@@ -1,0 +1,61 @@
+{
+  "title": "Hansaria Food Pvt. Ltd.",
+  "sections": [
+    {
+      "section":"Dashboard",
+      "actions":[
+        {
+          "name":"Dashboard", "link":"/dashboard","icon":"FaPlus"
+        }
+      ]
+    },
+    {
+      "section": "Buyer",
+      "icon": "FaUser",
+      "actions": [
+        { "name": "Add Buyer", "link": "/buyer/add", "icon": "FaPlus" },
+        { "name": "Buyer List", "link": "/buyer/list", "icon": "FaList" }
+      ]
+    },
+    {
+      "section": "Group of Company",
+      "icon": "FaBuilding",
+      "actions": [
+        { "name": "Add Group", "link": "/group-of-company/add", "icon": "FaPlus" },
+        { "name": "List Groups", "link": "/group-of-company/list", "icon": "FaList" }
+      ]
+    },
+    {
+      "section": "Company",
+      "icon": "FaBuilding",
+      "actions": [
+        { "name": "Add Company", "link": "/company/add", "icon": "FaPlus" },
+        { "name": "List Companies", "link": "/company/list", "icon": "FaList" }
+      ]
+    },
+    {
+      "section": "Consignee",
+      "icon": "FaTruck",
+      "actions": [
+        { "name": "Add Consignee", "link": "/consignee/add", "icon": "FaPlus" },
+        { "name": "Consignee List", "link": "/consignee/list", "icon": "FaList" }
+      ]
+    },
+    {
+      "section": "Commodity",
+      "icon": "FaCubes",
+      "actions": [
+        { "name": "Add Commodity", "link": "/commodity/add", "icon": "FaPlus" },
+        { "name": "Commodity List", "link": "/commodity/list", "icon": "FaList" }
+      ]
+    },
+    {
+      "section": "Quality Parameter",
+      "icon": "FaCheckCircle",
+      "actions": [
+        { "name": "Add Quality Parameter", "link": "/quality-parameter/add", "icon": "FaPlus" },
+        { "name": "List Quality Parameters", "link": "/quality-parameter/list", "icon": "FaList" }
+      ]
+    }
+  ]
+}
