@@ -5,11 +5,14 @@ import Actions from "../../../common/Actions/Actions";
 import SearchBox from "../../../common/SearchBox/SearchBox";
 import Pagination from "../../../common/Paginations/Paginations";
 import { toast } from "react-toastify";
+import PopupBox from "../../../common/PopupBox/PopupBox"; // Import the PopupBox
 
 const BuyerList = () => {
   const [buyersData, setBuyersData] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
+  const [isPopupOpen, setIsPopupOpen] = useState(false);
+  const [selectedBuyer, setSelectedBuyer] = useState(null);
   const itemsPerPage = 10;
 
   useEffect(() => {
@@ -42,7 +45,8 @@ const BuyerList = () => {
   };
 
   const handleView = (index) => {
-    console.log("View details for:", filteredData[index]);
+    setSelectedBuyer(filteredData[index]);
+    setIsPopupOpen(true);
   };
 
   const handleEdit = (index) => {
@@ -56,13 +60,12 @@ const BuyerList = () => {
     toast.success("Buyer deleted successfully");
   };
 
-  // Pagination logic
   const lastItemIndex = currentPage * itemsPerPage;
   const firstItemIndex = lastItemIndex - itemsPerPage;
   const currentItems = filteredData.slice(firstItemIndex, lastItemIndex);
 
   const rows = currentItems.map((buyer, index) => [
-    firstItemIndex + index + 1, // Serial number based on pagination
+    firstItemIndex + index + 1,
     buyer.name,
     buyer.mobile.join(", "),
     buyer.email.join(", "),
@@ -107,6 +110,22 @@ const BuyerList = () => {
         itemsPerPage={itemsPerPage}
         onPageChange={(page) => setCurrentPage(page)}
       />
+      <PopupBox
+        isOpen={isPopupOpen}
+        onClose={() => setIsPopupOpen(false)}
+        title="Buyer Details"
+      >
+        {selectedBuyer && (
+          <div className="space-y-4">
+            <p><strong>Name:</strong> {selectedBuyer.name}</p>
+            <p><strong>Mobile:</strong> {selectedBuyer.mobile.join(", ")}</p>
+            <p><strong>Email:</strong> {selectedBuyer.email.join(", ")}</p>
+            <p><strong>Company Name:</strong> {selectedBuyer.companyName}</p>
+            <p><strong>Commodity:</strong> {selectedBuyer.commodity.join(", ")}</p>
+            <p><strong>Status:</strong> {selectedBuyer.status}</p>
+          </div>
+        )}
+      </PopupBox>
     </div>
   );
 };

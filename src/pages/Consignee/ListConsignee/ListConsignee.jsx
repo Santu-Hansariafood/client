@@ -1,22 +1,29 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import Tables from '../../../common/Tables/Tables';
-import Actions from '../../../common/Actions/Actions';
-import SearchBox from '../../../common/SearchBox/SearchBox'; // Optional, for adding a search feature
+import { useState, useEffect } from "react";
+import axios from "axios";
+import Tables from "../../../common/Tables/Tables";
+import Actions from "../../../common/Actions/Actions";
+import PopupBox from "../../../common/PopupBox/PopupBox";
+import SearchBox from "../../../common/SearchBox/SearchBox";
+import EditPopupBox from "../../../common/EditPopupBox/EditPopupBox";
 
 const ListConsignee = () => {
   const [consigneeData, setConsigneeData] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isPopupOpen, setIsPopupOpen] = useState(false);
+  const [isEditPopupOpen, setIsEditPopupOpen] = useState(false);
+  const [selectedConsignee, setSelectedConsignee] = useState(null);
 
   // Fetch data from API on component mount
   useEffect(() => {
     const fetchConsignees = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/api/consignees');
+        const response = await axios.get(
+          "http://localhost:5000/api/consignees"
+        );
         setConsigneeData(response.data);
         setLoading(false);
       } catch (error) {
-        console.error('Error fetching consignees:', error);
+        console.error("Error fetching consignees:", error);
         setLoading(false);
       }
     };
@@ -24,30 +31,70 @@ const ListConsignee = () => {
     fetchConsignees();
   }, []);
 
-  // Format data for table rows and add serial number
-  const formattedRows = consigneeData
-    .sort((a, b) => a.name.localeCompare(b.name)) // Sorting by name (change as needed)
-    .map((consignee, index) => [
-      index + 1, // Serial number
-      consignee.name,
-      consignee.phone,
-      consignee.email,
-      consignee.gst,
-      consignee.pan,
-      consignee.state,
-      consignee.district,
-      consignee.location,
-      consignee.pin,
-      consignee.contactPerson,
-      consignee.mandiLicense,
-      consignee.activeStatus,
-      <Actions
-        key={index}
-        onView={() => console.log(`View ${consignee.name}`)}
-        onEdit={() => console.log(`Edit ${consignee.name}`)}
-        onDelete={() => console.log(`Delete ${consignee.name}`)}
-      />,
-    ]);
+  // Handle Edit Action
+  const handleEdit = (consignee) => {
+    setSelectedConsignee(consignee);
+    setIsEditPopupOpen(true);
+  };
+
+  const submitEdit = async (updatedData) => {
+    try {
+      const response = await axios.put(
+        `http://localhost:5000/api/consignees/${selectedConsignee._id}`,
+        updatedData
+      );
+      const updatedConsignees = consigneeData.map((consignee) =>
+        consignee._id === selectedConsignee._id ? response.data : consignee
+      );
+      setConsigneeData(updatedConsignees);
+      setIsEditPopupOpen(false);
+    } catch (error) {
+      console.error("Error updating consignee:", error);
+    }
+  };
+
+  // Handle Delete Action
+  const handleDelete = (consignee) => {
+    setSelectedConsignee(consignee);
+    setIsPopupOpen(true);
+  };
+
+  const submitDelete = async () => {
+    try {
+      await axios.delete(
+        `http://localhost:5000/api/consignees/${selectedConsignee._id}`
+      );
+      const updatedConsignees = consigneeData.filter(
+        (consignee) => consignee._id !== selectedConsignee._id
+      );
+      setConsigneeData(updatedConsignees);
+      setIsPopupOpen(false);
+    } catch (error) {
+      console.error("Error deleting consignee:", error);
+    }
+  };
+
+  const formattedRows = consigneeData.map((consignee, index) => [
+    index + 1,
+    consignee.name,
+    consignee.phone,
+    consignee.email,
+    consignee.gst,
+    consignee.pan,
+    consignee.state,
+    consignee.district,
+    consignee.location,
+    consignee.pin,
+    consignee.contactPerson,
+    consignee.mandiLicense,
+    consignee.activeStatus ? "Active" : "Inactive",
+    <Actions
+      key={index}
+      onView={() => console.log(`View ${consignee.name}`)}
+      onEdit={() => handleEdit(consignee)}
+      onDelete={() => handleDelete(consignee)}
+    />,
+  ]);
 
   return (
     <div className="container mx-auto p-4">
@@ -68,24 +115,47 @@ const ListConsignee = () => {
       ) : (
         <Tables
           headers={[
-            'Sl No.',
-            'Name',
-            'Phone',
-            'Email',
-            'GST',
-            'PAN',
-            'State',
-            'District',
-            'Location',
-            'Pin',
-            'Contact Person',
-            'Mandi License',
-            'Active Status',
-            'Actions',
+            "Sl No.",
+            "Name",
+            "Phone",
+            "Email",
+            "GST",
+            "PAN",
+            "State",
+            "District",
+            "Location",
+            "Pin",
+            "Contact Person",
+            "Mandi License",
+            "Active Status",
+            "Actions",
           ]}
           rows={formattedRows}
         />
       )}
+
+      {/* Edit Popup */}
+      <EditPopupBox
+        isOpen={isEditPopupOpen}
+        onClose={() => setIsEditPopupOpen(false)}
+        initialData={selectedConsignee || {}}
+        onSubmit={submitEdit}
+      />
+
+      {/* Delete Confirmation Popup */}
+      <PopupBox
+        isOpen={isPopupOpen}
+        onClose={() => setIsPopupOpen(false)}
+        title={`Delete Consignee: ${selectedConsignee?.name}`}
+      >
+        <p>Are you sure you want to delete this consignee?</p>
+        <button
+          onClick={submitDelete}
+          className="bg-red-500 text-white px-4 py-2 rounded mt-4"
+        >
+          Confirm Delete
+        </button>
+      </PopupBox>
     </div>
   );
 };

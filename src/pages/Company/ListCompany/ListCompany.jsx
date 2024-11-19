@@ -1,20 +1,21 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import axios from 'axios';
 import Tables from '../../../common/Tables/Tables';
 import Actions from '../../../common/Actions/Actions';
 import SearchBox from '../../../common/SearchBox/SearchBox';
+import PopupBox from '../../../common/PopupBox/PopupBox'; // Import PopupBox
 import { toast } from 'react-toastify';
 
 const ListCompany = () => {
   const [companyData, setCompanyData] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
+  const [isPopupOpen, setIsPopupOpen] = useState(false); // Popup open state
+  const [selectedCompany, setSelectedCompany] = useState(null); // Data for the popup
 
-  // Fetch data from API on component mount
   useEffect(() => {
     const fetchCompanyData = async () => {
       try {
         const response = await axios.get('http://localhost:5000/api/companies');
-        // Sort data by `companyName` for demonstration; you can adjust the sorting as needed
         const sortedData = response.data.sort((a, b) =>
           a.companyName.localeCompare(b.companyName)
         );
@@ -29,7 +30,6 @@ const ListCompany = () => {
     fetchCompanyData();
   }, []);
 
-  // Search handler to filter table data
   const handleSearch = (searchTerm) => {
     const lowercasedSearchTerm = searchTerm.toLowerCase();
     setFilteredData(
@@ -40,7 +40,8 @@ const ListCompany = () => {
   };
 
   const handleView = (index) => {
-    console.log('View details for:', filteredData[index]);
+    setSelectedCompany(filteredData[index]); // Set selected company data
+    setIsPopupOpen(true); // Open the popup
   };
 
   const handleEdit = (index) => {
@@ -48,7 +49,7 @@ const ListCompany = () => {
   };
 
   const handleDelete = async (index) => {
-    const companyId = filteredData[index]._id; // assuming each company has a unique `_id`
+    const companyId = filteredData[index]._id;
     try {
       await axios.delete(`http://localhost:5000/api/companies/${companyId}`);
       const updatedData = filteredData.filter((_, i) => i !== index);
@@ -61,17 +62,20 @@ const ListCompany = () => {
     }
   };
 
-  // Convert company data to row format for Tables component
   const rows = filteredData.map((company, index) => [
-    index + 1, // Serial Number
+    index + 1,
     company.companyName,
     company.companyPhone,
     company.companyEmail,
-    company.consignee.join(', '), // Joining multi-values with a comma
+    company.consignee.join(', '),
     company.group,
-    company.quality.join(', '), // Joining multi-values with a comma
-    company.mandiLicense,
-    company.activeStatus,
+    company.commodities
+      .map((commodity) =>
+        commodity.parameters.map((param) => `${param.parameter}: ${param.value}`).join(', ')
+      )
+      .join(' | '), // Combine all commodities' parameters
+    company.mandiLicense || 'N/A', // Handle missing data gracefully
+    company.activeStatus ? 'Active' : 'Inactive', // Default to Inactive if not present
     <Actions
       key={index}
       onView={() => handleView(index)}
@@ -103,6 +107,31 @@ const ListCompany = () => {
         ]}
         rows={rows}
       />
+      {isPopupOpen && (
+        <PopupBox
+          isOpen={isPopupOpen}
+          onClose={() => setIsPopupOpen(false)}
+          title={selectedCompany?.companyName || 'Company Details'}
+        >
+          <div>
+            <p><strong>Phone:</strong> {selectedCompany?.companyPhone}</p>
+            <p><strong>Email:</strong> {selectedCompany?.companyEmail}</p>
+            <p><strong>Consignee:</strong> {selectedCompany?.consignee.join(', ')}</p>
+            <p><strong>Group:</strong> {selectedCompany?.group}</p>
+            <p><strong>Commodities:</strong></p>
+            <ul>
+              {selectedCompany?.commodities.map((commodity, idx) => (
+                <li key={idx}>
+                  <strong>{commodity.name}:</strong>{' '}
+                  {commodity.parameters.map((param) => `${param.parameter}: ${param.value}`).join(', ')}
+                </li>
+              ))}
+            </ul>
+            <p><strong>Mandi License:</strong> {selectedCompany?.mandiLicense || 'N/A'}</p>
+            <p><strong>Status:</strong> {selectedCompany?.activeStatus ? 'Active' : 'Inactive'}</p>
+          </div>
+        </PopupBox>
+      )}
     </div>
   );
 };
