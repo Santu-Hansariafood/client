@@ -4,12 +4,15 @@ import Tables from "../../../common/Tables/Tables";
 import Actions from "../../../common/Actions/Actions";
 import SearchBox from "../../../common/SearchBox/SearchBox";
 import PopupBox from "../../../common/PopupBox/PopupBox";
+import EditCommodityPopup from "../EditCommodityPopup/EditCommodityPopup";
 
 const ListCommodity = () => {
   const [commodities, setCommodities] = useState([]);
   const [filteredCommodities, setFilteredCommodities] = useState([]);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
+  const [isEditPopupOpen, setIsEditPopupOpen] = useState(false);
   const [selectedCommodity, setSelectedCommodity] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchCommodities = async () => {
@@ -24,6 +27,10 @@ const ListCommodity = () => {
         setFilteredCommodities(sortedCommodities);
       } catch (error) {
         console.error("Error fetching commodities:", error);
+        setCommodities([]);
+        setFilteredCommodities([]);
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -43,7 +50,9 @@ const ListCommodity = () => {
 
   const handleView = async (id) => {
     try {
-      const response = await axios.get(`http://localhost:5000/api/commodities/${id}`);
+      const response = await axios.get(
+        `http://localhost:5000/api/commodities/${id}`
+      );
       setSelectedCommodity(response.data);
       setIsPopupOpen(true);
     } catch (error) {
@@ -52,7 +61,8 @@ const ListCommodity = () => {
   };
 
   const handleEdit = (id) => {
-    console.log("Editing commodity with ID:", id);
+    setSelectedCommodity({ _id: id });
+    setIsEditPopupOpen(true);
   };
 
   const handleDelete = (id) => {
@@ -61,10 +71,12 @@ const ListCommodity = () => {
 
   const tableRows = filteredCommodities.map((commodity, index) => [
     index + 1,
-    commodity.name,
-    commodity.hsnCode,
-    commodity.parameters.join(", "),
-    commodity.activeStatus,
+    commodity.name || "N/A",
+    commodity.hsnCode || "N/A",
+    Array.isArray(commodity.parameters)
+      ? commodity.parameters.join(", ")
+      : "N/A",
+    commodity.activeStatus ? "Active" : "Inactive",
     <Actions
       key={commodity._id}
       onView={() => handleView(commodity._id)}
@@ -82,12 +94,17 @@ const ListCommodity = () => {
     "Actions",
   ];
 
+  if (isLoading) {
+    return <p>Loading commodities...</p>;
+  }
+
   return (
     <div className="container mx-auto p-6">
       <div className="bg-white shadow-md rounded-lg p-6 border-2 border-gray-200">
-        <h2 className="text-2xl font-semibold mb-6 text-center">Commodity List</h2>
+        <h2 className="text-2xl font-semibold mb-6 text-center">
+          Commodity List
+        </h2>
 
-        {/* Search Box */}
         <div className="mb-6 flex justify-between items-center">
           <SearchBox
             placeholder="Search Commodities"
@@ -96,10 +113,12 @@ const ListCommodity = () => {
           />
         </div>
 
-        {/* Table */}
-        <Tables headers={tableHeaders} rows={tableRows} />
+        {filteredCommodities.length > 0 ? (
+          <Tables headers={tableHeaders} rows={tableRows} />
+        ) : (
+          <p>No commodities found.</p>
+        )}
 
-        {/* PopupBox */}
         <PopupBox
           isOpen={isPopupOpen}
           onClose={() => setIsPopupOpen(false)}
@@ -107,15 +126,46 @@ const ListCommodity = () => {
         >
           {selectedCommodity ? (
             <div>
-              <p><strong>Name:</strong> {selectedCommodity.name}</p>
-              <p><strong>HSN Code:</strong> {selectedCommodity.hsnCode}</p>
-              <p><strong>Parameters:</strong> {selectedCommodity.parameters.join(", ")}</p>
-              <p><strong>Active Status:</strong> {selectedCommodity.activeStatus ? "Active" : "Inactive"}</p>
+              <p>
+                <strong>Name:</strong> {selectedCommodity.name || "N/A"}
+              </p>
+              <p>
+                <strong>HSN Code:</strong> {selectedCommodity.hsnCode || "N/A"}
+              </p>
+              <p>
+                <strong>Parameters:</strong>{" "}
+                {Array.isArray(selectedCommodity.parameters)
+                  ? selectedCommodity.parameters.join(", ")
+                  : "N/A"}
+              </p>
+              <p>
+                <strong>Active Status:</strong>{" "}
+                {selectedCommodity.activeStatus ? "Active" : "Inactive"}
+              </p>
             </div>
           ) : (
             <p>Loading details...</p>
           )}
         </PopupBox>
+
+        {isEditPopupOpen && (
+          <EditCommodityPopup
+            isOpen={isEditPopupOpen}
+            onClose={() => setIsEditPopupOpen(false)}
+            commodityId={selectedCommodity ? selectedCommodity._id : null}
+            onUpdate={() => {
+              axios
+                .get("http://localhost:5000/api/commodities")
+                .then((response) => {
+                  const sortedCommodities = response.data.sort((a, b) =>
+                    a.name.localeCompare(b.name)
+                  );
+                  setCommodities(sortedCommodities);
+                  setFilteredCommodities(sortedCommodities);
+                });
+            }}
+          />
+        )}
       </div>
     </div>
   );

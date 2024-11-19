@@ -5,7 +5,8 @@ import Actions from "../../../common/Actions/Actions";
 import SearchBox from "../../../common/SearchBox/SearchBox";
 import Pagination from "../../../common/Paginations/Paginations";
 import { toast } from "react-toastify";
-import PopupBox from "../../../common/PopupBox/PopupBox"; // Import the PopupBox
+import PopupBox from "../../../common/PopupBox/PopupBox";
+import EditBuyerPopup from "../EditBuyerPopup/EditBuyerPopup";
 
 const BuyerList = () => {
   const [buyersData, setBuyersData] = useState([]);
@@ -13,6 +14,7 @@ const BuyerList = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [selectedBuyer, setSelectedBuyer] = useState(null);
+  const [isEditPopupOpen, setIsEditPopupOpen] = useState(false);
   const itemsPerPage = 10;
 
   useEffect(() => {
@@ -50,7 +52,8 @@ const BuyerList = () => {
   };
 
   const handleEdit = (index) => {
-    console.log("Edit buyer at index:", index);
+    setSelectedBuyer(filteredData[index]);
+    setIsEditPopupOpen(true);
   };
 
   const handleDelete = (index) => {
@@ -58,6 +61,15 @@ const BuyerList = () => {
     setFilteredData(updatedData);
     setBuyersData(updatedData);
     toast.success("Buyer deleted successfully");
+  };
+
+  const handleUpdate = (updatedBuyer) => {
+    setBuyersData((prev) =>
+      prev.map((buyer) => (buyer._id === updatedBuyer._id ? updatedBuyer : buyer))
+    );
+    setFilteredData((prev) =>
+      prev.map((buyer) => (buyer._id === updatedBuyer._id ? updatedBuyer : buyer))
+    );
   };
 
   const lastItemIndex = currentPage * itemsPerPage;
@@ -126,6 +138,12 @@ const BuyerList = () => {
           </div>
         )}
       </PopupBox>
+      <EditBuyerPopup
+        buyer={selectedBuyer}
+        isOpen={isEditPopupOpen}
+        onClose={() => setIsEditPopupOpen(false)}
+        onUpdate={handleUpdate}
+      />
     </div>
   );
 };

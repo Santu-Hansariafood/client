@@ -1,29 +1,26 @@
-import { useState, useEffect } from "react";
-import axios from "axios";
-import Tables from "../../../common/Tables/Tables";
-import Actions from "../../../common/Actions/Actions";
-import PopupBox from "../../../common/PopupBox/PopupBox";
-import SearchBox from "../../../common/SearchBox/SearchBox";
-import EditPopupBox from "../../../common/EditPopupBox/EditPopupBox";
+import { useState, useEffect } from 'react';
+import axios from 'axios';
+import Tables from '../../../common/Tables/Tables';
+import Actions from '../../../common/Actions/Actions';
+import PopupBox from '../../../common/PopupBox/PopupBox';
+import EditConsigneePopup from '../EditConsigneePopup/EditConsigneePopup';
 
 const ListConsignee = () => {
   const [consigneeData, setConsigneeData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [isEditPopupOpen, setIsEditPopupOpen] = useState(false);
+  const [isViewPopupOpen, setIsViewPopupOpen] = useState(false);
   const [selectedConsignee, setSelectedConsignee] = useState(null);
 
-  // Fetch data from API on component mount
   useEffect(() => {
     const fetchConsignees = async () => {
       try {
-        const response = await axios.get(
-          "http://localhost:5000/api/consignees"
-        );
+        const response = await axios.get('http://localhost:5000/api/consignees');
         setConsigneeData(response.data);
         setLoading(false);
       } catch (error) {
-        console.error("Error fetching consignees:", error);
+        console.error('Error fetching consignees:', error);
         setLoading(false);
       }
     };
@@ -31,7 +28,11 @@ const ListConsignee = () => {
     fetchConsignees();
   }, []);
 
-  // Handle Edit Action
+  const handleView = (consignee) => {
+    setSelectedConsignee(consignee);
+    setIsViewPopupOpen(true);
+  };
+
   const handleEdit = (consignee) => {
     setSelectedConsignee(consignee);
     setIsEditPopupOpen(true);
@@ -49,11 +50,10 @@ const ListConsignee = () => {
       setConsigneeData(updatedConsignees);
       setIsEditPopupOpen(false);
     } catch (error) {
-      console.error("Error updating consignee:", error);
+      console.error('Error updating consignee:', error);
     }
   };
 
-  // Handle Delete Action
   const handleDelete = (consignee) => {
     setSelectedConsignee(consignee);
     setIsPopupOpen(true);
@@ -61,16 +61,14 @@ const ListConsignee = () => {
 
   const submitDelete = async () => {
     try {
-      await axios.delete(
-        `http://localhost:5000/api/consignees/${selectedConsignee._id}`
-      );
+      await axios.delete(`http://localhost:5000/api/consignees/${selectedConsignee._id}`);
       const updatedConsignees = consigneeData.filter(
         (consignee) => consignee._id !== selectedConsignee._id
       );
       setConsigneeData(updatedConsignees);
       setIsPopupOpen(false);
     } catch (error) {
-      console.error("Error deleting consignee:", error);
+      console.error('Error deleting consignee:', error);
     }
   };
 
@@ -87,10 +85,10 @@ const ListConsignee = () => {
     consignee.pin,
     consignee.contactPerson,
     consignee.mandiLicense,
-    consignee.activeStatus ? "Active" : "Inactive",
+    consignee.activeStatus ? 'Active' : 'Inactive',
     <Actions
       key={index}
-      onView={() => console.log(`View ${consignee.name}`)}
+      onView={() => handleView(consignee)}
       onEdit={() => handleEdit(consignee)}
       onDelete={() => handleDelete(consignee)}
     />,
@@ -99,50 +97,61 @@ const ListConsignee = () => {
   return (
     <div className="container mx-auto p-4">
       <h2 className="text-2xl font-semibold mb-4">Consignee List</h2>
-      {/* Optional search feature */}
-      <div className="mb-4">
-        <SearchBox
-          placeholder="Search Consignee..."
-          items={consigneeData.map((consignee) => consignee.name)}
-          onSearch={(filteredItems) => {
-            console.log('Search results:', filteredItems);
-          }}
-        />
-      </div>
 
       {loading ? (
         <div>Loading...</div>
       ) : (
         <Tables
           headers={[
-            "Sl No.",
-            "Name",
-            "Phone",
-            "Email",
-            "GST",
-            "PAN",
-            "State",
-            "District",
-            "Location",
-            "Pin",
-            "Contact Person",
-            "Mandi License",
-            "Active Status",
-            "Actions",
+            'Sl No.',
+            'Name',
+            'Phone',
+            'Email',
+            'GST',
+            'PAN',
+            'State',
+            'District',
+            'Location',
+            'Pin',
+            'Contact Person',
+            'Mandi License',
+            'Active Status',
+            'Actions',
           ]}
           rows={formattedRows}
         />
       )}
 
-      {/* Edit Popup */}
-      <EditPopupBox
+      <EditConsigneePopup
         isOpen={isEditPopupOpen}
         onClose={() => setIsEditPopupOpen(false)}
         initialData={selectedConsignee || {}}
         onSubmit={submitEdit}
       />
 
-      {/* Delete Confirmation Popup */}
+      <PopupBox
+        isOpen={isViewPopupOpen}
+        onClose={() => setIsViewPopupOpen(false)}
+        title={`View Consignee: ${selectedConsignee?.name}`}
+      >
+        {selectedConsignee && (
+          <div>
+            <p><strong>Name:</strong> {selectedConsignee.name}</p>
+            <p><strong>Phone:</strong> {selectedConsignee.phone}</p>
+            <p><strong>Email:</strong> {selectedConsignee.email}</p>
+            <p><strong>GST:</strong> {selectedConsignee.gst}</p>
+            <p><strong>PAN:</strong> {selectedConsignee.pan}</p>
+            <p><strong>State:</strong> {selectedConsignee.state}</p>
+            <p><strong>District:</strong> {selectedConsignee.district}</p>
+            <p><strong>Location:</strong> {selectedConsignee.location}</p>
+            <p><strong>Pin:</strong> {selectedConsignee.pin}</p>
+            <p><strong>Contact Person:</strong> {selectedConsignee.contactPerson}</p>
+            <p><strong>Mandi License:</strong> {selectedConsignee.mandiLicense}</p>
+            <p><strong>Active Status:</strong> {selectedConsignee.activeStatus ? 'Active' : 'Inactive'}</p>
+          </div>
+        )}
+      </PopupBox>
+
       <PopupBox
         isOpen={isPopupOpen}
         onClose={() => setIsPopupOpen(false)}

@@ -15,6 +15,7 @@ const Login = lazy(() => import("./pages/Login/Login"));
 const Dashboard = lazy(() => import("./pages/Dashboard/Dashboard"));
 const AddBuyer = lazy(() => import("./pages/Buyer/AddBuyer/AddBuyer"));
 const ListBuyer = lazy(() => import("./pages/Buyer/BuyerList/BuyerList"));
+
 const AddCommodity = lazy(() =>
   import("./pages/Commodity/AddCommodity/AddCommodity")
 );

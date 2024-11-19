@@ -3,14 +3,16 @@ import axios from 'axios';
 import Tables from '../../../common/Tables/Tables';
 import Actions from '../../../common/Actions/Actions';
 import SearchBox from '../../../common/SearchBox/SearchBox';
-import PopupBox from '../../../common/PopupBox/PopupBox'; // Import PopupBox
+import PopupBox from '../../../common/PopupBox/PopupBox';
+import EditCompanyPopup from '../EditCompanyPopup/EditCompanyPopup';
 import { toast } from 'react-toastify';
 
 const ListCompany = () => {
   const [companyData, setCompanyData] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
-  const [isPopupOpen, setIsPopupOpen] = useState(false); // Popup open state
-  const [selectedCompany, setSelectedCompany] = useState(null); // Data for the popup
+  const [isPopupOpen, setIsPopupOpen] = useState(false);
+  const [isEditPopupOpen, setIsEditPopupOpen] = useState(false);
+  const [selectedCompany, setSelectedCompany] = useState(null);
 
   useEffect(() => {
     const fetchCompanyData = async () => {
@@ -40,12 +42,13 @@ const ListCompany = () => {
   };
 
   const handleView = (index) => {
-    setSelectedCompany(filteredData[index]); // Set selected company data
-    setIsPopupOpen(true); // Open the popup
+    setSelectedCompany(filteredData[index]);
+    setIsPopupOpen(true);
   };
 
   const handleEdit = (index) => {
-    console.log('Edit company at index:', index);
+    setSelectedCompany(filteredData[index]);
+    setIsEditPopupOpen(true);
   };
 
   const handleDelete = async (index) => {
@@ -62,6 +65,14 @@ const ListCompany = () => {
     }
   };
 
+  const handleUpdate = (updatedCompany) => {
+    const updatedList = companyData.map((company) =>
+      company._id === updatedCompany._id ? updatedCompany : company
+    );
+    setCompanyData(updatedList);
+    setFilteredData(updatedList);
+  };
+
   const rows = filteredData.map((company, index) => [
     index + 1,
     company.companyName,
@@ -73,9 +84,9 @@ const ListCompany = () => {
       .map((commodity) =>
         commodity.parameters.map((param) => `${param.parameter}: ${param.value}`).join(', ')
       )
-      .join(' | '), // Combine all commodities' parameters
-    company.mandiLicense || 'N/A', // Handle missing data gracefully
-    company.activeStatus ? 'Active' : 'Inactive', // Default to Inactive if not present
+      .join(' | '),
+    company.mandiLicense || 'N/A',
+    company.activeStatus ? 'Active' : 'Inactive',
     <Actions
       key={index}
       onView={() => handleView(index)}
@@ -113,24 +124,15 @@ const ListCompany = () => {
           onClose={() => setIsPopupOpen(false)}
           title={selectedCompany?.companyName || 'Company Details'}
         >
-          <div>
-            <p><strong>Phone:</strong> {selectedCompany?.companyPhone}</p>
-            <p><strong>Email:</strong> {selectedCompany?.companyEmail}</p>
-            <p><strong>Consignee:</strong> {selectedCompany?.consignee.join(', ')}</p>
-            <p><strong>Group:</strong> {selectedCompany?.group}</p>
-            <p><strong>Commodities:</strong></p>
-            <ul>
-              {selectedCompany?.commodities.map((commodity, idx) => (
-                <li key={idx}>
-                  <strong>{commodity.name}:</strong>{' '}
-                  {commodity.parameters.map((param) => `${param.parameter}: ${param.value}`).join(', ')}
-                </li>
-              ))}
-            </ul>
-            <p><strong>Mandi License:</strong> {selectedCompany?.mandiLicense || 'N/A'}</p>
-            <p><strong>Status:</strong> {selectedCompany?.activeStatus ? 'Active' : 'Inactive'}</p>
-          </div>
         </PopupBox>
+      )}
+      {isEditPopupOpen && (
+        <EditCompanyPopup
+          isOpen={isEditPopupOpen}
+          company={selectedCompany}
+          onClose={() => setIsEditPopupOpen(false)}
+          onUpdate={handleUpdate}
+        />
       )}
     </div>
   );
