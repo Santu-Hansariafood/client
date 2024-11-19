@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import axios from 'axios';
-import Tables from '../../../common/Tables/Tables';
-import Actions from '../../../common/Actions/Actions';
-import PopupBox from '../../../common/PopupBox/PopupBox';
-import EditConsigneePopup from '../EditConsigneePopup/EditConsigneePopup';
+import Loading from '../../../common/Loading/Loading';
+const Tables = lazy(()=>import("../../../common/Tables/Tables"))
+const Actions = lazy(()=>import("../../../common/Actions/Actions"))
+const PopupBox = lazy(()=>import("../../../common/PopupBox/PopupBox"))
+const EditConsigneePopup = lazy(()=>import("../EditConsigneePopup/EditConsigneePopup"))
 
 const ListConsignee = () => {
   const [consigneeData, setConsigneeData] = useState([]);
@@ -95,6 +96,7 @@ const ListConsignee = () => {
   ]);
 
   return (
+    <Suspense fallback={<Loading/>}>
     <div className="container mx-auto p-4">
       <h2 className="text-2xl font-semibold mb-4">Consignee List</h2>
 
@@ -166,6 +168,7 @@ const ListConsignee = () => {
         </button>
       </PopupBox>
     </div>
+    </Suspense>
   );
 };
 

@@ -1,10 +1,13 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, lazy, Suspense } from "react";
 import axios from "axios";
-import Tables from "../../../common/Tables/Tables";
-import Actions from "../../../common/Actions/Actions";
-import SearchBox from "../../../common/SearchBox/SearchBox";
-import PopupBox from "../../../common/PopupBox/PopupBox";
-import EditCommodityPopup from "../EditCommodityPopup/EditCommodityPopup";
+import Loading from "../../../common/Loading/Loading";
+const Tables = lazy(() => import("../../../common/Tables/Tables"));
+const Actions = lazy(() => import("../../../common/Actions/Actions"));
+const SearchBox = lazy(() => import("../../../common/SearchBox/SearchBox"));
+const PopupBox = lazy(() => import("../../../common/PopupBox/PopupBox"));
+const EditCommodityPopup = lazy(() =>
+  import("../EditCommodityPopup/EditCommodityPopup")
+);
 
 const ListCommodity = () => {
   const [commodities, setCommodities] = useState([]);
@@ -95,79 +98,82 @@ const ListCommodity = () => {
   ];
 
   if (isLoading) {
-    return <p>Loading commodities...</p>;
+    return <Loading />;
   }
 
   return (
-    <div className="container mx-auto p-6">
-      <div className="bg-white shadow-md rounded-lg p-6 border-2 border-gray-200">
-        <h2 className="text-2xl font-semibold mb-6 text-center">
-          Commodity List
-        </h2>
+    <Suspense fallback={<Loading />}>
+      <div className="container mx-auto p-6">
+        <div className="bg-white shadow-md rounded-lg p-6 border-2 border-gray-200">
+          <h2 className="text-2xl font-semibold mb-6 text-center">
+            Commodity List
+          </h2>
 
-        <div className="mb-6 flex justify-between items-center">
-          <SearchBox
-            placeholder="Search Commodities"
-            items={commodities.map((commodity) => commodity.name)}
-            onSearch={handleSearch}
-          />
-        </div>
+          <div className="mb-6 flex justify-between items-center">
+            <SearchBox
+              placeholder="Search Commodities"
+              items={commodities.map((commodity) => commodity.name)}
+              onSearch={handleSearch}
+            />
+          </div>
 
-        {filteredCommodities.length > 0 ? (
-          <Tables headers={tableHeaders} rows={tableRows} />
-        ) : (
-          <p>No commodities found.</p>
-        )}
-
-        <PopupBox
-          isOpen={isPopupOpen}
-          onClose={() => setIsPopupOpen(false)}
-          title="Commodity Details"
-        >
-          {selectedCommodity ? (
-            <div>
-              <p>
-                <strong>Name:</strong> {selectedCommodity.name || "N/A"}
-              </p>
-              <p>
-                <strong>HSN Code:</strong> {selectedCommodity.hsnCode || "N/A"}
-              </p>
-              <p>
-                <strong>Parameters:</strong>{" "}
-                {Array.isArray(selectedCommodity.parameters)
-                  ? selectedCommodity.parameters.join(", ")
-                  : "N/A"}
-              </p>
-              <p>
-                <strong>Active Status:</strong>{" "}
-                {selectedCommodity.activeStatus ? "Active" : "Inactive"}
-              </p>
-            </div>
+          {filteredCommodities.length > 0 ? (
+            <Tables headers={tableHeaders} rows={tableRows} />
           ) : (
-            <p>Loading details...</p>
+            <p>No commodities found.</p>
           )}
-        </PopupBox>
 
-        {isEditPopupOpen && (
-          <EditCommodityPopup
-            isOpen={isEditPopupOpen}
-            onClose={() => setIsEditPopupOpen(false)}
-            commodityId={selectedCommodity ? selectedCommodity._id : null}
-            onUpdate={() => {
-              axios
-                .get("http://localhost:5000/api/commodities")
-                .then((response) => {
-                  const sortedCommodities = response.data.sort((a, b) =>
-                    a.name.localeCompare(b.name)
-                  );
-                  setCommodities(sortedCommodities);
-                  setFilteredCommodities(sortedCommodities);
-                });
-            }}
-          />
-        )}
+          <PopupBox
+            isOpen={isPopupOpen}
+            onClose={() => setIsPopupOpen(false)}
+            title="Commodity Details"
+          >
+            {selectedCommodity ? (
+              <div>
+                <p>
+                  <strong>Name:</strong> {selectedCommodity.name || "N/A"}
+                </p>
+                <p>
+                  <strong>HSN Code:</strong>{" "}
+                  {selectedCommodity.hsnCode || "N/A"}
+                </p>
+                <p>
+                  <strong>Parameters:</strong>{" "}
+                  {Array.isArray(selectedCommodity.parameters)
+                    ? selectedCommodity.parameters.join(", ")
+                    : "N/A"}
+                </p>
+                <p>
+                  <strong>Active Status:</strong>{" "}
+                  {selectedCommodity.activeStatus ? "Active" : "Inactive"}
+                </p>
+              </div>
+            ) : (
+              <Loading />
+            )}
+          </PopupBox>
+
+          {isEditPopupOpen && (
+            <EditCommodityPopup
+              isOpen={isEditPopupOpen}
+              onClose={() => setIsEditPopupOpen(false)}
+              commodityId={selectedCommodity ? selectedCommodity._id : null}
+              onUpdate={() => {
+                axios
+                  .get("http://localhost:5000/api/commodities")
+                  .then((response) => {
+                    const sortedCommodities = response.data.sort((a, b) =>
+                      a.name.localeCompare(b.name)
+                    );
+                    setCommodities(sortedCommodities);
+                    setFilteredCommodities(sortedCommodities);
+                  });
+              }}
+            />
+          )}
+        </div>
       </div>
-    </div>
+    </Suspense>
   );
 };
 

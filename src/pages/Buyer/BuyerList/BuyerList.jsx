@@ -1,12 +1,15 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, lazy, Suspense } from "react";
 import axios from "axios";
-import Tables from "../../../common/Tables/Tables";
-import Actions from "../../../common/Actions/Actions";
-import SearchBox from "../../../common/SearchBox/SearchBox";
-import Pagination from "../../../common/Paginations/Paginations";
+const Tables = lazy(() => import("../../../common/Tables/Tables"));
+const Actions = lazy(() => import("../../../common/Actions/Actions"));
+const SearchBox = lazy(() => import("../../../common/SearchBox/SearchBox"));
+const Pagination = lazy(() =>
+  import("../../../common/Paginations/Paginations")
+);
+const PopupBox = lazy(() => import("../../../common/PopupBox/PopupBox"));
+const EditBuyerPopup = lazy(() => import("../EditBuyerPopup/EditBuyerPopup"));
 import { toast } from "react-toastify";
-import PopupBox from "../../../common/PopupBox/PopupBox";
-import EditBuyerPopup from "../EditBuyerPopup/EditBuyerPopup";
+import Loading from "../../../common/Loading/Loading";
 
 const BuyerList = () => {
   const [buyersData, setBuyersData] = useState([]);
@@ -65,10 +68,14 @@ const BuyerList = () => {
 
   const handleUpdate = (updatedBuyer) => {
     setBuyersData((prev) =>
-      prev.map((buyer) => (buyer._id === updatedBuyer._id ? updatedBuyer : buyer))
+      prev.map((buyer) =>
+        buyer._id === updatedBuyer._id ? updatedBuyer : buyer
+      )
     );
     setFilteredData((prev) =>
-      prev.map((buyer) => (buyer._id === updatedBuyer._id ? updatedBuyer : buyer))
+      prev.map((buyer) =>
+        buyer._id === updatedBuyer._id ? updatedBuyer : buyer
+      )
     );
   };
 
@@ -93,58 +100,72 @@ const BuyerList = () => {
   ]);
 
   return (
-    <div className="container mx-auto p-4">
-      <h2 className="text-2xl font-semibold mb-4">Buyer List</h2>
-      <SearchBox
-        placeholder="Search buyers..."
-        items={buyersData.flatMap((buyer) => Object.values(buyer))}
-        onSearch={handleSearch}
-      />
-      <div className="overflow-x-auto">
-        <Tables
-          headers={[
-            "Sl No",
-            "Name",
-            "Mobile",
-            "Email",
-            "Company Name",
-            "Commodity",
-            "Status",
-            "Actions",
-          ]}
-          rows={rows}
-          className="w-full border border-gray-300 text-left bg-white shadow-md rounded-lg overflow-hidden"
+    <Suspense fallback={<Loading />}>
+      <div className="container mx-auto p-4">
+        <h2 className="text-2xl font-semibold mb-4">Buyer List</h2>
+        <SearchBox
+          placeholder="Search buyers..."
+          items={buyersData.flatMap((buyer) => Object.values(buyer))}
+          onSearch={handleSearch}
+        />
+        <div className="overflow-x-auto">
+          <Tables
+            headers={[
+              "Sl No",
+              "Name",
+              "Mobile",
+              "Email",
+              "Company Name",
+              "Commodity",
+              "Status",
+              "Actions",
+            ]}
+            rows={rows}
+            className="w-full border border-gray-300 text-left bg-white shadow-md rounded-lg overflow-hidden"
+          />
+        </div>
+        <Pagination
+          currentPage={currentPage}
+          totalItems={filteredData.length}
+          itemsPerPage={itemsPerPage}
+          onPageChange={(page) => setCurrentPage(page)}
+        />
+        <PopupBox
+          isOpen={isPopupOpen}
+          onClose={() => setIsPopupOpen(false)}
+          title="Buyer Details"
+        >
+          {selectedBuyer && (
+            <div className="space-y-4">
+              <p>
+                <strong>Name:</strong> {selectedBuyer.name}
+              </p>
+              <p>
+                <strong>Mobile:</strong> {selectedBuyer.mobile.join(", ")}
+              </p>
+              <p>
+                <strong>Email:</strong> {selectedBuyer.email.join(", ")}
+              </p>
+              <p>
+                <strong>Company Name:</strong> {selectedBuyer.companyName}
+              </p>
+              <p>
+                <strong>Commodity:</strong> {selectedBuyer.commodity.join(", ")}
+              </p>
+              <p>
+                <strong>Status:</strong> {selectedBuyer.status}
+              </p>
+            </div>
+          )}
+        </PopupBox>
+        <EditBuyerPopup
+          buyer={selectedBuyer}
+          isOpen={isEditPopupOpen}
+          onClose={() => setIsEditPopupOpen(false)}
+          onUpdate={handleUpdate}
         />
       </div>
-      <Pagination
-        currentPage={currentPage}
-        totalItems={filteredData.length}
-        itemsPerPage={itemsPerPage}
-        onPageChange={(page) => setCurrentPage(page)}
-      />
-      <PopupBox
-        isOpen={isPopupOpen}
-        onClose={() => setIsPopupOpen(false)}
-        title="Buyer Details"
-      >
-        {selectedBuyer && (
-          <div className="space-y-4">
-            <p><strong>Name:</strong> {selectedBuyer.name}</p>
-            <p><strong>Mobile:</strong> {selectedBuyer.mobile.join(", ")}</p>
-            <p><strong>Email:</strong> {selectedBuyer.email.join(", ")}</p>
-            <p><strong>Company Name:</strong> {selectedBuyer.companyName}</p>
-            <p><strong>Commodity:</strong> {selectedBuyer.commodity.join(", ")}</p>
-            <p><strong>Status:</strong> {selectedBuyer.status}</p>
-          </div>
-        )}
-      </PopupBox>
-      <EditBuyerPopup
-        buyer={selectedBuyer}
-        isOpen={isEditPopupOpen}
-        onClose={() => setIsEditPopupOpen(false)}
-        onUpdate={handleUpdate}
-      />
-    </div>
+    </Suspense>
   );
 };
 

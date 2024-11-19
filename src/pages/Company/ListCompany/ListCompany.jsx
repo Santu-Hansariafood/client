@@ -1,11 +1,14 @@
-import { useState, useEffect } from 'react';
-import axios from 'axios';
-import Tables from '../../../common/Tables/Tables';
-import Actions from '../../../common/Actions/Actions';
-import SearchBox from '../../../common/SearchBox/SearchBox';
-import PopupBox from '../../../common/PopupBox/PopupBox';
-import EditCompanyPopup from '../EditCompanyPopup/EditCompanyPopup';
-import { toast } from 'react-toastify';
+import { useState, useEffect, lazy, Suspense } from "react";
+import axios from "axios";
+const Tables = lazy(() => import("../../../common/Tables/Tables"));
+const Actions = lazy(() => import("../../../common/Actions/Actions"));
+const SearchBox = lazy(() => import("'../../../common/SearchBox/SearchBox"));
+const PopupBox = lazy(() => import("../../../common/PopupBox/PopupBox"));
+const EditCompanyPopup = lazy(() =>
+  import("../EditCompanyPopup/EditCompanyPopup")
+);
+import { toast } from "react-toastify";
+import Loading from "../../../common/Loading/Loading";
 
 const ListCompany = () => {
   const [companyData, setCompanyData] = useState([]);
@@ -17,15 +20,15 @@ const ListCompany = () => {
   useEffect(() => {
     const fetchCompanyData = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/api/companies');
+        const response = await axios.get("http://localhost:5000/api/companies");
         const sortedData = response.data.sort((a, b) =>
           a.companyName.localeCompare(b.companyName)
         );
         setCompanyData(sortedData);
         setFilteredData(sortedData);
       } catch (error) {
-        console.error('Error fetching company data:', error);
-        toast.error('Failed to fetch company data');
+        console.error("Error fetching company data:", error);
+        toast.error("Failed to fetch company data");
       }
     };
 
@@ -58,10 +61,10 @@ const ListCompany = () => {
       const updatedData = filteredData.filter((_, i) => i !== index);
       setFilteredData(updatedData);
       setCompanyData(updatedData);
-      toast.success('Company deleted successfully');
+      toast.success("Company deleted successfully");
     } catch (error) {
-      console.error('Error deleting company:', error);
-      toast.error('Failed to delete company');
+      console.error("Error deleting company:", error);
+      toast.error("Failed to delete company");
     }
   };
 
@@ -78,15 +81,17 @@ const ListCompany = () => {
     company.companyName,
     company.companyPhone,
     company.companyEmail,
-    company.consignee.join(', '),
+    company.consignee.join(", "),
     company.group,
     company.commodities
       .map((commodity) =>
-        commodity.parameters.map((param) => `${param.parameter}: ${param.value}`).join(', ')
+        commodity.parameters
+          .map((param) => `${param.parameter}: ${param.value}`)
+          .join(", ")
       )
-      .join(' | '),
-    company.mandiLicense || 'N/A',
-    company.activeStatus ? 'Active' : 'Inactive',
+      .join(" | "),
+    company.mandiLicense || "N/A",
+    company.activeStatus ? "Active" : "Inactive",
     <Actions
       key={index}
       onView={() => handleView(index)}
@@ -96,45 +101,46 @@ const ListCompany = () => {
   ]);
 
   return (
-    <div className="container mx-auto p-4">
-      <h2 className="text-2xl font-semibold mb-4">List of Companies</h2>
-      <SearchBox
-        placeholder="Search companies..."
-        items={companyData.map((company) => company.companyName)}
-        onSearch={handleSearch}
-      />
-      <Tables
-        headers={[
-          'Sl No',
-          'Company Name',
-          'Phone Number',
-          'Email',
-          'Consignee',
-          'Group',
-          'Quality Parameter',
-          'Mandi License',
-          'Status',
-          'Actions',
-        ]}
-        rows={rows}
-      />
-      {isPopupOpen && (
-        <PopupBox
-          isOpen={isPopupOpen}
-          onClose={() => setIsPopupOpen(false)}
-          title={selectedCompany?.companyName || 'Company Details'}
-        >
-        </PopupBox>
-      )}
-      {isEditPopupOpen && (
-        <EditCompanyPopup
-          isOpen={isEditPopupOpen}
-          company={selectedCompany}
-          onClose={() => setIsEditPopupOpen(false)}
-          onUpdate={handleUpdate}
+    <Suspense fallback={<Loading />}>
+      <div className="container mx-auto p-4">
+        <h2 className="text-2xl font-semibold mb-4">List of Companies</h2>
+        <SearchBox
+          placeholder="Search companies..."
+          items={companyData.map((company) => company.companyName)}
+          onSearch={handleSearch}
         />
-      )}
-    </div>
+        <Tables
+          headers={[
+            "Sl No",
+            "Company Name",
+            "Phone Number",
+            "Email",
+            "Consignee",
+            "Group",
+            "Quality Parameter",
+            "Mandi License",
+            "Status",
+            "Actions",
+          ]}
+          rows={rows}
+        />
+        {isPopupOpen && (
+          <PopupBox
+            isOpen={isPopupOpen}
+            onClose={() => setIsPopupOpen(false)}
+            title={selectedCompany?.companyName || "Company Details"}
+          ></PopupBox>
+        )}
+        {isEditPopupOpen && (
+          <EditCompanyPopup
+            isOpen={isEditPopupOpen}
+            company={selectedCompany}
+            onClose={() => setIsEditPopupOpen(false)}
+            onUpdate={handleUpdate}
+          />
+        )}
+      </div>
+    </Suspense>
   );
 };
 
