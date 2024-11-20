@@ -77,7 +77,7 @@ const ListCommodity = () => {
     commodity.name || "N/A",
     commodity.hsnCode || "N/A",
     Array.isArray(commodity.parameters)
-      ? commodity.parameters.join(", ")
+      ? commodity.parameters.map((param) => param.parameter).join(", ")
       : "N/A",
     commodity.activeStatus ? "Active" : "Inactive",
     <Actions
