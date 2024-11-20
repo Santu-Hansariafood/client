@@ -2,7 +2,7 @@ import { useState, useEffect, lazy, Suspense } from "react";
 import axios from "axios";
 const Tables = lazy(() => import("../../../common/Tables/Tables"));
 const Actions = lazy(() => import("../../../common/Actions/Actions"));
-const SearchBox = lazy(() => import("'../../../common/SearchBox/SearchBox"));
+const SearchBox = lazy(() => import("../../../common/SearchBox/SearchBox"));
 const PopupBox = lazy(() => import("../../../common/PopupBox/PopupBox"));
 const EditCompanyPopup = lazy(() =>
   import("../EditCompanyPopup/EditCompanyPopup")
@@ -38,8 +38,10 @@ const ListCompany = () => {
   const handleSearch = (searchTerm) => {
     const lowercasedSearchTerm = searchTerm.toLowerCase();
     setFilteredData(
-      companyData.filter((company) =>
-        company.companyName.toLowerCase().includes(lowercasedSearchTerm)
+      companyData.filter(
+        (company) =>
+          company.companyName.toLowerCase().includes(lowercasedSearchTerm) ||
+          company.companyPhone.toLowerCase().includes(lowercasedSearchTerm)
       )
     );
   };

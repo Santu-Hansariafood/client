@@ -31,7 +31,7 @@ const AddBuyer = () => {
         const response = await axios.get("http://localhost:5000/api/companies");
         const sortedCompanies = response.data
           .map((company) => ({
-            value: company._id,
+            value: company.companyName,
             label: company.companyName,
           }))
           .sort((a, b) => a.label.localeCompare(b.label));
@@ -48,7 +48,7 @@ const AddBuyer = () => {
         );
         const sortedCommodities = response.data
           .map((commodity) => ({
-            value: commodity._id,
+            value: commodity.name,
             label: commodity.name,
           }))
           .sort((a, b) => a.label.localeCompare(b.label));

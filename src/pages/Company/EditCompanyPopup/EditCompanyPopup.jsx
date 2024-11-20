@@ -4,7 +4,6 @@ import axios from "axios";
 import { toast } from "react-toastify";
 
 const EditCompanyPopup = ({ company, isOpen, onClose, onUpdate }) => {
-
   const [formData, setFormData] = useState(company || {});
 
   useEffect(() => {
@@ -34,13 +33,19 @@ const EditCompanyPopup = ({ company, isOpen, onClose, onUpdate }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     try {
+      // Make an API call to update the database
       const response = await axios.put(
         `http://localhost:5000/api/companies/${formData._id}`,
         formData
       );
-      onUpdate(response.data);
-      toast.success("Company updated successfully");
+
+      // Update the parent component state with the updated company data
+      onUpdate(response.data); // Pass the updated data to the parent
+      toast.success("Company updated successfully in the database");
+
+      // Close the popup
       onClose();
     } catch (error) {
       console.error("Error updating company:", error);
@@ -55,7 +60,7 @@ const EditCompanyPopup = ({ company, isOpen, onClose, onUpdate }) => {
           className="text-gray-500 hover:text-gray-800 mb-2"
           onClick={onClose}
         >
-          Close
+          X
         </button>
         <form onSubmit={handleSubmit}>
           <div className="space-y-4">

@@ -28,11 +28,10 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
       );
       onUpdate(response.data);
       toast.success("Buyer updated successfully");
-      onClose();
     } catch (error) {
-      toast.error("Failed to update buyer data");
-      console.error("Error updating buyer data:", error);
-    }
+      console.error("Error updating buyer:", error.response || error.message);
+      toast.error("Failed to update buyer");
+    }    
   };
 
   return (
