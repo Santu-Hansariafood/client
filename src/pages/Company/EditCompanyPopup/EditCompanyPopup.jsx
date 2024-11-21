@@ -104,7 +104,7 @@ const EditCompanyPopup = ({ company, isOpen, onClose, onUpdate }) => {
           className="text-gray-500 hover:text-gray-800 mb-2"
           onClick={onClose}
         >
-          X
+          ✖
         </button>
         <form onSubmit={handleSubmit}>
           <div className="grid grid-cols-2 gap-4">

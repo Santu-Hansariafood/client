@@ -8,14 +8,14 @@ import {
 import { AuthProvider, useAuth } from "./context/AuthContext/AuthContext";
 
 import Loading from "./common/Loading/Loading";
+import PrivateLayout from "./layouts/PrivateLayout";
+
 import "./App.css";
 
-const Sidebar = lazy(() => import("./components/Sidebar/Sidebar"));
 const Login = lazy(() => import("./pages/Login/Login"));
 const Dashboard = lazy(() => import("./pages/Dashboard/Dashboard"));
 const AddBuyer = lazy(() => import("./pages/Buyer/AddBuyer/AddBuyer"));
 const ListBuyer = lazy(() => import("./pages/Buyer/BuyerList/BuyerList"));
-
 const AddCommodity = lazy(() =>
   import("./pages/Commodity/AddCommodity/AddCommodity")
 );
@@ -47,7 +47,11 @@ const ListQualityParameter = lazy(() =>
 
 const PrivateRoute = ({ children }) => {
   const { isAuthenticated } = useAuth();
-  return isAuthenticated ? children : <Navigate to="/login" />;
+  return isAuthenticated ? (
+    <PrivateLayout>{children}</PrivateLayout>
+  ) : (
+    <Navigate to="/login" replace />
+  );
 };
 
 const App = () => {
@@ -63,12 +67,7 @@ const App = () => {
               path="/dashboard"
               element={
                 <PrivateRoute>
-                  <div className="flex">
-                    <Sidebar />
-                    <div className="flex-1 p-4">
-                      <Dashboard />
-                    </div>
-                  </div>
+                  <Dashboard />
                 </PrivateRoute>
               }
             />
@@ -78,12 +77,7 @@ const App = () => {
               path="/buyer/add"
               element={
                 <PrivateRoute>
-                  <div className="flex">
-                    <Sidebar />
-                    <div className="flex-1 p-4">
-                      <AddBuyer />
-                    </div>
-                  </div>
+                  <AddBuyer />
                 </PrivateRoute>
               }
             />
@@ -91,12 +85,7 @@ const App = () => {
               path="/buyer/list"
               element={
                 <PrivateRoute>
-                  <div className="flex">
-                    <Sidebar />
-                    <div className="flex-1 p-4">
-                      <ListBuyer />
-                    </div>
-                  </div>
+                  <ListBuyer />
                 </PrivateRoute>
               }
             />
@@ -106,12 +95,7 @@ const App = () => {
               path="/group-of-company/add"
               element={
                 <PrivateRoute>
-                  <div className="flex">
-                    <Sidebar />
-                    <div className="flex-1 p-4">
-                      <AddGroupOfCompany />
-                    </div>
-                  </div>
+                  <AddGroupOfCompany />
                 </PrivateRoute>
               }
             />
@@ -119,12 +103,7 @@ const App = () => {
               path="/group-of-company/list"
               element={
                 <PrivateRoute>
-                  <div className="flex">
-                    <Sidebar />
-                    <div className="flex-1 p-4">
-                      <ListGroupOfCompany />
-                    </div>
-                  </div>
+                  <ListGroupOfCompany />
                 </PrivateRoute>
               }
             />
@@ -134,12 +113,7 @@ const App = () => {
               path="/company/add"
               element={
                 <PrivateRoute>
-                  <div className="flex">
-                    <Sidebar />
-                    <div className="flex-1 p-4">
-                      <AddCompany />
-                    </div>
-                  </div>
+                  <AddCompany />
                 </PrivateRoute>
               }
             />
@@ -147,12 +121,7 @@ const App = () => {
               path="/company/list"
               element={
                 <PrivateRoute>
-                  <div className="flex">
-                    <Sidebar />
-                    <div className="flex-1 p-4">
-                      <ListCompany />
-                    </div>
-                  </div>
+                  <ListCompany />
                 </PrivateRoute>
               }
             />
@@ -162,12 +131,7 @@ const App = () => {
               path="/consignee/add"
               element={
                 <PrivateRoute>
-                  <div className="flex">
-                    <Sidebar />
-                    <div className="flex-1 p-4">
-                      <AddConsignee />
-                    </div>
-                  </div>
+                  <AddConsignee />
                 </PrivateRoute>
               }
             />
@@ -175,12 +139,7 @@ const App = () => {
               path="/consignee/list"
               element={
                 <PrivateRoute>
-                  <div className="flex">
-                    <Sidebar />
-                    <div className="flex-1 p-4">
-                      <ListConsignee />
-                    </div>
-                  </div>
+                  <ListConsignee />
                 </PrivateRoute>
               }
             />
@@ -190,12 +149,7 @@ const App = () => {
               path="/commodity/add"
               element={
                 <PrivateRoute>
-                  <div className="flex">
-                    <Sidebar />
-                    <div className="flex-1 p-4">
-                      <AddCommodity />
-                    </div>
-                  </div>
+                  <AddCommodity />
                 </PrivateRoute>
               }
             />
@@ -203,12 +157,7 @@ const App = () => {
               path="/commodity/list"
               element={
                 <PrivateRoute>
-                  <div className="flex">
-                    <Sidebar />
-                    <div className="flex-1 p-4">
-                      <ListCommodity />
-                    </div>
-                  </div>
+                  <ListCommodity />
                 </PrivateRoute>
               }
             />
@@ -218,12 +167,7 @@ const App = () => {
               path="/quality-parameter/add"
               element={
                 <PrivateRoute>
-                  <div className="flex">
-                    <Sidebar />
-                    <div className="flex-1 p-4">
-                      <AddQualityParameter />
-                    </div>
-                  </div>
+                  <AddQualityParameter />
                 </PrivateRoute>
               }
             />
@@ -231,12 +175,7 @@ const App = () => {
               path="/quality-parameter/list"
               element={
                 <PrivateRoute>
-                  <div className="flex">
-                    <Sidebar />
-                    <div className="flex-1 p-4">
-                      <ListQualityParameter />
-                    </div>
-                  </div>
+                  <ListQualityParameter />
                 </PrivateRoute>
               }
             />
