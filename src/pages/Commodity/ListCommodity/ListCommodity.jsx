@@ -1,6 +1,7 @@
 import { useState, useEffect, lazy, Suspense } from "react";
 import axios from "axios";
 import Loading from "../../../common/Loading/Loading";
+
 const Tables = lazy(() => import("../../../common/Tables/Tables"));
 const Actions = lazy(() => import("../../../common/Actions/Actions"));
 const SearchBox = lazy(() => import("../../../common/SearchBox/SearchBox"));
@@ -30,13 +31,10 @@ const ListCommodity = () => {
         setFilteredCommodities(sortedCommodities);
       } catch (error) {
         console.error("Error fetching commodities:", error);
-        setCommodities([]);
-        setFilteredCommodities([]);
       } finally {
         setIsLoading(false);
       }
     };
-
     fetchCommodities();
   }, []);
 
@@ -68,8 +66,18 @@ const ListCommodity = () => {
     setIsEditPopupOpen(true);
   };
 
-  const handleDelete = (id) => {
-    console.log("Deleting commodity with ID:", id);
+  const handleDelete = async (id) => {
+    try {
+      await axios.delete(`http://localhost:5000/api/commodities/${id}`);
+      setCommodities((prev) =>
+        prev.filter((commodity) => commodity._id !== id)
+      );
+      setFilteredCommodities((prev) =>
+        prev.filter((commodity) => commodity._id !== id)
+      );
+    } catch (error) {
+      console.error("Error deleting commodity:", error);
+    }
   };
 
   const tableRows = filteredCommodities.map((commodity, index) => [
@@ -97,10 +105,6 @@ const ListCommodity = () => {
     "Actions",
   ];
 
-  if (isLoading) {
-    return <Loading />;
-  }
-
   return (
     <Suspense fallback={<Loading />}>
       <div className="container mx-auto p-6">
@@ -108,7 +112,6 @@ const ListCommodity = () => {
           <h2 className="text-2xl font-semibold mb-6 text-center">
             Commodity List
           </h2>
-
           <div className="mb-6 flex justify-between items-center">
             <SearchBox
               placeholder="Search Commodities"
@@ -116,19 +119,17 @@ const ListCommodity = () => {
               onSearch={handleSearch}
             />
           </div>
-
           {filteredCommodities.length > 0 ? (
             <Tables headers={tableHeaders} rows={tableRows} />
           ) : (
             <p>No commodities found.</p>
           )}
-
           <PopupBox
             isOpen={isPopupOpen}
             onClose={() => setIsPopupOpen(false)}
             title="Commodity Details"
           >
-            {selectedCommodity ? (
+            {selectedCommodity && (
               <div>
                 <p>
                   <strong>Name:</strong> {selectedCommodity.name || "N/A"}
@@ -139,8 +140,10 @@ const ListCommodity = () => {
                 </p>
                 <p>
                   <strong>Parameters:</strong>{" "}
-                  {Array.isArray(selectedCommodity.parameters)
-                    ? selectedCommodity.parameters.join(", ")
+                  {selectedCommodity.parameters
+                    ? selectedCommodity.parameters
+                        .map((param) => param.parameter)
+                        .join(", ")
                     : "N/A"}
                 </p>
                 <p>
@@ -148,11 +151,8 @@ const ListCommodity = () => {
                   {selectedCommodity.activeStatus ? "Active" : "Inactive"}
                 </p>
               </div>
-            ) : (
-              <Loading />
             )}
           </PopupBox>
-
           {isEditPopupOpen && (
             <EditCommodityPopup
               isOpen={isEditPopupOpen}
