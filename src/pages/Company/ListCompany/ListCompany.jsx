@@ -1,22 +1,27 @@
 import { useState, useEffect, lazy, Suspense } from "react";
 import axios from "axios";
+import { toast } from "react-toastify";
+import Loading from "../../../common/Loading/Loading";
 const Tables = lazy(() => import("../../../common/Tables/Tables"));
 const Actions = lazy(() => import("../../../common/Actions/Actions"));
 const SearchBox = lazy(() => import("../../../common/SearchBox/SearchBox"));
+const Pagination = lazy(()=>import("../../../common/Paginations/Paginations"))
 const PopupBox = lazy(() => import("../../../common/PopupBox/PopupBox"));
 const EditCompanyPopup = lazy(() =>
   import("../EditCompanyPopup/EditCompanyPopup")
 );
-import { toast } from "react-toastify";
-import Loading from "../../../common/Loading/Loading";
 
 const ListCompany = () => {
   const [companyData, setCompanyData] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [isEditPopupOpen, setIsEditPopupOpen] = useState(false);
   const [selectedCompany, setSelectedCompany] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
+  // Fetch company data on component mount
   useEffect(() => {
     const fetchCompanyData = async () => {
       try {
@@ -35,32 +40,44 @@ const ListCompany = () => {
     fetchCompanyData();
   }, []);
 
-  const handleSearch = (searchTerm) => {
+  // Handle search logic
+  useEffect(() => {
     const lowercasedSearchTerm = searchTerm.toLowerCase();
-    setFilteredData(
-      companyData.filter(
-        (company) =>
-          company.companyName.toLowerCase().includes(lowercasedSearchTerm) ||
-          company.companyPhone.toLowerCase().includes(lowercasedSearchTerm)
-      )
+    const filtered = companyData.filter(
+      (company) =>
+        company.companyName.toLowerCase().includes(lowercasedSearchTerm) ||
+        company.companyPhone.toLowerCase().includes(lowercasedSearchTerm)
     );
-  };
+    setFilteredData(filtered);
+    setCurrentPage(1); // Reset to the first page after a search
+  }, [searchTerm, companyData]);
 
+  // Paginate data
+  const paginatedData = filteredData.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  // View company details
   const handleView = (index) => {
-    setSelectedCompany(filteredData[index]);
+    setSelectedCompany(paginatedData[index]);
     setIsPopupOpen(true);
   };
 
+  // Edit company details
   const handleEdit = (index) => {
-    setSelectedCompany(filteredData[index]);
+    setSelectedCompany(paginatedData[index]);
     setIsEditPopupOpen(true);
   };
 
+  // Delete a company
   const handleDelete = async (index) => {
-    const companyId = filteredData[index]._id;
+    const companyId = paginatedData[index]._id;
     try {
       await axios.delete(`http://localhost:5000/api/companies/${companyId}`);
-      const updatedData = filteredData.filter((_, i) => i !== index);
+      const updatedData = filteredData.filter(
+        (company) => company._id !== companyId
+      );
       setFilteredData(updatedData);
       setCompanyData(updatedData);
       toast.success("Company deleted successfully");
@@ -70,6 +87,7 @@ const ListCompany = () => {
     }
   };
 
+  // Update company data after editing
   const handleUpdate = (updatedCompany) => {
     const updatedList = companyData.map((company) =>
       company._id === updatedCompany._id ? updatedCompany : company
@@ -78,8 +96,9 @@ const ListCompany = () => {
     setFilteredData(updatedList);
   };
 
-  const rows = filteredData.map((company, index) => [
-    index + 1,
+  // Prepare table rows
+  const rows = paginatedData.map((company, index) => [
+    (currentPage - 1) * itemsPerPage + index + 1,
     company.companyName,
     company.companyPhone,
     company.companyEmail,
@@ -107,9 +126,8 @@ const ListCompany = () => {
       <div className="container mx-auto p-4">
         <h2 className="text-2xl font-semibold mb-4">List of Companies</h2>
         <SearchBox
-          placeholder="Search companies..."
-          items={companyData.map((company) => company.companyName)}
-          onSearch={handleSearch}
+          placeholder="Search companies by name or phone..."
+          onSearch={(term) => setSearchTerm(term)}
         />
         <Tables
           headers={[
@@ -126,12 +144,39 @@ const ListCompany = () => {
           ]}
           rows={rows}
         />
+        <Pagination
+          currentPage={currentPage}
+          totalItems={filteredData.length}
+          itemsPerPage={itemsPerPage}
+          onPageChange={(page) => setCurrentPage(page)}
+        />
         {isPopupOpen && (
           <PopupBox
             isOpen={isPopupOpen}
             onClose={() => setIsPopupOpen(false)}
             title={selectedCompany?.companyName || "Company Details"}
-          ></PopupBox>
+          >
+            {selectedCompany && (
+              <div>
+                <p><strong>Company Name:</strong> {selectedCompany.companyName}</p>
+                <p><strong>Phone:</strong> {selectedCompany.companyPhone}</p>
+                <p><strong>Email:</strong> {selectedCompany.companyEmail}</p>
+                <p><strong>Consignee:</strong> {selectedCompany.consignee.join(", ")}</p>
+                <p><strong>Group:</strong> {selectedCompany.group}</p>
+                <h4 className="mt-4 font-semibold">Commodities:</h4>
+                <ul>
+                  {selectedCompany.commodities.map((commodity) => (
+                    <li key={commodity._id}>
+                      <strong>{commodity.name}</strong>:{" "}
+                      {commodity.parameters
+                        .map((param) => `${param.parameter}: ${param.value}`)
+                        .join(", ")}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </PopupBox>
         )}
         {isEditPopupOpen && (
           <EditCompanyPopup

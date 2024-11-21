@@ -2,15 +2,44 @@ import PropTypes from "prop-types";
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
+import DataInput from "../../../common/DataInput/DataInput";
+import DataDropdown from "../../../common/DataDropdown/DataDropdown";
 
 const EditCompanyPopup = ({ company, isOpen, onClose, onUpdate }) => {
   const [formData, setFormData] = useState(company || {});
+  const [consignees, setConsignees] = useState([]);
+  const [commodities, setCommodities] = useState([]);
+  const [qualityParameters, setQualityParameters] = useState([]);
+  const [groups, setGroups] = useState([]);
 
   useEffect(() => {
     if (company) {
       setFormData(company);
     }
   }, [company]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [consigneeRes, commodityRes, parameterRes, groupRes] =
+          await Promise.all([
+            axios.get("http://localhost:5000/api/consignees"),
+            axios.get("http://localhost:5000/api/commodities"),
+            axios.get("http://localhost:5000/api/quality-parameters"),
+            axios.get("http://localhost:5000/api/groups"),
+          ]);
+        setConsignees(consigneeRes.data);
+        setCommodities(commodityRes.data);
+        setQualityParameters(parameterRes.data);
+        setGroups(groupRes.data);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        toast.error("Failed to load required data.");
+      }
+    };
+
+    fetchData();
+  }, []);
 
   if (!isOpen || !formData) return null;
 
@@ -19,15 +48,34 @@ const EditCompanyPopup = ({ company, isOpen, onClose, onUpdate }) => {
     setFormData({ ...formData, [name]: value });
   };
 
-  const handleArrayChange = (index, field, value) => {
-    const updatedConsignee = [...formData.consignee];
-    updatedConsignee[index] = value;
-    setFormData({ ...formData, consignee: updatedConsignee });
+  const handleArrayChange = (field, value) => {
+    setFormData({ ...formData, [field]: value });
   };
 
-  const handleCommodityChange = (index, paramIndex, field, value) => {
+  const handleCommodityChange = (selectedOptions) => {
+    const selectedCommodities = selectedOptions.map((option) => ({
+      name: option.label,
+      _id: option.value,
+      parameters: [],
+    }));
+    setFormData({ ...formData, commodities: selectedCommodities });
+  };
+
+  const handleParameterChange = (commodityIndex, selectedOptions) => {
     const updatedCommodities = [...formData.commodities];
-    updatedCommodities[index].parameters[paramIndex][field] = value;
+    updatedCommodities[commodityIndex].parameters = selectedOptions.map(
+      (option) => ({
+        parameter: option.label,
+        _id: option.value,
+        value: "",
+      })
+    );
+    setFormData({ ...formData, commodities: updatedCommodities });
+  };
+
+  const handleParameterValueChange = (commodityIndex, parameterIndex, value) => {
+    const updatedCommodities = [...formData.commodities];
+    updatedCommodities[commodityIndex].parameters[parameterIndex].value = value;
     setFormData({ ...formData, commodities: updatedCommodities });
   };
 
@@ -35,27 +83,23 @@ const EditCompanyPopup = ({ company, isOpen, onClose, onUpdate }) => {
     e.preventDefault();
 
     try {
-      // Make an API call to update the database
       const response = await axios.put(
         `http://localhost:5000/api/companies/${formData._id}`,
         formData
       );
 
-      // Update the parent component state with the updated company data
-      onUpdate(response.data); // Pass the updated data to the parent
-      toast.success("Company updated successfully in the database");
-
-      // Close the popup
+      onUpdate(response.data);
+      toast.success("Company updated successfully.");
       onClose();
     } catch (error) {
       console.error("Error updating company:", error);
-      toast.error("Failed to update company");
+      toast.error("Failed to update company.");
     }
   };
 
   return (
     <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex justify-center items-center z-50">
-      <div className="bg-white p-6 rounded-lg shadow-md w-1/2 overflow-auto max-h-screen">
+      <div className="bg-white p-6 rounded-lg shadow-md w-3/4 overflow-auto max-h-screen">
         <button
           className="text-gray-500 hover:text-gray-800 mb-2"
           onClick={onClose}
@@ -63,127 +107,133 @@ const EditCompanyPopup = ({ company, isOpen, onClose, onUpdate }) => {
           X
         </button>
         <form onSubmit={handleSubmit}>
-          <div className="space-y-4">
-            <div>
-              <label className="block font-semibold">Company Name</label>
-              <input
-                type="text"
-                name="companyName"
-                value={formData.companyName || ""}
-                onChange={handleChange}
-                className="w-full p-2 border rounded"
-              />
-            </div>
-            <div>
-              <label className="block font-semibold">Phone Number</label>
-              <input
-                type="text"
-                name="companyPhone"
-                value={formData.companyPhone || ""}
-                onChange={handleChange}
-                className="w-full p-2 border rounded"
-              />
-            </div>
-            <div>
-              <label className="block font-semibold">Email</label>
-              <input
-                type="email"
-                name="companyEmail"
-                value={formData.companyEmail || ""}
-                onChange={handleChange}
-                className="w-full p-2 border rounded"
-              />
-            </div>
-            <div>
-              <label className="block font-semibold">Consignee</label>
-              {formData.consignee?.map((consignee, index) => (
-                <input
-                  key={index}
-                  type="text"
-                  value={consignee}
-                  onChange={(e) =>
-                    handleArrayChange(index, "consignee", e.target.value)
-                  }
-                  className="w-full p-2 border rounded mb-2"
-                />
-              ))}
-            </div>
-            <div>
-              <label className="block font-semibold">Group</label>
-              <input
-                type="text"
-                name="group"
-                value={formData.group || ""}
-                onChange={handleChange}
-                className="w-full p-2 border rounded"
-              />
-            </div>
-            <div>
+          <div className="grid grid-cols-2 gap-4">
+            <DataInput
+              placeholder="Company Name"
+              value={formData.companyName || ""}
+              onChange={handleChange}
+              name="companyName"
+              required
+            />
+            <DataDropdown
+              options={groups.map((group) => ({
+                value: group.groupName,
+                label: group.groupName,
+              }))}
+              selectedOptions={{
+                value: formData.group?.groupName,
+                label: formData.group?.groupName || "Select Group",
+              }}
+              onChange={(selectedOption) =>
+                setFormData({ ...formData, group: { _id: selectedOption.value, groupName: selectedOption.label } })
+              }
+              placeholder="Select Group"
+            />
+            <DataDropdown
+              options={consignees.map((consignee) => ({
+                value: consignee.name,
+                label: consignee.name,
+              }))}
+              selectedOptions={
+                formData.consignee?.map((id) => {
+                  const consignee = consignees.find((c) => c._id === id);
+                  return { value: id, label: consignee?.name || "" };
+                }) || []
+              }
+              isMulti
+              onChange={(selectedOptions) =>
+                handleArrayChange(
+                  "consignee",
+                  selectedOptions.map((option) => option.value)
+                )
+              }
+              placeholder="Select Consignees"
+            />
+            <DataInput
+              placeholder="Phone Numbers (comma-separated)"
+              value={formData.companyPhone || ""}
+              onChange={handleChange}
+              name="companyPhone"
+            />
+            <DataInput
+              placeholder="Emails (comma-separated)"
+              value={formData.companyEmail || ""}
+              onChange={handleChange}
+              name="companyEmail"
+              inputType="email"
+            />
+            <div className="col-span-2">
               <label className="block font-semibold">Commodities</label>
-              {formData.commodities?.map((commodity, index) => (
-                <div key={index} className="border p-2 rounded mb-2">
+              <DataDropdown
+                options={commodities.map((commodity) => ({
+                  value: commodity.name,
+                  label: commodity.name,
+                }))}
+                selectedOptions={
+                  formData.commodities?.map((commodity) => ({
+                    value: commodity.name,
+                    label: commodity.name,
+                  })) || []
+                }
+                isMulti
+                onChange={handleCommodityChange}
+                placeholder="Select Commodities"
+              />
+              {formData.commodities?.map((commodity, commodityIndex) => (
+                <div key={commodityIndex} className="border p-4 mt-2 rounded">
                   <p>
                     <strong>{commodity.name}</strong>
                   </p>
+                  <label className="block mt-2 font-semibold">
+                    Quality Parameters
+                  </label>
+                  <DataDropdown
+                    options={qualityParameters.map((param) => ({
+                      value: param.name,
+                      label: param.name,
+                    }))}
+                    selectedOptions={
+                      commodity.parameters?.map((param) => ({
+                        value: param.parameter,
+                        label: param.parameter,
+                      })) || []
+                    }
+                    isMulti
+                    onChange={(selectedOptions) =>
+                      handleParameterChange(commodityIndex, selectedOptions)
+                    }
+                    placeholder="Select Quality Parameters"
+                  />
                   {commodity.parameters.map((param, paramIndex) => (
-                    <div key={paramIndex}>
-                      <label className="block">
-                        Parameter: {param.parameter}
-                      </label>
-                      <input
-                        type="text"
+                    <div
+                      key={paramIndex}
+                      className="flex items-center gap-4 mt-2"
+                    >
+                      <p className="flex-1">{param.parameter}</p>
+                      <DataInput
+                        placeholder="Value"
                         value={param.value || ""}
                         onChange={(e) =>
-                          handleCommodityChange(
-                            index,
+                          handleParameterValueChange(
+                            commodityIndex,
                             paramIndex,
-                            "value",
                             e.target.value
                           )
                         }
-                        className="w-full p-2 border rounded mb-2"
+                        className="flex-1"
                       />
                     </div>
                   ))}
                 </div>
               ))}
             </div>
-            <div>
-              <label className="block font-semibold">Mandi License</label>
-              <input
-                type="text"
-                name="mandiLicense"
-                value={formData.mandiLicense || "N/A"}
-                onChange={handleChange}
-                className="w-full p-2 border rounded"
-              />
-            </div>
-            <div>
-              <label className="block font-semibold">Status</label>
-              <select
-                name="activeStatus"
-                value={formData.activeStatus ? "Active" : "Inactive"}
-                onChange={(e) =>
-                  handleChange({
-                    target: {
-                      name: "activeStatus",
-                      value: e.target.value === "Active",
-                    },
-                  })
-                }
-                className="w-full p-2 border rounded"
-              >
-                <option value="Active">Active</option>
-                <option value="Inactive">Inactive</option>
-              </select>
-            </div>
-            <button
-              type="submit"
-              className="mt-4 bg-green-500 text-white px-4 py-2 rounded"
-            >
-              Save Changes
-            </button>
           </div>
+          <button
+            type="submit"
+            className="mt-4 bg-green-500 text-white px-4 py-2 rounded"
+          >
+            Save Changes
+          </button>
         </form>
       </div>
     </div>
