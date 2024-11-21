@@ -1,5 +1,7 @@
+import PropTypes from "prop-types";
 import { useState, useEffect } from "react";
 import axios from "axios";
+import { toast } from "react-toastify";
 
 const EditCommodityPopup = ({ isOpen, onClose, commodityId, onUpdate }) => {
   const [commodity, setCommodity] = useState(null);
@@ -42,11 +44,14 @@ const EditCommodityPopup = ({ isOpen, onClose, commodityId, onUpdate }) => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setCommodity({ ...commodity, [name]: value });
+    setCommodity((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleAddParameter = () => {
-    if (!newQuality) return;
+    if (!newQuality) {
+      alert("Please select a quality parameter to add.");
+      return;
+    }
 
     const selectedQuality = qualityOptions.find(
       (option) => option._id === newQuality
@@ -57,33 +62,42 @@ const EditCommodityPopup = ({ isOpen, onClose, commodityId, onUpdate }) => {
       { parameter: selectedQuality.name, _id: newQuality },
     ];
 
-    setCommodity({ ...commodity, parameters: updatedParameters });
+    setCommodity((prev) => ({ ...prev, parameters: updatedParameters }));
     setNewQuality("");
   };
 
   const handleEditParameter = (index, value) => {
-    const updatedParameters = [...commodity.parameters];
+    const updatedParameters = [...(commodity.parameters || [])];
     updatedParameters[index].parameter = value;
-    setCommodity({ ...commodity, parameters: updatedParameters });
+    setCommodity((prev) => ({ ...prev, parameters: updatedParameters }));
   };
 
   const handleRemoveParameter = (index) => {
-    const updatedParameters = commodity.parameters.filter(
-      (_, i) => i !== index
-    );
-    setCommodity({ ...commodity, parameters: updatedParameters });
+    if (
+      window.confirm("Are you sure you want to remove this quality parameter?")
+    ) {
+      const updatedParameters = commodity.parameters.filter(
+        (_, i) => i !== index
+      );
+      setCommodity((prev) => ({ ...prev, parameters: updatedParameters }));
+    }
   };
 
   const handleSave = async () => {
+    setIsLoading(true);
     try {
       await axios.put(
         `http://localhost:5000/api/commodities/${commodityId}`,
         commodity
       );
       onUpdate();
+      toast.success("Commodity updated successfully!");
       onClose();
     } catch (error) {
       console.error("Error updating commodity:", error);
+      toast.error("Failed to update commodity. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -104,27 +118,30 @@ const EditCommodityPopup = ({ isOpen, onClose, commodityId, onUpdate }) => {
           commodity && (
             <>
               <div className="mb-4">
-                <label>Name:</label>
+                <label className="block font-medium">Name:</label>
                 <input
                   type="text"
                   name="name"
                   value={commodity.name || ""}
                   onChange={handleChange}
                   className="w-full border px-2 py-1 rounded"
+                  placeholder="Enter commodity name"
+                  required
                 />
               </div>
               <div className="mb-4">
-                <label>HSN Code:</label>
+                <label className="block font-medium">HSN Code:</label>
                 <input
                   type="text"
                   name="hsnCode"
                   value={commodity.hsnCode || ""}
                   onChange={handleChange}
                   className="w-full border px-2 py-1 rounded"
+                  placeholder="Enter HSN Code"
                 />
               </div>
               <div className="mb-4">
-                <label>Quality Parameters:</label>
+                <label className="block font-medium">Quality Parameters:</label>
                 <ul className="list-disc pl-5">
                   {commodity.parameters?.map((param, index) => (
                     <li key={index} className="mb-2 flex items-center">
@@ -135,10 +152,11 @@ const EditCommodityPopup = ({ isOpen, onClose, commodityId, onUpdate }) => {
                           handleEditParameter(index, e.target.value)
                         }
                         className="border px-2 py-1 rounded w-full"
+                        placeholder="Parameter name"
                       />
                       <button
                         onClick={() => handleRemoveParameter(index)}
-                        className="ml-2 text-red-500"
+                        className="ml-2 text-red-500 hover:text-red-700"
                       >
                         Remove
                       </button>
@@ -169,11 +187,17 @@ const EditCommodityPopup = ({ isOpen, onClose, commodityId, onUpdate }) => {
               <div className="flex justify-end">
                 <button
                   onClick={handleSave}
-                  className="bg-blue-500 text-white px-4 py-2 rounded"
+                  className={`bg-blue-500 text-white px-4 py-2 rounded ${
+                    isLoading ? "opacity-50 cursor-not-allowed" : ""
+                  }`}
+                  disabled={isLoading}
                 >
-                  Save
+                  {isLoading ? "Saving..." : "Save"}
                 </button>
-                <button onClick={onClose} className="ml-4 text-gray-500">
+                <button
+                  onClick={onClose}
+                  className="ml-4 text-gray-500 hover:text-gray-700"
+                >
                   Cancel
                 </button>
               </div>
@@ -183,6 +207,13 @@ const EditCommodityPopup = ({ isOpen, onClose, commodityId, onUpdate }) => {
       </div>
     </div>
   );
+};
+
+EditCommodityPopup.propTypes = {
+  isOpen: PropTypes.bool.isRequired,
+  onClose: PropTypes.func.isRequired,
+  onUpdate: PropTypes.func.isRequired,
+  commodityId: PropTypes.string.isRequired,
 };
 
 export default EditCommodityPopup;

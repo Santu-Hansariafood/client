@@ -67,17 +67,20 @@ const BuyerList = () => {
   };
 
   const handleUpdate = (updatedBuyer) => {
-    setBuyersData((prev) =>
-      prev.map((buyer) =>
+    // Update buyersData and filteredData with the edited buyer
+    const updateDataList = (list) =>
+      list.map((buyer) =>
         buyer._id === updatedBuyer._id ? updatedBuyer : buyer
-      )
-    );
-    setFilteredData((prev) =>
-      prev.map((buyer) =>
-        buyer._id === updatedBuyer._id ? updatedBuyer : buyer
-      )
-    );
+      );
+  
+    setBuyersData(updateDataList(buyersData));
+    setFilteredData(updateDataList(filteredData));
+  
+    // Close the edit popup and provide feedback
+    setIsEditPopupOpen(false);
+    toast.success("Buyer updated successfully");
   };
+  
 
   const lastItemIndex = currentPage * itemsPerPage;
   const firstItemIndex = lastItemIndex - itemsPerPage;
