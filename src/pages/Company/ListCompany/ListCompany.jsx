@@ -5,7 +5,9 @@ import Loading from "../../../common/Loading/Loading";
 const Tables = lazy(() => import("../../../common/Tables/Tables"));
 const Actions = lazy(() => import("../../../common/Actions/Actions"));
 const SearchBox = lazy(() => import("../../../common/SearchBox/SearchBox"));
-const Pagination = lazy(()=>import("../../../common/Paginations/Paginations"))
+const Pagination = lazy(() =>
+  import("../../../common/Paginations/Paginations")
+);
 const PopupBox = lazy(() => import("../../../common/PopupBox/PopupBox"));
 const EditCompanyPopup = lazy(() =>
   import("../EditCompanyPopup/EditCompanyPopup")
@@ -21,7 +23,6 @@ const ListCompany = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
-  // Fetch company data on component mount
   useEffect(() => {
     const fetchCompanyData = async () => {
       try {
@@ -40,7 +41,6 @@ const ListCompany = () => {
     fetchCompanyData();
   }, []);
 
-  // Handle search logic
   useEffect(() => {
     const lowercasedSearchTerm = searchTerm.toLowerCase();
     const filtered = companyData.filter(
@@ -49,28 +49,24 @@ const ListCompany = () => {
         company.companyPhone.toLowerCase().includes(lowercasedSearchTerm)
     );
     setFilteredData(filtered);
-    setCurrentPage(1); // Reset to the first page after a search
+    setCurrentPage(1);
   }, [searchTerm, companyData]);
 
-  // Paginate data
   const paginatedData = filteredData.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
 
-  // View company details
   const handleView = (index) => {
     setSelectedCompany(paginatedData[index]);
     setIsPopupOpen(true);
   };
 
-  // Edit company details
   const handleEdit = (index) => {
     setSelectedCompany(paginatedData[index]);
     setIsEditPopupOpen(true);
   };
 
-  // Delete a company
   const handleDelete = async (index) => {
     const companyId = paginatedData[index]._id;
     try {
@@ -87,7 +83,6 @@ const ListCompany = () => {
     }
   };
 
-  // Update company data after editing
   const handleUpdate = (updatedCompany) => {
     const updatedList = companyData.map((company) =>
       company._id === updatedCompany._id ? updatedCompany : company
@@ -96,7 +91,6 @@ const ListCompany = () => {
     setFilteredData(updatedList);
   };
 
-  // Prepare table rows
   const rows = paginatedData.map((company, index) => [
     (currentPage - 1) * itemsPerPage + index + 1,
     company.companyName,
@@ -158,11 +152,22 @@ const ListCompany = () => {
           >
             {selectedCompany && (
               <div>
-                <p><strong>Company Name:</strong> {selectedCompany.companyName}</p>
-                <p><strong>Phone:</strong> {selectedCompany.companyPhone}</p>
-                <p><strong>Email:</strong> {selectedCompany.companyEmail}</p>
-                <p><strong>Consignee:</strong> {selectedCompany.consignee.join(", ")}</p>
-                <p><strong>Group:</strong> {selectedCompany.group}</p>
+                <p>
+                  <strong>Company Name:</strong> {selectedCompany.companyName}
+                </p>
+                <p>
+                  <strong>Phone:</strong> {selectedCompany.companyPhone}
+                </p>
+                <p>
+                  <strong>Email:</strong> {selectedCompany.companyEmail}
+                </p>
+                <p>
+                  <strong>Consignee:</strong>{" "}
+                  {selectedCompany.consignee.join(", ")}
+                </p>
+                <p>
+                  <strong>Group:</strong> {selectedCompany.group}
+                </p>
                 <h4 className="mt-4 font-semibold">Commodities:</h4>
                 <ul>
                   {selectedCompany.commodities.map((commodity) => (

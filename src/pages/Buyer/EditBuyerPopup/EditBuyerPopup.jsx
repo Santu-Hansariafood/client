@@ -88,6 +88,7 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
         <button
           className="absolute top-3 right-3 text-gray-700 hover:text-red-500 font-bold text-lg"
           onClick={onClose}
+          title="Close"
         >
           ✖
         </button>
@@ -107,7 +108,7 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
             <div>
               <label className="block font-semibold">Password</label>
               <input
-                type="password"
+                type="text"
                 name="password"
                 value={formData.password || ""}
                 onChange={handleChange}

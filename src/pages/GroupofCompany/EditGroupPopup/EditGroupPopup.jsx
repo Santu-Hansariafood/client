@@ -1,8 +1,10 @@
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import PropTypes from "prop-types";
 import axios from "axios";
 import { toast } from "react-toastify";
+const DataInput = lazy(() => import("../../../common/DataInput/DataInput"));
 import "react-toastify/dist/ReactToastify.css";
+import Loading from "../../../common/Loading/Loading";
 
 const EditGroupPopup = ({ isOpen, group, onClose, onUpdate }) => {
   const [formData, setFormData] = useState({
@@ -38,39 +40,41 @@ const EditGroupPopup = ({ isOpen, group, onClose, onUpdate }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-      <div className="bg-white rounded-lg shadow-lg p-6 w-96 relative">
-        <button
-          onClick={onClose}
-          className="absolute top-2 right-2 text-gray-500 hover:text-red-500"
-        >
-          &#x2715;
-        </button>
+    <Suspense fallback={<Loading />}>
+      <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+        <div className="bg-white rounded-lg shadow-lg p-6 w-96 relative">
+          <button
+            onClick={onClose}
+            className="absolute top-2 right-2 text-gray-500 hover:text-red-500"
+          >
+            ✖
+          </button>
+          <h3 className="text-xl font-semibold mb-4 text-center">Edit Group</h3>
 
-        <h3 className="text-xl font-semibold mb-4">Edit Group</h3>
-        <label className="block mb-2">
-          Group Name
-          <input
-            type="text"
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Edit Group Name
+          </label>
+          <DataInput
             name="groupName"
+            placeholder="Enter Group Name"
             value={formData.groupName}
             onChange={handleChange}
-            className="block w-full mt-1 border rounded px-2 py-1"
           />
-        </label>
-        <div className="mt-4 flex justify-end space-x-2">
-          <button
-            onClick={handleSubmit}
-            className="bg-blue-500 text-white px-4 py-2 rounded"
-          >
-            Save
-          </button>
-          <button onClick={onClose} className="bg-gray-300 px-4 py-2 rounded">
-            Cancel
-          </button>
+
+          <div className="mt-4 flex justify-end space-x-2">
+            <button
+              onClick={handleSubmit}
+              className="bg-blue-500 text-white px-4 py-2 rounded"
+            >
+              Save
+            </button>
+            <button onClick={onClose} className="bg-gray-300 px-4 py-2 rounded">
+              Cancel
+            </button>
+          </div>
         </div>
       </div>
-    </div>
+    </Suspense>
   );
 };
 
