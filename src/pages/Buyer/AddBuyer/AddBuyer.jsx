@@ -1,10 +1,12 @@
-import { useState, useEffect, lazy, Suspense} from "react";
+import { useState, useEffect, lazy, Suspense } from "react";
 import axios from "axios";
 import { toast, ToastContainer } from "react-toastify";
 import Loading from "../../../common/Loading/Loading";
-const DataInput = lazy(()=>import("../../../common/DataInput/DataInput"));
-const DataDropdown = lazy(()=>import("../../../common/DataDropdown/DataDropdown"));
-const Buttons = lazy(()=>import("../../../common/Buttons/Buttons"));
+const DataInput = lazy(() => import("../../../common/DataInput/DataInput"));
+const DataDropdown = lazy(() =>
+  import("../../../common/DataDropdown/DataDropdown")
+);
+const Buttons = lazy(() => import("../../../common/Buttons/Buttons"));
 
 import regexPatterns from "../../../utils/regexPatterns/regexPatterns";
 import { FaPlus, FaTrash } from "react-icons/fa";
@@ -19,25 +21,31 @@ const AddBuyer = () => {
     password: "",
     commodity: [],
     status: "",
+    consignee: [],
   });
 
   const [errors, setErrors] = useState({});
   const [companyOptions, setCompanyOptions] = useState([]);
   const [commodityOptions, setCommodityOptions] = useState([]);
+  const [consigneeOptions, setConsigneeOptions] = useState([]);
 
   useEffect(() => {
     const fetchCompanies = async () => {
       try {
         const response = await axios.get("http://localhost:5000/api/companies");
-        const sortedCompanies = response.data
-          .map((company) => ({
-            value: company.companyName,
-            label: company.companyName,
-          }))
-          .sort((a, b) => a.label.localeCompare(b.label));
+        console.log("Fetched Companies:", response.data);
+
+        const sortedCompanies = response.data.map((company) => ({
+          value: company.companyName,
+          label: company.companyName,
+          consignees: company.consignee || [],
+        }));
+
+        console.log("Transformed Companies:", sortedCompanies);
         setCompanyOptions(sortedCompanies);
       } catch (error) {
-        toast.error("Failed to load companies. Please try again.", error);
+        console.error("Error fetching companies:", error);
+        toast.error("Failed to load companies. Please try again.");
       }
     };
 
@@ -46,12 +54,14 @@ const AddBuyer = () => {
         const response = await axios.get(
           "http://localhost:5000/api/commodities"
         );
+
         const sortedCommodities = response.data
           .map((commodity) => ({
             value: commodity.name,
             label: commodity.name,
           }))
           .sort((a, b) => a.label.localeCompare(b.label));
+
         setCommodityOptions(sortedCommodities);
       } catch (error) {
         toast.error("Failed to load commodities. Please try again.", error);
@@ -113,10 +123,31 @@ const AddBuyer = () => {
   };
 
   const handleDropdownChange = (selectedOption, actionMeta) => {
-    setFormData({
-      ...formData,
-      [actionMeta.name]: selectedOption,
-    });
+    if (actionMeta.name === "companyName") {
+      const selectedCompany = companyOptions.find(
+        (company) => company.value === selectedOption?.value
+      );
+
+      console.log("Selected Company:", selectedCompany);
+
+      setConsigneeOptions(
+        selectedCompany?.consignees.map((consignee) => ({
+          value: consignee,
+          label: consignee,
+        })) || []
+      );
+
+      setFormData({
+        ...formData,
+        companyName: selectedOption,
+        consignee: [],
+      });
+    } else {
+      setFormData({
+        ...formData,
+        [actionMeta.name]: selectedOption,
+      });
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -161,182 +192,192 @@ const AddBuyer = () => {
 
   return (
     <>
-    <Suspense fallback={<Loading />}>
-    <div className="max-w-2xl mx-auto p-6 border rounded-lg shadow-lg bg-white">
-      <h2 className="text-2xl font-semibold mb-6 text-center">Add Buyer</h2>
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-          <div>
-            <label className="block text-gray-700 mb-2" htmlFor="name">
-              Name
-            </label>
-            <DataInput
-              name="name"
-              placeholder="Enter Name"
-              value={formData.name}
-              onChange={handleInputChange}
-              required
-            />
-            {errors.name && (
-              <p className="text-red-500 text-sm">{errors.name}</p>
-            )}
-          </div>
-          <div>
-            <label className="block text-gray-700 mb-2" htmlFor="companyName">
-              Company Name
-            </label>
-            <DataDropdown
-              name="companyName"
-              options={companyOptions}
-              selectedOptions={formData.companyName}
-              onChange={(selected) =>
-                handleDropdownChange(selected, { name: "companyName" })
-              }
-              placeholder="Select Company"
-            />
-          </div>
-
-          {/* Mobile with dynamic fields */}
-          <div>
-            <label className="block text-gray-700 mb-2">Mobile</label>
-            {formData.mobile.map((mobile, index) => (
-              <div key={index} className="flex items-center gap-2 mb-2">
+      <Suspense fallback={<Loading />}>
+        <div className="max-w-2xl mx-auto p-6 border rounded-lg shadow-lg bg-white">
+          <h2 className="text-2xl font-semibold mb-6 text-center">Add Buyer</h2>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-gray-700 mb-2" htmlFor="name">
+                  Name
+                </label>
                 <DataInput
-                  name={`mobile-${index}`}
-                  placeholder="Enter Mobile"
-                  inputType="tel"
-                  value={mobile}
-                  onChange={(e) => handleInputChange(e, index, "mobile")}
-                  required
-                  maxLength="10"
-                  minLength="10"
-                />
-                {formData.mobile.length > 1 && (
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveField("mobile", index)}
-                    className="text-red-500"
-                  >
-                    <FaTrash />
-                  </button>
-                )}
-              </div>
-            ))}
-            <button
-              type="button"
-              onClick={() => handleAddField("mobile")}
-              className="text-blue-500 flex items-center mt-2"
-            >
-              <FaPlus className="mr-1" /> Add Mobile
-            </button>
-            {errors.mobile && (
-              <p className="text-red-500 text-sm">{errors.mobile}</p>
-            )}
-          </div>
-
-          {/* Email with dynamic fields */}
-          <div>
-            <label className="block text-gray-700 mb-2">Email</label>
-            {formData.email.map((email, index) => (
-              <div key={index} className="flex items-center gap-2 mb-2">
-                <DataInput
-                  name={`email-${index}`}
-                  placeholder="Enter Email"
-                  inputType="email"
-                  value={email}
-                  onChange={(e) => handleInputChange(e, index, "email")}
+                  name="name"
+                  placeholder="Enter Name"
+                  value={formData.name}
+                  onChange={handleInputChange}
                   required
                 />
-                {formData.email.length > 1 && (
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveField("email", index)}
-                    className="text-red-500"
-                  >
-                    <FaTrash />
-                  </button>
+                {errors.name && (
+                  <p className="text-red-500 text-sm">{errors.name}</p>
                 )}
               </div>
-            ))}
-            <button
-              type="button"
-              onClick={() => handleAddField("email")}
-              className="text-blue-500 flex items-center mt-2"
-            >
-              <FaPlus className="mr-1" /> Add Email
-            </button>
-            {errors.email && (
-              <p className="text-red-500 text-sm">{errors.email}</p>
-            )}
-          </div>
+              <div>
+                <label
+                  className="block text-gray-700 mb-2"
+                  htmlFor="companyName"
+                >
+                  Company Name
+                </label>
+                <DataDropdown
+                  name="companyName"
+                  options={companyOptions}
+                  selectedOptions={formData.companyName}
+                  onChange={(selected) =>
+                    handleDropdownChange(selected, { name: "companyName" })
+                  }
+                  placeholder="Select Company"
+                />
+              </div>
+              <div>
+                <label className="block text-gray-700 mb-2">Mobile</label>
+                {formData.mobile.map((mobile, index) => (
+                  <div key={index} className="flex items-center gap-2 mb-2">
+                    <DataInput
+                      name={`mobile-${index}`}
+                      placeholder="Enter Mobile"
+                      inputType="tel"
+                      value={mobile}
+                      onChange={(e) => handleInputChange(e, index, "mobile")}
+                      required
+                      maxLength="10"
+                      minLength="10"
+                    />
+                    {formData.mobile.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveField("mobile", index)}
+                        className="text-red-500"
+                      >
+                        <FaTrash />
+                      </button>
+                    )}
+                  </div>
+                ))}
+                <button
+                  type="button"
+                  onClick={() => handleAddField("mobile")}
+                  className="text-blue-500 flex items-center mt-2"
+                >
+                  <FaPlus className="mr-1" /> Add Mobile
+                </button>
+                {errors.mobile && (
+                  <p className="text-red-500 text-sm">{errors.mobile}</p>
+                )}
+              </div>
+              <div>
+                <label className="block text-gray-700 mb-2">Email</label>
+                {formData.email.map((email, index) => (
+                  <div key={index} className="flex items-center gap-2 mb-2">
+                    <DataInput
+                      name={`email-${index}`}
+                      placeholder="Enter Email"
+                      inputType="email"
+                      value={email}
+                      onChange={(e) => handleInputChange(e, index, "email")}
+                      required
+                    />
+                    {formData.email.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveField("email", index)}
+                        className="text-red-500"
+                      >
+                        <FaTrash />
+                      </button>
+                    )}
+                  </div>
+                ))}
+                <button
+                  type="button"
+                  onClick={() => handleAddField("email")}
+                  className="text-blue-500 flex items-center mt-2"
+                >
+                  <FaPlus className="mr-1" /> Add Email
+                </button>
+                {errors.email && (
+                  <p className="text-red-500 text-sm">{errors.email}</p>
+                )}
+              </div>
+              <div>
+                <label className="block text-gray-700 mb-2" htmlFor="password">
+                  Password
+                </label>
+                <DataInput
+                  name="password"
+                  placeholder="Enter Password"
+                  inputType="password"
+                  value={formData.password}
+                  onChange={handleInputChange}
+                  required
+                  minLength="4"
+                  maxLength="25"
+                />
+              </div>
+              <div>
+                <label className="block text-gray-700 mb-2" htmlFor="commodity">
+                  Commodity
+                </label>
+                <DataDropdown
+                  name="commodity"
+                  options={commodityOptions}
+                  selectedOptions={formData.commodity}
+                  onChange={(selected) =>
+                    handleDropdownChange(selected, { name: "commodity" })
+                  }
+                  placeholder="Select Commodity"
+                  isMulti
+                />
+              </div>
+              <div>
+                <label className="block text-gray-700 mb-2" htmlFor="consignee">
+                  Consignee
+                </label>
+                <DataDropdown
+                  name="consignee"
+                  options={consigneeOptions}
+                  selectedOptions={formData.consignee}
+                  onChange={(selected) =>
+                    handleDropdownChange(selected, { name: "consignee" })
+                  }
+                  placeholder="Select Consignee"
+                  isMulti
+                />
+              </div>
+              <div>
+                <label className="block text-gray-700 mb-2" htmlFor="status">
+                  Status
+                </label>
+                <DataDropdown
+                  name="status"
+                  options={statusOptions}
+                  selectedOptions={formData.status}
+                  onChange={(selected) =>
+                    handleDropdownChange(selected, { name: "status" })
+                  }
+                  placeholder="Select Status"
+                />
+              </div>
+            </div>
 
-          {/* Company Name */}
-
-          {/* Password */}
-          <div>
-            <label className="block text-gray-700 mb-2" htmlFor="password">
-              Password
-            </label>
-            <DataInput
-              name="password"
-              placeholder="Enter Password"
-              inputType="password"
-              value={formData.password}
-              onChange={handleInputChange}
-              required
-              minLength="4"
-              maxLength="25"
-            />
-          </div>
-
-          {/* Commodity */}
-          <div>
-            <label className="block text-gray-700 mb-2" htmlFor="commodity">
-              Commodity
-            </label>
-            <DataDropdown
-              name="commodity"
-              options={commodityOptions}
-              selectedOptions={formData.commodity}
-              onChange={(selected) =>
-                handleDropdownChange(selected, { name: "commodity" })
-              }
-              placeholder="Select Commodity"
-              isMulti
-            />
-          </div>
-
-          {/* Status */}
-          <div>
-            <label className="block text-gray-700 mb-2" htmlFor="status">
-              Status
-            </label>
-            <DataDropdown
-              name="status"
-              options={statusOptions}
-              selectedOptions={formData.status}
-              onChange={(selected) =>
-                handleDropdownChange(selected, { name: "status" })
-              }
-              placeholder="Select Status"
-            />
-          </div>
+            <div className="flex justify-end">
+              <Buttons
+                label="Submit"
+                type="submit"
+                variant="primary"
+                size="md"
+              />
+            </div>
+          </form>
+          <ToastContainer
+            position="top-right"
+            autoClose={3000}
+            hideProgressBar
+            closeOnClick
+            pauseOnHover
+          />
         </div>
-
-        {/* Submit Button */}
-        <div className="flex justify-end">
-          <Buttons label="Submit" type="submit" variant="primary" size="md" />
-        </div>
-      </form>
-      <ToastContainer
-        position="top-right"
-        autoClose={3000}
-        hideProgressBar
-        closeOnClick
-        pauseOnHover
-      />
-    </div>
-</Suspense>
+      </Suspense>
     </>
   );
 };

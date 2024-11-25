@@ -1,5 +1,8 @@
 import { useState, useEffect, lazy, Suspense } from "react";
 import axios from "axios";
+import { toast } from "react-toastify";
+import Loading from "../../../common/Loading/Loading";
+
 const Tables = lazy(() => import("../../../common/Tables/Tables"));
 const Actions = lazy(() => import("../../../common/Actions/Actions"));
 const SearchBox = lazy(() => import("../../../common/SearchBox/SearchBox"));
@@ -7,9 +10,9 @@ const Pagination = lazy(() =>
   import("../../../common/Paginations/Paginations")
 );
 const PopupBox = lazy(() => import("../../../common/PopupBox/PopupBox"));
-const EditBuyerPopup = lazy(() => import("../EditBuyerPopup/EditBuyerPopup"));
-import { toast } from "react-toastify";
-import Loading from "../../../common/Loading/Loading";
+const EditBuyerPopup = lazy(() =>
+  import("../EditBuyerPopup/EditBuyerPopup")
+);
 
 const BuyerList = () => {
   const [buyersData, setBuyersData] = useState([]);
@@ -20,6 +23,7 @@ const BuyerList = () => {
   const [isEditPopupOpen, setIsEditPopupOpen] = useState(false);
   const itemsPerPage = 10;
 
+  // Fetch Buyers Data
   useEffect(() => {
     const fetchBuyersData = async () => {
       try {
@@ -37,51 +41,51 @@ const BuyerList = () => {
     fetchBuyersData();
   }, []);
 
-  const handleSearch = (filteredItems) => {
+  // Filter Buyers Based on Search Input
+  const handleSearch = (searchInput) => {
     const filtered = buyersData.filter((buyer) =>
-      filteredItems.some((item) =>
-        Object.values(buyer).some((field) =>
-          String(field).toLowerCase().includes(item.toLowerCase())
-        )
+      Object.values(buyer).some((field) =>
+        String(field).toLowerCase().includes(searchInput.toLowerCase())
       )
     );
     setFilteredData(filtered);
     setCurrentPage(1);
   };
 
+  // Handle Viewing Buyer Details
   const handleView = (index) => {
     setSelectedBuyer(filteredData[index]);
     setIsPopupOpen(true);
   };
 
+  // Handle Editing Buyer Details
   const handleEdit = (index) => {
     setSelectedBuyer(filteredData[index]);
     setIsEditPopupOpen(true);
   };
 
+  // Handle Deleting a Buyer
   const handleDelete = (index) => {
     const updatedData = filteredData.filter((_, i) => i !== index);
-    setFilteredData(updatedData);
     setBuyersData(updatedData);
+    setFilteredData(updatedData);
     toast.success("Buyer deleted successfully");
   };
 
+  // Handle Updating Buyer Details
   const handleUpdate = (updatedBuyer) => {
-    // Update buyersData and filteredData with the edited buyer
-    const updateDataList = (list) =>
+    const updateData = (list) =>
       list.map((buyer) =>
         buyer._id === updatedBuyer._id ? updatedBuyer : buyer
       );
-  
-    setBuyersData(updateDataList(buyersData));
-    setFilteredData(updateDataList(filteredData));
-  
-    // Close the edit popup and provide feedback
+
+    setBuyersData(updateData(buyersData));
+    setFilteredData(updateData(filteredData));
     setIsEditPopupOpen(false);
     toast.success("Buyer updated successfully");
   };
-  
 
+  // Pagination
   const lastItemIndex = currentPage * itemsPerPage;
   const firstItemIndex = lastItemIndex - itemsPerPage;
   const currentItems = filteredData.slice(firstItemIndex, lastItemIndex);
@@ -93,6 +97,7 @@ const BuyerList = () => {
     buyer.email.join(", "),
     buyer.companyName,
     buyer.commodity.join(", "),
+    buyer.consignee.map((c) => c.label).join(", "), // Consignee labels
     buyer.status,
     <Actions
       key={index}
@@ -108,7 +113,7 @@ const BuyerList = () => {
         <h2 className="text-2xl font-semibold mb-4">Buyer List</h2>
         <SearchBox
           placeholder="Search buyers..."
-          items={buyersData.flatMap((buyer) => Object.values(buyer))}
+          items={buyersData}
           onSearch={handleSearch}
         />
         <div className="overflow-x-auto">
@@ -120,11 +125,11 @@ const BuyerList = () => {
               "Email",
               "Company Name",
               "Commodity",
+              "Consignee",
               "Status",
               "Actions",
             ]}
             rows={rows}
-            className="w-full border border-gray-300 text-left bg-white shadow-md rounded-lg overflow-hidden"
           />
         </div>
         <Pagination
@@ -139,7 +144,7 @@ const BuyerList = () => {
           title="Buyer Details"
         >
           {selectedBuyer && (
-            <div className="space-y-4">
+            <div>
               <p>
                 <strong>Name:</strong> {selectedBuyer.name}
               </p>
@@ -154,6 +159,10 @@ const BuyerList = () => {
               </p>
               <p>
                 <strong>Commodity:</strong> {selectedBuyer.commodity.join(", ")}
+              </p>
+              <p>
+                <strong>Consignee:</strong>{" "}
+                {selectedBuyer.consignee.map((c) => c.label).join(", ")}
               </p>
               <p>
                 <strong>Status:</strong> {selectedBuyer.status}
