@@ -16,6 +16,7 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
         email: buyer.email || [""],
         password: buyer.password || "",
         commodity: buyer.commodity || [""],
+        consignee: buyer.consignee || [{ label: "" }],
       });
     }
   }, [buyer]);
@@ -58,8 +59,10 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
     setFormData({ ...formData, [name]: updatedArray });
   };
 
-  const addField = (name) => {
-    setFormData({ ...formData, [name]: [...formData[name], ""] });
+  const addField = (name, defaultValue = "") => {
+    const newValue =
+      name === "consignee" ? { label: defaultValue } : defaultValue;
+    setFormData({ ...formData, [name]: [...formData[name], newValue] });
   };
 
   const removeField = (name, index) => {
@@ -222,6 +225,37 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
                 className="text-blue-500"
               >
                 Add Email
+              </button>
+            </div>
+            <div>
+              <label className="block font-semibold">Consignee</label>
+              {formData.consignee.map((consignee, index) => (
+                <div key={index} className="flex items-center space-x-2 mb-2">
+                  <input
+                    type="text"
+                    value={consignee.label || ""}
+                    onChange={(e) =>
+                      handleArrayChange("consignee", index, {
+                        label: e.target.value,
+                      })
+                    }
+                    className="w-full p-2 border rounded"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => removeField("consignee", index)}
+                    className="p-1 bg-red-500 text-white rounded"
+                  >
+                    ✖
+                  </button>
+                </div>
+              ))}
+              <button
+                type="button"
+                onClick={() => addField("consignee", "")}
+                className="text-blue-500"
+              >
+                Add Consignee
               </button>
             </div>
             <div>

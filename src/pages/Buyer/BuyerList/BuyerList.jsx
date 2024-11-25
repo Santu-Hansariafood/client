@@ -10,9 +10,7 @@ const Pagination = lazy(() =>
   import("../../../common/Paginations/Paginations")
 );
 const PopupBox = lazy(() => import("../../../common/PopupBox/PopupBox"));
-const EditBuyerPopup = lazy(() =>
-  import("../EditBuyerPopup/EditBuyerPopup")
-);
+const EditBuyerPopup = lazy(() => import("../EditBuyerPopup/EditBuyerPopup"));
 
 const BuyerList = () => {
   const [buyersData, setBuyersData] = useState([]);
@@ -23,7 +21,6 @@ const BuyerList = () => {
   const [isEditPopupOpen, setIsEditPopupOpen] = useState(false);
   const itemsPerPage = 10;
 
-  // Fetch Buyers Data
   useEffect(() => {
     const fetchBuyersData = async () => {
       try {
@@ -41,7 +38,6 @@ const BuyerList = () => {
     fetchBuyersData();
   }, []);
 
-  // Filter Buyers Based on Search Input
   const handleSearch = (searchInput) => {
     const filtered = buyersData.filter((buyer) =>
       Object.values(buyer).some((field) =>
@@ -52,27 +48,22 @@ const BuyerList = () => {
     setCurrentPage(1);
   };
 
-  // Handle Viewing Buyer Details
   const handleView = (index) => {
     setSelectedBuyer(filteredData[index]);
     setIsPopupOpen(true);
   };
 
-  // Handle Editing Buyer Details
   const handleEdit = (index) => {
     setSelectedBuyer(filteredData[index]);
     setIsEditPopupOpen(true);
   };
 
-  // Handle Deleting a Buyer
   const handleDelete = (index) => {
     const updatedData = filteredData.filter((_, i) => i !== index);
     setBuyersData(updatedData);
     setFilteredData(updatedData);
     toast.success("Buyer deleted successfully");
   };
-
-  // Handle Updating Buyer Details
   const handleUpdate = (updatedBuyer) => {
     const updateData = (list) =>
       list.map((buyer) =>
@@ -85,7 +76,6 @@ const BuyerList = () => {
     toast.success("Buyer updated successfully");
   };
 
-  // Pagination
   const lastItemIndex = currentPage * itemsPerPage;
   const firstItemIndex = lastItemIndex - itemsPerPage;
   const currentItems = filteredData.slice(firstItemIndex, lastItemIndex);
