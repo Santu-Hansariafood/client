@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import { useState } from "react";
+import axios from "axios";
 import DataInput from "../../../common/DataInput/DataInput";
 import DataDropdown from "../../../common/DataDropdown/DataDropdown";
 import Buttons from "../../../common/Buttons/Buttons";
@@ -9,13 +10,16 @@ import "react-toastify/dist/ReactToastify.css";
 const AddSellerDetails = () => {
   const [sellerName, setSellerName] = useState("");
   const [password, setPassword] = useState("");
-  const [phoneNumbers, setPhoneNumbers] = useState([{ id: Date.now(), value: "" }]);
+  const [phoneNumbers, setPhoneNumbers] = useState([
+    { id: Date.now(), value: "" },
+  ]);
   const [emails, setEmails] = useState([{ id: Date.now(), value: "" }]);
   const [selectedCommodity, setSelectedCommodity] = useState(null);
   const [selectedCompany, setSelectedCompany] = useState(null);
   const [selectedStatus, setSelectedStatus] = useState(null);
 
-  // Dropdown options
+  const apiBaseURL = "http://localhost:5000/api";
+
   const commodityOptions = [
     { value: "commodity1", label: "Commodity 1" },
     { value: "commodity2", label: "Commodity 2" },
@@ -33,7 +37,6 @@ const AddSellerDetails = () => {
     { value: "inactive", label: "Inactive" },
   ];
 
-  // Add and remove handlers for phone numbers and emails
   const addPhoneNumber = () => {
     setPhoneNumbers([...phoneNumbers, { id: Date.now(), value: "" }]);
   };
@@ -44,7 +47,9 @@ const AddSellerDetails = () => {
 
   const handlePhoneChange = (id, value) => {
     setPhoneNumbers(
-      phoneNumbers.map((phone) => (phone.id === id ? { ...phone, value } : phone))
+      phoneNumbers.map((phone) =>
+        phone.id === id ? { ...phone, value } : phone
+      )
     );
   };
 
@@ -57,31 +62,63 @@ const AddSellerDetails = () => {
   };
 
   const handleEmailChange = (id, value) => {
-    setEmails(emails.map((email) => (email.id === id ? { ...email, value } : email)));
+    setEmails(
+      emails.map((email) => (email.id === id ? { ...email, value } : email))
+    );
   };
 
-  // Form submission handler
-  const handleSubmit = () => {
-    // Validate input data before submitting
+  const handleSubmit = async () => {
     if (!sellerName || !password) {
       toast.error("Please fill out the Seller Name and Password.");
       return;
     }
 
-    if (phoneNumbers.some((phone) => !phone.value) || emails.some((email) => !email.value)) {
+    if (
+      phoneNumbers.some((phone) => !phone.value) ||
+      emails.some((email) => !email.value)
+    ) {
       toast.error("Please fill out all phone numbers and email addresses.");
       return;
     }
 
-    toast.success("Seller Details Submitted Successfully!");
+    const payload = {
+      sellerName,
+      password,
+      phoneNumbers: phoneNumbers.map((phone) => ({ value: phone.value })),
+      emails: emails.map((email) => ({ value: email.value })),
+      selectedCommodity: selectedCommodity?.value,
+      selectedCompany: selectedCompany?.value,
+      selectedStatus: selectedStatus?.value,
+    };
+
+    try {
+      const response = await axios.post(`${apiBaseURL}/sellers`, payload);
+      toast.success("Seller details submitted successfully!");
+      resetForm();
+    } catch (error) {
+      toast.error(
+        error.response?.data?.message ||
+          "An error occurred while submitting the form."
+      );
+    }
+  };
+
+  const resetForm = () => {
+    setSellerName("");
+    setPassword("");
+    setPhoneNumbers([{ id: Date.now(), value: "" }]);
+    setEmails([{ id: Date.now(), value: "" }]);
+    setSelectedCommodity(null);
+    setSelectedCompany(null);
+    setSelectedStatus(null);
   };
 
   return (
     <div className="p-4 sm:p-6 md:p-10 lg:p-16 bg-gray-100 flex justify-center items-center">
       <div className="w-full max-w-4xl bg-white rounded-lg shadow-md p-6">
-        <h2 className="text-2xl font-bold mb-4 text-gray-700">Add Seller Details</h2>
-
-        {/* Name Field */}
+        <h2 className="text-2xl font-bold mb-4 text-gray-700">
+          Add Seller Details
+        </h2>
         <div className="mb-4">
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Seller Name
@@ -94,8 +131,6 @@ const AddSellerDetails = () => {
             required
           />
         </div>
-
-        {/* Phone Numbers and Emails */}
         <h3 className="text-lg font-semibold mb-2">Contact Details</h3>
         {phoneNumbers.map((phone, index) => (
           <div key={phone.id} className="flex items-center space-x-4 mb-4">
@@ -117,7 +152,10 @@ const AddSellerDetails = () => {
                 </button>
               )}
               {index > 0 && (
-                <button onClick={() => removePhoneNumber(phone.id)} className="text-red-500 ml-2">
+                <button
+                  onClick={() => removePhoneNumber(phone.id)}
+                  className="text-red-500 ml-2"
+                >
                   <FaMinusCircle size={24} />
                 </button>
               )}
@@ -144,15 +182,16 @@ const AddSellerDetails = () => {
                 </button>
               )}
               {index > 0 && (
-                <button onClick={() => removeEmail(email.id)} className="text-red-500 ml-2">
+                <button
+                  onClick={() => removeEmail(email.id)}
+                  className="text-red-500 ml-2"
+                >
                   <FaMinusCircle size={24} />
                 </button>
               )}
             </div>
           </div>
         ))}
-
-        {/* Commodity and Company Dropdown */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -175,8 +214,6 @@ const AddSellerDetails = () => {
             />
           </div>
         </div>
-
-        {/* Password Field */}
         <div className="mt-4">
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Password
@@ -190,8 +227,6 @@ const AddSellerDetails = () => {
             required
           />
         </div>
-
-        {/* Status Dropdown */}
         <div className="mt-4">
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Status
@@ -202,8 +237,6 @@ const AddSellerDetails = () => {
             onChange={(selected) => setSelectedStatus(selected)}
           />
         </div>
-
-        {/* Submit Button */}
         <div className="mt-6 flex justify-end">
           <Buttons
             label="Submit"
