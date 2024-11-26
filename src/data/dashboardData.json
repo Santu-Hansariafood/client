@@ -2,10 +2,12 @@
   "title": "Hansaria Food Pvt. Ltd.",
   "sections": [
     {
-      "section":"Dashboard",
-      "actions":[
+      "section": "Dashboard",
+      "actions": [
         {
-          "name":"Dashboard", "link":"/dashboard","icon":"FaPlus"
+          "name": "Dashboard",
+          "link": "/dashboard",
+          "icon": "FaTachometerAlt"
         }
       ]
     },
@@ -55,6 +57,22 @@
       "actions": [
         { "name": "Add Quality Parameter", "link": "/quality-parameter/add", "icon": "FaPlus" },
         { "name": "List Quality Parameters", "link": "/quality-parameter/list", "icon": "FaList" }
+      ]
+    },
+    {
+      "section": "Seller Company",
+      "icon": "FaStore",
+      "actions": [
+        { "name": "Add Seller Company", "link": "/seller-company/add", "icon": "FaPlus" },
+        { "name": "Seller Company List", "link": "/seller-company/list", "icon": "FaList" }
+      ]
+    },
+    {
+      "section": "Seller Details",
+      "icon": "FaUserTie",
+      "actions": [
+        { "name": "Add Seller Details", "link": "/seller-details/add", "icon": "FaPlus" },
+        { "name": "Seller Details List", "link": "/seller-details/list", "icon": "FaList" }
       ]
     }
   ]

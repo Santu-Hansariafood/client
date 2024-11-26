@@ -44,6 +44,10 @@ const AddQualityParameter = lazy(() =>
 const ListQualityParameter = lazy(() =>
   import("./pages/QualityParameter/ListQualityParameter/ListQualityParameter")
 );
+const AddSellerDetails = lazy(()=>import("./pages/SellerDetails/AddSellerDetails/AddSellerDetails"))
+const ListSellerDetails = lazy(()=>import("./pages/SellerDetails/ListSellerDetails/ListSellerDetails"))
+const AddSellerCompany = lazy(()=>import("./pages/SellerCompany/AddSellerCompany/AddSellerCompany"))
+const ListSellerCompany = lazy(()=>import("./pages/SellerCompany/ListSellerCompany/ListSellerCompany"))
 
 const PrivateRoute = ({ children }) => {
   const { isAuthenticated } = useAuth();
@@ -179,6 +183,42 @@ const App = () => {
                 </PrivateRoute>
               }
             />
+
+            <Route
+              path="/seller-company/add"
+              element={
+                <PrivateRoute>
+                  <AddSellerCompany />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/seller-company/list"
+              element={
+                <PrivateRoute>
+                  <ListSellerCompany />
+                </PrivateRoute>
+              }
+            />
+
+            <Route
+              path="/seller-details/add"
+              element={
+                <PrivateRoute>
+                  <AddSellerDetails />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/seller-details/list"
+              element={
+                <PrivateRoute>
+<ListSellerDetails />
+                </PrivateRoute>
+              }
+            />
+
+
 
             {/* Default and Fallback Routes */}
             <Route path="/" element={<Navigate to="/login" />} />
