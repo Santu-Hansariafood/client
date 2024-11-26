@@ -8,7 +8,7 @@ import {
 
 const generateCaptcha = () => {
   const chars =
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!~`@#$%^&*()_-+=";
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!~`@#$%^&*(){}[]_-+=";
   const captchaText = Array.from({ length: 6 }, () =>
     chars.charAt(Math.floor(Math.random() * chars.length))
   ).join("");

@@ -7,7 +7,7 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
   const [formData, setFormData] = useState(null);
   const [companies, setCompanies] = useState([]);
   const [commodities, setCommodities] = useState([]);
-  const [consignees, setConsignees] = useState([]);  // New state for consignee options
+  const [consignees, setConsignees] = useState([]);
 
   useEffect(() => {
     if (buyer) {
@@ -47,7 +47,6 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
     fetchCommodities();
   }, []);
 
-  // Fetch consignees when a company is selected
   const handleCompanyChange = async (e) => {
     const selectedCompanyName = e.target.value;
     const selectedCompany = companies.find(
@@ -55,9 +54,9 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
     );
 
     if (selectedCompany) {
-      setConsignees(selectedCompany.consignee); // Set the consignee options based on the company
+      setConsignees(selectedCompany.consignee);
     }
-    setFormData({ ...formData, companyName: selectedCompanyName }); // Update the company in the form
+    setFormData({ ...formData, companyName: selectedCompanyName });
   };
 
   if (!isOpen || !formData) return null;
@@ -139,7 +138,7 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
                 <select
                   name="companyName"
                   value={formData.companyName || ""}
-                  onChange={handleCompanyChange} // Updated event handler for company selection
+                  onChange={handleCompanyChange}
                   className="w-full p-2 border rounded"
                 >
                   <option value="">Select Company</option>
@@ -186,63 +185,63 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
                 </button>
               </div>
               <div>
-              <label className="block font-semibold">Mobile</label>
-              {formData.mobile.map((number, index) => (
-                <div key={index} className="flex items-center space-x-2 mb-2">
-                  <input
-                    type="text"
-                    value={number}
-                    onChange={(e) =>
-                      handleArrayChange("mobile", index, e.target.value)
-                    }
-                    className="w-full p-2 border rounded"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => removeField("mobile", index)}
-                    className="p-1 bg-red-500 text-white rounded"
-                  >
-                    ✖
-                  </button>
-                </div>
-              ))}
-              <button
-                type="button"
-                onClick={() => addField("mobile")}
-                className="text-blue-500"
-              >
-                Add Mobile
-              </button>
-            </div>
-            <div>
-              <label className="block font-semibold">Email</label>
-              {formData.email.map((email, index) => (
-                <div key={index} className="flex items-center space-x-2 mb-2">
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) =>
-                      handleArrayChange("email", index, e.target.value)
-                    }
-                    className="w-full p-2 border rounded"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => removeField("email", index)}
-                    className="p-1 bg-red-500 text-white rounded"
-                  >
-                    ✖
-                  </button>
-                </div>
-              ))}
-              <button
-                type="button"
-                onClick={() => addField("email")}
-                className="text-blue-500"
-              >
-                Add Email
-              </button>
-            </div>
+                <label className="block font-semibold">Mobile</label>
+                {formData.mobile.map((number, index) => (
+                  <div key={index} className="flex items-center space-x-2 mb-2">
+                    <input
+                      type="text"
+                      value={number}
+                      onChange={(e) =>
+                        handleArrayChange("mobile", index, e.target.value)
+                      }
+                      className="w-full p-2 border rounded"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeField("mobile", index)}
+                      className="p-1 bg-red-500 text-white rounded"
+                    >
+                      ✖
+                    </button>
+                  </div>
+                ))}
+                <button
+                  type="button"
+                  onClick={() => addField("mobile")}
+                  className="text-blue-500"
+                >
+                  Add Mobile
+                </button>
+              </div>
+              <div>
+                <label className="block font-semibold">Email</label>
+                {formData.email.map((email, index) => (
+                  <div key={index} className="flex items-center space-x-2 mb-2">
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={(e) =>
+                        handleArrayChange("email", index, e.target.value)
+                      }
+                      className="w-full p-2 border rounded"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeField("email", index)}
+                      className="p-1 bg-red-500 text-white rounded"
+                    >
+                      ✖
+                    </button>
+                  </div>
+                ))}
+                <button
+                  type="button"
+                  onClick={() => addField("email")}
+                  className="text-blue-500"
+                >
+                  Add Email
+                </button>
+              </div>
               <div>
                 <label className="block font-semibold">Consignee</label>
                 {formData.consignee.map((consignee, index) => (

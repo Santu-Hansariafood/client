@@ -161,30 +161,31 @@ const EditCompanyPopup = ({ company, isOpen, onClose, onUpdate }) => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Edit Consignees
-                </label>
-                <DataDropdown
-                  options={consignees.map((consignee) => ({
-                    value: consignee._id,
-                    label: consignee.name,
-                  }))}
-                  selectedOptions={
-                    formData.consignee?.map((id) => {
-                      const consignee = consignees.find((c) => c._id === id);
-                      return { value: id, label: consignee?.name || "" };
-                    }) || []
-                  }
-                  isMulti
-                  onChange={(selectedOptions) =>
-                    handleArrayChange(
-                      "consignee",
-                      selectedOptions.map((option) => option.value)
-                    )
-                  }
-                  placeholder="Select Consignees"
-                />
-              </div>
+  <label className="block text-sm font-medium text-gray-700">
+    Edit Consignees
+  </label>
+  <DataDropdown
+    options={consignees.map((consignee) => ({
+      value: consignee.name, // Use the name as the value
+      label: consignee.name, // Display the name in the dropdown
+    }))}
+    selectedOptions={
+      formData.consignee?.map((name) => ({
+        value: name,
+        label: name,
+      })) || []
+    }
+    isMulti
+    onChange={(selectedOptions) =>
+      handleArrayChange(
+        "consignee",
+        selectedOptions.map((option) => option.value) // Directly update names
+      )
+    }
+    placeholder="Select Consignees"
+  />
+</div>
+
 
               <div>
                 <label className="block text-sm font-medium text-gray-700">
