@@ -5,94 +5,165 @@ import FileUpload from "../../../common/FileUpload/FileUpload";
 import Buttons from "../../../common/Buttons/Buttons";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import stateCityData from "../../../data/state-city.json"; // Assuming the JSON is saved locally
+import stateCityData from "../../../data/state-city.json";
+import axios from "axios";
 
 const AddSellerCompany = () => {
   const [companyInfo, setCompanyInfo] = useState({
     companyName: "",
     gstNo: "",
     panNo: "",
-    aadhaarNo: "", // Added Aadhaar Number
+    aadhaarNo: "",
     address: "",
     pinNo: "",
   });
-  const [msme, setMsme] = useState(false);
-  const [msmeDetails, setMsmeDetails] = useState({ msmeNo: "" });
   const [bankDetails, setBankDetails] = useState([
-    { id: Date.now(), accountHolderName: "", accountNumber: "", ifscCode: "", branchName: "" },
+    {
+      id: Date.now(),
+      accountHolderName: "",
+      accountNumber: "",
+      ifscCode: "",
+      branchName: "",
+    },
   ]);
   const [selectedState, setSelectedState] = useState(null);
   const [selectedDistrict, setSelectedDistrict] = useState(null);
   const [districtOptions, setDistrictOptions] = useState([]);
+  const [msme, setMsme] = useState(false);
+  const [msmeDetails, setMsmeDetails] = useState({ msmeNo: "" });
+  const [fileUploads, setFileUploads] = useState({});
 
-  // Handle changes for company info fields
+  const resetForm = () => {
+    setCompanyInfo({
+      companyName: "",
+      gstNo: "",
+      panNo: "",
+      aadhaarNo: "",
+      address: "",
+      pinNo: "",
+    });
+    setBankDetails([
+      {
+        id: Date.now(),
+        accountHolderName: "",
+        accountNumber: "",
+        ifscCode: "",
+        branchName: "",
+      },
+    ]);
+    setSelectedState(null);
+    setSelectedDistrict(null);
+    setDistrictOptions([]);
+    setMsme(false);
+    setMsmeDetails({ msmeNo: "" });
+    setFileUploads({});
+  };
+
   const handleCompanyInfoChange = (e) => {
     const { name, value } = e.target;
     setCompanyInfo((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Handle changes for bank details
   const handleBankDetailChange = (id, name, value) => {
     setBankDetails((prev) =>
       prev.map((bank) => (bank.id === id ? { ...bank, [name]: value } : bank))
     );
   };
 
-  // Add new bank detail form
-  const addBankDetail = () => {
-    setBankDetails([
-      ...bankDetails,
-      { id: Date.now(), accountHolderName: "", accountNumber: "", ifscCode: "", branchName: "" },
-    ]);
+  const handleFileUpload = (name, file) => {
+    setFileUploads((prev) => ({ ...prev, [name]: file }));
   };
 
-  // Remove a bank detail form
-  const removeBankDetail = (id) => {
-    setBankDetails(bankDetails.filter((bank) => bank.id !== id));
-  };
-
-  // Handle state selection to populate district dropdown
   const handleStateChange = (selected) => {
     setSelectedState(selected);
-    const selectedStateData = stateCityData.find((state) => state.state === selected?.value);
+    const stateData = stateCityData.find(
+      (state) => state.state === selected?.value
+    );
     setDistrictOptions(
-      selectedStateData
-        ? selectedStateData.district.map((district) => ({ value: district, label: district }))
-        : []
+      stateData?.district.map((district) => ({
+        value: district,
+        label: district,
+      })) || []
     );
   };
 
-  // Handle form submission
-  const handleSubmit = () => {
-    const isFormValid =
-      companyInfo.companyName &&
-      companyInfo.gstNo &&
-      companyInfo.panNo &&
-      companyInfo.aadhaarNo && // Ensure Aadhaar is filled
-      companyInfo.address &&
-      companyInfo.pinNo &&
-      selectedState &&
-      selectedDistrict &&
-      bankDetails.every((bank) =>
-        ["accountHolderName", "accountNumber", "ifscCode", "branchName"].every((key) =>
-          Boolean(bank[key])
-        )
-      );
+  const addBankDetail = () => {
+    setBankDetails((prev) => [
+      ...prev,
+      {
+        id: Date.now(),
+        accountHolderName: "",
+        accountNumber: "",
+        ifscCode: "",
+        branchName: "",
+      },
+    ]);
+  };
 
-    if (!isFormValid) {
-      toast.error("Please fill out all required fields.");
+  const removeBankDetail = (id) => {
+    setBankDetails((prev) => prev.filter((bank) => bank.id !== id));
+  };
+
+  const handleSubmit = async () => {
+    if (
+      !companyInfo.companyName ||
+      !companyInfo.gstNo ||
+      !companyInfo.panNo ||
+      !companyInfo.address ||
+      !selectedState ||
+      !selectedDistrict ||
+      !bankDetails.every(
+        (bank) =>
+          bank.accountHolderName &&
+          bank.accountNumber &&
+          bank.ifscCode &&
+          bank.branchName
+      )
+    ) {
+      toast.error("Please complete all required fields.");
       return;
     }
 
-    toast.success("Form submitted successfully!");
+    const formData = new FormData();
+
+    // Append form data
+    Object.entries(companyInfo).forEach(([key, value]) =>
+      formData.append(key, value)
+    );
+    formData.append("state", selectedState?.value);
+    formData.append("district", selectedDistrict?.value);
+    formData.append("bankDetails", JSON.stringify(bankDetails));
+    if (msme) formData.append("msmeNo", msmeDetails.msmeNo);
+
+    // Append file uploads
+    Object.entries(fileUploads).forEach(([key, file]) => {
+      if (file) {
+        formData.append(key, file); // Correctly append file data
+      }
+    });
+
+    try {
+      const response = await axios.post(
+        "http://localhost:5000/api/seller-company",
+        formData,
+        {
+          headers: { "Content-Type": "multipart/form-data" },
+        }
+      );
+      toast.success("Seller company added successfully!");
+      resetForm();
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to add seller company. Please try again.");
+    }
   };
 
   return (
     <div className="p-4 sm:p-6 md:p-10 lg:p-16 bg-gray-100 flex justify-center items-center">
       <div className="w-full max-w-4xl bg-white rounded-lg shadow-md p-6">
-        <h2 className="text-2xl font-bold mb-4 text-gray-700">Add Seller Company</h2>
-
-        {/* Basic Company Info */}
+        <h2 className="text-2xl font-bold mb-4 text-gray-700">
+          Add Seller Company
+        </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
           <DataInput
             placeholder="Company Name"
@@ -123,11 +194,12 @@ const AddSellerCompany = () => {
             required
           />
         </div>
-
-        {/* State, District, and PIN */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
           <DataDropdown
-            options={stateCityData.map((state) => ({ value: state.state, label: state.state }))}
+            options={stateCityData.map((state) => ({
+              value: state.state,
+              label: state.state,
+            }))}
             placeholder="Select State"
             onChange={handleStateChange}
           />
@@ -151,8 +223,6 @@ const AddSellerCompany = () => {
             required
           />
         </div>
-
-        {/* Bank Details */}
         <h3 className="text-lg font-semibold mb-2">Bank Details</h3>
         {bankDetails.map((bank, index) => (
           <div key={bank.id} className="mb-4 border p-4 rounded-lg shadow">
@@ -160,25 +230,41 @@ const AddSellerCompany = () => {
               <DataInput
                 placeholder="Account Holder Name"
                 value={bank.accountHolderName}
-                onChange={(e) => handleBankDetailChange(bank.id, "accountHolderName", e.target.value)}
+                onChange={(e) =>
+                  handleBankDetailChange(
+                    bank.id,
+                    "accountHolderName",
+                    e.target.value
+                  )
+                }
                 required
               />
               <DataInput
                 placeholder="Bank Account Number"
                 value={bank.accountNumber}
-                onChange={(e) => handleBankDetailChange(bank.id, "accountNumber", e.target.value)}
+                onChange={(e) =>
+                  handleBankDetailChange(
+                    bank.id,
+                    "accountNumber",
+                    e.target.value
+                  )
+                }
                 required
               />
               <DataInput
                 placeholder="IFSC Code"
                 value={bank.ifscCode}
-                onChange={(e) => handleBankDetailChange(bank.id, "ifscCode", e.target.value)}
+                onChange={(e) =>
+                  handleBankDetailChange(bank.id, "ifscCode", e.target.value)
+                }
                 required
               />
               <DataInput
                 placeholder="Branch Name"
                 value={bank.branchName}
-                onChange={(e) => handleBankDetailChange(bank.id, "branchName", e.target.value)}
+                onChange={(e) =>
+                  handleBankDetailChange(bank.id, "branchName", e.target.value)
+                }
                 required
               />
             </div>
@@ -193,50 +279,58 @@ const AddSellerCompany = () => {
           </div>
         ))}
         <div className="flex justify-end">
-          <Buttons label="Add Bank Detail" onClick={addBankDetail} variant="success" size="sm" />
+          <Buttons
+            label="Add Bank Detail"
+            onClick={addBankDetail}
+            variant="success"
+            size="sm"
+          />
         </div>
-
-        {/* Documents */}
         <h3 className="text-lg font-semibold mb-2 mt-4">Documents</h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
           <FileUpload
             label="Upload Address Proof"
             accept="image/*"
-            onFileChange={(file) => console.log(file)}
+            onFileChange={(file) => handleFileUpload("addressProof", file)}
             minWidth={300}
             minHeight={300}
           />
           <FileUpload
             label="Upload GST Proof"
             accept="image/*"
-            onFileChange={(file) => console.log(file)}
+            onFileChange={(file) => handleFileUpload("gstProof", file)}
             minWidth={300}
             minHeight={300}
           />
           <FileUpload
             label="Upload PAN Proof"
             accept="image/*"
-            onFileChange={(file) => console.log(file)}
+            onFileChange={(file) => handleFileUpload("panProof", file)}
             minWidth={300}
             minHeight={300}
           />
           <FileUpload
             label="Upload Aadhaar Card"
             accept="image/*"
-            onFileChange={(file) => console.log(file)}
+            onFileChange={(file) => handleFileUpload("aadhaarCard", file)}
             minWidth={300}
             minHeight={300}
           />
           <FileUpload
             label="Upload Check Copy"
             accept="image/*"
-            onFileChange={(file) => console.log(file)}
+            onFileChange={(file) => handleFileUpload("checkCopy", file)}
+            minWidth={300}
+            minHeight={300}
+          />
+          <FileUpload
+            label="Upload MSME Copy"
+            accept="image/*"
+            onFileChange={(file) => handleFileUpload("msmeCopy", file)}
             minWidth={300}
             minHeight={300}
           />
         </div>
-
-        {/* MSME */}
         <div className="mb-4">
           <label className="text-gray-700 font-semibold">MSME</label>
           <div className="flex items-center space-x-4 mt-2">
@@ -268,15 +362,16 @@ const AddSellerCompany = () => {
                 name="msmeNo"
                 value={msmeDetails.msmeNo}
                 onChange={(e) =>
-                  setMsmeDetails((prev) => ({ ...prev, msmeNo: e.target.value }))
+                  setMsmeDetails((prev) => ({
+                    ...prev,
+                    msmeNo: e.target.value,
+                  }))
                 }
                 required
               />
             </div>
           )}
         </div>
-
-        {/* Submit Button */}
         <div className="mt-6 flex justify-end">
           <Buttons
             label="Submit"
