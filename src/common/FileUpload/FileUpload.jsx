@@ -38,7 +38,9 @@ const FileUpload = ({ label, accept, onFileChange, minWidth, minHeight }) => {
   const validateAndUpload = () => {
     const { width, height } = croppedAreaPixels || {};
     if (width >= minWidth && height >= minHeight) {
-      onFileChange(file);
+      onFileChange(file); // Pass the file to the parent component
+      setImageSrc(""); // Clear the image preview
+      setFileName(""); // Clear the file name if needed
     } else {
       alert(`Minimum size required is ${minWidth}x${minHeight}px.`);
     }

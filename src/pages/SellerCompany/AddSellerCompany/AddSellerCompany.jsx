@@ -135,10 +135,9 @@ const AddSellerCompany = () => {
     formData.append("bankDetails", JSON.stringify(bankDetails));
     if (msme) formData.append("msmeNo", msmeDetails.msmeNo);
 
-    // Append file uploads
     Object.entries(fileUploads).forEach(([key, file]) => {
       if (file) {
-        formData.append(key, file); // Correctly append file data
+        formData.append(key, file);
       }
     });
 
