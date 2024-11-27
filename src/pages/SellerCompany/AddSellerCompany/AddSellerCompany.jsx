@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import DataInput from "../../../common/DataInput/DataInput";
 import DataDropdown from "../../../common/DataDropdown/DataDropdown";
 import FileUpload from "../../../common/FileUpload/FileUpload";
@@ -126,7 +126,6 @@ const AddSellerCompany = () => {
 
     const formData = new FormData();
 
-    // Append form data
     Object.entries(companyInfo).forEach(([key, value]) =>
       formData.append(key, value)
     );
@@ -164,108 +163,210 @@ const AddSellerCompany = () => {
           Add Seller Company
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-          <DataInput
-            placeholder="Company Name"
-            name="companyName"
-            value={companyInfo.companyName}
-            onChange={handleCompanyInfoChange}
-            required
-          />
-          <DataInput
-            placeholder="GST No"
-            name="gstNo"
-            value={companyInfo.gstNo}
-            onChange={handleCompanyInfoChange}
-            required
-          />
-          <DataInput
-            placeholder="PAN No"
-            name="panNo"
-            value={companyInfo.panNo}
-            onChange={handleCompanyInfoChange}
-            required
-          />
-          <DataInput
-            placeholder="Address"
-            name="address"
-            value={companyInfo.address}
-            onChange={handleCompanyInfoChange}
-            required
-          />
+          <div>
+            <label
+              className="text-gray-700 font-semibold"
+              htmlFor="companyName"
+            >
+              Company Name
+            </label>
+            <DataInput
+              id="companyName"
+              placeholder="Enter Company Name"
+              name="companyName"
+              value={companyInfo.companyName}
+              onChange={handleCompanyInfoChange}
+              required
+              maxLength="50"
+            />
+          </div>
+          <div>
+            <label className="text-gray-700 font-semibold" htmlFor="gstNo">
+              GST No
+            </label>
+            <DataInput
+              id="gstNo"
+              placeholder="Enter GST No"
+              name="gstNo"
+              value={companyInfo.gstNo}
+              onChange={handleCompanyInfoChange}
+              required
+              maxLength="15"
+              minLength="15"
+            />
+          </div>
+          <div>
+            <label className="text-gray-700 font-semibold" htmlFor="panNo">
+              PAN No
+            </label>
+            <DataInput
+              id="panNo"
+              placeholder="Enter PAN No"
+              name="panNo"
+              value={companyInfo.panNo}
+              onChange={handleCompanyInfoChange}
+              required
+              maxLength="10"
+              minLength="10"
+            />
+          </div>
+          <div>
+            <label className="text-gray-700 font-semibold" htmlFor="address">
+              Address
+            </label>
+            <DataInput
+              id="address"
+              placeholder="Enter Address"
+              name="address"
+              value={companyInfo.address}
+              onChange={handleCompanyInfoChange}
+              required
+            />
+          </div>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-          <DataDropdown
-            options={stateCityData.map((state) => ({
-              value: state.state,
-              label: state.state,
-            }))}
-            placeholder="Select State"
-            onChange={handleStateChange}
-          />
-          <DataDropdown
-            options={districtOptions}
-            placeholder="Select District"
-            onChange={(selected) => setSelectedDistrict(selected)}
-          />
-          <DataInput
-            placeholder="PIN No"
-            name="pinNo"
-            value={companyInfo.pinNo}
-            onChange={handleCompanyInfoChange}
-            required
-          />
-          <DataInput
-            placeholder="Aadhaar No/Director"
-            name="aadhaarNo"
-            value={companyInfo.aadhaarNo}
-            onChange={handleCompanyInfoChange}
-            required
-          />
+          <div>
+            <label className="text-gray-700 font-semibold" htmlFor="state">
+              Select State
+            </label>
+            <DataDropdown
+              id="state"
+              options={stateCityData.map((state) => ({
+                value: state.state,
+                label: state.state,
+              }))}
+              placeholder="Select State"
+              onChange={handleStateChange}
+            />
+          </div>
+          <div>
+            <label className="text-gray-700 font-semibold" htmlFor="district">
+              Select District
+            </label>
+            <DataDropdown
+              id="district"
+              options={districtOptions}
+              placeholder="Select District"
+              onChange={(selected) => setSelectedDistrict(selected)}
+            />
+          </div>
+          <div>
+            <label className="text-gray-700 font-semibold" htmlFor="pinNo">
+              PIN No
+            </label>
+            <DataInput
+              id="pinNo"
+              placeholder="Enter PIN No"
+              name="pinNo"
+              value={companyInfo.pinNo}
+              onChange={handleCompanyInfoChange}
+              required
+              maxLength="6"
+              minLength="6"
+            />
+          </div>
+          <div>
+            <label className="text-gray-700 font-semibold" htmlFor="aadhaarNo">
+              Aadhaar No/Director
+            </label>
+            <DataInput
+              id="aadhaarNo"
+              placeholder="Enter Aadhaar No"
+              name="aadhaarNo"
+              value={companyInfo.aadhaarNo}
+              onChange={handleCompanyInfoChange}
+              required
+              maxLength="12"
+              minLength="12"
+            />
+          </div>
         </div>
         <h3 className="text-lg font-semibold mb-2">Bank Details</h3>
         {bankDetails.map((bank, index) => (
           <div key={bank.id} className="mb-4 border p-4 rounded-lg shadow">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-              <DataInput
-                placeholder="Account Holder Name"
-                value={bank.accountHolderName}
-                onChange={(e) =>
-                  handleBankDetailChange(
-                    bank.id,
-                    "accountHolderName",
-                    e.target.value
-                  )
-                }
-                required
-              />
-              <DataInput
-                placeholder="Bank Account Number"
-                value={bank.accountNumber}
-                onChange={(e) =>
-                  handleBankDetailChange(
-                    bank.id,
-                    "accountNumber",
-                    e.target.value
-                  )
-                }
-                required
-              />
-              <DataInput
-                placeholder="IFSC Code"
-                value={bank.ifscCode}
-                onChange={(e) =>
-                  handleBankDetailChange(bank.id, "ifscCode", e.target.value)
-                }
-                required
-              />
-              <DataInput
-                placeholder="Branch Name"
-                value={bank.branchName}
-                onChange={(e) =>
-                  handleBankDetailChange(bank.id, "branchName", e.target.value)
-                }
-                required
-              />
+              <div>
+                <label
+                  className="text-gray-700 font-semibold"
+                  htmlFor={`accountHolderName-${bank.id}`}
+                >
+                  Account Holder Name
+                </label>
+                <DataInput
+                  id={`accountHolderName-${bank.id}`}
+                  placeholder="Enter Account Holder Name"
+                  value={bank.accountHolderName}
+                  onChange={(e) =>
+                    handleBankDetailChange(
+                      bank.id,
+                      "accountHolderName",
+                      e.target.value
+                    )
+                  }
+                  required
+                />
+              </div>
+              <div>
+                <label
+                  className="text-gray-700 font-semibold"
+                  htmlFor={`accountNumber-${bank.id}`}
+                >
+                  Bank Account Number
+                </label>
+                <DataInput
+                  id={`accountNumber-${bank.id}`}
+                  placeholder="Enter Bank Account Number"
+                  value={bank.accountNumber}
+                  onChange={(e) =>
+                    handleBankDetailChange(
+                      bank.id,
+                      "accountNumber",
+                      e.target.value
+                    )
+                  }
+                  required
+                />
+              </div>
+              <div>
+                <label
+                  className="text-gray-700 font-semibold"
+                  htmlFor={`ifscCode-${bank.id}`}
+                >
+                  IFSC Code
+                </label>
+                <DataInput
+                  id={`ifscCode-${bank.id}`}
+                  placeholder="Enter IFSC Code"
+                  value={bank.ifscCode}
+                  onChange={(e) =>
+                    handleBankDetailChange(bank.id, "ifscCode", e.target.value)
+                  }
+                  required
+                  maxLength="10"
+                  minLength="10"
+                />
+              </div>
+              <div>
+                <label
+                  className="text-gray-700 font-semibold"
+                  htmlFor={`branchName-${bank.id}`}
+                >
+                  Branch Name
+                </label>
+                <DataInput
+                  id={`branchName-${bank.id}`}
+                  placeholder="Enter Branch Name"
+                  value={bank.branchName}
+                  onChange={(e) =>
+                    handleBankDetailChange(
+                      bank.id,
+                      "branchName",
+                      e.target.value
+                    )
+                  }
+                  required
+                />
+              </div>
             </div>
             {index > 0 && (
               <Buttons
@@ -277,6 +378,7 @@ const AddSellerCompany = () => {
             )}
           </div>
         ))}
+
         <div className="flex justify-end">
           <Buttons
             label="Add Bank Detail"
@@ -285,7 +387,9 @@ const AddSellerCompany = () => {
             size="sm"
           />
         </div>
-        <h3 className="text-lg font-semibold mb-2 mt-4">Documents</h3>
+        <h3 className="text-lg font-semibold mb-2 mt-4">
+          Upload KYC Documents
+        </h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
           <FileUpload
             label="Upload Address Proof"

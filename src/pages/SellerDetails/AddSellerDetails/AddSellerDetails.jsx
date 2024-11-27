@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import axios from "axios";
 import DataInput from "../../../common/DataInput/DataInput";
 import DataDropdown from "../../../common/DataDropdown/DataDropdown";
@@ -14,28 +14,46 @@ const AddSellerDetails = () => {
     { id: Date.now(), value: "" },
   ]);
   const [emails, setEmails] = useState([{ id: Date.now(), value: "" }]);
+  const [commodityOptions, setCommodityOptions] = useState([]);
+  const [companyOptions, setCompanyOptions] = useState([]);
   const [selectedCommodity, setSelectedCommodity] = useState(null);
   const [selectedCompany, setSelectedCompany] = useState(null);
   const [selectedStatus, setSelectedStatus] = useState(null);
 
   const apiBaseURL = "http://localhost:5000/api";
 
-  const commodityOptions = [
-    { value: "commodity1", label: "Commodity 1" },
-    { value: "commodity2", label: "Commodity 2" },
-    { value: "commodity3", label: "Commodity 3" },
-  ];
-
-  const companyOptions = [
-    { value: "company1", label: "Company 1" },
-    { value: "company2", label: "Company 2" },
-    { value: "company3", label: "Company 3" },
-  ];
-
   const statusOptions = [
     { value: "active", label: "Active" },
     { value: "inactive", label: "Inactive" },
   ];
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [commoditiesRes, companiesRes] = await Promise.all([
+          axios.get(`${apiBaseURL}/commodities`),
+          axios.get(`${apiBaseURL}/seller-company`),
+        ]);
+
+        const commodities = commoditiesRes.data.map((item) => ({
+          value: item.name,
+          label: item.name,
+        }));
+
+        const companies = companiesRes.data.data.map((item) => ({
+          value: item.companyName,
+          label: item.companyName,
+        }));
+
+        setCommodityOptions(commodities.sort((a, b) => a.label.localeCompare(b.label)));
+        setCompanyOptions(companies.sort((a, b) => a.label.localeCompare(b.label)));
+      } catch (error) {
+        toast.error("Failed to load data from the server.");
+      }
+    };
+
+    fetchData();
+  }, []);
 
   const addPhoneNumber = () => {
     setPhoneNumbers([...phoneNumbers, { id: Date.now(), value: "" }]);
@@ -129,6 +147,7 @@ const AddSellerDetails = () => {
             value={sellerName}
             onChange={(e) => setSellerName(e.target.value)}
             required
+            maxLength="50"
           />
         </div>
         <h3 className="text-lg font-semibold mb-2">Contact Details</h3>
@@ -142,6 +161,8 @@ const AddSellerDetails = () => {
                 placeholder="Enter phone number"
                 name={`phoneNumber_${index}`}
                 value={phone.value}
+                maxLength="10"
+                minLength="10"
                 onChange={(e) => handlePhoneChange(phone.id, e.target.value)}
               />
             </div>
@@ -225,6 +246,8 @@ const AddSellerDetails = () => {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
+            minLength="4"
+            maxLength="25"
           />
         </div>
         <div className="mt-4">
