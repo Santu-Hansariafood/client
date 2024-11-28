@@ -8,6 +8,8 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import PopupBox from "../../../common/PopupBox/PopupBox";
 
+import EditSellerDetails from "../EditSellerDetails/EditSellerDetails"; // Import your component
+
 const ListSellerDetails = () => {
   const [data, setData] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
@@ -31,44 +33,12 @@ const ListSellerDetails = () => {
         setData(sortedData);
         setFilteredData(sortedData);
       } catch (error) {
-        toast.error("Failed to fetch seller data");
+        toast.error("Failed to fetch seller data", error);
       }
     };
 
     fetchSellers();
   }, []);
-
-  const handleSearch = (term) => {
-    setSearchTerm(term);
-    if (term) {
-      const lowerCaseTerm = term.toLowerCase();
-      const filtered = data.filter(
-        (item) =>
-          item.sellerName.toLowerCase().includes(lowerCaseTerm) ||
-          item.phoneNumbers.some((phone) =>
-            phone.value.toLowerCase().includes(lowerCaseTerm)
-          )
-      );
-      setFilteredData(filtered);
-      setCurrentPage(1);
-    } else {
-      setFilteredData(data);
-    }
-  };
-
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentItems = filteredData.slice(indexOfFirstItem, indexOfLastItem);
-
-  const handlePageChange = (pageNumber) => {
-    setCurrentPage(pageNumber);
-  };
-
-  const handleViewSeller = (seller) => {
-    setSelectedSeller(seller);
-    setPopupMode("view");
-    setIsPopupOpen(true);
-  };
 
   const handleEditSeller = (seller) => {
     setSelectedSeller(seller);
@@ -76,33 +46,44 @@ const ListSellerDetails = () => {
     setIsPopupOpen(true);
   };
 
+  const handlePopupClose = () => {
+    setIsPopupOpen(false);
+    setSelectedSeller(null);
+  };
+
   const headers = [
     "S.No",
     "Seller Name",
     "Emails",
     "Phone Numbers",
-    "Commodities",
-    "Companies",
+    "Commodity",
+    "Company",
     "Status",
     "Actions",
   ];
-
-  const rows = currentItems.map((item, index) => [
-    indexOfFirstItem + index + 1,
+  const rows = filteredData.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  ).map((item, index) => [
+    (currentPage - 1) * itemsPerPage + index + 1,
     item.sellerName,
     item.emails.map((email) => email.value).join(", "),
     item.phoneNumbers.map((phone) => phone.value).join(", "),
     item.commodities
       .map(
         (commodity) =>
-          `${commodity.name} (Brokerage: ₹${commodity.brokerage} per TON)`
+          `${commodity.name} (Brokerage: ₹${commodity.brokerage} per ton)`
       )
       .join(", "),
     item.selectedCompany.map((company) => company.label).join(", "),
     item.selectedStatus,
     <Actions
       key={item._id}
-      onView={() => handleViewSeller(item)}
+      onView={() => {
+        setSelectedSeller(item);
+        setPopupMode("view");
+        setIsPopupOpen(true);
+      }}
       onEdit={() => handleEditSeller(item)}
       onDelete={() => toast.error(`Delete ${item.sellerName}`)}
     />,
@@ -115,7 +96,17 @@ const ListSellerDetails = () => {
         <SearchBox
           placeholder="Search sellers by name or phone..."
           items={data.map((item) => item.sellerName)}
-          onSearch={handleSearch}
+          onSearch={(term) => {
+            const lowerCaseTerm = term.toLowerCase();
+            const filtered = data.filter(
+              (item) =>
+                item.sellerName.toLowerCase().includes(lowerCaseTerm) ||
+                item.phoneNumbers.some((phone) =>
+                  phone.value.toLowerCase().includes(lowerCaseTerm)
+                )
+            );
+            setFilteredData(filtered);
+          }}
         />
       </div>
       <div className="w-full max-w-4xl bg-white rounded-lg shadow-md">
@@ -126,64 +117,56 @@ const ListSellerDetails = () => {
           currentPage={currentPage}
           totalItems={filteredData.length}
           itemsPerPage={itemsPerPage}
-          onPageChange={handlePageChange}
+          onPageChange={setCurrentPage}
         />
       </div>
 
-      <PopupBox
-        isOpen={isPopupOpen}
-        onClose={() => setIsPopupOpen(false)}
-        title={popupMode === "view" ? "Seller Details" : "Edit Seller Details"}
-      >
-        {selectedSeller && (
-          <div>
-            <p>
-              <strong>Name:</strong> {selectedSeller.sellerName}
-            </p>
-            <p>
-              <strong>Email:</strong>{" "}
-              {selectedSeller.emails.map((email) => email.value).join(", ")}
-            </p>
-            <p>
-              <strong>Phone Numbers:</strong>{" "}
-              {selectedSeller.phoneNumbers
-                .map((phone) => phone.value)
-                .join(", ")}
-            </p>
-            <p>
-              <strong>Commodities:</strong>{" "}
-              {selectedSeller.commodities
-                .map(
-                  (commodity) =>
-                    `${commodity.name} (Brokerage: ₹${commodity.brokerage} per ton)`
-                )
-                .join(", ")}
-            </p>
-            <p>
-              <strong>Companies:</strong>{" "}
-              {selectedSeller.selectedCompany
-                .map((company) => company.label)
-                .join(", ")}
-            </p>
-            <p>
-              <strong>Status:</strong> {selectedSeller.selectedStatus}
-            </p>
-
-            {popupMode === "edit" && (
-              <div className="mt-4">
-                <button
-                  className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-                  onClick={() =>
-                    toast.success("Edit functionality coming soon!")
-                  }
-                >
-                  Save Changes
-                </button>
-              </div>
-            )}
-          </div>
-        )}
-      </PopupBox>
+      {isPopupOpen && (
+        <PopupBox isOpen={isPopupOpen} onClose={handlePopupClose}>
+          {popupMode === "view" && selectedSeller && (
+            <div>
+              <h2 className="text-xl font-bold mb-4">Seller Details</h2>
+              <p>
+                <strong>Name:</strong> {selectedSeller.sellerName}
+              </p>
+              <p>
+                <strong>Email:</strong>{" "}
+                {selectedSeller.emails.map((email) => email.value).join(", ")}
+              </p>
+              <p>
+                <strong>Phone Numbers:</strong>{" "}
+                {selectedSeller.phoneNumbers
+                  .map((phone) => phone.value)
+                  .join(", ")}
+              </p>
+              <p>
+                <strong>Commodities:</strong>{" "}
+                {selectedSeller.commodities
+                  .map(
+                    (commodity) =>
+                      `${commodity.name} (Brokerage: ₹${commodity.brokerage} per ton)`
+                  )
+                  .join(", ")}
+              </p>
+              <p>
+                <strong>Companies:</strong>{" "}
+                {selectedSeller.selectedCompany
+                  .map((company) => company.label)
+                  .join(", ")}
+              </p>
+              <p>
+                <strong>Status:</strong> {selectedSeller.selectedStatus}
+              </p>
+            </div>
+          )}
+          {popupMode === "edit" && selectedSeller && (
+            <EditSellerDetails
+              seller={selectedSeller}
+              onClose={handlePopupClose}
+            />
+          )}
+        </PopupBox>
+      )}
 
       <ToastContainer />
     </div>
