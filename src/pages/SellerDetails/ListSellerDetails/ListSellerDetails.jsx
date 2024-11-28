@@ -31,7 +31,7 @@ const ListSellerDetails = () => {
         setData(sortedData);
         setFilteredData(sortedData);
       } catch (error) {
-        toast.error("Failed to fetch seller data", error);
+        toast.error("Failed to fetch seller data");
       }
     };
 
@@ -81,18 +81,24 @@ const ListSellerDetails = () => {
     "Seller Name",
     "Emails",
     "Phone Numbers",
-    "Commodity",
-    "Company",
+    "Commodities",
+    "Companies",
     "Status",
     "Actions",
   ];
+
   const rows = currentItems.map((item, index) => [
     indexOfFirstItem + index + 1,
     item.sellerName,
     item.emails.map((email) => email.value).join(", "),
     item.phoneNumbers.map((phone) => phone.value).join(", "),
-    item.selectedCommodity,
-    item.selectedCompany,
+    item.commodities
+      .map(
+        (commodity) =>
+          `${commodity.name} (Brokerage: ₹${commodity.brokerage} per TON)`
+      )
+      .join(", "),
+    item.selectedCompany.map((company) => company.label).join(", "),
     item.selectedStatus,
     <Actions
       key={item._id}
@@ -145,10 +151,19 @@ const ListSellerDetails = () => {
                 .join(", ")}
             </p>
             <p>
-              <strong>Commodity:</strong> {selectedSeller.selectedCommodity}
+              <strong>Commodities:</strong>{" "}
+              {selectedSeller.commodities
+                .map(
+                  (commodity) =>
+                    `${commodity.name} (Brokerage: ₹${commodity.brokerage} per ton)`
+                )
+                .join(", ")}
             </p>
             <p>
-              <strong>Company:</strong> {selectedSeller.selectedCompany}
+              <strong>Companies:</strong>{" "}
+              {selectedSeller.selectedCompany
+                .map((company) => company.label)
+                .join(", ")}
             </p>
             <p>
               <strong>Status:</strong> {selectedSeller.selectedStatus}
