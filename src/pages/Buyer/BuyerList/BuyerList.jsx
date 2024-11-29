@@ -39,10 +39,15 @@ const BuyerList = () => {
   }, []);
 
   const handleSearch = (searchInput) => {
-    const filtered = buyersData.filter((buyer) =>
-      Object.values(buyer).some((field) =>
-        String(field).toLowerCase().includes(searchInput.toLowerCase())
-      )
+    const searchLower = searchInput.toLowerCase();
+    const filtered = buyersData.filter(
+      (buyer) =>
+        buyer.name.toLowerCase().includes(searchLower) ||
+        buyer.email.some((email) =>
+          email.toLowerCase().includes(searchLower)
+        ) ||
+        buyer.mobile.some((mobile) => mobile.includes(searchLower)) ||
+        buyer.companyName.toLowerCase().includes(searchLower)
     );
     setFilteredData(filtered);
     setCurrentPage(1);
@@ -58,12 +63,22 @@ const BuyerList = () => {
     setIsEditPopupOpen(true);
   };
 
-  const handleDelete = (index) => {
-    const updatedData = filteredData.filter((_, i) => i !== index);
-    setBuyersData(updatedData);
-    setFilteredData(updatedData);
-    toast.success("Buyer deleted successfully");
+  const handleDelete = async (index) => {
+    const buyerToDelete = filteredData[index];
+    try {
+      await axios.delete(
+        `http://localhost:5000/api/buyers/${buyerToDelete._id}`
+      );
+      const updatedData = filteredData.filter((_, i) => i !== index);
+      setBuyersData(updatedData);
+      setFilteredData(updatedData);
+      toast.success("Buyer deleted successfully");
+    } catch (error) {
+      toast.error("Failed to delete buyer. Please try again.");
+      console.error("Error deleting buyer:", error);
+    }
   };
+
   const handleUpdate = (updatedBuyer) => {
     const updateData = (list) =>
       list.map((buyer) =>
@@ -82,13 +97,16 @@ const BuyerList = () => {
 
   const rows = currentItems.map((buyer, index) => [
     firstItemIndex + index + 1,
-    buyer.name,
-    buyer.mobile.join(", "),
-    buyer.email.join(", "),
-    buyer.companyName,
-    buyer.commodity.join(", "),
-    buyer.consignee.map((c) => c.label).join(", "), // Consignee labels
-    buyer.status,
+    buyer.name || "N/A",
+    buyer.mobile?.join(", ") || "N/A",
+    buyer.email?.join(", ") || "N/A",
+    buyer.companyName || "N/A",
+    buyer.commodity?.join(", ") || "N/A",
+    buyer.consignee?.map((c) => c.label).join(", ") || "N/A",
+    Object.entries(buyer.brokerage || {})
+      .map(([key, value]) => `${key}: ${value}`)
+      .join(", ") || "N/A", // Format brokerage as "Commodity: Value"
+    buyer.status || "N/A",
     <Actions
       key={index}
       onView={() => handleView(index)}
@@ -116,6 +134,7 @@ const BuyerList = () => {
               "Company Name",
               "Commodity",
               "Consignee",
+              "Brokerage(Per Ton)",
               "Status",
               "Actions",
             ]}
@@ -155,11 +174,18 @@ const BuyerList = () => {
                 {selectedBuyer.consignee.map((c) => c.label).join(", ")}
               </p>
               <p>
+                <strong>Brokerage:</strong>{" "}
+                {Object.entries(selectedBuyer.brokerage || {})
+                  .map(([key, value]) => `${key}: ${value} per TON`)
+                  .join(", ")}
+              </p>
+              <p>
                 <strong>Status:</strong> {selectedBuyer.status}
               </p>
             </div>
           )}
         </PopupBox>
+
         <EditBuyerPopup
           buyer={selectedBuyer}
           isOpen={isEditPopupOpen}

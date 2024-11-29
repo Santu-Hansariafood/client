@@ -17,6 +17,7 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
         email: buyer.email || [""],
         password: buyer.password || "",
         commodity: buyer.commodity || [""],
+        brokerage: buyer.brokerage || {},
         consignee: buyer.consignee || [{ label: "" }],
       });
     }
@@ -47,7 +48,7 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
     fetchCommodities();
   }, []);
 
-  const handleCompanyChange = async (e) => {
+  const handleCompanyChange = (e) => {
     const selectedCompanyName = e.target.value;
     const selectedCompany = companies.find(
       (company) => company.companyName === selectedCompanyName
@@ -72,15 +73,24 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
     setFormData({ ...formData, [name]: updatedArray });
   };
 
+  const handleBrokerageChange = (commodity, value) => {
+    const updatedBrokerage = { ...formData.brokerage, [commodity]: value };
+    setFormData({ ...formData, brokerage: updatedBrokerage });
+  };
+
   const addField = (name, defaultValue = "") => {
-    const newValue =
-      name === "consignee" ? { label: defaultValue } : defaultValue;
-    setFormData({ ...formData, [name]: [...formData[name], newValue] });
+    setFormData({ ...formData, [name]: [...formData[name], defaultValue] });
   };
 
   const removeField = (name, index) => {
     const updatedArray = formData[name].filter((_, i) => i !== index);
-    setFormData({ ...formData, [name]: updatedArray });
+    const updatedBrokerage = { ...formData.brokerage };
+
+    if (name === "commodity") {
+      delete updatedBrokerage[formData[name][index]];
+    }
+
+    setFormData({ ...formData, [name]: updatedArray, brokerage: updatedBrokerage });
   };
 
   const handleSubmit = async (e) => {
@@ -113,6 +123,7 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
           <form onSubmit={handleSubmit}>
             <h2 className="text-xl font-semibold mb-4">Edit Buyer</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Name */}
               <div>
                 <label className="block font-semibold">Name</label>
                 <input
@@ -123,6 +134,7 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
                   className="w-full p-2 border rounded"
                 />
               </div>
+              {/* Password */}
               <div>
                 <label className="block font-semibold">Password</label>
                 <input
@@ -133,6 +145,7 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
                   className="w-full p-2 border rounded"
                 />
               </div>
+              {/* Company Name */}
               <div>
                 <label className="block font-semibold">Company Name</label>
                 <select
@@ -149,8 +162,9 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
                   ))}
                 </select>
               </div>
+              {/* Commodity and Brokerage */}
               <div>
-                <label className="block font-semibold">Commodity</label>
+                <label className="block font-semibold">Commodities & Brokerage</label>
                 {formData.commodity.map((comm, index) => (
                   <div key={index} className="flex items-center space-x-2 mb-2">
                     <select
@@ -167,6 +181,13 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
                         </option>
                       ))}
                     </select>
+                    <input
+                      type="number"
+                      value={formData.brokerage[comm] || ""}
+                      onChange={(e) => handleBrokerageChange(comm, e.target.value)}
+                      placeholder="Brokerage"
+                      className="w-24 p-2 border rounded"
+                    />
                     <button
                       type="button"
                       onClick={() => removeField("commodity", index)}

@@ -124,9 +124,7 @@ const EditSellerDetails = ({ seller, onClose, onUpdate }) => {
     setState(state.filter((item) => item.id !== id));
 
   const handleFieldChange = (state, setState, id, value) =>
-    setState(
-      state.map((item) => (item.id === id ? { ...item, value } : item))
-    );
+    setState(state.map((item) => (item.id === id ? { ...item, value } : item)));
 
   const handleBrokerageChange = (commodity, value) =>
     setBrokerageAmounts({ ...brokerageAmounts, [commodity]: value });
@@ -156,7 +154,12 @@ const EditSellerDetails = ({ seller, onClose, onUpdate }) => {
                 <DataInput
                   value={phone.value}
                   onChange={(e) =>
-                    handleFieldChange(phoneNumbers, setPhoneNumbers, phone.id, e.target.value)
+                    handleFieldChange(
+                      phoneNumbers,
+                      setPhoneNumbers,
+                      phone.id,
+                      e.target.value
+                    )
                   }
                   placeholder={`Phone ${index + 1}`}
                   className="flex-1"
@@ -194,7 +197,12 @@ const EditSellerDetails = ({ seller, onClose, onUpdate }) => {
                 <DataInput
                   value={email.value}
                   onChange={(e) =>
-                    handleFieldChange(emails, setEmails, email.id, e.target.value)
+                    handleFieldChange(
+                      emails,
+                      setEmails,
+                      email.id,
+                      e.target.value
+                    )
                   }
                   placeholder={`Email ${index + 1}`}
                   className="flex-1"
@@ -274,14 +282,19 @@ const EditSellerDetails = ({ seller, onClose, onUpdate }) => {
             </div>
           </div>
         </div>
-        <div className="flex justify-end mt-6">
+        <div className="flex justify-end mt-6 space-x-4">
           <Buttons
             text="Cancel"
             onClick={onClose}
-            className="mr-4 bg-gray-500"
+            className="px-6 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-all duration-300"
           />
-          <Buttons text="Update" onClick={handleSubmit} className="bg-blue-500" />
+          <Buttons
+            text="Update"
+            onClick={handleSubmit}
+            className="px-6 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-all duration-300"
+          />
         </div>
+
         <ToastContainer />
       </div>
     </div>

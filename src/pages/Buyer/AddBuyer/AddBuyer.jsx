@@ -20,6 +20,7 @@ const AddBuyer = () => {
     companyName: "",
     password: "",
     commodity: [],
+    brokerage: {},
     status: "",
     consignee: [],
   });
@@ -29,23 +30,23 @@ const AddBuyer = () => {
   const [commodityOptions, setCommodityOptions] = useState([]);
   const [consigneeOptions, setConsigneeOptions] = useState([]);
 
+  const statusOptions = [
+    { value: "Active", label: "Active" },
+    { value: "Inactive", label: "Inactive" },
+  ];
+
   useEffect(() => {
     const fetchCompanies = async () => {
       try {
-        const response = await axios.get("http://localhost:5000/api/companies");
-        console.log("Fetched Companies:", response.data);
-
+        const response = await axios.get("http://localhost:5000/api/companies",errors);
         const sortedCompanies = response.data.map((company) => ({
           value: company.companyName,
           label: company.companyName,
           consignees: company.consignee || [],
         }));
-
-        console.log("Transformed Companies:", sortedCompanies);
         setCompanyOptions(sortedCompanies);
       } catch (error) {
-        console.error("Error fetching companies:", error);
-        toast.error("Failed to load companies. Please try again.");
+        toast.error("Failed to load companies. Please try again.",error);
       }
     };
 
@@ -54,17 +55,13 @@ const AddBuyer = () => {
         const response = await axios.get(
           "http://localhost:5000/api/commodities"
         );
-
-        const sortedCommodities = response.data
-          .map((commodity) => ({
-            value: commodity.name,
-            label: commodity.name,
-          }))
-          .sort((a, b) => a.label.localeCompare(b.label));
-
+        const sortedCommodities = response.data.map((commodity) => ({
+          value: commodity.name,
+          label: commodity.name,
+        }));
         setCommodityOptions(sortedCommodities);
       } catch (error) {
-        toast.error("Failed to load commodities. Please try again.", error);
+        toast.error("Failed to load commodities. Please try again.",error);
       }
     };
 
@@ -72,63 +69,13 @@ const AddBuyer = () => {
     fetchCommodities();
   }, []);
 
-  const statusOptions = [
-    { value: "active", label: "Active" },
-    { value: "inactive", label: "Inactive" },
-  ];
-
-  const handleInputChange = (e, index = null, fieldName) => {
-    const { name, value } = e.target;
-
-    if (fieldName) {
-      const updatedField = [...formData[fieldName]];
-      updatedField[index] = value;
-      setFormData({
-        ...formData,
-        [fieldName]: updatedField,
-      });
-
-      if (fieldName === "mobile" && !regexPatterns.mobile.test(value)) {
-        setErrors((prev) => ({ ...prev, mobile: "Invalid mobile number." }));
-      } else if (fieldName === "email" && !regexPatterns.email.test(value)) {
-        setErrors((prev) => ({ ...prev, email: "Invalid email format." }));
-      } else {
-        setErrors((prev) => ({ ...prev, [fieldName]: "" }));
-      }
-    } else {
-      setFormData({
-        ...formData,
-        [name]: value,
-      });
-      if (name === "name" && !regexPatterns.name.test(value)) {
-        setErrors((prev) => ({ ...prev, name: "Invalid name format." }));
-      }
-    }
-  };
-
-  const handleAddField = (fieldName) => {
-    setFormData({
-      ...formData,
-      [fieldName]: [...formData[fieldName], ""],
-    });
-  };
-
-  const handleRemoveField = (fieldName, index) => {
-    const updatedField = [...formData[fieldName]];
-    updatedField.splice(index, 1);
-    setFormData({
-      ...formData,
-      [fieldName]: updatedField,
-    });
-  };
-
   const handleDropdownChange = (selectedOption, actionMeta) => {
-    if (actionMeta.name === "companyName") {
+    const fieldName = actionMeta.name;
+
+    if (fieldName === "companyName") {
       const selectedCompany = companyOptions.find(
         (company) => company.value === selectedOption?.value
       );
-
-      console.log("Selected Company:", selectedCompany);
 
       setConsigneeOptions(
         selectedCompany?.consignees.map((consignee) => ({
@@ -142,50 +89,98 @@ const AddBuyer = () => {
         companyName: selectedOption,
         consignee: [],
       });
+    } else if (fieldName === "commodity") {
+      const selectedCommodities = selectedOption || [];
+      const newBrokerage = {};
+
+      selectedCommodities.forEach((commodity) => {
+        newBrokerage[commodity.value] =
+          formData.brokerage[commodity.value] || "";
+      });
+
+      setFormData({
+        ...formData,
+        commodity: selectedCommodities,
+        brokerage: newBrokerage,
+      });
     } else {
       setFormData({
         ...formData,
-        [actionMeta.name]: selectedOption,
+        [fieldName]: selectedOption,
       });
     }
   };
 
+  const handleInputChange = (e, index = null, fieldName = null) => {
+    const { name, value } = e.target;
+
+    if (fieldName) {
+      const updatedField = [...formData[fieldName]];
+      updatedField[index] = value;
+      setFormData({ ...formData, [fieldName]: updatedField });
+    } else {
+      setFormData({ ...formData, [name]: value });
+    }
+  };
+
+  const handleAddField = (fieldName) => {
+    setFormData({ ...formData, [fieldName]: [...formData[fieldName], ""] });
+  };
+
+  const handleRemoveField = (fieldName, index) => {
+    const updatedField = [...formData[fieldName]];
+    updatedField.splice(index, 1);
+    setFormData({ ...formData, [fieldName]: updatedField });
+  };
+
+  const handleBrokerageChange = (e, commodity) => {
+    const { value } = e.target;
+    setFormData((prevState) => ({
+      ...prevState,
+      brokerage: {
+        ...prevState.brokerage,
+        [commodity]: value,
+      },
+    }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    let isValid = true;
-    const newErrors = {};
+    const { name, mobile, email } = formData;
 
-    if (!regexPatterns.name.test(formData.name)) {
-      newErrors.name = "Invalid name format.";
-      isValid = false;
-    }
-    if (formData.email.some((email) => !regexPatterns.email.test(email))) {
-      newErrors.email = "Invalid email format.";
-      isValid = false;
-    }
-    if (formData.mobile.some((mobile) => !regexPatterns.mobile.test(mobile))) {
+    // Validate inputs
+    const newErrors = {};
+    if (!regexPatterns.name.test(name)) newErrors.name = "Invalid name format.";
+    if (mobile.some((num) => !regexPatterns.mobile.test(num)))
       newErrors.mobile = "Invalid mobile number.";
-      isValid = false;
-    }
+    if (email.some((mail) => !regexPatterns.email.test(mail)))
+      newErrors.email = "Invalid email format.";
 
     setErrors(newErrors);
 
-    if (isValid) {
-      const transformedData = {
-        ...formData,
-        companyName: formData.companyName?.value || "",
-        commodity: formData.commodity.map((item) => item.value),
-        status: formData.status?.value || "",
-      };
-
+    if (Object.keys(newErrors).length === 0) {
       try {
-        const response = await axios.post(
-          "http://localhost:5000/api/buyers",
-          transformedData
-        );
-        toast.success("Buyer added successfully!", response);
+        const payload = {
+          ...formData,
+          companyName: formData.companyName?.value || "",
+          commodity: formData.commodity.map((item) => item.value),
+          status: formData.status?.value || "",
+        };
+        await axios.post("http://localhost:5000/api/buyers", payload);
+        toast.success("Buyer added successfully!");
+        setFormData({
+          name: "",
+          mobile: [""],
+          email: [""],
+          companyName: "",
+          password: "",
+          commodity: [],
+          brokerage: {},
+          status: "",
+          consignee: [],
+        });
       } catch (error) {
-        toast.error("Failed to add buyer. Please try again.", error);
+        toast.error("Failed to add buyer. Please try again.",error);
       }
     }
   };
@@ -328,6 +323,24 @@ const AddBuyer = () => {
                   placeholder="Select Commodity"
                   isMulti
                 />
+                {formData.commodity.map((commodity) => (
+                  <div key={commodity.value} className="mt-4">
+                    <label className="block text-gray-700 mb-2">
+                      Brokerage per Ton for {commodity.label}
+                    </label>
+                    <DataInput
+                      name={`brokerage-${commodity.value}`}
+                      placeholder={`Enter brokerage for ${commodity.label}`}
+                      value={formData.brokerage[commodity.value]}
+                      onChange={(e) =>
+                        handleBrokerageChange(e, commodity.value)
+                      }
+                      inputType="number"
+                      min="0"
+                      required
+                    />
+                  </div>
+                ))}
               </div>
               <div>
                 <label className="block text-gray-700 mb-2" htmlFor="consignee">
