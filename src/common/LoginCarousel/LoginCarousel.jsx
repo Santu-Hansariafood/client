@@ -3,9 +3,11 @@ import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 
 const carouselImages = [
-  "https://images.pexels.com/photos/210186/pexels-photo-210186.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
+  "https://images.pexels.com/photos/240040/pexels-photo-240040.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
   "https://images.pexels.com/photos/4040265/pexels-photo-4040265.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
-  "https://images.pexels.com/photos/374870/pexels-photo-374870.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
+  "https://images.pexels.com/photos/235990/pexels-photo-235990.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
+  "https://images.pexels.com/photos/414612/pexels-photo-414612.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
+  "https://images.pexels.com/photos/34950/pexels-photo.jpg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
 ];
 
 const LoginCarousel = () => {
@@ -23,10 +25,13 @@ const LoginCarousel = () => {
   };
 
   return (
-    <div className="h-full">
-      <Slider {...settings} className="h-full overflow-hidden">
+    <div className="h-screen">
+      <Slider {...settings} className="h-full">
         {carouselImages.map((image, index) => (
-          <div key={index} className="h-full flex justify-center items-center">
+          <div
+            key={index}
+            className="h-screen flex justify-center items-center"
+          >
             <img
               src={image}
               alt={`Slide ${index + 1}`}
