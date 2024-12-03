@@ -330,7 +330,7 @@ const AddSellerDetails = () => {
                   label: item.name,
                 }));
               } catch (error) {
-                toast.error("Failed to load buyers.");
+                toast.error("Failed to load buyers.",error);
                 return [];
               }
             }}

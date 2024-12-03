@@ -1,10 +1,11 @@
+import PropTypes from "prop-types";
 import { useState, useEffect } from "react";
 import { MdDeleteForever } from "react-icons/md";
 import DataDropdown from "../DataDropdown/DataDropdown";
 
 const DropdownSelector = ({ fetchData }) => {
-  const [dropdownData, setDropdownData] = useState([]); // Full dropdown options
-  const [selectedItems, setSelectedItems] = useState([]); // User's selected options
+  const [dropdownData, setDropdownData] = useState([]);
+  const [selectedItems, setSelectedItems] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -31,7 +32,6 @@ const DropdownSelector = ({ fetchData }) => {
   };
 
   const handleSelectAll = () => {
-    // Ensure all items are selected in the dropdown only
     setSelectedItems(dropdownData);
   };
 
@@ -91,6 +91,10 @@ const DropdownSelector = ({ fetchData }) => {
       )}
     </div>
   );
+};
+
+DropdownSelector.propTypes = {
+  fetchData: PropTypes.func.isRequired,
 };
 
 export default DropdownSelector;

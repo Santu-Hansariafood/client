@@ -38,7 +38,10 @@ const AddBuyer = () => {
   useEffect(() => {
     const fetchCompanies = async () => {
       try {
-        const response = await axios.get("http://localhost:5000/api/companies",errors);
+        const response = await axios.get(
+          "http://localhost:5000/api/companies",
+          errors
+        );
         const sortedCompanies = response.data.map((company) => ({
           value: company.companyName,
           label: company.companyName,
@@ -46,7 +49,7 @@ const AddBuyer = () => {
         }));
         setCompanyOptions(sortedCompanies);
       } catch (error) {
-        toast.error("Failed to load companies. Please try again.",error);
+        toast.error("Failed to load companies. Please try again.", error);
       }
     };
 
@@ -61,7 +64,7 @@ const AddBuyer = () => {
         }));
         setCommodityOptions(sortedCommodities);
       } catch (error) {
-        toast.error("Failed to load commodities. Please try again.",error);
+        toast.error("Failed to load commodities. Please try again.", error);
       }
     };
 
@@ -148,7 +151,6 @@ const AddBuyer = () => {
     e.preventDefault();
     const { name, mobile, email } = formData;
 
-    // Validate inputs
     const newErrors = {};
     if (!regexPatterns.name.test(name)) newErrors.name = "Invalid name format.";
     if (mobile.some((num) => !regexPatterns.mobile.test(num)))
@@ -180,7 +182,7 @@ const AddBuyer = () => {
           consignee: [],
         });
       } catch (error) {
-        toast.error("Failed to add buyer. Please try again.",error);
+        toast.error("Failed to add buyer. Please try again.", error);
       }
     }
   };
