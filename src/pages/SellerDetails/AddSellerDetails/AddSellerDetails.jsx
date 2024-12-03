@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import DataInput from "../../../common/DataInput/DataInput";
 import DataDropdown from "../../../common/DataDropdown/DataDropdown";
+import DropdownSelector from "../../../common/DropdownSelector/DropdownSelector";
 import Buttons from "../../../common/Buttons/Buttons";
 import { ToastContainer, toast } from "react-toastify";
 import { FaPlusCircle, FaMinusCircle } from "react-icons/fa";
@@ -20,6 +21,7 @@ const AddSellerDetails = () => {
   const [brokerageAmounts, setBrokerageAmounts] = useState({});
   const [selectedCompany, setSelectedCompany] = useState([]);
   const [selectedStatus, setSelectedStatus] = useState(null);
+  const [selectedBuyers, setSelectedBuyers] = useState([]);
 
   const apiBaseURL = "http://localhost:5000/api";
 
@@ -31,9 +33,10 @@ const AddSellerDetails = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [commoditiesRes, companiesRes] = await Promise.all([
+        const [commoditiesRes, companiesRes, buyersRes] = await Promise.all([
           axios.get(`${apiBaseURL}/commodities`),
           axios.get(`${apiBaseURL}/seller-company`),
+          axios.get(`${apiBaseURL}/buyers`),
         ]);
 
         const commodities = commoditiesRes.data.map((item) => ({
@@ -46,11 +49,19 @@ const AddSellerDetails = () => {
           label: item.companyName,
         }));
 
+        const buyers = buyersRes.data.map((item) => ({
+          value: item.name,
+          label: item.name,
+        }));
+
         setCommodityOptions(
           commodities.sort((a, b) => a.label.localeCompare(b.label))
         );
         setCompanyOptions(
           companies.sort((a, b) => a.label.localeCompare(b.label))
+        );
+        setSelectedBuyers(
+          buyers.sort((a, b) => a.label.localeCompare(b.label))
         );
       } catch (error) {
         toast.error("Failed to load data from the server.", error);
@@ -128,11 +139,14 @@ const AddSellerDetails = () => {
         name: commodity.value,
         brokerage: brokerageAmounts[commodity.value] || 0,
       })),
-      selectedCompany: selectedCompany.map((company) => ({
+      companies: selectedCompany.map((company) => ({
         value: company.value,
         label: company.label,
       })),
       selectedStatus: selectedStatus?.value,
+      buyers: selectedBuyers.map((buyer) => ({
+        name: buyer.value,
+      })),
     };
 
     try {
@@ -155,7 +169,8 @@ const AddSellerDetails = () => {
     setEmails([{ id: Date.now(), value: "" }]);
     setSelectedCommodity([]);
     setBrokerageAmounts({});
-    setSelectedCompany(null);
+    setSelectedBuyers([]);
+    setSelectedCompany([]);
     setSelectedStatus(null);
   };
 
@@ -302,6 +317,31 @@ const AddSellerDetails = () => {
             maxLength="25"
           />
         </div>
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Buyers
+          </label>
+          <DropdownSelector
+            fetchData={async () => {
+              try {
+                const buyersRes = await axios.get(`${apiBaseURL}/buyers`);
+                return buyersRes.data.map((item) => ({
+                  value: item.name,
+                  label: item.name,
+                }));
+              } catch (error) {
+                toast.error("Failed to load buyers.");
+                return [];
+              }
+            }}
+            options={selectedBuyers}
+            placeholder="Select buyers"
+            isMulti
+            value={selectedBuyers}
+            onChange={(selected) => setSelectedBuyers(selected || [])}
+          />
+        </div>
+
         <div className="mt-6 flex justify-end">
           <Buttons
             label="Submit"
