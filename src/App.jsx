@@ -1,4 +1,5 @@
-import { lazy, Suspense, useMemo } from "react";
+import PropTypes from "prop-types";
+import { lazy, Suspense, useMemo, useEffect, useState } from "react";
 import {
   BrowserRouter as Router,
   Route,
@@ -67,12 +68,19 @@ const PrivateRoute = ({ children }) => {
 };
 
 const App = () => {
-  const memoizedRoutes = useMemo(() => {
-    return (
+  const [hydrated, setHydrated] = useState(false);
+
+  useEffect(() => {
+    const idleCallback = window.requestIdleCallback || setTimeout;
+    idleCallback(() => {
+      setHydrated(true);
+    });
+  }, []);
+
+  const criticalRoutes = useMemo(
+    () => (
       <Routes>
         <Route path="/login" element={<Login />} />
-
-        {/* Dashboard */}
         <Route
           path="/dashboard"
           element={
@@ -81,165 +89,167 @@ const App = () => {
             </PrivateRoute>
           }
         />
-
-        {/* Buyer Routes */}
-        <Route
-          path="/buyer/add"
-          element={
-            <PrivateRoute>
-              <AddBuyer />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/buyer/list"
-          element={
-            <PrivateRoute>
-              <ListBuyer />
-            </PrivateRoute>
-          }
-        />
-
-        {/* Group of Company Routes */}
-        <Route
-          path="/group-of-company/add"
-          element={
-            <PrivateRoute>
-              <AddGroupOfCompany />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/group-of-company/list"
-          element={
-            <PrivateRoute>
-              <ListGroupOfCompany />
-            </PrivateRoute>
-          }
-        />
-
-        {/* Company Routes */}
-        <Route
-          path="/company/add"
-          element={
-            <PrivateRoute>
-              <AddCompany />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/company/list"
-          element={
-            <PrivateRoute>
-              <ListCompany />
-            </PrivateRoute>
-          }
-        />
-
-        {/* Consignee Routes */}
-        <Route
-          path="/consignee/add"
-          element={
-            <PrivateRoute>
-              <AddConsignee />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/consignee/list"
-          element={
-            <PrivateRoute>
-              <ListConsignee />
-            </PrivateRoute>
-          }
-        />
-
-        {/* Commodity Routes */}
-        <Route
-          path="/commodity/add"
-          element={
-            <PrivateRoute>
-              <AddCommodity />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/commodity/list"
-          element={
-            <PrivateRoute>
-              <ListCommodity />
-            </PrivateRoute>
-          }
-        />
-
-        {/* Quality Parameter Routes */}
-        <Route
-          path="/quality-parameter/add"
-          element={
-            <PrivateRoute>
-              <AddQualityParameter />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/quality-parameter/list"
-          element={
-            <PrivateRoute>
-              <ListQualityParameter />
-            </PrivateRoute>
-          }
-        />
-
-        {/* Seller Company Routes */}
-        <Route
-          path="/seller-company/add"
-          element={
-            <PrivateRoute>
-              <AddSellerCompany />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/seller-company/list"
-          element={
-            <PrivateRoute>
-              <ListSellerCompany />
-            </PrivateRoute>
-          }
-        />
-
-        {/* Seller Details Routes */}
-        <Route
-          path="/seller-details/add"
-          element={
-            <PrivateRoute>
-              <AddSellerDetails />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/seller-details/list"
-          element={
-            <PrivateRoute>
-              <ListSellerDetails />
-            </PrivateRoute>
-          }
-        />
-
-        {/* Default and Fallback Routes */}
         <Route path="/" element={<Navigate to="/login" />} />
         <Route path="*" element={<Navigate to="/login" />} />
       </Routes>
-    );
-  }, []);
+    ),
+    []
+  );
+
+  const nonCriticalRoutes = useMemo(
+    () =>
+      hydrated && (
+        <Routes>
+          <Route
+            path="/buyer/add"
+            element={
+              <PrivateRoute>
+                <AddBuyer />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/buyer/list"
+            element={
+              <PrivateRoute>
+                <ListBuyer />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/group-of-company/add"
+            element={
+              <PrivateRoute>
+                <AddGroupOfCompany />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/group-of-company/list"
+            element={
+              <PrivateRoute>
+                <ListGroupOfCompany />
+              </PrivateRoute>
+            }
+          />
+
+          <Route
+            path="/company/add"
+            element={
+              <PrivateRoute>
+                <AddCompany />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/company/list"
+            element={
+              <PrivateRoute>
+                <ListCompany />
+              </PrivateRoute>
+            }
+          />
+
+          <Route
+            path="/consignee/add"
+            element={
+              <PrivateRoute>
+                <AddConsignee />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/consignee/list"
+            element={
+              <PrivateRoute>
+                <ListConsignee />
+              </PrivateRoute>
+            }
+          />
+
+          <Route
+            path="/commodity/add"
+            element={
+              <PrivateRoute>
+                <AddCommodity />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/commodity/list"
+            element={
+              <PrivateRoute>
+                <ListCommodity />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/quality-parameter/add"
+            element={
+              <PrivateRoute>
+                <AddQualityParameter />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/quality-parameter/list"
+            element={
+              <PrivateRoute>
+                <ListQualityParameter />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/seller-company/add"
+            element={
+              <PrivateRoute>
+                <AddSellerCompany />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/seller-company/list"
+            element={
+              <PrivateRoute>
+                <ListSellerCompany />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/seller-details/add"
+            element={
+              <PrivateRoute>
+                <AddSellerDetails />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/seller-details/list"
+            element={
+              <PrivateRoute>
+                <ListSellerDetails />
+              </PrivateRoute>
+            }
+          />
+        </Routes>
+      ),
+    [hydrated]
+  );
 
   return (
     <AuthProvider>
       <Router>
-        <Suspense fallback={<Loading />}>{memoizedRoutes}</Suspense>
+        <Suspense fallback={<Loading />}>
+          {criticalRoutes}
+          {nonCriticalRoutes}
+        </Suspense>
       </Router>
     </AuthProvider>
   );
+};
+
+PrivateRoute.propTypes = {
+  children: PropTypes.node.isRequired,
 };
 
 export default App;
