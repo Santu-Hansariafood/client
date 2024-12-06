@@ -31,7 +31,6 @@ const ListConsignee = () => {
         setConsigneeData(response.data);
         setLoading(false);
       } catch (error) {
-        console.error("Error fetching consignees:", error);
         setLoading(false);
       }
     };

@@ -1,12 +1,13 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, lazy, Suspense } from "react";
 import axios from "axios";
-import DataInput from "../../../common/DataInput/DataInput";
-import DataDropdown from "../../../common/DataDropdown/DataDropdown";
-import DropdownSelector from "../../../common/DropdownSelector/DropdownSelector";
-import Buttons from "../../../common/Buttons/Buttons";
 import { ToastContainer, toast } from "react-toastify";
 import { FaPlusCircle, FaMinusCircle } from "react-icons/fa";
 import "react-toastify/dist/ReactToastify.css";
+import Loading from "../../../common/Loading/Loading"
+const DataInput = lazy(()=>import("../../../common/DataInput/DataInput"));
+const DataDropdown = lazy(()=>import("../../../common/DataDropdown/DataDropdown"));
+const DropdownSelector = lazy(()=>import("../../../common/DropdownSelector/DropdownSelector"));
+const Buttons = lazy(()=>import("../../../common/Buttons/Buttons"));
 
 const AddSellerDetails = () => {
   const [sellerName, setSellerName] = useState("");
@@ -175,9 +176,10 @@ const AddSellerDetails = () => {
   };
 
   return (
+    <Suspense fallback={<Loading/>}>
     <div className="p-4 sm:p-6 md:p-10 lg:p-16 bg-gray-100 flex justify-center items-center">
       <div className="w-full max-w-4xl bg-white rounded-lg shadow-md p-6">
-        <h2 className="text-2xl font-bold mb-4 text-gray-700">
+        <h2 className="text-2xl font-bold mb-4 text-gray-700 text-center">
           Add Seller Details
         </h2>
         <div className="mb-4">
@@ -354,6 +356,7 @@ const AddSellerDetails = () => {
       </div>
       <ToastContainer />
     </div>
+    </Suspense>
   );
 };
 
