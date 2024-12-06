@@ -9,21 +9,21 @@ const Actions = ({ onView, onEdit, onDelete }) => {
         className="bg-gradient-to-r from-blue-500 to-blue-700 text-white py-2 px-4 rounded-lg focus:outline-none hover:scale-105 transition duration-300"
         title="View"
       >
-        <MdVisibility size={24} className="animate-pulse" />
+        <MdVisibility size={15} className="animate-pulse" />
       </button>
       <button
         onClick={onEdit}
         className="bg-gradient-to-r from-green-500 to-green-700 text-white py-2 px-4 rounded-lg focus:outline-none hover:scale-105 transition duration-300"
         title="Edit"
       >
-        <MdEdit size={24} className="animate-pulse" />
+        <MdEdit size={15} className="animate-pulse" />
       </button>
       <button
         onClick={onDelete}
         className="bg-gradient-to-r from-red-500 to-red-700 text-white py-2 px-4 rounded-lg focus:outline-none hover:scale-105 transition duration-300"
         title="Delete"
       >
-        <MdDelete size={24} className="animate-pulse" />
+        <MdDelete size={15} className="animate-pulse" />
       </button>
     </div>
   );

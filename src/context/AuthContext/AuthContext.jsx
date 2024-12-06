@@ -4,16 +4,10 @@ import PropTypes from "prop-types";
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-
-  useEffect(() => {
-    const storedAuthStatus = JSON.parse(
-      localStorage.getItem("isAuthenticated")
-    );
-    if (storedAuthStatus) {
-      setIsAuthenticated(storedAuthStatus);
-    }
-  }, []);
+  const [isAuthenticated, setIsAuthenticated] = useState(() => {
+    // Load initial state from localStorage
+    return JSON.parse(localStorage.getItem("isAuthenticated")) || false;
+  });
 
   const login = () => {
     setIsAuthenticated(true);
@@ -22,8 +16,13 @@ export const AuthProvider = ({ children }) => {
 
   const logout = () => {
     setIsAuthenticated(false);
-    localStorage.setItem("isAuthenticated", JSON.stringify(false));
+    localStorage.removeItem("isAuthenticated");
   };
+
+  useEffect(() => {
+    // Synchronize authentication state with localStorage
+    localStorage.setItem("isAuthenticated", JSON.stringify(isAuthenticated));
+  }, [isAuthenticated]);
 
   return (
     <AuthContext.Provider value={{ isAuthenticated, login, logout }}>

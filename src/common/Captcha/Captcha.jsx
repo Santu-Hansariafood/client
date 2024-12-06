@@ -43,7 +43,7 @@ const generateCaptcha = () => {
         <text
           x="${10 + index * 20}"
           y="35"
-          font-family="Arial"
+          font-family="Roboto Flex"
           font-size="24"
           fill="rgba(0, 0, 0, 0.3)"
           dx="2" dy="2"
@@ -54,7 +54,7 @@ const generateCaptcha = () => {
         <text
           x="${10 + index * 20}"
           y="35"
-          font-family="Arial"
+          font-family="Roboto Flex"
           font-size="24"
           fill="rgba(0, 0, 0, 0.2)"
           dx="1" dy="1"
@@ -66,7 +66,7 @@ const generateCaptcha = () => {
         <text
           x="${10 + index * 20}"
           y="35"
-          font-family="Arial"
+          font-family="Roboto Flex"
           font-size="24"
           fill="${colors[index % colors.length]}"
           transform="rotate(${Math.random() * 15 - 7}, ${10 + index * 20}, 35)"

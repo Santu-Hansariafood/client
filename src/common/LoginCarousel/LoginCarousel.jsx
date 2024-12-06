@@ -1,6 +1,7 @@
 import Slider from "react-slick";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
+import LazyImage from "../LazyImage/LazyImage";
 
 const carouselImages = [
   "https://images.pexels.com/photos/240040/pexels-photo-240040.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
@@ -32,7 +33,7 @@ const LoginCarousel = () => {
             key={index}
             className="h-screen flex justify-center items-center"
           >
-            <img
+            <LazyImage
               src={image}
               alt={`Slide ${index + 1}`}
               className="w-full h-full object-cover"
