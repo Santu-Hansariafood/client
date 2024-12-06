@@ -1,3 +1,7 @@
+import axios from "axios";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import Loading from "../../../common/Loading/Loading";
 import { useState, useEffect, lazy, Suspense } from "react";
 const Tables = lazy(() => import("../../../common/Tables/Tables"));
 const Actions = lazy(() => import("../../../common/Actions/Actions"));
@@ -7,10 +11,6 @@ const Pagination = lazy(() =>
   import("../../../common/Paginations/Paginations")
 );
 const EditGroupPopup = lazy(() => import("../EditGroupPopup/EditGroupPopup"));
-import axios from "axios";
-import { toast, ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
-import Loading from "../../../common/Loading/Loading";
 
 const ListGroupOfCompany = () => {
   const [groupsData, setGroupsData] = useState([]);

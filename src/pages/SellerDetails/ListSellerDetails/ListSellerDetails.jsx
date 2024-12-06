@@ -1,22 +1,20 @@
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import axios from "axios";
-import Tables from "../../../common/Tables/Tables";
-import SearchBox from "../../../common/SearchBox/SearchBox";
-import Actions from "../../../common/Actions/Actions";
-import Pagination from "../../../common/Paginations/Paginations";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import PopupBox from "../../../common/PopupBox/PopupBox";
-
-import EditSellerDetails from "../EditSellerDetails/EditSellerDetails"; // Import your component
+import Loading from "../../../common/Loading/Loading";
+const Tables = lazy(() => "../../../common/Tables/Tables");
+const SearchBox = lazy(() => "../../../common/SearchBox/SearchBox");
+const Actions = lazy(() => "../../../common/Actions/Actions");
+const Pagination = lazy(() => "../../../common/Paginations/Paginations");
+const PopupBox = lazy(() => "../../../common/PopupBox/PopupBox");
+const EditSellerDetails = lazy(() => "../EditSellerDetails/EditSellerDetails");
 
 const ListSellerDetails = () => {
   const [data, setData] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
-  const [searchTerm, setSearchTerm] = useState("");
-
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [popupMode, setPopupMode] = useState("view");
   const [selectedSeller, setSelectedSeller] = useState(null);
@@ -61,115 +59,116 @@ const ListSellerDetails = () => {
     "Status",
     "Actions",
   ];
-  const rows = filteredData.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  ).map((item, index) => [
-    (currentPage - 1) * itemsPerPage + index + 1,
-    item.sellerName,
-    item.emails.map((email) => email.value).join(", "),
-    item.phoneNumbers.map((phone) => phone.value).join(", "),
-    item.commodities
-      .map(
-        (commodity) =>
-          `${commodity.name} (Brokerage: ₹${commodity.brokerage} per ton)`
-      )
-      .join(", "),
-    item.selectedCompany.map((company) => company.label).join(", "),
-    item.selectedStatus,
-    <Actions
-      key={item._id}
-      onView={() => {
-        setSelectedSeller(item);
-        setPopupMode("view");
-        setIsPopupOpen(true);
-      }}
-      onEdit={() => handleEditSeller(item)}
-      onDelete={() => toast.error(`Delete ${item.sellerName}`)}
-    />,
-  ]);
+  const rows = filteredData
+    .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+    .map((item, index) => [
+      (currentPage - 1) * itemsPerPage + index + 1,
+      item.sellerName,
+      item.emails.map((email) => email.value).join(", "),
+      item.phoneNumbers.map((phone) => phone.value).join(", "),
+      item.commodities
+        .map(
+          (commodity) =>
+            `${commodity.name} (Brokerage: ₹${commodity.brokerage} per ton)`
+        )
+        .join(", "),
+      item.selectedCompany.map((company) => company.label).join(", "),
+      item.selectedStatus,
+      <Actions
+        key={item._id}
+        onView={() => {
+          setSelectedSeller(item);
+          setPopupMode("view");
+          setIsPopupOpen(true);
+        }}
+        onEdit={() => handleEditSeller(item)}
+        onDelete={() => toast.error(`Delete ${item.sellerName}`)}
+      />,
+    ]);
 
   return (
-    <div className="p-4 sm:p-6 md:p-10 lg:p-16 bg-gray-100 flex flex-col items-center">
-      <h1 className="text-2xl font-bold mb-6 text-gray-700">Seller List</h1>
-      <div className="w-full max-w-4xl mb-4">
-        <SearchBox
-          placeholder="Search sellers by name or phone..."
-          items={data.map((item) => item.sellerName)}
-          onSearch={(term) => {
-            const lowerCaseTerm = term.toLowerCase();
-            const filtered = data.filter(
-              (item) =>
-                item.sellerName.toLowerCase().includes(lowerCaseTerm) ||
-                item.phoneNumbers.some((phone) =>
-                  phone.value.toLowerCase().includes(lowerCaseTerm)
-                )
-            );
-            setFilteredData(filtered);
-          }}
-        />
-      </div>
-      <div className="w-full max-w-4xl bg-white rounded-lg shadow-md">
-        <Tables headers={headers} rows={rows} />
-      </div>
-      <div className="w-full max-w-4xl">
-        <Pagination
-          currentPage={currentPage}
-          totalItems={filteredData.length}
-          itemsPerPage={itemsPerPage}
-          onPageChange={setCurrentPage}
-        />
-      </div>
-
-      {isPopupOpen && (
-        <PopupBox isOpen={isPopupOpen} onClose={handlePopupClose}>
-          {popupMode === "view" && selectedSeller && (
-            <div>
-              <h2 className="text-xl font-bold mb-4">Seller Details</h2>
-              <p>
-                <strong>Name:</strong> {selectedSeller.sellerName}
-              </p>
-              <p>
-                <strong>Email:</strong>{" "}
-                {selectedSeller.emails.map((email) => email.value).join(", ")}
-              </p>
-              <p>
-                <strong>Phone Numbers:</strong>{" "}
-                {selectedSeller.phoneNumbers
-                  .map((phone) => phone.value)
-                  .join(", ")}
-              </p>
-              <p>
-                <strong>Commodities:</strong>{" "}
-                {selectedSeller.commodities
-                  .map(
-                    (commodity) =>
-                      `${commodity.name} (Brokerage: ₹${commodity.brokerage} per ton)`
+    <Suspense fallback={<Loading />}>
+      <div className="p-4 sm:p-6 md:p-10 lg:p-16 bg-gray-100 flex flex-col items-center">
+        <h1 className="text-2xl font-bold mb-6 text-gray-700">Seller List</h1>
+        <div className="w-full max-w-4xl mb-4">
+          <SearchBox
+            placeholder="Search sellers by name or phone..."
+            items={data.map((item) => item.sellerName)}
+            onSearch={(term) => {
+              const lowerCaseTerm = term.toLowerCase();
+              const filtered = data.filter(
+                (item) =>
+                  item.sellerName.toLowerCase().includes(lowerCaseTerm) ||
+                  item.phoneNumbers.some((phone) =>
+                    phone.value.toLowerCase().includes(lowerCaseTerm)
                   )
-                  .join(", ")}
-              </p>
-              <p>
-                <strong>Companies:</strong>{" "}
-                {selectedSeller.selectedCompany
-                  .map((company) => company.label)
-                  .join(", ")}
-              </p>
-              <p>
-                <strong>Status:</strong> {selectedSeller.selectedStatus}
-              </p>
-            </div>
-          )}
-          {popupMode === "edit" && selectedSeller && (
-            <EditSellerDetails
-              seller={selectedSeller}
-              onClose={handlePopupClose}
-            />
-          )}
-        </PopupBox>
-      )}
+              );
+              setFilteredData(filtered);
+            }}
+          />
+        </div>
+        <div className="w-full max-w-4xl bg-white rounded-lg shadow-md">
+          <Tables headers={headers} rows={rows} />
+        </div>
+        <div className="w-full max-w-4xl">
+          <Pagination
+            currentPage={currentPage}
+            totalItems={filteredData.length}
+            itemsPerPage={itemsPerPage}
+            onPageChange={setCurrentPage}
+          />
+        </div>
 
-      <ToastContainer />
-    </div>
+        {isPopupOpen && (
+          <PopupBox isOpen={isPopupOpen} onClose={handlePopupClose}>
+            {popupMode === "view" && selectedSeller && (
+              <div>
+                <h2 className="text-xl font-bold mb-4">Seller Details</h2>
+                <p>
+                  <strong>Name:</strong> {selectedSeller.sellerName}
+                </p>
+                <p>
+                  <strong>Email:</strong>{" "}
+                  {selectedSeller.emails.map((email) => email.value).join(", ")}
+                </p>
+                <p>
+                  <strong>Phone Numbers:</strong>{" "}
+                  {selectedSeller.phoneNumbers
+                    .map((phone) => phone.value)
+                    .join(", ")}
+                </p>
+                <p>
+                  <strong>Commodities:</strong>{" "}
+                  {selectedSeller.commodities
+                    .map(
+                      (commodity) =>
+                        `${commodity.name} (Brokerage: ₹${commodity.brokerage} per ton)`
+                    )
+                    .join(", ")}
+                </p>
+                <p>
+                  <strong>Companies:</strong>{" "}
+                  {selectedSeller.selectedCompany
+                    .map((company) => company.label)
+                    .join(", ")}
+                </p>
+                <p>
+                  <strong>Status:</strong> {selectedSeller.selectedStatus}
+                </p>
+              </div>
+            )}
+            {popupMode === "edit" && selectedSeller && (
+              <EditSellerDetails
+                seller={selectedSeller}
+                onClose={handlePopupClose}
+              />
+            )}
+          </PopupBox>
+        )}
+
+        <ToastContainer />
+      </div>
+    </Suspense>
   );
 };
 

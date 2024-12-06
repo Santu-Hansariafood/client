@@ -1,0 +1,23 @@
+# Allow all crawlers access to all parts of the site
+User-agent: *
+Disallow: /admin/
+Disallow: /login/
+
+# Specific directives for Googlebot (Google's web crawler)
+User-agent: Googlebot
+Disallow: /private/
+Allow: /public/
+
+# Specific directives for Bingbot (Bing's web crawler)
+User-agent: Bingbot
+Disallow: /private/
+Allow: /public/
+
+# Sitemap location
+Sitemap: https://www.yourdomain.com/sitemap.xml
+
+# Block crawlers from accessing specific paths
+User-agent: *
+Disallow: /user/
+Disallow: /settings/
+Disallow: /profile/

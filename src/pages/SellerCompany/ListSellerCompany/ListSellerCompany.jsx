@@ -1,12 +1,19 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, lazy, Suspense } from "react";
 import axios from "axios";
-import Tables from "../../../common/Tables/Tables";
-import SearchBox from "../../../common/SearchBox/SearchBox";
-import Pagination from "../../../common/Paginations/Paginations";
-import PopupBox from "../../../common/PopupBox/PopupBox";
-import Actions from "../../../common/Actions/Actions";
-import generatePDF from "../../../common/GeneratePdf/GeneratePdf";
-import EditSellerCompany from "../EditSellerCompany/EditSellerCompany";
+import Loading from "../../../common/Loading/Loading";
+const Tables = lazy(() => import("../../../common/Tables/Tables"));
+const SearchBox = lazy(() => import("../../../common/SearchBox/SearchBox"));
+const Pagination = lazy(() =>
+  import("../../../common/Paginations/Paginations")
+);
+const PopupBox = lazy(() => import("../../../common/PopupBox/PopupBox"));
+const Actions = lazy(() => import("../../../common/Actions/Actions"));
+const generatePDF = lazy(() =>
+  import("../../../common/GeneratePdf/GeneratePdf")
+);
+const EditSellerCompany = lazy(() =>
+  import("../EditSellerCompany/EditSellerCompany")
+);
 
 const ListSellerCompany = () => {
   const [companies, setCompanies] = useState([]);
@@ -28,7 +35,7 @@ const ListSellerCompany = () => {
         setSearchResults(response.data.data);
         setLoading(false);
       } catch (err) {
-        setError("Failed to fetch companies");
+        setError("Failed to fetch companies",err);
         setLoading(false);
       }
     };
@@ -103,110 +110,116 @@ const ListSellerCompany = () => {
   }
 
   return (
-    <div className="p-4 sm:p-6 md:p-10 lg:p-16 bg-gray-100 flex justify-center items-center">
-      <div className="w-full max-w-6xl bg-white rounded-lg shadow-md p-6">
-        <h2 className="text-2xl font-bold mb-4 text-gray-700">
-          Seller Company List
-        </h2>
-        <SearchBox
-          placeholder="Search by Name or Mobile Number"
-          items={companies.map(
-            (company) =>
-              company.companyName +
-              company.bankDetails?.map((bank) => bank.accountNumber).join(", ")
-          )}
-          onSearch={handleSearch}
-        />
-        <Tables headers={headers} rows={rows} />
-        <Pagination
-          currentPage={currentPage}
-          totalItems={searchResults.length}
-          onPageChange={handlePageChange}
-        />
-        {selectedCompany && (
-          <PopupBox
-            isOpen={true}
-            onClose={() => setSelectedCompany(null)}
-            title={selectedCompany.companyName}
-          >
-            <div>
-              <p>
-                <strong>GST No:</strong> {selectedCompany.gstNo}
-              </p>
-              <p>
-                <strong>PAN No:</strong> {selectedCompany.panNo}
-              </p>
-              <p>
-                <strong>Aadhaar No:</strong> {selectedCompany.aadhaarNo}
-              </p>
-              <p>
-                <strong>Address:</strong> {selectedCompany.address}
-              </p>
-              <p>
-                <strong>State:</strong> {selectedCompany.state}
-              </p>
-              <p>
-                <strong>District:</strong> {selectedCompany.district}
-              </p>
-              {selectedCompany.msmeNo && (
+    <Suspense fallback={<Loading />}>
+      <div className="p-4 sm:p-6 md:p-10 lg:p-16 bg-gray-100 flex justify-center items-center">
+        <div className="w-full max-w-6xl bg-white rounded-lg shadow-md p-6">
+          <h2 className="text-2xl font-bold mb-4 text-gray-700">
+            Seller Company List
+          </h2>
+          <SearchBox
+            placeholder="Search by Name or Mobile Number"
+            items={companies.map(
+              (company) =>
+                company.companyName +
+                company.bankDetails
+                  ?.map((bank) => bank.accountNumber)
+                  .join(", ")
+            )}
+            onSearch={handleSearch}
+          />
+          <Tables headers={headers} rows={rows} />
+          <Pagination
+            currentPage={currentPage}
+            totalItems={searchResults.length}
+            onPageChange={handlePageChange}
+          />
+          {selectedCompany && (
+            <PopupBox
+              isOpen={true}
+              onClose={() => setSelectedCompany(null)}
+              title={selectedCompany.companyName}
+            >
+              <div>
                 <p>
-                  <strong>MSME No:</strong> {selectedCompany.msmeNo}
+                  <strong>GST No:</strong> {selectedCompany.gstNo}
                 </p>
-              )}
-              <p>
-                <strong>Bank Details:</strong>
-              </p>
-              {selectedCompany.bankDetails?.map((bank, index) => (
-                <div key={index} className="mb-4 border-b pb-2">
+                <p>
+                  <strong>PAN No:</strong> {selectedCompany.panNo}
+                </p>
+                <p>
+                  <strong>Aadhaar No:</strong> {selectedCompany.aadhaarNo}
+                </p>
+                <p>
+                  <strong>Address:</strong> {selectedCompany.address}
+                </p>
+                <p>
+                  <strong>State:</strong> {selectedCompany.state}
+                </p>
+                <p>
+                  <strong>District:</strong> {selectedCompany.district}
+                </p>
+                {selectedCompany.msmeNo && (
                   <p>
-                    <strong>Bank {index + 1}:</strong>
+                    <strong>MSME No:</strong> {selectedCompany.msmeNo}
                   </p>
-                  <p>
-                    <strong>Account Holder Name:</strong>{" "}
-                    {bank.accountHolderName}
-                  </p>
-                  <p>
-                    <strong>Account Number:</strong> {bank.accountNumber}
-                  </p>
-                  <p>
-                    <strong>IFSC Code:</strong> {bank.ifscCode}
-                  </p>
-                  <p>
-                    <strong>Branch Name:</strong> {bank.branchName}
-                  </p>
-                </div>
-              ))}
-              <button
-                onClick={() => generatePDF(selectedCompany)}
-                className="bg-green-500 text-white py-2 px-4 rounded-lg mt-4"
-              >
-                Download KYC Documents (PDF)
-              </button>
-            </div>
-          </PopupBox>
-        )}
-        {editCompany && (
-          <PopupBox
-            isOpen={true}
-            onClose={() => setEditCompany(null)}
-            title={`Edit ${editCompany.companyName}`}
-          >
-            <EditSellerCompany
-              company={editCompany}
-              onSave={(updatedCompany) => {
-                setCompanies((prev) =>
-                  prev.map((company) =>
-                    company.id === updatedCompany.id ? updatedCompany : company
-                  )
-                );
-                setEditCompany(null);
-              }}
-              onCancel={() => setEditCompany(null)}
-            />
-          </PopupBox>
-        )}
+                )}
+                <p>
+                  <strong>Bank Details:</strong>
+                </p>
+                {selectedCompany.bankDetails?.map((bank, index) => (
+                  <div key={index} className="mb-4 border-b pb-2">
+                    <p>
+                      <strong>Bank {index + 1}:</strong>
+                    </p>
+                    <p>
+                      <strong>Account Holder Name:</strong>{" "}
+                      {bank.accountHolderName}
+                    </p>
+                    <p>
+                      <strong>Account Number:</strong> {bank.accountNumber}
+                    </p>
+                    <p>
+                      <strong>IFSC Code:</strong> {bank.ifscCode}
+                    </p>
+                    <p>
+                      <strong>Branch Name:</strong> {bank.branchName}
+                    </p>
+                  </div>
+                ))}
+                <button
+                  onClick={() => generatePDF(selectedCompany)}
+                  className="bg-green-500 text-white py-2 px-4 rounded-lg mt-4"
+                >
+                  Download KYC Documents (PDF)
+                </button>
+              </div>
+            </PopupBox>
+          )}
+          {editCompany && (
+            <PopupBox
+              isOpen={true}
+              onClose={() => setEditCompany(null)}
+              title={`Edit ${editCompany.companyName}`}
+            >
+              <EditSellerCompany
+                company={editCompany}
+                onSave={(updatedCompany) => {
+                  setCompanies((prev) =>
+                    prev.map((company) =>
+                      company.id === updatedCompany.id
+                        ? updatedCompany
+                        : company
+                    )
+                  );
+                  setEditCompany(null);
+                }}
+                onCancel={() => setEditCompany(null)}
+              />
+            </PopupBox>
+          )}
+        </div>
       </div>
-    </div>
+    </Suspense>
   );
 };
 

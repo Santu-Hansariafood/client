@@ -1,13 +1,21 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, lazy, Suspense } from "react";
 import axios from "axios";
 import PropTypes from "prop-types";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import AddQualityParameter from "../AddQualityParameter/AddQualityParameter";
-import EditQualityParameter from "../EditQualityParameter/EditQualityParameter";
-import Tables from "../../../common/Tables/Tables";
-import Actions from "../../../common/Actions/Actions";
-import SearchBox from "../../../common/SearchBox/SearchBox";
+import Loading from "../../../common/Loading/Loading";
+const AddQualityParameter = lazy(() =>
+  import("../AddQualityParameter/AddQualityParameter")
+);
+const EditQualityParameter = lazy(() =>
+  import("../EditQualityParameter/EditQualityParameter")
+);
+const Tables = lazy(() => import("../../../common/Tables/Tables"));
+const Actions = lazy(() => import("../../../common/Actions/Actions"));
+const SearchBox = lazy(() => import("../../../common/SearchBox/SearchBox"));
+const Pagination = lazy(() =>
+  import("../../../common/Paginations/Paginations")
+);
 
 const ListQualityParameter = () => {
   const [qualityParameters, setQualityParameters] = useState([]);
@@ -15,10 +23,11 @@ const ListQualityParameter = () => {
   const [showAddForm, setShowAddForm] = useState(false);
   const [editItem, setEditItem] = useState(null);
   const [isEditPopupVisible, setIsEditPopupVisible] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   const headers = ["Name", "Actions"];
 
-  // Fetch Quality Parameters from the API
   useEffect(() => {
     const fetchQualityParameters = async () => {
       try {
@@ -86,7 +95,7 @@ const ListQualityParameter = () => {
 
   const handleDelete = async (item) => {
     try {
-      console.log("Deleting ID:", item._id); // Use _id
+      console.log("Deleting ID:", item._id);
       await axios.delete(
         `http://localhost:5000/api/quality-parameters/${item._id}`
       );
@@ -101,53 +110,68 @@ const ListQualityParameter = () => {
     }
   };
 
-  const rows = filteredData.map((item) => [
-    item.name,
-    <Actions
-      onView={() => handleView(item)}
-      onEdit={() => handleEdit(item)}
-      onDelete={() => handleDelete(item)}
-    />,
-  ]);
+  const rows = filteredData
+    .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+    .map((item) => [
+      item.name,
+      <Actions
+        onView={() => handleView(item)}
+        onEdit={() => handleEdit(item)}
+        onDelete={() => handleDelete(item)}
+      />,
+    ]);
+
+  const handlePageChange = (pageNumber) => {
+    setCurrentPage(pageNumber);
+  };
 
   return (
-    <div className="p-6 max-w-4xl mx-auto">
-      <h2 className="text-2xl font-bold mb-4">Quality Parameters</h2>
+    <Suspense fallback={<Loading />}>
+      <div className="p-6 max-w-4xl mx-auto">
+        <h2 className="text-2xl font-bold mb-4">Quality Parameters</h2>
 
-      <SearchBox
-        placeholder="Search by name..."
-        items={qualityParameters.map((param) => param.name)}
-        onSearch={handleSearch}
-      />
-
-      <button
-        onClick={() => setShowAddForm(!showAddForm)}
-        className="mt-4 mb-6 p-2 bg-blue-500 text-white rounded hover:bg-blue-600 focus:outline-none"
-      >
-        {showAddForm ? "Cancel" : "Add New Quality Parameter"}
-      </button>
-
-      {showAddForm && (
-        <AddQualityParameter onSubmit={handleAddQualityParameter} />
-      )}
-
-      {isEditPopupVisible && editItem && (
-        <EditQualityParameter
-          item={editItem}
-          onClose={() => setIsEditPopupVisible(false)}
-          onSubmit={handleUpdateQualityParameter}
+        <SearchBox
+          placeholder="Search by name..."
+          items={qualityParameters.map((param) => param.name)}
+          onSearch={handleSearch}
         />
-      )}
 
-      <Tables headers={headers} rows={rows} />
+        <button
+          onClick={() => setShowAddForm(!showAddForm)}
+          className="mt-4 mb-6 p-2 bg-blue-500 text-white rounded hover:bg-blue-600 focus:outline-none"
+        >
+          {showAddForm ? "Cancel" : "Add New Quality Parameter"}
+        </button>
 
-      <ToastContainer />
-    </div>
+        {showAddForm && (
+          <AddQualityParameter onSubmit={handleAddQualityParameter} />
+        )}
+
+        {isEditPopupVisible && editItem && (
+          <EditQualityParameter
+            item={editItem}
+            onClose={() => setIsEditPopupVisible(false)}
+            onSubmit={handleUpdateQualityParameter}
+          />
+        )}
+
+        <Tables headers={headers} rows={rows} />
+
+        <Pagination
+          currentPage={currentPage}
+          totalItems={filteredData.length}
+          itemsPerPage={itemsPerPage}
+          onPageChange={handlePageChange}
+        />
+
+        <ToastContainer />
+      </div>
+    </Suspense>
   );
 };
 
 ListQualityParameter.propTypes = {
-  onSubmit: PropTypes.func, 
+  onSubmit: PropTypes.func,
 };
 
 export default ListQualityParameter;

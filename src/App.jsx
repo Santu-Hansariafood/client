@@ -6,7 +6,6 @@ import {
   Routes,
   Navigate,
 } from "react-router-dom";
-import { HelmetProvider } from "react-helmet-async";
 import { AuthProvider, useAuth } from "./context/AuthContext/AuthContext";
 
 import Loading from "./common/Loading/Loading";
@@ -237,14 +236,12 @@ const App = () => {
 
   return (
     <AuthProvider>
-      <HelmetProvider>
         <Router>
           <Suspense fallback={<Loading />}>
             {criticalRoutes}
             {nonCriticalRoutes}
           </Suspense>
         </Router>
-      </HelmetProvider>
     </AuthProvider>
   );
 };
