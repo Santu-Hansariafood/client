@@ -80,6 +80,7 @@ const App = () => {
   const criticalRoutes = useMemo(
     () => (
       <Routes>
+        <Route path="/" element={<Login />} />
         <Route path="/login" element={<Login />} />
         <Route
           path="/dashboard"
