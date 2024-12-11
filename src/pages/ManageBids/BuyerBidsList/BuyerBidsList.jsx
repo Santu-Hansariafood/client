@@ -5,6 +5,7 @@ const SearchBox = lazy(() => import("../../../common/SearchBox/SearchBox"));
 const DateSelector = lazy(() =>
   import("../../../common/DateSelector/DateSelector")
 );
+const ViewBid = lazy(() => import("../ViewBidPopup/ViewBidPopup"));
 import "react-datepicker/dist/react-datepicker.css";
 import Loading from "../../../common/Loading/Loading";
 
@@ -18,6 +19,7 @@ const BidList = () => {
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [selectedBidId, setSelectedBidId] = useState(null);
   const itemsPerPage = 10;
 
   useEffect(() => {
@@ -118,7 +120,7 @@ const BidList = () => {
     "End Time",
     "Payment Terms",
     "Delivery",
-    "Action",
+    "View Bid",
   ];
 
   const rows = filteredData
@@ -141,7 +143,7 @@ const BidList = () => {
       <button
         key={index}
         className="text-blue-500 underline hover:text-blue-700"
-        onClick={() => alert(`Viewing details for bid ID: ${bid._id}`)}
+        onClick={() => setSelectedBidId(bid._id)}
       >
         View Bid
       </button>,
@@ -200,6 +202,9 @@ const BidList = () => {
           ))}
         </div>
       </div>
+      {selectedBidId && (
+        <ViewBid bidId={selectedBidId} onClose={() => setSelectedBidId(null)} />
+      )}
     </Suspense>
   );
 };
