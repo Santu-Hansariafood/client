@@ -3,12 +3,12 @@ import axios from "axios";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Loading from "../../../common/Loading/Loading";
-const Tables = lazy(() => "../../../common/Tables/Tables");
-const SearchBox = lazy(() => "../../../common/SearchBox/SearchBox");
-const Actions = lazy(() => "../../../common/Actions/Actions");
-const Pagination = lazy(() => "../../../common/Paginations/Paginations");
-const PopupBox = lazy(() => "../../../common/PopupBox/PopupBox");
-const EditSellerDetails = lazy(() => "../EditSellerDetails/EditSellerDetails");
+const Tables = lazy(() => import("../../../common/Tables/Tables"));
+const SearchBox = lazy(() => import("../../../common/SearchBox/SearchBox"));
+const Actions = lazy(() => import("../../../common/Actions/Actions"));
+const Pagination = lazy(() => import("../../../common/Paginations/Paginations"));
+const PopupBox = lazy(() => import("../../../common/PopupBox/PopupBox"));
+const EditSellerDetails = lazy(() => import("../EditSellerDetails/EditSellerDetails"));
 
 const ListSellerDetails = () => {
   const [data, setData] = useState([]);

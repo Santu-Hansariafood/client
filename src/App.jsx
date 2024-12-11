@@ -10,7 +10,6 @@ import { AuthProvider, useAuth } from "./context/AuthContext/AuthContext";
 
 import Loading from "./common/Loading/Loading";
 import PrivateLayout from "./layouts/PrivateLayout";
-
 import "./App.css";
 
 const Login = lazy(() => import("./pages/Login/Login"));
@@ -56,6 +55,19 @@ const AddSellerCompany = lazy(() =>
 );
 const ListSellerCompany = lazy(() =>
   import("./pages/SellerCompany/ListSellerCompany/ListSellerCompany")
+);
+const BuyerBid = lazy(() => import("./pages/ManageBids/BuyerBid/BuyerBid"));
+const SupplierBid = lazy(() =>
+  import("./pages/ManageBids/SupplierBid/SupplierBid")
+);
+const BuyerBidsList = lazy(() =>
+  import("./pages/ManageBids/BuyerBidsList/BuyerBidsList")
+);
+const SupplierBidList = lazy(() =>
+  import("./pages/ManageBids/SupplierBidList/SupplierBidList")
+);
+const BidLocation = lazy(() =>
+  import("./pages/ManageBids/BidLocation/BidLocation")
 );
 
 const PrivateRoute = ({ children }) => {
@@ -230,6 +242,46 @@ const App = () => {
               </PrivateRoute>
             }
           />
+          <Route
+            path="/manage-bids/supplier"
+            element={
+              <PrivateRoute>
+                <SupplierBid />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/manage-bids/buyer"
+            element={
+              <PrivateRoute>
+                <BuyerBid />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/manage-bids/bid-list-buyer"
+            element={
+              <PrivateRoute>
+                <BuyerBidsList />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/manage-bids/bid-list-supplier"
+            element={
+              <PrivateRoute>
+                <SupplierBidList />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/manage-bids/bid-location"
+            element={
+              <PrivateRoute>
+                <BidLocation />
+              </PrivateRoute>
+            }
+          />
         </Routes>
       ),
     [hydrated]
@@ -237,12 +289,12 @@ const App = () => {
 
   return (
     <AuthProvider>
-        <Router>
-          <Suspense fallback={<Loading />}>
-            {criticalRoutes}
-            {nonCriticalRoutes}
-          </Suspense>
-        </Router>
+      <Router>
+        <Suspense fallback={<Loading />}>
+          {criticalRoutes}
+          {nonCriticalRoutes}
+        </Suspense>
+      </Router>
     </AuthProvider>
   );
 };

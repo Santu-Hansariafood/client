@@ -8,6 +8,7 @@ const DateSelector = ({ selectedDate, onChange }) => {
       <DatePicker
         selected={selectedDate}
         onChange={onChange}
+        dateFormat="dd/MM/yyyy"
         className="w-full px-2 py-1 text-gray-700 focus:outline-none"
         placeholderText="Select a date"
         calendarClassName="react-datepicker-left"

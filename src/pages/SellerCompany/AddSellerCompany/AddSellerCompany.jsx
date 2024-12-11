@@ -352,8 +352,8 @@ const AddSellerCompany = () => {
                       )
                     }
                     required
-                    maxLength="10"
-                    minLength="10"
+                    maxLength="11"
+                    minLength="11"
                   />
                 </div>
                 <div>

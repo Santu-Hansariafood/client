@@ -74,6 +74,17 @@
         { "name": "Add Seller Details", "link": "/seller-details/add", "icon": "FaPlus" },
         { "name": "Seller Details List", "link": "/seller-details/list", "icon": "FaList" }
       ]
-    }
+    },
+    {
+      "section": "Manage Bids",
+      "icon": "FaGavel",
+      "actions": [
+        { "name": "Supplier Bid", "link": "/manage-bids/supplier", "icon": "FaFileInvoice" },
+        { "name": "Buyer Bid", "link": "/manage-bids/buyer", "icon": "FaHandshake" },
+        { "name": "Bid List Buyer", "link": "/manage-bids/bid-list-buyer", "icon": "FaList" },
+        { "name": "Bid List Supplier", "link": "/manage-bids/bid-list-supplier", "icon": "FaList" },
+        { "name": "Bid Location", "link": "/manage-bids/bid-location", "icon": "FaMapMarkerAlt" }
+      ]
+    }    
   ]
 }
