@@ -14,6 +14,7 @@ const EditCompanyPopup = ({ company, isOpen, onClose, onUpdate }) => {
   const [commodities, setCommodities] = useState([]);
   const [qualityParameters, setQualityParameters] = useState([]);
   const [groups, setGroups] = useState([]);
+  const [selectedCommodity, setSelectedCommodity] = useState(null);
 
   useEffect(() => {
     if (company) {
@@ -51,17 +52,21 @@ const EditCompanyPopup = ({ company, isOpen, onClose, onUpdate }) => {
     setFormData({ ...formData, [name]: value });
   };
 
-  const handleArrayChange = (field, value) => {
-    setFormData({ ...formData, [field]: value });
-  };
-
-  const handleCommodityChange = (selectedOptions) => {
-    const selectedCommodities = selectedOptions.map((option) => ({
-      name: option.label,
-      _id: option.value,
-      parameters: [],
-    }));
-    setFormData({ ...formData, commodities: selectedCommodities });
+  const handleCommodityAdd = () => {
+    if (selectedCommodity) {
+      const newCommodity = {
+        name: selectedCommodity.label,
+        _id: selectedCommodity.value,
+        parameters: [],
+      };
+      setFormData({
+        ...formData,
+        commodities: [...(formData.commodities || []), newCommodity],
+      });
+      setSelectedCommodity(null);
+    } else {
+      toast.error("Please select a commodity to add.");
+    }
   };
 
   const handleParameterChange = (commodityIndex, selectedOptions) => {
@@ -84,6 +89,9 @@ const EditCompanyPopup = ({ company, isOpen, onClose, onUpdate }) => {
     const updatedCommodities = [...formData.commodities];
     updatedCommodities[commodityIndex].parameters[parameterIndex].value = value;
     setFormData({ ...formData, commodities: updatedCommodities });
+  };
+  const handleArrayChange = (field, value) => {
+    setFormData({ ...formData, [field]: value });
   };
 
   const handleSubmit = async (e) => {
@@ -217,21 +225,25 @@ const EditCompanyPopup = ({ company, isOpen, onClose, onUpdate }) => {
                 <label className="block text-sm font-medium text-gray-700">
                   Edit Commodities
                 </label>
-                <DataDropdown
-                  options={commodities.map((commodity) => ({
-                    value: commodity.name,
-                    label: commodity.name,
-                  }))}
-                  selectedOptions={
-                    formData.commodities?.map((commodity) => ({
-                      value: commodity.name,
+                <div className="flex items-center gap-2">
+                  <DataDropdown
+                    options={commodities.map((commodity) => ({
+                      value: commodity._id,
                       label: commodity.name,
-                    })) || []
-                  }
-                  isMulti
-                  onChange={handleCommodityChange}
-                  placeholder="Select Commodities"
-                />
+                    }))}
+                    selectedOptions={selectedCommodity}
+                    onChange={(option) => setSelectedCommodity(option)}
+                    placeholder="Select Commodity"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleCommodityAdd}
+                    className="bg-blue-500 text-white px-3 py-1 rounded"
+                  >
+                    Add
+                  </button>
+                </div>
+
                 {formData.commodities?.map((commodity, commodityIndex) => (
                   <div key={commodityIndex} className="border p-4 mt-2 rounded">
                     <p>
@@ -242,12 +254,12 @@ const EditCompanyPopup = ({ company, isOpen, onClose, onUpdate }) => {
                     </label>
                     <DataDropdown
                       options={qualityParameters.map((param) => ({
-                        value: param.name,
+                        value: param._id,
                         label: param.name,
                       }))}
                       selectedOptions={
                         commodity.parameters?.map((param) => ({
-                          value: param.parameter,
+                          value: param._id,
                           label: param.parameter,
                         })) || []
                       }

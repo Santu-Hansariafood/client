@@ -98,6 +98,7 @@ const ListCompany = () => {
     company.companyEmail,
     company.consignee.join(", "),
     company.group,
+    company.commodities.map((commodity) => commodity.name).join(", "),
     company.commodities
       .map((commodity) =>
         commodity.parameters
@@ -131,6 +132,7 @@ const ListCompany = () => {
             "Email",
             "Consignee",
             "Group",
+            "Commodity",
             "Quality Parameter",
             "Mandi License",
             "Status",
