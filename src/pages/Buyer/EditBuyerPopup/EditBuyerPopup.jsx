@@ -27,7 +27,12 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
     const fetchCompanies = async () => {
       try {
         const { data } = await axios.get("http://localhost:5000/api/companies");
-        setCompanies(data);
+        const processedData = data.map((company) => ({
+          ...company,
+          consignee: company.consignee || [], // Default to empty array if undefined
+        }));
+        console.log("Processed Companies Data:", processedData); // Debugging
+        setCompanies(processedData);
       } catch (error) {
         console.error("Error fetching companies:", error);
       }
@@ -55,11 +60,17 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
     );
 
     if (selectedCompany) {
-      setConsignees(selectedCompany.consignee);
+      setConsignees(selectedCompany.consignee || []);
+    } else {
+      setConsignees([]); // Clear consignees if no company is selected
     }
-    setFormData({ ...formData, companyName: selectedCompanyName });
-  };
 
+    setFormData({
+      ...formData,
+      companyName: selectedCompanyName,
+      consignee: [],
+    });
+  };
   if (!isOpen || !formData) return null;
 
   const handleChange = (e) => {
@@ -90,7 +101,11 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
       delete updatedBrokerage[formData[name][index]];
     }
 
-    setFormData({ ...formData, [name]: updatedArray, brokerage: updatedBrokerage });
+    setFormData({
+      ...formData,
+      [name]: updatedArray,
+      brokerage: updatedBrokerage,
+    });
   };
 
   const handleSubmit = async (e) => {
@@ -164,7 +179,9 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
               </div>
               {/* Commodity and Brokerage */}
               <div>
-                <label className="block font-semibold">Commodities & Brokerage</label>
+                <label className="block font-semibold">
+                  Commodities & Brokerage
+                </label>
                 {formData.commodity.map((comm, index) => (
                   <div key={index} className="flex items-center space-x-2 mb-2">
                     <select
@@ -184,7 +201,9 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
                     <input
                       type="number"
                       value={formData.brokerage[comm] || ""}
-                      onChange={(e) => handleBrokerageChange(comm, e.target.value)}
+                      onChange={(e) =>
+                        handleBrokerageChange(comm, e.target.value)
+                      }
                       placeholder="Brokerage"
                       className="w-24 p-2 border rounded"
                     />
@@ -271,15 +290,19 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
                       value={consignee.label || ""}
                       onChange={(e) =>
                         handleArrayChange("consignee", index, {
-                          label: e.target.value,
+                          label: e.target.options[e.target.selectedIndex].text,
+                          value: e.target.value,
                         })
                       }
                       className="w-full p-2 border rounded"
                     >
                       <option value="">Select Consignee</option>
-                      {consignees.map((consignee, i) => (
-                        <option key={i} value={consignee}>
-                          {consignee}
+                      {consignees.map((consigneeOption) => (
+                        <option
+                          key={consigneeOption._id}
+                          value={consigneeOption.value}
+                        >
+                          {consigneeOption.label}
                         </option>
                       ))}
                     </select>
@@ -294,7 +317,9 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
                 ))}
                 <button
                   type="button"
-                  onClick={() => addField("consignee", "")}
+                  onClick={() =>
+                    addField("consignee", { label: "", value: "" })
+                  }
                   className="text-blue-500"
                 >
                   Add Consignee

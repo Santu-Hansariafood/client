@@ -81,10 +81,17 @@
       "actions": [
         { "name": "Supplier Bid", "link": "/manage-bids/supplier", "icon": "FaFileInvoice" },
         { "name": "Buyer Bid", "link": "/manage-bids/buyer", "icon": "FaHandshake" },
-        { "name": "Bid List Buyer", "link": "/manage-bids/bid-list-buyer", "icon": "FaList" },
-        { "name": "Bid List Supplier", "link": "/manage-bids/bid-list-supplier", "icon": "FaList" },
+        { "name": "Bid List ", "link": "/manage-bids/bid-list", "icon": "FaList" },
         { "name": "Bid Location", "link": "/manage-bids/bid-location", "icon": "FaMapMarkerAlt" }
       ]
-    }    
+    },
+    {
+      "section": "Sodabook",
+      "icon": "FaBook",
+      "actions": [
+        { "name": "Add Sodabook", "link": "/sodabook/add", "icon": "FaPlus" },
+        { "name": "List Sodabook", "link": "/sodabook/list", "icon": "FaList" }
+      ]
+    }   
   ]
 }

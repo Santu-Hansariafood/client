@@ -60,15 +60,16 @@ const BuyerBid = lazy(() => import("./pages/ManageBids/BuyerBid/BuyerBid"));
 const SupplierBid = lazy(() =>
   import("./pages/ManageBids/SupplierBid/SupplierBid")
 );
-const BuyerBidsList = lazy(() =>
-  import("./pages/ManageBids/BuyerBidsList/BuyerBidsList")
-);
-const SupplierBidList = lazy(() =>
-  import("./pages/ManageBids/SupplierBidList/SupplierBidList")
-);
 const BidLocation = lazy(() =>
   import("./pages/ManageBids/BidLocation/BidLocation")
 );
+const AddSoudabook = lazy(() =>
+  import("./pages/Soudabook/AddSoudabook/AddSoudabook")
+);
+const ListSoudabook = lazy(() =>
+  import("./pages/Soudabook/ListSoudabook/ListSoudabook")
+);
+const BidList = lazy(() => import("./pages/ManageBids/BidList/BidList"));
 
 const PrivateRoute = ({ children }) => {
   const { isAuthenticated } = useAuth();
@@ -143,7 +144,6 @@ const App = () => {
               </PrivateRoute>
             }
           />
-
           <Route
             path="/company/add"
             element={
@@ -160,7 +160,6 @@ const App = () => {
               </PrivateRoute>
             }
           />
-
           <Route
             path="/consignee/add"
             element={
@@ -177,7 +176,6 @@ const App = () => {
               </PrivateRoute>
             }
           />
-
           <Route
             path="/commodity/add"
             element={
@@ -259,18 +257,10 @@ const App = () => {
             }
           />
           <Route
-            path="/manage-bids/bid-list-buyer"
+            path="/manage-bids/bid-list"
             element={
               <PrivateRoute>
-                <BuyerBidsList />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/manage-bids/bid-list-supplier"
-            element={
-              <PrivateRoute>
-                <SupplierBidList />
+                <BidList />
               </PrivateRoute>
             }
           />
@@ -279,6 +269,22 @@ const App = () => {
             element={
               <PrivateRoute>
                 <BidLocation />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/sodabook/add"
+            element={
+              <PrivateRoute>
+                <AddSoudabook />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/sodabook/list"
+            element={
+              <PrivateRoute>
+                <ListSoudabook />
               </PrivateRoute>
             }
           />

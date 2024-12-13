@@ -3,7 +3,7 @@ import axios from "axios";
 import DateSelector from "../../../common/DateSelector/DateSelector";
 import DataDropdown from "../../../common/DataDropdown/DataDropdown";
 import DataInput from "../../../common/DataInput/DataInput";
-import { FaPlus, FaTrash } from "react-icons/fa";
+import { FaPlus, FaTrash, FaCheck } from "react-icons/fa";
 
 const AddSoudabook = () => {
   const [sellers, setSellers] = useState([]);
@@ -25,14 +25,13 @@ const AddSoudabook = () => {
     },
   ]);
 
-  // Fetch Sellers, Items, and Buyers on component mount
   useEffect(() => {
     const fetchSellers = async () => {
       try {
         const response = await axios.get("http://localhost:5000/api/sellers");
         const sellerOptions = response.data.map((seller) => ({
           value: seller._id,
-          label: seller.name,
+          label: seller.sellerName,
         }));
         setSellers(sellerOptions);
       } catch (error) {
@@ -42,7 +41,9 @@ const AddSoudabook = () => {
 
     const fetchItems = async () => {
       try {
-        const response = await axios.get("http://localhost:5000/api/commodities");
+        const response = await axios.get(
+          "http://localhost:5000/api/commodities"
+        );
         const itemOptions = response.data.map((item) => ({
           value: item._id,
           label: item.name,
@@ -71,7 +72,6 @@ const AddSoudabook = () => {
     fetchBuyers();
   }, []);
 
-  // Handle Add Row
   const handleAddRow = () => {
     setRows([
       ...rows,
@@ -91,18 +91,21 @@ const AddSoudabook = () => {
     ]);
   };
 
-  // Handle Remove Row
   const handleRemoveRow = (index) => {
     const updatedRows = rows.filter((_, i) => i !== index);
     setRows(updatedRows);
   };
 
-  // Handle Change
   const handleChange = (index, field, value) => {
     const updatedRows = [...rows];
     updatedRows[index][field] = value;
     setRows(updatedRows);
   };
+
+  
+    const handleApproveRow = (index) => {
+      console.log(`Row ${index + 1} approved`);
+    };
 
   return (
     <div className="p-6 bg-gray-50 shadow-lg rounded-lg space-y-6">
@@ -115,7 +118,6 @@ const AddSoudabook = () => {
           key={index}
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-4 items-center border p-4 rounded-lg bg-white shadow-md"
         >
-          {/* Date Selector */}
           <div className="col-span-1">
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Date
@@ -126,7 +128,6 @@ const AddSoudabook = () => {
             />
           </div>
 
-          {/* Seller Name Dropdown */}
           <div className="col-span-1">
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Seller Name
@@ -134,12 +135,13 @@ const AddSoudabook = () => {
             <DataDropdown
               options={sellers}
               selectedOptions={row.sellerName}
-              onChange={(selected) => handleChange(index, "sellerName", selected)}
+              onChange={(selected) =>
+                handleChange(index, "sellerName", selected)
+              }
               placeholder="Select Seller"
             />
           </div>
 
-          {/* Item Dropdown */}
           <div className="col-span-1">
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Item
@@ -152,7 +154,6 @@ const AddSoudabook = () => {
             />
           </div>
 
-          {/* O.Qnty Input */}
           <div className="col-span-1">
             <label className="block text-sm font-medium text-gray-700 mb-1">
               O.Qnty
@@ -164,7 +165,6 @@ const AddSoudabook = () => {
             />
           </div>
 
-          {/* Buyer Name Dropdown */}
           <div className="col-span-1">
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Buyer Name
@@ -179,7 +179,6 @@ const AddSoudabook = () => {
             />
           </div>
 
-          {/* Rate Input */}
           <div className="col-span-1">
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Rate
@@ -191,7 +190,6 @@ const AddSoudabook = () => {
             />
           </div>
 
-          {/* Loading Qnty Input */}
           <div className="col-span-1">
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Loading Qnty
@@ -205,7 +203,6 @@ const AddSoudabook = () => {
             />
           </div>
 
-          {/* Location Input */}
           <div className="col-span-1">
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Location
@@ -217,7 +214,6 @@ const AddSoudabook = () => {
             />
           </div>
 
-          {/* Unloading Qnty Input */}
           <div className="col-span-1">
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Unloading Qnty
@@ -231,10 +227,9 @@ const AddSoudabook = () => {
             />
           </div>
 
-          {/* Payment Terms Input */}
           <div className="col-span-1">
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Payment Terms
+              Payment Terms in days
             </label>
             <DataInput
               value={row.paymentTerms}
@@ -245,7 +240,6 @@ const AddSoudabook = () => {
             />
           </div>
 
-          {/* Remarks Input */}
           <div className="col-span-1">
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Remarks
@@ -257,8 +251,13 @@ const AddSoudabook = () => {
             />
           </div>
 
-          {/* Remove Button */}
-          <div className="col-span-1 flex justify-center">
+          <div className="col-span-1 flex justify-center space-x-2">
+            <button
+              onClick={() => handleApproveRow(index)}
+              className="text-green-500 hover:text-green-700"
+            >
+              <FaCheck size={18} />
+            </button>
             <button
               onClick={() => handleRemoveRow(index)}
               className="text-red-500 hover:text-red-700"
@@ -269,7 +268,6 @@ const AddSoudabook = () => {
         </div>
       ))}
 
-      {/* Add More Button */}
       <div className="flex justify-center mt-4">
         <button
           onClick={handleAddRow}
