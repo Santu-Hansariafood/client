@@ -102,6 +102,12 @@ const BaseBid = ({ type }) => {
     fetchCompanyOptions();
   }, [selectedOption, type]);
 
+  useEffect(() => {
+    const currentTime = new Date();
+    const formattedTime = currentTime.toTimeString().slice(0, 5);
+    setStartTime(formattedTime);
+  }, []);
+
   const handleCommodityChange = async (selectedCommodity) => {
     setCommodity(selectedCommodity);
     if (!selectedCommodity) {
@@ -194,13 +200,13 @@ const BaseBid = ({ type }) => {
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">
-              Select Company
+              Select Consignee
             </label>
             <DataDropdown
               options={companyOptions}
               selectedOptions={company}
               onChange={(option) => setCompany(option)}
-              placeholder="Select Company"
+              placeholder="Select Consignee"
             />
           </div>
           <div>
@@ -250,15 +256,15 @@ const BaseBid = ({ type }) => {
           )}
           <div>
             <label className="block text-sm font-medium mb-1">
-              Enter Quantity
+              Enter Quantity (Tons)
             </label>
             <DataInput
-              placeholder="Enter Quantity"
+              placeholder="Enter Quantity in Tons"
               value={quantity}
               onChange={(e) => setQuantity(e.target.value)}
             />
           </div>
-          <div>
+          {/* <div>
             <label className="block text-sm font-medium mb-1">
               Select Unit
             </label>
@@ -275,7 +281,7 @@ const BaseBid = ({ type }) => {
               onChange={(option) => setUnit(option.value)}
               placeholder="Select Unit"
             />
-          </div>
+          </div> */}
 
           <div>
             <label className="block text-sm font-medium mb-1">

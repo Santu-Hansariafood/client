@@ -105,7 +105,7 @@ const BuyerList = () => {
     buyer.consignee?.map((c) => c.label).join(", ") || "N/A",
     Object.entries(buyer.brokerage || {})
       .map(([key, value]) => `${key}: ${value}`)
-      .join(", ") || "N/A", // Format brokerage as "Commodity: Value"
+      .join(", ") || "N/A",
     buyer.status || "N/A",
     <Actions
       key={index}
