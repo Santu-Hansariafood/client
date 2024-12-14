@@ -1,5 +1,6 @@
 import { useState, useEffect, lazy, Suspense } from "react";
 import PropTypes from "prop-types";
+import { AiOutlineEye } from "react-icons/ai"; // Importing the eye icon
 const Tables = lazy(() => import("../../../common/Tables/Tables"));
 const SearchBox = lazy(() => import("../../../common/SearchBox/SearchBox"));
 const DateSelector = lazy(() =>
@@ -14,49 +15,44 @@ const BidList = () => {
   const [commodities, setCommodities] = useState([]);
   const [origins, setOrigins] = useState([]);
   const [searchCompany, setSearchCompany] = useState([]);
-  const [filterType, setFilterType] = useState("all");
   const [filteredData, setFilteredData] = useState([]);
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
+  const [showDateRange, setShowDateRange] = useState(false); // Toggle date range
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedBidId, setSelectedBidId] = useState(null);
+  const [error, setError] = useState(null);
   const itemsPerPage = 10;
 
   useEffect(() => {
-    const fetchBids = async () => {
+    const fetchData = async () => {
       try {
-        const response = await fetch("http://localhost:5000/api/bids");
-        const data = await response.json();
-        setBids(data);
-        setFilteredData(data);
+        const [bidsResponse, commoditiesResponse, originsResponse] =
+          await Promise.all([
+            fetch("http://localhost:5000/api/bids"),
+            fetch("http://localhost:5000/api/commodities"),
+            fetch("http://localhost:5000/api/bid-locations"),
+          ]);
+
+        if (!bidsResponse.ok || !commoditiesResponse.ok || !originsResponse.ok) {
+          throw new Error("Failed to fetch data");
+        }
+
+        const bidsData = await bidsResponse.json();
+        const commoditiesData = await commoditiesResponse.json();
+        const originsData = await originsResponse.json();
+
+        setBids(bidsData);
+        setFilteredData(bidsData);
+        setCommodities(commoditiesData);
+        setOrigins(originsData);
       } catch (error) {
-        console.error("Error fetching bids:", error);
+        setError("Error fetching data. Please try again later.");
+        console.error("Error:", error);
       }
     };
 
-    const fetchCommodities = async () => {
-      try {
-        const response = await fetch("http://localhost:5000/api/commodities");
-        const data = await response.json();
-        setCommodities(data);
-      } catch (error) {
-        console.error("Error fetching commodities:", error);
-      }
-    };
-
-    const fetchOrigins = async () => {
-      try {
-        const response = await fetch("http://localhost:5000/api/bid-locations");
-        const data = await response.json();
-        setOrigins(data);
-      } catch (error) {
-        console.error("Error fetching origins:", error);
-      }
-    };
-
-    fetchBids();
-    fetchCommodities();
-    fetchOrigins();
+    fetchData();
   }, []);
 
   useEffect(() => {
@@ -70,10 +66,6 @@ const BidList = () => {
       );
     }
 
-    if (filterType !== "all") {
-      data = data.filter((bid) => bid.type === filterType);
-    }
-
     if (startDate) {
       data = data.filter((bid) => new Date(bid.bidDate) >= startDate);
     }
@@ -84,7 +76,7 @@ const BidList = () => {
     data.sort((a, b) => new Date(b.bidDate) - new Date(a.bidDate));
 
     setFilteredData(data);
-  }, [searchCompany, filterType, startDate, endDate, bids]);
+  }, [searchCompany, startDate, endDate, bids]);
 
   const getCommodityName = (id) => {
     const commodity = commodities.find((item) => item._id === id);
@@ -142,10 +134,11 @@ const BidList = () => {
       `${bid.delivery} days`,
       <button
         key={index}
-        className="text-blue-500 underline hover:text-blue-700"
+        className="text-blue-500 hover:text-blue-700"
         onClick={() => setSelectedBidId(bid._id)}
+        title="View"
       >
-        View Bid
+        <AiOutlineEye size={20} />
       </button>,
     ]);
 
@@ -159,52 +152,64 @@ const BidList = () => {
         <h1 className="text-2xl font-bold mb-4 text-center text-blue-600">
           Bid Management Dashboard
         </h1>
-        <div className="mb-4 flex flex-col md:flex-row gap-4">
-          <SearchBox
-            placeholder="Search by company"
-            items={bids.map((bid) => bid.company)}
-            onSearch={(filteredItems) => setSearchCompany(filteredItems)}
-          />
-          <select
-            value={filterType}
-            onChange={(e) => setFilterType(e.target.value)}
-            className="border border-gray-300 rounded px-4 py-2 w-full md:w-1/3"
-          >
-            <option value="all">All</option>
-            <option value="buyer">Buyers</option>
-            <option value="seller">Sellers</option>
-          </select>
-          <DateSelector
-            selectedDate={startDate}
-            onChange={(date) => setStartDate(date)}
-          />
-          <DateSelector
-            selectedDate={endDate}
-            onChange={(date) => setEndDate(date)}
-          />
-        </div>
-        <Tables headers={headers} rows={rows} />
-        <div className="mt-4 flex justify-center">
-          {Array.from({
-            length: Math.ceil(filteredData.length / itemsPerPage),
-          }).map((_, index) => (
-            <button
-              key={index}
-              onClick={() => handlePageChange(index + 1)}
-              className={`mx-1 px-3 py-1 rounded border border-gray-300 ${
-                currentPage === index + 1
-                  ? "bg-blue-500 text-white"
-                  : "bg-white"
-              }`}
-            >
-              {index + 1}
-            </button>
-          ))}
-        </div>
+        {error ? (
+          <p className="text-red-500 text-center">{error}</p>
+        ) : (
+          <>
+            <div className="mb-4 flex flex-col md:flex-row gap-4">
+              <SearchBox
+                placeholder="Search by company"
+                items={bids.map((bid) => bid.company)}
+                onSearch={(filteredItems) => setSearchCompany(filteredItems)}
+              />
+              <button
+                className="bg-blue-500 text-white px-4 py-2 rounded"
+                onClick={() => setShowDateRange(!showDateRange)}
+              >
+                {showDateRange ? "Hide Date Range" : "Select Date Range"}
+              </button>
+            </div>
+            {showDateRange && (
+              <div className="mb-4 flex flex-col md:flex-row gap-4">
+                <DateSelector
+                  selectedDate={startDate}
+                  onChange={(date) => setStartDate(date)}
+                />
+                <DateSelector
+                  selectedDate={endDate}
+                  onChange={(date) => setEndDate(date)}
+                />
+              </div>
+            )}
+            <div className="overflow-x-auto">
+              <Tables headers={headers} rows={rows} />
+            </div>
+            {filteredData.length === 0 && (
+              <p className="text-gray-500 text-center">No data available.</p>
+            )}
+            <div className="mt-4 flex justify-center">
+              {Array.from({
+                length: Math.ceil(filteredData.length / itemsPerPage),
+              }).map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => handlePageChange(index + 1)}
+                  className={`mx-1 px-3 py-1 rounded border border-gray-300 ${
+                    currentPage === index + 1
+                      ? "bg-blue-500 text-white"
+                      : "bg-white"
+                  }`}
+                >
+                  {index + 1}
+                </button>
+              ))}
+            </div>
+          </>
+        )}
+        {selectedBidId && (
+          <ViewBid bidId={selectedBidId} onClose={() => setSelectedBidId(null)} />
+        )}
       </div>
-      {selectedBidId && (
-        <ViewBid bidId={selectedBidId} onClose={() => setSelectedBidId(null)} />
-      )}
     </Suspense>
   );
 };
