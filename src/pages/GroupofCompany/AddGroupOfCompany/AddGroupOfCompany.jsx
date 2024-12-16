@@ -1,8 +1,9 @@
-import { useState, lazy, Suspense } from "react";
+import { useState, lazy, Suspense, useMemo } from "react";
 import Loading from "../../../common/Loading/Loading";
 import axios from "axios";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+
 const DataInput = lazy(() => import("../../../common/DataInput/DataInput"));
 const Buttons = lazy(() => import("../../../common/Buttons/Buttons"));
 
@@ -32,14 +33,18 @@ const AddGroupOfCompany = () => {
     }
   };
 
+  // Memoize the ToastContainer to prevent unnecessary re-renders
+  const toastContainer = useMemo(
+    () => (
+      <ToastContainer position="top-center" autoClose={3000} hideProgressBar />
+    ),
+    []
+  );
+
   return (
     <Suspense fallback={<Loading />}>
       <div className="flex items-center justify-center min-h-screen bg-gray-100">
-        <ToastContainer
-          position="top-center"
-          autoClose={3000}
-          hideProgressBar
-        />
+        {toastContainer}
         <div className="bg-white p-8 rounded-lg shadow-2xl transform transition-transform duration-500 hover:scale-105 max-w-md w-full">
           <h2 className="text-2xl font-bold mb-6 text-center">
             Add Group of Company

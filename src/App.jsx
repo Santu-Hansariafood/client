@@ -12,64 +12,33 @@ import Loading from "./common/Loading/Loading";
 import PrivateLayout from "./layouts/PrivateLayout";
 import "./App.css";
 
-const Login = lazy(() => import("./pages/Login/Login"));
-const Dashboard = lazy(() => import("./pages/Dashboard/Dashboard"));
-const AddBuyer = lazy(() => import("./pages/Buyer/AddBuyer/AddBuyer"));
-const ListBuyer = lazy(() => import("./pages/Buyer/BuyerList/BuyerList"));
-const AddCommodity = lazy(() =>
-  import("./pages/Commodity/AddCommodity/AddCommodity")
-);
-const ListCommodity = lazy(() =>
-  import("./pages/Commodity/ListCommodity/ListCommodity")
-);
-const AddCompany = lazy(() => import("./pages/Company/AddCompany/AddCompany"));
-const ListCompany = lazy(() =>
-  import("./pages/Company/ListCompany/ListCompany")
-);
-const AddConsignee = lazy(() =>
-  import("./pages/Consignee/AddConsignee/AddConsignee")
-);
-const ListConsignee = lazy(() =>
-  import("./pages/Consignee/ListConsignee/ListConsignee")
-);
-const AddGroupOfCompany = lazy(() =>
-  import("./pages/GroupofCompany/AddGroupOfCompany/AddGroupOfCompany")
-);
-const ListGroupOfCompany = lazy(() =>
-  import("./pages/GroupofCompany/ListGroupOfCompany/ListGroupOfCompany")
-);
-const AddQualityParameter = lazy(() =>
-  import("./pages/QualityParameter/AddQualityParameter/AddQualityParameter")
-);
-const ListQualityParameter = lazy(() =>
-  import("./pages/QualityParameter/ListQualityParameter/ListQualityParameter")
-);
-const AddSellerDetails = lazy(() =>
-  import("./pages/SellerDetails/AddSellerDetails/AddSellerDetails")
-);
-const ListSellerDetails = lazy(() =>
-  import("./pages/SellerDetails/ListSellerDetails/ListSellerDetails")
-);
-const AddSellerCompany = lazy(() =>
-  import("./pages/SellerCompany/AddSellerCompany/AddSellerCompany")
-);
-const ListSellerCompany = lazy(() =>
-  import("./pages/SellerCompany/ListSellerCompany/ListSellerCompany")
-);
-const BuyerBid = lazy(() => import("./pages/ManageBids/BuyerBid/BuyerBid"));
-const SupplierBid = lazy(() =>
-  import("./pages/ManageBids/SupplierBid/SupplierBid")
-);
-const BidLocation = lazy(() =>
-  import("./pages/ManageBids/BidLocation/BidLocation")
-);
-const AddSoudabook = lazy(() =>
-  import("./pages/Soudabook/AddSoudabook/AddSoudabook")
-);
-const ListSoudabook = lazy(() =>
-  import("./pages/Soudabook/ListSoudabook/ListSoudabook")
-);
-const BidList = lazy(() => import("./pages/ManageBids/BidList/BidList"));
+// Lazy-loaded components
+const LazyPages = {
+  Login: lazy(() => import("./pages/Login/Login")),
+  Dashboard: lazy(() => import("./pages/Dashboard/Dashboard")),
+  AddBuyer: lazy(() => import("./pages/Buyer/AddBuyer/AddBuyer")),
+  ListBuyer: lazy(() => import("./pages/Buyer/BuyerList/BuyerList")),
+  AddCommodity: lazy(() => import("./pages/Commodity/AddCommodity/AddCommodity")),
+  ListCommodity: lazy(() => import("./pages/Commodity/ListCommodity/ListCommodity")),
+  AddCompany: lazy(() => import("./pages/Company/AddCompany/AddCompany")),
+  ListCompany: lazy(() => import("./pages/Company/ListCompany/ListCompany")),
+  AddConsignee: lazy(() => import("./pages/Consignee/AddConsignee/AddConsignee")),
+  ListConsignee: lazy(() => import("./pages/Consignee/ListConsignee/ListConsignee")),
+  AddGroupOfCompany: lazy(() => import("./pages/GroupofCompany/AddGroupOfCompany/AddGroupOfCompany")),
+  ListGroupOfCompany: lazy(() => import("./pages/GroupofCompany/ListGroupOfCompany/ListGroupOfCompany")),
+  AddQualityParameter: lazy(() => import("./pages/QualityParameter/AddQualityParameter/AddQualityParameter")),
+  ListQualityParameter: lazy(() => import("./pages/QualityParameter/ListQualityParameter/ListQualityParameter")),
+  AddSellerDetails: lazy(() => import("./pages/SellerDetails/AddSellerDetails/AddSellerDetails")),
+  ListSellerDetails: lazy(() => import("./pages/SellerDetails/ListSellerDetails/ListSellerDetails")),
+  AddSellerCompany: lazy(() => import("./pages/SellerCompany/AddSellerCompany/AddSellerCompany")),
+  ListSellerCompany: lazy(() => import("./pages/SellerCompany/ListSellerCompany/ListSellerCompany")),
+  BuyerBid: lazy(() => import("./pages/ManageBids/BuyerBid/BuyerBid")),
+  SupplierBid: lazy(() => import("./pages/ManageBids/SupplierBid/SupplierBid")),
+  BidLocation: lazy(() => import("./pages/ManageBids/BidLocation/BidLocation")),
+  AddSoudabook: lazy(() => import("./pages/Soudabook/AddSoudabook/AddSoudabook")),
+  ListSoudabook: lazy(() => import("./pages/Soudabook/ListSoudabook/ListSoudabook")),
+  BidList: lazy(() => import("./pages/ManageBids/BidList/BidList")),
+};
 
 const PrivateRoute = ({ children }) => {
   const { isAuthenticated } = useAuth();
@@ -85,21 +54,19 @@ const App = () => {
 
   useEffect(() => {
     const idleCallback = window.requestIdleCallback || setTimeout;
-    idleCallback(() => {
-      setHydrated(true);
-    });
+    idleCallback(() => setHydrated(true));
   }, []);
 
   const criticalRoutes = useMemo(
     () => (
       <Routes>
-        <Route path="/" element={<Login />} />
-        <Route path="/login" element={<Login />} />
+        <Route path="/" element={<LazyPages.Login />} />
+        <Route path="/login" element={<LazyPages.Login />} />
         <Route
           path="/dashboard"
           element={
             <PrivateRoute>
-              <Dashboard />
+              <LazyPages.Dashboard />
             </PrivateRoute>
           }
         />
@@ -108,186 +75,44 @@ const App = () => {
     []
   );
 
-  const nonCriticalRoutes = useMemo(
+  const privateRoutes = useMemo(
     () =>
       hydrated && (
         <Routes>
-          <Route
-            path="/buyer/add"
-            element={
-              <PrivateRoute>
-                <AddBuyer />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/buyer/list"
-            element={
-              <PrivateRoute>
-                <ListBuyer />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/group-of-company/add"
-            element={
-              <PrivateRoute>
-                <AddGroupOfCompany />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/group-of-company/list"
-            element={
-              <PrivateRoute>
-                <ListGroupOfCompany />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/company/add"
-            element={
-              <PrivateRoute>
-                <AddCompany />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/company/list"
-            element={
-              <PrivateRoute>
-                <ListCompany />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/consignee/add"
-            element={
-              <PrivateRoute>
-                <AddConsignee />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/consignee/list"
-            element={
-              <PrivateRoute>
-                <ListConsignee />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/commodity/add"
-            element={
-              <PrivateRoute>
-                <AddCommodity />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/commodity/list"
-            element={
-              <PrivateRoute>
-                <ListCommodity />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/quality-parameter/add"
-            element={
-              <PrivateRoute>
-                <AddQualityParameter />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/quality-parameter/list"
-            element={
-              <PrivateRoute>
-                <ListQualityParameter />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/seller-company/add"
-            element={
-              <PrivateRoute>
-                <AddSellerCompany />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/seller-company/list"
-            element={
-              <PrivateRoute>
-                <ListSellerCompany />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/seller-details/add"
-            element={
-              <PrivateRoute>
-                <AddSellerDetails />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/seller-details/list"
-            element={
-              <PrivateRoute>
-                <ListSellerDetails />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/manage-bids/supplier"
-            element={
-              <PrivateRoute>
-                <SupplierBid />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/manage-bids/buyer"
-            element={
-              <PrivateRoute>
-                <BuyerBid />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/manage-bids/bid-list"
-            element={
-              <PrivateRoute>
-                <BidList />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/manage-bids/bid-location"
-            element={
-              <PrivateRoute>
-                <BidLocation />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/sodabook/add"
-            element={
-              <PrivateRoute>
-                <AddSoudabook />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/sodabook/list"
-            element={
-              <PrivateRoute>
-                <ListSoudabook />
-              </PrivateRoute>
-            }
-          />
+          {Object.entries({
+            "/buyer/add": LazyPages.AddBuyer,
+            "/buyer/list": LazyPages.ListBuyer,
+            "/group-of-company/add": LazyPages.AddGroupOfCompany,
+            "/group-of-company/list": LazyPages.ListGroupOfCompany,
+            "/company/add": LazyPages.AddCompany,
+            "/company/list": LazyPages.ListCompany,
+            "/consignee/add": LazyPages.AddConsignee,
+            "/consignee/list": LazyPages.ListConsignee,
+            "/commodity/add": LazyPages.AddCommodity,
+            "/commodity/list": LazyPages.ListCommodity,
+            "/quality-parameter/add": LazyPages.AddQualityParameter,
+            "/quality-parameter/list": LazyPages.ListQualityParameter,
+            "/seller-company/add": LazyPages.AddSellerCompany,
+            "/seller-company/list": LazyPages.ListSellerCompany,
+            "/seller-details/add": LazyPages.AddSellerDetails,
+            "/seller-details/list": LazyPages.ListSellerDetails,
+            "/manage-bids/supplier": LazyPages.SupplierBid,
+            "/manage-bids/buyer": LazyPages.BuyerBid,
+            "/manage-bids/bid-list": LazyPages.BidList,
+            "/manage-bids/bid-location": LazyPages.BidLocation,
+            "/sodabook/add": LazyPages.AddSoudabook,
+            "/sodabook/list": LazyPages.ListSoudabook,
+          }).map(([path, Component]) => (
+            <Route
+              key={path}
+              path={path}
+              element={
+                <PrivateRoute>
+                  <Component />
+                </PrivateRoute>
+              }
+            />
+          ))}
         </Routes>
       ),
     [hydrated]
@@ -298,7 +123,7 @@ const App = () => {
       <Router>
         <Suspense fallback={<Loading />}>
           {criticalRoutes}
-          {nonCriticalRoutes}
+          {privateRoutes}
         </Suspense>
       </Router>
     </AuthProvider>

@@ -1,4 +1,4 @@
-import { useState, useEffect, lazy, Suspense } from "react";
+import { useState, useEffect, lazy, Suspense, useMemo } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
 import Loading from "../../../common/Loading/Loading";
@@ -93,27 +93,32 @@ const BuyerList = () => {
 
   const lastItemIndex = currentPage * itemsPerPage;
   const firstItemIndex = lastItemIndex - itemsPerPage;
-  const currentItems = filteredData.slice(firstItemIndex, lastItemIndex);
 
-  const rows = currentItems.map((buyer, index) => [
-    firstItemIndex + index + 1,
-    buyer.name || "N/A",
-    buyer.mobile?.join(", ") || "N/A",
-    buyer.email?.join(", ") || "N/A",
-    buyer.companyName || "N/A",
-    buyer.commodity?.join(", ") || "N/A",
-    buyer.consignee?.map((c) => c.label).join(", ") || "N/A",
-    Object.entries(buyer.brokerage || {})
-      .map(([key, value]) => `${key}: ${value}`)
-      .join(", ") || "N/A",
-    buyer.status || "N/A",
-    <Actions
-      key={index}
-      onView={() => handleView(index)}
-      onEdit={() => handleEdit(index)}
-      onDelete={() => handleDelete(index)}
-    />,
-  ]);
+  const currentItems = useMemo(() => {
+    return filteredData.slice(firstItemIndex, lastItemIndex);
+  }, [filteredData, firstItemIndex, lastItemIndex]);
+
+  const rows = useMemo(() => {
+    return currentItems.map((buyer, index) => [
+      firstItemIndex + index + 1,
+      buyer.name || "N/A",
+      buyer.mobile?.join(", ") || "N/A",
+      buyer.email?.join(", ") || "N/A",
+      buyer.companyName || "N/A",
+      buyer.commodity?.join(", ") || "N/A",
+      buyer.consignee?.map((c) => c.label).join(", ") || "N/A",
+      Object.entries(buyer.brokerage || {})
+        .map(([key, value]) => `${key}: ${value}`)
+        .join(", ") || "N/A",
+      buyer.status || "N/A",
+      <Actions
+        key={index}
+        onView={() => handleView(index)}
+        onEdit={() => handleEdit(index)}
+        onDelete={() => handleDelete(index)}
+      />,
+    ]);
+  }, [currentItems, firstItemIndex]);
 
   return (
     <Suspense fallback={<Loading />}>

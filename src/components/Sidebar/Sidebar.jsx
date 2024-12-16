@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 import * as Icons from "react-icons/fa";
 import dashboardData from "../../data/dashboardData.json";
@@ -16,23 +16,9 @@ const Sidebar = () => {
     return IconComponent ? <IconComponent /> : null;
   };
 
-  return (
-    <>
-      <button
-        className="lg:hidden fixed top-4 left-4 z-50 text-gray-200 p-2 bg-gray-800 rounded focus:outline-none"
-        onClick={() => setIsSidebarOpen((prev) => !prev)}
-      >
-        {isSidebarOpen ? (
-          <Icons.FaTimes size={20} />
-        ) : (
-          <Icons.FaBars size={20} />
-        )}
-      </button>
-      <aside
-        className={`fixed top-0 left-0 z-40 h-full w-64 lg:w-80 bg-gray-800 text-white p-4 space-y-4 transform transition-transform duration-300 ease-in-out ${
-          isSidebarOpen ? "translate-x-0" : "-translate-x-full"
-        } lg:translate-x-0 lg:static`}
-      >
+  const sidebarContent = useMemo(
+    () => (
+      <>
         <h2 className="text-xl font-bold text-gray-200">
           {dashboardData.title}
         </h2>
@@ -69,6 +55,29 @@ const Sidebar = () => {
             )}
           </div>
         ))}
+      </>
+    ),
+    [expandedSection]
+  );
+
+  return (
+    <>
+      <button
+        className="lg:hidden fixed top-4 left-4 z-50 text-gray-200 p-2 bg-gray-800 rounded focus:outline-none"
+        onClick={() => setIsSidebarOpen((prev) => !prev)}
+      >
+        {isSidebarOpen ? (
+          <Icons.FaTimes size={20} />
+        ) : (
+          <Icons.FaBars size={20} />
+        )}
+      </button>
+      <aside
+        className={`fixed top-0 left-0 z-40 h-full w-64 lg:w-80 bg-gray-800 text-white p-4 space-y-4 transform transition-transform duration-300 ease-in-out ${
+          isSidebarOpen ? "translate-x-0" : "-translate-x-full"
+        } lg:translate-x-0 lg:static`}
+      >
+        {sidebarContent}
       </aside>
       {isSidebarOpen && (
         <div

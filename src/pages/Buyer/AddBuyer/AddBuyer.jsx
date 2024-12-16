@@ -1,4 +1,4 @@
-import { useState, useEffect, lazy, Suspense } from "react";
+import { useState, useEffect, useMemo, lazy, Suspense } from "react";
 import axios from "axios";
 import { toast, ToastContainer } from "react-toastify";
 import Loading from "../../../common/Loading/Loading";
@@ -30,46 +30,42 @@ const AddBuyer = () => {
   const [commodityOptions, setCommodityOptions] = useState([]);
   const [consigneeOptions, setConsigneeOptions] = useState([]);
 
-  const statusOptions = [
-    { value: "Active", label: "Active" },
-    { value: "Inactive", label: "Inactive" },
-  ];
+  const statusOptions = useMemo(
+    () => [
+      { value: "Active", label: "Active" },
+      { value: "Inactive", label: "Inactive" },
+    ],
+    []
+  );
 
   useEffect(() => {
-    const fetchCompanies = async () => {
+    const fetchDropdownData = async () => {
       try {
-        const response = await axios.get(
-          "http://localhost:5000/api/companies",
-          errors
+        const [companiesResponse, commoditiesResponse] = await Promise.all([
+          axios.get("http://localhost:5000/api/companies"),
+          axios.get("http://localhost:5000/api/commodities"),
+        ]);
+
+        setCompanyOptions(
+          companiesResponse.data.map((company) => ({
+            value: company.companyName,
+            label: company.companyName,
+            consignees: company.consignee || [],
+          }))
         );
-        const sortedCompanies = response.data.map((company) => ({
-          value: company.companyName,
-          label: company.companyName,
-          consignees: company.consignee || [],
-        }));
-        setCompanyOptions(sortedCompanies);
+
+        setCommodityOptions(
+          commoditiesResponse.data.map((commodity) => ({
+            value: commodity.name,
+            label: commodity.name,
+          }))
+        );
       } catch (error) {
-        toast.error("Failed to load companies. Please try again.", error);
+        toast.error("Failed to load dropdown data. Please try again.");
       }
     };
 
-    const fetchCommodities = async () => {
-      try {
-        const response = await axios.get(
-          "http://localhost:5000/api/commodities"
-        );
-        const sortedCommodities = response.data.map((commodity) => ({
-          value: commodity.name,
-          label: commodity.name,
-        }));
-        setCommodityOptions(sortedCommodities);
-      } catch (error) {
-        toast.error("Failed to load commodities. Please try again.", error);
-      }
-    };
-
-    fetchCompanies();
-    fetchCommodities();
+    fetchDropdownData();
   }, []);
 
   const handleDropdownChange = (selectedOption, actionMeta) => {
@@ -182,7 +178,7 @@ const AddBuyer = () => {
           consignee: [],
         });
       } catch (error) {
-        toast.error("Failed to add buyer. Please try again.", error);
+        toast.error("Failed to add buyer. Please try again.");
       }
     }
   };

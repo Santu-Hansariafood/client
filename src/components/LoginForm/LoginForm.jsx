@@ -1,7 +1,8 @@
-import { lazy, useState } from "react";
+import { lazy, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext/AuthContext";
 import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
+
 const DataInput = lazy(() => import("../../common/DataInput/DataInput"));
 const Buttons = lazy(() => import("../../common/Buttons/Buttons"));
 const Captcha = lazy(() => import("../../common/Captcha/Captcha"));
@@ -15,7 +16,7 @@ const LoginForm = () => {
   const navigate = useNavigate();
   const { login } = useAuth();
 
-  const roles = ["Admin", "Employee", "Buyer", "Seller", "Transporter"];
+  const roles = useMemo(() => ["Admin", "Employee", "Buyer", "Seller", "Transporter"], []);
 
   const handleLogin = () => {
     if (!phoneNumber || !password) {
