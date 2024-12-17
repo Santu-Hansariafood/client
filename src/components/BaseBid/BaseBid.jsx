@@ -21,7 +21,7 @@ const BaseBid = ({ type }) => {
   const [parameters, setParameters] = useState([]);
   const [parameterValues, setParameterValues] = useState({});
   const [quantity, setQuantity] = useState("");
-  const [unit, setUnit] = useState("");
+  // const [unit, setUnit] = useState("");
   const [rate, setRate] = useState("");
   const [bidDate, setBidDate] = useState(null);
   const [startTime, setStartTime] = useState("");
@@ -141,7 +141,7 @@ const BaseBid = ({ type }) => {
       commodity: commodity?.value,
       parameters: parameterValues,
       quantity: parseFloat(quantity),
-      unit,
+      // unit,
       rate: parseFloat(rate),
       bidDate,
       startTime,
@@ -159,7 +159,7 @@ const BaseBid = ({ type }) => {
       setOrigin(null);
       setCommodity(null);
       setQuantity("");
-      setUnit("");
+      // setUnit("");
       setRate("");
       setBidDate(null);
       setStartTime("");

@@ -79,7 +79,7 @@
       "section": "Manage Bids",
       "icon": "FaGavel",
       "actions": [
-        { "name": "Supplier Bid", "link": "/manage-bids/supplier", "icon": "FaFileInvoice" },
+        
         { "name": "Buyer Bid", "link": "/manage-bids/buyer", "icon": "FaHandshake" },
         { "name": "Bid List ", "link": "/manage-bids/bid-list", "icon": "FaList" },
         { "name": "Bid Location", "link": "/manage-bids/bid-location", "icon": "FaMapMarkerAlt" }
