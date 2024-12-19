@@ -1,12 +1,13 @@
 import { useState, useEffect, lazy, Suspense } from "react";
 import PropTypes from "prop-types";
-import { AiOutlineEye } from "react-icons/ai"; // Importing the eye icon
+import { AiOutlineEye } from "react-icons/ai";
 const Tables = lazy(() => import("../../../common/Tables/Tables"));
 const SearchBox = lazy(() => import("../../../common/SearchBox/SearchBox"));
 const DateSelector = lazy(() =>
   import("../../../common/DateSelector/DateSelector")
 );
 const ViewBid = lazy(() => import("../ViewBidPopup/ViewBidPopup"));
+const BidIntroduction = lazy(() => import("../../../components/BidIntroduction/BidIntroduction"));
 import "react-datepicker/dist/react-datepicker.css";
 import Loading from "../../../common/Loading/Loading";
 
@@ -18,7 +19,8 @@ const BidList = () => {
   const [filteredData, setFilteredData] = useState([]);
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
-  const [showDateRange, setShowDateRange] = useState(false); // Toggle date range
+  const [showDateRange, setShowDateRange] = useState(false);
+  const [showBidIntro, setShowBidIntro] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedBidId, setSelectedBidId] = useState(null);
   const [error, setError] = useState(null);
@@ -34,7 +36,11 @@ const BidList = () => {
             fetch("http://localhost:5000/api/bid-locations"),
           ]);
 
-        if (!bidsResponse.ok || !commoditiesResponse.ok || !originsResponse.ok) {
+        if (
+          !bidsResponse.ok ||
+          !commoditiesResponse.ok ||
+          !originsResponse.ok
+        ) {
           throw new Error("Failed to fetch data");
         }
 
@@ -113,6 +119,7 @@ const BidList = () => {
     "Payment Terms",
     "Delivery",
     "View Bid",
+    "BidIntroduction",
   ];
 
   const rows = filteredData
@@ -140,6 +147,13 @@ const BidList = () => {
       >
         <AiOutlineEye size={20} />
       </button>,
+      <button
+        key={`intro-${index}`}
+        className="bg-indigo-500 text-white px-2 py-1 rounded hover:bg-indigo-600"
+        onClick={() => setShowBidIntro(true)}
+      >
+        BidIntroduction
+      </button>,
     ]);
 
   const handlePageChange = (page) => {
@@ -154,6 +168,8 @@ const BidList = () => {
         </h1>
         {error ? (
           <p className="text-red-500 text-center">{error}</p>
+        ) : showBidIntro ? (
+          <BidIntroduction />
         ) : (
           <>
             <div className="mb-4 flex flex-col md:flex-row gap-4">
@@ -207,7 +223,10 @@ const BidList = () => {
           </>
         )}
         {selectedBidId && (
-          <ViewBid bidId={selectedBidId} onClose={() => setSelectedBidId(null)} />
+          <ViewBid
+            bidId={selectedBidId}
+            onClose={() => setSelectedBidId(null)}
+          />
         )}
       </div>
     </Suspense>
