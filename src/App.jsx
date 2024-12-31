@@ -38,6 +38,8 @@ const LazyPages = {
   AddSoudabook: lazy(() => import("./pages/Soudabook/AddSoudabook/AddSoudabook")),
   ListSoudabook: lazy(() => import("./pages/Soudabook/ListSoudabook/ListSoudabook")),
   BidList: lazy(() => import("./pages/ManageBids/BidList/BidList")),
+  AddSelfOrder: lazy(() => import("./pages/ManageSelfOrder/SelfOrder/SelfOrder")),
+  ListSelfOrder: lazy(() => import("./pages/ManageSelfOrder/SelfOrderList/SelfOrderList"))
 };
 
 const PrivateRoute = ({ children }) => {
@@ -102,6 +104,8 @@ const App = () => {
             "/manage-bids/bid-location": LazyPages.BidLocation,
             "/sodabook/add": LazyPages.AddSoudabook,
             "/sodabook/list": LazyPages.ListSoudabook,
+            "/manage-order/add-self-order": LazyPages.AddSelfOrder,
+            "/manage-order/list-self-order": LazyPages.ListSelfOrder,
           }).map(([path, Component]) => (
             <Route
               key={path}

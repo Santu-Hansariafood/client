@@ -12,6 +12,7 @@ const DataInput = ({
   onBlur,
   required = false,
   disabled = false,
+  readOnly = false,
 }) => {
   return (
     <div className="mb-4">
@@ -27,9 +28,10 @@ const DataInput = ({
         maxLength={maxLength}
         required={required}
         disabled={disabled}
+        readOnly={readOnly}
         className={`w-full px-4 py-2 border rounded-md 
           ${
-            disabled
+            disabled || readOnly
               ? "bg-gray-200 cursor-not-allowed border-gray-200"
               : "bg-white border-blue-500 focus:border-blue-700"
           }
@@ -45,12 +47,13 @@ DataInput.propTypes = {
   maxLength: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
   inputType: PropTypes.string,
   value: PropTypes.string,
-  onChange: PropTypes.func.isRequired,
+  onChange: PropTypes.func,
   name: PropTypes.string,
   onFocus: PropTypes.func,
   onBlur: PropTypes.func,
   required: PropTypes.bool,
   disabled: PropTypes.bool,
+  readOnly: PropTypes.bool,
 };
 
 export default DataInput;

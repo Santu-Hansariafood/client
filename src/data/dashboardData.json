@@ -92,6 +92,14 @@
         { "name": "Add Sodabook", "link": "/sodabook/add", "icon": "FaPlus" },
         { "name": "List Sodabook", "link": "/sodabook/list", "icon": "FaList" }
       ]
+    },
+    {
+      "section": "Manage Order",
+      "icon": "FaClipboardList",
+      "actions": [
+        { "name": "Add SelfOrder", "link": "/manage-order/add-self-order", "icon": "FaPlus" },
+        { "name": "List SelfOrder", "link": "/manage-order/list-self-order", "icon": "FaList" }
+      ]
     }   
   ]
 }
