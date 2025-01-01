@@ -11,10 +11,11 @@ const PODetails = ({ handleChange, formData }) => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label className="block text-sm text-gray-600 mb-1">
-            PO Number
+            Buyers PO Number
           </label>
           <DataInput
             placeholder="PO Number"
+            value={formData.poNumber}
             onChange={(e) => handleChange("poNumber", e.target.value)}
           />
         </div>

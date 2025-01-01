@@ -84,7 +84,7 @@ const CommodityInformation = ({
         brokerageBuyer: updatedBrokerage,
       });
       handleChange("companyEmail", companyEmail);
-      handleChange("buyerEmails", [companyEmail]); // Update buyerEmails with companyEmail
+      handleChange("buyerEmails", [companyEmail]);
     } else {
       setParameters([]);
       setBrokerage({});

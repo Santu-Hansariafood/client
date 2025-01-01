@@ -1,9 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import BuyerInformation from "../../../components/BuyerInformation/BuyerInformation";
 import CommodityInformation from "../../../components/CommodityInformation/CommodityInformation";
-import PurchaseOrderDetails from "../../../components/PODetails/PODetails";
+import PODetails from "../../../components/PODetails/PODetails";
 import QuantityAndPricing from "../../../components/QuantityPricing/QuantityPricing";
 import SupplierInformation from "../../../components/SupplierInformation/SupplierInformation";
 import BrokerInformation from "../../../components/BrokerInformation/BrokerInformation";
@@ -52,10 +52,15 @@ const SelfOrder = () => {
 
   const [isLoading, setIsLoading] = useState(false);
 
+  // API base URL
+  const API_BASE_URL = "http://localhost:5000/api/self-order";
+
+  // Handle input changes
   const handleChange = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
+  // Validation function
   const handleValidation = () => {
     const errors = [];
     if (!formData.buyer) errors.push("Buyer name is required.");
@@ -70,20 +75,50 @@ const SelfOrder = () => {
     return true;
   };
 
+  // Submit the form (Create)
   const handleSubmit = async () => {
     if (!handleValidation()) return;
     setIsLoading(true);
     try {
-      await axios.post("http://localhost:3000/api/soda", formData);
-      toast.success("Data submitted successfully!", {
+      await axios.post(API_BASE_URL, formData);
+      toast.success("Order created successfully!", {
         position: toast.POSITION.TOP_RIGHT,
       });
-      setFormData((prev) => ({
-        ...prev,
+      setFormData({
+        buyer: "",
+        buyerCompany: "",
+        consignee: "",
+        buyerEmail: "",
+        buyerCommodity: [],
         buyerBrokerage: { brokerageBuyer: "", brokerageSupplier: "" },
-      }));
+        commodity: "",
+        parameters: [],
+        poNumber: "",
+        poDate: new Date(),
+        state: "",
+        location: "",
+        quantity: "",
+        pendingQuantity: "",
+        rate: "",
+        gst: "",
+        cd: "",
+        weight: "",
+        supplier: "",
+        supplierCompany: "",
+        paymentTerms: "",
+        deliveryDate: new Date(),
+        loadingDate: new Date(),
+        notes: [""],
+        broker: "",
+        agentName: "",
+        buyerEmails: [""],
+        sellerEmails: [""],
+        sendPOToBuyer: "yes",
+        sendPOToSupplier: "yes",
+        billTo: "none",
+      });
     } catch (error) {
-      toast.error("Failed to submit data!", {
+      toast.error("Failed to create order.", {
         position: toast.POSITION.TOP_RIGHT,
       });
     } finally {
@@ -101,13 +136,14 @@ const SelfOrder = () => {
         brokerage={formData.buyerBrokerage}
         formData={formData}
       />
-      <PurchaseOrderDetails formData={formData} handleChange={handleChange} />
+      <PODetails formData={formData} handleChange={handleChange} />
       <LoadingStation formData={formData} handleChange={handleChange} />
       <QuantityAndPricing formData={formData} handleChange={handleChange} />
       <SupplierInformation formData={formData} handleChange={handleChange} />
       <BrokerInformation formData={formData} handleChange={handleChange} />
       <NotesList formData={formData} setFormData={setFormData} />
       <AdditionalInformation formData={formData} handleChange={handleChange} />
+
       <button
         onClick={handleSubmit}
         className="w-full py-2 bg-blue-500 text-white font-semibold rounded-lg"
@@ -115,6 +151,7 @@ const SelfOrder = () => {
       >
         {isLoading ? "Submitting..." : "Submit"}
       </button>
+
       <ToastContainer />
     </div>
   );
