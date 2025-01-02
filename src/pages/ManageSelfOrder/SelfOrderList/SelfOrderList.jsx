@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import axios from "axios";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -6,6 +6,7 @@ import Tables from "../../../common/Tables/Tables";
 import Pagination from "../../../common/Paginations/Paginations";
 import Actions from "../../../common/Actions/Actions";
 import PopupBox from "../../../common/PopupBox/PopupBox";
+import OrderDetails from "./OrderDetails/OrderDetails";
 
 const SelfOrderList = () => {
   const [data, setData] = useState([]);
@@ -21,7 +22,7 @@ const SelfOrderList = () => {
         const response = await axios.get(API_URL);
         setData(response.data);
       } catch (error) {
-        toast.error("Failed to fetch data from the server.");
+        toast.error("Failed to fetch data from the server.", error);
       }
     };
 
@@ -65,7 +66,7 @@ const SelfOrderList = () => {
     item.consignee,
     item.commodity,
     item.quantity,
-    item.rate,
+    `₹${item.rate}`,
     item.state,
     item.location,
     item.agentName,
@@ -95,30 +96,7 @@ const SelfOrderList = () => {
           onClose={handleClosePopup}
           title={`PO Details: ${selectedItem.poNumber}`}
         >
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <p><strong>Buyer:</strong> {selectedItem.buyer}</p>
-              <p><strong>Buyer Company:</strong> {selectedItem.buyerCompany}</p>
-              <p><strong>Consignee:</strong> {selectedItem.consignee}</p>
-              <p><strong>Commodity:</strong> {selectedItem.commodity}</p>
-              <p><strong>Quantity:</strong> {selectedItem.quantity}</p>
-              <p><strong>Pending Quantity:</strong> {selectedItem.pendingQuantity} Tons</p>
-              <p><strong>Rate:</strong>Rs. {selectedItem.rate}</p>
-              <p><strong>State:</strong> {selectedItem.state}</p>
-              <p><strong>Location:</strong> {selectedItem.location}</p>
-            </div>
-            <div>
-              <p><strong>Agent Name:</strong> {selectedItem.agentName}</p>
-              <p><strong>PO Date:</strong> {new Date(selectedItem.poDate).toLocaleDateString()}</p>
-              <p><strong>Delivery Date:</strong> {new Date(selectedItem.deliveryDate).toLocaleDateString()}</p>
-              <p><strong>Loading Date:</strong> {new Date(selectedItem.loadingDate).toLocaleDateString()}</p>
-              <p><strong>GST:</strong> {selectedItem.gst} %</p>
-              <p><strong>CD:</strong> {selectedItem.cd} %</p>
-              <p><strong>Weight:</strong> {selectedItem.weight} Tons</p>
-              <p><strong>Payment Terms:</strong> {selectedItem.paymentTerms} Days</p>
-              <p><strong>Notes:</strong> {selectedItem.notes.join(", ") || "None"}</p>
-            </div>
-          </div>
+          <OrderDetails item={selectedItem} />
         </PopupBox>
       )}
       <ToastContainer />

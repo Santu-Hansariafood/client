@@ -4,16 +4,21 @@ const PopupBox = ({ isOpen, onClose, title, children }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-      <div className="bg-white w-11/12 md:w-2/3 lg:w-1/3 rounded-lg shadow-lg p-6 relative">
+    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 p-4">
+      <div className="relative bg-white w-full max-w-3xl rounded-3xl shadow-2xl p-8 md:p-10 lg:p-12 transition-transform transform scale-100">
         <button
+          title="Close"
           onClick={onClose}
-          className="absolute top-2 right-2 text-gray-600 hover:text-gray-900"
+          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-2xl focus:outline-none transition-transform transform hover:scale-110"
         >
           ✖
         </button>
-        <h3 className="text-xl font-semibold mb-4">{title}</h3>
-        <div className="overflow-auto max-h-96">{children}</div>
+        <h3 className="text-2xl font-bold text-gray-800 mb-6 text-center border-b pb-4">
+          {title}
+        </h3>
+        <div className="overflow-auto max-h-[70vh] space-y-6 px-4 text-gray-700">
+          {children}
+        </div>
       </div>
     </div>
   );
