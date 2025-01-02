@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import PropTypes from "prop-types"; // Import PropTypes
 import axios from "axios";
 import { toast } from "react-toastify";
 import DataInput from "../../common/DataInput/DataInput";
@@ -67,7 +68,9 @@ const BrokerInformation = ({ formData, handleChange }) => {
             <DataDropdown
               placeholder="Agent Name"
               options={agentOptions}
-              onChange={(value) => handleChange("agentName", value)}
+              onChange={(selectedOption) =>
+                handleChange("agentName", selectedOption?.value || "")
+              }
               value={formData.agentName}
             />
           )}
@@ -83,6 +86,18 @@ const BrokerInformation = ({ formData, handleChange }) => {
       </div>
     </div>
   );
+};
+
+// Define PropTypes for validation
+BrokerInformation.propTypes = {
+  formData: PropTypes.shape({
+    agentName: PropTypes.string,
+    buyerBrokerage: PropTypes.shape({
+      brokerageBuyer: PropTypes.string,
+      brokerageSupplier: PropTypes.string,
+    }),
+  }).isRequired,
+  handleChange: PropTypes.func.isRequired,
 };
 
 export default BrokerInformation;

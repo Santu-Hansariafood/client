@@ -32,7 +32,9 @@ const LoadingStation = ({ formData, handleChange }) => {
           <DataDropdown
             placeholder="Select State"
             options={stateOptions}
-            onChange={(value) => handleInputChange("state", value)}
+            onChange={(selectedOption) =>
+              handleInputChange("state", selectedOption.value)
+            }
             value={state}
           />
         </div>

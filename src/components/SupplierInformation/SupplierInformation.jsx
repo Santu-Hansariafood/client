@@ -1,4 +1,5 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
+import PropTypes from "prop-types";
 import DataDropdown from "../../common/DataDropdown/DataDropdown";
 import DataInput from "../../common/DataInput/DataInput";
 import DateSelector from "../../common/DateSelector/DateSelector";
@@ -40,6 +41,13 @@ const SupplierInformation = ({ handleChange, formData }) => {
     [sellers]
   );
 
+  const handleDropdownChange = useCallback(
+    (key, value) => {
+      handleChange(key, value);
+    },
+    [handleChange]
+  );
+
   return (
     <div>
       <label className="block mb-2 text-lg font-semibold text-gray-700">
@@ -53,10 +61,9 @@ const SupplierInformation = ({ handleChange, formData }) => {
           <DataDropdown
             placeholder="Select Supplier"
             options={suppliers}
-            onChange={(value) => {
-              // console.log("Supplier selected:", value);
-              handleChange("supplier", value);
-            }}
+            onChange={(selectedOption) =>
+              handleDropdownChange("supplier", selectedOption.value)
+            }
           />
         </div>
         <div>
@@ -66,10 +73,9 @@ const SupplierInformation = ({ handleChange, formData }) => {
           <DataDropdown
             placeholder="Select Supplier Company"
             options={companies}
-            onChange={(value) => {
-              // console.log("Company selected:", value);
-              handleChange("supplierCompany", value);
-            }}
+            onChange={(selectedOption) =>
+              handleDropdownChange("supplierCompany", selectedOption.value)
+            }
           />
         </div>
         <div>
@@ -78,11 +84,9 @@ const SupplierInformation = ({ handleChange, formData }) => {
           </label>
           <DataInput
             placeholder="Payment Terms"
-            inputType="number"
-            onChange={(e) => {
-              // console.log("Payment terms input:", e.target.value);
-              handleChange("paymentTerms", e.target.value);
-            }}
+            inputType="text"
+            value={formData.paymentTerms || ""}
+            onChange={(e) => handleChange("paymentTerms", e.target.value)}
           />
         </div>
         <div>
@@ -91,10 +95,7 @@ const SupplierInformation = ({ handleChange, formData }) => {
           </label>
           <DateSelector
             selectedDate={formData.deliveryDate}
-            onChange={(date) => {
-              // console.log("Delivery date selected:", date);
-              handleChange("deliveryDate", date);
-            }}
+            onChange={(date) => handleChange("deliveryDate", date)}
           />
         </div>
         <div>
@@ -103,15 +104,23 @@ const SupplierInformation = ({ handleChange, formData }) => {
           </label>
           <DateSelector
             selectedDate={formData.loadingDate}
-            onChange={(date) => {
-              // console.log("Loading date selected:", date);
-              handleChange("loadingDate", date);
-            }}
+            onChange={(date) => handleChange("loadingDate", date)}
           />
         </div>
       </div>
     </div>
   );
+};
+
+SupplierInformation.propTypes = {
+  handleChange: PropTypes.func.isRequired,
+  formData: PropTypes.shape({
+    supplier: PropTypes.string,
+    supplierCompany: PropTypes.string,
+    paymentTerms: PropTypes.string,
+    deliveryDate: PropTypes.instanceOf(Date),
+    loadingDate: PropTypes.instanceOf(Date),
+  }).isRequired,
 };
 
 export default SupplierInformation;
