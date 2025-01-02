@@ -1,160 +1,129 @@
-import { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
+import axios from "axios";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import BuyerInformation from "../../../components/BuyerInformation/BuyerInformation";
-import CommodityInformation from "../../../components/CommodityInformation/CommodityInformation";
-import PODetails from "../../../components/PODetails/PODetails";
-import QuantityAndPricing from "../../../components/QuantityPricing/QuantityPricing";
-import SupplierInformation from "../../../components/SupplierInformation/SupplierInformation";
-import BrokerInformation from "../../../components/BrokerInformation/BrokerInformation";
-import NotesList from "../../../components/NotesSection/NotesSection";
-import AdditionalInformation from "../../../components/AdditionalInformation/AdditionalInformation";
-import LoadingStation from "../../../components/LoadingStation/LoadingStation";
-import axios from "axios";
+import Tables from "../../../common/Tables/Tables";
+import Pagination from "../../../common/Paginations/Paginations";
+import Actions from "../../../common/Actions/Actions";
+import PopupBox from "../../../common/PopupBox/PopupBox";
 
-const SelfOrder = () => {
-  const [formData, setFormData] = useState({
-    buyer: "",
-    buyerCompany: "",
-    consignee: "",
-    buyerEmail: "",
-    buyerCommodity: [],
-    buyerBrokerage: {
-      brokerageBuyer: "",
-      brokerageSupplier: "",
-    },
-    commodity: "",
-    parameters: [],
-    poNumber: "",
-    poDate: new Date(),
-    state: "",
-    location: "",
-    quantity: "",
-    pendingQuantity: "",
-    rate: "",
-    gst: "",
-    cd: "",
-    weight: "",
-    supplier: "",
-    supplierCompany: "",
-    paymentTerms: "",
-    deliveryDate: new Date(),
-    loadingDate: new Date(),
-    notes: [""],
-    broker: "",
-    agentName: "",
-    buyerEmails: [""],
-    sellerEmails: [""],
-    sendPOToBuyer: "yes",
-    sendPOToSupplier: "yes",
-    billTo: "none",
-  });
+const SelfOrderList = () => {
+  const [data, setData] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
+  const [selectedItem, setSelectedItem] = useState(null);
 
-  const [isLoading, setIsLoading] = useState(false);
+  const API_URL = "http://localhost:5000/api/self-order";
 
-  // API base URL
-  const API_BASE_URL = "http://localhost:5000/api/self-order";
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await axios.get(API_URL);
+        setData(response.data);
+      } catch (error) {
+        toast.error("Failed to fetch data from the server.");
+      }
+    };
 
-  // Handle input changes
-  const handleChange = (field, value) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
+    fetchData();
+  }, []);
+
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = data.slice(indexOfFirstItem, indexOfLastItem);
+
+  const handlePageChange = (pageNumber) => {
+    setCurrentPage(pageNumber);
   };
 
-  // Validation function
-  const handleValidation = () => {
-    const errors = [];
-    if (!formData.buyer) errors.push("Buyer name is required.");
-    if (!formData.poNumber) errors.push("PO Number is required.");
-    // Add more validations as needed
-    if (errors.length) {
-      errors.forEach((err) =>
-        toast.error(err, { position: toast.POSITION.TOP_RIGHT })
-      );
-      return false;
-    }
-    return true;
+  const handleView = (item) => {
+    setSelectedItem(item);
   };
 
-  // Submit the form (Create)
-  const handleSubmit = async () => {
-    if (!handleValidation()) return;
-    setIsLoading(true);
-    try {
-      await axios.post(API_BASE_URL, formData);
-      toast.success("Order created successfully!", {
-        position: toast.POSITION.TOP_RIGHT,
-      });
-      setFormData({
-        buyer: "",
-        buyerCompany: "",
-        consignee: "",
-        buyerEmail: "",
-        buyerCommodity: [],
-        buyerBrokerage: { brokerageBuyer: "", brokerageSupplier: "" },
-        commodity: "",
-        parameters: [],
-        poNumber: "",
-        poDate: new Date(),
-        state: "",
-        location: "",
-        quantity: "",
-        pendingQuantity: "",
-        rate: "",
-        gst: "",
-        cd: "",
-        weight: "",
-        supplier: "",
-        supplierCompany: "",
-        paymentTerms: "",
-        deliveryDate: new Date(),
-        loadingDate: new Date(),
-        notes: [""],
-        broker: "",
-        agentName: "",
-        buyerEmails: [""],
-        sellerEmails: [""],
-        sendPOToBuyer: "yes",
-        sendPOToSupplier: "yes",
-        billTo: "none",
-      });
-    } catch (error) {
-      toast.error("Failed to create order.", {
-        position: toast.POSITION.TOP_RIGHT,
-      });
-    } finally {
-      setIsLoading(false);
-    }
+  const handleClosePopup = () => {
+    setSelectedItem(null);
   };
+
+  const headers = [
+    "PO Number",
+    "Buyer",
+    "Buyer Company",
+    "Consignee",
+    "Commodity",
+    "Quantity",
+    "Rate",
+    "Loading Station",
+    "Location",
+    "Agent Name",
+    "Action",
+  ];
+
+  const rows = currentItems.map((item) => [
+    item.poNumber,
+    item.buyer,
+    item.buyerCompany,
+    item.consignee,
+    item.commodity,
+    item.quantity,
+    item.rate,
+    item.state,
+    item.location,
+    item.agentName,
+    <Actions
+      key={item._id}
+      onView={() => handleView(item)}
+      onEdit={() => toast.success(`Editing PO Number: ${item.poNumber}`)}
+      onDelete={() => toast.error(`Deleting PO Number: ${item.poNumber}`)}
+    />,
+  ]);
 
   return (
     <div className="p-4 max-w-screen-lg mx-auto space-y-6 bg-gray-50 rounded-lg shadow-md">
-      <BuyerInformation formData={formData} handleChange={handleChange} />
-      <CommodityInformation
-        handleChange={handleChange}
-        selectedCompany={formData.buyerCompany}
-        buyerCommodity={formData.buyerCommodity}
-        brokerage={formData.buyerBrokerage}
-        formData={formData}
+      <h1 className="text-xl font-semibold text-gray-700 text-center">
+        Self Order List
+      </h1>
+      <Tables headers={headers} rows={rows} />
+      <Pagination
+        currentPage={currentPage}
+        totalItems={data.length}
+        itemsPerPage={itemsPerPage}
+        onPageChange={handlePageChange}
       />
-      <PODetails formData={formData} handleChange={handleChange} />
-      <LoadingStation formData={formData} handleChange={handleChange} />
-      <QuantityAndPricing formData={formData} handleChange={handleChange} />
-      <SupplierInformation formData={formData} handleChange={handleChange} />
-      <BrokerInformation formData={formData} handleChange={handleChange} />
-      <NotesList formData={formData} setFormData={setFormData} />
-      <AdditionalInformation formData={formData} handleChange={handleChange} />
-
-      <button
-        onClick={handleSubmit}
-        className="w-full py-2 bg-blue-500 text-white font-semibold rounded-lg"
-        disabled={isLoading}
-      >
-        {isLoading ? "Submitting..." : "Submit"}
-      </button>
-
+      {selectedItem && (
+        <PopupBox
+          isOpen={!!selectedItem}
+          onClose={handleClosePopup}
+          title={`PO Details: ${selectedItem.poNumber}`}
+        >
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <p><strong>Buyer:</strong> {selectedItem.buyer}</p>
+              <p><strong>Buyer Company:</strong> {selectedItem.buyerCompany}</p>
+              <p><strong>Consignee:</strong> {selectedItem.consignee}</p>
+              <p><strong>Commodity:</strong> {selectedItem.commodity}</p>
+              <p><strong>Quantity:</strong> {selectedItem.quantity}</p>
+              <p><strong>Pending Quantity:</strong> {selectedItem.pendingQuantity} Tons</p>
+              <p><strong>Rate:</strong>Rs. {selectedItem.rate}</p>
+              <p><strong>State:</strong> {selectedItem.state}</p>
+              <p><strong>Location:</strong> {selectedItem.location}</p>
+            </div>
+            <div>
+              <p><strong>Agent Name:</strong> {selectedItem.agentName}</p>
+              <p><strong>PO Date:</strong> {new Date(selectedItem.poDate).toLocaleDateString()}</p>
+              <p><strong>Delivery Date:</strong> {new Date(selectedItem.deliveryDate).toLocaleDateString()}</p>
+              <p><strong>Loading Date:</strong> {new Date(selectedItem.loadingDate).toLocaleDateString()}</p>
+              <p><strong>GST:</strong> {selectedItem.gst} %</p>
+              <p><strong>CD:</strong> {selectedItem.cd} %</p>
+              <p><strong>Weight:</strong> {selectedItem.weight} Tons</p>
+              <p><strong>Payment Terms:</strong> {selectedItem.paymentTerms} Days</p>
+              <p><strong>Notes:</strong> {selectedItem.notes.join(", ") || "None"}</p>
+            </div>
+          </div>
+        </PopupBox>
+      )}
       <ToastContainer />
     </div>
   );
 };
 
-export default SelfOrder;
+export default SelfOrderList;

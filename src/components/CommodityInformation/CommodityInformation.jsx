@@ -69,7 +69,6 @@ const CommodityInformation = ({
       );
       const updatedBrokerage = matchingBuyer?.brokerage[commodityName] || "N/A";
   
-      // Fetch companyEmail
       const companyData = commodities.find(
         (commodity) => commodity.companyName === selectedCompany
       );
@@ -94,11 +93,9 @@ const CommodityInformation = ({
         brokerageBuyer: "",
       });
       handleChange("companyEmail", "");
-      handleChange("buyerEmails", []); // Clear buyerEmails
+      handleChange("buyerEmails", []);
     }
   };
-  
-  
   
   const onParameterChange = (index, newValue) => {
     const updatedParameters = [...parameters];
