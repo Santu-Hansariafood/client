@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import BuyerInformation from "../../../components/BuyerInformation/BuyerInformation";
@@ -7,22 +8,20 @@ import PODetails from "../../../components/PODetails/PODetails";
 import QuantityAndPricing from "../../../components/QuantityPricing/QuantityPricing";
 import SupplierInformation from "../../../components/SupplierInformation/SupplierInformation";
 import BrokerInformation from "../../../components/BrokerInformation/BrokerInformation";
-import NotesList from "../../../components/NotesSection/NotesSection";
+import NotesSection from "../../../components/NotesSection/NotesSection";
 import AdditionalInformation from "../../../components/AdditionalInformation/AdditionalInformation";
 import LoadingStation from "../../../components/LoadingStation/LoadingStation";
 import axios from "axios";
 
 const SelfOrder = () => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     buyer: "",
     buyerCompany: "",
     consignee: "",
     buyerEmail: "",
     buyerCommodity: [],
-    buyerBrokerage: {
-      brokerageBuyer: "",
-      brokerageSupplier: "",
-    },
+    buyerBrokerage: { brokerageBuyer: "", brokerageSupplier: "" },
     commodity: "",
     parameters: [],
     poNumber: "",
@@ -48,11 +47,13 @@ const SelfOrder = () => {
     sendPOToBuyer: "yes",
     sendPOToSupplier: "yes",
     billTo: "none",
+    saudaNo: "",
   });
 
   const [isLoading, setIsLoading] = useState(false);
 
   const API_BASE_URL = "http://localhost:5000/api/self-order";
+  const SAUDA_API_URL = "http://localhost:5000/api/sauda-no";
 
   const handleChange = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -71,47 +72,35 @@ const SelfOrder = () => {
     return true;
   };
 
+  const generateSaudaNo = async () => {
+    try {
+      const response = await axios.post(SAUDA_API_URL, formData);
+      return response.data.saudaNo;
+    } catch (error) {
+      toast.error("Failed to generate Sauda No.", {
+        position: toast.POSITION.TOP_RIGHT,
+      });
+      throw error;
+    }
+  };
+
   const handleSubmit = async () => {
     if (!handleValidation()) return;
     setIsLoading(true);
+
     try {
-      await axios.post(API_BASE_URL, formData);
+      const saudaNo = await generateSaudaNo();
+      const dataToSave = { ...formData, saudaNo };
+
+      await axios.post(API_BASE_URL, dataToSave);
+
       toast.success("Order created successfully!", {
         position: toast.POSITION.TOP_RIGHT,
       });
-      setFormData({
-        buyer: "",
-        buyerCompany: "",
-        consignee: "",
-        buyerEmail: "",
-        buyerCommodity: [],
-        buyerBrokerage: { brokerageBuyer: "", brokerageSupplier: "" },
-        commodity: "",
-        parameters: [],
-        poNumber: "",
-        poDate: new Date(),
-        state: "",
-        location: "",
-        quantity: "",
-        pendingQuantity: "",
-        rate: "",
-        gst: "",
-        cd: "",
-        weight: "",
-        supplier: "",
-        supplierCompany: "",
-        paymentTerms: "",
-        deliveryDate: new Date(),
-        loadingDate: new Date(),
-        notes: [""],
-        broker: "",
-        agentName: "",
-        buyerEmails: [""],
-        sellerEmails: [""],
-        sendPOToBuyer: "yes",
-        sendPOToSupplier: "yes",
-        billTo: "none",
-      });
+
+      setTimeout(() => {
+        navigate("/");
+      }, 2000);
     } catch (error) {
       toast.error("Failed to create order.", {
         position: toast.POSITION.TOP_RIGHT,
@@ -136,7 +125,13 @@ const SelfOrder = () => {
       <QuantityAndPricing formData={formData} handleChange={handleChange} />
       <SupplierInformation formData={formData} handleChange={handleChange} />
       <BrokerInformation formData={formData} handleChange={handleChange} />
-      <NotesList formData={formData} setFormData={setFormData} />
+      <NotesSection
+        notes={formData.notes}
+        setNotes={(updatedNotes) => {
+          console.log("Updated notes:", updatedNotes);
+          handleChange("notes", updatedNotes);
+        }}
+      />
       <AdditionalInformation formData={formData} handleChange={handleChange} />
 
       <button
@@ -147,7 +142,19 @@ const SelfOrder = () => {
         {isLoading ? "Submitting..." : "Submit"}
       </button>
 
-      <ToastContainer />
+      {/* Ensure ToastContainer is visible */}
+      <ToastContainer 
+        position="top-right"
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop={true}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        style={{ zIndex: 9999 }}
+      />
     </div>
   );
 };

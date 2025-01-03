@@ -46,6 +46,7 @@ const SelfOrderList = () => {
   };
 
   const headers = [
+    "Sauda No",
     "PO Number",
     "Buyer",
     "Buyer Company",
@@ -60,6 +61,7 @@ const SelfOrderList = () => {
   ];
 
   const rows = currentItems.map((item) => [
+    item.saudaNo,
     item.poNumber,
     item.buyer,
     item.buyerCompany,
@@ -94,7 +96,7 @@ const SelfOrderList = () => {
         <PopupBox
           isOpen={!!selectedItem}
           onClose={handleClosePopup}
-          title={`PO Details: ${selectedItem.poNumber}`}
+          title={`Sauda Details: ${selectedItem.saudaNo}`}
         >
           <OrderDetails item={selectedItem} />
         </PopupBox>
