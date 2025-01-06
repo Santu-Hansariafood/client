@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { Link } from "react-router-dom";
 import * as Icons from "react-icons/fa";
 import dashboardData from "../../data/dashboardData.json";
@@ -7,25 +7,25 @@ const Sidebar = () => {
   const [expandedSection, setExpandedSection] = useState(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
-  const toggleSection = (sectionName) => {
+  const toggleSection = useCallback((sectionName) => {
     setExpandedSection((prev) => (prev === sectionName ? null : sectionName));
-  };
+  }, []);
 
-  const renderIcon = (iconName) => {
+  const renderIcon = useCallback((iconName) => {
     const IconComponent = Icons[iconName];
     return IconComponent ? <IconComponent /> : null;
-  };
+  }, []);
 
   const sidebarContent = useMemo(
     () => (
-      <>
-        <h2 className="text-xl font-bold text-gray-200">
+      <div>
+        <h4 className="text-2xl font-bold text-gray-200 mb-4">
           {dashboardData.title}
-        </h2>
+        </h4>
         {dashboardData.sections.map((section, index) => (
           <div key={index} className="mb-4">
             <div
-              className="flex items-center justify-between cursor-pointer text-gray-400 mb-2"
+              className="flex items-center justify-between cursor-pointer text-gray-400 mb-2 hover:text-gray-200"
               onClick={() => toggleSection(section.section)}
             >
               <div className="flex items-center space-x-2">
@@ -39,12 +39,12 @@ const Sidebar = () => {
               </span>
             </div>
             {expandedSection === section.section && (
-              <div className="pl-6 space-y-1">
+              <div className="pl-6 space-y-1 transition-all duration-300 ease-in-out">
                 {section.actions.map((action, idx) => (
                   <Link
                     key={idx}
                     to={action.link}
-                    className="flex items-center space-x-2 py-1 px-2 hover:bg-gray-700 rounded"
+                    className="flex items-center space-x-2 py-1 px-2 hover:bg-gray-700 rounded text-gray-400 hover:text-gray-200"
                     onClick={() => setIsSidebarOpen(false)}
                   >
                     {renderIcon(action.icon)}
@@ -55,9 +55,9 @@ const Sidebar = () => {
             )}
           </div>
         ))}
-      </>
+      </div>
     ),
-    [expandedSection]
+    [expandedSection, renderIcon, toggleSection]
   );
 
   return (
@@ -65,6 +65,7 @@ const Sidebar = () => {
       <button
         className="lg:hidden fixed top-4 left-4 z-50 text-gray-200 p-2 bg-gray-800 rounded focus:outline-none"
         onClick={() => setIsSidebarOpen((prev) => !prev)}
+        aria-label="Toggle Sidebar"
       >
         {isSidebarOpen ? (
           <Icons.FaTimes size={20} />
@@ -73,7 +74,7 @@ const Sidebar = () => {
         )}
       </button>
       <aside
-        className={`fixed top-0 left-0 z-40 h-full w-64 lg:w-80 bg-gray-800 text-white p-4 space-y-4 transform transition-transform duration-300 ease-in-out ${
+        className={`fixed top-0 left-0 z-40 h-full w-64 lg:w-80 bg-gray-800 text-white p-4 transform transition-transform duration-300 ease-in-out ${
           isSidebarOpen ? "translate-x-0" : "-translate-x-full"
         } lg:translate-x-0 lg:static`}
       >
@@ -83,7 +84,8 @@ const Sidebar = () => {
         <div
           className="fixed inset-0 z-30 bg-black bg-opacity-50 lg:hidden"
           onClick={() => setIsSidebarOpen(false)}
-        ></div>
+          aria-hidden="true"
+        />
       )}
     </>
   );
