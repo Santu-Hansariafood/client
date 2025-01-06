@@ -1,38 +1,119 @@
-import { createContext, useContext, useState, useEffect } from "react";
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useRef,
+  useMemo,
+} from "react";
 import PropTypes from "prop-types";
 
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
-    // Load initial state from localStorage
-    return JSON.parse(localStorage.getItem("isAuthenticated")) || false;
+    try {
+      return JSON.parse(localStorage.getItem("isAuthenticated")) || false;
+    } catch {
+      return false;
+    }
   });
+
+  const sessionTimeoutRef = useRef(null);
+  const SESSION_DURATION = 5 * 60 * 1000;
 
   const login = () => {
     setIsAuthenticated(true);
-    localStorage.setItem("isAuthenticated", JSON.stringify(true));
+    localStorage.setItem("isAuthenticated", "true");
+    localStorage.setItem("sessionTimestamp", Date.now().toString());
+    startSessionTimer();
   };
 
   const logout = () => {
     setIsAuthenticated(false);
     localStorage.removeItem("isAuthenticated");
+    localStorage.removeItem("sessionTimestamp");
+    clearSessionTimer();
+  };
+
+  const startSessionTimer = () => {
+    clearSessionTimer();
+    sessionTimeoutRef.current = setTimeout(() => {
+      logout();
+      alert("Session expired due to inactivity.");
+    }, SESSION_DURATION);
+  };
+
+  const clearSessionTimer = () => {
+    if (sessionTimeoutRef.current) {
+      clearTimeout(sessionTimeoutRef.current);
+      sessionTimeoutRef.current = null;
+    }
+  };
+
+  const handleUserActivity = () => {
+    if (isAuthenticated) {
+      localStorage.setItem("sessionTimestamp", Date.now().toString());
+      startSessionTimer();
+    }
+  };
+
+  const synchronizeAuthState = (event) => {
+    if (event.key === "isAuthenticated") {
+      const newState = JSON.parse(event.newValue);
+      setIsAuthenticated(newState);
+
+      if (newState) {
+        startSessionTimer();
+      } else {
+        clearSessionTimer();
+      }
+    }
   };
 
   useEffect(() => {
-    // Synchronize authentication state with localStorage
-    localStorage.setItem("isAuthenticated", JSON.stringify(isAuthenticated));
+    const activityEvents = ["mousemove", "keypress", "click"];
+    activityEvents.forEach((event) =>
+      window.addEventListener(event, handleUserActivity)
+    );
+    window.addEventListener("storage", synchronizeAuthState);
+
+    return () => {
+      activityEvents.forEach((event) =>
+        window.removeEventListener(event, handleUserActivity)
+      );
+      window.removeEventListener("storage", synchronizeAuthState);
+    };
   }, [isAuthenticated]);
 
-  return (
-    <AuthContext.Provider value={{ isAuthenticated, login, logout }}>
-      {children}
-    </AuthContext.Provider>
+  useEffect(() => {
+    if (isAuthenticated) {
+      startSessionTimer();
+    } else {
+      clearSessionTimer();
+    }
+  }, [isAuthenticated]);
+
+  const value = useMemo(
+    () => ({
+      isAuthenticated,
+      login,
+      logout,
+    }),
+    [isAuthenticated]
   );
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
 AuthProvider.propTypes = {
   children: PropTypes.node.isRequired,
 };
 
-export const useAuth = () => useContext(AuthContext);
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error("useAuth must be used within an AuthProvider");
+  }
+  return context;
+};
