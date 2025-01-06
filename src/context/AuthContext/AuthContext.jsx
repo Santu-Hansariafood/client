@@ -7,6 +7,8 @@ import {
   useMemo,
 } from "react";
 import PropTypes from "prop-types";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const AuthContext = createContext();
 
@@ -20,7 +22,7 @@ export const AuthProvider = ({ children }) => {
   });
 
   const sessionTimeoutRef = useRef(null);
-  const SESSION_DURATION = 5 * 60 * 1000;
+  const SESSION_DURATION = 10 * 60 * 1000;
 
   const login = () => {
     setIsAuthenticated(true);
@@ -40,7 +42,15 @@ export const AuthProvider = ({ children }) => {
     clearSessionTimer();
     sessionTimeoutRef.current = setTimeout(() => {
       logout();
-      alert("Session expired due to inactivity.");
+      toast.info("Session expired due to inactivity.", {
+        position: "top-center",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+      });
     }, SESSION_DURATION);
   };
 
@@ -103,7 +113,12 @@ export const AuthProvider = ({ children }) => {
     [isAuthenticated]
   );
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+      <ToastContainer />
+    </AuthContext.Provider>
+  );
 };
 
 AuthProvider.propTypes = {
