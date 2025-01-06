@@ -100,6 +100,14 @@
         { "name": "Add SelfOrder", "link": "/manage-order/add-self-order", "icon": "FaPlus" },
         { "name": "List SelfOrder", "link": "/manage-order/list-self-order", "icon": "FaList" }
       ]
+    },
+    {
+      "section": "Loading Entry",
+      "icon": "FaTruckLoading",
+      "actions": [
+        { "name": "Add Loading Entry", "link": "/Loading-Entry/add-loading-entry", "icon": "FaPlus" },
+        { "name": "List Loading Entry", "link": "/Loading-Entry/list-loading-entry", "icon": "FaList" }
+      ]
     }   
   ]
 }

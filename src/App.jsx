@@ -33,13 +33,14 @@ const LazyPages = {
   AddSellerCompany: lazy(() => import("./pages/SellerCompany/AddSellerCompany/AddSellerCompany")),
   ListSellerCompany: lazy(() => import("./pages/SellerCompany/ListSellerCompany/ListSellerCompany")),
   BuyerBid: lazy(() => import("./pages/ManageBids/BuyerBid/BuyerBid")),
-  // SupplierBid: lazy(() => import("./pages/ManageBids/SupplierBid/SupplierBid")),
   BidLocation: lazy(() => import("./pages/ManageBids/BidLocation/BidLocation")),
   AddSoudabook: lazy(() => import("./pages/Soudabook/AddSoudabook/AddSoudabook")),
   ListSoudabook: lazy(() => import("./pages/Soudabook/ListSoudabook/ListSoudabook")),
   BidList: lazy(() => import("./pages/ManageBids/BidList/BidList")),
   AddSelfOrder: lazy(() => import("./pages/ManageSelfOrder/SelfOrder/SelfOrder")),
-  ListSelfOrder: lazy(() => import("./pages/ManageSelfOrder/SelfOrderList/SelfOrderList"))
+  ListSelfOrder: lazy(() => import("./pages/ManageSelfOrder/SelfOrderList/SelfOrderList")),
+  AddLoadingEntry: lazy(() => import("./pages/LoadingEntry/AddLoadingEntry/AddLoadingEntry")),
+  ListLoadingEntry: lazy(() => import("./pages/LoadingEntry/ListLoadingEntry/ListLoadingEntry")),
 };
 
 const PrivateRoute = ({ children }) => {
@@ -106,6 +107,8 @@ const App = () => {
             "/sodabook/list": LazyPages.ListSoudabook,
             "/manage-order/add-self-order": LazyPages.AddSelfOrder,
             "/manage-order/list-self-order": LazyPages.ListSelfOrder,
+            "/Loading-Entry/add-loading-entry": LazyPages.AddLoadingEntry,
+            "/Loading-Entry/list-loading-entry": LazyPages.ListLoadingEntry,
           }).map(([path, Component]) => (
             <Route
               key={path}
