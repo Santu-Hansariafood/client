@@ -61,7 +61,7 @@ const AddBuyer = () => {
           }))
         );
       } catch (error) {
-        toast.error("Failed to load dropdown data. Please try again.");
+        toast.error("Failed to load dropdown data. Please try again.", error);
       }
     };
 
@@ -178,7 +178,7 @@ const AddBuyer = () => {
           consignee: [],
         });
       } catch (error) {
-        toast.error("Failed to add buyer. Please try again.");
+        toast.error("Failed to add buyer. Please try again.", error);
       }
     }
   };
