@@ -3,6 +3,7 @@ import axios from "axios";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Loading from "../../../common/Loading/Loading";
+
 const Tables = lazy(() => import("../../../common/Tables/Tables"));
 const SearchBox = lazy(() => import("../../../common/SearchBox/SearchBox"));
 const Actions = lazy(() => import("../../../common/Actions/Actions"));
@@ -39,7 +40,14 @@ const ListSellerDetails = () => {
   }, []);
 
   const handleEditSeller = (seller) => {
-    setSelectedSeller(seller);
+    setSelectedSeller({
+      ...seller,
+      phoneNumbers: seller.phoneNumbers || [],
+      emails: seller.emails || [],
+      commodities: seller.commodities || [],
+      selectedCompany: seller.selectedCompany || [],
+      buyers: seller.buyers || [],
+    });
     setPopupMode("edit");
     setIsPopupOpen(true);
   };
@@ -59,6 +67,7 @@ const ListSellerDetails = () => {
     "Status",
     "Actions",
   ];
+
   const rows = filteredData
     .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
     .map((item, index) => [
@@ -72,7 +81,7 @@ const ListSellerDetails = () => {
             `${commodity.name} (Brokerage: ₹${commodity.brokerage} per ton)`
         )
         .join(", "),
-      item.selectedCompany.map((company) => company.label).join(", "),
+      item.companies.join(", "),
       item.selectedStatus,
       <Actions
         key={item._id}
@@ -120,48 +129,23 @@ const ListSellerDetails = () => {
         </div>
 
         {isPopupOpen && (
-          <PopupBox isOpen={isPopupOpen} onClose={handlePopupClose}>
+          <PopupBox title="Edit Seller Details" isOpen={isPopupOpen} onClose={handlePopupClose}>
             {popupMode === "view" && selectedSeller && (
               <div>
                 <h2 className="text-xl font-bold mb-4">Seller Details</h2>
-                <p>
-                  <strong>Name:</strong> {selectedSeller.sellerName}
-                </p>
-                <p>
-                  <strong>Email:</strong>{" "}
-                  {selectedSeller.emails.map((email) => email.value).join(", ")}
-                </p>
-                <p>
-                  <strong>Phone Numbers:</strong>{" "}
-                  {selectedSeller.phoneNumbers
-                    .map((phone) => phone.value)
-                    .join(", ")}
-                </p>
-                <p>
-                  <strong>Commodities:</strong>{" "}
-                  {selectedSeller.commodities
-                    .map(
-                      (commodity) =>
-                        `${commodity.name} (Brokerage: ₹${commodity.brokerage} per ton)`
-                    )
-                    .join(", ")}
-                </p>
-                <p>
-                  <strong>Companies:</strong>{" "}
-                  {selectedSeller.selectedCompany
-                    .map((company) => company.label)
-                    .join(", ")}
-                </p>
-                <p>
-                  <strong>Status:</strong> {selectedSeller.selectedStatus}
-                </p>
+                <p><strong>Name:</strong> {selectedSeller.sellerName}</p>
+                <p><strong>Password:</strong> {selectedSeller.password}</p>
+                <p><strong>Email:</strong> {selectedSeller.emails.map((email) => email.value).join(", ")}</p>
+                <p><strong>Phone Numbers:</strong> {selectedSeller.phoneNumbers.map((phone) => phone.value).join(", ")}</p>
+                <p><strong>Commodities:</strong> {selectedSeller.commodities.map((commodity) => `${commodity.name} (Brokerage: ₹${commodity.brokerage} per ton)`).join(", ")}</p>
+                <p><strong>Companies:</strong> {selectedSeller.companies.join(", ")}</p>
+                <p><strong>Status:</strong> {selectedSeller.selectedStatus}</p>
+                <p><strong>Buyers:</strong> {selectedSeller.buyers.map((buyer) => buyer.name).join(", ")}</p>
               </div>
             )}
+
             {popupMode === "edit" && selectedSeller && (
-              <EditSellerDetails
-                seller={selectedSeller}
-                onClose={handlePopupClose}
-              />
+              <EditSellerDetails seller={selectedSeller} onClose={handlePopupClose} />
             )}
           </PopupBox>
         )}

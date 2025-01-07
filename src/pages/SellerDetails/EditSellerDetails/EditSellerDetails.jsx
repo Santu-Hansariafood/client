@@ -9,6 +9,7 @@ import "react-toastify/dist/ReactToastify.css";
 
 const EditSellerDetails = ({ seller, onClose, onUpdate }) => {
   const [sellerName, setSellerName] = useState(seller.sellerName || "");
+  const [password, setPassword] = useState(seller.password || "");
   const [phoneNumbers, setPhoneNumbers] = useState(
     seller.phoneNumbers.map((phone) => ({ id: phone._id, value: phone.value }))
   );
@@ -31,15 +32,21 @@ const EditSellerDetails = ({ seller, onClose, onUpdate }) => {
   );
   const [companyOptions, setCompanyOptions] = useState([]);
   const [selectedCompany, setSelectedCompany] = useState(
-    seller.selectedCompany.map((company) => ({
-      value: company.value,
-      label: company.label,
+    seller.companies.map((company) => ({
+      value: company,
+      label: company,
     }))
   );
   const [selectedStatus, setSelectedStatus] = useState({
     value: seller.selectedStatus,
     label: seller.selectedStatus,
   });
+  const [buyers, setBuyers] = useState(
+    seller.buyers.map((buyer) => ({
+      value: buyer.name,
+      label: buyer.name,
+    }))
+  );
 
   const apiBaseURL = "http://localhost:5000/api";
 
@@ -51,18 +58,18 @@ const EditSellerDetails = ({ seller, onClose, onUpdate }) => {
           axios.get(`${apiBaseURL}/seller-company`),
         ]);
 
-        const commodities = commoditiesRes.data.map((item) => ({
-          value: item.name,
-          label: item.name,
-        }));
-
-        const companies = companiesRes.data.data.map((item) => ({
-          value: item.companyName,
-          label: item.companyName,
-        }));
-
-        setCommodityOptions(commodities);
-        setCompanyOptions(companies);
+        setCommodityOptions(
+          commoditiesRes.data.map((item) => ({
+            value: item.name,
+            label: item.name,
+          }))
+        );
+        setCompanyOptions(
+          companiesRes.data.data.map((item) => ({
+            value: item.companyName,
+            label: item.companyName,
+          }))
+        );
       } catch (error) {
         toast.error("Failed to load dropdown options.");
       }
@@ -89,17 +96,16 @@ const EditSellerDetails = ({ seller, onClose, onUpdate }) => {
 
     const payload = {
       sellerName,
+      password,
       phoneNumbers: phoneNumbers.map((phone) => ({ value: phone.value })),
       emails: emails.map((email) => ({ value: email.value })),
       commodities: selectedCommodity.map((commodity) => ({
         name: commodity.value,
         brokerage: brokerageAmounts[commodity.value] || 0,
       })),
-      selectedCompany: selectedCompany.map((company) => ({
-        value: company.value,
-        label: company.label,
-      })),
+      companies: selectedCompany.map((company) => company.value),
       selectedStatus: selectedStatus?.value,
+      buyers: buyers.map((buyer) => ({ name: buyer.value })),
     };
 
     try {
@@ -134,6 +140,7 @@ const EditSellerDetails = ({ seller, onClose, onUpdate }) => {
       <div className="bg-white w-11/12 max-w-4xl rounded-lg shadow-lg p-6 overflow-y-auto max-h-[90vh]">
         <h2 className="text-2xl font-bold mb-6">Edit Seller Details</h2>
         <div className="space-y-4">
+          {/* Seller Name */}
           <div>
             <label className="block text-sm font-medium text-gray-700">
               Seller Name
@@ -145,6 +152,20 @@ const EditSellerDetails = ({ seller, onClose, onUpdate }) => {
             />
           </div>
 
+          {/* Password */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Password
+            </label>
+            <DataInput
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Enter Password"
+            />
+          </div>
+
+          {/* Phone Numbers */}
           <div>
             <label className="block text-sm font-medium text-gray-700">
               Phone Numbers
@@ -188,6 +209,7 @@ const EditSellerDetails = ({ seller, onClose, onUpdate }) => {
             ))}
           </div>
 
+          {/* Emails */}
           <div>
             <label className="block text-sm font-medium text-gray-700">
               Emails
@@ -229,6 +251,7 @@ const EditSellerDetails = ({ seller, onClose, onUpdate }) => {
             ))}
           </div>
 
+          {/* Commodities */}
           <div>
             <label className="block text-sm font-medium text-gray-700">
               Commodities
@@ -255,6 +278,7 @@ const EditSellerDetails = ({ seller, onClose, onUpdate }) => {
             ))}
           </div>
 
+          {/* Company and Status */}
           <div className="flex justify-between">
             <div className="w-full md:w-5/12">
               <label className="block text-sm font-medium text-gray-700">
@@ -281,17 +305,32 @@ const EditSellerDetails = ({ seller, onClose, onUpdate }) => {
               />
             </div>
           </div>
+
+          {/* Buyers */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Buyers
+            </label>
+            <DataDropdown
+              options={buyers}
+              value={buyers}
+              onChange={setBuyers}
+              isMulti
+            />
+          </div>
         </div>
+
+        {/* Buttons */}
         <div className="flex justify-end mt-6 space-x-4">
           <Buttons
             text="Cancel"
             onClick={onClose}
-            className="px-6 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-all duration-300"
+            className="px-6 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600"
           />
           <Buttons
             text="Update"
             onClick={handleSubmit}
-            className="px-6 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-all duration-300"
+            className="px-6 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
           />
         </div>
 

@@ -140,10 +140,7 @@ const AddSellerDetails = () => {
         name: commodity.value,
         brokerage: brokerageAmounts[commodity.value] || 0,
       })),
-      companies: selectedCompany.map((company) => ({
-        value: company.value,
-        label: company.label,
-      })),
+      companies: selectedCompany.map((company) => company.value),
       selectedStatus: selectedStatus?.value,
       buyers: selectedBuyers.map((buyer) => ({
         name: buyer.value,
