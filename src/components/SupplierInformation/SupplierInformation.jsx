@@ -6,6 +6,7 @@ import DateSelector from "../../common/DateSelector/DateSelector";
 
 const SupplierInformation = ({ handleChange, formData }) => {
   const [sellers, setSellers] = useState([]);
+  const [selectedSupplier, setSelectedSupplier] = useState(null);
 
   useEffect(() => {
     const fetchSuppliers = async () => {
@@ -30,22 +31,30 @@ const SupplierInformation = ({ handleChange, formData }) => {
     [sellers]
   );
 
-  const companies = useMemo(
-    () =>
-      sellers.flatMap((seller) =>
-        seller.buyers.map((buyer) => ({
-          value: buyer._id,
-          label: buyer.name,
-        }))
-      ),
-    [sellers]
-  );
+  const companies = useMemo(() => {
+    if (selectedSupplier) {
+      const supplier = sellers.find(
+        (seller) => seller._id === selectedSupplier
+      );
+      return (
+        supplier?.companies.map((company) => ({
+          value: company,
+          label: company,
+        })) || []
+      );
+    }
+    return [];
+  }, [selectedSupplier, sellers]);
 
-  const handleDropdownChange = useCallback(
-    (key, value) => {
-      handleChange(key, value);
+  const handleSupplierChange = useCallback(
+    (supplierId) => {
+      setSelectedSupplier(supplierId);
+      const selected = sellers.find((seller) => seller._id === supplierId);
+      handleChange("commodities", selected?.name || {});
+      handleChange("supplier", supplierId);
+      handleChange("supplierBrokerage", selected?.brokerage || {});
     },
-    [handleChange]
+    [sellers, handleChange]
   );
 
   return (
@@ -62,7 +71,7 @@ const SupplierInformation = ({ handleChange, formData }) => {
             placeholder="Select Supplier"
             options={suppliers}
             onChange={(selectedOption) =>
-              handleDropdownChange("supplier", selectedOption.value)
+              handleSupplierChange(selectedOption.value)
             }
           />
         </div>
@@ -74,7 +83,7 @@ const SupplierInformation = ({ handleChange, formData }) => {
             placeholder="Select Supplier Company"
             options={companies}
             onChange={(selectedOption) =>
-              handleDropdownChange("supplierCompany", selectedOption.value)
+              handleChange("supplierCompany", selectedOption.value)
             }
           />
         </div>

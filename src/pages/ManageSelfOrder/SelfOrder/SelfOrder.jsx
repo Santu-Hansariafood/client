@@ -124,7 +124,20 @@ const SelfOrder = () => {
       <LoadingStation formData={formData} handleChange={handleChange} />
       <QuantityAndPricing formData={formData} handleChange={handleChange} />
       <SupplierInformation formData={formData} handleChange={handleChange} />
-      <BrokerInformation formData={formData} handleChange={handleChange} />
+      <BrokerInformation
+        formData={formData}
+        handleChange={(key, value) => {
+          if (key === "buyerBrokerage") {
+            setFormData((prev) => ({
+              ...prev,
+              buyerBrokerage: { ...prev.buyerBrokerage, ...value },
+            }));
+          } else {
+            handleChange(key, value);
+          }
+        }}
+      />
+
       <NotesSection
         notes={formData.notes}
         setNotes={(updatedNotes) => {
@@ -143,7 +156,7 @@ const SelfOrder = () => {
       </button>
 
       {/* Ensure ToastContainer is visible */}
-      <ToastContainer 
+      <ToastContainer
         position="top-right"
         autoClose={5000}
         hideProgressBar={false}
