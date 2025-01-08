@@ -107,3 +107,5 @@ BrokerInformation.propTypes = {
   }).isRequired,
   handleChange: PropTypes.func.isRequired,
 };
+
+export default BrokerInformation

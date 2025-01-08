@@ -1,7 +1,75 @@
+import { useMemo } from "react";
+import PropTypes from "prop-types";
 import DataInput from "../../common/DataInput/DataInput";
 import { AiOutlinePlus, AiOutlineMinus } from "react-icons/ai";
 
 const AdditionalInformation = ({ formData, handleChange }) => {
+  const buyerEmailsSection = useMemo(() => {
+    return formData.buyerEmails.map((email, index) => (
+      <div key={index} className="flex items-center gap-2 mb-2">
+        <DataInput
+          placeholder={`Buyer Email ${index + 1}`}
+          value={index === 0 ? formData.buyerEmail : email}
+          onChange={(e) =>
+            index === 0
+              ? handleChange("buyerEmail", e.target.value)
+              : handleEmailChange("buyerEmails", index, e.target.value)
+          }
+        />
+        {index > 0 && (
+          <button
+            onClick={() => handleRemoveEmail("buyerEmails", index)}
+            className="text-red-500"
+          >
+            <AiOutlineMinus size={24} />
+          </button>
+        )}
+        {index === formData.buyerEmails.length - 1 && (
+          <button
+            onClick={() => handleAddEmail("buyerEmails")}
+            className="text-green-500"
+          >
+            <AiOutlinePlus size={24} />
+          </button>
+        )}
+      </div>
+    ));
+  }, [formData.buyerEmails, formData.buyerEmail, handleChange]);
+
+  const sellerEmailsSection = useMemo(() => {
+    return formData.sellerEmails.map((email, index) => (
+      <div key={index} className="flex items-center gap-2 mb-2">
+        <DataInput
+          placeholder={`Seller Email ${index + 1}`}
+          value={email}
+          onChange={(e) =>
+            handleChange("sellerEmails", [
+              ...formData.sellerEmails.slice(0, index),
+              e.target.value,
+              ...formData.sellerEmails.slice(index + 1),
+            ])
+          }
+        />
+        {index > 0 && (
+          <button
+            onClick={() => handleRemoveEmail("sellerEmails", index)}
+            className="text-red-500"
+          >
+            <AiOutlineMinus size={24} />
+          </button>
+        )}
+        {index === formData.sellerEmails.length - 1 && (
+          <button
+            onClick={() => handleAddEmail("sellerEmails")}
+            className="text-green-500"
+          >
+            <AiOutlinePlus size={24} />
+          </button>
+        )}
+      </div>
+    ));
+  }, [formData.sellerEmails, handleChange]);
+
   const handleAddEmail = (type) => {
     handleChange(type, [...formData[type], ""]);
   };
@@ -22,76 +90,18 @@ const AdditionalInformation = ({ formData, handleChange }) => {
       <label className="block mb-4 text-lg font-semibold text-gray-700">
         Additional Information
       </label>
-
-      {/* Buyer Emails Section */}
       <div className="mb-6">
         <label className="block mb-2 text-sm font-medium text-gray-700">
           Buyer Emails
         </label>
-        {formData.buyerEmails.map((email, index) => (
-          <div key={index} className="flex items-center gap-2 mb-2">
-            <DataInput
-              placeholder={`Buyer Email ${index + 1}`}
-              value={email}
-              onChange={(e) =>
-                handleEmailChange("buyerEmails", index, e.target.value)
-              }
-            />
-            {index > 0 && (
-              <button
-                onClick={() => handleRemoveEmail("buyerEmails", index)}
-                className="text-red-500"
-              >
-                <AiOutlineMinus size={24} />
-              </button>
-            )}
-            {index === formData.buyerEmails.length - 1 && (
-              <button
-                onClick={() => handleAddEmail("buyerEmails")}
-                className="text-green-500"
-              >
-                <AiOutlinePlus size={24} />
-              </button>
-            )}
-          </div>
-        ))}
+        {buyerEmailsSection}
       </div>
-
-      {/* Seller Emails Section */}
       <div className="mb-6">
         <label className="block mb-2 text-sm font-medium text-gray-700">
           Seller Emails
         </label>
-        {formData.sellerEmails.map((email, index) => (
-          <div key={index} className="flex items-center gap-2 mb-2">
-            <DataInput
-              placeholder={`Seller Email ${index + 1}`}
-              value={email}
-              onChange={(e) =>
-                handleEmailChange("sellerEmails", index, e.target.value)
-              }
-            />
-            {index > 0 && (
-              <button
-                onClick={() => handleRemoveEmail("sellerEmails", index)}
-                className="text-red-500"
-              >
-                <AiOutlineMinus size={24} />
-              </button>
-            )}
-            {index === formData.sellerEmails.length - 1 && (
-              <button
-                onClick={() => handleAddEmail("sellerEmails")}
-                className="text-green-500"
-              >
-                <AiOutlinePlus size={24} />
-              </button>
-            )}
-          </div>
-        ))}
+        {sellerEmailsSection}
       </div>
-
-      {/* Send Purchase Order (PO) Section */}
       <div className="mb-6">
         <label className="block mb-2 text-sm font-medium text-gray-700">
           Send Purchase Order (PO)
@@ -157,8 +167,6 @@ const AdditionalInformation = ({ formData, handleChange }) => {
           </div>
         </div>
       </div>
-
-      {/* Bill To Section */}
       <div>
         <label className="block mb-2 text-sm font-medium text-gray-700">
           Bill To
@@ -198,6 +206,18 @@ const AdditionalInformation = ({ formData, handleChange }) => {
       </div>
     </div>
   );
+};
+
+AdditionalInformation.propTypes = {
+  formData: PropTypes.shape({
+    buyerEmail: PropTypes.string.isRequired,
+    buyerEmails: PropTypes.arrayOf(PropTypes.string).isRequired,
+    sellerEmails: PropTypes.arrayOf(PropTypes.string).isRequired,
+    sendPOToBuyer: PropTypes.oneOf(["yes", "no"]).isRequired,
+    sendPOToSupplier: PropTypes.oneOf(["yes", "no"]).isRequired,
+    billTo: PropTypes.oneOf(["none", "buyer", "consignee"]).isRequired,
+  }).isRequired,
+  handleChange: PropTypes.func.isRequired,
 };
 
 export default AdditionalInformation;

@@ -51,13 +51,10 @@ const SupplierInformation = ({ handleChange, formData }) => {
       const selected = sellers.find((seller) => seller._id === supplierId);
   
       setSelectedSupplier(supplierId);
-      console.log("Selected Supplier ID:", supplierId);
-  
       handleChange("supplier", supplierId);
-      console.log("Selected Supplier Commodities:", selected?.commodities || []);
       handleChange("supplierBrokerage", selected?.commodities || []);
-      console.log("Selected Supplier Name:", selected?.sellerName || "");
       handleChange("supplierName", selected?.sellerName || "");
+      handleChange("sellerEmails", selected?.emails.map((email) => email.value) || []);
   
       if (selected) {
         const commoditiesBrokerage = selected.commodities.map((commodity) => ({

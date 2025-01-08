@@ -98,12 +98,47 @@ const SelfOrder = () => {
         position: toast.POSITION.TOP_RIGHT,
       });
 
+      setFormData({
+        buyer: "",
+        buyerCompany: "",
+        consignee: "",
+        buyerEmail: "",
+        buyerCommodity: [],
+        buyerBrokerage: { brokerageBuyer: "", brokerageSupplier: "" },
+        commodity: "",
+        parameters: [],
+        poNumber: "",
+        poDate: new Date(),
+        state: "",
+        location: "",
+        quantity: "",
+        pendingQuantity: "",
+        rate: "",
+        gst: "",
+        cd: "",
+        weight: "",
+        supplier: "",
+        supplierCompany: "",
+        paymentTerms: "",
+        deliveryDate: new Date(),
+        loadingDate: new Date(),
+        notes: [""],
+        broker: "",
+        agentName: "",
+        buyerEmails: [""],
+        sellerEmails: [""],
+        sendPOToBuyer: "yes",
+        sendPOToSupplier: "yes",
+        billTo: "none",
+        saudaNo: "",
+      });
+
       setTimeout(() => {
         navigate("/");
       }, 2000);
     } catch (error) {
       toast.error("Failed to create order.", {
-        position: toast.POSITION.TOP_RIGHT,
+        position: toast.POSITION.TOP_RIGHT ,
       });
     } finally {
       setIsLoading(false);
