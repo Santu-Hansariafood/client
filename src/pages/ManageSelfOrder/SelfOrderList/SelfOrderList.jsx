@@ -7,6 +7,8 @@ import Pagination from "../../../common/Paginations/Paginations";
 import Actions from "../../../common/Actions/Actions";
 import PopupBox from "../../../common/PopupBox/PopupBox";
 import OrderDetails from "./OrderDetails/OrderDetails";
+import DownloadSauda from "../../../components/DownloadSauda/DownloadSauda";
+import { FaDownload } from "react-icons/fa";
 
 const SelfOrderList = () => {
   const [data, setData] = useState([]);
@@ -72,12 +74,26 @@ const SelfOrderList = () => {
     item.state,
     item.location,
     item.agentName,
-    <Actions
-      key={item._id}
-      onView={() => handleView(item)}
-      onEdit={() => toast.success(`Editing PO Number: ${item.poNumber}`)}
-      onDelete={() => toast.error(`Deleting PO Number: ${item.poNumber}`)}
-    />,
+    <div className="flex space-x-2">
+      <Actions
+        key={item._id}
+        onView={() => handleView(item)}
+        onEdit={() => toast.success(`Editing PO Number: ${item.poNumber}`)}
+        onDelete={() => toast.error(`Deleting PO Number: ${item.poNumber}`)}
+      />
+      {/* Add Download PDF button */}
+      <DownloadSauda
+        data={item}
+        button={
+          <button
+            className="text-blue-500 hover:text-blue-700"
+            title="Download Sauda PDF"
+          >
+            <FaDownload />
+          </button>
+        }
+      />
+    </div>,
   ]);
 
   return (
