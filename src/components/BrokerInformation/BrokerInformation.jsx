@@ -81,14 +81,15 @@ const BrokerInformation = ({ formData, handleChange }) => {
         )}
         {renderBrokerageField(
           "Brokerage Per Ton (Supplier)",
-          formData.buyerBrokerage?.brokerageSupplier
+          formData.supplierBrokerageDetails?.find(
+            (brokerageDetail) => brokerageDetail.name === formData.commodity
+          )?.brokerage || "N/A"
         )}
       </div>
     </div>
   );
 };
 
-// Define PropTypes for validation
 BrokerInformation.propTypes = {
   formData: PropTypes.shape({
     agentName: PropTypes.string,
@@ -96,8 +97,13 @@ BrokerInformation.propTypes = {
       brokerageBuyer: PropTypes.string,
       brokerageSupplier: PropTypes.string,
     }),
+    supplierBrokerageDetails: PropTypes.arrayOf(
+      PropTypes.shape({
+        name: PropTypes.string.isRequired,
+        brokerage: PropTypes.string,
+      })
+    ),
+    commodity: PropTypes.string,
   }).isRequired,
   handleChange: PropTypes.func.isRequired,
 };
-
-export default BrokerInformation;

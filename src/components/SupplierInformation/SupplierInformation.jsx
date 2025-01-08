@@ -48,15 +48,29 @@ const SupplierInformation = ({ handleChange, formData }) => {
 
   const handleSupplierChange = useCallback(
     (supplierId) => {
-      setSelectedSupplier(supplierId);
       const selected = sellers.find((seller) => seller._id === supplierId);
-      handleChange("commodities", selected?.name || {});
+  
+      setSelectedSupplier(supplierId);
+      console.log("Selected Supplier ID:", supplierId);
+  
       handleChange("supplier", supplierId);
-      handleChange("supplierBrokerage", selected?.brokerage || {});
+      console.log("Selected Supplier Commodities:", selected?.commodities || []);
+      handleChange("supplierBrokerage", selected?.commodities || []);
+      console.log("Selected Supplier Name:", selected?.sellerName || "");
+      handleChange("supplierName", selected?.sellerName || "");
+  
+      if (selected) {
+        const commoditiesBrokerage = selected.commodities.map((commodity) => ({
+          name: commodity.name,
+          brokerage: commodity.brokerage,
+        }));
+        console.log("Supplier Brokerage Details:", commoditiesBrokerage);
+        handleChange("supplierBrokerageDetails", commoditiesBrokerage);
+      }
     },
     [sellers, handleChange]
   );
-
+  
   return (
     <div>
       <label className="block mb-2 text-lg font-semibold text-gray-700">
