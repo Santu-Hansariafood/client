@@ -10,15 +10,19 @@ const styles = StyleSheet.create({
     fontFamily: "Helvetica",
     fontSize: 12,
     padding: 30,
+    lineHeight: 0,
+  },
+  componentSpacing: {
+    marginBottom: 0,
   },
 });
 
 const SaudaPDF = ({ data }) => (
   <Document>
     <Page style={styles.page}>
-      <SaudaHeader />
-      <SaudaDetails data={data} />
-      <CommodityTable data={data} />
+      <SaudaHeader style={styles.componentSpacing} />
+      <SaudaDetails data={data} style={styles.componentSpacing} />
+      <CommodityTable data={data} style={styles.componentSpacing} />
       <AdditionalDetails data={data} />
     </Page>
   </Document>

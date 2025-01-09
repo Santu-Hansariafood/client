@@ -3,7 +3,7 @@ import { View, Text, StyleSheet } from "@react-pdf/renderer";
 
 const styles = StyleSheet.create({
   section: {
-    marginBottom: 20,
+    marginBottom: 10, // Reduced space between sections
     padding: 10,
     backgroundColor: "#ffffff",
   },
@@ -11,7 +11,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    padding: 10,
+    padding: 5, // Reduced padding
     backgroundColor: "#f7f9fc",
     borderRadius: 5,
   },
@@ -31,7 +31,7 @@ const styles = StyleSheet.create({
     color: "#003366",
   },
   tableContainer: {
-    marginTop: 10,
+    marginTop: 5, // Reduced top margin
     border: "1px solid #003366",
     borderRadius: 5,
     overflow: "hidden",
@@ -39,11 +39,11 @@ const styles = StyleSheet.create({
   tableHeader: {
     backgroundColor: "#003366",
     flexDirection: "row",
-    padding: 5,
+    padding: 3, // Reduced padding
   },
   tableHeaderText: {
     color: "#ffffff",
-    fontSize: 10,
+    fontSize: 9, // Adjusted font size for better alignment
     fontWeight: "bold",
     flex: 1,
     textAlign: "center",
@@ -51,25 +51,26 @@ const styles = StyleSheet.create({
   tableRow: {
     flexDirection: "row",
     backgroundColor: "#f7f9fc",
-    padding: 5,
+    paddingVertical: 3, // Reduced vertical padding
+    paddingHorizontal: 2,
   },
   tableCell: {
     fontSize: 8,
     color: "#555555",
     flex: 1,
     textAlign: "center",
-    paddingVertical: 3,
-    paddingHorizontal: 5,
+    paddingVertical: 2, // Reduced padding for compactness
+    paddingHorizontal: 3,
     borderLeft: "1px solid #003366",
   },
   firstCell: {
     borderLeft: "none",
   },
   addressDetails: {
-    fontSize: 8,
+    fontSize: 7, // Reduced font size for address details
     color: "#555555",
-    marginTop: 5,
-    lineHeight: 1.2,
+    marginTop: 2, // Reduced spacing
+    lineHeight: 1.1, // Adjusted line spacing
   },
 });
 
@@ -92,10 +93,12 @@ const SaudaDetails = ({ data }) => (
         <Text style={[styles.tableCell, styles.firstCell]}>{data.buyer}</Text>
         <Text style={styles.tableCell}>
           {data.supplierCompany}
-          {data.supplierDetails && (
+          {data.supplierDetails ? (
             <Text style={styles.addressDetails}>
-              {`\n${data.supplierDetails.location}, ${data.supplierDetails.district}, ${data.supplierDetails.state} - ${data.supplierDetails.pin}\nGST: ${data.supplierDetails.gst}`}
+              {`\n${data.supplierDetails.address}, ${data.supplierDetails.district}, ${data.supplierDetails.state} - ${data.supplierDetails.pinNo}\nGST: ${data.supplierDetails.gstNo}`}
             </Text>
+          ) : (
+            "\nDetails not available"
           )}
         </Text>
         <Text style={styles.tableCell}>

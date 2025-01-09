@@ -3,52 +3,47 @@ import { View, Text, StyleSheet } from "@react-pdf/renderer";
 
 const styles = StyleSheet.create({
   section: {
-    marginTop: 10,
-    padding: 10,
+    marginTop: 5,
+    padding: 8,
     backgroundColor: "#ffffff",
     borderRadius: 5,
     border: "1px solid #003366",
   },
   title: {
-    fontSize: 12,
+    fontSize: 10,
     fontWeight: "bold",
-    marginBottom: 10,
+    marginBottom: 5,
     color: "#003366",
     textAlign: "center",
   },
   tableContainer: {
-    marginVertical: 10,
+    marginVertical: 5,
     border: "1px solid #003366",
     borderRadius: 5,
     overflow: "hidden",
   },
   tableRow: {
     flexDirection: "row",
-    padding: 5,
+    padding: 3,
     backgroundColor: "#f7f9fc",
-  },
-  tableHeader: {
-    backgroundColor: "#003366",
-    flexDirection: "row",
-    padding: 5,
   },
   tableCell: {
     flex: 1,
-    padding: 5,
+    padding: 3,
     fontSize: 8,
     textAlign: "center",
     color: "#555555",
   },
   tableHeaderCell: {
-    fontSize: 12,
+    fontSize: 10,
     fontWeight: "bold",
     color: "#ffffff",
   },
   signatureRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginTop: 15,
-    padding: 10,
+    marginTop: 10,
+    padding: 5,
     borderTop: "1px solid #003366",
   },
   signatureText: {
@@ -58,22 +53,29 @@ const styles = StyleSheet.create({
     textAlign: "center",
     flex: 1,
   },
+  brokerInfoContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginVertical: 5,
+    paddingHorizontal: 3,
+  },
   brokerInfo: {
-    marginVertical: 5, // Reduced spacing here
-    textAlign: "center",
     fontSize: 8,
     fontWeight: "bold",
     color: "#003366",
+    flex: 1,
+    textAlign: "center",
   },
   footerNote: {
-    marginTop: 10,
+    marginTop: 5,
     textAlign: "center",
-    fontSize: 8,
+    fontSize: 7,
     color: "#555555",
   },
   notesSection: {
-    marginTop: 10,
-    padding: 10,
+    marginTop: 5,
+    padding: 8,
     backgroundColor: "#f9f9f9",
     borderRadius: 5,
     border: "1px solid #003366",
@@ -81,7 +83,17 @@ const styles = StyleSheet.create({
   notesText: {
     fontSize: 8,
     color: "#555555",
-    marginBottom: 5,
+    marginBottom: 3,
+  },
+  bankDetails: {
+    marginVertical: 5,
+    padding: 8,
+    backgroundColor: "#f9f9f9",
+    borderRadius: 5,
+    border: "1px solid #003366",
+    fontSize: 8,
+    color: "#555555",
+    textAlign: "center",
   },
 });
 
@@ -91,7 +103,7 @@ const AdditionalDetails = ({ data }) => (
       <Text style={styles.title}>Additional Details</Text>
       <View style={styles.tableContainer}>
         <View style={styles.tableRow}>
-          <Text style={styles.tableCell}>Weight: {data.weight} TON</Text>
+          <Text style={styles.tableCell}>Weight: `{data.weight}</Text>
           <Text style={styles.tableCell}>
             Delivery Date: {new Date(data.deliveryDate).toLocaleDateString()}
           </Text>
@@ -100,6 +112,12 @@ const AdditionalDetails = ({ data }) => (
           </Text>
           <Text style={styles.tableCell}>
             Payment Terms: {data.paymentTerms} Days
+          </Text>
+          <Text style={styles.tableCell}>
+            Loading Station: {data.state}
+          </Text>
+          <Text style={styles.tableCell}>
+            Location: {data.location}
           </Text>
         </View>
       </View>
@@ -113,6 +131,19 @@ const AdditionalDetails = ({ data }) => (
           ))}
         </View>
       )}
+      <View style={styles.bankDetails}>
+        <Text style={styles.title}>Bank Account Details</Text>
+        {data.supplierDetails?.bankDetails?.[0] ? (
+          <Text>
+            Account Holder: {data.supplierDetails.bankDetails[0].accountHolderName}
+            {"\n"}Account No: {data.supplierDetails.bankDetails[0].accountNumber}
+            {"\n"}IFSC: {data.supplierDetails.bankDetails[0].ifscCode}
+            {"\n"}Branch: {data.supplierDetails.bankDetails[0].branchName}
+          </Text>
+        ) : (
+          <Text>Bank details not available</Text>
+        )}
+      </View>
       <View style={styles.tableContainer}>
         <View style={styles.tableHeader}>
           <Text style={[styles.tableCell, styles.tableHeaderCell]}>
@@ -131,10 +162,12 @@ const AdditionalDetails = ({ data }) => (
           </Text>
         </View>
       </View>
-      <Text style={styles.brokerInfo}>
-        Broker: HANSARIA FOOD PRIVATE LIMITED
-      </Text>
-      <Text style={styles.brokerInfo}>Agent Name: {data.agentName}</Text>
+      <View style={styles.brokerInfoContainer}>
+        <Text style={styles.brokerInfo}>
+          Broker: HANSARIA FOOD PRIVATE LIMITED
+        </Text>
+        <Text style={styles.brokerInfo}>Agent Name: {data.agentName}</Text>
+      </View>
       <View style={styles.signatureRow}>
         <Text style={styles.signatureText}>Seller Signature</Text>
         <Text style={styles.signatureText}>Buyer Signature</Text>
