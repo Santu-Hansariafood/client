@@ -36,7 +36,7 @@ const styles = StyleSheet.create({
     fontSize: 8,
     flex: 1,
     border: "1px solid #cccccc",
-    textAlign: "left",
+    textAlign: "center",
   },
   bold: {
     fontWeight: "bold",
@@ -47,6 +47,12 @@ const CommodityTable = ({ data }) => {
   const filteredParameters = data.parameters.filter(
     (param) => param.value !== "0"
   );
+
+  const columnCount = 3;
+  const parameterRows = [];
+  for (let i = 0; i < filteredParameters.length; i += columnCount) {
+    parameterRows.push(filteredParameters.slice(i, i + columnCount));
+  }
 
   return (
     <View style={styles.table}>
@@ -68,19 +74,30 @@ const CommodityTable = ({ data }) => {
 
       <View style={styles.table}>
         <View style={styles.tableHeader}>
-          <Text style={[styles.tableCell, styles.bold]}>Quality Parameters</Text>
+          <Text style={[styles.tableCell, styles.bold]}>
+            Quality Parameters
+          </Text>
         </View>
-        {filteredParameters.map((param, index) => (
-          <View
-            key={param._id}
-            style={[
-              styles.fullWidthRow,
-              index % 2 === 0 ? styles.tableRow : styles.tableRowAlt,
-            ]}
-          >
-            <Text style={styles.parameterCell}>
-              {param.parameter}: {param.value} %
-            </Text>
+
+        {parameterRows.map((row, rowIndex) => (
+          <View key={rowIndex} style={styles.fullWidthRow}>
+            {row.map((param) => (
+              <Text
+                key={param._id}
+                style={[styles.parameterCell, rowIndex % 2 === 0 ? styles.tableRow : styles.tableRowAlt]}
+              >
+                {param.parameter}: {param.value} %
+              </Text>
+            ))}
+            {row.length < columnCount &&
+              Array.from({ length: columnCount - row.length }).map((_, index) => (
+                <Text
+                  key={`empty-${rowIndex}-${index}`}
+                  style={styles.parameterCell}
+                >
+                  {" "}
+                </Text>
+              ))}
           </View>
         ))}
       </View>

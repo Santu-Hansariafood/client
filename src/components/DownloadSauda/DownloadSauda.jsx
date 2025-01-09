@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import { PDFDownloadLink } from "@react-pdf/renderer";
 import SaudaPDF from "./SaudaPDF/SaudaPDF";
@@ -20,7 +20,7 @@ const DownloadSauda = ({ data }) => {
         const supplierResponse = await axios.get(SUPPLIER_API_URL);
 
         setConsigneeData(consigneeResponse.data);
-        setSupplierData(supplierResponse.data.data || []); // Extract `data` field
+        setSupplierData(supplierResponse.data.data || []);
       } catch (error) {
         console.error("Error fetching data:", error);
       } finally {
@@ -31,10 +31,8 @@ const DownloadSauda = ({ data }) => {
     fetchData();
   }, []);
 
-  // Find matching consignee and supplier details
   const matchingConsignee = consigneeData.find(
-    (consignee) =>
-      consignee.name.toLowerCase() === data.consignee.toLowerCase()
+    (consignee) => consignee.name.toLowerCase() === data.consignee.toLowerCase()
   );
 
   const matchingSupplier = supplierData.find(
@@ -42,7 +40,6 @@ const DownloadSauda = ({ data }) => {
       supplier.companyName.toLowerCase() === data.supplierCompany.toLowerCase()
   );
 
-  // Merge matching details into the existing `data`
   const mergedData = {
     ...data,
     consigneeDetails: matchingConsignee || null,

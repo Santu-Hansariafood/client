@@ -1,9 +1,8 @@
-import React from "react";
 import { View, Text, StyleSheet } from "@react-pdf/renderer";
 
 const styles = StyleSheet.create({
   section: {
-    marginBottom: 10, // Reduced space between sections
+    marginBottom: 10,
     padding: 10,
     backgroundColor: "#ffffff",
   },
@@ -11,7 +10,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    padding: 5, // Reduced padding
+    padding: 5,
     backgroundColor: "#f7f9fc",
     borderRadius: 5,
   },
@@ -31,7 +30,7 @@ const styles = StyleSheet.create({
     color: "#003366",
   },
   tableContainer: {
-    marginTop: 5, // Reduced top margin
+    marginTop: 5,
     border: "1px solid #003366",
     borderRadius: 5,
     overflow: "hidden",
@@ -39,11 +38,11 @@ const styles = StyleSheet.create({
   tableHeader: {
     backgroundColor: "#003366",
     flexDirection: "row",
-    padding: 3, // Reduced padding
+    padding: 3,
   },
   tableHeaderText: {
     color: "#ffffff",
-    fontSize: 9, // Adjusted font size for better alignment
+    fontSize: 9,
     fontWeight: "bold",
     flex: 1,
     textAlign: "center",
@@ -51,7 +50,7 @@ const styles = StyleSheet.create({
   tableRow: {
     flexDirection: "row",
     backgroundColor: "#f7f9fc",
-    paddingVertical: 3, // Reduced vertical padding
+    paddingVertical: 3,
     paddingHorizontal: 2,
   },
   tableCell: {
@@ -59,7 +58,7 @@ const styles = StyleSheet.create({
     color: "#555555",
     flex: 1,
     textAlign: "center",
-    paddingVertical: 2, // Reduced padding for compactness
+    paddingVertical: 2,
     paddingHorizontal: 3,
     borderLeft: "1px solid #003366",
   },
@@ -67,10 +66,10 @@ const styles = StyleSheet.create({
     borderLeft: "none",
   },
   addressDetails: {
-    fontSize: 7, // Reduced font size for address details
+    fontSize: 7,
     color: "#555555",
-    marginTop: 2, // Reduced spacing
-    lineHeight: 1.1, // Adjusted line spacing
+    marginTop: 2,
+    lineHeight: 1.1,
   },
 });
 
@@ -80,7 +79,8 @@ const SaudaDetails = ({ data }) => (
       <Text style={styles.headerLeft}>Sauda No: {data.saudaNo}</Text>
       <Text style={styles.headerMiddle}>Buyer PO No: {data.poNumber}</Text>
       <Text style={styles.headerRight}>
-        Date: {new Date(data.poDate).toLocaleDateString()}
+        Date:{" "}
+        {new Date(data.poDate).toLocaleDateString("en-GB").replace(/\//g, "-")}
       </Text>
     </View>
     <View style={styles.tableContainer}>

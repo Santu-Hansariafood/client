@@ -103,24 +103,17 @@ const SelfOrder = () => {
 
   const handleSubmit = async () => {
     if (!validateFormData()) return;
-  
     setIsLoading(true);
-  
     try {
       const saudaNo = await generateSaudaNo();
       const payload = { ...formData, saudaNo };
-  
       console.log("Payload being sent to server:", payload);
-  
       await axios.post(API_BASE_URL, payload);
-  
       toast.success("Order created successfully!", {
         position: toast.POSITION.TOP_RIGHT,
       });
-  
       resetForm();
-  
-      setTimeout(() => navigate("/"), 2000);
+      setTimeout(() => navigate("/manage-order/list-self-order"), 2000);
     } catch (error) {
       toast.error("Failed to create order.", {
         position: toast.POSITION.TOP_RIGHT,

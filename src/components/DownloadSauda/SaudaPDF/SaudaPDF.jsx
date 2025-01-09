@@ -1,4 +1,3 @@
-import React from "react";
 import { Page, Document, StyleSheet } from "@react-pdf/renderer";
 import SaudaHeader from "../SaudaHeader/SaudaHeader";
 import SaudaDetails from "../SaudaDetails/SaudaDetails";
@@ -20,7 +19,7 @@ const styles = StyleSheet.create({
 const SaudaPDF = ({ data }) => (
   <Document>
     <Page style={styles.page}>
-      <SaudaHeader style={styles.componentSpacing} />
+      <SaudaHeader style={{ marginBottom: 0 }} />
       <SaudaDetails data={data} style={styles.componentSpacing} />
       <CommodityTable data={data} style={styles.componentSpacing} />
       <AdditionalDetails data={data} />

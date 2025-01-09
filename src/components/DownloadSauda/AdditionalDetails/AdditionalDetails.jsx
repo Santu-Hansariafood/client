@@ -1,4 +1,3 @@
-import React from "react";
 import { View, Text, StyleSheet } from "@react-pdf/renderer";
 
 const styles = StyleSheet.create({
@@ -103,21 +102,33 @@ const AdditionalDetails = ({ data }) => (
       <Text style={styles.title}>Additional Details</Text>
       <View style={styles.tableContainer}>
         <View style={styles.tableRow}>
-          <Text style={styles.tableCell}>Weight: `{data.weight}</Text>
           <Text style={styles.tableCell}>
-            Delivery Date: {new Date(data.deliveryDate).toLocaleDateString()}
+            Weight: {"\n"}
+            {data.weight}
           </Text>
           <Text style={styles.tableCell}>
-            Loading Date: {new Date(data.loadingDate).toLocaleDateString()}
+            Delivery Date: {"\n"}
+            {new Date(data.deliveryDate)
+              .toLocaleDateString("en-GB")
+              .replace(/\//g, "-")}
           </Text>
           <Text style={styles.tableCell}>
-            Payment Terms: {data.paymentTerms} Days
+            Loading Date: {"\n"}
+            {new Date(data.loadingDate)
+              .toLocaleDateString("en-GB")
+              .replace(/\//g, "-")}
           </Text>
           <Text style={styles.tableCell}>
-            Loading Station: {data.state}
+            Payment Terms: {"\n"}
+            {data.paymentTerms} Days
           </Text>
           <Text style={styles.tableCell}>
-            Location: {data.location}
+            Loading Station: {"\n"}
+            {data.state}
+          </Text>
+          <Text style={styles.tableCell}>
+            Location: {"\n"}
+            {data.location}
           </Text>
         </View>
       </View>
@@ -135,8 +146,10 @@ const AdditionalDetails = ({ data }) => (
         <Text style={styles.title}>Bank Account Details</Text>
         {data.supplierDetails?.bankDetails?.[0] ? (
           <Text>
-            Account Holder: {data.supplierDetails.bankDetails[0].accountHolderName}
-            {"\n"}Account No: {data.supplierDetails.bankDetails[0].accountNumber}
+            Account Holder:{" "}
+            {data.supplierDetails.bankDetails[0].accountHolderName}
+            {"\n"}Account No:{" "}
+            {data.supplierDetails.bankDetails[0].accountNumber}
             {"\n"}IFSC: {data.supplierDetails.bankDetails[0].ifscCode}
             {"\n"}Branch: {data.supplierDetails.bankDetails[0].branchName}
           </Text>
