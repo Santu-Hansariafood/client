@@ -1,4 +1,3 @@
-import React from "react";
 import { View, Text, StyleSheet } from "@react-pdf/renderer";
 
 const styles = StyleSheet.create({
@@ -45,14 +44,12 @@ const styles = StyleSheet.create({
 });
 
 const CommodityTable = ({ data }) => {
-  // Filter out parameters with value "0"
   const filteredParameters = data.parameters.filter(
     (param) => param.value !== "0"
   );
 
   return (
     <View style={styles.table}>
-      {/* Main Table */}
       <View style={styles.tableHeader}>
         <Text style={[styles.tableCell, styles.bold]}>Product Name</Text>
         <Text style={[styles.tableCell, styles.bold]}>Qty</Text>
@@ -69,7 +66,6 @@ const CommodityTable = ({ data }) => {
         <Text style={styles.tableCell}>{data.cd}%</Text>
       </View>
 
-      {/* Quality Parameters Table */}
       <View style={styles.table}>
         <View style={styles.tableHeader}>
           <Text style={[styles.tableCell, styles.bold]}>Quality Parameters</Text>
@@ -83,7 +79,7 @@ const CommodityTable = ({ data }) => {
             ]}
           >
             <Text style={styles.parameterCell}>
-              {param.parameter}: {param.value}
+              {param.parameter}: {param.value} %
             </Text>
           </View>
         ))}

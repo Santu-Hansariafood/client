@@ -22,7 +22,7 @@ const SelfOrderList = () => {
     const fetchData = async () => {
       try {
         const response = await axios.get(API_URL);
-        setData(response.data);
+        setData(response.data.reverse());
       } catch (error) {
         toast.error("Failed to fetch data from the server.", error);
       }
@@ -81,7 +81,6 @@ const SelfOrderList = () => {
         onEdit={() => toast.success(`Editing PO Number: ${item.poNumber}`)}
         onDelete={() => toast.error(`Deleting PO Number: ${item.poNumber}`)}
       />
-      {/* Add Download PDF button */}
       <DownloadSauda
         data={item}
         button={
@@ -89,7 +88,7 @@ const SelfOrderList = () => {
             className="text-blue-500 hover:text-blue-700"
             title="Download Sauda PDF"
           >
-            <FaDownload />
+            <FaDownload size={20} />
           </button>
         }
       />
@@ -98,7 +97,7 @@ const SelfOrderList = () => {
 
   return (
     <div className="p-4 max-w-screen-lg mx-auto space-y-6 bg-gray-50 rounded-lg shadow-md">
-      <h1 className="text-xl font-semibold text-gray-700 text-center">
+      <h1 className="text-2xl font-semibold text-blue-500 text-center">
         Self Order List
       </h1>
       <Tables headers={headers} rows={rows} />

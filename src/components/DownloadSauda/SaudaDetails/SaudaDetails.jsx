@@ -25,7 +25,7 @@ const styles = StyleSheet.create({
     color: "#555555",
   },
   headerMiddle: {
-    fontSize: 12,
+    fontSize: 8,
     fontWeight: "bold",
     color: "#003366",
   },
