@@ -10,7 +10,7 @@ const styles = StyleSheet.create({
     border: "1px solid #003366",
   },
   title: {
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: "bold",
     marginBottom: 10,
     color: "#003366",
@@ -35,7 +35,7 @@ const styles = StyleSheet.create({
   tableCell: {
     flex: 1,
     padding: 5,
-    fontSize: 11,
+    fontSize: 8,
     textAlign: "center",
     color: "#555555",
   },
@@ -52,7 +52,7 @@ const styles = StyleSheet.create({
     borderTop: "1px solid #003366",
   },
   signatureText: {
-    fontSize: 12,
+    fontSize: 8,
     fontWeight: "bold",
     color: "#555555",
     textAlign: "center",
@@ -61,14 +61,14 @@ const styles = StyleSheet.create({
   brokerInfo: {
     marginTop: 20,
     textAlign: "center",
-    fontSize: 12,
+    fontSize: 8,
     fontWeight: "bold",
     color: "#003366",
   },
   footerNote: {
     marginTop: 10,
     textAlign: "center",
-    fontSize: 12,
+    fontSize: 8,
     color: "#555555",
   },
   notesSection: {
@@ -79,8 +79,9 @@ const styles = StyleSheet.create({
     border: "1px solid #003366",
   },
   notesText: {
-    fontSize: 12,
+    fontSize: 8,
     color: "#555555",
+    marginBottom: 5,
   },
 });
 
@@ -97,12 +98,19 @@ const AdditionalDetails = ({ data }) => (
           <Text style={styles.tableCell}>
             Loading Date: {new Date(data.loadingDate).toLocaleDateString()}
           </Text>
-          <Text style={styles.tableCell}>Payment Terms: {data.paymentTerms} Days</Text>
+          <Text style={styles.tableCell}>
+            Payment Terms: {data.paymentTerms} Days
+          </Text>
         </View>
       </View>
-      {data.notes && (
+      {data.notes && data.notes.length > 0 && (
         <View style={styles.notesSection}>
-          <Text style={styles.notesText}>Notes: {data.notes}</Text>
+          <Text style={styles.title}>Notes</Text>
+          {data.notes.map((note, index) => (
+            <Text key={index} style={styles.notesText}>
+              {index + 1}. {note}
+            </Text>
+          ))}
         </View>
       )}
       <View style={styles.tableContainer}>
@@ -119,11 +127,13 @@ const AdditionalDetails = ({ data }) => (
             Rs. {data.buyerBrokerage.brokerageBuyer} / TON
           </Text>
           <Text style={styles.tableCell}>
-            Rs. {data.buyerBrokerage.brokerageSeller || "N/A"} / TON
+            Rs. {data.supplierBrokerage[0]?.brokerage || "N/A"} / TON
           </Text>
         </View>
       </View>
-      <Text style={styles.brokerInfo}>Broker: HANSARIA FOOD PRIVATE LIMITED</Text>
+      <Text style={styles.brokerInfo}>
+        Broker: HANSARIA FOOD PRIVATE LIMITED
+      </Text>
       <Text style={styles.brokerInfo}>Agent Name: {data.agentName}</Text>
       <View style={styles.signatureRow}>
         <Text style={styles.signatureText}>Seller Signature</Text>

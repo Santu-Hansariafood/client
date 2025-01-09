@@ -17,15 +17,15 @@ const styles = StyleSheet.create({
   headerLeft: {
     color: "#FF0000",
     fontWeight: "bold",
-    fontSize: 12,
+    fontSize: 8,
   },
   headerRight: {
-    fontSize: 12,
+    fontSize: 8,
     fontWeight: "bold",
     color: "#555555",
   },
   headerMiddle: {
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: "bold",
     color: "#003366",
   },
@@ -42,7 +42,7 @@ const styles = StyleSheet.create({
   },
   tableHeaderText: {
     color: "#ffffff",
-    fontSize: 12,
+    fontSize: 10,
     fontWeight: "bold",
     flex: 1,
     textAlign: "center",
@@ -53,7 +53,7 @@ const styles = StyleSheet.create({
     padding: 5,
   },
   tableCell: {
-    fontSize: 11,
+    fontSize: 8,
     color: "#555555",
     flex: 1,
     textAlign: "center",

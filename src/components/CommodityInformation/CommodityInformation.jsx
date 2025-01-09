@@ -100,10 +100,15 @@ const CommodityInformation = ({
   const onParameterChange = (index, newValue) => {
     const updatedParameters = [...parameters];
     updatedParameters[index].value = newValue;
-    setParameters(updatedParameters);
-    handleChange("parameters", updatedParameters);
+  
+    const parametersWithIdAndValue = updatedParameters.map((param) => ({
+      id: param._id,
+      value: param.value,
+    }));
+  
+    handleChange("parameters", parametersWithIdAndValue);
   };
-
+  
   const commodityOptions = useMemo(
     () =>
       commodities.map((commodity) => ({

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import PropTypes from "prop-types"; // Import PropTypes
+import PropTypes from "prop-types";
 import axios from "axios";
 import { toast } from "react-toastify";
 import DataInput from "../../common/DataInput/DataInput";
@@ -46,6 +46,10 @@ const BrokerInformation = ({ formData, handleChange }) => {
     </div>
   );
 
+  const sellerBrokerage = formData.supplierBrokerage?.find(
+    (brokerageDetail) => brokerageDetail.name === formData.commodity
+  )?.brokerage;
+
   return (
     <div>
       <label className="block mb-2 text-lg font-semibold text-gray-700">
@@ -81,9 +85,7 @@ const BrokerInformation = ({ formData, handleChange }) => {
         )}
         {renderBrokerageField(
           "Brokerage Per Ton (Supplier)",
-          formData.supplierBrokerageDetails?.find(
-            (brokerageDetail) => brokerageDetail.name === formData.commodity
-          )?.brokerage || "N/A"
+          sellerBrokerage || "N/A"
         )}
       </div>
     </div>
@@ -97,7 +99,7 @@ BrokerInformation.propTypes = {
       brokerageBuyer: PropTypes.string,
       brokerageSupplier: PropTypes.string,
     }),
-    supplierBrokerageDetails: PropTypes.arrayOf(
+    supplierBrokerage: PropTypes.arrayOf(
       PropTypes.shape({
         name: PropTypes.string.isRequired,
         brokerage: PropTypes.string,
@@ -108,4 +110,4 @@ BrokerInformation.propTypes = {
   handleChange: PropTypes.func.isRequired,
 };
 
-export default BrokerInformation
+export default BrokerInformation;
