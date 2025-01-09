@@ -47,7 +47,7 @@ const styles = StyleSheet.create({
   signatureRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginTop: 20,
+    marginTop: 15,
     padding: 10,
     borderTop: "1px solid #003366",
   },
@@ -59,7 +59,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   brokerInfo: {
-    marginTop: 20,
+    marginVertical: 5, // Reduced spacing here
     textAlign: "center",
     fontSize: 8,
     fontWeight: "bold",

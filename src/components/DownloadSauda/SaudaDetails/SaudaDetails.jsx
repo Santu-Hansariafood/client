@@ -1,3 +1,4 @@
+import React from "react";
 import { View, Text, StyleSheet } from "@react-pdf/renderer";
 
 const styles = StyleSheet.create({
@@ -64,6 +65,12 @@ const styles = StyleSheet.create({
   firstCell: {
     borderLeft: "none",
   },
+  addressDetails: {
+    fontSize: 8,
+    color: "#555555",
+    marginTop: 5,
+    lineHeight: 1.2,
+  },
 });
 
 const SaudaDetails = ({ data }) => (
@@ -83,8 +90,22 @@ const SaudaDetails = ({ data }) => (
       </View>
       <View style={styles.tableRow}>
         <Text style={[styles.tableCell, styles.firstCell]}>{data.buyer}</Text>
-        <Text style={styles.tableCell}>{data.supplierCompany}</Text>
-        <Text style={styles.tableCell}>{data.consignee}</Text>
+        <Text style={styles.tableCell}>
+          {data.supplierCompany}
+          {data.supplierDetails && (
+            <Text style={styles.addressDetails}>
+              {`\n${data.supplierDetails.location}, ${data.supplierDetails.district}, ${data.supplierDetails.state} - ${data.supplierDetails.pin}\nGST: ${data.supplierDetails.gst}`}
+            </Text>
+          )}
+        </Text>
+        <Text style={styles.tableCell}>
+          {data.consignee}
+          {data.consigneeDetails && (
+            <Text style={styles.addressDetails}>
+              {`\n${data.consigneeDetails.location}, ${data.consigneeDetails.district}, ${data.consigneeDetails.state} - ${data.consigneeDetails.pin}\nGST: ${data.consigneeDetails.gst}`}
+            </Text>
+          )}
+        </Text>
       </View>
     </View>
   </View>
