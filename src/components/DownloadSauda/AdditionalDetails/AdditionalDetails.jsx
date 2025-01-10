@@ -168,10 +168,11 @@ const AdditionalDetails = ({ data }) => (
         </View>
         <View style={styles.tableRow}>
           <Text style={styles.tableCell}>
-            Rs. {data.buyerBrokerage.brokerageBuyer} / TON
+            Buyer Brokerage{"\n"} Rs. {data.buyerBrokerage.brokerageBuyer} / TON
           </Text>
           <Text style={styles.tableCell}>
-            Rs. {data.supplierBrokerage[0]?.brokerage || "N/A"} / TON
+            Supplier Brokerage{"\n"} Rs.{" "}
+            {data.supplierBrokerage[0]?.brokerage || "N/A"} / TON
           </Text>
         </View>
       </View>
