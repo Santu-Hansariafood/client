@@ -73,7 +73,7 @@ const BuyerInformation = ({ handleChange }) => {
         <div>
           <label className="block text-sm text-gray-600 mb-1">Souda No</label>
           <DataInput
-            placeholder="Enter Souda No"
+            placeholder="System Generated No Input Requird"
             value={soudaNo}
             readOnly
             onChange={(e) => {

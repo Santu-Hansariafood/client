@@ -103,7 +103,7 @@ const SaudaChart = ({ apiUrl }) => {
           <Line
             type="monotone"
             dataKey="sauda"
-            stroke="#82ca9d"
+            stroke="#2cf005"
             activeDot={{ r: 8 }}
           />
         </LineChart>

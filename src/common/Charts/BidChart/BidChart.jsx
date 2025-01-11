@@ -103,7 +103,7 @@ const BidChart = ({ apiUrl }) => {
           <Line
             type="monotone"
             dataKey="bid"
-            stroke="#82ca9d"
+            stroke="#2cf005"
             activeDot={{ r: 8 }}
           />
         </LineChart>

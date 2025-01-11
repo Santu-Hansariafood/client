@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { RiLogoutBoxLine } from "react-icons/ri";
 import { AiOutlineUser } from "react-icons/ai";
-import { FaUsers, FaStore, FaTruck, FaClipboardList } from "react-icons/fa";
+import { FaUsers, FaStore, FaTruck } from "react-icons/fa";
 import { toast } from "react-toastify";
 import axios from "axios";
 import "react-toastify/dist/ReactToastify.css";
@@ -14,32 +14,26 @@ import BidChart from "../../common/Charts/BidChart/BidChart";
 const Dashboard = () => {
   const [showDropdown, setShowDropdown] = useState(false);
   const [showLogoutConfirmation, setShowLogoutConfirmation] = useState(false);
-  const [buyersCount, setBuyersCount] = useState(0);
-  const [sellersCount, setSellersCount] = useState(0);
-  const [consigneesCount, setConsigneesCount] = useState(0);
-  const [ordersCount, setOrdersCount] = useState(0);
+  const [counts, setCounts] = useState({ buyers: 0, sellers: 0, consignees: 0, orders: 0 });
 
   const navigate = useNavigate();
   const { logout } = useAuth();
 
   const fetchCounts = useCallback(async () => {
     try {
-      const [
-        buyersResponse,
-        sellersResponse,
-        consigneesResponse,
-        ordersResponse,
-      ] = await Promise.all([
+      const responses = await Promise.all([
         axios.get("http://localhost:5000/api/buyers"),
         axios.get("http://localhost:5000/api/sellers"),
         axios.get("http://localhost:5000/api/consignees"),
         axios.get("http://localhost:5000/api/self-order"),
       ]);
 
-      setBuyersCount(buyersResponse.data.length || 0);
-      setSellersCount(sellersResponse.data.length || 0);
-      setConsigneesCount(consigneesResponse.data.length || 0);
-      setOrdersCount(ordersResponse.data.length || 0);
+      setCounts({
+        buyers: responses[0].data.length || 0,
+        sellers: responses[1].data.length || 0,
+        consignees: responses[2].data.length || 0,
+        orders: responses[3].data.length || 0,
+      });
     } catch (error) {
       toast.error("Failed to fetch data counts", {
         position: "top-right",
@@ -75,20 +69,26 @@ const Dashboard = () => {
     setShowDropdown((prev) => !prev);
   }, []);
 
-  const confirmLogout = () => {
+  const confirmLogout = useCallback(() => {
     setShowLogoutConfirmation(true);
-  };
+  }, []);
 
-  const cancelLogout = () => {
+  const cancelLogout = useCallback(() => {
     setShowLogoutConfirmation(false);
-  };
+  }, []);
+
+  const memoizedCards = useMemo(() => (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <Cards title="Total Buyers" count={counts.buyers} icon={FaUsers} link="/buyer/list" />
+      <Cards title="Total Sellers" count={counts.sellers} icon={FaStore} link="/seller-details/list" />
+      <Cards title="Total Consignees" count={counts.consignees} icon={FaTruck} link="/consignee/list" />
+    </div>
+  ), [counts]);
 
   return (
     <div className="min-h-screen bg-gray-100">
       <header className="flex items-center justify-between px-6 py-4 bg-white shadow-md">
-        <h1 className="text-xl font-bold text-gray-800">
-          Hansaria Food Private Limited
-        </h1>
+        <h1 className="text-xl font-bold text-gray-800">Hansaria Food Private Limited</h1>
         <div className="relative">
           <button
             className="flex items-center space-x-2 font-medium text-gray-700 hover:text-gray-900"
@@ -113,30 +113,8 @@ const Dashboard = () => {
         </div>
       </header>
       <main className="px-6 py-8">
-        <p className="text-lg font-medium text-center text-gray-700 mb-6">
-          Admin Report
-        </p>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <Cards
-            title="Total Buyers"
-            count={buyersCount}
-            icon={FaUsers}
-            link="/buyer/list"
-          />
-          <Cards
-            title="Total Sellers"
-            count={sellersCount}
-            icon={FaStore}
-            link="/seller-details/list"
-          />
-          <Cards
-            title="Total Consignees"
-            count={consigneesCount}
-            icon={FaTruck}
-            link="/consignee/list"
-          />
-        </div>
-
+        <p className="text-lg font-medium text-center text-gray-700 mb-6">Admin Report</p>
+        {memoizedCards}
         <div className="mt-8">
           <SaudaChart apiUrl="http://localhost:5000/api/self-order" />
         </div>
@@ -144,7 +122,6 @@ const Dashboard = () => {
           <BidChart apiUrl="http://localhost:5000/api/bids" />
         </div>
       </main>
-
       {showLogoutConfirmation && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg shadow-lg p-6 w-80 text-center">

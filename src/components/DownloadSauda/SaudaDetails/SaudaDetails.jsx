@@ -95,7 +95,7 @@ const SaudaDetails = ({ data }) => (
           {data.supplierCompany}
           {data.supplierDetails ? (
             <Text style={styles.addressDetails}>
-              {`\n${data.supplierDetails.address}, ${data.supplierDetails.district}, ${data.supplierDetails.state} - ${data.supplierDetails.pinNo}\nGST: ${data.supplierDetails.gstNo}`}
+              {`\n${data.supplierDetails.address}, ${data.supplierDetails.district}, ${data.supplierDetails.state} - ${data.supplierDetails.pinNo}\n PAN No: ${data.supplierDetails.panNo}\nGST: ${data.supplierDetails.gstNo}`}
             </Text>
           ) : (
             "\nDetails not available"
@@ -105,7 +105,7 @@ const SaudaDetails = ({ data }) => (
           {data.consignee}
           {data.consigneeDetails && (
             <Text style={styles.addressDetails}>
-              {`\n${data.consigneeDetails.location}, ${data.consigneeDetails.district}, ${data.consigneeDetails.state} - ${data.consigneeDetails.pin}\nGST: ${data.consigneeDetails.gst}`}
+              {`\n${data.consigneeDetails.location}, ${data.consigneeDetails.district}, ${data.consigneeDetails.state} - ${data.consigneeDetails.pin}\nPAN No : ${data.consigneeDetails.pan}\nGST: ${data.consigneeDetails.gst}`}
             </Text>
           )}
         </Text>
