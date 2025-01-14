@@ -11,7 +11,7 @@ import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { FaPlus } from "react-icons/fa";
 import Loading from "../../../common/Loading/Loading";
-
+import addCompanyLable from "../../../language/en/addCompany";
 const DataInput = lazy(() => import("../../../common/DataInput/DataInput"));
 const DataDropdown = lazy(() =>
   import("../../../common/DataDropdown/DataDropdown")
@@ -59,7 +59,7 @@ const AddCompany = () => {
           }))
         );
       } catch (error) {
-        toast.error("Failed to load options. Please try again.");
+        toast.error("Failed to load options. Please try again.",error);
       }
     };
     fetchData();
@@ -179,12 +179,12 @@ const AddCompany = () => {
         <div className="flex items-center justify-center min-h-screen bg-gray-50 p-4 sm:p-8">
           <div className="bg-white p-8 rounded-lg shadow-xl w-full max-w-3xl">
             <h2 className="text-3xl font-semibold text-center mb-8 text-gray-800">
-              Add Company
+              {addCompanyLable.company_title}
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="text-sm font-medium text-gray-600 mb-1">
-                  Company Name
+                  {addCompanyLable.company_name}
                 </label>
                 <DataInput
                   placeholder="Enter company name"
@@ -195,7 +195,7 @@ const AddCompany = () => {
               </div>
               <div>
                 <label className="text-sm font-medium text-gray-600 mb-1">
-                  Company Phone Number
+                  {addCompanyLable.company_phone}
                 </label>
                 <DataInput
                   placeholder="Enter company phone"
@@ -209,7 +209,7 @@ const AddCompany = () => {
               </div>
               <div>
                 <label className="text-sm font-medium text-gray-600 mb-1">
-                  Company Email
+                  {addCompanyLable.company_email}
                 </label>
                 <DataInput
                   placeholder="Enter company email"
@@ -221,7 +221,7 @@ const AddCompany = () => {
               </div>
               <div>
                 <label className="text-sm font-medium text-gray-600 mb-1">
-                  Consignee
+                  {addCompanyLable.consignee_title}
                 </label>
                 <DataDropdown
                   options={consigneeOptions}
@@ -233,7 +233,7 @@ const AddCompany = () => {
               </div>
               <div>
                 <label className="text-sm font-medium text-gray-600 mb-1">
-                  Group
+                  {addCompanyLable.group_title}
                 </label>
                 <DataDropdown
                   options={groupOptions}
@@ -248,7 +248,7 @@ const AddCompany = () => {
                   className="col-span-1 md:col-span-2 bg-gray-100 p-4 rounded-md shadow-inner mt-4"
                 >
                   <label className="text-sm font-medium text-gray-600 mb-2 block">
-                    Quality of Commodity
+                    {addCompanyLable.quality_of_commodity}
                   </label>
                   <DataDropdown
                     options={availableCommodities}
@@ -285,7 +285,8 @@ const AddCompany = () => {
               onClick={handleAddCommodity}
               className="flex items-center text-blue-600 hover:text-blue-800 mt-6"
             >
-              <FaPlus className="mr-2" /> Add Another Commodity
+              <FaPlus className="mr-2" />{" "}
+              {addCompanyLable.add_another_commodity}
             </button>
             <div className="mt-10 text-center">
               <Buttons

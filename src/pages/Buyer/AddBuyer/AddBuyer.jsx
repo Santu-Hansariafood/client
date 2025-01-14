@@ -7,7 +7,7 @@ const DataDropdown = lazy(() =>
   import("../../../common/DataDropdown/DataDropdown")
 );
 const Buttons = lazy(() => import("../../../common/Buttons/Buttons"));
-
+import buyerLabels from "../../../language/en/buyer";
 import regexPatterns from "../../../utils/regexPatterns/regexPatterns";
 import { FaPlus, FaTrash } from "react-icons/fa";
 import "react-toastify/dist/ReactToastify.css";
@@ -187,12 +187,12 @@ const AddBuyer = () => {
     <>
       <Suspense fallback={<Loading />}>
         <div className="max-w-2xl mx-auto p-6 border rounded-lg shadow-lg bg-white">
-          <h2 className="text-2xl font-semibold mb-6 text-center">Add Buyer</h2>
+          <h2 className="text-2xl font-semibold mb-6 text-center">{buyerLabels.title}</h2>
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <div>
                 <label className="block text-gray-700 mb-2" htmlFor="name">
-                  Name
+                  {buyerLabels.title_name}
                 </label>
                 <DataInput
                   name="name"
@@ -210,7 +210,7 @@ const AddBuyer = () => {
                   className="block text-gray-700 mb-2"
                   htmlFor="companyName"
                 >
-                  Company Name
+                  {buyerLabels.company_name}
                 </label>
                 <DataDropdown
                   name="companyName"
@@ -223,7 +223,9 @@ const AddBuyer = () => {
                 />
               </div>
               <div>
-                <label className="block text-gray-700 mb-2">Mobile</label>
+                <label className="block text-gray-700 mb-2">
+                  {buyerLabels.mobile_title}
+                </label>
                 {formData.mobile.map((mobile, index) => (
                   <div key={index} className="flex items-center gap-2 mb-2">
                     <DataInput
@@ -252,14 +254,16 @@ const AddBuyer = () => {
                   onClick={() => handleAddField("mobile")}
                   className="text-blue-500 flex items-center mt-2"
                 >
-                  <FaPlus className="mr-1" /> Add Mobile
+                  <FaPlus className="mr-1" /> {buyerLabels.add_mobile}
                 </button>
                 {errors.mobile && (
                   <p className="text-red-500 text-sm">{errors.mobile}</p>
                 )}
               </div>
               <div>
-                <label className="block text-gray-700 mb-2">Email</label>
+                <label className="block text-gray-700 mb-2">
+                  {buyerLabels.email_title}
+                </label>
                 {formData.email.map((email, index) => (
                   <div key={index} className="flex items-center gap-2 mb-2">
                     <DataInput
@@ -286,7 +290,7 @@ const AddBuyer = () => {
                   onClick={() => handleAddField("email")}
                   className="text-blue-500 flex items-center mt-2"
                 >
-                  <FaPlus className="mr-1" /> Add Email
+                  <FaPlus className="mr-1" /> {buyerLabels.add_email}
                 </button>
                 {errors.email && (
                   <p className="text-red-500 text-sm">{errors.email}</p>
@@ -294,7 +298,7 @@ const AddBuyer = () => {
               </div>
               <div>
                 <label className="block text-gray-700 mb-2" htmlFor="password">
-                  Password
+                  {buyerLabels.password_title}
                 </label>
                 <DataInput
                   name="password"
@@ -309,7 +313,7 @@ const AddBuyer = () => {
               </div>
               <div>
                 <label className="block text-gray-700 mb-2" htmlFor="commodity">
-                  Commodity
+                  {buyerLabels.commodity_title}
                 </label>
                 <DataDropdown
                   name="commodity"
@@ -324,7 +328,7 @@ const AddBuyer = () => {
                 {formData.commodity.map((commodity) => (
                   <div key={commodity.value} className="mt-4">
                     <label className="block text-gray-700 mb-2">
-                      Brokerage per Ton for {commodity.label}
+                      {buyerLabels.brokerage_per_ton_title} {commodity.label}
                     </label>
                     <DataInput
                       name={`brokerage-${commodity.value}`}
@@ -342,7 +346,7 @@ const AddBuyer = () => {
               </div>
               <div>
                 <label className="block text-gray-700 mb-2" htmlFor="consignee">
-                  Consignee
+                  {buyerLabels.consignee_title}
                 </label>
                 <DataDropdown
                   name="consignee"
@@ -357,7 +361,7 @@ const AddBuyer = () => {
               </div>
               <div>
                 <label className="block text-gray-700 mb-2" htmlFor="status">
-                  Status
+                  {buyerLabels.status_title}
                 </label>
                 <DataDropdown
                   name="status"

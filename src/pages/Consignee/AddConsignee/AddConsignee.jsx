@@ -8,6 +8,7 @@ const DataDropdown = lazy(() =>
 const Buttons = lazy(() => import("../../../common/Buttons/Buttons"));
 import stateCityData from "../../../data/state-city.json";
 import Loading from "../../../common/Loading/Loading";
+import addConsigneeLable from "../../../language/en/addConsignee";
 
 const AddConsignee = () => {
   const [formData, setFormData] = useState({
@@ -104,11 +105,15 @@ const AddConsignee = () => {
     <Suspense fallback={<Loading />}>
       <div className="container mx-auto p-4">
         <div className="bg-white shadow-md rounded-lg p-6">
-          <h2 className="text-2xl font-semibold mb-4">Add Consignee</h2>
+          <h2 className="text-2xl font-semibold mb-4">
+            {addConsigneeLable.consignee_title}
+          </h2>
           <form onSubmit={handleSubmit}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block mb-1 font-medium">Name</label>
+                <label className="block mb-1 font-medium">
+                  {addConsigneeLable.consignee_name}
+                </label>
                 <DataInput
                   placeholder="Enter Name"
                   name="name"
@@ -118,7 +123,9 @@ const AddConsignee = () => {
                 />
               </div>
               <div>
-                <label className="block mb-1 font-medium">Phone</label>
+                <label className="block mb-1 font-medium">
+                  {addConsigneeLable.consignee_phone}
+                </label>
                 <DataInput
                   placeholder="Enter Phone Number"
                   name="phone"
@@ -131,7 +138,9 @@ const AddConsignee = () => {
                 />
               </div>
               <div>
-                <label className="block mb-1 font-medium">Email</label>
+                <label className="block mb-1 font-medium">
+                  {addConsigneeLable.consignee_email}
+                </label>
                 <DataInput
                   placeholder="Enter Email"
                   name="email"
@@ -142,7 +151,9 @@ const AddConsignee = () => {
                 />
               </div>
               <div>
-                <label className="block mb-1 font-medium">GST</label>
+                <label className="block mb-1 font-medium">
+                  {addConsigneeLable.consignee_gst}
+                </label>
                 <DataInput
                   placeholder="Enter GST"
                   name="gst"
@@ -154,7 +165,9 @@ const AddConsignee = () => {
                 />
               </div>
               <div>
-                <label className="block mb-1 font-medium">PAN</label>
+                <label className="block mb-1 font-medium">
+                  {addConsigneeLable.consignee_pan}
+                </label>
                 <DataInput
                   placeholder="Enter PAN"
                   name="pan"
@@ -166,7 +179,9 @@ const AddConsignee = () => {
                 />
               </div>
               <div>
-                <label className="block mb-1 font-medium">State</label>
+                <label className="block mb-1 font-medium">
+                  {addConsigneeLable.consignee_state}
+                </label>
                 <DataDropdown
                   options={stateOptions}
                   selectedOptions={stateOptions.find(
@@ -179,7 +194,9 @@ const AddConsignee = () => {
                 />
               </div>
               <div>
-                <label className="block mb-1 font-medium">District</label>
+                <label className="block mb-1 font-medium">
+                  {addConsigneeLable.consignee_district}
+                </label>
                 <DataDropdown
                   options={districtOptions}
                   selectedOptions={districtOptions.find(
@@ -192,7 +209,9 @@ const AddConsignee = () => {
                 />
               </div>
               <div>
-                <label className="block mb-1 font-medium">Location</label>
+                <label className="block mb-1 font-medium">
+                  {addConsigneeLable.consignee_location}
+                </label>
                 <DataInput
                   placeholder="Enter Location"
                   name="location"
@@ -201,7 +220,9 @@ const AddConsignee = () => {
                 />
               </div>
               <div>
-                <label className="block mb-1 font-medium">Pin</label>
+                <label className="block mb-1 font-medium">
+                  {addConsigneeLable.consignee_pin}
+                </label>
                 <DataInput
                   placeholder="Enter Pin"
                   name="pin"
@@ -213,7 +234,9 @@ const AddConsignee = () => {
                 />
               </div>
               <div>
-                <label className="block mb-1 font-medium">Contact Person</label>
+                <label className="block mb-1 font-medium">
+                  {addConsigneeLable.consignee_contact}
+                </label>
                 <DataInput
                   placeholder="Enter Contact Person Name"
                   name="contactPerson"
@@ -222,7 +245,9 @@ const AddConsignee = () => {
                 />
               </div>
               <div>
-                <label className="block mb-1 font-medium">Mandi License</label>
+                <label className="block mb-1 font-medium">
+                  {addConsigneeLable.consignee_mandi_license}
+                </label>
                 <DataInput
                   placeholder="Enter Mandi License"
                   name="mandiLicense"
@@ -231,7 +256,9 @@ const AddConsignee = () => {
                 />
               </div>
               <div>
-                <label className="block mb-1 font-medium">Active Status</label>
+                <label className="block mb-1 font-medium">
+                  {addConsigneeLable.consignee_active_status}
+                </label>
                 <DataDropdown
                   options={activeOptions}
                   selectedOptions={activeOptions.find(

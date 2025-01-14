@@ -33,6 +33,13 @@ export default [
         "warn",
         { allowConstantExport: true },
       ],
+      "no-unused-vars": [
+        "warn",
+        {
+          varsIgnorePattern: "PropTypes",
+        },
+      ],
+      "react/prop-types": "off",
     },
   },
 ];

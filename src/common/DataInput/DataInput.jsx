@@ -29,13 +29,13 @@ const DataInput = ({
         required={required}
         disabled={disabled}
         readOnly={readOnly}
-        className={`w-full px-4 py-2 border rounded-md 
+        className={`w-full px-4 py-2 border rounded-md transition-all
           ${
             disabled || readOnly
-              ? "bg-gray-200 cursor-not-allowed border-gray-200"
-              : "bg-white border-blue-500 focus:border-blue-700"
+              ? "bg-gray-200 text-gray-500 cursor-not-allowed border-gray-300"
+              : "bg-white text-gray-800 border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
           }
-          text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-md`}
+          placeholder-gray-400 shadow-sm focus:shadow-md`}
       />
     </div>
   );
