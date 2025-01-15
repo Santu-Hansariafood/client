@@ -42,8 +42,8 @@ const AddBuyer = () => {
     const fetchDropdownData = async () => {
       try {
         const [companiesResponse, commoditiesResponse] = await Promise.all([
-          axios.get("http://localhost:5000/api/companies"),
-          axios.get("http://localhost:5000/api/commodities"),
+          axios.get("https://phpserver-v77g.onrender.com/api/companies"),
+          axios.get("https://phpserver-v77g.onrender.com/api/commodities"),
         ]);
 
         setCompanyOptions(
@@ -164,7 +164,7 @@ const AddBuyer = () => {
           commodity: formData.commodity.map((item) => item.value),
           status: formData.status?.value || "",
         };
-        await axios.post("http://localhost:5000/api/buyers", payload);
+        await axios.post("https://phpserver-v77g.onrender.com/api/buyers", payload);
         toast.success("Buyer added successfully!");
         setFormData({
           name: "",

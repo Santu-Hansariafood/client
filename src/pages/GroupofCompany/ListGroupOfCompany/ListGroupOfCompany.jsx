@@ -24,7 +24,7 @@ const ListGroupOfCompany = () => {
   useEffect(() => {
     const fetchGroups = async () => {
       try {
-        const response = await axios.get("http://localhost:5000/api/groups");
+        const response = await axios.get("https://phpserver-v77g.onrender.com/api/groups");
         setGroupsData(response.data);
         setFilteredData(response.data);
       } catch (error) {
@@ -62,7 +62,7 @@ const ListGroupOfCompany = () => {
     async (index) => {
       const groupToDelete = filteredData[index];
       try {
-        await axios.delete(`http://localhost:5000/api/groups/${groupToDelete._id}`);
+        await axios.delete(`https://phpserver-v77g.onrender.com/api/groups/${groupToDelete._id}`);
         const updatedData = filteredData.filter((_, i) => i !== index);
         setFilteredData(updatedData);
         setGroupsData((prevData) =>

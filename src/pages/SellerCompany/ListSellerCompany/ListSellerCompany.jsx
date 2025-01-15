@@ -29,7 +29,7 @@ const ListSellerCompany = () => {
     const fetchCompanies = async () => {
       try {
         const response = await axios.get(
-          "http://localhost:5000/api/seller-company"
+          "https://phpserver-v77g.onrender.com/api/seller-company"
         );
         setCompanies(response.data.data);
         setSearchResults(response.data.data);

@@ -26,7 +26,7 @@ const ListConsignee = () => {
     const fetchConsignees = async () => {
       try {
         const response = await axios.get(
-          "http://localhost:5000/api/consignees"
+          "https://phpserver-v77g.onrender.com/api/consignees"
         );
         setConsigneeData(response.data);
         setLoading(false);
@@ -51,7 +51,7 @@ const ListConsignee = () => {
   const submitEdit = async (updatedData) => {
     try {
       const response = await axios.put(
-        `http://localhost:5000/api/consignees/${selectedConsignee._id}`,
+        `https://phpserver-v77g.onrender.com/api/consignees/${selectedConsignee._id}`,
         updatedData
       );
       const updatedConsignees = consigneeData.map((consignee) =>
@@ -72,7 +72,7 @@ const ListConsignee = () => {
   const submitDelete = async () => {
     try {
       await axios.delete(
-        `http://localhost:5000/api/consignees/${selectedConsignee._id}`
+        `https://phpserver-v77g.onrender.com/api/consignees/${selectedConsignee._id}`
       );
       const updatedConsignees = consigneeData.filter(
         (consignee) => consignee._id !== selectedConsignee._id

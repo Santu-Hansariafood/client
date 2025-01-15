@@ -138,7 +138,7 @@ const EditSellerCompany = ({ company, onSave, onCancel }) => {
 
     try {
       const response = await axios.put(
-        `http://localhost:5000/api/seller-company/${company.id}`,
+        `https://phpserver-v77g.onrender.com/api/seller-company/${company.id}`,
         formData,
         {
           headers: { "Content-Type": "multipart/form-data" },

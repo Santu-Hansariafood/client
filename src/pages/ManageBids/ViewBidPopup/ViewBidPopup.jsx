@@ -15,9 +15,9 @@ const ViewBidPopup = ({ bidId, onClose }) => {
       try {
         const [bidResponse, commodityResponse, locationResponse] =
           await Promise.all([
-            fetch(`http://localhost:5000/api/bids/${bidId}`),
-            fetch("http://localhost:5000/api/commodities"),
-            fetch("http://localhost:5000/api/bid-locations"),
+            fetch(`https://phpserver-v77g.onrender.com/api/bids/${bidId}`),
+            fetch("https://phpserver-v77g.onrender.com/api/commodities"),
+            fetch("https://phpserver-v77g.onrender.com/api/bid-locations"),
           ]);
 
         if (!bidResponse.ok || !commodityResponse.ok || !locationResponse.ok) {

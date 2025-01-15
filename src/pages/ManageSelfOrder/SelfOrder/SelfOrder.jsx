@@ -53,8 +53,8 @@ const SelfOrder = () => {
   const [formData, setFormData] = useState(INITIAL_FORM_DATA);
   const [isLoading, setIsLoading] = useState(false);
 
-  const API_BASE_URL = "http://localhost:5000/api/self-order";
-  const SAUDA_API_URL = "http://localhost:5000/api/sauda-no";
+  const API_BASE_URL = "https://phpserver-v77g.onrender.com/api/self-order";
+  const SAUDA_API_URL = "https://phpserver-v77g.onrender.com/api/sauda-no";
 
   const handleChange = (field, value) => {
     setFormData((prev) => {

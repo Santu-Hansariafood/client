@@ -20,7 +20,7 @@ const ListSellerDetails = () => {
   const [popupMode, setPopupMode] = useState("view");
   const [selectedSeller, setSelectedSeller] = useState(null);
 
-  const apiBaseURL = "http://localhost:5000/api";
+  const apiBaseURL = "https://phpserver-v77g.onrender.com/api";
 
   useEffect(() => {
     const fetchSellers = async () => {

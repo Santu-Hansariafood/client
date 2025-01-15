@@ -11,7 +11,7 @@ const SupplierInformation = ({ handleChange, formData }) => {
   useEffect(() => {
     const fetchSuppliers = async () => {
       try {
-        const response = await fetch("http://localhost:5000/api/sellers");
+        const response = await fetch("https://phpserver-v77g.onrender.com/api/sellers");
         const data = await response.json();
         setSellers(data);
       } catch (error) {

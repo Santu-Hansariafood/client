@@ -18,7 +18,7 @@ const AddCommodity = () => {
     const fetchParametersOptions = async () => {
       try {
         const response = await axios.get(
-          "http://localhost:5000/api/quality-parameters"
+          "https://phpserver-v77g.onrender.com/api/quality-parameters"
         );
         const options = response.data
           .map((param) => ({ value: param.name, label: param.name }))
@@ -68,7 +68,7 @@ const AddCommodity = () => {
     };
   
     try {
-      await axios.post("http://localhost:5000/api/commodities", formData);
+      await axios.post("https://phpserver-v77g.onrender.com/api/commodities", formData);
       toast.success("Commodity added successfully");
       setCommodityName("");
       setHsnCode("");

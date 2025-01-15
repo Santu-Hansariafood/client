@@ -30,7 +30,7 @@ const AddQualityParameter = () => {
     };
 
     try {
-      await axios.post("http://localhost:5000/api/quality-parameters", payload);
+      await axios.post("https://phpserver-v77g.onrender.com/api/quality-parameters", payload);
       toast.success("Quality parameter added successfully!");
       setFormData({
         name: "",

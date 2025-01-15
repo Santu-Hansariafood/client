@@ -28,7 +28,7 @@ const AddSoudabook = () => {
   useEffect(() => {
     const fetchSellers = async () => {
       try {
-        const response = await axios.get("http://localhost:5000/api/sellers");
+        const response = await axios.get("https://phpserver-v77g.onrender.com/api/sellers");
         const sellerOptions = response.data.map((seller) => ({
           value: seller._id,
           label: seller.sellerName,
@@ -42,7 +42,7 @@ const AddSoudabook = () => {
     const fetchItems = async () => {
       try {
         const response = await axios.get(
-          "http://localhost:5000/api/commodities"
+          "https://phpserver-v77g.onrender.com/api/commodities"
         );
         const itemOptions = response.data.map((item) => ({
           value: item._id,
@@ -56,7 +56,7 @@ const AddSoudabook = () => {
 
     const fetchBuyers = async () => {
       try {
-        const response = await axios.get("http://localhost:5000/api/buyers");
+        const response = await axios.get("https://phpserver-v77g.onrender.com/api/buyers");
         const buyerOptions = response.data.map((buyer) => ({
           value: buyer._id,
           label: buyer.name,

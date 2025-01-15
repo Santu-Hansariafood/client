@@ -34,7 +34,7 @@ const BaseBid = ({ type }) => {
   const [originOptions, setOriginOptions] = useState([]);
   const [commodityOptions, setCommodityOptions] = useState([]);
 
-  const apiBaseUrl = "http://localhost:5000/api";
+  const apiBaseUrl = "https://phpserver-v77g.onrender.com/api";
 
   useEffect(() => {
     const fetchData = async () => {

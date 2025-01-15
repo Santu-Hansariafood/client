@@ -24,7 +24,7 @@ const AddSellerDetails = () => {
   const [selectedStatus, setSelectedStatus] = useState(null);
   const [selectedBuyers, setSelectedBuyers] = useState([]);
 
-  const apiBaseURL = "http://localhost:5000/api";
+  const apiBaseURL = "https://phpserver-v77g.onrender.com/api";
 
   const statusOptions = [
     { value: "active", label: "Active" },

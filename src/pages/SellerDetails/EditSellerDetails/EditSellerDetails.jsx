@@ -48,7 +48,7 @@ const EditSellerDetails = ({ seller, onClose, onUpdate }) => {
     }))
   );
 
-  const apiBaseURL = "http://localhost:5000/api";
+  const apiBaseURL = "https://phpserver-v77g.onrender.com/api";
 
   useEffect(() => {
     const fetchOptions = async () => {

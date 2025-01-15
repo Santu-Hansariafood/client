@@ -34,9 +34,9 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
       try {
         const [companiesRes, commoditiesRes, consigneesRes] = await Promise.all(
           [
-            axios.get("http://localhost:5000/api/companies"),
-            axios.get("http://localhost:5000/api/commodities"),
-            axios.get("http://localhost:5000/api/consignees"),
+            axios.get("https://phpserver-v77g.onrender.com/api/companies"),
+            axios.get("https://phpserver-v77g.onrender.com/api/commodities"),
+            axios.get("https://phpserver-v77g.onrender.com/api/consignees"),
           ]
         );
 
@@ -122,7 +122,7 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
     e.preventDefault();
     try {
       const response = await axios.put(
-        `http://localhost:5000/api/buyers/${formData._id}`,
+        `https://phpserver-v77g.onrender.com/api/buyers/${formData._id}`,
         formData
       );
       onUpdate(response.data);

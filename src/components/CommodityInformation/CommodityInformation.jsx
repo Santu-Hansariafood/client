@@ -19,7 +19,7 @@ const CommodityInformation = ({
   useEffect(() => {
     const fetchCommodities = async () => {
       try {
-        const { data } = await axios.get("http://localhost:5000/api/companies");
+        const { data } = await axios.get("https://phpserver-v77g.onrender.com/api/companies");
         const companyData = data.find(
           (company) => company.companyName === selectedCompany
         );
@@ -37,7 +37,7 @@ const CommodityInformation = ({
 
     const fetchBuyers = async () => {
       try {
-        const { data } = await axios.get("http://localhost:5000/api/buyers");
+        const { data } = await axios.get("https://phpserver-v77g.onrender.com/api/buyers");
         setBuyers(data || []);
       } catch (error) {
         console.error("Error fetching buyers:", error);

@@ -25,7 +25,7 @@ const BidList = () => {
   useEffect(() => {
     const fetchBids = async () => {
       try {
-        const response = await fetch("http://localhost:5000/api/bids");
+        const response = await fetch("https://phpserver-v77g.onrender.com/api/bids");
         const data = await response.json();
         setBids(data);
         setFilteredData(data);
@@ -36,7 +36,7 @@ const BidList = () => {
 
     const fetchCommodities = async () => {
       try {
-        const response = await fetch("http://localhost:5000/api/commodities");
+        const response = await fetch("https://phpserver-v77g.onrender.com/api/commodities");
         const data = await response.json();
         setCommodities(data);
       } catch (error) {
@@ -46,7 +46,7 @@ const BidList = () => {
 
     const fetchOrigins = async () => {
       try {
-        const response = await fetch("http://localhost:5000/api/bid-locations");
+        const response = await fetch("https://phpserver-v77g.onrender.com/api/bid-locations");
         const data = await response.json();
         setOrigins(data);
       } catch (error) {

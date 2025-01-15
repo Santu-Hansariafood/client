@@ -24,7 +24,7 @@ const BuyerList = () => {
   useEffect(() => {
     const fetchBuyersData = async () => {
       try {
-        const response = await axios.get("http://localhost:5000/api/buyers");
+        const response = await axios.get("https://phpserver-v77g.onrender.com/api/buyers");
         const sortedData = response.data.sort((a, b) =>
           a.name.localeCompare(b.name)
         );
@@ -67,7 +67,7 @@ const BuyerList = () => {
     const buyerToDelete = filteredData[index];
     try {
       await axios.delete(
-        `http://localhost:5000/api/buyers/${buyerToDelete._id}`
+        `https://phpserver-v77g.onrender.com/api/buyers/${buyerToDelete._id}`
       );
       const updatedData = filteredData.filter((_, i) => i !== index);
       setBuyersData(updatedData);

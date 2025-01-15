@@ -26,7 +26,7 @@ const ListCompany = () => {
   useEffect(() => {
     const fetchCompanyData = async () => {
       try {
-        const response = await axios.get("http://localhost:5000/api/companies");
+        const response = await axios.get("https://phpserver-v77g.onrender.com/api/companies");
         const sortedData = response.data.sort((a, b) =>
           a.companyName.localeCompare(b.companyName)
         );
@@ -70,7 +70,7 @@ const ListCompany = () => {
   const handleDelete = async (index) => {
     const companyId = paginatedData[index]._id;
     try {
-      await axios.delete(`http://localhost:5000/api/companies/${companyId}`);
+      await axios.delete(`https://phpserver-v77g.onrender.com/api/companies/${companyId}`);
       const updatedData = filteredData.filter(
         (company) => company._id !== companyId
       );

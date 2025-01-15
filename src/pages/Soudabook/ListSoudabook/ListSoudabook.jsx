@@ -7,7 +7,7 @@ import DataInput from "../../../common/DataInput/DataInput";
 import Tables from "../../../common/Tables/Tables";
 import Actions from "../../../common/Actions/Actions";
 
-const API_URL = "http://localhost:5000/api/agents";
+const API_URL = "https://phpserver-v77g.onrender.com/api/agents";
 
 const ListSoudabook = () => {
   const [agentName, setAgentName] = useState("");

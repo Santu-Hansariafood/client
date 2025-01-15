@@ -15,7 +15,7 @@ const BuyerInformation = ({ handleChange }) => {
     const fetchBuyers = async () => {
       setLoading(true);
       try {
-        const { data } = await axios.get("http://localhost:5000/api/buyers");
+        const { data } = await axios.get("https://phpserver-v77g.onrender.com/api/buyers");
         setBuyers(data);
       } catch (error) {
         console.error("Error fetching buyers:", error);

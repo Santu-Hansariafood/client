@@ -5,10 +5,10 @@ const ChartSection = () => {
   return (
     <>
       <div className="mt-8">
-        <SaudaChart apiUrl="http://localhost:5000/api/self-order" />
+        <SaudaChart apiUrl="https://phpserver-v77g.onrender.com/api/self-order" />
       </div>
       <div className="mt-8">
-        <BidChart apiUrl="http://localhost:5000/api/bids" />
+        <BidChart apiUrl="https://phpserver-v77g.onrender.com/api/bids" />
       </div>
     </>
   );

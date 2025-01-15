@@ -31,9 +31,9 @@ const BidList = () => {
       try {
         const [bidsResponse, commoditiesResponse, originsResponse] =
           await Promise.all([
-            fetch("http://localhost:5000/api/bids"),
-            fetch("http://localhost:5000/api/commodities"),
-            fetch("http://localhost:5000/api/bid-locations"),
+            fetch("https://phpserver-v77g.onrender.com/api/bids"),
+            fetch("https://phpserver-v77g.onrender.com/api/commodities"),
+            fetch("https://phpserver-v77g.onrender.com/api/bid-locations"),
           ]);
 
         if (
