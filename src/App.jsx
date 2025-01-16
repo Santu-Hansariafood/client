@@ -1,14 +1,8 @@
 import PropTypes from "prop-types";
-import { lazy, Suspense, useMemo, useEffect, useState } from "react";
-import {
-  BrowserRouter as Router,
-  Route,
-  Routes,
-  Navigate,
-} from "react-router-dom";
+import { lazy, Suspense, useEffect, useState, useMemo } from "react";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext/AuthContext";
 import { HelmetProvider, Helmet } from "react-helmet-async";
-
 import Loading from "./common/Loading/Loading";
 import PrivateLayout from "./layouts/PrivateLayout";
 import "./App.css";
@@ -89,6 +83,10 @@ const PrivateRoute = ({ children }) => {
   );
 };
 
+PrivateRoute.propTypes = {
+  children: PropTypes.node.isRequired,
+};
+
 const App = () => {
   const [hydrated, setHydrated] = useState(false);
 
@@ -136,7 +134,6 @@ const App = () => {
             "/seller-company/list": LazyPages.ListSellerCompany,
             "/seller-details/add": LazyPages.AddSellerDetails,
             "/seller-details/list": LazyPages.ListSellerDetails,
-            "/manage-bids/supplier": LazyPages.SupplierBid,
             "/manage-bids/buyer": LazyPages.BuyerBid,
             "/manage-bids/bid-list": LazyPages.BidList,
             "/manage-bids/bid-location": LazyPages.BidLocation,
@@ -174,19 +171,15 @@ const App = () => {
           <link rel="icon" href="./assets/react.svg" />
         </Helmet>
 
-        <Router>
+        <BrowserRouter>
           <Suspense fallback={<Loading />}>
             {criticalRoutes}
             {privateRoutes}
           </Suspense>
-        </Router>
+        </BrowserRouter>
       </AuthProvider>
     </HelmetProvider>
   );
-};
-
-PrivateRoute.propTypes = {
-  children: PropTypes.node.isRequired,
 };
 
 export default App;

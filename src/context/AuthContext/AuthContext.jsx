@@ -13,6 +13,8 @@ import "react-toastify/dist/ReactToastify.css";
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
+  const SESSION_DURATION = 5 * 60 * 1000;
+
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
     try {
       return JSON.parse(localStorage.getItem("isAuthenticated")) || false;
@@ -22,7 +24,6 @@ export const AuthProvider = ({ children }) => {
   });
 
   const sessionTimeoutRef = useRef(null);
-  const SESSION_DURATION = 10 * 60 * 1000;
 
   const login = () => {
     setIsAuthenticated(true);
@@ -45,11 +46,6 @@ export const AuthProvider = ({ children }) => {
       toast.info("Session expired due to inactivity.", {
         position: "top-center",
         autoClose: 5000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
       });
     }, SESSION_DURATION);
   };
@@ -72,12 +68,7 @@ export const AuthProvider = ({ children }) => {
     if (event.key === "isAuthenticated") {
       const newState = JSON.parse(event.newValue);
       setIsAuthenticated(newState);
-
-      if (newState) {
-        startSessionTimer();
-      } else {
-        clearSessionTimer();
-      }
+      newState ? startSessionTimer() : clearSessionTimer();
     }
   };
 
