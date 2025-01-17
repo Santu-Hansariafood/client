@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import DataInput from "../../../common/DataInput/DataInput";
 import DataDropdown from "../../../common/DataDropdown/DataDropdown";
-import Buttons from "../../../common/Buttons/Buttons";
 import { ToastContainer, toast } from "react-toastify";
 import { FaPlusCircle, FaMinusCircle } from "react-icons/fa";
 import "react-toastify/dist/ReactToastify.css";
@@ -53,9 +52,10 @@ const EditSellerDetails = ({ seller, onClose, onUpdate }) => {
   useEffect(() => {
     const fetchOptions = async () => {
       try {
-        const [commoditiesRes, companiesRes] = await Promise.all([
+        const [commoditiesRes, companiesRes, buyersRes] = await Promise.all([
           axios.get(`${apiBaseURL}/commodities`),
           axios.get(`${apiBaseURL}/seller-company`),
+          axios.get(`${apiBaseURL}/buyers`),
         ]);
 
         setCommodityOptions(
@@ -69,6 +69,14 @@ const EditSellerDetails = ({ seller, onClose, onUpdate }) => {
             value: item.companyName,
             label: item.companyName,
           }))
+        );
+        setBuyers(
+          buyersRes.data
+            .map((buyer) => ({
+              value: buyer.name,
+              label: buyer.name,
+            }))
+            .sort((a, b) => a.label.localeCompare(b.label))
         );
       } catch (error) {
         toast.error("Failed to load dropdown options.");
@@ -136,11 +144,10 @@ const EditSellerDetails = ({ seller, onClose, onUpdate }) => {
     setBrokerageAmounts({ ...brokerageAmounts, [commodity]: value });
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white w-11/12 max-w-4xl rounded-lg shadow-lg p-6 overflow-y-auto max-h-[90vh]">
+    <div className="fixed inset-0 bg-gray-900 bg-opacity-70 flex items-center justify-center z-50">
+      <div className="bg-white w-11/12 max-w-4xl rounded-lg shadow-xl p-6 overflow-y-auto max-h-[90vh] border border-gray-300">
         <h2 className="text-2xl font-bold mb-6">Edit Seller Details</h2>
         <div className="space-y-4">
-          {/* Seller Name */}
           <div>
             <label className="block text-sm font-medium text-gray-700">
               Seller Name
@@ -151,8 +158,6 @@ const EditSellerDetails = ({ seller, onClose, onUpdate }) => {
               placeholder="Enter Seller Name"
             />
           </div>
-
-          {/* Password */}
           <div>
             <label className="block text-sm font-medium text-gray-700">
               Password
@@ -164,8 +169,6 @@ const EditSellerDetails = ({ seller, onClose, onUpdate }) => {
               placeholder="Enter Password"
             />
           </div>
-
-          {/* Phone Numbers */}
           <div>
             <label className="block text-sm font-medium text-gray-700">
               Phone Numbers
@@ -208,8 +211,6 @@ const EditSellerDetails = ({ seller, onClose, onUpdate }) => {
               </div>
             ))}
           </div>
-
-          {/* Emails */}
           <div>
             <label className="block text-sm font-medium text-gray-700">
               Emails
@@ -250,8 +251,6 @@ const EditSellerDetails = ({ seller, onClose, onUpdate }) => {
               </div>
             ))}
           </div>
-
-          {/* Commodities */}
           <div>
             <label className="block text-sm font-medium text-gray-700">
               Commodities
@@ -277,8 +276,6 @@ const EditSellerDetails = ({ seller, onClose, onUpdate }) => {
               </div>
             ))}
           </div>
-
-          {/* Company and Status */}
           <div className="flex justify-between">
             <div className="w-full md:w-5/12">
               <label className="block text-sm font-medium text-gray-700">
@@ -305,8 +302,6 @@ const EditSellerDetails = ({ seller, onClose, onUpdate }) => {
               />
             </div>
           </div>
-
-          {/* Buyers */}
           <div>
             <label className="block text-sm font-medium text-gray-700">
               Buyers
@@ -319,19 +314,19 @@ const EditSellerDetails = ({ seller, onClose, onUpdate }) => {
             />
           </div>
         </div>
-
-        {/* Buttons */}
-        <div className="flex justify-end mt-6 space-x-4">
-          <Buttons
-            text="Cancel"
+        <div className="flex justify-center mt-8 space-x-4">
+          <button
             onClick={onClose}
-            className="px-6 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600"
-          />
-          <Buttons
-            text="Update"
+            className="px-8 py-3 bg-gray-600 text-white rounded-md hover:bg-gray-700 shadow focus:outline-none text-sm"
+          >
+            Cancel
+          </button>
+          <button
             onClick={handleSubmit}
-            className="px-6 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
-          />
+            className="px-8 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 shadow focus:outline-none text-sm"
+          >
+            Update
+          </button>
         </div>
 
         <ToastContainer />
