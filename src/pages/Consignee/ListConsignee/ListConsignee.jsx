@@ -28,9 +28,19 @@ const ListConsignee = () => {
         const response = await axios.get(
           "https://phpserver-v77g.onrender.com/api/consignees"
         );
-        setConsigneeData(response.data);
+        const normalizedData = response.data.map((consignee) => ({
+          ...consignee,
+          email: consignee.email.toLowerCase(),
+          gst: consignee.gst.toUpperCase(),
+          pan: consignee.pan.toUpperCase(),
+        }));
+        const sortedData = normalizedData.sort((a, b) =>
+          a.name.localeCompare(b.name)
+        );
+        setConsigneeData(sortedData);
         setLoading(false);
       } catch (error) {
+        console.error("Error fetching consignees:", error);
         setLoading(false);
       }
     };
