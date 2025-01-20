@@ -74,6 +74,8 @@ const LazyPages = {
   ),
 };
 
+const CACHE_EXPIRY_TIME = 5 * 60 * 1000;
+
 const PrivateRoute = ({ children }) => {
   const { isAuthenticated } = useAuth();
   return isAuthenticated ? (
@@ -93,6 +95,24 @@ const App = () => {
   useEffect(() => {
     const idleCallback = window.requestIdleCallback || setTimeout;
     idleCallback(() => setHydrated(true));
+  }, []);
+
+  useEffect(() => {
+    const idleCallback = window.requestIdleCallback || setTimeout;
+    const handleCache = () => {
+      const cacheTimestamp = sessionStorage.getItem("cacheTimestamp");
+      const currentTime = Date.now();
+      if (cacheTimestamp && currentTime - cacheTimestamp > CACHE_EXPIRY_TIME) {
+        sessionStorage.removeItem("lastVisitedPage");
+        sessionStorage.removeItem("cacheTimestamp");
+      }
+      sessionStorage.setItem("cacheTimestamp", currentTime);
+    };
+
+    idleCallback(() => {
+      handleCache();
+      setHydrated(true);
+    });
   }, []);
 
   const criticalRoutes = useMemo(

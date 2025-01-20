@@ -122,7 +122,7 @@ const ListCompany = () => {
   return (
     <Suspense fallback={<Loading />}>
       <div className="container mx-auto p-4">
-        <h2 className="text-2xl font-semibold mb-4">List of Companies</h2>
+        <h2 className="text-2xl font-semibold mb-4 text-center text-blue-500">List of Companies</h2>
         <SearchBox
           placeholder="Search companies by name..."
           onSearch={(term) => setSearchTerm(term)}
