@@ -85,6 +85,14 @@ const AdditionalInformation = ({ formData, handleChange }) => {
     handleChange(type, updatedEmails);
   };
 
+  const handleRadioChange = (field, value) => {
+    if (value) {
+      handleChange(field, value);
+    } else {
+      handleChange(field, "");
+    }
+  };
+
   return (
     <div>
       <label className="block mb-4 text-lg font-semibold text-gray-700">
@@ -116,9 +124,7 @@ const AdditionalInformation = ({ formData, handleChange }) => {
                   name="sendPOToBuyer"
                   value="yes"
                   checked={formData.sendPOToBuyer === "yes"}
-                  onChange={(e) =>
-                    handleChange("sendPOToBuyer", e.target.value)
-                  }
+                  onChange={(e) => handleRadioChange("sendPOToBuyer", e.target.value)}
                 />
                 <span className="ml-2">Yes</span>
               </label>
@@ -128,9 +134,7 @@ const AdditionalInformation = ({ formData, handleChange }) => {
                   name="sendPOToBuyer"
                   value="no"
                   checked={formData.sendPOToBuyer === "no"}
-                  onChange={(e) =>
-                    handleChange("sendPOToBuyer", e.target.value)
-                  }
+                  onChange={(e) => handleRadioChange("sendPOToBuyer", e.target.value)}
                 />
                 <span className="ml-2">No</span>
               </label>
@@ -145,9 +149,7 @@ const AdditionalInformation = ({ formData, handleChange }) => {
                   name="sendPOToSupplier"
                   value="yes"
                   checked={formData.sendPOToSupplier === "yes"}
-                  onChange={(e) =>
-                    handleChange("sendPOToSupplier", e.target.value)
-                  }
+                  onChange={(e) => handleRadioChange("sendPOToSupplier", e.target.value)}
                 />
                 <span className="ml-2">Yes</span>
               </label>
@@ -157,9 +159,7 @@ const AdditionalInformation = ({ formData, handleChange }) => {
                   name="sendPOToSupplier"
                   value="no"
                   checked={formData.sendPOToSupplier === "no"}
-                  onChange={(e) =>
-                    handleChange("sendPOToSupplier", e.target.value)
-                  }
+                  onChange={(e) => handleRadioChange("sendPOToSupplier", e.target.value)}
                 />
                 <span className="ml-2">No</span>
               </label>
@@ -178,7 +178,7 @@ const AdditionalInformation = ({ formData, handleChange }) => {
               name="billTo"
               value="none"
               checked={formData.billTo === "none"}
-              onChange={(e) => handleChange("billTo", e.target.value)}
+              onChange={(e) => handleRadioChange("billTo", e.target.value)}
             />
             <span className="ml-2">None</span>
           </label>
@@ -188,7 +188,7 @@ const AdditionalInformation = ({ formData, handleChange }) => {
               name="billTo"
               value="buyer"
               checked={formData.billTo === "buyer"}
-              onChange={(e) => handleChange("billTo", e.target.value)}
+              onChange={(e) => handleRadioChange("billTo", e.target.value)}
             />
             <span className="ml-2">Buyer</span>
           </label>
@@ -198,7 +198,7 @@ const AdditionalInformation = ({ formData, handleChange }) => {
               name="billTo"
               value="consignee"
               checked={formData.billTo === "consignee"}
-              onChange={(e) => handleChange("billTo", e.target.value)}
+              onChange={(e) => handleRadioChange("billTo", e.target.value)}
             />
             <span className="ml-2">Consignee</span>
           </label>
@@ -213,9 +213,9 @@ AdditionalInformation.propTypes = {
     buyerEmail: PropTypes.string.isRequired,
     buyerEmails: PropTypes.arrayOf(PropTypes.string).isRequired,
     sellerEmails: PropTypes.arrayOf(PropTypes.string).isRequired,
-    sendPOToBuyer: PropTypes.oneOf(["yes", "no"]).isRequired,
-    sendPOToSupplier: PropTypes.oneOf(["yes", "no"]).isRequired,
-    billTo: PropTypes.oneOf(["none", "buyer", "consignee"]).isRequired,
+    sendPOToBuyer: PropTypes.oneOf(["yes", "no", ""]).isRequired,
+    sendPOToSupplier: PropTypes.oneOf(["yes", "no", ""]).isRequired,
+    billTo: PropTypes.oneOf(["none", "buyer", "consignee", ""]).isRequired,
   }).isRequired,
   handleChange: PropTypes.func.isRequired,
 };

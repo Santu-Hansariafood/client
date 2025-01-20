@@ -148,7 +148,7 @@ const ListCommodity = () => {
                 </p>
                 <p>
                   <strong>Active Status:</strong>{" "}
-                  {selectedCommodity.activeStatus ? "Active" : "Inactive"}
+                  {selectedCommodity.activeStatus ? "Active" : "Active"}
                 </p>
               </div>
             )}
