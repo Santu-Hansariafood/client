@@ -40,12 +40,14 @@ const ListCommodity = () => {
 
   const handleSearch = (searchTerm) => {
     if (searchTerm === "") {
-      setFilteredCommodities(commodities);
+      setFilteredCommodities([...commodities]);
     } else {
       const filteredData = commodities.filter((commodity) =>
         commodity.name.toLowerCase().includes(searchTerm.toLowerCase())
       );
-      setFilteredCommodities(filteredData);
+      setFilteredCommodities(
+        filteredData.sort((a, b) => a.name.localeCompare(b.name))
+      );
     }
   };
 
@@ -68,12 +70,15 @@ const ListCommodity = () => {
 
   const handleDelete = async (id) => {
     try {
-      await axios.delete(`https://phpserver-v77g.onrender.com/api/commodities/${id}`);
-      setCommodities((prev) =>
-        prev.filter((commodity) => commodity._id !== id)
+      await axios.delete(
+        `https://phpserver-v77g.onrender.com/api/commodities/${id}`
       );
-      setFilteredCommodities((prev) =>
-        prev.filter((commodity) => commodity._id !== id)
+      const updatedCommodities = commodities.filter(
+        (commodity) => commodity._id !== id
+      );
+      setCommodities(updatedCommodities);
+      setFilteredCommodities(
+        updatedCommodities.sort((a, b) => a.name.localeCompare(b.name))
       );
     } catch (error) {
       console.error("Error deleting commodity:", error);
@@ -87,7 +92,6 @@ const ListCommodity = () => {
     Array.isArray(commodity.parameters)
       ? commodity.parameters.map((param) => param.parameter).join(", ")
       : "N/A",
-    commodity.activeStatus ? "Active" : "Inactive",
     <Actions
       key={commodity._id}
       onView={() => handleView(commodity._id)}
@@ -101,7 +105,6 @@ const ListCommodity = () => {
     "Commodity Name",
     "HSN Code",
     "Parameters",
-    "Active Status",
     "Actions",
   ];
 
@@ -145,10 +148,6 @@ const ListCommodity = () => {
                         .map((param) => param.parameter)
                         .join(", ")
                     : "N/A"}
-                </p>
-                <p>
-                  <strong>Active Status:</strong>{" "}
-                  {selectedCommodity.activeStatus ? "Active" : "Active"}
                 </p>
               </div>
             )}

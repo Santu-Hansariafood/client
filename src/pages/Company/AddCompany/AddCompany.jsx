@@ -20,7 +20,6 @@ const Buttons = lazy(() => import("../../../common/Buttons/Buttons"));
 
 const AddCompany = () => {
   const [companyName, setCompanyName] = useState("");
-  const [companyPhone, setCompanyPhone] = useState("");
   const [companyEmail, setCompanyEmail] = useState("");
   const [selectedConsignee, setSelectedConsignee] = useState([]);
   const [selectedGroup, setSelectedGroup] = useState(null);
@@ -40,17 +39,23 @@ const AddCompany = () => {
         ]);
 
         setConsigneeOptions(
-          consignees.data.map((item) => ({
-            value: item.name,
-            label: item.name,
-          }))
+          consignees.data
+            .map((item) => ({
+              value: item.name,
+              label: item.name,
+            }))
+            .sort((a, b) => a.label.localeCompare(b.label))
         );
+
         setGroupOptions(
-          groups.data.map((item) => ({
-            value: item.groupName,
-            label: item.groupName,
-          }))
+          groups.data
+            .map((item) => ({
+              value: item.groupName,
+              label: item.groupName,
+            }))
+            .sort((a, b) => a.label.localeCompare(b.label))
         );
+
         setCommodityOptions(
           commodities.data.map((item) => ({
             value: item._id,
@@ -59,7 +64,7 @@ const AddCompany = () => {
           }))
         );
       } catch (error) {
-        toast.error("Failed to load options. Please try again.",error);
+        toast.error("Failed to load options. Please try again.", error);
       }
     };
     fetchData();
@@ -122,14 +127,13 @@ const AddCompany = () => {
   );
 
   const handleSubmit = useCallback(async () => {
-    if (!companyName || !companyPhone || !companyEmail) {
+    if (!companyName || !companyEmail) {
       toast.error("Please fill in all required fields");
       return;
     }
 
     const companyData = {
       companyName,
-      companyPhone,
       companyEmail,
       consignee: selectedConsignee.map((item) => item.value),
       group: selectedGroup ? selectedGroup.value : null,
@@ -150,7 +154,6 @@ const AddCompany = () => {
       if (response.status === 201) {
         toast.success("Company added successfully!");
         setCompanyName("");
-        setCompanyPhone("");
         setCompanyEmail("");
         setSelectedConsignee([]);
         setSelectedGroup(null);
@@ -165,7 +168,6 @@ const AddCompany = () => {
     }
   }, [
     companyName,
-    companyPhone,
     companyEmail,
     selectedConsignee,
     selectedGroup,
@@ -177,7 +179,7 @@ const AddCompany = () => {
       <Suspense fallback={<Loading />}>
         <ToastContainer />
         <div className="flex items-center justify-center min-h-screen bg-gray-50 p-4 sm:p-8">
-          <div className="bg-white p-8 rounded-lg shadow-xl w-full max-w-3xl">
+          <div className="bg-white p-8 rounded-lg shadow-xl w-full max-w-4xl">
             <h2 className="text-3xl font-semibold text-center mb-8 text-gray-800">
               {addCompanyLable.company_title}
             </h2>
@@ -190,20 +192,6 @@ const AddCompany = () => {
                   placeholder="Enter company name"
                   value={companyName}
                   onChange={(e) => setCompanyName(e.target.value)}
-                  required
-                />
-              </div>
-              <div>
-                <label className="text-sm font-medium text-gray-600 mb-1">
-                  {addCompanyLable.company_phone}
-                </label>
-                <DataInput
-                  placeholder="Enter company phone"
-                  value={companyPhone}
-                  onChange={(e) => setCompanyPhone(e.target.value)}
-                  inputType="tel"
-                  maxLength="10"
-                  minLength="10"
                   required
                 />
               </div>

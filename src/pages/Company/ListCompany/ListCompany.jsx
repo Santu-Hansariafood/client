@@ -27,9 +27,14 @@ const ListCompany = () => {
     const fetchCompanyData = async () => {
       try {
         const response = await axios.get("https://phpserver-v77g.onrender.com/api/companies");
-        const sortedData = response.data.sort((a, b) =>
-          a.companyName.localeCompare(b.companyName)
-        );
+
+        const sortedData = response.data.sort((a, b) => {
+          if (a.group === b.group) {
+            return a.companyName.localeCompare(b.companyName);
+          }
+          return a.group.localeCompare(b.group);
+        });
+
         setCompanyData(sortedData);
         setFilteredData(sortedData);
       } catch (error) {
@@ -45,8 +50,7 @@ const ListCompany = () => {
     const lowercasedSearchTerm = searchTerm.toLowerCase();
     const filtered = companyData.filter(
       (company) =>
-        company.companyName.toLowerCase().includes(lowercasedSearchTerm) ||
-        company.companyPhone.toLowerCase().includes(lowercasedSearchTerm)
+        company.companyName.toLowerCase().includes(lowercasedSearchTerm)
     );
     setFilteredData(filtered);
     setCurrentPage(1);
@@ -94,7 +98,6 @@ const ListCompany = () => {
   const rows = paginatedData.map((company, index) => [
     (currentPage - 1) * itemsPerPage + index + 1,
     company.companyName,
-    company.companyPhone,
     company.companyEmail,
     company.consignee.join(", "),
     company.group,
@@ -121,14 +124,13 @@ const ListCompany = () => {
       <div className="container mx-auto p-4">
         <h2 className="text-2xl font-semibold mb-4">List of Companies</h2>
         <SearchBox
-          placeholder="Search companies by name or phone..."
+          placeholder="Search companies by name..."
           onSearch={(term) => setSearchTerm(term)}
         />
         <Tables
           headers={[
             "Sl No",
             "Company Name",
-            "Phone Number",
             "Email",
             "Consignee",
             "Group",
@@ -158,14 +160,10 @@ const ListCompany = () => {
                   <strong>Company Name:</strong> {selectedCompany.companyName}
                 </p>
                 <p>
-                  <strong>Phone:</strong> {selectedCompany.companyPhone}
-                </p>
-                <p>
                   <strong>Email:</strong> {selectedCompany.companyEmail}
                 </p>
                 <p>
-                  <strong>Consignee:</strong>{" "}
-                  {selectedCompany.consignee.join(", ")}
+                  <strong>Consignee:</strong> {selectedCompany.consignee.join(", ")}
                 </p>
                 <p>
                   <strong>Group:</strong> {selectedCompany.group}
@@ -174,7 +172,7 @@ const ListCompany = () => {
                 <ul>
                   {selectedCompany.commodities.map((commodity) => (
                     <li key={commodity._id}>
-                      <strong>{commodity.name}</strong>:{" "}
+                      <strong>{commodity.name}</strong>: {" "}
                       {commodity.parameters
                         .map((param) => `${param.parameter}: ${param.value}`)
                         .join(", ")}

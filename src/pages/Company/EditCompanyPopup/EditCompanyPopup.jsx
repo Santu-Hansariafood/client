@@ -3,6 +3,7 @@ import { useState, useEffect, lazy, Suspense } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
 import Loading from "../../../common/Loading/Loading";
+
 const DataInput = lazy(() => import("../../../common/DataInput/DataInput"));
 const DataDropdown = lazy(() =>
   import("../../../common/DataDropdown/DataDropdown")
@@ -90,6 +91,7 @@ const EditCompanyPopup = ({ company, isOpen, onClose, onUpdate }) => {
     updatedCommodities[commodityIndex].parameters[parameterIndex].value = value;
     setFormData({ ...formData, commodities: updatedCommodities });
   };
+
   const handleArrayChange = (field, value) => {
     setFormData({ ...formData, [field]: value });
   };
@@ -191,33 +193,6 @@ const EditCompanyPopup = ({ company, isOpen, onClose, onUpdate }) => {
                     )
                   }
                   placeholder="Select Consignees"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Edit Phone Numbers
-                </label>
-                <DataInput
-                  placeholder="Phone Numbers"
-                  value={formData.companyPhone || ""}
-                  onChange={handleChange}
-                  name="companyPhone"
-                  maxLength="10"
-                  minLength="10"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Edit Emails
-                </label>
-                <DataInput
-                  placeholder="Emails"
-                  value={formData.companyEmail || ""}
-                  onChange={handleChange}
-                  name="companyEmail"
-                  inputType="email"
                 />
               </div>
 

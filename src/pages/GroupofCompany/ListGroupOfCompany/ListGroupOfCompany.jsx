@@ -11,6 +11,15 @@ const PopupBox = lazy(() => import("../../../common/PopupBox/PopupBox"));
 const Pagination = lazy(() => import("../../../common/Paginations/Paginations"));
 const EditGroupPopup = lazy(() => import("../EditGroupPopup/EditGroupPopup"));
 
+// Utility function to convert a string to Title Case
+const toTitleCase = (str) => {
+  return str
+    .toLowerCase()
+    .split(" ")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+};
+
 const ListGroupOfCompany = () => {
   const [groupsData, setGroupsData] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
@@ -25,8 +34,16 @@ const ListGroupOfCompany = () => {
     const fetchGroups = async () => {
       try {
         const response = await axios.get("https://phpserver-v77g.onrender.com/api/groups");
-        setGroupsData(response.data);
-        setFilteredData(response.data);
+        const uniqueGroups = Array.from(
+          new Map(
+            response.data.map((group) => [
+              toTitleCase(group.groupName), // Convert to Title Case
+              { ...group, groupName: toTitleCase(group.groupName) },
+            ])
+          ).values()
+        ).sort((a, b) => a.groupName.localeCompare(b.groupName)); // Sort alphabetically
+        setGroupsData(uniqueGroups);
+        setFilteredData(uniqueGroups);
       } catch (error) {
         toast.error("Failed to fetch groups");
         console.error("Error fetching groups:", error);
@@ -48,15 +65,21 @@ const ListGroupOfCompany = () => {
     [groupsData]
   );
 
-  const handleView = useCallback((index) => {
-    setSelectedGroup(filteredData[index]);
-    setIsPopupOpen(true);
-  }, [filteredData]);
+  const handleView = useCallback(
+    (index) => {
+      setSelectedGroup(filteredData[index]);
+      setIsPopupOpen(true);
+    },
+    [filteredData]
+  );
 
-  const handleEdit = useCallback((index) => {
-    setSelectedGroup(filteredData[index]);
-    setIsEditPopupOpen(true);
-  }, [filteredData]);
+  const handleEdit = useCallback(
+    (index) => {
+      setSelectedGroup(filteredData[index]);
+      setIsEditPopupOpen(true);
+    },
+    [filteredData]
+  );
 
   const handleDelete = useCallback(
     async (index) => {
@@ -80,9 +103,11 @@ const ListGroupOfCompany = () => {
   const handleUpdate = useCallback(
     (updatedGroup) => {
       const updatedList = groupsData.map((group) =>
-        group._id === updatedGroup._id ? updatedGroup : group
+        group._id === updatedGroup._id
+          ? { ...updatedGroup, groupName: toTitleCase(updatedGroup.groupName) }
+          : group
       );
-      setGroupsData(updatedList);
+      setGroupsData(updatedList.sort((a, b) => a.groupName.localeCompare(b.groupName)));
       setFilteredData(updatedList);
     },
     [groupsData]
