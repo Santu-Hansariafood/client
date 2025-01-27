@@ -70,18 +70,23 @@ const ListCommodity = () => {
 
   const handleDelete = async (id) => {
     try {
+      const confirmDelete = window.confirm("Are you sure you want to delete this commodity?");
+      if (!confirmDelete) return;
+
       await axios.delete(
         `https://phpserver-v77g.onrender.com/api/commodities/${id}`
       );
+
       const updatedCommodities = commodities.filter(
         (commodity) => commodity._id !== id
       );
       setCommodities(updatedCommodities);
-      setFilteredCommodities(
-        updatedCommodities.sort((a, b) => a.name.localeCompare(b.name))
-      );
+      setFilteredCommodities(updatedCommodities);
+
+      alert("Commodity deleted successfully!");
     } catch (error) {
       console.error("Error deleting commodity:", error);
+      alert("Failed to delete the commodity. Please try again.");
     }
   };
 

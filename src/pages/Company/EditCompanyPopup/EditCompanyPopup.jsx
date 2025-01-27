@@ -70,6 +70,12 @@ const EditCompanyPopup = ({ company, isOpen, onClose, onUpdate }) => {
     }
   };
 
+  const handleCommodityRemove = (index) => {
+    const updatedCommodities = [...formData.commodities];
+    updatedCommodities.splice(index, 1);
+    setFormData({ ...formData, commodities: updatedCommodities });
+  };
+
   const handleParameterChange = (commodityIndex, selectedOptions) => {
     const updatedCommodities = [...formData.commodities];
     updatedCommodities[commodityIndex].parameters = selectedOptions.map(
@@ -82,11 +88,7 @@ const EditCompanyPopup = ({ company, isOpen, onClose, onUpdate }) => {
     setFormData({ ...formData, commodities: updatedCommodities });
   };
 
-  const handleParameterValueChange = (
-    commodityIndex,
-    parameterIndex,
-    value
-  ) => {
+  const handleParameterValueChange = (commodityIndex, parameterIndex, value) => {
     const updatedCommodities = [...formData.commodities];
     updatedCommodities[commodityIndex].parameters[parameterIndex].value = value;
     setFormData({ ...formData, commodities: updatedCommodities });
@@ -117,7 +119,7 @@ const EditCompanyPopup = ({ company, isOpen, onClose, onUpdate }) => {
   return (
     <Suspense fallback={<Loading />}>
       <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex justify-center items-center z-50">
-        <div className="bg-white p-6 rounded-lg shadow-md w-11/12 sm:w-3/4 lg:w-1/2 max-h-screen overflow-auto relative">
+        <div className="bg-white p-6 rounded-lg shadow-md w-full sm:w-3/4 lg:w-2/3 max-h-screen overflow-auto relative">
           <button
             className="absolute top-2 right-2 text-gray-500 hover:text-gray-800"
             onClick={onClose}
@@ -131,9 +133,10 @@ const EditCompanyPopup = ({ company, isOpen, onClose, onUpdate }) => {
 
           <form onSubmit={handleSubmit}>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Company Name */}
               <div>
                 <label className="block text-sm font-medium text-gray-700">
-                  Edit Company Name
+                  Company Name
                 </label>
                 <DataInput
                   placeholder="Company Name"
@@ -144,9 +147,10 @@ const EditCompanyPopup = ({ company, isOpen, onClose, onUpdate }) => {
                 />
               </div>
 
+              {/* Group */}
               <div>
                 <label className="block text-sm font-medium text-gray-700">
-                  Edit Group
+                  Group
                 </label>
                 <DataDropdown
                   options={groups.map((group) => ({
@@ -170,9 +174,10 @@ const EditCompanyPopup = ({ company, isOpen, onClose, onUpdate }) => {
                 />
               </div>
 
+              {/* Consignees */}
               <div>
                 <label className="block text-sm font-medium text-gray-700">
-                  Edit Consignees
+                  Consignees
                 </label>
                 <DataDropdown
                   options={consignees.map((consignee) => ({
@@ -196,9 +201,10 @@ const EditCompanyPopup = ({ company, isOpen, onClose, onUpdate }) => {
                 />
               </div>
 
+              {/* Commodities */}
               <div className="col-span-2">
                 <label className="block text-sm font-medium text-gray-700">
-                  Edit Commodities
+                  Commodities
                 </label>
                 <div className="flex items-center gap-2">
                   <DataDropdown
@@ -220,10 +226,19 @@ const EditCompanyPopup = ({ company, isOpen, onClose, onUpdate }) => {
                 </div>
 
                 {formData.commodities?.map((commodity, commodityIndex) => (
-                  <div key={commodityIndex} className="border p-4 mt-2 rounded">
-                    <p>
-                      <strong>{commodity.name}</strong>
-                    </p>
+                  <div
+                    key={commodityIndex}
+                    className="border p-4 mt-2 rounded relative"
+                  >
+                    <button
+                      type="button"
+                      onClick={() => handleCommodityRemove(commodityIndex)}
+                      className="absolute top-2 right-2 text-red-500 hover:text-red-700"
+                      title="Remove Commodity"
+                    >
+                      ✖
+                    </button>
+                    <p className="font-semibold">{commodity.name}</p>
                     <label className="block mt-2 font-semibold">
                       Quality Parameters
                     </label>
