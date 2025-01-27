@@ -24,7 +24,9 @@ const BuyerList = () => {
   useEffect(() => {
     const fetchBuyersData = async () => {
       try {
-        const response = await axios.get("https://phpserver-v77g.onrender.com/api/buyers");
+        const response = await axios.get(
+          "https://phpserver-v77g.onrender.com/api/buyers"
+        );
         const sortedData = response.data.sort((a, b) =>
           a.name.localeCompare(b.name)
         );
@@ -47,7 +49,7 @@ const BuyerList = () => {
           email.toLowerCase().includes(searchLower)
         ) ||
         buyer.mobile.some((mobile) => mobile.includes(searchLower)) ||
-        buyer.companyName.toLowerCase().includes(searchLower)
+        buyer.group.toLowerCase().includes(searchLower)
     );
     setFilteredData(filtered);
     setCurrentPage(1);
@@ -104,7 +106,7 @@ const BuyerList = () => {
       buyer.name || "N/A",
       buyer.mobile?.join(", ") || "N/A",
       buyer.email?.join(", ") || "N/A",
-      buyer.companyName || "N/A",
+      buyer.group || "N/A",
       buyer.commodity?.join(", ") || "N/A",
       buyer.consignee?.map((c) => c.label).join(", ") || "N/A",
       Object.entries(buyer.brokerage || {})
@@ -136,7 +138,7 @@ const BuyerList = () => {
               "Name",
               "Mobile",
               "Email",
-              "Company Name",
+              "Group Company",
               "Commodity",
               "Consignee",
               "Brokerage(Per Ton)",
@@ -169,7 +171,7 @@ const BuyerList = () => {
                 <strong>Email:</strong> {selectedBuyer.email.join(", ")}
               </p>
               <p>
-                <strong>Company Name:</strong> {selectedBuyer.companyName}
+                <strong>Company Name:</strong> {selectedBuyer.group}
               </p>
               <p>
                 <strong>Commodity:</strong> {selectedBuyer.commodity.join(", ")}

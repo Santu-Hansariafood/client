@@ -10,7 +10,7 @@ const DataDropdown = lazy(() =>
 
 const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
   const [formData, setFormData] = useState(null);
-  const [companies, setCompanies] = useState([]);
+  const [groups, setGroups] = useState([]);
   const [commodities, setCommodities] = useState([]);
   const [consignees, setConsignees] = useState([]);
   const [allConsignees, setAllConsignees] = useState([]);
@@ -32,15 +32,19 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [companiesRes, commoditiesRes, consigneesRes] = await Promise.all(
-          [
-            axios.get("https://phpserver-v77g.onrender.com/api/companies"),
-            axios.get("https://phpserver-v77g.onrender.com/api/commodities"),
-            axios.get("https://phpserver-v77g.onrender.com/api/consignees"),
-          ]
-        );
+        const [groupsRes, commoditiesRes, consigneesRes] = await Promise.all([
+          axios.get("https://phpserver-v77g.onrender.com/api/companies"),
+          axios.get("https://phpserver-v77g.onrender.com/api/commodities"),
+          axios.get("https://phpserver-v77g.onrender.com/api/consignees"),
+        ]);
 
-        setCompanies(companiesRes.data);
+        setGroups(
+          groupsRes.data.map((group) => ({
+            value: group.group,
+            label: group.group,
+            consignees: group.consignee || [],
+          }))
+        );
         setCommodities(commoditiesRes.data);
         setAllConsignees(consigneesRes.data);
       } catch (error) {
@@ -63,19 +67,16 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
     setFormData({ ...formData, [name]: updatedArray });
   };
 
-  const handleCompanyChange = (e) => {
-    const selectedCompanyName = e.target.value;
-    const selectedCompany = companies.find(
-      (company) => company.companyName === selectedCompanyName
-    );
+  const handleGroupChange = (selectedGroup) => {
+    const group = groups.find((g) => g.value === selectedGroup.value);
 
     setFormData((prevData) => ({
       ...prevData,
-      companyName: selectedCompanyName,
+      group: selectedGroup.value,
       consignee: [],
     }));
 
-    setConsignees(selectedCompany?.consignee || []);
+    setConsignees(group?.consignees || []);
   };
 
   const addField = (name) => {
@@ -139,7 +140,7 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
 
   return (
     <Suspense fallback={<Loading />}>
-      <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex justify-center items-center">
+      <div className="fixed inset-0 bg-gray-800 bg-opacity-75 flex justify-center items-center z-50">
         <div className="relative bg-white p-8 rounded-lg shadow-lg w-full max-w-3xl">
           <button
             className="absolute top-3 right-3 text-gray-700 hover:text-red-500 font-bold text-lg"
@@ -172,20 +173,15 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
                   />
                 </div>
                 <div>
-                  <label className="block font-semibold">Company Name</label>
-                  <select
-                    name="companyName"
-                    value={formData.companyName || ""}
-                    onChange={handleCompanyChange}
-                    className="w-full p-2 border rounded"
-                  >
-                    <option value="">Select Company</option>
-                    {companies.map((company) => (
-                      <option key={company._id} value={company.companyName}>
-                        {company.companyName}
-                      </option>
-                    ))}
-                  </select>
+                  <label className="block font-semibold">Group</label>
+                  <DataDropdown
+                    options={groups}
+                    selectedOptions={groups.find(
+                      (group) => group.value === formData.group
+                    )}
+                    onChange={handleGroupChange}
+                    placeholder="Select Group"
+                  />
                 </div>
                 <div>
                   <label className="block font-semibold">
