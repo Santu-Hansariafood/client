@@ -17,7 +17,7 @@ const AddBuyer = () => {
     name: "",
     mobile: [""],
     email: [""],
-    companyName: "",
+    group: "",
     password: "",
     commodity: [],
     brokerage: {},
@@ -26,7 +26,7 @@ const AddBuyer = () => {
   });
 
   const [errors, setErrors] = useState({});
-  const [companyOptions, setCompanyOptions] = useState([]);
+  const [groupOptions, setGroupOptions] = useState([]);
   const [commodityOptions, setCommodityOptions] = useState([]);
   const [consigneeOptions, setConsigneeOptions] = useState([]);
 
@@ -46,10 +46,10 @@ const AddBuyer = () => {
           axios.get("https://phpserver-v77g.onrender.com/api/commodities"),
         ]);
 
-        setCompanyOptions(
+        setGroupOptions(
           companiesResponse.data.map((company) => ({
-            value: company.companyName,
-            label: company.companyName,
+            value: company.group,
+            label: company.group,
             consignees: company.consignee || [],
           }))
         );
@@ -71,13 +71,13 @@ const AddBuyer = () => {
   const handleDropdownChange = (selectedOption, actionMeta) => {
     const fieldName = actionMeta.name;
 
-    if (fieldName === "companyName") {
-      const selectedCompany = companyOptions.find(
-        (company) => company.value === selectedOption?.value
+    if (fieldName === "group") {
+      const selectedGroup = groupOptions.find(
+        (group) => group.value === selectedOption?.value
       );
 
       setConsigneeOptions(
-        selectedCompany?.consignees.map((consignee) => ({
+        selectedGroup?.consignees.map((consignee) => ({
           value: consignee,
           label: consignee,
         })) || []
@@ -85,7 +85,7 @@ const AddBuyer = () => {
 
       setFormData({
         ...formData,
-        companyName: selectedOption,
+        group: selectedOption,
         consignee: [],
       });
     } else if (fieldName === "commodity") {
@@ -160,7 +160,7 @@ const AddBuyer = () => {
       try {
         const payload = {
           ...formData,
-          companyName: formData.companyName?.value || "",
+          group: formData.group?.value || "",
           commodity: formData.commodity.map((item) => item.value),
           status: formData.status?.value || "",
         };
@@ -170,7 +170,7 @@ const AddBuyer = () => {
           name: "",
           mobile: [""],
           email: [""],
-          companyName: "",
+          group: "",
           password: "",
           commodity: [],
           brokerage: {},
@@ -182,7 +182,7 @@ const AddBuyer = () => {
       }
     }
   };
-
+  
   return (
     <>
       <Suspense fallback={<Loading />}>
@@ -208,16 +208,16 @@ const AddBuyer = () => {
               <div>
                 <label
                   className="block text-gray-700 mb-2"
-                  htmlFor="companyName"
+                  htmlFor="group"
                 >
                   {buyerLabels.company_name}
                 </label>
                 <DataDropdown
-                  name="companyName"
-                  options={companyOptions}
-                  selectedOptions={formData.companyName}
+                  name="group"
+                  options={groupOptions}
+                  selectedOptions={formData.group}
                   onChange={(selected) =>
-                    handleDropdownChange(selected, { name: "companyName" })
+                    handleDropdownChange(selected, { name: "group" })
                   }
                   placeholder="Select Company"
                 />

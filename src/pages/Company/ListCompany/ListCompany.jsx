@@ -174,7 +174,7 @@ const ListCompany = () => {
                     <li key={commodity._id}>
                       <strong>{commodity.name}</strong>: {" "}
                       {commodity.parameters
-                        .map((param) => `${param.parameter}: ${param.value}`)
+                        .map((param) => `${param.parameter}: ${param.value} %`)
                         .join(", ")}
                     </li>
                   ))}
