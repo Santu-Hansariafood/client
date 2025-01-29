@@ -165,6 +165,7 @@ const BaseBid = () => {
         <h2 className="text-2xl font-semibold mb-6 text-center">Buyer Bid</h2>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          {/* Group, Consignee, Origin, and Commodity */}
           {[
             {
               label: "Select Group",
@@ -181,8 +182,8 @@ const BaseBid = () => {
             {
               label: "Select Origin",
               options: state.originOptions,
-              value: state.origin,
-              onChange: (opt) => handleChange("origin", opt),
+              value: state.selectedOrigin,
+              onChange: (opt) => handleChange("selectedOrigin", opt),
             },
             {
               label: "Select Commodity",
@@ -203,10 +204,11 @@ const BaseBid = () => {
           ))}
         </div>
 
+        {/* Dynamic Parameters */}
         {state.parameters?.map((param) => (
           <div key={param._id}>
             <label className="block text-sm font-medium mb-1">
-              {param.parameter}: {param.value}
+              {param.parameter}
             </label>
             <DataInput
               placeholder={`Enter ${param.parameter}`}
@@ -221,13 +223,14 @@ const BaseBid = () => {
           </div>
         ))}
 
+        {/* Additional Fields */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-6">
           {[
-            { label: "Enter Quantity (Tons)", field: "quantity", type: "text" },
-            { label: "Rate for Bid (Rs.)", field: "rate", type: "text" },
+            { label: "Quantity (Tons)", field: "quantity", type: "text" },
+            { label: "Rate (Rs.)", field: "rate", type: "text" },
             { label: "Bid Date", field: "bidDate", type: "date" },
-            { label: "Start Time (HH:MM)", field: "startTime", type: "time" },
-            { label: "End Time (HH:MM)", field: "endTime", type: "time" },
+            { label: "Start Time", field: "startTime", type: "time" },
+            { label: "End Time", field: "endTime", type: "time" },
             { label: "Payment Terms", field: "paymentTerms", type: "text" },
             { label: "Delivery", field: "delivery", type: "text" },
           ].map(({ label, field, type }, index) => (
@@ -250,6 +253,7 @@ const BaseBid = () => {
           ))}
         </div>
 
+        {/* Submit Button */}
         <div className="mt-6 text-center">
           <Buttons
             label={state.isSubmitting ? "Submitting..." : "Submit Bid"}

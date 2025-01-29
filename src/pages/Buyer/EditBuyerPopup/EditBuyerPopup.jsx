@@ -10,6 +10,7 @@ const DataDropdown = lazy(() =>
 
 const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
   const [formData, setFormData] = useState(null);
+  const [companies, setCompanies] = useState([]);
   const [groups, setGroups] = useState([]);
   const [commodities, setCommodities] = useState([]);
   const [consignees, setConsignees] = useState([]);
@@ -32,10 +33,11 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [groupsRes, commoditiesRes, consigneesRes] = await Promise.all([
+        const [groupsRes, commoditiesRes, consigneesRes, companiesRes] = await Promise.all([
           axios.get("https://phpserver-v77g.onrender.com/api/companies"),
           axios.get("https://phpserver-v77g.onrender.com/api/commodities"),
           axios.get("https://phpserver-v77g.onrender.com/api/consignees"),
+          axios.get("https://phpserver-v77g.onrender.com/api/companies"),
         ]);
 
         setGroups(
@@ -47,6 +49,12 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
         );
         setCommodities(commoditiesRes.data);
         setAllConsignees(consigneesRes.data);
+        setCompanies(
+          companiesRes.data.map((company) => ({
+            value: company._id,
+            label: company.companyName,
+          }))
+        );
       } catch (error) {
         console.error("Error fetching data:", error);
         toast.error("Failed to fetch required data.");
@@ -78,7 +86,12 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
 
     setConsignees(group?.consignees || []);
   };
-
+  const handleCompanyChange = (selectedCompany) => {
+    setFormData((prevData) => ({
+      ...prevData,
+      company: selectedCompany.value,
+    }));
+  };
   const addField = (name) => {
     setFormData({
       ...formData,
@@ -155,6 +168,7 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
               <h2 className="text-xl font-semibold mb-4">Edit Buyer</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
+                <label className="block font-semibold">Buyer Name</label>
                   <DataInput
                     placeholder="Enter Name"
                     name="name"
@@ -164,6 +178,18 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
                   />
                 </div>
                 <div>
+                  <label className="block font-semibold">Company</label>
+                  <DataDropdown
+                    options={companies}
+                    selectedOptions={companies.find(
+                      (company) => company.value === formData.company
+                    )}
+                    onChange={handleCompanyChange}
+                    placeholder="Select Company"
+                  />
+                </div>
+                <div>
+                <label className="block font-semibold">Password</label>
                   <DataInput
                     placeholder="Enter Password"
                     name="password"

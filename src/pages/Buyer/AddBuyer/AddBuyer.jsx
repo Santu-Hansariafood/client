@@ -18,6 +18,7 @@ const AddBuyer = () => {
     mobile: [""],
     email: [""],
     group: "",
+    companyName: "",
     password: "",
     commodity: [],
     brokerage: {},
@@ -27,6 +28,7 @@ const AddBuyer = () => {
 
   const [errors, setErrors] = useState({});
   const [groupOptions, setGroupOptions] = useState([]);
+  const [companyOptions, setCompanyOptions] = useState([]);
   const [commodityOptions, setCommodityOptions] = useState([]);
   const [consigneeOptions, setConsigneeOptions] = useState([]);
 
@@ -46,11 +48,20 @@ const AddBuyer = () => {
           axios.get("https://phpserver-v77g.onrender.com/api/commodities"),
         ]);
 
+        const companies = companiesResponse.data;
+
         setGroupOptions(
-          companiesResponse.data.map((company) => ({
+          companies.map((company) => ({
             value: company.group,
             label: company.group,
             consignees: company.consignee || [],
+          }))
+        );
+
+        setCompanyOptions(
+          companies.map((company) => ({
+            value: company.companyName,
+            label: company.companyName,
           }))
         );
 
@@ -161,16 +172,21 @@ const AddBuyer = () => {
         const payload = {
           ...formData,
           group: formData.group?.value || "",
+          companyName: formData.companyName?.value || "",
           commodity: formData.commodity.map((item) => item.value),
           status: formData.status?.value || "",
         };
-        await axios.post("https://phpserver-v77g.onrender.com/api/buyers", payload);
+        await axios.post(
+          "https://phpserver-v77g.onrender.com/api/buyers",
+          payload
+        );
         toast.success("Buyer added successfully!");
         setFormData({
           name: "",
           mobile: [""],
           email: [""],
           group: "",
+          companyName: "",
           password: "",
           commodity: [],
           brokerage: {},
@@ -182,12 +198,14 @@ const AddBuyer = () => {
       }
     }
   };
-  
+
   return (
     <>
       <Suspense fallback={<Loading />}>
         <div className="max-w-2xl mx-auto p-6 border rounded-lg shadow-lg bg-white">
-          <h2 className="text-2xl font-semibold mb-6 text-center">{buyerLabels.title}</h2>
+          <h2 className="text-2xl font-semibold mb-6 text-center">
+            {buyerLabels.title}
+          </h2>
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <div>
@@ -208,8 +226,22 @@ const AddBuyer = () => {
               <div>
                 <label
                   className="block text-gray-700 mb-2"
-                  htmlFor="group"
+                  htmlFor="companyName"
                 >
+                  {buyerLabels.company_name_title}
+                </label>
+                <DataDropdown
+                  name="companyName"
+                  options={companyOptions}
+                  selectedOptions={formData.companyName}
+                  onChange={(selected) =>
+                    handleDropdownChange(selected, { name: "companyName" })
+                  }
+                  placeholder="Group of Company Name"
+                />
+              </div>
+              <div>
+                <label className="block text-gray-700 mb-2" htmlFor="group">
                   {buyerLabels.company_name}
                 </label>
                 <DataDropdown
@@ -219,7 +251,22 @@ const AddBuyer = () => {
                   onChange={(selected) =>
                     handleDropdownChange(selected, { name: "group" })
                   }
-                  placeholder="Select Company"
+                  placeholder="Select Group of Company"
+                />
+              </div>
+              <div>
+                <label className="block text-gray-700 mb-2" htmlFor="password">
+                  {buyerLabels.password_title}
+                </label>
+                <DataInput
+                  name="password"
+                  placeholder="Enter Password"
+                  inputType="password"
+                  value={formData.password}
+                  onChange={handleInputChange}
+                  required
+                  minLength="4"
+                  maxLength="25"
                 />
               </div>
               <div>
@@ -295,21 +342,6 @@ const AddBuyer = () => {
                 {errors.email && (
                   <p className="text-red-500 text-sm">{errors.email}</p>
                 )}
-              </div>
-              <div>
-                <label className="block text-gray-700 mb-2" htmlFor="password">
-                  {buyerLabels.password_title}
-                </label>
-                <DataInput
-                  name="password"
-                  placeholder="Enter Password"
-                  inputType="password"
-                  value={formData.password}
-                  onChange={handleInputChange}
-                  required
-                  minLength="4"
-                  maxLength="25"
-                />
               </div>
               <div>
                 <label className="block text-gray-700 mb-2" htmlFor="commodity">

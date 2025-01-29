@@ -11,6 +11,7 @@ const buyerLabels = {
   commodity_title: "Commodity",
   status_title: "Status",
   brokerage_per_ton_title: "Brokerage per Ton for",
+  company_name_title: "Select Company Name"
 };
 
 export default buyerLabels;
