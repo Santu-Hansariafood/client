@@ -1,11 +1,17 @@
 import PropTypes from "prop-types";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { FaCalendarAlt } from "react-icons/fa";
 
-const DateSelector = ({ onChange }) => {
-  const [currentDate, setCurrentDate] = useState(null);
+const DateSelector = ({ selectedDate, onChange }) => {
+  const [currentDate, setCurrentDate] = useState(selectedDate ? new Date(selectedDate) : null);
+
+  useEffect(() => {
+    if (selectedDate) {
+      setCurrentDate(new Date(selectedDate));
+    }
+  }, [selectedDate]);
 
   const handleDateChange = (date) => {
     setCurrentDate(date);
@@ -28,7 +34,7 @@ const DateSelector = ({ onChange }) => {
         placeholderText="Select a date"
         calendarClassName="react-datepicker-left"
         wrapperClassName="w-full"
-        isClearable // Allows clearing the date to make it empty
+        isClearable
       />
       <button
         type="button"
@@ -43,6 +49,7 @@ const DateSelector = ({ onChange }) => {
 };
 
 DateSelector.propTypes = {
+  selectedDate: PropTypes.oneOfType([PropTypes.string, PropTypes.instanceOf(Date)]),
   onChange: PropTypes.func.isRequired,
 };
 

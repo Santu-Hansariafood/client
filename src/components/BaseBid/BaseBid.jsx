@@ -4,15 +4,10 @@ import "react-toastify/dist/ReactToastify.css";
 import axios from "axios";
 import { ToastContainer } from "react-toastify";
 import Loading from "../../common/Loading/Loading";
-
-const DataInput = lazy(() => import("../../common/DataInput/DataInput"));
-const DataDropdown = lazy(() =>
-  import("../../common/DataDropdown/DataDropdown")
-);
-const DateSelector = lazy(() =>
-  import("../../common/DateSelector/DateSelector")
-);
-const Buttons = lazy(() => import("../../common/Buttons/Buttons"));
+const GroupSelection = lazy(() => import("./GroupSelection"));
+const ParameterInputs = lazy(() => import("./ParameterInputs"));
+const AdditionalFields = lazy(() => import("./AdditionalFields"));
+const SubmitButton = lazy(() => import("./SubmitButton"));
 
 const apiBaseUrl = "https://phpserver-v77g.onrender.com/api";
 
@@ -23,6 +18,7 @@ const BaseBid = () => {
     origin: null,
     selectedCommodity: null,
     parameterValues: {},
+    notes: "",
     quantity: "",
     rate: "",
     bidDate: null,
@@ -59,7 +55,7 @@ const BaseBid = () => {
         })),
       }));
     } catch (error) {
-      toast.error("Failed to fetch data. Please try again later.", error);
+      toast.error("Failed to fetch data. Please try again later.");
     }
   };
 
@@ -91,179 +87,72 @@ const BaseBid = () => {
       selectedCommodity: null,
       parameters: [],
       parameterValues: {},
+      notes: "",
     }));
   };
 
   const handleCommodityChange = (selectedCommodity) => {
-    const parameters = selectedCommodity?.parameters || [];
-    const parameterValues = parameters.reduce((acc, param) => {
+    if (!selectedCommodity) {
+      setState((prev) => ({
+        ...prev,
+        selectedCommodity: null,
+        parameters: [],
+        parameterValues: {},
+        notes: "",
+      }));
+      return;
+    }
+
+    const commodity = state.commodityOptions.find(
+      (c) => c.value === selectedCommodity.value
+    );
+
+    if (!commodity || !commodity.parameters) {
+      setState((prev) => ({
+        ...prev,
+        selectedCommodity,
+        parameters: [],
+        parameterValues: {},
+        notes: "",
+      }));
+      return;
+    }
+
+    const parameterValues = commodity.parameters.reduce((acc, param) => {
       acc[param._id] = param.value || "";
       return acc;
     }, {});
 
-    console.log("Quality Parameters and Values:", parameters);
-
     setState((prev) => ({
       ...prev,
       selectedCommodity,
-      parameters,
+      parameters: commodity.parameters,
       parameterValues,
     }));
-  };
-
-  const handleSubmit = async () => {
-    const bidData = {
-      type: "buyer",
-      group: state.selectedGroup?.label,
-      consignee: state.selectedConsignee?.value,
-      origin: state.origin?.value,
-      commodity: state.selectedCommodity?.value,
-      parameters: state.parameterValues,
-      quantity: parseFloat(state.quantity),
-      rate: parseFloat(state.rate),
-      bidDate: state.bidDate,
-      startTime: state.startTime,
-      endTime: state.endTime,
-      paymentTerms: state.paymentTerms,
-      delivery: state.delivery,
-    };
-
-    setState((prev) => ({ ...prev, isSubmitting: true }));
-    try {
-      await axios.post(`${apiBaseUrl}/bids`, bidData);
-      toast.success("Bid submitted successfully!");
-      setState((prev) => ({
-        ...prev,
-        selectedGroup: null,
-        selectedConsignee: null,
-        origin: null,
-        selectedCommodity: null,
-        parameters: [],
-        parameterValues: {},
-        quantity: "",
-        rate: "",
-        bidDate: null,
-        startTime: "",
-        endTime: "",
-        paymentTerms: "",
-        delivery: "",
-        isSubmitting: false,
-      }));
-    } catch (error) {
-      toast.error(
-        error.response?.data?.message ||
-          "Failed to submit bid. Please try again."
-      );
-    } finally {
-      setState((prev) => ({ ...prev, isSubmitting: false }));
-    }
   };
 
   return (
     <Suspense fallback={<Loading />}>
       <div className="max-w-4xl mx-auto p-4 border rounded-md shadow-md bg-white">
         <h2 className="text-2xl font-semibold mb-6 text-center">Buyer Bid</h2>
+        <GroupSelection
+          state={state}
+          handleGroupChange={handleGroupChange}
+          handleChange={handleChange}
+          handleCommodityChange={handleCommodityChange}
+        />
+        <ParameterInputs
+          parameters={state.parameters}
+          parameterValues={state.parameterValues}
+          handleChange={handleChange}
+          notes={state.notes}
+        />
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-          {/* Group, Consignee, Origin, and Commodity */}
-          {[
-            {
-              label: "Select Group",
-              options: state.groupOptions,
-              value: state.selectedGroup,
-              onChange: handleGroupChange,
-            },
-            {
-              label: "Select Consignee",
-              options: state.consigneeOptions,
-              value: state.selectedConsignee,
-              onChange: (opt) => handleChange("selectedConsignee", opt),
-            },
-            {
-              label: "Select Origin",
-              options: state.originOptions,
-              value: state.selectedOrigin,
-              onChange: (opt) => handleChange("selectedOrigin", opt),
-            },
-            {
-              label: "Select Commodity",
-              options: state.commodityOptions,
-              value: state.selectedCommodity,
-              onChange: handleCommodityChange,
-            },
-          ].map(({ label, options, value, onChange }, index) => (
-            <div key={index}>
-              <label className="block text-sm font-medium mb-2">{label}</label>
-              <DataDropdown
-                options={options}
-                selectedOptions={value}
-                onChange={onChange}
-                placeholder={label}
-              />
-            </div>
-          ))}
-        </div>
-
-        {/* Dynamic Parameters */}
-        {state.parameters?.map((param) => (
-          <div key={param._id}>
-            <label className="block text-sm font-medium mb-1">
-              {param.parameter}
-            </label>
-            <DataInput
-              placeholder={`Enter ${param.parameter}`}
-              value={state.parameterValues[param._id] || ""}
-              onChange={(e) =>
-                handleChange("parameterValues", {
-                  ...state.parameterValues,
-                  [param._id]: e.target.value,
-                })
-              }
-            />
-          </div>
-        ))}
-
-        {/* Additional Fields */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-6">
-          {[
-            { label: "Quantity (Tons)", field: "quantity", type: "text" },
-            { label: "Rate (Rs.)", field: "rate", type: "text" },
-            { label: "Bid Date", field: "bidDate", type: "date" },
-            { label: "Start Time", field: "startTime", type: "time" },
-            { label: "End Time", field: "endTime", type: "time" },
-            { label: "Payment Terms", field: "paymentTerms", type: "text" },
-            { label: "Delivery", field: "delivery", type: "text" },
-          ].map(({ label, field, type }, index) => (
-            <div key={index}>
-              <label className="block text-sm font-medium mb-1">{label}</label>
-              {type === "date" ? (
-                <DateSelector
-                  selectedDate={state[field]}
-                  onChange={(date) => handleChange(field, date)}
-                />
-              ) : (
-                <DataInput
-                  placeholder={label}
-                  value={state[field] || ""}
-                  onChange={(e) => handleChange(field, e.target.value)}
-                  inputType={type}
-                />
-              )}
-            </div>
-          ))}
-        </div>
-
-        {/* Submit Button */}
-        <div className="mt-6 text-center">
-          <Buttons
-            label={state.isSubmitting ? "Submitting..." : "Submit Bid"}
-            onClick={handleSubmit}
-            type="button"
-            variant="primary"
-            size="md"
-            disabled={state.isSubmitting}
-          />
-        </div>
+        <AdditionalFields state={state} handleChange={handleChange} />
+        <SubmitButton
+          isSubmitting={state.isSubmitting}
+          handleSubmit={() => {}}
+        />
 
         <ToastContainer />
       </div>
