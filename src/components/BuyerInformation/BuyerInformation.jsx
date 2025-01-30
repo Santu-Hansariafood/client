@@ -1,8 +1,11 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, lazy, Suspense } from "react";
 import PropTypes from "prop-types";
 import axios from "axios";
-import DataDropdown from "../../common/DataDropdown/DataDropdown";
-import DataInput from "../../common/DataInput/DataInput";
+import Loading from "../../common/Loading/Loading";
+const DataDropdown = lazy(() =>
+  import("../../common/DataDropdown/DataDropdown")
+);
+const DataInput = lazy(() => import("../../common/DataInput/DataInput"));
 
 const BuyerInformation = ({ handleChange }) => {
   const [buyers, setBuyers] = useState([]);
@@ -15,7 +18,9 @@ const BuyerInformation = ({ handleChange }) => {
     const fetchBuyers = async () => {
       setLoading(true);
       try {
-        const { data } = await axios.get("https://phpserver-v77g.onrender.com/api/buyers");
+        const { data } = await axios.get(
+          "https://phpserver-v77g.onrender.com/api/buyers"
+        );
         setBuyers(data);
       } catch (error) {
         console.error("Error fetching buyers:", error);
@@ -65,7 +70,7 @@ const BuyerInformation = ({ handleChange }) => {
   };
 
   return (
-    <div>
+    <Suspense fallback={<Loading />}>
       <label className="block mb-2 text-lg font-semibold text-gray-700">
         Buyer Information
       </label>
@@ -113,7 +118,7 @@ const BuyerInformation = ({ handleChange }) => {
           />
         </div>
       </div>
-    </div>
+    </Suspense>
   );
 };
 

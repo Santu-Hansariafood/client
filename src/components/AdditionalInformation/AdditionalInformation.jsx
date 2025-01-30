@@ -1,7 +1,8 @@
-import { useMemo } from "react";
+import { Suspense, useMemo } from "react";
 import PropTypes from "prop-types";
 import DataInput from "../../common/DataInput/DataInput";
 import { AiOutlinePlus, AiOutlineMinus } from "react-icons/ai";
+import Loading from "../../common/Loading/Loading";
 
 const AdditionalInformation = ({ formData, handleChange }) => {
   const buyerEmailsSection = useMemo(() => {
@@ -94,7 +95,7 @@ const AdditionalInformation = ({ formData, handleChange }) => {
   };
 
   return (
-    <div>
+    <Suspense fallback={<Loading />}>
       <label className="block mb-4 text-lg font-semibold text-gray-700">
         Additional Information
       </label>
@@ -124,7 +125,9 @@ const AdditionalInformation = ({ formData, handleChange }) => {
                   name="sendPOToBuyer"
                   value="yes"
                   checked={formData.sendPOToBuyer === "yes"}
-                  onChange={(e) => handleRadioChange("sendPOToBuyer", e.target.value)}
+                  onChange={(e) =>
+                    handleRadioChange("sendPOToBuyer", e.target.value)
+                  }
                 />
                 <span className="ml-2">Yes</span>
               </label>
@@ -134,7 +137,9 @@ const AdditionalInformation = ({ formData, handleChange }) => {
                   name="sendPOToBuyer"
                   value="no"
                   checked={formData.sendPOToBuyer === "no"}
-                  onChange={(e) => handleRadioChange("sendPOToBuyer", e.target.value)}
+                  onChange={(e) =>
+                    handleRadioChange("sendPOToBuyer", e.target.value)
+                  }
                 />
                 <span className="ml-2">No</span>
               </label>
@@ -149,7 +154,9 @@ const AdditionalInformation = ({ formData, handleChange }) => {
                   name="sendPOToSupplier"
                   value="yes"
                   checked={formData.sendPOToSupplier === "yes"}
-                  onChange={(e) => handleRadioChange("sendPOToSupplier", e.target.value)}
+                  onChange={(e) =>
+                    handleRadioChange("sendPOToSupplier", e.target.value)
+                  }
                 />
                 <span className="ml-2">Yes</span>
               </label>
@@ -159,7 +166,9 @@ const AdditionalInformation = ({ formData, handleChange }) => {
                   name="sendPOToSupplier"
                   value="no"
                   checked={formData.sendPOToSupplier === "no"}
-                  onChange={(e) => handleRadioChange("sendPOToSupplier", e.target.value)}
+                  onChange={(e) =>
+                    handleRadioChange("sendPOToSupplier", e.target.value)
+                  }
                 />
                 <span className="ml-2">No</span>
               </label>
@@ -204,7 +213,7 @@ const AdditionalInformation = ({ formData, handleChange }) => {
           </label>
         </div>
       </div>
-    </div>
+    </Suspense>
   );
 };
 

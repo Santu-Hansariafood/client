@@ -1,8 +1,20 @@
-import { useEffect, useState, useMemo, useCallback } from "react";
+import {
+  useEffect,
+  useState,
+  useMemo,
+  useCallback,
+  lazy,
+  Suspense,
+} from "react";
 import PropTypes from "prop-types";
-import DataDropdown from "../../common/DataDropdown/DataDropdown";
-import DataInput from "../../common/DataInput/DataInput";
-import DateSelector from "../../common/DateSelector/DateSelector";
+import Loading from "../../common/Loading/Loading";
+const DataDropdown = lazy(() =>
+  import("../../common/DataDropdown/DataDropdown")
+);
+const DataInput = lazy(() => import("../../common/DataInput/DataInput"));
+const DateSelector = lazy(() =>
+  import("../../common/DateSelector/DateSelector")
+);
 
 const SupplierInformation = ({ handleChange, formData }) => {
   const [sellers, setSellers] = useState([]);
@@ -11,7 +23,9 @@ const SupplierInformation = ({ handleChange, formData }) => {
   useEffect(() => {
     const fetchSuppliers = async () => {
       try {
-        const response = await fetch("https://phpserver-v77g.onrender.com/api/sellers");
+        const response = await fetch(
+          "https://phpserver-v77g.onrender.com/api/sellers"
+        );
         const data = await response.json();
         setSellers(data);
       } catch (error) {
@@ -49,13 +63,16 @@ const SupplierInformation = ({ handleChange, formData }) => {
   const handleSupplierChange = useCallback(
     (supplierId) => {
       const selected = sellers.find((seller) => seller._id === supplierId);
-  
+
       setSelectedSupplier(supplierId);
       handleChange("supplier", supplierId);
       handleChange("supplierBrokerage", selected?.commodities || []);
       handleChange("supplierName", selected?.sellerName || "");
-      handleChange("sellerEmails", selected?.emails.map((email) => email.value) || []);
-  
+      handleChange(
+        "sellerEmails",
+        selected?.emails.map((email) => email.value) || []
+      );
+
       if (selected) {
         const commoditiesBrokerage = selected.commodities.map((commodity) => ({
           name: commodity.name,
@@ -67,9 +84,9 @@ const SupplierInformation = ({ handleChange, formData }) => {
     },
     [sellers, handleChange]
   );
-  
+
   return (
-    <div>
+    <Suspense fallback={<Loading />}>
       <label className="block mb-2 text-lg font-semibold text-gray-700">
         Supplier Information
       </label>
@@ -130,7 +147,7 @@ const SupplierInformation = ({ handleChange, formData }) => {
           />
         </div>
       </div>
-    </div>
+    </Suspense>
   );
 };
 

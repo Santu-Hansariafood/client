@@ -1,6 +1,7 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, lazy, Suspense } from "react";
 import PropTypes from "prop-types";
-import DataInput from "../../common/DataInput/DataInput";
+import Loading from "../../common/Loading/Loading";
+const DataInput = lazy(() => import("../../common/DataInput/DataInput"));
 
 const QuantityPricing = ({ handleChange }) => {
   const [formData, setFormData] = useState({
@@ -51,7 +52,7 @@ const QuantityPricing = ({ handleChange }) => {
   );
 
   return (
-    <>
+    <Suspense fallback={<Loading />}>
       <label className="block mb-2 text-lg font-semibold text-gray-700">
         Quantity and Pricing
       </label>
@@ -68,7 +69,7 @@ const QuantityPricing = ({ handleChange }) => {
           </div>
         ))}
       </div>
-    </>
+    </Suspense>
   );
 };
 

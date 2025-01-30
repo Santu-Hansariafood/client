@@ -1,8 +1,9 @@
-import { useMemo, useCallback } from "react";
+import { useMemo, useCallback, lazy, Suspense } from "react";
 import PropTypes from "prop-types";
-import DataDropdown from "../../common/DataDropdown/DataDropdown";
-import DataInput from "../../common/DataInput/DataInput";
 import statesData from "../../data/state-city.json";
+import Loading from "../../common/Loading/Loading";
+const DataDropdown = lazy(()=> import("../../common/DataDropdown/DataDropdown"));
+const DataInput = lazy(()=> import("../../common/DataInput/DataInput"));
 
 const LoadingStation = ({ formData, handleChange }) => {
   const { state, location } = formData;
@@ -20,7 +21,7 @@ const LoadingStation = ({ formData, handleChange }) => {
   );
 
   return (
-    <div>
+    <Suspense fallback={<Loading/>}>
       <label className="block mb-2 text-lg font-semibold text-gray-700">
         Loading Station
       </label>
@@ -51,7 +52,7 @@ const LoadingStation = ({ formData, handleChange }) => {
           />
         </div>
       </div>
-    </div>
+    </Suspense>
   );
 };
 

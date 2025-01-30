@@ -1,10 +1,13 @@
-import React from 'react';
-import DataInput from '../../common/DataInput/DataInput'; 
-import DateSelector from '../../common/DateSelector/DateSelector';
+import { lazy, Suspense } from "react";
+import Loading from "../../common/Loading/Loading";
+const DataInput = lazy(() => import("../../common/DataInput/DataInput"));
+const DateSelector = lazy(() =>
+  import("../../common/DateSelector/DateSelector")
+);
 
 const PODetails = ({ handleChange, formData }) => {
   return (
-    <div>
+    <Suspense fallback={<Loading />}>
       <label className="block mb-2 text-lg font-semibold text-gray-700">
         Purchase Order Details
       </label>
@@ -27,7 +30,7 @@ const PODetails = ({ handleChange, formData }) => {
           />
         </div>
       </div>
-    </div>
+    </Suspense>
   );
 };
 

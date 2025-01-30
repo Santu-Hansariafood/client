@@ -1,9 +1,12 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, lazy, Suspense } from "react";
 import PropTypes from "prop-types";
 import axios from "axios";
-import DataDropdown from "../../common/DataDropdown/DataDropdown";
-import DataInput from "../../common/DataInput/DataInput";
-import Tables from "../../common/Tables/Tables";
+import Loading from "../../common/Loading/Loading";
+const DataDropdown = lazy(() =>
+  import("../../common/DataDropdown/DataDropdown")
+);
+const DataInput = lazy(() => import("../../common/DataInput/DataInput"));
+const Tables = lazy(() => import("../../common/Tables/Tables"));
 
 const CommodityInformation = ({
   handleChange,
@@ -19,7 +22,9 @@ const CommodityInformation = ({
   useEffect(() => {
     const fetchCommodities = async () => {
       try {
-        const { data } = await axios.get("https://phpserver-v77g.onrender.com/api/companies");
+        const { data } = await axios.get(
+          "https://phpserver-v77g.onrender.com/api/companies"
+        );
         const companyData = data.find(
           (company) => company.companyName === selectedCompany
         );
@@ -37,7 +42,9 @@ const CommodityInformation = ({
 
     const fetchBuyers = async () => {
       try {
-        const { data } = await axios.get("https://phpserver-v77g.onrender.com/api/buyers");
+        const { data } = await axios.get(
+          "https://phpserver-v77g.onrender.com/api/buyers"
+        );
         setBuyers(data || []);
       } catch (error) {
         console.error("Error fetching buyers:", error);
@@ -57,26 +64,26 @@ const CommodityInformation = ({
   const onCommodityChange = (option) => {
     const commodityName = option?.value || null;
     setSelectedCommodity(commodityName);
-  
+
     if (commodityName) {
       const commodity = commodities.find((item) => item.name === commodityName);
       const updatedParameters = commodity?.parameters || [];
-  
+
       const matchingBuyer = buyers.find(
         (buyer) =>
           buyer.companyName === selectedCompany &&
           buyer.commodity.includes(commodityName)
       );
       const updatedBrokerage = matchingBuyer?.brokerage[commodityName] || "N/A";
-  
+
       const companyData = commodities.find(
         (commodity) => commodity.companyName === selectedCompany
       );
       const companyEmail = companyData?.companyEmail || "";
-  
+
       setParameters(updatedParameters);
       setBrokerage({ [commodityName]: updatedBrokerage });
-  
+
       handleChange("commodity", commodityName);
       handleChange("parameters", updatedParameters);
       handleChange("buyerBrokerage", {
@@ -96,19 +103,19 @@ const CommodityInformation = ({
       handleChange("buyerEmails", []);
     }
   };
-  
+
   const onParameterChange = (index, newValue) => {
     const updatedParameters = [...parameters];
     updatedParameters[index].value = newValue;
-  
+
     const parametersWithIdAndValue = updatedParameters.map((param) => ({
       id: param._id,
       value: param.value,
     }));
-  
+
     handleChange("parameters", parametersWithIdAndValue);
   };
-  
+
   const commodityOptions = useMemo(
     () =>
       commodities.map((commodity) => ({
@@ -135,7 +142,7 @@ const CommodityInformation = ({
   );
 
   return (
-    <div>
+    <Suspense fallback={<Loading />}>
       <label className="block mb-2 text-lg font-semibold text-gray-700">
         Commodity Information
       </label>
@@ -165,7 +172,7 @@ const CommodityInformation = ({
           </div>
         )}
       </div>
-    </div>
+    </Suspense>
   );
 };
 

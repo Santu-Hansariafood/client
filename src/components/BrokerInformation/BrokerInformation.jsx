@@ -1,9 +1,11 @@
-import { useEffect, useState } from "react";
+import { lazy, useEffect, useState } from "react";
 import PropTypes from "prop-types";
 import axios from "axios";
 import { toast } from "react-toastify";
-import DataInput from "../../common/DataInput/DataInput";
-import DataDropdown from "../../common/DataDropdown/DataDropdown";
+const DataInput = lazy(() => import("../../common/DataInput/DataInput"));
+const DataDropdown = lazy(() =>
+  import("../../common/DataDropdown/DataDropdown")
+);
 
 const API_URL = "https://phpserver-v77g.onrender.com/api/agents";
 
