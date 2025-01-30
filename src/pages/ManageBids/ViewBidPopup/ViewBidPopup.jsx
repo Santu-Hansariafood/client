@@ -34,26 +34,24 @@ const ViewBidPopup = ({ bidId, onClose }) => {
     if (!bidDetails) return;
 
     const doc = new jsPDF({ format: "a4" });
+
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(20);
+    doc.setTextColor(208, 177, 19);
+    doc.setFontSize(32);
     doc.text("Hansaria Food Private Limited", 105, 20, { align: "center" });
-    doc.setFontSize(8);
-    doc.text(
-      "Registered Office: Primarc Square, Plot No.1, Salt Lake Bypass, LA Block, Sector: 3, Bidhannagar, Kolkata, West Bengal 700098",
-      105,
-      28,
-      { align: "center" }
-    );
-    doc.text(
-      "Contact: +91-93304 33535, +91-98304 33535 | Email: info@hansariafood.com",
-      105,
-      34,
-      { align: "center" }
-    );
+
+    doc.setTextColor(0, 128, 0);
+    doc.setFontSize(10);
+    doc.text("_______________________Broker & Commission Agent", 105, 28, {
+      align: "center",
+    });
+
+    doc.setTextColor(0, 0, 0);
     doc.line(15, 38, 195, 38);
 
     doc.setFontSize(14);
     doc.text("Bid Details Report", 105, 48, { align: "center" });
+
     const tableColumn = ["Field", "Value"];
     const tableRows = [
       ["Group", bidDetails.group],
@@ -78,18 +76,60 @@ const ViewBidPopup = ({ bidId, onClose }) => {
       columnStyles: { 0: { fontStyle: "bold" } },
     });
 
-    const finalY = doc.lastAutoTable.finalY + 10;
+    let finalY = doc.lastAutoTable.finalY + 10;
+
+    doc.setFont("helvetica", "bold");
+    doc.text("Quality Parameters", 15, finalY);
+    doc.setFont("helvetica", "normal");
+
+    const parameterRows = Object.entries(bidDetails.parameters).map(
+      ([key, value]) => [key, `${value}%`]
+    );
+
+    doc.autoTable({
+      startY: finalY + 5,
+      head: [["Parameter", "Value"]],
+      body: parameterRows,
+      theme: "grid",
+      styles: { fontSize: 10, cellPadding: 2 },
+      columnStyles: { 0: { fontStyle: "bold" } },
+    });
+
+    finalY = doc.lastAutoTable.finalY + 10;
+
+    doc.setFont("helvetica", "bold");
+    doc.text("Notes", 15, finalY);
+    doc.setFont("helvetica", "normal");
+    doc.text(
+      bidDetails.notes || "No additional notes provided.",
+      15,
+      finalY + 5
+    );
+
+    finalY += 15;
     doc.line(15, finalY, 195, finalY);
 
     doc.setFontSize(10);
-    doc.text("Notes: - This is a System Generated Document", 15, finalY + 5);
     doc.text(
-      "For Confirmation, please contact the Head Office",
-      15,
-      finalY + 10
+      "Corporate Office: Primarc Square, Plot No.1, Salt Lake Bypass, LA Block, Sector: 3, Bidhannagar, Kolkata, West Bengal 700098",
+      105,
+      finalY + 5,
+      { align: "center" }
     );
-    doc.text("After Approval, the Final Deal is Confirmed", 15, finalY + 15);
+    doc.text(
+      "Registered Office: 207, Maharshi Debendranath Road, 6th Floor, Room No. 111, Kolkata - 700 007",
+      105,
+      finalY + 10,
+      { align: "center" }
+    );
+    doc.text(
+      "Contact: +91-93304 33535, +91-98304 33535 | Email: info@hansariafood.com | www.hansariafood.com",
+      105,
+      finalY + 15,
+      { align: "center" }
+    );
     doc.line(15, finalY + 18, 195, finalY + 18);
+
     const pdfBlob = doc.output("blob");
     const url = URL.createObjectURL(pdfBlob);
     const a = document.createElement("a");
