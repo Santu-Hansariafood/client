@@ -1,9 +1,9 @@
 import { useState, useEffect, lazy, Suspense } from "react";
-import { toast } from "react-toastify";
+import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import axios from "axios";
-import { ToastContainer } from "react-toastify";
 import Loading from "../../common/Loading/Loading";
+
 const GroupSelection = lazy(() => import("./GroupSelection"));
 const ParameterInputs = lazy(() => import("./ParameterInputs"));
 const AdditionalFields = lazy(() => import("./AdditionalFields"));
@@ -21,7 +21,7 @@ const BaseBid = () => {
     notes: "",
     quantity: "",
     rate: "",
-    bidDate: null,
+    bidDate: "",
     startTime: "",
     endTime: "",
     paymentTerms: "",
@@ -44,18 +44,18 @@ const BaseBid = () => {
       setState((prev) => ({
         ...prev,
         groupOptions: companiesRes.data.map((c) => ({
-          value: c._id,
+          value: c.group,
           label: c.group,
           consignees: c.consignee,
           commodities: c.commodities,
         })),
         originOptions: originsRes.data.map((o) => ({
-          value: o._id,
+          value: o.name,
           label: o.name,
         })),
       }));
     } catch (error) {
-      toast.error("Failed to fetch data. Please try again later.");
+      toast.error("Failed to fetch data. Please try again later.", error);
     }
   };
 
@@ -79,7 +79,7 @@ const BaseBid = () => {
         group?.consignees.map((c) => ({ value: c, label: c })) || [],
       commodityOptions:
         group?.commodities.map((c) => ({
-          value: c._id,
+          value: c.name,
           label: c.name,
           parameters: c.parameters,
         })) || [],
@@ -131,6 +131,62 @@ const BaseBid = () => {
     }));
   };
 
+  const handleSubmit = async () => {
+    setState((prev) => ({ ...prev, isSubmitting: true }));
+
+    try {
+      const formattedParameters = state.parameters.reduce((acc, param) => {
+        acc[param.parameter] = state.parameterValues[param._id] || "";
+        return acc;
+      }, {});
+
+      await axios.post(`${apiBaseUrl}/bids`, {
+        type: "buyer",
+        group: state.selectedGroup?.value,
+        consignee: state.selectedConsignee?.value,
+        origin: state.origin?.value,
+        commodity: state.selectedCommodity?.value,
+        parameters: formattedParameters,
+        notes: state.notes,
+        quantity: state.quantity,
+        rate: state.rate,
+        bidDate: state.bidDate,
+        startTime: state.startTime,
+        endTime: state.endTime,
+        paymentTerms: state.paymentTerms,
+        delivery: state.delivery,
+      });
+
+      toast.success("Bid submitted successfully!");
+
+      setState({
+        selectedGroup: null,
+        selectedConsignee: null,
+        origin: null,
+        selectedCommodity: null,
+        parameterValues: {},
+        notes: "",
+        quantity: "",
+        rate: "",
+        bidDate: "",
+        startTime: "",
+        endTime: "",
+        paymentTerms: "",
+        delivery: "",
+        isSubmitting: false,
+        groupOptions: state.groupOptions,
+        consigneeOptions: [],
+        originOptions: state.originOptions,
+        commodityOptions: [],
+        parameters: [],
+      });
+    } catch (error) {
+      toast.error("Failed to submit bid. Please try again.", error);
+    } finally {
+      setState((prev) => ({ ...prev, isSubmitting: false }));
+    }
+  };
+
   return (
     <Suspense fallback={<Loading />}>
       <div className="max-w-4xl mx-auto p-4 border rounded-md shadow-md bg-white">
@@ -147,13 +203,11 @@ const BaseBid = () => {
           handleChange={handleChange}
           notes={state.notes}
         />
-
         <AdditionalFields state={state} handleChange={handleChange} />
         <SubmitButton
           isSubmitting={state.isSubmitting}
-          handleSubmit={() => {}}
+          handleSubmit={handleSubmit}
         />
-
         <ToastContainer />
       </div>
     </Suspense>

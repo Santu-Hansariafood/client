@@ -116,6 +116,7 @@ const SupplierInformation = ({ handleChange, formData }) => {
           <DateSelector
             selectedDate={formData.deliveryDate}
             onChange={(date) => handleChange("deliveryDate", date)}
+            defaultToToday={false}
           />
         </div>
         <div>
@@ -125,6 +126,7 @@ const SupplierInformation = ({ handleChange, formData }) => {
           <DateSelector
             selectedDate={formData.loadingDate}
             onChange={(date) => handleChange("loadingDate", date)}
+            defaultToToday={false}
           />
         </div>
       </div>

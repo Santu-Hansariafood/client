@@ -106,6 +106,7 @@ const BuyerList = () => {
       buyer.name || "N/A",
       buyer.mobile?.join(", ") || "N/A",
       buyer.email?.join(", ") || "N/A",
+      buyer.companyName || "N/A",
       buyer.group || "N/A",
       buyer.commodity?.join(", ") || "N/A",
       buyer.consignee?.map((c) => c.label).join(", ") || "N/A",
@@ -138,6 +139,7 @@ const BuyerList = () => {
               "Name",
               "Mobile",
               "Email",
+              "Company",
               "Group Company",
               "Commodity",
               "Consignee",
@@ -171,7 +173,10 @@ const BuyerList = () => {
                 <strong>Email:</strong> {selectedBuyer.email.join(", ")}
               </p>
               <p>
-                <strong>Company Name:</strong> {selectedBuyer.group}
+                <strong>Company Name:</strong> {selectedBuyer.companyName}
+              </p>
+              <p>
+                <strong>Group of Company Name:</strong> {selectedBuyer.group}
               </p>
               <p>
                 <strong>Commodity:</strong> {selectedBuyer.commodity.join(", ")}

@@ -1,11 +1,11 @@
 import { useState, useEffect, lazy, Suspense } from "react";
 import PropTypes from "prop-types";
 import { AiOutlineEye } from "react-icons/ai";
+import axios from "axios";
+
 const Tables = lazy(() => import("../../../common/Tables/Tables"));
 const SearchBox = lazy(() => import("../../../common/SearchBox/SearchBox"));
-const DateSelector = lazy(() =>
-  import("../../../common/DateSelector/DateSelector")
-);
+const DateSelector = lazy(() => import("../../../common/DateSelector/DateSelector"));
 const ViewBid = lazy(() => import("../ViewBidPopup/ViewBidPopup"));
 const BidIntroduction = lazy(() => import("../../../components/BidIntroduction/BidIntroduction"));
 import "react-datepicker/dist/react-datepicker.css";
@@ -13,45 +13,24 @@ import Loading from "../../../common/Loading/Loading";
 
 const BidList = () => {
   const [bids, setBids] = useState([]);
-  const [commodities, setCommodities] = useState([]);
-  const [origins, setOrigins] = useState([]);
-  const [searchCompany, setSearchCompany] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
+  const [searchQuery, setSearchQuery] = useState("");
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
   const [showDateRange, setShowDateRange] = useState(false);
   const [showBidIntro, setShowBidIntro] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const [selectedBidId, setSelectedBidId] = useState(null);
+  const [selectedBid, setSelectedBid] = useState(null);
   const [error, setError] = useState(null);
   const itemsPerPage = 10;
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [bidsResponse, commoditiesResponse, originsResponse] =
-          await Promise.all([
-            fetch("https://phpserver-v77g.onrender.com/api/bids"),
-            fetch("https://phpserver-v77g.onrender.com/api/commodities"),
-            fetch("https://phpserver-v77g.onrender.com/api/bid-locations"),
-          ]);
-
-        if (
-          !bidsResponse.ok ||
-          !commoditiesResponse.ok ||
-          !originsResponse.ok
-        ) {
-          throw new Error("Failed to fetch data");
-        }
-
-        const bidsData = await bidsResponse.json();
-        const commoditiesData = await commoditiesResponse.json();
-        const originsData = await originsResponse.json();
-
-        setBids(bidsData);
-        setFilteredData(bidsData);
-        setCommodities(commoditiesData);
-        setOrigins(originsData);
+        const response = await axios.get("https://phpserver-v77g.onrender.com/api/bids");
+        const sortedBids = response.data.sort((a, b) => new Date(b.bidDate) - new Date(a.bidDate));
+        setBids(sortedBids);
+        setFilteredData(sortedBids);
       } catch (error) {
         setError("Error fetching data. Please try again later.");
         console.error("Error:", error);
@@ -64,12 +43,8 @@ const BidList = () => {
   useEffect(() => {
     let data = [...bids];
 
-    if (searchCompany.length > 0) {
-      data = data.filter((bid) =>
-        searchCompany.some((term) =>
-          bid.company.toLowerCase().includes(term.toLowerCase())
-        )
-      );
+    if (searchQuery) {
+      data = data.filter((bid) => bid.consignee.toLowerCase().includes(searchQuery.toLowerCase()));
     }
 
     if (startDate) {
@@ -79,39 +54,22 @@ const BidList = () => {
       data = data.filter((bid) => new Date(bid.bidDate) <= endDate);
     }
 
-    data.sort((a, b) => new Date(b.bidDate) - new Date(a.bidDate));
-
     setFilteredData(data);
-  }, [searchCompany, startDate, endDate, bids]);
+  }, [searchQuery, startDate, endDate, bids]);
 
-  const getCommodityName = (id) => {
-    const commodity = commodities.find((item) => item._id === id);
-    return commodity ? commodity.name : "Unknown";
-  };
-
-  const getOriginName = (id) => {
-    const origin = origins.find((item) => item._id === id);
-    return origin ? origin.name : "Unknown";
-  };
-
-  const getParametersDisplay = (parameters, commodityId) => {
-    const commodity = commodities.find((item) => item._id === commodityId);
-    if (!commodity) return "N/A";
-
-    return commodity.parameters
-      .map((param) => `${param.parameter}: ${parameters[param._id] || "N/A"}`)
-      .join(", ");
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-GB");
   };
 
   const headers = [
     "ID",
-    "Type",
-    "Company",
+    "Group",
+    "Consignee",
     "Origin",
     "Commodity",
     "Parameters",
     "Quantity",
-    "Unit",
     "Rate",
     "Bid Date",
     "Start Time",
@@ -119,40 +77,33 @@ const BidList = () => {
     "Payment Terms",
     "Delivery",
     "View Bid",
-    "BidIntroduction",
   ];
 
   const rows = filteredData
     .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
     .map((bid, index) => [
       filteredData.length - ((currentPage - 1) * itemsPerPage + index),
-      bid.type,
-      bid.company,
-      getOriginName(bid.origin),
-      getCommodityName(bid.commodity),
-      getParametersDisplay(bid.parameters, bid.commodity),
+      bid.group,
+      bid.consignee,
+      bid.origin,
+      bid.commodity,
+      Object.entries(bid.parameters)
+        .map(([key, value]) => `${key}: ${value}`)
+        .join(", "),
       bid.quantity,
-      bid.unit,
       bid.rate,
-      new Date(bid.bidDate).toLocaleDateString(),
+      formatDate(bid.bidDate),
       bid.startTime,
       bid.endTime,
       bid.paymentTerms,
-      `${bid.delivery} days`,
+      bid.delivery,
       <button
         key={index}
         className="text-blue-500 hover:text-blue-700"
-        onClick={() => setSelectedBidId(bid._id)}
+        onClick={() => setSelectedBid(bid)}
         title="View"
       >
         <AiOutlineEye size={20} />
-      </button>,
-      <button
-        key={`intro-${index}`}
-        className="bg-indigo-500 text-white px-2 py-1 rounded hover:bg-indigo-600"
-        onClick={() => setShowBidIntro(true)}
-      >
-        BidIntroduction
       </button>,
     ]);
 
@@ -162,7 +113,7 @@ const BidList = () => {
 
   return (
     <Suspense fallback={<Loading />}>
-      <div className="p-4">
+      <div className="p-4 max-w-6xl mx-auto">
         <h1 className="text-2xl font-bold mb-4 text-center text-blue-600">
           Bid Management Dashboard
         </h1>
@@ -174,9 +125,8 @@ const BidList = () => {
           <>
             <div className="mb-4 flex flex-col md:flex-row gap-4">
               <SearchBox
-                placeholder="Search by company"
-                items={bids.map((bid) => bid.company)}
-                onSearch={(filteredItems) => setSearchCompany(filteredItems)}
+                placeholder="Search by consignee"
+                onSearch={(query) => setSearchQuery(query)}
               />
               <button
                 className="bg-blue-500 text-white px-4 py-2 rounded"
@@ -222,12 +172,10 @@ const BidList = () => {
             </div>
           </>
         )}
-        {selectedBidId && (
-          <ViewBid
-            bidId={selectedBidId}
-            onClose={() => setSelectedBidId(null)}
-          />
-        )}
+       {selectedBid && (
+  <ViewBid bidId={selectedBid._id} onClose={() => setSelectedBid(null)} />
+)}
+
       </div>
     </Suspense>
   );
