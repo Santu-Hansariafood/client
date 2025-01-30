@@ -201,10 +201,12 @@ const ViewBidPopup = ({ bidId, onClose }) => {
                 <strong>End Time:</strong> {bidDetails.endTime}
               </p>
               <p>
-                <strong>Payment Terms:</strong> {bidDetails.paymentTerms}
+                <strong>Payment Terms:</strong> {bidDetails.paymentTerms}{" "}
+                <strong> Days</strong>
               </p>
               <p>
-                <strong>Delivery:</strong> {bidDetails.delivery}
+                <strong>Delivery:</strong> {bidDetails.delivery}{" "}
+                <strong> Days</strong>
               </p>
             </div>
             <button
