@@ -7,9 +7,22 @@ import Loading from "../../../common/Loading/Loading";
 const Tables = lazy(() => import("../../../common/Tables/Tables"));
 const SearchBox = lazy(() => import("../../../common/SearchBox/SearchBox"));
 const Actions = lazy(() => import("../../../common/Actions/Actions"));
-const Pagination = lazy(() => import("../../../common/Paginations/Paginations"));
+const Pagination = lazy(() =>
+  import("../../../common/Paginations/Paginations")
+);
 const PopupBox = lazy(() => import("../../../common/PopupBox/PopupBox"));
-const EditSellerDetails = lazy(() => import("../EditSellerDetails/EditSellerDetails"));
+const EditSellerDetails = lazy(() =>
+  import("../EditSellerDetails/EditSellerDetails")
+);
+
+// Utility function to convert a string to Title Case
+const toTitleCase = (str) => {
+  return str
+    .toLowerCase()
+    .split(" ")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+};
 
 const ListSellerDetails = () => {
   const [data, setData] = useState([]);
@@ -26,7 +39,14 @@ const ListSellerDetails = () => {
     const fetchSellers = async () => {
       try {
         const response = await axios.get(`${apiBaseURL}/sellers`);
-        const sortedData = response.data.sort((a, b) =>
+        // Format seller names and company names to Title Case
+        const formattedData = response.data.map((seller) => ({
+          ...seller,
+          sellerName: toTitleCase(seller.sellerName),
+          companies: seller.companies.map((company) => toTitleCase(company)),
+          emails: seller.emails.map((email) => email.value.toLowerCase()), // Emails in lowercase
+        }));
+        const sortedData = formattedData.sort((a, b) =>
           a.sellerName.localeCompare(b.sellerName)
         );
         setData(sortedData);
@@ -72,17 +92,19 @@ const ListSellerDetails = () => {
     .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
     .map((item, index) => [
       (currentPage - 1) * itemsPerPage + index + 1,
-      item.sellerName,
-      item.emails.map((email) => email.value).join(", "),
+      item.sellerName, // Already formatted to Title Case
+      item.emails.join(", "), // Emails already in lowercase
       item.phoneNumbers.map((phone) => phone.value).join(", "),
       item.commodities
         .map(
           (commodity) =>
-            `${commodity.name} (Brokerage: ₹${commodity.brokerage} per ton)`
+            `${toTitleCase(commodity.name)} (Brokerage: ₹${
+              commodity.brokerage
+            } per ton)`
         )
         .join(", "),
-      item.companies.join(", "),
-      item.selectedStatus,
+      item.companies.join(", "), // Already formatted to Title Case
+      toTitleCase(item.selectedStatus), // Status in Title Case
       <Actions
         key={item._id}
         onView={() => {
@@ -129,23 +151,62 @@ const ListSellerDetails = () => {
         </div>
 
         {isPopupOpen && (
-          <PopupBox title="Edit Seller Details" isOpen={isPopupOpen} onClose={handlePopupClose}>
+          <PopupBox
+            title="Edit Seller Details"
+            isOpen={isPopupOpen}
+            onClose={handlePopupClose}
+          >
             {popupMode === "view" && selectedSeller && (
               <div>
                 <h2 className="text-xl font-bold mb-4">Seller Details</h2>
-                <p><strong>Name:</strong> {selectedSeller.sellerName}</p>
-                <p><strong>Password:</strong> {selectedSeller.password}</p>
-                <p><strong>Email:</strong> {selectedSeller.emails.map((email) => email.value).join(", ")}</p>
-                <p><strong>Phone Numbers:</strong> {selectedSeller.phoneNumbers.map((phone) => phone.value).join(", ")}</p>
-                <p><strong>Commodities:</strong> {selectedSeller.commodities.map((commodity) => `${commodity.name} (Brokerage: ₹${commodity.brokerage} per ton)`).join(", ")}</p>
-                <p><strong>Companies:</strong> {selectedSeller.companies.join(", ")}</p>
-                <p><strong>Status:</strong> {selectedSeller.selectedStatus}</p>
-                <p><strong>Buyers:</strong> {selectedSeller.buyers.map((buyer) => buyer.name).join(", ")}</p>
+                <p>
+                  <strong>Name:</strong> {selectedSeller.sellerName}
+                </p>
+                <p>
+                  <strong>Password:</strong> {selectedSeller.password}
+                </p>
+                <p>
+                  <strong>Email:</strong> {selectedSeller.emails.join(", ")}
+                </p>
+                <p>
+                  <strong>Phone Numbers:</strong>{" "}
+                  {selectedSeller.phoneNumbers
+                    .map((phone) => phone.value)
+                    .join(", ")}
+                </p>
+                <p>
+                  <strong>Commodities:</strong>{" "}
+                  {selectedSeller.commodities
+                    .map(
+                      (commodity) =>
+                        `${toTitleCase(commodity.name)} (Brokerage: ₹${
+                          commodity.brokerage
+                        } per ton)`
+                    )
+                    .join(", ")}
+                </p>
+                <p>
+                  <strong>Companies:</strong>{" "}
+                  {selectedSeller.companies.join(", ")}
+                </p>
+                <p>
+                  <strong>Status:</strong>{" "}
+                  {toTitleCase(selectedSeller.selectedStatus)}
+                </p>
+                <p>
+                  <strong>Buyers:</strong>{" "}
+                  {selectedSeller.buyers
+                    .map((buyer) => toTitleCase(buyer.name))
+                    .join(", ")}
+                </p>
               </div>
             )}
 
             {popupMode === "edit" && selectedSeller && (
-              <EditSellerDetails seller={selectedSeller} onClose={handlePopupClose} />
+              <EditSellerDetails
+                seller={selectedSeller}
+                onClose={handlePopupClose}
+              />
             )}
           </PopupBox>
         )}

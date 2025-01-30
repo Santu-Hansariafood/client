@@ -12,6 +12,14 @@ const Pagination = lazy(() =>
 const PopupBox = lazy(() => import("../../../common/PopupBox/PopupBox"));
 const EditBuyerPopup = lazy(() => import("../EditBuyerPopup/EditBuyerPopup"));
 
+const toTitleCase = (str) => {
+  return str
+    .toLowerCase()
+    .split(" ")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+};
+
 const BuyerList = () => {
   const [buyersData, setBuyersData] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
@@ -41,16 +49,22 @@ const BuyerList = () => {
   }, []);
 
   const handleSearch = (searchInput) => {
+    if (!searchInput.trim()) {
+      setFilteredData(buyersData);
+      return;
+    }
+
     const searchLower = searchInput.toLowerCase();
+
     const filtered = buyersData.filter(
       (buyer) =>
-        buyer.name.toLowerCase().includes(searchLower) ||
-        buyer.email.some((email) =>
-          email.toLowerCase().includes(searchLower)
-        ) ||
-        buyer.mobile.some((mobile) => mobile.includes(searchLower)) ||
-        buyer.group.toLowerCase().includes(searchLower)
+        (buyer.name && buyer.name.toLowerCase().includes(searchLower)) ||
+        (buyer.mobile &&
+          buyer.mobile.some((mobile) =>
+            String(mobile).toLowerCase().includes(searchLower)
+          ))
     );
+
     setFilteredData(filtered);
     setCurrentPage(1);
   };
@@ -103,17 +117,21 @@ const BuyerList = () => {
   const rows = useMemo(() => {
     return currentItems.map((buyer, index) => [
       firstItemIndex + index + 1,
-      buyer.name || "N/A",
+      toTitleCase(buyer.name || "N/A"),
       buyer.mobile?.join(", ") || "N/A",
-      buyer.email?.join(", ") || "N/A",
-      buyer.companyName || "N/A",
-      buyer.group || "N/A",
-      buyer.commodity?.join(", ") || "N/A",
-      buyer.consignee?.map((c) => c.label).join(", ") || "N/A",
+      buyer.email?.join(", ").toLowerCase() || "N/A",
+      toTitleCase(buyer.companyName || "N/A"),
+      toTitleCase(buyer.group || "N/A"),
+      toTitleCase(buyer.commodity?.join(", ") || "N/A"),
+      buyer.consignee?.map((c) => (
+        <ol key={c.value}>
+          <li>{toTitleCase(c.label)}</li>
+        </ol>
+      )) || "N/A",
       Object.entries(buyer.brokerage || {})
-        .map(([key, value]) => `${key}: ${value}`)
+        .map(([key, value]) => `${toTitleCase(key)}: ${value}`)
         .join(", ") || "N/A",
-      buyer.status || "N/A",
+      toTitleCase(buyer.status || "N/A"),
       <Actions
         key={index}
         onView={() => handleView(index)}
@@ -164,35 +182,45 @@ const BuyerList = () => {
           {selectedBuyer && (
             <div>
               <p>
-                <strong>Name:</strong> {selectedBuyer.name}
+                <strong>Name:</strong> {toTitleCase(selectedBuyer.name)}
               </p>
               <p>
                 <strong>Mobile:</strong> {selectedBuyer.mobile.join(", ")}
               </p>
               <p>
-                <strong>Email:</strong> {selectedBuyer.email.join(", ")}
+                <strong>Email:</strong>{" "}
+                {selectedBuyer.email.join(", ").toLowerCase()}
               </p>
               <p>
-                <strong>Company Name:</strong> {selectedBuyer.companyName}
+                <strong>Company Name:</strong>{" "}
+                {toTitleCase(selectedBuyer.companyName)}
               </p>
               <p>
-                <strong>Group of Company Name:</strong> {selectedBuyer.group}
+                <strong>Group of Company Name:</strong>{" "}
+                {toTitleCase(selectedBuyer.group)}
               </p>
               <p>
-                <strong>Commodity:</strong> {selectedBuyer.commodity.join(", ")}
+                <strong>Commodity:</strong>{" "}
+                {toTitleCase(selectedBuyer.commodity.join(", "))}
               </p>
               <p>
-                <strong>Consignee:</strong>{" "}
-                {selectedBuyer.consignee.map((c) => c.label).join(", ")}
+                <strong>Consignee:</strong>
+                <ol>
+                  {selectedBuyer.consignee.map((c) => (
+                    <li key={c.value}>{toTitleCase(c.label)}</li>
+                  ))}
+                </ol>
               </p>
               <p>
                 <strong>Brokerage:</strong>{" "}
                 {Object.entries(selectedBuyer.brokerage || {})
-                  .map(([key, value]) => `${key}: ${value} per TON`)
+                  .map(
+                    ([key, value]) => `${toTitleCase(key)}: ${value} per TON`
+                  )
                   .join(", ")}
               </p>
               <p>
-                <strong>Status:</strong> {selectedBuyer.status}
+                <strong>Status:</strong> {toTitleCase(selectedBuyer.status)}
               </p>
             </div>
           )}

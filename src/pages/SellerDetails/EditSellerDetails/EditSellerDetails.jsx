@@ -146,7 +146,7 @@ const EditSellerDetails = ({ seller, onClose, onUpdate }) => {
   return (
     <div className="fixed inset-0 bg-gray-900 bg-opacity-70 flex items-center justify-center z-50">
       <div className="bg-white w-11/12 max-w-4xl rounded-lg shadow-xl p-6 overflow-y-auto max-h-[90vh] border border-gray-300">
-        <h2 className="text-2xl font-bold mb-6">Edit Seller Details</h2>
+        <h2 className="text-2xl font-bold mb-6">Seller Details</h2>
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700">

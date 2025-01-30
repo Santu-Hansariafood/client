@@ -1,4 +1,11 @@
-import { useState, useEffect, lazy, Suspense, useMemo, useCallback } from "react";
+import {
+  useState,
+  useEffect,
+  lazy,
+  Suspense,
+  useMemo,
+  useCallback,
+} from "react";
 import axios from "axios";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -8,10 +15,11 @@ const Tables = lazy(() => import("../../../common/Tables/Tables"));
 const Actions = lazy(() => import("../../../common/Actions/Actions"));
 const SearchBox = lazy(() => import("../../../common/SearchBox/SearchBox"));
 const PopupBox = lazy(() => import("../../../common/PopupBox/PopupBox"));
-const Pagination = lazy(() => import("../../../common/Paginations/Paginations"));
+const Pagination = lazy(() =>
+  import("../../../common/Paginations/Paginations")
+);
 const EditGroupPopup = lazy(() => import("../EditGroupPopup/EditGroupPopup"));
 
-// Utility function to convert a string to Title Case
 const toTitleCase = (str) => {
   return str
     .toLowerCase()
@@ -33,15 +41,17 @@ const ListGroupOfCompany = () => {
   useEffect(() => {
     const fetchGroups = async () => {
       try {
-        const response = await axios.get("https://phpserver-v77g.onrender.com/api/groups");
+        const response = await axios.get(
+          "https://phpserver-v77g.onrender.com/api/groups"
+        );
         const uniqueGroups = Array.from(
           new Map(
             response.data.map((group) => [
-              toTitleCase(group.groupName), // Convert to Title Case
+              toTitleCase(group.groupName),
               { ...group, groupName: toTitleCase(group.groupName) },
             ])
           ).values()
-        ).sort((a, b) => a.groupName.localeCompare(b.groupName)); // Sort alphabetically
+        ).sort((a, b) => a.groupName.localeCompare(b.groupName));
         setGroupsData(uniqueGroups);
         setFilteredData(uniqueGroups);
       } catch (error) {
@@ -85,7 +95,9 @@ const ListGroupOfCompany = () => {
     async (index) => {
       const groupToDelete = filteredData[index];
       try {
-        await axios.delete(`https://phpserver-v77g.onrender.com/api/groups/${groupToDelete._id}`);
+        await axios.delete(
+          `https://phpserver-v77g.onrender.com/api/groups/${groupToDelete._id}`
+        );
         const updatedData = filteredData.filter((_, i) => i !== index);
         setFilteredData(updatedData);
         setGroupsData((prevData) =>
@@ -102,12 +114,16 @@ const ListGroupOfCompany = () => {
 
   const handleUpdate = useCallback(
     (updatedGroup) => {
-      const updatedList = groupsData.map((group) =>
-        group._id === updatedGroup._id
-          ? { ...updatedGroup, groupName: toTitleCase(updatedGroup.groupName) }
-          : group
-      );
-      setGroupsData(updatedList.sort((a, b) => a.groupName.localeCompare(b.groupName)));
+      const formattedGroup = {
+        ...updatedGroup,
+        groupName: toTitleCase(updatedGroup.groupName),
+      };
+      const updatedList = groupsData
+        .map((group) =>
+          group._id === formattedGroup._id ? formattedGroup : group
+        )
+        .sort((a, b) => a.groupName.localeCompare(b.groupName));
+      setGroupsData(updatedList);
       setFilteredData(updatedList);
     },
     [groupsData]
@@ -138,7 +154,11 @@ const ListGroupOfCompany = () => {
   return (
     <Suspense fallback={<Loading />}>
       <div className="container mx-auto p-4">
-        <ToastContainer position="top-center" autoClose={3000} hideProgressBar />
+        <ToastContainer
+          position="top-center"
+          autoClose={3000}
+          hideProgressBar
+        />
         <h2 className="text-2xl font-semibold mb-4 text-center">
           List of Groups of Companies
         </h2>

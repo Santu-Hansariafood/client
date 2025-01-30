@@ -1,6 +1,6 @@
 [
   {
-    "district": ["Nicobar", "North and Middle Andaman", "South Andaman"],
+    "district": ["North and Middle Andaman", "South Andaman", "Nicobar"],
     "state": "Andaman and Nicobar Islands"
   },
   {
@@ -13,24 +13,30 @@
       "Chittoor",
       "East Godavari",
       "Eluru",
+      "Anakapalli",
+      "Anantapur",
+      "Bapatla",
+      "Chittoor",
+      "East Godavari",
+      "Eluru",
       "Guntur",
+      "Kadapa",
       "Kakinada",
-      "Konaseema",
       "Krishna",
       "Kurnool",
       "Nandyal",
+      "Nellore",
       "NTR",
       "Palnadu",
-      "Parvathipuram Manyam",
       "Prakasam",
+      "Parvathipuram Manyam",
+      "Srikakulam",
       "Sri Potti Sriramulu Nellore",
       "Sri Sathya Sai",
-      "Srikakulam",
       "Tirupati",
       "Visakhapatnam",
       "Vizianagaram",
-      "West Godavari",
-      "YSR Kadapa"
+      "West Godavari"
     ],
     "state": "Andhra Pradesh"
   },

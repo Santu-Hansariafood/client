@@ -41,17 +41,57 @@ const BaseBid = () => {
         axios.get(`${apiBaseUrl}/bid-locations`),
       ]);
 
+      const formatName = (name) => {
+        return name
+          .split(" ")
+          .map(
+            (word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+          )
+          .join(" ");
+      };
+
+      const groupMap = new Map();
+
+      companiesRes.data.forEach((c) => {
+        const formattedGroupName = formatName(c.group);
+        if (groupMap.has(formattedGroupName)) {
+          const existingGroup = groupMap.get(formattedGroupName);
+          existingGroup.consignees = [
+            ...new Set([
+              ...existingGroup.consignees,
+              ...c.consignee.map(formatName),
+            ]),
+          ];
+          existingGroup.commodities = [
+            ...existingGroup.commodities,
+            ...c.commodities.map((commodity) => ({
+              ...commodity,
+              name: formatName(commodity.name),
+            })),
+          ];
+        } else {
+          groupMap.set(formattedGroupName, {
+            value: formattedGroupName,
+            label: formattedGroupName,
+            consignees: c.consignee.map(formatName),
+            commodities: c.commodities.map((commodity) => ({
+              ...commodity,
+              name: formatName(commodity.name),
+            })),
+          });
+        }
+      });
+
+      const sortedGroupOptions = Array.from(groupMap.values()).sort((a, b) =>
+        a.label.localeCompare(b.label)
+      );
+
       setState((prev) => ({
         ...prev,
-        groupOptions: companiesRes.data.map((c) => ({
-          value: c.group,
-          label: c.group,
-          consignees: c.consignee,
-          commodities: c.commodities,
-        })),
+        groupOptions: sortedGroupOptions,
         originOptions: originsRes.data.map((o) => ({
-          value: o.name,
-          label: o.name,
+          value: formatName(o.name),
+          label: formatName(o.name),
         })),
       }));
     } catch (error) {

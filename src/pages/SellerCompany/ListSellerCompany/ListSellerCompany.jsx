@@ -35,12 +35,35 @@ const ListSellerCompany = () => {
         setSearchResults(response.data.data);
         setLoading(false);
       } catch (err) {
-        setError("Failed to fetch companies",err);
+        setError("Failed to fetch companies", err);
         setLoading(false);
       }
     };
     fetchCompanies();
   }, []);
+
+  // Utility function to capitalize the first letter of each word
+  const capitalizeWords = (str) => {
+    return str
+      .split(" ")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(" ");
+  };
+
+  // Utility function to convert a string to uppercase
+  const toUpperCase = (str) => {
+    return str.toUpperCase();
+  };
+
+  // Utility function to format bank details
+  const formatBankDetails = (bankDetails) => {
+    return bankDetails.map((bank) => ({
+      accountHolderName: toUpperCase(bank.accountHolderName),
+      accountNumber: toUpperCase(bank.accountNumber),
+      ifscCode: toUpperCase(bank.ifscCode),
+      branchName: toUpperCase(bank.branchName),
+    }));
+  };
 
   const handleSearch = (filteredItems) => {
     setSearchResults(filteredItems);
@@ -66,15 +89,15 @@ const ListSellerCompany = () => {
   const rows = searchResults
     .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
     .map((company) => [
-      company.companyName,
-      company.gstNo,
-      company.panNo,
+      capitalizeWords(company.companyName),
+      toUpperCase(company.gstNo),
+      toUpperCase(company.panNo),
       company.aadhaarNo,
-      company.address,
-      company.state,
-      company.district,
+      capitalizeWords(company.address),
+      capitalizeWords(company.state),
+      capitalizeWords(company.district),
       company.msmeNo || "-",
-      company.bankDetails?.map((bank, index) => (
+      formatBankDetails(company.bankDetails)?.map((bank, index) => (
         <div key={index}>
           <strong>Bank {index + 1}:</strong>
           <div>
@@ -137,26 +160,29 @@ const ListSellerCompany = () => {
             <PopupBox
               isOpen={true}
               onClose={() => setSelectedCompany(null)}
-              title={selectedCompany.companyName}
+              title={capitalizeWords(selectedCompany.companyName)}
             >
               <div>
                 <p>
-                  <strong>GST No:</strong> {selectedCompany.gstNo}
+                  <strong>GST No:</strong> {toUpperCase(selectedCompany.gstNo)}
                 </p>
                 <p>
-                  <strong>PAN No:</strong> {selectedCompany.panNo}
+                  <strong>PAN No:</strong> {toUpperCase(selectedCompany.panNo)}
                 </p>
                 <p>
                   <strong>Aadhaar No:</strong> {selectedCompany.aadhaarNo}
                 </p>
                 <p>
-                  <strong>Address:</strong> {selectedCompany.address}
+                  <strong>Address:</strong>{" "}
+                  {capitalizeWords(selectedCompany.address)}
                 </p>
                 <p>
-                  <strong>State:</strong> {selectedCompany.state}
+                  <strong>State:</strong>{" "}
+                  {capitalizeWords(selectedCompany.state)}
                 </p>
                 <p>
-                  <strong>District:</strong> {selectedCompany.district}
+                  <strong>District:</strong>{" "}
+                  {capitalizeWords(selectedCompany.district)}
                 </p>
                 {selectedCompany.msmeNo && (
                   <p>
@@ -166,26 +192,28 @@ const ListSellerCompany = () => {
                 <p>
                   <strong>Bank Details:</strong>
                 </p>
-                {selectedCompany.bankDetails?.map((bank, index) => (
-                  <div key={index} className="mb-4 border-b pb-2">
-                    <p>
-                      <strong>Bank {index + 1}:</strong>
-                    </p>
-                    <p>
-                      <strong>Account Holder Name:</strong>{" "}
-                      {bank.accountHolderName}
-                    </p>
-                    <p>
-                      <strong>Account Number:</strong> {bank.accountNumber}
-                    </p>
-                    <p>
-                      <strong>IFSC Code:</strong> {bank.ifscCode}
-                    </p>
-                    <p>
-                      <strong>Branch Name:</strong> {bank.branchName}
-                    </p>
-                  </div>
-                ))}
+                {formatBankDetails(selectedCompany.bankDetails)?.map(
+                  (bank, index) => (
+                    <div key={index} className="mb-4 border-b pb-2">
+                      <p>
+                        <strong>Bank {index + 1}:</strong>
+                      </p>
+                      <p>
+                        <strong>Account Holder Name:</strong>{" "}
+                        {bank.accountHolderName}
+                      </p>
+                      <p>
+                        <strong>Account Number:</strong> {bank.accountNumber}
+                      </p>
+                      <p>
+                        <strong>IFSC Code:</strong> {bank.ifscCode}
+                      </p>
+                      <p>
+                        <strong>Branch Name:</strong> {bank.branchName}
+                      </p>
+                    </div>
+                  )
+                )}
                 <button
                   onClick={() => generatePDF(selectedCompany)}
                   className="bg-green-500 text-white py-2 px-4 rounded-lg mt-4"
