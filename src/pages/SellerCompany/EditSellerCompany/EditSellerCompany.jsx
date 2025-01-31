@@ -26,7 +26,6 @@ const EditSellerCompany = ({ company, onSave, onCancel }) => {
   const [fileUploads, setFileUploads] = useState({});
 
   useEffect(() => {
-    // Pre-fill form with the passed company data
     setCompanyInfo({
       companyName: company.companyName || "",
       gstNo: company.gstNo || "",
@@ -76,6 +75,7 @@ const EditSellerCompany = ({ company, onSave, onCancel }) => {
         accountNumber: "",
         ifscCode: "",
         branchName: "",
+        bankName: "",
       },
     ]);
   };
@@ -114,7 +114,8 @@ const EditSellerCompany = ({ company, onSave, onCancel }) => {
           bank.accountHolderName &&
           bank.accountNumber &&
           bank.ifscCode &&
-          bank.branchName
+          bank.branchName &&
+          bank.bankName
       )
     ) {
       toast.error("Please complete all required fields.");
@@ -145,7 +146,7 @@ const EditSellerCompany = ({ company, onSave, onCancel }) => {
         }
       );
       toast.success("Seller company updated successfully!");
-      onSave(response.data); // Return updated data to parent
+      onSave(response.data);
     } catch (error) {
       console.error(error);
       toast.error("Failed to update seller company. Please try again.");
@@ -165,8 +166,6 @@ const EditSellerCompany = ({ company, onSave, onCancel }) => {
         <h2 className="text-3xl font-bold text-blue-600 mb-6">
           Edit Seller Company
         </h2>
-
-        {/* Company Information */}
         <h3 className="text-xl font-semibold text-gray-800 mb-4">
           Company Information
         </h3>
@@ -296,6 +295,15 @@ const EditSellerCompany = ({ company, onSave, onCancel }) => {
                 value={bank.branchName}
                 onChange={(e) =>
                   handleBankDetailChange(bank.id, "branchName", e.target.value)
+                }
+                placeholder="Enter Branch Name"
+              />
+              <DataInput
+                label="Bank Name"
+                id={`bankName-${bank.id}`}
+                value={bank.bankName}
+                onChange={(e) =>
+                  handleBankDetailChange(bank.id, "bankName", e.target.value)
                 }
                 placeholder="Enter Branch Name"
               />

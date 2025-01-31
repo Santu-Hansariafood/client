@@ -152,7 +152,7 @@ const ListSellerDetails = () => {
 
         {isPopupOpen && (
           <PopupBox
-            title="Edit Seller Details"
+            title={popupMode === "view" ? "View Seller Details" : "Edit Seller Details"}
             isOpen={isPopupOpen}
             onClose={handlePopupClose}
           >
@@ -204,7 +204,7 @@ const ListSellerDetails = () => {
 
             {popupMode === "edit" && selectedSeller && (
               <EditSellerDetails
-                seller={selectedSeller}
+                sellerId={selectedSeller._id} // Pass the seller ID to EditSellerDetails
                 onClose={handlePopupClose}
               />
             )}

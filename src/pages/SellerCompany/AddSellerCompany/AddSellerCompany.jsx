@@ -27,6 +27,7 @@ const AddSellerCompany = () => {
       accountNumber: "",
       ifscCode: "",
       branchName: "",
+      bankName: "",
     },
   ]);
   const [selectedState, setSelectedState] = useState(null);
@@ -52,6 +53,7 @@ const AddSellerCompany = () => {
         accountNumber: "",
         ifscCode: "",
         branchName: "",
+        bankName:""
       },
     ]);
     setSelectedState(null);
@@ -99,6 +101,7 @@ const AddSellerCompany = () => {
         accountNumber: "",
         ifscCode: "",
         branchName: "",
+        bankName: ""
       },
     ]);
   };
@@ -120,7 +123,8 @@ const AddSellerCompany = () => {
           bank.accountHolderName &&
           bank.accountNumber &&
           bank.ifscCode &&
-          bank.branchName
+          bank.branchName &&
+          bank.bankName
       )
     ) {
       toast.error("Please complete all required fields.");
@@ -354,6 +358,27 @@ const AddSellerCompany = () => {
                     required
                     maxLength="11"
                     minLength="11"
+                  />
+                </div>
+                <div>
+                  <label
+                    className="text-gray-700 font-semibold"
+                    htmlFor={`bankName-${bank.id}`}
+                  >
+                    Bank Name
+                  </label>
+                  <DataInput
+                    id={`bankName-${bank.id}`}
+                    placeholder="Enter Bank Name"
+                    value={bank.bankName}
+                    onChange={(e) =>
+                      handleBankDetailChange(
+                        bank.id,
+                        "bankName",
+                        e.target.value
+                      )
+                    }
+                    required
                   />
                 </div>
                 <div>

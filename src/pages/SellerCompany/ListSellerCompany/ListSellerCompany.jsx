@@ -42,7 +42,6 @@ const ListSellerCompany = () => {
     fetchCompanies();
   }, []);
 
-  // Utility function to capitalize the first letter of each word
   const capitalizeWords = (str) => {
     return str
       .split(" ")
@@ -50,18 +49,17 @@ const ListSellerCompany = () => {
       .join(" ");
   };
 
-  // Utility function to convert a string to uppercase
   const toUpperCase = (str) => {
     return str.toUpperCase();
   };
 
-  // Utility function to format bank details
   const formatBankDetails = (bankDetails) => {
     return bankDetails.map((bank) => ({
       accountHolderName: toUpperCase(bank.accountHolderName),
       accountNumber: toUpperCase(bank.accountNumber),
       ifscCode: toUpperCase(bank.ifscCode),
       branchName: toUpperCase(bank.branchName),
+      // bankName: toUpperCase(bank.bankName),
     }));
   };
 
@@ -115,6 +113,10 @@ const ListSellerCompany = () => {
             <span style={{ fontWeight: "bold" }}>Branch Name:</span>{" "}
             {bank.branchName}
           </div>
+          <div>
+            <span style={{ fontWeight: "bold" }}>Bank Name:</span>{" "}
+            {bank.bankName}
+          </div>
         </div>
       )),
       <Actions
@@ -125,7 +127,7 @@ const ListSellerCompany = () => {
     ]);
 
   if (loading) {
-    return <div>Loading...</div>;
+    return <Loading />;
   }
 
   if (error) {
@@ -210,6 +212,9 @@ const ListSellerCompany = () => {
                       </p>
                       <p>
                         <strong>Branch Name:</strong> {bank.branchName}
+                      </p>
+                      <p>
+                        <strong>Branch Name:</strong> {bank.bankName}
                       </p>
                     </div>
                   )
