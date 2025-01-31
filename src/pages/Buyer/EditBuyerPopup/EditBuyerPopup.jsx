@@ -26,6 +26,7 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
         commodity: buyer.commodity || [""],
         brokerage: buyer.brokerage || {},
         consignee: buyer.consignee || [],
+        companyName: buyer.companyName || [],
       });
     }
   }, [buyer]);
@@ -33,12 +34,13 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [groupsRes, commoditiesRes, consigneesRes, companiesRes] = await Promise.all([
-          axios.get("https://phpserver-v77g.onrender.com/api/companies"),
-          axios.get("https://phpserver-v77g.onrender.com/api/commodities"),
-          axios.get("https://phpserver-v77g.onrender.com/api/consignees"),
-          axios.get("https://phpserver-v77g.onrender.com/api/companies"),
-        ]);
+        const [groupsRes, commoditiesRes, consigneesRes, companiesRes] =
+          await Promise.all([
+            axios.get("https://phpserver-v77g.onrender.com/api/companies"),
+            axios.get("https://phpserver-v77g.onrender.com/api/commodities"),
+            axios.get("https://phpserver-v77g.onrender.com/api/consignees"),
+            axios.get("https://phpserver-v77g.onrender.com/api/companies"),
+          ]);
 
         setGroups(
           groupsRes.data.map((group) => ({
@@ -51,7 +53,7 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
         setAllConsignees(consigneesRes.data);
         setCompanies(
           companiesRes.data.map((company) => ({
-            value: company._id,
+            value: company.companyName,
             label: company.companyName,
           }))
         );
@@ -86,12 +88,14 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
 
     setConsignees(group?.consignees || []);
   };
-  const handleCompanyChange = (selectedCompany) => {
+
+  const handleCompanyChange = (selectedCompanies) => {
     setFormData((prevData) => ({
       ...prevData,
-      company: selectedCompany.value,
+      companyName: selectedCompanies.map((company) => company.value),
     }));
   };
+
   const addField = (name) => {
     setFormData({
       ...formData,
@@ -135,9 +139,13 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      const payload = {
+        ...formData,
+        companyName: formData.companyName, // Include companyName in the payload
+      };
       const response = await axios.put(
         `https://phpserver-v77g.onrender.com/api/buyers/${formData._id}`,
-        formData
+        payload
       );
       onUpdate(response.data);
       toast.success("Buyer updated successfully");
@@ -168,7 +176,7 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
               <h2 className="text-xl font-semibold mb-4">Edit Buyer</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                <label className="block font-semibold">Buyer Name</label>
+                  <label className="block font-semibold">Buyer Name</label>
                   <DataInput
                     placeholder="Enter Name"
                     name="name"
@@ -181,16 +189,17 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
                   <label className="block font-semibold">Company</label>
                   <DataDropdown
                     options={companies}
-                    selectedOptions={companies.find(
-                      (company) => company.value === formData.company
-                    )}
+                    selectedOptions={formData.companyName.map((company) => ({
+                      value: company,
+                      label: company,
+                    }))}
                     onChange={handleCompanyChange}
                     placeholder="Select Company"
                     isMulti={true}
                   />
                 </div>
                 <div>
-                <label className="block font-semibold">Password</label>
+                  <label className="block font-semibold">Password</label>
                   <DataInput
                     placeholder="Enter Password"
                     name="password"
