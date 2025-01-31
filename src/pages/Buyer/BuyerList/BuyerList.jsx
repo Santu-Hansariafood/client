@@ -120,7 +120,7 @@ const BuyerList = () => {
       toTitleCase(buyer.name || "N/A"),
       buyer.mobile?.join(", ") || "N/A",
       buyer.email?.join(", ").toLowerCase() || "N/A",
-      toTitleCase(buyer.companyName || "N/A"),
+      buyer.companyName?.join(", ") || "N/A", // Join company names with a comma
       toTitleCase(buyer.group || "N/A"),
       toTitleCase(buyer.commodity?.join(", ") || "N/A"),
       buyer.consignee?.map((c) => (
@@ -193,7 +193,7 @@ const BuyerList = () => {
               </p>
               <p>
                 <strong>Company Name:</strong>{" "}
-                {toTitleCase(selectedBuyer.companyName)}
+                {selectedBuyer.companyName.join(", ")}
               </p>
               <p>
                 <strong>Group of Company Name:</strong>{" "}
