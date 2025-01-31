@@ -186,6 +186,7 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
                     )}
                     onChange={handleCompanyChange}
                     placeholder="Select Company"
+                    isMulti={true}
                   />
                 </div>
                 <div>

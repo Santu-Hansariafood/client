@@ -18,7 +18,7 @@ const AddBuyer = () => {
     mobile: [""],
     email: [""],
     group: "",
-    companyName: "",
+    companyName: [],
     password: "",
     commodity: [],
     brokerage: {},
@@ -113,6 +113,11 @@ const AddBuyer = () => {
         commodity: selectedCommodities,
         brokerage: newBrokerage,
       });
+    } else if (fieldName === "companyName") {
+      setFormData({
+        ...formData,
+        companyName: selectedOption || [],
+      });
     } else {
       setFormData({
         ...formData,
@@ -172,7 +177,7 @@ const AddBuyer = () => {
         const payload = {
           ...formData,
           group: formData.group?.value || "",
-          companyName: formData.companyName?.value || "",
+          companyName: formData.companyName.map((item) => item.value),
           commodity: formData.commodity.map((item) => item.value),
           status: formData.status?.value || "",
         };
@@ -186,7 +191,7 @@ const AddBuyer = () => {
           mobile: [""],
           email: [""],
           group: "",
-          companyName: "",
+          companyName: [],
           password: "",
           commodity: [],
           brokerage: {},
@@ -237,7 +242,8 @@ const AddBuyer = () => {
                   onChange={(selected) =>
                     handleDropdownChange(selected, { name: "companyName" })
                   }
-                  placeholder="Group of Company Name"
+                  placeholder="Select Company Name"
+                  isMulti={true}
                 />
               </div>
               <div>
