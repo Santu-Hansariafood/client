@@ -18,7 +18,7 @@ const AddBuyer = () => {
     mobile: [""],
     email: [""],
     group: "",
-    companyName: [],
+    companyName: "",
     password: "",
     commodity: [],
     brokerage: {},
@@ -116,7 +116,7 @@ const AddBuyer = () => {
     } else if (fieldName === "companyName") {
       setFormData({
         ...formData,
-        companyName: selectedOption || [],
+        companyName: selectedOption,
       });
     } else {
       setFormData({
@@ -177,7 +177,7 @@ const AddBuyer = () => {
         const payload = {
           ...formData,
           group: formData.group?.value || "",
-          companyName: formData.companyName.map((item) => item.value),
+          companyName: formData.companyName?.value || "",
           commodity: formData.commodity.map((item) => item.value),
           status: formData.status?.value || "",
         };
@@ -191,7 +191,7 @@ const AddBuyer = () => {
           mobile: [""],
           email: [""],
           group: "",
-          companyName: [],
+          companyName: "",
           password: "",
           commodity: [],
           brokerage: {},
@@ -243,7 +243,7 @@ const AddBuyer = () => {
                     handleDropdownChange(selected, { name: "companyName" })
                   }
                   placeholder="Select Company Name"
-                  isMulti={true}
+                  // Removed the isMulti prop
                 />
               </div>
               <div>

@@ -26,7 +26,7 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
         commodity: buyer.commodity || [""],
         brokerage: buyer.brokerage || {},
         consignee: buyer.consignee || [],
-        companyName: buyer.companyName || [],
+        companyName: buyer.companyName || "", // Changed from [] to ""
       });
     }
   }, [buyer]);
@@ -89,10 +89,10 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
     setConsignees(group?.consignees || []);
   };
 
-  const handleCompanyChange = (selectedCompanies) => {
+  const handleCompanyChange = (selectedCompany) => {
     setFormData((prevData) => ({
       ...prevData,
-      companyName: selectedCompanies.map((company) => company.value),
+      companyName: selectedCompany?.value || "", // Changed to handle single value
     }));
   };
 
@@ -141,7 +141,7 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
     try {
       const payload = {
         ...formData,
-        companyName: formData.companyName, // Include companyName in the payload
+        companyName: formData.companyName, // Include companyName as a single value
       };
       const response = await axios.put(
         `https://phpserver-v77g.onrender.com/api/buyers/${formData._id}`,
@@ -189,13 +189,17 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
                   <label className="block font-semibold">Company</label>
                   <DataDropdown
                     options={companies}
-                    selectedOptions={formData.companyName.map((company) => ({
-                      value: company,
-                      label: company,
-                    }))}
+                    selectedOptions={
+                      formData.companyName
+                        ? {
+                            value: formData.companyName,
+                            label: formData.companyName,
+                          }
+                        : null
+                    }
                     onChange={handleCompanyChange}
                     placeholder="Select Company"
-                    isMulti={true}
+                    // Removed the isMulti prop
                   />
                 </div>
                 <div>

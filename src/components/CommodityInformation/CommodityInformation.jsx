@@ -178,7 +178,7 @@ const CommodityInformation = ({
 
 CommodityInformation.propTypes = {
   handleChange: PropTypes.func.isRequired,
-  selectedCompany: PropTypes.string.isRequired,
+  selectedCompany: PropTypes.array.isRequired,
   buyerCommodity: PropTypes.array.isRequired,
 };
 
