@@ -356,7 +356,7 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
                   <DataDropdown
                     options={allConsignees.map((c) => ({
                       label: c.name,
-                      value: c._id,
+                      value: c.name,
                     }))}
                     selectedOptions={null}
                     onChange={(selectedConsignee) => {
