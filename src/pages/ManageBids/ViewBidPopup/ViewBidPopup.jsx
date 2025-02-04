@@ -63,8 +63,8 @@ const ViewBidPopup = ({ bidId, onClose }) => {
       ["Bid Date", new Date(bidDetails.bidDate).toLocaleDateString("en-GB")],
       ["Start Time", bidDetails.startTime],
       ["End Time", bidDetails.endTime],
-      ["Payment Terms", bidDetails.paymentTerms],
-      ["Delivery", bidDetails.delivery],
+      ["Payment Terms", `${bidDetails.paymentTerms} Days`],
+      ["Delivery", `${bidDetails.delivery} Days`],
     ];
 
     doc.autoTable({

@@ -19,9 +19,9 @@ const styles = StyleSheet.create({
 const SaudaPDF = ({ data }) => (
   <Document>
     <Page style={styles.page}>
-      <SaudaHeader style={{ marginBottom: 0 }} />
-      <SaudaDetails data={data} style={styles.componentSpacing} />
-      <CommodityTable data={data} style={styles.componentSpacing} />
+      <SaudaHeader />
+      <SaudaDetails data={data} />
+      <CommodityTable data={data} />
       <AdditionalDetails data={data} />
     </Page>
   </Document>

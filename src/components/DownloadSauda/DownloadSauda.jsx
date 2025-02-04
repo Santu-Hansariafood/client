@@ -40,11 +40,20 @@ const DownloadSauda = ({ data }) => {
       supplier.companyName.toLowerCase() === data.supplierCompany.toLowerCase()
   );
 
-  const mergedData = {
+  let transformedData = {
     ...data,
     consigneeDetails: matchingConsignee || null,
     supplierDetails: matchingSupplier || null,
   };
+
+  if (data.billTo === "consignee") {
+    transformedData = {
+      ...transformedData,
+      buyer: data.consignee,
+      buyerCompany: data.consignee,
+      
+    };
+  }
 
   return (
     <div className="flex items-center justify-center bg-white rounded-lg shadow-md p-2">
@@ -57,7 +66,7 @@ const DownloadSauda = ({ data }) => {
         </button>
       ) : (
         <PDFDownloadLink
-          document={<SaudaPDF data={mergedData} />}
+          document={<SaudaPDF data={transformedData} />}
           fileName={`HANS-2025-${data.saudaNo}.pdf`}
         >
           {({ loading }) => (
