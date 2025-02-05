@@ -2,6 +2,7 @@ import { lazy, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext/AuthContext";
 import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
+import axios from "axios";
 
 const DataInput = lazy(() => import("../../common/DataInput/DataInput"));
 const Buttons = lazy(() => import("../../common/Buttons/Buttons"));
@@ -13,12 +14,16 @@ const LoginForm = () => {
   const [userRole, setUserRole] = useState("Admin");
   const [showPassword, setShowPassword] = useState(false);
   const [isCaptchaValid, setCaptchaValid] = useState(false);
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { login } = useAuth();
 
-  const roles = useMemo(() => ["Admin", "Employee", "Buyer", "Seller", "Transporter"], []);
+  const roles = useMemo(
+    () => ["Admin", "Employee", "Buyer", "Seller", "Transporter"],
+    []
+  );
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     if (!phoneNumber || !password) {
       alert("Please enter valid credentials.");
       return;
@@ -27,8 +32,43 @@ const LoginForm = () => {
       alert("CAPTCHA is not valid.");
       return;
     }
-    login();
-    navigate("/dashboard");
+
+    setLoading(true);
+
+    const apiEndpoints = {
+      Admin: "https://phpserver-v77g.onrender.com/api/admin/login",
+      Employee: "https://phpserver-v77g.onrender.com/api/employees/login",
+      Buyer: "https://phpserver-v77g.onrender.com/api/buyers/login",
+      Seller: "https://phpserver-v77g.onrender.com/api/sellers/login",
+      Transporter: "https://phpserver-v77g.onrender.com/api/transporters/login",
+    };
+
+    const apiUrl = apiEndpoints[userRole];
+
+    if (!apiUrl) {
+      alert("Invalid role selected.");
+      setLoading(false);
+      return;
+    }
+
+    const phoneKey = userRole === "Seller" ? "phone" : "mobile";
+
+    try {
+      const response = await axios.post(apiUrl, {
+        [phoneKey]: phoneNumber,
+        password: password,
+      });
+
+      if (response.status === 200) {
+        alert("Login successful!");
+        login(response.data);
+        navigate("/dashboard");
+      }
+    } catch (error) {
+      alert(error.response?.data?.message || "Login failed. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -104,12 +144,13 @@ const LoginForm = () => {
       <Captcha onValidate={setCaptchaValid} />
       <div className="flex justify-center mt-4">
         <Buttons
-          label="Login"
+          label={loading ? "Logging in..." : "Login"}
           onClick={handleLogin}
           type="submit"
           variant="primary"
           size="lg"
           className="w-full py-3 rounded-lg shadow-md bg-blue-600 text-white hover:bg-blue-700 transform transition-all hover:shadow-lg"
+          disabled={loading}
         />
       </div>
     </div>
