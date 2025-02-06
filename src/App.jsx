@@ -1,4 +1,5 @@
 import PropTypes from "prop-types";
+import axios from "axios";
 import { lazy, Suspense, useEffect, useState, useMemo } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext/AuthContext";
@@ -7,6 +8,7 @@ import Loading from "./common/Loading/Loading";
 import PrivateLayout from "./layouts/PrivateLayout";
 import "./App.css";
 
+const SERVER_URL = "https://phpserver-v77g.onrender.com"
 // Lazy-loaded components
 const LazyPages = {
   Login: lazy(() => import("./pages/Login/Login")),
@@ -72,6 +74,9 @@ const LazyPages = {
   ListLoadingEntry: lazy(() =>
     import("./pages/LoadingEntry/ListLoadingEntry/ListLoadingEntry")
   ),
+  // SellerDashboard: lazy(() =>
+  // import("./components/SellerDashboard/SellerDashboard")
+  // )
 };
 
 const CACHE_EXPIRY_TIME = 5 * 60 * 1000;
@@ -89,7 +94,20 @@ PrivateRoute.propTypes = {
   children: PropTypes.node.isRequired,
 };
 
+const keepBackendAlive = () => {
+  setInterval(() => {
+    axios.get(`${SERVER_URL}/keep-alive`)
+      .then(() => console.log("Backend keep-alive ping successful"))
+      .catch((err) => console.error("Keep-alive ping failed", err.message));
+  }, 4 * 60 * 1000);
+};
+
+
 const App = () => {
+  useEffect(() => {
+    keepBackendAlive();
+  }, []);
+
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
@@ -125,6 +143,7 @@ const App = () => {
           element={
             <PrivateRoute>
               <LazyPages.Dashboard />
+              {/* <LazyPages.SellerDashboard /> */}
             </PrivateRoute>
           }
         />
@@ -203,3 +222,63 @@ const App = () => {
 };
 
 export default App;
+
+// import { Suspense, useEffect, useState } from "react";
+// import { BrowserRouter } from "react-router-dom";
+// import { AuthProvider } from "./context/AuthContext/AuthContext";
+// import { HelmetProvider, Helmet } from "react-helmet-async";
+// import Loading from "./common/Loading/Loading";
+// import RoutesConfig from "./routes/RoutesConfig";
+// import "./App.css";
+
+// const CACHE_EXPIRY_TIME = 5 * 60 * 1000;
+
+// const App = () => {
+//   const [hydrated, setHydrated] = useState(false);
+
+//   useEffect(() => {
+//     const idleCallback = window.requestIdleCallback || setTimeout;
+//     idleCallback(() => setHydrated(true));
+//   }, []);
+
+//   useEffect(() => {
+//     const idleCallback = window.requestIdleCallback || setTimeout;
+//     const handleCache = () => {
+//       const cacheTimestamp = sessionStorage.getItem("cacheTimestamp");
+//       const currentTime = Date.now();
+//       if (cacheTimestamp && currentTime - cacheTimestamp > CACHE_EXPIRY_TIME) {
+//         sessionStorage.removeItem("lastVisitedPage");
+//         sessionStorage.removeItem("cacheTimestamp");
+//       }
+//       sessionStorage.setItem("cacheTimestamp", currentTime);
+//     };
+
+//     idleCallback(() => {
+//       handleCache();
+//       setHydrated(true);
+//     });
+//   }, []);
+
+//   return (
+//     <HelmetProvider>
+//       <AuthProvider>
+//         <Helmet>
+//           <title>Hansaria Food Private Limited - Premium Food Products</title>
+//           <meta
+//             name="description"
+//             content="Hansaria Food Private Limited specializes in premium food products, offering innovative solutions and exceptional service."
+//           />
+//           <link rel="icon" href="./assets/react.svg" />
+//         </Helmet>
+
+//         <BrowserRouter>
+//           <Suspense fallback={<Loading />}>
+//             <RoutesConfig hydrated={hydrated} />
+//           </Suspense>
+//         </BrowserRouter>
+//       </AuthProvider>
+//     </HelmetProvider>
+//   );
+// };
+
+// export default App;

@@ -32,9 +32,9 @@ const LoginForm = () => {
       alert("CAPTCHA is not valid.");
       return;
     }
-
+  
     setLoading(true);
-
+  
     const apiEndpoints = {
       Admin: "https://phpserver-v77g.onrender.com/api/admin/login",
       Employee: "https://phpserver-v77g.onrender.com/api/employees/login",
@@ -42,35 +42,49 @@ const LoginForm = () => {
       Seller: "https://phpserver-v77g.onrender.com/api/sellers/login",
       Transporter: "https://phpserver-v77g.onrender.com/api/transporters/login",
     };
-
+  
+    const roleBasedRoutes = {
+      Admin: "/dashboard",
+      Employee: "/employee/dashboard",
+      Buyer: "/buyer/dashboard",
+      Seller: "/dashboard",
+      Transporter: "/transporter/dashboard",
+    };
+  
     const apiUrl = apiEndpoints[userRole];
-
+  
     if (!apiUrl) {
       alert("Invalid role selected.");
       setLoading(false);
       return;
     }
-
+  
     const phoneKey = userRole === "Seller" ? "phone" : "mobile";
-
+  
+    console.log("Logging in with:", { [phoneKey]: phoneNumber, password });
+  
     try {
       const response = await axios.post(apiUrl, {
         [phoneKey]: phoneNumber,
         password: password,
       });
-
+  
       if (response.status === 200) {
+        console.log("Seller Data:", response.data);
+        
+        // Store `mobile` explicitly in context
+        login({ ...response.data, mobile: response.data.phone || response.data.mobile });
+  
         alert("Login successful!");
-        login(response.data);
-        navigate("/dashboard");
+        navigate(roleBasedRoutes[userRole] || "/dashboard");
       }
     } catch (error) {
-      alert(error.response?.data?.message || "Login failed. Please try again.");
+      alert(error.response?.data?.message || "Invalid mobile number or password");
     } finally {
       setLoading(false);
     }
   };
-
+  
   return (
     <div className="w-full max-w-md bg-white p-6 rounded-xl shadow-md border border-gray-200">
       <h2 className="text-xl font-bold mb-4 text-center text-gray-800">
