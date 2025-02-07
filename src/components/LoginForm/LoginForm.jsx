@@ -61,8 +61,6 @@ const LoginForm = () => {
   
     const phoneKey = userRole === "Seller" ? "phone" : "mobile";
   
-    console.log("Logging in with:", { [phoneKey]: phoneNumber, password });
-  
     try {
       const response = await axios.post(apiUrl, {
         [phoneKey]: phoneNumber,
@@ -70,10 +68,7 @@ const LoginForm = () => {
       });
   
       if (response.status === 200) {
-        console.log("Seller Data:", response.data);
-        
-        // Store `mobile` explicitly in context
-        login({ ...response.data, mobile: response.data.phone || response.data.mobile });
+        login({ ...response.data, mobile: phoneNumber });
   
         alert("Login successful!");
         navigate(roleBasedRoutes[userRole] || "/dashboard");
@@ -84,6 +79,7 @@ const LoginForm = () => {
       setLoading(false);
     }
   };
+  
   
   return (
     <div className="w-full max-w-md bg-white p-6 rounded-xl shadow-md border border-gray-200">

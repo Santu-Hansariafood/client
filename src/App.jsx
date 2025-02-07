@@ -74,9 +74,12 @@ const LazyPages = {
   ListLoadingEntry: lazy(() =>
     import("./pages/LoadingEntry/ListLoadingEntry/ListLoadingEntry")
   ),
-  // SellerDashboard: lazy(() =>
-  // import("./components/SellerDashboard/SellerDashboard")
-  // )
+  SellerDashboard: lazy(() =>
+  import("./components/SellerDashboard/SellerDashboard")
+  ),
+  SellerBidList: lazy(() =>
+    import("./pages/ManageBids/SupplierBidList/SupplierBidList")
+  )
 };
 
 const CACHE_EXPIRY_TIME = 5 * 60 * 1000;
@@ -96,7 +99,7 @@ PrivateRoute.propTypes = {
 
 const keepBackendAlive = () => {
   setInterval(() => {
-    axios.get(`${SERVER_URL}/keep-alive`)
+    axios.get(`${SERVER_URL}/api/keep-alive`)
       .then(() => console.log("Backend keep-alive ping successful"))
       .catch((err) => console.error("Keep-alive ping failed", err.message));
   }, 4 * 60 * 1000);
@@ -182,6 +185,7 @@ const App = () => {
             "/manage-order/list-self-order": LazyPages.ListSelfOrder,
             "/Loading-Entry/add-loading-entry": LazyPages.AddLoadingEntry,
             "/Loading-Entry/list-loading-entry": LazyPages.ListLoadingEntry,
+            "/Supplier-Bid-List" :LazyPages.SellerBidList,
           }).map(([path, Component]) => (
             <Route
               key={path}
@@ -222,63 +226,3 @@ const App = () => {
 };
 
 export default App;
-
-// import { Suspense, useEffect, useState } from "react";
-// import { BrowserRouter } from "react-router-dom";
-// import { AuthProvider } from "./context/AuthContext/AuthContext";
-// import { HelmetProvider, Helmet } from "react-helmet-async";
-// import Loading from "./common/Loading/Loading";
-// import RoutesConfig from "./routes/RoutesConfig";
-// import "./App.css";
-
-// const CACHE_EXPIRY_TIME = 5 * 60 * 1000;
-
-// const App = () => {
-//   const [hydrated, setHydrated] = useState(false);
-
-//   useEffect(() => {
-//     const idleCallback = window.requestIdleCallback || setTimeout;
-//     idleCallback(() => setHydrated(true));
-//   }, []);
-
-//   useEffect(() => {
-//     const idleCallback = window.requestIdleCallback || setTimeout;
-//     const handleCache = () => {
-//       const cacheTimestamp = sessionStorage.getItem("cacheTimestamp");
-//       const currentTime = Date.now();
-//       if (cacheTimestamp && currentTime - cacheTimestamp > CACHE_EXPIRY_TIME) {
-//         sessionStorage.removeItem("lastVisitedPage");
-//         sessionStorage.removeItem("cacheTimestamp");
-//       }
-//       sessionStorage.setItem("cacheTimestamp", currentTime);
-//     };
-
-//     idleCallback(() => {
-//       handleCache();
-//       setHydrated(true);
-//     });
-//   }, []);
-
-//   return (
-//     <HelmetProvider>
-//       <AuthProvider>
-//         <Helmet>
-//           <title>Hansaria Food Private Limited - Premium Food Products</title>
-//           <meta
-//             name="description"
-//             content="Hansaria Food Private Limited specializes in premium food products, offering innovative solutions and exceptional service."
-//           />
-//           <link rel="icon" href="./assets/react.svg" />
-//         </Helmet>
-
-//         <BrowserRouter>
-//           <Suspense fallback={<Loading />}>
-//             <RoutesConfig hydrated={hydrated} />
-//           </Suspense>
-//         </BrowserRouter>
-//       </AuthProvider>
-//     </HelmetProvider>
-//   );
-// };
-
-// export default App;

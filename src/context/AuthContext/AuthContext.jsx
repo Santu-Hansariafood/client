@@ -23,19 +23,31 @@ export const AuthProvider = ({ children }) => {
     }
   });
 
+  const [mobile, setMobile] = useState(() => {
+    return localStorage.getItem("mobile") || "";
+  });
+
   const sessionTimeoutRef = useRef(null);
 
-  const login = () => {
+  const login = (userData) => {
     setIsAuthenticated(true);
+    setMobile(userData.mobile || "");
+
     localStorage.setItem("isAuthenticated", "true");
+    localStorage.setItem("mobile", userData.mobile || "");
     localStorage.setItem("sessionTimestamp", Date.now().toString());
+
     startSessionTimer();
   };
 
   const logout = () => {
     setIsAuthenticated(false);
+    setMobile("");
+
     localStorage.removeItem("isAuthenticated");
+    localStorage.removeItem("mobile");
     localStorage.removeItem("sessionTimestamp");
+
     clearSessionTimer();
   };
 
@@ -70,6 +82,9 @@ export const AuthProvider = ({ children }) => {
       setIsAuthenticated(newState);
       newState ? startSessionTimer() : clearSessionTimer();
     }
+    if (event.key === "mobile") {
+      setMobile(event.newValue || "");
+    }
   };
 
   useEffect(() => {
@@ -98,10 +113,11 @@ export const AuthProvider = ({ children }) => {
   const value = useMemo(
     () => ({
       isAuthenticated,
+      mobile,
       login,
       logout,
     }),
-    [isAuthenticated]
+    [isAuthenticated, mobile]
   );
 
   return (
