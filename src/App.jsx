@@ -145,8 +145,8 @@ const App = () => {
           path="/dashboard"
           element={
             <PrivateRoute>
-              <LazyPages.Dashboard />
-              {/* <LazyPages.SellerDashboard /> */}
+              {/* <LazyPages.Dashboard /> */}
+              <LazyPages.SellerDashboard />
             </PrivateRoute>
           }
         />
