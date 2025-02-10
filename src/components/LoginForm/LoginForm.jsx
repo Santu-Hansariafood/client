@@ -66,18 +66,18 @@ const LoginForm = () => {
         [phoneKey]: phoneNumber,
         password: password,
       });
-  
+    
       if (response.status === 200) {
-        login({ ...response.data, mobile: phoneNumber });
-  
+        login({ ...response.data, mobile: phoneNumber, role: userRole }); // Pass role
+    
         alert("Login successful!");
-  
-        // Redirect based on user role
+    
         navigate(roleBasedRoutes[userRole] || "/dashboard", { replace: true });
       }
     } catch (error) {
       alert(error.response?.data?.message || "Invalid mobile number or password");
-    } finally {
+    }
+     finally {
       setLoading(false);
     }
   };

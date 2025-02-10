@@ -27,14 +27,20 @@ export const AuthProvider = ({ children }) => {
     return localStorage.getItem("mobile") || "";
   });
 
+  const [userRole, setUserRole] = useState(() => {
+    return localStorage.getItem("userRole") || "";
+  });
+
   const sessionTimeoutRef = useRef(null);
 
   const login = (userData) => {
     setIsAuthenticated(true);
     setMobile(userData.mobile || "");
+    setUserRole(userData.role || "");
 
     localStorage.setItem("isAuthenticated", "true");
     localStorage.setItem("mobile", userData.mobile || "");
+    localStorage.setItem("userRole", userData.role || "");
     localStorage.setItem("sessionTimestamp", Date.now().toString());
 
     startSessionTimer();
@@ -43,9 +49,11 @@ export const AuthProvider = ({ children }) => {
   const logout = () => {
     setIsAuthenticated(false);
     setMobile("");
+    setUserRole("");
 
     localStorage.removeItem("isAuthenticated");
     localStorage.removeItem("mobile");
+    localStorage.removeItem("userRole");
     localStorage.removeItem("sessionTimestamp");
 
     clearSessionTimer();
@@ -85,6 +93,9 @@ export const AuthProvider = ({ children }) => {
     if (event.key === "mobile") {
       setMobile(event.newValue || "");
     }
+    if (event.key === "userRole") {
+      setUserRole(event.newValue || "");
+    }
   };
 
   useEffect(() => {
@@ -114,10 +125,11 @@ export const AuthProvider = ({ children }) => {
     () => ({
       isAuthenticated,
       mobile,
+      userRole,
       login,
       logout,
     }),
-    [isAuthenticated, mobile]
+    [isAuthenticated, mobile, userRole]
   );
 
   return (
