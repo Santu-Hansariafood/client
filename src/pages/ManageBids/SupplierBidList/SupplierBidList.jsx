@@ -76,7 +76,7 @@ const SupplierBidList = () => {
       };
 
       const response = await axios.post(
-        "http://localhost:5000/api/participatebids",
+        "https://phpserver-v77g.onrender.com/api/participatebids",
         participationData
       );
 
