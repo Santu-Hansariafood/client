@@ -1,14 +1,14 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, lazy } from "react";
 import { toast } from "react-toastify";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext/AuthContext";
 
-import DashboardLayout from "../../layouts/DashboardLayout/DashboardLayout";
-import Header from "./Header/Header";
-import LogoutConfirmationModal from "./LogoutConfirmationModal/LogoutConfirmationModal";
-import CardGrid from "./CardGrid/CardGrid";
-import ChartSection from "./ChartSection/ChartSection";
+const DashboardLayout = lazy(()=>import("../../layouts/DashboardLayout/DashboardLayout"));
+const Header = lazy(()=>import("../../common/Header/Header"));
+const LogoutConfirmationModal = lazy(()=>import("../../common/LogoutConfirmationModal/LogoutConfirmationModal"));
+const CardGrid = lazy(()=>import("./CardGrid/CardGrid"));
+const ChartSection = lazy(()=>import("./ChartSection/ChartSection"));
 
 const Dashboard = () => {
   const [showLogoutConfirmation, setShowLogoutConfirmation] = useState(false);
@@ -38,7 +38,7 @@ const Dashboard = () => {
         orders: responses[3].data.length || 0,
       });
     } catch (error) {
-      toast.error("Failed to fetch data counts");
+      toast.error("Failed to fetch data counts",error);
     }
   }, []);
 

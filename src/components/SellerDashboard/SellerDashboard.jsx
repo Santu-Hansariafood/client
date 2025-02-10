@@ -8,9 +8,11 @@ import {
   FaUpload,
 } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
-const Cards = lazy(() => import("../../common/Cards/Cards"));
 import { useAuth } from "../../context/AuthContext/AuthContext";
-import Loading from "../../common/Loading/Loading";
+const Cards = lazy(() => import("../../common/Cards/Cards"));
+const Loading = lazy(() => import("../../common/Loading/Loading"));
+const Header = lazy(() => import("../../common/Header/Header"));
+const LogoutConfirmationModal = lazy(() => import("../../common/LogoutConfirmationModal/LogoutConfirmationModal"));
 
 const SellerDashboard = () => {
   const { mobile } = useAuth();
@@ -20,6 +22,7 @@ const SellerDashboard = () => {
   const [error, setError] = useState(null);
   const [sellerBidCount, setSellerBidCount] = useState(0);
   const [participateBidCount, setParticipateBidCount] = useState(0);
+  const [showLogoutConfirmation, setShowLogoutConfirmation] = useState(false);
 
   useEffect(() => {
     const fetchSellerDetails = async () => {
@@ -58,7 +61,7 @@ const SellerDashboard = () => {
           setError("Invalid response from server.");
         }
       } catch (error) {
-        setError("Failed to fetch seller details. Please try again.", error);
+        setError("Failed to fetch seller details. Please try again.");
       } finally {
         setLoading(false);
       }
@@ -110,63 +113,60 @@ const SellerDashboard = () => {
   ];
 
   return (
-    <Suspense fallback={<Loading/>}>
-    <div className="min-h-screen bg-gray-100 p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">Seller Dashboard</h1>
-        <div className="relative cursor-pointer">
-          <FaBell className="text-2xl text-gray-600 hover:text-blue-500 transition-all" />
-          <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">
-            3
-          </span>
+    <Suspense fallback={<Loading />}>
+      <Header onLogoutClick={() => setShowLogoutConfirmation(true)} />
+      <div className="min-h-screen bg-gray-100 p-4 sm:p-6">
+        <div className="flex flex-col sm:flex-row justify-between items-center mb-6">
+          <h1 className="text-2xl font-bold text-gray-800">Seller Dashboard</h1>
+          <div className="relative cursor-pointer">
+            <FaBell className="text-2xl text-gray-600 hover:text-blue-500 transition-all" />
+            <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">
+              3
+            </span>
+          </div>
         </div>
-      </div>
-      <div className="bg-white p-6 rounded-lg shadow-md mb-6 flex items-center justify-between">
-        <div>
-          <h2 className="text-xl font-semibold text-gray-800 mb-2">
-            Seller Details
-          </h2>
-          {loading ? (
-            <Loading/>
-          ) : error ? (
-            <p className="text-red-500">{error}</p>
-          ) : sellerDetails ? (
-            <div className="text-gray-700">
-              <p><strong>Name:</strong> {sellerDetails.sellerName}</p>
-              <p><strong>Phone:</strong> {sellerDetails.phoneNumbers.map((p) => p.value).join(", ")}</p>
-              <p><strong>Email:</strong> {sellerDetails.emails.map((e) => e.value).join(", ")}</p>
-              <p><strong>Company:</strong> {sellerDetails.companies.join(", ")}</p>
-              <p><strong>Commodity:</strong> {sellerDetails.commodities.map((c) => c.name).join(", ")}</p>
+        <div className="bg-white p-6 rounded-lg shadow-md mb-6 flex flex-col sm:flex-row items-center justify-between">
+          <div className="w-full sm:w-auto text-center sm:text-left">
+            <h2 className="text-xl font-semibold text-gray-800 mb-2">Seller Details</h2>
+            {loading ? (
+              <Loading />
+            ) : error ? (
+              <p className="text-red-500">{error}</p>
+            ) : sellerDetails ? (
+              <div className="text-gray-700">
+                <p><strong>Name:</strong> {sellerDetails.sellerName}</p>
+                <p><strong>Phone:</strong> {sellerDetails.phoneNumbers.map((p) => p.value).join(", ")}</p>
+                <p><strong>Email:</strong> {sellerDetails.emails.map((e) => e.value).join(", ")}</p>
+                <p><strong>Company:</strong> {sellerDetails.companies.join(", ")}</p>
+                <p><strong>Commodity:</strong> {sellerDetails.commodities.map((c) => c.name).join(", ")}</p>
+              </div>
+            ) : (
+              <p className="text-red-500">Seller details not available.</p>
+            )}
+          </div>
+          <div className="flex flex-col items-center mt-4 sm:mt-0">
+            <div className="w-24 h-24 flex items-center justify-center bg-gray-300 text-gray-800 text-2xl font-bold rounded-full border-2 border-gray-400">
+              {getInitials(sellerDetails?.sellerName)}
             </div>
-          ) : (
-            <p className="text-red-500">Seller details not available.</p>
-          )}
-        </div>
-        <div className="flex flex-col items-center mt-4 sm:mt-0">
-          <div className="w-24 h-24 flex items-center justify-center bg-gray-300 text-gray-800 text-2xl font-bold rounded-full border-2 border-gray-400">
-            {getInitials(sellerDetails?.sellerName)}
+            <button className="mt-2 flex items-center gap-2 bg-blue-500 text-white px-4 py-2 rounded-lg text-sm">
+              <FaUpload /> Upload
+            </button>
           </div>
-          <button className="mt-2 flex items-center gap-2 bg-blue-500 text-white px-4 py-2 rounded-lg text-sm">
-            <FaUpload /> Upload
-          </button>
         </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+          {dashboardData.map((item, index) => (
+            <div key={index} onClick={() => navigate(item.link, { state: item.state })}>
+              <Cards title={item.title} count={item.count} icon={item.icon} link={item.link} />
+            </div>
+          ))}
+        </div>
+        {showLogoutConfirmation && (
+          <LogoutConfirmationModal
+            onConfirm={() => console.log("Logout confirmed")}
+            onCancel={() => setShowLogoutConfirmation(false)}
+          />
+        )}
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-        {dashboardData.map((item, index) => (
-          <div
-            key={index}
-            onClick={() => navigate(item.link, { state: item.state })}
-          >
-            <Cards
-              title={item.title}
-              count={item.count}
-              icon={item.icon}
-              link={item.link}
-            />
-          </div>
-        ))}
-      </div>
-    </div>
     </Suspense>
   );
 };

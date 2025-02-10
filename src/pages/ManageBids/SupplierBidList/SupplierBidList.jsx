@@ -1,14 +1,21 @@
-import { lazy, useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 import { FaRegHandPointer } from "react-icons/fa";
-import { useLocation } from "react-router-dom";
-const Tables = lazy(() =>import("../../../common/Tables/Tables"));
-const Pagination = lazy(() =>import("../../../common/Paginations/Paginations"));
-const PopupBox = lazy(() =>import("../../../common/PopupBox/PopupBox"));
+import { IoArrowBack, IoRefresh } from "react-icons/io5";
+import Loading from "../../../common/Loading/Loading";
+
+const Tables = lazy(() => import("../../../common/Tables/Tables"));
+const Pagination = lazy(() =>
+  import("../../../common/Paginations/Paginations")
+);
+const PopupBox = lazy(() => import("../../../common/PopupBox/PopupBox"));
 
 const SupplierBidList = () => {
+  const navigate = useNavigate();
   const location = useLocation();
   const { commodityNames = [], mobile } = location.state || {};
+
   const [bids, setBids] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -21,43 +28,52 @@ const SupplierBidList = () => {
 
   const itemsPerPage = 10;
 
-  useEffect(() => {
-    const fetchBids = async () => {
-      try {
-        if (commodityNames.length === 0) {
-          setError("No commodities selected.");
-          setLoading(false);
-          return;
-        }
-
-        const bidsRes = await axios.get("https://phpserver-v77g.onrender.com/api/bids");
-
-        const sevenDaysAgo = new Date();
-        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-        const filteredBids = bidsRes.data
-          .filter((bid) => {
-            const bidDate = new Date(bid.bidDate);
-            return commodityNames.includes(bid.commodity) && bidDate >= sevenDaysAgo;
-          })
-          .sort((a, b) => new Date(b.bidDate) - new Date(a.bidDate));
-
-        setBids(filteredBids);
-        setBidCount(filteredBids.length);
-        setCurrentPage(1);
-      } catch (error) {
-        setError("Failed to fetch bid data.",error);
-      } finally {
+  const fetchBids = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      if (commodityNames.length === 0) {
+        setError("No commodities selected.");
         setLoading(false);
+        return;
       }
-    };
 
+      const bidsRes = await axios.get(
+        "https://phpserver-v77g.onrender.com/api/bids"
+      );
+
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setHours(0, 0, 0, 0);
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+      const filteredBids = bidsRes.data
+        .filter((bid) => {
+          const bidDate = new Date(bid.bidDate);
+          bidDate.setHours(0, 0, 0, 0);
+          return (
+            commodityNames.includes(bid.commodity) && bidDate >= sevenDaysAgo
+          );
+        })
+        .sort((a, b) => new Date(b.bidDate) - new Date(a.bidDate));
+
+      setBids(filteredBids);
+      setBidCount(filteredBids.length);
+      setCurrentPage(1);
+    } catch (error) {
+      setError("Failed to fetch bid data.", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchBids();
   }, [commodityNames]);
 
   const handleParticipate = (bid) => {
     setSelectedBid(bid);
-    setRate(bid.rate || ""); 
-    setQuantity(bid.quantity || ""); 
+    setRate(bid.rate || "");
+    setQuantity(bid.quantity || "");
     setIsPopupOpen(true);
   };
 
@@ -72,25 +88,35 @@ const SupplierBidList = () => {
         bidId: selectedBid._id,
         mobile: mobile,
         rate: Number(rate),
-        quantity: Number(quantity)
+        quantity: Number(quantity),
       };
 
-      const response = await axios.post(
+      await axios.post(
         "https://phpserver-v77g.onrender.com/api/participatebids",
         participationData
       );
 
       alert("Participation successful!");
-      console.log("Server Response:", response.data);
       setIsPopupOpen(false);
     } catch (error) {
-      console.error("Error submitting participation:", error);
-      alert("Failed to participate in the bid.");
+      alert("Failed to participate in the bid.", error);
     }
   };
 
   const headers = [
-    "Count", "Company", "consignee","Commodity", "Quantity", "Rate", "Bid Date", "Start Time", "End Time", "Payment Terms", "Delivery", "Parameters", "Action"
+    "Count",
+    "Company",
+    "Consignee",
+    "Commodity",
+    "Quantity",
+    "Rate",
+    "Bid Date",
+    "Start Time",
+    "End Time",
+    "Payment Terms",
+    "Delivery",
+    "Parameters",
+    "Action",
   ];
 
   const indexOfLastItem = currentPage * itemsPerPage;
@@ -109,64 +135,128 @@ const SupplierBidList = () => {
     bid.endTime || "-",
     bid.paymentTerms || "N/A",
     bid.delivery || "N/A",
-    bid.parameters ? Object.entries(bid.parameters).map(([key, value]) => `${key}: ${value}`).join(", ") : "No Parameters",
+    bid.parameters
+      ? Object.entries(bid.parameters)
+          .map(([key, value]) => `${key}: ${value}`)
+          .join(", ")
+      : "No Parameters",
     <button
       onClick={() => handleParticipate(bid)}
       className="flex items-center gap-2 text-blue-500 hover:text-blue-700"
     >
       <FaRegHandPointer /> Participate
-    </button>
+    </button>,
   ]);
 
   return (
-    <div className="p-6 bg-gray-100 min-h-screen">
-      <h1 className="text-2xl font-bold text-gray-800 mb-4">
-        Manage Bids ({bidCount})
-      </h1>
+    <Suspense fallback={<Loading />}>
+      <div className="p-6 bg-gray-100 min-h-screen">
+        <div className="flex items-center justify-between mb-4">
+          <button
+            onClick={() => navigate(-1)}
+            className="flex items-center gap-2 px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400"
+          >
+            <IoArrowBack /> Back
+          </button>
+          <button
+            onClick={fetchBids}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-700"
+          >
+            <IoRefresh /> Refresh
+          </button>
+        </div>
 
-      {loading ? (
-        <p className="text-center text-gray-600">Loading bids...</p>
-      ) : error ? (
-        <p className="text-red-500">{error}</p>
-      ) : bids.length === 0 ? (
-        <p className="text-center text-gray-600">
-          No active bids available for {commodityNames.join(", ")} in the last 7 days.
-        </p>
-      ) : (
-        <>
-          <Tables headers={headers} rows={rows} />
-          <Pagination
-            currentPage={currentPage}
-            totalItems={bidCount}
-            itemsPerPage={itemsPerPage}
-            onPageChange={setCurrentPage}
-          />
-        </>
-      )}
+        <h1 className="text-2xl font-bold text-gray-800 mb-4">
+          Manage Bids ({bidCount})
+        </h1>
 
-      {isPopupOpen && selectedBid && (
-        <PopupBox isOpen={isPopupOpen} onClose={() => setIsPopupOpen(false)} title="Participate in Bid">
-          <div className="space-y-4 p-4">
-            <div className="grid grid-cols-2 gap-4 border-b pb-4 text-sm text-gray-700">
-              <p><strong>Company:</strong> {selectedBid.group || "N/A"}</p>
-              <p><strong>Commodity:</strong> {selectedBid.commodity || "Unknown"}</p>
-              <p><strong>Consignee:</strong>{selectedBid.consignee|| "N/A"}</p>
-              <p><strong>Origin:</strong>{selectedBid.origin}</p>
-              <p><strong>Quantity:</strong> {selectedBid.quantity || "N/A"}<strong> Tons</strong></p>
-              <p><strong>Rate: &#x20B9;</strong>  {selectedBid.rate || "N/A"}</p>
-              <p><strong>Bid Date:</strong> {new Date(selectedBid.bidDate).toLocaleDateString()}</p>
-              <p><strong>Start Time:</strong> {selectedBid.startTime || "-"}</p>
-              <p><strong>End Time:</strong> {selectedBid.endTime || "-"}</p>
-              <p><strong>Payment Terms:</strong> {selectedBid.paymentTerms || "N/A"}<strong> Days</strong></p>
-              <p><strong>Delivery:</strong> {selectedBid.delivery || "N/A"}<strong> Days</strong></p>
-              <p><strong>Parameters:</strong> {selectedBid.parameters 
-                ? Object.entries(selectedBid.parameters).map(([key, value]) => `${key}: ${value} %`).join(", ") 
-                : "No Parameters"}
+        {loading ? (
+          <p className="text-center text-gray-600">Loading bids...</p>
+        ) : error ? (
+          <p className="text-red-500">{error}</p>
+        ) : bids.length === 0 ? (
+          <p className="text-center text-gray-600">
+            No active bids available for {commodityNames.join(", ")} in the last
+            7 days.
+          </p>
+        ) : (
+          <>
+            <Tables headers={headers} rows={rows} />
+            <Pagination
+              currentPage={currentPage}
+              totalItems={bidCount}
+              itemsPerPage={itemsPerPage}
+              onPageChange={setCurrentPage}
+            />
+          </>
+        )}
+
+        {isPopupOpen && selectedBid && (
+          <PopupBox
+            isOpen={isPopupOpen}
+            onClose={() => setIsPopupOpen(false)}
+            title="Participate in Bid"
+          >
+            <div className="space-y-4 p-4">
+              <div className="grid grid-cols-2 gap-4 border-b pb-4 text-sm text-gray-700">
+                <p>
+                  <strong>Company:</strong> {selectedBid.group || "N/A"}
+                </p>
+                <p>
+                  <strong>Commodity:</strong>{" "}
+                  {selectedBid.commodity || "Unknown"}
+                </p>
+                <p>
+                  <strong>Consignee:</strong>
+                  {selectedBid.consignee || "N/A"}
+                </p>
+                <p>
+                  <strong>Origin:</strong>
+                  {selectedBid.origin}
+                </p>
+                <p>
+                  <strong>Quantity:</strong> {selectedBid.quantity || "N/A"}
+                  <strong> Tons</strong>
+                </p>
+                <p>
+                  <strong>Rate: &#x20B9;</strong> {selectedBid.rate || "N/A"}
+                </p>
+                <p>
+                  <strong>Bid Date:</strong>{" "}
+                  {new Date(selectedBid.bidDate).toLocaleDateString()}
+                </p>
+                <p>
+                  <strong>Start Time:</strong> {selectedBid.startTime || "-"}
+                </p>
+                <p>
+                  <strong>End Time:</strong> {selectedBid.endTime || "-"}
+                </p>
+                <p>
+                  <strong>Payment Terms:</strong>{" "}
+                  {selectedBid.paymentTerms || "N/A"}
+                  <strong> Days</strong>
+                </p>
+                <p>
+                  <strong>Delivery:</strong> {selectedBid.delivery || "N/A"}
+                  <strong> Days</strong>
+                </p>
+                <p>
+                  <strong>Parameters:</strong>{" "}
+                  {selectedBid.parameters
+                    ? Object.entries(selectedBid.parameters)
+                        .map(([key, value]) => `${key}: ${value} %`)
+                        .join(", ")
+                    : "No Parameters"}
+                </p>
+              </div>
+              <p>
+                <strong>Notes: </strong>{" "}
+                {selectedBid.notes || "No Notes for This"}{" "}
               </p>
-            </div>
-                <p><strong>Notes: </strong> {selectedBid.notes || "No Notes for This"} </p>
-            <div className="space-y-4">
-              <label className="block text-gray-700 font-semibold">Enter Your Rate:</label>
+              <div className="space-y-4"></div>
+              <label className="block text-gray-700 font-semibold">
+                Enter Your Rate in Ruppies:
+              </label>
               <input
                 type="number"
                 value={rate}
@@ -175,7 +265,9 @@ const SupplierBidList = () => {
                 placeholder="Enter your rate"
               />
 
-              <label className="block text-gray-700 font-semibold">Enter Quantity:</label>
+              <label className="block text-gray-700 font-semibold">
+                Enter Quantity in TONS:
+              </label>
               <input
                 type="number"
                 value={quantity}
@@ -191,10 +283,10 @@ const SupplierBidList = () => {
                 Confirm Bids
               </button>
             </div>
-          </div>
-        </PopupBox>
-      )}
-    </div>
+          </PopupBox>
+        )}
+      </div>
+    </Suspense>
   );
 };
 
