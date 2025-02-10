@@ -100,6 +100,8 @@ const LoginForm = () => {
           onChange={(e) => setPhoneNumber(e.target.value)}
           name="phoneNumber"
           className="w-full p-3 rounded-lg border border-gray-300 shadow-md focus:shadow-lg transition-all"
+          maxLength="10"
+          minLength="10"
         />
       </div>
       <div className="mb-4 relative">

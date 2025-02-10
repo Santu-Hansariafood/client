@@ -1,4 +1,4 @@
-import { useEffect, useState, lazy } from "react";
+import { useEffect, useState, lazy, Suspense } from "react";
 import axios from "axios";
 import {
   FaBell,
@@ -10,6 +10,7 @@ import {
 import { useNavigate } from "react-router-dom";
 const Cards = lazy(() => import("../../common/Cards/Cards"));
 import { useAuth } from "../../context/AuthContext/AuthContext";
+import Loading from "../../common/Loading/Loading";
 
 const SellerDashboard = () => {
   const { mobile } = useAuth();
@@ -18,13 +19,15 @@ const SellerDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [sellerBidCount, setSellerBidCount] = useState(0);
+  const [participateBidCount, setParticipateBidCount] = useState(0);
 
   useEffect(() => {
     const fetchSellerDetails = async () => {
       try {
-        const [sellersRes, bidsRes] = await Promise.all([
+        const [sellersRes, bidsRes, participateRes] = await Promise.all([
           axios.get("https://phpserver-v77g.onrender.com/api/sellers"),
           axios.get("https://phpserver-v77g.onrender.com/api/bids"),
+          axios.get("http://localhost:5000/api/participatebids"),
         ]);
 
         if (!mobile) {
@@ -44,6 +47,9 @@ const SellerDashboard = () => {
               bidsRes.data.filter((bid) =>
                 seller.commodities.some((c) => c.name === bid.commodity)
               ).length
+            );
+            setParticipateBidCount(
+              participateRes.data.filter((p) => String(p.mobile) === String(mobile)).length
             );
           } else {
             setError("No seller found for this mobile number.");
@@ -95,9 +101,16 @@ const SellerDashboard = () => {
       icon: FaTruckMoving,
       link: "/loading-entry",
     },
+    {
+      title: "Participate on Bid",
+      count: participateBidCount,
+      icon: FaGavel,
+      link: "/participate-bid-list",
+    },
   ];
 
   return (
+    <Suspense fallback={<Loading/>}>
     <div className="min-h-screen bg-gray-100 p-6">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-gray-800">Seller Dashboard</h1>
@@ -114,29 +127,16 @@ const SellerDashboard = () => {
             Seller Details
           </h2>
           {loading ? (
-            <p>Loading...</p>
+            <Loading/>
           ) : error ? (
             <p className="text-red-500">{error}</p>
           ) : sellerDetails ? (
             <div className="text-gray-700">
-              <p>
-                <strong>Name:</strong> {sellerDetails.sellerName}
-              </p>
-              <p>
-                <strong>Phone:</strong>{" "}
-                {sellerDetails.phoneNumbers.map((p) => p.value).join(", ")}
-              </p>
-              <p>
-                <strong>Email:</strong>{" "}
-                {sellerDetails.emails.map((e) => e.value).join(", ")}
-              </p>
-              <p>
-                <strong>Company:</strong> {sellerDetails.companies.join(", ")}
-              </p>
-              <p>
-                <strong>Commodity:</strong>{" "}
-                {sellerDetails.commodities.map((c) => c.name).join(", ")}
-              </p>
+              <p><strong>Name:</strong> {sellerDetails.sellerName}</p>
+              <p><strong>Phone:</strong> {sellerDetails.phoneNumbers.map((p) => p.value).join(", ")}</p>
+              <p><strong>Email:</strong> {sellerDetails.emails.map((e) => e.value).join(", ")}</p>
+              <p><strong>Company:</strong> {sellerDetails.companies.join(", ")}</p>
+              <p><strong>Commodity:</strong> {sellerDetails.commodities.map((c) => c.name).join(", ")}</p>
             </div>
           ) : (
             <p className="text-red-500">Seller details not available.</p>
@@ -167,6 +167,7 @@ const SellerDashboard = () => {
         ))}
       </div>
     </div>
+    </Suspense>
   );
 };
 

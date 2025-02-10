@@ -79,6 +79,9 @@ const LazyPages = {
   ),
   SellerBidList: lazy(() =>
     import("./pages/ManageBids/SupplierBidList/SupplierBidList")
+  ),
+  ParticipateBid: lazy(() =>
+  import("./components/ParticipateBid/ParticipateBid")
   )
 };
 
@@ -186,6 +189,7 @@ const App = () => {
             "/Loading-Entry/add-loading-entry": LazyPages.AddLoadingEntry,
             "/Loading-Entry/list-loading-entry": LazyPages.ListLoadingEntry,
             "/Supplier-Bid-List" :LazyPages.SellerBidList,
+            "/participate-bid-list" :LazyPages.ParticipateBid,
           }).map(([path, Component]) => (
             <Route
               key={path}
