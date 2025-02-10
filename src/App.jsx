@@ -8,7 +8,7 @@ import Loading from "./common/Loading/Loading";
 import PrivateLayout from "./layouts/PrivateLayout";
 import "./App.css";
 
-const SERVER_URL = "https://phpserver-v77g.onrender.com"
+const SERVER_URL = "https://phpserver-v77g.onrender.com";
 // Lazy-loaded components
 const LazyPages = {
   Login: lazy(() => import("./pages/Login/Login")),
@@ -75,14 +75,23 @@ const LazyPages = {
     import("./pages/LoadingEntry/ListLoadingEntry/ListLoadingEntry")
   ),
   SellerDashboard: lazy(() =>
-  import("./components/SellerDashboard/SellerDashboard")
+    import("./components/SellerDashboard/SellerDashboard")
   ),
+  BuyerDashboard: lazy(() =>
+   import("./components/BuyerDashboard/BuyerDashboard")
+  ),
+  TransporterDashboard: lazy(() =>
+  import("./components/TransporterDashboard/TransporterDashboard")
+  ),
+  EmployeeDashboard: lazy(()=>
+  import("./components/EmployeeDashboard/EmployeeDashboard")
+),
   SellerBidList: lazy(() =>
     import("./pages/ManageBids/SupplierBidList/SupplierBidList")
   ),
   ParticipateBid: lazy(() =>
-  import("./components/ParticipateBid/ParticipateBid")
-  )
+    import("./components/ParticipateBid/ParticipateBid")
+  ),
 };
 
 const CACHE_EXPIRY_TIME = 5 * 60 * 1000;
@@ -102,12 +111,12 @@ PrivateRoute.propTypes = {
 
 const keepBackendAlive = () => {
   setInterval(() => {
-    axios.get(`${SERVER_URL}/api/keep-alive`)
+    axios
+      .get(`${SERVER_URL}/api/keep-alive`)
       .then(() => console.log("Backend keep-alive ping successful"))
       .catch((err) => console.error("Keep-alive ping failed", err.message));
   }, 4 * 60 * 1000);
 };
-
 
 const App = () => {
   useEffect(() => {
@@ -148,8 +157,39 @@ const App = () => {
           path="/dashboard"
           element={
             <PrivateRoute>
-              {/* <LazyPages.Dashboard /> */}
+              <LazyPages.Dashboard />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/employee/dashboard"
+          element={
+            <PrivateRoute>
+              <LazyPages.EmployeeDashboard />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/buyer/dashboard"
+          element={
+            <PrivateRoute>
+              <LazyPages.BuyerDashboard />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/seller/dashboard"
+          element={
+            <PrivateRoute>
               <LazyPages.SellerDashboard />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/transporter/dashboard"
+          element={
+            <PrivateRoute>
+              <LazyPages.TransporterDashboard />
             </PrivateRoute>
           }
         />
@@ -188,8 +228,8 @@ const App = () => {
             "/manage-order/list-self-order": LazyPages.ListSelfOrder,
             "/Loading-Entry/add-loading-entry": LazyPages.AddLoadingEntry,
             "/Loading-Entry/list-loading-entry": LazyPages.ListLoadingEntry,
-            "/Supplier-Bid-List" :LazyPages.SellerBidList,
-            "/participate-bid-list" :LazyPages.ParticipateBid,
+            "/Supplier-Bid-List": LazyPages.SellerBidList,
+            "/participate-bid-list": LazyPages.ParticipateBid,
           }).map(([path, Component]) => (
             <Route
               key={path}

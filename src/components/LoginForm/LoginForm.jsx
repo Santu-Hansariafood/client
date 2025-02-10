@@ -47,7 +47,7 @@ const LoginForm = () => {
       Admin: "/dashboard",
       Employee: "/employee/dashboard",
       Buyer: "/buyer/dashboard",
-      Seller: "/dashboard",
+      Seller: "/seller/dashboard", // Ensure this matches App.js routes
       Transporter: "/transporter/dashboard",
     };
   
@@ -71,7 +71,9 @@ const LoginForm = () => {
         login({ ...response.data, mobile: phoneNumber });
   
         alert("Login successful!");
-        navigate(roleBasedRoutes[userRole] || "/dashboard");
+  
+        // Redirect based on user role
+        navigate(roleBasedRoutes[userRole] || "/dashboard", { replace: true });
       }
     } catch (error) {
       alert(error.response?.data?.message || "Invalid mobile number or password");
