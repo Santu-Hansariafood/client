@@ -95,6 +95,9 @@ const LazyPages = {
   ParticipateBidAdmin: lazy(()=>
   import("./pages/ManageBids/ParticipateBidAdmin/ParticipateBidAdmin")
 ),
+ConfirmBids: lazy(() => 
+  import("./components/ConfirmBids/ConfirmBids")
+),
 };
 
 const CACHE_EXPIRY_TIME = 5 * 60 * 1000;
@@ -234,6 +237,7 @@ const App = () => {
             "/Loading-Entry/list-loading-entry": LazyPages.ListLoadingEntry,
             "/Supplier-Bid-List": LazyPages.SellerBidList,
             "/participate-bid-list": LazyPages.ParticipateBid,
+            "/confirm-bids/:bidId": LazyPages.ConfirmBids,
           }).map(([path, Component]) => (
             <Route
               key={path}

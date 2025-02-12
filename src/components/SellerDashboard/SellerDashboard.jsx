@@ -23,14 +23,16 @@ const SellerDashboard = () => {
   const [sellerBidCount, setSellerBidCount] = useState(0);
   const [participateBidCount, setParticipateBidCount] = useState(0);
   const [showLogoutConfirmation, setShowLogoutConfirmation] = useState(false);
+  const [notificationCount, setNotificationCount] = useState(0);
 
   useEffect(() => {
     const fetchSellerDetails = async () => {
       try {
-        const [sellersRes, bidsRes, participateRes] = await Promise.all([
+        const [sellersRes, bidsRes, participateRes, confirmBidsRes] = await Promise.all([
           axios.get("https://phpserver-v77g.onrender.com/api/sellers"),
           axios.get("https://phpserver-v77g.onrender.com/api/bids"),
           axios.get("https://phpserver-v77g.onrender.com/api/participatebids"),
+          axios.get("http://localhost:5000/api/confirm-bid"),
         ]);
 
         if (!mobile) {
@@ -54,6 +56,11 @@ const SellerDashboard = () => {
             setParticipateBidCount(
               participateRes.data.filter((p) => String(p.mobile) === String(mobile)).length
             );
+
+            const confirmedBids = confirmBidsRes.data.filter(
+              (bid) => String(bid.phone) === String(mobile) && bid.status === "Confirmed"
+            );
+            setNotificationCount(confirmedBids.length);
           } else {
             setError("No seller found for this mobile number.");
           }
@@ -61,7 +68,7 @@ const SellerDashboard = () => {
           setError("Invalid response from server.");
         }
       } catch (error) {
-        setError("Failed to fetch seller details. Please try again.");
+        setError("Failed to fetch seller details. Please try again.",error);
       } finally {
         setLoading(false);
       }
@@ -120,26 +127,27 @@ const SellerDashboard = () => {
           <h1 className="text-2xl font-bold text-gray-800">Seller Dashboard</h1>
           <div className="relative cursor-pointer">
             <FaBell className="text-2xl text-gray-600 hover:text-blue-500 transition-all" />
-            <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">
-              3
-            </span>
+            {notificationCount > 0 && (
+              <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">
+                {notificationCount}
+              </span>
+            )}
           </div>
         </div>
         <div className="bg-white p-6 rounded-lg shadow-md mb-6 flex flex-col sm:flex-row items-center justify-between">
-          <div className="w-full sm:w-auto text-center sm:text-left">
-            <h2 className="text-xl font-semibold text-gray-800 mb-2">Seller Details</h2>
+          <div className="text-gray-700">
             {loading ? (
               <Loading />
             ) : error ? (
               <p className="text-red-500">{error}</p>
             ) : sellerDetails ? (
-              <div className="text-gray-700">
+              <>
                 <p><strong>Name:</strong> {sellerDetails.sellerName}</p>
                 <p><strong>Phone:</strong> {sellerDetails.phoneNumbers.map((p) => p.value).join(", ")}</p>
                 <p><strong>Email:</strong> {sellerDetails.emails.map((e) => e.value).join(", ")}</p>
                 <p><strong>Company:</strong> {sellerDetails.companies.join(", ")}</p>
                 <p><strong>Commodity:</strong> {sellerDetails.commodities.map((c) => c.name).join(", ")}</p>
-              </div>
+              </>
             ) : (
               <p className="text-red-500">Seller details not available.</p>
             )}

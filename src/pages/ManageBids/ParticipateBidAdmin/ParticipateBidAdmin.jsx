@@ -52,6 +52,7 @@ const ParticipateBidAdmin = () => {
 
       if (!groupedBids[pBid.bidId]) {
         groupedBids[pBid.bidId] = {
+          bidId: pBid.bidId,
           slNo: 0,
           group: matchingBid.group,
           consignee: matchingBid.consignee || "N/A",
@@ -100,8 +101,7 @@ const ParticipateBidAdmin = () => {
     bid.quantities,
     bid.rate,
     <button
-      key={`${bid.consignee}-${index}`}
-      onClick={() => navigate("/")}
+      onClick={() => navigate(`/confirm-bids/${bid.bidId}`)}
       className="text-blue-500 underline hover:text-blue-700"
     >
       {bid.mobiles.size} interactions
