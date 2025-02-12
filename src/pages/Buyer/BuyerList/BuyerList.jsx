@@ -75,9 +75,10 @@ const BuyerList = () => {
   };
 
   const handleEdit = (index) => {
-    setSelectedBuyer(filteredData[index]);
+    const actualIndex = firstItemIndex + index;
+    setSelectedBuyer(filteredData[actualIndex]);
     setIsEditPopupOpen(true);
-  };
+  };  
 
   const handleDelete = async (index) => {
     const buyerToDelete = filteredData[index];

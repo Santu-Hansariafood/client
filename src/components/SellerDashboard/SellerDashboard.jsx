@@ -32,7 +32,7 @@ const SellerDashboard = () => {
           axios.get("https://phpserver-v77g.onrender.com/api/sellers"),
           axios.get("https://phpserver-v77g.onrender.com/api/bids"),
           axios.get("https://phpserver-v77g.onrender.com/api/participatebids"),
-          axios.get("http://localhost:5000/api/confirm-bid"),
+          axios.get("https://phpserver-v77g.onrender.com/api/confirm-bid"),
         ]);
 
         if (!mobile) {

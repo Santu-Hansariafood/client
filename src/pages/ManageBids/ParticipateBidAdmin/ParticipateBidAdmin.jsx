@@ -20,8 +20,8 @@ const ParticipateBidAdmin = () => {
     const fetchData = async () => {
       try {
         const [bidsRes, participateRes] = await Promise.all([
-          axios.get("http://localhost:5000/api/bids"),
-          axios.get("http://localhost:5000/api/participatebids"),
+          axios.get("https://phpserver-v77g.onrender.com/api/bids"),
+          axios.get("https://phpserver-v77g.onrender.com/api/participatebids"),
         ]);
 
         const sevenDaysAgo = new Date();
