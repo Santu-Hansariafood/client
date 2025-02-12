@@ -33,7 +33,6 @@ const SaudaChart = ({ apiUrl }) => {
 
   const processChartData = (data, view) => {
     const groupedData = {};
-
     data.forEach((item) => {
       const dateKey = moment(item.createdAt).format("YYYY-MM-DD");
       if (!groupedData[dateKey]) groupedData[dateKey] = { sauda: 0 };
@@ -51,21 +50,31 @@ const SaudaChart = ({ apiUrl }) => {
     if (view === "weekly") {
       return processed.slice(-7);
     } else if (view === "monthly") {
-      return processed.slice(-30);
-    } else if (view === "quarterly") {
-      return processed.slice(-90);
+      const month = moment().month();
+      const monthKeys = keys.filter((key) => moment(key).month() === month);
+      return monthKeys.map((key) => ({
+        date: key,
+        sauda: groupedData[key].sauda,
+      }));
+    } else if (view === "yearly") {
+      const year = moment().year();
+      const yearKeys = keys.filter((key) => moment(key).year() === year);
+      return yearKeys.map((key) => ({
+        date: key,
+        sauda: groupedData[key].sauda,
+      }));
     } else {
       return processed;
     }
   };
 
   return (
-    <div>
+    <div className="bg-white shadow-md rounded-md p-4">
       <h2 className="text-xl text-center font-semibold mb-4">
         Sauda Count Over Time
       </h2>
-      <div className="flex space-x-4 mb-4">
-        {["weekly", "monthly", "quarterly", "yearly"].map((option) => (
+      <div className="flex space-x-4 mb-4 justify-center">
+        {["weekly", "monthly", "yearly"].map((option) => (
           <label key={option}>
             <input
               type="radio"
@@ -91,7 +100,11 @@ const SaudaChart = ({ apiUrl }) => {
             label={{ value: "Date", position: "insideBottomRight", offset: -5 }}
           />
           <YAxis
-            label={{ value: "Sauda Count", angle: -90, position: "insideLeft" }}
+            label={{
+              value: "Sauda Count",
+              angle: -90,
+              position: "insideLeft",
+            }}
           />
           <Tooltip
             formatter={(value) => [`${value}`, "Sauda"]}

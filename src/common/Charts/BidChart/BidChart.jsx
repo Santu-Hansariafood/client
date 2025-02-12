@@ -33,7 +33,6 @@ const BidChart = ({ apiUrl }) => {
 
   const processChartData = (data, view) => {
     const groupedData = {};
-
     data.forEach((item) => {
       const dateKey = moment(item.createdAt).format("YYYY-MM-DD");
       if (!groupedData[dateKey]) groupedData[dateKey] = { bid: 0 };
@@ -54,17 +53,19 @@ const BidChart = ({ apiUrl }) => {
       return processed.slice(-30);
     } else if (view === "quarterly") {
       return processed.slice(-90);
+    } else if (view === "yearly") {
+      return processed.slice(-365);
     } else {
       return processed;
     }
   };
 
   return (
-    <div>
+    <div className="bg-white shadow-md rounded-md p-4">
       <h2 className="text-xl text-center font-semibold mb-4">
         Bid Count Over Time
       </h2>
-      <div className="flex space-x-4 mb-4">
+      <div className="flex space-x-4 mb-4 justify-center">
         {["weekly", "monthly", "quarterly", "yearly"].map((option) => (
           <label key={option}>
             <input
@@ -91,7 +92,11 @@ const BidChart = ({ apiUrl }) => {
             label={{ value: "Date", position: "insideBottomRight", offset: -5 }}
           />
           <YAxis
-            label={{ value: "Bid Count", angle: -90, position: "insideLeft" }}
+            label={{
+              value: "Bid Count",
+              angle: -90,
+              position: "insideLeft",
+            }}
           />
           <Tooltip
             formatter={(value) => [`${value}`, "Bid"]}
@@ -103,7 +108,7 @@ const BidChart = ({ apiUrl }) => {
           <Line
             type="monotone"
             dataKey="bid"
-            stroke="#2cf005"
+            stroke="#F7DC6F"
             activeDot={{ r: 8 }}
           />
         </LineChart>

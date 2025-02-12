@@ -92,6 +92,9 @@ const LazyPages = {
   ParticipateBid: lazy(() =>
     import("./components/ParticipateBid/ParticipateBid")
   ),
+  ParticipateBidAdmin: lazy(()=>
+  import("./pages/ManageBids/ParticipateBidAdmin/ParticipateBidAdmin")
+),
 };
 
 const CACHE_EXPIRY_TIME = 5 * 60 * 1000;
@@ -221,6 +224,7 @@ const App = () => {
             "/seller-details/list": LazyPages.ListSellerDetails,
             "/manage-bids/buyer": LazyPages.BuyerBid,
             "/manage-bids/bid-list": LazyPages.BidList,
+            "manage-bids/bid-list/participate-bid-admin": LazyPages.ParticipateBidAdmin,
             "/manage-bids/bid-location": LazyPages.BidLocation,
             "/sodabook/add": LazyPages.AddSoudabook,
             "/sodabook/list": LazyPages.ListSoudabook,

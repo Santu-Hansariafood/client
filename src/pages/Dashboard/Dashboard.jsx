@@ -1,14 +1,19 @@
-import { useState, useEffect, useCallback, lazy } from "react";
+import { useState, useEffect, useCallback, lazy, Suspense } from "react";
 import { toast } from "react-toastify";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext/AuthContext";
+import Loading from "../../common/Loading/Loading";
 
-const DashboardLayout = lazy(()=>import("../../layouts/DashboardLayout/DashboardLayout"));
-const Header = lazy(()=>import("../../common/Header/Header"));
-const LogoutConfirmationModal = lazy(()=>import("../../common/LogoutConfirmationModal/LogoutConfirmationModal"));
-const CardGrid = lazy(()=>import("./CardGrid/CardGrid"));
-const ChartSection = lazy(()=>import("./ChartSection/ChartSection"));
+const DashboardLayout = lazy(() =>
+  import("../../layouts/DashboardLayout/DashboardLayout")
+);
+const Header = lazy(() => import("../../common/Header/Header"));
+const LogoutConfirmationModal = lazy(() =>
+  import("../../common/LogoutConfirmationModal/LogoutConfirmationModal")
+);
+const CardGrid = lazy(() => import("./CardGrid/CardGrid"));
+const ChartSection = lazy(() => import("./ChartSection/ChartSection"));
 
 const Dashboard = () => {
   const [showLogoutConfirmation, setShowLogoutConfirmation] = useState(false);
@@ -38,7 +43,7 @@ const Dashboard = () => {
         orders: responses[3].data.length || 0,
       });
     } catch (error) {
-      toast.error("Failed to fetch data counts",error);
+      toast.error("Failed to fetch data counts", error);
     }
   }, []);
 
@@ -53,22 +58,24 @@ const Dashboard = () => {
   }, [logout, navigate]);
 
   return (
-    <DashboardLayout>
-      <Header onLogoutClick={() => setShowLogoutConfirmation(true)} />
-      <main className="px-6 py-8">
-        <p className="text-lg font-medium text-center text-gray-700 mb-6">
-          Admin Report
-        </p>
-        <CardGrid counts={counts} />
-        <ChartSection />
-      </main>
-      {showLogoutConfirmation && (
-        <LogoutConfirmationModal
-          onConfirm={handleLogout}
-          onCancel={() => setShowLogoutConfirmation(false)}
-        />
-      )}
-    </DashboardLayout>
+    <Suspense fallback={<Loading />}>
+      <DashboardLayout>
+        <Header onLogoutClick={() => setShowLogoutConfirmation(true)} />
+        <main className="px-6 py-8">
+          <p className="text-lg font-medium text-center text-gray-700 mb-6">
+            Admin Report
+          </p>
+          <CardGrid counts={counts} />
+          <ChartSection />
+        </main>
+        {showLogoutConfirmation && (
+          <LogoutConfirmationModal
+            onConfirm={handleLogout}
+            onCancel={() => setShowLogoutConfirmation(false)}
+          />
+        )}
+      </DashboardLayout>
+    </Suspense>
   );
 };
 

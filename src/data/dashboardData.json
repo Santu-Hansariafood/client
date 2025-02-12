@@ -79,9 +79,9 @@
       "section": "Manage Bids",
       "icon": "FaGavel",
       "actions": [
-        
         { "name": "Buyer Bid", "link": "/manage-bids/buyer", "icon": "FaHandshake" },
-        { "name": "Bid List ", "link": "/manage-bids/bid-list", "icon": "FaList" },
+        { "name": "Bid List", "link": "/manage-bids/bid-list", "icon": "FaList" },
+        { "name": "Participate Bid", "link": "/manage-bids/bid-list/participate-bid-admin", "icon": "FaUsers" },
         { "name": "Bid Location", "link": "/manage-bids/bid-location", "icon": "FaMapMarkerAlt" }
       ]
     },
@@ -108,6 +108,6 @@
         { "name": "Add Loading Entry", "link": "/Loading-Entry/add-loading-entry", "icon": "FaPlus" },
         { "name": "List Loading Entry", "link": "/Loading-Entry/list-loading-entry", "icon": "FaList" }
       ]
-    }   
+    }
   ]
 }
