@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { useAuth } from "../../context/AuthContext/AuthContext";
 import Loading from "../../common/Loading/Loading";
+
 const Tables = lazy(() => import("../../common/Tables/Tables"));
 const Pagination = lazy(() => import("../../common/Paginations/Paginations"));
 
@@ -11,19 +12,22 @@ const ParticipateBid = () => {
   const { mobile } = useAuth();
   const [bids, setBids] = useState([]);
   const [participations, setParticipations] = useState([]);
+  const [bidStatuses, setBidStatuses] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
   const fetchBidsAndParticipations = async () => {
     try {
-      const [bidsRes, participateRes] = await Promise.all([
+      const [bidsRes, participateRes, confirmBidsRes] = await Promise.all([
         axios.get("https://phpserver-v77g.onrender.com/api/bids"),
         axios.get("https://phpserver-v77g.onrender.com/api/participatebids"),
+        axios.get("https://phpserver-v77g.onrender.com/api/confirm-bid"),
       ]);
 
       setBids(bidsRes.data);
       setParticipations(participateRes.data);
+      setBidStatuses(confirmBidsRes.data);
     } catch (error) {
       console.error("Error fetching data", error);
     }
@@ -47,8 +51,10 @@ const ParticipateBid = () => {
 
           const bidDate = new Date(participation.participationDate);
           bidDate.setHours(0, 0, 0, 0);
-
           if (bidDate < sevenDaysAgo) return null;
+
+          const bidStatus =
+            bidStatuses.find((c) => c.bidId === bid._id)?.status || "Pending";
 
           return [
             index + 1,
@@ -61,7 +67,7 @@ const ParticipateBid = () => {
             participation.rate || "N/A",
             participation.quantity || "N/A",
             new Date(participation.participationDate).toLocaleString(),
-            "Status",
+            bidStatus,
           ];
         })
         .filter((item) => item !== null);
@@ -69,7 +75,7 @@ const ParticipateBid = () => {
       setFilteredData(matchedData);
       setCurrentPage(1);
     }
-  }, [bids, participations, mobile]);
+  }, [bids, participations, bidStatuses, mobile]);
 
   const headers = [
     "Count",
@@ -94,7 +100,7 @@ const ParticipateBid = () => {
       <div className="p-4 sm:p-6 bg-white shadow-md rounded-md w-full max-w-6xl mx-auto">
         <div className="flex justify-between items-center mb-4">
           <button
-            onClick={() => navigate(-1)}
+            onClick={() => navigate(-2)}
             className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition"
           >
             ← Back

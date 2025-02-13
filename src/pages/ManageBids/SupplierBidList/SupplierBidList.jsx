@@ -153,7 +153,7 @@ const SupplierBidList = () => {
       <div className="p-6 bg-gray-100 min-h-screen">
         <div className="flex items-center justify-between mb-4">
           <button
-            onClick={() => navigate(-1)}
+            onClick={() => navigate(-2)}
             className="flex items-center gap-2 px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400"
           >
             <IoArrowBack /> Back

@@ -1,11 +1,12 @@
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import "react-toastify/dist/ReactToastify.css";
-import Tables from "../../../common/Tables/Tables";
-import Pagination from "../../../common/Paginations/Paginations";
-import SearchBox from "../../../common/SearchBox/SearchBox";
+import Loading from "../../../common/Loading/Loading"
+const Tables = lazy(() =>import("../../../common/Tables/Tables"));
+const Pagination = lazy(() =>import("../../../common/Paginations/Paginations"));
+const SearchBox = lazy(() =>import("../../../common/SearchBox/SearchBox"));
 
 const ParticipateBidAdmin = () => {
   const [bids, setBids] = useState([]);
@@ -127,6 +128,7 @@ const ParticipateBidAdmin = () => {
   };
 
   return (
+    <Suspense fallback={<Loading/>}>
     <div className="p-4">
       <h2 className="text-xl font-bold mb-4">Participate Bid Admin</h2>
       <SearchBox
@@ -135,7 +137,7 @@ const ParticipateBidAdmin = () => {
         onSearch={handleSearch}
       />
       {loading ? (
-        <p className="text-center text-gray-500">Loading...</p>
+        <Loading/>
       ) : (
         <>
           <Tables headers={headers} rows={rows} />
@@ -148,6 +150,7 @@ const ParticipateBidAdmin = () => {
         </>
       )}
     </div>
+    </Suspense>
   );
 };
 

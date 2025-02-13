@@ -5,9 +5,13 @@ import axios from "axios";
 
 const Tables = lazy(() => import("../../../common/Tables/Tables"));
 const SearchBox = lazy(() => import("../../../common/SearchBox/SearchBox"));
-const DateSelector = lazy(() => import("../../../common/DateSelector/DateSelector"));
+const DateSelector = lazy(() =>
+  import("../../../common/DateSelector/DateSelector")
+);
 const ViewBid = lazy(() => import("../ViewBidPopup/ViewBidPopup"));
-const BidIntroduction = lazy(() => import("../../../components/BidIntroduction/BidIntroduction"));
+const BidIntroduction = lazy(() =>
+  import("../../../components/BidIntroduction/BidIntroduction")
+);
 import "react-datepicker/dist/react-datepicker.css";
 import Loading from "../../../common/Loading/Loading";
 
@@ -27,8 +31,12 @@ const BidList = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axios.get("https://phpserver-v77g.onrender.com/api/bids");
-        const sortedBids = response.data.sort((a, b) => new Date(b.bidDate) - new Date(a.bidDate));
+        const response = await axios.get(
+          "https://phpserver-v77g.onrender.com/api/bids"
+        );
+        const sortedBids = response.data.sort(
+          (a, b) => new Date(b.bidDate) - new Date(a.bidDate)
+        );
         setBids(sortedBids);
         setFilteredData(sortedBids);
       } catch (error) {
@@ -44,7 +52,9 @@ const BidList = () => {
     let data = [...bids];
 
     if (searchQuery) {
-      data = data.filter((bid) => bid.consignee.toLowerCase().includes(searchQuery.toLowerCase()));
+      data = data.filter((bid) =>
+        bid.consignee.toLowerCase().includes(searchQuery.toLowerCase())
+      );
     }
 
     if (startDate) {
@@ -172,10 +182,12 @@ const BidList = () => {
             </div>
           </>
         )}
-       {selectedBid && (
-  <ViewBid bidId={selectedBid._id} onClose={() => setSelectedBid(null)} />
-)}
-
+        {selectedBid && (
+          <ViewBid
+            bidId={selectedBid._id}
+            onClose={() => setSelectedBid(null)}
+          />
+        )}
       </div>
     </Suspense>
   );
