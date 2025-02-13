@@ -26,7 +26,7 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
         commodity: buyer.commodity || [""],
         brokerage: buyer.brokerage || {},
         consignee: buyer.consignee || [],
-        companyName: buyer.companyName || "", // Changed from [] to ""
+        companyName: buyer.companyName || "",
       });
     }
   }, [buyer]);
@@ -58,8 +58,7 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
           }))
         );
       } catch (error) {
-        console.error("Error fetching data:", error);
-        toast.error("Failed to fetch required data.");
+        toast.error("Failed to fetch required data.", error);
       }
     };
 
@@ -92,7 +91,7 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
   const handleCompanyChange = (selectedCompany) => {
     setFormData((prevData) => ({
       ...prevData,
-      companyName: selectedCompany?.value || "", // Changed to handle single value
+      companyName: selectedCompany?.value || "",
     }));
   };
 
@@ -141,7 +140,7 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
     try {
       const payload = {
         ...formData,
-        companyName: formData.companyName, // Include companyName as a single value
+        companyName: formData.companyName,
       };
       const response = await axios.put(
         `https://phpserver-v77g.onrender.com/api/buyers/${formData._id}`,
@@ -152,7 +151,6 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
     } catch (error) {
       const message =
         error.response?.data?.message || "An error occurred while updating.";
-      console.error("Error updating buyer:", error);
       toast.error(message);
     }
   };
@@ -199,7 +197,6 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
                     }
                     onChange={handleCompanyChange}
                     placeholder="Select Company"
-                    // Removed the isMulti prop
                   />
                 </div>
                 <div>

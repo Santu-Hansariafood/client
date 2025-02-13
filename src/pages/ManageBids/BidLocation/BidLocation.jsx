@@ -22,72 +22,70 @@ const BidLocation = () => {
 
   const fetchBidLocations = async () => {
     try {
-      console.log('Fetching bid locations...');
       const response = await axios.get(API_URL);
-  
-      // Validate response data
       if (Array.isArray(response.data)) {
         setData(response.data);
-        console.log('Fetched data:', response.data);
+        toast.log("Fetched data:", response.data);
       } else {
         throw new Error("Unexpected API response format");
       }
     } catch (error) {
-      console.error('Failed to fetch bid locations:', error.message);
-      toast.error("Failed to fetch bid locations");
+      toast.error("Failed to fetch bid locations:", error.message);
     }
   };
-  
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-  
+
     if (!inputValue.trim()) {
       toast.warning("Input cannot be empty");
       return;
     }
-  
+
     try {
       if (isEditing !== null) {
         const id = data[isEditing]._id;
-        console.log(`Updating bid location with ID: ${id}`);
-        const response = await axios.put(`${API_URL}/${id}`, { name: inputValue });
-  
+        toast.log(`Updating bid location with ID: ${id}`);
+        const response = await axios.put(`${API_URL}/${id}`, {
+          name: inputValue,
+        });
+
         if (response.status === 200) {
           toast.success("Bid location updated successfully");
         } else {
           throw new Error("Failed to update bid location");
         }
       } else {
-        console.log('Creating new bid location with name:', inputValue);
+        toast.log("Creating new bid location with name:", inputValue);
         const response = await axios.post(API_URL, { name: inputValue });
-  
+
         if (response.status === 201) {
           toast.success("Bid location added successfully");
         } else {
           throw new Error("Failed to create bid location");
         }
       }
-  
-      // Reset form state
+
       setInputValue("");
       setIsEditing(null);
-  
-      // Refresh data
+
       fetchBidLocations();
     } catch (error) {
-      console.error('Error saving bid location:', error.message);
-      toast.error(error.response?.data?.message || "Failed to save bid location");
+      toast.error("Error saving bid location:", error.message);
+      toast.error(
+        error.response?.data?.message || "Failed to save bid location"
+      );
     }
   };
-  
+
   const handleDelete = async (index) => {
     const id = data[index]._id;
-    console.log(`Attempting to delete bid location with ID: ${id}`);
-  
+    toast.log(`Attempting to delete bid location with ID: ${id}`);
+
     if (window.confirm("Are you sure you want to delete this entry?")) {
       try {
         const response = await axios.delete(`${API_URL}/${id}`);
-  
+
         if (response.status === 200) {
           toast.success("Bid location deleted successfully");
           fetchBidLocations();
@@ -95,12 +93,13 @@ const BidLocation = () => {
           throw new Error("Failed to delete bid location");
         }
       } catch (error) {
-        console.error('Failed to delete bid location:', error.message);
-        toast.error(error.response?.data?.message || "Failed to delete bid location");
+        toast.error(
+          error.response?.data?.message || "Failed to delete bid location"
+        );
       }
     }
   };
-  
+
   const handleEdit = (index) => {
     setIsEditing(index);
     setInputValue(data[index].name);
@@ -137,8 +136,6 @@ const BidLocation = () => {
       <div className="p-4">
         <ToastContainer position="top-right" autoClose={3000} />
         <h2 className="text-xl font-bold mb-4">Bid Location</h2>
-
-        {/* Form for adding/updating bid location */}
         <form onSubmit={handleSubmit} className="flex space-x-2">
           <DataInput
             placeholder="Enter bid location"
@@ -152,8 +149,6 @@ const BidLocation = () => {
             size="md"
           />
         </form>
-
-        {/* Data Table and Pagination */}
         <div className="mt-8">
           <Tables headers={headers} rows={rows} />
           <Pagination

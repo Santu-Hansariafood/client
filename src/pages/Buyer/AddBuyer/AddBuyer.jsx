@@ -205,233 +205,221 @@ const AddBuyer = () => {
   };
 
   return (
-    <>
-      <Suspense fallback={<Loading />}>
-        <div className="max-w-2xl mx-auto p-6 border rounded-lg shadow-lg bg-white">
-          <h2 className="text-2xl font-semibold mb-6 text-center">
-            {buyerLabels.title}
-          </h2>
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-gray-700 mb-2" htmlFor="name">
-                  {buyerLabels.title_name}
-                </label>
-                <DataInput
-                  name="name"
-                  placeholder="Enter Name"
-                  value={formData.name}
-                  onChange={handleInputChange}
-                  required
-                />
-                {errors.name && (
-                  <p className="text-red-500 text-sm">{errors.name}</p>
-                )}
-              </div>
-              <div>
-                <label
-                  className="block text-gray-700 mb-2"
-                  htmlFor="companyName"
-                >
-                  {buyerLabels.company_name_title}
-                </label>
-                <DataDropdown
-                  name="companyName"
-                  options={companyOptions}
-                  selectedOptions={formData.companyName}
-                  onChange={(selected) =>
-                    handleDropdownChange(selected, { name: "companyName" })
-                  }
-                  placeholder="Select Company Name"
-                  // Removed the isMulti prop
-                />
-              </div>
-              <div>
-                <label className="block text-gray-700 mb-2" htmlFor="group">
-                  {buyerLabels.company_name}
-                </label>
-                <DataDropdown
-                  name="group"
-                  options={groupOptions}
-                  selectedOptions={formData.group}
-                  onChange={(selected) =>
-                    handleDropdownChange(selected, { name: "group" })
-                  }
-                  placeholder="Select Group of Company"
-                />
-              </div>
-              <div>
-                <label className="block text-gray-700 mb-2" htmlFor="password">
-                  {buyerLabels.password_title}
-                </label>
-                <DataInput
-                  name="password"
-                  placeholder="Enter Password"
-                  inputType="password"
-                  value={formData.password}
-                  onChange={handleInputChange}
-                  required
-                  minLength="4"
-                  maxLength="25"
-                />
-              </div>
-              <div>
-                <label className="block text-gray-700 mb-2">
-                  {buyerLabels.mobile_title}
-                </label>
-                {formData.mobile.map((mobile, index) => (
-                  <div key={index} className="flex items-center gap-2 mb-2">
-                    <DataInput
-                      name={`mobile-${index}`}
-                      placeholder="Enter Mobile"
-                      inputType="tel"
-                      value={mobile}
-                      onChange={(e) => handleInputChange(e, index, "mobile")}
-                      required
-                      maxLength="10"
-                      minLength="10"
-                    />
-                    {formData.mobile.length > 1 && (
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveField("mobile", index)}
-                        className="text-red-500"
-                      >
-                        <FaTrash />
-                      </button>
-                    )}
-                  </div>
-                ))}
-                <button
-                  type="button"
-                  onClick={() => handleAddField("mobile")}
-                  className="text-blue-500 flex items-center mt-2"
-                >
-                  <FaPlus className="mr-1" /> {buyerLabels.add_mobile}
-                </button>
-                {errors.mobile && (
-                  <p className="text-red-500 text-sm">{errors.mobile}</p>
-                )}
-              </div>
-              <div>
-                <label className="block text-gray-700 mb-2">
-                  {buyerLabels.email_title}
-                </label>
-                {formData.email.map((email, index) => (
-                  <div key={index} className="flex items-center gap-2 mb-2">
-                    <DataInput
-                      name={`email-${index}`}
-                      placeholder="Enter Email"
-                      inputType="email"
-                      value={email}
-                      onChange={(e) => handleInputChange(e, index, "email")}
-                      required
-                    />
-                    {formData.email.length > 1 && (
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveField("email", index)}
-                        className="text-red-500"
-                      >
-                        <FaTrash />
-                      </button>
-                    )}
-                  </div>
-                ))}
-                <button
-                  type="button"
-                  onClick={() => handleAddField("email")}
-                  className="text-blue-500 flex items-center mt-2"
-                >
-                  <FaPlus className="mr-1" /> {buyerLabels.add_email}
-                </button>
-                {errors.email && (
-                  <p className="text-red-500 text-sm">{errors.email}</p>
-                )}
-              </div>
-              <div>
-                <label className="block text-gray-700 mb-2" htmlFor="commodity">
-                  {buyerLabels.commodity_title}
-                </label>
-                <DataDropdown
-                  name="commodity"
-                  options={commodityOptions}
-                  selectedOptions={formData.commodity}
-                  onChange={(selected) =>
-                    handleDropdownChange(selected, { name: "commodity" })
-                  }
-                  placeholder="Select Commodity"
-                  isMulti
-                />
-                {formData.commodity.map((commodity) => (
-                  <div key={commodity.value} className="mt-4">
-                    <label className="block text-gray-700 mb-2">
-                      {buyerLabels.brokerage_per_ton_title} {commodity.label}
-                    </label>
-                    <DataInput
-                      name={`brokerage-${commodity.value}`}
-                      placeholder={`Enter brokerage for ${commodity.label}`}
-                      value={formData.brokerage[commodity.value]}
-                      onChange={(e) =>
-                        handleBrokerageChange(e, commodity.value)
-                      }
-                      inputType="number"
-                      min="0"
-                      required
-                    />
-                  </div>
-                ))}
-              </div>
-              <div>
-                <label className="block text-gray-700 mb-2" htmlFor="consignee">
-                  {buyerLabels.consignee_title}
-                </label>
-                <DataDropdown
-                  name="consignee"
-                  options={consigneeOptions}
-                  selectedOptions={formData.consignee}
-                  onChange={(selected) =>
-                    handleDropdownChange(selected, { name: "consignee" })
-                  }
-                  placeholder="Select Consignee"
-                  isMulti
-                />
-              </div>
-              <div>
-                <label className="block text-gray-700 mb-2" htmlFor="status">
-                  {buyerLabels.status_title}
-                </label>
-                <DataDropdown
-                  name="status"
-                  options={statusOptions}
-                  selectedOptions={formData.status}
-                  onChange={(selected) =>
-                    handleDropdownChange(selected, { name: "status" })
-                  }
-                  placeholder="Select Status"
-                />
-              </div>
+    <Suspense fallback={<Loading />}>
+      <div className="max-w-2xl mx-auto p-6 border rounded-lg shadow-lg bg-white">
+        <h2 className="text-2xl font-semibold mb-6 text-center">
+          {buyerLabels.title}
+        </h2>
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-gray-700 mb-2" htmlFor="name">
+                {buyerLabels.title_name}
+              </label>
+              <DataInput
+                name="name"
+                placeholder="Enter Name"
+                value={formData.name}
+                onChange={handleInputChange}
+                required
+              />
+              {errors.name && (
+                <p className="text-red-500 text-sm">{errors.name}</p>
+              )}
             </div>
-
-            <div className="flex justify-end">
-              <Buttons
-                label="Submit"
-                type="submit"
-                variant="primary"
-                size="md"
+            <div>
+              <label className="block text-gray-700 mb-2" htmlFor="companyName">
+                {buyerLabels.company_name_title}
+              </label>
+              <DataDropdown
+                name="companyName"
+                options={companyOptions}
+                selectedOptions={formData.companyName}
+                onChange={(selected) =>
+                  handleDropdownChange(selected, { name: "companyName" })
+                }
+                placeholder="Select Company Name"
+                // Removed the isMulti prop
               />
             </div>
-          </form>
-          <ToastContainer
-            position="top-right"
-            autoClose={3000}
-            hideProgressBar
-            closeOnClick
-            pauseOnHover
-          />
-        </div>
-      </Suspense>
-    </>
+            <div>
+              <label className="block text-gray-700 mb-2" htmlFor="group">
+                {buyerLabels.company_name}
+              </label>
+              <DataDropdown
+                name="group"
+                options={groupOptions}
+                selectedOptions={formData.group}
+                onChange={(selected) =>
+                  handleDropdownChange(selected, { name: "group" })
+                }
+                placeholder="Select Group of Company"
+              />
+            </div>
+            <div>
+              <label className="block text-gray-700 mb-2" htmlFor="password">
+                {buyerLabels.password_title}
+              </label>
+              <DataInput
+                name="password"
+                placeholder="Enter Password"
+                inputType="password"
+                value={formData.password}
+                onChange={handleInputChange}
+                required
+                minLength="4"
+                maxLength="25"
+              />
+            </div>
+            <div>
+              <label className="block text-gray-700 mb-2">
+                {buyerLabels.mobile_title}
+              </label>
+              {formData.mobile.map((mobile, index) => (
+                <div key={index} className="flex items-center gap-2 mb-2">
+                  <DataInput
+                    name={`mobile-${index}`}
+                    placeholder="Enter Mobile"
+                    inputType="tel"
+                    value={mobile}
+                    onChange={(e) => handleInputChange(e, index, "mobile")}
+                    required
+                    maxLength="10"
+                    minLength="10"
+                  />
+                  {formData.mobile.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveField("mobile", index)}
+                      className="text-red-500"
+                    >
+                      <FaTrash />
+                    </button>
+                  )}
+                </div>
+              ))}
+              <button
+                type="button"
+                onClick={() => handleAddField("mobile")}
+                className="text-blue-500 flex items-center mt-2"
+              >
+                <FaPlus className="mr-1" /> {buyerLabels.add_mobile}
+              </button>
+              {errors.mobile && (
+                <p className="text-red-500 text-sm">{errors.mobile}</p>
+              )}
+            </div>
+            <div>
+              <label className="block text-gray-700 mb-2">
+                {buyerLabels.email_title}
+              </label>
+              {formData.email.map((email, index) => (
+                <div key={index} className="flex items-center gap-2 mb-2">
+                  <DataInput
+                    name={`email-${index}`}
+                    placeholder="Enter Email"
+                    inputType="email"
+                    value={email}
+                    onChange={(e) => handleInputChange(e, index, "email")}
+                    required
+                  />
+                  {formData.email.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveField("email", index)}
+                      className="text-red-500"
+                    >
+                      <FaTrash />
+                    </button>
+                  )}
+                </div>
+              ))}
+              <button
+                type="button"
+                onClick={() => handleAddField("email")}
+                className="text-blue-500 flex items-center mt-2"
+              >
+                <FaPlus className="mr-1" /> {buyerLabels.add_email}
+              </button>
+              {errors.email && (
+                <p className="text-red-500 text-sm">{errors.email}</p>
+              )}
+            </div>
+            <div>
+              <label className="block text-gray-700 mb-2" htmlFor="commodity">
+                {buyerLabels.commodity_title}
+              </label>
+              <DataDropdown
+                name="commodity"
+                options={commodityOptions}
+                selectedOptions={formData.commodity}
+                onChange={(selected) =>
+                  handleDropdownChange(selected, { name: "commodity" })
+                }
+                placeholder="Select Commodity"
+                isMulti
+              />
+              {formData.commodity.map((commodity) => (
+                <div key={commodity.value} className="mt-4">
+                  <label className="block text-gray-700 mb-2">
+                    {buyerLabels.brokerage_per_ton_title} {commodity.label}
+                  </label>
+                  <DataInput
+                    name={`brokerage-${commodity.value}`}
+                    placeholder={`Enter brokerage for ${commodity.label}`}
+                    value={formData.brokerage[commodity.value]}
+                    onChange={(e) => handleBrokerageChange(e, commodity.value)}
+                    inputType="number"
+                    min="0"
+                    required
+                  />
+                </div>
+              ))}
+            </div>
+            <div>
+              <label className="block text-gray-700 mb-2" htmlFor="consignee">
+                {buyerLabels.consignee_title}
+              </label>
+              <DataDropdown
+                name="consignee"
+                options={consigneeOptions}
+                selectedOptions={formData.consignee}
+                onChange={(selected) =>
+                  handleDropdownChange(selected, { name: "consignee" })
+                }
+                placeholder="Select Consignee"
+                isMulti
+              />
+            </div>
+            <div>
+              <label className="block text-gray-700 mb-2" htmlFor="status">
+                {buyerLabels.status_title}
+              </label>
+              <DataDropdown
+                name="status"
+                options={statusOptions}
+                selectedOptions={formData.status}
+                onChange={(selected) =>
+                  handleDropdownChange(selected, { name: "status" })
+                }
+                placeholder="Select Status"
+              />
+            </div>
+          </div>
+
+          <div className="flex justify-end">
+            <Buttons label="Submit" type="submit" variant="primary" size="md" />
+          </div>
+        </form>
+        <ToastContainer
+          position="top-right"
+          autoClose={3000}
+          hideProgressBar
+          closeOnClick
+          pauseOnHover
+        />
+      </div>
+    </Suspense>
   );
 };
 

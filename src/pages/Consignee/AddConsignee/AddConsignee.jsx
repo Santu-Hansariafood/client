@@ -96,8 +96,7 @@ const AddConsignee = () => {
         });
       }
     } catch (error) {
-      toast.error("Failed to add consignee. Please try again.");
-      console.error(error);
+      toast.error("Failed to add consignee. Please try again.", error);
     }
   };
 

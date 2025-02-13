@@ -55,8 +55,7 @@ const ListGroupOfCompany = () => {
         setGroupsData(uniqueGroups);
         setFilteredData(uniqueGroups);
       } catch (error) {
-        toast.error("Failed to fetch groups");
-        console.error("Error fetching groups:", error);
+        toast.error("Failed to fetch groups", error);
       }
     };
     fetchGroups();
@@ -105,8 +104,7 @@ const ListGroupOfCompany = () => {
         );
         toast.success("Group deleted successfully");
       } catch (error) {
-        toast.error("Failed to delete group");
-        console.error("Error deleting group:", error);
+        toast.error("Failed to delete group", error);
       }
     },
     [filteredData]

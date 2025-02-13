@@ -37,7 +37,7 @@ const BrokerInformation = ({ formData, handleChange }) => {
   }, []);
 
   const renderBrokerageField = (label, value) => (
-    <div>
+    <>
       <label className="block text-sm text-gray-600 mb-1">{label}</label>
       <DataInput
         placeholder={`₹ ${label}`}
@@ -45,7 +45,7 @@ const BrokerInformation = ({ formData, handleChange }) => {
         value={`₹ ${value || ""}`}
         readOnly
       />
-    </div>
+    </>
   );
 
   const sellerBrokerage = formData.supplierBrokerage?.find(
@@ -53,7 +53,7 @@ const BrokerInformation = ({ formData, handleChange }) => {
   )?.brokerage;
 
   return (
-    <div>
+    <>
       <label className="block mb-2 text-lg font-semibold text-gray-700">
         Broker Information
       </label>
@@ -90,7 +90,7 @@ const BrokerInformation = ({ formData, handleChange }) => {
           sellerBrokerage || "N/A"
         )}
       </div>
-    </div>
+    </>
   );
 };
 

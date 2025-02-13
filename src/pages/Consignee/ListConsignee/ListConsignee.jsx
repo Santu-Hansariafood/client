@@ -1,5 +1,6 @@
 import { useState, useEffect, lazy, Suspense } from "react";
 import axios from "axios";
+import { toast } from "react-toastify";
 import Loading from "../../../common/Loading/Loading";
 const Tables = lazy(() => import("../../../common/Tables/Tables"));
 const Actions = lazy(() => import("../../../common/Actions/Actions"));
@@ -40,7 +41,7 @@ const ListConsignee = () => {
         setConsigneeData(sortedData);
         setLoading(false);
       } catch (error) {
-        console.error("Error fetching consignees:", error);
+        toast.error("Error fetching consignees:", error);
         setLoading(false);
       }
     };
@@ -70,7 +71,7 @@ const ListConsignee = () => {
       setConsigneeData(updatedConsignees);
       setIsEditPopupOpen(false);
     } catch (error) {
-      console.error("Error updating consignee:", error);
+      toast.error("Error updating consignee:", error);
     }
   };
 
@@ -90,7 +91,7 @@ const ListConsignee = () => {
       setConsigneeData(updatedConsignees);
       setIsPopupOpen(false);
     } catch (error) {
-      console.error("Error deleting consignee:", error);
+      toast.error("Error deleting consignee:", error);
     }
   };
 

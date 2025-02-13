@@ -15,7 +15,6 @@ const EditSellerDetails = lazy(() =>
   import("../EditSellerDetails/EditSellerDetails")
 );
 
-// Utility function to convert a string to Title Case
 const toTitleCase = (str) => {
   return str
     .toLowerCase()
@@ -39,12 +38,11 @@ const ListSellerDetails = () => {
     const fetchSellers = async () => {
       try {
         const response = await axios.get(`${apiBaseURL}/sellers`);
-        // Format seller names and company names to Title Case
         const formattedData = response.data.map((seller) => ({
           ...seller,
           sellerName: toTitleCase(seller.sellerName),
           companies: seller.companies.map((company) => toTitleCase(company)),
-          emails: seller.emails.map((email) => email.value.toLowerCase()), // Emails in lowercase
+          emails: seller.emails.map((email) => email.value.toLowerCase()),
         }));
         const sortedData = formattedData.sort((a, b) =>
           a.sellerName.localeCompare(b.sellerName)
@@ -92,8 +90,8 @@ const ListSellerDetails = () => {
     .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
     .map((item, index) => [
       (currentPage - 1) * itemsPerPage + index + 1,
-      item.sellerName, // Already formatted to Title Case
-      item.emails.join(", "), // Emails already in lowercase
+      item.sellerName,
+      item.emails.join(", "),
       item.phoneNumbers.map((phone) => phone.value).join(", "),
       item.commodities
         .map(
@@ -103,8 +101,8 @@ const ListSellerDetails = () => {
             } per ton)`
         )
         .join(", "),
-      item.companies.join(", "), // Already formatted to Title Case
-      toTitleCase(item.selectedStatus), // Status in Title Case
+      item.companies.join(", "),
+      toTitleCase(item.selectedStatus),
       <Actions
         key={item._id}
         onView={() => {
@@ -152,7 +150,11 @@ const ListSellerDetails = () => {
 
         {isPopupOpen && (
           <PopupBox
-            title={popupMode === "view" ? "View Seller Details" : "Edit Seller Details"}
+            title={
+              popupMode === "view"
+                ? "View Seller Details"
+                : "Edit Seller Details"
+            }
             isOpen={isPopupOpen}
             onClose={handlePopupClose}
           >
@@ -204,7 +206,7 @@ const ListSellerDetails = () => {
 
             {popupMode === "edit" && selectedSeller && (
               <EditSellerDetails
-                sellerId={selectedSeller._id} // Pass the seller ID to EditSellerDetails
+                sellerId={selectedSeller._id}
                 onClose={handlePopupClose}
               />
             )}

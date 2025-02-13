@@ -40,8 +40,7 @@ const BidList = () => {
         setBids(sortedBids);
         setFilteredData(sortedBids);
       } catch (error) {
-        setError("Error fetching data. Please try again later.");
-        console.error("Error:", error);
+        setError("Error fetching data. Please try again later.", error);
       }
     };
 

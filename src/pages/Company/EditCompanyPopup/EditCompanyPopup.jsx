@@ -30,7 +30,9 @@ const EditCompanyPopup = ({ company, isOpen, onClose, onUpdate }) => {
           await Promise.all([
             axios.get("https://phpserver-v77g.onrender.com/api/consignees"),
             axios.get("https://phpserver-v77g.onrender.com/api/commodities"),
-            axios.get("https://phpserver-v77g.onrender.com/api/quality-parameters"),
+            axios.get(
+              "https://phpserver-v77g.onrender.com/api/quality-parameters"
+            ),
             axios.get("https://phpserver-v77g.onrender.com/api/groups"),
           ]);
         setConsignees(consigneeRes.data);
@@ -38,8 +40,7 @@ const EditCompanyPopup = ({ company, isOpen, onClose, onUpdate }) => {
         setQualityParameters(parameterRes.data);
         setGroups(groupRes.data);
       } catch (error) {
-        console.error("Error fetching data:", error);
-        toast.error("Failed to load required data.");
+        toast.error("Failed to load required data.", error);
       }
     };
 
@@ -88,7 +89,11 @@ const EditCompanyPopup = ({ company, isOpen, onClose, onUpdate }) => {
     setFormData({ ...formData, commodities: updatedCommodities });
   };
 
-  const handleParameterValueChange = (commodityIndex, parameterIndex, value) => {
+  const handleParameterValueChange = (
+    commodityIndex,
+    parameterIndex,
+    value
+  ) => {
     const updatedCommodities = [...formData.commodities];
     updatedCommodities[commodityIndex].parameters[parameterIndex].value = value;
     setFormData({ ...formData, commodities: updatedCommodities });
@@ -111,8 +116,7 @@ const EditCompanyPopup = ({ company, isOpen, onClose, onUpdate }) => {
       toast.success("Company updated successfully.");
       onClose();
     } catch (error) {
-      console.error("Error updating company:", error);
-      toast.error("Failed to update company.");
+      toast.error("Failed to update company.", error);
     }
   };
 
@@ -133,7 +137,6 @@ const EditCompanyPopup = ({ company, isOpen, onClose, onUpdate }) => {
 
           <form onSubmit={handleSubmit}>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {/* Company Name */}
               <div>
                 <label className="block text-sm font-medium text-gray-700">
                   Company Name
@@ -146,8 +149,6 @@ const EditCompanyPopup = ({ company, isOpen, onClose, onUpdate }) => {
                   required
                 />
               </div>
-
-              {/* Group */}
               <div>
                 <label className="block text-sm font-medium text-gray-700">
                   Group
@@ -173,8 +174,6 @@ const EditCompanyPopup = ({ company, isOpen, onClose, onUpdate }) => {
                   placeholder="Select Group"
                 />
               </div>
-
-              {/* Consignees */}
               <div>
                 <label className="block text-sm font-medium text-gray-700">
                   Consignees
@@ -200,8 +199,6 @@ const EditCompanyPopup = ({ company, isOpen, onClose, onUpdate }) => {
                   placeholder="Select Consignees"
                 />
               </div>
-
-              {/* Commodities */}
               <div className="col-span-2">
                 <label className="block text-sm font-medium text-gray-700">
                   Commodities

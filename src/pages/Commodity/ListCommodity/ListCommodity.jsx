@@ -1,6 +1,7 @@
 import { useState, useEffect, lazy, Suspense } from "react";
 import axios from "axios";
 import Loading from "../../../common/Loading/Loading";
+import { toast } from "react-toastify";
 
 const Tables = lazy(() => import("../../../common/Tables/Tables"));
 const Actions = lazy(() => import("../../../common/Actions/Actions"));
@@ -30,7 +31,7 @@ const ListCommodity = () => {
         setCommodities(sortedCommodities);
         setFilteredCommodities(sortedCommodities);
       } catch (error) {
-        console.error("Error fetching commodities:", error);
+        toast.error("Error fetching commodities:", error);
       } finally {
         setIsLoading(false);
       }
@@ -59,7 +60,7 @@ const ListCommodity = () => {
       setSelectedCommodity(response.data);
       setIsPopupOpen(true);
     } catch (error) {
-      console.error("Error fetching commodity details:", error);
+      toast.error("Error fetching commodity details:", error);
     }
   };
 
@@ -70,7 +71,9 @@ const ListCommodity = () => {
 
   const handleDelete = async (id) => {
     try {
-      const confirmDelete = window.confirm("Are you sure you want to delete this commodity?");
+      const confirmDelete = window.confirm(
+        "Are you sure you want to delete this commodity?"
+      );
       if (!confirmDelete) return;
 
       await axios.delete(
@@ -85,8 +88,7 @@ const ListCommodity = () => {
 
       alert("Commodity deleted successfully!");
     } catch (error) {
-      console.error("Error deleting commodity:", error);
-      alert("Failed to delete the commodity. Please try again.");
+      toast.error("Error deleting commodity:", error);
     }
   };
 

@@ -148,8 +148,7 @@ const EditSellerCompany = ({ company, onSave, onCancel }) => {
       toast.success("Seller company updated successfully!");
       onSave(response.data);
     } catch (error) {
-      console.error(error);
-      toast.error("Failed to update seller company. Please try again.");
+      toast.error("Failed to update seller company. Please try again.", error);
     }
   };
 

@@ -150,7 +150,6 @@ const AddSellerDetails = () => {
     try {
       const response = await axios.post(`${apiBaseURL}/sellers`, payload);
       toast.success("Seller details submitted successfully!");
-      console.log(response);
       resetForm();
     } catch (error) {
       toast.error(

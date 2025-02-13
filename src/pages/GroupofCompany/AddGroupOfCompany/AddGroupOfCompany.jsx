@@ -26,10 +26,8 @@ const AddGroupOfCompany = () => {
       });
       toast.success("Group added successfully");
       setGroupName("");
-      // console.log(response.data);
     } catch (error) {
       toast.error(error.response?.data?.message || "Failed to add group");
-      console.error("Error adding group:", error);
     }
   };
 

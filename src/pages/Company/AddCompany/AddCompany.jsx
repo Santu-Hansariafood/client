@@ -175,118 +175,111 @@ const AddCompany = () => {
   ]);
 
   return (
-    <>
-      <Suspense fallback={<Loading />}>
-        <ToastContainer />
-        <div className="flex items-center justify-center min-h-screen bg-gray-50 p-4 sm:p-8">
-          <div className="bg-white p-8 rounded-lg shadow-xl w-full max-w-4xl">
-            <h2 className="text-3xl font-semibold text-center mb-8 text-gray-800">
-              {addCompanyLable.company_title}
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="text-sm font-medium text-gray-600 mb-1">
-                  {addCompanyLable.company_name}
-                </label>
-                <DataInput
-                  placeholder="Enter company name"
-                  value={companyName}
-                  onChange={(e) => setCompanyName(e.target.value)}
-                  required
-                />
-              </div>
-              <div>
-                <label className="text-sm font-medium text-gray-600 mb-1">
-                  {addCompanyLable.company_email}
-                </label>
-                <DataInput
-                  placeholder="Enter company email"
-                  value={companyEmail}
-                  onChange={(e) => setCompanyEmail(e.target.value)}
-                  inputType="email"
-                  required
-                />
-              </div>
-              <div>
-                <label className="text-sm font-medium text-gray-600 mb-1">
-                  {addCompanyLable.consignee_title}
-                </label>
-                <DataDropdown
-                  options={consigneeOptions}
-                  selectedOptions={selectedConsignee}
-                  onChange={setSelectedConsignee}
-                  placeholder="Select consignee"
-                  isMulti
-                />
-              </div>
-              <div>
-                <label className="text-sm font-medium text-gray-600 mb-1">
-                  {addCompanyLable.group_title}
-                </label>
-                <DataDropdown
-                  options={groupOptions}
-                  selectedOptions={selectedGroup}
-                  onChange={setSelectedGroup}
-                  placeholder="Select group"
-                />
-              </div>
-              {selectedCommodities.map((entry, index) => (
-                <div
-                  key={index}
-                  className="col-span-1 md:col-span-2 bg-gray-100 p-4 rounded-md shadow-inner mt-4"
-                >
-                  <label className="text-sm font-medium text-gray-600 mb-2 block">
-                    {addCompanyLable.quality_of_commodity}
-                  </label>
-                  <DataDropdown
-                    options={availableCommodities}
-                    selectedOptions={entry.commodity}
-                    onChange={(commodity) =>
-                      handleCommodityChange(index, commodity)
-                    }
-                    placeholder="Select commodity"
-                  />
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
-                    {entry.parameters.map((param, paramIndex) => (
-                      <div key={param.parameter}>
-                        <label className="text-xs font-medium text-gray-500">
-                          {param.parameter}
-                        </label>
-                        <DataInput
-                          placeholder={`Enter ${param.parameter}`}
-                          value={param.value}
-                          onChange={(e) =>
-                            handleParameterChange(
-                              index,
-                              paramIndex,
-                              e.target.value
-                            )
-                          }
-                        />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-            <button
-              onClick={handleAddCommodity}
-              className="flex items-center text-blue-600 hover:text-blue-800 mt-6"
-            >
-              <FaPlus className="mr-2" />{" "}
-              {addCompanyLable.add_another_commodity}
-            </button>
-            <div className="mt-10 text-center">
-              <Buttons
-                label="Submit"
-                onClick={handleSubmit}
-                variant="primary"
+    <Suspense fallback={<Loading />}>
+      <ToastContainer />
+      <div className="flex items-center justify-center min-h-screen bg-gray-50 p-4 sm:p-8">
+        <div className="bg-white p-8 rounded-lg shadow-xl w-full max-w-4xl">
+          <h2 className="text-3xl font-semibold text-center mb-8 text-gray-800">
+            {addCompanyLable.company_title}
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="text-sm font-medium text-gray-600 mb-1">
+                {addCompanyLable.company_name}
+              </label>
+              <DataInput
+                placeholder="Enter company name"
+                value={companyName}
+                onChange={(e) => setCompanyName(e.target.value)}
+                required
               />
             </div>
+            <div>
+              <label className="text-sm font-medium text-gray-600 mb-1">
+                {addCompanyLable.company_email}
+              </label>
+              <DataInput
+                placeholder="Enter company email"
+                value={companyEmail}
+                onChange={(e) => setCompanyEmail(e.target.value)}
+                inputType="email"
+                required
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium text-gray-600 mb-1">
+                {addCompanyLable.consignee_title}
+              </label>
+              <DataDropdown
+                options={consigneeOptions}
+                selectedOptions={selectedConsignee}
+                onChange={setSelectedConsignee}
+                placeholder="Select consignee"
+                isMulti
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium text-gray-600 mb-1">
+                {addCompanyLable.group_title}
+              </label>
+              <DataDropdown
+                options={groupOptions}
+                selectedOptions={selectedGroup}
+                onChange={setSelectedGroup}
+                placeholder="Select group"
+              />
+            </div>
+            {selectedCommodities.map((entry, index) => (
+              <div
+                key={index}
+                className="col-span-1 md:col-span-2 bg-gray-100 p-4 rounded-md shadow-inner mt-4"
+              >
+                <label className="text-sm font-medium text-gray-600 mb-2 block">
+                  {addCompanyLable.quality_of_commodity}
+                </label>
+                <DataDropdown
+                  options={availableCommodities}
+                  selectedOptions={entry.commodity}
+                  onChange={(commodity) =>
+                    handleCommodityChange(index, commodity)
+                  }
+                  placeholder="Select commodity"
+                />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+                  {entry.parameters.map((param, paramIndex) => (
+                    <div key={param.parameter}>
+                      <label className="text-xs font-medium text-gray-500">
+                        {param.parameter}
+                      </label>
+                      <DataInput
+                        placeholder={`Enter ${param.parameter}`}
+                        value={param.value}
+                        onChange={(e) =>
+                          handleParameterChange(
+                            index,
+                            paramIndex,
+                            e.target.value
+                          )
+                        }
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+          <button
+            onClick={handleAddCommodity}
+            className="flex items-center text-blue-600 hover:text-blue-800 mt-6"
+          >
+            <FaPlus className="mr-2" /> {addCompanyLable.add_another_commodity}
+          </button>
+          <div className="mt-10 text-center">
+            <Buttons label="Submit" onClick={handleSubmit} variant="primary" />
           </div>
         </div>
-      </Suspense>
-    </>
+      </div>
+    </Suspense>
   );
 };
 

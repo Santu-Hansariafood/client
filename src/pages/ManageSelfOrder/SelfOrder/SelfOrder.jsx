@@ -113,7 +113,7 @@ const SelfOrder = () => {
       toast.error("Failed to generate Sauda No.", {
         position: toast.POSITION.TOP_RIGHT,
       });
-      console.error("Error generating Sauda No:", error.message);
+      toast.error("Error generating Sauda No:", error.message);
       throw error;
     }
   };
@@ -124,7 +124,7 @@ const SelfOrder = () => {
     try {
       const saudaNo = await generateSaudaNo();
       const payload = { ...formData, saudaNo };
-      console.log("Payload being sent to server:", payload);
+      toast.log("Payload being sent to server:", payload);
       await axios.post(API_BASE_URL, payload);
 
       resetForm();
@@ -140,7 +140,6 @@ const SelfOrder = () => {
       toast.error("Failed to create order.", {
         position: toast.POSITION.TOP_RIGHT,
       });
-      console.error("Error creating order:", error.message);
     } finally {
       setIsLoading(false);
     }

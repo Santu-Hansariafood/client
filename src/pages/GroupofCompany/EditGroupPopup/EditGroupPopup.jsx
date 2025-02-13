@@ -32,8 +32,7 @@ const EditGroupPopup = ({ isOpen, group, onClose, onUpdate }) => {
       toast.success("Group updated successfully");
       onClose();
     } catch (error) {
-      toast.error("Failed to update group");
-      console.error("Error updating group:", error);
+      toast.error("Failed to update group", error);
     }
   };
 

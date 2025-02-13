@@ -1,5 +1,6 @@
 import { useState, useEffect, lazy, Suspense } from "react";
 import PropTypes from "prop-types";
+import { toast } from "react-toastify";
 const Tables = lazy(() => import("../../../common/Tables/Tables"));
 const SearchBox = lazy(() => import("../../../common/SearchBox/SearchBox"));
 const DateSelector = lazy(() =>
@@ -30,7 +31,7 @@ const BidList = () => {
         setBids(data);
         setFilteredData(data);
       } catch (error) {
-        console.error("Error fetching bids:", error);
+        toast.error("Error fetching bids:", error);
       }
     };
 
@@ -40,7 +41,7 @@ const BidList = () => {
         const data = await response.json();
         setCommodities(data);
       } catch (error) {
-        console.error("Error fetching commodities:", error);
+        toast.error("Error fetching commodities:", error);
       }
     };
 
@@ -50,7 +51,7 @@ const BidList = () => {
         const data = await response.json();
         setOrigins(data);
       } catch (error) {
-        console.error("Error fetching origins:", error);
+        toast.error("Error fetching origins:", error);
       }
     };
 

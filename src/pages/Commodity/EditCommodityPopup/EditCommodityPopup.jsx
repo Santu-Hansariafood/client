@@ -1,7 +1,8 @@
 import PropTypes from "prop-types";
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
+import Loading from "../../../common/Loading/Loading";
 
 const EditCommodityPopup = ({ isOpen, onClose, commodityId, onUpdate }) => {
   const [commodity, setCommodity] = useState(null);
@@ -19,7 +20,7 @@ const EditCommodityPopup = ({ isOpen, onClose, commodityId, onUpdate }) => {
         );
         setCommodity(response.data);
       } catch (error) {
-        console.error("Error fetching commodity:", error);
+        toast.error("Error fetching commodity:", error);
       } finally {
         setIsLoading(false);
       }
@@ -32,7 +33,7 @@ const EditCommodityPopup = ({ isOpen, onClose, commodityId, onUpdate }) => {
         );
         setQualityOptions(response.data);
       } catch (error) {
-        console.error("Error fetching quality parameters:", error);
+        toast.error("Error fetching quality parameters:", error);
       }
     };
 
@@ -94,8 +95,7 @@ const EditCommodityPopup = ({ isOpen, onClose, commodityId, onUpdate }) => {
       toast.success("Commodity updated successfully!");
       onClose();
     } catch (error) {
-      console.error("Error updating commodity:", error);
-      toast.error("Failed to update commodity. Please try again.");
+      toast.error("Failed to update commodity. Please try again.", error);
     } finally {
       setIsLoading(false);
     }
@@ -109,103 +109,107 @@ const EditCommodityPopup = ({ isOpen, onClose, commodityId, onUpdate }) => {
   );
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white w-full max-w-lg p-6 rounded-lg shadow-lg">
-        <h3 className="text-xl font-semibold mb-4">Edit Commodity</h3>
-        {isLoading ? (
-          <p>Loading...</p>
-        ) : (
-          commodity && (
-            <>
-              <div className="mb-4">
-                <label className="block font-medium">Name:</label>
-                <input
-                  type="text"
-                  name="name"
-                  value={commodity.name || ""}
-                  onChange={handleChange}
-                  className="w-full border px-2 py-1 rounded"
-                  placeholder="Enter commodity name"
-                  required
-                />
-              </div>
-              <div className="mb-4">
-                <label className="block font-medium">HSN Code:</label>
-                <input
-                  type="text"
-                  name="hsnCode"
-                  value={commodity.hsnCode || ""}
-                  onChange={handleChange}
-                  className="w-full border px-2 py-1 rounded"
-                  placeholder="Enter HSN Code"
-                />
-              </div>
-              <div className="mb-4">
-                <label className="block font-medium">Quality Parameters:</label>
-                <ul className="list-disc pl-5">
-                  {commodity.parameters?.map((param, index) => (
-                    <li key={index} className="mb-2 flex items-center">
-                      <input
-                        type="text"
-                        value={param.parameter}
-                        onChange={(e) =>
-                          handleEditParameter(index, e.target.value)
-                        }
-                        className="border px-2 py-1 rounded w-full"
-                        placeholder="Parameter name"
-                      />
-                      <button
-                        onClick={() => handleRemoveParameter(index)}
-                        className="ml-2 text-red-500 hover:text-red-700"
-                      >
-                        Remove
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-                <div className="flex mt-2 items-center">
-                  <select
-                    value={newQuality}
-                    onChange={(e) => setNewQuality(e.target.value)}
-                    className="border px-2 py-1 rounded w-full"
-                  >
-                    <option value="">Select Quality</option>
-                    {availableOptions.map((option) => (
-                      <option key={option._id} value={option._id}>
-                        {option.name}
-                      </option>
+    <Suspense fallback={<Loading />}>
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="bg-white w-full max-w-lg p-6 rounded-lg shadow-lg">
+          <h3 className="text-xl font-semibold mb-4">Edit Commodity</h3>
+          {isLoading ? (
+            <p>Loading...</p>
+          ) : (
+            commodity && (
+              <>
+                <div className="mb-4">
+                  <label className="block font-medium">Name:</label>
+                  <input
+                    type="text"
+                    name="name"
+                    value={commodity.name || ""}
+                    onChange={handleChange}
+                    className="w-full border px-2 py-1 rounded"
+                    placeholder="Enter commodity name"
+                    required
+                  />
+                </div>
+                <div className="mb-4">
+                  <label className="block font-medium">HSN Code:</label>
+                  <input
+                    type="text"
+                    name="hsnCode"
+                    value={commodity.hsnCode || ""}
+                    onChange={handleChange}
+                    className="w-full border px-2 py-1 rounded"
+                    placeholder="Enter HSN Code"
+                  />
+                </div>
+                <div className="mb-4">
+                  <label className="block font-medium">
+                    Quality Parameters:
+                  </label>
+                  <ul className="list-disc pl-5">
+                    {commodity.parameters?.map((param, index) => (
+                      <li key={index} className="mb-2 flex items-center">
+                        <input
+                          type="text"
+                          value={param.parameter}
+                          onChange={(e) =>
+                            handleEditParameter(index, e.target.value)
+                          }
+                          className="border px-2 py-1 rounded w-full"
+                          placeholder="Parameter name"
+                        />
+                        <button
+                          onClick={() => handleRemoveParameter(index)}
+                          className="ml-2 text-red-500 hover:text-red-700"
+                        >
+                          Remove
+                        </button>
+                      </li>
                     ))}
-                  </select>
+                  </ul>
+                  <div className="flex mt-2 items-center">
+                    <select
+                      value={newQuality}
+                      onChange={(e) => setNewQuality(e.target.value)}
+                      className="border px-2 py-1 rounded w-full"
+                    >
+                      <option value="">Select Quality</option>
+                      {availableOptions.map((option) => (
+                        <option key={option._id} value={option._id}>
+                          {option.name}
+                        </option>
+                      ))}
+                    </select>
+                    <button
+                      onClick={handleAddParameter}
+                      className="ml-2 bg-green-500 text-white px-4 py-1 rounded"
+                    >
+                      Add
+                    </button>
+                  </div>
+                </div>
+                <div className="flex justify-end">
                   <button
-                    onClick={handleAddParameter}
-                    className="ml-2 bg-green-500 text-white px-4 py-1 rounded"
+                    onClick={handleSave}
+                    className={`bg-blue-500 text-white px-4 py-2 rounded ${
+                      isLoading ? "opacity-50 cursor-not-allowed" : ""
+                    }`}
+                    disabled={isLoading}
                   >
-                    Add
+                    {isLoading ? "Saving..." : "Save"}
+                  </button>
+                  <button
+                    onClick={onClose}
+                    className="ml-4 text-gray-500 hover:text-gray-700"
+                  >
+                    Cancel
                   </button>
                 </div>
-              </div>
-              <div className="flex justify-end">
-                <button
-                  onClick={handleSave}
-                  className={`bg-blue-500 text-white px-4 py-2 rounded ${
-                    isLoading ? "opacity-50 cursor-not-allowed" : ""
-                  }`}
-                  disabled={isLoading}
-                >
-                  {isLoading ? "Saving..." : "Save"}
-                </button>
-                <button
-                  onClick={onClose}
-                  className="ml-4 text-gray-500 hover:text-gray-700"
-                >
-                  Cancel
-                </button>
-              </div>
-            </>
-          )
-        )}
+              </>
+            )
+          )}
+        </div>
       </div>
-    </div>
+    </Suspense>
   );
 };
 

@@ -41,8 +41,7 @@ const BuyerList = () => {
         setBuyersData(sortedData);
         setFilteredData(sortedData);
       } catch (error) {
-        toast.error("Failed to fetch buyers data");
-        console.error("Error fetching buyers data:", error);
+        toast.error("Failed to fetch buyers data", error);
       }
     };
     fetchBuyersData();
@@ -78,7 +77,7 @@ const BuyerList = () => {
     const actualIndex = firstItemIndex + index;
     setSelectedBuyer(filteredData[actualIndex]);
     setIsEditPopupOpen(true);
-  };  
+  };
 
   const handleDelete = async (index) => {
     const buyerToDelete = filteredData[index];
@@ -91,8 +90,7 @@ const BuyerList = () => {
       setFilteredData(updatedData);
       toast.success("Buyer deleted successfully");
     } catch (error) {
-      toast.error("Failed to delete buyer. Please try again.");
-      console.error("Error deleting buyer:", error);
+      toast.error("Failed to delete buyer. Please try again.", error);
     }
   };
 
