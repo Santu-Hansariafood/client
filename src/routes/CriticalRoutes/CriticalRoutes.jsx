@@ -47,6 +47,7 @@ const CriticalRoutes = () => {
           </PrivateRoute>
         }
       />
+      <Route path="*" element={<LazyPages.NotFound />} />
     </Routes>
   );
 };

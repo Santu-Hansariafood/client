@@ -208,6 +208,9 @@ const ViewBidPopup = ({ bidId, onClose }) => {
                 <strong>Delivery:</strong> {bidDetails.delivery}{" "}
                 <strong> Days</strong>
               </p>
+              <p>
+                <strong>Notes: - </strong> {bidDetails.notes}
+              </p>
             </div>
             <button
               onClick={generatePDF}

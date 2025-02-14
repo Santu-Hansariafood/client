@@ -1,37 +1,41 @@
+import { lazy, Suspense } from "react";
 import { BrowserRouter } from "react-router-dom";
 import { HelmetProvider, Helmet } from "react-helmet-async";
 import { AuthProvider } from "./context/AuthContext/AuthContext";
 import Loading from "./common/Loading/Loading";
-import CacheHandler from "./utils/CacheHandler/CacheHandler";
-import KeepAlive from "./utils/KeepAlive/KeepAlive";
-import CriticalRoutes from "./routes/CriticalRoutes/CriticalRoutes";
-import PrivateRoutes from "./routes/PrivateRoutes/PrivateRoutes";
-import { Suspense } from "react";
 import "./App.css";
 
+const CacheHandler = lazy(() => import("./utils/CacheHandler/CacheHandler"));
+const KeepAlive = lazy(() => import("./utils/KeepAlive/KeepAlive"));
+const CriticalRoutes = lazy(() =>
+  import("./routes/CriticalRoutes/CriticalRoutes")
+);
+const PrivateRoutes = lazy(() =>
+  import("./routes/PrivateRoutes/PrivateRoutes")
+);
+
 const App = () => {
-  const hydrated = CacheHandler();
-
   return (
-    <HelmetProvider>
-      <AuthProvider>
-        <Helmet>
-          <title>Hansaria Food Private Limited - Premium Food Products</title>
-          <meta
-            name="description"
-            content="Hansaria Food Private Limited specializes in premium food products."
-          />
-        </Helmet>
+    <Suspense fallback={<Loading />}>
+      <HelmetProvider>
+        <AuthProvider>
+          <Helmet>
+            <title>Hansaria Food Private Limited</title>
+            <meta
+              name="description"
+              content="Hansaria Food Private Limited specializes in premium food products."
+            />
+          </Helmet>
 
-        <BrowserRouter>
-          <Suspense fallback={<Loading />}>
+          <BrowserRouter>
+            <CacheHandler />
             <KeepAlive />
             <CriticalRoutes />
-            <PrivateRoutes hydrated={hydrated} />
-          </Suspense>
-        </BrowserRouter>
-      </AuthProvider>
-    </HelmetProvider>
+            <PrivateRoutes />
+          </BrowserRouter>
+        </AuthProvider>
+      </HelmetProvider>
+    </Suspense>
   );
 };
 

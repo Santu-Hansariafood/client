@@ -36,6 +36,8 @@ const LazyPages = {
   ParticipateBid: lazy(() => import("../../components/ParticipateBid/ParticipateBid")),
   ParticipateBidAdmin: lazy(() => import("../../pages/ManageBids/ParticipateBidAdmin/ParticipateBidAdmin")),
   ConfirmBids: lazy(() => import("../../components/ConfirmBids/ConfirmBids")),
+//at the end it need to used
+  NotFound: lazy(() => import("../../pages/NotFound/NotFound"))
 };
 
 export default LazyPages;
