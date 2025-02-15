@@ -5,6 +5,7 @@ import {
   AiOutlineCheckCircle,
   AiOutlineCloseCircle,
 } from "react-icons/ai";
+import loginLable from "../../language/en/login";
 
 const generateCaptcha = () => {
   const chars =
@@ -43,7 +44,7 @@ const generateCaptcha = () => {
         <text
           x="${10 + index * 20}"
           y="35"
-          font-family="Roboto Flex"
+          font-family="Courier New"
           font-size="24"
           fill="rgba(0, 0, 0, 0.3)"
           dx="2" dy="2"
@@ -116,14 +117,14 @@ const Captcha = ({ onValidate }) => {
         size={24}
         className="text-blue-500 cursor-pointer"
         onClick={refreshCaptcha}
-        title="Refresh CAPTCHA"
+        title={loginLable.refreshCaptcha}
       />
       <div className="flex items-center gap-2">
         <input
           type="text"
           value={captchaInput}
           onChange={(e) => setCaptchaInput(e.target.value)}
-          placeholder="Enter CAPTCHA"
+          placeholder={loginLable.enter_captcha}
           maxLength={6}
           minLength={6}
           className="p-2 w-40 rounded-lg border border-gray-300 shadow-sm focus:outline-none focus:border-blue-500"
@@ -132,14 +133,14 @@ const Captcha = ({ onValidate }) => {
           <AiOutlineCheckCircle
             size={24}
             className="text-green-500"
-            title="Valid CAPTCHA"
+            title={loginLable.valid_capcha}
           />
         )}
         {isValid === false && (
           <AiOutlineCloseCircle
             size={24}
             className="text-red-500"
-            title="Invalid CAPTCHA"
+            title={loginLable.invalid_capcha}
           />
         )}
       </div>

@@ -4,6 +4,9 @@ import { useAuth } from "../../context/AuthContext/AuthContext";
 import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
 import axios from "axios";
 import Loading from "../../common/Loading/Loading";
+import loginLable from "../../language/en/login";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const DataInput = lazy(() => import("../../common/DataInput/DataInput"));
 const Buttons = lazy(() => import("../../common/Buttons/Buttons"));
@@ -26,11 +29,11 @@ const LoginForm = () => {
 
   const handleLogin = async () => {
     if (!phoneNumber || !password) {
-      alert("Please enter valid credentials.");
+      toast.error("Please enter valid credentials.", { position: "top-right", autoClose: 3000 });
       return;
     }
     if (!isCaptchaValid) {
-      alert("CAPTCHA is not valid.");
+      toast.error("CAPTCHA is not valid.", { position: "top-right", autoClose: 3000 });
       return;
     }
 
@@ -55,7 +58,7 @@ const LoginForm = () => {
     const apiUrl = apiEndpoints[userRole];
 
     if (!apiUrl) {
-      alert("Invalid role selected.");
+      toast.error("Invalid role selected.", { position: "top-right", autoClose: 3000 });
       setLoading(false);
       return;
     }
@@ -69,16 +72,17 @@ const LoginForm = () => {
       });
 
       if (response.status === 200) {
-        login({ ...response.data, mobile: phoneNumber, role: userRole }); // Pass role
+        login({ ...response.data, mobile: phoneNumber, role: userRole });
 
-        alert("Login successful!");
+        toast.success("Login successful!", { position: "top-right", autoClose: 3000 });
 
         navigate(roleBasedRoutes[userRole] || "/dashboard", { replace: true });
       }
     } catch (error) {
-      alert(
-        error.response?.data?.message || "Invalid mobile number or password"
-      );
+      toast.error(error.response?.data?.message || "Invalid mobile number or password", {
+        position: "top-right",
+        autoClose: 3000,
+      });
     } finally {
       setLoading(false);
     }
@@ -88,17 +92,19 @@ const LoginForm = () => {
     <Suspense fallback={<Loading />}>
       <div className="w-full max-w-md bg-white p-6 rounded-xl shadow-md border border-gray-200">
         <h2 className="text-xl font-bold mb-4 text-center text-gray-800">
-          Welcome Back <br /> Hansaria Food Private Limited
+          {loginLable.title1}
+          <br />
+          {loginLable.title2}
         </h2>
         <div className="mb-4">
           <label
             htmlFor="phoneNumber"
             className="block mb-2 text-gray-700 text-sm font-semibold"
           >
-            Phone Number
+            {loginLable.phone_number}
           </label>
           <DataInput
-            placeholder="Enter your phone number"
+            placeholder={loginLable.phone_number_placeholder}
             inputType="text"
             value={phoneNumber}
             onChange={(e) => setPhoneNumber(e.target.value)}
@@ -113,11 +119,11 @@ const LoginForm = () => {
             htmlFor="password"
             className="block mb-2 text-gray-700 text-sm font-semibold"
           >
-            Password
+            {loginLable.password}
           </label>
           <div className="relative">
             <DataInput
-              placeholder="Enter your password"
+              placeholder={loginLable.password_placeholder}
               inputType={showPassword ? "text" : "password"}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -129,9 +135,9 @@ const LoginForm = () => {
               onClick={() => setShowPassword(!showPassword)}
             >
               {showPassword ? (
-                <AiOutlineEye size={20} />
+                <AiOutlineEye size={20} title={loginLable.show_title} />
               ) : (
-                <AiOutlineEyeInvisible size={20} />
+                <AiOutlineEyeInvisible size={20} title={loginLable.hide_title} />
               )}
             </div>
           </div>

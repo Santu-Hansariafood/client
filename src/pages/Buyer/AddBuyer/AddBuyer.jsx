@@ -180,7 +180,14 @@ const AddBuyer = () => {
           companyName: formData.companyName?.value || "",
           commodity: formData.commodity.map((item) => item.value),
           status: formData.status?.value || "",
+          brokerage: new Map(
+            Object.entries(formData.brokerage).map(([key, value]) => [
+              key,
+              Number(value),
+            ])
+          ),
         };
+
         await axios.post(
           "https://phpserver-v77g.onrender.com/api/buyers",
           payload
@@ -199,7 +206,8 @@ const AddBuyer = () => {
           consignee: [],
         });
       } catch (error) {
-        toast.error("Failed to add buyer. Please try again.", error);
+        console.error(error);
+        toast.error("Failed to add buyer. Please try again.");
       }
     }
   };

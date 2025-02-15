@@ -69,7 +69,8 @@ const BuyerList = () => {
   };
 
   const handleView = (index) => {
-    setSelectedBuyer(filteredData[index]);
+    const actualIndex = firstItemIndex + index;
+    setSelectedBuyer(filteredData[actualIndex]);
     setIsPopupOpen(true);
   };
 
@@ -80,12 +81,15 @@ const BuyerList = () => {
   };
 
   const handleDelete = async (index) => {
-    const buyerToDelete = filteredData[index];
+    const actualIndex = firstItemIndex + index;
+    const buyerToDelete = filteredData[actualIndex];
+
     try {
       await axios.delete(
         `https://phpserver-v77g.onrender.com/api/buyers/${buyerToDelete._id}`
       );
-      const updatedData = filteredData.filter((_, i) => i !== index);
+
+      const updatedData = filteredData.filter((_, i) => i !== actualIndex);
       setBuyersData(updatedData);
       setFilteredData(updatedData);
       toast.success("Buyer deleted successfully");

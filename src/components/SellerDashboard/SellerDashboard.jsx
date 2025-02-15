@@ -1,5 +1,6 @@
-import { useEffect, useState, lazy, Suspense } from "react";
+import { useEffect, useState, lazy, Suspense, useCallback } from "react";
 import axios from "axios";
+import { toast } from "react-toastify";
 import {
   FaBell,
   FaGavel,
@@ -9,6 +10,7 @@ import {
 } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext/AuthContext";
+
 const Cards = lazy(() => import("../../common/Cards/Cards"));
 const Loading = lazy(() => import("../../common/Loading/Loading"));
 const Header = lazy(() => import("../../common/Header/Header"));
@@ -18,7 +20,7 @@ const LogoutConfirmationModal = lazy(() =>
 const PopupBox = lazy(() => import("../../common/PopupBox/PopupBox"));
 
 const SellerDashboard = () => {
-  const { mobile } = useAuth();
+  const { mobile, logout } = useAuth();
   const navigate = useNavigate();
   const [sellerDetails, setSellerDetails] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -98,7 +100,7 @@ const SellerDashboard = () => {
           setError("Invalid response from server.");
         }
       } catch (error) {
-        setError("Failed to fetch seller details. Please try again.",error);
+        setError("Failed to fetch seller details. Please try again.", error);
       } finally {
         setLoading(false);
       }
@@ -148,6 +150,12 @@ const SellerDashboard = () => {
       link: "/participate-bid-list",
     },
   ];
+
+  const handleLogout = useCallback(() => {
+    logout();
+    toast.success("Successfully logged out!");
+    navigate("/login", { replace: true });
+  }, [logout, navigate]);
 
   return (
     <Suspense fallback={<Loading />}>
@@ -224,7 +232,7 @@ const SellerDashboard = () => {
         </div>
         {showLogoutConfirmation && (
           <LogoutConfirmationModal
-            onConfirm={() => console.log("Logout confirmed")}
+            onConfirm={handleLogout}
             onCancel={() => setShowLogoutConfirmation(false)}
           />
         )}
