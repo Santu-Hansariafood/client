@@ -24,7 +24,7 @@ const SupplierInformation = ({ handleChange, formData }) => {
     const fetchSuppliers = async () => {
       try {
         const response = await fetch(
-          "http://88.222.215.234:5000/api/sellers"
+          "https://api.hansariafood.shop/api/sellers"
         );
         const data = await response.json();
         setSellers(data);

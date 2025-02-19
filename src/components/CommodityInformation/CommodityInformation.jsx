@@ -23,7 +23,7 @@ const CommodityInformation = ({
     const fetchCommodities = async () => {
       try {
         const { data } = await axios.get(
-          "http://88.222.215.234:5000/api/companies"
+          "https://api.hansariafood.shop/api/companies"
         );
         const companyData = data.find(
           (company) => company.companyName === selectedCompany
@@ -43,7 +43,7 @@ const CommodityInformation = ({
     const fetchBuyers = async () => {
       try {
         const { data } = await axios.get(
-          "http://88.222.215.234:5000/api/buyers"
+          "https://api.hansariafood.shop/api/buyers"
         );
         setBuyers(data || []);
       } catch (error) {

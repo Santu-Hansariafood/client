@@ -32,7 +32,7 @@ const BidList = () => {
     const fetchData = async () => {
       try {
         const response = await axios.get(
-          "http://88.222.215.234:5000/api/bids"
+          "https://api.hansariafood.shop/api/bids"
         );
         const sortedBids = response.data.sort(
           (a, b) => new Date(b.bidDate) - new Date(a.bidDate)

@@ -20,7 +20,7 @@ const AddCommodity = () => {
     const fetchParametersOptions = async () => {
       try {
         const response = await axios.get(
-          "http://88.222.215.234:5000/api/quality-parameters"
+          "https://api.hansariafood.shop/api/quality-parameters"
         );
         const options = response.data
           .map((param) => ({ value: param.name, label: param.name }))
@@ -70,7 +70,7 @@ const AddCommodity = () => {
 
     try {
       await axios.post(
-        "http://88.222.215.234:5000/api/commodities",
+        "https://api.hansariafood.shop/api/commodities",
         formData
       );
       toast.success("Commodity added successfully");

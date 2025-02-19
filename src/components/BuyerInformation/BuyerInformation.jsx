@@ -19,7 +19,7 @@ const BuyerInformation = ({ handleChange }) => {
       setLoading(true);
       try {
         const { data } = await axios.get(
-          "http://88.222.215.234:5000/api/buyers"
+          "https://api.hansariafood.shop/api/buyers"
         );
         setBuyers(data);
       } catch (error) {

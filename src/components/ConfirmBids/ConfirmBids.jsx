@@ -18,10 +18,10 @@ const ConfirmBids = () => {
     try {
       const [participateRes, sellersRes, bidsRes, confirmRes] =
         await Promise.all([
-          axios.get("http://88.222.215.234:5000/api/participatebids"),
-          axios.get("http://88.222.215.234:5000/api/sellers"),
-          axios.get("http://88.222.215.234:5000/api/bids"),
-          axios.get("http://88.222.215.234:5000/api/confirm-bid"),
+          axios.get("https://api.hansariafood.shop/api/participatebids"),
+          axios.get("https://api.hansariafood.shop/api/sellers"),
+          axios.get("https://api.hansariafood.shop/api/bids"),
+          axios.get("https://api.hansariafood.shop/api/confirm-bid"),
         ]);
 
       const matchedBid = bidsRes.data.find((b) => b._id === bidId);
@@ -84,7 +84,7 @@ const ConfirmBids = () => {
     if (!confirmAction) return;
 
     try {
-      await axios.post("http://88.222.215.234:5000/api/confirm-bid", {
+      await axios.post("https://api.hansariafood.shop/api/confirm-bid", {
         bidId,
         sellerName: selectedBid.sellerName,
         phone: selectedBid.phone,

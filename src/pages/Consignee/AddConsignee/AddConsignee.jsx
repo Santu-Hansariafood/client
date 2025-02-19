@@ -75,7 +75,7 @@ const AddConsignee = () => {
     e.preventDefault();
     try {
       const response = await axios.post(
-        "http://88.222.215.234:5000/api/consignees",
+        "https://api.hansariafood.shop/api/consignees",
         formData
       );
       if (response.status === 201) {

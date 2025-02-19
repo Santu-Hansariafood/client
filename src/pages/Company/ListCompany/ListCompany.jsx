@@ -26,7 +26,7 @@ const ListCompany = () => {
   useEffect(() => {
     const fetchCompanyData = async () => {
       try {
-        const response = await axios.get("http://88.222.215.234:5000/api/companies");
+        const response = await axios.get("https://api.hansariafood.shop/api/companies");
 
         const sortedData = response.data.sort((a, b) => {
           if (a.group === b.group) {
@@ -74,7 +74,7 @@ const ListCompany = () => {
   const handleDelete = async (index) => {
     const companyId = paginatedData[index]._id;
     try {
-      await axios.delete(`http://88.222.215.234:5000/api/companies/${companyId}`);
+      await axios.delete(`https://api.hansariafood.shop/api/companies/${companyId}`);
       const updatedData = filteredData.filter(
         (company) => company._id !== companyId
       );

@@ -32,7 +32,7 @@ const ListSellerDetails = () => {
   const [popupMode, setPopupMode] = useState("view");
   const [selectedSeller, setSelectedSeller] = useState(null);
 
-  const apiBaseURL = "http://88.222.215.234:5000/api";
+  const apiBaseURL = "https://api.hansariafood.shop/api";
 
   useEffect(() => {
     const fetchSellers = async () => {

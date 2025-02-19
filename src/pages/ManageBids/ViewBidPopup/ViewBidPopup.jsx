@@ -13,7 +13,7 @@ const ViewBidPopup = ({ bidId, onClose }) => {
     const fetchBidDetails = async () => {
       try {
         const response = await fetch(
-          `http://88.222.215.234:5000/api/bids/${bidId}`
+          `https://api.hansariafood.shop/api/bids/${bidId}`
         );
         if (!response.ok) {
           throw new Error("Failed to fetch bid details.");

@@ -7,7 +7,7 @@ const DataInput = lazy(() => import("../../../common/DataInput/DataInput"));
 const Tables = lazy(() => import("../../../common/Tables/Tables"));
 const Actions = lazy(() => import("../../../common/Actions/Actions"));
 
-const API_URL = "http://88.222.215.234:5000/api/agents";
+const API_URL = "https://api.hansariafood.shop/api/agents";
 
 const ListSoudabook = () => {
   const [agentName, setAgentName] = useState("");

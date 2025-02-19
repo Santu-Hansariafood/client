@@ -24,7 +24,7 @@ const AddSellerDetails = () => {
   const [selectedStatus, setSelectedStatus] = useState(null);
   const [selectedBuyers, setSelectedBuyers] = useState([]);
 
-  const apiBaseURL = "http://88.222.215.234:5000/api";
+  const apiBaseURL = "https://api.hansariafood.shop/api";
 
   const statusOptions = [
     { value: "active", label: "Active" },

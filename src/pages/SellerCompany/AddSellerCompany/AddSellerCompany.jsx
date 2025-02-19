@@ -149,7 +149,7 @@ const AddSellerCompany = () => {
 
     try {
       const response = await axios.post(
-        "http://88.222.215.234:5000/api/seller-company",
+        "https://api.hansariafood.shop/api/seller-company",
         formData,
         {
           headers: { "Content-Type": "multipart/form-data" },

@@ -36,10 +36,10 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
       try {
         const [groupsRes, commoditiesRes, consigneesRes, companiesRes] =
           await Promise.all([
-            axios.get("http://88.222.215.234:5000/api/companies"),
-            axios.get("http://88.222.215.234:5000/api/commodities"),
-            axios.get("http://88.222.215.234:5000/api/consignees"),
-            axios.get("http://88.222.215.234:5000/api/companies"),
+            axios.get("https://api.hansariafood.shop/api/companies"),
+            axios.get("https://api.hansariafood.shop/api/commodities"),
+            axios.get("https://api.hansariafood.shop/api/consignees"),
+            axios.get("https://api.hansariafood.shop/api/companies"),
           ]);
 
         setGroups(
@@ -143,7 +143,7 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
         companyName: formData.companyName,
       };
       const response = await axios.put(
-        `http://88.222.215.234:5000/api/buyers/${formData._id}`,
+        `https://api.hansariafood.shop/api/buyers/${formData._id}`,
         payload
       );
       onUpdate(response.data);

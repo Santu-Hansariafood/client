@@ -21,7 +21,7 @@ const AddGroupOfCompany = () => {
     }
 
     try {
-      const response = await axios.post("http://88.222.215.234:5000/api/groups", {
+      const response = await axios.post("https://api.hansariafood.shop/api/groups", {
         groupName,
       });
       toast.success("Group added successfully");

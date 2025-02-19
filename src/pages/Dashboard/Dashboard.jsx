@@ -30,10 +30,10 @@ const Dashboard = () => {
   const fetchCounts = useCallback(async () => {
     try {
       const responses = await Promise.all([
-        axios.get("http://88.222.215.234:5000/api/buyers"),
-        axios.get("http://88.222.215.234:5000/api/sellers"),
-        axios.get("http://88.222.215.234:5000/api/consignees"),
-        axios.get("http://88.222.215.234:5000/api/self-order"),
+        axios.get("https://api.hansariafood.shop/api/buyers"),
+        axios.get("https://api.hansariafood.shop/api/sellers"),
+        axios.get("https://api.hansariafood.shop/api/consignees"),
+        axios.get("https://api.hansariafood.shop/api/self-order"),
       ]);
 
       setCounts({

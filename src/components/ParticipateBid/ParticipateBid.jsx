@@ -20,9 +20,9 @@ const ParticipateBid = () => {
   const fetchBidsAndParticipations = async () => {
     try {
       const [bidsRes, participateRes, confirmBidsRes] = await Promise.all([
-        axios.get("http://88.222.215.234:5000/api/bids"),
-        axios.get("http://88.222.215.234:5000/api/participatebids"),
-        axios.get("http://88.222.215.234:5000/api/confirm-bid"),
+        axios.get("https://api.hansariafood.shop/api/bids"),
+        axios.get("https://api.hansariafood.shop/api/participatebids"),
+        axios.get("https://api.hansariafood.shop/api/confirm-bid"),
       ]);
 
       setBids(bidsRes.data);

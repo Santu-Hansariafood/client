@@ -40,11 +40,11 @@ const LoginForm = () => {
     setLoading(true);
 
     const apiEndpoints = {
-      Admin: "http://88.222.215.234:5000/api/admin/login",
-      Employee: "http://88.222.215.234:5000/api/employees/login",
-      Buyer: "http://88.222.215.234:5000/api/buyers/login",
-      Seller: "http://88.222.215.234:5000/api/sellers/login",
-      Transporter: "http://88.222.215.234:5000/api/transporters/login",
+      Admin: "https://api.hansariafood.shop/api/admin/login",
+      Employee: "https://api.hansariafood.shop/api/employees/login",
+      Buyer: "https://api.hansariafood.shop/api/buyers/login",
+      Seller: "https://api.hansariafood.shop/api/sellers/login",
+      Transporter: "https://api.hansariafood.shop/api/transporters/login",
     };
 
     const roleBasedRoutes = {

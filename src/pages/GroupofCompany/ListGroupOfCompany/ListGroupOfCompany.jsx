@@ -42,7 +42,7 @@ const ListGroupOfCompany = () => {
     const fetchGroups = async () => {
       try {
         const response = await axios.get(
-          "http://88.222.215.234:5000/api/groups"
+          "https://api.hansariafood.shop/api/groups"
         );
         const uniqueGroups = Array.from(
           new Map(
@@ -95,7 +95,7 @@ const ListGroupOfCompany = () => {
       const groupToDelete = filteredData[index];
       try {
         await axios.delete(
-          `http://88.222.215.234:5000/api/groups/${groupToDelete._id}`
+          `https://api.hansariafood.shop/api/groups/${groupToDelete._id}`
         );
         const updatedData = filteredData.filter((_, i) => i !== index);
         setFilteredData(updatedData);

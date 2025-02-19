@@ -25,7 +25,7 @@ const EditGroupPopup = ({ isOpen, group, onClose, onUpdate }) => {
   const handleSubmit = async () => {
     try {
       const response = await axios.put(
-        `http://88.222.215.234:5000/api/groups/${group._id}`,
+        `https://api.hansariafood.shop/api/groups/${group._id}`,
         formData
       );
       onUpdate(response.data);

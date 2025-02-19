@@ -70,8 +70,8 @@ const SelfOrder = () => {
   const [formData, setFormData] = useState(INITIAL_FORM_DATA);
   const [isLoading, setIsLoading] = useState(false);
 
-  const API_BASE_URL = "http://88.222.215.234:5000/api/self-order";
-  const SAUDA_API_URL = "http://88.222.215.234:5000/api/sauda-no";
+  const API_BASE_URL = "https://api.hansariafood.shop/api/self-order";
+  const SAUDA_API_URL = "https://api.hansariafood.shop/api/sauda-no";
 
   const handleChange = (field, value) => {
     setFormData((prev) => {

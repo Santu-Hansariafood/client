@@ -33,9 +33,9 @@ const AddCompany = () => {
     const fetchData = async () => {
       try {
         const [consignees, groups, commodities] = await Promise.all([
-          axios.get("http://88.222.215.234:5000/api/consignees"),
-          axios.get("http://88.222.215.234:5000/api/groups"),
-          axios.get("http://88.222.215.234:5000/api/commodities"),
+          axios.get("https://api.hansariafood.shop/api/consignees"),
+          axios.get("https://api.hansariafood.shop/api/groups"),
+          axios.get("https://api.hansariafood.shop/api/commodities"),
         ]);
 
         setConsigneeOptions(
@@ -148,7 +148,7 @@ const AddCompany = () => {
 
     try {
       const response = await axios.post(
-        "http://88.222.215.234:5000/api/companies",
+        "https://api.hansariafood.shop/api/companies",
         companyData
       );
       if (response.status === 201) {

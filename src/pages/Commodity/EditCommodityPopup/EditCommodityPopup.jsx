@@ -16,7 +16,7 @@ const EditCommodityPopup = ({ isOpen, onClose, commodityId, onUpdate }) => {
       setIsLoading(true);
       try {
         const response = await axios.get(
-          `http://88.222.215.234:5000/api/commodities/${commodityId}`
+          `https://api.hansariafood.shop/api/commodities/${commodityId}`
         );
         setCommodity(response.data);
       } catch (error) {
@@ -29,7 +29,7 @@ const EditCommodityPopup = ({ isOpen, onClose, commodityId, onUpdate }) => {
     const fetchQualityParameters = async () => {
       try {
         const response = await axios.get(
-          "http://88.222.215.234:5000/api/quality-parameters"
+          "https://api.hansariafood.shop/api/quality-parameters"
         );
         setQualityOptions(response.data);
       } catch (error) {
@@ -88,7 +88,7 @@ const EditCommodityPopup = ({ isOpen, onClose, commodityId, onUpdate }) => {
     setIsLoading(true);
     try {
       await axios.put(
-        `http://88.222.215.234:5000/api/commodities/${commodityId}`,
+        `https://api.hansariafood.shop/api/commodities/${commodityId}`,
         commodity
       );
       onUpdate();

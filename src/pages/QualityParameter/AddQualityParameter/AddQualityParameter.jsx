@@ -30,7 +30,7 @@ const AddQualityParameter = () => {
     };
 
     try {
-      await axios.post("http://88.222.215.234:5000/api/quality-parameters", payload);
+      await axios.post("https://api.hansariafood.shop/api/quality-parameters", payload);
       toast.success("Quality parameter added successfully!");
       setFormData({
         name: "",

@@ -10,10 +10,10 @@ const ChartSection = () => {
   return (
     <Suspense fallback={<Loading />}>
       <div className="mt-8">
-        <SaudaChart apiUrl="http://88.222.215.234:5000/api/self-order" />
+        <SaudaChart apiUrl="https://api.hansariafood.shop/api/self-order" />
       </div>
       <div className="mt-8">
-        <BidChart apiUrl="http://88.222.215.234:5000/api/bids" />
+        <BidChart apiUrl="https://api.hansariafood.shop/api/bids" />
       </div>
     </Suspense>
   );

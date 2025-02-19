@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import axios from "axios";
 
-const SERVER_URL = "http://88.222.215.234:5000";
+const SERVER_URL = "https://api.hansariafood.shop";
 
 const keepBackendAlive = () => {
   setInterval(() => {

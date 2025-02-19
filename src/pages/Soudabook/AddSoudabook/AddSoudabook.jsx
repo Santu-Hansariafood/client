@@ -35,7 +35,7 @@ const AddSoudabook = () => {
     const fetchSellers = async () => {
       try {
         const response = await axios.get(
-          "http://88.222.215.234:5000/api/sellers"
+          "https://api.hansariafood.shop/api/sellers"
         );
         const sellerOptions = response.data.map((seller) => ({
           value: seller._id,
@@ -50,7 +50,7 @@ const AddSoudabook = () => {
     const fetchItems = async () => {
       try {
         const response = await axios.get(
-          "http://88.222.215.234:5000/api/commodities"
+          "https://api.hansariafood.shop/api/commodities"
         );
         const itemOptions = response.data.map((item) => ({
           value: item._id,
@@ -65,7 +65,7 @@ const AddSoudabook = () => {
     const fetchBuyers = async () => {
       try {
         const response = await axios.get(
-          "http://88.222.215.234:5000/api/buyers"
+          "https://api.hansariafood.shop/api/buyers"
         );
         const buyerOptions = response.data.map((buyer) => ({
           value: buyer._id,
