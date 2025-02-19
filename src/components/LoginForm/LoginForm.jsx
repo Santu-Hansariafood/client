@@ -40,11 +40,11 @@ const LoginForm = () => {
     setLoading(true);
 
     const apiEndpoints = {
-      Admin: "https://phpserver-v77g.onrender.com/api/admin/login",
-      Employee: "https://phpserver-v77g.onrender.com/api/employees/login",
-      Buyer: "https://phpserver-v77g.onrender.com/api/buyers/login",
-      Seller: "https://phpserver-v77g.onrender.com/api/sellers/login",
-      Transporter: "https://phpserver-v77g.onrender.com/api/transporters/login",
+      Admin: "http://88.222.215.234:5000/api/admin/login",
+      Employee: "http://88.222.215.234:5000/api/employees/login",
+      Buyer: "http://88.222.215.234:5000/api/buyers/login",
+      Seller: "http://88.222.215.234:5000/api/sellers/login",
+      Transporter: "http://88.222.215.234:5000/api/transporters/login",
     };
 
     const roleBasedRoutes = {

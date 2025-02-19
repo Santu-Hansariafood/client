@@ -42,7 +42,7 @@ const ListGroupOfCompany = () => {
     const fetchGroups = async () => {
       try {
         const response = await axios.get(
-          "https://phpserver-v77g.onrender.com/api/groups"
+          "http://88.222.215.234:5000/api/groups"
         );
         const uniqueGroups = Array.from(
           new Map(
@@ -95,7 +95,7 @@ const ListGroupOfCompany = () => {
       const groupToDelete = filteredData[index];
       try {
         await axios.delete(
-          `https://phpserver-v77g.onrender.com/api/groups/${groupToDelete._id}`
+          `http://88.222.215.234:5000/api/groups/${groupToDelete._id}`
         );
         const updatedData = filteredData.filter((_, i) => i !== index);
         setFilteredData(updatedData);

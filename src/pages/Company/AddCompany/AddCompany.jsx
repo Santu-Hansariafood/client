@@ -33,9 +33,9 @@ const AddCompany = () => {
     const fetchData = async () => {
       try {
         const [consignees, groups, commodities] = await Promise.all([
-          axios.get("https://phpserver-v77g.onrender.com/api/consignees"),
-          axios.get("https://phpserver-v77g.onrender.com/api/groups"),
-          axios.get("https://phpserver-v77g.onrender.com/api/commodities"),
+          axios.get("http://88.222.215.234:5000/api/consignees"),
+          axios.get("http://88.222.215.234:5000/api/groups"),
+          axios.get("http://88.222.215.234:5000/api/commodities"),
         ]);
 
         setConsigneeOptions(
@@ -148,7 +148,7 @@ const AddCompany = () => {
 
     try {
       const response = await axios.post(
-        "https://phpserver-v77g.onrender.com/api/companies",
+        "http://88.222.215.234:5000/api/companies",
         companyData
       );
       if (response.status === 201) {

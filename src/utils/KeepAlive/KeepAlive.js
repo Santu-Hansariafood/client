@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import axios from "axios";
 
-const SERVER_URL = "https://phpserver-v77g.onrender.com";
+const SERVER_URL = "http://88.222.215.234:5000";
 
 const keepBackendAlive = () => {
   setInterval(() => {

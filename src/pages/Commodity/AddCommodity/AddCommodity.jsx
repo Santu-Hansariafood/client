@@ -20,7 +20,7 @@ const AddCommodity = () => {
     const fetchParametersOptions = async () => {
       try {
         const response = await axios.get(
-          "https://phpserver-v77g.onrender.com/api/quality-parameters"
+          "http://88.222.215.234:5000/api/quality-parameters"
         );
         const options = response.data
           .map((param) => ({ value: param.name, label: param.name }))
@@ -70,7 +70,7 @@ const AddCommodity = () => {
 
     try {
       await axios.post(
-        "https://phpserver-v77g.onrender.com/api/commodities",
+        "http://88.222.215.234:5000/api/commodities",
         formData
       );
       toast.success("Commodity added successfully");

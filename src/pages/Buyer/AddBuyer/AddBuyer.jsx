@@ -44,8 +44,8 @@ const AddBuyer = () => {
     const fetchDropdownData = async () => {
       try {
         const [companiesResponse, commoditiesResponse] = await Promise.all([
-          axios.get("https://phpserver-v77g.onrender.com/api/companies"),
-          axios.get("https://phpserver-v77g.onrender.com/api/commodities"),
+          axios.get("http://88.222.215.234:5000/api/companies"),
+          axios.get("http://88.222.215.234:5000/api/commodities"),
         ]);
 
         const companies = companiesResponse.data;
@@ -189,7 +189,7 @@ const AddBuyer = () => {
         };
 
         await axios.post(
-          "https://phpserver-v77g.onrender.com/api/buyers",
+          "http://88.222.215.234:5000/api/buyers",
           payload
         );
         toast.success("Buyer added successfully!");

@@ -39,7 +39,7 @@ const SupplierBidList = () => {
       }
 
       const bidsRes = await axios.get(
-        "https://phpserver-v77g.onrender.com/api/bids"
+        "http://88.222.215.234:5000/api/bids"
       );
 
       const sevenDaysAgo = new Date();
@@ -92,7 +92,7 @@ const SupplierBidList = () => {
       };
 
       await axios.post(
-        "https://phpserver-v77g.onrender.com/api/participatebids",
+        "http://88.222.215.234:5000/api/participatebids",
         participationData
       );
 

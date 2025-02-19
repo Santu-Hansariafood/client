@@ -32,7 +32,7 @@ const ListQualityParameter = () => {
     const fetchQualityParameters = async () => {
       try {
         const response = await axios.get(
-          "https://phpserver-v77g.onrender.com/api/quality-parameters"
+          "http://88.222.215.234:5000/api/quality-parameters"
         );
         setQualityParameters(response.data);
         setFilteredData(response.data);
@@ -71,7 +71,7 @@ const ListQualityParameter = () => {
   const handleUpdateQualityParameter = async (updatedData) => {
     try {
       const response = await axios.put(
-        `https://phpserver-v77g.onrender.com/api/quality-parameters/${updatedData._id}`,
+        `http://88.222.215.234:5000/api/quality-parameters/${updatedData._id}`,
         updatedData
       );
       setQualityParameters((prev) =>
@@ -97,7 +97,7 @@ const ListQualityParameter = () => {
     try {
       console.log("Deleting ID:", item._id);
       await axios.delete(
-        `https://phpserver-v77g.onrender.com/api/quality-parameters/${item._id}`
+        `http://88.222.215.234:5000/api/quality-parameters/${item._id}`
       );
       setQualityParameters((prev) =>
         prev.filter((param) => param._id !== item._id)

@@ -10,10 +10,10 @@ const ChartSection = () => {
   return (
     <Suspense fallback={<Loading />}>
       <div className="mt-8">
-        <SaudaChart apiUrl="https://phpserver-v77g.onrender.com/api/self-order" />
+        <SaudaChart apiUrl="http://88.222.215.234:5000/api/self-order" />
       </div>
       <div className="mt-8">
-        <BidChart apiUrl="https://phpserver-v77g.onrender.com/api/bids" />
+        <BidChart apiUrl="http://88.222.215.234:5000/api/bids" />
       </div>
     </Suspense>
   );

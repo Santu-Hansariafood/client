@@ -16,7 +16,7 @@ const SelfOrderList = () => {
   const [itemsPerPage] = useState(10);
   const [selectedItem, setSelectedItem] = useState(null);
 
-  const API_URL = "https://phpserver-v77g.onrender.com/api/self-order";
+  const API_URL = "http://88.222.215.234:5000/api/self-order";
 
   useEffect(() => {
     const fetchData = async () => {

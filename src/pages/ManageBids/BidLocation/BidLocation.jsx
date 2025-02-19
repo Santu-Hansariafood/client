@@ -18,7 +18,7 @@ const BidLocation = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
-  const API_URL = "https://phpserver-v77g.onrender.com/api/bid-locations";
+  const API_URL = "http://88.222.215.234:5000/api/bid-locations";
 
   const fetchBidLocations = async () => {
     try {

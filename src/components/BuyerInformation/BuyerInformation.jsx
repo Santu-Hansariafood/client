@@ -19,7 +19,7 @@ const BuyerInformation = ({ handleChange }) => {
       setLoading(true);
       try {
         const { data } = await axios.get(
-          "https://phpserver-v77g.onrender.com/api/buyers"
+          "http://88.222.215.234:5000/api/buyers"
         );
         setBuyers(data);
       } catch (error) {

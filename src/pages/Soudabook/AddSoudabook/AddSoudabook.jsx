@@ -35,7 +35,7 @@ const AddSoudabook = () => {
     const fetchSellers = async () => {
       try {
         const response = await axios.get(
-          "https://phpserver-v77g.onrender.com/api/sellers"
+          "http://88.222.215.234:5000/api/sellers"
         );
         const sellerOptions = response.data.map((seller) => ({
           value: seller._id,
@@ -50,7 +50,7 @@ const AddSoudabook = () => {
     const fetchItems = async () => {
       try {
         const response = await axios.get(
-          "https://phpserver-v77g.onrender.com/api/commodities"
+          "http://88.222.215.234:5000/api/commodities"
         );
         const itemOptions = response.data.map((item) => ({
           value: item._id,
@@ -65,7 +65,7 @@ const AddSoudabook = () => {
     const fetchBuyers = async () => {
       try {
         const response = await axios.get(
-          "https://phpserver-v77g.onrender.com/api/buyers"
+          "http://88.222.215.234:5000/api/buyers"
         );
         const buyerOptions = response.data.map((buyer) => ({
           value: buyer._id,

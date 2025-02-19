@@ -10,8 +10,8 @@ const DownloadSauda = ({ data }) => {
   const [supplierData, setSupplierData] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const CONSIGNEE_API_URL = "https://phpserver-v77g.onrender.com/api/consignees";
-  const SUPPLIER_API_URL = "https://phpserver-v77g.onrender.com/api/seller-company";
+  const CONSIGNEE_API_URL = "http://88.222.215.234:5000/api/consignees";
+  const SUPPLIER_API_URL = "http://88.222.215.234:5000/api/seller-company";
 
   useEffect(() => {
     const fetchData = async () => {

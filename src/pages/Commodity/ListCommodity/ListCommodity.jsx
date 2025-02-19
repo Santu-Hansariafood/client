@@ -23,7 +23,7 @@ const ListCommodity = () => {
     const fetchCommodities = async () => {
       try {
         const response = await axios.get(
-          "https://phpserver-v77g.onrender.com/api/commodities"
+          "http://88.222.215.234:5000/api/commodities"
         );
         const sortedCommodities = response.data.sort((a, b) =>
           a.name.localeCompare(b.name)
@@ -55,7 +55,7 @@ const ListCommodity = () => {
   const handleView = async (id) => {
     try {
       const response = await axios.get(
-        `https://phpserver-v77g.onrender.com/api/commodities/${id}`
+        `http://88.222.215.234:5000/api/commodities/${id}`
       );
       setSelectedCommodity(response.data);
       setIsPopupOpen(true);
@@ -77,7 +77,7 @@ const ListCommodity = () => {
       if (!confirmDelete) return;
 
       await axios.delete(
-        `https://phpserver-v77g.onrender.com/api/commodities/${id}`
+        `http://88.222.215.234:5000/api/commodities/${id}`
       );
 
       const updatedCommodities = commodities.filter(
@@ -166,7 +166,7 @@ const ListCommodity = () => {
               commodityId={selectedCommodity ? selectedCommodity._id : null}
               onUpdate={() => {
                 axios
-                  .get("https://phpserver-v77g.onrender.com/api/commodities")
+                  .get("http://88.222.215.234:5000/api/commodities")
                   .then((response) => {
                     const sortedCommodities = response.data.sort((a, b) =>
                       a.name.localeCompare(b.name)

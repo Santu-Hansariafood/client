@@ -37,12 +37,12 @@ const SellerDashboard = () => {
       try {
         const [sellersRes, bidsRes, participateRes, confirmBidsRes] =
           await Promise.all([
-            axios.get("https://phpserver-v77g.onrender.com/api/sellers"),
-            axios.get("https://phpserver-v77g.onrender.com/api/bids"),
+            axios.get("http://88.222.215.234:5000/api/sellers"),
+            axios.get("http://88.222.215.234:5000/api/bids"),
             axios.get(
-              "https://phpserver-v77g.onrender.com/api/participatebids"
+              "http://88.222.215.234:5000/api/participatebids"
             ),
-            axios.get("https://phpserver-v77g.onrender.com/api/confirm-bid"),
+            axios.get("http://88.222.215.234:5000/api/confirm-bid"),
           ]);
 
         if (!mobile) {

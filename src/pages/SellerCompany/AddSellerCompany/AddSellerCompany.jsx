@@ -149,7 +149,7 @@ const AddSellerCompany = () => {
 
     try {
       const response = await axios.post(
-        "https://phpserver-v77g.onrender.com/api/seller-company",
+        "http://88.222.215.234:5000/api/seller-company",
         formData,
         {
           headers: { "Content-Type": "multipart/form-data" },

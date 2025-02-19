@@ -9,7 +9,7 @@ const ParameterInputs = lazy(() => import("./ParameterInputs"));
 const AdditionalFields = lazy(() => import("./AdditionalFields"));
 const SubmitButton = lazy(() => import("./SubmitButton"));
 
-const apiBaseUrl = "https://phpserver-v77g.onrender.com/api";
+const apiBaseUrl = "http://88.222.215.234:5000/api";
 
 const BaseBid = () => {
   const [state, setState] = useState({

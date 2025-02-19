@@ -29,7 +29,7 @@ const EditSellerDetails = ({ sellerId, onClose }) => {
   const [selectedStatus, setSelectedStatus] = useState(null);
   const [selectedBuyers, setSelectedBuyers] = useState([]);
 
-  const apiBaseURL = "https://phpserver-v77g.onrender.com/api";
+  const apiBaseURL = "http://88.222.215.234:5000/api";
 
   const statusOptions = [
     { value: "active", label: "Active" },

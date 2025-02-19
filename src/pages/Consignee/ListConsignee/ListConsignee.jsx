@@ -27,7 +27,7 @@ const ListConsignee = () => {
     const fetchConsignees = async () => {
       try {
         const response = await axios.get(
-          "https://phpserver-v77g.onrender.com/api/consignees"
+          "http://88.222.215.234:5000/api/consignees"
         );
         const normalizedData = response.data.map((consignee) => ({
           ...consignee,
@@ -62,7 +62,7 @@ const ListConsignee = () => {
   const submitEdit = async (updatedData) => {
     try {
       const response = await axios.put(
-        `https://phpserver-v77g.onrender.com/api/consignees/${selectedConsignee._id}`,
+        `http://88.222.215.234:5000/api/consignees/${selectedConsignee._id}`,
         updatedData
       );
       const updatedConsignees = consigneeData.map((consignee) =>
@@ -83,7 +83,7 @@ const ListConsignee = () => {
   const submitDelete = async () => {
     try {
       await axios.delete(
-        `https://phpserver-v77g.onrender.com/api/consignees/${selectedConsignee._id}`
+        `http://88.222.215.234:5000/api/consignees/${selectedConsignee._id}`
       );
       const updatedConsignees = consigneeData.filter(
         (consignee) => consignee._id !== selectedConsignee._id

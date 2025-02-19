@@ -75,7 +75,7 @@ const AddConsignee = () => {
     e.preventDefault();
     try {
       const response = await axios.post(
-        "https://phpserver-v77g.onrender.com/api/consignees",
+        "http://88.222.215.234:5000/api/consignees",
         formData
       );
       if (response.status === 201) {

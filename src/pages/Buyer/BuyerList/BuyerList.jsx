@@ -33,7 +33,7 @@ const BuyerList = () => {
     const fetchBuyersData = async () => {
       try {
         const response = await axios.get(
-          "https://phpserver-v77g.onrender.com/api/buyers"
+          "http://88.222.215.234:5000/api/buyers"
         );
         const sortedData = response.data.sort((a, b) =>
           a.name.localeCompare(b.name)
@@ -86,7 +86,7 @@ const BuyerList = () => {
 
     try {
       await axios.delete(
-        `https://phpserver-v77g.onrender.com/api/buyers/${buyerToDelete._id}`
+        `http://88.222.215.234:5000/api/buyers/${buyerToDelete._id}`
       );
 
       const updatedData = filteredData.filter((_, i) => i !== actualIndex);

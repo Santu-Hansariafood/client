@@ -32,7 +32,7 @@ const BidList = () => {
     const fetchData = async () => {
       try {
         const response = await axios.get(
-          "https://phpserver-v77g.onrender.com/api/bids"
+          "http://88.222.215.234:5000/api/bids"
         );
         const sortedBids = response.data.sort(
           (a, b) => new Date(b.bidDate) - new Date(a.bidDate)

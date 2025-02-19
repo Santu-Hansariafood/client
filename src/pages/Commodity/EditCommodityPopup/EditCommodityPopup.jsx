@@ -16,7 +16,7 @@ const EditCommodityPopup = ({ isOpen, onClose, commodityId, onUpdate }) => {
       setIsLoading(true);
       try {
         const response = await axios.get(
-          `https://phpserver-v77g.onrender.com/api/commodities/${commodityId}`
+          `http://88.222.215.234:5000/api/commodities/${commodityId}`
         );
         setCommodity(response.data);
       } catch (error) {
@@ -29,7 +29,7 @@ const EditCommodityPopup = ({ isOpen, onClose, commodityId, onUpdate }) => {
     const fetchQualityParameters = async () => {
       try {
         const response = await axios.get(
-          "https://phpserver-v77g.onrender.com/api/quality-parameters"
+          "http://88.222.215.234:5000/api/quality-parameters"
         );
         setQualityOptions(response.data);
       } catch (error) {
@@ -88,7 +88,7 @@ const EditCommodityPopup = ({ isOpen, onClose, commodityId, onUpdate }) => {
     setIsLoading(true);
     try {
       await axios.put(
-        `https://phpserver-v77g.onrender.com/api/commodities/${commodityId}`,
+        `http://88.222.215.234:5000/api/commodities/${commodityId}`,
         commodity
       );
       onUpdate();

@@ -23,7 +23,7 @@ const CommodityInformation = ({
     const fetchCommodities = async () => {
       try {
         const { data } = await axios.get(
-          "https://phpserver-v77g.onrender.com/api/companies"
+          "http://88.222.215.234:5000/api/companies"
         );
         const companyData = data.find(
           (company) => company.companyName === selectedCompany
@@ -43,7 +43,7 @@ const CommodityInformation = ({
     const fetchBuyers = async () => {
       try {
         const { data } = await axios.get(
-          "https://phpserver-v77g.onrender.com/api/buyers"
+          "http://88.222.215.234:5000/api/buyers"
         );
         setBuyers(data || []);
       } catch (error) {

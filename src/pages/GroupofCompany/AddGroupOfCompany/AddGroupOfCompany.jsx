@@ -21,7 +21,7 @@ const AddGroupOfCompany = () => {
     }
 
     try {
-      const response = await axios.post("https://phpserver-v77g.onrender.com/api/groups", {
+      const response = await axios.post("http://88.222.215.234:5000/api/groups", {
         groupName,
       });
       toast.success("Group added successfully");

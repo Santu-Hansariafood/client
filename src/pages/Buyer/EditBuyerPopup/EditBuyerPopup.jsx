@@ -36,10 +36,10 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
       try {
         const [groupsRes, commoditiesRes, consigneesRes, companiesRes] =
           await Promise.all([
-            axios.get("https://phpserver-v77g.onrender.com/api/companies"),
-            axios.get("https://phpserver-v77g.onrender.com/api/commodities"),
-            axios.get("https://phpserver-v77g.onrender.com/api/consignees"),
-            axios.get("https://phpserver-v77g.onrender.com/api/companies"),
+            axios.get("http://88.222.215.234:5000/api/companies"),
+            axios.get("http://88.222.215.234:5000/api/commodities"),
+            axios.get("http://88.222.215.234:5000/api/consignees"),
+            axios.get("http://88.222.215.234:5000/api/companies"),
           ]);
 
         setGroups(
@@ -143,7 +143,7 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
         companyName: formData.companyName,
       };
       const response = await axios.put(
-        `https://phpserver-v77g.onrender.com/api/buyers/${formData._id}`,
+        `http://88.222.215.234:5000/api/buyers/${formData._id}`,
         payload
       );
       onUpdate(response.data);
