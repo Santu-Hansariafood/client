@@ -54,7 +54,7 @@ const Dashboard = () => {
   const handleLogout = useCallback(() => {
     logout();
     toast.success("Successfully logged out!");
-    navigate("/login", { replace: true });
+    navigate("/", { replace: true });
   }, [logout, navigate]);
 
   return (
