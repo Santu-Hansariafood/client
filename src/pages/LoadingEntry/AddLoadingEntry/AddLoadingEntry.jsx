@@ -1,109 +1,136 @@
-import { lazy, Suspense, useState } from "react";
-const DataInput = lazy(() => import("../../../common/DataInput/DataInput"));
-const DateSelector = lazy(() =>
-  import("../../../common/DateSelector/DateSelector")
-);
-const FileUpload = lazy(() => import("../../../common/FileUpload/FileUpload"));
-const SearchBox = lazy(() => import("../../../common/SearchBox/SearchBox"));
-import "tailwindcss/tailwind.css";
-import Loading from "../../../common/Loading/Loading";
+import axios from "axios";
+import React, { useState, useEffect } from "react";
+import { FaPlus } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
+import DataDropdown from "../../../common/DataDropdown/DataDropdown";
+import Tables from "../../../common/Tables/Tables";
 
-const LoadingEntry = () => {
-  const [searchResults, setSearchResults] = useState([]);
+const capitalizeWords = (str) =>
+  str.toLowerCase().replace(/\b\w/g, (char) => char.toUpperCase());
 
-  const handleSearch = (filteredItems) => {
-    setSearchResults(filteredItems);
+const fetchData = async (url, key) => {
+  try {
+    const response = await axios.get(url);
+    return response.data.map((item) => ({
+      value: item._id,
+      label: capitalizeWords(item[key]),
+    }));
+  } catch (error) {
+    console.error(`Error fetching ${key}:`, error);
+    return [];
+  }
+};
+
+const fetchOrders = async (supplierId, consignee) => {
+  try {
+    const response = await axios.get("http://localhost:5000/api/self-order");
+    return response.data.filter(
+      (order) => order.supplier === supplierId && order.consignee === consignee
+    );
+  } catch (error) {
+    console.error("Error fetching orders:", error);
+    return [];
+  }
+};
+
+const AddLoadingEntry = () => {
+  const [suppliers, setSuppliers] = useState([]);
+  const [consignees, setConsignees] = useState([]);
+  const [selectedSupplier, setSelectedSupplier] = useState(null);
+  const [selectedConsignee, setSelectedConsignee] = useState(null);
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const loadDropdowns = async () => {
+      setLoading(true);
+      const [suppliersData, consigneesData] = await Promise.all([
+        fetchData("http://localhost:5000/api/sellers", "sellerName"),
+        fetchData("http://localhost:5000/api/consignees", "name"),
+      ]);
+      setSuppliers(suppliersData);
+      setConsignees(consigneesData);
+      setLoading(false);
+    };
+    loadDropdowns();
+  }, []);
+
+  const handleSearch = async () => {
+    if (selectedSupplier && selectedConsignee) {
+      setLoading(true);
+      let orderData = await fetchOrders(
+        selectedSupplier.value,
+        selectedConsignee.label
+      );
+      orderData.sort((a, b) => {
+        return a.buyer.localeCompare(b.buyer) || a.consignee.localeCompare(b.consignee);
+      });
+      setOrders(orderData);
+      setLoading(false);
+    }
   };
 
   return (
-    <Suspense fallback={<Loading />}>
-      <div className="container mx-auto p-4">
-        <h1 className="text-2xl font-bold text-center text-blue-700 mb-4">
-          Loading Entry
-        </h1>
-        <div className="flex flex-col mb-6">
-          <label htmlFor="loadingEntrySearch" className="mb-2 font-semibold">
-            Loading Entry Number
-          </label>
-          <SearchBox
-            placeholder="Enter Loading Entry Number..."
-            items={[]}
-            onSearch={handleSearch}
-          />
-        </div>
-        <form className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div>
-            <label>Loading Date</label>
-            <DateSelector onChange={() => {}} />
+    <div className="w-full p-6 bg-white shadow-md rounded-lg">
+      <h2 className="text-xl font-semibold text-gray-700 mb-4">Add Loading Entry</h2>
+      {loading ? (
+        <p className="text-center text-gray-500">Loading...</p>
+      ) : (
+        <div className="space-y-4">
+          <div className="flex gap-4">
+            <div className="flex-1">
+              <label className="text-gray-700 font-medium">Select Supplier:</label>
+              <DataDropdown
+                options={suppliers}
+                selectedOptions={selectedSupplier ? [selectedSupplier] : []}
+                onChange={setSelectedSupplier}
+                placeholder="Select Supplier"
+                isMulti={false}
+              />
+            </div>
+            <div className="flex-1">
+              <label className="text-gray-700 font-medium">Select Consignee:</label>
+              <DataDropdown
+                options={consignees}
+                selectedOptions={selectedConsignee ? [selectedConsignee] : []}
+                onChange={setSelectedConsignee}
+                placeholder="Select Consignee"
+                isMulti={false}
+              />
+            </div>
           </div>
-          <div>
-            <label>Loading Weight</label>
-            <DataInput placeholder="Enter weight" />
-          </div>
-          <div>
-            <label>Lorry Number</label>
-            <DataInput placeholder="Enter lorry number" />
-          </div>
-          <div>
-            <label>Added Transport</label>
-            <DataInput placeholder="Enter transport details" />
-          </div>
-          <div>
-            <label>Driver Name</label>
-            <DataInput placeholder="Enter driver name" />
-          </div>
-          <div>
-            <label>Driver Phone Number</label>
-            <DataInput placeholder="Enter phone number" />
-          </div>
-          <div>
-            <label>Freight Rate</label>
-            <DataInput placeholder="Enter freight rate" />
-          </div>
-          <div>
-            <label>Total Freight</label>
-            <DataInput placeholder="Enter total freight" />
-          </div>
-          <div>
-            <label>Advance</label>
-            <DataInput placeholder="Enter advance" />
-          </div>
-          <div>
-            <label>Balance</label>
-            <DataInput placeholder="Enter balance" />
-          </div>
-          <div>
-            <label>Bill Number</label>
-            <DataInput placeholder="Enter bill number" />
-          </div>
-          <div>
-            <label>Date of Issue</label>
-            <DateSelector onChange={() => {}} />
-          </div>
-          <div className="md:col-span-3">
-            <label>Upload Document</label>
-            <FileUpload
-              label="Upload File"
-              accept=".jpg,.png,.pdf"
-              onFileChange={() => {}}
-              minWidth={100}
-              minHeight={100}
+          <button
+            onClick={handleSearch}
+            className="w-full px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+          >
+            Search
+          </button>
+          {orders.length > 0 && (
+            <Tables
+              headers={["Sauda No","Seller Name", "Company","Consignee", "Commodity", "Quantity", "Rate", "Pending Quantity", "Action"]}
+              rows={orders.map((order) => [
+                order.saudaNo,
+                capitalizeWords(order.supplierCompany),
+                capitalizeWords(order.buyerCompany),
+                capitalizeWords(order.consignee),
+                capitalizeWords(order.commodity),
+                order.quantity,
+                order.rate,
+                capitalizeWords(order.pendingQuantity),
+                <button
+                  onClick={() => navigate(`/loading-entry-sauda/${order.supplier}`, { state: { order } })}
+                  className="text-blue-500 hover:text-blue-700"
+                >
+                  <FaPlus />
+                </button>
+              ])}
             />
-          </div>
-          <div className="md:col-span-3 flex justify-center">
-            <button
-              type="submit"
-              className="px-6 py-2 bg-blue-600 text-white font-bold rounded hover:bg-blue-700"
-            >
-              Submit
-            </button>
-          </div>
-        </form>
-      </div>
-    </Suspense>
+          )}
+        </div>
+      )}
+    </div>
   );
 };
 
-LoadingEntry.propTypes = {};
-
-export default LoadingEntry;
+export default AddLoadingEntry;

@@ -2,6 +2,10 @@ import { lazy, Suspense, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import axios from "axios";
+import Loading from "../../../common/Loading/Loading";
+
+// Lazy-loaded components
 const BuyerInformation = lazy(() =>
   import("../../../components/BuyerInformation/BuyerInformation")
 );
@@ -27,8 +31,6 @@ const AdditionalInformation = lazy(() =>
 const LoadingStation = lazy(() =>
   import("../../../components/LoadingStation/LoadingStation")
 );
-import axios from "axios";
-import Loading from "../../../common/Loading/Loading";
 
 const INITIAL_FORM_DATA = {
   buyer: "",
@@ -94,11 +96,13 @@ const SelfOrder = () => {
     if (!formData.buyer) errors.push("Buyer name is required.");
     if (!formData.poNumber) errors.push("PO Number is required.");
 
-    errors.forEach((err) =>
-      toast.error(err, { position: toast.POSITION.TOP_RIGHT })
-    );
-
-    return errors.length === 0;
+    if (errors.length > 0) {
+      errors.forEach((err) =>
+        toast.error(err, { position: toast.POSITION.TOP_RIGHT })
+      );
+      return false;
+    }
+    return true;
   };
 
   const resetForm = () => {
@@ -107,39 +111,55 @@ const SelfOrder = () => {
 
   const generateSaudaNo = async () => {
     try {
+      console.log("Generating Sauda No with data:", formData);
       const response = await axios.post(SAUDA_API_URL, formData);
+      console.log("Sauda No Response:", response.data);
+
+      if (!response.data.saudaNo) {
+        throw new Error("Sauda No not generated");
+      }
+
       return response.data.saudaNo;
     } catch (error) {
       toast.error("Failed to generate Sauda No.", {
         position: toast.POSITION.TOP_RIGHT,
       });
-      toast.error("Error generating Sauda No:", error.message);
+      console.error("Error generating Sauda No:", error);
       throw error;
     }
   };
 
   const handleSubmit = async () => {
     if (!validateFormData()) return;
+
     setIsLoading(true);
+
     try {
       const saudaNo = await generateSaudaNo();
+
+      if (!saudaNo) {
+        toast.error("Sauda No generation failed. Order not submitted.");
+        return;
+      }
+
       const payload = { ...formData, saudaNo };
-      toast.log("Payload being sent to server:", payload);
+
+      console.log("Final Payload being sent to API:", JSON.stringify(payload, null, 2));
+
       await axios.post(API_BASE_URL, payload);
 
       resetForm();
 
       setTimeout(() => {
-        toast.success("Order created successfully! Form has been reset.", {
+        toast.success("Order created successfully! Redirecting...", {
           position: toast.POSITION.TOP_RIGHT,
         });
       }, 500);
 
       setTimeout(() => navigate("/manage-order/list-self-order"), 2000);
     } catch (error) {
-      toast.error("Failed to create order.", {
-        position: toast.POSITION.TOP_RIGHT,
-      });
+      console.error("Self Order API Error:", error.response?.data || error.message);
+      toast.error(`Failed to create order: ${error.response?.data?.message || error.message}`);
     } finally {
       setIsLoading(false);
     }
@@ -177,10 +197,8 @@ const SelfOrder = () => {
           notes={formData.notes}
           setNotes={(updatedNotes) => handleChange("notes", updatedNotes)}
         />
-        <AdditionalInformation
-          formData={formData}
-          handleChange={handleChange}
-        />
+        <AdditionalInformation formData={formData} handleChange={handleChange} />
+
         <button
           onClick={handleSubmit}
           className="w-full py-2 bg-blue-500 text-white font-semibold rounded-lg"
@@ -188,6 +206,7 @@ const SelfOrder = () => {
         >
           {isLoading ? "Submitting..." : "Submit"}
         </button>
+
         <ToastContainer
           position="top-right"
           autoClose={5000}

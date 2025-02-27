@@ -42,6 +42,7 @@ const privateRoutes = [
     path: "/Loading-Entry/list-loading-entry",
     component: LazyPages.ListLoadingEntry,
   },
+  {path: "/loading-entry-sauda/:id",component: LazyPages.LoadingEntrySauda},
   { path: "/Supplier-Bid-List", component: LazyPages.SellerBidList },
   { path: "/participate-bid-list", component: LazyPages.ParticipateBid },
   { path: "/confirm-bids/:bidId", component: LazyPages.ConfirmBids },
