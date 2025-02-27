@@ -54,7 +54,7 @@ const LoadingEntry = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.post("http://localhost:5000/api/loading-entries", formData);
+      await axios.post("https://api.hansariafood.shop/api/loading-entries", formData);
       toast.success("Loading entry added successfully");
       setFormData({
         loadingDate: "",

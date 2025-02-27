@@ -20,8 +20,8 @@ const ListLoadingEntry = () => {
   const fetchData = async () => {
     try {
       const [entriesRes, sellersRes] = await Promise.all([
-        axios.get("http://localhost:5000/api/loading-entries"),
-        axios.get("http://localhost:5000/api/sellers"),
+        axios.get("https://api.hansariafood.shop/api/loading-entries"),
+        axios.get("https://api.hansariafood.shop/api/sellers"),
       ]);
       setLoadingEntries(entriesRes.data);
       setSellerMap(
@@ -47,7 +47,7 @@ const ListLoadingEntry = () => {
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this entry?")) {
       try {
-        await axios.delete(`http://localhost:5000/api/loading-entries/${id}`);
+        await axios.delete(`https://api.hansariafood.shop/api/loading-entries/${id}`);
         toast.success("Entry deleted successfully");
         fetchData();
       } catch (error) {

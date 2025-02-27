@@ -23,7 +23,7 @@ const fetchData = async (url, key) => {
 
 const fetchOrders = async (supplierId, consignee) => {
   try {
-    const response = await axios.get("http://localhost:5000/api/self-order");
+    const response = await axios.get("https://api.hansariafood.shop/api/self-order");
     return response.data.filter(
       (order) => order.supplier === supplierId && order.consignee === consignee
     );
@@ -46,8 +46,8 @@ const AddLoadingEntry = () => {
     const loadDropdowns = async () => {
       setLoading(true);
       const [suppliersData, consigneesData] = await Promise.all([
-        fetchData("http://localhost:5000/api/sellers", "sellerName"),
-        fetchData("http://localhost:5000/api/consignees", "name"),
+        fetchData("https://api.hansariafood.shop/api/sellers", "sellerName"),
+        fetchData("https://api.hansariafood.shop/api/consignees", "name"),
       ]);
       setSuppliers(suppliersData);
       setConsignees(consigneesData);
