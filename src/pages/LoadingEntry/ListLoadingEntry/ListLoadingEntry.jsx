@@ -1,44 +1,59 @@
-import React, { useEffect, useState } from "react";
+import React, { lazy, useEffect, useState } from "react";
 import axios from "axios";
-import Tables from "../../../common/Tables/Tables";
 import { MdVisibility, MdEdit, MdDelete, MdDownload } from "react-icons/md";
-import PrintLoadingEntry from "../PrintLoadingEntry/PrintLoadingEntry";
 import { toast } from "react-toastify";
+
+import PrintLoadingEntry from "../PrintLoadingEntry/PrintLoadingEntry";
+const PopupBox = lazy(() => import("../../../common/PopupBox/PopupBox"));
+const Tables = lazy(() => import("../../../common/Tables/Tables"));
 
 const ListLoadingEntry = () => {
   const [loadingEntries, setLoadingEntries] = useState([]);
   const [sellerMap, setSellerMap] = useState({});
+  const [selectedEntry, setSelectedEntry] = useState(null);
+  const [popupType, setPopupType] = useState("");
 
   useEffect(() => {
-    // Fetch loading entries
-    axios
-      .get("http://localhost:5000/api/loading-entries")
-      .then((response) => setLoadingEntries(response.data))
-      .catch(() => toast.error("Failed to fetch loading entries"));
-
-    // Fetch sellers and create a map of seller ID to seller name
-    axios
-      .get("http://localhost:5000/api/sellers")
-      .then((response) => {
-        const map = {};
-        response.data.forEach((seller) => {
-          map[seller._id] = seller.sellerName;
-        });
-        setSellerMap(map);
-      })
-      .catch(() => toast.error("Failed to fetch sellers"));
+    fetchData();
   }, []);
 
+  const fetchData = async () => {
+    try {
+      const [entriesRes, sellersRes] = await Promise.all([
+        axios.get("http://localhost:5000/api/loading-entries"),
+        axios.get("http://localhost:5000/api/sellers"),
+      ]);
+      setLoadingEntries(entriesRes.data);
+      setSellerMap(
+        Object.fromEntries(
+          sellersRes.data.map((seller) => [seller._id, seller.sellerName])
+        )
+      );
+    } catch (error) {
+      toast.error("Failed to fetch data");
+    }
+  };
+
   const handleView = (entry) => {
-    console.log("View entry:", entry);
+    setSelectedEntry(entry);
+    setPopupType("view");
   };
 
-  const handleEdit = (id) => {
-    console.log("Edit entry:", id);
+  const handleEdit = (entry) => {
+    setSelectedEntry(entry);
+    setPopupType("edit");
   };
 
-  const handleDelete = (id) => {
-    console.log("Delete entry:", id);
+  const handleDelete = async (id) => {
+    if (window.confirm("Are you sure you want to delete this entry?")) {
+      try {
+        await axios.delete(`http://localhost:5000/api/loading-entries/${id}`);
+        toast.success("Entry deleted successfully");
+        fetchData();
+      } catch (error) {
+        toast.error("Failed to delete entry",error);
+      }
+    }
   };
 
   const handleDownload = async (entry) => {
@@ -56,7 +71,6 @@ const ListLoadingEntry = () => {
         toast.error("Failed to generate download.");
       }
     } catch (error) {
-      console.error(error);
       toast.error("Error generating download.");
     }
   };
@@ -104,7 +118,7 @@ const ListLoadingEntry = () => {
         <MdVisibility size={18} />
       </button>
       <button
-        onClick={() => handleEdit(entry._id)}
+        onClick={() => handleEdit(entry)}
         title="Edit"
         className="p-1 text-green-500 hover:bg-green-100 rounded"
       >
@@ -133,6 +147,21 @@ const ListLoadingEntry = () => {
         Loading Entries
       </h1>
       <Tables headers={headers} rows={rows} />
+      {selectedEntry && (
+        <PopupBox
+          isOpen={!!popupType}
+          onClose={() => setPopupType("")}
+          title={popupType === "view" ? "View Entry" : "Edit Entry"}
+        >
+          {popupType === "view" ? (
+            <pre>{JSON.stringify(selectedEntry, null, 2)}</pre>
+          ) : (
+            <div>
+              <p>Edit functionality can be implemented here.</p>
+            </div>
+          )}
+        </PopupBox>
+      )}
     </div>
   );
 };
