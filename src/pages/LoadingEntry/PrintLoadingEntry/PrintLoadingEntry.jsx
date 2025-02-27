@@ -27,10 +27,10 @@ const PrintLoadingEntry = async (data) => {
       doc.line(10, 40, pageWidth - 10, 40);
 
       const [orders, sellers, companies, consignees] = await Promise.all([
-        axios.get("http://localhost:5000/api/self-order"),
-        axios.get("http://localhost:5000/api/sellers"),
-        axios.get("http://localhost:5000/api/seller-company"),
-        axios.get("http://localhost:5000/api/consignees"),
+        axios.get("https://api.hansariafood.shop/api/self-order"),
+        axios.get("https://api.hansariafood.shop/api/sellers"),
+        axios.get("https://api.hansariafood.shop/api/seller-company"),
+        axios.get("https://api.hansariafood.shop/api/consignees"),
       ]);
 
       const buyerDetails = orders.data.find((order) => order.saudaNo === data.saudaNo) || {};
