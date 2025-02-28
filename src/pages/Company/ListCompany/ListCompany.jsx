@@ -26,7 +26,9 @@ const ListCompany = () => {
   useEffect(() => {
     const fetchCompanyData = async () => {
       try {
-        const response = await axios.get("https://api.hansariafood.shop/api/companies");
+        const response = await axios.get(
+          "https://api.hansariafood.shop/api/companies"
+        );
 
         const sortedData = response.data.sort((a, b) => {
           if (a.group === b.group) {
@@ -48,9 +50,8 @@ const ListCompany = () => {
 
   useEffect(() => {
     const lowercasedSearchTerm = searchTerm.toLowerCase();
-    const filtered = companyData.filter(
-      (company) =>
-        company.companyName.toLowerCase().includes(lowercasedSearchTerm)
+    const filtered = companyData.filter((company) =>
+      company.companyName.toLowerCase().includes(lowercasedSearchTerm)
     );
     setFilteredData(filtered);
     setCurrentPage(1);
@@ -74,7 +75,9 @@ const ListCompany = () => {
   const handleDelete = async (index) => {
     const companyId = paginatedData[index]._id;
     try {
-      await axios.delete(`https://api.hansariafood.shop/api/companies/${companyId}`);
+      await axios.delete(
+        `https://api.hansariafood.shop/api/companies/${companyId}`
+      );
       const updatedData = filteredData.filter(
         (company) => company._id !== companyId
       );
@@ -105,10 +108,13 @@ const ListCompany = () => {
     company.commodities
       .map((commodity) =>
         commodity.parameters
+          .filter((param) => param.value !== "0")
           .map((param) => `${param.parameter}: ${param.value}`)
           .join(", ")
       )
+      .filter((entry) => entry !== "")
       .join(" | "),
+
     company.mandiLicense || "N/A",
     company.activeStatus ? "Active" : "Inactive",
     <Actions
@@ -122,11 +128,15 @@ const ListCompany = () => {
   return (
     <Suspense fallback={<Loading />}>
       <div className="container mx-auto p-4">
-        <h2 className="text-2xl font-semibold mb-4 text-center text-blue-500">List of Companies</h2>
-        <SearchBox
-          placeholder="Search companies by name..."
-          onSearch={(term) => setSearchTerm(term)}
-        />
+        <h2 className="text-2xl font-semibold mb-4 text-center text-blue-500">
+          List of Companies
+        </h2>
+        <div className="mb-4">
+          <SearchBox
+            placeholder="Search companies by name..."
+            onSearch={(term) => setSearchTerm(term)}
+          />
+        </div>
         <Tables
           headers={[
             "Sl No",
@@ -163,7 +173,8 @@ const ListCompany = () => {
                   <strong>Email:</strong> {selectedCompany.companyEmail}
                 </p>
                 <p>
-                  <strong>Consignee:</strong> {selectedCompany.consignee.join(", ")}
+                  <strong>Consignee:</strong>{" "}
+                  {selectedCompany.consignee.join(", ")}
                 </p>
                 <p>
                   <strong>Group:</strong> {selectedCompany.group}
@@ -172,7 +183,7 @@ const ListCompany = () => {
                 <ul>
                   {selectedCompany.commodities.map((commodity) => (
                     <li key={commodity._id}>
-                      <strong>{commodity.name}</strong>: {" "}
+                      <strong>{commodity.name}</strong>:{" "}
                       {commodity.parameters
                         .map((param) => `${param.parameter}: ${param.value} %`)
                         .join(", ")}

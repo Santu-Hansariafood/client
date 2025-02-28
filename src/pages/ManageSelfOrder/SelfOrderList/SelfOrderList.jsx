@@ -22,24 +22,28 @@ const OrderDetails = lazy(() => import("./OrderDetails/OrderDetails"));
 const DownloadSauda = lazy(() =>
   import("../../../components/DownloadSauda/DownloadSauda")
 );
+const SearchBox = lazy(() => import("../../../common/SearchBox/SearchBox"));
 
 const API_URL = "https://api.hansariafood.shop/api/self-order";
 
 const SelfOrderList = () => {
   const [data, setData] = useState([]);
+  const [filteredData, setFilteredData] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
   const [selectedItem, setSelectedItem] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    let isMounted = true; // Prevent memory leaks
+    let isMounted = true;
 
     const fetchData = async () => {
       try {
         const response = await axios.get(API_URL);
         if (isMounted) {
-          setData(response.data.reverse());
+          const reversedData = response.data.reverse();
+          setData(reversedData);
+          setFilteredData(reversedData);
           setLoading(false);
         }
       } catch (error) {
@@ -60,8 +64,8 @@ const SelfOrderList = () => {
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
 
   const currentItems = useMemo(
-    () => data.slice(indexOfFirstItem, indexOfLastItem),
-    [data, currentPage, itemsPerPage]
+    () => filteredData.slice(indexOfFirstItem, indexOfLastItem),
+    [filteredData, currentPage, itemsPerPage]
   );
 
   const handlePageChange = useCallback((pageNumber) => {
@@ -130,21 +134,37 @@ const SelfOrderList = () => {
     [currentItems, handleView]
   );
 
-  if (loading) return <Loading />;
-
   return (
     <Suspense fallback={<Loading />}>
       <div className="p-4 max-w-screen-lg mx-auto space-y-6 bg-gray-50 rounded-lg shadow-md">
         <h1 className="text-2xl font-semibold text-blue-500 text-center">
           Self Order List
         </h1>
+        <SearchBox
+          placeholder="Search by Buyer Name..."
+          items={data.map((item) => item.buyer)}
+          onSearch={(filteredNames) => {
+            if (!filteredNames.length) {
+              setFilteredData(data);
+              return;
+            }
+
+            const filteredOrders = data.filter((order) =>
+              filteredNames.includes(order.buyer)
+            );
+
+            setFilteredData(filteredOrders);
+          }}
+        />
+
         <Tables headers={headers} rows={rows} />
         <Pagination
           currentPage={currentPage}
-          totalItems={data.length}
+          totalItems={filteredData.length}
           itemsPerPage={itemsPerPage}
           onPageChange={handlePageChange}
         />
+
         {selectedItem && (
           <PopupBox
             isOpen={!!selectedItem}

@@ -148,11 +148,13 @@ const BuyerList = () => {
     <Suspense fallback={<Loading />}>
       <div className="container mx-auto p-4">
         <h2 className="text-2xl font-semibold mb-4">Buyer List</h2>
-        <SearchBox
-          placeholder="Search buyers..."
-          items={buyersData}
-          onSearch={handleSearch}
-        />
+        <div className="mb-4">
+          <SearchBox
+            placeholder="Search buyers..."
+            items={buyersData}
+            onSearch={handleSearch}
+          />
+        </div>
         <div className="overflow-x-auto">
           <Tables
             headers={[

@@ -123,16 +123,17 @@ const ListSellerDetails = () => {
           <SearchBox
             placeholder="Search sellers by name or phone..."
             items={data.map((item) => item.sellerName)}
-            onSearch={(term) => {
-              const lowerCaseTerm = term.toLowerCase();
-              const filtered = data.filter(
-                (item) =>
-                  item.sellerName.toLowerCase().includes(lowerCaseTerm) ||
-                  item.phoneNumbers.some((phone) =>
-                    phone.value.toLowerCase().includes(lowerCaseTerm)
-                  )
+            onSearch={(filteredNames) => {
+              if (!filteredNames.length) {
+                setFilteredData(data);
+                return;
+              }
+
+              const filteredSellers = data.filter(
+                (seller) => filteredNames.includes(seller.sellerName)
               );
-              setFilteredData(filtered);
+
+              setFilteredData(filteredSellers);
             }}
           />
         </div>

@@ -39,16 +39,14 @@ const ListCommodity = () => {
     fetchCommodities();
   }, []);
 
-  const handleSearch = (searchTerm) => {
-    if (searchTerm === "") {
+  const handleSearch = (filteredNames) => {
+    if (filteredNames.length === 0) {
       setFilteredCommodities([...commodities]);
     } else {
-      const filteredData = commodities.filter((commodity) =>
-        commodity.name.toLowerCase().includes(searchTerm.toLowerCase())
+      const results = commodities.filter((commodity) =>
+        filteredNames.includes(commodity.name)
       );
-      setFilteredCommodities(
-        filteredData.sort((a, b) => a.name.localeCompare(b.name))
-      );
+      setFilteredCommodities(results);
     }
   };
 
@@ -76,9 +74,7 @@ const ListCommodity = () => {
       );
       if (!confirmDelete) return;
 
-      await axios.delete(
-        `https://api.hansariafood.shop/api/commodities/${id}`
-      );
+      await axios.delete(`https://api.hansariafood.shop/api/commodities/${id}`);
 
       const updatedCommodities = commodities.filter(
         (commodity) => commodity._id !== id
@@ -125,7 +121,7 @@ const ListCommodity = () => {
           <div className="mb-6 flex justify-between items-center">
             <SearchBox
               placeholder="Search Commodities"
-              items={commodities.map((commodity) => commodity.name)}
+              items={commodities.map((commodity) => commodity.name || "")}
               onSearch={handleSearch}
             />
           </div>

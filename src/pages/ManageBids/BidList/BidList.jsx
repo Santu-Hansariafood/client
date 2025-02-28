@@ -28,9 +28,17 @@ const BidList = () => {
         const response = await axios.get(
           "https://api.hansariafood.shop/api/bids"
         );
-        const sortedBids = response.data.sort(
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+        const filteredBids = response.data.filter(
+          (bid) => new Date(bid.bidDate) >= sevenDaysAgo
+        );
+
+        const sortedBids = filteredBids.sort(
           (a, b) => new Date(b.bidDate) - new Date(a.bidDate)
         );
+
         setBids(sortedBids);
         setFilteredData(sortedBids);
       } catch (error) {
@@ -110,7 +118,8 @@ const BidList = () => {
     bid.origin,
     bid.commodity,
     Object.entries(bid.parameters)
-      .map(([key, value]) => `${key}: ${value}`)
+      .filter(([_, value]) => value !== "0")
+      .map(([key, value]) => `${key}: ${value}%`)
       .join(", "),
     bid.quantity,
     bid.rate,

@@ -51,13 +51,17 @@ const ListQualityParameter = () => {
     toast.success("Quality parameter added successfully!");
   };
 
-  const handleSearch = (searchResults) => {
-    setFilteredData(
-      qualityParameters.filter((param) =>
-        param.name.toLowerCase().includes(searchResults.toLowerCase())
-      )
-    );
+  const handleSearch = (filteredNames) => {
+    if (filteredNames.length === 0) {
+      setFilteredData([...qualityParameters]);
+    } else {
+      const results = qualityParameters.filter((param) =>
+        filteredNames.includes(param.name)
+      );
+      setFilteredData(results);
+    }
   };
+  
 
   const handleView = (item) => {
     console.log("Viewing:", item);

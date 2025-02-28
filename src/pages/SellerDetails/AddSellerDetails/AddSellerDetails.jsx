@@ -203,6 +203,9 @@ const AddSellerDetails = () => {
                 name={`phoneNumber_${index}`}
                 value={phone.value}
                 onChange={(e) => handlePhoneChange(phone.id, e.target.value)}
+                inputType="number"
+                minLength={10}
+                maxLength={10}
               />
             </div>
             <div className="flex items-center">

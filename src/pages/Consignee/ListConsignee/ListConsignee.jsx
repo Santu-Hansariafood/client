@@ -8,6 +8,7 @@ const Pagination = lazy(() =>
   import("../../../common/Paginations/Paginations")
 );
 const PopupBox = lazy(() => import("../../../common/PopupBox/PopupBox"));
+const SearchBox = lazy(() => import("../../../common/SearchBox/SearchBox"));
 const EditConsigneePopup = lazy(() =>
   import("../EditConsigneePopup/EditConsigneePopup")
 );
@@ -16,6 +17,7 @@ const ITEMS_PER_PAGE = 10;
 
 const ListConsignee = () => {
   const [consigneeData, setConsigneeData] = useState([]);
+  const [filteredData, setFilteredData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [isEditPopupOpen, setIsEditPopupOpen] = useState(false);
@@ -39,6 +41,7 @@ const ListConsignee = () => {
           a.name.localeCompare(b.name)
         );
         setConsigneeData(sortedData);
+        setFilteredData(sortedData);
         setLoading(false);
       } catch (error) {
         toast.error("Error fetching consignees:", error);
@@ -95,9 +98,28 @@ const ListConsignee = () => {
     }
   };
 
+  const handleSearch = (query) => {
+    if (!query) {
+      setFilteredData(consigneeData);
+      return;
+    }
+
+    const searchQuery = query.toLowerCase();
+    const results = consigneeData.filter(
+      (consignee) =>
+        consignee.name.toLowerCase().includes(searchQuery) ||
+        consignee.phone.includes(searchQuery) ||
+        consignee.email.toLowerCase().includes(searchQuery) ||
+        consignee.gst.includes(searchQuery) ||
+        consignee.pan.includes(searchQuery)
+    );
+
+    setFilteredData(results);
+  };
+
   const indexOfLastItem = currentPage * ITEMS_PER_PAGE;
   const indexOfFirstItem = indexOfLastItem - ITEMS_PER_PAGE;
-  const currentConsignees = consigneeData.slice(
+  const currentConsignees = filteredData.slice(
     indexOfFirstItem,
     indexOfLastItem
   );
@@ -127,10 +149,27 @@ const ListConsignee = () => {
   return (
     <Suspense fallback={<Loading />}>
       <div className="container mx-auto p-4">
-        <h2 className="text-2xl font-semibold mb-4">Consignee List</h2>
-
+        <h2 className="text-2xl font-semibold mb-4 text-center">
+          Consignee List
+        </h2>
+        <div className="mb-4">
+          <SearchBox
+            placeholder="Search by Name..."
+            items={consigneeData.map((c) => c.name || "")}
+            onSearch={(filteredNames) => {
+              if (filteredNames.length === 0) {
+                setFilteredData(consigneeData);
+              } else {
+                const results = consigneeData.filter((c) =>
+                  filteredNames.includes(c.name)
+                );
+                setFilteredData(results);
+              }
+            }}
+          />
+        </div>
         {loading ? (
-          <div>Loading...</div>
+          <Loading />
         ) : (
           <>
             <div className="overflow-x-auto">

@@ -64,7 +64,20 @@ const ListSellerCompany = () => {
   };
 
   const handleSearch = (filteredItems) => {
-    setSearchResults(filteredItems);
+    if (filteredItems.length === 0) {
+      setSearchResults(companies); // Reset when search is empty
+      return;
+    }
+
+    const results = companies.filter(
+      (company) =>
+        filteredItems.includes(company.companyName) ||
+        company.bankDetails?.some((bank) =>
+          filteredItems.includes(bank.accountNumber)
+        )
+    );
+
+    setSearchResults(results);
   };
 
   const handlePageChange = (pageNumber) => {
@@ -138,20 +151,26 @@ const ListSellerCompany = () => {
     <Suspense fallback={<Loading />}>
       <div className="p-4 sm:p-6 md:p-10 lg:p-16 bg-gray-100 flex justify-center items-center">
         <div className="w-full max-w-6xl bg-white rounded-lg shadow-md p-6">
-          <h2 className="text-2xl font-bold mb-4 text-gray-700">
+          <h2 className="text-2xl font-bold mb-4 text-gray-700 text-center">
             Seller Company List
           </h2>
-          <SearchBox
-            placeholder="Search by Name or Mobile Number"
-            items={companies.map(
-              (company) =>
-                company.companyName +
-                company.bankDetails
-                  ?.map((bank) => bank.accountNumber)
-                  .join(", ")
-            )}
-            onSearch={handleSearch}
-          />
+          <div className="mb-4">
+            <SearchBox
+              placeholder="Search by Name or Account Number"
+              items={[
+                ...companies
+                  .map((company) => company.companyName || "")
+                  .filter(Boolean),
+                ...companies.flatMap(
+                  (company) =>
+                    company.bankDetails
+                      ?.map((bank) => bank.accountNumber || "")
+                      .filter(Boolean) || []
+                ),
+              ]}
+              onSearch={handleSearch}
+            />
+          </div>
           <Tables headers={headers} rows={rows} />
           <Pagination
             currentPage={currentPage}
