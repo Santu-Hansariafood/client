@@ -90,6 +90,7 @@ const AddCompany = () => {
             ...param,
             value: "",
           })),
+          brokerage: "",
         };
         return updatedCommodities;
       });
@@ -139,6 +140,7 @@ const AddCompany = () => {
       group: selectedGroup ? selectedGroup.value : null,
       commodities: selectedCommodities.map((entry) => ({
         name: entry.commodity.label,
+        brokerage: entry.brokerage,
         parameters: entry.parameters.map((param) => ({
           parameter: param.parameter,
           value: param.value || "",
@@ -264,6 +266,23 @@ const AddCompany = () => {
                       />
                     </div>
                   ))}
+                  {/* Brokerage Field */}
+                  <div>
+                    <label className="text-xs font-medium text-gray-500">
+                      Brokerage per Tons
+                    </label>
+                    <DataInput
+                      placeholder="Enter brokerage amount"
+                      value={entry.brokerage}
+                      onChange={(e) =>
+                        setSelectedCommodities((prev) => {
+                          const updated = [...prev];
+                          updated[index].brokerage = e.target.value;
+                          return updated;
+                        })
+                      }
+                    />
+                  </div>
                 </div>
               </div>
             ))}

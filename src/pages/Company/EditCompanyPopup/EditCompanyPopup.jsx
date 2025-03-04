@@ -30,9 +30,7 @@ const EditCompanyPopup = ({ company, isOpen, onClose, onUpdate }) => {
           await Promise.all([
             axios.get("https://api.hansariafood.shop/api/consignees"),
             axios.get("https://api.hansariafood.shop/api/commodities"),
-            axios.get(
-              "https://api.hansariafood.shop/api/quality-parameters"
-            ),
+            axios.get("https://api.hansariafood.shop/api/quality-parameters"),
             axios.get("https://api.hansariafood.shop/api/groups"),
           ]);
         setConsignees(consigneeRes.data);
@@ -59,6 +57,7 @@ const EditCompanyPopup = ({ company, isOpen, onClose, onUpdate }) => {
       const newCommodity = {
         name: selectedCommodity.label,
         _id: selectedCommodity.value,
+        brokerage: "",
         parameters: [],
       };
       setFormData({
@@ -89,13 +88,15 @@ const EditCompanyPopup = ({ company, isOpen, onClose, onUpdate }) => {
     setFormData({ ...formData, commodities: updatedCommodities });
   };
 
-  const handleParameterValueChange = (
-    commodityIndex,
-    parameterIndex,
-    value
-  ) => {
+  const handleParameterValueChange = (commodityIndex, parameterIndex, value) => {
     const updatedCommodities = [...formData.commodities];
     updatedCommodities[commodityIndex].parameters[parameterIndex].value = value;
+    setFormData({ ...formData, commodities: updatedCommodities });
+  };
+
+  const handleBrokerageChange = (commodityIndex, value) => {
+    const updatedCommodities = [...formData.commodities];
+    updatedCommodities[commodityIndex].brokerage = value;
     setFormData({ ...formData, commodities: updatedCommodities });
   };
 
@@ -235,6 +236,14 @@ const EditCompanyPopup = ({ company, isOpen, onClose, onUpdate }) => {
                     >
                       ✖
                     </button>
+                    <label className="block mt-2 font-semibold">Brokerage</label>
+                    <DataInput
+                      placeholder="Enter Brokerage"
+                      value={commodity.brokerage || ""}
+                      onChange={(e) =>
+                        handleBrokerageChange(commodityIndex, e.target.value)
+                      }
+                    />
                     <p className="font-semibold">{commodity.name}</p>
                     <label className="block mt-2 font-semibold">
                       Quality Parameters
