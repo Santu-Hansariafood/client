@@ -254,19 +254,18 @@ const ListSellerCompany = () => {
               title={`Edit ${editCompany.companyName}`}
             >
               <EditSellerCompany
-                company={editCompany}
-                onSave={(updatedCompany) => {
-                  setCompanies((prev) =>
-                    prev.map((company) =>
-                      company.id === updatedCompany.id
-                        ? updatedCompany
-                        : company
-                    )
-                  );
-                  setEditCompany(null);
-                }}
-                onCancel={() => setEditCompany(null)}
-              />
+  company={editCompany} // <-- This is passed as company
+  onSave={(updatedCompany) => {
+    setCompanies((prev) =>
+      prev.map((company) =>
+        company.id === updatedCompany.id ? updatedCompany : company
+      )
+    );
+    setEditCompany(null);
+  }}
+  onCancel={() => setEditCompany(null)}
+/>
+
             </PopupBox>
           )}
         </div>
