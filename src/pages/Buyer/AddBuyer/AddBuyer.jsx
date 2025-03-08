@@ -62,6 +62,7 @@ const AddBuyer = () => {
           companies.map((company) => ({
             value: company.companyName,
             label: company.companyName,
+            commodities: company.commodities || [],
           }))
         );
 
@@ -71,8 +72,17 @@ const AddBuyer = () => {
             label: commodity.name,
           }))
         );
+
+        const consignees = companies
+          .flatMap((company) => company.consignee || []) // Extract consignees
+          .map((consignee) => ({
+            value: consignee,
+            label: consignee,
+          }));
+
+        setConsigneeOptions(consignees);
       } catch (error) {
-        toast.error("Failed to load dropdown data. Please try again.", error);
+        toast.error("Failed to load dropdown data. Please try again.");
       }
     };
 
@@ -82,41 +92,43 @@ const AddBuyer = () => {
   const handleDropdownChange = (selectedOption, actionMeta) => {
     const fieldName = actionMeta.name;
 
-    if (fieldName === "group") {
-      const selectedGroup = groupOptions.find(
-        (group) => group.value === selectedOption?.value
+    if (fieldName === "companyName") {
+      const selectedCompany = companyOptions.find(
+        (company) => company.value === selectedOption?.value
       );
 
-      setConsigneeOptions(
-        selectedGroup?.consignees.map((consignee) => ({
-          value: consignee,
-          label: consignee,
-        })) || []
-      );
+      if (selectedCompany) {
+        const newBrokerage = {};
+        selectedCompany.commodities.forEach((commodity) => {
+          newBrokerage[commodity.name] = commodity.brokerage;
+        });
 
-      setFormData({
-        ...formData,
-        group: selectedOption,
-        consignee: [],
-      });
+        setFormData({
+          ...formData,
+          companyName: selectedOption,
+          brokerage: newBrokerage,
+        });
+      } else {
+        setFormData({
+          ...formData,
+          companyName: selectedOption,
+          brokerage: {},
+        });
+      }
     } else if (fieldName === "commodity") {
       const selectedCommodities = selectedOption || [];
-      const newBrokerage = {};
+      const newBrokerage = { ...formData.brokerage };
 
       selectedCommodities.forEach((commodity) => {
-        newBrokerage[commodity.value] =
-          formData.brokerage[commodity.value] || "";
+        if (!newBrokerage[commodity.value]) {
+          newBrokerage[commodity.value] = "";
+        }
       });
 
       setFormData({
         ...formData,
         commodity: selectedCommodities,
         brokerage: newBrokerage,
-      });
-    } else if (fieldName === "companyName") {
-      setFormData({
-        ...formData,
-        companyName: selectedOption,
       });
     } else {
       setFormData({
@@ -180,7 +192,7 @@ const AddBuyer = () => {
           companyName: formData.companyName?.value || "",
           commodity: formData.commodity.map((item) => item.value),
           status: formData.status?.value || "",
-          brokerage: new Map(
+          brokerage: Object.fromEntries(
             Object.entries(formData.brokerage).map(([key, value]) => [
               key,
               Number(value),
@@ -188,11 +200,11 @@ const AddBuyer = () => {
           ),
         };
 
-        await axios.post(
-          "https://api.hansariafood.shop/api/buyers",
-          payload
-        );
+        console.log("Submitting Payload:", payload); // Debugging line
+
+        await axios.post("http://localhost:5000/api/buyers", payload);
         toast.success("Buyer added successfully!");
+
         setFormData({
           name: "",
           mobile: [""],
@@ -206,7 +218,7 @@ const AddBuyer = () => {
           consignee: [],
         });
       } catch (error) {
-        console.error(error);
+        console.error("Error submitting buyer:", error);
         toast.error("Failed to add buyer. Please try again.");
       }
     }
@@ -374,16 +386,15 @@ const AddBuyer = () => {
                   </label>
                   <DataInput
                     name={`brokerage-${commodity.value}`}
-                    placeholder={`Enter brokerage for ${commodity.label}`}
+                    placeholder={`Brokerage for ${commodity.label}`}
                     value={formData.brokerage[commodity.value]}
-                    onChange={(e) => handleBrokerageChange(e, commodity.value)}
                     inputType="number"
-                    min="0"
-                    required
+                    readOnly // Make field read-only
                   />
                 </div>
               ))}
             </div>
+
             <div>
               <label className="block text-gray-700 mb-2" htmlFor="consignee">
                 {buyerLabels.consignee_title}

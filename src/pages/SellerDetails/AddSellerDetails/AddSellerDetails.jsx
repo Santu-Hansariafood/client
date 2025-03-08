@@ -327,8 +327,8 @@ const AddSellerDetails = () => {
               try {
                 const buyersRes = await axios.get(`${apiBaseURL}/buyers`);
                 return buyersRes.data.map((item) => ({
-                  value: item.name,
-                  label: item.name,
+                  value: item.companyName,
+                  label: item.companyName,
                 }));
               } catch (error) {
                 toast.error("Failed to load buyers.",error);
@@ -336,7 +336,7 @@ const AddSellerDetails = () => {
               }
             }}
             options={selectedBuyers}
-            placeholder="Select buyers"
+            placeholder="Select buyers Company"
             isMulti
             value={selectedBuyers}
             onChange={(selected) => setSelectedBuyers(selected || [])}

@@ -33,9 +33,9 @@ const AddCompany = () => {
     const fetchData = async () => {
       try {
         const [consignees, groups, commodities] = await Promise.all([
-          axios.get("https://api.hansariafood.shop/api/consignees"),
-          axios.get("https://api.hansariafood.shop/api/groups"),
-          axios.get("https://api.hansariafood.shop/api/commodities"),
+          axios.get("http://localhost:5000/api/consignees"),
+          axios.get("http://localhost:5000/api/groups"),
+          axios.get("http://localhost:5000/api/commodities"),
         ]);
 
         setConsigneeOptions(
