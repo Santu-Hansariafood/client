@@ -202,7 +202,7 @@ const AddBuyer = () => {
 
         console.log("Submitting Payload:", payload); // Debugging line
 
-        await axios.post("http://localhost:5000/api/buyers", payload);
+        await axios.post("https://api.hansariafood.shop/api/buyers", payload);
         toast.success("Buyer added successfully!");
 
         setFormData({
