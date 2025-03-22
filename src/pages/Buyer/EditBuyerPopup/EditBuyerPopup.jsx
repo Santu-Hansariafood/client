@@ -24,7 +24,7 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
         email: buyer.email || [""],
         password: buyer.password || "",
         commodity: buyer.commodity || [""],
-        brokerage: buyer.brokerage || {},
+        // brokerage: buyer.brokerage || {},
         consignee: buyer.consignee || [],
         companyName: buyer.companyName || "",
       });
@@ -243,14 +243,14 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
                           </option>
                         ))}
                       </select>
-                      <DataInput
+                      {/* <DataInput
                         placeholder="Brokerage"
                         value={formData.brokerage[comm] || ""}
                         onChange={(e) =>
                           handleBrokerageChange(comm, e.target.value)
                         }
                         inputType="number"
-                      />
+                      /> */}
                       <button
                         type="button"
                         onClick={() => removeField("commodity", index)}
