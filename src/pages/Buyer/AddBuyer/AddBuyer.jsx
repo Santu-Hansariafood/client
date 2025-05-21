@@ -31,6 +31,7 @@ const AddBuyer = () => {
   const [companyOptions, setCompanyOptions] = useState([]);
   const [commodityOptions, setCommodityOptions] = useState([]);
   const [consigneeOptions, setConsigneeOptions] = useState([]);
+  const [successMessage, setSuccessMessage] = useState("");
 
   const statusOptions = useMemo(
     () => [
@@ -200,11 +201,8 @@ const AddBuyer = () => {
           ),
         };
 
-        console.log("Submitting Payload:", payload); // Debugging line
-
         await axios.post("https://api.hansariafood.shop/api/buyers", payload);
-        toast.success("Buyer added successfully!");
-
+        setSuccessMessage("Buyer added successfully!");
         setFormData({
           name: "",
           mobile: [""],
@@ -217,8 +215,9 @@ const AddBuyer = () => {
           status: "",
           consignee: [],
         });
+        setTimeout(() => setSuccessMessage(""), 3000);
       } catch (error) {
-        console.error("Error submitting buyer:", error);
+        setSuccessMessage("");
         toast.error("Failed to add buyer. Please try again.");
       }
     }
@@ -226,14 +225,20 @@ const AddBuyer = () => {
 
   return (
     <Suspense fallback={<Loading />}>
-      <div className="max-w-2xl mx-auto p-6 border rounded-lg shadow-lg bg-white">
-        <h2 className="text-2xl font-semibold mb-6 text-center">
+      <div className="max-w-2xl mx-auto p-4 sm:p-8 border rounded-2xl shadow-2xl bg-white mt-6 mb-6">
+        <h2 className="text-3xl font-bold mb-8 text-center text-blue-700 tracking-wide">
           {buyerLabels.title}
         </h2>
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+        {successMessage && (
+          <div className="mb-4 p-3 rounded-lg bg-green-100 text-green-800 text-center font-semibold animate-fade-in">
+            {successMessage}
+          </div>
+        )}
+        <form onSubmit={handleSubmit} className="space-y-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {/* Name */}
             <div>
-              <label className="block text-gray-700 mb-2" htmlFor="name">
+              <label className="block text-gray-800 mb-2 font-medium" htmlFor="name">
                 {buyerLabels.title_name}
               </label>
               <DataInput
@@ -242,13 +247,15 @@ const AddBuyer = () => {
                 value={formData.name}
                 onChange={handleInputChange}
                 required
+                className="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
               />
               {errors.name && (
-                <p className="text-red-500 text-sm">{errors.name}</p>
+                <p className="text-red-500 text-xs mt-1">{errors.name}</p>
               )}
             </div>
+            {/* Company Name */}
             <div>
-              <label className="block text-gray-700 mb-2" htmlFor="companyName">
+              <label className="block text-gray-800 mb-2 font-medium" htmlFor="companyName">
                 {buyerLabels.company_name_title}
               </label>
               <DataDropdown
@@ -259,11 +266,12 @@ const AddBuyer = () => {
                   handleDropdownChange(selected, { name: "companyName" })
                 }
                 placeholder="Select Company Name"
-                // Removed the isMulti prop
+                className="w-full"
               />
             </div>
+            {/* Group */}
             <div>
-              <label className="block text-gray-700 mb-2" htmlFor="group">
+              <label className="block text-gray-800 mb-2 font-medium" htmlFor="group">
                 {buyerLabels.company_name}
               </label>
               <DataDropdown
@@ -274,10 +282,12 @@ const AddBuyer = () => {
                   handleDropdownChange(selected, { name: "group" })
                 }
                 placeholder="Select Group of Company"
+                className="w-full"
               />
             </div>
+            {/* Password */}
             <div>
-              <label className="block text-gray-700 mb-2" htmlFor="password">
+              <label className="block text-gray-800 mb-2 font-medium" htmlFor="password">
                 {buyerLabels.password_title}
               </label>
               <DataInput
@@ -289,10 +299,12 @@ const AddBuyer = () => {
                 required
                 minLength="4"
                 maxLength="25"
+                className="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
               />
             </div>
+            {/* Mobile Numbers */}
             <div>
-              <label className="block text-gray-700 mb-2">
+              <label className="block text-gray-800 mb-2 font-medium">
                 {buyerLabels.mobile_title}
               </label>
               {formData.mobile.map((mobile, index) => (
@@ -306,12 +318,13 @@ const AddBuyer = () => {
                     required
                     maxLength="10"
                     minLength="10"
+                    className="flex-1 rounded-lg border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
                   />
                   {formData.mobile.length > 1 && (
                     <button
                       type="button"
                       onClick={() => handleRemoveField("mobile", index)}
-                      className="text-red-500"
+                      className="text-red-500 hover:text-red-700 transition"
                     >
                       <FaTrash />
                     </button>
@@ -321,16 +334,17 @@ const AddBuyer = () => {
               <button
                 type="button"
                 onClick={() => handleAddField("mobile")}
-                className="text-blue-500 flex items-center mt-2"
+                className="text-blue-600 flex items-center mt-2 hover:underline"
               >
                 <FaPlus className="mr-1" /> {buyerLabels.add_mobile}
               </button>
               {errors.mobile && (
-                <p className="text-red-500 text-sm">{errors.mobile}</p>
+                <p className="text-red-500 text-xs mt-1">{errors.mobile}</p>
               )}
             </div>
+            {/* Emails */}
             <div>
-              <label className="block text-gray-700 mb-2">
+              <label className="block text-gray-800 mb-2 font-medium">
                 {buyerLabels.email_title}
               </label>
               {formData.email.map((email, index) => (
@@ -342,12 +356,13 @@ const AddBuyer = () => {
                     value={email}
                     onChange={(e) => handleInputChange(e, index, "email")}
                     required
+                    className="flex-1 rounded-lg border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
                   />
                   {formData.email.length > 1 && (
                     <button
                       type="button"
                       onClick={() => handleRemoveField("email", index)}
-                      className="text-red-500"
+                      className="text-red-500 hover:text-red-700 transition"
                     >
                       <FaTrash />
                     </button>
@@ -357,16 +372,17 @@ const AddBuyer = () => {
               <button
                 type="button"
                 onClick={() => handleAddField("email")}
-                className="text-blue-500 flex items-center mt-2"
+                className="text-blue-600 flex items-center mt-2 hover:underline"
               >
                 <FaPlus className="mr-1" /> {buyerLabels.add_email}
               </button>
               {errors.email && (
-                <p className="text-red-500 text-sm">{errors.email}</p>
+                <p className="text-red-500 text-xs mt-1">{errors.email}</p>
               )}
             </div>
+            {/* Commodity & Brokerage */}
             <div>
-              <label className="block text-gray-700 mb-2" htmlFor="commodity">
+              <label className="block text-gray-800 mb-2 font-medium" htmlFor="commodity">
                 {buyerLabels.commodity_title}
               </label>
               <DataDropdown
@@ -378,6 +394,7 @@ const AddBuyer = () => {
                 }
                 placeholder="Select Commodity"
                 isMulti
+                className="w-full"
               />
               {formData.commodity.map((commodity) => (
                 <div key={commodity.value} className="mt-4">
@@ -389,14 +406,15 @@ const AddBuyer = () => {
                     placeholder={`Brokerage for ${commodity.label}`}
                     value={formData.brokerage[commodity.value]}
                     inputType="number"
-                    readOnly // Make field read-only
+                    readOnly
+                    className="w-full rounded-lg border-gray-300 bg-gray-100"
                   />
                 </div>
               ))}
             </div>
-
+            {/* Consignee */}
             <div>
-              <label className="block text-gray-700 mb-2" htmlFor="consignee">
+              <label className="block text-gray-800 mb-2 font-medium" htmlFor="consignee">
                 {buyerLabels.consignee_title}
               </label>
               <DataDropdown
@@ -408,10 +426,12 @@ const AddBuyer = () => {
                 }
                 placeholder="Select Consignee"
                 isMulti
+                className="w-full"
               />
             </div>
+            {/* Status */}
             <div>
-              <label className="block text-gray-700 mb-2" htmlFor="status">
+              <label className="block text-gray-800 mb-2 font-medium" htmlFor="status">
                 {buyerLabels.status_title}
               </label>
               <DataDropdown
@@ -422,12 +442,12 @@ const AddBuyer = () => {
                   handleDropdownChange(selected, { name: "status" })
                 }
                 placeholder="Select Status"
+                className="w-full"
               />
             </div>
           </div>
-
-          <div className="flex justify-end">
-            <Buttons label="Submit" type="submit" variant="primary" size="md" />
+          <div className="flex justify-end mt-8">
+            <Buttons label="Submit" type="submit" variant="primary" size="md" className="px-8 py-2 rounded-lg shadow-md bg-blue-600 hover:bg-blue-700 text-white font-semibold transition" />
           </div>
         </form>
         <ToastContainer

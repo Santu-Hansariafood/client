@@ -27,33 +27,70 @@ const DataDropdown = ({
           ...theme,
           colors: {
             ...theme.colors,
-            primary: "#3498db",
-            primary50: "#67b6c7",
-            danger: "#e74c3c",
-            dangerLight: "#ffcad4",
+            primary: "#2563eb",
+            primary25: "#e0e7ff",
+            primary50: "#93c5fd",
+            danger: "#e11d48",
+            dangerLight: "#fee2e2",
+            neutral0: "#f8fafc",
+            neutral10: "#e0e7ef",
+            neutral20: "#cbd5e1",
+            neutral30: "#94a3b8",
           },
           spacing: {
             ...theme.spacing,
-            controlHeight: 40,
+            controlHeight: 44,
+            baseUnit: 6,
           },
-          borderRadius: 10,
+          borderRadius: 14,
           fontSize: 16,
         })}
         styles={{
-          control: (provided) => ({
+          control: (provided, state) => ({
             ...provided,
-            boxShadow: "0 0 10px rgba(0, 0, 0, 0.1)",
-            borderColor: "#ccc",
-            "&:hover": {
-              borderColor: "#aaa",
-            },
+            background: "rgba(255,255,255,0.85)",
+            borderColor: state.isFocused ? "#2563eb" : "#cbd5e1",
+            boxShadow: state.isFocused ? "0 0 0 2px #2563eb33" : "0 2px 8px rgba(0,0,0,0.06)",
+            transition: "border-color 0.2s, box-shadow 0.2s",
+            minHeight: 44,
+            fontWeight: 500,
           }),
-          option: (provided) => ({
+          option: (provided, state) => ({
             ...provided,
-            backgroundColor: "#f9f9f9",
-            color: "#333",
-            "&:hover": {
-              backgroundColor: "#f2f2f2",
+            backgroundColor: state.isSelected
+              ? "#2563eb"
+              : state.isFocused
+              ? "#e0e7ff"
+              : "#f8fafc",
+            color: state.isSelected ? "#fff" : "#1e293b",
+            fontWeight: state.isSelected ? 600 : 400,
+            cursor: "pointer",
+            transition: "background 0.2s, color 0.2s",
+          }),
+          menu: (provided) => ({
+            ...provided,
+            borderRadius: 14,
+            boxShadow: "0 8px 24px rgba(0,0,0,0.10)",
+            background: "rgba(255,255,255,0.98)",
+            marginTop: 6,
+          }),
+          multiValue: (provided) => ({
+            ...provided,
+            backgroundColor: "#e0e7ff",
+            borderRadius: 8,
+            padding: "2px 6px",
+          }),
+          multiValueLabel: (provided) => ({
+            ...provided,
+            color: "#2563eb",
+            fontWeight: 500,
+          }),
+          multiValueRemove: (provided) => ({
+            ...provided,
+            color: "#e11d48",
+            ':hover': {
+              backgroundColor: "#fee2e2",
+              color: "#be123c",
             },
           }),
         }}

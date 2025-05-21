@@ -3,27 +3,27 @@ import { MdVisibility, MdEdit, MdDelete } from "react-icons/md";
 
 const Actions = ({ onView, onEdit, onDelete }) => {
   return (
-    <div className="flex space-x-2 bg-white rounded-lg shadow-md p-2">
+    <div className="flex space-x-2 bg-white/80 rounded-xl shadow-lg p-2 border border-gray-100 backdrop-blur-md">
       <button
         onClick={onView}
-        className="bg-gradient-to-r from-blue-500 to-blue-700 text-white py-2 px-4 rounded-lg focus:outline-none hover:scale-105 transition duration-300"
+        className="group bg-gradient-to-tr from-blue-400 to-blue-700 text-white py-2 px-3 rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-blue-400/60 hover:scale-110 transition-all duration-200 border border-blue-200 hover:shadow-xl"
         title="View"
       >
-        <MdVisibility size={15} className="animate-pulse" />
+        <MdVisibility size={18} className="group-hover:animate-pulse" />
       </button>
       <button
         onClick={onEdit}
-        className="bg-gradient-to-r from-green-500 to-green-700 text-white py-2 px-4 rounded-lg focus:outline-none hover:scale-105 transition duration-300"
+        className="group bg-gradient-to-tr from-green-400 to-green-700 text-white py-2 px-3 rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-green-400/60 hover:scale-110 transition-all duration-200 border border-green-200 hover:shadow-xl"
         title="Edit"
       >
-        <MdEdit size={15} className="animate-pulse" />
+        <MdEdit size={18} className="group-hover:animate-pulse" />
       </button>
       <button
         onClick={onDelete}
-        className="bg-gradient-to-r from-red-500 to-red-700 text-white py-2 px-4 rounded-lg focus:outline-none hover:scale-105 transition duration-300"
+        className="group bg-gradient-to-tr from-red-400 to-red-700 text-white py-2 px-3 rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-red-400/60 hover:scale-110 transition-all duration-200 border border-red-200 hover:shadow-xl"
         title="Delete"
       >
-        <MdDelete size={15} className="animate-pulse" />
+        <MdDelete size={18} className="group-hover:animate-pulse" />
       </button>
     </div>
   );

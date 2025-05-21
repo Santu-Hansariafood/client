@@ -24,28 +24,30 @@ const Pagination = ({
   }
 
   return (
-    <div className="flex flex-col items-center mt-4">
-      <div className="flex justify-center space-x-2 mb-2">
+    <div className="flex flex-col items-center mt-6">
+      <div className="flex justify-center space-x-2 mb-3">
         {pageGroups.map((group) => (
           <button
             key={group}
             onClick={() => setCurrentGroup(group)}
-            className={`px-3 py-1 rounded ${
+            className={`px-3 py-1 rounded-lg shadow transition-all duration-200 font-semibold focus:outline-none focus:ring-2 focus:ring-blue-400/60 border border-transparent ${
               currentGroup === group
-                ? "bg-blue-500 text-white"
-                : "bg-gray-300 hover:bg-gray-400"
+                ? "bg-gradient-to-r from-blue-500 to-blue-700 text-white scale-105"
+                : "bg-white text-blue-600 hover:bg-blue-100 border-blue-200"
             }`}
           >
             {group}
           </button>
         ))}
       </div>
-      <div className="flex justify-center space-x-2">
+      <div className="flex justify-center space-x-2 bg-white/80 rounded-xl shadow p-2">
         <button
           onClick={() => onPageChange(currentPage - 1)}
           disabled={currentPage === 1}
-          className={`px-3 py-1 bg-gray-300 hover:bg-gray-400 rounded ${
-            currentPage === 1 && "cursor-not-allowed opacity-50"
+          className={`px-3 py-1 rounded-lg font-medium transition-all duration-200 border border-gray-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400/60 ${
+            currentPage === 1
+              ? "bg-gray-200 text-gray-400 cursor-not-allowed opacity-60"
+              : "bg-white text-blue-600 hover:bg-blue-100"
           }`}
         >
           Previous
@@ -55,10 +57,10 @@ const Pagination = ({
           <button
             key={number}
             onClick={() => onPageChange(number)}
-            className={`px-3 py-1 rounded ${
+            className={`px-3 py-1 rounded-lg font-semibold transition-all duration-200 border border-transparent focus:outline-none focus:ring-2 focus:ring-blue-400/60 shadow-sm ${
               currentPage === number
-                ? "bg-blue-500 text-white"
-                : "bg-gray-300 hover:bg-gray-400"
+                ? "bg-gradient-to-r from-blue-500 to-blue-700 text-white scale-105"
+                : "bg-white text-blue-600 hover:bg-blue-100 border-blue-200"
             }`}
           >
             {number}
@@ -68,8 +70,10 @@ const Pagination = ({
         <button
           onClick={() => onPageChange(currentPage + 1)}
           disabled={currentPage === totalPages}
-          className={`px-3 py-1 bg-gray-300 hover:bg-gray-400 rounded ${
-            currentPage === totalPages && "cursor-not-allowed opacity-50"
+          className={`px-3 py-1 rounded-lg font-medium transition-all duration-200 border border-gray-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400/60 ${
+            currentPage === totalPages
+              ? "bg-gray-200 text-gray-400 cursor-not-allowed opacity-60"
+              : "bg-white text-blue-600 hover:bg-blue-100"
           }`}
         >
           Next

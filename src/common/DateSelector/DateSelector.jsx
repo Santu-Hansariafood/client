@@ -25,12 +25,12 @@ const DateSelector = ({ selectedDate, onChange }) => {
   };
 
   return (
-    <div className="w-full max-w-md flex items-center border border-blue-500 rounded-md p-2 shadow-md bg-white">
+    <div className="w-full max-w-md flex items-center bg-white/80 border border-blue-300 rounded-xl p-3 shadow-lg backdrop-blur-md">
       <DatePicker
         selected={currentDate}
         onChange={handleDateChange}
         dateFormat="dd/MM/yyyy"
-        className="w-full px-2 py-1 text-gray-700 focus:outline-none"
+        className="w-full px-3 py-2 text-gray-700 rounded-lg bg-white/70 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-200 shadow-sm"
         placeholderText="Select a date"
         calendarClassName="react-datepicker-left"
         wrapperClassName="w-full"
@@ -39,7 +39,7 @@ const DateSelector = ({ selectedDate, onChange }) => {
       <button
         type="button"
         onClick={handleIconClick}
-        className="ml-2 text-blue-500 hover:text-blue-700"
+        className="ml-3 p-2 rounded-full bg-blue-100 hover:bg-blue-200 text-blue-600 hover:text-blue-800 shadow transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-blue-400"
         aria-label="Select current date"
       >
         <FaCalendarAlt size={20} />

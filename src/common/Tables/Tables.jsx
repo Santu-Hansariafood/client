@@ -2,14 +2,14 @@ import PropTypes from "prop-types";
 
 const Tables = ({ headers, rows }) => {
   return (
-    <div className="w-full overflow-auto scroll-smooth">
-      <table className="w-full table-auto border-collapse border border-gray-300 shadow-md">
-        <thead>
+    <div className="w-full overflow-x-auto scroll-smooth rounded-2xl shadow-lg bg-white">
+      <table className="w-full table-auto border-separate border-spacing-0 min-w-max">
+        <thead className="sticky top-0 z-10">
           <tr className="bg-gradient-to-r from-green-500 to-green-700 text-white">
             {headers.map((header, index) => (
               <th
                 key={index}
-                className="px-4 py-2 border border-gray-300 text-left text-xs md:text-sm lg:text-base font-semibold uppercase tracking-wide whitespace-nowrap"
+                className="px-4 py-3 border-b border-green-600 text-left text-xs md:text-sm lg:text-base font-bold uppercase tracking-wider whitespace-nowrap sticky top-0 bg-gradient-to-r from-green-500 to-green-700 shadow-md"
               >
                 {header}
               </th>
@@ -22,13 +22,13 @@ const Tables = ({ headers, rows }) => {
               <tr
                 key={rowIndex}
                 className={`transition-colors duration-200 ${
-                  rowIndex % 2 === 0 ? "bg-yellow-50" : "bg-white"
+                  rowIndex % 2 === 0 ? "bg-green-50" : "bg-white"
                 } hover:bg-green-100`}
               >
                 {row.map((cell, cellIndex) => (
                   <td
                     key={cellIndex}
-                    className="px-4 py-2 border border-gray-300 text-xs md:text-sm lg:text-base break-words whitespace-nowrap"
+                    className="px-4 py-3 border-b border-gray-200 text-xs md:text-sm lg:text-base break-words whitespace-nowrap"
                   >
                     {cell}
                   </td>
@@ -39,7 +39,7 @@ const Tables = ({ headers, rows }) => {
             <tr>
               <td
                 colSpan={headers.length}
-                className="text-center py-4 text-sm md:text-base text-gray-500"
+                className="text-center py-6 text-base md:text-lg text-gray-500"
               >
                 No data available
               </td>

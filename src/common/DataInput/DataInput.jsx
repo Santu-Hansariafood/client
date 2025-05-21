@@ -29,13 +29,14 @@ const DataInput = ({
         required={required}
         disabled={disabled}
         readOnly={readOnly}
-        className={`w-full px-4 py-2 border rounded-md transition-all
-          ${
-            disabled || readOnly
-              ? "bg-gray-200 text-gray-500 cursor-not-allowed border-gray-300"
-              : "bg-white text-gray-800 border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
-          }
-          placeholder-gray-400 shadow-sm focus:shadow-md`}
+        className={`w-full px-5 py-3 border rounded-xl transition-all duration-200
+          bg-white text-gray-900 border-gray-300
+          shadow-sm focus:shadow-lg
+          focus:border-blue-500 focus:ring-2 focus:ring-blue-200
+          hover:border-blue-400
+          placeholder-gray-400
+          ${disabled || readOnly ? "bg-gray-100 text-gray-400 cursor-not-allowed border-gray-200" : ""}
+        `}
       />
     </div>
   );

@@ -91,16 +91,35 @@ const ListSellerDetails = () => {
     .map((item, index) => [
       (currentPage - 1) * itemsPerPage + index + 1,
       item.sellerName,
-      item.emails.join(", "),
-      item.phoneNumbers.map((phone) => phone.value).join(", "),
+      item.emails
+        .map((email) => (
+          <a
+            key={email}
+            href={`mailto:${email}`}
+            className="text-blue-600 underline hover:text-blue-800 transition-colors duration-150"
+          >
+            {email}
+          </a>
+        ))
+        .reduce((prev, curr) => [prev, ", ", curr]),
+      item.phoneNumbers
+        .map((phone) => (
+          <a
+            key={phone.value}
+            href={`tel:${phone.value}`}
+            className="text-blue-600 underline hover:text-blue-800 transition-colors duration-150"
+          >
+            {phone.value}
+          </a>
+        ))
+        .reduce((prev, curr) => [prev, ", ", curr]),
       item.commodities
         .map(
           (commodity) =>
-            `${toTitleCase(commodity.name)} (Brokerage: ₹${
-              commodity.brokerage
-            } per ton)`
-        )
-        .join(", "),
+            <span key={commodity.name}>
+              {`${toTitleCase(commodity.name)} (Brokerage: ₹${commodity.brokerage} per ton)`}<br />
+            </span>
+        ),
       item.companies.join(", "),
       toTitleCase(item.selectedStatus),
       <Actions
@@ -169,24 +188,40 @@ const ListSellerDetails = () => {
                   <strong>Password:</strong> {selectedSeller.password}
                 </p>
                 <p>
-                  <strong>Email:</strong> {selectedSeller.emails.join(", ")}
+                  <strong>Email:</strong>{" "}
+                  {selectedSeller.emails.map((email, idx) => (
+                    <span key={email}>
+                      <a
+                        href={`mailto:${email}`}
+                        className="text-blue-600 underline hover:text-blue-800 transition-colors duration-150"
+                      >
+                        {email}
+                      </a>
+                      {idx < selectedSeller.emails.length - 1 ? ", " : ""}
+                    </span>
+                  ))}
                 </p>
                 <p>
                   <strong>Phone Numbers:</strong>{" "}
-                  {selectedSeller.phoneNumbers
-                    .map((phone) => phone.value)
-                    .join(", ")}
+                  {selectedSeller.phoneNumbers.map((phone, idx) => (
+                    <span key={phone.value}>
+                      <a
+                        href={`tel:${phone.value}`}
+                        className="text-blue-600 underline hover:text-blue-800 transition-colors duration-150"
+                      >
+                        {phone.value}
+                      </a>
+                      {idx < selectedSeller.phoneNumbers.length - 1 ? ", " : ""}
+                    </span>
+                  ))}
                 </p>
                 <p>
                   <strong>Commodities:</strong>{" "}
-                  {selectedSeller.commodities
-                    .map(
-                      (commodity) =>
-                        `${toTitleCase(commodity.name)} (Brokerage: ₹${
-                          commodity.brokerage
-                        } per ton)`
-                    )
-                    .join(", ")}
+                  {selectedSeller.commodities.map((commodity, idx) => (
+                    <span key={commodity.name}>
+                      {`${toTitleCase(commodity.name)} (Brokerage: ₹${commodity.brokerage} per ton)`}<br />
+                    </span>
+                  ))}
                 </p>
                 <p>
                   <strong>Companies:</strong>{" "}

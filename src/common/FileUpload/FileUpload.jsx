@@ -38,9 +38,9 @@ const FileUpload = ({ label, accept, onFileChange, minWidth, minHeight }) => {
   const validateAndUpload = () => {
     const { width, height } = croppedAreaPixels || {};
     if (width >= minWidth && height >= minHeight) {
-      onFileChange(file); // Pass the file to the parent component
-      setImageSrc(""); // Clear the image preview
-      setFileName(""); // Clear the file name if needed
+      onFileChange(file);
+      setImageSrc("");
+      setFileName("");
     } else {
       alert(`Minimum size required is ${minWidth}x${minHeight}px.`);
     }
@@ -63,19 +63,19 @@ const FileUpload = ({ label, accept, onFileChange, minWidth, minHeight }) => {
   };
 
   return (
-    <div className="mb-4">
-      <label className="block text-sm font-medium text-gray-700 mb-2">
+    <div className="mb-6 w-full max-w-md mx-auto bg-white/80 rounded-2xl shadow-lg p-6 border border-gray-100">
+      <label className="block text-base font-semibold text-gray-700 mb-3">
         {label}
       </label>
       <input
         type="file"
         accept={accept}
         onChange={handleFileChange}
-        className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 mb-2"
+        className="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white/70 shadow-sm transition-all duration-200 mb-3"
       />
       {imageSrc && (
         <>
-          <div className="relative w-full h-64 bg-gray-200">
+          <div className="relative w-full h-64 bg-gradient-to-br from-blue-100 to-blue-200 rounded-xl overflow-hidden shadow-inner border border-blue-100">
             <Cropper
               image={imageSrc}
               crop={crop}
@@ -86,60 +86,60 @@ const FileUpload = ({ label, accept, onFileChange, minWidth, minHeight }) => {
               onCropComplete={onCropComplete}
             />
           </div>
-          <div className="flex justify-between mt-2">
-            <div className="flex items-center space-x-2">
-              <label className="text-sm text-gray-700">Zoom:</label>
+          <div className="flex flex-col md:flex-row justify-between items-center mt-3 gap-3">
+            <div className="flex items-center space-x-2 w-full md:w-auto">
+              <label className="text-sm text-gray-700 font-medium">Zoom:</label>
               <input
                 type="range"
                 min={1}
                 max={3}
                 step={0.1}
                 value={zoom}
-                onChange={(e) => setZoom(e.target.value)}
-                className="slider"
+                onChange={(e) => setZoom(Number(e.target.value))}
+                className="w-32 accent-blue-500 h-2 rounded-lg appearance-none bg-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-400"
               />
             </div>
             <div className="flex items-center space-x-2">
               <button
-                onClick={() => setAspect(4 / 3)} // Change to 4:3 aspect ratio
-                className="px-2 py-1 bg-blue-500 text-white rounded-md text-sm hover:bg-blue-600"
+                onClick={() => setAspect(4 / 3)}
+                className="px-3 py-1 bg-blue-500 text-white rounded-lg text-xs font-semibold shadow hover:bg-blue-600 transition-all duration-150"
               >
                 4:3
               </button>
               <button
-                onClick={() => setAspect(16 / 9)} // Change to 16:9 aspect ratio
-                className="px-2 py-1 bg-blue-500 text-white rounded-md text-sm hover:bg-blue-600"
+                onClick={() => setAspect(16 / 9)}
+                className="px-3 py-1 bg-blue-500 text-white rounded-lg text-xs font-semibold shadow hover:bg-blue-600 transition-all duration-150"
               >
                 16:9
               </button>
               <button
-                onClick={resetToOriginal} // Reset to full image
-                className="px-2 py-1 bg-blue-500 text-white rounded-md text-sm hover:bg-blue-600"
+                onClick={resetToOriginal}
+                className="px-3 py-1 bg-blue-500 text-white rounded-lg text-xs font-semibold shadow hover:bg-blue-600 transition-all duration-150"
               >
                 Original
               </button>
             </div>
           </div>
-          <div className="flex justify-end mt-2 space-x-4">
+          <div className="flex justify-end mt-4 space-x-4">
             <button
               onClick={validateAndUpload}
-              className="text-green-500 hover:text-green-700 flex items-center"
+              className="flex items-center px-4 py-2 bg-green-500 text-white rounded-lg font-semibold shadow hover:bg-green-600 transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-green-400"
               title="Confirm Crop"
             >
-              <MdCheckCircle size={24} className="mr-1" /> Save
+              <MdCheckCircle size={22} className="mr-1" /> Save
             </button>
             <button
               onClick={cancelCrop}
-              className="text-red-500 hover:text-red-700 flex items-center"
+              className="flex items-center px-4 py-2 bg-red-500 text-white rounded-lg font-semibold shadow hover:bg-red-600 transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-red-400"
               title="Cancel Crop"
             >
-              <MdCancel size={24} className="mr-1" /> Cancel
+              <MdCancel size={22} className="mr-1" /> Cancel
             </button>
           </div>
         </>
       )}
       {fileName && !imageSrc && (
-        <span className="text-sm text-gray-500">{fileName}</span>
+        <span className="text-sm text-gray-500 font-medium">{fileName}</span>
       )}
     </div>
   );
