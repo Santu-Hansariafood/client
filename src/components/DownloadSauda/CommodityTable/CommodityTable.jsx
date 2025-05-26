@@ -2,29 +2,30 @@ import { View, Text, StyleSheet } from "@react-pdf/renderer";
 
 const styles = StyleSheet.create({
   table: {
-    marginVertical: 10,
-    borderRadius: 5,
+    marginVertical: 12,
+    borderRadius: 10,
     overflow: "hidden",
+    border: "1px solid #27ae60",
   },
   tableHeader: {
-    backgroundColor: "#003366",
-    color: "#ffffff",
+    backgroundColor: "#27ae60",
+    color: "#f7ca18",
     flexDirection: "row",
-    padding: 5,
+    padding: 6,
   },
   tableRow: {
     flexDirection: "row",
-    backgroundColor: "#f2f2f2",
+    backgroundColor: "#fffde7",
   },
   tableRowAlt: {
     flexDirection: "row",
     backgroundColor: "#ffffff",
   },
   tableCell: {
-    padding: 5,
-    fontSize: 8,
+    padding: 6,
+    fontSize: 9,
     flex: 1,
-    border: "1px solid #cccccc",
+    border: "1px solid #f7ca18",
     textAlign: "center",
   },
   fullWidthRow: {
@@ -32,10 +33,10 @@ const styles = StyleSheet.create({
     width: "100%",
   },
   parameterCell: {
-    padding: 5,
-    fontSize: 8,
+    padding: 6,
+    fontSize: 9,
     flex: 1,
-    border: "1px solid #cccccc",
+    border: "1px solid #f7ca18",
     textAlign: "center",
   },
   bold: {

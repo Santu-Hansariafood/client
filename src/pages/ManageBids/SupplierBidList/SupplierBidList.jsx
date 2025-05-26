@@ -38,9 +38,7 @@ const SupplierBidList = () => {
         return;
       }
 
-      const bidsRes = await axios.get(
-        "https://api.hansariafood.shop/api/bids"
-      );
+      const bidsRes = await axios.get("https://api.hansariafood.shop/api/bids");
 
       const sevenDaysAgo = new Date();
       sevenDaysAgo.setHours(0, 0, 0, 0);

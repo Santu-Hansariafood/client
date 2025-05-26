@@ -39,9 +39,7 @@ const SellerDashboard = () => {
           await Promise.all([
             axios.get("https://api.hansariafood.shop/api/sellers"),
             axios.get("https://api.hansariafood.shop/api/bids"),
-            axios.get(
-              "https://api.hansariafood.shop/api/participatebids"
-            ),
+            axios.get("https://api.hansariafood.shop/api/participatebids"),
             axios.get("https://api.hansariafood.shop/api/confirm-bid"),
           ]);
 
@@ -58,11 +56,17 @@ const SellerDashboard = () => {
 
           if (seller) {
             setSellerDetails(seller);
-            setSellerBidCount(
-              bidsRes.data.filter((bid) =>
+            const sevenDaysAgo = new Date();
+            sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+            const recentSellerBids = bidsRes.data.filter(
+              (bid) =>
+                new Date(bid.createdAt) >= sevenDaysAgo &&
                 seller.commodities.some((c) => c.name === bid.commodity)
-              ).length
             );
+
+            setSellerBidCount(recentSellerBids.length);
+
             setParticipateBidCount(
               participateRes.data.filter(
                 (p) => String(p.mobile) === String(mobile)
@@ -210,9 +214,9 @@ const SellerDashboard = () => {
             <div className="w-24 h-24 flex items-center justify-center bg-gray-300 text-gray-800 text-2xl font-bold rounded-full border-2 border-gray-400">
               {getInitials(sellerDetails?.sellerName)}
             </div>
-            <button className="mt-2 flex items-center gap-2 bg-blue-500 text-white px-4 py-2 rounded-lg text-sm">
+            {/* <button className="mt-2 flex items-center gap-2 bg-blue-500 text-white px-4 py-2 rounded-lg text-sm">
               <FaUpload /> Upload
-            </button>
+            </button> */}
           </div>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">

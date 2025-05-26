@@ -3,7 +3,7 @@ import { HelmetProvider, Helmet } from "react-helmet-async";
 import { AuthProvider } from "./context/AuthContext/AuthContext";
 import Loading from "./common/Loading/Loading";
 import CacheHandler from "./utils/CacheHandler/CacheHandler";
-// import KeepAlive from "./utils/KeepAlive/KeepAlive";
+import KeepAlive from "./utils/KeepAlive/KeepAlive";
 import CriticalRoutes from "./routes/CriticalRoutes/CriticalRoutes";
 import PrivateRoutes from "./routes/PrivateRoutes/PrivateRoutes";
 import { Suspense } from "react";
@@ -25,7 +25,7 @@ const App = () => {
 
         <BrowserRouter>
           <Suspense fallback={<Loading />}>
-            {/* <KeepAlive /> */}
+            <KeepAlive />
             <CriticalRoutes />
             <PrivateRoutes hydrated={hydrated} />
           </Suspense>
