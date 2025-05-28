@@ -3,6 +3,7 @@ import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import axios from "axios";
 import Loading from "../../common/Loading/Loading";
+import WhatsAppNotification from '../WhatsAppNotification/WhatsAppNotification';
 
 const GroupSelection = lazy(() => import("./GroupSelection"));
 const ParameterInputs = lazy(() => import("./ParameterInputs"));
@@ -179,8 +180,9 @@ const BaseBid = () => {
         acc[param.parameter] = state.parameterValues[param._id] || "";
         return acc;
       }, {});
-
-      await axios.post(`${apiBaseUrl}/bids`, {
+  
+      // Submit bid
+      const response = await axios.post(`${apiBaseUrl}/bids`, {
         type: "buyer",
         group: state.selectedGroup?.value,
         consignee: state.selectedConsignee?.value,
@@ -196,9 +198,30 @@ const BaseBid = () => {
         paymentTerms: state.paymentTerms,
         delivery: state.delivery,
       });
-
-      toast.success("Bid submitted successfully!");
-
+  
+      // Get bid ID from response
+      const bidId = response.data.id || "BID123"; // Added fallback value
+  
+      // Initialize WhatsApp notification
+      const whatsappNotifier = await WhatsAppNotification({
+        bidData: {
+          group: state.selectedGroup?.value,
+          consignee: state.selectedConsignee?.value,
+          commodity: state.selectedCommodity?.value,
+          quantity: state.quantity,
+          origin: state.origin?.value,
+          paymentTerms: state.paymentTerms,
+          endTime: state.endTime
+        },
+        bidId
+      });
+  
+      // Send notifications
+      await whatsappNotifier.notifyRelevantSellers();
+  
+      toast.success("Bid submitted successfully and notifications sent!");
+  
+      // Reset form state
       setState({
         selectedGroup: null,
         selectedConsignee: null,
@@ -221,7 +244,8 @@ const BaseBid = () => {
         parameters: [],
       });
     } catch (error) {
-      toast.error("Failed to submit bid. Please try again.", error);
+      toast.error("Failed to submit bid or send notifications. Please try again.");
+      console.error("Error:", error);
     } finally {
       setState((prev) => ({ ...prev, isSubmitting: false }));
     }
