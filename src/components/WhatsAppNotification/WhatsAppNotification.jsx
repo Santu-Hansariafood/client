@@ -1,18 +1,19 @@
 import axios from "axios";
 
 const WhatsAppNotification = async ({ bidData, bidId }) => {
-  const apiBaseUrl = "https://api.hansariafood.shop/api";
-
   const notifyRelevantSellers = async () => {
     try {
-      if (!bidId) {
-        console.error("Missing bidId");
+      if (!bidId || !bidData) {
+        console.error("Missing bidId or bidData");
         return false;
       }
 
-      const response = await axios.post(`${apiBaseUrl}/whatsapp/send`, {
-        bidData,
+      const apiKey = "cdbcead5dfba4eb7a4b3f16b62dc2bb8";
+
+      const response = await axios.post(`http://localhost:5000/api/whatsapp/send`, {
         bidId,
+        bidData,
+        apiKey
       });
 
       if (response.status === 200) {
@@ -23,7 +24,7 @@ const WhatsAppNotification = async ({ bidData, bidId }) => {
         return false;
       }
     } catch (error) {
-      console.error("Error notifying sellers via backend:", error.message);
+      console.error("Error notifying sellers:", error.response?.data || error.message);
       return false;
     }
   };
