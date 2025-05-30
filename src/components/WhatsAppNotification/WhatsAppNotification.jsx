@@ -10,10 +10,16 @@ const WhatsAppNotification = async ({ bidData, bidId }) => {
 
       const apiKey = "cdbcead5dfba4eb7a4b3f16b62dc2bb8";
 
+      console.log("Sending WhatsApp Notification with data:", {
+        bidId,
+        bidData,
+        apiKey,
+      });
+
       const response = await axios.post(`http://localhost:5000/api/whatsapp/send`, {
         bidId,
         bidData,
-        apiKey
+        apiKey,
       });
 
       if (response.status === 200) {
