@@ -61,12 +61,14 @@ const Dashboard = () => {
     <Suspense fallback={<Loading />}>
       <DashboardLayout>
         <Header onLogoutClick={() => setShowLogoutConfirmation(true)} />
-        <main className="px-6 py-8">
-          <p className="text-lg font-medium text-center text-gray-700 mb-6">
-            Admin Report
-          </p>
-          <CardGrid counts={counts} />
-          <ChartSection />
+        <main className="min-h-screen px-6 py-10 bg-gradient-to-br from-blue-100 via-white to-purple-100">
+          <div className="max-w-5xl mx-auto">
+            <h1 className="text-3xl md:text-4xl font-extrabold text-center mb-8 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 bg-clip-text text-transparent drop-shadow-lg">
+              Admin Report
+            </h1>
+            <CardGrid counts={counts} />
+            <ChartSection />
+          </div>
         </main>
         {showLogoutConfirmation && (
           <LogoutConfirmationModal

@@ -3,6 +3,7 @@ import { AiOutlineEye, AiOutlineEdit } from "react-icons/ai";
 import axios from "axios";
 import { toast } from "react-toastify";
 import Loading from "../../../common/Loading/Loading";
+import { useMemo } from "react";
 
 const Tables = lazy(() => import("../../../common/Tables/Tables"));
 const SearchBox = lazy(() => import("../../../common/SearchBox/SearchBox"));
@@ -152,6 +153,23 @@ const BidList = () => {
     </button>,
   ]);
 
+  const [selectedGroup, setSelectedGroup] = useState(null);
+
+  const groupedBids = useMemo(() => {
+    const groups = {};
+    bids.forEach((bid) => {
+      if (!groups[bid.group]) groups[bid.group] = [];
+      groups[bid.group].push(bid);
+    });
+    return Object.keys(groups)
+      .sort()
+      .map((group) => ({
+        group,
+        bids: groups[group],
+        consignees: [...new Set(groups[group].map((b) => b.consignee))],
+      }));
+  }, [bids]);
+
   return (
     <Suspense fallback={<Loading />}>
       <div className="p-4 max-w-6xl mx-auto">
@@ -169,18 +187,78 @@ const BidList = () => {
               />
             </div>
             <div className="overflow-x-auto">
-              <Tables headers={headers} rows={rows} />
+              {groupedBids.map(({ group, bids, consignees }) => (
+                <div key={group} className="mb-6 border rounded p-4 bg-gray-50">
+                  <div
+                    className="flex justify-between items-center cursor-pointer"
+                    onClick={() => setSelectedGroup(group)}
+                  >
+                    <span className="font-bold text-lg">{group}</span>
+                    <span className="text-sm text-green-600">
+                      {consignees.length} Consignees
+                    </span>
+                  </div>
+                  <div className="mt-2 text-gray-700">
+                    Consignees: {consignees.join(", ")}
+                  </div>
+                </div>
+              ))}
             </div>
-            {filteredData.length === 0 && (
-              <p className="text-gray-500 text-center">No data available.</p>
-            )}
-            <Pagination
-              currentPage={currentPage}
-              totalItems={filteredData.length}
-              itemsPerPage={itemsPerPage}
-              onPageChange={setCurrentPage}
-            />
           </>
+        )}
+        {selectedGroup && (
+          <PopupBox
+            isOpen={!!selectedGroup}
+            onClose={() => setSelectedGroup(null)}
+            title={`Bids for Group: ${selectedGroup}`}
+          >
+            <Tables
+              headers={headers}
+              rows={groupedBids
+                .find((g) => g.group === selectedGroup)
+                .bids.map((bid, index) => [
+                  filteredData.length -
+                    ((currentPage - 1) * itemsPerPage + index),
+                  bid.group,
+                  bid.consignee,
+                  bid.origin,
+                  bid.commodity,
+                  Object.entries(bid.parameters)
+                    .filter(([_, value]) => value !== "0")
+                    .map(([key, value]) => `${key}: ${value}%`)
+                    .join(", "),
+                  bid.quantity,
+                  bid.rate,
+                  formatDate(bid.bidDate),
+                  bid.startTime,
+                  bid.endTime,
+                  bid.paymentTerms,
+                  bid.delivery,
+                  <button
+                    key={`rate-quantity-${index}`}
+                    className="text-green-500 hover:text-green-700 flex items-center gap-1"
+                    onClick={() =>
+                      setEditableRateQuantity({
+                        id: bid._id,
+                        rate: bid.rate,
+                        quantity: bid.quantity,
+                      })
+                    }
+                    title="View/Edit Rate & Quantity"
+                  >
+                    <AiOutlineEdit size={20} />
+                  </button>,
+                  <button
+                    key={`view-bid-${index}`}
+                    className="text-blue-500 hover:text-blue-700"
+                    onClick={() => setSelectedBid(bid)}
+                    title="View"
+                  >
+                    <AiOutlineEye size={20} />
+                  </button>,
+                ])}
+            />
+          </PopupBox>
         )}
         {editableRateQuantity && (
           <PopupBox

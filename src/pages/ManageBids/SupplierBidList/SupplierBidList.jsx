@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState, useMemo } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 import { FaRegHandPointer } from "react-icons/fa";
@@ -6,9 +6,6 @@ import { IoArrowBack, IoRefresh } from "react-icons/io5";
 import Loading from "../../../common/Loading/Loading";
 
 const Tables = lazy(() => import("../../../common/Tables/Tables"));
-const Pagination = lazy(() =>
-  import("../../../common/Paginations/Paginations")
-);
 const PopupBox = lazy(() => import("../../../common/PopupBox/PopupBox"));
 
 const SupplierBidList = () => {
@@ -20,13 +17,11 @@ const SupplierBidList = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [bidCount, setBidCount] = useState(0);
-  const [currentPage, setCurrentPage] = useState(1);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [selectedBid, setSelectedBid] = useState(null);
   const [rate, setRate] = useState("");
   const [quantity, setQuantity] = useState("");
-
-  const itemsPerPage = 10;
+  const [selectedGroup, setSelectedGroup] = useState(null);
 
   const fetchBids = async () => {
     setLoading(true);
@@ -37,13 +32,10 @@ const SupplierBidList = () => {
         setLoading(false);
         return;
       }
-
       const bidsRes = await axios.get("https://api.hansariafood.shop/api/bids");
-
       const sevenDaysAgo = new Date();
       sevenDaysAgo.setHours(0, 0, 0, 0);
       sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-
       const filteredBids = bidsRes.data
         .filter((bid) => {
           const bidDate = new Date(bid.bidDate);
@@ -53,12 +45,10 @@ const SupplierBidList = () => {
           );
         })
         .sort((a, b) => new Date(b.bidDate) - new Date(a.bidDate));
-
       setBids(filteredBids);
       setBidCount(filteredBids.length);
-      setCurrentPage(1);
     } catch (error) {
-      setError("Failed to fetch bid data.", error);
+      setError("Failed to fetch bid data.");
     } finally {
       setLoading(false);
     }
@@ -66,6 +56,7 @@ const SupplierBidList = () => {
 
   useEffect(() => {
     fetchBids();
+    // eslint-disable-next-line
   }, [commodityNames]);
 
   const handleParticipate = (bid) => {
@@ -80,7 +71,6 @@ const SupplierBidList = () => {
       alert("Please enter a valid rate and quantity.");
       return;
     }
-
     try {
       const participationData = {
         bidId: selectedBid._id,
@@ -88,63 +78,28 @@ const SupplierBidList = () => {
         rate: Number(rate),
         quantity: Number(quantity),
       };
-
       await axios.post(
         "https://api.hansariafood.shop/api/participatebids",
         participationData
       );
-
       alert("Participation successful!");
       setIsPopupOpen(false);
     } catch (error) {
-      alert("Failed to participate in the bid.", error);
+      alert("Failed to participate in the bid.");
     }
   };
 
-  const headers = [
-    "Count",
-    "Company",
-    "Consignee",
-    "Commodity",
-    "Quantity",
-    "Rate",
-    "Bid Date",
-    "Start Time",
-    "End Time",
-    "Payment Terms",
-    "Delivery",
-    "Parameters",
-    "Action",
-  ];
-
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentBids = bids.slice(indexOfFirstItem, indexOfLastItem);
-
-  const rows = currentBids.map((bid, index) => [
-    indexOfFirstItem + index + 1,
-    bid.group || "N/A",
-    bid.consignee || "N/A",
-    bid.commodity || "Unknown Commodity",
-    bid.quantity || "N/A",
-    bid.rate || "N/A",
-    bid.bidDate ? new Date(bid.bidDate).toLocaleDateString() : "N/A",
-    bid.startTime || "-",
-    bid.endTime || "-",
-    bid.paymentTerms || "N/A",
-    bid.delivery || "N/A",
-    bid.parameters
-      ? Object.entries(bid.parameters)
-          .map(([key, value]) => `${key}: ${value}`)
-          .join(", ")
-      : "No Parameters",
-    <button
-      onClick={() => handleParticipate(bid)}
-      className="flex items-center gap-2 text-blue-500 hover:text-blue-700"
-    >
-      <FaRegHandPointer /> Participate
-    </button>,
-  ]);
+  const groupedBids = useMemo(() => {
+    const now = new Date();
+    const groups = {};
+    bids.forEach((bid) => {
+      if (bid.endTime && new Date(bid.endTime) > now) {
+        if (!groups[bid.group]) groups[bid.group] = [];
+        groups[bid.group].push(bid);
+      }
+    });
+    return Object.entries(groups).sort(([a], [b]) => a.localeCompare(b));
+  }, [bids]);
 
   return (
     <Suspense fallback={<Loading />}>
@@ -163,126 +118,96 @@ const SupplierBidList = () => {
             <IoRefresh /> Refresh
           </button>
         </div>
-
         <h1 className="text-2xl font-bold text-gray-800 mb-4">
           Manage Bids ({bidCount})
         </h1>
-
         {loading ? (
           <p className="text-center text-gray-600">Loading bids...</p>
         ) : error ? (
           <p className="text-red-500">{error}</p>
-        ) : bids.length === 0 ? (
+        ) : groupedBids.length === 0 ? (
           <p className="text-center text-gray-600">
-            No active bids available for {commodityNames.join(", ")} in the last
-            7 days.
+            No active bids available for {commodityNames.join(", ")} in the last 7 days.
           </p>
         ) : (
-          <>
-            <Tables headers={headers} rows={rows} />
-            <Pagination
-              currentPage={currentPage}
-              totalItems={bidCount}
-              itemsPerPage={itemsPerPage}
-              onPageChange={setCurrentPage}
-            />
-          </>
-        )}
-
-        {isPopupOpen && selectedBid && (
-          <PopupBox
-            isOpen={isPopupOpen}
-            onClose={() => setIsPopupOpen(false)}
-            title="Participate in Bid"
-          >
-            <div className="space-y-4 p-4">
-              <div className="grid grid-cols-2 gap-4 border-b pb-4 text-sm text-gray-700">
-                <p>
-                  <strong>Company:</strong> {selectedBid.group || "N/A"}
-                </p>
-                <p>
-                  <strong>Commodity:</strong>{" "}
-                  {selectedBid.commodity || "Unknown"}
-                </p>
-                <p>
-                  <strong>Consignee:</strong>
-                  {selectedBid.consignee || "N/A"}
-                </p>
-                <p>
-                  <strong>Origin:</strong>
-                  {selectedBid.origin}
-                </p>
-                <p>
-                  <strong>Quantity:</strong> {selectedBid.quantity || "N/A"}
-                  <strong> Tons</strong>
-                </p>
-                <p>
-                  <strong>Rate: &#x20B9;</strong> {selectedBid.rate || "N/A"}
-                </p>
-                <p>
-                  <strong>Bid Date:</strong>{" "}
-                  {new Date(selectedBid.bidDate).toLocaleDateString()}
-                </p>
-                <p>
-                  <strong>Start Time:</strong> {selectedBid.startTime || "-"}
-                </p>
-                <p>
-                  <strong>End Time:</strong> {selectedBid.endTime || "-"}
-                </p>
-                <p>
-                  <strong>Payment Terms:</strong>{" "}
-                  {selectedBid.paymentTerms || "N/A"}
-                  <strong> Days</strong>
-                </p>
-                <p>
-                  <strong>Delivery:</strong> {selectedBid.delivery || "N/A"}
-                  <strong> Days</strong>
-                </p>
-                <p>
-                  <strong>Parameters:</strong>{" "}
-                  {selectedBid.parameters
-                    ? Object.entries(selectedBid.parameters)
-                        .map(([key, value]) => `${key}: ${value} %`)
-                        .join(", ")
-                    : "No Parameters"}
-                </p>
+          <div>
+            {groupedBids.map(([groupName, groupBids]) => (
+              <div key={groupName} className="mb-4">
+                <button
+                  className="font-bold text-lg text-blue-700 hover:underline"
+                  onClick={() => setSelectedGroup(selectedGroup === groupName ? null : groupName)}
+                >
+                  {groupName} <span className="text-gray-500">({[...new Set(groupBids.map(b => b.consignee))].length} consignees)</span>
+                </button>
+                {selectedGroup === groupName && (
+                  <div className="mt-2 bg-white rounded shadow p-4">
+                    <Tables
+                      headers={["Consignee", "Commodity", "Quantity", "Rate", "Bid Date", "Start Time", "End Time", "Payment Terms", "Delivery", "Parameters", "Action"]}
+                      rows={groupBids.map((bid) => [
+                        bid.consignee,
+                        bid.commodity,
+                        bid.quantity,
+                        bid.rate,
+                        bid.bidDate ? new Date(bid.bidDate).toLocaleDateString() : "N/A",
+                        bid.startTime || "-",
+                        bid.endTime || "-",
+                        bid.paymentTerms || "N/A",
+                        bid.delivery || "N/A",
+                        bid.parameters
+                          ? Object.entries(bid.parameters)
+                              .map(([key, value]) => `${key}: ${value}`)
+                              .join(", ")
+                          : "No Parameters",
+                        <button
+                          onClick={() => handleParticipate(bid)}
+                          className="flex items-center gap-2 text-blue-500 hover:text-blue-700"
+                        >
+                          <FaRegHandPointer /> Participate
+                        </button>,
+                      ])}
+                    />
+                  </div>
+                )}
               </div>
-              <p>
-                <strong>Notes: </strong>{" "}
-                {selectedBid.notes || "No Notes for This"}{" "}
-              </p>
-              <div className="space-y-4"></div>
-              <label className="block text-gray-700 font-semibold">
-                Enter Your Rate in Ruppies:
-              </label>
-              <input
-                type="number"
-                value={rate}
-                onChange={(e) => setRate(e.target.value)}
-                className="w-full border rounded-lg p-2"
-                placeholder="Enter your rate"
-              />
-
-              <label className="block text-gray-700 font-semibold">
-                Enter Quantity in TONS:
-              </label>
-              <input
-                type="number"
-                value={quantity}
-                onChange={(e) => setQuantity(e.target.value)}
-                className="w-full border rounded-lg p-2"
-                placeholder="Enter quantity"
-              />
-
-              <button
-                onClick={handleConfirm}
-                className="w-full bg-blue-500 text-white p-2 rounded-lg hover:bg-blue-700"
-              >
-                Confirm Bids
-              </button>
-            </div>
-          </PopupBox>
+            ))}
+          </div>
         )}
+        <Suspense fallback={null}>
+          {isPopupOpen && (
+            <PopupBox
+              isOpen={isPopupOpen}
+              onClose={() => setIsPopupOpen(false)}
+              title="Participate in Bid"
+            >
+              <div className="flex flex-col gap-4">
+                <div>
+                  <label className="block mb-1">Rate:</label>
+                  <input
+                    type="number"
+                    value={rate}
+                    onChange={(e) => setRate(e.target.value)}
+                    className="w-full border rounded px-2 py-1"
+                  />
+                </div>
+                <div>
+                  <label className="block mb-1">Quantity:</label>
+                  <input
+                    type="number"
+                    value={quantity}
+                    onChange={(e) => setQuantity(e.target.value)}
+                    className="w-full border rounded px-2 py-1"
+                  />
+                </div>
+                <button
+                  onClick={handleConfirm}
+                  className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-700"
+                >
+                  Confirm
+                </button>
+              </div>
+            </PopupBox>
+          )}
+        </Suspense>
       </div>
     </Suspense>
   );
