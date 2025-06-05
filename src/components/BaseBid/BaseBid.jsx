@@ -200,7 +200,7 @@ const BaseBid = () => {
         delivery: state.delivery,
       });
 
-      const bidId = response.data.id || "BID123";
+      const bidId = response.data.bidId || response.data._id || "UNKNOWN_BID";
 
       const whatsappNotifier = await WhatsAppNotification({
         bidData: {
