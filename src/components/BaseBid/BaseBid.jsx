@@ -1,5 +1,6 @@
 import { useState, useEffect, lazy, Suspense } from "react";
 import { toast, ToastContainer } from "react-toastify";
+import { useNavigate } from "react-router-dom";
 import "react-toastify/dist/ReactToastify.css";
 import axios from "axios";
 import Loading from "../../common/Loading/Loading";
@@ -13,6 +14,7 @@ const SubmitButton = lazy(() => import("./SubmitButton"));
 const apiBaseUrl = "https://api.hansariafood.shop/api";
 
 const BaseBid = () => {
+  const navigate = useNavigate();
   const [state, setState] = useState({
     selectedGroup: null,
     selectedConsignee: null,
@@ -180,7 +182,7 @@ const BaseBid = () => {
         acc[param.parameter] = state.parameterValues[param._id] || "";
         return acc;
       }, {});
-  
+
       const response = await axios.post(`${apiBaseUrl}/bids`, {
         type: "buyer",
         group: state.selectedGroup?.value,
@@ -212,11 +214,12 @@ const BaseBid = () => {
         bidId,
       });
 
-
       await whatsappNotifier.notifyRelevantSellers();
 
       toast.success("Bid submitted successfully and notifications sent!");
-
+      setTimeout(() => {
+        navigate("/manage-bids/bid-list");
+      }, 2000);
 
       setState({
         selectedGroup: null,

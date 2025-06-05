@@ -13,7 +13,7 @@ import "react-toastify/dist/ReactToastify.css";
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  const SESSION_DURATION = 30 * 60 * 1000;
+  const SESSION_DURATION = 60 * 60 * 1000;
 
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
     try {
