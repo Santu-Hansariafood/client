@@ -5,9 +5,8 @@ import "react-toastify/dist/ReactToastify.css";
 import axios from "axios";
 import Loading from "../../common/Loading/Loading";
 
-const WhatsAppNotification = lazy(() =>
-  import("../WhatsAppNotification/WhatsAppNotification")
-);
+import WhatsAppNotification from "../WhatsAppNotification/WhatsAppNotification"
+
 const GroupSelection = lazy(() => import("./GroupSelection"));
 const ParameterInputs = lazy(() => import("./ParameterInputs"));
 const AdditionalFields = lazy(() => import("./AdditionalFields"));
