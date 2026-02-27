@@ -30,10 +30,10 @@ const Dashboard = () => {
   const fetchCounts = useCallback(async () => {
     try {
       const responses = await Promise.all([
-        axios.get("https://api.hansariafood.shop/api/buyers"),
-        axios.get("https://api.hansariafood.shop/api/sellers"),
-        axios.get("https://api.hansariafood.shop/api/consignees"),
-        axios.get("https://api.hansariafood.shop/api/self-order"),
+        axios.get("https://phpserver-kappa.vercel.app/api/buyers"),
+        axios.get("https://phpserver-kappa.vercel.app/api/sellers"),
+        axios.get("https://phpserver-kappa.vercel.app/api/consignees"),
+        axios.get("https://phpserver-kappa.vercel.app/api/self-order"),
       ]);
 
       setCounts({

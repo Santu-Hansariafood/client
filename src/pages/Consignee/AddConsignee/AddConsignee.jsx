@@ -75,7 +75,7 @@ const AddConsignee = () => {
     e.preventDefault();
     try {
       const response = await axios.post(
-        "https://api.hansariafood.shop/api/consignees",
+        "https://phpserver-kappa.vercel.app/api/consignees",
         formData
       );
       if (response.status === 201) {

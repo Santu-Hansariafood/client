@@ -42,7 +42,7 @@ const ListGroupOfCompany = () => {
     const fetchGroups = async () => {
       try {
         const response = await axios.get(
-          "https://api.hansariafood.shop/api/groups"
+          "https://phpserver-kappa.vercel.app/api/groups"
         );
         const uniqueGroups = Array.from(
           new Map(
@@ -95,7 +95,7 @@ const ListGroupOfCompany = () => {
       const groupToDelete = filteredData[index];
       try {
         await axios.delete(
-          `https://api.hansariafood.shop/api/groups/${groupToDelete._id}`
+          `https://phpserver-kappa.vercel.app/api/groups/${groupToDelete._id}`
         );
         const updatedData = filteredData.filter((_, i) => i !== index);
         setFilteredData(updatedData);

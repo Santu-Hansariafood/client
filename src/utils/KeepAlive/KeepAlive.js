@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import axios from "axios";
 
-const SERVER_URL = "https://api.hansariafood.shop";
+const SERVER_URL = "https://phpserver-kappa.vercel.app";
 
 const keepBackendAlive = () => {
   setInterval(() => {

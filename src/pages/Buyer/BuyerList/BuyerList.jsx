@@ -33,7 +33,7 @@ const BuyerList = () => {
     const fetchBuyersData = async () => {
       try {
         const response = await axios.get(
-          "https://api.hansariafood.shop/api/buyers"
+          "https://phpserver-kappa.vercel.app/api/buyers"
         );
         const sortedData = response.data.sort((a, b) =>
           a.name.localeCompare(b.name)
@@ -86,7 +86,7 @@ const BuyerList = () => {
 
     try {
       await axios.delete(
-        `https://api.hansariafood.shop/api/buyers/${buyerToDelete._id}`
+        `https://phpserver-kappa.vercel.app/api/buyers/${buyerToDelete._id}`
       );
 
       const updatedData = filteredData.filter((_, i) => i !== actualIndex);

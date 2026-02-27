@@ -32,7 +32,7 @@ const ListSellerDetails = () => {
   const [popupMode, setPopupMode] = useState("view");
   const [selectedSeller, setSelectedSeller] = useState(null);
 
-  const apiBaseURL = "https://api.hansariafood.shop/api";
+  const apiBaseURL = "https://phpserver-kappa.vercel.app/api";
 
   useEffect(() => {
     const fetchSellers = async () => {

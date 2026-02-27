@@ -32,7 +32,7 @@ const SupplierBidList = () => {
         setLoading(false);
         return;
       }
-      const bidsRes = await axios.get("https://api.hansariafood.shop/api/bids");
+      const bidsRes = await axios.get("https://phpserver-kappa.vercel.app/api/bids");
       const sevenDaysAgo = new Date();
       sevenDaysAgo.setHours(0, 0, 0, 0);
       sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
@@ -79,7 +79,7 @@ const SupplierBidList = () => {
         quantity: Number(quantity),
       };
       await axios.post(
-        "https://api.hansariafood.shop/api/participatebids",
+        "https://phpserver-kappa.vercel.app/api/participatebids",
         participationData
       );
       alert("Participation successful!");

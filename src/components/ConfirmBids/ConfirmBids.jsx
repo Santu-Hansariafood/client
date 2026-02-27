@@ -18,10 +18,10 @@ const ConfirmBids = () => {
     try {
       const [participateRes, sellersRes, bidsRes, confirmRes] =
         await Promise.all([
-          axios.get("https://api.hansariafood.shop/api/participatebids"),
-          axios.get("https://api.hansariafood.shop/api/sellers"),
-          axios.get("https://api.hansariafood.shop/api/bids"),
-          axios.get("https://api.hansariafood.shop/api/confirm-bid"),
+          axios.get("https://phpserver-kappa.vercel.app/api/participatebids"),
+          axios.get("https://phpserver-kappa.vercel.app/api/sellers"),
+          axios.get("https://phpserver-kappa.vercel.app/api/bids"),
+          axios.get("https://phpserver-kappa.vercel.app/api/confirm-bid"),
         ]);
 
       const matchedBid = bidsRes.data.find((b) => b._id === bidId);
@@ -84,7 +84,7 @@ const ConfirmBids = () => {
     if (!confirmAction) return;
 
     try {
-      await axios.post("https://api.hansariafood.shop/api/confirm-bid", {
+      await axios.post("https://phpserver-kappa.vercel.app/api/confirm-bid", {
         bidId,
         sellerName: selectedBid.sellerName,
         phone: selectedBid.phone,

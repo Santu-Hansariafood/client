@@ -22,8 +22,8 @@ const ListLoadingEntry = () => {
   const fetchData = async () => {
     try {
       const [entriesRes, sellersRes] = await Promise.all([
-        axios.get("https://api.hansariafood.shop/api/loading-entries"),
-        axios.get("https://api.hansariafood.shop/api/sellers"),
+        axios.get("https://phpserver-kappa.vercel.app/api/loading-entries"),
+        axios.get("https://phpserver-kappa.vercel.app/api/sellers"),
       ]);
       const sellerMapping = Object.fromEntries(
         sellersRes.data.map((seller) => [seller._id, seller.sellerName])
@@ -49,7 +49,7 @@ const ListLoadingEntry = () => {
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this entry?")) {
       try {
-        await axios.delete(`https://api.hansariafood.shop/api/loading-entries/${id}`);
+        await axios.delete(`https://phpserver-kappa.vercel.app/api/loading-entries/${id}`);
         toast.success("Entry deleted successfully");
         fetchData();
       } catch (error) {

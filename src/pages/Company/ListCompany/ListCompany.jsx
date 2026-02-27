@@ -27,7 +27,7 @@ const ListCompany = () => {
     const fetchCompanyData = async () => {
       try {
         const response = await axios.get(
-          "https://api.hansariafood.shop/api/companies"
+          "https://phpserver-kappa.vercel.app/api/companies"
         );
 
         const sortedData = response.data.sort((a, b) => {
@@ -76,7 +76,7 @@ const ListCompany = () => {
     const companyId = paginatedData[index]._id;
     try {
       await axios.delete(
-        `https://api.hansariafood.shop/api/companies/${companyId}`
+        `https://phpserver-kappa.vercel.app/api/companies/${companyId}`
       );
       const updatedData = filteredData.filter(
         (company) => company._id !== companyId

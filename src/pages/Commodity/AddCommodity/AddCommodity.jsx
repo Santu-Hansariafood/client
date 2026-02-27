@@ -20,7 +20,7 @@ const AddCommodity = () => {
     const fetchParametersOptions = async () => {
       try {
         const response = await axios.get(
-          "https://api.hansariafood.shop/api/quality-parameters"
+          "https://phpserver-kappa.vercel.app/api/quality-parameters"
         );
         const options = response.data
           .map((param) => ({ value: param.name, label: param.name }))
@@ -70,7 +70,7 @@ const AddCommodity = () => {
 
     try {
       await axios.post(
-        "https://api.hansariafood.shop/api/commodities",
+        "https://phpserver-kappa.vercel.app/api/commodities",
         formData
       );
       toast.success("Commodity added successfully");

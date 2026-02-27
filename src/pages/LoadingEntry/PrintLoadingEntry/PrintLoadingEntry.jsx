@@ -27,10 +27,10 @@ const PrintLoadingEntry = async (data) => {
       doc.line(10, 40, pageWidth - 10, 40);
 
       const [orders, sellers, companies, consignees] = await Promise.all([
-        axios.get("https://api.hansariafood.shop/api/self-order"),
-        axios.get("https://api.hansariafood.shop/api/sellers"),
-        axios.get("https://api.hansariafood.shop/api/seller-company"),
-        axios.get("https://api.hansariafood.shop/api/consignees"),
+        axios.get("https://phpserver-kappa.vercel.app/api/self-order"),
+        axios.get("https://phpserver-kappa.vercel.app/api/sellers"),
+        axios.get("https://phpserver-kappa.vercel.app/api/seller-company"),
+        axios.get("https://phpserver-kappa.vercel.app/api/consignees"),
       ]);
 
       const buyerDetails = orders.data.find((order) => order.saudaNo === data.saudaNo) || {};

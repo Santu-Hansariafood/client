@@ -17,7 +17,7 @@ const BidLocation = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
-  const API_URL = "https://api.hansariafood.shop/api/bid-locations";
+  const API_URL = "https://phpserver-kappa.vercel.app/api/bid-locations";
 
   const fetchBidLocations = async () => {
     try {

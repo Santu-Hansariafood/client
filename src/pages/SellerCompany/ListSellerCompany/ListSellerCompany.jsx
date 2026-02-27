@@ -29,7 +29,7 @@ const ListSellerCompany = () => {
     const fetchCompanies = async () => {
       try {
         const response = await axios.get(
-          "https://api.hansariafood.shop/api/seller-company"
+          "https://phpserver-kappa.vercel.app/api/seller-company"
         );
         setCompanies(response.data.data);
         setSearchResults(response.data.data);

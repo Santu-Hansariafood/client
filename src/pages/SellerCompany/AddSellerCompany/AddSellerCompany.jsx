@@ -149,7 +149,7 @@ const AddSellerCompany = () => {
 
     try {
       const response = await axios.post(
-        "https://api.hansariafood.shop/api/seller-company",
+        "https://phpserver-kappa.vercel.app/api/seller-company",
         formData,
         {
           headers: { "Content-Type": "multipart/form-data" },

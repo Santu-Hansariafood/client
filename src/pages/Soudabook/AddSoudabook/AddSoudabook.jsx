@@ -35,7 +35,7 @@ const AddSoudabook = () => {
     const fetchSellers = async () => {
       try {
         const response = await axios.get(
-          "https://api.hansariafood.shop/api/sellers"
+          "https://phpserver-kappa.vercel.app/api/sellers"
         );
         const sellerOptions = response.data.map((seller) => ({
           value: seller._id,
@@ -50,7 +50,7 @@ const AddSoudabook = () => {
     const fetchItems = async () => {
       try {
         const response = await axios.get(
-          "https://api.hansariafood.shop/api/commodities"
+          "https://phpserver-kappa.vercel.app/api/commodities"
         );
         const itemOptions = response.data.map((item) => ({
           value: item._id,
@@ -65,7 +65,7 @@ const AddSoudabook = () => {
     const fetchBuyers = async () => {
       try {
         const response = await axios.get(
-          "https://api.hansariafood.shop/api/buyers"
+          "https://phpserver-kappa.vercel.app/api/buyers"
         );
         const buyerOptions = response.data.map((buyer) => ({
           value: buyer._id,

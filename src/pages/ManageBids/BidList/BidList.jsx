@@ -27,7 +27,7 @@ const BidList = () => {
     const fetchData = async () => {
       try {
         const response = await axios.get(
-          "https://api.hansariafood.shop/api/bids"
+          "https://phpserver-kappa.vercel.app/api/bids"
         );
         const sevenDaysAgo = new Date();
         sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
@@ -70,7 +70,7 @@ const BidList = () => {
       const { id, rate, quantity } = editableRateQuantity;
 
       const response = await axios.put(
-        `https://api.hansariafood.shop/api/bids/${id}`,
+        `https://phpserver-kappa.vercel.app/api/bids/${id}`,
         { rate, quantity }
       );
 

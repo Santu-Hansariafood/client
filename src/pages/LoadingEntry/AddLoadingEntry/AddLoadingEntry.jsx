@@ -23,7 +23,7 @@ const fetchData = async (url, key) => {
 
 const fetchOrders = async (supplierId, consignee) => {
   try {
-    const response = await axios.get("https://api.hansariafood.shop/api/self-order");
+    const response = await axios.get("https://phpserver-kappa.vercel.app/api/self-order");
     return response.data.filter(
       (order) => order.supplier === supplierId && order.consignee === consignee
     );
@@ -46,8 +46,8 @@ const AddLoadingEntry = () => {
     const loadDropdowns = async () => {
       setLoading(true);
       const [suppliersData, consigneesData] = await Promise.all([
-        fetchData("https://api.hansariafood.shop/api/sellers", "sellerName"),
-        fetchData("https://api.hansariafood.shop/api/consignees", "name"),
+        fetchData("https://phpserver-kappa.vercel.app/api/sellers", "sellerName"),
+        fetchData("https://phpserver-kappa.vercel.app/api/consignees", "name"),
       ]);
       setSuppliers(suppliersData);
       setConsignees(consigneesData);

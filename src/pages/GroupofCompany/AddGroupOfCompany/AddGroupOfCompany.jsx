@@ -21,7 +21,7 @@ const AddGroupOfCompany = () => {
     }
 
     try {
-      const response = await axios.post("https://api.hansariafood.shop/api/groups", {
+      const response = await axios.post("https://phpserver-kappa.vercel.app/api/groups", {
         groupName,
       });
       toast.success("Group added successfully");

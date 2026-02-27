@@ -13,7 +13,7 @@ const ViewBidPopup = ({ bidId, onClose }) => {
     const fetchBidDetails = async () => {
       try {
         const response = await fetch(
-          `https://api.hansariafood.shop/api/bids/${bidId}`
+          `https://phpserver-kappa.vercel.app/api/bids/${bidId}`
         );
         if (!response.ok) {
           throw new Error("Failed to fetch bid details.");

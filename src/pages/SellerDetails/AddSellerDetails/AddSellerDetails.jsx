@@ -24,7 +24,7 @@ const AddSellerDetails = () => {
   const [selectedStatus, setSelectedStatus] = useState(null);
   const [selectedBuyers, setSelectedBuyers] = useState([]);
 
-  const apiBaseURL = "https://api.hansariafood.shop/api";
+  const apiBaseURL = "https://phpserver-kappa.vercel.app/api";
 
   const statusOptions = [
     { value: "active", label: "Active" },

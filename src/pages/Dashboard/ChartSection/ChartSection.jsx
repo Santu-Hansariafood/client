@@ -38,10 +38,10 @@ const ChartSection = () => {
       </div>
       <div className="space-y-10">
         <div className="rounded-3xl shadow-2xl bg-gradient-to-br from-blue-100 via-white/80 to-purple-100 backdrop-blur-2xl border border-blue-200 p-8">
-          <SaudaChart apiUrl="https://api.hansariafood.shop/api/self-order" chartType={chartType} />
+          <SaudaChart apiUrl="https://phpserver-kappa.vercel.app/api/self-order" chartType={chartType} />
         </div>
         <div className="rounded-3xl shadow-2xl bg-gradient-to-br from-yellow-100 via-white/80 to-pink-100 backdrop-blur-2xl border border-yellow-200 p-8">
-          <BidChart apiUrl="https://api.hansariafood.shop/api/bids" chartType={chartType} />
+          <BidChart apiUrl="https://phpserver-kappa.vercel.app/api/bids" chartType={chartType} />
         </div>
       </div>
     </Suspense>

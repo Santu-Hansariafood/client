@@ -32,7 +32,7 @@ const ListQualityParameter = () => {
     const fetchQualityParameters = async () => {
       try {
         const response = await axios.get(
-          "https://api.hansariafood.shop/api/quality-parameters"
+          "https://phpserver-kappa.vercel.app/api/quality-parameters"
         );
         setQualityParameters(response.data);
         setFilteredData(response.data);
@@ -75,7 +75,7 @@ const ListQualityParameter = () => {
   const handleUpdateQualityParameter = async (updatedData) => {
     try {
       const response = await axios.put(
-        `https://api.hansariafood.shop/api/quality-parameters/${updatedData._id}`,
+        `https://phpserver-kappa.vercel.app/api/quality-parameters/${updatedData._id}`,
         updatedData
       );
       setQualityParameters((prev) =>
@@ -101,7 +101,7 @@ const ListQualityParameter = () => {
     try {
       console.log("Deleting ID:", item._id);
       await axios.delete(
-        `https://api.hansariafood.shop/api/quality-parameters/${item._id}`
+        `https://phpserver-kappa.vercel.app/api/quality-parameters/${item._id}`
       );
       setQualityParameters((prev) =>
         prev.filter((param) => param._id !== item._id)

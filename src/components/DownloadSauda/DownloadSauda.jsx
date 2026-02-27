@@ -10,8 +10,8 @@ const DownloadSauda = ({ data }) => {
   const [supplierData, setSupplierData] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const CONSIGNEE_API_URL = "https://api.hansariafood.shop/api/consignees";
-  const SUPPLIER_API_URL = "https://api.hansariafood.shop/api/seller-company";
+  const CONSIGNEE_API_URL = "https://phpserver-kappa.vercel.app/api/consignees";
+  const SUPPLIER_API_URL = "https://phpserver-kappa.vercel.app/api/seller-company";
 
   useEffect(() => {
     const fetchData = async () => {

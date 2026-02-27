@@ -19,7 +19,7 @@ const BuyerInformation = ({ handleChange }) => {
       setLoading(true);
       try {
         const { data } = await axios.get(
-          "https://api.hansariafood.shop/api/buyers"
+          "https://phpserver-kappa.vercel.app/api/buyers"
         );
         setBuyers(data);
       } catch (error) {

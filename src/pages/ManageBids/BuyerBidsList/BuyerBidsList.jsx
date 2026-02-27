@@ -26,7 +26,7 @@ const BidList = () => {
   useEffect(() => {
     const fetchBids = async () => {
       try {
-        const response = await fetch("https://api.hansariafood.shop/api/bids");
+        const response = await fetch("https://phpserver-kappa.vercel.app/api/bids");
         const data = await response.json();
         setBids(data);
         setFilteredData(data);
@@ -37,7 +37,7 @@ const BidList = () => {
 
     const fetchCommodities = async () => {
       try {
-        const response = await fetch("https://api.hansariafood.shop/api/commodities");
+        const response = await fetch("https://phpserver-kappa.vercel.app/api/commodities");
         const data = await response.json();
         setCommodities(data);
       } catch (error) {
@@ -47,7 +47,7 @@ const BidList = () => {
 
     const fetchOrigins = async () => {
       try {
-        const response = await fetch("https://api.hansariafood.shop/api/bid-locations");
+        const response = await fetch("https://phpserver-kappa.vercel.app/api/bid-locations");
         const data = await response.json();
         setOrigins(data);
       } catch (error) {

@@ -21,8 +21,8 @@ const ParticipateBidAdmin = () => {
     const fetchData = async () => {
       try {
         const [bidsRes, participateRes] = await Promise.all([
-          axios.get("https://api.hansariafood.shop/api/bids"),
-          axios.get("https://api.hansariafood.shop/api/participatebids"),
+          axios.get("https://phpserver-kappa.vercel.app/api/bids"),
+          axios.get("https://phpserver-kappa.vercel.app/api/participatebids"),
         ]);
 
         const sevenDaysAgo = new Date();

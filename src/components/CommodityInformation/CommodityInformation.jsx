@@ -23,7 +23,7 @@ const CommodityInformation = ({
     const fetchCommodities = async () => {
       try {
         const { data } = await axios.get(
-          "https://api.hansariafood.shop/api/companies"
+          "https://phpserver-kappa.vercel.app/api/companies"
         );
         const companyData = data.find(
           (company) => company.companyName === selectedCompany
@@ -43,7 +43,7 @@ const CommodityInformation = ({
     const fetchBuyers = async () => {
       try {
         const { data } = await axios.get(
-          "https://api.hansariafood.shop/api/buyers"
+          "https://phpserver-kappa.vercel.app/api/buyers"
         );
         setBuyers(data || []);
       } catch (error) {

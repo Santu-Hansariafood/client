@@ -40,11 +40,11 @@ const LoginForm = () => {
     setLoading(true);
 
     const apiEndpoints = {
-      Admin: "https://api.hansariafood.shop/api/admin/login",
-      Employee: "https://api.hansariafood.shop/api/employees/login",
-      Buyer: "https://api.hansariafood.shop/api/buyers/login",
-      Seller: "https://api.hansariafood.shop/api/sellers/login",
-      Transporter: "https://api.hansariafood.shop/api/transporters/login",
+      Admin: "https://phpserver-kappa.vercel.app/api/admin/login",
+      Employee: "https://phpserver-kappa.vercel.app/api/employees/login",
+      Buyer: "https://phpserver-kappa.vercel.app/api/buyers/login",
+      Seller: "https://phpserver-kappa.vercel.app/api/sellers/login",
+      Transporter: "https://phpserver-kappa.vercel.app/api/transporters/login",
     };
 
     const roleBasedRoutes = {

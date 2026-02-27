@@ -24,7 +24,7 @@ const SupplierInformation = ({ handleChange, formData }) => {
     const fetchSuppliers = async () => {
       try {
         const response = await fetch(
-          "https://api.hansariafood.shop/api/sellers"
+          "https://phpserver-kappa.vercel.app/api/sellers"
         );
         const data = await response.json();
         setSellers(data);

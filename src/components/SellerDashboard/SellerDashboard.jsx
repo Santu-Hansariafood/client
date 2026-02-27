@@ -36,10 +36,10 @@ const SellerDashboard = () => {
       try {
         const [sellersRes, bidsRes, participateRes, confirmBidsRes] =
           await Promise.all([
-            axios.get("https://api.hansariafood.shop/api/sellers"),
-            axios.get("https://api.hansariafood.shop/api/bids"),
-            axios.get("https://api.hansariafood.shop/api/participatebids"),
-            axios.get("https://api.hansariafood.shop/api/confirm-bid"),
+            axios.get("https://phpserver-kappa.vercel.app/api/sellers"),
+            axios.get("https://phpserver-kappa.vercel.app/api/bids"),
+            axios.get("https://phpserver-kappa.vercel.app/api/participatebids"),
+            axios.get("https://phpserver-kappa.vercel.app/api/confirm-bid"),
           ]);
 
         if (!mobile) {

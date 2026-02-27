@@ -17,7 +17,7 @@ const WhatsAppNotification = async ({ bidData, bidId }) => {
       });
 
       const response = await axios.post(
-        `https://api.hansariafood.shop/api/whatsapp/send`,
+        `https://phpserver-kappa.vercel.app/api/whatsapp/send`,
         {
           bidId,
           bidData,

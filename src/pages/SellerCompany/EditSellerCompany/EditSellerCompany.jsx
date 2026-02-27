@@ -139,7 +139,7 @@ const EditSellerCompany = ({ company, onSave, onCancel }) => {
 
     try {
       const response = await axios.put(
-        `https://api.hansariafood.shop/api/seller-company/${company._id}`,
+        `https://phpserver-kappa.vercel.app/api/seller-company/${company._id}`,
         formData,
         {
           headers: { "Content-Type": "multipart/form-data" },

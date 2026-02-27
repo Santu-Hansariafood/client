@@ -16,7 +16,7 @@ const EditCommodityPopup = ({ isOpen, onClose, commodityId, onUpdate }) => {
       setIsLoading(true);
       try {
         const response = await axios.get(
-          `https://api.hansariafood.shop/api/commodities/${commodityId}`
+          `https://phpserver-kappa.vercel.app/api/commodities/${commodityId}`
         );
         setCommodity(response.data);
       } catch (error) {
@@ -29,7 +29,7 @@ const EditCommodityPopup = ({ isOpen, onClose, commodityId, onUpdate }) => {
     const fetchQualityParameters = async () => {
       try {
         const response = await axios.get(
-          "https://api.hansariafood.shop/api/quality-parameters"
+          "https://phpserver-kappa.vercel.app/api/quality-parameters"
         );
         setQualityOptions(response.data);
       } catch (error) {
@@ -88,7 +88,7 @@ const EditCommodityPopup = ({ isOpen, onClose, commodityId, onUpdate }) => {
     setIsLoading(true);
     try {
       await axios.put(
-        `https://api.hansariafood.shop/api/commodities/${commodityId}`,
+        `https://phpserver-kappa.vercel.app/api/commodities/${commodityId}`,
         commodity
       );
       onUpdate();

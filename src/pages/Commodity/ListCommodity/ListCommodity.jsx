@@ -23,7 +23,7 @@ const ListCommodity = () => {
     const fetchCommodities = async () => {
       try {
         const response = await axios.get(
-          "https://api.hansariafood.shop/api/commodities"
+          "https://phpserver-kappa.vercel.app/api/commodities"
         );
         const sortedCommodities = response.data.sort((a, b) =>
           a.name.localeCompare(b.name)
@@ -53,7 +53,7 @@ const ListCommodity = () => {
   const handleView = async (id) => {
     try {
       const response = await axios.get(
-        `https://api.hansariafood.shop/api/commodities/${id}`
+        `https://phpserver-kappa.vercel.app/api/commodities/${id}`
       );
       setSelectedCommodity(response.data);
       setIsPopupOpen(true);
@@ -74,7 +74,7 @@ const ListCommodity = () => {
       );
       if (!confirmDelete) return;
 
-      await axios.delete(`https://api.hansariafood.shop/api/commodities/${id}`);
+      await axios.delete(`https://phpserver-kappa.vercel.app/api/commodities/${id}`);
 
       const updatedCommodities = commodities.filter(
         (commodity) => commodity._id !== id
@@ -162,7 +162,7 @@ const ListCommodity = () => {
               commodityId={selectedCommodity ? selectedCommodity._id : null}
               onUpdate={() => {
                 axios
-                  .get("https://api.hansariafood.shop/api/commodities")
+                  .get("https://phpserver-kappa.vercel.app/api/commodities")
                   .then((response) => {
                     const sortedCommodities = response.data.sort((a, b) =>
                       a.name.localeCompare(b.name)
