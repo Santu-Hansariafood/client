@@ -2,7 +2,7 @@ import { lazy, useState, useMemo, Suspense } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext/AuthContext";
 import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
-import axios from "axios";
+import api from "../../utils/apiClient/apiClient";
 import Loading from "../../common/Loading/Loading";
 import loginLable from "../../language/en/login";
 import { toast } from "react-toastify";
@@ -39,12 +39,13 @@ const LoginForm = () => {
 
     setLoading(true);
 
+    const base = import.meta.env.VITE_API_BASE_URL || "/api";
     const apiEndpoints = {
-      Admin: "https://phpserver-kappa.vercel.app/api/admin/login",
-      Employee: "https://phpserver-kappa.vercel.app/api/employees/login",
-      Buyer: "https://phpserver-kappa.vercel.app/api/buyers/login",
-      Seller: "https://phpserver-kappa.vercel.app/api/sellers/login",
-      Transporter: "https://phpserver-kappa.vercel.app/api/transporters/login",
+      Admin: `${base}/admin/login`,
+      Employee: `${base}/employees/login`,
+      Buyer: `${base}/buyers/login`,
+      Seller: `${base}/sellers/login`,
+      Transporter: `${base}/transporters/login`,
     };
 
     const roleBasedRoutes = {
@@ -66,13 +67,13 @@ const LoginForm = () => {
     const phoneKey = userRole === "Seller" ? "phone" : "mobile";
 
     try {
-      const response = await axios.post(apiUrl, {
+      const response = await api.post(apiUrl.replace(base, ""), {
         [phoneKey]: phoneNumber,
         password: password,
       });
 
       if (response.status === 200) {
-        login({ ...response.data, mobile: phoneNumber, role: userRole });
+        login({ ...response.data, mobile: phoneNumber, role: userRole, token: response.data.token });
 
         toast.success("Login successful!", { position: "top-right", autoClose: 3000 });
 

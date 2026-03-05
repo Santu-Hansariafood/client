@@ -13,8 +13,6 @@ import "react-toastify/dist/ReactToastify.css";
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  const SESSION_DURATION = 60 * 60 * 1000;
-
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
     try {
       return JSON.parse(localStorage.getItem("isAuthenticated")) || false;
@@ -32,43 +30,40 @@ export const AuthProvider = ({ children }) => {
   });
 
   const sessionTimeoutRef = useRef(null);
+  const [token, setToken] = useState(() => localStorage.getItem("token") || "");
 
   const login = (userData) => {
     setIsAuthenticated(true);
     setMobile(userData.mobile || "");
     setUserRole(userData.role || "");
+    if (userData.token) {
+      setToken(userData.token);
+    }
 
     localStorage.setItem("isAuthenticated", "true");
     localStorage.setItem("mobile", userData.mobile || "");
     localStorage.setItem("userRole", userData.role || "");
-    localStorage.setItem("sessionTimestamp", Date.now().toString());
-
-    startSessionTimer();
+    if (userData.token) {
+      localStorage.setItem("token", userData.token);
+    }
+    // No auto logout; keep the session persistent
   };
 
   const logout = () => {
     setIsAuthenticated(false);
     setMobile("");
     setUserRole("");
+    setToken("");
 
     localStorage.removeItem("isAuthenticated");
     localStorage.removeItem("mobile");
     localStorage.removeItem("userRole");
-    localStorage.removeItem("sessionTimestamp");
+    localStorage.removeItem("token");
 
     clearSessionTimer();
   };
 
-  const startSessionTimer = () => {
-    clearSessionTimer();
-    sessionTimeoutRef.current = setTimeout(() => {
-      logout();
-      toast.info("Session expired due to inactivity.", {
-        position: "top-center",
-        autoClose: 5000,
-      });
-    }, SESSION_DURATION);
-  };
+  const startSessionTimer = () => {};
 
   const clearSessionTimer = () => {
     if (sessionTimeoutRef.current) {
@@ -78,10 +73,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const handleUserActivity = () => {
-    if (isAuthenticated) {
-      localStorage.setItem("sessionTimestamp", Date.now().toString());
-      startSessionTimer();
-    }
+    // No session timeout; keep user logged in
   };
 
   const synchronizeAuthState = (event) => {
@@ -114,11 +106,7 @@ export const AuthProvider = ({ children }) => {
   }, [isAuthenticated]);
 
   useEffect(() => {
-    if (isAuthenticated) {
-      startSessionTimer();
-    } else {
-      clearSessionTimer();
-    }
+    // No-op; persistence handled via localStorage token
   }, [isAuthenticated]);
 
   const value = useMemo(
@@ -126,10 +114,11 @@ export const AuthProvider = ({ children }) => {
       isAuthenticated,
       mobile,
       userRole,
+      token,
       login,
       logout,
     }),
-    [isAuthenticated, mobile, userRole]
+    [isAuthenticated, mobile, userRole, token]
   );
 
   return (

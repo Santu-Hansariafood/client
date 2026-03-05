@@ -31,6 +31,7 @@ const AdditionalInformation = lazy(() =>
 const LoadingStation = lazy(() =>
   import("../../../components/LoadingStation/LoadingStation")
 );
+const DataInput = lazy(() => import("../../../common/DataInput/DataInput"));
 
 const INITIAL_FORM_DATA = {
   buyer: "",
@@ -135,14 +136,16 @@ const SelfOrder = () => {
     setIsLoading(true);
 
     try {
-      const saudaNo = await generateSaudaNo();
-
-      if (!saudaNo) {
-        toast.error("Sauda No generation failed. Order not submitted.");
-        return;
+      let saudaNoToUse = formData.saudaNo;
+      if (!saudaNoToUse) {
+        saudaNoToUse = await generateSaudaNo();
+        if (!saudaNoToUse) {
+          toast.error("Sauda No generation failed. Order not submitted.");
+          return;
+        }
       }
 
-      const payload = { ...formData, saudaNo };
+      const payload = { ...formData, saudaNo: saudaNoToUse };
 
       console.log("Final Payload being sent to API:", JSON.stringify(payload, null, 2));
 
@@ -198,6 +201,42 @@ const SelfOrder = () => {
           setNotes={(updatedNotes) => handleChange("notes", updatedNotes)}
         />
         <AdditionalInformation formData={formData} handleChange={handleChange} />
+
+        <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
+          <h3 className="text-lg font-semibold text-gray-800 mb-3">Sauda Number</h3>
+          <div className="flex flex-col sm:flex-row gap-3">
+            <div className="flex-1">
+              <DataInput
+                placeholder="Enter Sauda No (or Generate)"
+                value={formData.saudaNo}
+                onChange={(e) => handleChange("saudaNo", e.target.value)}
+                name="saudaNo"
+                inputType="text"
+                size="md"
+              />
+            </div>
+            <button
+              type="button"
+              onClick={async () => {
+                try {
+                  const n = await generateSaudaNo();
+                  setFormData((prev) => ({ ...prev, saudaNo: n }));
+                  toast.success(`Generated Sauda No: ${n}`, { position: "top-right", autoClose: 2000 });
+                } catch {
+                  /* error toast already shown */
+                }
+              }}
+              className="px-4 py-2 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700 transition shadow"
+              disabled={isLoading}
+              title="Generate Sauda No"
+            >
+              Generate
+            </button>
+          </div>
+          <p className="text-sm text-gray-500 mt-1">
+            System generates a Sauda No, but you can manually edit it here before submitting.
+          </p>
+        </div>
 
         <button
           onClick={handleSubmit}

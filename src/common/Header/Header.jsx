@@ -1,6 +1,7 @@
 import { useState, useCallback } from "react";
 import { AiOutlineUser } from "react-icons/ai";
 import { RiLogoutBoxLine } from "react-icons/ri";
+import PWAInstall from "../PWAInstall/PWAInstall";
 
 const Header = ({ onLogoutClick }) => {
   const [showDropdown, setShowDropdown] = useState(false);
@@ -14,22 +15,25 @@ const Header = ({ onLogoutClick }) => {
   const logout = "Logout";
   
   return (
-    <header className="flex items-center justify-between px-6 py-4 bg-white shadow-md">
-      <h1 className="text-xl font-bold text-gray-800">{title}</h1>
+    <header className="flex items-center justify-between px-6 py-4 bg-gradient-to-r from-green-700 via-green-800 to-green-900 text-yellow-100 shadow-lg rounded-b-2xl border-b border-green-400/30">
+      <h1 className="text-xl font-extrabold tracking-wide drop-shadow">{title}</h1>
       <div className="relative">
+        <div className="hidden sm:flex items-center gap-3 mr-3">
+          <PWAInstall />
+        </div>
         <button
-          className="flex items-center space-x-2 font-medium text-gray-700 hover:text-gray-900"
+          className="flex items-center space-x-2 font-medium text-yellow-100 hover:text-white"
           onClick={toggleDropdown}
         >
-          <div className="w-10 h-10 rounded-full bg-gray-300 grid place-items-center">
-            <AiOutlineUser size={24} />
+          <div className="w-10 h-10 rounded-full bg-white/20 grid place-items-center ring-2 ring-yellow-300/60">
+            <AiOutlineUser size={22} />
           </div>
-          <span>{profile}</span>
+          <span className="hidden sm:inline">{profile}</span>
         </button>
         {showDropdown && (
-          <div className="absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded-md shadow-lg">
+          <div className="absolute right-0 mt-2 w-44 bg-white/95 backdrop-blur-md border border-green-400/20 rounded-md shadow-xl overflow-hidden">
             <button
-              className="w-full px-4 py-2 text-left text-red-600 hover:bg-red-100 flex items-center space-x-2"
+              className="w-full px-4 py-2 text-left text-red-600 hover:bg-red-50 flex items-center space-x-2"
               onClick={onLogoutClick}
             >
               <RiLogoutBoxLine size={20} />
