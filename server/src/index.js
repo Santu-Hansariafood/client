@@ -22,6 +22,9 @@ import confirmBidRoutes from "./routes/confirmBids.js";
 import agentRoutes from "./routes/agents.js";
 import selfOrderRoutes from "./routes/selfOrders.js";
 import whatsappRoutes from "./routes/whatsapp.js";
+import qualityParameterRoutes from "./routes/qualityParameters.js";
+import groupRoutes from "./routes/groups.js";
+import consigneeRoutes from "./routes/consignees.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -65,6 +68,9 @@ app.use("/api/confirm-bid", cache(10), authJwt, confirmBidRoutes);
 app.use("/api/agents", cache(120), authJwt, agentRoutes);
 app.use("/api/self-order", cache(15), authJwt, selfOrderRoutes);
 app.use("/api/whatsapp", authJwt, whatsappRoutes);
+app.use("/api/quality-parameters", authJwt, qualityParameterRoutes);
+app.use("/api/groups", authJwt, groupRoutes);
+app.use("/api/consignees", authJwt, consigneeRoutes);
 
 const PORT = process.env.PORT || 5000;
 

@@ -80,7 +80,9 @@ const LoginForm = () => {
         navigate(roleBasedRoutes[userRole] || "/dashboard", { replace: true });
       }
     } catch (error) {
-      toast.error(error.response?.data?.message || "Invalid mobile number or password", {
+      console.error("Login Error:", error);
+      const errorMsg = error.response?.data?.message || `Login failed: ${error.message}`;
+      toast.error(errorMsg, {
         position: "top-right",
         autoClose: 3000,
       });

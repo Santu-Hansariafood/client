@@ -26,8 +26,12 @@ router.get("/:id", async (req, res) => {
 });
 
 router.post("/", async (req, res) => {
-  const item = await Commodity.create(req.body);
-  res.status(201).json(item);
+  try {
+    const item = await Commodity.create(req.body);
+    res.status(201).json(item);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
 });
 
 export default router;
