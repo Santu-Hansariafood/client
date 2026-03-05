@@ -21,8 +21,8 @@ const ParticipateBidAdmin = () => {
     const fetchData = async () => {
       try {
         const [bidsRes, participateRes] = await Promise.all([
-          axios.get("https://phpserver-kappa.vercel.app/api/bids"),
-          axios.get("https://phpserver-kappa.vercel.app/api/participatebids"),
+          axios.get("/bids"),
+          axios.get("/participatebids"),
         ]);
 
         const sevenDaysAgo = new Date();
@@ -102,6 +102,7 @@ const ParticipateBidAdmin = () => {
     bid.quantities,
     bid.rate,
     <button
+      key={bid.bidId}
       onClick={() => navigate(`/confirm-bids/${bid.bidId}`)}
       className="text-blue-500 underline hover:text-blue-700"
     >

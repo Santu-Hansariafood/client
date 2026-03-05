@@ -24,7 +24,7 @@ const DownloadSauda = lazy(() =>
 );
 const SearchBox = lazy(() => import("../../../common/SearchBox/SearchBox"));
 
-const API_URL = "https://phpserver-kappa.vercel.app/api/self-order";
+const API_URL = "/self-order";
 
 const SelfOrderList = () => {
   const [data, setData] = useState([]);

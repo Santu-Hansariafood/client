@@ -36,10 +36,10 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
       try {
         const [groupsRes, commoditiesRes, consigneesRes, companiesRes] =
           await Promise.all([
-            axios.get("https://phpserver-kappa.vercel.app/api/companies"),
-            axios.get("https://phpserver-kappa.vercel.app/api/commodities"),
-            axios.get("https://phpserver-kappa.vercel.app/api/consignees"),
-            axios.get("https://phpserver-kappa.vercel.app/api/companies"),
+            axios.get("/companies"),
+            axios.get("/commodities"),
+            axios.get("/consignees"),
+            axios.get("/companies"),
           ]);
 
         setGroups(
@@ -143,7 +143,7 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
         companyName: formData.companyName,
       };
       const response = await axios.put(
-        `https://phpserver-kappa.vercel.app/api/buyers/${formData._id}`,
+        `/buyers/${formData._id}`,
         payload
       );
       onUpdate(response.data);

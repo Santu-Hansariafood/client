@@ -22,9 +22,7 @@ const CommodityInformation = ({
   useEffect(() => {
     const fetchCommodities = async () => {
       try {
-        const { data } = await axios.get(
-          "https://phpserver-kappa.vercel.app/api/companies"
-        );
+        const { data } = await axios.get("/companies");
         const companyData = data.find(
           (company) => company.companyName === selectedCompany
         );
@@ -42,9 +40,7 @@ const CommodityInformation = ({
 
     const fetchBuyers = async () => {
       try {
-        const { data } = await axios.get(
-          "https://phpserver-kappa.vercel.app/api/buyers"
-        );
+        const { data } = await axios.get("/buyers");
         setBuyers(data || []);
       } catch (error) {
         console.error("Error fetching buyers:", error);

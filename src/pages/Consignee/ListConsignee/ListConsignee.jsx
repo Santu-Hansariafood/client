@@ -28,9 +28,7 @@ const ListConsignee = () => {
   useEffect(() => {
     const fetchConsignees = async () => {
       try {
-        const response = await axios.get(
-          "https://phpserver-kappa.vercel.app/api/consignees"
-        );
+        const response = await axios.get("/consignees");
         const normalizedData = response.data.map((consignee) => ({
           ...consignee,
           email: consignee.email.toLowerCase(),
@@ -65,7 +63,7 @@ const ListConsignee = () => {
   const submitEdit = async (updatedData) => {
     try {
       const response = await axios.put(
-        `https://phpserver-kappa.vercel.app/api/consignees/${selectedConsignee._id}`,
+        `/consignees/${selectedConsignee._id}`,
         updatedData
       );
       const updatedConsignees = consigneeData.map((consignee) =>
@@ -86,7 +84,7 @@ const ListConsignee = () => {
   const submitDelete = async () => {
     try {
       await axios.delete(
-        `https://phpserver-kappa.vercel.app/api/consignees/${selectedConsignee._id}`
+        `/consignees/${selectedConsignee._id}`
       );
       const updatedConsignees = consigneeData.filter(
         (consignee) => consignee._id !== selectedConsignee._id

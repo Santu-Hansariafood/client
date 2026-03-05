@@ -7,7 +7,7 @@ const DataDropdown = lazy(() =>
   import("../../common/DataDropdown/DataDropdown")
 );
 
-const API_URL = "https://phpserver-kappa.vercel.app/api/agents";
+const API_URL = "/agents";
 
 const BrokerInformation = ({ formData, handleChange }) => {
   const [agentOptions, setAgentOptions] = useState([]);

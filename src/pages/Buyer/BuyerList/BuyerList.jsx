@@ -32,9 +32,7 @@ const BuyerList = () => {
   useEffect(() => {
     const fetchBuyersData = async () => {
       try {
-        const response = await axios.get(
-          "https://phpserver-kappa.vercel.app/api/buyers"
-        );
+        const response = await axios.get("/buyers");
         const sortedData = response.data.sort((a, b) =>
           a.name.localeCompare(b.name)
         );
@@ -86,7 +84,7 @@ const BuyerList = () => {
 
     try {
       await axios.delete(
-        `https://phpserver-kappa.vercel.app/api/buyers/${buyerToDelete._id}`
+        `/buyers/${buyerToDelete._id}`
       );
 
       const updatedData = filteredData.filter((_, i) => i !== actualIndex);

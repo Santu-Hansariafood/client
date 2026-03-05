@@ -25,7 +25,7 @@ const EditGroupPopup = ({ isOpen, group, onClose, onUpdate }) => {
   const handleSubmit = async () => {
     try {
       const response = await axios.put(
-        `https://phpserver-kappa.vercel.app/api/groups/${group._id}`,
+        `/groups/${group._id}`,
         formData
       );
       onUpdate(response.data);

@@ -23,7 +23,7 @@ const fetchData = async (url, key) => {
 
 const fetchOrders = async (supplierId, consignee) => {
   try {
-    const response = await axios.get("https://phpserver-kappa.vercel.app/api/self-order");
+    const response = await axios.get("/self-order");
     return response.data.filter(
       (order) => order.supplier === supplierId && order.consignee === consignee
     );
@@ -46,8 +46,8 @@ const AddLoadingEntry = () => {
     const loadDropdowns = async () => {
       setLoading(true);
       const [suppliersData, consigneesData] = await Promise.all([
-        fetchData("https://phpserver-kappa.vercel.app/api/sellers", "sellerName"),
-        fetchData("https://phpserver-kappa.vercel.app/api/consignees", "name"),
+        fetchData("/sellers", "sellerName"),
+        fetchData("/consignees", "name"),
       ]);
       setSuppliers(suppliersData);
       setConsignees(consigneesData);
@@ -119,6 +119,7 @@ const AddLoadingEntry = () => {
                 order.rate,
                 capitalizeWords(order.pendingQuantity),
                 <button
+                  key={order._id || order.saudaNo}
                   onClick={() => navigate(`/loading-entry-sauda/${order.supplier}`, { state: { order } })}
                   className="text-blue-500 hover:text-blue-700"
                 >

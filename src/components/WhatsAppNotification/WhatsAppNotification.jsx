@@ -17,7 +17,7 @@ const WhatsAppNotification = async ({ bidData, bidId }) => {
       });
 
       const response = await axios.post(
-        `https://phpserver-kappa.vercel.app/api/whatsapp/send`,
+        `/whatsapp/send`,
         {
           bidId,
           bidData,

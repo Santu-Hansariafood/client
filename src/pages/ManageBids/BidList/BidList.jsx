@@ -26,9 +26,7 @@ const BidList = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axios.get(
-          "https://phpserver-kappa.vercel.app/api/bids"
-        );
+        const response = await axios.get("/bids");
         const sevenDaysAgo = new Date();
         sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
@@ -70,7 +68,7 @@ const BidList = () => {
       const { id, rate, quantity } = editableRateQuantity;
 
       const response = await axios.put(
-        `https://phpserver-kappa.vercel.app/api/bids/${id}`,
+        `/bids/${id}`,
         { rate, quantity }
       );
 

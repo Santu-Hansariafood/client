@@ -12,7 +12,7 @@ const ParameterInputs = lazy(() => import("./ParameterInputs"));
 const AdditionalFields = lazy(() => import("./AdditionalFields"));
 const SubmitButton = lazy(() => import("./SubmitButton"));
 
-const apiBaseUrl = "https://phpserver-kappa.vercel.app/api";
+const apiBaseUrl = "";
 
 const BaseBid = () => {
   const navigate = useNavigate();

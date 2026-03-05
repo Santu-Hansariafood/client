@@ -5,6 +5,8 @@ import compression from "compression";
 import connect from "./lib/db.js";
 import cluster from "node:cluster";
 import os from "node:os";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import authRoutes from "./routes/auth.js";
 import apiKey from "./middleware/apiKey.js";
 import authJwt from "./middleware/authJwt.js";
@@ -21,13 +23,22 @@ import agentRoutes from "./routes/agents.js";
 import selfOrderRoutes from "./routes/selfOrders.js";
 import whatsappRoutes from "./routes/whatsapp.js";
 
-dotenv.config();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+dotenv.config({ path: path.resolve(__dirname, "../.env") });
 
 const app = express();
-const corsOrigin = process.env.CORS_ORIGIN || "*";
+const corsOrigin = (process.env.CORS_ORIGIN || "*").trim();
+const corsOrigins =
+  corsOrigin && corsOrigin !== "*"
+    ? corsOrigin
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean)
+    : null;
 app.use(
   cors({
-    origin: corsOrigin,
+    origin: corsOrigins || true,
     credentials: true
   })
 );

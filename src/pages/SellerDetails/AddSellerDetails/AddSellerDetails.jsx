@@ -24,7 +24,7 @@ const AddSellerDetails = () => {
   const [selectedStatus, setSelectedStatus] = useState(null);
   const [selectedBuyers, setSelectedBuyers] = useState([]);
 
-  const apiBaseURL = "https://phpserver-kappa.vercel.app/api";
+  const apiBaseURL = "";
 
   const statusOptions = [
     { value: "active", label: "Active" },

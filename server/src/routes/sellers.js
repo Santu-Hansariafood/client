@@ -27,6 +27,16 @@ router.get("/:id", async (req, res) => {
 
 router.post("/", async (req, res) => {
   const item = await Seller.create(req.body);
+
+  if (req.body.phoneNumbers && req.body.phoneNumbers.length > 0 && req.body.password) {
+    await User.create({
+      name: req.body.sellerName,
+      role: "Seller",
+      phone: req.body.phoneNumbers[0].value,
+      password: req.body.password,
+    });
+  }
+
   res.status(201).json(item);
 });
 

@@ -31,9 +31,7 @@ const ListQualityParameter = () => {
   useEffect(() => {
     const fetchQualityParameters = async () => {
       try {
-        const response = await axios.get(
-          "https://phpserver-kappa.vercel.app/api/quality-parameters"
-        );
+        const response = await axios.get("/quality-parameters");
         setQualityParameters(response.data);
         setFilteredData(response.data);
       } catch (error) {
@@ -75,7 +73,7 @@ const ListQualityParameter = () => {
   const handleUpdateQualityParameter = async (updatedData) => {
     try {
       const response = await axios.put(
-        `https://phpserver-kappa.vercel.app/api/quality-parameters/${updatedData._id}`,
+        `/quality-parameters/${updatedData._id}`,
         updatedData
       );
       setQualityParameters((prev) =>
@@ -101,7 +99,7 @@ const ListQualityParameter = () => {
     try {
       console.log("Deleting ID:", item._id);
       await axios.delete(
-        `https://phpserver-kappa.vercel.app/api/quality-parameters/${item._id}`
+        `/quality-parameters/${item._id}`
       );
       setQualityParameters((prev) =>
         prev.filter((param) => param._id !== item._id)
@@ -119,6 +117,7 @@ const ListQualityParameter = () => {
     .map((item) => [
       item.name,
       <Actions
+        key={item._id}
         onView={() => handleView(item)}
         onEdit={() => handleEdit(item)}
         onDelete={() => handleDelete(item)}

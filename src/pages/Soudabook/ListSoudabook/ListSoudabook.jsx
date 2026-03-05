@@ -7,7 +7,7 @@ const DataInput = lazy(() => import("../../../common/DataInput/DataInput"));
 const Tables = lazy(() => import("../../../common/Tables/Tables"));
 const Actions = lazy(() => import("../../../common/Actions/Actions"));
 
-const API_URL = "https://phpserver-kappa.vercel.app/api/agents";
+const API_URL = "/agents";
 
 const ListSoudabook = () => {
   const [agentName, setAgentName] = useState("");

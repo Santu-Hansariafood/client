@@ -73,8 +73,8 @@ const SelfOrder = () => {
   const [formData, setFormData] = useState(INITIAL_FORM_DATA);
   const [isLoading, setIsLoading] = useState(false);
 
-  const API_BASE_URL = "https://phpserver-kappa.vercel.app/api/self-order";
-  const SAUDA_API_URL = "https://phpserver-kappa.vercel.app/api/sauda-no";
+  const API_BASE_URL = "/self-order";
+  const SAUDA_API_URL = "/sauda-no";
 
   const handleChange = (field, value) => {
     setFormData((prev) => {

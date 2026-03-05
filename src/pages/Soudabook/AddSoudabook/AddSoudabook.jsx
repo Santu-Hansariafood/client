@@ -34,9 +34,7 @@ const AddSoudabook = () => {
   useEffect(() => {
     const fetchSellers = async () => {
       try {
-        const response = await axios.get(
-          "https://phpserver-kappa.vercel.app/api/sellers"
-        );
+        const response = await axios.get("/sellers");
         const sellerOptions = response.data.map((seller) => ({
           value: seller._id,
           label: seller.sellerName,
@@ -49,9 +47,7 @@ const AddSoudabook = () => {
 
     const fetchItems = async () => {
       try {
-        const response = await axios.get(
-          "https://phpserver-kappa.vercel.app/api/commodities"
-        );
+        const response = await axios.get("/commodities");
         const itemOptions = response.data.map((item) => ({
           value: item._id,
           label: item.name,
@@ -64,9 +60,7 @@ const AddSoudabook = () => {
 
     const fetchBuyers = async () => {
       try {
-        const response = await axios.get(
-          "https://phpserver-kappa.vercel.app/api/buyers"
-        );
+        const response = await axios.get("/buyers");
         const buyerOptions = response.data.map((buyer) => ({
           value: buyer._id,
           label: buyer.name,

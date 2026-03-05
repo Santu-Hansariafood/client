@@ -1,6 +1,7 @@
 import { useState, useEffect, lazy, Suspense } from "react";
 import PropTypes from "prop-types";
 import { toast } from "react-toastify";
+import axios from "axios";
 const Tables = lazy(() => import("../../../common/Tables/Tables"));
 const SearchBox = lazy(() => import("../../../common/SearchBox/SearchBox"));
 const DateSelector = lazy(() =>
@@ -26,10 +27,9 @@ const BidList = () => {
   useEffect(() => {
     const fetchBids = async () => {
       try {
-        const response = await fetch("https://phpserver-kappa.vercel.app/api/bids");
-        const data = await response.json();
-        setBids(data);
-        setFilteredData(data);
+        const response = await axios.get("/bids");
+        setBids(response.data);
+        setFilteredData(response.data);
       } catch (error) {
         toast.error("Error fetching bids:", error);
       }
@@ -37,9 +37,8 @@ const BidList = () => {
 
     const fetchCommodities = async () => {
       try {
-        const response = await fetch("https://phpserver-kappa.vercel.app/api/commodities");
-        const data = await response.json();
-        setCommodities(data);
+        const response = await axios.get("/commodities");
+        setCommodities(response.data);
       } catch (error) {
         toast.error("Error fetching commodities:", error);
       }
@@ -47,9 +46,8 @@ const BidList = () => {
 
     const fetchOrigins = async () => {
       try {
-        const response = await fetch("https://phpserver-kappa.vercel.app/api/bid-locations");
-        const data = await response.json();
-        setOrigins(data);
+        const response = await axios.get("/bid-locations");
+        setOrigins(response.data);
       } catch (error) {
         toast.error("Error fetching origins:", error);
       }

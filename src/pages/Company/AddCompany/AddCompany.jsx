@@ -33,9 +33,9 @@ const AddCompany = () => {
     const fetchData = async () => {
       try {
         const [consignees, groups, commodities] = await Promise.all([
-          axios.get("https://phpserver-kappa.vercel.app/api/consignees"),
-          axios.get("https://phpserver-kappa.vercel.app/api/groups"),
-          axios.get("https://phpserver-kappa.vercel.app/api/commodities"),
+          axios.get("/consignees"),
+          axios.get("/groups"),
+          axios.get("/commodities"),
         ]);
 
         setConsigneeOptions(
@@ -150,7 +150,7 @@ const AddCompany = () => {
 
     try {
       const response = await axios.post(
-        "https://phpserver-kappa.vercel.app/api/companies",
+        "/companies",
         companyData
       );
       if (response.status === 201) {

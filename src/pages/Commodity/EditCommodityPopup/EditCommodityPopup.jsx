@@ -15,9 +15,7 @@ const EditCommodityPopup = ({ isOpen, onClose, commodityId, onUpdate }) => {
       if (!commodityId) return;
       setIsLoading(true);
       try {
-        const response = await axios.get(
-          `https://phpserver-kappa.vercel.app/api/commodities/${commodityId}`
-        );
+        const response = await axios.get(`/commodities/${commodityId}`);
         setCommodity(response.data);
       } catch (error) {
         toast.error("Error fetching commodity:", error);
@@ -28,9 +26,7 @@ const EditCommodityPopup = ({ isOpen, onClose, commodityId, onUpdate }) => {
 
     const fetchQualityParameters = async () => {
       try {
-        const response = await axios.get(
-          "https://phpserver-kappa.vercel.app/api/quality-parameters"
-        );
+        const response = await axios.get("/quality-parameters");
         setQualityOptions(response.data);
       } catch (error) {
         toast.error("Error fetching quality parameters:", error);
@@ -87,10 +83,7 @@ const EditCommodityPopup = ({ isOpen, onClose, commodityId, onUpdate }) => {
   const handleSave = async () => {
     setIsLoading(true);
     try {
-      await axios.put(
-        `https://phpserver-kappa.vercel.app/api/commodities/${commodityId}`,
-        commodity
-      );
+      await axios.put(`/commodities/${commodityId}`, commodity);
       onUpdate();
       toast.success("Commodity updated successfully!");
       onClose();

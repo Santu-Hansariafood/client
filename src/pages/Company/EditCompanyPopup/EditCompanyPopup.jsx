@@ -28,10 +28,10 @@ const EditCompanyPopup = ({ company, isOpen, onClose, onUpdate }) => {
       try {
         const [consigneeRes, commodityRes, parameterRes, groupRes] =
           await Promise.all([
-            axios.get("https://phpserver-kappa.vercel.app/api/consignees"),
-            axios.get("https://phpserver-kappa.vercel.app/api/commodities"),
-            axios.get("https://phpserver-kappa.vercel.app/api/quality-parameters"),
-            axios.get("https://phpserver-kappa.vercel.app/api/groups"),
+            axios.get("/consignees"),
+            axios.get("/commodities"),
+            axios.get("/quality-parameters"),
+            axios.get("/groups"),
           ]);
         setConsignees(consigneeRes.data);
         setCommodities(commodityRes.data);
@@ -109,7 +109,7 @@ const EditCompanyPopup = ({ company, isOpen, onClose, onUpdate }) => {
 
     try {
       const response = await axios.put(
-        `https://phpserver-kappa.vercel.app/api/companies/${formData._id}`,
+        `/companies/${formData._id}`,
         formData
       );
 

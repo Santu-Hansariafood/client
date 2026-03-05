@@ -45,8 +45,8 @@ const AddBuyer = () => {
     const fetchDropdownData = async () => {
       try {
         const [companiesResponse, commoditiesResponse] = await Promise.all([
-          axios.get("https://phpserver-kappa.vercel.app/api/companies"),
-          axios.get("https://phpserver-kappa.vercel.app/api/commodities"),
+          axios.get("/companies"),
+          axios.get("/commodities"),
         ]);
 
         const companies = companiesResponse.data;
@@ -201,7 +201,7 @@ const AddBuyer = () => {
           ),
         };
 
-        await axios.post("https://phpserver-kappa.vercel.app/api/buyers", payload);
+        await axios.post("/buyers", payload);
         setSuccessMessage("Buyer added successfully!");
         setFormData({
           name: "",

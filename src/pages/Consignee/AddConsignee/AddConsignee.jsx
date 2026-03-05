@@ -75,7 +75,7 @@ const AddConsignee = () => {
     e.preventDefault();
     try {
       const response = await axios.post(
-        "https://phpserver-kappa.vercel.app/api/consignees",
+        "/consignees",
         formData
       );
       if (response.status === 201) {

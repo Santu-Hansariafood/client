@@ -17,8 +17,8 @@ const LoginForm = () => {
   const [password, setPassword] = useState("");
   const [userRole, setUserRole] = useState("Admin");
   const [showPassword, setShowPassword] = useState(false);
-  const [isCaptchaValid, setCaptchaValid] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [isCaptchaValid, setCaptchaValid] = useState(false);
   const navigate = useNavigate();
   const { login } = useAuth();
 

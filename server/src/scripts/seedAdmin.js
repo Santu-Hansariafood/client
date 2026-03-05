@@ -2,8 +2,12 @@ import dotenv from "dotenv";
 import mongoose from "mongoose";
 import connect from "../lib/db.js";
 import User from "../models/User.js";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 
-dotenv.config();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+dotenv.config({ path: path.resolve(__dirname, "../../.env") });
 
 const run = async () => {
   try {
@@ -33,4 +37,3 @@ const run = async () => {
 };
 
 run();
-

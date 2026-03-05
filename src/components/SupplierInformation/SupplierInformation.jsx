@@ -7,6 +7,7 @@ import {
   Suspense,
 } from "react";
 import PropTypes from "prop-types";
+import axios from "axios";
 import Loading from "../../common/Loading/Loading";
 const DataDropdown = lazy(() =>
   import("../../common/DataDropdown/DataDropdown")
@@ -23,11 +24,8 @@ const SupplierInformation = ({ handleChange, formData }) => {
   useEffect(() => {
     const fetchSuppliers = async () => {
       try {
-        const response = await fetch(
-          "https://phpserver-kappa.vercel.app/api/sellers"
-        );
-        const data = await response.json();
-        setSellers(data);
+        const response = await axios.get("/sellers");
+        setSellers(response.data);
       } catch (error) {
         console.error("Error fetching suppliers:", error);
       }

@@ -28,9 +28,7 @@ const ListSellerCompany = () => {
   useEffect(() => {
     const fetchCompanies = async () => {
       try {
-        const response = await axios.get(
-          "https://phpserver-kappa.vercel.app/api/seller-company"
-        );
+        const response = await axios.get("/seller-company");
         setCompanies(response.data.data);
         setSearchResults(response.data.data);
         setLoading(false);
@@ -133,6 +131,7 @@ const ListSellerCompany = () => {
         </div>
       )),
       <Actions
+        key={company._id}
         onView={() => setSelectedCompany(company)}
         onEdit={() => setEditCompany(company)}
         onDelete={() => console.log("Delete clicked")}

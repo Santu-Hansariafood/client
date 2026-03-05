@@ -19,9 +19,7 @@ const AddCommodity = () => {
   useEffect(() => {
     const fetchParametersOptions = async () => {
       try {
-        const response = await axios.get(
-          "https://phpserver-kappa.vercel.app/api/quality-parameters"
-        );
+        const response = await axios.get("/quality-parameters");
         const options = response.data
           .map((param) => ({ value: param.name, label: param.name }))
           .sort((a, b) => a.label.localeCompare(b.label));
@@ -69,10 +67,7 @@ const AddCommodity = () => {
     };
 
     try {
-      await axios.post(
-        "https://phpserver-kappa.vercel.app/api/commodities",
-        formData
-      );
+      await axios.post("/commodities", formData);
       toast.success("Commodity added successfully");
       setCommodityName("");
       setHsnCode("");

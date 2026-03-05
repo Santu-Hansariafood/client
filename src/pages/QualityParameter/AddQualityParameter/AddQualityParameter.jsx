@@ -30,7 +30,7 @@ const AddQualityParameter = () => {
     };
 
     try {
-      await axios.post("https://phpserver-kappa.vercel.app/api/quality-parameters", payload);
+      await axios.post("/quality-parameters", payload);
       toast.success("Quality parameter added successfully!");
       setFormData({
         name: "",

@@ -20,9 +20,9 @@ const ParticipateBid = () => {
   const fetchBidsAndParticipations = async () => {
     try {
       const [bidsRes, participateRes, confirmBidsRes] = await Promise.all([
-        axios.get("https://phpserver-kappa.vercel.app/api/bids"),
-        axios.get("https://phpserver-kappa.vercel.app/api/participatebids"),
-        axios.get("https://phpserver-kappa.vercel.app/api/confirm-bid"),
+        axios.get("/bids"),
+        axios.get("/participatebids"),
+        axios.get("/confirm-bid"),
       ]);
 
       setBids(bidsRes.data);

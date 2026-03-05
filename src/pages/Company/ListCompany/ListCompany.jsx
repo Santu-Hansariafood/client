@@ -26,9 +26,7 @@ const ListCompany = () => {
   useEffect(() => {
     const fetchCompanyData = async () => {
       try {
-        const response = await axios.get(
-          "https://phpserver-kappa.vercel.app/api/companies"
-        );
+        const response = await axios.get("/companies");
 
         const sortedData = response.data.sort((a, b) => {
           if (a.group === b.group) {
@@ -75,9 +73,7 @@ const ListCompany = () => {
   const handleDelete = async (index) => {
     const companyId = paginatedData[index]._id;
     try {
-      await axios.delete(
-        `https://phpserver-kappa.vercel.app/api/companies/${companyId}`
-      );
+      await axios.delete(`/companies/${companyId}`);
       const updatedData = filteredData.filter(
         (company) => company._id !== companyId
       );

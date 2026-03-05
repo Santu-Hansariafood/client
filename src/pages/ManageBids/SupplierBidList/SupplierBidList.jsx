@@ -32,7 +32,7 @@ const SupplierBidList = () => {
         setLoading(false);
         return;
       }
-      const bidsRes = await axios.get("https://phpserver-kappa.vercel.app/api/bids");
+      const bidsRes = await axios.get("/bids");
       const sevenDaysAgo = new Date();
       sevenDaysAgo.setHours(0, 0, 0, 0);
       sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
@@ -79,7 +79,7 @@ const SupplierBidList = () => {
         quantity: Number(quantity),
       };
       await axios.post(
-        "https://phpserver-kappa.vercel.app/api/participatebids",
+        "/participatebids",
         participationData
       );
       alert("Participation successful!");
@@ -159,6 +159,7 @@ const SupplierBidList = () => {
                               .join(", ")
                           : "No Parameters",
                         <button
+                          key={bid._id}
                           onClick={() => handleParticipate(bid)}
                           className="flex items-center gap-2 text-blue-500 hover:text-blue-700"
                         >

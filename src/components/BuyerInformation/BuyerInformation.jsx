@@ -18,9 +18,7 @@ const BuyerInformation = ({ handleChange }) => {
     const fetchBuyers = async () => {
       setLoading(true);
       try {
-        const { data } = await axios.get(
-          "https://phpserver-kappa.vercel.app/api/buyers"
-        );
+        const { data } = await axios.get("/buyers");
         setBuyers(data);
       } catch (error) {
         console.error("Error fetching buyers:", error);

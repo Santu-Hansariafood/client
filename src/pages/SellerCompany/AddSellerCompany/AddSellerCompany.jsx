@@ -149,7 +149,7 @@ const AddSellerCompany = () => {
 
     try {
       const response = await axios.post(
-        "https://phpserver-kappa.vercel.app/api/seller-company",
+        "/seller-company",
         formData,
         {
           headers: { "Content-Type": "multipart/form-data" },

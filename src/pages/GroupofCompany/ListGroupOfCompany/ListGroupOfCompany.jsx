@@ -41,9 +41,7 @@ const ListGroupOfCompany = () => {
   useEffect(() => {
     const fetchGroups = async () => {
       try {
-        const response = await axios.get(
-          "https://phpserver-kappa.vercel.app/api/groups"
-        );
+        const response = await axios.get("/groups");
         const uniqueGroups = Array.from(
           new Map(
             response.data.map((group) => [
@@ -94,9 +92,7 @@ const ListGroupOfCompany = () => {
     async (index) => {
       const groupToDelete = filteredData[index];
       try {
-        await axios.delete(
-          `https://phpserver-kappa.vercel.app/api/groups/${groupToDelete._id}`
-        );
+        await axios.delete(`/groups/${groupToDelete._id}`);
         const updatedData = filteredData.filter((_, i) => i !== index);
         setFilteredData(updatedData);
         setGroupsData((prevData) =>

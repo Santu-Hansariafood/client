@@ -32,7 +32,7 @@ const ListSellerDetails = () => {
   const [popupMode, setPopupMode] = useState("view");
   const [selectedSeller, setSelectedSeller] = useState(null);
 
-  const apiBaseURL = "https://phpserver-kappa.vercel.app/api";
+  const apiBaseURL = "";
 
   useEffect(() => {
     const fetchSellers = async () => {

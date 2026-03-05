@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import PropTypes from "prop-types";
+import axios from "axios";
 import Loading from "../../../common/Loading/Loading";
 import { jsPDF } from "jspdf";
 import "jspdf-autotable";
@@ -12,14 +13,8 @@ const ViewBidPopup = ({ bidId, onClose }) => {
   useEffect(() => {
     const fetchBidDetails = async () => {
       try {
-        const response = await fetch(
-          `https://phpserver-kappa.vercel.app/api/bids/${bidId}`
-        );
-        if (!response.ok) {
-          throw new Error("Failed to fetch bid details.");
-        }
-        const data = await response.json();
-        setBidDetails(data);
+        const response = await axios.get(`/bids/${bidId}`);
+        setBidDetails(response.data);
       } catch (err) {
         setError(err.message);
       } finally {
