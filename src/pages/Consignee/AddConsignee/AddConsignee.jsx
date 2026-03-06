@@ -51,10 +51,10 @@ const AddConsignee = () => {
   };
 
   const handleDropdownChange = (selectedOption, fieldName) => {
-    setFormData({
-      ...formData,
-      [fieldName]: selectedOption ? selectedOption.value : "",
-    });
+    setFormData((prev) => ({
+        ...prev,
+        [fieldName]: selectedOption ? selectedOption.value : "",
+    }));
 
     if (fieldName === "state") {
       const selectedState = stateCityData.find(
@@ -71,6 +71,7 @@ const AddConsignee = () => {
     }
   };
 
+  
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -80,6 +81,23 @@ const AddConsignee = () => {
       );
       if (response.status === 201) {
         toast.success("Consignee added successfully!");
+      if (formData.phone.length !== 10) {
+        toast.error("Phone number must be 10 digits");
+          return;
+        }
+      if (formData.gst.length !== 15) {
+        toast.error("GST number must be 15 characters");
+          return;
+      }
+if (formData.pan.length !== 10) {
+  toast.error("PAN number must be 10 characters");
+  return;
+}
+
+if (formData.pin && formData.pin.length !== 6) {
+  toast.error("Pin code must be 6 digits");
+  return;
+}
         setFormData({
           name: "",
           phone: "",
@@ -158,8 +176,8 @@ const AddConsignee = () => {
                   name="gst"
                   value={formData.gst}
                   onChange={handleInputChange}
-                  maxLength="16"
-                  minLength="16"
+                  maxLength="15"
+                  minLength="15"
                   required
                 />
               </div>
@@ -225,7 +243,7 @@ const AddConsignee = () => {
                 <DataInput
                   placeholder="Enter Pin"
                   name="pin"
-                  inputType="number"
+                  inputType="text"
                   value={formData.pin}
                   minLength="6"
                   maxLength="6"

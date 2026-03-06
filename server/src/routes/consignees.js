@@ -1,4 +1,3 @@
-
 import { Router } from "express";
 import Consignee from "../models/Consignee.js";
 
@@ -6,40 +5,156 @@ const router = Router();
 
 router.get("/", async (req, res) => {
   try {
-    const consignees = await Consignee.find().sort({ name: 1 });
-    res.json(consignees);
+    const { page = 1, limit = 50, search = "" } = req.query;
+
+    const query = search
+      ? {
+          $or: [
+            { name: { $regex: search, $options: "i" } },
+            { phone: { $regex: search, $options: "i" } },
+            { gst: { $regex: search, $options: "i" } }
+          ]
+        }
+      : {};
+
+    const consignees = await Consignee.find(query)
+      .sort({ name: 1 })
+      .skip((page - 1) * limit)
+      .limit(Number(limit))
+      .lean();
+
+    const total = await Consignee.countDocuments(query);
+
+    res.json({
+      data: consignees,
+      total,
+      page: Number(page),
+      pages: Math.ceil(total / limit)
+    });
+
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({
+      message: error.message
+    });
   }
 });
+
 
 router.post("/", async (req, res) => {
   try {
-    const consignee = new Consignee(req.body);
-    await consignee.save();
-    res.status(201).json(consignee);
+    const {
+      name,
+      phone,
+      email,
+      gst,
+      pan,
+      state,
+      district,
+      location,
+      pin,
+      contactPerson,
+      mandiLicense,
+      activeStatus
+    } = req.body;
+
+    if (!name || !phone) {
+      return res.status(400).json({
+        message: "Name and Phone are required"
+      });
+    }
+
+    const existingPhone = await Consignee.findOne({ phone });
+
+    if (existingPhone) {
+      return res.status(400).json({
+        message: "Phone number already exists"
+      });
+    }
+
+    if (gst) {
+      const existingGST = await Consignee.findOne({ gst });
+
+      if (existingGST) {
+        return res.status(400).json({
+          message: "GST number already exists"
+        });
+      }
+    }
+
+    const consignee = new Consignee({
+      name,
+      phone,
+      email,
+      gst,
+      pan,
+      state,
+      district,
+      location,
+      pin,
+      contactPerson,
+      mandiLicense,
+      activeStatus
+    });
+
+    const saved = await consignee.save();
+
+    res.status(201).json(saved);
+
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    res.status(400).json({
+      message: error.message
+    });
   }
 });
+
 
 router.put("/:id", async (req, res) => {
   try {
-    const consignee = await Consignee.findByIdAndUpdate(req.params.id, req.body, { new: true });
-    if (!consignee) return res.status(404).json({ message: "Consignee not found" });
-    res.json(consignee);
+
+    const updated = await Consignee.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      {
+        new: true,
+        runValidators: true
+      }
+    );
+
+    if (!updated) {
+      return res.status(404).json({
+        message: "Consignee not found"
+      });
+    }
+
+    res.json(updated);
+
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    res.status(400).json({
+      message: error.message
+    });
   }
 });
 
+
 router.delete("/:id", async (req, res) => {
   try {
-    const consignee = await Consignee.findByIdAndDelete(req.params.id);
-    if (!consignee) return res.status(404).json({ message: "Consignee not found" });
-    res.json({ message: "Consignee deleted" });
+
+    const deleted = await Consignee.findByIdAndDelete(req.params.id);
+
+    if (!deleted) {
+      return res.status(404).json({
+        message: "Consignee not found"
+      });
+    }
+
+    res.json({
+      message: "Consignee deleted successfully"
+    });
+
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({
+      message: error.message
+    });
   }
 });
 

@@ -29,7 +29,7 @@ const ListConsignee = () => {
     const fetchConsignees = async () => {
       try {
         const response = await axios.get("/consignees");
-        const normalizedData = response.data.map((consignee) => ({
+        const normalizedData = response.data.data.map((consignee) => ({
           ...consignee,
           email: consignee.email.toLowerCase(),
           gst: consignee.gst.toUpperCase(),

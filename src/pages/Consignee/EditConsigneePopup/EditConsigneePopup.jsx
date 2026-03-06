@@ -112,8 +112,8 @@ const EditConsigneePopup = ({ isOpen, onClose, initialData, onSubmit }) => {
                   value={formData.gst || ""}
                   onChange={handleChange}
                   name="gst"
-                  maxLength="16"
-                  minLength="16"
+                  maxLength="15"
+                  minLength="15"
                 />
               </div>
               <div>
