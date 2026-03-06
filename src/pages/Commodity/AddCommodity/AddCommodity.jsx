@@ -59,10 +59,10 @@ const AddCommodity = () => {
     }
 
     const formData = {
-      commodityName,
+      name: commodityName,
       hsnCode,
       parameters: extraFields.map((field) => ({
-        parameter: field.parameter.value,
+        parameter: field.parameter?.value,
       })),
     };
 
@@ -74,9 +74,7 @@ const AddCommodity = () => {
       setExtraFields([{ parameter: "" }]);
     } catch (error) {
       const errorMessage =
-        error.response && error.response.data
-          ? error.response.data.message
-          : error.message;
+        error.response?.data?.message || error.message;
       toast.error(`Failed to add commodity: ${errorMessage}`);
     }
   };
