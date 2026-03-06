@@ -1,5 +1,16 @@
 import mongoose from "mongoose";
 
+const commodityParameterSchema = new mongoose.Schema(
+  {
+    parameterId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "QualityParameter",
+      required: true
+    }
+  },
+  { _id: false }
+);
+
 const commoditySchema = new mongoose.Schema(
   {
     name: {
@@ -17,10 +28,7 @@ const commoditySchema = new mongoose.Schema(
 
     parameters: [
       {
-        parameter: {
-          type: String,
-          required: true
-        }
+        ...commodityParameterSchema.obj
       }
     ]
   },

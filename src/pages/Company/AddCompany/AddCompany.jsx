@@ -7,9 +7,10 @@ import {
   useCallback,
 } from "react";
 import axios from "axios";
-import { toast, ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { toast } from "react-toastify";
 import { FaPlus } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../../context/AuthContext/AuthContext";
 
 import Loading from "../../../common/Loading/Loading";
 import addCompanyLable from "../../../language/en/addCompany";
@@ -19,6 +20,13 @@ const DataDropdown = lazy(() =>
   import("../../../common/DataDropdown/DataDropdown")
 );
 const Buttons = lazy(() => import("../../../common/Buttons/Buttons"));
+const DashboardLayout = lazy(() =>
+  import("../../../layouts/DashboardLayout/DashboardLayout")
+);
+const Header = lazy(() => import("../../../common/Header/Header"));
+const LogoutConfirmationModal = lazy(() =>
+  import("../../../common/LogoutConfirmationModal/LogoutConfirmationModal")
+);
 
 const AddCompany = () => {
   const [companyName, setCompanyName] = useState("");
@@ -31,6 +39,10 @@ const AddCompany = () => {
   const [consigneeOptions, setConsigneeOptions] = useState([]);
   const [groupOptions, setGroupOptions] = useState([]);
   const [commodityOptions, setCommodityOptions] = useState([]);
+  const [showLogoutConfirmation, setShowLogoutConfirmation] = useState(false);
+
+  const navigate = useNavigate();
+  const { logout } = useAuth();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -71,8 +83,7 @@ const AddCompany = () => {
           }))
         );
       } catch (error) {
-        toast.error("Failed to load dropdown data");
-        console.error(error);
+        toast.error(error?.response?.data?.message || "Failed to load dropdown data");
       }
     };
 
@@ -157,12 +168,12 @@ const AddCompany = () => {
 
       commodities: selectedCommodities.map((entry) => ({
         commodityId: entry.commodity?.value,
-        brokerage: entry.brokerage,
+        brokerage: Number(entry.brokerage || 0),
 
         parameters: entry.parameters.map((param) => ({
-          parameter: param.parameter,
+          parameterId: param.parameterId || param._id,
           value: param.value,
-        })),
+        })).filter((p) => p.parameterId),
       })),
     };
 
@@ -191,16 +202,24 @@ const AddCompany = () => {
     selectedCommodities,
   ]);
 
+  const handleLogout = useCallback(() => {
+    logout();
+    toast.success("Successfully logged out!");
+    navigate("/", { replace: true });
+  }, [logout, navigate]);
+
   return (
     <Suspense fallback={<Loading />}>
-      <ToastContainer />
-      <div className="flex justify-center min-h-screen bg-gray-50 p-6">
-        <div className="bg-white p-8 rounded-lg shadow-xl w-full max-w-4xl">
-          <h2 className="text-3xl font-semibold text-center mb-8">
-            {addCompanyLable.company_title}
-          </h2>
+      <DashboardLayout>
+        <Header onLogoutClick={() => setShowLogoutConfirmation(true)} />
+        <main className="min-h-screen px-4 sm:px-6 py-10 bg-green-50">
+          <div className="max-w-5xl mx-auto">
+            <div className="bg-white p-8 rounded-2xl shadow-xl w-full border border-yellow-300">
+              <h2 className="text-3xl font-extrabold text-center mb-8 text-green-800">
+                {addCompanyLable.company_title}
+              </h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="text-sm font-medium">
                 {addCompanyLable.company_name}
@@ -247,12 +266,12 @@ const AddCompany = () => {
                 placeholder="Select group"
               />
             </div>
-          </div>
-          {selectedCommodities.map((entry, index) => (
-            <div
-              key={index}
-              className="bg-gray-100 p-4 mt-6 rounded-md"
-            >
+              </div>
+              {selectedCommodities.map((entry, index) => (
+                <div
+                  key={index}
+                  className="bg-gray-50 p-4 mt-6 rounded-md border border-gray-100"
+                >
               <DataDropdown
                 options={availableCommodities}
                 selectedOptions={entry.commodity}
@@ -303,26 +322,34 @@ const AddCompany = () => {
                   />
                 </div>
               </div>
+                </div>
+              ))}
+
+              <button
+                onClick={handleAddCommodity}
+                className="flex items-center text-blue-600 mt-6"
+              >
+                <FaPlus className="mr-2" />
+                {addCompanyLable.add_another_commodity}
+              </button>
+
+              <div className="mt-10 text-center">
+                <Buttons
+                  label="Submit"
+                  variant="primary"
+                  onClick={handleSubmit}
+                />
+              </div>
             </div>
-          ))}
-
-          <button
-            onClick={handleAddCommodity}
-            className="flex items-center text-blue-600 mt-6"
-          >
-            <FaPlus className="mr-2" />
-            {addCompanyLable.add_another_commodity}
-          </button>
-
-          <div className="mt-10 text-center">
-            <Buttons
-              label="Submit"
-              variant="primary"
-              onClick={handleSubmit}
-            />
           </div>
-        </div>
-      </div>
+        </main>
+        {showLogoutConfirmation && (
+          <LogoutConfirmationModal
+            onConfirm={handleLogout}
+            onCancel={() => setShowLogoutConfirmation(false)}
+          />
+        )}
+      </DashboardLayout>
     </Suspense>
   );
 };

@@ -7,6 +7,7 @@ import RouteSEO from "./common/SEO/RouteSEO";
 import CriticalRoutes from "./routes/CriticalRoutes/CriticalRoutes";
 import PrivateRoutes from "./routes/PrivateRoutes/PrivateRoutes";
 import { Suspense } from "react";
+import { ToastContainer } from "react-toastify";
 import "./App.css";
 
 const App = () => {
@@ -27,6 +28,7 @@ const App = () => {
         <BrowserRouter>
           <Suspense fallback={<Loading />}>
             <RouteSEO />
+            <ToastContainer position="top-right" autoClose={3000} />
             <CriticalRoutes />
             <PrivateRoutes hydrated={hydrated} />
           </Suspense>

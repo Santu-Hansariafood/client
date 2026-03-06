@@ -1,6 +1,8 @@
-import { useState, useEffect, lazy, Suspense, useMemo } from "react";
+import { useState, useEffect, lazy, Suspense, useMemo, useCallback } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../../context/AuthContext/AuthContext";
 import Loading from "../../../common/Loading/Loading";
 
 const Tables = lazy(() => import("../../../common/Tables/Tables"));
@@ -11,6 +13,13 @@ const Pagination = lazy(() =>
 );
 const PopupBox = lazy(() => import("../../../common/PopupBox/PopupBox"));
 const EditBuyerPopup = lazy(() => import("../EditBuyerPopup/EditBuyerPopup"));
+const DashboardLayout = lazy(() =>
+  import("../../../layouts/DashboardLayout/DashboardLayout")
+);
+const Header = lazy(() => import("../../../common/Header/Header"));
+const LogoutConfirmationModal = lazy(() =>
+  import("../../../common/LogoutConfirmationModal/LogoutConfirmationModal")
+);
 
 const toTitleCase = (str) => {
   return str
@@ -27,7 +36,11 @@ const BuyerList = () => {
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [selectedBuyer, setSelectedBuyer] = useState(null);
   const [isEditPopupOpen, setIsEditPopupOpen] = useState(false);
+  const [showLogoutConfirmation, setShowLogoutConfirmation] = useState(false);
   const itemsPerPage = 10;
+
+  const navigate = useNavigate();
+  const { logout } = useAuth();
 
   useEffect(() => {
     const fetchBuyersData = async () => {
@@ -44,6 +57,12 @@ const BuyerList = () => {
     };
     fetchBuyersData();
   }, []);
+
+  const handleLogout = useCallback(() => {
+    logout();
+    toast.success("Successfully logged out!");
+    navigate("/", { replace: true });
+  }, [logout, navigate]);
 
   const handleSearch = (searchInput) => {
     if (!searchInput.trim()) {
@@ -144,44 +163,54 @@ const BuyerList = () => {
 
   return (
     <Suspense fallback={<Loading />}>
-      <div className="container mx-auto p-4">
-        <h2 className="text-2xl font-semibold mb-4">Buyer List</h2>
-        <div className="mb-4">
-          <SearchBox
-            placeholder="Search buyers..."
-            items={buyersData}
-            onSearch={handleSearch}
-          />
-        </div>
-        <div className="overflow-x-auto">
-          <Tables
-            headers={[
-              "Sl No",
-              "Name",
-              "Mobile",
-              "Email",
-              "Company",
-              "Group Company",
-              "Commodity",
-              "Consignee",
-              // "Brokerage(Per Ton)",
-              "Status",
-              "Actions",
-            ]}
-            rows={rows}
-          />
-        </div>
-        <Pagination
-          currentPage={currentPage}
-          totalItems={filteredData.length}
-          itemsPerPage={itemsPerPage}
-          onPageChange={(page) => setCurrentPage(page)}
-        />
-        <PopupBox
-          isOpen={isPopupOpen}
-          onClose={() => setIsPopupOpen(false)}
-          title="Buyer Details"
-        >
+      <DashboardLayout>
+        <Header onLogoutClick={() => setShowLogoutConfirmation(true)} />
+        <main className="min-h-screen px-4 sm:px-6 py-10 bg-green-50">
+          <div className="max-w-6xl mx-auto">
+            <div className="bg-white border border-yellow-300 rounded-2xl shadow-xl p-4 sm:p-6">
+              <h2 className="text-3xl font-extrabold mb-6 text-center text-green-800">
+                Buyer List
+              </h2>
+              <div className="mb-4">
+                <SearchBox
+                  placeholder="Search buyers..."
+                  items={buyersData}
+                  onSearch={handleSearch}
+                />
+              </div>
+              <div className="overflow-x-auto rounded-xl border border-gray-100">
+                <Tables
+                  headers={[
+                    "Sl No",
+                    "Name",
+                    "Mobile",
+                    "Email",
+                    "Company",
+                    "Group Company",
+                    "Commodity",
+                    "Consignee",
+                    // "Brokerage(Per Ton)",
+                    "Status",
+                    "Actions",
+                  ]}
+                  rows={rows}
+                />
+              </div>
+              <div className="mt-4">
+                <Pagination
+                  currentPage={currentPage}
+                  totalItems={filteredData.length}
+                  itemsPerPage={itemsPerPage}
+                  onPageChange={(page) => setCurrentPage(page)}
+                />
+              </div>
+            </div>
+          </div>
+          <PopupBox
+            isOpen={isPopupOpen}
+            onClose={() => setIsPopupOpen(false)}
+            title="Buyer Details"
+          >
           {selectedBuyer && (
             <div>
               <p>
@@ -227,15 +256,22 @@ const BuyerList = () => {
               </p>
             </div>
           )}
-        </PopupBox>
+          </PopupBox>
 
-        <EditBuyerPopup
-          buyer={selectedBuyer}
-          isOpen={isEditPopupOpen}
-          onClose={() => setIsEditPopupOpen(false)}
-          onUpdate={handleUpdate}
-        />
-      </div>
+          <EditBuyerPopup
+            buyer={selectedBuyer}
+            isOpen={isEditPopupOpen}
+            onClose={() => setIsEditPopupOpen(false)}
+            onUpdate={handleUpdate}
+          />
+        </main>
+        {showLogoutConfirmation && (
+          <LogoutConfirmationModal
+            onConfirm={handleLogout}
+            onCancel={() => setShowLogoutConfirmation(false)}
+          />
+        )}
+      </DashboardLayout>
     </Suspense>
   );
 };

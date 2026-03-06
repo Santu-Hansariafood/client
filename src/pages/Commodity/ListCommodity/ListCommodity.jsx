@@ -1,14 +1,26 @@
-import { useState, useEffect, lazy, Suspense } from "react";
+import { useState, useEffect, lazy, Suspense, useMemo, useCallback } from "react";
 import axios from "axios";
 import Loading from "../../../common/Loading/Loading";
 import { toast } from "react-toastify";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../../context/AuthContext/AuthContext";
 
 const Tables = lazy(() => import("../../../common/Tables/Tables"));
 const Actions = lazy(() => import("../../../common/Actions/Actions"));
 const SearchBox = lazy(() => import("../../../common/SearchBox/SearchBox"));
 const PopupBox = lazy(() => import("../../../common/PopupBox/PopupBox"));
+const Pagination = lazy(() =>
+  import("../../../common/Paginations/Paginations")
+);
 const EditCommodityPopup = lazy(() =>
   import("../EditCommodityPopup/EditCommodityPopup")
+);
+const DashboardLayout = lazy(() =>
+  import("../../../layouts/DashboardLayout/DashboardLayout")
+);
+const Header = lazy(() => import("../../../common/Header/Header"));
+const LogoutConfirmationModal = lazy(() =>
+  import("../../../common/LogoutConfirmationModal/LogoutConfirmationModal")
 );
 
 const ListCommodity = () => {
@@ -18,24 +30,37 @@ const ListCommodity = () => {
   const [isEditPopupOpen, setIsEditPopupOpen] = useState(false);
   const [selectedCommodity, setSelectedCommodity] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [showLogoutConfirmation, setShowLogoutConfirmation] = useState(false);
+  const itemsPerPage = 10;
+
+  const navigate = useNavigate();
+  const { logout } = useAuth();
 
   useEffect(() => {
     const fetchCommodities = async () => {
       try {
         const response = await axios.get("/commodities");
-        const sortedCommodities = response.data.sort((a, b) =>
+        const items = response.data?.data || response.data || [];
+        const sortedCommodities = items.sort((a, b) =>
           a.name.localeCompare(b.name)
         );
         setCommodities(sortedCommodities);
         setFilteredCommodities(sortedCommodities);
       } catch (error) {
-        toast.error("Error fetching commodities:", error);
+        toast.error(error?.response?.data?.message || "Error fetching commodities");
       } finally {
         setIsLoading(false);
       }
     };
     fetchCommodities();
   }, []);
+
+  const handleLogout = useCallback(() => {
+    logout();
+    toast.success("Successfully logged out!");
+    navigate("/", { replace: true });
+  }, [logout, navigate]);
 
   const handleSearch = (filteredNames) => {
     if (filteredNames.length === 0) {
@@ -78,14 +103,19 @@ const ListCommodity = () => {
       setCommodities(updatedCommodities);
       setFilteredCommodities(updatedCommodities);
 
-      alert("Commodity deleted successfully!");
+      toast.success("Commodity deleted successfully!");
     } catch (error) {
-      toast.error("Error deleting commodity:", error);
+      toast.error(error?.response?.data?.message || "Error deleting commodity");
     }
   };
 
-  const tableRows = filteredCommodities.map((commodity, index) => [
-    index + 1,
+  const paginatedData = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    return filteredCommodities.slice(start, start + itemsPerPage);
+  }, [filteredCommodities, currentPage]);
+
+  const tableRows = paginatedData.map((commodity, index) => [
+    (currentPage - 1) * itemsPerPage + index + 1,
     commodity.name || "N/A",
     commodity.hsnCode || "N/A",
     Array.isArray(commodity.parameters)
@@ -109,28 +139,43 @@ const ListCommodity = () => {
 
   return (
     <Suspense fallback={<Loading />}>
-      <div className="container mx-auto p-6">
-        <div className="bg-white shadow-md rounded-lg p-6 border-2 border-gray-200">
-          <h2 className="text-2xl font-semibold mb-6 text-center">
-            Commodity List
-          </h2>
-          <div className="mb-6 flex justify-between items-center">
-            <SearchBox
-              placeholder="Search Commodities"
-              items={commodities.map((commodity) => commodity.name || "")}
-              onSearch={handleSearch}
-            />
-          </div>
-          {filteredCommodities.length > 0 ? (
-            <Tables headers={tableHeaders} rows={tableRows} />
-          ) : (
-            <p>No commodities found.</p>
-          )}
-          <PopupBox
-            isOpen={isPopupOpen}
-            onClose={() => setIsPopupOpen(false)}
-            title="Commodity Details"
-          >
+      <DashboardLayout>
+        <Header onLogoutClick={() => setShowLogoutConfirmation(true)} />
+        <main className="min-h-screen px-4 sm:px-6 py-10 bg-green-50">
+          <div className="max-w-6xl mx-auto">
+            <div className="bg-white border border-yellow-300 rounded-2xl shadow-xl p-4 sm:p-6">
+              <h2 className="text-3xl font-extrabold mb-6 text-center text-green-800">
+                Commodity List
+              </h2>
+              <div className="mb-6 flex justify-between items-center">
+                <SearchBox
+                  placeholder="Search Commodities"
+                  items={commodities.map((commodity) => commodity.name || "")}
+                  onSearch={handleSearch}
+                />
+              </div>
+              {filteredCommodities.length > 0 ? (
+                <>
+                  <div className="overflow-x-auto rounded-xl border border-gray-100">
+                    <Tables headers={tableHeaders} rows={tableRows} />
+                  </div>
+                  <div className="mt-4">
+                    <Pagination
+                      currentPage={currentPage}
+                      totalItems={filteredCommodities.length}
+                      itemsPerPage={itemsPerPage}
+                      onPageChange={setCurrentPage}
+                    />
+                  </div>
+                </>
+              ) : (
+                <p>No commodities found.</p>
+              )}
+              <PopupBox
+                isOpen={isPopupOpen}
+                onClose={() => setIsPopupOpen(false)}
+                title="Commodity Details"
+              >
             {selectedCommodity && (
               <div>
                 <p>
@@ -150,27 +195,33 @@ const ListCommodity = () => {
                 </p>
               </div>
             )}
-          </PopupBox>
-          {isEditPopupOpen && (
-            <EditCommodityPopup
-              isOpen={isEditPopupOpen}
-              onClose={() => setIsEditPopupOpen(false)}
-              commodityId={selectedCommodity ? selectedCommodity._id : null}
-              onUpdate={() => {
-                axios
-                  .get("/commodities")
-                  .then((response) => {
-                    const sortedCommodities = response.data.sort((a, b) =>
-                      a.name.localeCompare(b.name)
-                    );
-                    setCommodities(sortedCommodities);
-                    setFilteredCommodities(sortedCommodities);
-                  });
-              }}
-            />
-          )}
-        </div>
-      </div>
+              </PopupBox>
+              {isEditPopupOpen && (
+                <EditCommodityPopup
+                  isOpen={isEditPopupOpen}
+                  onClose={() => setIsEditPopupOpen(false)}
+                  commodityId={selectedCommodity ? selectedCommodity._id : null}
+                  onUpdate={() => {
+                    axios.get("/commodities").then((response) => {
+                      const sortedCommodities = response.data.sort((a, b) =>
+                        a.name.localeCompare(b.name)
+                      );
+                      setCommodities(sortedCommodities);
+                      setFilteredCommodities(sortedCommodities);
+                    });
+                  }}
+                />
+              )}
+            </div>
+          </div>
+        </main>
+        {showLogoutConfirmation && (
+          <LogoutConfirmationModal
+            onConfirm={handleLogout}
+            onCancel={() => setShowLogoutConfirmation(false)}
+          />
+        )}
+      </DashboardLayout>
     </Suspense>
   );
 };

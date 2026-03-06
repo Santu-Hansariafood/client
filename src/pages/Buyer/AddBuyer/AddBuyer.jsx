@@ -1,24 +1,32 @@
-import { useState, useEffect, useMemo, lazy, Suspense } from "react";
+import { useState, useEffect, useMemo, useCallback, lazy, Suspense } from "react";
 import axios from "axios";
-import { toast, ToastContainer } from "react-toastify";
+import { toast } from "react-toastify";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../../context/AuthContext/AuthContext";
 import Loading from "../../../common/Loading/Loading";
 const DataInput = lazy(() => import("../../../common/DataInput/DataInput"));
 const DataDropdown = lazy(() =>
   import("../../../common/DataDropdown/DataDropdown")
 );
 const Buttons = lazy(() => import("../../../common/Buttons/Buttons"));
+const DashboardLayout = lazy(() =>
+  import("../../../layouts/DashboardLayout/DashboardLayout")
+);
+const Header = lazy(() => import("../../../common/Header/Header"));
+const LogoutConfirmationModal = lazy(() =>
+  import("../../../common/LogoutConfirmationModal/LogoutConfirmationModal")
+);
 import buyerLabels from "../../../language/en/buyer";
 import regexPatterns from "../../../utils/regexPatterns/regexPatterns";
 import { FaPlus, FaTrash } from "react-icons/fa";
-import "react-toastify/dist/ReactToastify.css";
 
 const AddBuyer = () => {
   const [formData, setFormData] = useState({
     name: "",
     mobile: [""],
     email: [""],
-    group: "",
-    companyName: "",
+    group: null,
+    company: null,
     password: "",
     commodity: [],
     brokerage: {},
@@ -31,7 +39,12 @@ const AddBuyer = () => {
   const [companyOptions, setCompanyOptions] = useState([]);
   const [commodityOptions, setCommodityOptions] = useState([]);
   const [consigneeOptions, setConsigneeOptions] = useState([]);
+  const [companiesData, setCompaniesData] = useState([]);
   const [successMessage, setSuccessMessage] = useState("");
+  const [showLogoutConfirmation, setShowLogoutConfirmation] = useState(false);
+
+  const navigate = useNavigate();
+  const { logout } = useAuth();
 
   const statusOptions = useMemo(
     () => [
@@ -44,79 +57,84 @@ const AddBuyer = () => {
   useEffect(() => {
     const fetchDropdownData = async () => {
       try {
-        const [companiesResponse, commoditiesResponse] = await Promise.all([
+        const [companiesResponse, groupsResponse] = await Promise.all([
           axios.get("/companies"),
-          axios.get("/commodities"),
+          axios.get("/groups"),
         ]);
 
-        const companies = companiesResponse.data;
+        const companies = companiesResponse.data?.data || companiesResponse.data || [];
+        const groups = groupsResponse.data?.data || groupsResponse.data || [];
 
-        setGroupOptions(
-          companies.map((company) => ({
-            value: company.group,
-            label: company.group,
-            consignees: company.consignee || [],
-          }))
-        );
-
+        setCompaniesData(companies);
         setCompanyOptions(
-          companies.map((company) => ({
-            value: company.companyName,
-            label: company.companyName,
-            commodities: company.commodities || [],
-          }))
+          companies
+            .map((c) => ({ value: String(c._id), label: c.companyName }))
+            .sort((a, b) => a.label.localeCompare(b.label))
         );
-
-        setCommodityOptions(
-          commoditiesResponse.data.map((commodity) => ({
-            value: commodity.name,
-            label: commodity.name,
-          }))
+        setGroupOptions(
+          groups
+            .map((g) => ({ value: String(g._id), label: g.groupName }))
+            .sort((a, b) => a.label.localeCompare(b.label))
         );
-
-        const consignees = companies
-          .flatMap((company) => company.consignee || []) // Extract consignees
-          .map((consignee) => ({
-            value: consignee,
-            label: consignee,
-          }));
-
-        setConsigneeOptions(consignees);
+        setCommodityOptions([]);
+        setConsigneeOptions([]);
       } catch (error) {
-        toast.error("Failed to load dropdown data. Please try again.");
+        toast.error(error?.response?.data?.message || "Failed to load dropdown data. Please try again.");
       }
     };
 
     fetchDropdownData();
   }, []);
 
+  const handleLogout = useCallback(() => {
+    logout();
+    toast.success("Successfully logged out!");
+    navigate("/", { replace: true });
+  }, [logout, navigate]);
+
   const handleDropdownChange = (selectedOption, actionMeta) => {
     const fieldName = actionMeta.name;
 
-    if (fieldName === "companyName") {
-      const selectedCompany = companyOptions.find(
-        (company) => company.value === selectedOption?.value
-      );
+    if (fieldName === "company") {
+      const selectedCompanyId = selectedOption?.value || "";
+      const selectedCompany = companiesData.find((c) => String(c._id) === String(selectedCompanyId));
 
-      if (selectedCompany) {
-        const newBrokerage = {};
-        selectedCompany.commodities.forEach((commodity) => {
-          newBrokerage[commodity.name] = commodity.brokerage;
-        });
+      const companyCommodities = (selectedCompany?.commodities || []).map((c) => ({
+        value: String(c._id || c.commodityId),
+        label: c.name,
+        brokerage: c.brokerage ?? 0,
+      }));
+      const companyConsignees = Array.isArray(selectedCompany?.consigneeIds)
+        ? selectedCompany.consigneeIds.map((id, idx) => ({
+            value: String(id),
+            label: selectedCompany.consignee?.[idx] || "Consignee",
+          }))
+        : [];
 
-        setFormData({
-          ...formData,
-          companyName: selectedOption,
-          brokerage: newBrokerage,
-        });
-      } else {
-        setFormData({
-          ...formData,
-          companyName: selectedOption,
-          brokerage: {},
-        });
+      const newBrokerage = {};
+      for (const c of companyCommodities) {
+        newBrokerage[c.value] = Number(c.brokerage || 0);
       }
-    } else if (fieldName === "commodity") {
+
+      const autoGroup =
+        selectedCompany?.groupId && selectedCompany?.group
+          ? { value: String(selectedCompany.groupId), label: selectedCompany.group }
+          : null;
+
+      setCommodityOptions(companyCommodities.sort((a, b) => a.label.localeCompare(b.label)));
+      setConsigneeOptions(companyConsignees.sort((a, b) => a.label.localeCompare(b.label)));
+      setFormData((prev) => ({
+        ...prev,
+        company: selectedOption,
+        group: autoGroup,
+        commodity: [],
+        consignee: [],
+        brokerage: newBrokerage,
+      }));
+      return;
+    }
+
+    if (fieldName === "commodity") {
       const selectedCommodities = selectedOption || [];
       const newBrokerage = { ...formData.brokerage };
 
@@ -189,10 +207,11 @@ const AddBuyer = () => {
       try {
         const payload = {
           ...formData,
-          group: formData.group?.value || "",
-          companyName: formData.companyName?.value || "",
-          commodity: formData.commodity.map((item) => item.value),
-          status: formData.status?.value || "",
+          companyId: formData.company?.value || null,
+          groupId: formData.group?.value || null,
+          commodityIds: formData.commodity.map((item) => item.value),
+          consigneeIds: (formData.consignee || []).map((c) => c.value),
+          status: formData.status?.value || "Active",
           brokerage: Object.fromEntries(
             Object.entries(formData.brokerage).map(([key, value]) => [
               key,
@@ -207,8 +226,8 @@ const AddBuyer = () => {
           name: "",
           mobile: [""],
           email: [""],
-          group: "",
-          companyName: "",
+          group: null,
+          company: null,
           password: "",
           commodity: [],
           brokerage: {},
@@ -218,24 +237,28 @@ const AddBuyer = () => {
         setTimeout(() => setSuccessMessage(""), 3000);
       } catch (error) {
         setSuccessMessage("");
-        toast.error("Failed to add buyer. Please try again.");
+        toast.error(error?.response?.data?.message || "Failed to add buyer. Please try again.");
       }
     }
   };
 
   return (
     <Suspense fallback={<Loading />}>
-      <div className="max-w-2xl mx-auto p-4 sm:p-8 border rounded-2xl shadow-2xl bg-white mt-6 mb-6">
-        <h2 className="text-3xl font-bold mb-8 text-center text-blue-700 tracking-wide">
-          {buyerLabels.title}
-        </h2>
-        {successMessage && (
-          <div className="mb-4 p-3 rounded-lg bg-green-100 text-green-800 text-center font-semibold animate-fade-in">
-            {successMessage}
-          </div>
-        )}
-        <form onSubmit={handleSubmit} className="space-y-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+      <DashboardLayout>
+        <Header onLogoutClick={() => setShowLogoutConfirmation(true)} />
+        <main className="min-h-screen px-4 sm:px-6 py-10 bg-green-50">
+          <div className="max-w-4xl mx-auto">
+            <div className="max-w-2xl mx-auto p-4 sm:p-8 border border-yellow-300 rounded-2xl shadow-2xl bg-white">
+              <h2 className="text-3xl font-extrabold mb-6 text-center text-green-800 tracking-wide">
+                {buyerLabels.title}
+              </h2>
+              {successMessage && (
+                <div className="mb-4 p-3 rounded-lg bg-green-100 text-green-800 text-center font-semibold animate-fade-in">
+                  {successMessage}
+                </div>
+              )}
+              <form onSubmit={handleSubmit} className="space-y-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {/* Name */}
             <div>
               <label className="block text-gray-800 mb-2 font-medium" htmlFor="name">
@@ -259,11 +282,11 @@ const AddBuyer = () => {
                 {buyerLabels.company_name_title}
               </label>
               <DataDropdown
-                name="companyName"
+                name="company"
                 options={companyOptions}
-                selectedOptions={formData.companyName}
+                selectedOptions={formData.company}
                 onChange={(selected) =>
-                  handleDropdownChange(selected, { name: "companyName" })
+                  handleDropdownChange(selected, { name: "company" })
                 }
                 placeholder="Select Company Name"
                 className="w-full"
@@ -447,17 +470,25 @@ const AddBuyer = () => {
             </div>
           </div>
           <div className="flex justify-end mt-8">
-            <Buttons label="Submit" type="submit" variant="primary" size="md" className="px-8 py-2 rounded-lg shadow-md bg-blue-600 hover:bg-blue-700 text-white font-semibold transition" />
+            <Buttons
+              label="Submit"
+              type="submit"
+              variant="primary"
+              size="md"
+              className="px-8 py-2 rounded-lg shadow-md bg-blue-600 hover:bg-blue-700 text-white font-semibold transition"
+            />
           </div>
         </form>
-        <ToastContainer
-          position="top-right"
-          autoClose={3000}
-          hideProgressBar
-          closeOnClick
-          pauseOnHover
-        />
       </div>
+    </div>
+  </main>
+  {showLogoutConfirmation && (
+    <LogoutConfirmationModal
+      onConfirm={handleLogout}
+      onCancel={() => setShowLogoutConfirmation(false)}
+    />
+  )}
+</DashboardLayout>
     </Suspense>
   );
 };

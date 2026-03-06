@@ -18,7 +18,7 @@ const EditCommodityPopup = ({ isOpen, onClose, commodityId, onUpdate }) => {
         const response = await axios.get(`/commodities/${commodityId}`);
         setCommodity(response.data);
       } catch (error) {
-        toast.error("Error fetching commodity:", error);
+        toast.error(error?.response?.data?.message || "Error fetching commodity");
       } finally {
         setIsLoading(false);
       }
@@ -29,7 +29,7 @@ const EditCommodityPopup = ({ isOpen, onClose, commodityId, onUpdate }) => {
         const response = await axios.get("/quality-parameters");
         setQualityOptions(response.data);
       } catch (error) {
-        toast.error("Error fetching quality parameters:", error);
+        toast.error(error?.response?.data?.message || "Error fetching quality parameters");
       }
     };
 
@@ -46,7 +46,7 @@ const EditCommodityPopup = ({ isOpen, onClose, commodityId, onUpdate }) => {
 
   const handleAddParameter = () => {
     if (!newQuality) {
-      alert("Please select a quality parameter to add.");
+      toast.error("Please select a quality parameter to add.");
       return;
     }
 
@@ -56,17 +56,11 @@ const EditCommodityPopup = ({ isOpen, onClose, commodityId, onUpdate }) => {
 
     const updatedParameters = [
       ...(commodity.parameters || []),
-      { parameter: selectedQuality.name, _id: newQuality },
+      { parameter: selectedQuality.name, parameterId: newQuality, _id: newQuality },
     ];
 
     setCommodity((prev) => ({ ...prev, parameters: updatedParameters }));
     setNewQuality("");
-  };
-
-  const handleEditParameter = (index, value) => {
-    const updatedParameters = [...(commodity.parameters || [])];
-    updatedParameters[index].parameter = value;
-    setCommodity((prev) => ({ ...prev, parameters: updatedParameters }));
   };
 
   const handleRemoveParameter = (index) => {
@@ -83,12 +77,19 @@ const EditCommodityPopup = ({ isOpen, onClose, commodityId, onUpdate }) => {
   const handleSave = async () => {
     setIsLoading(true);
     try {
-      await axios.put(`/commodities/${commodityId}`, commodity);
+      const payload = {
+        name: commodity.name,
+        hsnCode: commodity.hsnCode,
+        parameters: (commodity.parameters || [])
+          .map((p) => ({ parameterId: p.parameterId || p._id }))
+          .filter((p) => p.parameterId),
+      };
+      await axios.put(`/commodities/${commodityId}`, payload);
       onUpdate();
       toast.success("Commodity updated successfully!");
       onClose();
     } catch (error) {
-      toast.error("Failed to update commodity. Please try again.", error);
+      toast.error(error?.response?.data?.message || "Failed to update commodity. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -98,7 +99,9 @@ const EditCommodityPopup = ({ isOpen, onClose, commodityId, onUpdate }) => {
 
   const availableOptions = qualityOptions.filter(
     (option) =>
-      !commodity?.parameters?.some((param) => param._id === option._id)
+      !commodity?.parameters?.some(
+        (param) => (param.parameterId || param._id) === option._id
+      )
   );
 
   return (
@@ -141,15 +144,9 @@ const EditCommodityPopup = ({ isOpen, onClose, commodityId, onUpdate }) => {
                   <ul className="list-disc pl-5">
                     {commodity.parameters?.map((param, index) => (
                       <li key={index} className="mb-2 flex items-center">
-                        <input
-                          type="text"
-                          value={param.parameter}
-                          onChange={(e) =>
-                            handleEditParameter(index, e.target.value)
-                          }
-                          className="border px-2 py-1 rounded w-full"
-                          placeholder="Parameter name"
-                        />
+                        <div className="border px-2 py-1 rounded w-full bg-gray-50">
+                          {param.parameter}
+                        </div>
                         <button
                           onClick={() => handleRemoveParameter(index)}
                           className="ml-2 text-red-500 hover:text-red-700"

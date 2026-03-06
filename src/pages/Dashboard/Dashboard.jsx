@@ -36,14 +36,21 @@ const Dashboard = () => {
         axios.get("/self-order"),
       ]);
 
+      const getCount = (res) => {
+        const data = res?.data;
+        if (Array.isArray(data)) return data.length;
+        if (data && Array.isArray(data.data)) return data.data.length;
+        return 0;
+      };
+
       setCounts({
-        buyers: responses[0].data.length || 0,
-        sellers: responses[1].data.length || 0,
-        consignees: responses[2].data.length || 0,
-        orders: responses[3].data.length || 0,
+        buyers: getCount(responses[0]),
+        sellers: getCount(responses[1]),
+        consignees: getCount(responses[2]),
+        orders: getCount(responses[3]),
       });
     } catch (error) {
-      toast.error("Failed to fetch data counts", error);
+      toast.error(error?.response?.data?.message || "Failed to fetch data counts");
     }
   }, []);
 
@@ -61,9 +68,9 @@ const Dashboard = () => {
     <Suspense fallback={<Loading />}>
       <DashboardLayout>
         <Header onLogoutClick={() => setShowLogoutConfirmation(true)} />
-        <main className="min-h-screen px-6 py-10 bg-gradient-to-br from-blue-100 via-white to-purple-100">
+        <main className="min-h-screen px-6 py-10 bg-green-50">
           <div className="max-w-5xl mx-auto">
-            <h1 className="text-3xl md:text-4xl font-extrabold text-center mb-8 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 bg-clip-text text-transparent drop-shadow-lg">
+            <h1 className="text-3xl md:text-4xl font-extrabold text-center mb-8 text-green-800">
               Admin Report
             </h1>
             <CardGrid counts={counts} />

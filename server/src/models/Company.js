@@ -10,18 +10,55 @@ const formatName = (name) => {
     .join(" ");
 };
 
+const companyCommodityParameterSchema = new mongoose.Schema(
+  {
+    parameterId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "QualityParameter",
+      required: true,
+    },
+    value: { type: String, default: "" },
+  },
+  { _id: false }
+);
+
+const companyCommoditySchema = new mongoose.Schema(
+  {
+    commodityId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Commodity",
+      required: true,
+    },
+    brokerage: { type: Number, default: 0 },
+    parameters: { type: [companyCommodityParameterSchema], default: [] },
+  },
+  { _id: false }
+);
+
 const companySchema = new mongoose.Schema(
   {
     companyName: {
       type: String,
       required: true,
       trim: true,
-      set: formatName
-    }
+      set: formatName,
+    },
+    companyEmail: { type: String, trim: true, lowercase: true },
+    consigneeIds: {
+      type: [mongoose.Schema.Types.ObjectId],
+      ref: "Consignee",
+      default: [],
+    },
+    groupId: { type: mongoose.Schema.Types.ObjectId, ref: "Group", default: null },
+    commodities: { type: [companyCommoditySchema], default: [] },
+    mandiLicense: { type: String, trim: true, default: "" },
+    activeStatus: { type: Boolean, default: true },
   },
   { timestamps: true }
 );
 
 companySchema.index({ companyName: 1 });
+companySchema.index({ groupId: 1 });
+companySchema.index({ consigneeIds: 1 });
 
 export default mongoose.model("Company", companySchema);

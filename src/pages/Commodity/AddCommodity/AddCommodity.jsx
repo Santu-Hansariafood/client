@@ -1,31 +1,43 @@
-import { useState, useEffect, lazy, Suspense } from "react";
+import { useState, useEffect, lazy, Suspense, useCallback } from "react";
 import axios from "axios";
-import { toast, ToastContainer } from "react-toastify";
+import { toast } from "react-toastify";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../../context/AuthContext/AuthContext";
 import Loading from "../../../common/Loading/Loading";
 import { AiOutlinePlus, AiOutlineMinus } from "react-icons/ai";
-import "react-toastify/dist/ReactToastify.css";
 const DataInput = lazy(() => import("../../../common/DataInput/DataInput"));
 const DataDropdown = lazy(() =>
   import("../../../common/DataDropdown/DataDropdown")
 );
 const Buttons = lazy(() => import("../../../common/Buttons/Buttons"));
+const DashboardLayout = lazy(() =>
+  import("../../../layouts/DashboardLayout/DashboardLayout")
+);
+const Header = lazy(() => import("../../../common/Header/Header"));
+const LogoutConfirmationModal = lazy(() =>
+  import("../../../common/LogoutConfirmationModal/LogoutConfirmationModal")
+);
 
 const AddCommodity = () => {
   const [commodityName, setCommodityName] = useState("");
   const [hsnCode, setHsnCode] = useState("");
   const [extraFields, setExtraFields] = useState([{ parameter: "" }]);
   const [parametersOptions, setParametersOptions] = useState([]);
+  const [showLogoutConfirmation, setShowLogoutConfirmation] = useState(false);
+
+  const navigate = useNavigate();
+  const { logout } = useAuth();
 
   useEffect(() => {
     const fetchParametersOptions = async () => {
       try {
         const response = await axios.get("/quality-parameters");
         const options = response.data
-          .map((param) => ({ value: param.name, label: param.name }))
+          .map((param) => ({ value: param._id, label: param.name }))
           .sort((a, b) => a.label.localeCompare(b.label));
         setParametersOptions(options);
       } catch (error) {
-        toast.error("Failed to load parameters. Please try again.", error);
+        toast.error(error?.response?.data?.message || "Failed to load parameters. Please try again.");
       }
     };
 
@@ -62,8 +74,8 @@ const AddCommodity = () => {
       name: commodityName,
       hsnCode,
       parameters: extraFields.map((field) => ({
-        parameter: field.parameter?.value,
-      })),
+        parameterId: field.parameter?.value,
+      })).filter((p) => p.parameterId),
     };
 
     try {
@@ -88,14 +100,23 @@ const AddCommodity = () => {
     );
   };
 
+  const handleLogout = useCallback(() => {
+    logout();
+    toast.success("Successfully logged out!");
+    navigate("/", { replace: true });
+  }, [logout, navigate]);
+
   return (
     <Suspense fallback={<Loading />}>
-      <div className="container mx-auto p-6 max-w-4xl">
-        <div className="bg-white shadow-lg rounded-lg p-8 border-2 border-gray-300">
-          <h2 className="text-3xl font-semibold mb-8 text-center text-blue-600">
-            Add Commodity
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+      <DashboardLayout>
+        <Header onLogoutClick={() => setShowLogoutConfirmation(true)} />
+        <main className="min-h-screen px-4 sm:px-6 py-10 bg-green-50">
+          <div className="container mx-auto max-w-4xl">
+            <div className="bg-white shadow-lg rounded-2xl p-8 border border-yellow-300">
+              <h2 className="text-3xl font-extrabold mb-8 text-center text-green-800">
+                Add Commodity
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <DataInput
               placeholder="Enter commodity name"
               value={commodityName}
@@ -112,19 +133,19 @@ const AddCommodity = () => {
             />
           </div>
 
-          <button
-            onClick={handleAddField}
-            className="mt-4 text-blue-500 flex items-center space-x-2"
-          >
-            <AiOutlinePlus size={20} />
-            <span className="font-medium">Add Quality Parameter</span>
-          </button>
+              <button
+                onClick={handleAddField}
+                className="mt-4 text-green-700 flex items-center space-x-2"
+              >
+                <AiOutlinePlus size={20} />
+                <span className="font-medium">Add Quality Parameter</span>
+              </button>
 
-          {extraFields.map((field, index) => (
-            <div
-              key={index}
-              className="mt-4 grid grid-cols-3 gap-4 items-center bg-gray-50 p-4 rounded-lg shadow-sm"
-            >
+              {extraFields.map((field, index) => (
+                <div
+                  key={index}
+                  className="mt-4 grid grid-cols-3 gap-4 items-center bg-gray-50 p-4 rounded-lg shadow-sm"
+                >
               <DataDropdown
                 options={getFilteredOptions(index)}
                 selectedOptions={field.parameter}
@@ -142,20 +163,27 @@ const AddCommodity = () => {
                   <span>Remove</span>
                 </button>
               </div>
-            </div>
-          ))}
+                </div>
+              ))}
 
-          <div className="flex justify-center mt-8">
-            <Buttons
-              label="Submit"
-              onClick={handleSubmit}
-              variant="primary"
-              size="md"
-            />
+              <div className="flex justify-center mt-8">
+                <Buttons
+                  label="Submit"
+                  onClick={handleSubmit}
+                  variant="primary"
+                  size="md"
+                />
+              </div>
+            </div>
           </div>
-        </div>
-        <ToastContainer />
-      </div>
+        </main>
+        {showLogoutConfirmation && (
+          <LogoutConfirmationModal
+            onConfirm={handleLogout}
+            onCancel={() => setShowLogoutConfirmation(false)}
+          />
+        )}
+      </DashboardLayout>
     </Suspense>
   );
 };
