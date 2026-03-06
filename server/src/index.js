@@ -60,7 +60,7 @@ app.use("/api", authRoutes);
 app.use("/api/sellers", authJwt, sellerRoutes);
 app.use("/api/buyers", authJwt, buyerRoutes);
 app.use("/api/commodities", cache(60), authJwt, commodityRoutes);
-app.use("/api/seller-company", cache(60), authJwt, companyRoutes);
+app.use("/api/companies", cache(60), authJwt, companyRoutes);
 app.use("/api/bid-locations", cache(60), authJwt, bidLocationRoutes);
 app.use("/api/bids", cache(10), authJwt, bidRoutes);
 app.use("/api/participatebids", authJwt, participateRoutes);
