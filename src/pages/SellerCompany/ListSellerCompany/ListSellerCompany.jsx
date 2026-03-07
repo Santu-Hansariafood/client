@@ -253,13 +253,16 @@ const ListSellerCompany = () => {
               title={`Edit ${editCompany.companyName}`}
             >
               <EditSellerCompany
-                company={editCompany} // <-- This is passed as company
+                company={editCompany}
                 onSave={(updatedCompany) => {
                   setCompanies((prev) =>
                     prev.map((company) =>
-                      company.id === updatedCompany.id
-                        ? updatedCompany
-                        : company
+                      company._id === updatedCompany._id ? updatedCompany : company
+                    )
+                  );
+                  setSearchResults((prev) =>
+                    prev.map((company) =>
+                      company._id === updatedCompany._id ? updatedCompany : company
                     )
                   );
                   setEditCompany(null);

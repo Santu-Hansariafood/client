@@ -2,12 +2,28 @@ import mongoose from "mongoose";
 
 const bidSchema = new mongoose.Schema(
   {
-    commodity: { type: String, required: true }
+    type: { type: String, enum: ["buyer", "seller"], default: "buyer" },
+    group: { type: String, required: true },
+    consignee: { type: String, required: true },
+    origin: { type: String, required: true },
+    commodity: { type: String, required: true },
+    parameters: { type: Map, of: String, default: {} },
+    notes: { type: String, default: "" },
+    quantity: { type: Number, required: true },
+    rate: { type: Number, required: true },
+    bidDate: { type: Date, required: true },
+    startTime: { type: String, required: true },
+    endTime: { type: String, required: true },
+    paymentTerms: { type: String, default: "" },
+    delivery: { type: String, default: "" },
+    company: { type: String, default: "" },
+    unit: { type: String, default: "" }
   },
   { timestamps: true }
 );
 
 bidSchema.index({ createdAt: -1 });
 bidSchema.index({ commodity: 1 });
+bidSchema.index({ group: 1 });
 
 export default mongoose.model("Bid", bidSchema);

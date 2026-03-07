@@ -5,7 +5,6 @@ import "react-toastify/dist/ReactToastify.css";
 import axios from "axios";
 import Loading from "../../../common/Loading/Loading";
 
-// Lazy-loaded components
 const BuyerInformation = lazy(() =>
   import("../../../components/BuyerInformation/BuyerInformation")
 );
@@ -39,7 +38,7 @@ const INITIAL_FORM_DATA = {
   consignee: "",
   buyerEmail: "",
   buyerCommodity: [],
-  buyerBrokerage: { brokerageBuyer: "", brokerageSupplier: "" },
+  buyerBrokerage: { brokerageBuyer: 0, brokerageSupplier: 0 },
   commodity: "",
   parameters: [],
   poNumber: "",
@@ -74,7 +73,6 @@ const SelfOrder = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   const API_BASE_URL = "/self-order";
-  const SAUDA_API_URL = "/sauda-no";
 
   const handleChange = (field, value) => {
     setFormData((prev) => {
@@ -96,10 +94,11 @@ const SelfOrder = () => {
     const errors = [];
     if (!formData.buyer) errors.push("Buyer name is required.");
     if (!formData.poNumber) errors.push("PO Number is required.");
+    if (!formData.saudaNo) errors.push("Sauda No is required.");
 
     if (errors.length > 0) {
       errors.forEach((err) =>
-        toast.error(err, { position: toast.POSITION.TOP_RIGHT })
+        toast.error(err, { position: "top-right" })
       );
       return false;
     }
@@ -110,44 +109,33 @@ const SelfOrder = () => {
     setFormData(INITIAL_FORM_DATA);
   };
 
-  const generateSaudaNo = async () => {
-    try {
-      console.log("Generating Sauda No with data:", formData);
-      const response = await axios.post(SAUDA_API_URL, formData);
-      console.log("Sauda No Response:", response.data);
-
-      if (!response.data.saudaNo) {
-        throw new Error("Sauda No not generated");
-      }
-
-      return response.data.saudaNo;
-    } catch (error) {
-      toast.error("Failed to generate Sauda No.", {
-        position: toast.POSITION.TOP_RIGHT,
-      });
-      console.error("Error generating Sauda No:", error);
-      throw error;
-    }
-  };
-
   const handleSubmit = async () => {
     if (!validateFormData()) return;
 
     setIsLoading(true);
 
     try {
-      let saudaNoToUse = formData.saudaNo;
-      if (!saudaNoToUse) {
-        saudaNoToUse = await generateSaudaNo();
-        if (!saudaNoToUse) {
-          toast.error("Sauda No generation failed. Order not submitted.");
-          return;
-        }
-      }
-
-      const payload = { ...formData, saudaNo: saudaNoToUse };
-
-      console.log("Final Payload being sent to API:", JSON.stringify(payload, null, 2));
+      const payload = {
+        ...formData,
+        quantity: Number(formData.quantity) || 0,
+        pendingQuantity: Number(formData.pendingQuantity) || 0,
+        rate: Number(formData.rate) || 0,
+        gst: Number(formData.gst) || 0,
+        cd: Number(formData.cd) || 0,
+        weight: Number(formData.weight) || 0,
+        buyerBrokerage: {
+          brokerageBuyer: Number(
+            formData.buyerBrokerage?.brokerageBuyer ?? 0
+          ) || 0,
+          brokerageSupplier: Number(
+            formData.buyerBrokerage?.brokerageSupplier ?? 0
+          ) || 0,
+        },
+      };
+      console.log(
+        "Final Payload being sent to API:",
+        JSON.stringify(payload, null, 2)
+      );
 
       await axios.post(API_BASE_URL, payload);
 
@@ -155,7 +143,7 @@ const SelfOrder = () => {
 
       setTimeout(() => {
         toast.success("Order created successfully! Redirecting...", {
-          position: toast.POSITION.TOP_RIGHT,
+          position: "top-right",
         });
       }, 500);
 
@@ -207,7 +195,7 @@ const SelfOrder = () => {
           <div className="flex flex-col sm:flex-row gap-3">
             <div className="flex-1">
               <DataInput
-                placeholder="Enter Sauda No (or Generate)"
+                placeholder="Enter Sauda No"
                 value={formData.saudaNo}
                 onChange={(e) => handleChange("saudaNo", e.target.value)}
                 name="saudaNo"
@@ -215,27 +203,7 @@ const SelfOrder = () => {
                 size="md"
               />
             </div>
-            <button
-              type="button"
-              onClick={async () => {
-                try {
-                  const n = await generateSaudaNo();
-                  setFormData((prev) => ({ ...prev, saudaNo: n }));
-                  toast.success(`Generated Sauda No: ${n}`, { position: "top-right", autoClose: 2000 });
-                } catch {
-                  /* error toast already shown */
-                }
-              }}
-              className="px-4 py-2 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700 transition shadow"
-              disabled={isLoading}
-              title="Generate Sauda No"
-            >
-              Generate
-            </button>
           </div>
-          <p className="text-sm text-gray-500 mt-1">
-            System generates a Sauda No, but you can manually edit it here before submitting.
-          </p>
         </div>
 
         <button

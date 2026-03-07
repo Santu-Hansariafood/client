@@ -122,33 +122,27 @@ const EditSellerCompany = ({ company, onSave, onCancel }) => {
       return;
     }
 
-    const formData = new FormData();
-    Object.entries(companyInfo).forEach(([key, value]) =>
-      formData.append(key, value)
-    );
-    formData.append("state", selectedState?.value);
-    formData.append("district", selectedDistrict?.value);
-    formData.append("bankDetails", JSON.stringify(bankDetails));
-    if (msme) formData.append("msmeNo", msmeDetails.msmeNo);
-
-    Object.entries(fileUploads).forEach(([key, file]) => {
-      if (file) {
-        formData.append(key, file);
-      }
-    });
+    const payload = {
+      ...companyInfo,
+      state: selectedState?.value,
+      district: selectedDistrict?.value,
+      pinNo: companyInfo.pinNo,
+      msmeNo: msme ? msmeDetails.msmeNo : "",
+      bankDetails,
+    };
 
     try {
       const response = await axios.put(
         `/seller-company/${company._id}`,
-        formData,
-        {
-          headers: { "Content-Type": "multipart/form-data" },
-        }
+        payload
       );
       toast.success("Seller company updated successfully!");
       onSave(response.data);
     } catch (error) {
-      toast.error("Failed to update seller company. Please try again.", error);
+      toast.error(
+        error.response?.data?.message ||
+          "Failed to update seller company. Please try again."
+      );
     }
   };
 

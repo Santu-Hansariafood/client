@@ -70,7 +70,11 @@ const CommodityInformation = ({
           buyer.companyName === selectedCompany &&
           buyer.commodity.includes(commodityName)
       );
-      const updatedBrokerage = matchingBuyer?.brokerage[commodityName] || "N/A";
+      const rawBrokerage = matchingBuyer?.brokerage[commodityName];
+      const updatedBrokerage =
+        typeof rawBrokerage === "number" && !Number.isNaN(rawBrokerage)
+          ? rawBrokerage
+          : 0;
 
       const companyData = commodities.find(
         (commodity) => commodity.companyName === selectedCompany
@@ -174,7 +178,7 @@ const CommodityInformation = ({
 
 CommodityInformation.propTypes = {
   handleChange: PropTypes.func.isRequired,
-  selectedCompany: PropTypes.array.isRequired,
+  selectedCompany: PropTypes.string,
   buyerCommodity: PropTypes.array.isRequired,
 };
 

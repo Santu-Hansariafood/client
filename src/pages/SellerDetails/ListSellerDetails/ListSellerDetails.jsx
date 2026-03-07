@@ -86,6 +86,20 @@ const ListSellerDetails = () => {
     "Actions",
   ];
 
+  const handleDeleteSeller = async (sellerId) => {
+    try {
+      await axios.delete(`${apiBaseURL}/sellers/${sellerId}`);
+      const updatedData = data.filter((seller) => seller._id !== sellerId);
+      setData(updatedData);
+      setFilteredData(updatedData);
+      toast.success("Seller deleted successfully");
+    } catch (error) {
+      toast.error(
+        error.response?.data?.message || "Failed to delete seller"
+      );
+    }
+  };
+
   const rows = filteredData
     .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
     .map((item, index) => [
@@ -121,7 +135,7 @@ const ListSellerDetails = () => {
             </span>
         ),
       item.companies.join(", "),
-      toTitleCase(item.selectedStatus),
+      toTitleCase(item.status),
       <Actions
         key={item._id}
         onView={() => {
@@ -130,7 +144,7 @@ const ListSellerDetails = () => {
           setIsPopupOpen(true);
         }}
         onEdit={() => handleEditSeller(item)}
-        onDelete={() => toast.error(`Delete ${item.sellerName}`)}
+        onDelete={() => handleDeleteSeller(item._id)}
       />,
     ]);
 
@@ -229,7 +243,7 @@ const ListSellerDetails = () => {
                 </p>
                 <p>
                   <strong>Status:</strong>{" "}
-                  {toTitleCase(selectedSeller.selectedStatus)}
+                  {toTitleCase(selectedSeller.status)}
                 </p>
                 <p>
                   <strong>Buyers:</strong>{" "}
@@ -244,6 +258,14 @@ const ListSellerDetails = () => {
               <EditSellerDetails
                 sellerId={selectedSeller._id}
                 onClose={handlePopupClose}
+                onSave={(updatedSeller) => {
+                  const updatedData = data.map((seller) =>
+                    seller._id === updatedSeller._id ? updatedSeller : seller
+                  );
+                  setData(updatedData);
+                  setFilteredData(updatedData);
+                  setSelectedSeller(updatedSeller);
+                }}
               />
             )}
           </PopupBox>

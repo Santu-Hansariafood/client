@@ -98,13 +98,22 @@ BrokerInformation.propTypes = {
   formData: PropTypes.shape({
     agentName: PropTypes.string,
     buyerBrokerage: PropTypes.shape({
-      brokerageBuyer: PropTypes.string,
-      brokerageSupplier: PropTypes.string,
+      brokerageBuyer: PropTypes.oneOfType([
+        PropTypes.string,
+        PropTypes.number,
+      ]),
+      brokerageSupplier: PropTypes.oneOfType([
+        PropTypes.string,
+        PropTypes.number,
+      ]),
     }),
     supplierBrokerage: PropTypes.arrayOf(
       PropTypes.shape({
         name: PropTypes.string.isRequired,
-        brokerage: PropTypes.string,
+        brokerage: PropTypes.oneOfType([
+          PropTypes.string,
+          PropTypes.number,
+        ]),
       })
     ),
     commodity: PropTypes.string,

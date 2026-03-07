@@ -131,34 +131,24 @@ const AddSellerCompany = () => {
       return;
     }
 
-    const formData = new FormData();
-
-    Object.entries(companyInfo).forEach(([key, value]) =>
-      formData.append(key, value)
-    );
-    formData.append("state", selectedState?.value);
-    formData.append("district", selectedDistrict?.value);
-    formData.append("bankDetails", JSON.stringify(bankDetails));
-    if (msme) formData.append("msmeNo", msmeDetails.msmeNo);
-
-    Object.entries(fileUploads).forEach(([key, file]) => {
-      if (file) {
-        formData.append(key, file);
-      }
-    });
+    const payload = {
+      ...companyInfo,
+      state: selectedState?.value,
+      district: selectedDistrict?.value,
+      pinNo: companyInfo.pinNo,
+      msmeNo: msme ? msmeDetails.msmeNo : "",
+      bankDetails,
+    };
 
     try {
-      const response = await axios.post(
-        "/seller-company",
-        formData,
-        {
-          headers: { "Content-Type": "multipart/form-data" },
-        }
-      );
+      await axios.post("/seller-company", payload);
       toast.success("Seller company added successfully!");
       resetForm();
     } catch (error) {
-      toast.error("Failed to add seller company. Please try again.",error);
+      toast.error(
+        error.response?.data?.message ||
+          "Failed to add seller company. Please try again."
+      );
     }
   };
 

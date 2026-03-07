@@ -14,7 +14,7 @@ const DropdownSelector = lazy(() =>
 );
 const Buttons = lazy(() => import("../../../common/Buttons/Buttons"));
 
-const EditSellerDetails = ({ sellerId, onClose }) => {
+const EditSellerDetails = ({ sellerId, onClose, onSave }) => {
   const [sellerName, setSellerName] = useState("");
   const [password, setPassword] = useState("");
   const [phoneNumbers, setPhoneNumbers] = useState([
@@ -99,9 +99,7 @@ const EditSellerDetails = ({ sellerId, onClose }) => {
           }))
         );
         setSelectedStatus(
-          statusOptions.find(
-            (option) => option.value === sellerData.selectedStatus
-          )
+          statusOptions.find((option) => option.value === sellerData.status)
         );
         setSelectedBuyers(
           sellerData.buyers.map((buyer) => ({
@@ -196,7 +194,7 @@ const EditSellerDetails = ({ sellerId, onClose }) => {
         brokerage: brokerageAmounts[commodity.value] || 0,
       })),
       companies: selectedCompany.map((company) => company.value),
-      selectedStatus: selectedStatus?.value,
+      status: selectedStatus?.value,
       buyers: selectedBuyers.map((buyer) => ({
         name: buyer.value,
       })),
@@ -208,7 +206,13 @@ const EditSellerDetails = ({ sellerId, onClose }) => {
         payload
       );
       toast.success("Seller details updated successfully!");
+      if (onSave) {
+        onSave(response.data);
+      }
       resetForm();
+      if (onClose) {
+        onClose();
+      }
     } catch (error) {
       toast.error(
         error.response?.data?.message ||

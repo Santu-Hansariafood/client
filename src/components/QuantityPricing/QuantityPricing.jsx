@@ -39,14 +39,19 @@ const QuantityPricing = ({ handleChange }) => {
         type: "number",
       },
       {
-        label: "Rate (in tons)",
+        label: "Rate (per ton)",
         field: "rate",
-        placeholder: "Rate (in tons)",
+        placeholder: "Rate (per ton)",
         type: "number",
       },
       { label: "GST (%)", field: "gst", placeholder: "GST", type: "number" },
       { label: "CD (%)", field: "cd", placeholder: "CD (%)", type: "number" },
-      { label: "Weight", field: "weight", placeholder: "Weight", type: "text" },
+      {
+        label: "Weight (tons)",
+        field: "weight",
+        placeholder: "Weight (tons)",
+        type: "number",
+      },
     ],
     []
   );

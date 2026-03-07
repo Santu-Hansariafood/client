@@ -41,7 +41,10 @@ const SelfOrderList = () => {
       try {
         const response = await axios.get(API_URL);
         if (isMounted) {
-          const reversedData = response.data.reverse();
+          const raw = Array.isArray(response.data)
+            ? response.data
+            : response.data?.data || [];
+          const reversedData = [...raw].reverse();
           setData(reversedData);
           setFilteredData(reversedData);
           setLoading(false);

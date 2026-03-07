@@ -3,41 +3,89 @@ import Seller from "../models/Seller.js";
 
 const router = Router();
 
+
 router.get("/", async (req, res) => {
-  const page = parseInt(req.query.page || "0", 10);
-  const limit = parseInt(req.query.limit || "0", 10);
-  if (page > 0 && limit > 0) {
-    const items = await Seller.find()
-      .sort({ sellerName: 1 })
-      .skip((page - 1) * limit)
-      .limit(limit)
-      .lean();
-    const total = await Seller.countDocuments();
-    return res.json({ data: items, total });
+  try {
+    const page = parseInt(req.query.page || "0", 10);
+    const limit = parseInt(req.query.limit || "0", 10);
+
+    if (page > 0 && limit > 0) {
+      const items = await Seller.find()
+        .sort({ sellerName: 1 })
+        .skip((page - 1) * limit)
+        .limit(limit)
+        .lean();
+
+      const total = await Seller.countDocuments();
+
+      return res.json({ data: items, total });
+    }
+
+    const items = await Seller.find().sort({ sellerName: 1 }).lean();
+
+    res.json(items);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
   }
-  const items = await Seller.find().sort({ sellerName: 1 }).lean();
-  res.json(items);
 });
+
 
 router.get("/:id", async (req, res) => {
-  const item = await Seller.findById(req.params.id).lean();
-  if (!item) return res.status(404).json({ message: "Not found" });
-  res.json(item);
+  try {
+    const item = await Seller.findById(req.params.id).lean();
+
+    if (!item) {
+      return res.status(404).json({ message: "Seller not found" });
+    }
+
+    res.json(item);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
 });
 
+
 router.post("/", async (req, res) => {
-  const item = await Seller.create(req.body);
+  try {
+    const seller = await Seller.create(req.body);
 
-  if (req.body.phoneNumbers && req.body.phoneNumbers.length > 0 && req.body.password) {
-    await User.create({
-      name: req.body.sellerName,
-      role: "Seller",
-      phone: req.body.phoneNumbers[0].value,
-      password: req.body.password,
-    });
+    res.status(201).json(seller);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
   }
+});
 
-  res.status(201).json(item);
+
+router.put("/:id", async (req, res) => {
+  try {
+    const updated = await Seller.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { new: true, runValidators: true }
+    );
+
+    if (!updated) {
+      return res.status(404).json({ message: "Seller not found" });
+    }
+
+    res.json(updated);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+});
+
+router.delete("/:id", async (req, res) => {
+  try {
+    const deleted = await Seller.findByIdAndDelete(req.params.id);
+
+    if (!deleted) {
+      return res.status(404).json({ message: "Seller not found" });
+    }
+
+    res.json({ message: "Seller deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
 });
 
 export default router;

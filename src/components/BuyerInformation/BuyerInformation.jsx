@@ -11,7 +11,6 @@ const BuyerInformation = ({ handleChange }) => {
   const [buyers, setBuyers] = useState([]);
   const [selectedCompany, setSelectedCompany] = useState(null);
   const [selectedConsignee, setSelectedConsignee] = useState("");
-  const [soudaNo, setSoudaNo] = useState("");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -72,20 +71,7 @@ const BuyerInformation = ({ handleChange }) => {
       <label className="block mb-2 text-lg font-semibold text-gray-700">
         Buyer Information
       </label>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div>
-          <label className="block text-sm text-gray-600 mb-1">Souda No</label>
-          <DataInput
-            placeholder="System Generated No Input Requird"
-            value={soudaNo}
-            readOnly
-            onChange={(e) => {
-              const value = e.target.value;
-              setSoudaNo(value);
-              handleChange("soudaNo", value);
-            }}
-          />
-        </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label className="block text-sm text-gray-600 mb-1">
             Select Company
