@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo, lazy, Suspense } from "react";
+import { useEffect, useState, useMemo, lazy, Suspense, useCallback } from "react";
 import PropTypes from "prop-types";
 import axios from "axios";
 import Loading from "../../common/Loading/Loading";
@@ -11,12 +11,10 @@ const Tables = lazy(() => import("../../common/Tables/Tables"));
 const CommodityInformation = ({
   handleChange,
   selectedCompany,
-  buyerCommodity,
 }) => {
   const [commodities, setCommodities] = useState([]);
   const [parameters, setParameters] = useState([]);
   const [selectedCommodity, setSelectedCommodity] = useState(null);
-  const [brokerage, setBrokerage] = useState({});
   const [buyers, setBuyers] = useState([]);
 
   useEffect(() => {
@@ -82,7 +80,6 @@ const CommodityInformation = ({
       const companyEmail = companyData?.companyEmail || "";
 
       setParameters(updatedParameters);
-      setBrokerage({ [commodityName]: updatedBrokerage });
 
       handleChange("commodity", commodityName);
       handleChange("parameters", updatedParameters);
@@ -93,7 +90,6 @@ const CommodityInformation = ({
       handleChange("buyerEmails", [companyEmail]);
     } else {
       setParameters([]);
-      setBrokerage({});
       handleChange("commodity", "");
       handleChange("parameters", []);
       handleChange("buyerBrokerage", {
@@ -104,17 +100,20 @@ const CommodityInformation = ({
     }
   };
 
-  const onParameterChange = (index, newValue) => {
-    const updatedParameters = [...parameters];
-    updatedParameters[index].value = newValue;
+  const onParameterChange = useCallback(
+    (index, newValue) => {
+      const updatedParameters = [...parameters];
+      updatedParameters[index].value = newValue;
 
-    const parametersWithIdAndValue = updatedParameters.map((param) => ({
-      id: param._id,
-      value: param.value,
-    }));
+      const parametersWithIdAndValue = updatedParameters.map((param) => ({
+        id: param._id,
+        value: param.value,
+      }));
 
-    handleChange("parameters", parametersWithIdAndValue);
-  };
+      handleChange("parameters", parametersWithIdAndValue);
+    },
+    [parameters, handleChange]
+  );
 
   const commodityOptions = useMemo(
     () =>
@@ -138,7 +137,7 @@ const CommodityInformation = ({
           onChange={(e) => onParameterChange(index, e.target.value)}
         />,
       ]),
-    [parameters]
+    [parameters, onParameterChange]
   );
 
   return (

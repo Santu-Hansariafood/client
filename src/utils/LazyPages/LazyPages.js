@@ -25,6 +25,7 @@ const LazyPages = {
   ListSoudabook: lazy(() => import("../../pages/Soudabook/ListSoudabook/ListSoudabook")),
   BidList: lazy(() => import("../../pages/ManageBids/BidList/BidList")),
   AddSelfOrder: lazy(() => import("../../pages/ManageSelfOrder/SelfOrder/SelfOrder")),
+  EditSelfOrder: lazy(() => import("../../pages/ManageSelfOrder/EditSelfOrder/EditSelfOrder")),
   ListSelfOrder: lazy(() => import("../../pages/ManageSelfOrder/SelfOrderList/SelfOrderList")),
   AddLoadingEntry: lazy(() => import("../../pages/LoadingEntry/AddLoadingEntry/AddLoadingEntry")),
   ListLoadingEntry: lazy(() => import("../../pages/LoadingEntry/ListLoadingEntry/ListLoadingEntry")),

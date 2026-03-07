@@ -105,31 +105,31 @@ const AdditionalDetails = ({ data }) => (
         <View style={styles.tableRow}>
           <Text style={styles.tableCell}>
             Weight: {"\n"}
-            {data.weight}
+            {data.weight ?? "N/A"}
           </Text>
           <Text style={styles.tableCell}>
             Delivery Date: {"\n"}
-            {new Date(data.deliveryDate)
-              .toLocaleDateString("en-GB")
-              .replace(/\//g, "-")}
+            {data.deliveryDate 
+              ? new Date(data.deliveryDate).toLocaleDateString("en-GB").replace(/\//g, "-")
+              : "N/A"}
           </Text>
           <Text style={styles.tableCell}>
             Loading Date: {"\n"}
-            {new Date(data.loadingDate)
-              .toLocaleDateString("en-GB")
-              .replace(/\//g, "-")}
+            {data.loadingDate 
+              ? new Date(data.loadingDate).toLocaleDateString("en-GB").replace(/\//g, "-")
+              : "N/A"}
           </Text>
           <Text style={styles.tableCell}>
             Payment Terms: {"\n"}
-            {data.paymentTerms} Days
+            {data.paymentTerms ?? "N/A"} Days
           </Text>
           <Text style={styles.tableCell}>
             Loading Station: {"\n"}
-            {data.state}
+            {data.state ?? "N/A"}
           </Text>
           <Text style={styles.tableCell}>
             Location: {"\n"}
-            {data.location}
+            {data.location ?? "N/A"}
           </Text>
         </View>
       </View>
@@ -169,11 +169,11 @@ const AdditionalDetails = ({ data }) => (
         </View>
         <View style={styles.tableRow}>
           <Text style={styles.tableCell}>
-            Buyer Brokerage{"\n"} Rs. {data.buyerBrokerage.brokerageBuyer} / TON
+            Buyer Brokerage{"\n"} Rs. {data.buyerBrokerage?.brokerageBuyer ?? "N/A"} / TON
           </Text>
           <Text style={styles.tableCell}>
             Supplier Brokerage{"\n"} Rs.{" "}
-            {data.supplierBrokerage[0]?.brokerage || "N/A"} / TON
+            {data.supplierBrokerage?.[0]?.brokerage ?? "N/A"} / TON
           </Text>
         </View>
       </View>

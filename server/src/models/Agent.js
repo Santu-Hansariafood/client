@@ -17,6 +17,4 @@ const agentSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-agentSchema.index({ name: 1 }, { unique: true });
-
 export default mongoose.model("Agent", agentSchema);

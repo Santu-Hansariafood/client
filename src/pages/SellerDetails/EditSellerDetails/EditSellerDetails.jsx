@@ -14,6 +14,13 @@ const DropdownSelector = lazy(() =>
 );
 const Buttons = lazy(() => import("../../../common/Buttons/Buttons"));
 
+const apiBaseURL = "";
+
+const statusOptions = [
+  { value: "active", label: "Active" },
+  { value: "inactive", label: "Inactive" },
+];
+
 const EditSellerDetails = ({ sellerId, onClose, onSave }) => {
   const [sellerName, setSellerName] = useState("");
   const [password, setPassword] = useState("");
@@ -28,13 +35,6 @@ const EditSellerDetails = ({ sellerId, onClose, onSave }) => {
   const [selectedCompany, setSelectedCompany] = useState([]);
   const [selectedStatus, setSelectedStatus] = useState(null);
   const [selectedBuyers, setSelectedBuyers] = useState([]);
-
-  const apiBaseURL = "";
-
-  const statusOptions = [
-    { value: "active", label: "Active" },
-    { value: "inactive", label: "Inactive" },
-  ];
 
   useEffect(() => {
     const fetchData = async () => {

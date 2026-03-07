@@ -4,8 +4,7 @@ import { AuthProvider } from "./context/AuthContext/AuthContext";
 import Loading from "./common/Loading/Loading";
 import CacheHandler from "./utils/CacheHandler/CacheHandler";
 import RouteSEO from "./common/SEO/RouteSEO";
-import CriticalRoutes from "./routes/CriticalRoutes/CriticalRoutes";
-import PrivateRoutes from "./routes/PrivateRoutes/PrivateRoutes";
+import AppRoutes from "./routes/AppRoutes";
 import { Suspense } from "react";
 import { ToastContainer } from "react-toastify";
 import "./App.css";
@@ -29,8 +28,7 @@ const App = () => {
           <Suspense fallback={<Loading />}>
             <RouteSEO />
             <ToastContainer position="top-right" autoClose={3000} />
-            <CriticalRoutes />
-            <PrivateRoutes hydrated={hydrated} />
+            <AppRoutes hydrated={hydrated} />
           </Suspense>
         </BrowserRouter>
       </AuthProvider>

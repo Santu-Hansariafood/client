@@ -69,7 +69,7 @@ app.use("/api/bids", cache(10), authJwt, bidRoutes);
 app.use("/api/participatebids", authJwt, participateRoutes);
 app.use("/api/confirm-bid", cache(10), authJwt, confirmBidRoutes);
 app.use("/api/agents", cache(120), authJwt, agentRoutes);
-app.use("/api/self-order", cache(15), authJwt, selfOrderRoutes);
+app.use("/api/self-order", authJwt, selfOrderRoutes);
 app.use("/api/sauda-no", authJwt, saudaNoRoutes);
 app.use("/api/whatsapp", authJwt, whatsappRoutes);
 app.use("/api/quality-parameters", authJwt, qualityParameterRoutes);

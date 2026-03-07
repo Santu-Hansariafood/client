@@ -35,6 +35,4 @@ const commoditySchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-commoditySchema.index({ name: 1 }, { unique: true });
-
 export default mongoose.model("Commodity", commoditySchema);
