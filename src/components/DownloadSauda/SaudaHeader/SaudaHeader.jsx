@@ -4,47 +4,65 @@ import logo from "../../../assets/Hans.jpg";
 const styles = StyleSheet.create({
   header: {
     flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 20,
-    padding: 12,
-    backgroundColor: "#27ae60",
-    color: "#f7ca18",
-    borderRadius: 10,
-    boxShadow: "0 2px 8px rgba(39,174,96,0.10)",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    marginBottom: 15,
+    paddingBottom: 10,
+    borderBottom: "1.5pt solid #1a365d",
+  },
+  logoContainer: {
+    width: "25%",
   },
   logo: {
-    width: 110, // Increased width for zoom effect
-    height: 70, // Increased height for zoom effect
-    marginRight: 15,
-    objectFit: "cover", // Ensures the image is zoomed/cropped
-    backgroundColor: "transparent", // Removes any background
-    borderRadius: 8,
+    width: 80,
+    height: 50,
+    objectFit: "contain",
   },
   textContainer: {
-    flex: 1,
-    textAlign: "center",
+    width: "70%",
+    textAlign: "right",
   },
   mainTitle: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: "bold",
-    color: "#f7ca18",
+    color: "#1a365d",
     letterSpacing: 1,
+    marginBottom: 2,
   },
   subtitle: {
-    fontSize: 10,
-    marginTop: 4,
-    color: "#ffffff",
+    fontSize: 8,
+    color: "#4a5568",
     letterSpacing: 0.5,
+    textTransform: "uppercase",
+    fontWeight: "bold",
+  },
+  address: {
+    fontSize: 7,
+    color: "#718096",
+    marginTop: 2,
+    lineHeight: 1.2,
+  },
+  tagline: {
+    fontSize: 7,
+    color: "#1a365d",
+    marginTop: 4,
+    fontStyle: "italic",
+    fontWeight: "bold",
   },
 });
 
 const SaudaHeader = () => (
   <View style={styles.header}>
-    <Image src={logo} style={styles.logo} />
+    <View style={styles.logoContainer}>
+      <Image src={logo} style={styles.logo} />
+    </View>
     <View style={styles.textContainer}>
       <Text style={styles.mainTitle}>HANSARIA FOOD PVT. LTD.</Text>
-      <Text style={styles.subtitle}>BROKER AND COMMISSION AGENT</Text>
-      <Text style={styles.subtitle}>
+      <Text style={styles.subtitle}>Broker and Commission Agent</Text>
+      <Text style={styles.address}>
+        Regd. Office: 123, Business Center, Mumbai, Maharashtra - 400001
+      </Text>
+      <Text style={styles.tagline}>
         MAIZE | SOYABEAN D.O.C | M.D.O.C | D.ORB | WHEAT | RICE
       </Text>
     </View>

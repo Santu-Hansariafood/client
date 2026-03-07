@@ -2,116 +2,94 @@ import { View, Text, StyleSheet } from "@react-pdf/renderer";
 
 const styles = StyleSheet.create({
   section: {
-    marginBottom: 12,
-    padding: 12,
-    backgroundColor: "#f7f9fc",
-    borderRadius: 10,
-    border: "1px solid #27ae60",
-    boxShadow: "0 1px 4px rgba(39,174,96,0.07)",
+    marginBottom: 10,
+    padding: 0,
+    backgroundColor: "#ffffff",
   },
-  headerBox: {
+  headerRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
-    padding: 6,
-    backgroundColor: "#eafaf1",
-    borderRadius: 7,
+    marginBottom: 10,
+    borderBottom: "0.5pt solid #e2e8f0",
+    paddingBottom: 5,
   },
-  headerLeft: {
-    color: "#27ae60",
-    fontWeight: "bold",
-    fontSize: 9,
-  },
-  headerRight: {
-    fontSize: 9,
-    fontWeight: "bold",
-    color: "#f7ca18",
-  },
-  headerMiddle: {
-    fontSize: 9,
-    fontWeight: "bold",
-    color: "#27ae60",
-  },
-  tableContainer: {
-    marginTop: 7,
-    border: "1px solid #27ae60",
-    borderRadius: 7,
-    overflow: "hidden",
-  },
-  tableHeader: {
-    backgroundColor: "#27ae60",
-    flexDirection: "row",
-    padding: 4,
-  },
-  tableHeaderText: {
-    color: "#f7ca18",
-    fontSize: 10,
-    fontWeight: "bold",
+  headerItem: {
     flex: 1,
-    textAlign: "center",
   },
-  tableRow: {
-    flexDirection: "row",
-    backgroundColor: "#fffde7",
-    paddingVertical: 4,
-    paddingHorizontal: 3,
+  label: {
+    fontSize: 7,
+    color: "#718096",
+    textTransform: "uppercase",
+    marginBottom: 1,
+    fontWeight: "bold",
   },
-  tableCell: {
+  value: {
     fontSize: 9,
-    color: "#555555",
-    flex: 1,
-    textAlign: "center",
-    paddingVertical: 3,
-    paddingHorizontal: 4,
-    borderLeft: "1px solid #f7ca18",
+    color: "#2d3748",
+    fontWeight: "bold",
   },
-  firstCell: {
-    borderLeft: "none",
+  grid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    marginTop: 0,
+  },
+  gridItem: {
+    width: "33.33%",
+    padding: 2,
+    marginBottom: 5,
   },
   addressDetails: {
-    fontSize: 8,
-    color: "#27ae60",
-    marginTop: 2,
+    fontSize: 7,
+    color: "#4a5568",
+    marginTop: 1,
     lineHeight: 1.1,
+    fontWeight: "normal",
   },
 });
 
 const SaudaDetails = ({ data }) => (
   <View style={styles.section}>
-    <View style={styles.headerBox}>
-      <Text style={styles.headerLeft}>Sauda No: {data.saudaNo}</Text>
-      <Text style={styles.headerMiddle}>Buyer PO No: {data.poNumber}</Text>
-      <Text style={styles.headerRight}>
-        Date:{" "}
-        {new Date(data.poDate).toLocaleDateString("en-GB").replace(/\//g, "-")}
-      </Text>
-    </View>
-    <View style={styles.tableContainer}>
-      <View style={styles.tableHeader}>
-        <Text style={styles.tableHeaderText}>Buyer Name (Debitor)</Text>
-        <Text style={styles.tableHeaderText}>Supplier Company</Text>
-        <Text style={styles.tableHeaderText}>Ship To (Consignee)</Text>
+    <View style={styles.headerRow}>
+      <View style={styles.headerItem}>
+        <Text style={styles.label}>Sauda No</Text>
+        <Text style={styles.value}>{data.saudaNo}</Text>
       </View>
-      <View style={styles.tableRow}>
-        <Text style={[styles.tableCell, styles.firstCell]}>{data.buyer}</Text>
-        <Text style={styles.tableCell}>
-          {data.supplierCompany}
-          {data.supplierDetails ? (
-            <Text style={styles.addressDetails}>
-              {`\n${data.supplierDetails.address}, ${data.supplierDetails.district}, ${data.supplierDetails.state} - ${data.supplierDetails.pinNo}\n PAN No: ${data.supplierDetails.panNo}\nGST: ${data.supplierDetails.gstNo}`}
-            </Text>
-          ) : (
-            "\nDetails not available"
-          )}
+      <View style={styles.headerItem}>
+        <Text style={styles.label}>Buyer PO No</Text>
+        <Text style={styles.value}>{data.poNumber || "N/A"}</Text>
+      </View>
+      <View style={[styles.headerItem, { textAlign: "right" }]}>
+        <Text style={styles.label}>Date</Text>
+        <Text style={styles.value}>
+          {new Date(data.poDate).toLocaleDateString("en-GB").replace(/\//g, "-")}
         </Text>
-        <Text style={styles.tableCell}>
-          {data.consignee}
-          {data.consigneeDetails && (
-            <Text style={styles.addressDetails}>
-              {`\n${data.consigneeDetails.location}, ${data.consigneeDetails.district}, ${data.consigneeDetails.state} - ${data.consigneeDetails.pin}\nPAN No : ${data.consigneeDetails.pan}\nGST: ${data.consigneeDetails.gst}`}
-            </Text>
-          )}
-        </Text>
+      </View>
+    </View>
+
+    <View style={styles.grid}>
+      <View style={styles.gridItem}>
+        <Text style={styles.label}>Buyer Name (Debitor)</Text>
+        <Text style={styles.value}>{data.buyer}</Text>
+      </View>
+      <View style={styles.gridItem}>
+        <Text style={styles.label}>Supplier Company</Text>
+        <Text style={styles.value}>{data.supplierCompany}</Text>
+        {data.supplierDetails ? (
+          <Text style={styles.addressDetails}>
+            {`\n${data.supplierDetails.address}, ${data.supplierDetails.district}, ${data.supplierDetails.state} - ${data.supplierDetails.pinNo}\n PAN No: ${data.supplierDetails.panNo}\nGST: ${data.supplierDetails.gstNo}`}
+          </Text>
+        ) : (
+          <Text style={styles.addressDetails}>{"\nDetails not available"}</Text>
+        )}
+      </View>
+      <View style={styles.gridItem}>
+        <Text style={styles.label}>Ship To (Consignee)</Text>
+        <Text style={styles.value}>{data.consignee}</Text>
+        {data.consigneeDetails && (
+          <Text style={styles.addressDetails}>
+            {`\n${data.consigneeDetails.location}, ${data.consigneeDetails.district}, ${data.consigneeDetails.state} - ${data.consigneeDetails.pin}\nPAN No : ${data.consigneeDetails.pan}\nGST: ${data.consigneeDetails.gst}`}
+          </Text>
+        )}
       </View>
     </View>
   </View>

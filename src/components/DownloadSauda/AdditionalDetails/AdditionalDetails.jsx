@@ -2,196 +2,217 @@ import { View, Text, StyleSheet } from "@react-pdf/renderer";
 
 const styles = StyleSheet.create({
   section: {
-    marginTop: 7,
-    padding: 10,
-    backgroundColor: "#f7f9fc",
-    borderRadius: 10,
-    border: "1px solid #27ae60",
+    marginTop: 10,
   },
-  title: {
-    fontSize: 12,
-    fontWeight: "bold",
-    marginBottom: 6,
-    color: "#27ae60",
-    textAlign: "center",
-    letterSpacing: 0.5,
-  },
-  tableContainer: {
-    marginVertical: 7,
-    border: "1px solid #27ae60",
-    borderRadius: 7,
-    overflow: "hidden",
-  },
-  tableRow: {
+  grid: {
     flexDirection: "row",
-    padding: 4,
-    backgroundColor: "#fffde7",
+    flexWrap: "wrap",
+    border: "0.5pt solid #e2e8f0",
+    borderRadius: 3,
+    marginBottom: 10,
   },
-  tableCell: {
-    flex: 1,
-    padding: 4,
-    fontSize: 9,
-    textAlign: "center",
-    color: "#555555",
-  },
-  tableHeaderCell: {
-    fontSize: 11,
-    fontWeight: "bold",
-    color: "#f7ca18",
-  },
-  signatureRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginTop: 12,
+  gridItem: {
+    width: "33.33%",
     padding: 6,
-    borderTop: "1px solid #27ae60",
+    borderRight: "0.5pt solid #e2e8f0",
+    borderBottom: "0.5pt solid #e2e8f0",
   },
-  signatureText: {
-    fontSize: 9,
+  label: {
+    fontSize: 7,
+    color: "#718096",
+    textTransform: "uppercase",
+    marginBottom: 1,
     fontWeight: "bold",
-    color: "#27ae60",
-    textAlign: "center",
-    flex: 1,
   },
-  brokerInfoContainer: {
+  value: {
+    fontSize: 8,
+    color: "#2d3748",
+  },
+  notesSection: {
+    backgroundColor: "#f7fafc",
+    padding: 6,
+    borderRadius: 3,
+    marginBottom: 10,
+  },
+  notesTitle: {
+    fontSize: 8,
+    fontWeight: "bold",
+    color: "#1a365d",
+    marginBottom: 3,
+    textTransform: "uppercase",
+  },
+  notesText: {
+    fontSize: 7,
+    color: "#4a5568",
+    lineHeight: 1.3,
+    marginBottom: 1,
+  },
+  bankSection: {
+    border: "0.5pt solid #1a365d",
+    padding: 6,
+    borderRadius: 3,
+    marginBottom: 10,
+  },
+  bankTitle: {
+    fontSize: 8,
+    fontWeight: "bold",
+    color: "#1a365d",
+    textAlign: "center",
+    marginBottom: 3,
+    textTransform: "uppercase",
+  },
+  bankText: {
+    fontSize: 8,
+    color: "#2d3748",
+    textAlign: "center",
+    lineHeight: 1.3,
+  },
+  brokerageSection: {
     flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginVertical: 7,
-    paddingHorizontal: 4,
+    border: "0.5pt solid #e2e8f0",
+    borderRadius: 3,
+    marginBottom: 10,
+  },
+  brokerageItem: {
+    flex: 1,
+    padding: 6,
+    textAlign: "center",
+    borderRight: "0.5pt solid #e2e8f0",
   },
   brokerInfo: {
-    fontSize: 9,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 15,
+    padding: 2,
+  },
+  brokerText: {
+    fontSize: 8,
     fontWeight: "bold",
-    color: "#27ae60",
-    flex: 1,
+    color: "#1a365d",
+  },
+  signatureSection: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 20,
+  },
+  signatureBox: {
+    width: "30%",
+    borderTop: "0.5pt solid #2d3748",
+    textAlign: "center",
+    paddingTop: 3,
+  },
+  signatureLabel: {
+    fontSize: 7,
+    fontWeight: "bold",
+    color: "#2d3748",
+    textTransform: "uppercase",
+  },
+  footer: {
+    marginTop: 10,
     textAlign: "center",
   },
   footerNote: {
-    marginTop: 7,
-    textAlign: "center",
-    fontSize: 8,
-    color: "#f7ca18",
-  },
-  notesSection: {
-    marginTop: 7,
-    padding: 10,
-    backgroundColor: "#fffde7",
-    borderRadius: 7,
-    border: "1px solid #f7ca18",
-  },
-  notesText: {
-    fontSize: 9,
-    color: "#555555",
-    marginBottom: 4,
-  },
-  bankDetails: {
-    marginVertical: 7,
-    padding: 10,
-    backgroundColor: "#fffde7",
-    borderRadius: 7,
-    border: "1px solid #f7ca18",
-    fontSize: 9,
-    color: "#555555",
-    textAlign: "center",
+    fontSize: 6,
+    color: "#718096",
+    fontStyle: "italic",
   },
 });
 
 const AdditionalDetails = ({ data }) => (
-  <View>
-    <View style={styles.section}>
-      <Text style={styles.title}>Additional Details</Text>
-      <View style={styles.tableContainer}>
-        <View style={styles.tableRow}>
-          <Text style={styles.tableCell}>
-            Weight: {"\n"}
-            {data.weight ?? "N/A"}
-          </Text>
-          <Text style={styles.tableCell}>
-            Delivery Date: {"\n"}
-            {data.deliveryDate 
-              ? new Date(data.deliveryDate).toLocaleDateString("en-GB").replace(/\//g, "-")
-              : "N/A"}
-          </Text>
-          <Text style={styles.tableCell}>
-            Loading Date: {"\n"}
-            {data.loadingDate 
-              ? new Date(data.loadingDate).toLocaleDateString("en-GB").replace(/\//g, "-")
-              : "N/A"}
-          </Text>
-          <Text style={styles.tableCell}>
-            Payment Terms: {"\n"}
-            {data.paymentTerms ?? "N/A"} Days
-          </Text>
-          <Text style={styles.tableCell}>
-            Loading Station: {"\n"}
-            {data.state ?? "N/A"}
-          </Text>
-          <Text style={styles.tableCell}>
-            Location: {"\n"}
-            {data.location ?? "N/A"}
-          </Text>
-        </View>
+  <View style={styles.section}>
+    <View style={styles.grid}>
+      <View style={styles.gridItem}>
+        <Text style={styles.label}>Weight</Text>
+        <Text style={styles.value}>{data.weight ?? "N/A"}</Text>
       </View>
-      {data.notes && data.notes.length > 0 && (
-        <View style={styles.notesSection}>
-          <Text style={styles.title}>Notes</Text>
-          {data.notes.map((note, index) => (
-            <Text key={index} style={styles.notesText}>
-              {index + 1}. {note}
-            </Text>
-          ))}
-        </View>
-      )}
-      <View style={styles.bankDetails}>
-        <Text style={styles.title}>Bank Account Details</Text>
-        {data.supplierDetails?.bankDetails?.[0] ? (
-          <Text>
-            Account Holder:{" "}
-            {data.supplierDetails.bankDetails[0].accountHolderName}
-            {"\n"}Account No:{" "}
-            {data.supplierDetails.bankDetails[0].accountNumber}
-            {"\n"}IFSC: {data.supplierDetails.bankDetails[0].ifscCode}
-            {"\n"}Branch: {data.supplierDetails.bankDetails[0].branchName}
-          </Text>
-        ) : (
-          <Text>Bank details not available</Text>
-        )}
-      </View>
-      <View style={styles.tableContainer}>
-        <View style={styles.tableHeader}>
-          <Text style={[styles.tableCell, styles.tableHeaderCell]}>
-            Buyer Brokerage
-          </Text>
-          <Text style={[styles.tableCell, styles.tableHeaderCell]}>
-            Supplier Brokerage
-          </Text>
-        </View>
-        <View style={styles.tableRow}>
-          <Text style={styles.tableCell}>
-            Buyer Brokerage{"\n"} Rs. {data.buyerBrokerage?.brokerageBuyer ?? "N/A"} / TON
-          </Text>
-          <Text style={styles.tableCell}>
-            Supplier Brokerage{"\n"} Rs.{" "}
-            {data.supplierBrokerage?.[0]?.brokerage ?? "N/A"} / TON
-          </Text>
-        </View>
-      </View>
-      <View style={styles.brokerInfoContainer}>
-        <Text style={styles.brokerInfo}>
-          Broker: HANSARIA FOOD PRIVATE LIMITED
+      <View style={styles.gridItem}>
+        <Text style={styles.label}>Delivery Date</Text>
+        <Text style={styles.value}>
+          {data.deliveryDate 
+            ? new Date(data.deliveryDate).toLocaleDateString("en-GB").replace(/\//g, "-")
+            : "N/A"}
         </Text>
-        <Text style={styles.brokerInfo}>Agent Name: {data.agentName}</Text>
       </View>
-      <View style={styles.signatureRow}>
-        <Text style={styles.signatureText}>Seller Signature</Text>
-        <Text style={styles.signatureText}>Buyer Signature</Text>
-        <Text style={styles.signatureText}>Brokerage Signature</Text>
+      <View style={styles.gridItem}>
+        <Text style={styles.label}>Loading Date</Text>
+        <Text style={styles.value}>
+          {data.loadingDate 
+            ? new Date(data.loadingDate).toLocaleDateString("en-GB").replace(/\//g, "-")
+            : "N/A"}
+        </Text>
+      </View>
+      <View style={styles.gridItem}>
+        <Text style={styles.label}>Payment Terms</Text>
+        <Text style={styles.value}>{data.paymentTerms ?? "N/A"} Days</Text>
+      </View>
+      <View style={styles.gridItem}>
+        <Text style={styles.label}>Loading Station</Text>
+        <Text style={styles.value}>{data.state ?? "N/A"}</Text>
+      </View>
+      <View style={styles.gridItem}>
+        <Text style={styles.label}>Location</Text>
+        <Text style={styles.value}>{data.location ?? "N/A"}</Text>
       </View>
     </View>
-    <Text style={styles.footerNote}>
-      *This is a system-generated file. No signature required.
-    </Text>
+
+    {data.notes && data.notes.length > 0 && (
+      <View style={styles.notesSection}>
+        <Text style={styles.notesTitle}>Special Notes</Text>
+        {data.notes.map((note, index) => (
+          <Text key={index} style={styles.notesText}>
+            {index + 1}. {note}
+          </Text>
+        ))}
+      </View>
+    )}
+
+    <View style={styles.bankSection}>
+      <Text style={styles.bankTitle}>Bank Account Details</Text>
+      {data.supplierDetails?.bankDetails?.[0] ? (
+        <Text style={styles.bankText}>
+          {data.supplierDetails.bankDetails[0].accountHolderName} | 
+          A/C: {data.supplierDetails.bankDetails[0].accountNumber} | 
+          IFSC: {data.supplierDetails.bankDetails[0].ifscCode} | 
+          Branch: {data.supplierDetails.bankDetails[0].branchName}
+        </Text>
+      ) : (
+        <Text style={styles.bankText}>Bank details not available</Text>
+      )}
+    </View>
+
+    <View style={styles.brokerageSection}>
+      <View style={styles.brokerageItem}>
+        <Text style={styles.label}>Buyer Brokerage</Text>
+        <Text style={styles.value}>Rs. {data.buyerBrokerage?.brokerageBuyer ?? "N/A"} / TON</Text>
+      </View>
+      <View style={[styles.brokerageItem, { borderRight: "none" }]}>
+        <Text style={styles.label}>Supplier Brokerage</Text>
+        <Text style={styles.value}>Rs. {data.supplierBrokerage?.[0]?.brokerage ?? "N/A"} / TON</Text>
+      </View>
+    </View>
+
+    <View style={styles.brokerInfo}>
+      <Text style={styles.brokerText}>Broker: HANSARIA FOOD PRIVATE LIMITED</Text>
+      <Text style={styles.brokerText}>Agent Name: {data.agentName || "N/A"}</Text>
+    </View>
+
+    <View style={styles.signatureSection}>
+      <View style={styles.signatureBox}>
+        <Text style={styles.signatureLabel}>Seller Signature</Text>
+      </View>
+      <View style={styles.signatureBox}>
+        <Text style={styles.signatureLabel}>Buyer Signature</Text>
+      </View>
+      <View style={styles.signatureBox}>
+        <Text style={styles.signatureLabel}>Broker Signature</Text>
+      </View>
+    </View>
+
+    <View style={styles.footer}>
+      <Text style={styles.footerNote}>
+        * This is a system-generated file. No physical signature is required.
+      </Text>
+    </View>
   </View>
 );
 
