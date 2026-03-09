@@ -39,13 +39,12 @@ const LoginForm = () => {
 
     setLoading(true);
 
-    const base = import.meta.env.VITE_API_BASE_URL || "/api";
     const apiEndpoints = {
-      Admin: `${base}/admin/login`,
-      Employee: `${base}/employees/login`,
-      Buyer: `${base}/buyers/login`,
-      Seller: `${base}/sellers/login`,
-      Transporter: `${base}/transporters/login`,
+      Admin: "/admin/login",
+      Employee: "/employees/login",
+      Buyer: "/buyers/login",
+      Seller: "/sellers/login",
+      Transporter: "/transporters/login",
     };
 
     const roleBasedRoutes = {
@@ -59,7 +58,10 @@ const LoginForm = () => {
     const apiUrl = apiEndpoints[userRole];
 
     if (!apiUrl) {
-      toast.error("Invalid role selected.", { position: "top-right", autoClose: 3000 });
+      toast.error("Invalid role selected.", {
+        position: "top-right",
+        autoClose: 3000,
+      });
       setLoading(false);
       return;
     }
@@ -67,7 +69,7 @@ const LoginForm = () => {
     const phoneKey = userRole === "Seller" ? "phone" : "mobile";
 
     try {
-      const response = await api.post(apiUrl.replace(base, ""), {
+      const response = await api.post(apiUrl, {
         [phoneKey]: phoneNumber,
         password: password,
       });

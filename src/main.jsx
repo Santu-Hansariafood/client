@@ -13,16 +13,7 @@ import { registerSW } from 'virtual:pwa-register';
 const rootElement = document.getElementById('root');
 const root = createRoot(rootElement);
 
-const normalizeApiBaseUrl = (raw) => {
-  if (!raw) return raw;
-  const trimmed = String(raw).replace(/\/+$/, "");
-  if (trimmed.endsWith("/api")) return trimmed;
-  return `${trimmed}/api`;
-};
-
-axios.defaults.baseURL =
-  normalizeApiBaseUrl(import.meta.env.VITE_API_BASE_URL) ||
-  (import.meta.env.DEV ? "/api" : "/api");
+axios.defaults.baseURL = import.meta.env.VITE_API_BASE_URL || "/api";
 axios.defaults.timeout = 15000;
 axios.interceptors.request.use((config) => {
   if (typeof config.url === "string" && config.url.startsWith("/") && !config.url.startsWith("//")) {
