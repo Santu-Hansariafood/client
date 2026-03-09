@@ -7,11 +7,12 @@ const DataDropdown = lazy(() =>
 );
 const DataInput = lazy(() => import("../../common/DataInput/DataInput"));
 
-const BuyerInformation = ({ handleChange }) => {
+const BuyerInformation = ({ formData, handleChange }) => {
   const [buyers, setBuyers] = useState([]);
   const [selectedCompany, setSelectedCompany] = useState(null);
   const [selectedConsignee, setSelectedConsignee] = useState("");
   const [loading, setLoading] = useState(true);
+  const [initialized, setInitialized] = useState(false);
 
   useEffect(() => {
     const fetchBuyers = async () => {
@@ -27,6 +28,28 @@ const BuyerInformation = ({ handleChange }) => {
     };
     fetchBuyers();
   }, []);
+
+  const orderId = formData?._id;
+
+  useEffect(() => {
+    if (orderId) setInitialized(false);
+  }, [orderId]);
+
+  useEffect(() => {
+    if (loading || initialized || !formData?.buyerCompany) return;
+    const match = (Array.isArray(buyers) ? buyers : []).find(
+      (b) =>
+        (b.companyName || "").trim().toLowerCase() ===
+        (formData.buyerCompany || "").trim().toLowerCase()
+    );
+    if (match) {
+      setSelectedCompany(match._id);
+      const consigneeId =
+        formData.consignee?._id || formData.consignee?.value || formData.consignee;
+      if (consigneeId) setSelectedConsignee(String(consigneeId));
+      setInitialized(true);
+    }
+  }, [buyers, loading, formData?.buyerCompany, formData?.consignee, initialized]);
 
   const companyOptions = useMemo(
     () =>
@@ -51,9 +74,15 @@ const BuyerInformation = ({ handleChange }) => {
 
     const selectedBuyer = buyers.find(({ _id }) => _id === companyId) || {};
 
+    const rawEmails = selectedBuyer?.email;
+    const buyerEmails = Array.isArray(rawEmails)
+      ? rawEmails.map((e) => (typeof e === "string" ? e : e?.value ?? e?.email ?? "")).filter(Boolean)
+      : [];
+    const firstEmail = buyerEmails[0] || "";
     handleChange("buyer", selectedBuyer.name || "");
     handleChange("buyerCompany", selectedBuyer.companyName || "");
-    handleChange("buyerEmail", selectedBuyer.email?.[0] || "");
+    handleChange("buyerEmail", firstEmail);
+    handleChange("buyerEmails", buyerEmails.length ? buyerEmails : [""]);
     handleChange("buyerCommodity", selectedBuyer.commodity || []);
     handleChange("buyerBrokerage", selectedBuyer.brokerage || {});
     setSelectedConsignee("");
@@ -68,37 +97,35 @@ const BuyerInformation = ({ handleChange }) => {
 
   return (
     <Suspense fallback={<Loading />}>
-      <label className="block mb-2 text-lg font-semibold text-gray-700">
+      <label className="block mb-4 text-base font-semibold text-slate-800 dark:text-slate-100">
         Buyer Information
       </label>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm text-gray-600 mb-1">
+          <label className="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-1">
             Select Company
           </label>
           <DataDropdown
             placeholder="Select Company"
             options={companyOptions}
-            onChange={onCompanyChange}
-            value={
+            selectedOptions={
               companyOptions.find(({ value }) => value === selectedCompany) ||
               null
             }
-            isLoading={loading}
+            onChange={onCompanyChange}
           />
         </div>
         <div>
-          <label className="block text-sm text-gray-600 mb-1">Consignee</label>
+          <label className="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-1">Consignee</label>
           <DataDropdown
             placeholder="Select Consignee"
             options={consigneeOptions}
-            onChange={onConsigneeChange}
-            value={
+            selectedOptions={
               consigneeOptions.find(
                 ({ value }) => value === selectedConsignee
               ) || null
             }
-            isDisabled={!selectedCompany}
+            onChange={onConsigneeChange}
           />
         </div>
       </div>
@@ -107,6 +134,7 @@ const BuyerInformation = ({ handleChange }) => {
 };
 
 BuyerInformation.propTypes = {
+  formData: PropTypes.object,
   handleChange: PropTypes.func.isRequired,
 };
 

@@ -20,20 +20,23 @@ const NotesSection = ({ notes, setNotes }) => {
 
   return (
     <Suspense fallback={<Loading />}>
+      <label className="block mb-4 text-base font-semibold text-slate-800 dark:text-slate-100">
+        Notes
+      </label>
       <div className="space-y-4">
-        <h3 className="text-lg font-semibold">Notes</h3>
         {notes.map((note, index) => (
-          <div key={index} className="flex items-center space-x-2">
+          <div key={index} className="flex items-start gap-2">
             <textarea
-              className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="flex-1 min-h-[80px] px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-emerald-500"
               placeholder={`Note ${index + 1}`}
               value={note}
               onChange={(e) => handleNoteChange(index, e.target.value)}
             />
             <button
               type="button"
-              className="p-2 text-red-500 hover:text-red-700"
+              className="shrink-0 mt-2 p-2 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors"
               onClick={() => removeNote(index)}
+              aria-label="Remove note"
             >
               <AiOutlineMinus size={20} />
             </button>
@@ -41,10 +44,10 @@ const NotesSection = ({ notes, setNotes }) => {
         ))}
         <button
           type="button"
-          className="flex items-center p-2 text-blue-500 hover:text-blue-700"
+          className="flex items-center gap-2 px-4 py-2 rounded-xl text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 font-medium transition-colors"
           onClick={addNote}
         >
-          <AiOutlinePlus size={20} className="mr-2" /> Add Note
+          <AiOutlinePlus size={20} /> Add Note
         </button>
       </div>
     </Suspense>

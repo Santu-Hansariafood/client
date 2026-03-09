@@ -3,23 +3,24 @@ import PropTypes from "prop-types";
 const Tables = ({ headers, rows }) => {
   return (
     <div className="w-full">
-      <div className="space-y-3 md:hidden">
+      {/* Mobile View */}
+      <div className="md:hidden space-y-3">
         {rows.length > 0 ? (
           rows.map((row, rowIndex) => (
             <div
               key={rowIndex}
-              className="bg-white/95 rounded-2xl shadow-md border border-gray-200 overflow-hidden"
+              className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 overflow-hidden shadow-sm"
             >
-              <div className="divide-y divide-gray-100">
+              <div className="divide-y divide-slate-100 dark:divide-slate-700/80">
                 {row.map((cell, cellIndex) => (
                   <div
                     key={cellIndex}
-                    className="flex items-start justify-between px-4 py-3"
+                    className="flex justify-between gap-4 px-4 py-3.5"
                   >
-                    <span className="text-xs font-semibold uppercase tracking-wide text-gray-500 mr-4">
+                    <span className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider shrink-0">
                       {headers[cellIndex]}
                     </span>
-                    <div className="text-sm text-gray-900 text-right max-w-[55%] break-words">
+                    <div className="text-sm text-slate-800 dark:text-slate-200 text-right break-words max-w-[60%]">
                       {cell}
                     </div>
                   </div>
@@ -28,40 +29,39 @@ const Tables = ({ headers, rows }) => {
             </div>
           ))
         ) : (
-          <div className="bg-white rounded-2xl shadow border border-gray-200 p-6 text-center text-gray-500">
-            No data available
+          <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-8 text-center">
+            <p className="text-slate-500 dark:text-slate-400">No data available</p>
           </div>
         )}
       </div>
 
-      <div className="hidden md:block overflow-x-auto scroll-smooth rounded-2xl shadow-lg bg-white">
-        <table className="w-full table-auto border-separate border-spacing-0 min-w-max">
-          <thead className="sticky top-0 z-10">
-            <tr className="bg-gradient-to-r from-green-600 to-green-700 text-white">
+      {/* Desktop Table */}
+      <div className="hidden md:block w-full overflow-x-auto rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-sm">
+        <table className="w-full min-w-[600px] border-collapse">
+          <thead>
+            <tr className="bg-slate-50 dark:bg-slate-800/50">
               {headers.map((header, index) => (
                 <th
                   key={index}
-                  scope="col"
-                  className="px-5 py-3 border-b border-green-700 text-left text-sm lg:text-base font-bold uppercase tracking-wider whitespace-nowrap sticky top-0 bg-gradient-to-r from-green-600 to-green-700 shadow-md backdrop-blur-sm"
+                  className="px-5 py-3.5 text-left text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider border-b border-slate-200 dark:border-slate-700 whitespace-nowrap"
                 >
                   {header}
                 </th>
               ))}
             </tr>
           </thead>
+
           <tbody>
             {rows.length > 0 ? (
               rows.map((row, rowIndex) => (
                 <tr
                   key={rowIndex}
-                  className={`transition-colors duration-200 ${
-                    rowIndex % 2 === 0 ? "bg-green-50" : "bg-white"
-                  } hover:bg-green-100`}
+                  className="border-b border-slate-100 dark:border-slate-700/50 last:border-0 hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors"
                 >
                   {row.map((cell, cellIndex) => (
                     <td
                       key={cellIndex}
-                      className="px-5 py-3 border-b border-gray-200 text-sm lg:text-base break-words whitespace-nowrap"
+                      className="px-5 py-3.5 text-sm text-slate-800 dark:text-slate-200 whitespace-nowrap"
                     >
                       {cell}
                     </td>
@@ -72,7 +72,7 @@ const Tables = ({ headers, rows }) => {
               <tr>
                 <td
                   colSpan={headers.length}
-                  className="text-center py-6 text-base md:text-lg text-gray-500"
+                  className="px-5 py-12 text-center text-slate-500 dark:text-slate-400"
                 >
                   No data available
                 </td>

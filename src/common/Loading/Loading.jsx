@@ -1,30 +1,18 @@
 const Loading = () => {
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-green-100 via-yellow-50 to-gray-100">
-      <div className="backdrop-blur-md bg-white/60 rounded-2xl shadow-2xl border border-white/40 px-10 py-8 flex flex-col items-center">
-        <div className="relative w-20 h-20 mb-6">
-          <span className="absolute inset-0 rounded-full bg-gradient-to-tr from-green-400 via-yellow-300 to-green-600 opacity-30 animate-pulse"></span>
-          <svg className="w-20 h-20 animate-spin-slow relative z-10" viewBox="0 0 80 80">
-            <circle
-              className="text-green-400 opacity-30"
-              cx="40" cy="40" r="32"
-              stroke="currentColor"
-              strokeWidth="8"
-              fill="none"
-            />
-            <circle
-              className="text-yellow-400"
-              cx="40" cy="40" r="32"
-              stroke="currentColor"
-              strokeWidth="8"
-              fill="none"
-              strokeDasharray="60 200"
-              strokeLinecap="round"
-            />
-          </svg>
+    <div className="flex items-center justify-center min-h-screen bg-slate-50 dark:bg-slate-950">
+      <div className="flex flex-col items-center gap-6 p-8 md:p-10 rounded-3xl bg-white dark:bg-slate-900/90 border border-slate-200/80 dark:border-slate-700/80 shadow-xl shadow-slate-200/50 dark:shadow-none backdrop-blur-sm">
+        <div className="relative">
+          <div className="w-16 h-16 rounded-full border-4 border-slate-200 dark:border-slate-700"></div>
+          <div
+            className="absolute inset-0 w-16 h-16 rounded-full border-4 border-transparent border-t-emerald-500 animate-spin"
+            style={{ animationDuration: "0.8s" }}
+          />
         </div>
-        <h2 className="text-2xl font-bold text-gray-800 drop-shadow-sm mb-2 tracking-wide">Loading...</h2>
-        <p className="text-gray-600 text-base">Please wait, your network is slow.</p>
+        <div className="text-center space-y-1">
+          <p className="text-lg font-semibold text-slate-800 dark:text-slate-100">Loading</p>
+          <p className="text-sm text-slate-500 dark:text-slate-400">Please wait...</p>
+        </div>
       </div>
     </div>
   );

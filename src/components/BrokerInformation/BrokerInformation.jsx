@@ -36,30 +36,21 @@ const BrokerInformation = ({ formData, handleChange }) => {
     fetchAgents();
   }, []);
 
-  const renderBrokerageField = (label, value) => (
-    <>
-      <label className="block text-sm text-gray-600 mb-1">{label}</label>
-      <DataInput
-        placeholder={`₹ ${label}`}
-        inputType="text"
-        value={`₹ ${value || ""}`}
-        readOnly
-      />
-    </>
-  );
-
-  const sellerBrokerage = formData.supplierBrokerage?.find(
-    (brokerageDetail) => brokerageDetail.name === formData.commodity
+  const supplierBrokerage = formData.supplierBrokerage?.find(
+    (b) => b.name === formData.commodity
   )?.brokerage;
+
+  const buyerBrokerageVal = formData.buyerBrokerage?.brokerageBuyer;
+  const supplierBrokerageVal = supplierBrokerage ?? formData.buyerBrokerage?.brokerageSupplier;
 
   return (
     <>
-      <label className="block mb-2 text-lg font-semibold text-gray-700">
+      <label className="block mb-4 text-base font-semibold text-slate-800 dark:text-slate-100">
         Broker Information
       </label>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <div>
-          <label className="block text-sm text-gray-600 mb-1">Broker</label>
+          <label className="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-1">Broker</label>
           <DataInput
             placeholder="Broker"
             value="Hansaria Food Private Limited"
@@ -67,28 +58,42 @@ const BrokerInformation = ({ formData, handleChange }) => {
           />
         </div>
         <div>
-          <label className="block text-sm text-gray-600 mb-1">Agent Name</label>
+          <label className="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-1">Agent Name</label>
           {loading ? (
-            <p className="text-sm text-gray-500">Loading agents...</p>
+            <p className="text-sm text-slate-500 py-3">Loading agents...</p>
           ) : (
             <DataDropdown
-              placeholder="Agent Name"
+              placeholder="Select Agent"
               options={agentOptions}
-              onChange={(selectedOption) =>
-                handleChange("agentName", selectedOption?.value || "")
+              selectedOptions={
+                agentOptions.find((o) => o.value === formData.agentName) || null
               }
-              value={formData.agentName}
+              onChange={(opt) => handleChange("agentName", opt?.value || "")}
             />
           )}
         </div>
-        {renderBrokerageField(
-          "Brokerage Per Ton (Buyer)",
-          formData.buyerBrokerage?.brokerageBuyer
-        )}
-        {renderBrokerageField(
-          "Brokerage Per Ton (Supplier)",
-          sellerBrokerage || "N/A"
-        )}
+        <div>
+          <label className="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-1">
+            Brokerage Per Ton (Buyer)
+          </label>
+          <DataInput
+            placeholder="₹ 0"
+            inputType="text"
+            value={buyerBrokerageVal !== undefined && buyerBrokerageVal !== "" ? `₹ ${buyerBrokerageVal}` : ""}
+            readOnly
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-1">
+            Brokerage Per Ton (Supplier)
+          </label>
+          <DataInput
+            placeholder="₹ 0"
+            inputType="text"
+            value={supplierBrokerageVal !== undefined && supplierBrokerageVal !== "" ? `₹ ${supplierBrokerageVal}` : ""}
+            readOnly
+          />
+        </div>
       </div>
     </>
   );

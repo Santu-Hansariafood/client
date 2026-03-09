@@ -38,10 +38,10 @@ const DataInput = ({
         disabled={disabled}
         readOnly={readOnly}
         className={`w-full ${sizeStyles} border rounded-2xl transition-all duration-200
-          bg-white/90 text-gray-900 border-gray-300
+          bg-white text-gray-900 border-gray-300
           shadow-sm focus:shadow-md
-          focus:border-blue-500 focus:ring-2 focus:ring-blue-200/70
-          hover:border-blue-400
+          focus:border-green-500 focus:ring-2 focus:ring-green-200
+          hover:border-green-400
           placeholder-gray-400 tracking-wide
           ${disabled || readOnly ? "bg-gray-100 text-gray-400 cursor-not-allowed border-gray-200" : ""}
         `}

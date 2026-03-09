@@ -1,27 +1,11 @@
-import { useState, useMemo, lazy, Suspense } from "react";
+import { useMemo, lazy, Suspense } from "react";
 import PropTypes from "prop-types";
 import Loading from "../../common/Loading/Loading";
 const DataInput = lazy(() => import("../../common/DataInput/DataInput"));
 
-const QuantityPricing = ({ handleChange }) => {
-  const [formData, setFormData] = useState({
-    quantity: "",
-    pendingQuantity: "",
-    rate: "",
-    gst: "",
-    cd: "",
-    weight: "",
-  });
-
+const QuantityPricing = ({ formData = {}, handleChange }) => {
   const handleInputChange = (field, value) => {
-    setFormData((prevData) => ({
-      ...prevData,
-      [field]: value,
-    }));
-
-    if (handleChange) {
-      handleChange(field, value);
-    }
+    if (handleChange) handleChange(field, value);
   };
 
   const inputFields = useMemo(
@@ -58,17 +42,17 @@ const QuantityPricing = ({ handleChange }) => {
 
   return (
     <Suspense fallback={<Loading />}>
-      <label className="block mb-2 text-lg font-semibold text-gray-700">
+      <label className="block mb-4 text-base font-semibold text-slate-800 dark:text-slate-100">
         Quantity and Pricing
       </label>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {inputFields.map(({ label, field, placeholder, type }) => (
           <div key={field}>
-            <label className="block text-sm text-gray-600 mb-1">{label}</label>
+            <label className="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-1">{label}</label>
             <DataInput
               placeholder={placeholder}
               inputType={type}
-              value={formData[field]}
+              value={formData[field] ?? ""}
               onChange={(e) => handleInputChange(field, e.target.value)}
             />
           </div>
@@ -79,6 +63,7 @@ const QuantityPricing = ({ handleChange }) => {
 };
 
 QuantityPricing.propTypes = {
+  formData: PropTypes.object,
   handleChange: PropTypes.func.isRequired,
 };
 

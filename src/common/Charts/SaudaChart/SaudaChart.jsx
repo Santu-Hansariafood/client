@@ -97,39 +97,49 @@ const SaudaChart = ({ apiUrl }) => {
           data={chartData}
           margin={{ top: 20, right: 30, left: 20, bottom: 10 }}
         >
-          <CartesianGrid strokeDasharray="3 3" stroke="#e0e7ff" />
+          <defs>
+            <linearGradient id="colorSauda" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stopColor="#22c55e" />
+              <stop offset="50%" stopColor="#4ade80" />
+              <stop offset="100%" stopColor="#16a34a" />
+            </linearGradient>
+          </defs>
+
+          <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+
           <XAxis
             dataKey="date"
             tickFormatter={(tick) => moment(tick).format("MMM DD")}
-            label={{ value: "Date", position: "insideBottomRight", offset: -5 }}
-            tick={{ fill: "#6366f1", fontWeight: 600 }}
+            tick={{ fill: "#374151", fontWeight: 600 }}
           />
+
           <YAxis
-            label={{
-              value: "Sauda Count",
-              angle: -90,
-              position: "insideLeft",
-              fill: "#6366f1",
-              fontWeight: 600,
-            }}
-            tick={{ fill: "#6366f1", fontWeight: 600 }}
+            tick={{ fill: "#374151", fontWeight: 600 }}
           />
+
           <Tooltip
-            contentStyle={{ background: "#fff", borderRadius: 12, border: "1px solid #a5b4fc" }}
+            contentStyle={{
+              background: "#ffffff",
+              borderRadius: 12,
+              border: "1px solid #d1d5db",
+            }}
             formatter={(value) => [`${value}`, "Sauda"]}
             labelFormatter={(label) =>
               `Date: ${moment(label).format("MMM DD, YYYY")}`
             }
           />
-          <Legend wrapperStyle={{ color: "#6366f1", fontWeight: 700 }} />
+
+          <Legend />
+
           <Line
             type="monotone"
             dataKey="sauda"
-            stroke="#6366f1"
-            strokeWidth={3}
-            activeDot={{ r: 8 }}
-            dot={{ stroke: "#6366f1", strokeWidth: 2, fill: "#fff" }}
+            stroke="url(#colorSauda)"
+            strokeWidth={4}
+            activeDot={{ r: 7 }}
+            dot={{ strokeWidth: 2, fill: "#fff" }}
           />
+
         </LineChart>
       </ResponsiveContainer>
     </div>

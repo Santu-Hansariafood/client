@@ -5,7 +5,9 @@ import "react-datepicker/dist/react-datepicker.css";
 import { FaCalendarAlt } from "react-icons/fa";
 
 const DateSelector = ({ selectedDate, onChange }) => {
-  const [currentDate, setCurrentDate] = useState(selectedDate ? new Date(selectedDate) : null);
+  const [currentDate, setCurrentDate] = useState(
+    selectedDate ? new Date(selectedDate) : null
+  );
 
   useEffect(() => {
     if (selectedDate) {
@@ -25,31 +27,34 @@ const DateSelector = ({ selectedDate, onChange }) => {
   };
 
   return (
-    <div className="w-full max-w-md flex items-center bg-white/80 border border-blue-300 rounded-xl p-3 shadow-lg backdrop-blur-md">
+    <div className="w-full max-w-md flex items-center gap-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-2 shadow-sm transition-all duration-200 focus-within:ring-2 focus-within:ring-emerald-400/40 focus-within:border-emerald-500">
       <DatePicker
         selected={currentDate}
         onChange={handleDateChange}
         dateFormat="dd/MM/yyyy"
-        className="w-full px-3 py-2 text-gray-700 rounded-lg bg-white/70 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-200 shadow-sm"
         placeholderText="Select a date"
-        calendarClassName="react-datepicker-left"
-        wrapperClassName="w-full"
+        wrapperClassName="w-full flex-1"
         isClearable
+        className="w-full px-3 py-2.5 bg-transparent text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none"
       />
+
       <button
         type="button"
         onClick={handleIconClick}
-        className="ml-3 p-2 rounded-full bg-blue-100 hover:bg-blue-200 text-blue-600 hover:text-blue-800 shadow transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-blue-400"
-        aria-label="Select current date"
+        aria-label="Select today"
+        className="shrink-0 p-2.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-400/50"
       >
-        <FaCalendarAlt size={20} />
+        <FaCalendarAlt size={18} />
       </button>
     </div>
   );
 };
 
 DateSelector.propTypes = {
-  selectedDate: PropTypes.oneOfType([PropTypes.string, PropTypes.instanceOf(Date)]),
+  selectedDate: PropTypes.oneOfType([
+    PropTypes.string,
+    PropTypes.instanceOf(Date),
+  ]),
   onChange: PropTypes.func.isRequired,
 };
 

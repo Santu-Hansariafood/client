@@ -66,18 +66,18 @@ const SupplierInformation = ({ handleChange, formData }) => {
       handleChange("supplier", supplierId);
       handleChange("supplierBrokerage", selected?.commodities || []);
       handleChange("supplierName", selected?.sellerName || "");
-      handleChange(
-        "sellerEmails",
-        selected?.emails.map((email) => email.value) || []
-      );
 
-      if (selected) {
-        const commoditiesBrokerage = selected.commodities.map((commodity) => ({
-          name: commodity.name,
-          brokerage: commodity.brokerage,
-        }));
-        console.log("Supplier Brokerage Details:", commoditiesBrokerage);
-        handleChange("supplierBrokerageDetails", commoditiesBrokerage);
+      const rawEmails = selected?.emails || [];
+      const sellerEmails = Array.isArray(rawEmails)
+        ? rawEmails.map((e) => (typeof e === "string" ? e : e?.value ?? e?.email ?? "")).filter(Boolean)
+        : [];
+      handleChange("sellerEmails", sellerEmails.length ? sellerEmails : [""]);
+
+      if (selected?.commodities?.length) {
+        handleChange("supplierBrokerageDetails", selected.commodities.map((c) => ({
+          name: c.name,
+          brokerage: c.brokerage,
+        })));
       }
     },
     [sellers, handleChange]
@@ -85,36 +85,36 @@ const SupplierInformation = ({ handleChange, formData }) => {
 
   return (
     <Suspense fallback={<Loading />}>
-      <label className="block mb-2 text-lg font-semibold text-gray-700">
+      <label className="block mb-4 text-base font-semibold text-slate-800 dark:text-slate-100">
         Supplier Information
       </label>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         <div>
-          <label className="block text-sm text-gray-600 mb-1">
+          <label className="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-1">
             Select Supplier
           </label>
           <DataDropdown
             placeholder="Select Supplier"
             options={suppliers}
-            onChange={(selectedOption) =>
-              handleSupplierChange(selectedOption.value)
-            }
+            selectedOptions={suppliers.find((s) => s.value === selectedSupplier) || null}
+            onChange={(opt) => handleSupplierChange(opt?.value)}
           />
         </div>
         <div>
-          <label className="block text-sm text-gray-600 mb-1">
+          <label className="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-1">
             Supplier Company
           </label>
           <DataDropdown
             placeholder="Select Supplier Company"
             options={companies}
-            onChange={(selectedOption) =>
-              handleChange("supplierCompany", selectedOption.value)
+            selectedOptions={
+              companies.find((c) => c.value === formData.supplierCompany) || null
             }
+            onChange={(opt) => handleChange("supplierCompany", opt?.value || "")}
           />
         </div>
         <div>
-          <label className="block text-sm text-gray-600 mb-1">
+          <label className="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-1">
             Payment Terms (in days)
           </label>
           <DataInput
@@ -125,7 +125,7 @@ const SupplierInformation = ({ handleChange, formData }) => {
           />
         </div>
         <div>
-          <label className="block text-sm text-gray-600 mb-1">
+          <label className="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-1">
             Delivery Date
           </label>
           <DateSelector
@@ -135,7 +135,7 @@ const SupplierInformation = ({ handleChange, formData }) => {
           />
         </div>
         <div>
-          <label className="block text-sm text-gray-600 mb-1">
+          <label className="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-1">
             Loading Date
           </label>
           <DateSelector

@@ -30,6 +30,7 @@ const SelfOrderList = () => {
   const navigate = useNavigate();
   const [data, setData] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
+  const [consigneeMap, setConsigneeMap] = useState(new Map());
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
   const [selectedItem, setSelectedItem] = useState(null);
@@ -39,14 +40,26 @@ const SelfOrderList = () => {
 
     const fetchData = async () => {
       try {
-        const response = await axios.get(API_URL);
+        const [orderRes, consigneeRes] = await Promise.all([
+          axios.get(API_URL),
+          axios.get("/consignees").catch(() => ({ data: [] })),
+        ]);
         if (isMounted) {
-          const raw = Array.isArray(response.data)
-            ? response.data
-            : response.data?.data || [];
+          const raw = Array.isArray(orderRes.data)
+            ? orderRes.data
+            : orderRes.data?.data || [];
           const reversedData = [...raw].reverse();
           setData(reversedData);
           setFilteredData(reversedData);
+
+          const consignees = Array.isArray(consigneeRes.data)
+            ? consigneeRes.data
+            : consigneeRes.data?.data || [];
+          const map = new Map();
+          consignees.forEach((c) => {
+            if (c?._id) map.set(String(c._id), c.name || c.label || "-");
+          });
+          setConsigneeMap(map);
         }
       } catch {
         if (isMounted) {
@@ -73,9 +86,24 @@ const SelfOrderList = () => {
     setCurrentPage(pageNumber);
   }, []);
 
-  const handleView = useCallback((item) => {
-    setSelectedItem(item);
-  }, []);
+  const getConsigneeDisplay = useCallback(
+    (item) => {
+      const c = item.consignee;
+      if (typeof c === "object" && c?.name) return c.name;
+      if (typeof c === "object" && c?.label) return c.label;
+      if (c && typeof c === "string")
+        return consigneeMap.get(c) || consigneeMap.get(c.trim()) || c;
+      return consigneeMap.get(String(c)) || "N/A";
+    },
+    [consigneeMap]
+  );
+
+  const handleView = useCallback(
+    (item) => {
+      setSelectedItem({ ...item, consignee: getConsigneeDisplay(item) });
+    },
+    [getConsigneeDisplay]
+  );
 
   const handleClosePopup = useCallback(() => {
     setSelectedItem(null);
@@ -112,7 +140,7 @@ const SelfOrderList = () => {
         item.poNumber,
         item.buyer,
         item.buyerCompany,
-        item.consignee,
+        getConsigneeDisplay(item),
         item.commodity,
         item.quantity,
         `₹${item.rate}`,
@@ -140,7 +168,7 @@ const SelfOrderList = () => {
           />
         </div>,
       ]),
-    [currentItems, handleView, handleEdit]
+    [currentItems, handleView, handleEdit, getConsigneeDisplay]
   );
 
   const handleSearch = useCallback((searchTerm) => {

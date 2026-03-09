@@ -93,7 +93,6 @@ const SelfOrder = () => {
   const validateFormData = () => {
     const errors = [];
     if (!formData.buyer) errors.push("Buyer name is required.");
-    if (!formData.poNumber) errors.push("PO Number is required.");
     if (!formData.saudaNo) errors.push("Sauda No is required.");
 
     if (errors.length > 0) {
@@ -156,62 +155,96 @@ const SelfOrder = () => {
     }
   };
 
+  const sectionClass = "rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-6 shadow-sm";
   return (
     <Suspense fallback={<Loading />}>
-      <div className="p-4 max-w-screen-lg mx-auto space-y-6 bg-gray-50 rounded-lg shadow-md">
-        <BuyerInformation formData={formData} handleChange={handleChange} />
-        <CommodityInformation
-          handleChange={handleChange}
-          selectedCompany={formData.buyerCompany}
-          buyerCommodity={formData.buyerCommodity}
-          brokerage={formData.buyerBrokerage}
-          formData={formData}
-        />
-        <PODetails formData={formData} handleChange={handleChange} />
-        <LoadingStation formData={formData} handleChange={handleChange} />
-        <QuantityAndPricing formData={formData} handleChange={handleChange} />
-        <SupplierInformation formData={formData} handleChange={handleChange} />
-        <BrokerInformation
-          formData={formData}
-          handleChange={(key, value) => {
-            if (key === "buyerBrokerage") {
-              setFormData((prev) => ({
-                ...prev,
-                buyerBrokerage: { ...prev.buyerBrokerage, ...value },
-              }));
-            } else {
-              handleChange(key, value);
-            }
-          }}
-        />
-        <NotesSection
-          notes={formData.notes}
-          setNotes={(updatedNotes) => handleChange("notes", updatedNotes)}
-        />
-        <AdditionalInformation formData={formData} handleChange={handleChange} />
+      <div className="p-4 md:p-6 max-w-4xl mx-auto space-y-6">
+        <div className="text-center mb-8">
+          <h1 className="text-2xl md:text-3xl font-semibold text-slate-800 dark:text-slate-100">
+            Add Self Order
+          </h1>
+          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+            Fill in the details to create a new self order
+          </p>
+        </div>
 
-        <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
-          <h3 className="text-lg font-semibold text-gray-800 mb-3">Sauda Number</h3>
-          <div className="flex flex-col sm:flex-row gap-3">
-            <div className="flex-1">
-              <DataInput
-                placeholder="Enter Sauda No"
-                value={formData.saudaNo}
-                onChange={(e) => handleChange("saudaNo", e.target.value)}
-                name="saudaNo"
-                inputType="text"
-                size="md"
-              />
-            </div>
-          </div>
+        <div className={sectionClass}>
+          <BuyerInformation formData={formData} handleChange={handleChange} />
+        </div>
+
+        <div className={sectionClass}>
+          <CommodityInformation
+            handleChange={handleChange}
+            selectedCompany={formData.buyerCompany}
+            buyerCommodity={formData.buyerCommodity}
+            brokerage={formData.buyerBrokerage}
+            formData={formData}
+          />
+        </div>
+
+        <div className={sectionClass}>
+          <PODetails formData={formData} handleChange={handleChange} />
+        </div>
+
+        <div className={sectionClass}>
+          <LoadingStation formData={formData} handleChange={handleChange} />
+        </div>
+
+        <div className={sectionClass}>
+          <QuantityAndPricing formData={formData} handleChange={handleChange} />
+        </div>
+
+        <div className={sectionClass}>
+          <SupplierInformation formData={formData} handleChange={handleChange} />
+        </div>
+
+        <div className={sectionClass}>
+          <BrokerInformation
+            formData={formData}
+            handleChange={(key, value) => {
+              if (key === "buyerBrokerage") {
+                setFormData((prev) => ({
+                  ...prev,
+                  buyerBrokerage: { ...prev.buyerBrokerage, ...value },
+                }));
+              } else {
+                handleChange(key, value);
+              }
+            }}
+          />
+        </div>
+
+        <div className={sectionClass}>
+          <NotesSection
+            notes={formData.notes}
+            setNotes={(updatedNotes) => handleChange("notes", updatedNotes)}
+          />
+        </div>
+
+        <div className={sectionClass}>
+          <AdditionalInformation formData={formData} handleChange={handleChange} />
+        </div>
+
+        <div className={sectionClass}>
+          <h3 className="text-base font-semibold text-slate-800 dark:text-slate-100 mb-4">
+            Sauda Number
+          </h3>
+          <DataInput
+            placeholder="Enter Sauda No"
+            value={formData.saudaNo}
+            onChange={(e) => handleChange("saudaNo", e.target.value)}
+            name="saudaNo"
+            inputType="text"
+            size="md"
+          />
         </div>
 
         <button
           onClick={handleSubmit}
-          className="w-full py-2 bg-blue-500 text-white font-semibold rounded-lg"
+          className="w-full py-3.5 rounded-xl font-semibold bg-emerald-600 text-white hover:bg-emerald-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-offset-2"
           disabled={isLoading}
         >
-          {isLoading ? "Submitting..." : "Submit"}
+          {isLoading ? "Submitting..." : "Submit Order"}
         </button>
 
         <ToastContainer

@@ -55,9 +55,10 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: {
-          react: ['react', 'react-dom'],
+          react: ['react', 'react-dom', 'react-router-dom'],
           utils: ['axios', 'moment']
-        }
+        },
+        chunkFileNames: 'assets/[name]-[hash].js',
       }
     },
     chunkSizeWarningLimit: 1600

@@ -142,30 +142,29 @@ const CommodityInformation = ({
 
   return (
     <Suspense fallback={<Loading />}>
-      <label className="block mb-2 text-lg font-semibold text-gray-700">
+      <label className="block mb-4 text-base font-semibold text-slate-800 dark:text-slate-100">
         Commodity Information
       </label>
       <div className="grid grid-cols-1 gap-4">
         <div>
-          <label className="block text-sm text-gray-600 mb-1">
+          <label className="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-1">
             Select Commodity
           </label>
           <DataDropdown
             placeholder="Select Commodity"
             options={commodityOptions}
-            onChange={onCommodityChange}
-            value={
+            selectedOptions={
               commodityOptions.find(
                 ({ value }) => value === selectedCommodity
               ) || null
             }
-            isDisabled={!selectedCompany}
+            onChange={onCommodityChange}
           />
         </div>
         {parameters.length > 0 && (
           <div className="mt-4">
-            <label className="block mb-2 text-sm font-semibold text-gray-700">
-              Parameters
+            <label className="block mb-3 text-sm font-semibold text-slate-700 dark:text-slate-300">
+              Quality Parameters
             </label>
             <Tables headers={headers} rows={rows} />
           </div>

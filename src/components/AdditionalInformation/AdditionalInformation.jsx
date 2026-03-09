@@ -11,26 +11,34 @@ const AdditionalInformation = ({ formData, handleChange }) => {
         <DataInput
           placeholder={`Buyer Email ${index + 1}`}
           value={index === 0 ? formData.buyerEmail : email}
-          onChange={(e) =>
-            index === 0
-              ? handleChange("buyerEmail", e.target.value)
-              : handleEmailChange("buyerEmails", index, e.target.value)
-          }
+          onChange={(e) => {
+            const v = e.target.value;
+            if (index === 0) {
+              handleChange("buyerEmail", v);
+              handleEmailChange("buyerEmails", 0, v);
+            } else {
+              handleEmailChange("buyerEmails", index, v);
+            }
+          }}
         />
         {index > 0 && (
           <button
+            type="button"
             onClick={() => handleRemoveEmail("buyerEmails", index)}
-            className="text-red-500"
+            className="shrink-0 p-2 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors"
+            aria-label="Remove email"
           >
-            <AiOutlineMinus size={24} />
+            <AiOutlineMinus size={20} />
           </button>
         )}
         {index === formData.buyerEmails.length - 1 && (
           <button
+            type="button"
             onClick={() => handleAddEmail("buyerEmails")}
-            className="text-green-500"
+            className="shrink-0 p-2 rounded-lg text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 transition-colors"
+            aria-label="Add email"
           >
-            <AiOutlinePlus size={24} />
+            <AiOutlinePlus size={20} />
           </button>
         )}
       </div>
@@ -53,18 +61,22 @@ const AdditionalInformation = ({ formData, handleChange }) => {
         />
         {index > 0 && (
           <button
+            type="button"
             onClick={() => handleRemoveEmail("sellerEmails", index)}
-            className="text-red-500"
+            className="shrink-0 p-2 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors"
+            aria-label="Remove email"
           >
-            <AiOutlineMinus size={24} />
+            <AiOutlineMinus size={20} />
           </button>
         )}
         {index === formData.sellerEmails.length - 1 && (
           <button
+            type="button"
             onClick={() => handleAddEmail("sellerEmails")}
-            className="text-green-500"
+            className="shrink-0 p-2 rounded-lg text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 transition-colors"
+            aria-label="Add email"
           >
-            <AiOutlinePlus size={24} />
+            <AiOutlinePlus size={20} />
           </button>
         )}
       </div>
@@ -96,28 +108,31 @@ const AdditionalInformation = ({ formData, handleChange }) => {
 
   return (
     <Suspense fallback={<Loading />}>
-      <label className="block mb-4 text-lg font-semibold text-gray-700">
+      <label className="block mb-4 text-base font-semibold text-slate-800 dark:text-slate-100">
         Additional Information
       </label>
+      <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">
+        Emails are filled from the selected company and supplier. You can add or edit as needed.
+      </p>
       <div className="mb-6">
-        <label className="block mb-2 text-sm font-medium text-gray-700">
+        <label className="block mb-2 text-sm font-medium text-slate-700 dark:text-slate-300">
           Buyer Emails
         </label>
         {buyerEmailsSection}
       </div>
       <div className="mb-6">
-        <label className="block mb-2 text-sm font-medium text-gray-700">
+        <label className="block mb-2 text-sm font-medium text-slate-700 dark:text-slate-300">
           Seller Emails
         </label>
         {sellerEmailsSection}
       </div>
       <div className="mb-6">
-        <label className="block mb-2 text-sm font-medium text-gray-700">
+        <label className="block mb-2 text-sm font-medium text-slate-700 dark:text-slate-300">
           Send Purchase Order (PO)
         </label>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm text-gray-600">To Buyer</label>
+            <label className="block text-sm text-slate-600 dark:text-slate-400">To Buyer</label>
             <div className="flex gap-2">
               <label className="flex items-center">
                 <input
@@ -146,7 +161,7 @@ const AdditionalInformation = ({ formData, handleChange }) => {
             </div>
           </div>
           <div>
-            <label className="block text-sm text-gray-600">To Supplier</label>
+            <label className="block text-sm text-slate-600 dark:text-slate-400">To Supplier</label>
             <div className="flex gap-2">
               <label className="flex items-center">
                 <input
@@ -177,7 +192,7 @@ const AdditionalInformation = ({ formData, handleChange }) => {
         </div>
       </div>
       <div>
-        <label className="block mb-2 text-sm font-medium text-gray-700">
+        <label className="block mb-2 text-sm font-medium text-slate-700 dark:text-slate-300">
           Bill To
         </label>
         <div className="flex gap-4">

@@ -1,43 +1,154 @@
 import { lazy } from "react";
 
+// Loader functions for prefetching (same as used by lazy())
+const loaders = {
+  Login: () => import("../../pages/Login/Login"),
+  Dashboard: () => import("../../pages/Dashboard/Dashboard"),
+  AddBuyer: () => import("../../pages/Buyer/AddBuyer/AddBuyer"),
+  ListBuyer: () => import("../../pages/Buyer/BuyerList/BuyerList"),
+  AddCommodity: () => import("../../pages/Commodity/AddCommodity/AddCommodity"),
+  ListCommodity: () => import("../../pages/Commodity/ListCommodity/ListCommodity"),
+  AddCompany: () => import("../../pages/Company/AddCompany/AddCompany"),
+  ListCompany: () => import("../../pages/Company/ListCompany/ListCompany"),
+  AddConsignee: () => import("../../pages/Consignee/AddConsignee/AddConsignee"),
+  ListConsignee: () => import("../../pages/Consignee/ListConsignee/ListConsignee"),
+  AddGroupOfCompany: () => import("../../pages/GroupofCompany/AddGroupOfCompany/AddGroupOfCompany"),
+  ListGroupOfCompany: () => import("../../pages/GroupofCompany/ListGroupOfCompany/ListGroupOfCompany"),
+  AddQualityParameter: () => import("../../pages/QualityParameter/AddQualityParameter/AddQualityParameter"),
+  ListQualityParameter: () => import("../../pages/QualityParameter/ListQualityParameter/ListQualityParameter"),
+  AddSellerDetails: () => import("../../pages/SellerDetails/AddSellerDetails/AddSellerDetails"),
+  ListSellerDetails: () => import("../../pages/SellerDetails/ListSellerDetails/ListSellerDetails"),
+  AddSellerCompany: () => import("../../pages/SellerCompany/AddSellerCompany/AddSellerCompany"),
+  ListSellerCompany: () => import("../../pages/SellerCompany/ListSellerCompany/ListSellerCompany"),
+  BuyerBid: () => import("../../pages/ManageBids/BuyerBid/BuyerBid"),
+  BidLocation: () => import("../../pages/ManageBids/BidLocation/BidLocation"),
+  AddSoudabook: () => import("../../pages/Soudabook/AddSoudabook/AddSoudabook"),
+  ListSoudabook: () => import("../../pages/Soudabook/ListSoudabook/ListSoudabook"),
+  BidList: () => import("../../pages/ManageBids/BidList/BidList"),
+  AddSelfOrder: () => import("../../pages/ManageSelfOrder/SelfOrder/SelfOrder"),
+  EditSelfOrder: () => import("../../pages/ManageSelfOrder/EditSelfOrder/EditSelfOrder"),
+  ListSelfOrder: () => import("../../pages/ManageSelfOrder/SelfOrderList/SelfOrderList"),
+  AddLoadingEntry: () => import("../../pages/LoadingEntry/AddLoadingEntry/AddLoadingEntry"),
+  ListLoadingEntry: () => import("../../pages/LoadingEntry/ListLoadingEntry/ListLoadingEntry"),
+  SellerDashboard: () => import("../../components/SellerDashboard/SellerDashboard"),
+  BuyerDashboard: () => import("../../components/BuyerDashboard/BuyerDashboard"),
+  TransporterDashboard: () => import("../../components/TransporterDashboard/TransporterDashboard"),
+  EmployeeDashboard: () => import("../../components/EmployeeDashboard/EmployeeDashboard"),
+  SellerBidList: () => import("../../pages/ManageBids/SupplierBidList/SupplierBidList"),
+  ParticipateBid: () => import("../../components/ParticipateBid/ParticipateBid"),
+  ParticipateBidAdmin: () => import("../../pages/ManageBids/ParticipateBidAdmin/ParticipateBidAdmin"),
+  ConfirmBids: () => import("../../components/ConfirmBids/ConfirmBids"),
+  LoadingEntrySauda: () => import("../../pages/LoadingEntry/LoadingEntrySauda/LoadingEntrySauda"),
+};
+
+// URL path (with or without leading slash) -> loader key
+const pathToKey = {
+  "/": "Login",
+  "/login": "Login",
+  "/dashboard": "Dashboard",
+  "/employee/dashboard": "EmployeeDashboard",
+  "/buyer/dashboard": "BuyerDashboard",
+  "/seller/dashboard": "SellerDashboard",
+  "/transporter/dashboard": "TransporterDashboard",
+  "/buyer/add": "AddBuyer",
+  "/buyer/list": "ListBuyer",
+  "/group-of-company/add": "AddGroupOfCompany",
+  "/group-of-company/list": "ListGroupOfCompany",
+  "/company/add": "AddCompany",
+  "/company/list": "ListCompany",
+  "/consignee/add": "AddConsignee",
+  "/consignee/list": "ListConsignee",
+  "/commodity/add": "AddCommodity",
+  "/commodity/list": "ListCommodity",
+  "/quality-parameter/add": "AddQualityParameter",
+  "/quality-parameter/list": "ListQualityParameter",
+  "/seller-company/add": "AddSellerCompany",
+  "/seller-company/list": "ListSellerCompany",
+  "/seller-details/add": "AddSellerDetails",
+  "/seller-details/list": "ListSellerDetails",
+  "/manage-bids/buyer": "BuyerBid",
+  "/manage-bids/bid-list": "BidList",
+  "/manage-bids/bid-list/participate-bid-admin": "ParticipateBidAdmin",
+  "/manage-bids/bid-location": "BidLocation",
+  "/sodabook/add": "AddSoudabook",
+  "/sodabook/list": "ListSoudabook",
+  "/manage-order/add-self-order": "AddSelfOrder",
+  "/manage-order/list-self-order": "ListSelfOrder",
+  "/Loading-Entry/add-loading-entry": "AddLoadingEntry",
+  "/Loading-Entry/list-loading-entry": "ListLoadingEntry",
+  "/Supplier-Bid-List": "SellerBidList",
+  "/participate-bid-list": "ParticipateBid",
+  "/confirm-bids/:bidId": "ConfirmBids",
+};
+
+const prefetched = new Set();
+
+/**
+ * Prefetch a route chunk by path. Call on link hover to load JS before click.
+ * @param {string} path - e.g. "/dashboard" or "/buyer/list"
+ */
+export function prefetchRoute(path) {
+  const normalized = path?.startsWith("/") ? path : `/${path || ""}`;
+  const key = pathToKey[normalized];
+  if (!key || prefetched.has(key)) return;
+  const loader = loaders[key];
+  if (loader) {
+    prefetched.add(key);
+    loader();
+  }
+}
+
+// Match dynamic routes like /confirm-bids/123
+export function prefetchRouteByPathname(pathname) {
+  if (prefetched.has(pathname)) return;
+  let key = pathToKey[pathname];
+  if (!key && pathname.startsWith("/confirm-bids/")) key = "ConfirmBids";
+  if (!key && pathname.startsWith("/manage-order/edit-self-order/")) key = "EditSelfOrder";
+  if (!key && pathname.startsWith("/loading-entry-sauda/")) key = "LoadingEntrySauda";
+  if (key && loaders[key]) {
+    prefetched.add(pathname);
+    loaders[key]();
+  }
+}
+
 const LazyPages = {
-  Login: lazy(() => import("../../pages/Login/Login")),
-  Dashboard: lazy(() => import("../../pages/Dashboard/Dashboard")),
-  AddBuyer: lazy(() => import("../../pages/Buyer/AddBuyer/AddBuyer")),
-  ListBuyer: lazy(() => import("../../pages/Buyer/BuyerList/BuyerList")),
-  AddCommodity: lazy(() => import("../../pages/Commodity/AddCommodity/AddCommodity")),
-  ListCommodity: lazy(() => import("../../pages/Commodity/ListCommodity/ListCommodity")),
-  AddCompany: lazy(() => import("../../pages/Company/AddCompany/AddCompany")),
-  ListCompany: lazy(() => import("../../pages/Company/ListCompany/ListCompany")),
-  AddConsignee: lazy(() => import("../../pages/Consignee/AddConsignee/AddConsignee")),
-  ListConsignee: lazy(() => import("../../pages/Consignee/ListConsignee/ListConsignee")),
-  AddGroupOfCompany: lazy(() => import("../../pages/GroupofCompany/AddGroupOfCompany/AddGroupOfCompany")),
-  ListGroupOfCompany: lazy(() => import("../../pages/GroupofCompany/ListGroupOfCompany/ListGroupOfCompany")),
-  AddQualityParameter: lazy(() => import("../../pages/QualityParameter/AddQualityParameter/AddQualityParameter")),
-  ListQualityParameter: lazy(() => import("../../pages/QualityParameter/ListQualityParameter/ListQualityParameter")),
-  AddSellerDetails: lazy(() => import("../../pages/SellerDetails/AddSellerDetails/AddSellerDetails")),
-  ListSellerDetails: lazy(() => import("../../pages/SellerDetails/ListSellerDetails/ListSellerDetails")),
-  AddSellerCompany: lazy(() => import("../../pages/SellerCompany/AddSellerCompany/AddSellerCompany")),
-  ListSellerCompany: lazy(() => import("../../pages/SellerCompany/ListSellerCompany/ListSellerCompany")),
-  BuyerBid: lazy(() => import("../../pages/ManageBids/BuyerBid/BuyerBid")),
-  BidLocation: lazy(() => import("../../pages/ManageBids/BidLocation/BidLocation")),
-  AddSoudabook: lazy(() => import("../../pages/Soudabook/AddSoudabook/AddSoudabook")),
-  ListSoudabook: lazy(() => import("../../pages/Soudabook/ListSoudabook/ListSoudabook")),
-  BidList: lazy(() => import("../../pages/ManageBids/BidList/BidList")),
-  AddSelfOrder: lazy(() => import("../../pages/ManageSelfOrder/SelfOrder/SelfOrder")),
-  EditSelfOrder: lazy(() => import("../../pages/ManageSelfOrder/EditSelfOrder/EditSelfOrder")),
-  ListSelfOrder: lazy(() => import("../../pages/ManageSelfOrder/SelfOrderList/SelfOrderList")),
-  AddLoadingEntry: lazy(() => import("../../pages/LoadingEntry/AddLoadingEntry/AddLoadingEntry")),
-  ListLoadingEntry: lazy(() => import("../../pages/LoadingEntry/ListLoadingEntry/ListLoadingEntry")),
-  SellerDashboard: lazy(() => import("../../components/SellerDashboard/SellerDashboard")),
-  BuyerDashboard: lazy(() => import("../../components/BuyerDashboard/BuyerDashboard")),
-  TransporterDashboard: lazy(() => import("../../components/TransporterDashboard/TransporterDashboard")),
-  EmployeeDashboard: lazy(() => import("../../components/EmployeeDashboard/EmployeeDashboard")),
-  SellerBidList: lazy(() => import("../../pages/ManageBids/SupplierBidList/SupplierBidList")),
-  ParticipateBid: lazy(() => import("../../components/ParticipateBid/ParticipateBid")),
-  ParticipateBidAdmin: lazy(() => import("../../pages/ManageBids/ParticipateBidAdmin/ParticipateBidAdmin")),
-  ConfirmBids: lazy(() => import("../../components/ConfirmBids/ConfirmBids")),
-  LoadingEntrySauda: lazy(() =>import("../../pages/LoadingEntry/LoadingEntrySauda/LoadingEntrySauda"))
+  Login: lazy(loaders.Login),
+  Dashboard: lazy(loaders.Dashboard),
+  AddBuyer: lazy(loaders.AddBuyer),
+  ListBuyer: lazy(loaders.ListBuyer),
+  AddCommodity: lazy(loaders.AddCommodity),
+  ListCommodity: lazy(loaders.ListCommodity),
+  AddCompany: lazy(loaders.AddCompany),
+  ListCompany: lazy(loaders.ListCompany),
+  AddConsignee: lazy(loaders.AddConsignee),
+  ListConsignee: lazy(loaders.ListConsignee),
+  AddGroupOfCompany: lazy(loaders.AddGroupOfCompany),
+  ListGroupOfCompany: lazy(loaders.ListGroupOfCompany),
+  AddQualityParameter: lazy(loaders.AddQualityParameter),
+  ListQualityParameter: lazy(loaders.ListQualityParameter),
+  AddSellerDetails: lazy(loaders.AddSellerDetails),
+  ListSellerDetails: lazy(loaders.ListSellerDetails),
+  AddSellerCompany: lazy(loaders.AddSellerCompany),
+  ListSellerCompany: lazy(loaders.ListSellerCompany),
+  BuyerBid: lazy(loaders.BuyerBid),
+  BidLocation: lazy(loaders.BidLocation),
+  AddSoudabook: lazy(loaders.AddSoudabook),
+  ListSoudabook: lazy(loaders.ListSoudabook),
+  BidList: lazy(loaders.BidList),
+  AddSelfOrder: lazy(loaders.AddSelfOrder),
+  EditSelfOrder: lazy(loaders.EditSelfOrder),
+  ListSelfOrder: lazy(loaders.ListSelfOrder),
+  AddLoadingEntry: lazy(loaders.AddLoadingEntry),
+  ListLoadingEntry: lazy(loaders.ListLoadingEntry),
+  SellerDashboard: lazy(loaders.SellerDashboard),
+  BuyerDashboard: lazy(loaders.BuyerDashboard),
+  TransporterDashboard: lazy(loaders.TransporterDashboard),
+  EmployeeDashboard: lazy(loaders.EmployeeDashboard),
+  SellerBidList: lazy(loaders.SellerBidList),
+  ParticipateBid: lazy(loaders.ParticipateBid),
+  ParticipateBidAdmin: lazy(loaders.ParticipateBidAdmin),
+  ConfirmBids: lazy(loaders.ConfirmBids),
+  LoadingEntrySauda: lazy(loaders.LoadingEntrySauda),
 };
 
 export default LazyPages;
