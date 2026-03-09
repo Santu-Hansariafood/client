@@ -74,5 +74,9 @@ export default defineConfig({
         secure: false,
       },
     },
+    allowedHosts: ["bid.hansariafood.in"],
+  },
+  preview: {
+    allowedHosts: ["bid.hansariafood.in"],
   },
 })
