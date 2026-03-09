@@ -1,6 +1,7 @@
-const express = require("express");
+import express from "express";
+import nodemailer from "nodemailer";
+
 const router = express.Router();
-const nodemailer = require("nodemailer");
 
 router.post("/send-pdf", async (req, res) => {
   const { pdf, email, saudaNo } = req.body;
@@ -22,7 +23,14 @@ router.post("/send-pdf", async (req, res) => {
       from: process.env.EMAIL_USER,
       to: email,
       subject: `Sauda Confirmation - HANS-2025-${saudaNo}`,
-      text: `Dear Sir/Madam,\n\nPlease find attached the Sauda Confirmation for Sauda No: HANS-2025-${saudaNo}.\n\nThank you for your business.\n\nBest Regards,\nHansaria Food Pvt. Ltd.`,
+      text: `Dear Sir/Madam,
+
+Please find attached the Sauda Confirmation for Sauda No: HANS-2025-${saudaNo}.
+
+Thank you for your business.
+
+Best Regards,
+Hansaria Food Pvt. Ltd.`,
       attachments: [
         {
           filename: `HANS-2025-${saudaNo}.pdf`,
@@ -40,4 +48,4 @@ router.post("/send-pdf", async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;
