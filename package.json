@@ -10,7 +10,7 @@
     "dev:all": "concurrently -k -n CLIENT,API -c green,cyan \"npm run dev:client\" \"npm run dev:server\"",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview --host 0.0.0.0 --port 4173"
   },
   "dependencies": {
     "@react-pdf/renderer": "^4.1.6",
