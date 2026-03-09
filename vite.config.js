@@ -8,7 +8,7 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['test.png'],
+      includeAssets: ['favicon.ico', 'robots.txt', 'icons/*.png'],
       manifest: {
         name: 'Hansaria Food Private Limited',
         short_name: 'Hansaria',
@@ -17,8 +17,8 @@ export default defineConfig({
         theme_color: '#4CAF50',
         background_color: '#ffffff',
         icons: [
-          { src: '/test.png', sizes: '192x192', type: 'image/png', purpose: 'any maskable' },
-          { src: '/test.png', sizes: '512x512', type: 'image/png', purpose: 'any maskable' }
+          { src: '/icons/android-chrome-192x192.png', sizes: '192x192', type: 'image/png', purpose: 'any maskable' },
+          { src: '/icons/android-chrome-512x512.png', sizes: '512x512', type: 'image/png', purpose: 'any maskable' }
         ]
       },
       workbox: {
