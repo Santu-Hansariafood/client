@@ -64,56 +64,47 @@ const DownloadSauda = ({ data }) => {
     };
   }
 
+  const [showEmailPopup, setShowEmailPopup] = useState(false);
+  const [recipientEmail, setRecipientEmail] = useState("");
+
   const handleSendEmail = async () => {
-  try {
-    const emails = [];
-
-    if (data.sendPOToBuyer === "yes" && data.buyerEmails?.length) {
-      emails.push(...data.buyerEmails.filter(e => e?.trim()));
-    }
-
-    if (data.sendPOToSupplier === "yes" && data.sellerEmails?.length) {
-      emails.push(...data.sellerEmails.filter(e => e?.trim()));
-    }
-
-    const uniqueEmails = [...new Set(emails)];
-
-    if (uniqueEmails.length === 0) {
-      toast.warning("No recipient emails found.");
+    if (!recipientEmail) {
+      toast.warning("Please enter a recipient email address.");
       return;
     }
 
     setSendingEmail(true);
 
-    const blob = await pdf(<SaudaPDF data={transformedData} />).toBlob();
+    try {
+      const blob = await pdf(<SaudaPDF data={transformedData} />).toBlob();
+      const reader = new FileReader();
+      reader.readAsDataURL(blob);
+      reader.onloadend = async () => {
+        const base64data = reader.result.split(",")[1];
 
-    const reader = new FileReader();
-    reader.readAsDataURL(blob);
-    reader.onloadend = async () => {
-      const base64data = reader.result.split(",")[1];
+        try {
+          await axios.post("/api/email/send-pdf", {
+            email: recipientEmail,
+            pdf: base64data,
+            saudaNo: data.saudaNo,
+          });
 
-      try {
-        await axios.post("/self-order/send-email", {
-          email: uniqueEmails.join(","),
-          pdfBase64: base64data,
-          saudaNo: data.saudaNo,
-          poNumber: data.poNumber,
-        });
-
-        toast.success("Email sent successfully!");
-      } catch (error) {
-        console.error("Email error:", error);
-        toast.error("Failed to send email.");
-      } finally {
-        setSendingEmail(false);
-      }
-    };
-  } catch (error) {
-    console.error("Email error:", error);
-    toast.error("Failed to send email.");
-    setSendingEmail(false);
-  }
-};
+          toast.success("Email sent successfully!");
+          setShowEmailPopup(false);
+          setRecipientEmail("");
+        } catch (error) {
+          console.error("Email error:", error);
+          toast.error("Failed to send email.");
+        } finally {
+          setSendingEmail(false);
+        }
+      };
+    } catch (error) {
+      console.error("PDF generation error:", error);
+      toast.error("Failed to generate PDF for email.");
+      setSendingEmail(false);
+    }
+  };
   return (
     <div className="flex items-center justify-center bg-white rounded-lg shadow-md p-2 gap-2">
       {loading ? (
@@ -152,7 +143,7 @@ const DownloadSauda = ({ data }) => {
           </PDFDownloadLink>
           
           <button
-            onClick={handleSendEmail}
+            onClick={() => setShowEmailPopup(true)}
             className={`flex items-center justify-center py-2 px-4 rounded-lg focus:outline-none transition duration-300 ${
               sendingEmail
                 ? "bg-gray-300 cursor-not-allowed text-gray-600"
@@ -171,6 +162,35 @@ const DownloadSauda = ({ data }) => {
             )}
           </button>
         </>
+      )}
+      {showEmailPopup && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+          <div className="bg-white p-6 rounded-lg shadow-lg">
+            <h3 className="text-lg font-bold mb-4">Send PDF via Email</h3>
+            <input
+              type="email"
+              placeholder="Enter recipient's email"
+              className="w-full p-2 border rounded mb-4"
+              value={recipientEmail}
+              onChange={(e) => setRecipientEmail(e.target.value)}
+            />
+            <div className="flex justify-end gap-4">
+              <button
+                onClick={() => setShowEmailPopup(false)}
+                className="py-2 px-4 rounded bg-gray-300 hover:bg-gray-400"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSendEmail}
+                className="py-2 px-4 rounded bg-green-500 text-white hover:bg-green-600"
+                disabled={sendingEmail}
+              >
+                {sendingEmail ? "Sending..." : "Send"}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

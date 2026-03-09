@@ -27,6 +27,7 @@ import whatsappRoutes from "./routes/whatsapp.js";
 import qualityParameterRoutes from "./routes/qualityParameters.js";
 import groupRoutes from "./routes/groups.js";
 import consigneeRoutes from "./routes/consignees.js";
+import emailRoutes from "./routes/email.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -75,6 +76,7 @@ app.use("/api/whatsapp", authJwt, whatsappRoutes);
 app.use("/api/quality-parameters", authJwt, qualityParameterRoutes);
 app.use("/api/groups", authJwt, groupRoutes);
 app.use("/api/consignees", authJwt, consigneeRoutes);
+app.use("/api/email", authJwt, emailRoutes);
 
 const PORT = process.env.PORT || 5000;
 
