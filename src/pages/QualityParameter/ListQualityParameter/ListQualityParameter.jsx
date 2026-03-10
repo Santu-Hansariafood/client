@@ -4,6 +4,11 @@ import PropTypes from "prop-types";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Loading from "../../../common/Loading/Loading";
+import { FaUsers } from "react-icons/fa";
+const AdminPageShell = lazy(() =>
+  import("../../../common/AdminPageShell/AdminPageShell")
+);
+import"../../../common/AdminPageShell/AdminPageShell";
 const AddQualityParameter = lazy(() =>
   import("../AddQualityParameter/AddQualityParameter")
 );
@@ -131,8 +136,12 @@ const ListQualityParameter = () => {
   return (
     <Suspense fallback={<Loading />}>
       <div className="p-6 max-w-4xl mx-auto">
-        <h2 className="text-2xl font-bold mb-4">Quality Parameters</h2>
-
+        <AdminPageShell
+          title="Quality Parameter List"
+          subtitle="Search and manage all quality parameters"
+          icon={FaUsers}
+          noContentCard
+        >
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
           <div className="w-full md:w-1/2">
             <SearchBox
@@ -171,6 +180,7 @@ const ListQualityParameter = () => {
         />
 
         <ToastContainer />
+      </AdminPageShell>
       </div>
     </Suspense>
   );

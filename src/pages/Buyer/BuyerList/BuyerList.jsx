@@ -126,9 +126,6 @@ const BuyerList = () => {
           <li>{toTitleCase(c.label)}</li>
         </ol>
       )) || "N/A",
-      // Object.entries(buyer.brokerage || {})
-      //   .map(([key, value]) => `${toTitleCase(key)}: ${value}`)
-      //   .join(", ") || "N/A",
       toTitleCase(buyer.status || "N/A"),
       <Actions
         key={index}
@@ -221,14 +218,6 @@ const BuyerList = () => {
                   ))}
                 </ol>
               </p>
-              {/* <p>
-                <strong>Brokerage:</strong>{" "}
-                {Object.entries(selectedBuyer.brokerage || {})
-                  .map(
-                    ([key, value]) => `${toTitleCase(key)}: ${value} per TON`
-                  )
-                  .join(", ")}
-              </p> */}
               <p>
                 <strong>Status:</strong> {toTitleCase(selectedBuyer.status)}
               </p>
