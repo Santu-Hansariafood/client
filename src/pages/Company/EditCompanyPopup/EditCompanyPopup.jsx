@@ -24,22 +24,63 @@ const EditCompanyPopup = ({ company, isOpen, onClose, onUpdate }) => {
   const [selectedCommodityToAdd, setSelectedCommodityToAdd] = useState(null);
 
   useEffect(() => {
-    if (company) {
-      setCompanyName(company.companyName || "");
-      setCompanyEmail(company.companyEmail || "");
-      setSelectedGroup(
-        company.groupId
-          ? { value: String(company.groupId), label: company.group || "Select Group" }
-          : null
-      );
-      setSelectedConsignees(
-        Array.isArray(company.consigneeIds)
-          ? company.consigneeIds.map((id, idx) => ({
-              value: String(id),
-              label: company.consignee?.[idx] || "Consignee",
-            }))
-          : []
-      );
+    const fetchData = async () => {
+      try {
+        const [consigneeRes, commodityRes, groupRes] = await Promise.all([
+          axios.get("/consignees"),
+          axios.get("/commodities"),
+          axios.get("/groups"),
+        ]);
+
+        const consignees = consigneeRes.data?.data || consigneeRes.data || [];
+        const commoditiesData = commodityRes.data?.data || commodityRes.data || [];
+        const groups = groupRes.data?.data || groupRes.data || [];
+
+        setConsigneeOptions(
+          consignees
+            .map((c) => ({ value: String(c._id), label: c.name }))
+            .sort((a, b) => a.label.localeCompare(b.label))
+        );
+        setGroupOptions(
+          groups
+            .map((g) => ({ value: String(g._id), label: g.groupName }))
+            .sort((a, b) => a.label.localeCompare(b.label))
+        );
+
+        const mappedCommodityOptions = commoditiesData
+          .map((c) => ({
+            value: String(c._id),
+            label: c.name,
+            parameters: Array.isArray(c.parameters)
+              ? c.parameters
+                  .map((p) => ({
+                    value: String(p.parameterId || p._id || ""),
+                    label: p.parameter,
+                  }))
+                  .filter((p) => p.value && p.label)
+              : [],
+          }))
+          .sort((a, b) => a.label.localeCompare(b.label));
+
+        setCommodityOptions(mappedCommodityOptions);
+
+        if (company) {
+          setCompanyName(company.companyName || "");
+          setCompanyEmail(company.companyEmail || "");
+          setSelectedGroup(
+            company.groupId
+              ? { value: String(company.groupId), label: company.group || "Select Group" }
+              : null
+          );
+          setSelectedConsignees(
+            Array.isArray(company.consigneeIds)
+              ? company.consigneeIds.map((id, idx) => ({
+                  value: String(id),
+                  label: company.consignee?.[idx] || "Consignee",
+                }))
+              : []
+          );
+
       setCommodityEntries(
         Array.isArray(company.commodities)
           ? company.commodities.map((entry) => ({
@@ -55,55 +96,14 @@ const EditCompanyPopup = ({ company, isOpen, onClose, onUpdate }) => {
             }))
           : []
       );
-    }
-  }, [company]);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [consigneeRes, commodityRes, groupRes] = await Promise.all([
-          axios.get("/consignees"),
-          axios.get("/commodities"),
-          axios.get("/groups"),
-        ]);
-
-        const consignees = consigneeRes.data?.data || consigneeRes.data || [];
-        const commodities = commodityRes.data?.data || commodityRes.data || [];
-        const groups = groupRes.data?.data || groupRes.data || [];
-
-        setConsigneeOptions(
-          consignees
-            .map((c) => ({ value: String(c._id), label: c.name }))
-            .sort((a, b) => a.label.localeCompare(b.label))
-        );
-        setGroupOptions(
-          groups
-            .map((g) => ({ value: String(g._id), label: g.groupName }))
-            .sort((a, b) => a.label.localeCompare(b.label))
-        );
-        setCommodityOptions(
-          commodities
-            .map((c) => ({
-              value: String(c._id),
-              label: c.name,
-              parameters: Array.isArray(c.parameters)
-                ? c.parameters
-                    .map((p) => ({
-                      value: String(p.parameterId || p._id || ""),
-                      label: p.parameter,
-                    }))
-                    .filter((p) => p.value && p.label)
-                : [],
-            }))
-            .sort((a, b) => a.label.localeCompare(b.label))
-        );
+        }
       } catch (error) {
         toast.error(error?.response?.data?.message || "Failed to load required data.");
       }
     };
 
     if (isOpen) fetchData();
-  }, []);
+  }, [isOpen, company]);
 
   if (!isOpen) return null;
 

@@ -186,8 +186,9 @@ const ListCommodity = () => {
                   commodityId={selectedCommodity ? selectedCommodity._id : null}
                   onUpdate={() => {
                     axios.get("/commodities").then((response) => {
-                      const sortedCommodities = response.data.sort((a, b) =>
-                        a.name.localeCompare(b.name)
+                      const items = response.data?.data || response.data || [];
+                      const sortedCommodities = [...items].sort((a, b) =>
+                        (a.name || "").localeCompare(b.name || "")
                       );
                       setCommodities(sortedCommodities);
                       setFilteredCommodities(sortedCommodities);

@@ -21,17 +21,30 @@ const mapCompanyForClient = (company) => {
 
   const commodities = (company.commodities || []).map((entry) => {
     const commodityId = entry.commodityId?._id || entry.commodityId || null;
+    const commodityRef = entry.commodityId;
+
+    // Get parameters from the Company record (with their values)
+    const storedParamsMap = new Map(
+      (entry.parameters || []).map((p) => [
+        String(p.parameterId?._id || p.parameterId),
+        p.value ?? "",
+      ])
+    );
+
+    // Get parameters from the Commodity model (the latest list)
+    const commodityParams = (commodityRef?.parameters || []).map((p) => ({
+      _id: p.parameterId?._id || p.parameterId,
+      parameterId: p.parameterId?._id || p.parameterId,
+      parameter: p.parameterId?.name || "",
+      value: storedParamsMap.get(String(p.parameterId?._id || p.parameterId)) ?? "",
+    }));
+
     return {
       _id: commodityId,
       commodityId,
-      name: entry.commodityId?.name || entry.name || "",
+      name: commodityRef?.name || entry.name || "",
       brokerage: entry.brokerage ?? 0,
-      parameters: (entry.parameters || []).map((p) => ({
-        _id: p.parameterId?._id || p.parameterId,
-        parameterId: p.parameterId?._id || p.parameterId,
-        parameter: p.parameterId?.name || "",
-        value: p.value ?? "",
-      })),
+      parameters: commodityParams,
     };
   });
 
@@ -52,7 +65,11 @@ const mapCompanyForClient = (company) => {
 const companyPopulate = [
   { path: "consigneeIds", select: "name" },
   { path: "groupId", select: "groupName" },
-  { path: "commodities.commodityId", select: "name" },
+  {
+    path: "commodities.commodityId",
+    select: "name parameters",
+    populate: { path: "parameters.parameterId", select: "name" },
+  },
   { path: "commodities.parameters.parameterId", select: "name" },
 ];
 

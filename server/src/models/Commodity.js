@@ -26,11 +26,7 @@ const commoditySchema = new mongoose.Schema(
       trim: true
     },
 
-    parameters: [
-      {
-        ...commodityParameterSchema.obj
-      }
-    ]
+    parameters: [commodityParameterSchema]
   },
   { timestamps: true }
 );
