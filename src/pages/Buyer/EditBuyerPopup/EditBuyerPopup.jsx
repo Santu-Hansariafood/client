@@ -23,10 +23,10 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
         mobile: buyer.mobile || [""],
         email: buyer.email || [""],
         password: buyer.password || "",
-        commodityIds: buyer.commodityIds || [],
+        commodity: buyer.commodity || [""],
         consignee: buyer.consignee || [],
-        companyId: buyer.companyId || "",
-        groupId: buyer.groupId || "",
+        companyName: buyer.companyName || "",
+        group: buyer.group || "",
       });
     }
   }, [buyer]);
@@ -49,19 +49,19 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
 
         setGroups(
           groupsData.map((group) => ({
-            value: group._id,
+            value: group.groupName,
             label: group.groupName,
           }))
         );
         setCommodities(
-          commoditiesData.map((c) => ({ value: c._id, label: c.name }))
+          commoditiesData.map((c) => ({ value: c.name, label: c.name }))
         );
         setAllConsignees(
-          consigneesData.map((c) => ({ value: c._id, label: c.name }))
+          consigneesData.map((c) => ({ value: c.name, label: c.name }))
         );
         setCompanies(
           companiesData.map((company) => ({
-            value: company._id,
+            value: company.companyName,
             label: company.companyName,
           }))
         );
@@ -150,10 +150,8 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
     try {
       const payload = {
         ...formData,
-        companyId: formData.companyId,
-        groupId: formData.groupId,
-        commodityIds: formData.commodityIds,
-        consigneeIds: formData.consignee.map(c => c.value),
+        // Backend handles name-to-ID resolution for these:
+        // companyName, group, commodity (array of names), consignee (array of {label, value})
       };
       const response = await axios.put(
         `/buyers/${formData._id}`,
@@ -364,10 +362,7 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
                     ))}
                   </div>
                   <DataDropdown
-                    options={allConsignees.map((c) => ({
-                      label: c.name,
-                      value: c.name,
-                    }))}
+                    options={allConsignees}
                     selectedOptions={null}
                     onChange={(selectedConsignee) => {
                       addConsignee({
