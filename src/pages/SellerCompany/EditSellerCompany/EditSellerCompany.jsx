@@ -57,7 +57,14 @@ const EditSellerCompany = ({ company, onSave, onCancel }) => {
 
   const handleCompanyInfoChange = (e) => {
     const { name, value } = e.target;
-    setCompanyInfo((prev) => ({ ...prev, [name]: value }));
+    let newCompanyInfo = { ...companyInfo, [name]: value };
+
+    if (name === "gstNo" && value.length === 15) {
+      const pan = value.substring(2, 12).toUpperCase();
+      newCompanyInfo.panNo = pan;
+    }
+
+    setCompanyInfo(newCompanyInfo);
   };
 
   const handleBankDetailChange = (id, name, value) => {

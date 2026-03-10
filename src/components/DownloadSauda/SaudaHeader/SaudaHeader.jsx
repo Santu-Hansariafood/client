@@ -5,49 +5,55 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "flex-start",
-    marginBottom: 15,
-    paddingBottom: 10,
-    borderBottom: "1.5pt solid #1a365d",
+    alignItems: "center",
+    marginBottom: 20,
+    paddingBottom: 15,
+    borderBottom: "2pt solid #1a365d",
   },
   logoContainer: {
-    width: "25%",
+    width: "30%",
   },
   logo: {
-    width: 80,
-    height: 50,
+    width: 90,
+    height: 60,
     objectFit: "contain",
   },
   textContainer: {
-    width: "70%",
+    width: "65%",
     textAlign: "right",
+    flexDirection: "column",
+    gap: 3,
   },
   mainTitle: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: "bold",
     color: "#1a365d",
-    letterSpacing: 1,
-    marginBottom: 2,
+    letterSpacing: 1.5,
   },
   subtitle: {
-    fontSize: 8,
-    color: "#4a5568",
-    letterSpacing: 0.5,
+    fontSize: 10,
+    color: "#2b6cb0",
+    letterSpacing: 1,
     textTransform: "uppercase",
     fontWeight: "bold",
+    marginTop: 2,
+    marginBottom: 4,
+    borderTop: "0.5pt solid #e2e8f0",
+    paddingTop: 2,
   },
   address: {
-    fontSize: 7,
-    color: "#718096",
-    marginTop: 2,
-    lineHeight: 1.2,
+    fontSize: 8,
+    color: "#4a5568",
+    lineHeight: 1.4,
   },
   tagline: {
-    fontSize: 7,
-    color: "#1a365d",
-    marginTop: 4,
-    fontStyle: "italic",
+    fontSize: 8,
+    color: "#2d3748",
+    marginTop: 5,
     fontWeight: "bold",
+    backgroundColor: "#f7fafc",
+    padding: "2 5",
+    borderRadius: 2,
   },
 });
 
@@ -58,7 +64,7 @@ const SaudaHeader = () => (
     </View>
     <View style={styles.textContainer}>
       <Text style={styles.mainTitle}>HANSARIA FOOD PVT. LTD.</Text>
-      <Text style={styles.subtitle}>Broker and Commission Agent</Text>
+      <Text style={styles.subtitle}>Broker & Commission Agent</Text>
       <Text style={styles.address}>
         Primarc Square, Plot No.1, Salt Lake Bypass, LA Block, Sector: 3, Bidhannagar, Kolkata, West Bengal 700106
       </Text>

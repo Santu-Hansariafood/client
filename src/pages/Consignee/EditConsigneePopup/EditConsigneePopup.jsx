@@ -28,7 +28,14 @@ const EditConsigneePopup = ({ isOpen, onClose, initialData, onSubmit }) => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
+    let newFormData = { ...formData, [name]: value };
+
+    if (name === "gst" && value.length === 15) {
+      const pan = value.substring(2, 12).toUpperCase();
+      newFormData.pan = pan;
+    }
+
+    setFormData(newFormData);
   };
 
   const handleDropdownChange = (selectedOption, fieldName) => {

@@ -90,8 +90,8 @@ const BuyerInformation = ({ formData, handleChange }) => {
   };
 
   const onConsigneeChange = (option) => {
-    const consigneeValue = option?.value || "";
-    setSelectedConsignee(consigneeValue);
+    const consigneeValue = option?.label || "";
+    setSelectedConsignee(option?.value || "");
     handleChange("consignee", consigneeValue);
   };
 

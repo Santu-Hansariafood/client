@@ -71,16 +71,6 @@ router.post("/", async (req, res) => {
       });
     }
 
-    if (gst) {
-      const existingGST = await Consignee.findOne({ gst });
-
-      if (existingGST) {
-        return res.status(400).json({
-          message: "GST number already exists"
-        });
-      }
-    }
-
     const consignee = new Consignee({
       name,
       phone,

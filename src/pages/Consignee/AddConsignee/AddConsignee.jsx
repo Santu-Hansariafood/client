@@ -46,10 +46,17 @@ const AddConsignee = () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData({
+    let newFormData = {
       ...formData,
       [name]: value,
-    });
+    };
+
+    if (name === "gst" && value.length === 15) {
+      const pan = value.substring(2, 12).toUpperCase();
+      newFormData.pan = pan;
+    }
+
+    setFormData(newFormData);
   };
 
   const handleDropdownChange = (selectedOption, fieldName) => {
@@ -76,30 +83,28 @@ const AddConsignee = () => {
   
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (formData.phone.length !== 10) {
+      toast.error("Phone number must be 10 digits");
+      return;
+    }
+    if (formData.gst.length !== 15) {
+      toast.error("GST number must be 15 characters");
+      return;
+    }
+    if (formData.pan.length !== 10) {
+      toast.error("PAN number must be 10 characters");
+      return;
+    }
+    if (formData.pin && formData.pin.length !== 6) {
+      toast.error("Pin code must be 6 digits");
+      return;
+    }
+
     try {
-      const response = await axios.post(
-        "/consignees",
-        formData
-      );
+      const response = await axios.post("/consignees", formData);
       if (response.status === 201) {
         toast.success("Consignee added successfully!");
-      if (formData.phone.length !== 10) {
-        toast.error("Phone number must be 10 digits");
-          return;
-        }
-      if (formData.gst.length !== 15) {
-        toast.error("GST number must be 15 characters");
-          return;
-      }
-if (formData.pan.length !== 10) {
-  toast.error("PAN number must be 10 characters");
-  return;
-}
-
-if (formData.pin && formData.pin.length !== 6) {
-  toast.error("Pin code must be 6 digits");
-  return;
-}
         setFormData({
           name: "",
           phone: "",
@@ -116,7 +121,9 @@ if (formData.pin && formData.pin.length !== 6) {
         });
       }
     } catch (error) {
-      toast.error("Failed to add consignee. Please try again.", error);
+      toast.error(
+        error.response?.data?.message || "Failed to add consignee. Please try again."
+      );
     }
   };
 
