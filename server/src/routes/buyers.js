@@ -147,7 +147,40 @@ router.post("/", async (req, res) => {
 
 router.put("/:id", async (req, res) => {
   try {
+    const { id } = req.params;
     const body = req.body || {};
+
+    let { companyId, groupId, commodityIds, consigneeIds } = body;
+
+    // Resolve companyId from companyName if needed
+    if (!toObjectId(companyId) && body.companyName) {
+      const company = await Company.findOne({ companyName: body.companyName })
+        .select("_id")
+        .lean();
+      companyId = company?._id || null;
+    }
+
+    // Resolve groupId from group name if needed
+    if (!toObjectId(groupId) && body.group) {
+      const group = await Group.findOne({ groupName: body.group })
+        .select("_id")
+        .lean();
+      groupId = group?._id || null;
+    }
+
+    // Resolve commodityIds from commodity names if needed
+    if (Array.isArray(body.commodity) && body.commodity.some(c => typeof c === 'string')) {
+      const commodities = await Commodity.find({ name: { $in: body.commodity } })
+        .select("_id")
+        .lean();
+      commodityIds = commodities.map((c) => c._id);
+    }
+
+    // Resolve consigneeIds from consignee objects/names if needed
+    if (Array.isArray(body.consignee) && body.consignee.length > 0) {
+      const consigneeIdentifiers = body.consignee.map(c => c.value || c);
+      consigneeIds = normalizeObjectIdArray(consigneeIdentifiers);
+    }
 
     const update = {
       name: body.name,
@@ -156,13 +189,13 @@ router.put("/:id", async (req, res) => {
       password: body.password || "",
       status: body.status || "Active",
       brokerage: body.brokerage || {},
-      companyId: toObjectId(body.companyId) || null,
-      groupId: toObjectId(body.groupId) || null,
-      commodityIds: normalizeObjectIdArray(body.commodityIds),
-      consigneeIds: normalizeObjectIdArray(body.consigneeIds),
+      companyId: toObjectId(companyId) || null,
+      groupId: toObjectId(groupId) || null,
+      commodityIds: normalizeObjectIdArray(commodityIds),
+      consigneeIds: normalizeObjectIdArray(consigneeIds),
     };
 
-    const updated = await Buyer.findByIdAndUpdate(req.params.id, update, {
+    const updated = await Buyer.findByIdAndUpdate(id, update, {
       new: true,
       runValidators: true,
     })

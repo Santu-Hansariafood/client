@@ -23,10 +23,10 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
         mobile: buyer.mobile || [""],
         email: buyer.email || [""],
         password: buyer.password || "",
-        commodity: buyer.commodity || [""],
-        // brokerage: buyer.brokerage || {},
+        commodityIds: buyer.commodityIds || [],
         consignee: buyer.consignee || [],
-        companyName: buyer.companyName || "",
+        companyId: buyer.companyId || "",
+        groupId: buyer.groupId || "",
       });
     }
   }, [buyer]);
@@ -36,24 +36,32 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
       try {
         const [groupsRes, commoditiesRes, consigneesRes, companiesRes] =
           await Promise.all([
-            axios.get("/companies"),
+            axios.get("/groups"),
             axios.get("/commodities"),
             axios.get("/consignees"),
             axios.get("/companies"),
           ]);
 
+        const groupsData = groupsRes.data?.data || groupsRes.data || [];
+        const commoditiesData = commoditiesRes.data?.data || commoditiesRes.data || [];
+        const consigneesData = consigneesRes.data?.data || consigneesRes.data || [];
+        const companiesData = companiesRes.data?.data || companiesRes.data || [];
+
         setGroups(
-          groupsRes.data.map((group) => ({
-            value: group.group,
-            label: group.group,
-            consignees: group.consignee || [],
+          groupsData.map((group) => ({
+            value: group._id,
+            label: group.groupName,
           }))
         );
-        setCommodities(commoditiesRes.data);
-        setAllConsignees(consigneesRes.data);
+        setCommodities(
+          commoditiesData.map((c) => ({ value: c._id, label: c.name }))
+        );
+        setAllConsignees(
+          consigneesData.map((c) => ({ value: c._id, label: c.name }))
+        );
         setCompanies(
-          companiesRes.data.map((company) => ({
-            value: company.companyName,
+          companiesData.map((company) => ({
+            value: company._id,
             label: company.companyName,
           }))
         );
@@ -62,8 +70,10 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
       }
     };
 
-    fetchData();
-  }, []);
+    if (isOpen) {
+      fetchData();
+    }
+  }, [isOpen]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -140,7 +150,10 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
     try {
       const payload = {
         ...formData,
-        companyName: formData.companyName,
+        companyId: formData.companyId,
+        groupId: formData.groupId,
+        commodityIds: formData.commodityIds,
+        consigneeIds: formData.consignee.map(c => c.value),
       };
       const response = await axios.put(
         `/buyers/${formData._id}`,
