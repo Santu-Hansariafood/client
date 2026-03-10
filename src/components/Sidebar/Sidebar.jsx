@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import * as Icons from "react-icons/fa";
 import dashboardData from "../../data/dashboardData.json";
@@ -6,133 +6,118 @@ import { prefetchRoute } from "../../utils/LazyPages/LazyPages";
 
 const Sidebar = () => {
   const location = useLocation();
+
   const [expandedSection, setExpandedSection] = useState(
-    localStorage.getItem("expandedSection") || null
+    localStorage.getItem("expandedSection")
   );
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [isCollapsed, setIsCollapsed] = useState(
-    localStorage.getItem("sidebarCollapsed") === "1"
-  );
+  const [isCollapsed, setIsCollapsed] =
+    useState(localStorage.getItem("sidebarCollapsed") === "1");
 
   useEffect(() => {
-    localStorage.setItem("expandedSection", expandedSection);
+    localStorage.setItem("expandedSection", expandedSection || "");
   }, [expandedSection]);
 
   useEffect(() => {
     localStorage.setItem("sidebarCollapsed", isCollapsed ? "1" : "0");
   }, [isCollapsed]);
 
-  const toggleSection = useCallback((sectionName) => {
+  const toggleSection = (sectionName) => {
     if (isCollapsed) {
       setIsCollapsed(false);
       return;
     }
     setExpandedSection((prev) => (prev === sectionName ? null : sectionName));
-  }, []);
+  };
 
-  const renderIcon = useCallback((iconName) => {
-    const IconComponent = Icons[iconName];
-    return IconComponent ? <IconComponent className="text-xl drop-shadow" /> : null;
-  }, []);
+  const renderIcon = (iconName) => {
+    const Icon = Icons[iconName];
+    return Icon ? <Icon className="text-xl drop-shadow" /> : null;
+  };
 
   return (
     <>
       <button
-        className="lg:hidden fixed top-4 left-4 z-50 text-white p-2.5 rounded-xl shadow-lg focus:outline-none border border-emerald-500/70 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 transition"
-        onClick={() => setIsSidebarOpen((prev) => !prev)}
-        aria-label="Toggle Sidebar"
+        className="lg:hidden fixed top-4 left-4 z-50 text-white p-2.5 rounded-xl shadow-lg border border-emerald-500/70 bg-gradient-to-r from-emerald-500 to-emerald-600"
+        onClick={() => setIsSidebarOpen((v) => !v)}
       >
         {isSidebarOpen ? <Icons.FaTimes size={24} /> : <Icons.FaBars size={24} />}
       </button>
 
       <aside
-        className={`fixed top-0 left-0 z-40 h-full w-64 text-slate-100 shadow-2xl transform transition-all duration-300 ease-out border-r border-slate-800/80
-          bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950
-          ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"}
-          lg:translate-x-0 lg:static ${isCollapsed ? "lg:w-[4.5rem]" : "lg:w-60"} flex flex-col`}
+        className={`fixed top-0 left-0 z-40 h-full text-slate-100 shadow-2xl transform transition-all duration-300 border-r border-slate-800/80
+        bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950
+        ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"}
+        lg:translate-x-0 lg:static ${isCollapsed ? "lg:w-[4.5rem]" : "lg:w-60"} flex flex-col`}
       >
-        {/* Header: logo + collapse */}
-        <div className="relative flex items-center justify-between h-16 min-h-[4rem] px-4 border-b border-slate-800/80 shrink-0">
-          <div className="absolute inset-x-0 -bottom-px h-px bg-gradient-to-r from-emerald-500/40 via-amber-400/20 to-transparent" />
-          <div className="flex items-center gap-3 min-w-0">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-slate-800/70 border border-slate-700/60 text-emerald-300 shadow-inner">
-              <Icons.FaLeaf className="text-base" />
+        <div className="flex items-center justify-between h-16 px-4 border-b border-slate-800/80">
+          <div className="flex items-center gap-3">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-800 border border-slate-700 text-emerald-300">
+              <Icons.FaLeaf />
             </div>
-            <span
-              className={`font-semibold text-slate-100 truncate transition-opacity duration-200 tracking-tight ${
-                isCollapsed ? "opacity-0 w-0 overflow-hidden" : "opacity-100"
-              }`}
-            >
-              HFPL Bid Portal
-            </span>
+
+            {!isCollapsed && (
+              <span className="font-semibold text-slate-100">
+                HFPL Bid Portal
+              </span>
+            )}
           </div>
+
           <button
-            type="button"
-            className="hidden lg:flex shrink-0 items-center justify-center w-9 h-9 rounded-xl text-slate-400 hover:text-slate-100 hover:bg-slate-800/70 border border-transparent hover:border-slate-700/60 transition"
-            aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+            className="hidden lg:flex items-center justify-center w-9 h-9 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800"
             onClick={() => setIsCollapsed((v) => !v)}
           >
-            {isCollapsed ? <Icons.FaAngleRight size={18} /> : <Icons.FaAngleLeft size={18} />}
+            {isCollapsed ? (
+              <Icons.FaAngleRight size={18} />
+            ) : (
+              <Icons.FaAngleLeft size={18} />
+            )}
           </button>
         </div>
-
-        {/* Nav */}
-        <nav
-          className={`flex-1 overflow-y-auto no-scrollbar ${
-            isCollapsed ? "px-2 py-3" : "px-3 py-4"
-          }`}
-        >
+        <nav className={`flex-1 overflow-y-auto ${isCollapsed ? "px-2 py-3" : "px-3 py-4"}`}>
           {dashboardData.sections.map((section, index) => (
-            <div key={index} className={isCollapsed ? "mb-2" : "mb-1"}>
+            <div key={index} className="mb-2">
               <button
-                type="button"
                 className={`w-full flex items-center ${
-                  isCollapsed ? "justify-center py-2.5 px-2" : "justify-between py-2 px-3"
-                } rounded-xl text-slate-300 hover:bg-slate-800/70 hover:text-white transition text-left border border-transparent hover:border-slate-700/60`}
+                  isCollapsed ? "justify-center py-2.5" : "justify-between py-2 px-3"
+                } rounded-xl text-slate-300 hover:bg-slate-800 hover:text-white`}
                 onClick={() => toggleSection(section.section)}
               >
-                <div className="flex items-center gap-3 min-w-0">
-                  <span className="shrink-0 text-slate-400">
-                    {renderIcon(section.icon || section.actions?.[0]?.icon)}
-                  </span>
+                <div className="flex items-center gap-3">
+                  {renderIcon(section.icon || section.actions?.[0]?.icon)}
                   {!isCollapsed && (
-                    <span className="text-sm font-medium truncate">{section.section}</span>
+                    <span className="text-sm font-medium">{section.section}</span>
                   )}
                 </div>
-                {!isCollapsed && (
-                  <span className="shrink-0 text-slate-500 text-xs">
-                    {expandedSection === section.section ? (
-                      <Icons.FaChevronUp size={12} />
-                    ) : (
-                      <Icons.FaChevronDown size={12} />
-                    )}
-                  </span>
-                )}
+
+                {!isCollapsed &&
+                  (expandedSection === section.section ? (
+                    <Icons.FaChevronUp size={12} />
+                  ) : (
+                    <Icons.FaChevronDown size={12} />
+                  ))}
               </button>
 
               {expandedSection === section.section && !isCollapsed && (
-                <div className="pl-9 pr-2 py-1.5 space-y-1">
+                <div className="pl-9 pr-2 py-1 space-y-1">
                   {section.actions.map((action, idx) => {
                     const isActive = location.pathname === action.link;
+
                     return (
                       <Link
                         key={idx}
                         to={action.link}
                         onMouseEnter={() => prefetchRoute(action.link)}
-                        className={`group relative flex items-center gap-3 py-2 px-3 rounded-xl text-sm transition
-                          ${isActive
-                            ? "bg-emerald-500/15 text-emerald-200 font-semibold border border-emerald-500/20"
-                            : "text-slate-300/80 hover:bg-slate-800/70 hover:text-white border border-transparent hover:border-slate-700/60"
-                          }`}
+                        className={`flex items-center gap-3 py-2 px-3 rounded-xl text-sm transition
+                        ${
+                          isActive
+                            ? "bg-emerald-500/15 text-emerald-200 font-semibold"
+                            : "text-slate-300 hover:bg-slate-800 hover:text-white"
+                        }`}
                         onClick={() => setIsSidebarOpen(false)}
                       >
-                        {isActive && (
-                          <span className="absolute left-1 top-1/2 -translate-y-1/2 h-6 w-1 rounded-full bg-emerald-400/80" />
-                        )}
-                        <span className={`shrink-0 ${isActive ? "text-emerald-200" : "text-slate-300/70 group-hover:text-slate-200"}`}>
-                          {renderIcon(action.icon)}
-                        </span>
-                        <span className="truncate">{action.name}</span>
+                        {renderIcon(action.icon)}
+                        <span>{action.name}</span>
                       </Link>
                     );
                   })}
@@ -141,22 +126,11 @@ const Sidebar = () => {
             </div>
           ))}
         </nav>
-
-        <div className={`shrink-0 border-t border-slate-800/80 ${isCollapsed ? "px-2 py-3" : "px-3 py-4"}`}>
-          <div className={`rounded-2xl bg-slate-900/40 border border-slate-800/60 px-3 py-3 ${isCollapsed ? "hidden" : "block"}`}>
-            <p className="text-xs font-semibold text-slate-200">Hansaria Food (HFPL)</p>
-            <p className="mt-0.5 text-[11px] text-slate-400">
-              Commodity bids • Buyers • Sellers • Consignees
-            </p>
-          </div>
-        </div>
       </aside>
-
       {isSidebarOpen && (
         <div
-          className="fixed inset-0 z-30 bg-black bg-opacity-50 lg:hidden backdrop-blur-sm"
+          className="fixed inset-0 z-30 bg-black/50 lg:hidden"
           onClick={() => setIsSidebarOpen(false)}
-          aria-hidden="true"
         />
       )}
     </>
