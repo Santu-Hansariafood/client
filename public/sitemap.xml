@@ -2,7 +2,6 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
-  <!-- Primary entry -->
   <url>
     <loc>https://bid.hansariafood.in/</loc>
     <changefreq>daily</changefreq>
@@ -13,7 +12,6 @@
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
-  <!-- Commodities — high priority for indexing -->
   <url>
     <loc>https://bid.hansariafood.in/commodity/list</loc>
     <changefreq>daily</changefreq>
@@ -34,12 +32,10 @@
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
-  <!-- Bid & order flows -->
   <url><loc>https://bid.hansariafood.in/manage-bids/bid-list</loc><changefreq>daily</changefreq><priority>0.9</priority></url>
   <url><loc>https://bid.hansariafood.in/manage-bids/buyer</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
   <url><loc>https://bid.hansariafood.in/manage-bids/bid-location</loc><changefreq>weekly</changefreq><priority>0.75</priority></url>
   <url><loc>https://bid.hansariafood.in/manage-order/list-self-order</loc><changefreq>daily</changefreq><priority>0.85</priority></url>
-  <!-- Master data -->
   <url><loc>https://bid.hansariafood.in/buyer/list</loc><changefreq>daily</changefreq><priority>0.75</priority></url>
   <url><loc>https://bid.hansariafood.in/company/list</loc><changefreq>weekly</changefreq><priority>0.75</priority></url>
   <url><loc>https://bid.hansariafood.in/consignee/list</loc><changefreq>weekly</changefreq><priority>0.75</priority></url>
