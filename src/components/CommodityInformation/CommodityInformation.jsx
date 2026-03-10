@@ -11,11 +11,11 @@ const Tables = lazy(() => import("../../common/Tables/Tables"));
 const CommodityInformation = ({
   handleChange,
   selectedCompany,
+  brokerageMap,
 }) => {
   const [commodities, setCommodities] = useState([]);
   const [parameters, setParameters] = useState([]);
   const [selectedCommodity, setSelectedCommodity] = useState(null);
-  const [buyers, setBuyers] = useState([]);
 
   useEffect(() => {
     const fetchCommodities = async () => {
@@ -36,22 +36,10 @@ const CommodityInformation = ({
       }
     };
 
-    const fetchBuyers = async () => {
-      try {
-        const { data } = await axios.get("/buyers");
-        setBuyers(data || []);
-      } catch (error) {
-        console.error("Error fetching buyers:", error);
-        setBuyers([]);
-      }
-    };
-
     if (selectedCompany) {
       fetchCommodities();
-      fetchBuyers();
     } else {
       setCommodities([]);
-      setBuyers([]);
     }
   }, [selectedCompany]);
 
@@ -63,12 +51,7 @@ const CommodityInformation = ({
       const commodity = commodities.find((item) => item.name === commodityName);
       const updatedParameters = commodity?.parameters || [];
 
-      const matchingBuyer = buyers.find(
-        (buyer) =>
-          buyer.companyName === selectedCompany &&
-          buyer.commodity.includes(commodityName)
-      );
-      const rawBrokerage = matchingBuyer?.brokerage[commodityName];
+      const rawBrokerage = brokerageMap ? brokerageMap[commodityName] : undefined;
       const updatedBrokerage =
         typeof rawBrokerage === "number" && !Number.isNaN(rawBrokerage)
           ? rawBrokerage
@@ -85,6 +68,7 @@ const CommodityInformation = ({
       handleChange("parameters", updatedParameters);
       handleChange("buyerBrokerage", {
         brokerageBuyer: updatedBrokerage,
+        brokerageSupplier: updatedBrokerage,
       });
       handleChange("companyEmail", companyEmail);
       handleChange("buyerEmails", [companyEmail]);
@@ -94,6 +78,7 @@ const CommodityInformation = ({
       handleChange("parameters", []);
       handleChange("buyerBrokerage", {
         brokerageBuyer: "",
+        brokerageSupplier: "",
       });
       handleChange("companyEmail", "");
       handleChange("buyerEmails", []);
@@ -177,6 +162,7 @@ const CommodityInformation = ({
 CommodityInformation.propTypes = {
   handleChange: PropTypes.func.isRequired,
   selectedCompany: PropTypes.string,
+  brokerageMap: PropTypes.object,
   buyerCommodity: PropTypes.array.isRequired,
 };
 

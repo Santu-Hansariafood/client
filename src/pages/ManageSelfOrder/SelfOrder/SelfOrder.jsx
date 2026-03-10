@@ -73,6 +73,7 @@ const SelfOrder = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState(INITIAL_FORM_DATA);
   const [isLoading, setIsLoading] = useState(false);
+  const [_buyerBrokerageMap, setBuyerBrokerageMap] = useState({});
 
   const API_BASE_URL = "/self-order";
 
@@ -90,6 +91,10 @@ const SelfOrder = () => {
       }
       return { ...prev, [field]: value };
     });
+
+    if (field === "buyerBrokerage") {
+      setBuyerBrokerageMap(value || {});
+    }
   };
 
   const validateFormData = () => {
@@ -178,7 +183,7 @@ const SelfOrder = () => {
             handleChange={handleChange}
             selectedCompany={formData.buyerCompany}
             buyerCommodity={formData.buyerCommodity}
-            brokerage={formData.buyerBrokerage}
+            brokerageMap={_buyerBrokerageMap}
             formData={formData}
           />
         </div>

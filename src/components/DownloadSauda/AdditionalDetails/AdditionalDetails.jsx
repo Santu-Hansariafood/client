@@ -187,7 +187,7 @@ const AdditionalDetails = ({ data }) => (
       </View>
       <View style={[styles.brokerageItem, { borderRight: "none" }]}>
         <Text style={styles.label}>Supplier Brokerage</Text>
-        <Text style={styles.value}>Rs. {data.supplierBrokerage?.[0]?.brokerage ?? "N/A"} / TON</Text>
+        <Text style={styles.value}>Rs. {data.buyerBrokerage?.brokerageSupplier ?? "N/A"} / TON</Text>
       </View>
     </View>
 

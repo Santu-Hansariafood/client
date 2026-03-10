@@ -76,6 +76,7 @@ const EditSelfOrder = () => {
   const [formData, setFormData] = useState(INITIAL_FORM_DATA);
   const [isLoading, setIsLoading] = useState(false);
   const [isFetching, setIsFetching] = useState(false);
+  const [_buyerBrokerageMap, setBuyerBrokerageMap] = useState({});
 
   const API_BASE_URL = "/self-order";
 
@@ -135,6 +136,10 @@ const EditSelfOrder = () => {
       }
       return { ...prev, [field]: value };
     });
+
+    if (field === "buyerBrokerage") {
+      setBuyerBrokerageMap(value || {});
+    }
   };
 
   const validateFormData = () => {
@@ -213,13 +218,13 @@ const EditSelfOrder = () => {
         <BuyerInformation formData={formData} handleChange={handleChange} />
         </div>
         <div className={sectionClass}>
-        <CommodityInformation
-          handleChange={handleChange}
-          selectedCompany={formData.buyerCompany}
-          buyerCommodity={formData.buyerCommodity}
-          brokerage={formData.buyerBrokerage}
-          formData={formData}
-        />
+          <CommodityInformation
+            handleChange={handleChange}
+            selectedCompany={formData.buyerCompany}
+            buyerCommodity={formData.buyerCommodity}
+            brokerageMap={_buyerBrokerageMap}
+            formData={formData}
+          />
         </div>
         <div className={sectionClass}>
         <PODetails formData={formData} handleChange={handleChange} />
