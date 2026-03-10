@@ -299,7 +299,7 @@ const EditCompanyPopup = ({ company, isOpen, onClose, onUpdate }) => {
                   <button
                     type="button"
                     onClick={handleAddCommodity}
-                    className="bg-blue-500 text-white px-3 py-1 rounded"
+                    className="bg-gradient-to-r from-emerald-800 to-emerald-700 text-white px-4 py-2 rounded-lg hover:from-emerald-700 hover:to-emerald-600 transition"
                   >
                     Add
                   </button>

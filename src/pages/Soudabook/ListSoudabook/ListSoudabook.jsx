@@ -105,7 +105,7 @@ const ListSoudabook = () => {
   return (
     <Suspense fallback={<Loading />}>
       <div className="p-4">
-        <h1 className="text-2xl font-bold mb-4">List Soudabook</h1>
+        <h1 className="text-2xl font-bold mb-4">List Agents</h1>
         <ToastContainer
           position="top-right"
           autoClose={3000}
@@ -121,7 +121,7 @@ const ListSoudabook = () => {
           />
           <button
             type="submit"
-            className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-700"
+            className="bg-gradient-to-r from-emerald-800 to-emerald-700 text-white px-4 py-2 rounded-lg hover:from-emerald-700 hover:to-emerald-600 transition"
           >
             Submit
           </button>

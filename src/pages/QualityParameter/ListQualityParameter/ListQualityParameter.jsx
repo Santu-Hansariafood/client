@@ -141,7 +141,7 @@ const ListQualityParameter = () => {
 
         <button
           onClick={() => setShowAddForm(!showAddForm)}
-          className="mt-4 mb-6 p-2 bg-blue-500 text-white rounded hover:bg-blue-600 focus:outline-none"
+          className="bg-gradient-to-r from-emerald-800 to-emerald-700 text-white px-4 py-2 rounded-lg hover:from-emerald-700 hover:to-emerald-600 transition"
         >
           {showAddForm ? "Cancel" : "Add New Quality Parameter"}
         </button>
