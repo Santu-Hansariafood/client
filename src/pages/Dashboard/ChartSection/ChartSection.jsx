@@ -13,22 +13,24 @@ const ChartSection = () => {
   return (
     <Suspense fallback={<Loading />}>
       <div className="flex justify-center mb-8">
-        <div className="inline-flex rounded-2xl shadow-lg bg-gradient-to-r from-blue-200 via-white to-purple-200 p-2 gap-2">
+        <div className="inline-flex rounded-xl bg-slate-100 p-1 border border-slate-200 shadow-sm gap-1">
           <button
-            className={`px-6 py-2 rounded-xl font-bold shadow transition-all border-2 border-transparent focus:outline-none focus:ring-2 focus:ring-blue-400 ${
+            type="button"
+            className={`px-4 py-2 rounded-lg text-sm font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 ${
               chartType === "line"
-                ? "bg-gradient-to-r from-blue-400 to-purple-400 text-white scale-105"
-                : "bg-white/70 text-blue-700 hover:bg-blue-100"
+                ? "bg-white text-slate-900 shadow-sm"
+                : "text-slate-600 hover:text-slate-900"
             }`}
             onClick={() => setChartType("line")}
           >
             Line Chart
           </button>
           <button
-            className={`px-6 py-2 rounded-xl font-bold shadow transition-all border-2 border-transparent focus:outline-none focus:ring-2 focus:ring-pink-400 ${
+            type="button"
+            className={`px-4 py-2 rounded-lg text-sm font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2 ${
               chartType === "bar"
-                ? "bg-gradient-to-r from-pink-400 to-yellow-400 text-white scale-105"
-                : "bg-white/70 text-pink-700 hover:bg-pink-100"
+                ? "bg-white text-slate-900 shadow-sm"
+                : "text-slate-600 hover:text-slate-900"
             }`}
             onClick={() => setChartType("bar")}
           >
@@ -36,11 +38,12 @@ const ChartSection = () => {
           </button>
         </div>
       </div>
-      <div className="space-y-10">
-        <div className="rounded-3xl shadow-2xl bg-gradient-to-br from-blue-100 via-white/80 to-purple-100 backdrop-blur-2xl border border-blue-200 p-8">
+
+      <div className="grid grid-cols-1 gap-8">
+        <div className="rounded-2xl border border-slate-200 bg-white shadow-sm p-5 sm:p-6">
           <SaudaChart apiUrl="/self-order" chartType={chartType} />
         </div>
-        <div className="rounded-3xl shadow-2xl bg-gradient-to-br from-yellow-100 via-white/80 to-pink-100 backdrop-blur-2xl border border-yellow-200 p-8">
+        <div className="rounded-2xl border border-slate-200 bg-white shadow-sm p-5 sm:p-6">
           <BidChart apiUrl="/bids" chartType={chartType} />
         </div>
       </div>

@@ -1,5 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import {
+  Bar,
+  BarChart,
   LineChart,
   Line,
   XAxis,
@@ -12,7 +14,7 @@ import {
 import axios from "axios";
 import moment from "moment";
 
-const SaudaChart = ({ apiUrl }) => {
+const SaudaChart = ({ apiUrl, chartType = "line" }) => {
   const [chartData, setChartData] = useState([]);
   const [view, setView] = useState("weekly");
 
@@ -69,79 +71,129 @@ const SaudaChart = ({ apiUrl }) => {
   };
 
   return (
-    <div className="rounded-2xl shadow-2xl bg-gradient-to-br from-blue-100 via-white/70 to-purple-100 backdrop-blur-md border border-blue-200 p-6">
-      <h2 className="text-2xl font-bold text-center mb-6 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 bg-clip-text text-transparent drop-shadow">
-        Sauda Count Over Time
-      </h2>
-      <div className="flex space-x-4 mb-6 justify-center">
-        {[
-          { label: "Weekly", value: "weekly" },
-          { label: "Monthly", value: "monthly" },
-          { label: "Yearly", value: "yearly" },
-        ].map((option) => (
-          <button
-            key={option.value}
-            className={`px-4 py-2 rounded-full font-semibold transition-all shadow-md border-2 border-transparent focus:outline-none focus:ring-2 focus:ring-blue-400 ${
-              view === option.value
-                ? "bg-gradient-to-r from-blue-400 to-purple-400 text-white scale-105"
-                : "bg-white/60 text-blue-700 hover:bg-blue-100"
-            }`}
-            onClick={() => setView(option.value)}
-          >
-            {option.label}
-          </button>
-        ))}
+    <div className="w-full">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-4">
+        <div>
+          <h3 className="text-base sm:text-lg font-semibold text-slate-900">
+            Sauda Count Over Time
+          </h3>
+          <p className="text-xs sm:text-sm text-slate-500">
+            Track sauda creation trend by date
+          </p>
+        </div>
+
+        <div className="inline-flex w-fit items-center rounded-xl bg-slate-100 p-1 border border-slate-200">
+          {[
+            { label: "Weekly", value: "weekly" },
+            { label: "Monthly", value: "monthly" },
+            { label: "Yearly", value: "yearly" },
+          ].map((option) => (
+            <button
+              key={option.value}
+              type="button"
+              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 ${
+                view === option.value
+                  ? "bg-white text-slate-900 shadow-sm"
+                  : "text-slate-600 hover:text-slate-900"
+              }`}
+              onClick={() => setView(option.value)}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
       </div>
-      <ResponsiveContainer width="100%" height={400}>
-        <LineChart
-          data={chartData}
-          margin={{ top: 20, right: 30, left: 20, bottom: 10 }}
-        >
-          <defs>
-            <linearGradient id="colorSauda" x1="0" y1="0" x2="1" y2="0">
-              <stop offset="0%" stopColor="#22c55e" />
-              <stop offset="50%" stopColor="#4ade80" />
-              <stop offset="100%" stopColor="#16a34a" />
-            </linearGradient>
-          </defs>
 
-          <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+      <div className="h-[320px] sm:h-[380px]">
+        {[
+          <ResponsiveContainer width="100%" height="100%">
+            {chartType === "bar" ? (
+              <BarChart
+                data={chartData}
+                margin={{ top: 12, right: 20, left: 8, bottom: 8 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <XAxis
+                  dataKey="date"
+                  tickFormatter={(tick) => moment(tick).format("MMM DD")}
+                  tick={{ fill: "#475569", fontSize: 12 }}
+                  axisLine={{ stroke: "#cbd5e1" }}
+                  tickLine={{ stroke: "#cbd5e1" }}
+                />
+                <YAxis
+                  tick={{ fill: "#475569", fontSize: 12 }}
+                  axisLine={{ stroke: "#cbd5e1" }}
+                  tickLine={{ stroke: "#cbd5e1" }}
+                />
+                <Tooltip
+                  contentStyle={{
+                    background: "#ffffff",
+                    borderRadius: 12,
+                    border: "1px solid #e2e8f0",
+                  }}
+                  formatter={(value) => [`${value}`, "Sauda"]}
+                  labelFormatter={(label) =>
+                    moment(label).format("MMM DD, YYYY")
+                  }
+                />
+                <Legend />
+                <Bar dataKey="sauda" fill="#22c55e" radius={[6, 6, 0, 0]} />
+              </BarChart>
+            ) : (
+              <LineChart
+                data={chartData}
+                margin={{ top: 12, right: 20, left: 8, bottom: 8 }}
+              >
+                <defs>
+                  <linearGradient id="colorSauda" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#22c55e" stopOpacity={0.35} />
+                    <stop offset="100%" stopColor="#22c55e" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
 
-          <XAxis
-            dataKey="date"
-            tickFormatter={(tick) => moment(tick).format("MMM DD")}
-            tick={{ fill: "#374151", fontWeight: 600 }}
-          />
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
 
-          <YAxis
-            tick={{ fill: "#374151", fontWeight: 600 }}
-          />
+                <XAxis
+                  dataKey="date"
+                  tickFormatter={(tick) => moment(tick).format("MMM DD")}
+                  tick={{ fill: "#475569", fontSize: 12 }}
+                  axisLine={{ stroke: "#cbd5e1" }}
+                  tickLine={{ stroke: "#cbd5e1" }}
+                />
 
-          <Tooltip
-            contentStyle={{
-              background: "#ffffff",
-              borderRadius: 12,
-              border: "1px solid #d1d5db",
-            }}
-            formatter={(value) => [`${value}`, "Sauda"]}
-            labelFormatter={(label) =>
-              `Date: ${moment(label).format("MMM DD, YYYY")}`
-            }
-          />
+                <YAxis
+                  tick={{ fill: "#475569", fontSize: 12 }}
+                  axisLine={{ stroke: "#cbd5e1" }}
+                  tickLine={{ stroke: "#cbd5e1" }}
+                />
 
-          <Legend />
+                <Tooltip
+                  contentStyle={{
+                    background: "#ffffff",
+                    borderRadius: 12,
+                    border: "1px solid #e2e8f0",
+                  }}
+                  formatter={(value) => [`${value}`, "Sauda"]}
+                  labelFormatter={(label) =>
+                    moment(label).format("MMM DD, YYYY")
+                  }
+                />
 
-          <Line
-            type="monotone"
-            dataKey="sauda"
-            stroke="url(#colorSauda)"
-            strokeWidth={4}
-            activeDot={{ r: 7 }}
-            dot={{ strokeWidth: 2, fill: "#fff" }}
-          />
+                <Legend />
 
-        </LineChart>
-      </ResponsiveContainer>
+                <Line
+                  type="monotone"
+                  dataKey="sauda"
+                  stroke="#16a34a"
+                  strokeWidth={3}
+                  activeDot={{ r: 6 }}
+                  dot={false}
+                />
+              </LineChart>
+            )}
+          </ResponsiveContainer>
+        ]}
+      </div>
     </div>
   );
 };

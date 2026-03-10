@@ -3,6 +3,8 @@ import axios from "axios";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Loading from "../../../common/Loading/Loading";
+import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
+import { FaMapMarkerAlt } from "react-icons/fa";
 
 const DataInput = lazy(() => import("../../../common/DataInput/DataInput"));
 const Buttons = lazy(() => import("../../../common/Buttons/Buttons"));
@@ -128,34 +130,52 @@ const BidLocation = () => {
 
   return (
     <Suspense fallback={<Loading />}>
-      <div className="p-4">
+      <AdminPageShell
+        title="Bid Location"
+        subtitle="Create and manage bid location names used in bids"
+        icon={FaMapMarkerAlt}
+        noContentCard
+      >
         <ToastContainer position="top-right" autoClose={3000} />
-        <h2 className="text-xl font-bold mb-4">Bid Location</h2>
-        
-        <form onSubmit={handleSubmit} className="flex space-x-2">
-          <DataInput
-            placeholder="Enter bid location"
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-          />
-          <Buttons
-            type="submit"
-            label={isEditing !== null ? "Update" : "Save"}
-            variant="primary"
-            size="md"
-          />
-        </form>
 
-        <div className="mt-8">
-          <Tables headers={headers} rows={rows} />
-          <Pagination
-            currentPage={currentPage}
-            totalItems={data.length}
-            itemsPerPage={itemsPerPage}
-            onPageChange={handlePageChange}
-          />
+        <div className="max-w-6xl mx-auto space-y-6">
+          <div className="rounded-2xl border border-amber-200/60 bg-white shadow-lg p-4 sm:p-6">
+            <form
+              onSubmit={handleSubmit}
+              className="flex flex-col sm:flex-row gap-3 sm:items-end"
+            >
+              <div className="flex-1">
+                <label className="block mb-1 text-sm font-semibold text-slate-700">
+                  Location name
+                </label>
+                <DataInput
+                  placeholder="Enter bid location"
+                  value={inputValue}
+                  onChange={(e) => setInputValue(e.target.value)}
+                />
+              </div>
+              <div className="shrink-0">
+                <Buttons
+                  type="submit"
+                  label={isEditing !== null ? "Update" : "Save"}
+                  variant="primary"
+                  size="md"
+                />
+              </div>
+            </form>
+          </div>
+
+          <div className="rounded-2xl border border-slate-200 bg-white shadow-sm p-3 sm:p-4">
+            <Tables headers={headers} rows={rows} />
+            <Pagination
+              currentPage={currentPage}
+              totalItems={data.length}
+              itemsPerPage={itemsPerPage}
+              onPageChange={handlePageChange}
+            />
+          </div>
         </div>
-      </div>
+      </AdminPageShell>
     </Suspense>
   );
 };

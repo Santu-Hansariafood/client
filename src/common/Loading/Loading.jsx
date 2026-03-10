@@ -1,17 +1,31 @@
 const Loading = () => {
   return (
-    <div className="flex items-center justify-center min-h-screen bg-slate-50 dark:bg-slate-950">
-      <div className="flex flex-col items-center gap-6 p-8 md:p-10 rounded-3xl bg-white dark:bg-slate-900/90 border border-slate-200/80 dark:border-slate-700/80 shadow-xl shadow-slate-200/50 dark:shadow-none backdrop-blur-sm">
-        <div className="relative">
-          <div className="w-16 h-16 rounded-full border-4 border-slate-200 dark:border-slate-700"></div>
-          <div
-            className="absolute inset-0 w-16 h-16 rounded-full border-4 border-transparent border-t-emerald-500 animate-spin"
-            style={{ animationDuration: "0.8s" }}
-          />
+    <div className="min-h-screen w-full flex items-center justify-center px-4 bg-gradient-to-b from-slate-50 to-emerald-50/40">
+      <div className="w-full max-w-md rounded-3xl border border-amber-200/60 bg-white/95 shadow-xl shadow-slate-200/50 backdrop-blur-sm p-6 sm:p-8">
+        <div className="flex items-center gap-4">
+          <div className="relative shrink-0">
+            <div className="w-12 h-12 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center justify-center">
+              <div className="w-7 h-7 rounded-full border-2 border-emerald-200 border-t-emerald-600 animate-spin" style={{ animationDuration: "0.75s" }} />
+            </div>
+            <div className="absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full bg-amber-400 ring-4 ring-white" />
+          </div>
+
+          <div className="min-w-0 flex-1">
+            <p className="text-base font-semibold text-slate-900">Loading…</p>
+            <p className="text-sm text-slate-500">Preparing your workspace</p>
+          </div>
         </div>
-        <div className="text-center space-y-1">
-          <p className="text-lg font-semibold text-slate-800 dark:text-slate-100">Loading</p>
-          <p className="text-sm text-slate-500 dark:text-slate-400">Please wait...</p>
+
+        <div className="mt-6 space-y-3">
+          <div className="h-3 rounded-full bg-gradient-to-r from-slate-100 via-slate-200 to-slate-100 animate-shimmer" />
+          <div className="h-3 rounded-full bg-gradient-to-r from-slate-100 via-slate-200 to-slate-100 animate-shimmer w-11/12" />
+          <div className="h-3 rounded-full bg-gradient-to-r from-slate-100 via-slate-200 to-slate-100 animate-shimmer w-9/12" />
+        </div>
+
+        <div className="mt-6 flex items-center justify-between text-xs text-slate-400">
+          <span className="font-medium">Secure</span>
+          <span className="font-medium">Fast</span>
+          <span className="font-medium">Reliable</span>
         </div>
       </div>
     </div>

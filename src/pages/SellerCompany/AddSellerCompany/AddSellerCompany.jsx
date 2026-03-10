@@ -4,6 +4,8 @@ import "react-toastify/dist/ReactToastify.css";
 import stateCityData from "../../../data/state-city.json";
 import axios from "axios";
 import Loading from "../../../common/Loading/Loading";
+import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
+import { FaBuilding } from "react-icons/fa";
 const DataInput = lazy(() => import("../../../common/DataInput/DataInput"));
 const DataDropdown = lazy(() =>
   import("../../../common/DataDropdown/DataDropdown")
@@ -154,15 +156,18 @@ const AddSellerCompany = () => {
 
   return (
     <Suspense fallback={<Loading />}>
-      <div className="p-4 sm:p-6 md:p-10 lg:p-16 bg-gray-100 flex justify-center items-center">
-        <div className="w-full max-w-4xl bg-white rounded-lg shadow-md p-6">
-          <h2 className="text-2xl font-bold mb-4 text-gray-700 text-center">
-            Add Seller Company
-          </h2>
+      <AdminPageShell
+        title="Add Seller Company"
+        subtitle="Register a seller company with KYC documents and bank details"
+        icon={FaBuilding}
+        noContentCard
+      >
+        <div className="max-w-6xl mx-auto">
+          <div className="w-full bg-white rounded-2xl border border-amber-200/60 shadow-lg p-4 sm:p-6 md:p-8">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
             <div>
               <label
-                className="text-gray-700 font-semibold"
+                className="text-slate-700 font-semibold"
                 htmlFor="companyName"
               >
                 Company Name
@@ -178,7 +183,7 @@ const AddSellerCompany = () => {
               />
             </div>
             <div>
-              <label className="text-gray-700 font-semibold" htmlFor="gstNo">
+              <label className="text-slate-700 font-semibold" htmlFor="gstNo">
                 GST No
               </label>
               <DataInput
@@ -193,7 +198,7 @@ const AddSellerCompany = () => {
               />
             </div>
             <div>
-              <label className="text-gray-700 font-semibold" htmlFor="panNo">
+              <label className="text-slate-700 font-semibold" htmlFor="panNo">
                 PAN No
               </label>
               <DataInput
@@ -208,7 +213,7 @@ const AddSellerCompany = () => {
               />
             </div>
             <div>
-              <label className="text-gray-700 font-semibold" htmlFor="address">
+              <label className="text-slate-700 font-semibold" htmlFor="address">
                 Address
               </label>
               <DataInput
@@ -223,7 +228,7 @@ const AddSellerCompany = () => {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
             <div>
-              <label className="text-gray-700 font-semibold" htmlFor="state">
+              <label className="text-slate-700 font-semibold" htmlFor="state">
                 Select State
               </label>
               <DataDropdown
@@ -237,7 +242,7 @@ const AddSellerCompany = () => {
               />
             </div>
             <div>
-              <label className="text-gray-700 font-semibold" htmlFor="district">
+              <label className="text-slate-700 font-semibold" htmlFor="district">
                 Select District
               </label>
               <DataDropdown
@@ -248,7 +253,7 @@ const AddSellerCompany = () => {
               />
             </div>
             <div>
-              <label className="text-gray-700 font-semibold" htmlFor="pinNo">
+              <label className="text-slate-700 font-semibold" htmlFor="pinNo">
                 PIN No
               </label>
               <DataInput
@@ -264,7 +269,7 @@ const AddSellerCompany = () => {
             </div>
             <div>
               <label
-                className="text-gray-700 font-semibold"
+                className="text-slate-700 font-semibold"
                 htmlFor="aadhaarNo"
               >
                 Aadhaar No/Director
@@ -281,13 +286,18 @@ const AddSellerCompany = () => {
               />
             </div>
           </div>
-          <h3 className="text-lg font-semibold mb-2">Bank Details</h3>
+          <h3 className="text-base sm:text-lg font-semibold mb-2 text-slate-800">
+            Bank Details
+          </h3>
           {bankDetails.map((bank, index) => (
-            <div key={bank.id} className="mb-4 border p-4 rounded-lg shadow">
+            <div
+              key={bank.id}
+              className="mb-4 border border-slate-200 p-4 rounded-xl bg-slate-50/40"
+            >
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                 <div>
                   <label
-                    className="text-gray-700 font-semibold"
+                    className="text-slate-700 font-semibold"
                     htmlFor={`accountHolderName-${bank.id}`}
                   >
                     Account Holder Name
@@ -308,7 +318,7 @@ const AddSellerCompany = () => {
                 </div>
                 <div>
                   <label
-                    className="text-gray-700 font-semibold"
+                    className="text-slate-700 font-semibold"
                     htmlFor={`accountNumber-${bank.id}`}
                   >
                     Bank Account Number
@@ -329,7 +339,7 @@ const AddSellerCompany = () => {
                 </div>
                 <div>
                   <label
-                    className="text-gray-700 font-semibold"
+                    className="text-slate-700 font-semibold"
                     htmlFor={`ifscCode-${bank.id}`}
                   >
                     IFSC Code
@@ -352,7 +362,7 @@ const AddSellerCompany = () => {
                 </div>
                 <div>
                   <label
-                    className="text-gray-700 font-semibold"
+                    className="text-slate-700 font-semibold"
                     htmlFor={`bankName-${bank.id}`}
                   >
                     Bank Name
@@ -373,7 +383,7 @@ const AddSellerCompany = () => {
                 </div>
                 <div>
                   <label
-                    className="text-gray-700 font-semibold"
+                    className="text-slate-700 font-semibold"
                     htmlFor={`branchName-${bank.id}`}
                   >
                     Branch Name
@@ -412,7 +422,7 @@ const AddSellerCompany = () => {
               size="sm"
             />
           </div>
-          <h3 className="text-lg font-semibold mb-2 mt-4">
+          <h3 className="text-base sm:text-lg font-semibold mb-2 mt-6 text-slate-800">
             Upload KYC Documents
           </h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
@@ -460,7 +470,7 @@ const AddSellerCompany = () => {
             />
           </div>
           <div className="mb-4">
-            <label className="text-gray-700 font-semibold">MSME</label>
+            <label className="text-slate-700 font-semibold">MSME</label>
             <div className="flex items-center space-x-4 mt-2">
               <label className="flex items-center space-x-2">
                 <input
@@ -511,8 +521,9 @@ const AddSellerCompany = () => {
           </div>
         </div>
 
-        <ToastContainer />
-      </div>
+          <ToastContainer />
+        </div>
+      </AdminPageShell>
     </Suspense>
   );
 };

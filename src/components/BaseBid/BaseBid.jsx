@@ -4,6 +4,8 @@ import { useNavigate } from "react-router-dom";
 import "react-toastify/dist/ReactToastify.css";
 import axios from "axios";
 import Loading from "../../common/Loading/Loading";
+import AdminPageShell from "../../common/AdminPageShell/AdminPageShell";
+import { FaGavel } from "react-icons/fa";
 
 import WhatsAppNotification from "../WhatsAppNotification/WhatsAppNotification"
 
@@ -255,27 +257,35 @@ const BaseBid = () => {
 
   return (
     <Suspense fallback={<Loading />}>
-      <div className="max-w-4xl mx-auto p-4 border rounded-md shadow-md bg-white">
-        <h2 className="text-2xl font-semibold mb-6 text-center">Buyer Bid</h2>
-        <GroupSelection
-          state={state}
-          handleGroupChange={handleGroupChange}
-          handleChange={handleChange}
-          handleCommodityChange={handleCommodityChange}
-        />
-        <ParameterInputs
-          parameters={state.parameters}
-          parameterValues={state.parameterValues}
-          handleChange={handleChange}
-          notes={state.notes}
-        />
-        <AdditionalFields state={state} handleChange={handleChange} />
-        <SubmitButton
-          isSubmitting={state.isSubmitting}
-          handleSubmit={handleSubmit}
-        />
-        <ToastContainer />
-      </div>
+      <AdminPageShell
+        title="Buyer Bid"
+        subtitle="Create a bid with group, consignee, commodity, parameters, and timings"
+        icon={FaGavel}
+        noContentCard
+      >
+        <div className="max-w-6xl mx-auto">
+          <div className="rounded-2xl border border-amber-200/60 bg-white shadow-lg p-4 sm:p-6 md:p-8">
+            <GroupSelection
+              state={state}
+              handleGroupChange={handleGroupChange}
+              handleChange={handleChange}
+              handleCommodityChange={handleCommodityChange}
+            />
+            <ParameterInputs
+              parameters={state.parameters}
+              parameterValues={state.parameterValues}
+              handleChange={handleChange}
+              notes={state.notes}
+            />
+            <AdditionalFields state={state} handleChange={handleChange} />
+            <SubmitButton
+              isSubmitting={state.isSubmitting}
+              handleSubmit={handleSubmit}
+            />
+          </div>
+          <ToastContainer />
+        </div>
+      </AdminPageShell>
     </Suspense>
   );
 };

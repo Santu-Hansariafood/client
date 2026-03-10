@@ -4,6 +4,8 @@ import { FaPlus } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import DataDropdown from "../../../common/DataDropdown/DataDropdown";
 import Tables from "../../../common/Tables/Tables";
+import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
+import { FaTruckLoading } from "react-icons/fa";
 
 const capitalizeWords = (str) =>
   str.toLowerCase().replace(/\b\w/g, (char) => char.toUpperCase());
@@ -72,43 +74,69 @@ const AddLoadingEntry = () => {
   };
 
   return (
-    <div className="w-full p-6 bg-white shadow-md rounded-lg">
-      <h2 className="text-xl font-semibold text-gray-700 mb-4">Add Loading Entry</h2>
-      {loading ? (
-        <p className="text-center text-gray-500">Loading...</p>
-      ) : (
-        <div className="space-y-4">
-          <div className="flex gap-4">
-            <div className="flex-1">
-              <label className="text-gray-700 font-medium">Select Supplier:</label>
-              <DataDropdown
-                options={suppliers}
-                selectedOptions={selectedSupplier ? [selectedSupplier] : []}
-                onChange={setSelectedSupplier}
-                placeholder="Select Supplier"
-                isMulti={false}
-              />
+    <AdminPageShell
+      title="Add Loading Entry"
+      subtitle="Select supplier and consignee to find sauda entries for loading"
+      icon={FaTruckLoading}
+      noContentCard
+    >
+      <div className="max-w-7xl mx-auto space-y-6">
+        <div className="rounded-2xl border border-amber-200/60 bg-white shadow-lg p-4 sm:p-6">
+          {loading ? (
+            <p className="text-center text-slate-500 font-medium">Loading...</p>
+          ) : (
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block mb-1 text-sm font-semibold text-slate-700">
+                    Supplier
+                  </label>
+                  <DataDropdown
+                    options={suppliers}
+                    selectedOptions={selectedSupplier ? [selectedSupplier] : []}
+                    onChange={setSelectedSupplier}
+                    placeholder="Select Supplier"
+                    isMulti={false}
+                  />
+                </div>
+                <div>
+                  <label className="block mb-1 text-sm font-semibold text-slate-700">
+                    Consignee
+                  </label>
+                  <DataDropdown
+                    options={consignees}
+                    selectedOptions={selectedConsignee ? [selectedConsignee] : []}
+                    onChange={setSelectedConsignee}
+                    placeholder="Select Consignee"
+                    isMulti={false}
+                  />
+                </div>
+              </div>
+
+              <button
+                onClick={handleSearch}
+                className="w-full sm:w-auto px-5 py-2.5 bg-emerald-600 text-white rounded-xl shadow-sm hover:bg-emerald-700 transition font-semibold"
+              >
+                Search
+              </button>
             </div>
-            <div className="flex-1">
-              <label className="text-gray-700 font-medium">Select Consignee:</label>
-              <DataDropdown
-                options={consignees}
-                selectedOptions={selectedConsignee ? [selectedConsignee] : []}
-                onChange={setSelectedConsignee}
-                placeholder="Select Consignee"
-                isMulti={false}
-              />
-            </div>
-          </div>
-          <button
-            onClick={handleSearch}
-            className="w-full px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
-          >
-            Search
-          </button>
-          {orders.length > 0 && (
+          )}
+        </div>
+
+        <div className="rounded-2xl border border-slate-200 bg-white shadow-sm p-3 sm:p-4">
+          {orders.length > 0 ? (
             <Tables
-              headers={["Sauda No","Seller Name", "Company","Consignee", "Commodity", "Quantity", "Rate", "Pending Quantity", "Action"]}
+              headers={[
+                "Sauda No",
+                "Seller Name",
+                "Company",
+                "Consignee",
+                "Commodity",
+                "Quantity",
+                "Rate",
+                "Pending Quantity",
+                "Action",
+              ]}
               rows={orders.map((order) => [
                 order.saudaNo,
                 capitalizeWords(order.supplierCompany),
@@ -120,17 +148,27 @@ const AddLoadingEntry = () => {
                 capitalizeWords(order.pendingQuantity),
                 <button
                   key={order._id || order.saudaNo}
-                  onClick={() => navigate(`/loading-entry-sauda/${order.supplier}`, { state: { order } })}
-                  className="text-blue-500 hover:text-blue-700"
+                  onClick={() =>
+                    navigate(`/loading-entry-sauda/${order.supplier}`, {
+                      state: { order },
+                    })
+                  }
+                  className="inline-flex items-center justify-center w-9 h-9 rounded-lg text-emerald-700 hover:bg-emerald-50 transition"
+                  aria-label="Add loading entry"
+                  title="Add loading entry"
                 >
                   <FaPlus />
-                </button>
+                </button>,
               ])}
             />
+          ) : (
+            <div className="py-10 text-center text-slate-500 font-medium">
+              No results yet. Select supplier & consignee and search.
+            </div>
           )}
         </div>
-      )}
-    </div>
+      </div>
+    </AdminPageShell>
   );
 };
 

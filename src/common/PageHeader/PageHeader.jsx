@@ -18,11 +18,11 @@ const PageHeader = ({ title, subtitle, icon: Icon, className = "" }) => {
               </span>
             )}
             <div className="min-w-0">
-              <h1 className="text-2xl sm:text-3xl font-bold text-slate-800 tracking-tight truncate">
+              <h1 className="animate-page-title text-2xl sm:text-3xl font-bold text-slate-800 tracking-tight truncate">
                 {title}
               </h1>
               {subtitle && (
-                <p className="mt-1 text-sm sm:text-base text-slate-600 max-w-2xl">
+                <p className="animate-page-title mt-1 text-sm sm:text-base text-slate-600 max-w-2xl [animation-delay:60ms]">
                   {subtitle}
                 </p>
               )}
@@ -30,7 +30,7 @@ const PageHeader = ({ title, subtitle, icon: Icon, className = "" }) => {
           </div>
         </div>
       </div>
-      <div className="mt-4 h-px bg-gradient-to-r from-emerald-500/40 via-amber-400/30 to-transparent rounded-full" />
+      <div className="animate-page-underline mt-4 h-px bg-gradient-to-r from-emerald-500/40 via-amber-400/30 to-transparent rounded-full" />
     </div>
   );
 };

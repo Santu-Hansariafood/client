@@ -1,31 +1,47 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import PropTypes from "prop-types";
 import { FiSearch } from "react-icons/fi";
 import { IoCloseCircle } from "react-icons/io5";
 
-const SearchBox = ({ placeholder, items, onSearch, className = "" }) => {
+const SearchBox = ({
+  placeholder,
+  items,
+  onSearch,
+  className = "",
+  debounceMs = 250,
+}) => {
   const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedTerm, setDebouncedTerm] = useState("");
 
   const handleInputChange = (e) => {
-    const value = e.target.value.trim();
-    setSearchTerm(value);
-
-    if (!value) {
-      onSearch(items);
-      return;
-    }
-
-    const filteredItems = items.filter((item) =>
-      String(item).toLowerCase().includes(value.toLowerCase())
-    );
-
-    onSearch(filteredItems);
+    setSearchTerm(e.target.value);
   };
 
   const clearSearch = () => {
     setSearchTerm("");
-    onSearch(items);
   };
+
+  useEffect(() => {
+    const handle = setTimeout(() => setDebouncedTerm(searchTerm), debounceMs);
+    return () => clearTimeout(handle);
+  }, [searchTerm, debounceMs]);
+
+  const normalizedItems = useMemo(
+    () => (Array.isArray(items) ? items.map((item) => String(item ?? "")) : []),
+    [items]
+  );
+
+  useEffect(() => {
+    const q = String(debouncedTerm ?? "").trim().toLowerCase();
+    if (!q) {
+      onSearch(normalizedItems);
+      return;
+    }
+    const filtered = normalizedItems.filter((item) =>
+      item.toLowerCase().includes(q)
+    );
+    onSearch(filtered);
+  }, [debouncedTerm, normalizedItems, onSearch]);
 
   return (
     <div
@@ -66,6 +82,7 @@ SearchBox.propTypes = {
   items: PropTypes.arrayOf(PropTypes.string).isRequired,
   onSearch: PropTypes.func.isRequired,
   className: PropTypes.string,
+  debounceMs: PropTypes.number,
 };
 
 export default SearchBox;

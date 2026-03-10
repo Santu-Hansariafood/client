@@ -129,9 +129,6 @@ if (formData.pin && formData.pin.length !== 6) {
         noContentCard
       >
         <div className="rounded-2xl border border-amber-200/60 bg-white shadow-lg p-4 sm:p-6 md:p-8 w-full max-w-5xl mx-auto">
-          <h2 className="text-xl font-bold text-slate-800 mb-6">
-            {addConsigneeLable.consignee_title}
-          </h2>
           <form onSubmit={handleSubmit}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>

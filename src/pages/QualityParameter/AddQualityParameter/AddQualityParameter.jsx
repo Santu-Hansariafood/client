@@ -4,6 +4,8 @@ import axios from "axios";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Loading from "../../../common/Loading/Loading";
+import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
+import { FaSlidersH } from "react-icons/fa";
 const DataInput = lazy(() => import("../../../common/DataInput/DataInput"));
 const Buttons = lazy(() => import("../../../common/Buttons/Buttons"));
 
@@ -46,29 +48,35 @@ const AddQualityParameter = () => {
 
   return (
     <Suspense fallback={<Loading />}>
-      <div className="max-w-md mx-auto bg-white rounded-lg shadow-lg p-6 md:p-8 lg:p-10">
-        <h2 className="text-2xl font-bold mb-4 text-gray-800 text-center">
-          Add Quality Parameter
-        </h2>
-        <form onSubmit={handleSubmit} className="flex flex-col space-y-6">
-          <DataInput
-            placeholder="Name"
-            value={formData.name}
-            name="name"
-            onChange={handleChange}
-            required
-            className="input-field"
-          />
-          <Buttons
-            label="Submit"
-            type="submit"
-            variant="primary"
-            size="md"
-            className="button-field"
-          />
-        </form>
+      <AdminPageShell
+        title="Add Quality Parameter"
+        subtitle="Create a new quality parameter to use in commodities and bidding"
+        icon={FaSlidersH}
+        noContentCard
+      >
+        <div className="max-w-3xl mx-auto">
+          <div className="rounded-2xl border border-amber-200/60 bg-white shadow-lg p-4 sm:p-6 md:p-8">
+            <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-5">
+              <div>
+                <label className="block mb-1 text-sm font-semibold text-slate-700">
+                  Parameter name
+                </label>
+                <DataInput
+                  placeholder="e.g. Moisture, Broken, Grade"
+                  value={formData.name}
+                  name="name"
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+              <div className="flex justify-end">
+                <Buttons label="Submit" type="submit" variant="primary" size="md" />
+              </div>
+            </form>
+          </div>
+        </div>
         <ToastContainer />
-      </div>
+      </AdminPageShell>
     </Suspense>
   );
 };

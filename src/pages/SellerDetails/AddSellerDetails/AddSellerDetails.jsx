@@ -5,6 +5,8 @@ import { FaPlusCircle, FaMinusCircle } from "react-icons/fa";
 import "react-toastify/dist/ReactToastify.css";
 
 import Loading from "../../../common/Loading/Loading";
+import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
+import { FaUserTie } from "react-icons/fa";
 
 const DataInput = lazy(() =>
   import("../../../common/DataInput/DataInput")
@@ -231,26 +233,43 @@ const AddSellerDetails = () => {
 
   return (
     <Suspense fallback={<Loading />}>
-      <div className="p-4 sm:p-6 md:p-10 lg:p-16 bg-gray-100 flex justify-center">
+      <AdminPageShell
+        title="Add Seller Details"
+        subtitle="Create a seller user with contact details, commodities, and buyer access"
+        icon={FaUserTie}
+        noContentCard
+      >
+        <div className="max-w-5xl mx-auto">
+          <div className="w-full bg-white rounded-2xl border border-amber-200/60 shadow-lg p-4 sm:p-6 md:p-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div>
+                <label className="block mb-1 text-sm font-semibold text-slate-700">
+                  Seller name
+                </label>
+                <DataInput
+                  placeholder="Enter seller name"
+                  value={sellerName}
+                  onChange={(e) => setSellerName(e.target.value)}
+                />
+              </div>
 
-        <div className="w-full max-w-4xl bg-white rounded-lg shadow-md p-6">
-
-          <h2 className="text-2xl font-bold mb-6 text-center">
-            Add Seller Details
-          </h2>
-
-          <DataInput
-            placeholder="Seller Name"
-            value={sellerName}
-            onChange={(e) =>
-              setSellerName(e.target.value)
-            }
-          />
+              <div>
+                <label className="block mb-1 text-sm font-semibold text-slate-700">
+                  Password
+                </label>
+                <DataInput
+                  placeholder="Enter password"
+                  inputType="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+              </div>
+            </div>
 
           {phoneNumbers.map((phone, index) => (
             <div
               key={phone.id}
-              className="flex items-center gap-3 mt-3"
+              className="flex items-center gap-3 mt-4"
             >
               <DataInput
                 placeholder={`Phone ${index + 1}`}
@@ -374,17 +393,6 @@ const AddSellerDetails = () => {
             />
           </div>
 
-          <div className="mt-4">
-            <DataInput
-              placeholder="Password"
-              inputType="password"
-              value={password}
-              onChange={(e) =>
-                setPassword(e.target.value)
-              }
-            />
-          </div>
-
           <div className="mt-6 flex justify-end">
             <Buttons
               label="Submit"
@@ -395,8 +403,9 @@ const AddSellerDetails = () => {
           </div>
         </div>
 
-        <ToastContainer />
-      </div>
+          <ToastContainer />
+        </div>
+      </AdminPageShell>
     </Suspense>
   );
 };
