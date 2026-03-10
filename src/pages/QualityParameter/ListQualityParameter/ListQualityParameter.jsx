@@ -133,19 +133,22 @@ const ListQualityParameter = () => {
       <div className="p-6 max-w-4xl mx-auto">
         <h2 className="text-2xl font-bold mb-4">Quality Parameters</h2>
 
-        <SearchBox
-          placeholder="Search by name..."
-          items={qualityParameters.map((param) => param.name)}
-          onSearch={handleSearch}
-        />
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
+          <div className="w-full md:w-1/2">
+            <SearchBox
+              placeholder="Search by name..."
+              items={qualityParameters.map((param) => param.name)}
+              onSearch={handleSearch}
+            />
+          </div>
 
-        <button
-          onClick={() => setShowAddForm(!showAddForm)}
-          className="bg-gradient-to-r from-emerald-800 to-emerald-700 text-white px-4 py-2 rounded-lg hover:from-emerald-700 hover:to-emerald-600 transition"
-        >
-          {showAddForm ? "Cancel" : "Add New Quality Parameter"}
-        </button>
-
+          <button
+            onClick={() => setShowAddForm(!showAddForm)}
+            className="bg-gradient-to-r from-emerald-800 to-emerald-700 text-white px-4 py-2 rounded-lg hover:from-emerald-700 hover:to-emerald-600 transition whitespace-nowrap"
+          >
+            {showAddForm ? "Cancel" : "Add New Quality Parameter"}
+          </button>
+        </div>
         {showAddForm && (
           <AddQualityParameter onSubmit={handleAddQualityParameter} />
         )}
