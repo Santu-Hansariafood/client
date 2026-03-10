@@ -1,9 +1,9 @@
-import { useState, useEffect, lazy, Suspense, useMemo, useCallback } from "react";
+import { useState, useEffect, lazy, Suspense, useMemo } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
-import { useNavigate } from "react-router-dom";
-import { useAuth } from "../../../context/AuthContext/AuthContext";
 import Loading from "../../../common/Loading/Loading";
+import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
+import { FaUsers } from "react-icons/fa";
 
 const Tables = lazy(() => import("../../../common/Tables/Tables"));
 const Actions = lazy(() => import("../../../common/Actions/Actions"));
@@ -13,13 +13,6 @@ const Pagination = lazy(() =>
 );
 const PopupBox = lazy(() => import("../../../common/PopupBox/PopupBox"));
 const EditBuyerPopup = lazy(() => import("../EditBuyerPopup/EditBuyerPopup"));
-const DashboardLayout = lazy(() =>
-  import("../../../layouts/DashboardLayout/DashboardLayout")
-);
-const Header = lazy(() => import("../../../common/Header/Header"));
-const LogoutConfirmationModal = lazy(() =>
-  import("../../../common/LogoutConfirmationModal/LogoutConfirmationModal")
-);
 
 const toTitleCase = (str) => {
   return str
@@ -36,11 +29,7 @@ const BuyerList = () => {
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [selectedBuyer, setSelectedBuyer] = useState(null);
   const [isEditPopupOpen, setIsEditPopupOpen] = useState(false);
-  const [showLogoutConfirmation, setShowLogoutConfirmation] = useState(false);
   const itemsPerPage = 10;
-
-  const navigate = useNavigate();
-  const { logout } = useAuth();
 
   useEffect(() => {
     const fetchBuyersData = async () => {
@@ -58,30 +47,19 @@ const BuyerList = () => {
     fetchBuyersData();
   }, []);
 
-  const handleLogout = useCallback(() => {
-    logout();
-    toast.success("Successfully logged out!");
-    navigate("/", { replace: true });
-  }, [logout, navigate]);
-
-  const handleSearch = (searchInput) => {
-    if (!searchInput.trim()) {
+  const handleSearchByNames = (filteredNames) => {
+    if (!filteredNames || filteredNames.length === 0) {
       setFilteredData(buyersData);
+      setCurrentPage(1);
       return;
     }
-
-    const searchLower = searchInput.toLowerCase();
-
-    const filtered = buyersData.filter(
-      (buyer) =>
-        (buyer.name && buyer.name.toLowerCase().includes(searchLower)) ||
-        (buyer.mobile &&
-          buyer.mobile.some((mobile) =>
-            String(mobile).toLowerCase().includes(searchLower)
-          ))
-    );
-
-    setFilteredData(filtered);
+    if (filteredNames.length === buyersData.length) {
+      setFilteredData(buyersData);
+      setCurrentPage(1);
+      return;
+    }
+    const nameSet = new Set(filteredNames);
+    setFilteredData(buyersData.filter((b) => nameSet.has(b.name)));
     setCurrentPage(1);
   };
 
@@ -163,21 +141,24 @@ const BuyerList = () => {
 
   return (
     <Suspense fallback={<Loading />}>
-      <DashboardLayout>
-        <Header onLogoutClick={() => setShowLogoutConfirmation(true)} />
-        <main className="min-h-screen px-4 sm:px-6 py-10 bg-green-50">
-          <div className="max-w-6xl mx-auto">
-            <div className="bg-white border border-yellow-300 rounded-2xl shadow-xl p-4 sm:p-6">
-              <h2 className="text-3xl font-extrabold mb-6 text-center text-green-800">
-                Buyer List
-              </h2>
-              <div className="mb-4">
-                <SearchBox
-                  placeholder="Search buyers..."
-                  items={buyersData}
-                  onSearch={handleSearch}
-                />
-              </div>
+      <AdminPageShell
+        title="Buyer List"
+        subtitle="Search and manage all buyers"
+        icon={FaUsers}
+        noContentCard
+      >
+        <div className="max-w-6xl mx-auto">
+          <div className="bg-white border border-amber-200/80 rounded-2xl shadow-lg p-4 sm:p-6">
+            <h2 className="text-xl sm:text-2xl font-bold mb-6 text-center text-slate-800">
+              Buyer List
+            </h2>
+            <div className="mb-4">
+              <SearchBox
+                placeholder="Search buyers by name..."
+                items={buyersData.map((b) => b.name || "")}
+                onSearch={handleSearchByNames}
+              />
+            </div>
               <div className="overflow-x-auto rounded-xl border border-gray-100">
                 <Tables
                   headers={[
@@ -264,14 +245,7 @@ const BuyerList = () => {
             onClose={() => setIsEditPopupOpen(false)}
             onUpdate={handleUpdate}
           />
-        </main>
-        {showLogoutConfirmation && (
-          <LogoutConfirmationModal
-            onConfirm={handleLogout}
-            onCancel={() => setShowLogoutConfirmation(false)}
-          />
-        )}
-      </DashboardLayout>
+      </AdminPageShell>
     </Suspense>
   );
 };

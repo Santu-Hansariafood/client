@@ -1,21 +1,14 @@
-import { useState, useEffect, useMemo, useCallback, lazy, Suspense } from "react";
+import { useState, useEffect, useMemo, lazy, Suspense } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
-import { useNavigate } from "react-router-dom";
-import { useAuth } from "../../../context/AuthContext/AuthContext";
 import Loading from "../../../common/Loading/Loading";
+import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
+import { FaUserPlus } from "react-icons/fa";
 const DataInput = lazy(() => import("../../../common/DataInput/DataInput"));
 const DataDropdown = lazy(() =>
   import("../../../common/DataDropdown/DataDropdown")
 );
 const Buttons = lazy(() => import("../../../common/Buttons/Buttons"));
-const DashboardLayout = lazy(() =>
-  import("../../../layouts/DashboardLayout/DashboardLayout")
-);
-const Header = lazy(() => import("../../../common/Header/Header"));
-const LogoutConfirmationModal = lazy(() =>
-  import("../../../common/LogoutConfirmationModal/LogoutConfirmationModal")
-);
 import buyerLabels from "../../../language/en/buyer";
 import regexPatterns from "../../../utils/regexPatterns/regexPatterns";
 import { FaPlus, FaTrash } from "react-icons/fa";
@@ -41,10 +34,6 @@ const AddBuyer = () => {
   const [consigneeOptions, setConsigneeOptions] = useState([]);
   const [companiesData, setCompaniesData] = useState([]);
   const [successMessage, setSuccessMessage] = useState("");
-  const [showLogoutConfirmation, setShowLogoutConfirmation] = useState(false);
-
-  const navigate = useNavigate();
-  const { logout } = useAuth();
 
   const statusOptions = useMemo(
     () => [
@@ -85,12 +74,6 @@ const AddBuyer = () => {
 
     fetchDropdownData();
   }, []);
-
-  const handleLogout = useCallback(() => {
-    logout();
-    toast.success("Successfully logged out!");
-    navigate("/", { replace: true });
-  }, [logout, navigate]);
 
   const handleDropdownChange = (selectedOption, actionMeta) => {
     const fieldName = actionMeta.name;
@@ -244,14 +227,17 @@ const AddBuyer = () => {
 
   return (
     <Suspense fallback={<Loading />}>
-      <DashboardLayout>
-        <Header onLogoutClick={() => setShowLogoutConfirmation(true)} />
-        <main className="min-h-screen px-4 sm:px-6 py-10 bg-green-50">
-          <div className="max-w-4xl mx-auto">
-            <div className="max-w-2xl mx-auto p-4 sm:p-8 border border-yellow-300 rounded-2xl shadow-2xl bg-white">
-              <h2 className="text-3xl font-extrabold mb-6 text-center text-green-800 tracking-wide">
-                {buyerLabels.title}
-              </h2>
+      <AdminPageShell
+        title={buyerLabels.title}
+        subtitle="Create a new buyer with company, group, and commodity access"
+        icon={FaUserPlus}
+        noContentCard
+      >
+        <div className="max-w-4xl mx-auto">
+          <div className="max-w-2xl mx-auto p-4 sm:p-8 border border-amber-200/80 rounded-2xl shadow-lg bg-white">
+            <h2 className="text-xl sm:text-2xl font-bold mb-6 text-center text-slate-800">
+              {buyerLabels.title}
+            </h2>
               {successMessage && (
                 <div className="mb-4 p-3 rounded-lg bg-green-100 text-green-800 text-center font-semibold animate-fade-in">
                   {successMessage}
@@ -479,16 +465,9 @@ const AddBuyer = () => {
             />
           </div>
         </form>
-      </div>
-    </div>
-  </main>
-  {showLogoutConfirmation && (
-    <LogoutConfirmationModal
-      onConfirm={handleLogout}
-      onCancel={() => setShowLogoutConfirmation(false)}
-    />
-  )}
-</DashboardLayout>
+          </div>
+        </div>
+      </AdminPageShell>
     </Suspense>
   );
 };

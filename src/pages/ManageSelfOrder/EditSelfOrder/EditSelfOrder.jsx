@@ -4,6 +4,8 @@ import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import axios from "axios";
 import Loading from "../../../common/Loading/Loading";
+import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
+import { FaEdit } from "react-icons/fa";
 
 const BuyerInformation = lazy(() =>
   import("../../../components/BuyerInformation/BuyerInformation")
@@ -78,36 +80,46 @@ const EditSelfOrder = () => {
   const API_BASE_URL = "/self-order";
 
   useEffect(() => {
-    if (location.state?.orderData) {
+    const orderFromState = location.state?.orderData;
+    if (orderFromState) {
       setFormData({
         ...INITIAL_FORM_DATA,
-        ...location.state.orderData,
-        poDate: location.state.orderData.poDate ? new Date(location.state.orderData.poDate) : new Date(),
-        deliveryDate: location.state.orderData.deliveryDate ? new Date(location.state.orderData.deliveryDate) : new Date(),
-        loadingDate: location.state.orderData.loadingDate ? new Date(location.state.orderData.loadingDate) : new Date(),
+        ...orderFromState,
+        poDate: orderFromState.poDate ? new Date(orderFromState.poDate) : new Date(),
+        deliveryDate: orderFromState.deliveryDate
+          ? new Date(orderFromState.deliveryDate)
+          : new Date(),
+        loadingDate: orderFromState.loadingDate
+          ? new Date(orderFromState.loadingDate)
+          : new Date(),
       });
-    } else if (id) {
-      const fetchOrder = async () => {
-        setIsFetching(true);
-        try {
-          const { data } = await axios.get(`${API_BASE_URL}/${id}`);
-          setFormData({
-            ...INITIAL_FORM_DATA,
-            ...data,
-            poDate: data.poDate ? new Date(data.poDate) : new Date(),
-            deliveryDate: data.deliveryDate ? new Date(data.deliveryDate) : new Date(),
-            loadingDate: data.loadingDate ? new Date(data.loadingDate) : new Date(),
-          });
-        } catch (error) {
-          console.error("Error fetching order:", error);
-          toast.error("Failed to fetch order details.");
-        } finally {
-          setIsFetching(false);
-        }
-      };
-      fetchOrder();
+      return;
     }
-  }, [id, location.state]);
+    if (!id) {
+      toast.error("Missing order id. Open edit from the order list.");
+      navigate("/manage-order/list-self-order", { replace: true });
+      return;
+    }
+    const fetchOrder = async () => {
+      setIsFetching(true);
+      try {
+        const { data } = await axios.get(`${API_BASE_URL}/${id}`);
+        setFormData({
+          ...INITIAL_FORM_DATA,
+          ...data,
+          poDate: data.poDate ? new Date(data.poDate) : new Date(),
+          deliveryDate: data.deliveryDate ? new Date(data.deliveryDate) : new Date(),
+          loadingDate: data.loadingDate ? new Date(data.loadingDate) : new Date(),
+        });
+      } catch {
+        toast.error("Failed to fetch order details.");
+        navigate("/manage-order/list-self-order", { replace: true });
+      } finally {
+        setIsFetching(false);
+      }
+    };
+    fetchOrder();
+  }, [id, navigate, location.state?.orderData]);
 
   const handleChange = (field, value) => {
     setFormData((prev) => {
@@ -142,6 +154,10 @@ const EditSelfOrder = () => {
 
   const handleSubmit = async () => {
     if (!validateFormData()) return;
+    if (!id) {
+      toast.error("Cannot update: missing order id.");
+      return;
+    }
 
     setIsLoading(true);
 
@@ -181,13 +197,22 @@ const EditSelfOrder = () => {
 
   if (isFetching) return <Loading />;
 
+  const sectionClass =
+    "rounded-2xl border border-emerald-100 bg-white p-5 sm:p-6 shadow-md shadow-emerald-900/5";
+
   return (
     <Suspense fallback={<Loading />}>
-      <div className="p-4 max-w-screen-lg mx-auto space-y-6 bg-gray-50 rounded-lg shadow-md">
-        <h1 className="text-2xl font-semibold text-blue-500 text-center">
-          Edit Self Order: {formData.saudaNo}
-        </h1>
+      <AdminPageShell
+        title={`Edit self order — ${formData.saudaNo || "…"}`}
+        subtitle="Update buyer, commodity, and supplier details"
+        icon={FaEdit}
+        noContentCard
+      >
+        <div className="max-w-4xl mx-auto space-y-6">
+        <div className={sectionClass}>
         <BuyerInformation formData={formData} handleChange={handleChange} />
+        </div>
+        <div className={sectionClass}>
         <CommodityInformation
           handleChange={handleChange}
           selectedCompany={formData.buyerCompany}
@@ -195,10 +220,20 @@ const EditSelfOrder = () => {
           brokerage={formData.buyerBrokerage}
           formData={formData}
         />
+        </div>
+        <div className={sectionClass}>
         <PODetails formData={formData} handleChange={handleChange} />
+        </div>
+        <div className={sectionClass}>
         <LoadingStation formData={formData} handleChange={handleChange} />
+        </div>
+        <div className={sectionClass}>
         <QuantityAndPricing formData={formData} handleChange={handleChange} />
+        </div>
+        <div className={sectionClass}>
         <SupplierInformation formData={formData} handleChange={handleChange} />
+        </div>
+        <div className={sectionClass}>
         <BrokerInformation
           formData={formData}
           handleChange={(key, value) => {
@@ -212,14 +247,19 @@ const EditSelfOrder = () => {
             }
           }}
         />
+        </div>
+        <div className={sectionClass}>
         <NotesSection
           notes={formData.notes}
           setNotes={(updatedNotes) => handleChange("notes", updatedNotes)}
         />
+        </div>
+        <div className={sectionClass}>
         <AdditionalInformation formData={formData} handleChange={handleChange} />
+        </div>
 
-        <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
-          <h3 className="text-lg font-semibold text-gray-800 mb-3">Sauda Number</h3>
+        <div className={sectionClass}>
+          <h3 className="text-base font-semibold text-slate-800 mb-3">Sauda number</h3>
           <div className="flex flex-col sm:flex-row gap-3">
             <div className="flex-1">
               <DataInput
@@ -234,19 +274,21 @@ const EditSelfOrder = () => {
           </div>
         </div>
 
-        <div className="flex gap-4">
+        <div className="flex flex-col sm:flex-row gap-3">
           <button
+            type="button"
             onClick={() => navigate("/manage-order/list-self-order")}
-            className="flex-1 py-2 bg-gray-500 text-white font-semibold rounded-lg"
+            className="flex-1 py-3 rounded-xl font-semibold bg-slate-100 text-slate-700 border border-slate-200 hover:bg-slate-200 transition-colors"
           >
             Cancel
           </button>
           <button
+            type="button"
             onClick={handleSubmit}
-            className="flex-2 py-2 bg-blue-500 text-white font-semibold rounded-lg"
+            className="flex-1 py-3 rounded-xl font-semibold bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-60 transition-colors"
             disabled={isLoading}
           >
-            {isLoading ? "Updating..." : "Update Order"}
+            {isLoading ? "Updating…" : "Update order"}
           </button>
         </div>
 
@@ -262,7 +304,8 @@ const EditSelfOrder = () => {
           pauseOnHover
           style={{ zIndex: 9999 }}
         />
-      </div>
+        </div>
+      </AdminPageShell>
     </Suspense>
   );
 };

@@ -1,9 +1,11 @@
-import { useState, lazy, Suspense, useMemo } from "react";
+import { useState, lazy, Suspense } from "react";
 import Loading from "../../../common/Loading/Loading";
 import axios from "axios";
-import { toast, ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { toast } from "react-toastify";
+import { FaPlus } from "react-icons/fa";
 import addgroupcompanyLable from "../../../language/en/addGroupCompany";
+import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
+
 const DataInput = lazy(() => import("../../../common/DataInput/DataInput"));
 const Buttons = lazy(() => import("../../../common/Buttons/Buttons"));
 
@@ -21,9 +23,7 @@ const AddGroupOfCompany = () => {
     }
 
     try {
-      const response = await axios.post("/groups", {
-        groupName,
-      });
+      await axios.post("/groups", { groupName });
       toast.success("Group added successfully");
       setGroupName("");
     } catch (error) {
@@ -31,22 +31,22 @@ const AddGroupOfCompany = () => {
     }
   };
 
-  const toastContainer = useMemo(
-    () => (
-      <ToastContainer position="top-center" autoClose={3000} hideProgressBar />
-    ),
-    []
-  );
-
   return (
     <Suspense fallback={<Loading />}>
-      <div className="flex items-center justify-center min-h-screen bg-gray-100">
-        {toastContainer}
-        <div className="bg-white p-8 rounded-lg shadow-2xl transform transition-transform duration-500 hover:scale-105 max-w-md w-full">
-          <h2 className="text-2xl font-bold mb-6 text-center">
+      <AdminPageShell
+        title="Add Group of Company"
+        subtitle="Create a new group to link companies"
+        icon={FaPlus}
+        noContentCard
+      >
+        <div className="max-w-lg mx-auto rounded-2xl border border-amber-200/60 bg-white shadow-lg p-6 sm:p-8">
+          <h2 className="text-xl font-bold text-slate-800 mb-6 text-center sm:text-left">
             {addgroupcompanyLable.group_title}
           </h2>
-          <label className="block text-sm font-medium mb-2" htmlFor="groupName">
+          <label
+            className="block text-sm font-medium text-slate-700 mb-2"
+            htmlFor="groupName"
+          >
             {addgroupcompanyLable.group_company_title}
           </label>
           <DataInput
@@ -54,19 +54,19 @@ const AddGroupOfCompany = () => {
             value={groupName}
             onChange={handleInputChange}
             name="groupName"
-            required={true}
+            required
           />
-          <div className="mt-4 align-middle">
+          <div className="mt-6 flex justify-center sm:justify-start">
             <Buttons
               label="Submit"
               onClick={handleSubmit}
-              type="submit"
+              type="button"
               variant="primary"
               size="md"
             />
           </div>
         </div>
-      </div>
+      </AdminPageShell>
     </Suspense>
   );
 };

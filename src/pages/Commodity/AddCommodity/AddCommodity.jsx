@@ -1,32 +1,21 @@
-import { useState, useEffect, lazy, Suspense, useCallback } from "react";
+import { useState, useEffect, lazy, Suspense } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
-import { useNavigate } from "react-router-dom";
-import { useAuth } from "../../../context/AuthContext/AuthContext";
 import Loading from "../../../common/Loading/Loading";
+import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
+import { FaCubes } from "react-icons/fa";
 import { AiOutlinePlus, AiOutlineMinus } from "react-icons/ai";
 const DataInput = lazy(() => import("../../../common/DataInput/DataInput"));
 const DataDropdown = lazy(() =>
   import("../../../common/DataDropdown/DataDropdown")
 );
 const Buttons = lazy(() => import("../../../common/Buttons/Buttons"));
-const DashboardLayout = lazy(() =>
-  import("../../../layouts/DashboardLayout/DashboardLayout")
-);
-const Header = lazy(() => import("../../../common/Header/Header"));
-const LogoutConfirmationModal = lazy(() =>
-  import("../../../common/LogoutConfirmationModal/LogoutConfirmationModal")
-);
 
 const AddCommodity = () => {
   const [commodityName, setCommodityName] = useState("");
   const [hsnCode, setHsnCode] = useState("");
   const [extraFields, setExtraFields] = useState([{ parameter: "" }]);
   const [parametersOptions, setParametersOptions] = useState([]);
-  const [showLogoutConfirmation, setShowLogoutConfirmation] = useState(false);
-
-  const navigate = useNavigate();
-  const { logout } = useAuth();
 
   useEffect(() => {
     const fetchParametersOptions = async () => {
@@ -100,22 +89,19 @@ const AddCommodity = () => {
     );
   };
 
-  const handleLogout = useCallback(() => {
-    logout();
-    toast.success("Successfully logged out!");
-    navigate("/", { replace: true });
-  }, [logout, navigate]);
-
   return (
     <Suspense fallback={<Loading />}>
-      <DashboardLayout>
-        <Header onLogoutClick={() => setShowLogoutConfirmation(true)} />
-        <main className="min-h-screen px-4 sm:px-6 py-10 bg-green-50">
-          <div className="container mx-auto max-w-4xl">
-            <div className="bg-white shadow-lg rounded-2xl p-8 border border-yellow-300">
-              <h2 className="text-3xl font-extrabold mb-8 text-center text-green-800">
-                Add Commodity
-              </h2>
+      <AdminPageShell
+        title="Add Commodity"
+        subtitle="Create commodity with HSN code and quality parameters"
+        icon={FaCubes}
+        noContentCard
+      >
+        <div className="container mx-auto max-w-4xl">
+          <div className="bg-white shadow-lg rounded-2xl p-4 sm:p-8 border border-amber-200/80">
+            <h2 className="text-xl sm:text-2xl font-bold mb-8 text-center text-slate-800">
+              Add Commodity
+            </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <DataInput
               placeholder="Enter commodity name"
@@ -176,14 +162,7 @@ const AddCommodity = () => {
               </div>
             </div>
           </div>
-        </main>
-        {showLogoutConfirmation && (
-          <LogoutConfirmationModal
-            onConfirm={handleLogout}
-            onCancel={() => setShowLogoutConfirmation(false)}
-          />
-        )}
-      </DashboardLayout>
+      </AdminPageShell>
     </Suspense>
   );
 };

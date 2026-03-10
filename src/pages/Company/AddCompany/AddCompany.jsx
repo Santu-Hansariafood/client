@@ -9,10 +9,9 @@ import {
 import axios from "axios";
 import { toast } from "react-toastify";
 import { FaPlus } from "react-icons/fa";
-import { useNavigate } from "react-router-dom";
-import { useAuth } from "../../../context/AuthContext/AuthContext";
-
 import Loading from "../../../common/Loading/Loading";
+import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
+import { FaBuilding } from "react-icons/fa";
 import addCompanyLable from "../../../language/en/addCompany";
 
 const DataInput = lazy(() => import("../../../common/DataInput/DataInput"));
@@ -20,13 +19,6 @@ const DataDropdown = lazy(() =>
   import("../../../common/DataDropdown/DataDropdown")
 );
 const Buttons = lazy(() => import("../../../common/Buttons/Buttons"));
-const DashboardLayout = lazy(() =>
-  import("../../../layouts/DashboardLayout/DashboardLayout")
-);
-const Header = lazy(() => import("../../../common/Header/Header"));
-const LogoutConfirmationModal = lazy(() =>
-  import("../../../common/LogoutConfirmationModal/LogoutConfirmationModal")
-);
 
 const AddCompany = () => {
   const [companyName, setCompanyName] = useState("");
@@ -39,10 +31,6 @@ const AddCompany = () => {
   const [consigneeOptions, setConsigneeOptions] = useState([]);
   const [groupOptions, setGroupOptions] = useState([]);
   const [commodityOptions, setCommodityOptions] = useState([]);
-  const [showLogoutConfirmation, setShowLogoutConfirmation] = useState(false);
-
-  const navigate = useNavigate();
-  const { logout } = useAuth();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -202,22 +190,19 @@ const AddCompany = () => {
     selectedCommodities,
   ]);
 
-  const handleLogout = useCallback(() => {
-    logout();
-    toast.success("Successfully logged out!");
-    navigate("/", { replace: true });
-  }, [logout, navigate]);
-
   return (
     <Suspense fallback={<Loading />}>
-      <DashboardLayout>
-        <Header onLogoutClick={() => setShowLogoutConfirmation(true)} />
-        <main className="min-h-screen px-4 sm:px-6 py-10 bg-green-50">
-          <div className="max-w-5xl mx-auto">
-            <div className="bg-white p-8 rounded-2xl shadow-xl w-full border border-yellow-300">
-              <h2 className="text-3xl font-extrabold text-center mb-8 text-green-800">
-                {addCompanyLable.company_title}
-              </h2>
+      <AdminPageShell
+        title={addCompanyLable.company_title}
+        subtitle="Add company with consignees, group, and commodities"
+        icon={FaBuilding}
+        noContentCard
+      >
+        <div className="max-w-5xl mx-auto">
+          <div className="bg-white p-4 sm:p-8 rounded-2xl shadow-lg w-full border border-amber-200/80">
+            <h2 className="text-xl sm:text-2xl font-bold text-center mb-8 text-slate-800">
+              {addCompanyLable.company_title}
+            </h2>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
@@ -342,14 +327,7 @@ const AddCompany = () => {
               </div>
             </div>
           </div>
-        </main>
-        {showLogoutConfirmation && (
-          <LogoutConfirmationModal
-            onConfirm={handleLogout}
-            onCancel={() => setShowLogoutConfirmation(false)}
-          />
-        )}
-      </DashboardLayout>
+      </AdminPageShell>
     </Suspense>
   );
 };

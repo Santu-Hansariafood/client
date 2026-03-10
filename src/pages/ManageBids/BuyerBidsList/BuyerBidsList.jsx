@@ -2,16 +2,22 @@ import { useState, useEffect, lazy, Suspense } from "react";
 import PropTypes from "prop-types";
 import { toast } from "react-toastify";
 import axios from "axios";
+import Loading from "../../../common/Loading/Loading";
+import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
+import { FaGavel } from "react-icons/fa";
+
 const Tables = lazy(() => import("../../../common/Tables/Tables"));
 const SearchBox = lazy(() => import("../../../common/SearchBox/SearchBox"));
 const DateSelector = lazy(() =>
   import("../../../common/DateSelector/DateSelector")
 );
 const ViewBid = lazy(() => import("../ViewBidPopup/ViewBidPopup"));
+const Pagination = lazy(() =>
+  import("../../../common/Paginations/Paginations")
+);
 import "react-datepicker/dist/react-datepicker.css";
-import Loading from "../../../common/Loading/Loading";
 
-const BidList = () => {
+const BuyerBidsList = () => {
   const [bids, setBids] = useState([]);
   const [commodities, setCommodities] = useState([]);
   const [origins, setOrigins] = useState([]);
@@ -30,29 +36,26 @@ const BidList = () => {
         const response = await axios.get("/bids");
         setBids(response.data);
         setFilteredData(response.data);
-      } catch (error) {
-        toast.error("Error fetching bids:", error);
+      } catch {
+        toast.error("Error fetching bids");
       }
     };
-
     const fetchCommodities = async () => {
       try {
         const response = await axios.get("/commodities");
-        setCommodities(response.data);
-      } catch (error) {
-        toast.error("Error fetching commodities:", error);
+        setCommodities(response.data?.data || response.data || []);
+      } catch {
+        toast.error("Error fetching commodities");
       }
     };
-
     const fetchOrigins = async () => {
       try {
         const response = await axios.get("/bid-locations");
-        setOrigins(response.data);
-      } catch (error) {
-        toast.error("Error fetching origins:", error);
+        setOrigins(response.data || []);
+      } catch {
+        toast.error("Error fetching origins");
       }
     };
-
     fetchBids();
     fetchCommodities();
     fetchOrigins();
@@ -60,29 +63,22 @@ const BidList = () => {
 
   useEffect(() => {
     let data = [...bids];
-
     if (searchCompany.length > 0) {
-      data = data.filter((bid) =>
-        searchCompany.some((term) =>
-          bid.company.toLowerCase().includes(term.toLowerCase())
-        )
-      );
+      const set = new Set(searchCompany);
+      data = data.filter((bid) => set.has(bid.company));
     }
-
     if (filterType !== "all") {
       data = data.filter((bid) => bid.type === filterType);
     }
-
     if (startDate) {
       data = data.filter((bid) => new Date(bid.bidDate) >= startDate);
     }
     if (endDate) {
       data = data.filter((bid) => new Date(bid.bidDate) <= endDate);
     }
-
     data.sort((a, b) => new Date(b.bidDate) - new Date(a.bidDate));
-
     setFilteredData(data);
+    setCurrentPage(1);
   }, [searchCompany, filterType, startDate, endDate, bids]);
 
   const getCommodityName = (id) => {
@@ -98,7 +94,6 @@ const BidList = () => {
   const getParametersDisplay = (parameters, commodityId) => {
     const commodity = commodities.find((item) => item._id === commodityId);
     if (!commodity) return "N/A";
-
     return commodity.parameters
       .map((param) => `${param.parameter}: ${parameters[param._id] || "N/A"}`)
       .join(", ");
@@ -119,7 +114,7 @@ const BidList = () => {
     "End Time",
     "Payment Terms",
     "Delivery",
-    "View Bid",
+    "View",
   ];
 
   const rows = filteredData
@@ -140,77 +135,80 @@ const BidList = () => {
       bid.paymentTerms,
       `${bid.delivery} days`,
       <button
-        key={index}
-        className="text-blue-500 underline hover:text-blue-700"
+        key={bid._id}
+        type="button"
+        className="font-medium text-emerald-700 hover:text-emerald-800 underline decoration-emerald-300"
         onClick={() => setSelectedBidId(bid._id)}
       >
-        View Bid
+        View bid
       </button>,
     ]);
 
-  const handlePageChange = (page) => {
-    setCurrentPage(page);
-  };
+  const companyItems = [...new Set(bids.map((b) => b.company).filter(Boolean))];
 
   return (
     <Suspense fallback={<Loading />}>
-      <div className="p-4">
-        <h1 className="text-2xl font-bold mb-4 text-center text-blue-600">
-          Bid Management Dashboard
-        </h1>
-        <div className="mb-4 flex flex-col md:flex-row gap-4">
-          <SearchBox
-            placeholder="Search by company"
-            items={bids.map((bid) => bid.company)}
-            onSearch={(filteredItems) => setSearchCompany(filteredItems)}
-          />
-          <select
-            value={filterType}
-            onChange={(e) => setFilterType(e.target.value)}
-            className="border border-gray-300 rounded px-4 py-2 w-full md:w-1/3"
-          >
-            <option value="all">All</option>
-            <option value="buyer">Buyers</option>
-            <option value="seller">Sellers</option>
-          </select>
-          <DateSelector
-            selectedDate={startDate}
-            onChange={(date) => setStartDate(date)}
-          />
-          <DateSelector
-            selectedDate={endDate}
-            onChange={(date) => setEndDate(date)}
-          />
-        </div>
-        <Tables headers={headers} rows={rows} />
-        <div className="mt-4 flex justify-center">
-          {Array.from({
-            length: Math.ceil(filteredData.length / itemsPerPage),
-          }).map((_, index) => (
-            <button
-              key={index}
-              onClick={() => handlePageChange(index + 1)}
-              className={`mx-1 px-3 py-1 rounded border border-gray-300 ${
-                currentPage === index + 1
-                  ? "bg-blue-500 text-white"
-                  : "bg-white"
-              }`}
+      <AdminPageShell
+        title="Bid list"
+        subtitle="Filter by company, type, and date range"
+        icon={FaGavel}
+        noContentCard
+      >
+        <div className="max-w-full space-y-6">
+          <div className="flex flex-col lg:flex-row flex-wrap gap-4 items-stretch lg:items-end">
+            <SearchBox
+              placeholder="Search by company..."
+              items={companyItems}
+              onSearch={(filtered) => setSearchCompany(filtered)}
+              className="max-w-full lg:max-w-xs"
+            />
+            <select
+              value={filterType}
+              onChange={(e) => setFilterType(e.target.value)}
+              className="rounded-xl border border-emerald-100 bg-white px-4 py-2.5 text-slate-800 shadow-md shadow-emerald-900/5 focus:ring-2 focus:ring-emerald-400/50 focus:border-emerald-400 outline-none min-w-[140px]"
             >
-              {index + 1}
-            </button>
-          ))}
+              <option value="all">All types</option>
+              <option value="buyer">Buyers</option>
+              <option value="seller">Sellers</option>
+            </select>
+            <div className="flex flex-wrap gap-3">
+              <DateSelector
+                selectedDate={startDate}
+                onChange={(date) => setStartDate(date)}
+              />
+              <DateSelector
+                selectedDate={endDate}
+                onChange={(date) => setEndDate(date)}
+              />
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-emerald-100 bg-white p-4 sm:p-6 shadow-lg shadow-emerald-900/5 overflow-hidden">
+            <Tables headers={headers} rows={rows} />
+          </div>
+
+          <Pagination
+            currentPage={currentPage}
+            totalItems={filteredData.length}
+            itemsPerPage={itemsPerPage}
+            onPageChange={setCurrentPage}
+          />
         </div>
-      </div>
-      {selectedBidId && (
-        <ViewBid bidId={selectedBidId} onClose={() => setSelectedBidId(null)} />
-      )}
+
+        {selectedBidId && (
+          <ViewBid
+            bidId={selectedBidId}
+            onClose={() => setSelectedBidId(null)}
+          />
+        )}
+      </AdminPageShell>
     </Suspense>
   );
 };
 
-BidList.propTypes = {
+BuyerBidsList.propTypes = {
   headers: PropTypes.arrayOf(PropTypes.string),
   rows: PropTypes.arrayOf(PropTypes.array),
 };
 
-export default BidList;
+export default BuyerBidsList;

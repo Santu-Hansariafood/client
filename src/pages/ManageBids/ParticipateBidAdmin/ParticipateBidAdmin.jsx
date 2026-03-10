@@ -1,12 +1,14 @@
-import { lazy, Suspense, useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState, useMemo } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
-import "react-toastify/dist/ReactToastify.css";
-import Loading from "../../../common/Loading/Loading"
-const Tables = lazy(() =>import("../../../common/Tables/Tables"));
-const Pagination = lazy(() =>import("../../../common/Paginations/Paginations"));
-const SearchBox = lazy(() =>import("../../../common/SearchBox/SearchBox"));
+import Loading from "../../../common/Loading/Loading";
+import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
+import { FaUsers } from "react-icons/fa";
+
+const Tables = lazy(() => import("../../../common/Tables/Tables"));
+const Pagination = lazy(() => import("../../../common/Paginations/Paginations"));
+const SearchBox = lazy(() => import("../../../common/SearchBox/SearchBox"));
 
 const ParticipateBidAdmin = () => {
   const [bids, setBids] = useState([]);
@@ -35,9 +37,9 @@ const ParticipateBidAdmin = () => {
         setBids(bidsRes.data);
         setParticipationBids(recentParticipations);
         setFilteredBids(recentParticipations);
-        setLoading(false);
-      } catch (error) {
-        toast.error("Error fetching data", error);
+      } catch {
+        toast.error("Error fetching data");
+      } finally {
         setLoading(false);
       }
     };
@@ -46,15 +48,12 @@ const ParticipateBidAdmin = () => {
 
   const getBidParticipationDetails = (data) => {
     const groupedBids = {};
-
     data.forEach((pBid) => {
       const matchingBid = bids.find((bid) => bid._id === pBid.bidId);
       if (!matchingBid) return;
-
       if (!groupedBids[pBid.bidId]) {
         groupedBids[pBid.bidId] = {
           bidId: pBid.bidId,
-          slNo: 0,
           group: matchingBid.group,
           consignee: matchingBid.consignee || "N/A",
           origin: matchingBid.origin || "N/A",
@@ -68,7 +67,6 @@ const ParticipateBidAdmin = () => {
       }
       groupedBids[pBid.bidId].mobiles.add(pBid.mobile);
     });
-
     return Object.values(groupedBids);
   };
 
@@ -78,11 +76,11 @@ const ParticipateBidAdmin = () => {
     "Consignee",
     "Origin",
     "Commodity",
-    "Bid Quantity",
+    "Bid Qty",
     "Bid Rate",
-    "Party Quantity",
+    "Party Qty",
     "Party Rate",
-    "Bid Interaction",
+    "Interactions",
   ];
 
   const filteredData = getBidParticipationDetails(filteredBids);
@@ -103,54 +101,67 @@ const ParticipateBidAdmin = () => {
     bid.rate,
     <button
       key={bid.bidId}
+      type="button"
       onClick={() => navigate(`/confirm-bids/${bid.bidId}`)}
-      className="text-blue-500 underline hover:text-blue-700"
+      className="font-medium text-emerald-700 hover:text-emerald-800"
     >
-      {bid.mobiles.size} interactions
+      {bid.mobiles.size} interaction{bid.mobiles.size !== 1 ? "s" : ""}
     </button>,
   ]);
 
-  const handleSearch = (searchText) => {
-    if (!searchText) {
+  const consigneeItems = useMemo(
+    () => [...new Set(bids.map((b) => b.consignee).filter(Boolean))],
+    [bids]
+  );
+
+  const handleSearch = (filteredNames) => {
+    if (!filteredNames || filteredNames.length === 0) {
+      setFilteredBids(participationBids);
+    } else if (filteredNames.length === consigneeItems.length) {
       setFilteredBids(participationBids);
     } else {
-      const searchLower = searchText.toLowerCase();
+      const nameSet = new Set(filteredNames);
       setFilteredBids(
-        participationBids.filter((pBid) =>
-          bids.some(
-            (bid) =>
-              bid._id === pBid.bidId &&
-              bid.consignee?.toLowerCase().includes(searchLower)
-          )
-        )
+        participationBids.filter((pBid) => {
+          const bid = bids.find((b) => b._id === pBid.bidId);
+          return bid && nameSet.has(bid.consignee);
+        })
       );
     }
     setCurrentPage(1);
   };
 
   return (
-    <Suspense fallback={<Loading/>}>
-    <div className="p-4">
-      <h2 className="text-xl font-bold mb-4">Participate Bid Admin</h2>
-      <SearchBox
-        placeholder="Search by Consignee..."
-        items={[...new Set(bids.map((bid) => bid.consignee).filter(Boolean))]}
-        onSearch={handleSearch}
-      />
-      {loading ? (
-        <Loading/>
-      ) : (
-        <>
-          <Tables headers={headers} rows={rows} />
-          <Pagination
-            currentPage={currentPage}
-            totalItems={totalItems}
-            itemsPerPage={itemsPerPage}
-            onPageChange={setCurrentPage}
+    <Suspense fallback={<Loading />}>
+      <AdminPageShell
+        title="Participate bid (admin)"
+        subtitle="Recent participation activity — last 7 days"
+        icon={FaUsers}
+        noContentCard
+      >
+        <div className="space-y-6">
+          <SearchBox
+            placeholder="Search by consignee..."
+            items={consigneeItems}
+            onSearch={handleSearch}
           />
-        </>
-      )}
-    </div>
+          {loading ? (
+            <Loading />
+          ) : (
+            <>
+              <div className="rounded-2xl border border-emerald-100 bg-white p-4 shadow-lg shadow-emerald-900/5 overflow-hidden">
+                <Tables headers={headers} rows={rows} />
+              </div>
+              <Pagination
+                currentPage={currentPage}
+                totalItems={totalItems}
+                itemsPerPage={itemsPerPage}
+                onPageChange={setCurrentPage}
+              />
+            </>
+          )}
+        </div>
+      </AdminPageShell>
     </Suspense>
   );
 };

@@ -1,9 +1,9 @@
-import { useState, useEffect, lazy, Suspense, useCallback } from "react";
+import { useState, useEffect, lazy, Suspense } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
-import { useNavigate } from "react-router-dom";
-import { useAuth } from "../../../context/AuthContext/AuthContext";
 import Loading from "../../../common/Loading/Loading";
+import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
+import { FaBuilding } from "react-icons/fa";
 const Tables = lazy(() => import("../../../common/Tables/Tables"));
 const Actions = lazy(() => import("../../../common/Actions/Actions"));
 const SearchBox = lazy(() => import("../../../common/SearchBox/SearchBox"));
@@ -14,27 +14,15 @@ const PopupBox = lazy(() => import("../../../common/PopupBox/PopupBox"));
 const EditCompanyPopup = lazy(() =>
   import("../EditCompanyPopup/EditCompanyPopup")
 );
-const DashboardLayout = lazy(() =>
-  import("../../../layouts/DashboardLayout/DashboardLayout")
-);
-const Header = lazy(() => import("../../../common/Header/Header"));
-const LogoutConfirmationModal = lazy(() =>
-  import("../../../common/LogoutConfirmationModal/LogoutConfirmationModal")
-);
 
 const ListCompany = () => {
   const [companyData, setCompanyData] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
-  const [searchTerm, setSearchTerm] = useState("");
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [isEditPopupOpen, setIsEditPopupOpen] = useState(false);
   const [selectedCompany, setSelectedCompany] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [showLogoutConfirmation, setShowLogoutConfirmation] = useState(false);
   const itemsPerPage = 10;
-
-  const navigate = useNavigate();
-  const { logout } = useAuth();
 
   useEffect(() => {
     const fetchCompanyData = async () => {
@@ -58,21 +46,6 @@ const ListCompany = () => {
 
     fetchCompanyData();
   }, []);
-
-  useEffect(() => {
-    const lowercasedSearchTerm = searchTerm.toLowerCase();
-    const filtered = companyData.filter((company) =>
-      company.companyName.toLowerCase().includes(lowercasedSearchTerm)
-    );
-    setFilteredData(filtered);
-    setCurrentPage(1);
-  }, [searchTerm, companyData]);
-
-  const handleLogout = useCallback(() => {
-    logout();
-    toast.success("Successfully logged out!");
-    navigate("/", { replace: true });
-  }, [logout, navigate]);
 
   const paginatedData = filteredData.slice(
     (currentPage - 1) * itemsPerPage,
@@ -142,20 +115,40 @@ const ListCompany = () => {
 
   return (
     <Suspense fallback={<Loading />}>
-      <DashboardLayout>
-        <Header onLogoutClick={() => setShowLogoutConfirmation(true)} />
-        <main className="min-h-screen px-4 sm:px-6 py-10 bg-green-50">
-          <div className="max-w-6xl mx-auto">
-            <div className="bg-white border border-yellow-300 rounded-2xl shadow-xl p-4 sm:p-6">
-              <h2 className="text-3xl font-extrabold mb-6 text-center text-green-800">
-                List of Companies
-              </h2>
-              <div className="mb-4">
-                <SearchBox
-                  placeholder="Search companies by name..."
-                  onSearch={(term) => setSearchTerm(term)}
-                />
-              </div>
+      <AdminPageShell
+        title="Company List"
+        subtitle="List of companies with group and consignee"
+        icon={FaBuilding}
+        noContentCard
+      >
+        <div className="max-w-6xl mx-auto">
+          <div className="bg-white border border-amber-200/80 rounded-2xl shadow-lg p-4 sm:p-6">
+            <h2 className="text-xl sm:text-2xl font-bold mb-6 text-center text-slate-800">
+              List of Companies
+            </h2>
+            <div className="mb-4">
+              <SearchBox
+                placeholder="Search companies by name..."
+                items={companyData.map((c) => c.companyName || "")}
+                onSearch={(filteredNames) => {
+                  if (!filteredNames || filteredNames.length === 0) {
+                    setFilteredData(companyData);
+                    setCurrentPage(1);
+                    return;
+                  }
+                  if (filteredNames.length === companyData.length) {
+                    setFilteredData(companyData);
+                    setCurrentPage(1);
+                    return;
+                  }
+                  const nameSet = new Set(filteredNames);
+                  setFilteredData(
+                    companyData.filter((c) => nameSet.has(c.companyName))
+                  );
+                  setCurrentPage(1);
+                }}
+              />
+            </div>
               <div className="overflow-x-auto rounded-xl border border-gray-100">
                 <Tables
                   headers={[
@@ -227,14 +220,7 @@ const ListCompany = () => {
               onUpdate={handleUpdate}
             />
           )}
-        </main>
-        {showLogoutConfirmation && (
-          <LogoutConfirmationModal
-            onConfirm={handleLogout}
-            onCancel={() => setShowLogoutConfirmation(false)}
-          />
-        )}
-      </DashboardLayout>
+      </AdminPageShell>
     </Suspense>
   );
 };

@@ -9,6 +9,8 @@ const Buttons = lazy(() => import("../../../common/Buttons/Buttons"));
 import stateCityData from "../../../data/state-city.json";
 import Loading from "../../../common/Loading/Loading";
 import addConsigneeLable from "../../../language/en/addConsignee";
+import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
+import { FaTruck } from "react-icons/fa";
 
 const AddConsignee = () => {
   const [formData, setFormData] = useState({
@@ -120,9 +122,14 @@ if (formData.pin && formData.pin.length !== 6) {
 
   return (
     <Suspense fallback={<Loading />}>
-      <div className="container mx-auto p-4">
-        <div className="bg-white shadow-md rounded-lg p-6">
-          <h2 className="text-2xl font-semibold mb-4">
+      <AdminPageShell
+        title="Add Consignee"
+        subtitle="Register a new consignee with contact and location details"
+        icon={FaTruck}
+        noContentCard
+      >
+        <div className="rounded-2xl border border-amber-200/60 bg-white shadow-lg p-4 sm:p-6 md:p-8 w-full max-w-5xl mx-auto">
+          <h2 className="text-xl font-bold text-slate-800 mb-6">
             {addConsigneeLable.consignee_title}
           </h2>
           <form onSubmit={handleSubmit}>
@@ -299,7 +306,7 @@ if (formData.pin && formData.pin.length !== 6) {
             </div>
           </form>
         </div>
-      </div>
+      </AdminPageShell>
     </Suspense>
   );
 };

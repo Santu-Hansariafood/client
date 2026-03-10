@@ -7,9 +7,10 @@ import {
   useCallback,
 } from "react";
 import axios from "axios";
-import { toast, ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { toast } from "react-toastify";
+import { FaBuilding } from "react-icons/fa";
 import Loading from "../../../common/Loading/Loading";
+import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
 
 const Tables = lazy(() => import("../../../common/Tables/Tables"));
 const Actions = lazy(() => import("../../../common/Actions/Actions"));
@@ -60,13 +61,19 @@ const ListGroupOfCompany = () => {
   }, []);
 
   const handleSearch = useCallback(
-    (filteredItems) => {
-      const searchResult = groupsData.filter((group) =>
-        filteredItems.some((item) =>
-          group.groupName.toLowerCase().includes(item.toLowerCase())
-        )
-      );
-      setFilteredData(searchResult);
+    (filteredNames) => {
+      if (!filteredNames || filteredNames.length === 0) {
+        setFilteredData(groupsData);
+        setCurrentPage(1);
+        return;
+      }
+      if (filteredNames.length === groupsData.length) {
+        setFilteredData(groupsData);
+        setCurrentPage(1);
+        return;
+      }
+      const nameSet = new Set(filteredNames);
+      setFilteredData(groupsData.filter((g) => nameSet.has(g.groupName)));
       setCurrentPage(1);
     },
     [groupsData]
@@ -119,6 +126,8 @@ const ListGroupOfCompany = () => {
         .sort((a, b) => a.groupName.localeCompare(b.groupName));
       setGroupsData(updatedList);
       setFilteredData(updatedList);
+      setIsEditPopupOpen(false);
+      toast.success("Group updated successfully");
     },
     [groupsData]
   );
@@ -136,7 +145,7 @@ const ListGroupOfCompany = () => {
         startIndex + index + 1,
         group.groupName,
         <Actions
-          key={index}
+          key={group._id}
           onView={() => handleView(startIndex + index)}
           onEdit={() => handleEdit(startIndex + index)}
           onDelete={() => handleDelete(startIndex + index)}
@@ -147,33 +156,34 @@ const ListGroupOfCompany = () => {
 
   return (
     <Suspense fallback={<Loading />}>
-      <div className="container mx-auto p-4">
-        <ToastContainer
-          position="top-center"
-          autoClose={3000}
-          hideProgressBar
-        />
-        <h2 className="text-2xl font-semibold mb-4 text-center">
-          List of Groups of Companies
-        </h2>
+      <AdminPageShell
+        title="Group of Company"
+        subtitle="List and manage groups of companies"
+        icon={FaBuilding}
+        noContentCard
+      >
+        <div className="rounded-2xl border border-amber-200/60 bg-white shadow-lg p-4 sm:p-6 w-full overflow-hidden">
+          <div className="mb-4 max-w-md">
+            <SearchBox
+              placeholder="Search groups..."
+              items={groupsData.map((group) => group.groupName)}
+              onSearch={handleSearch}
+            />
+          </div>
 
-        <div className="mb-4">
-          <SearchBox
-            placeholder="Search groups..."
-            items={groupsData.map((group) => group.groupName)}
-            onSearch={handleSearch}
-            className="p-2 border border-gray-300 rounded-lg w-full md:w-1/3 mx-auto"
-          />
+          <div className="overflow-x-auto rounded-xl border border-slate-100">
+            <Tables headers={["Sl. No", "Group Name", "Actions"]} rows={rows} />
+          </div>
+
+          <div className="mt-4">
+            <Pagination
+              currentPage={currentPage}
+              totalItems={filteredData.length}
+              itemsPerPage={itemsPerPage}
+              onPageChange={setCurrentPage}
+            />
+          </div>
         </div>
-
-        <Tables headers={["Sl. No", "Group Name", "Actions"]} rows={rows} />
-
-        <Pagination
-          currentPage={currentPage}
-          totalItems={filteredData.length}
-          itemsPerPage={itemsPerPage}
-          onPageChange={setCurrentPage}
-        />
 
         {isPopupOpen && (
           <PopupBox
@@ -182,7 +192,7 @@ const ListGroupOfCompany = () => {
             title={selectedGroup?.groupName || "Group Details"}
           >
             {selectedGroup && (
-              <div>
+              <div className="space-y-2 text-sm">
                 <p>
                   <strong>Group Name:</strong> {selectedGroup.groupName}
                 </p>
@@ -201,7 +211,7 @@ const ListGroupOfCompany = () => {
           onClose={() => setIsEditPopupOpen(false)}
           onUpdate={handleUpdate}
         />
-      </div>
+      </AdminPageShell>
     </Suspense>
   );
 };

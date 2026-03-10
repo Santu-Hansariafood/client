@@ -13,14 +13,14 @@ const PopupBox = ({ isOpen, onClose, title, children }) => {
         className="relative w-full max-w-2xl max-h-[90vh] flex flex-col rounded-2xl bg-white dark:bg-slate-900 shadow-2xl shadow-slate-900/30 border border-slate-200 dark:border-slate-700 overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between shrink-0 px-6 py-5 border-b border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50">
-          <h3 className="text-xl font-semibold text-slate-800 dark:text-slate-100">
+        <div className="flex items-center justify-between shrink-0 px-6 py-4 border-b border-emerald-600/20 bg-gradient-to-r from-emerald-800 to-emerald-700">
+          <h3 className="text-lg font-semibold text-amber-50 tracking-tight">
             {title}
           </h3>
           <button
             onClick={onClose}
             title="Close"
-            className="flex items-center justify-center w-10 h-10 rounded-xl text-slate-500 hover:text-slate-700 hover:bg-slate-200 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-700 transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-400/50"
+            className="flex items-center justify-center w-10 h-10 rounded-xl text-amber-100/90 hover:text-white hover:bg-white/15 transition-colors focus:outline-none focus:ring-2 focus:ring-amber-300/50"
           >
             <FaTimes className="w-5 h-5" />
           </button>

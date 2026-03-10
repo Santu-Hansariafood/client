@@ -1,27 +1,24 @@
-import { useState, useEffect, lazy, Suspense } from "react";
+import { useState, useEffect, lazy, Suspense, useMemo } from "react";
 import { AiOutlineEye, AiOutlineEdit } from "react-icons/ai";
 import axios from "axios";
 import { toast } from "react-toastify";
 import Loading from "../../../common/Loading/Loading";
-import { useMemo } from "react";
+import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
+import { FaGavel } from "react-icons/fa";
 
 const Tables = lazy(() => import("../../../common/Tables/Tables"));
 const SearchBox = lazy(() => import("../../../common/SearchBox/SearchBox"));
 const ViewBid = lazy(() => import("../ViewBidPopup/ViewBidPopup"));
 const PopupBox = lazy(() => import("../../../common/PopupBox/PopupBox"));
-const Pagination = lazy(() =>
-  import("../../../common/Paginations/Paginations")
-);
 
 const BidList = () => {
   const [bids, setBids] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
-  const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedBid, setSelectedBid] = useState(null);
   const [editableRateQuantity, setEditableRateQuantity] = useState(null);
   const [error, setError] = useState(null);
-  const itemsPerPage = 10;
+  const [selectedGroup, setSelectedGroup] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -40,57 +37,47 @@ const BidList = () => {
 
         setBids(sortedBids);
         setFilteredData(sortedBids);
-      } catch (error) {
+      } catch {
         setError("Error fetching data. Please try again later.");
       }
     };
     fetchData();
   }, []);
 
-  useEffect(() => {
-    const data = searchQuery
-      ? bids.filter((bid) =>
-          bid.consignee.toLowerCase().includes(searchQuery.toLowerCase())
-        )
-      : bids;
-    setFilteredData(data);
-    setCurrentPage(1);
-  }, [searchQuery, bids]);
+  const consigneeItems = useMemo(
+    () => [...new Set(bids.map((b) => b.consignee).filter(Boolean))],
+    [bids]
+  );
 
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString("en-GB");
+  const handleSearchConsignee = (filteredNames) => {
+    if (!filteredNames || filteredNames.length === 0) {
+      setFilteredData(bids);
+    } else if (filteredNames.length === consigneeItems.length) {
+      setFilteredData(bids);
+    } else {
+      const nameSet = new Set(filteredNames);
+      setFilteredData(bids.filter((bid) => nameSet.has(bid.consignee)));
+    }
+    setCurrentPage(1);
   };
+
+  const formatDate = (dateString) =>
+    new Date(dateString).toLocaleDateString("en-GB");
 
   const handleEdit = async () => {
     if (!editableRateQuantity) return;
-
     try {
       const { id, rate, quantity } = editableRateQuantity;
-
-      const response = await axios.put(
-        `/bids/${id}`,
-        { rate, quantity }
-      );
-
+      await axios.put(`/bids/${id}`, { rate, quantity });
       toast.success("Bid updated successfully!");
-
-      setBids((prevBids) =>
-        prevBids.map((bid) =>
-          bid._id === id ? { ...bid, rate, quantity } : bid
-        )
+      setBids((prev) =>
+        prev.map((bid) => (bid._id === id ? { ...bid, rate, quantity } : bid))
       );
-
       setEditableRateQuantity(null);
-    } catch (error) {
-      console.error("Error updating bid:", error);
+    } catch {
       toast.error("Failed to update bid. Please try again.");
     }
   };
-
-  const paginatedData = filteredData.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
 
   const headers = [
     "ID",
@@ -106,52 +93,9 @@ const BidList = () => {
     "End Time",
     "Payment Terms",
     "Delivery",
-    "View/Edit Rate & Quantity",
-    "View Bid",
+    "Edit",
+    "View",
   ];
-
-  const rows = paginatedData.map((bid, index) => [
-    filteredData.length - ((currentPage - 1) * itemsPerPage + index),
-    bid.group,
-    bid.consignee,
-    bid.origin,
-    bid.commodity,
-    Object.entries(bid.parameters)
-      .filter(([_, value]) => value !== "0")
-      .map(([key, value]) => `${key}: ${value}%`)
-      .join(", "),
-    bid.quantity,
-    bid.rate,
-    formatDate(bid.bidDate),
-    bid.startTime,
-    bid.endTime,
-    bid.paymentTerms,
-    bid.delivery,
-    <button
-      key={`rate-quantity-${index}`}
-      className="text-green-500 hover:text-green-700 flex items-center gap-1"
-      onClick={() =>
-        setEditableRateQuantity({
-          id: bid._id,
-          rate: bid.rate,
-          quantity: bid.quantity,
-        })
-      }
-      title="View/Edit Rate & Quantity"
-    >
-      <AiOutlineEdit size={20} />
-    </button>,
-    <button
-      key={`view-bid-${index}`}
-      className="text-blue-500 hover:text-blue-700"
-      onClick={() => setSelectedBid(bid)}
-      title="View"
-    >
-      <AiOutlineEye size={20} />
-    </button>,
-  ]);
-
-  const [selectedGroup, setSelectedGroup] = useState(null);
 
   const groupedBids = useMemo(() => {
     const groups = {};
@@ -168,147 +112,176 @@ const BidList = () => {
       }));
   }, [bids]);
 
+  const buildRow = (bid, index, listLength) => [
+    listLength - index,
+    bid.group,
+    bid.consignee,
+    bid.origin,
+    bid.commodity,
+    Object.entries(bid.parameters || {})
+      .filter(([, value]) => value !== "0")
+      .map(([key, value]) => `${key}: ${value}%`)
+      .join(", "),
+    bid.quantity,
+    bid.rate,
+    formatDate(bid.bidDate),
+    bid.startTime,
+    bid.endTime,
+    bid.paymentTerms,
+    bid.delivery,
+    <button
+      key={`edit-${bid._id}`}
+      type="button"
+      className="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-100 hover:bg-emerald-100 transition-colors"
+      onClick={() =>
+        setEditableRateQuantity({
+          id: bid._id,
+          rate: bid.rate,
+          quantity: bid.quantity,
+        })
+      }
+      title="Edit rate & quantity"
+    >
+      <AiOutlineEdit size={18} />
+    </button>,
+    <button
+      key={`view-${bid._id}`}
+      type="button"
+      className="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-slate-50 text-slate-700 border border-slate-200 hover:bg-slate-100 transition-colors"
+      onClick={() => setSelectedBid(bid)}
+      title="View bid"
+    >
+      <AiOutlineEye size={18} />
+    </button>,
+  ];
+
   return (
     <Suspense fallback={<Loading />}>
-      <div className="p-4 max-w-6xl mx-auto">
-        <h1 className="text-2xl font-bold mb-4 text-center text-blue-600">
-          Bid Management Dashboard
-        </h1>
-        {error ? (
-          <p className="text-red-500 text-center">{error}</p>
-        ) : (
-          <>
-            <div className="mb-4 flex flex-col md:flex-row gap-4">
-              <SearchBox
-                placeholder="Search by consignee"
-                onSearch={setSearchQuery}
-              />
+      <AdminPageShell
+        title="Bid Management"
+        subtitle="Recent bids grouped by company — last 7 days"
+        icon={FaGavel}
+        noContentCard
+      >
+        <div className="max-w-6xl mx-auto space-y-6">
+          {error ? (
+            <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-center text-red-700 font-medium">
+              {error}
             </div>
-            <div className="overflow-x-auto">
-              {groupedBids.map(({ group, bids, consignees }) => (
-                <div key={group} className="mb-6 border rounded p-4 bg-gray-50">
-                  <div
-                    className="flex justify-between items-center cursor-pointer"
-                    onClick={() => setSelectedGroup(group)}
-                  >
-                    <span className="font-bold text-lg">{group}</span>
-                    <span className="text-sm text-green-600">
-                      {consignees.length} Consignees
-                    </span>
-                  </div>
-                  <div className="mt-2 text-gray-700">
-                    Consignees: {consignees.join(", ")}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </>
-        )}
-        {selectedGroup && (
-          <PopupBox
-            isOpen={!!selectedGroup}
-            onClose={() => setSelectedGroup(null)}
-            title={`Bids for Group: ${selectedGroup}`}
-          >
-            <Tables
-              headers={headers}
-              rows={groupedBids
-                .find((g) => g.group === selectedGroup)
-                .bids.map((bid, index) => [
-                  filteredData.length -
-                    ((currentPage - 1) * itemsPerPage + index),
-                  bid.group,
-                  bid.consignee,
-                  bid.origin,
-                  bid.commodity,
-                  Object.entries(bid.parameters)
-                    .filter(([_, value]) => value !== "0")
-                    .map(([key, value]) => `${key}: ${value}%`)
-                    .join(", "),
-                  bid.quantity,
-                  bid.rate,
-                  formatDate(bid.bidDate),
-                  bid.startTime,
-                  bid.endTime,
-                  bid.paymentTerms,
-                  bid.delivery,
+          ) : (
+            <>
+              <div className="flex flex-col sm:flex-row gap-4 items-stretch sm:items-center">
+                <SearchBox
+                  placeholder="Search by consignee..."
+                  items={consigneeItems}
+                  onSearch={handleSearchConsignee}
+                  className="max-w-full sm:max-w-md"
+                />
+              </div>
+
+              <div className="grid gap-4">
+                {groupedBids.map(({ group, consignees }) => (
                   <button
-                    key={`rate-quantity-${index}`}
-                    className="text-green-500 hover:text-green-700 flex items-center gap-1"
-                    onClick={() =>
+                    key={group}
+                    type="button"
+                    onClick={() => setSelectedGroup(group)}
+                    className="text-left rounded-2xl border border-emerald-100 bg-white p-5 shadow-md shadow-emerald-900/5 hover:border-emerald-200 hover:shadow-lg transition-all"
+                  >
+                    <div className="flex flex-wrap justify-between items-center gap-2">
+                      <span className="text-lg font-bold text-slate-800">
+                        {group}
+                      </span>
+                      <span className="text-sm font-medium text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full">
+                        {consignees.length} consignee
+                        {consignees.length !== 1 ? "s" : ""}
+                      </span>
+                    </div>
+                    <p className="mt-2 text-sm text-slate-600 line-clamp-2">
+                      {consignees.join(", ")}
+                    </p>
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+
+          {selectedGroup && (
+            <PopupBox
+              isOpen={!!selectedGroup}
+              onClose={() => setSelectedGroup(null)}
+              title={`Bids — ${selectedGroup}`}
+            >
+              <Tables
+                headers={headers}
+                rows={
+                  groupedBids
+                    .find((g) => g.group === selectedGroup)
+                    ?.bids.map((bid, idx, arr) =>
+                      buildRow(bid, idx, arr.length)
+                    ) || []
+                }
+              />
+            </PopupBox>
+          )}
+
+          {editableRateQuantity && (
+            <PopupBox
+              isOpen={!!editableRateQuantity}
+              onClose={() => setEditableRateQuantity(null)}
+              title="Edit rate & quantity"
+            >
+              <div className="space-y-4">
+                <label className="block">
+                  <span className="text-sm font-medium text-slate-700">
+                    Rate / Ton
+                  </span>
+                  <input
+                    type="number"
+                    className="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3 focus:ring-2 focus:ring-emerald-400/50 focus:border-emerald-400 outline-none"
+                    value={editableRateQuantity.rate}
+                    onChange={(e) =>
                       setEditableRateQuantity({
-                        id: bid._id,
-                        rate: bid.rate,
-                        quantity: bid.quantity,
+                        ...editableRateQuantity,
+                        rate: e.target.value,
                       })
                     }
-                    title="View/Edit Rate & Quantity"
-                  >
-                    <AiOutlineEdit size={20} />
-                  </button>,
-                  <button
-                    key={`view-bid-${index}`}
-                    className="text-blue-500 hover:text-blue-700"
-                    onClick={() => setSelectedBid(bid)}
-                    title="View"
-                  >
-                    <AiOutlineEye size={20} />
-                  </button>,
-                ])}
+                  />
+                </label>
+                <label className="block">
+                  <span className="text-sm font-medium text-slate-700">
+                    Quantity (tons)
+                  </span>
+                  <input
+                    type="number"
+                    className="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3 focus:ring-2 focus:ring-emerald-400/50 focus:border-emerald-400 outline-none"
+                    value={editableRateQuantity.quantity}
+                    onChange={(e) =>
+                      setEditableRateQuantity({
+                        ...editableRateQuantity,
+                        quantity: e.target.value,
+                      })
+                    }
+                  />
+                </label>
+                <button
+                  type="button"
+                  className="w-full py-3 rounded-xl font-semibold bg-emerald-600 text-white hover:bg-emerald-700 transition-colors"
+                  onClick={handleEdit}
+                >
+                  Save changes
+                </button>
+              </div>
+            </PopupBox>
+          )}
+
+          {selectedBid && (
+            <ViewBid
+              bidId={selectedBid._id}
+              onClose={() => setSelectedBid(null)}
             />
-          </PopupBox>
-        )}
-        {editableRateQuantity && (
-          <PopupBox
-            isOpen={!!editableRateQuantity}
-            onClose={() => setEditableRateQuantity(null)}
-            title="Edit Rate & Quantity"
-          >
-            <div className="space-y-4">
-              <label>
-                Rate / Tons:
-                <input
-                  type="number"
-                  className="border p-2 w-full"
-                  value={editableRateQuantity.rate}
-                  onChange={(e) =>
-                    setEditableRateQuantity({
-                      ...editableRateQuantity,
-                      rate: e.target.value,
-                    })
-                  }
-                />
-              </label>
-              <label>
-                Quantity in Tons:
-                <input
-                  type="number"
-                  className="border p-2 w-full"
-                  value={editableRateQuantity.quantity}
-                  onChange={(e) =>
-                    setEditableRateQuantity({
-                      ...editableRateQuantity,
-                      quantity: e.target.value,
-                    })
-                  }
-                />
-              </label>
-              <button
-                className="bg-blue-500 text-white px-4 py-2 rounded"
-                onClick={handleEdit}
-              >
-                Save
-              </button>
-            </div>
-          </PopupBox>
-        )}
-        {selectedBid && (
-          <ViewBid
-            bidId={selectedBid._id}
-            onClose={() => setSelectedBid(null)}
-          />
-        )}
-      </div>
+          )}
+        </div>
+      </AdminPageShell>
     </Suspense>
   );
 };

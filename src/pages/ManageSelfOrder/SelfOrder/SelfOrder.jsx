@@ -4,6 +4,8 @@ import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import axios from "axios";
 import Loading from "../../../common/Loading/Loading";
+import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
+import { FaClipboardList } from "react-icons/fa";
 
 const BuyerInformation = lazy(() =>
   import("../../../components/BuyerInformation/BuyerInformation")
@@ -155,18 +157,17 @@ const SelfOrder = () => {
     }
   };
 
-  const sectionClass = "rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-6 shadow-sm";
+  const sectionClass =
+    "rounded-2xl border border-emerald-100 bg-white p-5 sm:p-6 shadow-md shadow-emerald-900/5";
   return (
     <Suspense fallback={<Loading />}>
-      <div className="p-4 md:p-6 max-w-4xl mx-auto space-y-6">
-        <div className="text-center mb-8">
-          <h1 className="text-2xl md:text-3xl font-semibold text-slate-800 dark:text-slate-100">
-            Add Self Order
-          </h1>
-          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-            Fill in the details to create a new self order
-          </p>
-        </div>
+      <AdminPageShell
+        title="Add self order"
+        subtitle="Fill in buyer, commodity, PO, and supplier details"
+        icon={FaClipboardList}
+        noContentCard
+      >
+        <div className="max-w-4xl mx-auto space-y-6">
 
         <div className={sectionClass}>
           <BuyerInformation formData={formData} handleChange={handleChange} />
@@ -259,7 +260,8 @@ const SelfOrder = () => {
           pauseOnHover
           style={{ zIndex: 9999 }}
         />
-      </div>
+        </div>
+      </AdminPageShell>
     </Suspense>
   );
 };

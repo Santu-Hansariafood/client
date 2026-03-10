@@ -1,7 +1,10 @@
 import { useState, useEffect, lazy, Suspense } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
+import { FaTruck } from "react-icons/fa";
 import Loading from "../../../common/Loading/Loading";
+import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
+
 const Tables = lazy(() => import("../../../common/Tables/Tables"));
 const Actions = lazy(() => import("../../../common/Actions/Actions"));
 const Pagination = lazy(() =>
@@ -70,7 +73,9 @@ const ListConsignee = () => {
         consignee._id === selectedConsignee._id ? response.data : consignee
       );
       setConsigneeData(updatedConsignees);
+      setFilteredData(updatedConsignees);
       setIsEditPopupOpen(false);
+      toast.success("Consignee updated successfully");
     } catch (error) {
       toast.error("Error updating consignee:", error);
     }
@@ -83,36 +88,17 @@ const ListConsignee = () => {
 
   const submitDelete = async () => {
     try {
-      await axios.delete(
-        `/consignees/${selectedConsignee._id}`
-      );
+      await axios.delete(`/consignees/${selectedConsignee._id}`);
       const updatedConsignees = consigneeData.filter(
         (consignee) => consignee._id !== selectedConsignee._id
       );
       setConsigneeData(updatedConsignees);
+      setFilteredData(updatedConsignees);
       setIsPopupOpen(false);
+      toast.success("Consignee deleted successfully");
     } catch (error) {
       toast.error("Error deleting consignee:", error);
     }
-  };
-
-  const handleSearch = (query) => {
-    if (!query) {
-      setFilteredData(consigneeData);
-      return;
-    }
-
-    const searchQuery = query.toLowerCase();
-    const results = consigneeData.filter(
-      (consignee) =>
-        consignee.name.toLowerCase().includes(searchQuery) ||
-        consignee.phone.includes(searchQuery) ||
-        consignee.email.toLowerCase().includes(searchQuery) ||
-        consignee.gst.includes(searchQuery) ||
-        consignee.pan.includes(searchQuery)
-    );
-
-    setFilteredData(results);
   };
 
   const indexOfLastItem = currentPage * ITEMS_PER_PAGE;
@@ -137,7 +123,7 @@ const ListConsignee = () => {
     consignee.mandiLicense,
     consignee.activeStatus ? "Active" : "Inactive",
     <Actions
-      key={index}
+      key={consignee._id}
       onView={() => handleView(consignee)}
       onEdit={() => handleEdit(consignee)}
       onDelete={() => handleDelete(consignee)}
@@ -146,60 +132,66 @@ const ListConsignee = () => {
 
   return (
     <Suspense fallback={<Loading />}>
-      <div className="container mx-auto p-4">
-        <h2 className="text-2xl font-semibold mb-4 text-center">
-          Consignee List
-        </h2>
-        <div className="mb-4">
-          <SearchBox
-            placeholder="Search by Name..."
-            items={consigneeData.map((c) => c.name || "")}
-            onSearch={(filteredNames) => {
-              if (filteredNames.length === 0) {
-                setFilteredData(consigneeData);
-              } else {
-                const results = consigneeData.filter((c) =>
-                  filteredNames.includes(c.name)
-                );
-                setFilteredData(results);
-              }
-            }}
-          />
-        </div>
-        {loading ? (
-          <Loading />
-        ) : (
-          <>
-            <div className="overflow-x-auto">
-              <Tables
-                headers={[
-                  "Sl No.",
-                  "Name",
-                  "Phone",
-                  "Email",
-                  "GST",
-                  "PAN",
-                  "State",
-                  "District",
-                  "Location",
-                  "Pin",
-                  "Contact Person",
-                  "Mandi License",
-                  "Active Status",
-                  "Actions",
-                ]}
-                rows={formattedRows}
-              />
-            </div>
-
-            <Pagination
-              currentPage={currentPage}
-              totalItems={consigneeData.length}
-              itemsPerPage={ITEMS_PER_PAGE}
-              onPageChange={setCurrentPage}
+      <AdminPageShell
+        title="Consignee List"
+        subtitle="View and manage all consignees"
+        icon={FaTruck}
+        noContentCard
+      >
+        <div className="rounded-2xl border border-amber-200/60 bg-white shadow-lg p-4 sm:p-6 w-full overflow-hidden">
+          <div className="mb-4">
+            <SearchBox
+              placeholder="Search by name..."
+              items={consigneeData.map((c) => c.name || "")}
+              onSearch={(filteredNames) => {
+                if (!filteredNames || filteredNames.length === 0) {
+                  setFilteredData(consigneeData);
+                } else {
+                  const nameSet = new Set(filteredNames);
+                  setFilteredData(
+                    consigneeData.filter((c) => nameSet.has(c.name))
+                  );
+                }
+                setCurrentPage(1);
+              }}
             />
-          </>
-        )}
+          </div>
+          {loading ? (
+            <Loading />
+          ) : (
+            <>
+              <div className="overflow-x-auto rounded-xl border border-slate-100 -mx-1 px-1">
+                <Tables
+                  headers={[
+                    "Sl No.",
+                    "Name",
+                    "Phone",
+                    "Email",
+                    "GST",
+                    "PAN",
+                    "State",
+                    "District",
+                    "Location",
+                    "Pin",
+                    "Contact Person",
+                    "Mandi License",
+                    "Active Status",
+                    "Actions",
+                  ]}
+                  rows={formattedRows}
+                />
+              </div>
+              <div className="mt-4">
+                <Pagination
+                  currentPage={currentPage}
+                  totalItems={filteredData.length}
+                  itemsPerPage={ITEMS_PER_PAGE}
+                  onPageChange={setCurrentPage}
+                />
+              </div>
+            </>
+          )}
+        </div>
 
         <EditConsigneePopup
           isOpen={isEditPopupOpen}
@@ -214,7 +206,7 @@ const ListConsignee = () => {
           title={`View Consignee: ${selectedConsignee?.name}`}
         >
           {selectedConsignee && (
-            <div>
+            <div className="space-y-2 text-sm">
               <p>
                 <strong>Name:</strong> {selectedConsignee.name}
               </p>
@@ -264,13 +256,14 @@ const ListConsignee = () => {
         >
           <p>Are you sure you want to delete this consignee?</p>
           <button
+            type="button"
             onClick={submitDelete}
-            className="bg-red-500 text-white px-4 py-2 rounded mt-4"
+            className="bg-red-500 text-white px-4 py-2 rounded-lg mt-4 hover:bg-red-600"
           >
             Confirm Delete
           </button>
         </PopupBox>
-      </div>
+      </AdminPageShell>
     </Suspense>
   );
 };

@@ -1,7 +1,10 @@
-import { Suspense, useEffect } from "react";
-import { Outlet } from "react-router-dom";
+import { Suspense, useEffect, useState, useCallback } from "react";
+import { Outlet, useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 import { useAuth } from "../context/AuthContext/AuthContext";
 import Sidebar from "../components/Sidebar/Sidebar";
+import Header from "../common/Header/Header";
+import LogoutConfirmationModal from "../common/LogoutConfirmationModal/LogoutConfirmationModal";
 import { prefetchRoute } from "../utils/LazyPages/LazyPages";
 
 const PageLoader = () => (
@@ -11,7 +14,15 @@ const PageLoader = () => (
 );
 
 const PrivateLayout = () => {
-  const { userRole } = useAuth();
+  const { userRole, logout } = useAuth();
+  const navigate = useNavigate();
+  const [showLogoutConfirmation, setShowLogoutConfirmation] = useState(false);
+
+  const handleLogout = useCallback(() => {
+    logout();
+    toast.success("Successfully logged out!");
+    navigate("/", { replace: true });
+  }, [logout, navigate]);
 
   useEffect(() => {
     prefetchRoute("/dashboard");
@@ -24,13 +35,22 @@ const PrivateLayout = () => {
   }, []);
 
   return (
-    <div className="flex h-screen">
+    <div className="flex h-screen w-full overflow-hidden bg-slate-100">
       {userRole === "Admin" && <Sidebar />}
-      <main className="flex-1 p-4 overflow-auto">
-        <Suspense fallback={<PageLoader />}>
-          <Outlet />
-        </Suspense>
-      </main>
+      <div className="flex-1 min-w-0 flex flex-col overflow-hidden">
+        <Header onLogoutClick={() => setShowLogoutConfirmation(true)} />
+        <main className="flex-1 min-w-0 overflow-auto">
+          <Suspense fallback={<PageLoader />}>
+            <Outlet />
+          </Suspense>
+        </main>
+      </div>
+      {showLogoutConfirmation && (
+        <LogoutConfirmationModal
+          onConfirm={handleLogout}
+          onCancel={() => setShowLogoutConfirmation(false)}
+        />
+      )}
     </div>
   );
 };

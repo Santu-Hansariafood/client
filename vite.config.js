@@ -56,7 +56,8 @@ export default defineConfig({
       output: {
         manualChunks: {
           react: ['react', 'react-dom', 'react-router-dom'],
-          utils: ['axios', 'moment']
+          utils: ['axios', 'moment'],
+          ui: ['react-toastify', 'react-helmet-async']
         },
         chunkFileNames: 'assets/[name]-[hash].js',
       }

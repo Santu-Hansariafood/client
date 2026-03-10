@@ -1,5 +1,5 @@
 import { BrowserRouter } from "react-router-dom";
-import { HelmetProvider, Helmet } from "react-helmet-async";
+import { Helmet } from "react-helmet-async";
 import { AuthProvider } from "./context/AuthContext/AuthContext";
 import Loading from "./common/Loading/Loading";
 import CacheHandler from "./utils/CacheHandler/CacheHandler";
@@ -13,26 +13,24 @@ const App = () => {
   const hydrated = CacheHandler();
 
   return (
-    <HelmetProvider>
-      <AuthProvider>
-        <Helmet>
-          <title>Hansaria Food Private Limited</title>
-          <meta
-            name="description"
-            content="Hansaria Food Private Limited specializes in premium food products."
-          />
-          <meta name="robots" content="index,follow" />
-        </Helmet>
+    <AuthProvider>
+      {/* Fallback until RouteSEO mounts; RouteSEO overwrites per route */}
+      <Helmet>
+        <title>Hansaria Food Private Limited</title>
+        <meta
+          name="description"
+          content="Hansaria Food Private Limited — poultry & feed meal trading and brokerage."
+        />
+      </Helmet>
 
-        <BrowserRouter>
+      <BrowserRouter>
           <Suspense fallback={<Loading />}>
             <RouteSEO />
             <ToastContainer position="top-right" autoClose={3000} />
             <AppRoutes hydrated={hydrated} />
           </Suspense>
-        </BrowserRouter>
-      </AuthProvider>
-    </HelmetProvider>
+      </BrowserRouter>
+    </AuthProvider>
   );
 };
 
