@@ -169,17 +169,30 @@ router.put("/:id", async (req, res) => {
     }
 
     // Resolve commodityIds from commodity names if needed
-    if (Array.isArray(body.commodity) && body.commodity.some(c => typeof c === 'string')) {
-      const commodities = await Commodity.find({ name: { $in: body.commodity } })
-        .select("_id")
-        .lean();
-      commodityIds = commodities.map((c) => c._id);
+    if (Array.isArray(body.commodity)) {
+      if (body.commodity.length === 0) {
+        commodityIds = [];
+      } else {
+        const commodities = await Commodity.find({ name: { $in: body.commodity } })
+          .select("_id")
+          .lean();
+        commodityIds = commodities.map((c) => c._id);
+      }
     }
 
     // Resolve consigneeIds from consignee objects/names if needed
-    if (Array.isArray(body.consignee) && body.consignee.length > 0) {
-      const consigneeIdentifiers = body.consignee.map(c => c.value || c);
-      consigneeIds = normalizeObjectIdArray(consigneeIdentifiers);
+    if (Array.isArray(body.consignee)) {
+      if (body.consignee.length === 0) {
+        consigneeIds = [];
+      } else {
+        const names = body.consignee
+          .map((c) => (typeof c === "string" ? c : c?.label || c?.name || ""))
+          .filter(Boolean);
+        const foundConsignees = await Consignee.find({ name: { $in: names } })
+          .select("_id")
+          .lean();
+        consigneeIds = foundConsignees.map((c) => c._id);
+      }
     }
 
     const update = {
