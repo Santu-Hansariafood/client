@@ -130,9 +130,6 @@ const ListCommodity = () => {
       >
         <div className="max-w-6xl mx-auto">
           <div className="bg-white border border-amber-200/80 rounded-2xl shadow-lg p-4 sm:p-6">
-            <h2 className="text-xl sm:text-2xl font-bold mb-6 text-center text-slate-800">
-              Commodity List
-            </h2>
               <div className="mb-6 flex justify-between items-center">
                 <SearchBox
                   placeholder="Search Commodities"

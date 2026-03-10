@@ -1,6 +1,8 @@
 import { useState, useEffect, lazy, Suspense } from "react";
 import axios from "axios";
 import Loading from "../../../common/Loading/Loading";
+import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
+import { FaBuilding } from "react-icons/fa";
 const Tables = lazy(() => import("../../../common/Tables/Tables"));
 const SearchBox = lazy(() => import("../../../common/SearchBox/SearchBox"));
 const Pagination = lazy(() =>
@@ -148,14 +150,16 @@ const ListSellerCompany = () => {
 
   return (
     <Suspense fallback={<Loading />}>
-      <div className="p-4 sm:p-6 md:p-10 lg:p-16 bg-gray-100 flex justify-center items-center">
-        <div className="w-full max-w-6xl bg-white rounded-lg shadow-md p-6">
-          <h2 className="text-2xl font-bold mb-4 text-gray-700 text-center">
-            Seller Company List
-          </h2>
-          <div className="mb-4">
+      <AdminPageShell
+        title="Seller Companies"
+        subtitle="Browse seller companies, KYC, and bank details"
+        icon={FaBuilding}
+        noContentCard
+      >
+        <div className="max-w-7xl mx-auto space-y-6">
+          <div className="rounded-2xl border border-amber-200/60 bg-white shadow-lg p-4 sm:p-6">
             <SearchBox
-              placeholder="Search by Name or Account Number"
+              placeholder="Search by name or account number..."
               items={[
                 ...companies
                   .map((company) => company.companyName || "")
@@ -167,15 +171,22 @@ const ListSellerCompany = () => {
                       .filter(Boolean) || []
                 ),
               ]}
-              onSearch={handleSearch}
+              onSearch={(filteredItems) => {
+                handleSearch(filteredItems);
+                setCurrentPage(1);
+              }}
             />
           </div>
-          <Tables headers={headers} rows={rows} />
-          <Pagination
-            currentPage={currentPage}
-            totalItems={searchResults.length}
-            onPageChange={handlePageChange}
-          />
+
+          <div className="rounded-2xl border border-slate-200 bg-white shadow-sm p-3 sm:p-4">
+            <Tables headers={headers} rows={rows} />
+            <Pagination
+              currentPage={currentPage}
+              totalItems={searchResults.length}
+              onPageChange={handlePageChange}
+            />
+          </div>
+
           {selectedCompany && (
             <PopupBox
               isOpen={true}
@@ -239,7 +250,7 @@ const ListSellerCompany = () => {
                 )}
                 <button
                   onClick={() => generatePDF(selectedCompany)}
-                  className="bg-green-500 text-white py-2 px-4 rounded-lg mt-4"
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white py-2 px-4 rounded-xl mt-4 font-semibold transition"
                 >
                   Download KYC Documents (PDF)
                 </button>
@@ -272,7 +283,7 @@ const ListSellerCompany = () => {
             </PopupBox>
           )}
         </div>
-      </div>
+      </AdminPageShell>
     </Suspense>
   );
 };

@@ -5,6 +5,7 @@ const SITE_URL =
   (typeof import.meta !== "undefined" && import.meta.env?.VITE_SITE_URL) ||
   "https://bid.hansariafood.in";
 const OG_IMAGE = `${SITE_URL}/icons/android-chrome-512x512.png`;
+const OG_IMAGE_192 = `${SITE_URL}/icons/android-chrome-192x192.png`;
 
 const DEFAULT_TITLE = "Hansaria Food Private Limited | Bid Portal";
 const DEFAULT_DESC =
@@ -104,10 +105,14 @@ const RouteSEO = () => {
       <meta property="og:image:width" content="512" />
       <meta property="og:image:height" content="512" />
       <meta property="og:image:alt" content="Hansaria Food — Commodity & bid portal" />
+      <meta property="og:image:type" content="image/png" />
+      <meta property="og:image:secure_url" content={OG_IMAGE} />
+      <meta property="og:logo" content={OG_IMAGE_192} />
       <meta name="twitter:card" content="summary_large_image" />
       <meta name="twitter:title" content={title} />
       <meta name="twitter:description" content={desc} />
       <meta name="twitter:image" content={OG_IMAGE} />
+      <meta name="twitter:image:alt" content="Hansaria Food — Bid Portal" />
     </Helmet>
   );
 };

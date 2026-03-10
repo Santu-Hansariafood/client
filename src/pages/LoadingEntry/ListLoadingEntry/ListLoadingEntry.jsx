@@ -2,6 +2,9 @@ import React, { lazy, useEffect, useState, useMemo } from "react";
 import axios from "axios";
 import { MdVisibility, MdEdit, MdDelete, MdDownload } from "react-icons/md";
 import { toast } from "react-toastify";
+import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
+import Loading from "../../../common/Loading/Loading";
+import { FaClipboardList } from "react-icons/fa";
 
 import PrintLoadingEntry from "../PrintLoadingEntry/PrintLoadingEntry";
 const PopupBox = lazy(() => import("../../../common/PopupBox/PopupBox"));
@@ -149,60 +152,74 @@ const ListLoadingEntry = () => {
   );
 
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold text-center text-blue-700 mb-4">
-        Loading Entries
-      </h1>
+    <React.Suspense fallback={<Loading />}>
+      <AdminPageShell
+        title="Loading Entries"
+        subtitle="Search, view, edit, and download loading entry documents"
+        icon={FaClipboardList}
+        noContentCard
+      >
+        <div className="max-w-7xl mx-auto space-y-6">
+          <div className="rounded-2xl border border-amber-200/60 bg-white shadow-lg p-4 sm:p-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <SearchBox
+                placeholder="Search by Seller Name..."
+                items={loadingEntries.map(
+                  (entry) => sellerMap[entry.supplier] || "Unknown Supplier"
+                )}
+                onSearch={(filteredNames) => {
+                  if (!filteredNames.length) {
+                    setFilteredEntries(loadingEntries);
+                    return;
+                  }
+                  setFilteredEntries(
+                    loadingEntries.filter((entry) =>
+                      filteredNames.includes(sellerMap[entry.supplier])
+                    )
+                  );
+                }}
+              />
 
-      {/* ✅ Search Boxes for Seller Name & Lorry Number */}
-      <div className="flex gap-4 mb-4">
-        <SearchBox
-          placeholder="Search by Seller Name..."
-          items={loadingEntries.map((entry) => sellerMap[entry.supplier] || "Unknown Supplier")}
-          onSearch={(filteredNames) => {
-            if (!filteredNames.length) {
-              setFilteredEntries(loadingEntries);
-              return;
-            }
-            setFilteredEntries(
-              loadingEntries.filter((entry) => filteredNames.includes(sellerMap[entry.supplier]))
-            );
-          }}
-        />
-
-        <SearchBox
-          placeholder="Search by Lorry Number..."
-          items={loadingEntries.map((entry) => entry.lorryNumber)}
-          onSearch={(filteredLorryNumbers) => {
-            if (!filteredLorryNumbers.length) {
-              setFilteredEntries(loadingEntries);
-              return;
-            }
-            setFilteredEntries(
-              loadingEntries.filter((entry) => filteredLorryNumbers.includes(entry.lorryNumber))
-            );
-          }}
-        />
-      </div>
-
-      <Tables headers={headers} rows={rows} />
-
-      {selectedEntry && (
-        <PopupBox
-          isOpen={!!popupType}
-          onClose={() => setPopupType("")}
-          title={popupType === "view" ? "View Entry" : "Edit Entry"}
-        >
-          {popupType === "view" ? (
-            <pre>{JSON.stringify(selectedEntry, null, 2)}</pre>
-          ) : (
-            <div>
-              <p>Edit functionality can be implemented here.</p>
+              <SearchBox
+                placeholder="Search by Lorry Number..."
+                items={loadingEntries.map((entry) => entry.lorryNumber)}
+                onSearch={(filteredLorryNumbers) => {
+                  if (!filteredLorryNumbers.length) {
+                    setFilteredEntries(loadingEntries);
+                    return;
+                  }
+                  setFilteredEntries(
+                    loadingEntries.filter((entry) =>
+                      filteredLorryNumbers.includes(entry.lorryNumber)
+                    )
+                  );
+                }}
+              />
             </div>
+          </div>
+
+          <div className="rounded-2xl border border-slate-200 bg-white shadow-sm p-3 sm:p-4">
+            <Tables headers={headers} rows={rows} />
+          </div>
+
+          {selectedEntry && (
+            <PopupBox
+              isOpen={!!popupType}
+              onClose={() => setPopupType("")}
+              title={popupType === "view" ? "View Entry" : "Edit Entry"}
+            >
+              {popupType === "view" ? (
+                <pre>{JSON.stringify(selectedEntry, null, 2)}</pre>
+              ) : (
+                <div>
+                  <p>Edit functionality can be implemented here.</p>
+                </div>
+              )}
+            </PopupBox>
           )}
-        </PopupBox>
-      )}
-    </div>
+        </div>
+      </AdminPageShell>
+    </React.Suspense>
   );
 };
 

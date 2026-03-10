@@ -3,6 +3,8 @@ import axios from "axios";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Loading from "../../../common/Loading/Loading";
+import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
+import { FaUsersCog } from "react-icons/fa";
 
 const Tables = lazy(() => import("../../../common/Tables/Tables"));
 const SearchBox = lazy(() => import("../../../common/SearchBox/SearchBox"));
@@ -150,37 +152,42 @@ const ListSellerDetails = () => {
 
   return (
     <Suspense fallback={<Loading />}>
-      <div className="p-4 sm:p-6 md:p-10 lg:p-16 bg-gray-100 flex flex-col items-center">
-        <h1 className="text-2xl font-bold mb-6 text-gray-700">Seller List</h1>
-        <div className="w-full max-w-4xl mb-4">
-          <SearchBox
-            placeholder="Search sellers by name or phone..."
-            items={data.map((item) => item.sellerName)}
-            onSearch={(filteredNames) => {
-              if (!filteredNames.length) {
-                setFilteredData(data);
-                return;
-              }
+      <AdminPageShell
+        title="Seller Details"
+        subtitle="Search, view, edit, and manage seller users"
+        icon={FaUsersCog}
+        noContentCard
+      >
+        <div className="max-w-7xl mx-auto space-y-6">
+          <div className="rounded-2xl border border-amber-200/60 bg-white shadow-lg p-4 sm:p-6">
+            <SearchBox
+              placeholder="Search sellers by name..."
+              items={data.map((item) => item.sellerName)}
+              onSearch={(filteredNames) => {
+                if (!filteredNames.length) {
+                  setFilteredData(data);
+                  return;
+                }
 
-              const filteredSellers = data.filter(
-                (seller) => filteredNames.includes(seller.sellerName)
-              );
+                const filteredSellers = data.filter((seller) =>
+                  filteredNames.includes(seller.sellerName)
+                );
 
-              setFilteredData(filteredSellers);
-            }}
-          />
-        </div>
-        <div className="w-full max-w-4xl bg-white rounded-lg shadow-md">
-          <Tables headers={headers} rows={rows} />
-        </div>
-        <div className="w-full max-w-4xl">
-          <Pagination
-            currentPage={currentPage}
-            totalItems={filteredData.length}
-            itemsPerPage={itemsPerPage}
-            onPageChange={setCurrentPage}
-          />
-        </div>
+                setFilteredData(filteredSellers);
+                setCurrentPage(1);
+              }}
+            />
+          </div>
+
+          <div className="rounded-2xl border border-slate-200 bg-white shadow-sm p-3 sm:p-4">
+            <Tables headers={headers} rows={rows} />
+            <Pagination
+              currentPage={currentPage}
+              totalItems={filteredData.length}
+              itemsPerPage={itemsPerPage}
+              onPageChange={setCurrentPage}
+            />
+          </div>
 
         {isPopupOpen && (
           <PopupBox
@@ -272,7 +279,8 @@ const ListSellerDetails = () => {
         )}
 
         <ToastContainer />
-      </div>
+        </div>
+      </AdminPageShell>
     </Suspense>
   );
 };
