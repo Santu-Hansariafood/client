@@ -10,15 +10,11 @@ const DEFAULT_TITLE = "Hansaria Food Private Limited | Bid Portal";
 const DEFAULT_DESC =
   "Hansaria Food bid portal — poultry, feed meal, and agricultural commodity trading & brokerage across India. Manage commodities, bids, buyers, and consignees.";
 
-/** Commodity-focused SEO copy for indexing */
 const COMMODITY_LIST_DESC =
   "Browse Hansaria Food commodity catalog — HSN codes, quality parameters, poultry & feed ingredients. Commodity list for trading and brokerage on bid.hansariafood.in.";
 const COMMODITY_ADD_DESC =
   "Add commodities with HSN codes and quality parameters for bid management — Hansaria Food trading platform.";
 
-/**
- * Paths that must not be indexed (auth/edit/dynamic).
- */
 const NOINDEX_PATTERNS = [
   /^\/manage-order\/edit-self-order\//,
   /^\/confirm-bids\//,

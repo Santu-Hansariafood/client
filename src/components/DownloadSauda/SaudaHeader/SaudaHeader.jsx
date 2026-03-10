@@ -60,7 +60,7 @@ const SaudaHeader = () => (
       <Text style={styles.mainTitle}>HANSARIA FOOD PVT. LTD.</Text>
       <Text style={styles.subtitle}>Broker and Commission Agent</Text>
       <Text style={styles.address}>
-        Regd. Office: 123, Business Center, Mumbai, Maharashtra - 400001
+        Primarc Square, Plot No.1, Salt Lake Bypass, LA Block, Sector: 3, Bidhannagar, Kolkata, West Bengal 700106
       </Text>
       <Text style={styles.tagline}>
         MAIZE | SOYABEAN D.O.C | M.D.O.C | D.ORB | WHEAT | RICE

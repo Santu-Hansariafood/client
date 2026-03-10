@@ -1,10 +1,6 @@
 import PropTypes from "prop-types";
 import PageHeader from "../PageHeader/PageHeader";
 
-/**
- * Common content wrapper for admin pages. Header is rendered once in PrivateLayout.
- * Use for Buyer, Company, Group of Company, Consignee, and any admin screen.
- */
 const AdminPageShell = ({
   title,
   subtitle,

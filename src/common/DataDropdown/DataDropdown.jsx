@@ -27,8 +27,8 @@ const DataDropdown = ({
           ...theme,
           colors: {
             ...theme.colors,
-            primary: "#16a34a",        // main green
-            primary25: "#dcfce7",      // hover
+            primary: "#16a34a",
+            primary25: "#dcfce7",
             primary50: "#bbf7d0",
             danger: "#dc2626",
             dangerLight: "#fee2e2",

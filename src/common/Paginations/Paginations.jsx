@@ -40,7 +40,6 @@ const Pagination = ({
 
   return (
     <div className="flex flex-col items-center gap-4 mt-6 w-full">
-      {/* Mobile: compact prev/next */}
       <div className="flex items-center justify-between w-full max-w-sm md:hidden gap-3 p-3 rounded-2xl bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700/80 shadow-sm">
         <button
           onClick={() => onPageChange(currentPage - 1)}
@@ -63,7 +62,6 @@ const Pagination = ({
         </button>
       </div>
 
-      {/* Desktop: full pagination */}
       <div className="hidden md:flex flex-col items-center w-full gap-4">
         {pageGroups.length > 1 && (
           <div className="flex flex-wrap justify-center gap-2">

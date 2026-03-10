@@ -1,9 +1,5 @@
 import PropTypes from "prop-types";
 
-/**
- * Consistent page title block for all devices.
- * Use inside main content after the app Header/navbar.
- */
 const PageHeader = ({ title, subtitle, icon: Icon, className = "" }) => {
   return (
     <div

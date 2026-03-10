@@ -105,8 +105,7 @@ const SaudaChart = ({ apiUrl, chartType = "line" }) => {
       </div>
 
       <div className="h-[320px] sm:h-[380px]">
-        {[
-          <ResponsiveContainer width="100%" height="100%">
+        <ResponsiveContainer width="100%" height="100%">
             {chartType === "bar" ? (
               <BarChart
                 data={chartData}
@@ -191,8 +190,7 @@ const SaudaChart = ({ apiUrl, chartType = "line" }) => {
                 />
               </LineChart>
             )}
-          </ResponsiveContainer>
-        ]}
+        </ResponsiveContainer>
       </div>
     </div>
   );

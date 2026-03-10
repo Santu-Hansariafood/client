@@ -32,9 +32,9 @@ const Header = ({ onLogoutClick }) => {
       className="sticky top-0 z-20 flex flex-wrap items-center justify-between gap-3 pl-14 pr-4 py-3 sm:py-4 lg:pl-6 lg:pr-6 bg-gradient-to-r from-emerald-800 via-emerald-700 to-emerald-800 text-amber-50 shadow-lg border-b border-amber-400/20"
       role="banner"
     >
-      <h1 className="text-base sm:text-xl font-bold tracking-wide truncate max-w-[70vw] sm:max-w-none pr-2">
+      <h2 className="text-base sm:text-xl font-bold tracking-wide truncate max-w-[70vw] sm:max-w-none pr-2">
         {title}
-      </h1>
+      </h2>
       <div className="flex items-center gap-2 sm:gap-3 ml-auto" ref={dropdownRef}>
         <div className="hidden sm:flex items-center">
           <PWAInstall />
