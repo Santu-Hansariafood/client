@@ -20,11 +20,11 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
     if (buyer) {
       setFormData({
         ...buyer,
-        mobile: buyer.mobile || [""],
-        email: buyer.email || [""],
+        mobile: Array.isArray(buyer.mobile) ? buyer.mobile : [""],
+        email: Array.isArray(buyer.email) ? buyer.email : [""],
         password: buyer.password || "",
-        commodity: buyer.commodity || [""],
-        consignee: buyer.consignee || [],
+        commodity: Array.isArray(buyer.commodity) ? buyer.commodity : [""],
+        consignee: Array.isArray(buyer.consignee) ? buyer.consignee : [],
         companyName: buyer.companyName || "",
         group: buyer.group || "",
       });
@@ -235,7 +235,7 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
                   <label className="block font-semibold">
                     Commodities & Brokerage
                   </label>
-                  {formData.commodity.map((comm, index) => (
+                  {(formData.commodity || []).map((comm, index) => (
                     <div
                       key={index}
                       className="flex items-center space-x-2 mb-2"
@@ -248,9 +248,9 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
                         className="w-full p-2 border rounded"
                       >
                         <option value="">Select Commodity</option>
-                        {commodities.map((commodity) => (
-                          <option key={commodity._id} value={commodity.name}>
-                            {commodity.name}
+                        {(commodities || []).map((commodity) => (
+                          <option key={commodity.value} value={commodity.label}>
+                            {commodity.label}
                           </option>
                         ))}
                       </select>
@@ -281,7 +281,7 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
                 </div>
                 <div>
                   <label className="block font-semibold">Mobile</label>
-                  {formData.mobile.map((number, index) => (
+                  {(formData.mobile || []).map((number, index) => (
                     <div
                       key={index}
                       className="flex items-center space-x-2 mb-2"
@@ -312,7 +312,7 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
                 </div>
                 <div>
                   <label className="block font-semibold">Email</label>
-                  {formData.email.map((email, index) => (
+                  {(formData.email || []).map((email, index) => (
                     <div
                       key={index}
                       className="flex items-center space-x-2 mb-2"
@@ -345,7 +345,7 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
                 <div>
                   <label className="block font-semibold">Consignee</label>
                   <div className="space-y-2">
-                    {formData.consignee.map((consignee, index) => (
+                    {(formData.consignee || []).map((consignee, index) => (
                       <div
                         key={index}
                         className="flex items-center justify-between bg-gray-100 p-2 rounded"
@@ -362,7 +362,7 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
                     ))}
                   </div>
                   <DataDropdown
-                    options={allConsignees}
+                    options={allConsignees || []}
                     selectedOptions={null}
                     onChange={(selectedConsignee) => {
                       addConsignee({
