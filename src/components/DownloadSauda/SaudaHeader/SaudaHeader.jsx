@@ -4,28 +4,33 @@ import logo from "../../../assets/Hans.jpg";
 const styles = StyleSheet.create({
   header: {
     borderBottom: "3 solid #1F7A3E",
-    paddingBottom: 12,
+    paddingBottom: 10,
     marginBottom: 15,
   },
 
   topRow: {
     flexDirection: "row",
-    justifyContent: "space-between",
     alignItems: "center",
   },
 
+  logoContainer: {
+    width: "30%",
+    justifyContent: "center",
+  },
+
   logo: {
-    width: 110,
-    height: 70,
+    width: 100,
+    height: 65,
     objectFit: "contain",
   },
 
   companySection: {
-    textAlign: "right",
+    width: "70%",
+    paddingLeft: 10,
   },
 
   companyName: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: "bold",
     color: "#1F7A3E",
     letterSpacing: 1,
@@ -41,21 +46,22 @@ const styles = StyleSheet.create({
   address: {
     fontSize: 8,
     color: "#4B5563",
-    marginTop: 4,
-    lineHeight: 1.3,
+    marginTop: 3,
+    lineHeight: 1.2,
   },
 
   productLine: {
-    marginTop: 6,
+    marginTop: 4,
     fontSize: 8,
     color: "#1F2937",
     fontWeight: "bold",
   },
 
   saudaTitleBox: {
-    marginTop: 10,
+    marginTop: 8,
     backgroundColor: "#E8F5E9",
-    padding: 6,
+    paddingVertical: 5,
+    paddingHorizontal: 8,
     borderLeft: "5 solid #F4B400",
   },
 
@@ -69,7 +75,10 @@ const styles = StyleSheet.create({
 const SaudaHeader = () => (
   <View style={styles.header} fixed>
     <View style={styles.topRow}>
-      <Image src={logo} style={styles.logo} />
+      
+      <View style={styles.logoContainer}>
+        <Image src={logo} style={styles.logo} />
+      </View>
 
       <View style={styles.companySection}>
         <Text style={styles.companyName}>HANSARIA FOOD PVT. LTD.</Text>
