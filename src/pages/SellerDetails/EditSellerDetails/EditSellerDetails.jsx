@@ -35,6 +35,7 @@ const EditSellerDetails = ({ sellerId, onClose, onSave }) => {
   const [selectedCompany, setSelectedCompany] = useState([]);
   const [selectedStatus, setSelectedStatus] = useState(null);
   const [selectedBuyers, setSelectedBuyers] = useState([]);
+  const [buyerOptions, setBuyerOptions] = useState([]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -114,7 +115,7 @@ const EditSellerDetails = ({ sellerId, onClose, onSave }) => {
         setCompanyOptions(
           companies.sort((a, b) => a.label.localeCompare(b.label))
         );
-        setSelectedBuyers(
+        setBuyerOptions(
           buyers.sort((a, b) => a.label.localeCompare(b.label))
         );
       } catch (error) {
@@ -381,25 +382,14 @@ const EditSellerDetails = ({ sellerId, onClose, onSave }) => {
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Buyers
             </label>
-            <DropdownSelector
-              fetchData={async () => {
-                try {
-                  const buyersRes = await axios.get(`${apiBaseURL}/buyers`);
-                  return buyersRes.data.map((item) => ({
-                    value: item.name,
-                    label: item.name,
-                  }));
-                } catch (error) {
-                  toast.error("Failed to load buyers.", error);
-                  return [];
-                }
-              }}
-              options={selectedBuyers}
-              placeholder="Select buyers"
-              isMulti
-              value={selectedBuyers}
-              onChange={(selected) => setSelectedBuyers(selected || [])}
-            />
+              <DropdownSelector
+                fetchData={async () => buyerOptions}
+                options={buyerOptions}
+                placeholder="Select buyers"
+                isMulti
+                value={selectedBuyers}
+                onChange={(selected) => setSelectedBuyers(selected || [])}
+              />
           </div>
 
           <div className="mt-6 flex justify-end">
