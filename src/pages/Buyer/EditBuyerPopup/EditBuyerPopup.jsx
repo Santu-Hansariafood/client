@@ -13,7 +13,6 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
   const [companies, setCompanies] = useState([]);
   const [groups, setGroups] = useState([]);
   const [commodities, setCommodities] = useState([]);
-  const [consignees, setConsignees] = useState([]);
   const [allConsignees, setAllConsignees] = useState([]);
 
   useEffect(() => {
@@ -43,25 +42,34 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
           ]);
 
         const groupsData = groupsRes.data?.data || groupsRes.data || [];
-        const commoditiesData = commoditiesRes.data?.data || commoditiesRes.data || [];
-        const consigneesData = consigneesRes.data?.data || consigneesRes.data || [];
-        const companiesData = companiesRes.data?.data || companiesRes.data || [];
+        const commoditiesData =
+          commoditiesRes.data?.data || commoditiesRes.data || [];
+        const consigneesData =
+          consigneesRes.data?.data || consigneesRes.data || [];
+        const companiesData =
+          companiesRes.data?.data || companiesRes.data || [];
 
         setGroups(
           groupsData.map((group) => ({
-            value: group.groupName,
+            value: String(group._id),
             label: group.groupName,
           }))
         );
         setCommodities(
-          commoditiesData.map((c) => ({ value: c.name, label: c.name }))
+          commoditiesData.map((c) => ({
+            value: String(c._id),
+            label: c.name,
+          }))
         );
         setAllConsignees(
-          consigneesData.map((c) => ({ value: c.name, label: c.name }))
+          consigneesData.map((c) => ({
+            value: String(c._id),
+            label: c.name,
+          }))
         );
         setCompanies(
           companiesData.map((company) => ({
-            value: company.companyName,
+            value: String(company._id),
             label: company.companyName,
           }))
         );
@@ -87,21 +95,19 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
   };
 
   const handleGroupChange = (selectedGroup) => {
-    const group = groups.find((g) => g.value === selectedGroup.value);
-
     setFormData((prevData) => ({
       ...prevData,
-      group: selectedGroup.value,
+      group: selectedGroup.label,
+      groupId: selectedGroup.value,
       consignee: [],
     }));
-
-    setConsignees(group?.consignees || []);
   };
 
   const handleCompanyChange = (selectedCompany) => {
     setFormData((prevData) => ({
       ...prevData,
-      companyName: selectedCompany?.value || "",
+      companyName: selectedCompany?.label || "",
+      companyId: selectedCompany?.value || "",
     }));
   };
 
@@ -148,10 +154,32 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      const commodityIds = (formData.commodity || []).map((comm) => {
+        if (typeof comm === "string") {
+          const match = commodities.find((c) => c.label === comm);
+          return match ? match.value : comm;
+        }
+        if (comm && typeof comm === "object") {
+          return comm.value || comm.label || "";
+        }
+        return "";
+      });
+
+      const consigneeIds = (formData.consignee || []).map(
+        (c) => c.value || c._id || ""
+      );
+
       const payload = {
-        ...formData,
-        // Backend handles name-to-ID resolution for these:
-        // companyName, group, commodity (array of names), consignee (array of {label, value})
+        name: formData.name,
+        password: formData.password,
+        mobile: formData.mobile,
+        email: formData.email,
+        companyId: formData.companyId || null,
+        groupId: formData.groupId || null,
+        commodityIds,
+        consigneeIds,
+        status: formData.status || "Active",
+        brokerage: formData.brokerage || {},
       };
       const response = await axios.put(
         `/buyers/${formData._id}`,
@@ -170,191 +198,233 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
 
   return (
     <Suspense fallback={<Loading />}>
-      <div className="fixed inset-0 bg-gray-800 bg-opacity-75 flex justify-center items-center z-50">
-        <div className="relative bg-white p-8 rounded-lg shadow-lg w-full max-w-3xl">
-          <button
-            className="absolute top-3 right-3 text-gray-700 hover:text-red-500 font-bold text-lg"
-            onClick={onClose}
-            title="Close"
-          >
-            ✖
-          </button>
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/70 backdrop-blur-sm">
+        <div className="relative w-full max-w-4xl mx-4 rounded-2xl bg-white/95 shadow-2xl border border-slate-200">
+          <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-gradient-to-r from-emerald-500/10 via-sky-500/5 to-transparent rounded-t-2xl">
+            <div>
+              <h2 className="text-lg sm:text-xl font-semibold text-slate-900 tracking-tight">
+                Edit Buyer
+              </h2>
+              <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
+                Update buyer profile, access and contact details.
+              </p>
+            </div>
+            <button
+              className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 hover:text-red-500 hover:border-red-200 shadow-sm transition"
+              onClick={onClose}
+              title="Close"
+              type="button"
+            >
+              ✖
+            </button>
+          </div>
 
-          <div className="max-h-[80vh] overflow-y-auto">
-            <form onSubmit={handleSubmit}>
-              <h2 className="text-xl font-semibold mb-4">Edit Buyer</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block font-semibold">Buyer Name</label>
+          <div className="max-h-[80vh] overflow-y-auto px-6 pb-6 pt-4">
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-semibold tracking-wide text-slate-600">
+                    Buyer Name
+                  </label>
                   <DataInput
-                    placeholder="Enter Name"
+                    placeholder="Enter buyer name"
                     name="name"
                     value={formData.name || ""}
                     onChange={handleChange}
                     required
                   />
                 </div>
-                <div>
-                  <label className="block font-semibold">Company</label>
+
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-semibold tracking-wide text-slate-600">
+                    Company
+                  </label>
                   <DataDropdown
                     options={companies}
                     selectedOptions={
-                      formData.companyName
+                      formData.companyId
                         ? {
-                            value: formData.companyName,
+                            value: formData.companyId,
                             label: formData.companyName,
                           }
                         : null
                     }
                     onChange={handleCompanyChange}
-                    placeholder="Select Company"
+                    placeholder="Select company"
                   />
                 </div>
-                <div>
-                  <label className="block font-semibold">Password</label>
+
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-semibold tracking-wide text-slate-600">
+                    Password
+                  </label>
                   <DataInput
-                    placeholder="Enter Password"
+                    placeholder="Enter password"
                     name="password"
                     value={formData.password || ""}
                     onChange={handleChange}
                     required
                   />
                 </div>
-                <div>
-                  <label className="block font-semibold">Group</label>
+
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-semibold tracking-wide text-slate-600">
+                    Group
+                  </label>
                   <DataDropdown
                     options={groups}
                     selectedOptions={groups.find(
-                      (group) => group.value === formData.group
+                      (group) => group.value === formData.groupId
                     )}
                     onChange={handleGroupChange}
-                    placeholder="Select Group"
+                    placeholder="Select group"
                   />
                 </div>
-                <div>
-                  <label className="block font-semibold">
-                    Commodities & Brokerage
-                  </label>
+              </div>
+
+              <div className="rounded-xl border border-slate-100 bg-slate-50/60 px-4 py-3 space-y-3">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xs font-semibold tracking-wide text-slate-700">
+                    Contact Details
+                  </h3>
+                  <span className="text-[11px] text-slate-400">
+                    Add multiple mobiles and emails if needed
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-[11px] font-medium text-slate-600 mb-1">
+                      Mobile Numbers
+                    </p>
+                    {(formData.mobile || []).map((number, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center gap-2 mb-2"
+                      >
+                        <DataInput
+                          placeholder="Enter mobile number"
+                          value={number}
+                          onChange={(e) =>
+                            handleArrayChange("mobile", index, e.target.value)
+                          }
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removeField("mobile", index)}
+                          className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-red-500 text-white text-xs shadow-sm hover:bg-red-600 transition"
+                        >
+                          ✖
+                        </button>
+                      </div>
+                    ))}
+                    <button
+                      type="button"
+                      onClick={() => addField("mobile")}
+                      className="mt-1 text-[11px] font-semibold text-emerald-600 hover:text-emerald-700"
+                    >
+                      + Add mobile
+                    </button>
+                  </div>
+
+                  <div>
+                    <p className="text-[11px] font-medium text-slate-600 mb-1">
+                      Email Addresses
+                    </p>
+                    {(formData.email || []).map((email, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center gap-2 mb-2"
+                      >
+                        <DataInput
+                          placeholder="Enter email address"
+                          value={email}
+                          onChange={(e) =>
+                            handleArrayChange("email", index, e.target.value)
+                          }
+                          inputType="email"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removeField("email", index)}
+                          className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-red-500 text-white text-xs shadow-sm hover:bg-red-600 transition"
+                        >
+                          ✖
+                        </button>
+                      </div>
+                    ))}
+                    <button
+                      type="button"
+                      onClick={() => addField("email")}
+                      className="mt-1 text-[11px] font-semibold text-emerald-600 hover:text-emerald-700"
+                    >
+                      + Add email
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-semibold tracking-wide text-slate-600">
+                      Commodities
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => addField("commodity")}
+                      className="text-[11px] font-semibold text-emerald-600 hover:text-emerald-700"
+                    >
+                      + Add commodity
+                    </button>
+                  </div>
                   {(formData.commodity || []).map((comm, index) => (
                     <div
                       key={index}
-                      className="flex items-center space-x-2 mb-2"
+                      className="flex items-center gap-2 mb-2"
                     >
                       <select
                         value={comm}
                         onChange={(e) =>
                           handleArrayChange("commodity", index, e.target.value)
                         }
-                        className="w-full p-2 border rounded"
+                        className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
                       >
-                        <option value="">Select Commodity</option>
+                        <option value="">Select commodity</option>
                         {(commodities || []).map((commodity) => (
                           <option key={commodity.value} value={commodity.label}>
                             {commodity.label}
                           </option>
                         ))}
                       </select>
-                      {/* <DataInput
-                        placeholder="Brokerage"
-                        value={formData.brokerage[comm] || ""}
-                        onChange={(e) =>
-                          handleBrokerageChange(comm, e.target.value)
-                        }
-                        inputType="number"
-                      /> */}
                       <button
                         type="button"
                         onClick={() => removeField("commodity", index)}
-                        className="p-1 bg-red-500 text-white rounded"
+                        className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-red-500 text-white text-xs shadow-sm hover:bg-red-600 transition"
                       >
                         ✖
                       </button>
                     </div>
                   ))}
-                  <button
-                    type="button"
-                    onClick={() => addField("commodity")}
-                    className="text-blue-500 mt-2"
-                  >
-                    Add Commodity
-                  </button>
                 </div>
-                <div>
-                  <label className="block font-semibold">Mobile</label>
-                  {(formData.mobile || []).map((number, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center space-x-2 mb-2"
-                    >
-                      <DataInput
-                        placeholder="Enter Mobile Number"
-                        value={number}
-                        onChange={(e) =>
-                          handleArrayChange("mobile", index, e.target.value)
-                        }
-                      />
-                      <button
-                        type="button"
-                        onClick={() => removeField("mobile", index)}
-                        className="p-1 bg-red-500 text-white rounded"
-                      >
-                        ✖
-                      </button>
-                    </div>
-                  ))}
-                  <button
-                    type="button"
-                    onClick={() => addField("mobile")}
-                    className="text-blue-500"
-                  >
-                    Add Mobile
-                  </button>
-                </div>
-                <div>
-                  <label className="block font-semibold">Email</label>
-                  {(formData.email || []).map((email, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center space-x-2 mb-2"
-                    >
-                      <DataInput
-                        placeholder="Enter Email"
-                        value={email}
-                        onChange={(e) =>
-                          handleArrayChange("email", index, e.target.value)
-                        }
-                        inputType="email"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => removeField("email", index)}
-                        className="p-1 bg-red-500 text-white rounded"
-                      >
-                        ✖
-                      </button>
-                    </div>
-                  ))}
-                  <button
-                    type="button"
-                    onClick={() => addField("email")}
-                    className="text-blue-500"
-                  >
-                    Add Email
-                  </button>
-                </div>
-                <div>
-                  <label className="block font-semibold">Consignee</label>
+
+                <div className="space-y-2">
+                  <label className="text-xs font-semibold tracking-wide text-slate-600">
+                    Consignee Access
+                  </label>
                   <div className="space-y-2">
                     {(formData.consignee || []).map((consignee, index) => (
                       <div
                         key={index}
-                        className="flex items-center justify-between bg-gray-100 p-2 rounded"
+                        className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2 border border-slate-100"
                       >
-                        <span>{consignee.label}</span>
+                        <span className="text-sm text-slate-700">
+                          {consignee.label}
+                        </span>
                         <button
                           type="button"
                           onClick={() => removeConsignee(index)}
-                          className="p-1 bg-red-500 text-white rounded"
+                          className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-red-500 text-white text-[11px] shadow-sm hover:bg-red-600 transition"
                         >
                           ✖
                         </button>
@@ -370,29 +440,35 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
                         value: selectedConsignee.value,
                       });
                     }}
-                    placeholder="Select Consignee"
+                    placeholder="Add consignee"
                   />
-                </div>
-                <div>
-                  <label className="block font-semibold">Status</label>
-                  <select
-                    name="status"
-                    value={formData.status || ""}
-                    onChange={handleChange}
-                    className="w-full p-2 border rounded"
-                  >
-                    <option value="active">Active</option>
-                    <option value="inactive">Inactive</option>
-                  </select>
                 </div>
               </div>
 
-              <button
-                type="submit"
-                className="mt-6 bg-green-500 text-white px-4 py-2 rounded"
-              >
-                Save Changes
-              </button>
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-2 border-t border-slate-100 mt-2">
+                <div className="flex items-center gap-2 text-[11px] text-slate-500">
+                  <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                  <span>Buyer status</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <select
+                    name="status"
+                    value={formData.status || "Active"}
+                    onChange={handleChange}
+                    className="rounded-lg border border-slate-200 px-3 py-1.5 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white"
+                  >
+                    <option value="Active">Active</option>
+                    <option value="Inactive">Inactive</option>
+                  </select>
+
+                  <button
+                    type="submit"
+                    className="inline-flex items-center justify-center rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-emerald-700 transition"
+                  >
+                    Save changes
+                  </button>
+                </div>
+              </div>
             </form>
           </div>
         </div>
