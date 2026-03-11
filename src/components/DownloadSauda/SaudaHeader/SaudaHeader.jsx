@@ -4,69 +4,61 @@ import logo from "../../../assets/Hans.jpg";
 const styles = StyleSheet.create({
   header: {
     borderBottom: "3 solid #1F7A3E",
-    paddingBottom: 10,
-    marginBottom: 15,
+    paddingBottom: 8,
+    marginBottom: 12,
   },
 
   topRow: {
     flexDirection: "row",
-    alignItems: "center",
+    alignItems: "flex-start",
   },
 
   logoContainer: {
-    width: "30%",
-    justifyContent: "center",
+    flex: 0.3,
+    alignItems: "flex-start",
   },
 
   logo: {
-    width: 100,
-    height: 65,
-    objectFit: "contain",
+    width: 95,
+    height: 60,
   },
 
   companySection: {
-    width: "70%",
+    flex: 0.7,
     paddingLeft: 10,
   },
 
   companyName: {
-    fontSize: 18,
+    fontSize: 17,
     fontWeight: "bold",
     color: "#1F7A3E",
-    letterSpacing: 1,
-  },
-
-  subtitle: {
-    fontSize: 10,
-    color: "#F4B400",
-    fontWeight: "bold",
-    marginTop: 2,
+    marginBottom: 2,
   },
 
   address: {
     fontSize: 8,
     color: "#4B5563",
-    marginTop: 3,
-    lineHeight: 1.2,
+    lineHeight: 1.3,
+    marginBottom: 3,
+    maxWidth: "100%",
   },
 
   productLine: {
-    marginTop: 4,
     fontSize: 8,
     color: "#1F2937",
     fontWeight: "bold",
   },
 
   saudaTitleBox: {
-    marginTop: 8,
+    marginTop: 6,
     backgroundColor: "#E8F5E9",
-    paddingVertical: 5,
+    paddingVertical: 4,
     paddingHorizontal: 8,
-    borderLeft: "5 solid #F4B400",
+    borderLeft: "4 solid #F4B400",
   },
 
   saudaTitle: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: "bold",
     color: "#1F7A3E",
   },
@@ -74,14 +66,18 @@ const styles = StyleSheet.create({
 
 const SaudaHeader = () => (
   <View style={styles.header} fixed>
+
     <View style={styles.topRow}>
-      
+
       <View style={styles.logoContainer}>
         <Image src={logo} style={styles.logo} />
       </View>
 
       <View style={styles.companySection}>
-        <Text style={styles.companyName}>HANSARIA FOOD PRIVATE LIMITED</Text>
+        <Text style={styles.companyName}>
+          HANSARIA FOOD PRIVATE LIMITED
+        </Text>
+
         <Text style={styles.address}>
           Primarc Square, Plot No.1, Salt Lake Bypass, LA Block, Sector 3,
           Bidhannagar, Kolkata – 700106
@@ -91,11 +87,13 @@ const SaudaHeader = () => (
           MAIZE | SOYABEAN DOC | MDOC | DORB | WHEAT | RICE
         </Text>
       </View>
+
     </View>
 
     <View style={styles.saudaTitleBox}>
       <Text style={styles.saudaTitle}>SAUDA AGREEMENT</Text>
     </View>
+
   </View>
 );
 
