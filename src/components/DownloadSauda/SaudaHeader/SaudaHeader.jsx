@@ -82,11 +82,6 @@ const SaudaHeader = () => (
 
       <View style={styles.companySection}>
         <Text style={styles.companyName}>HANSARIA FOOD PVT. LTD.</Text>
-
-        <Text style={styles.subtitle}>
-          BROKER & COMMISSION AGENT
-        </Text>
-
         <Text style={styles.address}>
           Primarc Square, Plot No.1, Salt Lake Bypass, LA Block, Sector 3,
           Bidhannagar, Kolkata – 700106
