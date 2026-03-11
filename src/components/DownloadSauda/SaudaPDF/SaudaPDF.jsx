@@ -38,6 +38,10 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
 
+  bold: {
+  fontWeight: "bold",
+},
+
   divider: {
     height: 1,
     backgroundColor: "#E5E7EB",
@@ -100,11 +104,15 @@ const SaudaPDF = ({ data }) => (
       </View>
       <View style={styles.footer} fixed>
         <View style={styles.footerLine} />
+
         <Text style={styles.footerText}>
-          HANSARIA FOOD PRIVATE LIMITED • Broker & Commission Agent
+          <Text style={styles.bold}>Register Office: </Text>
+          207, Maharshi Debendra Road, 6th Floor, Room No. 111, Kolkata - 700007
         </Text>
+
         <Text style={styles.footerText}>
-          This is a computer-generated Sauda Agreement.
+          <Text style={styles.bold}>Contact: </Text>
+          +91 98304 33535 / 93304 33535 | Email: info@hansariafood.com | Website: www.hansariafood.com
         </Text>
       </View>
 

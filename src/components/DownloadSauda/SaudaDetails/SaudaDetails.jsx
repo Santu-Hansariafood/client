@@ -44,6 +44,14 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#1F2937",
   },
+
+  saudaNumber: {
+    fontSize: 10,
+    fontWeight: "bold",
+    color: "#dc2626",
+    letterSpacing: 1,
+  },
+
   addressDetails: {
     fontSize: 7,
     color: "#4a5568",
@@ -58,7 +66,7 @@ const SaudaDetails = ({ data }) => (
     <View style={styles.headerRow}>
       <View style={styles.headerItem}>
         <Text style={styles.label}>Sauda No</Text>
-        <Text style={styles.value}>{data.saudaNo}</Text>
+        <Text style={styles.saudaNumber}>{data.saudaNo}</Text>
       </View>
       <View style={styles.headerItem}>
         <Text style={styles.label}>Buyer PO No</Text>

@@ -212,7 +212,7 @@ const AdditionalDetails = ({ data }) => (
 
     <View style={styles.footer}>
       <Text style={styles.footerNote}>
-        * This is a system-generated file. No physical signature is required.
+        * This is a computer-generated Sauda Agreement. No physical signature is required.
       </Text>
     </View>
   </View>
