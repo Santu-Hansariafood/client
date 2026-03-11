@@ -90,23 +90,25 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#1a365d",
   },
-  signatureSection: {
+    signatureSection: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginTop: 20,
+    marginTop: 35,
   },
+
   signatureBox: {
     width: "30%",
-    borderTop: "0.5pt solid #2d3748",
+    borderTop: "1 solid #374151",
     textAlign: "center",
-    paddingTop: 3,
+    paddingTop: 6,
   },
+
   signatureLabel: {
-    fontSize: 7,
+    fontSize: 8,
+    color: "#374151",
     fontWeight: "bold",
-    color: "#2d3748",
-    textTransform: "uppercase",
   },
+  
   footer: {
     marginTop: 10,
     textAlign: "center",

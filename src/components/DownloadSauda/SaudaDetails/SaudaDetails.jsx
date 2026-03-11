@@ -16,27 +16,33 @@ const styles = StyleSheet.create({
   headerItem: {
     flex: 1,
   },
-  label: {
-    fontSize: 7,
-    color: "#718096",
-    textTransform: "uppercase",
-    marginBottom: 1,
-    fontWeight: "bold",
-  },
-  value: {
-    fontSize: 9,
-    color: "#2d3748",
-    fontWeight: "bold",
-  },
-  grid: {
+
+    grid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    marginTop: 0,
+    border: "0.5pt solid #E5E7EB",
+    borderRadius: 4,
+    backgroundColor: "#F9FAFB",
   },
+
   gridItem: {
     width: "33.33%",
-    padding: 2,
-    marginBottom: 5,
+    padding: 8,
+    borderRight: "0.5pt solid #E5E7EB",
+    borderBottom: "0.5pt solid #E5E7EB",
+  },
+
+  label: {
+    fontSize: 7,
+    color: "#6B7280",
+    textTransform: "uppercase",
+    marginBottom: 2,
+  },
+
+  value: {
+    fontSize: 9,
+    fontWeight: "bold",
+    color: "#1F2937",
   },
   addressDetails: {
     fontSize: 7,

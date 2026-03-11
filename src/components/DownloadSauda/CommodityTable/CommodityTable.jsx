@@ -4,33 +4,34 @@ const styles = StyleSheet.create({
   table: {
     marginVertical: 10,
   },
-  tableHeader: {
-    backgroundColor: "#1a365d",
+    tableHeader: {
+    backgroundColor: "#1F7A3E",
     flexDirection: "row",
-    padding: 5,
-    borderTopLeftRadius: 3,
-    borderTopRightRadius: 3,
+    padding: 6,
   },
+
+  headerCell: {
+    fontSize: 9,
+    flex: 1,
+    textAlign: "center",
+    color: "#ffffff",
+    fontWeight: "bold",
+  },
+
   tableRow: {
     flexDirection: "row",
-    borderBottom: "0.5pt solid #e2e8f0",
-    padding: 5,
-    backgroundColor: "#ffffff",
+    borderBottom: "0.5pt solid #E5E7EB",
+    padding: 6,
+    backgroundColor: "#F9FAFB",
   },
+  
   tableCell: {
     fontSize: 8,
     flex: 1,
     textAlign: "center",
     color: "#2d3748",
   },
-  headerCell: {
-    fontSize: 8,
-    flex: 1,
-    textAlign: "center",
-    color: "#ffffff",
-    fontWeight: "bold",
-    textTransform: "uppercase",
-  },
+  
   qualitySection: {
     marginTop: 10,
   },
