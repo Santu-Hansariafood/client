@@ -40,9 +40,21 @@ const DownloadSauda = ({ data }) => {
     fetchData();
   }, []);
 
-  const matchingConsignee = consigneeData.find(
-    (consignee) => consignee.name.toLowerCase() === data?.consignee?.toLowerCase()
-  );
+  const normalizedConsigneeKey = (() => {
+    const c = data?.consignee;
+    if (!c) return "";
+    if (typeof c === "object") return (c.name || c.label || c.value || "").toString();
+    return String(c);
+  })();
+
+  const matchingConsignee = consigneeData.find((consignee) => {
+    const idMatch =
+      consignee?._id && normalizedConsigneeKey && String(consignee._id) === String(normalizedConsigneeKey);
+    if (idMatch) return true;
+    const name = (consignee?.name || consignee?.label || "").toString().trim().toLowerCase();
+    const key = normalizedConsigneeKey.toString().trim().toLowerCase();
+    return name && key && name === key;
+  });
 
   const matchingSupplier = supplierData.find(
     (supplier) =>
@@ -66,6 +78,16 @@ const DownloadSauda = ({ data }) => {
 
   const [showEmailPopup, setShowEmailPopup] = useState(false);
   const [recipientEmail, setRecipientEmail] = useState("");
+
+  useEffect(() => {
+    if (!showEmailPopup) return;
+    const fromArray = Array.isArray(data?.buyerEmails)
+      ? data.buyerEmails.filter(Boolean)
+      : [];
+    const fromSingle = data?.buyerEmail ? [data.buyerEmail] : [];
+    const defaultEmail = [...fromArray, ...fromSingle][0] || "";
+    setRecipientEmail((prev) => prev || defaultEmail);
+  }, [showEmailPopup, data]);
 
   const handleSendEmail = async () => {
     if (!recipientEmail) {
@@ -167,6 +189,9 @@ const DownloadSauda = ({ data }) => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
           <div className="bg-white p-6 rounded-lg shadow-lg">
             <h3 className="text-lg font-bold mb-4">Send PDF via Email</h3>
+            <p className="text-xs text-slate-500 mb-2">
+              Default email is picked from buyer emails. You can change it if needed.
+            </p>
             <input
               type="email"
               placeholder="Enter recipient's email"

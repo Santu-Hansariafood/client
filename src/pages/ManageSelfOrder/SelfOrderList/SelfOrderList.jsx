@@ -153,8 +153,10 @@ const SelfOrderList = () => {
         item.state,
         item.location,
         item.agentName,
-        item.buyerEmails?.join(", ") || "N/A",
-        item.sellerEmails?.join(", ") || "N/A",
+        item.buyerEmails?.filter(Boolean)?.join(", ") ||
+          item.buyerEmail ||
+          "N/A",
+        item.sellerEmails?.filter(Boolean)?.join(", ") || "N/A",
         <div className="flex flex-wrap items-center gap-2" key={item._id}>
           <Actions
             onView={() => handleView(item)}
@@ -162,7 +164,7 @@ const SelfOrderList = () => {
             onDelete={() => toast.error(`Deleting PO Number: ${item.poNumber}`)}
           />
           <DownloadSauda
-            data={item}
+            data={{ ...item, consignee: getConsigneeDisplay(item) }}
             button={
               <button
                 type="button"
