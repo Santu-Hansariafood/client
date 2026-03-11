@@ -1,63 +1,208 @@
 import { View, Text, StyleSheet } from "@react-pdf/renderer";
 
 const styles = StyleSheet.create({
-  sectionTitle: {
-    fontSize: 12,
+  container: {
+    marginTop: 10,
+  },
+
+  titleBox: {
+    backgroundColor: "#E8F5E9",
+    borderLeft: "6 solid #1F7A3E",
+    padding: 10,
+    marginBottom: 12,
+  },
+
+  title: {
+    fontSize: 13,
     fontWeight: "bold",
     color: "#1F7A3E",
-    marginBottom: 8,
+    letterSpacing: 1,
   },
 
-  clauseTitle: {
-    fontSize: 10,
-    fontWeight: "bold",
-    marginTop: 6,
+  section: {
+    marginBottom: 10,
+    padding: 8,
+    backgroundColor: "#FAFAFA",
+    border: "0.5 solid #E5E7EB",
+    borderRadius: 4,
   },
 
-  clauseText: {
-    fontSize: 9,
-    lineHeight: 1.4,
+  mainPointRow: {
+    flexDirection: "row",
     marginBottom: 4,
   },
 
-  listItem: {
+  mainBullet: {
+    width: 12,
+    fontSize: 10,
+    color: "#F4B400",
+    fontWeight: "bold",
+  },
+
+  mainText: {
+    flex: 1,
+    fontSize: 9.5,
+    fontWeight: "bold",
+    color: "#1F2937",
+  },
+
+  subPointRow: {
+    flexDirection: "row",
+    marginLeft: 12,
+    marginBottom: 2,
+  },
+
+  subBullet: {
+    width: 10,
     fontSize: 9,
-    marginBottom: 3,
+    color: "#1F7A3E",
+  },
+
+  subText: {
+    flex: 1,
+    fontSize: 9,
+    color: "#374151",
     lineHeight: 1.4,
-  }
+  },
 });
 
 const TermsPage = () => (
-  <View>
+  <View style={styles.container}>
 
-    <Text style={styles.sectionTitle}>TERMS & CONDITIONS</Text>
+    {/* TITLE */}
+    <View style={styles.titleBox}>
+      <Text style={styles.title}>TERMS & CONDITIONS</Text>
+    </View>
 
-    <Text style={styles.clauseTitle}>1. Late Delivery Condition</Text>
-    <Text style={styles.clauseText}>
-      In case of late delivery, the buyer must first obtain confirmation from the broker or the concerned party before unloading the goods.
-    </Text>
+    {/* Late Delivery */}
+    <View style={styles.section}>
+      <View style={styles.mainPointRow}>
+        <Text style={styles.mainBullet}>◆</Text>
+        <Text style={styles.mainText}>Late Delivery Condition</Text>
+      </View>
 
-    <Text style={styles.clauseTitle}>2. Detention Condition</Text>
-    <Text style={styles.clauseText}>
-      Detention charges, if applicable, shall be determined mutually between the buyer and seller with broker confirmation.
-    </Text>
+      <View style={styles.subPointRow}>
+        <Text style={styles.subBullet}>▸</Text>
+        <Text style={styles.subText}>
+          Buyer must confirm with broker or concerned party before unloading goods if delivery is late.
+        </Text>
+      </View>
 
-    <Text style={styles.clauseTitle}>3. Contract Terms</Text>
+      <View style={styles.subPointRow}>
+        <Text style={styles.subBullet}>▸</Text>
+        <Text style={styles.subText}>
+          If unloading is done without confirmation, buyer cannot deduct late delivery charges.
+        </Text>
+      </View>
+    </View>
 
-    <Text style={styles.listItem}>1. The Seller and Buyer shall not terminate this contract without prior notice.</Text>
-    <Text style={styles.listItem}>2. Any dispute shall be resolved through mutual discussion.</Text>
-    <Text style={styles.listItem}>3. If unresolved, disputes will follow the Indian Arbitration and Conciliation Act 1996.</Text>
-    <Text style={styles.listItem}>4. This contract is subject to West Bengal jurisdiction.</Text>
+    {/* Detention */}
+    <View style={styles.section}>
+      <View style={styles.mainPointRow}>
+        <Text style={styles.mainBullet}>◆</Text>
+        <Text style={styles.mainText}>Detention Condition</Text>
+      </View>
 
-    <Text style={styles.clauseTitle}>4. Special Clauses</Text>
+      <View style={styles.subPointRow}>
+        <Text style={styles.subBullet}>▸</Text>
+        <Text style={styles.subText}>
+          Detention charges will be mutually decided between buyer and seller with broker confirmation.
+        </Text>
+      </View>
+    </View>
 
-    <Text style={styles.listItem}>1. Buyer and Seller shall not initiate legal action against the Broker.</Text>
-    <Text style={styles.listItem}>2. Broker shall appear only as a witness in legal proceedings.</Text>
-    <Text style={styles.listItem}>3. Payments to broker or third parties must not be withheld.</Text>
-    <Text style={styles.listItem}>4. Third parties may take legal action if payments are withheld.</Text>
-    <Text style={styles.listItem}>5. Signed contract must be returned within 24 hours.</Text>
-    <Text style={styles.listItem}>6. Broker is not liable for financial losses.</Text>
-    <Text style={styles.listItem}>7. Brokerage is applicable once the Sauda is finalized.</Text>
+    {/* Contract Terms */}
+    <View style={styles.section}>
+      <View style={styles.mainPointRow}>
+        <Text style={styles.mainBullet}>◆</Text>
+        <Text style={styles.mainText}>Contract Terms</Text>
+      </View>
+
+      <View style={styles.subPointRow}>
+        <Text style={styles.subBullet}>▸</Text>
+        <Text style={styles.subText}>
+          Seller and Buyer cannot terminate the contract without prior notice.
+        </Text>
+      </View>
+
+      <View style={styles.subPointRow}>
+        <Text style={styles.subBullet}>▸</Text>
+        <Text style={styles.subText}>
+          Any dispute should first be resolved through mutual discussion.
+        </Text>
+      </View>
+
+      <View style={styles.subPointRow}>
+        <Text style={styles.subBullet}>▸</Text>
+        <Text style={styles.subText}>
+          If unresolved, dispute will follow the Indian Arbitration and Conciliation Act 1996.
+        </Text>
+      </View>
+
+      <View style={styles.subPointRow}>
+        <Text style={styles.subBullet}>▸</Text>
+        <Text style={styles.subText}>
+          Contract is subject to West Bengal jurisdiction.
+        </Text>
+      </View>
+    </View>
+
+    {/* Special Clauses */}
+    <View style={styles.section}>
+      <View style={styles.mainPointRow}>
+        <Text style={styles.mainBullet}>◆</Text>
+        <Text style={styles.mainText}>Special Clauses</Text>
+      </View>
+
+      <View style={styles.subPointRow}>
+        <Text style={styles.subBullet}>▸</Text>
+        <Text style={styles.subText}>
+          Buyer and Seller cannot initiate legal action against broker or brokerage firm.
+        </Text>
+      </View>
+
+      <View style={styles.subPointRow}>
+        <Text style={styles.subBullet}>▸</Text>
+        <Text style={styles.subText}>
+          Broker may appear in court only as a witness.
+        </Text>
+      </View>
+
+      <View style={styles.subPointRow}>
+        <Text style={styles.subBullet}>▸</Text>
+        <Text style={styles.subText}>
+          Payments to broker or third parties cannot be stopped during disputes.
+        </Text>
+      </View>
+
+      <View style={styles.subPointRow}>
+        <Text style={styles.subBullet}>▸</Text>
+        <Text style={styles.subText}>
+          Third parties may take legal action if payments are withheld.
+        </Text>
+      </View>
+
+      <View style={styles.subPointRow}>
+        <Text style={styles.subBullet}>▸</Text>
+        <Text style={styles.subText}>
+          Signed contract copy must be returned within 24 hours.
+        </Text>
+      </View>
+
+      <View style={styles.subPointRow}>
+        <Text style={styles.subBullet}>▸</Text>
+        <Text style={styles.subText}>
+          Broker will not be liable for monetary losses.
+        </Text>
+      </View>
+
+      <View style={styles.subPointRow}>
+        <Text style={styles.subBullet}>▸</Text>
+        <Text style={styles.subText}>
+          Brokerage applies once the Sauda agreement is finalized.
+        </Text>
+      </View>
+    </View>
 
   </View>
 );
