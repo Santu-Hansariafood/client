@@ -3,6 +3,7 @@ import SaudaHeader from "../SaudaHeader/SaudaHeader";
 import SaudaDetails from "../SaudaDetails/SaudaDetails";
 import CommodityTable from "../CommodityTable/CommodityTable";
 import AdditionalDetails from "../AdditionalDetails/AdditionalDetails";
+import TermsPage from "../TermsPage/TermsPage";
 
 const styles = StyleSheet.create({
   page: {
@@ -117,6 +118,29 @@ const SaudaPDF = ({ data }) => (
       </View>
 
     </Page>
+    <Page style={styles.page} size="A4">
+    <View style={styles.pageBorder} fixed />
+    <View style={styles.innerBorder} fixed />
+
+    <SaudaHeader />
+
+    <View style={styles.section}>
+      <TermsPage />
+    </View>
+    <View style={styles.footer} fixed>
+        <View style={styles.footerLine} />
+
+        <Text style={styles.footerText}>
+          <Text style={styles.bold}>Register Office: </Text>
+          207, Maharshi Debendra Road, 6th Floor, Room No. 111, Kolkata - 700007
+        </Text>
+
+        <Text style={styles.footerText}>
+          <Text style={styles.bold}>Contact: </Text>
+          +91 98304 33535 / 93304 33535 | Email: info@hansariafood.com | Website: www.hansariafood.com
+        </Text>
+      </View>
+  </Page>
   </Document>
 );
 
