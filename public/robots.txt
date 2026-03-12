@@ -3,6 +3,10 @@ Allow: /
 
 Allow: /commodity/list
 Allow: /quality-parameter/list
+Allow: /terms-conditions
+Allow: /privacy-policy
+Allow: /broker-commission-policy
+Allow: /teams
 
 Disallow: /login
 Disallow: /logout

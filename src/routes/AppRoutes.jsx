@@ -46,18 +46,16 @@ const AppRoutes = ({ hydrated }) => {
 
   return (
     <Routes>
-      {/* Public Routes */}
       <Route path="/" element={<LazyPages.Login />} />
+      <Route path="/privacy-policy" element={<LazyPages.PrivacyPolicy />} />
+      <Route path="/terms-conditions" element={<LazyPages.TermsConditions />} />
+      <Route path="/broker-commission-policy" element={<LazyPages.BrokerCommissionPolicy />} />
       <Route path="/login" element={<LazyPages.Login />} />
-
-      {/* Private Routes - layout stays mounted, only page content swaps */}
       <Route element={<PrivateRoute />}>
         {privateRoutes.map(({ path, component: Component }) => (
           <Route key={path} path={path} element={<Component />} />
         ))}
       </Route>
-
-      {/* Catch-all Route */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

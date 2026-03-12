@@ -67,6 +67,9 @@ const ROUTE_META = [
   { match: /^\/seller-company\/list$/, title: "Seller Companies | Hansaria Food", desc: "Seller companies for commodity supply." },
   { match: /^\/seller-details\/list$/, title: "Seller Details | Hansaria Food", desc: "Seller details linked to commodities." },
   { match: /^\/sodabook\/list$/, title: "Agent / Sodabook | Hansaria Food", desc: "Agent and sodabook entries." },
+  { match: /^\/privacy-policy$/, title: "Privacy Policy | Hansaria Food", desc: "Our privacy policy for handling your data." },
+  { match: /^\/terms-conditions$/, title: "Terms & Conditions | Hansaria Food", desc: "Our terms and conditions for using the platform." },
+  { match: /^\/broker-commission-policy$/, title: "Broker Commission Policy | Hansaria Food", desc: "Our policy for broker commissions in commodity trading." }
 ];
 
 function shouldNoIndex(pathname) {

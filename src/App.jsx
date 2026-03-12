@@ -14,7 +14,6 @@ const App = () => {
 
   return (
     <AuthProvider>
-      {/* Fallback until RouteSEO mounts; RouteSEO overwrites per route */}
       <Helmet>
         <title>Hansaria Food Private Limited</title>
         <meta

@@ -1,6 +1,5 @@
 import { lazy } from "react";
 
-// Loader functions for prefetching (same as used by lazy())
 const loaders = {
   Login: () => import("../../pages/Login/Login"),
   Dashboard: () => import("../../pages/Dashboard/Dashboard"),
@@ -39,9 +38,11 @@ const loaders = {
   ParticipateBidAdmin: () => import("../../pages/ManageBids/ParticipateBidAdmin/ParticipateBidAdmin"),
   ConfirmBids: () => import("../../components/ConfirmBids/ConfirmBids"),
   LoadingEntrySauda: () => import("../../pages/LoadingEntry/LoadingEntrySauda/LoadingEntrySauda"),
+  PrivacyPolicy: () => import("../../common/PrivacyPolicy/PrivacyPolicy"),
+  TermsConditions: () => import("../../common/TermsConditions/TermsConditions"),
+  BrokerCommissionPolicy: () => import("../../common/BrokerCommissionPolicy/BrokerCommissionPolicy"),
 };
 
-// URL path (with or without leading slash) -> loader key
 const pathToKey = {
   "/": "Login",
   "/login": "Login",
@@ -79,14 +80,13 @@ const pathToKey = {
   "/Supplier-Bid-List": "SellerBidList",
   "/participate-bid-list": "ParticipateBid",
   "/confirm-bids/:bidId": "ConfirmBids",
+  "/privacy-policy": "PrivacyPolicy",
+  "/terms-conditions": "TermsConditions",
+  "/broker-commission-policy": "BrokerCommissionPolicy",
 };
 
 const prefetched = new Set();
 
-/**
- * Prefetch a route chunk by path. Call on link hover to load JS before click.
- * @param {string} path - e.g. "/dashboard" or "/buyer/list"
- */
 export function prefetchRoute(path) {
   const normalized = path?.startsWith("/") ? path : `/${path || ""}`;
   const key = pathToKey[normalized];
@@ -98,7 +98,6 @@ export function prefetchRoute(path) {
   }
 }
 
-// Match dynamic routes like /confirm-bids/123
 export function prefetchRouteByPathname(pathname) {
   if (prefetched.has(pathname)) return;
   let key = pathToKey[pathname];
@@ -149,6 +148,9 @@ const LazyPages = {
   ParticipateBidAdmin: lazy(loaders.ParticipateBidAdmin),
   ConfirmBids: lazy(loaders.ConfirmBids),
   LoadingEntrySauda: lazy(loaders.LoadingEntrySauda),
+  PrivacyPolicy: lazy(loaders.PrivacyPolicy),
+  TermsConditions: lazy(loaders.TermsConditions),
+  BrokerCommissionPolicy: lazy(loaders.BrokerCommissionPolicy),
 };
 
 export default LazyPages;

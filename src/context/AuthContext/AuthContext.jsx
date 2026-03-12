@@ -46,7 +46,6 @@ export const AuthProvider = ({ children }) => {
     if (userData.token) {
       localStorage.setItem("token", userData.token);
     }
-    // No auto logout; keep the session persistent
   };
 
   const logout = () => {
@@ -73,7 +72,6 @@ export const AuthProvider = ({ children }) => {
   };
 
   const handleUserActivity = () => {
-    // No session timeout; keep user logged in
   };
 
   const synchronizeAuthState = (event) => {
@@ -106,7 +104,6 @@ export const AuthProvider = ({ children }) => {
   }, [isAuthenticated]);
 
   useEffect(() => {
-    // No-op; persistence handled via localStorage token
   }, [isAuthenticated]);
 
   const value = useMemo(
