@@ -7,7 +7,7 @@ const teamData = [
       "Gopal Agarwal is the Founder and Chief Executive Officer of Hansaria Food Private Limited. With deep expertise in commodity trading, feed raw material sourcing, and agricultural supply chains, he has built the company into a trusted partner for maize, soybean DOC, MDOC, DORB, wheat, and rice distribution. His strategic leadership, market insight, and commitment to reliability have enabled Hansaria Food to grow as a dependable supplier across India’s feed and agri-commodity sectors.",
     quote:
       "Strong supply chains are built on trust, consistency, and long-term partnerships.",
-    image: "/public/teams/gopal.webp",
+    image: "/teams/gopal.webp",
     social: {
       facebook: "https://www.facebook.com/profile.php?id=100087874624812",
       instagram: "https://www.instagram.com/hansaria_food/",
@@ -22,7 +22,7 @@ const teamData = [
       "Dr. Sunita Agarwalla oversees operational strategy and logistics coordination at Hansaria Food Private Limited. She plays a key role in strengthening supplier relationships, optimizing procurement processes, and ensuring seamless delivery across commodity markets. Her analytical approach and operational expertise help maintain efficiency, quality standards, and strong vendor partnerships within the agricultural trading ecosystem.",
     quote:
       "Operational excellence is achieved when every process works with precision and purpose.",
-    image: "/public/teams/sunita.webp",
+    image: "/teams/sunita.webp",
     social: {
       facebook: "https://www.facebook.com/profile.php?id=100094304316835",
       instagram: "https://www.instagram.com/rzsunita/",
@@ -36,7 +36,7 @@ const teamData = [
     description:
       "Prince Surana contributes to the operational and commercial growth of Hansaria Food Private Limited by managing supplier coordination, logistics planning, and market execution. With a strong focus on efficiency and reliability, he ensures that trading operations run smoothly while maintaining consistent supply for clients in the feed and agri-commodity sectors.",
     quote: "Efficiency in operations is the backbone of sustainable growth.",
-    image: "/public/teams/prince.webp",
+    image: "/teams/prince.webp",
     social: {
       facebook: "https://www.facebook.com/prince.surana.5",
       instagram: "https://www.instagram.com/prince.surana/",
@@ -50,7 +50,7 @@ const teamData = [
     description:
       "Uttam Das contributes to the operational and commercial growth of Hansaria Food Private Limited by managing supplier coordination, logistics planning, and market execution. With a strong focus on efficiency and reliability, he ensures that trading operations run smoothly while maintaining consistent supply for clients in the feed and agri-commodity sectors.",
     quote: "Efficiency in operations is the backbone of sustainable growth.",
-    image: "/public/teams/uttam.webp",
+    image: "/teams/uttam.webp",
     social: {
       facebook: "https://www.facebook.com/uttam.das.505523",
       instagram: "https://instagram.com/",
