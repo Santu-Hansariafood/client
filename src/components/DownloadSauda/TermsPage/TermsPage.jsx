@@ -2,7 +2,7 @@ import { View, Text, StyleSheet, Image } from "@react-pdf/renderer";
 import QRCode from "qrcode";
 import { useEffect, useState } from "react";
 
-const feedbackUrl = "https://hansariafood.com/feedback";
+const feedbackUrl = "https://forms.gle/5EmjSAMvCQ1xLtrm8";
 
 const styles = StyleSheet.create({
   container: {
@@ -108,26 +108,20 @@ const TermsPage = () => {
 
   return (
     <View style={styles.container}>
-      
-      {/* TITLE */}
       <View style={styles.titleBox}>
         <Text style={styles.title}>TERMS & CONDITIONS</Text>
       </View>
-
-      {/* Late Delivery */}
       <View style={styles.section}>
         <View style={styles.mainPointRow}>
           <View style={styles.mainBullet} />
           <Text style={styles.mainText}>Late Delivery Condition</Text>
         </View>
-
         <View style={styles.subPointRow}>
           <View style={styles.subBullet} />
           <Text style={styles.subText}>
             Buyer must confirm with broker or concerned party before unloading goods if delivery is late.
           </Text>
         </View>
-
         <View style={styles.subPointRow}>
           <View style={styles.subBullet} />
           <Text style={styles.subText}>
@@ -135,14 +129,11 @@ const TermsPage = () => {
           </Text>
         </View>
       </View>
-
-      {/* Detention */}
       <View style={styles.section}>
         <View style={styles.mainPointRow}>
           <View style={styles.mainBullet} />
           <Text style={styles.mainText}>Detention Condition</Text>
         </View>
-
         <View style={styles.subPointRow}>
           <View style={styles.subBullet} />
           <Text style={styles.subText}>
@@ -150,35 +141,29 @@ const TermsPage = () => {
           </Text>
         </View>
       </View>
-
-      {/* Contract Terms */}
       <View style={styles.section}>
         <View style={styles.mainPointRow}>
           <View style={styles.mainBullet} />
           <Text style={styles.mainText}>Contract Terms</Text>
         </View>
-
         <View style={styles.subPointRow}>
           <View style={styles.subBullet} />
           <Text style={styles.subText}>
             Seller and Buyer cannot terminate the contract without prior notice.
           </Text>
         </View>
-
         <View style={styles.subPointRow}>
           <View style={styles.subBullet} />
           <Text style={styles.subText}>
             Any dispute should first be resolved through mutual discussion.
           </Text>
         </View>
-
         <View style={styles.subPointRow}>
           <View style={styles.subBullet} />
           <Text style={styles.subText}>
             If unresolved, dispute will follow the Indian Arbitration and Conciliation Act 1996.
           </Text>
         </View>
-
         <View style={styles.subPointRow}>
           <View style={styles.subBullet} />
           <Text style={styles.subText}>
@@ -186,42 +171,35 @@ const TermsPage = () => {
           </Text>
         </View>
       </View>
-
-      {/* Special Clauses */}
       <View style={styles.section}>
         <View style={styles.mainPointRow}>
           <View style={styles.mainBullet} />
           <Text style={styles.mainText}>Special Clauses</Text>
         </View>
-
         <View style={styles.subPointRow}>
           <View style={styles.subBullet} />
           <Text style={styles.subText}>
             Buyer and Seller cannot initiate legal action against broker or brokerage firm.
           </Text>
         </View>
-
         <View style={styles.subPointRow}>
           <View style={styles.subBullet} />
           <Text style={styles.subText}>
             Broker may appear in court only as a witness.
           </Text>
         </View>
-
         <View style={styles.subPointRow}>
           <View style={styles.subBullet} />
           <Text style={styles.subText}>
             Payments to broker or third parties cannot be stopped during disputes.
           </Text>
         </View>
-
         <View style={styles.subPointRow}>
           <View style={styles.subBullet} />
           <Text style={styles.subText}>
             Third parties may take legal action if payments are withheld.
           </Text>
         </View>
-
         <View style={styles.subPointRow}>
           <View style={styles.subBullet} />
           <Text style={styles.subText}>
@@ -235,7 +213,6 @@ const TermsPage = () => {
             Broker will not be liable for monetary losses.
           </Text>
         </View>
-
         <View style={styles.subPointRow}>
           <View style={styles.subBullet} />
           <Text style={styles.subText}>
@@ -243,15 +220,11 @@ const TermsPage = () => {
           </Text>
         </View>
       </View>
-
-      {/* QR Feedback Section */}
       <View style={styles.feedbackSection}>
         <Text style={styles.feedbackTitle}>
-          Scan QR Code to Give Feedback
+          Scan QR Code to Give Feedback Or Any Suggestions
         </Text>
-
         {qrCode && <Image src={qrCode} style={styles.qr} />}
-
         <Text style={styles.feedbackText}>{feedbackUrl}</Text>
       </View>
 

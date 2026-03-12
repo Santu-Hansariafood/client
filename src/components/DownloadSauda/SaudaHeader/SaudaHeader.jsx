@@ -4,8 +4,8 @@ import logo from "../../../assets/Hans.jpg";
 const styles = StyleSheet.create({
   header: {
     borderBottom: "2pt solid #1F7A3E",
-    paddingBottom: 10,
-    marginBottom: 15,
+    paddingBottom: 8,
+    marginBottom: 10,
   },
 
   topRow: {
@@ -14,63 +14,64 @@ const styles = StyleSheet.create({
   },
 
   logoContainer: {
-    width: 110,
+    width: 95,
     justifyContent: "center",
     alignItems: "flex-start",
   },
 
   logo: {
-    width: 90,
-    height: 55,
+    width: 80,
+    height: 50,
     objectFit: "contain",
   },
 
   companySection: {
     flex: 1,
-    paddingLeft: 12,
+    paddingLeft: 10,
   },
 
   companyName: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: "#1F7A3E",
-    marginBottom: 3,
-    letterSpacing: 0.3,
-  },
-
-  address: {
-    fontSize: 8.5,
-    color: "#4B5563",
-    lineHeight: 1.4,
-    marginBottom: 4,
-  },
-
-  productLine: {
-    fontSize: 8,
-    color: "#1F2937",
-    fontWeight: "bold",
-    letterSpacing: 0.5,
-  },
-
-  saudaTitleBox: {
-    marginTop: 8,
-    backgroundColor: "#E8F5E9",
-    paddingVertical: 6,
-    paddingHorizontal: 10,
-    borderLeft: "5pt solid #F4B400",
-    borderRadius: 2,
-  },
-
-  saudaTitle: {
-    fontSize: 11,
+    fontSize: 20,
     fontWeight: "bold",
     color: "#1F7A3E",
     letterSpacing: 1,
+    marginBottom: 2,
+  },
+
+  address: {
+    fontSize: 8,
+    color: "#4B5563",
+    lineHeight: 1.2,
+    marginBottom: 3,
+  },
+
+  productLine: {
+    fontSize: 8.5,
+    fontWeight: "bold",
+    color: "#1F2937",
+    letterSpacing: 0.6,
+  },
+
+  saudaTitleBox: {
+    marginTop: 6,
+    backgroundColor: "#E8F5E9",
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+    borderLeft: "6pt solid #F4B400",
+    borderRadius: 3,
+  },
+
+  saudaTitle: {
+    fontSize: 13,
+    fontWeight: "bold",
+    color: "#1F7A3E",
+    letterSpacing: 2,
   },
 });
 
 const SaudaHeader = () => (
   <View style={styles.header} fixed>
+
     <View style={styles.topRow}>
       
       <View style={styles.logoContainer}>
@@ -97,6 +98,7 @@ const SaudaHeader = () => (
     <View style={styles.saudaTitleBox}>
       <Text style={styles.saudaTitle}>SAUDA AGREEMENT</Text>
     </View>
+
   </View>
 );
 
