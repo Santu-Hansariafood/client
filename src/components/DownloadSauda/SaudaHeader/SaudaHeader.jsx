@@ -1,5 +1,5 @@
 import { View, Text, Image, StyleSheet } from "@react-pdf/renderer";
-import logo from "../../../assets/Hans.jpg";
+import logo from "../../../assets/Hans.png";
 
 const styles = StyleSheet.create({
   header: {
