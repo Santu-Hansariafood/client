@@ -51,6 +51,7 @@ const AppRoutes = ({ hydrated }) => {
       <Route path="/terms-conditions" element={<LazyPages.TermsConditions />} />
       <Route path="/broker-commission-policy" element={<LazyPages.BrokerCommissionPolicy />} />
       <Route path="/login" element={<LazyPages.Login />} />
+      <Route path="/teams" element={<LazyPages.Teams />} />
       <Route element={<PrivateRoute />}>
         {privateRoutes.map(({ path, component: Component }) => (
           <Route key={path} path={path} element={<Component />} />
