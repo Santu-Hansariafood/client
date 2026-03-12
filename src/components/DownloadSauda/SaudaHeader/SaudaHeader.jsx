@@ -3,66 +3,62 @@ import logo from "../../../assets/Hans.jpg";
 
 const styles = StyleSheet.create({
   header: {
+    paddingBottom: 12,
+    marginBottom: 15,
     borderBottom: "2pt solid #1F7A3E",
-    paddingBottom: 10,
-    marginBottom: 12,
   },
 
-  topRow: {
+  row: {
     flexDirection: "row",
     alignItems: "center",
   },
 
-  logoContainer: {
-    width: 95,
+  logoBox: {
+    width: 90,
     justifyContent: "center",
     alignItems: "flex-start",
   },
 
   logo: {
-    width: 85,
-    height: 55,
+    width: 80,
+    height: 50,
     objectFit: "contain",
   },
 
-  companySection: {
+  companyBox: {
     flex: 1,
-    paddingLeft: 10,
+    alignItems: "center",
+    textAlign: "center",
   },
 
   companyName: {
-    fontSize: 22,
+    fontSize: 24,
     fontWeight: "bold",
     color: "#1F7A3E",
-    letterSpacing: 2,
-    marginBottom: 4,
-  },
-
-  productLine: {
-    fontSize: 9,
-    fontWeight: "bold",
-    color: "#1F2937",
-    letterSpacing: 1,
     marginBottom: 3,
   },
 
+  products: {
+    fontSize: 10,
+    fontWeight: "bold",
+    color: "#1F2937",
+    marginBottom: 4,
+  },
+
   address: {
-    fontSize: 8,
+    fontSize: 9,
     color: "#4B5563",
-    lineHeight: 1.3,
   },
 
   divider: {
-    marginTop: 6,
+    marginTop: 8,
     borderBottom: "1pt solid #D1D5DB",
   },
 
-  saudaTitleBox: {
-    marginTop: 8,
+  saudaBox: {
+    marginTop: 10,
     backgroundColor: "#E8F5E9",
-    paddingVertical: 6,
-    paddingHorizontal: 10,
-    borderLeft: "6pt solid #F4B400",
+    padding: 8,
   },
 
   saudaTitle: {
@@ -76,34 +72,32 @@ const styles = StyleSheet.create({
 const SaudaHeader = () => (
   <View style={styles.header} fixed>
 
-    <View style={styles.topRow}>
+    <View style={styles.row}>
 
-      <View style={styles.logoContainer}>
+      <View style={styles.logoBox}>
         <Image src={logo} style={styles.logo} />
       </View>
 
-      <View style={styles.companySection}>
-        
+      <View style={styles.companyBox}>
         <Text style={styles.companyName}>
           HANSARIA FOOD PRIVATE LIMITED
         </Text>
 
-        <Text style={styles.productLine}>
+        <Text style={styles.products}>
           MAIZE | SOYABEAN DOC | MDOC | DORB | WHEAT | RICE
         </Text>
 
         <Text style={styles.address}>
-          Primarc Square, Plot No.1, Salt Lake Bypass, LA Block, Sector 3,
-          Bidhannagar, Kolkata – 700106
+          Primarc Square, Plot No.1, Salt Lake Bypass, LA Block,
+          Sector 3, Bidhannagar, Kolkata – 700106
         </Text>
-
       </View>
 
     </View>
 
     <View style={styles.divider} />
 
-    <View style={styles.saudaTitleBox}>
+    <View style={styles.saudaBox}>
       <Text style={styles.saudaTitle}>SAUDA AGREEMENT</Text>
     </View>
 
