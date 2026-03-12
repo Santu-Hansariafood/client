@@ -53,6 +53,17 @@ const ListConsignee = () => {
     fetchConsignees();
   }, []);
 
+  // Keep currentPage within bounds when filteredData changes
+  useEffect(() => {
+    const totalPages = Math.max(1, Math.ceil(filteredData.length / ITEMS_PER_PAGE));
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+    if (currentPage < 1) {
+      setCurrentPage(1);
+    }
+  }, [filteredData.length]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const handleView = (consignee) => {
     setSelectedConsignee(consignee);
     setIsViewPopupOpen(true);
@@ -186,7 +197,14 @@ const ListConsignee = () => {
                   currentPage={currentPage}
                   totalItems={filteredData.length}
                   itemsPerPage={ITEMS_PER_PAGE}
-                  onPageChange={setCurrentPage}
+                  onPageChange={(page) => {
+                    const totalPages = Math.max(
+                      1,
+                      Math.ceil(filteredData.length / ITEMS_PER_PAGE)
+                    );
+                    const next = Math.max(1, Math.min(page, totalPages));
+                    setCurrentPage(next);
+                  }}
                 />
               </div>
             </>

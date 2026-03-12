@@ -47,6 +47,17 @@ const ListCompany = () => {
     fetchCompanyData();
   }, []);
 
+  // Keep currentPage within bounds when filteredData changes
+  useEffect(() => {
+    const totalPages = Math.max(1, Math.ceil(filteredData.length / itemsPerPage));
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+    if (currentPage < 1) {
+      setCurrentPage(1);
+    }
+  }, [filteredData.length, itemsPerPage]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const paginatedData = filteredData.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
@@ -90,12 +101,19 @@ const ListCompany = () => {
     (currentPage - 1) * itemsPerPage + index + 1,
     company.companyName,
     company.companyEmail,
-    company.consignee.join(", "),
+    Array.isArray(company.consignee)
+      ? company.consignee
+          .map((c) => (typeof c === "string" ? c : c?.name || ""))
+          .filter(Boolean)
+          .join(", ")
+      : "",
     company.group,
-    company.commodities.map((commodity) => commodity.name).join(", "),
-    company.commodities
+    Array.isArray(company.commodities)
+      ? company.commodities.map((commodity) => commodity.name).join(", ")
+      : "",
+    Array.isArray(company.commodities)
       .map((commodity) =>
-        commodity.parameters
+        (commodity.parameters || [])
           .filter((param) => param.value !== "0")
           .map((param) => `${param.parameter}: ${param.value}`)
           .join(", ")
@@ -168,7 +186,14 @@ const ListCompany = () => {
                   currentPage={currentPage}
                   totalItems={filteredData.length}
                   itemsPerPage={itemsPerPage}
-                  onPageChange={(page) => setCurrentPage(page)}
+                  onPageChange={(page) => {
+                    const totalPages = Math.max(
+                      1,
+                      Math.ceil(filteredData.length / itemsPerPage)
+                    );
+                    const next = Math.max(1, Math.min(page, totalPages));
+                    setCurrentPage(next);
+                  }}
                 />
               </div>
             </div>
@@ -189,17 +214,22 @@ const ListCompany = () => {
                 </p>
                 <p>
                   <strong>Consignee:</strong>{" "}
-                  {selectedCompany.consignee.join(", ")}
+                  {Array.isArray(selectedCompany.consignee)
+                    ? selectedCompany.consignee
+                        .map((c) => (typeof c === "string" ? c : c?.name || ""))
+                        .filter(Boolean)
+                        .join(", ")
+                    : ""}
                 </p>
                 <p>
                   <strong>Group:</strong> {selectedCompany.group}
                 </p>
                 <h4 className="mt-4 font-semibold">Commodities:</h4>
                 <ul>
-                  {selectedCompany.commodities.map((commodity) => (
+                  {(selectedCompany.commodities || []).map((commodity) => (
                     <li key={commodity._id}>
                       <strong>{commodity.name}</strong>:{" "}
-                      {commodity.parameters
+                      {(commodity.parameters || [])
                         .map((param) => `${param.parameter}: ${param.value} %`)
                         .join(", ")}
                     </li>

@@ -67,19 +67,40 @@ const EditCompanyPopup = ({ company, isOpen, onClose, onUpdate }) => {
         if (company) {
           setCompanyName(company.companyName || "");
           setCompanyEmail(company.companyEmail || "");
-          setSelectedGroup(
-            company.groupId
-              ? { value: String(company.groupId), label: company.group || "Select Group" }
-              : null
-          );
-          setSelectedConsignees(
-            Array.isArray(company.consigneeIds)
-              ? company.consigneeIds.map((id, idx) => ({
-                  value: String(id),
-                  label: company.consignee?.[idx] || "Consignee",
-                }))
-              : []
-          );
+          // Prefill group by id or by matching name if id missing
+          if (company.groupId) {
+            const grp = groups.find((g) => String(g._id) === String(company.groupId));
+            setSelectedGroup(
+              grp ? { value: String(grp._id), label: grp.groupName } : null
+            );
+          } else if (company.group) {
+            const grp = groups.find((g) => g.groupName === company.group);
+            setSelectedGroup(
+              grp ? { value: String(grp._id), label: grp.groupName } : null
+            );
+          } else {
+            setSelectedGroup(null);
+          }
+          // Prefill consignees by ids or by names if ids missing
+          if (Array.isArray(company.consigneeIds) && company.consigneeIds.length) {
+            const mapped = company.consigneeIds
+              .map((id) => {
+                const c = consignees.find((x) => String(x._id) === String(id));
+                return c ? { value: String(c._id), label: c.name } : null;
+              })
+              .filter(Boolean);
+            setSelectedConsignees(mapped);
+          } else if (Array.isArray(company.consignee) && company.consignee.length) {
+            const mapped = company.consignee
+              .map((name) => {
+                const c = consignees.find((x) => x.name === name);
+                return c ? { value: String(c._id), label: c.name } : null;
+              })
+              .filter(Boolean);
+            setSelectedConsignees(mapped);
+          } else {
+            setSelectedConsignees([]);
+          }
 
       setCommodityEntries(
         Array.isArray(company.commodities)
@@ -207,7 +228,8 @@ const EditCompanyPopup = ({ company, isOpen, onClose, onUpdate }) => {
       };
 
       const response = await axios.put(`/companies/${company._id}`, payload);
-      onUpdate(response.data);
+      const updated = response.data?.data || response.data;
+      onUpdate(updated);
       toast.success("Company updated successfully.");
       onClose();
     } catch (error) {
