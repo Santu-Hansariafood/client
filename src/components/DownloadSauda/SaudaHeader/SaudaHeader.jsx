@@ -35,14 +35,14 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: "bold",
     color: "#1F7A3E",
-    marginBottom: 10,
+    marginBottom: 12,
   },
 
   products: {
     fontSize: 11,
     fontWeight: "bold",
     color: "#1F2937",
-    marginBottom: 8,
+    marginBottom: 4,
   },
 
   address: {
