@@ -1,26 +1,40 @@
-# Hansaria Food — Bid portal
-# https://bid.hansariafood.in
 User-agent: *
 Allow: /
 
-# Allow commodity catalog for SEO (HSN, parameters, trading context)
 Allow: /commodity/list
-Allow: /commodity/add
 Allow: /quality-parameter/list
 
-# Do not index login-only or edit/dynamic paths
 Disallow: /login
+Disallow: /logout
+Disallow: /register
+Disallow: /dashboard
+
+Disallow: /manage-order/
 Disallow: /manage-order/edit-self-order/
+
 Disallow: /confirm-bids/
 Disallow: /loading-entry-sauda/
+
 Disallow: /Supplier-Bid-List
 Disallow: /participate-bid-list
 
-# Optional: uncomment to block entire authenticated app (SPA) from crawlers
-# Disallow: /dashboard
-# Disallow: /buyer/
-# Disallow: /company/
-# Disallow: /manage-bids/
-# Disallow: /manage-order/
+Disallow: /buyer/
+Disallow: /company/
+Disallow: /manage-bids/
+
+Disallow: /api/
+Disallow: /auth/
+Disallow: /admin/
+
+Disallow: /*?*
 
 Sitemap: https://bid.hansariafood.in/sitemap.xml
+
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: *
+Crawl-delay: 10
