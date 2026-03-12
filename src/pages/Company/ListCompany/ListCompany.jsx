@@ -29,12 +29,30 @@ const ListCompany = () => {
       try {
         const response = await axios.get("/companies");
 
-        const items = response.data?.data || response.data || [];
-        const sortedData = items.sort((a, b) => {
-          if (a.group === b.group) {
-            return a.companyName.localeCompare(b.companyName);
+        const raw = response.data;
+        const items = Array.isArray(raw?.data)
+          ? raw.data
+          : Array.isArray(raw)
+          ? raw
+          : Array.isArray(raw?.items)
+          ? raw.items
+          : [];
+        const normalized = items
+          .filter(Boolean)
+          .map((c) => ({
+            ...c,
+            group: typeof c.group === "string" ? c.group : c.group?.groupName || "",
+            companyName: c.companyName || "",
+            consignee: Array.isArray(c.consignee) ? c.consignee : [],
+            commodities: Array.isArray(c.commodities) ? c.commodities : [],
+          }));
+        const sortedData = normalized.sort((a, b) => {
+          const gA = a.group || "";
+          const gB = b.group || "";
+          if (gA === gB) {
+            return (a.companyName || "").localeCompare(b.companyName || "");
           }
-          return a.group.localeCompare(b.group);
+          return gA.localeCompare(gB);
         });
 
         setCompanyData(sortedData);
