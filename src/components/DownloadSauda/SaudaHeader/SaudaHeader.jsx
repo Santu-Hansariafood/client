@@ -3,96 +3,99 @@ import logo from "../../../assets/Hans.jpg";
 
 const styles = StyleSheet.create({
   header: {
-    marginBottom: 20,
-    borderBottom: "2 solid #1F7A3E",
+    borderBottom: "2pt solid #1F7A3E",
     paddingBottom: 10,
+    marginBottom: 15,
   },
-  // Main branding container
-  brandingRow: {
+
+  topRow: {
     flexDirection: "row",
-    justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 8,
   },
+
   logoContainer: {
-    width: "25%",
+    width: 110,
+    justifyContent: "center",
+    alignItems: "flex-start",
   },
+
   logo: {
     width: 90,
-    height: "auto",
+    height: 55,
+    objectFit: "contain",
   },
-  companyDetails: {
-    width: "75%",
-    textAlign: "right",
+
+  companySection: {
+    flex: 1,
+    paddingLeft: 12,
   },
+
   companyName: {
-    fontSize: 18,
-    fontWeight: "heavy",
+    fontSize: 16,
+    fontWeight: "bold",
     color: "#1F7A3E",
+    marginBottom: 3,
+    letterSpacing: 0.3,
+  },
+
+  address: {
+    fontSize: 8.5,
+    color: "#4B5563",
+    lineHeight: 1.4,
+    marginBottom: 4,
+  },
+
+  productLine: {
+    fontSize: 8,
+    color: "#1F2937",
+    fontWeight: "bold",
     letterSpacing: 0.5,
   },
-  address: {
-    fontSize: 8,
-    color: "#4B5563",
-    marginTop: 2,
-    lineHeight: 1.4,
+
+  saudaTitleBox: {
+    marginTop: 8,
+    backgroundColor: "#E8F5E9",
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    borderLeft: "5pt solid #F4B400",
+    borderRadius: 2,
   },
-  productLine: {
-    fontSize: 7,
+
+  saudaTitle: {
+    fontSize: 11,
+    fontWeight: "bold",
     color: "#1F7A3E",
-    fontWeight: "bold",
-    marginTop: 4,
-    textTransform: "uppercase",
+    letterSpacing: 1,
   },
-  // Document Title Bar
-  titleBar: {
-    flexDirection: "row",
-    backgroundColor: "#F3F4F6",
-    borderLeft: "4 solid #F4B400",
-    padding: "6 10",
-    marginTop: 5,
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  titleText: {
-    fontSize: 12,
-    fontWeight: "bold",
-    color: "#111827",
-  },
-  saudaMeta: {
-    fontSize: 9,
-    fontWeight: "bold",
-    color: "#374151",
-  }
 });
 
-const SaudaHeader = ({ saudaNo = "1", date = "10-03-2026" }) => (
+const SaudaHeader = () => (
   <View style={styles.header} fixed>
-    {/* Top Section: Logo and Company Info */}
-    <View style={styles.brandingRow}>
+    <View style={styles.topRow}>
+      
       <View style={styles.logoContainer}>
         <Image src={logo} style={styles.logo} />
       </View>
-      
-      <View style={styles.companyDetails}>
-        <Text style={styles.companyName}>HANSARIA FOOD PRIVATE LIMITED</Text>
-        <Text style={styles.address}>
-          Primarc Square, Plot No.1, Salt Lake Bypass, LA Block, Sector 3,{"\n"}
-          Bidhannagar, Kolkata – 700106 [cite: 5]
+
+      <View style={styles.companySection}>
+        <Text style={styles.companyName}>
+          HANSARIA FOOD PRIVATE LIMITED
         </Text>
+
+        <Text style={styles.address}>
+          Primarc Square, Plot No.1, Salt Lake Bypass, LA Block, Sector 3,
+          Bidhannagar, Kolkata – 700106
+        </Text>
+
         <Text style={styles.productLine}>
-          MAIZE | SOYABEAN DOC | MDOC | DORB | WHEAT | RICE [cite: 6]
+          MAIZE | SOYABEAN DOC | MDOC | DORB | WHEAT | RICE
         </Text>
       </View>
+
     </View>
 
-    {/* Secondary Section: Document Type and ID */}
-    <View style={styles.titleBar}>
-      <Text style={styles.titleText}>SAUDA AGREEMENT [cite: 2]</Text>
-      <View style={{ flexDirection: 'row', gap: 15 }}>
-        <Text style={styles.saudaMeta}>SAUDA NO: {saudaNo} </Text>
-        <Text style={styles.saudaMeta}>DATE: {date} </Text>
-      </View>
+    <View style={styles.saudaTitleBox}>
+      <Text style={styles.saudaTitle}>SAUDA AGREEMENT</Text>
     </View>
   </View>
 );
