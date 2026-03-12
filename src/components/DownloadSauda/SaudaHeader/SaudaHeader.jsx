@@ -35,7 +35,7 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: "bold",
     color: "#1F7A3E",
-    marginBottom: 8,
+    marginBottom: 10,
   },
 
   products: {
@@ -80,7 +80,7 @@ const SaudaHeader = () => (
 
       <View style={styles.companyBox}>
         <Text style={styles.companyName}>
-          Hansaria Food Private Limited
+          HANSARIA FOOD PRIVATE LIMITED
         </Text>
 
         <Text style={styles.products}>
