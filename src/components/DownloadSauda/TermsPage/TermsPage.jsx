@@ -1,5 +1,8 @@
 import { View, Text, StyleSheet, Image } from "@react-pdf/renderer";
-import qr from "../../../assets/feedbackQR.png"; // your QR image
+import QRCode from "qrcode";
+import { useEffect, useState } from "react";
+
+const feedbackUrl = "https://hansariafood.com/feedback";
 
 const styles = StyleSheet.create({
   container: {
@@ -29,10 +32,10 @@ const styles = StyleSheet.create({
 
   mainPointRow: {
     flexDirection: "row",
-    marginBottom: 5,
+    marginBottom: 4,
   },
 
-  mainBulletBox: {
+  mainBullet: {
     width: 8,
     height: 8,
     backgroundColor: "#1F7A3E",
@@ -50,10 +53,10 @@ const styles = StyleSheet.create({
   subPointRow: {
     flexDirection: "row",
     marginLeft: 14,
-    marginBottom: 3,
+    marginBottom: 2,
   },
 
-  subBulletBox: {
+  subBullet: {
     width: 5,
     height: 5,
     backgroundColor: "#F4B400",
@@ -83,8 +86,8 @@ const styles = StyleSheet.create({
   },
 
   qr: {
-    width: 70,
-    height: 70,
+    width: 80,
+    height: 80,
   },
 
   feedbackText: {
@@ -94,65 +97,166 @@ const styles = StyleSheet.create({
   },
 });
 
-const TermsPage = () => (
-  <View style={styles.container}>
+const TermsPage = () => {
+  const [qrCode, setQrCode] = useState("");
 
-    {/* TITLE */}
-    <View style={styles.titleBox}>
-      <Text style={styles.title}>TERMS & CONDITIONS</Text>
-    </View>
+  useEffect(() => {
+    QRCode.toDataURL(feedbackUrl).then((url) => {
+      setQrCode(url);
+    });
+  }, []);
 
-    {/* Late Delivery */}
-    <View style={styles.section}>
-      <View style={styles.mainPointRow}>
-        <View style={styles.mainBulletBox}/>
-        <Text style={styles.mainText}>Late Delivery Condition</Text>
+  return (
+    <View style={styles.container}>
+      
+      {/* TITLE */}
+      <View style={styles.titleBox}>
+        <Text style={styles.title}>TERMS & CONDITIONS</Text>
       </View>
 
-      <View style={styles.subPointRow}>
-        <View style={styles.subBulletBox}/>
-        <Text style={styles.subText}>
-          Buyer must confirm with broker before unloading goods if delivery is late.
+      {/* Late Delivery */}
+      <View style={styles.section}>
+        <View style={styles.mainPointRow}>
+          <View style={styles.mainBullet} />
+          <Text style={styles.mainText}>Late Delivery Condition</Text>
+        </View>
+
+        <View style={styles.subPointRow}>
+          <View style={styles.subBullet} />
+          <Text style={styles.subText}>
+            Buyer must confirm with broker or concerned party before unloading goods if delivery is late.
+          </Text>
+        </View>
+
+        <View style={styles.subPointRow}>
+          <View style={styles.subBullet} />
+          <Text style={styles.subText}>
+            If unloading is done without confirmation, buyer cannot deduct late delivery charges.
+          </Text>
+        </View>
+      </View>
+
+      {/* Detention */}
+      <View style={styles.section}>
+        <View style={styles.mainPointRow}>
+          <View style={styles.mainBullet} />
+          <Text style={styles.mainText}>Detention Condition</Text>
+        </View>
+
+        <View style={styles.subPointRow}>
+          <View style={styles.subBullet} />
+          <Text style={styles.subText}>
+            Detention charges will be mutually decided between buyer and seller with broker confirmation.
+          </Text>
+        </View>
+      </View>
+
+      {/* Contract Terms */}
+      <View style={styles.section}>
+        <View style={styles.mainPointRow}>
+          <View style={styles.mainBullet} />
+          <Text style={styles.mainText}>Contract Terms</Text>
+        </View>
+
+        <View style={styles.subPointRow}>
+          <View style={styles.subBullet} />
+          <Text style={styles.subText}>
+            Seller and Buyer cannot terminate the contract without prior notice.
+          </Text>
+        </View>
+
+        <View style={styles.subPointRow}>
+          <View style={styles.subBullet} />
+          <Text style={styles.subText}>
+            Any dispute should first be resolved through mutual discussion.
+          </Text>
+        </View>
+
+        <View style={styles.subPointRow}>
+          <View style={styles.subBullet} />
+          <Text style={styles.subText}>
+            If unresolved, dispute will follow the Indian Arbitration and Conciliation Act 1996.
+          </Text>
+        </View>
+
+        <View style={styles.subPointRow}>
+          <View style={styles.subBullet} />
+          <Text style={styles.subText}>
+            Contract is subject to West Bengal jurisdiction.
+          </Text>
+        </View>
+      </View>
+
+      {/* Special Clauses */}
+      <View style={styles.section}>
+        <View style={styles.mainPointRow}>
+          <View style={styles.mainBullet} />
+          <Text style={styles.mainText}>Special Clauses</Text>
+        </View>
+
+        <View style={styles.subPointRow}>
+          <View style={styles.subBullet} />
+          <Text style={styles.subText}>
+            Buyer and Seller cannot initiate legal action against broker or brokerage firm.
+          </Text>
+        </View>
+
+        <View style={styles.subPointRow}>
+          <View style={styles.subBullet} />
+          <Text style={styles.subText}>
+            Broker may appear in court only as a witness.
+          </Text>
+        </View>
+
+        <View style={styles.subPointRow}>
+          <View style={styles.subBullet} />
+          <Text style={styles.subText}>
+            Payments to broker or third parties cannot be stopped during disputes.
+          </Text>
+        </View>
+
+        <View style={styles.subPointRow}>
+          <View style={styles.subBullet} />
+          <Text style={styles.subText}>
+            Third parties may take legal action if payments are withheld.
+          </Text>
+        </View>
+
+        <View style={styles.subPointRow}>
+          <View style={styles.subBullet} />
+          <Text style={styles.subText}>
+            Signed contract copy must be returned within 24 hours.
+          </Text>
+        </View>
+
+        <View style={styles.subPointRow}>
+          <View style={styles.subBullet} />
+          <Text style={styles.subText}>
+            Broker will not be liable for monetary losses.
+          </Text>
+        </View>
+
+        <View style={styles.subPointRow}>
+          <View style={styles.subBullet} />
+          <Text style={styles.subText}>
+            Brokerage applies once the Sauda agreement is finalized.
+          </Text>
+        </View>
+      </View>
+
+      {/* QR Feedback Section */}
+      <View style={styles.feedbackSection}>
+        <Text style={styles.feedbackTitle}>
+          Scan QR Code to Give Feedback
         </Text>
+
+        {qrCode && <Image src={qrCode} style={styles.qr} />}
+
+        <Text style={styles.feedbackText}>{feedbackUrl}</Text>
       </View>
 
-      <View style={styles.subPointRow}>
-        <View style={styles.subBulletBox}/>
-        <Text style={styles.subText}>
-          If unloading is done without confirmation, late delivery charges cannot be deducted.
-        </Text>
-      </View>
     </View>
-
-    {/* Detention */}
-    <View style={styles.section}>
-      <View style={styles.mainPointRow}>
-        <View style={styles.mainBulletBox}/>
-        <Text style={styles.mainText}>Detention Condition</Text>
-      </View>
-
-      <View style={styles.subPointRow}>
-        <View style={styles.subBulletBox}/>
-        <Text style={styles.subText}>
-          Detention charges will be mutually decided between buyer and seller with broker confirmation.
-        </Text>
-      </View>
-    </View>
-
-    {/* FEEDBACK QR */}
-    <View style={styles.feedbackSection}>
-      <Text style={styles.feedbackTitle}>
-        Scan QR Code to Give Feedback
-      </Text>
-
-      <Image src={qr} style={styles.qr} />
-
-      <Text style={styles.feedbackText}>
-        https://yourwebsite.com/feedback
-      </Text>
-    </View>
-
-  </View>
-);
+  );
+};
 
 export default TermsPage;
