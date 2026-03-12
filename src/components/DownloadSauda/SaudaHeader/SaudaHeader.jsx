@@ -1,5 +1,5 @@
 import { View, Text, Image, StyleSheet } from "@react-pdf/renderer";
-import logo from "../../../assets/Hans.png";
+import logo from "../../../assets/Hans.jpg";
 
 const styles = StyleSheet.create({
   header: {
@@ -35,28 +35,29 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: "bold",
     color: "#1F7A3E",
-    marginBottom: 3,
+    marginBottom: 8,
   },
 
   products: {
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: "bold",
     color: "#1F2937",
-    marginBottom: 4,
+    marginBottom: 8,
   },
 
   address: {
     fontSize: 9,
     color: "#4B5563",
+    marginTop: 2,
   },
 
   divider: {
-    marginTop: 8,
+    marginTop: 10,
     borderBottom: "1pt solid #D1D5DB",
   },
 
   saudaBox: {
-    marginTop: 10,
+    marginTop: 12,
     backgroundColor: "#E8F5E9",
     padding: 8,
   },
@@ -68,7 +69,6 @@ const styles = StyleSheet.create({
     letterSpacing: 2,
   },
 });
-
 const SaudaHeader = () => (
   <View style={styles.header} fixed>
 
@@ -80,7 +80,7 @@ const SaudaHeader = () => (
 
       <View style={styles.companyBox}>
         <Text style={styles.companyName}>
-          HANSARIA FOOD PRIVATE LIMITED
+          Hansaria Food Private Limited
         </Text>
 
         <Text style={styles.products}>
