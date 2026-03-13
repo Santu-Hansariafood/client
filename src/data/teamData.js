@@ -3,8 +3,9 @@ const teamData = [
     id: 1,
     name: "Gopal Agarwal",
     position: "CEO & Founder",
+    email: "gopal@hansariafood.com",
     description:
-      "Gopal Agarwal is the Founder and Chief Executive Officer of Hansaria Food Private Limited. With deep expertise in commodity trading, feed raw material sourcing, and agricultural supply chains, he has built the company into a trusted partner for maize, soybean DOC, MDOC, DORB, wheat, and rice distribution. His strategic leadership, market insight, and commitment to reliability have enabled Hansaria Food to grow as a dependable supplier across India’s feed and agri-commodity sectors.",
+      "Gopal Agarwal is the Founder and Chief Executive Officer of Hansaria Food Private Limited, a leading agricultural commodity trading company in India. With decades of experience in agri-commodity markets, feed raw material sourcing, and supply chain development, he has successfully built a strong nationwide distribution network for maize, soybean DOC, mustard DOC, rice, wheat, and other feed ingredients. Under his leadership, Hansaria Food has grown into a trusted partner for feed manufacturers, poultry producers, and commodity buyers across India. His expertise in market strategy, supplier partnerships, and commodity logistics continues to drive the company's long-term growth and reliability in India's agricultural supply chain ecosystem.",
     quote:
       "Strong supply chains are built on trust, consistency, and long-term partnerships.",
     image: "/teams/gopal.webp",
@@ -18,8 +19,9 @@ const teamData = [
     id: 2,
     name: "Dr. Sunita Agarwalla",
     position: "Director – Operations",
+    email: "info@hansariafood.com",
     description:
-      "Dr. Sunita Agarwalla oversees operational strategy and logistics coordination at Hansaria Food Private Limited. She plays a key role in strengthening supplier relationships, optimizing procurement processes, and ensuring seamless delivery across commodity markets. Her analytical approach and operational expertise help maintain efficiency, quality standards, and strong vendor partnerships within the agricultural trading ecosystem.",
+      "Dr. Sunita Agarwalla serves as the Director of Operations at Hansaria Food Private Limited, where she oversees procurement strategy, operational management, and supplier coordination. She plays a key role in maintaining operational efficiency across the company’s commodity trading network, ensuring seamless procurement and distribution of feed raw materials such as maize, soybean DOC, DORB, and mustard DOC. With a strong analytical background and leadership in operational planning, she ensures quality control, reliable vendor partnerships, and optimized logistics throughout the agricultural supply chain.",
     quote:
       "Operational excellence is achieved when every process works with precision and purpose.",
     image: "/teams/sunita.webp",
@@ -32,9 +34,10 @@ const teamData = [
   {
     id: 3,
     name: "Prince Surana",
-    position: "Director – Operations",
+    position: "Country Head",
+    email: "prince@hansariafood.com",
     description:
-      "Prince Surana contributes to the operational and commercial growth of Hansaria Food Private Limited by managing supplier coordination, logistics planning, and market execution. With a strong focus on efficiency and reliability, he ensures that trading operations run smoothly while maintaining consistent supply for clients in the feed and agri-commodity sectors.",
+      "Prince Surana leads national-level operations and commercial coordination at Hansaria Food Private Limited. As Country Head, he manages supplier relationships, logistics planning, and market expansion strategies across India's agricultural commodity markets. His role focuses on strengthening supply chain efficiency and ensuring timely delivery of essential feed ingredients including maize, soybean DOC, and other agri commodities. Through strong vendor networks and operational discipline, he supports the company’s mission of delivering reliable and high-quality agricultural raw materials to customers nationwide.",
     quote: "Efficiency in operations is the backbone of sustainable growth.",
     image: "/teams/prince.webp",
     social: {
@@ -46,10 +49,12 @@ const teamData = [
   {
     id: 4,
     name: "Uttam Das",
-    position: "Director – Operations",
+    position: "Accounts Head",
+    email: "accounts@hansariafood.com",
     description:
-      "Uttam Das contributes to the operational and commercial growth of Hansaria Food Private Limited by managing supplier coordination, logistics planning, and market execution. With a strong focus on efficiency and reliability, he ensures that trading operations run smoothly while maintaining consistent supply for clients in the feed and agri-commodity sectors.",
-    quote: "Efficiency in operations is the backbone of sustainable growth.",
+      "Uttam Das serves as the Accounts Head at Hansaria Food Private Limited and is responsible for financial management, accounting operations, and compliance within the organization. He ensures accurate financial reporting, smooth transaction management, and effective coordination between procurement, trading, and finance teams. His role supports the company’s operational stability by maintaining financial transparency and ensuring efficient management of commodity trading transactions across suppliers and clients.",
+    quote:
+      "Financial discipline and transparency are essential pillars of sustainable business growth.",
     image: "/teams/uttam.webp",
     social: {
       facebook: "https://www.facebook.com/uttam.das.505523",
