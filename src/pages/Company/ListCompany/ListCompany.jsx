@@ -6,7 +6,6 @@ import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
 import { FaBuilding } from "react-icons/fa";
 const Tables = lazy(() => import("../../../common/Tables/Tables"));
 const Actions = lazy(() => import("../../../common/Actions/Actions"));
-const SearchBox = lazy(() => import("../../../common/SearchBox/SearchBox"));
 const Pagination = lazy(() =>
   import("../../../common/Paginations/Paginations")
 );
@@ -24,82 +23,51 @@ const ListCompany = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
+  const [loading, setLoading] = useState(true);
+  const [totalItems, setTotalItems] = useState(0);
+
   useEffect(() => {
     const fetchCompanyData = async () => {
       try {
-        const response = await axios.get("/companies");
-
-        const raw = response.data;
-        const items = Array.isArray(raw?.data)
-          ? raw.data
-          : Array.isArray(raw)
-          ? raw
-          : Array.isArray(raw?.items)
-          ? raw.items
-          : [];
-        const normalized = items
-          .filter(Boolean)
-          .map((c) => ({
-            ...c,
-            group: typeof c.group === "string" ? c.group : c.group?.groupName || "",
-            companyName: c.companyName || "",
-            consignee: Array.isArray(c.consignee) ? c.consignee : [],
-            commodities: Array.isArray(c.commodities) ? c.commodities : [],
-          }));
-        const sortedData = normalized.sort((a, b) => {
-          const gA = a.group || "";
-          const gB = b.group || "";
-          if (gA === gB) {
-            return (a.companyName || "").localeCompare(b.companyName || "");
-          }
-          return gA.localeCompare(gB);
+        setLoading(true);
+        const response = await axios.get("/companies", {
+          params: { page: currentPage, limit: itemsPerPage },
         });
 
-        setCompanyData(sortedData);
-        setFilteredData(sortedData);
+        const items = response.data?.data || [];
+        const total = response.data?.total ?? items.length;
+
+        setCompanyData(items);
+        setFilteredData(items);
+        setTotalItems(total);
       } catch (error) {
         toast.error(error?.response?.data?.message || "Failed to fetch company data");
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchCompanyData();
-  }, []);
-
-  // Keep currentPage within bounds when filteredData changes
-  useEffect(() => {
-    const totalPages = Math.max(1, Math.ceil(filteredData.length / itemsPerPage));
-    if (currentPage > totalPages) {
-      setCurrentPage(totalPages);
-    }
-    if (currentPage < 1) {
-      setCurrentPage(1);
-    }
-  }, [filteredData.length, itemsPerPage]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const paginatedData = filteredData.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
+  }, [currentPage]);
 
   const handleView = (index) => {
-    setSelectedCompany(paginatedData[index]);
+    setSelectedCompany(companyData[index]);
     setIsPopupOpen(true);
   };
 
   const handleEdit = (index) => {
-    setSelectedCompany(paginatedData[index]);
+    setSelectedCompany(companyData[index]);
     setIsEditPopupOpen(true);
   };
 
   const handleDelete = async (index) => {
-    const companyId = paginatedData[index]._id;
+    const companyId = companyData[index]._id;
     try {
       await axios.delete(`/companies/${companyId}`);
-      const updatedData = filteredData.filter(
-        (company) => company._id !== companyId
-      );
-      setFilteredData(updatedData);
-      setCompanyData(updatedData);
+      const nextTotal = Math.max(0, totalItems - 1);
+      const totalPages = Math.max(1, Math.ceil(nextTotal / itemsPerPage));
+      const nextPage = Math.min(currentPage, totalPages);
+      setCurrentPage(nextPage);
       toast.success("Company deleted successfully");
     } catch (error) {
       console.error("Error deleting company:", error);
@@ -108,14 +76,43 @@ const ListCompany = () => {
   };
 
   const handleUpdate = (updatedCompany) => {
-    const updatedList = companyData.map((company) =>
-      company._id === updatedCompany._id ? updatedCompany : company
-    );
+    const updatedId = updatedCompany?._id || updatedCompany?.id;
+    const updatedList = companyData.map((company) => {
+      if ((company._id || company.id) === updatedId) {
+        return {
+          ...company,
+          ...updatedCompany,
+          group: updatedCompany.group || company.group,
+          consignee: Array.isArray(updatedCompany.consignee)
+            ? updatedCompany.consignee
+            : company.consignee,
+          commodities: Array.isArray(updatedCompany.commodities)
+            ? updatedCompany.commodities
+            : company.commodities,
+        };
+      }
+      return company;
+    });
     setCompanyData(updatedList);
     setFilteredData(updatedList);
+    setSelectedCompany((prev) => {
+      if (!prev) return prev;
+      if ((prev._id || prev.id) !== updatedId) return prev;
+      return {
+        ...prev,
+        ...updatedCompany,
+        group: updatedCompany.group || prev.group,
+        consignee: Array.isArray(updatedCompany.consignee)
+          ? updatedCompany.consignee
+          : prev.consignee,
+        commodities: Array.isArray(updatedCompany.commodities)
+          ? updatedCompany.commodities
+          : prev.commodities,
+      };
+    });
   };
 
-  const rows = paginatedData.map((company, index) => [
+  const rows = companyData.map((company, index) => [
     (currentPage - 1) * itemsPerPage + index + 1,
     company.companyName,
     company.companyEmail,
@@ -159,30 +156,8 @@ const ListCompany = () => {
       >
         <div className="max-w-6xl mx-auto">
           <div className="bg-white border border-amber-200/80 rounded-2xl shadow-lg p-4 sm:p-6">
-            <div className="mb-4">
-              <SearchBox
-                placeholder="Search companies by name..."
-                items={companyData.map((c) => c.companyName || "")}
-                onSearch={(filteredNames) => {
-                  if (!filteredNames || filteredNames.length === 0) {
-                    setFilteredData(companyData);
-                    setCurrentPage(1);
-                    return;
-                  }
-                  if (filteredNames.length === companyData.length) {
-                    setFilteredData(companyData);
-                    setCurrentPage(1);
-                    return;
-                  }
-                  const nameSet = new Set(filteredNames);
-                  setFilteredData(
-                    companyData.filter((c) => nameSet.has(c.companyName))
-                  );
-                  setCurrentPage(1);
-                }}
-              />
-            </div>
               <div className="overflow-x-auto rounded-xl border border-gray-100">
+                {loading && <Loading />}
                 <Tables
                   headers={[
                     "Sl No",
@@ -202,15 +177,10 @@ const ListCompany = () => {
               <div className="mt-4">
                 <Pagination
                   currentPage={currentPage}
-                  totalItems={filteredData.length}
+                  totalItems={totalItems}
                   itemsPerPage={itemsPerPage}
                   onPageChange={(page) => {
-                    const totalPages = Math.max(
-                      1,
-                      Math.ceil(filteredData.length / itemsPerPage)
-                    );
-                    const next = Math.max(1, Math.min(page, totalPages));
-                    setCurrentPage(next);
+                    setCurrentPage(page);
                   }}
                 />
               </div>
