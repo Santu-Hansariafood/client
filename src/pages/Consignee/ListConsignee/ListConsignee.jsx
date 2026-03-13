@@ -20,51 +20,52 @@ const ITEMS_PER_PAGE = 10;
 
 const ListConsignee = () => {
   const [consigneeData, setConsigneeData] = useState([]);
-  const [filteredData, setFilteredData] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+  const [searchText, setSearchText] = useState("");
+
+  const [selectedConsignee, setSelectedConsignee] = useState(null);
+
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [isEditPopupOpen, setIsEditPopupOpen] = useState(false);
   const [isViewPopupOpen, setIsViewPopupOpen] = useState(false);
-  const [selectedConsignee, setSelectedConsignee] = useState(null);
-  const [currentPage, setCurrentPage] = useState(1);
+
+  const fetchConsignees = async () => {
+    try {
+      setLoading(true);
+
+      const response = await axios.get("/consignees", {
+        params: {
+          page: currentPage,
+          limit: ITEMS_PER_PAGE,
+          search: searchText
+        }
+      });
+
+      const normalized = response.data.data.map((c) => ({
+        ...c,
+        email: c.email?.toLowerCase(),
+        gst: c.gst?.toUpperCase(),
+        pan: c.pan?.toUpperCase()
+      }));
+
+      setConsigneeData(normalized);
+      setTotalItems(response.data.total);
+
+    } catch (error) {
+      toast.error("Error fetching consignees");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchConsignees = async () => {
-      try {
-        const response = await axios.get("/consignees");
-        const normalizedData = response.data.data.map((consignee) => ({
-          ...consignee,
-          email: consignee.email.toLowerCase(),
-          gst: consignee.gst.toUpperCase(),
-          pan: consignee.pan.toUpperCase(),
-        }));
-        const sortedData = normalizedData.sort((a, b) =>
-          a.name.localeCompare(b.name)
-        );
-        setConsigneeData(sortedData);
-        setFilteredData(sortedData);
-        setLoading(false);
-      } catch (error) {
-        toast.error("Error fetching consignees:", error);
-        setLoading(false);
-      }
-    };
-
     fetchConsignees();
-  }, []);
+  }, [currentPage, searchText]);
 
-  // Keep currentPage within bounds when filteredData changes
-  useEffect(() => {
-    const totalPages = Math.max(1, Math.ceil(filteredData.length / ITEMS_PER_PAGE));
-    if (currentPage > totalPages) {
-      setCurrentPage(totalPages);
-    }
-    if (currentPage < 1) {
-      setCurrentPage(1);
-    }
-  }, [filteredData.length]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const handleView = (consignee) => {
+   const handleView = (consignee) => {
     setSelectedConsignee(consignee);
     setIsViewPopupOpen(true);
   };
@@ -74,53 +75,42 @@ const ListConsignee = () => {
     setIsEditPopupOpen(true);
   };
 
-  const submitEdit = async (updatedData) => {
-    try {
-      const response = await axios.put(
-        `/consignees/${selectedConsignee._id}`,
-        updatedData
-      );
-      const updatedConsignees = consigneeData.map((consignee) =>
-        consignee._id === selectedConsignee._id ? response.data : consignee
-      );
-      setConsigneeData(updatedConsignees);
-      setFilteredData(updatedConsignees);
-      setIsEditPopupOpen(false);
-      toast.success("Consignee updated successfully");
-    } catch (error) {
-      toast.error("Error updating consignee:", error);
-    }
-  };
-
   const handleDelete = (consignee) => {
     setSelectedConsignee(consignee);
     setIsPopupOpen(true);
   };
 
-  const submitDelete = async () => {
+  const submitEdit = async (updatedData) => {
     try {
-      await axios.delete(`/consignees/${selectedConsignee._id}`);
-      const updatedConsignees = consigneeData.filter(
-        (consignee) => consignee._id !== selectedConsignee._id
-      );
-      setConsigneeData(updatedConsignees);
-      setFilteredData(updatedConsignees);
-      setIsPopupOpen(false);
-      toast.success("Consignee deleted successfully");
+      await axios.put(`/consignees/${selectedConsignee._id}`, updatedData);
+
+      toast.success("Consignee updated successfully");
+
+      setIsEditPopupOpen(false);
+      fetchConsignees();
+
     } catch (error) {
-      toast.error("Error deleting consignee:", error);
+      toast.error("Error updating consignee");
     }
   };
 
-  const indexOfLastItem = currentPage * ITEMS_PER_PAGE;
-  const indexOfFirstItem = indexOfLastItem - ITEMS_PER_PAGE;
-  const currentConsignees = filteredData.slice(
-    indexOfFirstItem,
-    indexOfLastItem
-  );
+  const submitDelete = async () => {
+    try {
 
-  const formattedRows = currentConsignees.map((consignee, index) => [
-    indexOfFirstItem + index + 1,
+      await axios.delete(`/consignees/${selectedConsignee._id}`);
+
+      toast.success("Consignee deleted successfully");
+
+      setIsPopupOpen(false);
+      fetchConsignees();
+
+    } catch (error) {
+      toast.error("Error deleting consignee");
+    }
+  };
+
+  const formattedRows = consigneeData.map((consignee, index) => [
+    (currentPage - 1) * ITEMS_PER_PAGE + index + 1,
     consignee.name,
     consignee.phone,
     consignee.email,
@@ -133,12 +123,13 @@ const ListConsignee = () => {
     consignee.contactPerson,
     consignee.mandiLicense,
     consignee.activeStatus ? "Active" : "Inactive",
+
     <Actions
       key={consignee._id}
       onView={() => handleView(consignee)}
       onEdit={() => handleEdit(consignee)}
       onDelete={() => handleDelete(consignee)}
-    />,
+    />
   ]);
 
   return (
@@ -152,21 +143,15 @@ const ListConsignee = () => {
         <div className="rounded-2xl border border-amber-200/60 bg-white shadow-lg p-4 sm:p-6 w-full overflow-hidden">
           <div className="mb-4">
             <SearchBox
-              placeholder="Search by name..."
-              items={consigneeData.map((c) => c.name || "")}
-              onSearch={(filteredNames) => {
-                if (!filteredNames || filteredNames.length === 0) {
-                  setFilteredData(consigneeData);
-                } else {
-                  const nameSet = new Set(filteredNames);
-                  setFilteredData(
-                    consigneeData.filter((c) => nameSet.has(c.name))
-                  );
-                }
+              placeholder="Search by name / phone / gst..."
+              items={[]}
+              onSearch={(value) => {
+                setSearchText(value);
                 setCurrentPage(1);
               }}
             />
           </div>
+
           {loading ? (
             <Loading />
           ) : (
@@ -187,7 +172,7 @@ const ListConsignee = () => {
                     "Contact Person",
                     "Mandi License",
                     "Active Status",
-                    "Actions",
+                    "Actions"
                   ]}
                   rows={formattedRows}
                 />
@@ -195,29 +180,14 @@ const ListConsignee = () => {
               <div className="mt-4">
                 <Pagination
                   currentPage={currentPage}
-                  totalItems={filteredData.length}
+                  totalItems={totalItems}
                   itemsPerPage={ITEMS_PER_PAGE}
-                  onPageChange={(page) => {
-                    const totalPages = Math.max(
-                      1,
-                      Math.ceil(filteredData.length / ITEMS_PER_PAGE)
-                    );
-                    const next = Math.max(1, Math.min(page, totalPages));
-                    setCurrentPage(next);
-                  }}
+                  onPageChange={(page) => setCurrentPage(page)}
                 />
               </div>
             </>
           )}
         </div>
-
-        <EditConsigneePopup
-          isOpen={isEditPopupOpen}
-          onClose={() => setIsEditPopupOpen(false)}
-          initialData={selectedConsignee || {}}
-          onSubmit={submitEdit}
-        />
-
         <PopupBox
           isOpen={isViewPopupOpen}
           onClose={() => setIsViewPopupOpen(false)}
@@ -225,40 +195,17 @@ const ListConsignee = () => {
         >
           {selectedConsignee && (
             <div className="space-y-2 text-sm">
-              <p>
-                <strong>Name:</strong> {selectedConsignee.name}
-              </p>
-              <p>
-                <strong>Phone:</strong> {selectedConsignee.phone}
-              </p>
-              <p>
-                <strong>Email:</strong> {selectedConsignee.email}
-              </p>
-              <p>
-                <strong>GST:</strong> {selectedConsignee.gst}
-              </p>
-              <p>
-                <strong>PAN:</strong> {selectedConsignee.pan}
-              </p>
-              <p>
-                <strong>State:</strong> {selectedConsignee.state}
-              </p>
-              <p>
-                <strong>District:</strong> {selectedConsignee.district}
-              </p>
-              <p>
-                <strong>Location:</strong> {selectedConsignee.location}
-              </p>
-              <p>
-                <strong>Pin:</strong> {selectedConsignee.pin}
-              </p>
-              <p>
-                <strong>Contact Person:</strong>{" "}
-                {selectedConsignee.contactPerson}
-              </p>
-              <p>
-                <strong>Mandi License:</strong> {selectedConsignee.mandiLicense}
-              </p>
+              <p><strong>Name:</strong> {selectedConsignee.name}</p>
+              <p><strong>Phone:</strong> {selectedConsignee.phone}</p>
+              <p><strong>Email:</strong> {selectedConsignee.email}</p>
+              <p><strong>GST:</strong> {selectedConsignee.gst}</p>
+              <p><strong>PAN:</strong> {selectedConsignee.pan}</p>
+              <p><strong>State:</strong> {selectedConsignee.state}</p>
+              <p><strong>District:</strong> {selectedConsignee.district}</p>
+              <p><strong>Location:</strong> {selectedConsignee.location}</p>
+              <p><strong>Pin:</strong> {selectedConsignee.pin}</p>
+              <p><strong>Contact Person:</strong> {selectedConsignee.contactPerson}</p>
+              <p><strong>Mandi License:</strong> {selectedConsignee.mandiLicense}</p>
               <p>
                 <strong>Active Status:</strong>{" "}
                 {selectedConsignee.activeStatus ? "Active" : "Inactive"}
@@ -266,7 +213,12 @@ const ListConsignee = () => {
             </div>
           )}
         </PopupBox>
-
+        <EditConsigneePopup
+          isOpen={isEditPopupOpen}
+          onClose={() => setIsEditPopupOpen(false)}
+          initialData={selectedConsignee || {}}
+          onSubmit={submitEdit}
+        />
         <PopupBox
           isOpen={isPopupOpen}
           onClose={() => setIsPopupOpen(false)}
@@ -281,6 +233,7 @@ const ListConsignee = () => {
             Confirm Delete
           </button>
         </PopupBox>
+
       </AdminPageShell>
     </Suspense>
   );
