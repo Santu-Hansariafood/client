@@ -7,13 +7,13 @@ import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
 
 const Tables = lazy(() => import("../../../common/Tables/Tables"));
 const Actions = lazy(() => import("../../../common/Actions/Actions"));
-const Pagination = lazy(() =>
-  import("../../../common/Paginations/Paginations")
+const Pagination = lazy(
+  () => import("../../../common/Paginations/Paginations"),
 );
 const PopupBox = lazy(() => import("../../../common/PopupBox/PopupBox"));
 const SearchBox = lazy(() => import("../../../common/SearchBox/SearchBox"));
-const EditConsigneePopup = lazy(() =>
-  import("../EditConsigneePopup/EditConsigneePopup")
+const EditConsigneePopup = lazy(
+  () => import("../EditConsigneePopup/EditConsigneePopup"),
 );
 
 const ITEMS_PER_PAGE = 10;
@@ -40,22 +40,28 @@ const ListConsignee = () => {
         params: {
           page: currentPage,
           limit: ITEMS_PER_PAGE,
-          search: searchText
-        }
+          search: searchText,
+        },
       });
 
-      const normalized = response.data.data.map((c) => ({
+      const data = response?.data?.data || [];
+      const total = response?.data?.total || 0;
+
+      const normalized = data.map((c) => ({
         ...c,
-        email: c.email?.toLowerCase(),
-        gst: c.gst?.toUpperCase(),
-        pan: c.pan?.toUpperCase()
+        email: c.email?.toLowerCase() || "",
+        gst: c.gst?.toUpperCase() || "",
+        pan: c.pan?.toUpperCase() || "",
       }));
 
       setConsigneeData(normalized);
-      setTotalItems(response.data.total);
-
+      setTotalItems(total);
     } catch (error) {
-      toast.error("Error fetching consignees");
+      console.error("Fetch Consignee Error:", error);
+
+      toast.error(
+        error?.response?.data?.message || "Error fetching consignees",
+      );
     } finally {
       setLoading(false);
     }
@@ -65,7 +71,7 @@ const ListConsignee = () => {
     fetchConsignees();
   }, [currentPage, searchText]);
 
-   const handleView = (consignee) => {
+  const handleView = (consignee) => {
     setSelectedConsignee(consignee);
     setIsViewPopupOpen(true);
   };
@@ -87,25 +93,24 @@ const ListConsignee = () => {
       toast.success("Consignee updated successfully");
 
       setIsEditPopupOpen(false);
-      fetchConsignees();
 
+      fetchConsignees();
     } catch (error) {
-      toast.error("Error updating consignee");
+      toast.error(error?.response?.data?.message || "Error updating consignee");
     }
   };
 
   const submitDelete = async () => {
     try {
-
       await axios.delete(`/consignees/${selectedConsignee._id}`);
 
       toast.success("Consignee deleted successfully");
 
       setIsPopupOpen(false);
-      fetchConsignees();
 
+      fetchConsignees();
     } catch (error) {
-      toast.error("Error deleting consignee");
+      toast.error(error?.response?.data?.message || "Error deleting consignee");
     }
   };
 
@@ -129,7 +134,7 @@ const ListConsignee = () => {
       onView={() => handleView(consignee)}
       onEdit={() => handleEdit(consignee)}
       onDelete={() => handleDelete(consignee)}
-    />
+    />,
   ]);
 
   return (
@@ -144,9 +149,9 @@ const ListConsignee = () => {
           <div className="mb-4">
             <SearchBox
               placeholder="Search by name / phone / gst..."
-              items={[]}
+              items={consigneeData.map((c) => c.name)}
               onSearch={(value) => {
-                setSearchText(value);
+                setSearchText(value || "");
                 setCurrentPage(1);
               }}
             />
@@ -172,11 +177,12 @@ const ListConsignee = () => {
                     "Contact Person",
                     "Mandi License",
                     "Active Status",
-                    "Actions"
+                    "Actions",
                   ]}
                   rows={formattedRows}
                 />
               </div>
+
               <div className="mt-4">
                 <Pagination
                   currentPage={currentPage}
@@ -195,17 +201,40 @@ const ListConsignee = () => {
         >
           {selectedConsignee && (
             <div className="space-y-2 text-sm">
-              <p><strong>Name:</strong> {selectedConsignee.name}</p>
-              <p><strong>Phone:</strong> {selectedConsignee.phone}</p>
-              <p><strong>Email:</strong> {selectedConsignee.email}</p>
-              <p><strong>GST:</strong> {selectedConsignee.gst}</p>
-              <p><strong>PAN:</strong> {selectedConsignee.pan}</p>
-              <p><strong>State:</strong> {selectedConsignee.state}</p>
-              <p><strong>District:</strong> {selectedConsignee.district}</p>
-              <p><strong>Location:</strong> {selectedConsignee.location}</p>
-              <p><strong>Pin:</strong> {selectedConsignee.pin}</p>
-              <p><strong>Contact Person:</strong> {selectedConsignee.contactPerson}</p>
-              <p><strong>Mandi License:</strong> {selectedConsignee.mandiLicense}</p>
+              <p>
+                <strong>Name:</strong> {selectedConsignee.name}
+              </p>
+              <p>
+                <strong>Phone:</strong> {selectedConsignee.phone}
+              </p>
+              <p>
+                <strong>Email:</strong> {selectedConsignee.email}
+              </p>
+              <p>
+                <strong>GST:</strong> {selectedConsignee.gst}
+              </p>
+              <p>
+                <strong>PAN:</strong> {selectedConsignee.pan}
+              </p>
+              <p>
+                <strong>State:</strong> {selectedConsignee.state}
+              </p>
+              <p>
+                <strong>District:</strong> {selectedConsignee.district}
+              </p>
+              <p>
+                <strong>Location:</strong> {selectedConsignee.location}
+              </p>
+              <p>
+                <strong>Pin:</strong> {selectedConsignee.pin}
+              </p>
+              <p>
+                <strong>Contact Person:</strong>{" "}
+                {selectedConsignee.contactPerson}
+              </p>
+              <p>
+                <strong>Mandi License:</strong> {selectedConsignee.mandiLicense}
+              </p>
               <p>
                 <strong>Active Status:</strong>{" "}
                 {selectedConsignee.activeStatus ? "Active" : "Inactive"}
@@ -213,6 +242,7 @@ const ListConsignee = () => {
             </div>
           )}
         </PopupBox>
+
         <EditConsigneePopup
           isOpen={isEditPopupOpen}
           onClose={() => setIsEditPopupOpen(false)}
@@ -225,6 +255,7 @@ const ListConsignee = () => {
           title={`Delete Consignee: ${selectedConsignee?.name}`}
         >
           <p>Are you sure you want to delete this consignee?</p>
+
           <button
             type="button"
             onClick={submitDelete}
@@ -233,7 +264,6 @@ const ListConsignee = () => {
             Confirm Delete
           </button>
         </PopupBox>
-
       </AdminPageShell>
     </Suspense>
   );
