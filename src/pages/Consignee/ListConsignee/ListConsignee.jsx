@@ -1,4 +1,4 @@
-import { useState, useEffect, lazy, Suspense } from "react";
+import { useState, useEffect, useMemo, useRef, lazy, Suspense } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
 import { FaTruck } from "react-icons/fa";
@@ -11,7 +11,6 @@ const Pagination = lazy(
   () => import("../../../common/Paginations/Paginations"),
 );
 const PopupBox = lazy(() => import("../../../common/PopupBox/PopupBox"));
-const SearchBox = lazy(() => import("../../../common/SearchBox/SearchBox"));
 const EditConsigneePopup = lazy(
   () => import("../EditConsigneePopup/EditConsigneePopup"),
 );
@@ -25,6 +24,7 @@ const ListConsignee = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
   const [searchText, setSearchText] = useState("");
+  const [searchInput, setSearchInput] = useState("");
 
   const [selectedConsignee, setSelectedConsignee] = useState(null);
 
@@ -32,9 +32,19 @@ const ListConsignee = () => {
   const [isEditPopupOpen, setIsEditPopupOpen] = useState(false);
   const [isViewPopupOpen, setIsViewPopupOpen] = useState(false);
 
-  const fetchConsignees = async () => {
+  const cacheRef = useRef(new Map());
+
+  const fetchConsignees = async (signal) => {
     try {
       setLoading(true);
+
+      const key = `${currentPage}|${searchText}`;
+      if (cacheRef.current.has(key)) {
+        const cached = cacheRef.current.get(key);
+        setConsigneeData(cached.items);
+        setTotalItems(cached.total);
+        return;
+      }
 
       const response = await axios.get("/consignees", {
         params: {
@@ -42,6 +52,7 @@ const ListConsignee = () => {
           limit: ITEMS_PER_PAGE,
           search: searchText,
         },
+        signal,
       });
 
       const data = response?.data?.data || [];
@@ -56,6 +67,7 @@ const ListConsignee = () => {
 
       setConsigneeData(normalized);
       setTotalItems(total);
+      cacheRef.current.set(key, { items: normalized, total });
     } catch (error) {
       console.error("Fetch Consignee Error:", error);
 
@@ -68,8 +80,18 @@ const ListConsignee = () => {
   };
 
   useEffect(() => {
-    fetchConsignees();
+    const controller = new AbortController();
+    fetchConsignees(controller.signal);
+    return () => controller.abort();
   }, [currentPage, searchText]);
+
+  useEffect(() => {
+    const handle = setTimeout(() => {
+      setSearchText(searchInput.trim());
+      setCurrentPage(1);
+    }, 300);
+    return () => clearTimeout(handle);
+  }, [searchInput]);
 
   const handleView = (consignee) => {
     setSelectedConsignee(consignee);
@@ -114,28 +136,31 @@ const ListConsignee = () => {
     }
   };
 
-  const formattedRows = consigneeData.map((consignee, index) => [
-    (currentPage - 1) * ITEMS_PER_PAGE + index + 1,
-    consignee.name,
-    consignee.phone,
-    consignee.email,
-    consignee.gst,
-    consignee.pan,
-    consignee.state,
-    consignee.district,
-    consignee.location,
-    consignee.pin,
-    consignee.contactPerson,
-    consignee.mandiLicense,
-    consignee.activeStatus ? "Active" : "Inactive",
-
-    <Actions
-      key={consignee._id}
-      onView={() => handleView(consignee)}
-      onEdit={() => handleEdit(consignee)}
-      onDelete={() => handleDelete(consignee)}
-    />,
-  ]);
+  const formattedRows = useMemo(
+    () =>
+      consigneeData.map((consignee, index) => [
+        (currentPage - 1) * ITEMS_PER_PAGE + index + 1,
+        consignee.name,
+        consignee.phone,
+        consignee.email,
+        consignee.gst,
+        consignee.pan,
+        consignee.state,
+        consignee.district,
+        consignee.location,
+        consignee.pin,
+        consignee.contactPerson,
+        consignee.mandiLicense,
+        consignee.activeStatus ? "Active" : "Inactive",
+        <Actions
+          key={consignee._id}
+          onView={() => handleView(consignee)}
+          onEdit={() => handleEdit(consignee)}
+          onDelete={() => handleDelete(consignee)}
+        />,
+      ]),
+    [consigneeData, currentPage]
+  );
 
   return (
     <Suspense fallback={<Loading />}>
@@ -147,14 +172,15 @@ const ListConsignee = () => {
       >
         <div className="rounded-2xl border border-amber-200/60 bg-white shadow-lg p-4 sm:p-6 w-full overflow-hidden">
           <div className="mb-4">
-            <SearchBox
-              placeholder="Search by name / phone / gst..."
-              items={consigneeData.map((c) => c.name)}
-              onSearch={(value) => {
-                setSearchText(value || "");
-                setCurrentPage(1);
-              }}
-            />
+            <div className="flex items-center w-full max-w-md bg-white border border-emerald-100 rounded-xl px-4 py-2.5 shadow-md shadow-emerald-900/5 transition-all duration-200 focus-within:ring-2 focus-within:ring-emerald-400/50 focus-within:border-emerald-400">
+              <input
+                type="text"
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                placeholder="Search by name / phone / gst..."
+                className="w-full min-w-0 px-3 py-2 bg-transparent text-slate-800 placeholder-slate-400 focus:outline-none"
+              />
+            </div>
           </div>
 
           {loading ? (
