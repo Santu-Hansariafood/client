@@ -7,12 +7,12 @@ import { FaBuilding } from "react-icons/fa";
 
 const Tables = lazy(() => import("../../../common/Tables/Tables"));
 const Actions = lazy(() => import("../../../common/Actions/Actions"));
-const Pagination = lazy(() =>
-  import("../../../common/Paginations/Paginations")
+const Pagination = lazy(
+  () => import("../../../common/Paginations/Paginations"),
 );
 const PopupBox = lazy(() => import("../../../common/PopupBox/PopupBox"));
-const EditCompanyPopup = lazy(() =>
-  import("../EditCompanyPopup/EditCompanyPopup")
+const EditCompanyPopup = lazy(
+  () => import("../EditCompanyPopup/EditCompanyPopup"),
 );
 
 const ListCompany = () => {
@@ -28,10 +28,6 @@ const ListCompany = () => {
   const [loading, setLoading] = useState(true);
   const [totalItems, setTotalItems] = useState(0);
 
-  // ===============================
-  // FETCH COMPANY DATA
-  // ===============================
-
   const fetchCompanyData = async () => {
     try {
       setLoading(true);
@@ -45,16 +41,12 @@ const ListCompany = () => {
 
       setCompanyData(Array.isArray(items) ? items : []);
       setTotalItems(total);
-
     } catch (error) {
-
       console.error("Fetch Company Error:", error);
 
       toast.error(
-        error?.response?.data?.message ||
-        "Failed to fetch company data"
+        error?.response?.data?.message || "Failed to fetch company data",
       );
-
     } finally {
       setLoading(false);
     }
@@ -63,10 +55,6 @@ const ListCompany = () => {
   useEffect(() => {
     fetchCompanyData();
   }, [currentPage]);
-
-  // ===============================
-  // ACTIONS
-  // ===============================
 
   const handleView = (index) => {
     setSelectedCompany(companyData[index]);
@@ -87,28 +75,18 @@ const ListCompany = () => {
       toast.success("Company deleted successfully");
 
       fetchCompanyData();
-
     } catch (error) {
-
       console.error("Delete Error:", error);
 
-      toast.error(
-        error?.response?.data?.message ||
-        "Failed to delete company"
-      );
+      toast.error(error?.response?.data?.message || "Failed to delete company");
     }
   };
 
-  // ===============================
-  // UPDATE AFTER EDIT
-  // ===============================
-
   const handleUpdate = (updatedCompany) => {
-
     const updatedId = updatedCompany?._id;
 
     const updatedList = companyData.map((company) =>
-      company._id === updatedId ? { ...company, ...updatedCompany } : company
+      company._id === updatedId ? { ...company, ...updatedCompany } : company,
     );
 
     setCompanyData(updatedList);
@@ -116,22 +94,14 @@ const ListCompany = () => {
     setSelectedCompany(updatedCompany);
   };
 
-  // ===============================
-  // TABLE ROWS
-  // ===============================
-
   const rows = companyData.map((company, index) => [
-
     (currentPage - 1) * itemsPerPage + index + 1,
-
     company.companyName || "",
-
     company.companyEmail || "",
 
-    (Array.isArray(company.consignee) ? company.consignee : [])
-      .map((c) => (typeof c === "string" ? c : c?.name || ""))
-      .filter(Boolean)
-      .join(", "),
+    (Array.isArray(company.consignee) ? company.consignee : []).map((c, i) => (
+      <div key={i}>{typeof c === "string" ? c : c?.name || ""}</div>
+    )),
 
     company.group || "",
 
@@ -145,13 +115,12 @@ const ListCompany = () => {
         (commodity?.parameters || [])
           .filter((param) => param.value !== "0")
           .map((param) => `${param.parameter}: ${param.value}`)
-          .join(", ")
+          .join(", "),
       )
       .filter(Boolean)
       .join(" | "),
 
     company.mandiLicense || "N/A",
-
     company.activeStatus ? "Active" : "Inactive",
 
     <Actions
@@ -172,9 +141,7 @@ const ListCompany = () => {
       >
         <div className="max-w-6xl mx-auto">
           <div className="bg-white border border-amber-200/80 rounded-2xl shadow-lg p-4 sm:p-6">
-
             <div className="overflow-x-auto rounded-xl border border-gray-100">
-
               {loading ? (
                 <Loading />
               ) : (
@@ -194,23 +161,18 @@ const ListCompany = () => {
                   rows={rows}
                 />
               )}
-
             </div>
 
             <div className="mt-4">
-
               <Pagination
                 currentPage={currentPage}
                 totalItems={totalItems}
                 itemsPerPage={itemsPerPage}
                 onPageChange={(page) => setCurrentPage(page)}
               />
-
             </div>
           </div>
         </div>
-
-        {/* ================= VIEW POPUP ================= */}
 
         {isPopupOpen && (
           <PopupBox
@@ -220,7 +182,6 @@ const ListCompany = () => {
           >
             {selectedCompany && (
               <div>
-
                 <p>
                   <strong>Company Name:</strong> {selectedCompany.companyName}
                 </p>
@@ -244,29 +205,19 @@ const ListCompany = () => {
                 <h4 className="mt-4 font-semibold">Commodities:</h4>
 
                 <ul>
-
                   {(selectedCompany.commodities || []).map((commodity) => (
-
                     <li key={commodity._id}>
-
                       <strong>{commodity.name}</strong>:{" "}
-
                       {(commodity.parameters || [])
                         .map((param) => `${param.parameter}: ${param.value}%`)
                         .join(", ")}
-
                     </li>
-
                   ))}
-
                 </ul>
-
               </div>
             )}
           </PopupBox>
         )}
-
-        {/* ================= EDIT POPUP ================= */}
 
         {isEditPopupOpen && (
           <EditCompanyPopup
@@ -276,7 +227,6 @@ const ListCompany = () => {
             onUpdate={handleUpdate}
           />
         )}
-
       </AdminPageShell>
     </Suspense>
   );

@@ -20,7 +20,6 @@ const EditCompanyPopup = ({ company, isOpen, onClose, onUpdate }) => {
   const [consigneeOptions, setConsigneeOptions] = useState([]);
   const [groupOptions, setGroupOptions] = useState([]);
   const [commodityOptions, setCommodityOptions] = useState([]);
-
   const [selectedCommodityToAdd, setSelectedCommodityToAdd] = useState(null);
 
   useEffect(() => {
@@ -33,7 +32,8 @@ const EditCompanyPopup = ({ company, isOpen, onClose, onUpdate }) => {
         ]);
 
         const consignees = consigneeRes.data?.data || consigneeRes.data || [];
-        const commoditiesData = commodityRes.data?.data || commodityRes.data || [];
+        const commoditiesData =
+          commodityRes.data?.data || commodityRes.data || [];
         const groups = groupRes.data?.data || groupRes.data || [];
 
         setConsigneeOptions(
@@ -41,6 +41,7 @@ const EditCompanyPopup = ({ company, isOpen, onClose, onUpdate }) => {
             .map((c) => ({ value: String(c._id), label: c.name }))
             .sort((a, b) => a.label.localeCompare(b.label))
         );
+
         setGroupOptions(
           groups
             .map((g) => ({ value: String(g._id), label: g.groupName }))
@@ -52,12 +53,10 @@ const EditCompanyPopup = ({ company, isOpen, onClose, onUpdate }) => {
             value: String(c._id),
             label: c.name,
             parameters: Array.isArray(c.parameters)
-              ? c.parameters
-                  .map((p) => ({
-                    value: String(p.parameterId || p._id || ""),
-                    label: p.parameter,
-                  }))
-                  .filter((p) => p.value && p.label)
+              ? c.parameters.map((p) => ({
+                  value: String(p.parameterId || p._id),
+                  label: p.parameter,
+                }))
               : [],
           }))
           .sort((a, b) => a.label.localeCompare(b.label));
@@ -67,59 +66,51 @@ const EditCompanyPopup = ({ company, isOpen, onClose, onUpdate }) => {
         if (company) {
           setCompanyName(company.companyName || "");
           setCompanyEmail(company.companyEmail || "");
-          // Prefill group by id or by matching name if id missing
+
           if (company.groupId) {
-            const grp = groups.find((g) => String(g._id) === String(company.groupId));
+            const grp = groups.find(
+              (g) => String(g._id) === String(company.groupId)
+            );
             setSelectedGroup(
               grp ? { value: String(grp._id), label: grp.groupName } : null
             );
-          } else if (company.group) {
-            const grp = groups.find((g) => g.groupName === company.group);
-            setSelectedGroup(
-              grp ? { value: String(grp._id), label: grp.groupName } : null
-            );
-          } else {
-            setSelectedGroup(null);
-          }
-          // Prefill consignees by ids or by names if ids missing
-          if (Array.isArray(company.consigneeIds) && company.consigneeIds.length) {
-            const mapped = company.consigneeIds
-              .map((id) => {
-                const c = consignees.find((x) => String(x._id) === String(id));
-                return c ? { value: String(c._id), label: c.name } : null;
-              })
-              .filter(Boolean);
-            setSelectedConsignees(mapped);
-          } else if (Array.isArray(company.consignee) && company.consignee.length) {
-            const mapped = company.consignee
-              .map((name) => {
-                const c = consignees.find((x) => x.name === name);
-                return c ? { value: String(c._id), label: c.name } : null;
-              })
-              .filter(Boolean);
-            setSelectedConsignees(mapped);
-          } else {
-            setSelectedConsignees([]);
           }
 
-      setCommodityEntries(
-        Array.isArray(company.commodities)
-          ? company.commodities.map((entry) => ({
-              commodityId: String(entry.commodityId || entry._id || ""),
-              brokerage: entry.brokerage ?? 0,
-              parameters: Array.isArray(entry.parameters)
-                ? entry.parameters.map((p) => ({
-                    parameterId: String(p.parameterId || p._id || ""),
-                    label: p.parameter || "",
-                    value: p.value ?? "",
-                  }))
-                : [],
-            }))
-          : []
-      );
+          if (Array.isArray(company.consigneeIds)) {
+            const mapped = company.consigneeIds
+              .map((id) => {
+                const c = consignees.find(
+                  (x) => String(x._id) === String(id)
+                );
+                return c ? { value: String(c._id), label: c.name } : null;
+              })
+              .filter(Boolean);
+
+            setSelectedConsignees(mapped);
+          }
+
+          // ✅ IMPORTANT FIX (keeps commodity _id)
+          setCommodityEntries(
+            Array.isArray(company.commodities)
+              ? company.commodities.map((entry) => ({
+                  _id: entry._id || null,
+                  commodityId: String(entry.commodityId || entry._id || ""),
+                  brokerage: entry.brokerage ?? 0,
+                  parameters: Array.isArray(entry.parameters)
+                    ? entry.parameters.map((p) => ({
+                        parameterId: String(p.parameterId || p._id),
+                        label: p.parameter,
+                        value: p.value ?? "",
+                      }))
+                    : [],
+                }))
+              : []
+          );
         }
       } catch (error) {
-        toast.error(error?.response?.data?.message || "Failed to load required data.");
+        toast.error(
+          error?.response?.data?.message || "Failed to load required data."
+        );
       }
     };
 
@@ -129,22 +120,27 @@ const EditCompanyPopup = ({ company, isOpen, onClose, onUpdate }) => {
   if (!isOpen) return null;
 
   const getCommodityParameterOptions = (commodityId) => {
-    const commodity = commodityOptions.find((c) => c.value === String(commodityId));
+    const commodity = commodityOptions.find(
+      (c) => c.value === String(commodityId)
+    );
     return commodity?.parameters || [];
   };
 
   const getCommodityLabel = (commodityId) => {
-    const commodity = commodityOptions.find((c) => c.value === String(commodityId));
+    const commodity = commodityOptions.find(
+      (c) => c.value === String(commodityId)
+    );
     return commodity?.label || "";
   };
 
   const handleAddCommodity = () => {
     if (!selectedCommodityToAdd?.value) {
-      toast.error("Please select a commodity to add.");
+      toast.error("Please select a commodity.");
       return;
     }
 
-    const commodityId = String(selectedCommodityToAdd.value);
+    const commodityId = selectedCommodityToAdd.value;
+
     if (commodityEntries.some((e) => e.commodityId === commodityId)) {
       toast.warning("Commodity already added.");
       return;
@@ -153,15 +149,17 @@ const EditCompanyPopup = ({ company, isOpen, onClose, onUpdate }) => {
     setCommodityEntries((prev) => [
       ...prev,
       {
+        _id: null,
         commodityId,
         brokerage: 0,
         parameters: getCommodityParameterOptions(commodityId).map((p) => ({
-          parameterId: String(p.value),
+          parameterId: p.value,
           label: p.label,
           value: "",
         })),
       },
     ]);
+
     setSelectedCommodityToAdd(null);
   };
 
@@ -169,33 +167,10 @@ const EditCompanyPopup = ({ company, isOpen, onClose, onUpdate }) => {
     setCommodityEntries((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const handleParameterSelectionChange = (commodityIndex, selectedOptions) => {
-    setCommodityEntries((prev) => {
-      const updated = [...prev];
-      const current = updated[commodityIndex];
-      const existingById = new Map(
-        (current.parameters || []).map((p) => [String(p.parameterId), p])
-      );
-      const nextParams = (selectedOptions || []).map((opt) => {
-        const existing = existingById.get(String(opt.value));
-        return {
-          parameterId: String(opt.value),
-          label: opt.label,
-          value: existing?.value ?? "",
-        };
-      });
-      updated[commodityIndex] = { ...current, parameters: nextParams };
-      return updated;
-    });
-  };
-
   const handleParameterValueChange = (commodityIndex, parameterIndex, value) => {
     setCommodityEntries((prev) => {
       const updated = [...prev];
-      const current = updated[commodityIndex];
-      const params = [...(current.parameters || [])];
-      params[parameterIndex] = { ...params[parameterIndex], value };
-      updated[commodityIndex] = { ...current, parameters: params };
+      updated[commodityIndex].parameters[parameterIndex].value = value;
       return updated;
     });
   };
@@ -203,7 +178,7 @@ const EditCompanyPopup = ({ company, isOpen, onClose, onUpdate }) => {
   const handleBrokerageChange = (commodityIndex, value) => {
     setCommodityEntries((prev) => {
       const updated = [...prev];
-      updated[commodityIndex] = { ...updated[commodityIndex], brokerage: Number(value || 0) };
+      updated[commodityIndex].brokerage = Number(value || 0);
       return updated;
     });
   };
@@ -218,22 +193,32 @@ const EditCompanyPopup = ({ company, isOpen, onClose, onUpdate }) => {
         companyEmail,
         groupId: selectedGroup?.value || null,
         consigneeIds: selectedConsignees.map((c) => c.value),
+
+        // ✅ IMPORTANT FIX
         commodities: commodityEntries.map((entry) => ({
+          _id: entry._id || undefined,
           commodityId: entry.commodityId,
           brokerage: Number(entry.brokerage || 0),
-          parameters: (entry.parameters || [])
-            .map((p) => ({ parameterId: p.parameterId, value: p.value }))
-            .filter((p) => p.parameterId),
+          parameters: (entry.parameters || []).map((p) => ({
+            parameterId: p.parameterId,
+            value: p.value,
+          })),
         })),
       };
 
       const response = await axios.put(`/companies/${company._id}`, payload);
+
       const updated = response.data?.data || response.data;
+
       onUpdate(updated);
+
       toast.success("Company updated successfully.");
+
       onClose();
     } catch (error) {
-      toast.error(error?.response?.data?.message || "Failed to update company.");
+      toast.error(
+        error?.response?.data?.message || "Failed to update company."
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -246,82 +231,57 @@ const EditCompanyPopup = ({ company, isOpen, onClose, onUpdate }) => {
           <button
             className="absolute top-2 right-2 text-gray-500 hover:text-gray-800"
             onClick={onClose}
-            title="Close"
           >
             ✖
           </button>
+
           <h2 className="text-2xl font-bold mb-4 text-center">
             Edit Company Details
           </h2>
 
           <form onSubmit={handleSubmit}>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Company Name
-                </label>
-                <DataInput
-                  placeholder="Company Name"
-                  value={companyName}
-                  onChange={(e) => setCompanyName(e.target.value)}
-                  name="companyName"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Company Email
-                </label>
-                <DataInput
-                  placeholder="Company Email"
-                  value={companyEmail}
-                  onChange={(e) => setCompanyEmail(e.target.value)}
-                  name="companyEmail"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Group
-                </label>
-                <DataDropdown
-                  options={groupOptions}
-                  selectedOptions={selectedGroup}
-                  onChange={(opt) => setSelectedGroup(opt)}
-                  placeholder="Select Group"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Consignees
-                </label>
-                <DataDropdown
-                  options={consigneeOptions}
-                  selectedOptions={selectedConsignees}
-                  isMulti
-                  onChange={(opts) => setSelectedConsignees(opts || [])}
-                  placeholder="Select Consignees"
-                />
-              </div>
+              <DataInput
+                placeholder="Company Name"
+                value={companyName}
+                onChange={(e) => setCompanyName(e.target.value)}
+                required
+              />
+
+              <DataInput
+                placeholder="Company Email"
+                value={companyEmail}
+                onChange={(e) => setCompanyEmail(e.target.value)}
+              />
+
+              <DataDropdown
+                options={groupOptions}
+                selectedOptions={selectedGroup}
+                onChange={setSelectedGroup}
+                placeholder="Select Group"
+              />
+
+              <DataDropdown
+                options={consigneeOptions}
+                selectedOptions={selectedConsignees}
+                isMulti
+                onChange={(opts) => setSelectedConsignees(opts || [])}
+                placeholder="Select Consignees"
+              />
+
               <div className="col-span-2">
-                <label className="block text-sm font-medium text-gray-700">
-                  Commodities
-                </label>
-                <div className="flex items-center gap-2">
+                <div className="flex gap-2">
                   <DataDropdown
-                    options={commodityOptions.filter(
-                      (opt) =>
-                        !commodityEntries.some(
-                          (entry) => entry.commodityId === opt.value
-                        )
-                    )}
+                    options={commodityOptions}
                     selectedOptions={selectedCommodityToAdd}
-                    onChange={(option) => setSelectedCommodityToAdd(option)}
+                    onChange={setSelectedCommodityToAdd}
                     placeholder="Select Commodity"
                   />
+
                   <button
                     type="button"
                     onClick={handleAddCommodity}
-                    className="bg-gradient-to-r from-emerald-800 to-emerald-700 text-white px-4 py-2 rounded-lg hover:from-emerald-700 hover:to-emerald-600 transition"
+                    className="bg-emerald-700 text-white px-4 py-2 rounded"
                   >
                     Add
                   </button>
@@ -330,49 +290,40 @@ const EditCompanyPopup = ({ company, isOpen, onClose, onUpdate }) => {
                 {commodityEntries.map((entry, commodityIndex) => (
                   <div
                     key={commodityIndex}
-                    className="border p-4 mt-2 rounded relative"
+                    className="border p-4 mt-3 rounded relative"
                   >
                     <button
                       type="button"
-                      onClick={() => handleRemoveCommodity(commodityIndex)}
-                      className="absolute top-2 right-2 text-red-500 hover:text-red-700"
-                      title="Remove Commodity"
+                      onClick={() =>
+                        handleRemoveCommodity(commodityIndex)
+                      }
+                      className="absolute right-2 top-2 text-red-500"
                     >
                       ✖
                     </button>
-                    <label className="block mt-2 font-semibold">Brokerage</label>
+
+                    <p className="font-semibold">
+                      {getCommodityLabel(entry.commodityId)}
+                    </p>
+
                     <DataInput
-                      placeholder="Enter Brokerage"
+                      placeholder="Brokerage"
                       value={entry.brokerage}
                       onChange={(e) =>
-                        handleBrokerageChange(commodityIndex, e.target.value)
+                        handleBrokerageChange(
+                          commodityIndex,
+                          e.target.value
+                        )
                       }
                     />
-                    <p className="font-semibold">{getCommodityLabel(entry.commodityId)}</p>
-                    <label className="block mt-2 font-semibold">
-                      Quality Parameters
-                    </label>
-                    <DataDropdown
-                      options={getCommodityParameterOptions(entry.commodityId)}
-                      selectedOptions={(entry.parameters || []).map((p) => ({
-                        value: p.parameterId,
-                        label: p.label,
-                      }))}
-                      isMulti
-                      onChange={(selectedOptions) =>
-                        handleParameterSelectionChange(commodityIndex, selectedOptions)
-                      }
-                      placeholder="Select Quality Parameters"
-                    />
+
                     {(entry.parameters || []).map((param, paramIndex) => (
-                      <div
-                        key={paramIndex}
-                        className="flex items-center gap-4 mt-2"
-                      >
+                      <div key={paramIndex} className="flex gap-2 mt-2">
                         <p className="flex-1">{param.label}</p>
+
                         <DataInput
                           placeholder="Value"
-                          value={param.value || ""}
+                          value={param.value}
                           onChange={(e) =>
                             handleParameterValueChange(
                               commodityIndex,
@@ -380,7 +331,6 @@ const EditCompanyPopup = ({ company, isOpen, onClose, onUpdate }) => {
                               e.target.value
                             )
                           }
-                          className="flex-1"
                         />
                       </div>
                     ))}
@@ -388,13 +338,12 @@ const EditCompanyPopup = ({ company, isOpen, onClose, onUpdate }) => {
                 ))}
               </div>
             </div>
+
             <div className="mt-6 flex justify-center">
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className={`bg-green-500 text-white px-4 py-2 rounded ${
-                  isSubmitting ? "opacity-60 cursor-not-allowed" : ""
-                }`}
+                className="bg-green-500 text-white px-6 py-2 rounded"
               >
                 Update
               </button>
