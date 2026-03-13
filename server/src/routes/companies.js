@@ -23,7 +23,6 @@ const mapCompanyForClient = (company) => {
     const commodityId = entry.commodityId?._id || entry.commodityId || null;
     const commodityRef = entry.commodityId;
 
-    // Get parameters from the Company record (with their values)
     const storedParamsMap = new Map(
       (entry.parameters || []).map((p) => [
         String(p.parameterId?._id || p.parameterId),
@@ -31,7 +30,6 @@ const mapCompanyForClient = (company) => {
       ])
     );
 
-    // Get parameters from the Commodity model (the latest list)
     const commodityParams = (commodityRef?.parameters || []).map((p) => ({
       _id: p.parameterId?._id || p.parameterId,
       parameterId: p.parameterId?._id || p.parameterId,
@@ -192,11 +190,26 @@ router.post("/", async (req, res) => {
 router.put("/:id", async (req, res) => {
   try {
     const body = req.body || {};
+    let consigneeIds = normalizeObjectIdArray(body.consigneeIds);
+    let groupId = toObjectId(body.groupId);
+
+    if (consigneeIds.length === 0 && Array.isArray(body.consignee) && body.consignee.length) {
+      const consignees = await Consignee.find({ name: { $in: body.consignee } })
+        .select("_id")
+        .lean();
+      consigneeIds = consignees.map((c) => c._id);
+    }
+
+    if (!groupId && body.group) {
+      const group = await Group.findOne({ groupName: body.group }).select("_id").lean();
+      groupId = group?._id || null;
+    }
+
     const update = {
       companyName: body.companyName,
       companyEmail: body.companyEmail,
-      consigneeIds: normalizeObjectIdArray(body.consigneeIds),
-      groupId: toObjectId(body.groupId),
+      consigneeIds,
+      groupId,
       commodities: Array.isArray(body.commodities)
         ? body.commodities
             .map((entry) => ({
