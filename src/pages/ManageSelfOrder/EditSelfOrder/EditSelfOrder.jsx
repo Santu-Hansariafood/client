@@ -82,12 +82,14 @@ const EditSelfOrder = () => {
   useEffect(() => {
     // Only auto-calculate if we have a commodity selected
     if (formData.commodity) {
+      // Get brokerage from Buyer's profile
       const buyerBrokerageVal = _buyerBrokerageMap[formData.commodity] ?? 0;
 
+      // Get brokerage from Supplier's profile
       const supplierBrokerageItem = formData.supplierBrokerage?.find(
         (b) => b.name === formData.commodity
       );
-      const supplierBrokerageVal = supplierBrokerageItem?.brokerage ?? buyerBrokerageVal;
+      const supplierBrokerageVal = supplierBrokerageItem?.brokerage ?? 0;
 
       // Only update if the values are different to avoid unnecessary renders
       if (
