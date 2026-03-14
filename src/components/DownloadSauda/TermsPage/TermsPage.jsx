@@ -119,13 +119,15 @@ const TermsPage = () => {
         <View style={styles.subPointRow}>
           <View style={styles.subBullet} />
           <Text style={styles.subText}>
-            Buyer must confirm with broker or concerned party before unloading goods if delivery is late.
+            Buyer must confirm with the broker or the concerned party before
+            unloading the goods if the delivery is delayed.
           </Text>
         </View>
         <View style={styles.subPointRow}>
           <View style={styles.subBullet} />
           <Text style={styles.subText}>
-            If unloading is done without confirmation, buyer cannot deduct late delivery charges.
+            If unloading is done without confirmation, the buyer cannot deduct
+            any late delivery charges.
           </Text>
         </View>
       </View>
@@ -137,7 +139,8 @@ const TermsPage = () => {
         <View style={styles.subPointRow}>
           <View style={styles.subBullet} />
           <Text style={styles.subText}>
-            Detention charges will be mutually decided between buyer and seller with broker confirmation.
+            Detention charges will be mutually decided between the buyer and the
+            seller with confirmation from the broker.
           </Text>
         </View>
       </View>
@@ -149,25 +152,30 @@ const TermsPage = () => {
         <View style={styles.subPointRow}>
           <View style={styles.subBullet} />
           <Text style={styles.subText}>
-            Seller and Buyer cannot terminate the contract without prior notice.
+            The seller and the buyer cannot terminate the contract without prior
+            notice.
           </Text>
         </View>
         <View style={styles.subPointRow}>
           <View style={styles.subBullet} />
           <Text style={styles.subText}>
-            Any dispute should first be resolved through mutual discussion.
+            Any dispute should first be resolved through mutual discussion
+            between the parties.
           </Text>
         </View>
         <View style={styles.subPointRow}>
           <View style={styles.subBullet} />
           <Text style={styles.subText}>
-            If unresolved, dispute will follow the Indian Arbitration and Conciliation Act 1996.
+            If unresolved, the dispute will be governed by the Indian
+            Arbitration and Conciliation Act, 1996. This contract is subject to
+            the jurisdiction of West Bengal.
           </Text>
         </View>
         <View style={styles.subPointRow}>
           <View style={styles.subBullet} />
           <Text style={styles.subText}>
-            Contract is subject to West Bengal jurisdiction.
+            Under no circumstances shall the buyer or seller have the right to
+            take any legal action against the broker or the brokerage firm.
           </Text>
         </View>
       </View>
@@ -179,19 +187,21 @@ const TermsPage = () => {
         <View style={styles.subPointRow}>
           <View style={styles.subBullet} />
           <Text style={styles.subText}>
-            Buyer and Seller cannot initiate legal action against broker or brokerage firm.
+            The buyer and the seller cannot initiate legal action against the
+            broker or the brokerage firm.
           </Text>
         </View>
         <View style={styles.subPointRow}>
           <View style={styles.subBullet} />
           <Text style={styles.subText}>
-            Broker may appear in court only as a witness.
+            The broker may appear in court only as a witness.
           </Text>
         </View>
         <View style={styles.subPointRow}>
           <View style={styles.subBullet} />
           <Text style={styles.subText}>
-            Payments to broker or third parties cannot be stopped during disputes.
+            Payments to the broker or any third parties cannot be stopped during
+            disputes.
           </Text>
         </View>
         <View style={styles.subPointRow}>
@@ -203,31 +213,43 @@ const TermsPage = () => {
         <View style={styles.subPointRow}>
           <View style={styles.subBullet} />
           <Text style={styles.subText}>
-            Signed contract copy must be returned within 24 hours.
+            A signed copy of this contract will be sent to the buyer/seller via
+            email or fax. The signed copy must be returned to the broker within
+            24 hours of receipt via email or fax. This contract shall then be
+            considered valid, binding, and enforceable between the parties. If
+            no signed copy is received and no comments are made within 24 hours,
+            all the terms and conditions shall be deemed accepted by both
+            parties.
           </Text>
         </View>
 
         <View style={styles.subPointRow}>
           <View style={styles.subBullet} />
           <Text style={styles.subText}>
-            Broker will not be liable for monetary losses.
+            The broker shall not be liable for any monetary losses.
           </Text>
         </View>
         <View style={styles.subPointRow}>
           <View style={styles.subBullet} />
           <Text style={styles.subText}>
-            Brokerage applies once the Sauda agreement is finalized.
+            Brokerage charges shall apply once the Sauda agreement is finalized.
+          </Text>
+        </View>
+        <View style={styles.subPointRow}>
+          <View style={styles.subBullet} />
+          <Text style={styles.subText}>
+            Brokerage shall be applicable if any Sauda is settled between the
+            parties.
           </Text>
         </View>
       </View>
       <View style={styles.feedbackSection}>
         <Text style={styles.feedbackTitle}>
-          Scan QR Code to Give Feedback Or Any Suggestions
+          Scan the QR Code to give feedback or suggestions.{" "}
         </Text>
         {qrCode && <Image src={qrCode} style={styles.qr} />}
         <Text style={styles.feedbackText}>{feedbackUrl}</Text>
       </View>
-
     </View>
   );
 };
