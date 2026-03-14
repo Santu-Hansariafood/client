@@ -8,12 +8,10 @@ const PrintLoadingEntry = async (data) => {
   const pageWidth = doc.internal.pageSize.width;
   const pageHeight = doc.internal.pageSize.height;
 
-  // Add a thin border around the page for a letterhead look
   doc.setDrawColor(26, 54, 93);
   doc.setLineWidth(0.2);
   doc.rect(10, 10, pageWidth - 20, pageHeight - 20);
 
-  // Header section
   const logoWidth = 30;
   const logoHeight = 20;
   doc.addImage(logo, "PNG", 15, 15, logoWidth, logoHeight);

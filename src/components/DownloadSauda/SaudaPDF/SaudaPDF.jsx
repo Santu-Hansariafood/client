@@ -8,35 +8,35 @@ import TermsPage from "../TermsPage/TermsPage";
 const styles = StyleSheet.create({
   page: {
     fontFamily: "Helvetica",
-    fontSize: 9,
-    paddingTop: 35,
-    paddingBottom: 35,
-    paddingHorizontal: 30,
-    lineHeight: 1.3,
+    fontSize: 8,
+    paddingTop: 20,
+    paddingBottom: 20,
+    paddingHorizontal: 25,
+    lineHeight: 1.2,
     color: "#1F2937",
     backgroundColor: "#ffffff",
   },
 
   pageBorder: {
     position: "absolute",
-    top: 12,
-    left: 12,
-    right: 12,
-    bottom: 12,
+    top: 8,
+    left: 8,
+    right: 8,
+    bottom: 8,
     border: "1 solid #1F7A3E",
   },
 
   innerBorder: {
     position: "absolute",
-    top: 18,
-    left: 18,
-    right: 18,
-    bottom: 18,
+    top: 12,
+    left: 12,
+    right: 12,
+    bottom: 12,
     border: "0.5 solid #E5E7EB",
   },
 
   section: {
-    marginTop: 12,
+    marginTop: 8,
   },
 
   bold: {
@@ -46,27 +46,27 @@ const styles = StyleSheet.create({
   divider: {
     height: 1,
     backgroundColor: "#E5E7EB",
-    marginVertical: 10,
+    marginVertical: 6,
   },
 
   footer: {
     position: "absolute",
-    bottom: 20,
+    bottom: 15,
     left: 30,
     right: 30,
     textAlign: "center",
-    fontSize: 7,
+    fontSize: 6,
     color: "#6B7280",
   },
 
   footerLine: {
-    height: 1,
+    height: 0.5,
     backgroundColor: "#E5E7EB",
-    marginBottom: 5,
+    marginBottom: 4,
   },
 
   footerText: {
-    fontSize: 7,
+    fontSize: 6,
     color: "#6B7280",
   },
 
@@ -75,8 +75,9 @@ const styles = StyleSheet.create({
     top: "40%",
     left: "20%",
     fontSize: 60,
-    color: "#E8F5E9",
+    color: "#F3F4F6",
     transform: "rotate(-25deg)",
+    opacity: 0.3,
   },
 });
 
@@ -119,15 +120,15 @@ const SaudaPDF = ({ data }) => (
 
     </Page>
     <Page style={styles.page} size="A4">
-    <View style={styles.pageBorder} fixed />
-    <View style={styles.innerBorder} fixed />
+      <View style={styles.pageBorder} fixed />
+      <View style={styles.innerBorder} fixed />
 
-    <SaudaHeader />
+      <SaudaHeader />
 
-    <View style={styles.section}>
-      <TermsPage />
-    </View>
-    <View style={styles.footer} fixed>
+      <View style={styles.section}>
+        <TermsPage />
+      </View>
+      <View style={styles.footer} fixed>
         <View style={styles.footerLine} />
 
         <Text style={styles.footerText}>
@@ -140,7 +141,7 @@ const SaudaPDF = ({ data }) => (
           +91 98304 33535 / 93304 33535 | Email: info@hansariafood.com | Website: www.hansariafood.com
         </Text>
       </View>
-  </Page>
+    </Page>
   </Document>
 );
 

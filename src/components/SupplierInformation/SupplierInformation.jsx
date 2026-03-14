@@ -34,6 +34,22 @@ const SupplierInformation = ({ handleChange, formData }) => {
     fetchSuppliers();
   }, []);
 
+  useEffect(() => {
+    if (sellers.length > 0 && formData.supplier && !selectedSupplier) {
+      setSelectedSupplier(formData.supplier);
+      const selected = sellers.find((seller) => seller._id === formData.supplier);
+      if (selected) {
+        handleChange("supplierBrokerage", selected.commodities || []);
+        if (selected.commodities?.length) {
+          handleChange("supplierBrokerageDetails", selected.commodities.map((c) => ({
+            name: c.name,
+            brokerage: c.brokerage,
+          })));
+        }
+      }
+    }
+  }, [sellers, formData.supplier, selectedSupplier, handleChange]);
+
   const suppliers = useMemo(
     () =>
       sellers.map((seller) => ({

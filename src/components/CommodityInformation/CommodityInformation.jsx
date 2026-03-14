@@ -43,6 +43,16 @@ const CommodityInformation = ({
     }
   }, [selectedCompany]);
 
+  useEffect(() => {
+    if (commodities.length > 0 && formData.commodity && !selectedCommodity) {
+      setSelectedCommodity(formData.commodity);
+      const commodity = commodities.find((item) => item.name === formData.commodity);
+      if (commodity) {
+        setParameters(commodity.parameters || []);
+      }
+    }
+  }, [commodities, formData.commodity, selectedCommodity]);
+
   const onCommodityChange = (option) => {
     const commodityName = option?.value || null;
     setSelectedCommodity(commodityName);

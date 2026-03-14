@@ -75,6 +75,24 @@ const SelfOrder = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [_buyerBrokerageMap, setBuyerBrokerageMap] = useState({});
 
+  useEffect(() => {
+    if (formData.commodity) {
+      const buyerBrokerageVal = _buyerBrokerageMap[formData.commodity] || 0;
+      const supplierBrokerageItem = formData.supplierBrokerage?.find(
+        (b) => b.name === formData.commodity
+      );
+      const supplierBrokerageVal = supplierBrokerageItem?.brokerage ?? buyerBrokerageVal;
+
+      setFormData((prev) => ({
+        ...prev,
+        buyerBrokerage: {
+          brokerageBuyer: buyerBrokerageVal,
+          brokerageSupplier: supplierBrokerageVal,
+        },
+      }));
+    }
+  }, [formData.commodity, formData.supplierBrokerage, _buyerBrokerageMap]);
+
   const API_BASE_URL = "/self-order";
 
   const handleChange = (field, value) => {

@@ -65,7 +65,7 @@ const styles = StyleSheet.create({
 
 const CommodityTable = ({ data }) => {
   const filteredParameters = data.parameters.filter(
-    (param) => param.value !== "0"
+    (param) => param.value !== "0" && param.value !== "" && param.value !== null && param.value !== undefined
   );
 
   return (

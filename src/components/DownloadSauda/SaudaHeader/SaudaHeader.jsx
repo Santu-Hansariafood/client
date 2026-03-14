@@ -3,9 +3,9 @@ import logo from "../../../assets/Hans.jpg";
 
 const styles = StyleSheet.create({
   header: {
-    paddingBottom: 12,
-    marginBottom: 15,
-    borderBottom: "2pt solid #1F7A3E",
+    paddingBottom: 8,
+    marginBottom: 10,
+    borderBottom: "1.5pt solid #1F7A3E",
   },
 
   row: {
@@ -14,14 +14,14 @@ const styles = StyleSheet.create({
   },
 
   logoBox: {
-    width: 90,
+    width: 70,
     justifyContent: "center",
     alignItems: "flex-start",
   },
 
   logo: {
-    width: 80,
-    height: 50,
+    width: 60,
+    height: 40,
     objectFit: "contain",
   },
 
@@ -32,41 +32,41 @@ const styles = StyleSheet.create({
   },
 
   companyName: {
-    fontSize: 24,
+    fontSize: 18,
     fontWeight: "bold",
     color: "#1F7A3E",
-    marginBottom: 12,
+    marginBottom: 6,
   },
 
   products: {
-    fontSize: 11,
+    fontSize: 9,
     fontWeight: "bold",
     color: "#1F2937",
-    marginBottom: 4,
+    marginBottom: 2,
   },
 
   address: {
-    fontSize: 9,
+    fontSize: 7,
     color: "#4B5563",
-    marginTop: 2,
+    marginTop: 1,
   },
 
   divider: {
-    marginTop: 10,
-    borderBottom: "1pt solid #D1D5DB",
+    marginTop: 6,
+    borderBottom: "0.5pt solid #D1D5DB",
   },
 
   saudaBox: {
-    marginTop: 12,
+    marginTop: 8,
     backgroundColor: "#E8F5E9",
-    padding: 8,
+    padding: 6,
   },
 
   saudaTitle: {
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: "bold",
     color: "#1F7A3E",
-    letterSpacing: 2,
+    letterSpacing: 1.5,
   },
 });
 const SaudaHeader = () => (

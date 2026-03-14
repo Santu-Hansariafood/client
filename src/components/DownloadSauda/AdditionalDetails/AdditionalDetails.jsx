@@ -195,7 +195,6 @@ const AdditionalDetails = ({ data }) => (
 
     <View style={styles.brokerInfo}>
       <Text style={styles.brokerText}>Broker: HANSARIA FOOD PRIVATE LIMITED</Text>
-      <Text style={styles.brokerText}>Agent Name: {data.agentName || "N/A"}</Text>
     </View>
 
     <View style={styles.signatureSection}>

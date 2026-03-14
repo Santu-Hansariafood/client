@@ -9,17 +9,22 @@ import { toast } from "react-toastify";
 const DownloadSauda = ({ data }) => {
   const [consigneeData, setConsigneeData] = useState([]);
   const [supplierData, setSupplierData] = useState([]);
+  const [buyerData, setBuyerData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [sendingEmail, setSendingEmail] = useState(false);
 
   const CONSIGNEE_API_URL = "/consignees";
   const SUPPLIER_API_URL = "/seller-company";
+  const BUYER_API_URL = "/buyers";
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const consigneeResponse = await axios.get(CONSIGNEE_API_URL);
-        const supplierResponse = await axios.get(SUPPLIER_API_URL);
+        const [consigneeResponse, supplierResponse, buyerResponse] = await Promise.all([
+          axios.get(CONSIGNEE_API_URL),
+          axios.get(SUPPLIER_API_URL),
+          axios.get(BUYER_API_URL)
+        ]);
 
         const cData = Array.isArray(consigneeResponse.data)
           ? consigneeResponse.data
@@ -27,9 +32,13 @@ const DownloadSauda = ({ data }) => {
         const sData = Array.isArray(supplierResponse.data)
           ? supplierResponse.data
           : supplierResponse.data?.data || [];
+        const bData = Array.isArray(buyerResponse.data)
+          ? buyerResponse.data
+          : buyerResponse.data?.data || [];
 
         setConsigneeData(cData);
         setSupplierData(sData);
+        setBuyerData(bData);
       } catch (error) {
         console.error("Error fetching data:", error);
       } finally {
@@ -61,10 +70,16 @@ const DownloadSauda = ({ data }) => {
       supplier.companyName.toLowerCase() === data.supplierCompany.toLowerCase()
   );
 
+  const matchingBuyer = buyerData.find(
+    (buyer) =>
+      buyer.companyName.toLowerCase() === data.buyerCompany.toLowerCase()
+  );
+
   let transformedData = {
     ...data,
     consigneeDetails: matchingConsignee || null,
     supplierDetails: matchingSupplier || null,
+    buyerDetails: matchingBuyer || null,
   };
 
   if (data.billTo === "consignee") {

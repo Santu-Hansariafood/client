@@ -83,7 +83,14 @@ const SaudaDetails = ({ data }) => (
     <View style={styles.grid}>
       <View style={styles.gridItem}>
         <Text style={styles.label}>Buyer Name (Debitor)</Text>
-        <Text style={styles.value}>{data.buyer}</Text>
+        <Text style={styles.value}>{data.buyerCompany || data.buyer}</Text>
+        {data.buyerDetails ? (
+          <Text style={styles.addressDetails}>
+            {`\n${data.buyerDetails.address || ""}, ${data.buyerDetails.district || ""}, ${data.buyerDetails.state || ""} - ${data.buyerDetails.pinNo || ""}\n PAN No: ${data.buyerDetails.panNo || ""}\nGST: ${data.buyerDetails.gstNo || ""}`}
+          </Text>
+        ) : (
+          <Text style={styles.addressDetails}>{"\nDetails not available"}</Text>
+        )}
       </View>
       <View style={styles.gridItem}>
         <Text style={styles.label}>Supplier Company</Text>
