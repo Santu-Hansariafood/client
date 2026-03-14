@@ -85,8 +85,10 @@ const AddSellerCompany = () => {
 
     if (name === "ifscCode" && value.length === 11) {
       try {
-        const response = await axios.get(`https://ifsc.razorpay.com/${value}`);
-        const { BANK, BRANCH } = response.data;
+        const response = await fetch(`https://ifsc.razorpay.com/${value.toUpperCase()}`);
+        if (!response.ok) throw new Error("Invalid IFSC Code");
+        const data = await response.json();
+        const { BANK, BRANCH } = data;
         setBankDetails((prev) =>
           prev.map((bank) =>
             bank.id === id
