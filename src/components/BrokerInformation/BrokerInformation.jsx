@@ -77,15 +77,10 @@ const BrokerInformation = ({ formData, handleChange }) => {
             Brokerage Per Ton (Buyer)
           </label>
           <DataInput
-            placeholder="Enter Brokerage"
-            inputType="number"
-            value={formData.buyerBrokerage?.brokerageBuyer ?? ""}
-            onChange={(e) =>
-              handleChange(
-                { key: "buyerBrokerage", subKey: "brokerageBuyer", nested: true },
-                e.target.value
-              )
-            }
+            placeholder="₹ 0"
+            inputType="text"
+            value={buyerBrokerageVal !== undefined && buyerBrokerageVal !== "" ? `₹ ${buyerBrokerageVal}` : ""}
+            readOnly
           />
         </div>
         <div>
@@ -93,15 +88,10 @@ const BrokerInformation = ({ formData, handleChange }) => {
             Brokerage Per Ton (Supplier)
           </label>
           <DataInput
-            placeholder="Enter Brokerage"
-            inputType="number"
-            value={formData.buyerBrokerage?.brokerageSupplier ?? ""}
-            onChange={(e) =>
-              handleChange(
-                { key: "buyerBrokerage", subKey: "brokerageSupplier", nested: true },
-                e.target.value
-              )
-            }
+            placeholder="₹ 0"
+            inputType="text"
+            value={supplierBrokerageVal !== undefined && supplierBrokerageVal !== "" ? `₹ ${supplierBrokerageVal}` : ""}
+            readOnly
           />
         </div>
       </div>

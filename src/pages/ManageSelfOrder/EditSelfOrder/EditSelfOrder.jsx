@@ -78,35 +78,32 @@ const EditSelfOrder = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isFetching, setIsFetching] = useState(false);
   const [_buyerBrokerageMap, setBuyerBrokerageMap] = useState({});
-  const [prevCommodity, setPrevCommodity] = useState("");
 
   useEffect(() => {
-    // Only auto-calculate if we have the brokerage map and a commodity selected
-    if (formData.commodity && Object.keys(_buyerBrokerageMap).length > 0) {
-      // Only auto-fill if the commodity has actually changed
-      if (formData.commodity === prevCommodity) return;
-
-      const buyerBrokerageVal = _buyerBrokerageMap[formData.commodity];
-      
-      // If we don't have a value in the map for this commodity, don't overwrite with 0 
-      // unless it's explicitly missing from the map (which means it IS 0)
-      if (buyerBrokerageVal === undefined) return;
+    // Only auto-calculate if we have a commodity selected
+    if (formData.commodity) {
+      const buyerBrokerageVal = _buyerBrokerageMap[formData.commodity] ?? 0;
 
       const supplierBrokerageItem = formData.supplierBrokerage?.find(
         (b) => b.name === formData.commodity
       );
       const supplierBrokerageVal = supplierBrokerageItem?.brokerage ?? buyerBrokerageVal;
 
-      setFormData((prev) => ({
-        ...prev,
-        buyerBrokerage: {
-          brokerageBuyer: buyerBrokerageVal,
-          brokerageSupplier: supplierBrokerageVal,
-        },
-      }));
-      setPrevCommodity(formData.commodity);
+      // Only update if the values are different to avoid unnecessary renders
+      if (
+        formData.buyerBrokerage?.brokerageBuyer !== buyerBrokerageVal ||
+        formData.buyerBrokerage?.brokerageSupplier !== supplierBrokerageVal
+      ) {
+        setFormData((prev) => ({
+          ...prev,
+          buyerBrokerage: {
+            brokerageBuyer: buyerBrokerageVal,
+            brokerageSupplier: supplierBrokerageVal,
+          },
+        }));
+      }
     }
-  }, [formData.commodity, _buyerBrokerageMap, formData.supplierBrokerage, prevCommodity]);
+  }, [formData.commodity, _buyerBrokerageMap, formData.supplierBrokerage, formData.buyerBrokerage]);
 
   const API_BASE_URL = "/self-order";
 
@@ -124,7 +121,6 @@ const EditSelfOrder = () => {
           ? new Date(orderFromState.loadingDate)
           : new Date(),
       });
-      setPrevCommodity(orderFromState.commodity || "");
       return;
     }
     if (!id) {
@@ -143,7 +139,6 @@ const EditSelfOrder = () => {
           deliveryDate: data.deliveryDate ? new Date(data.deliveryDate) : new Date(),
           loadingDate: data.loadingDate ? new Date(data.loadingDate) : new Date(),
         });
-        setPrevCommodity(data.commodity || "");
       } catch {
         toast.error("Failed to fetch order details.");
         navigate("/manage-order/list-self-order", { replace: true });
