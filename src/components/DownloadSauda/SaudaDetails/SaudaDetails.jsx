@@ -93,12 +93,6 @@ const SaudaDetails = ({ data }) => {
           <Text style={styles.label}>Buyer PO No</Text>
           <Text style={styles.value}>{data.poNumber || "N/A"}</Text>
         </View>
-        <View style={styles.headerItem}>
-          <Text style={styles.label}>Loading Date</Text>
-          <Text style={styles.value}>
-            {data.loadingDate ? new Date(data.loadingDate).toLocaleDateString("en-GB").replace(/\//g, "-") : "N/A"}
-          </Text>
-        </View>
         <View style={[styles.headerItem, { textAlign: "right" }]}>
           <Text style={styles.label}>Date</Text>
           <Text style={styles.value}>
@@ -122,7 +116,7 @@ const SaudaDetails = ({ data }) => {
             </Text>
           ) : null}
         </View>
-        <View style={styles.gridItem}>
+        <View style={[styles.gridItem, { borderRight: "none" }]}>
           <Text style={styles.label}>Ship To (Consignee)</Text>
           <Text style={styles.value}>{data.consignee}</Text>
           {data.consigneeDetails && (
@@ -130,10 +124,6 @@ const SaudaDetails = ({ data }) => {
               {`\n${data.consigneeDetails.location || ""}, ${data.consigneeDetails.district || ""}, ${data.consigneeDetails.state || ""} - ${data.consigneeDetails.pin || ""}\nPAN No : ${data.consigneeDetails.pan || ""}\nGST: ${data.consigneeDetails.gst || ""}`}
             </Text>
           )}
-        </View>
-        <View style={[styles.gridItem, { borderRight: "none" }]}>
-          <Text style={styles.label}>Location</Text>
-          <Text style={styles.value}>{data.location || "N/A"}</Text>
         </View>
       </View>
     </View>
