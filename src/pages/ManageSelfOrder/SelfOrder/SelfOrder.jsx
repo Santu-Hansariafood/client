@@ -75,10 +75,14 @@ const SelfOrder = () => {
   const [formData, setFormData] = useState(INITIAL_FORM_DATA);
   const [isLoading, setIsLoading] = useState(false);
   const [_buyerBrokerageMap, setBuyerBrokerageMap] = useState({});
+  const [prevCommodity, setPrevCommodity] = useState("");
 
   useEffect(() => {
     // Only auto-calculate if we have the brokerage map and a commodity selected
     if (formData.commodity && Object.keys(_buyerBrokerageMap).length > 0) {
+      // Only auto-fill if the commodity has actually changed
+      if (formData.commodity === prevCommodity) return;
+
       const buyerBrokerageVal = _buyerBrokerageMap[formData.commodity];
       
       // If we don't have a value in the map for this commodity, don't overwrite with 0 
@@ -90,21 +94,16 @@ const SelfOrder = () => {
       );
       const supplierBrokerageVal = supplierBrokerageItem?.brokerage ?? buyerBrokerageVal;
 
-      // Only update if the values are different to avoid unnecessary renders
-      if (
-        formData.buyerBrokerage?.brokerageBuyer !== buyerBrokerageVal ||
-        formData.buyerBrokerage?.brokerageSupplier !== supplierBrokerageVal
-      ) {
-        setFormData((prev) => ({
-          ...prev,
-          buyerBrokerage: {
-            brokerageBuyer: buyerBrokerageVal,
-            brokerageSupplier: supplierBrokerageVal,
-          },
-        }));
-      }
+      setFormData((prev) => ({
+        ...prev,
+        buyerBrokerage: {
+          brokerageBuyer: buyerBrokerageVal,
+          brokerageSupplier: supplierBrokerageVal,
+        },
+      }));
+      setPrevCommodity(formData.commodity);
     }
-  }, [formData.commodity, formData.supplierBrokerage, _buyerBrokerageMap, formData.buyerBrokerage]);
+  }, [formData.commodity, _buyerBrokerageMap, formData.supplierBrokerage, prevCommodity]);
 
   const API_BASE_URL = "/self-order";
 
@@ -153,6 +152,7 @@ const SelfOrder = () => {
 
   const resetForm = () => {
     setFormData(INITIAL_FORM_DATA);
+    setPrevCommodity("");
   };
 
   const handleSubmit = async () => {
