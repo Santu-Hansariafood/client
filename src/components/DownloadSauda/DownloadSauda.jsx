@@ -98,7 +98,6 @@ const DownloadSauda = ({ data }) => {
     buyerDetails: matchingBuyer || (data.billTo === "consignee" ? matchingConsignee : null),
   };
 
-  // Normalize buyer details for consistent field names in PDF (address, gstNo, panNo, etc.)
   if (transformedData.buyerDetails) {
     const bd = transformedData.buyerDetails;
     transformedData.buyerDetails = {
@@ -112,7 +111,6 @@ const DownloadSauda = ({ data }) => {
     };
   }
 
-  // Ensure brokerage is fetched from buyer/seller profile if it's 0 or missing in order data
   if (matchingBuyer && (!transformedData.buyerBrokerage?.brokerageBuyer || transformedData.buyerBrokerage.brokerageBuyer === 0)) {
     const buyerProfileBrokerage = matchingBuyer.brokerageByName?.[data.commodity] || matchingBuyer.brokerage?.[data.commodity];
     if (buyerProfileBrokerage !== undefined) {

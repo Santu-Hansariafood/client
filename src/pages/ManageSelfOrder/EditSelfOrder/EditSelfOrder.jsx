@@ -174,6 +174,24 @@ const EditSelfOrder = () => {
     const errors = [];
     if (!formData.buyer) errors.push("Buyer name is required.");
     if (!formData.saudaNo) errors.push("Sauda No is required.");
+    if (!formData.commodity) errors.push("Commodity is required.");
+    if (!formData.supplier) errors.push("Supplier is required.");
+
+    // Validate if selected commodity exists in both buyer and seller lists
+    if (formData.commodity) {
+      const buyerCommodities = formData.buyerCommodity || [];
+      const supplierCommodities = formData.supplierBrokerage || []; // This comes from SupplierInformation.jsx
+
+      const buyerHasCommodity = buyerCommodities.includes(formData.commodity);
+      const supplierHasCommodity = supplierCommodities.some(c => c.name === formData.commodity);
+
+      if (!buyerHasCommodity) {
+        errors.push(`Buyer does not deal in ${formData.commodity}.`);
+      }
+      if (!supplierHasCommodity) {
+        errors.push(`Supplier does not deal in ${formData.commodity}.`);
+      }
+    }
 
     // Email validation for buyer and seller emails
     if (formData.buyerEmails?.some(email => email.trim() && !regexPatterns.email.test(email.trim()))) {

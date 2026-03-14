@@ -29,16 +29,28 @@ const mapBuyerForClient = (buyer) => {
   const consigneeIds = (buyer.consigneeIds || []).map((c) => c?._id || c).filter(Boolean);
 
   const brokerageByName = {};
+  
+  // First, check brokerage from Buyer's own brokerage map
   if (buyer.brokerage) {
     const rawBrokerage = buyer.brokerage;
     (buyer.commodityIds || []).forEach((c) => {
       if (c && c.name) {
         const cid = c._id ? c._id.toString() : c.toString();
-        // Handle both Mongoose Map (with .get) and plain object (lean)
         const value = typeof rawBrokerage.get === "function" 
           ? rawBrokerage.get(cid) 
           : rawBrokerage[cid];
-        brokerageByName[c.name] = value || 0;
+        if (value !== undefined) brokerageByName[c.name] = value;
+      }
+    });
+  }
+
+  // Second, check brokerage from Company's commodities array (fallback/override)
+  if (buyer.companyId && Array.isArray(buyer.companyId.commodities)) {
+    buyer.companyId.commodities.forEach((cc) => {
+      const cName = cc.commodityId?.name || cc.commodityId?.toString();
+      if (cName && cc.brokerage !== undefined) {
+        // Only set if not already set or if explicitly provided in company profile
+        brokerageByName[cName] = cc.brokerage;
       }
     });
   }
@@ -71,7 +83,11 @@ const mapBuyerForClient = (buyer) => {
 };
 
 const buyerPopulate = [
-  { path: "companyId", select: "companyName companyEmail groupId consigneeIds" },
+  {
+    path: "companyId",
+    select: "companyName companyEmail groupId consigneeIds commodities",
+    populate: { path: "commodities.commodityId", select: "name" },
+  },
   { path: "groupId", select: "groupName" },
   { path: "commodityIds", select: "name" },
   { path: "consigneeIds", select: "name" },

@@ -164,7 +164,6 @@ const BuyerList = () => {
                     "Group Company",
                     "Commodity",
                     "Consignee",
-                    // "Brokerage(Per Ton)",
                     "Status",
                     "Actions",
                   ]}

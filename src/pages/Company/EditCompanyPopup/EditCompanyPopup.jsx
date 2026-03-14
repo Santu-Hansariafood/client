@@ -201,7 +201,6 @@ const EditCompanyPopup = ({ company, isOpen, onClose, onUpdate }) => {
         groupId: selectedGroup?.value || null,
         consigneeIds: selectedConsignees.map((c) => c.value),
 
-        // ✅ IMPORTANT FIX
         commodities: commodityEntries.map((entry) => ({
           _id: entry._id || undefined,
           commodityId: entry.commodityId,

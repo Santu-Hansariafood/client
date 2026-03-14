@@ -4,6 +4,21 @@ import Seller from "../models/Seller.js";
 const router = Router();
 
 
+const mapSellerForClient = (seller) => {
+  const brokerageByName = {};
+  if (Array.isArray(seller.commodities)) {
+    seller.commodities.forEach((c) => {
+      if (c && c.name && c.brokerage !== undefined) {
+        brokerageByName[c.name] = c.brokerage;
+      }
+    });
+  }
+  return {
+    ...seller,
+    brokerageByName,
+  };
+};
+
 router.get("/", async (req, res) => {
   try {
     const page = parseInt(req.query.page || "0", 10);
@@ -18,17 +33,19 @@ router.get("/", async (req, res) => {
 
       const total = await Seller.countDocuments();
 
-      return res.json({ data: items, total });
+      return res.json({
+        data: items.map(mapSellerForClient),
+        total,
+      });
     }
 
     const items = await Seller.find().sort({ sellerName: 1 }).lean();
 
-    res.json(items);
+    res.json(items.map(mapSellerForClient));
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 });
-
 
 router.get("/:id", async (req, res) => {
   try {
@@ -38,7 +55,7 @@ router.get("/:id", async (req, res) => {
       return res.status(404).json({ message: "Seller not found" });
     }
 
-    res.json(item);
+    res.json(mapSellerForClient(item));
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

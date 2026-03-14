@@ -48,7 +48,6 @@ const BuyerInformation = ({ formData, handleChange }) => {
         formData.consignee?._id || formData.consignee?.value || formData.consignee;
       if (consigneeId) setSelectedConsignee(String(consigneeId));
       
-      // Also update brokerage map and other details for initialization
       const rawEmails = match?.email;
       const buyerEmails = Array.isArray(rawEmails)
         ? rawEmails.map((e) => (typeof e === "string" ? e : e?.value ?? e?.email ?? "")).filter(Boolean)
@@ -57,7 +56,6 @@ const BuyerInformation = ({ formData, handleChange }) => {
       if (!formData.buyerBrokerage || Object.keys(formData.buyerBrokerage).length === 0 || (formData.buyerBrokerage.brokerageBuyer === 0 && formData.buyerBrokerage.brokerageSupplier === 0)) {
          handleChange("buyerBrokerageMap", match.brokerageByName || match.brokerage || {});
       } else {
-        // If we already have brokerage (from DB), we still need to set the map for the parent
         handleChange("buyerBrokerageMap", match.brokerageByName || match.brokerage || {});
       }
 

@@ -156,13 +156,11 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Mobile Validation
     if (formData.mobile.some((num) => num.trim() && !regexPatterns.mobile.test(num.trim()))) {
       toast.error("Invalid mobile number format.");
       return;
     }
 
-    // Email Validation
     if (formData.email.some((mail) => mail.trim() && !regexPatterns.email.test(mail.trim()))) {
       toast.error("Invalid email format.");
       return;

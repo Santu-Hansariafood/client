@@ -12,7 +12,6 @@ const TermsConditions = () => {
 
       <div className="max-w-5xl mx-auto">
 
-        {/* Header */}
         <div className="text-center mb-14">
           <h1 className="text-5xl font-bold text-green-700 mb-4">
             Terms & Conditions
@@ -23,7 +22,6 @@ const TermsConditions = () => {
           </p>
         </div>
 
-        {/* Main Content */}
         <div className="backdrop-blur-lg bg-white/80 border border-gray-200 shadow-xl rounded-3xl p-10 md:p-14">
 
           <Section title="1. Acceptance of Terms">
@@ -148,7 +146,6 @@ const TermsConditions = () => {
 
         </div>
 
-        {/* Back Button */}
         <div className="text-center mt-14">
 
           <Link

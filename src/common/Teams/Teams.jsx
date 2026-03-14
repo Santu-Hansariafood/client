@@ -44,7 +44,6 @@ const Teams = () => {
   return (
     <section className="bg-gray-50">
 
-      {/* HERO HEADER */}
       <header className="relative h-screen flex flex-col justify-center items-center text-center px-6 bg-gradient-to-br from-green-50 via-white to-green-100">
 
         <Link
@@ -80,7 +79,6 @@ const Teams = () => {
         </div>
       </header>
 
-      {/* TEAM MEMBERS */}
       <div className="max-w-7xl mx-auto px-6 py-20">
 
         {teamData.map((member, index) => {

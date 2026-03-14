@@ -160,7 +160,6 @@ const SellerDashboard = () => {
     navigate("/", { replace: true });
   }, [logout, navigate]);
 
-  // Secure back navigation with auth check
   const handleBack = () => {
     if (!mobile) {
       toast.error("You are not authenticated. Please login again.");

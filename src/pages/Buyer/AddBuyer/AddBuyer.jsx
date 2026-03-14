@@ -435,7 +435,6 @@ const AddBuyer = () => {
                 className="w-full"
               />
             </div>
-            {/* Status */}
             <div>
               <label className="block text-gray-800 mb-2 font-medium" htmlFor="status">
                 {buyerLabels.status_title}
