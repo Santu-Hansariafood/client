@@ -84,7 +84,7 @@ const SaudaHeader = () => (
         </Text>
 
         <Text style={styles.products}>
-          MAIZE | SOYABEAN DOC | MDOC | DORB | WHEAT | RICE
+          MAIZE | SOYABEAN DOC | MDOC | DDGS | DORB | RICE
         </Text>
 
         <Text style={styles.address}>
