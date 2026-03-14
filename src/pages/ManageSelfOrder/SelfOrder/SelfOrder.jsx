@@ -1,4 +1,4 @@
-import { lazy, Suspense, useState } from "react";
+import { lazy, Suspense, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -76,26 +76,43 @@ const SelfOrder = () => {
   const [_buyerBrokerageMap, setBuyerBrokerageMap] = useState({});
 
   useEffect(() => {
-    if (formData.commodity) {
-      const buyerBrokerageVal = _buyerBrokerageMap[formData.commodity] || 0;
+    // Only auto-calculate if we have the brokerage map and a commodity selected
+    if (formData.commodity && Object.keys(_buyerBrokerageMap).length > 0) {
+      const buyerBrokerageVal = _buyerBrokerageMap[formData.commodity];
+      
+      // If we don't have a value in the map for this commodity, don't overwrite with 0 
+      // unless it's explicitly missing from the map (which means it IS 0)
+      if (buyerBrokerageVal === undefined) return;
+
       const supplierBrokerageItem = formData.supplierBrokerage?.find(
         (b) => b.name === formData.commodity
       );
       const supplierBrokerageVal = supplierBrokerageItem?.brokerage ?? buyerBrokerageVal;
 
-      setFormData((prev) => ({
-        ...prev,
-        buyerBrokerage: {
-          brokerageBuyer: buyerBrokerageVal,
-          brokerageSupplier: supplierBrokerageVal,
-        },
-      }));
+      // Only update if the values are different to avoid unnecessary renders
+      if (
+        formData.buyerBrokerage?.brokerageBuyer !== buyerBrokerageVal ||
+        formData.buyerBrokerage?.brokerageSupplier !== supplierBrokerageVal
+      ) {
+        setFormData((prev) => ({
+          ...prev,
+          buyerBrokerage: {
+            brokerageBuyer: buyerBrokerageVal,
+            brokerageSupplier: supplierBrokerageVal,
+          },
+        }));
+      }
     }
-  }, [formData.commodity, formData.supplierBrokerage, _buyerBrokerageMap]);
+  }, [formData.commodity, formData.supplierBrokerage, _buyerBrokerageMap, formData.buyerBrokerage]);
 
   const API_BASE_URL = "/self-order";
 
   const handleChange = (field, value) => {
+    if (field === "buyerBrokerageMap") {
+      setBuyerBrokerageMap(value || {});
+      return;
+    }
+
     setFormData((prev) => {
       if (typeof field === "object" && field.nested) {
         const { key, subKey } = field;
@@ -109,10 +126,6 @@ const SelfOrder = () => {
       }
       return { ...prev, [field]: value };
     });
-
-    if (field === "buyerBrokerage") {
-      setBuyerBrokerageMap(value || {});
-    }
   };
 
   const validateFormData = () => {

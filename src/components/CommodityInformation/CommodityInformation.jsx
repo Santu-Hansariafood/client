@@ -12,6 +12,7 @@ const CommodityInformation = ({
   handleChange,
   selectedCompany,
   brokerageMap,
+  formData,
 }) => {
   const [commodities, setCommodities] = useState([]);
   const [parameters, setParameters] = useState([]);
@@ -76,20 +77,12 @@ const CommodityInformation = ({
 
       handleChange("commodity", commodityName);
       handleChange("parameters", updatedParameters);
-      handleChange("buyerBrokerage", {
-        brokerageBuyer: updatedBrokerage,
-        brokerageSupplier: updatedBrokerage,
-      });
       handleChange("companyEmail", companyEmail);
       handleChange("buyerEmails", [companyEmail]);
     } else {
       setParameters([]);
       handleChange("commodity", "");
       handleChange("parameters", []);
-      handleChange("buyerBrokerage", {
-        brokerageBuyer: "",
-        brokerageSupplier: "",
-      });
       handleChange("companyEmail", "");
       handleChange("buyerEmails", []);
     }
@@ -174,6 +167,7 @@ CommodityInformation.propTypes = {
   selectedCompany: PropTypes.string,
   brokerageMap: PropTypes.object,
   buyerCommodity: PropTypes.array.isRequired,
+  formData: PropTypes.object.isRequired,
 };
 
 export default CommodityInformation;
