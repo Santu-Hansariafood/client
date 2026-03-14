@@ -7,6 +7,7 @@ import "react-toastify/dist/ReactToastify.css";
 import Loading from "../../../common/Loading/Loading";
 import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
 import { FaUserTie } from "react-icons/fa";
+import regexPatterns from "../../../utils/regexPatterns/regexPatterns";
 
 const DataInput = lazy(() =>
   import("../../../common/DataInput/DataInput")
@@ -175,6 +176,16 @@ const AddSellerDetails = () => {
       emails.some((e) => !e.value)
     ) {
       toast.error("Fill all phone numbers and emails.");
+      return;
+    }
+
+    if (phoneNumbers.some((p) => p.value && !regexPatterns.mobile.test(p.value))) {
+      toast.error("Invalid phone number format.");
+      return;
+    }
+
+    if (emails.some((e) => e.value && !regexPatterns.email.test(e.value))) {
+      toast.error("Invalid email format.");
       return;
     }
 

@@ -6,6 +6,8 @@ import axios from "axios";
 import Loading from "../../../common/Loading/Loading";
 import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
 import { FaBuilding } from "react-icons/fa";
+import regexPatterns from "../../../utils/regexPatterns/regexPatterns";
+
 const DataInput = lazy(() => import("../../../common/DataInput/DataInput"));
 const DataDropdown = lazy(() =>
   import("../../../common/DataDropdown/DataDropdown")
@@ -32,6 +34,15 @@ const AddSellerCompany = () => {
       bankName: "",
     },
   ]);
+
+  const validateEmail = (email) => {
+    return regexPatterns.email.test(String(email).toLowerCase());
+  };
+
+  const validateMobile = (mobile) => {
+    return regexPatterns.mobile.test(String(mobile));
+  };
+
   const [selectedState, setSelectedState] = useState(null);
   const [selectedDistrict, setSelectedDistrict] = useState(null);
   const [districtOptions, setDistrictOptions] = useState([]);
@@ -47,6 +58,8 @@ const AddSellerCompany = () => {
       aadhaarNo: "",
       address: "",
       pinNo: "",
+      mobileNo: "",
+      email: "",
     });
     setBankDetails([
       {
@@ -140,11 +153,25 @@ const AddSellerCompany = () => {
   };
 
   const handleSubmit = async () => {
+    // Mobile Validation
+    if (companyInfo.mobileNo && !validateMobile(companyInfo.mobileNo)) {
+      toast.error("Please enter a valid 10-digit mobile number.");
+      return;
+    }
+
+    // Email Validation
+    if (companyInfo.email && !validateEmail(companyInfo.email)) {
+      toast.error("Please enter a valid email address.");
+      return;
+    }
+
     if (
       !companyInfo.companyName ||
       !companyInfo.gstNo ||
       !companyInfo.panNo ||
       !companyInfo.address ||
+      !companyInfo.mobileNo ||
+      !companyInfo.email ||
       !selectedState ||
       !selectedDistrict ||
       !bankDetails.every(
@@ -248,6 +275,33 @@ const AddSellerCompany = () => {
                 placeholder="Enter Address"
                 name="address"
                 value={companyInfo.address}
+                onChange={handleCompanyInfoChange}
+                required
+              />
+            </div>
+            <div>
+              <label className="text-slate-700 font-semibold" htmlFor="mobileNo">
+                Mobile Number
+              </label>
+              <DataInput
+                id="mobileNo"
+                placeholder="Enter 10-digit Mobile Number"
+                name="mobileNo"
+                value={companyInfo.mobileNo}
+                onChange={handleCompanyInfoChange}
+                required
+                maxLength="10"
+              />
+            </div>
+            <div>
+              <label className="text-slate-700 font-semibold" htmlFor="email">
+                Email Address
+              </label>
+              <DataInput
+                id="email"
+                placeholder="Enter Email Address"
+                name="email"
+                value={companyInfo.email}
                 onChange={handleCompanyInfoChange}
                 required
               />

@@ -7,6 +7,7 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import stateCityData from "../../../data/state-city.json";
 import axios from "axios";
+import regexPatterns from "../../../utils/regexPatterns/regexPatterns";
 
 const EditSellerCompany = ({ company, onSave, onCancel }) => {
   const [companyInfo, setCompanyInfo] = useState({
@@ -16,7 +17,18 @@ const EditSellerCompany = ({ company, onSave, onCancel }) => {
     aadhaarNo: "",
     address: "",
     pinNo: "",
+    mobileNo: "",
+    email: "",
   });
+
+  const validateEmail = (email) => {
+    return regexPatterns.email.test(String(email).toLowerCase());
+  };
+
+  const validateMobile = (mobile) => {
+    return regexPatterns.mobile.test(String(mobile));
+  };
+
   const [bankDetails, setBankDetails] = useState([]);
   const [selectedState, setSelectedState] = useState(null);
   const [selectedDistrict, setSelectedDistrict] = useState(null);
@@ -33,6 +45,8 @@ const EditSellerCompany = ({ company, onSave, onCancel }) => {
       aadhaarNo: company.aadhaarNo || "",
       address: company.address || "",
       pinNo: company.pinNo || "",
+      mobileNo: company.mobileNo || "",
+      email: company.email || "",
     });
     setBankDetails(company.bankDetails || []);
     setSelectedState(
@@ -129,11 +143,25 @@ const EditSellerCompany = ({ company, onSave, onCancel }) => {
   };
 
   const handleSubmit = async () => {
+    // Mobile Validation
+    if (companyInfo.mobileNo && !validateMobile(companyInfo.mobileNo)) {
+      toast.error("Please enter a valid 10-digit mobile number.");
+      return;
+    }
+
+    // Email Validation
+    if (companyInfo.email && !validateEmail(companyInfo.email)) {
+      toast.error("Please enter a valid email address.");
+      return;
+    }
+
     if (
       !companyInfo.companyName ||
       !companyInfo.gstNo ||
       !companyInfo.panNo ||
       !companyInfo.address ||
+      !companyInfo.mobileNo ||
+      !companyInfo.email ||
       !selectedState ||
       !selectedDistrict ||
       !bankDetails.every(
@@ -230,6 +258,23 @@ const EditSellerCompany = ({ company, onSave, onCancel }) => {
             value={companyInfo.address}
             onChange={handleCompanyInfoChange}
             placeholder="Enter Address"
+          />
+          <DataInput
+            label="Mobile Number"
+            id="mobileNo"
+            name="mobileNo"
+            value={companyInfo.mobileNo}
+            onChange={handleCompanyInfoChange}
+            placeholder="Enter 10-digit Mobile Number"
+            maxLength="10"
+          />
+          <DataInput
+            label="Email Address"
+            id="email"
+            name="email"
+            value={companyInfo.email}
+            onChange={handleCompanyInfoChange}
+            placeholder="Enter Email Address"
           />
           <DataInput
             label="PIN Code"

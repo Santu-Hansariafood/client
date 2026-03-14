@@ -6,6 +6,7 @@ import axios from "axios";
 import Loading from "../../../common/Loading/Loading";
 import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
 import { FaEdit } from "react-icons/fa";
+import regexPatterns from "../../../utils/regexPatterns/regexPatterns";
 
 const BuyerInformation = lazy(() =>
   import("../../../components/BuyerInformation/BuyerInformation")
@@ -176,8 +177,15 @@ const EditSelfOrder = () => {
   const validateFormData = () => {
     const errors = [];
     if (!formData.buyer) errors.push("Buyer name is required.");
-    if (!formData.poNumber) errors.push("PO Number is required.");
     if (!formData.saudaNo) errors.push("Sauda No is required.");
+
+    // Email validation for buyer and seller emails
+    if (formData.buyerEmails?.some(email => email.trim() && !regexPatterns.email.test(email.trim()))) {
+      errors.push("Invalid buyer email format.");
+    }
+    if (formData.sellerEmails?.some(email => email.trim() && !regexPatterns.email.test(email.trim()))) {
+      errors.push("Invalid seller email format.");
+    }
 
     if (errors.length > 0) {
       errors.forEach((err) =>

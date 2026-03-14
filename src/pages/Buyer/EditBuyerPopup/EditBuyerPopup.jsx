@@ -8,6 +8,8 @@ const DataDropdown = lazy(() =>
   import("../../../common/DataDropdown/DataDropdown")
 );
 
+import regexPatterns from "../../../utils/regexPatterns/regexPatterns";
+
 const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
   const [formData, setFormData] = useState(null);
   const [companies, setCompanies] = useState([]);
@@ -153,6 +155,19 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Mobile Validation
+    if (formData.mobile.some((num) => num.trim() && !regexPatterns.mobile.test(num.trim()))) {
+      toast.error("Invalid mobile number format.");
+      return;
+    }
+
+    // Email Validation
+    if (formData.email.some((mail) => mail.trim() && !regexPatterns.email.test(mail.trim()))) {
+      toast.error("Invalid email format.");
+      return;
+    }
+
     try {
       const commodityIds = (formData.commodity || []).map((comm) => {
         if (typeof comm === "string") {

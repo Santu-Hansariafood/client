@@ -20,6 +20,8 @@ const DataDropdown = lazy(() =>
 );
 const Buttons = lazy(() => import("../../../common/Buttons/Buttons"));
 
+import regexPatterns from "../../../utils/regexPatterns/regexPatterns";
+
 const AddCompany = () => {
   const [companyName, setCompanyName] = useState("");
   const [companyEmail, setCompanyEmail] = useState("");
@@ -145,6 +147,11 @@ const AddCompany = () => {
   const handleSubmit = useCallback(async () => {
     if (!companyName || !companyEmail) {
       toast.error("Company name and email required");
+      return;
+    }
+
+    if (!regexPatterns.email.test(companyEmail)) {
+      toast.error("Invalid email format");
       return;
     }
 

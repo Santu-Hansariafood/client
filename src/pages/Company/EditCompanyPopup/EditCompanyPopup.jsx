@@ -3,6 +3,7 @@ import { useState, useEffect, lazy, Suspense } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
 import Loading from "../../../common/Loading/Loading";
+import regexPatterns from "../../../utils/regexPatterns/regexPatterns";
 
 const DataInput = lazy(() => import("../../../common/DataInput/DataInput"));
 const DataDropdown = lazy(() =>
@@ -185,6 +186,12 @@ const EditCompanyPopup = ({ company, isOpen, onClose, onUpdate }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (companyEmail && !regexPatterns.email.test(companyEmail)) {
+      toast.error("Invalid email format");
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {

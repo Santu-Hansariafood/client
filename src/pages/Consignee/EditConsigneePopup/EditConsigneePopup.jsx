@@ -9,6 +9,8 @@ const DataDropdown = lazy(
 import statesData from "../../../data/state-city.json";
 import Loading from "../../../common/Loading/Loading";
 
+import regexPatterns from "../../../utils/regexPatterns/regexPatterns";
+
 const EditConsigneePopup = ({ isOpen, onClose, initialData, onSubmit }) => {
   const [formData, setFormData] = useState({});
   const [districts, setDistricts] = useState([]);
@@ -78,6 +80,16 @@ const EditConsigneePopup = ({ isOpen, onClose, initialData, onSubmit }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+
+    if (formData.phone && !regexPatterns.mobile.test(formData.phone)) {
+      toast.error("Invalid phone number format.");
+      return;
+    }
+    if (formData.email && !regexPatterns.email.test(formData.email)) {
+      toast.error("Invalid email format.");
+      return;
+    }
+
     onSubmit(formData);
   };
 

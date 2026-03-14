@@ -12,6 +12,8 @@ import addConsigneeLable from "../../../language/en/addConsignee";
 import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
 import { FaTruck } from "react-icons/fa";
 
+import regexPatterns from "../../../utils/regexPatterns/regexPatterns";
+
 const AddConsignee = () => {
   const [formData, setFormData] = useState({
     name: "",
@@ -84,16 +86,20 @@ const AddConsignee = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (formData.phone.length !== 10) {
-      toast.error("Phone number must be 10 digits");
+    if (formData.phone && !regexPatterns.mobile.test(formData.phone)) {
+      toast.error("Invalid phone number format.");
       return;
     }
-    if (formData.gst.length !== 15) {
-      toast.error("GST number must be 15 characters");
+    if (formData.email && !regexPatterns.email.test(formData.email)) {
+      toast.error("Invalid email format.");
       return;
     }
-    if (formData.pan.length !== 10) {
-      toast.error("PAN number must be 10 characters");
+    if (formData.gst && !regexPatterns.gstNo.test(formData.gst)) {
+      toast.error("Invalid GST number format.");
+      return;
+    }
+    if (formData.pan && !regexPatterns.panNo.test(formData.pan)) {
+      toast.error("Invalid PAN number format.");
       return;
     }
     if (formData.pin && formData.pin.length !== 6) {
