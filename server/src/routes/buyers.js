@@ -28,6 +28,23 @@ const mapBuyerForClient = (buyer) => {
   const commodityIds = (buyer.commodityIds || []).map((c) => c?._id || c).filter(Boolean);
   const consigneeIds = (buyer.consigneeIds || []).map((c) => c?._id || c).filter(Boolean);
 
+  const brokerageByName = {};
+  if (buyer.brokerage && typeof buyer.brokerage.get === "function") {
+    // It's a Mongoose Map
+    buyer.commodityIds.forEach((c) => {
+      if (c && c.name) {
+        brokerageByName[c.name] = buyer.brokerage.get(c._id.toString()) || 0;
+      }
+    });
+  } else if (buyer.brokerage) {
+    // It's a plain object
+    buyer.commodityIds.forEach((c) => {
+      if (c && c.name) {
+        brokerageByName[c.name] = buyer.brokerage[c._id.toString()] || 0;
+      }
+    });
+  }
+
   return {
     _id: buyer._id,
     name: buyer.name,
@@ -36,6 +53,7 @@ const mapBuyerForClient = (buyer) => {
     password: buyer.password || "",
     status: buyer.status || "Active",
     brokerage: buyer.brokerage || {},
+    brokerageByName,
 
     companyId,
     groupId,

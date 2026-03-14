@@ -206,14 +206,8 @@ const EditSelfOrder = () => {
     setIsLoading(true);
 
     try {
-      // If PO Number is blank, use Sauda No as the PO Number
-      const effectivePONumber = formData.poNumber && formData.poNumber.trim() !== "" 
-        ? formData.poNumber 
-        : formData.saudaNo;
-
       const payload = {
         ...formData,
-        poNumber: effectivePONumber,
         quantity: Number(formData.quantity) || 0,
         pendingQuantity: Number(formData.pendingQuantity) || 0,
         rate: Number(formData.rate) || 0,

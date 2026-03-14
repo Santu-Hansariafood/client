@@ -55,10 +55,10 @@ const BuyerInformation = ({ formData, handleChange }) => {
         : [];
       
       if (!formData.buyerBrokerage || Object.keys(formData.buyerBrokerage).length === 0 || (formData.buyerBrokerage.brokerageBuyer === 0 && formData.buyerBrokerage.brokerageSupplier === 0)) {
-         handleChange("buyerBrokerageMap", match.brokerage || {});
+         handleChange("buyerBrokerageMap", match.brokerageByName || match.brokerage || {});
       } else {
         // If we already have brokerage (from DB), we still need to set the map for the parent
-        handleChange("buyerBrokerageMap", match.brokerage || {});
+        handleChange("buyerBrokerageMap", match.brokerageByName || match.brokerage || {});
       }
 
       setInitialized(true);
@@ -98,7 +98,7 @@ const BuyerInformation = ({ formData, handleChange }) => {
     handleChange("buyerEmail", firstEmail);
     handleChange("buyerEmails", buyerEmails.length ? buyerEmails : [""]);
     handleChange("buyerCommodity", selectedBuyer.commodity || []);
-    handleChange("buyerBrokerageMap", selectedBuyer.brokerage || {});
+    handleChange("buyerBrokerageMap", selectedBuyer.brokerageByName || selectedBuyer.brokerage || {});
     setSelectedConsignee("");
     handleChange("consignee", "");
   };

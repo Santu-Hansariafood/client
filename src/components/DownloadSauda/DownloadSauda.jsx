@@ -114,7 +114,7 @@ const DownloadSauda = ({ data }) => {
 
   // Ensure brokerage is fetched from buyer/seller profile if it's 0 or missing in order data
   if (matchingBuyer && (!transformedData.buyerBrokerage?.brokerageBuyer || transformedData.buyerBrokerage.brokerageBuyer === 0)) {
-    const buyerProfileBrokerage = matchingBuyer.brokerage?.[data.commodity];
+    const buyerProfileBrokerage = matchingBuyer.brokerageByName?.[data.commodity] || matchingBuyer.brokerage?.[data.commodity];
     if (buyerProfileBrokerage !== undefined) {
       transformedData.buyerBrokerage = {
         ...transformedData.buyerBrokerage,
