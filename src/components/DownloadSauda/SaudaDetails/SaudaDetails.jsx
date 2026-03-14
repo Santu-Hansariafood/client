@@ -38,9 +38,52 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#dc2626",
   },
+  grid: {
+    flexDirection: "row",
+    flexWrap: "nowrap",
+    border: "0.5pt solid #E5E7EB",
+    borderRadius: 4,
+    backgroundColor: "#F9FAFB",
+  },
+  gridItem: {
+    flex: 1,
+    padding: 6,
+    borderRight: "0.5pt solid #E5E7EB",
+  },
+  addressDetails: {
+    fontSize: 8,
+    color: "#4B5563",
+    lineHeight: 1.4,
+  },
 });
 
 const SaudaDetails = ({ data }) => {
+  const renderBuyerDetails = () => {
+    if (!data.buyerDetails) return null;
+    const { address, district, state, pinNo, panNo, gstNo } = data.buyerDetails;
+
+    let parts = [];
+    if (address || district || state || pinNo) {
+      parts.push(
+        `${address || ""}${address && (district || state || pinNo) ? ", " : ""}${
+          district || ""
+        }${district && (state || pinNo) ? ", " : ""}${state || ""}${
+          state && pinNo ? " - " : ""
+        }${pinNo || ""}`
+      );
+    }
+    if (panNo) parts.push(`PAN No: ${panNo}`);
+    if (gstNo) parts.push(`GST: ${gstNo}`);
+
+    if (parts.length === 0) return null;
+
+    return (
+      <Text style={styles.addressDetails}>
+        {"\n" + parts.join("\n")}
+      </Text>
+    );
+  };
+
   return (
     <View style={styles.section}>
 

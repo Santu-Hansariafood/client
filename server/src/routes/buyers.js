@@ -29,18 +29,16 @@ const mapBuyerForClient = (buyer) => {
   const consigneeIds = (buyer.consigneeIds || []).map((c) => c?._id || c).filter(Boolean);
 
   const brokerageByName = {};
-  if (buyer.brokerage && typeof buyer.brokerage.get === "function") {
-    // It's a Mongoose Map
-    buyer.commodityIds.forEach((c) => {
+  if (buyer.brokerage) {
+    const rawBrokerage = buyer.brokerage;
+    (buyer.commodityIds || []).forEach((c) => {
       if (c && c.name) {
-        brokerageByName[c.name] = buyer.brokerage.get(c._id.toString()) || 0;
-      }
-    });
-  } else if (buyer.brokerage) {
-    // It's a plain object
-    buyer.commodityIds.forEach((c) => {
-      if (c && c.name) {
-        brokerageByName[c.name] = buyer.brokerage[c._id.toString()] || 0;
+        const cid = c._id ? c._id.toString() : c.toString();
+        // Handle both Mongoose Map (with .get) and plain object (lean)
+        const value = typeof rawBrokerage.get === "function" 
+          ? rawBrokerage.get(cid) 
+          : rawBrokerage[cid];
+        brokerageByName[c.name] = value || 0;
       }
     });
   }
