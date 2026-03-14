@@ -78,10 +78,28 @@ const AddSellerCompany = () => {
     setCompanyInfo(newCompanyInfo);
   };
 
-  const handleBankDetailChange = (id, name, value) => {
+  const handleBankDetailChange = async (id, name, value) => {
     setBankDetails((prev) =>
       prev.map((bank) => (bank.id === id ? { ...bank, [name]: value } : bank))
     );
+
+    if (name === "ifscCode" && value.length === 11) {
+      try {
+        const response = await axios.get(`https://ifsc.razorpay.com/${value}`);
+        const { BANK, BRANCH } = response.data;
+        setBankDetails((prev) =>
+          prev.map((bank) =>
+            bank.id === id
+              ? { ...bank, bankName: BANK, branchName: BRANCH }
+              : bank
+          )
+        );
+        toast.success("Bank details fetched successfully!");
+      } catch (error) {
+        console.error("Error fetching bank details:", error);
+        toast.error("Invalid IFSC Code or failed to fetch bank details.");
+      }
+    }
   };
 
   const handleFileUpload = (name, file) => {
@@ -376,15 +394,9 @@ const AddSellerCompany = () => {
                   </label>
                   <DataInput
                     id={`bankName-${bank.id}`}
-                    placeholder="Enter Bank Name"
+                    placeholder="Auto-fetched Bank Name"
                     value={bank.bankName}
-                    onChange={(e) =>
-                      handleBankDetailChange(
-                        bank.id,
-                        "bankName",
-                        e.target.value
-                      )
-                    }
+                    readOnly
                     required
                   />
                 </div>
@@ -397,15 +409,9 @@ const AddSellerCompany = () => {
                   </label>
                   <DataInput
                     id={`branchName-${bank.id}`}
-                    placeholder="Enter Branch Name"
+                    placeholder="Auto-fetched Branch Name"
                     value={bank.branchName}
-                    onChange={(e) =>
-                      handleBankDetailChange(
-                        bank.id,
-                        "branchName",
-                        e.target.value
-                      )
-                    }
+                    readOnly
                     required
                   />
                 </div>

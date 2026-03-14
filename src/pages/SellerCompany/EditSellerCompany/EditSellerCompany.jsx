@@ -67,10 +67,28 @@ const EditSellerCompany = ({ company, onSave, onCancel }) => {
     setCompanyInfo(newCompanyInfo);
   };
 
-  const handleBankDetailChange = (id, name, value) => {
+  const handleBankDetailChange = async (id, name, value) => {
     setBankDetails((prev) =>
       prev.map((bank) => (bank.id === id ? { ...bank, [name]: value } : bank))
     );
+
+    if (name === "ifscCode" && value.length === 11) {
+      try {
+        const response = await axios.get(`https://ifsc.razorpay.com/${value}`);
+        const { BANK, BRANCH } = response.data;
+        setBankDetails((prev) =>
+          prev.map((bank) =>
+            bank.id === id
+              ? { ...bank, bankName: BANK, branchName: BRANCH }
+              : bank
+          )
+        );
+        toast.success("Bank details fetched successfully!");
+      } catch (error) {
+        console.error("Error fetching bank details:", error);
+        toast.error("Invalid IFSC Code or failed to fetch bank details.");
+      }
+    }
   };
 
   const addBankDetail = () => {
@@ -293,19 +311,15 @@ const EditSellerCompany = ({ company, onSave, onCancel }) => {
                 label="Branch Name"
                 id={`branchName-${bank.id}`}
                 value={bank.branchName}
-                onChange={(e) =>
-                  handleBankDetailChange(bank.id, "branchName", e.target.value)
-                }
-                placeholder="Enter Branch Name"
+                readOnly
+                placeholder="Auto-fetched Branch Name"
               />
               <DataInput
                 label="Bank Name"
                 id={`bankName-${bank.id}`}
                 value={bank.bankName}
-                onChange={(e) =>
-                  handleBankDetailChange(bank.id, "bankName", e.target.value)
-                }
-                placeholder="Enter Branch Name"
+                readOnly
+                placeholder="Auto-fetched Bank Name"
               />
             </div>
             <div className="flex justify-end mt-4">

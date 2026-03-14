@@ -68,10 +68,19 @@ const styles = StyleSheet.create({
     lineHeight: 1.3,
   },
   brokerageSection: {
-    flexDirection: "row",
-    border: "0.5pt solid #e2e8f0",
+    border: "0.5pt solid #1a365d",
     borderRadius: 3,
     marginBottom: 10,
+    overflow: "hidden",
+  },
+  brokerageHeader: {
+    backgroundColor: "#E8F5E9",
+    padding: 4,
+    borderBottom: "0.5pt solid #1a365d",
+    textAlign: "center",
+  },
+  brokerageRow: {
+    flexDirection: "row",
   },
   brokerageItem: {
     flex: 1,
@@ -183,18 +192,19 @@ const AdditionalDetails = ({ data }) => (
     </View>
 
     <View style={styles.brokerageSection}>
-      <View style={styles.brokerageItem}>
-        <Text style={styles.label}>Buyer Brokerage</Text>
-        <Text style={styles.value}>Rs. {data.buyerBrokerage?.brokerageBuyer ?? "N/A"} / TON</Text>
+      <View style={styles.brokerageHeader}>
+        <Text style={styles.brokerText}>Broker: HANSARIA FOOD PRIVATE LIMITED</Text>
       </View>
-      <View style={[styles.brokerageItem, { borderRight: "none" }]}>
-        <Text style={styles.label}>Supplier Brokerage</Text>
-        <Text style={styles.value}>Rs. {data.buyerBrokerage?.brokerageSupplier ?? "N/A"} / TON</Text>
+      <View style={styles.brokerageRow}>
+        <View style={styles.brokerageItem}>
+          <Text style={styles.label}>Buyer Brokerage</Text>
+          <Text style={styles.value}>Rs. {data.buyerBrokerage?.brokerageBuyer ?? "N/A"} / TON</Text>
+        </View>
+        <View style={[styles.brokerageItem, { borderRight: "none" }]}>
+          <Text style={styles.label}>Supplier Brokerage</Text>
+          <Text style={styles.value}>Rs. {data.buyerBrokerage?.brokerageSupplier ?? "N/A"} / TON</Text>
+        </View>
       </View>
-    </View>
-
-    <View style={styles.brokerInfo}>
-      <Text style={styles.brokerText}>Broker: HANSARIA FOOD PRIVATE LIMITED</Text>
     </View>
 
     <View style={styles.signatureSection}>

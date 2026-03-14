@@ -10,20 +10,23 @@ const DownloadSauda = ({ data }) => {
   const [consigneeData, setConsigneeData] = useState([]);
   const [supplierData, setSupplierData] = useState([]);
   const [buyerData, setBuyerData] = useState([]);
+  const [sellerProfileData, setSellerProfileData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [sendingEmail, setSendingEmail] = useState(false);
 
   const CONSIGNEE_API_URL = "/consignees";
   const SUPPLIER_API_URL = "/seller-company";
   const BUYER_API_URL = "/buyers";
+  const SELLER_PROFILE_API_URL = "/sellers";
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [consigneeResponse, supplierResponse, buyerResponse] = await Promise.all([
+        const [consigneeResponse, supplierResponse, buyerResponse, sellerProfileResponse] = await Promise.all([
           axios.get(CONSIGNEE_API_URL),
           axios.get(SUPPLIER_API_URL),
-          axios.get(BUYER_API_URL)
+          axios.get(BUYER_API_URL),
+          axios.get(SELLER_PROFILE_API_URL)
         ]);
 
         const cData = Array.isArray(consigneeResponse.data)
@@ -35,10 +38,14 @@ const DownloadSauda = ({ data }) => {
         const bData = Array.isArray(buyerResponse.data)
           ? buyerResponse.data
           : buyerResponse.data?.data || [];
+        const spData = Array.isArray(sellerProfileResponse.data)
+          ? sellerProfileResponse.data
+          : sellerProfileResponse.data?.data || [];
 
         setConsigneeData(cData);
         setSupplierData(sData);
         setBuyerData(bData);
+        setSellerProfileData(spData);
       } catch (error) {
         console.error("Error fetching data:", error);
       } finally {
@@ -75,12 +82,39 @@ const DownloadSauda = ({ data }) => {
       buyer.companyName.toLowerCase() === data.buyerCompany.toLowerCase()
   );
 
+  const matchingSellerProfile = sellerProfileData.find(
+    (seller) => seller._id === data.supplier
+  );
+
   let transformedData = {
     ...data,
     consigneeDetails: matchingConsignee || null,
     supplierDetails: matchingSupplier || null,
     buyerDetails: matchingBuyer || null,
   };
+
+  // Ensure brokerage is fetched from buyer/seller profile if it's 0 or missing in order data
+  if (matchingBuyer && (!transformedData.buyerBrokerage?.brokerageBuyer || transformedData.buyerBrokerage.brokerageBuyer === 0)) {
+    const buyerProfileBrokerage = matchingBuyer.brokerage?.[data.commodity];
+    if (buyerProfileBrokerage !== undefined) {
+      transformedData.buyerBrokerage = {
+        ...transformedData.buyerBrokerage,
+        brokerageBuyer: buyerProfileBrokerage,
+      };
+    }
+  }
+
+  if (matchingSellerProfile && (!transformedData.buyerBrokerage?.brokerageSupplier || transformedData.buyerBrokerage.brokerageSupplier === 0)) {
+    const supplierProfileBrokerage = matchingSellerProfile.commodities?.find(
+      (c) => c.name === data.commodity
+    )?.brokerage;
+    if (supplierProfileBrokerage !== undefined) {
+      transformedData.buyerBrokerage = {
+        ...transformedData.buyerBrokerage,
+        brokerageSupplier: supplierProfileBrokerage,
+      };
+    }
+  }
 
   if (data.billTo === "consignee") {
     transformedData = {
