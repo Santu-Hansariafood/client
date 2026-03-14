@@ -12,11 +12,11 @@ const formatName = (name) => {
 
 const formatPhone = (phone) => {
   if (!phone) return phone;
-  const cleaned = phone.replace(/\D/g, "");
-  if (cleaned.length !== 10) {
-    throw new Error("Phone number must be 10 digits");
+  const re = /^(?:\+91|0)?[6-9]\d{9}$/;
+  if (!re.test(phone)) {
+    throw new Error("Invalid phone number format. Must be 10 digits with optional +91 or 0 prefix.");
   }
-  return cleaned;
+  return phone;
 };
 
 const upperCase = (val) => {

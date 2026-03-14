@@ -25,7 +25,7 @@ const LoadingStation = ({ formData, handleChange }) => {
       <label className="block mb-4 text-base font-semibold text-slate-800 dark:text-slate-100">
         Loading Station
       </label>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
         <div>
           <label className="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-1">Select State</label>
           <DataDropdown
@@ -33,15 +33,6 @@ const LoadingStation = ({ formData, handleChange }) => {
             options={stateOptions}
             selectedOptions={stateOptions.find((o) => o.value === state) || null}
             onChange={(opt) => handleInputChange("state", opt?.value ?? "")}
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-1">Enter Location</label>
-          <DataInput
-            placeholder="Enter Location"
-            value={location || ""}
-            onChange={(e) => handleInputChange("location", e.target.value)}
-            name="location"
           />
         </div>
       </div>

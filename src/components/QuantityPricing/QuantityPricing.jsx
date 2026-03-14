@@ -34,7 +34,7 @@ const QuantityPricing = ({ formData = {}, handleChange }) => {
         label: "Weight (tons)",
         field: "weight",
         placeholder: "Weight (tons)",
-        type: "number",
+        type: "text",
       },
     ],
     []

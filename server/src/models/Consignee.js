@@ -12,14 +12,14 @@ const consigneeSchema = new mongoose.Schema(
       type: String,
       required: true,
       trim: true,
-      match: [/^[6-9]\d{9}$/, "Please enter a valid Indian mobile number"]
+      match: [/^(?:\+91|0)?[6-9]\d{9}$/, "Please enter a valid Indian mobile number"]
     },
 
     email: {
       type: String,
       trim: true,
       lowercase: true,
-      match: [/^\S+@\S+\.\S+$/, "Please enter a valid email"]
+      match: [/^[^\s@]+@[^\s@]+\.[^\s@]+$/, "Please enter a valid email"]
     },
 
     gst: {

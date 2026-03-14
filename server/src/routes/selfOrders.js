@@ -74,7 +74,14 @@ router.get("/:id", async (req, res) => {
 
 router.put("/:id", async (req, res) => {
   try {
-    const item = await SelfOrder.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    const body = req.body || {};
+
+    // Server-side fallback: If poNumber is missing or blank, use saudaNo
+    if (!body.poNumber || String(body.poNumber).trim() === "") {
+      body.poNumber = body.saudaNo || "";
+    }
+
+    const item = await SelfOrder.findByIdAndUpdate(req.params.id, body, { new: true });
     if (!item) return res.status(404).json({ message: "Order not found" });
     res.json(item);
   } catch (error) {
@@ -84,7 +91,14 @@ router.put("/:id", async (req, res) => {
 
 router.post("/", async (req, res) => {
   try {
-    const item = await SelfOrder.create(req.body);
+    const body = req.body || {};
+    
+    // Server-side fallback: If poNumber is missing or blank, use saudaNo
+    if (!body.poNumber || String(body.poNumber).trim() === "") {
+      body.poNumber = body.saudaNo || "";
+    }
+
+    const item = await SelfOrder.create(body);
     res.status(201).json(item);
   } catch (error) {
     res.status(400).json({ message: error.message });

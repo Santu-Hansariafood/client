@@ -18,6 +18,8 @@ const sellerCompanySchema = new mongoose.Schema(
     panNo: { type: String, required: true, trim: true },
     aadhaarNo: { type: String, default: "", trim: true },
     address: { type: String, required: true, trim: true },
+    mobileNo: { type: String, required: true, trim: true },
+    email: { type: String, required: true, trim: true },
     state: { type: String, required: true, trim: true },
     district: { type: String, required: true, trim: true },
     pinNo: { type: String, default: "", trim: true },
