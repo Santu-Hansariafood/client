@@ -77,10 +77,15 @@ const DownloadSauda = ({ data }) => {
       supplier.companyName.toLowerCase() === data.supplierCompany.toLowerCase()
   );
 
-  const matchingBuyer = buyerData.find(
-    (buyer) =>
-      buyer.companyName.toLowerCase() === data.buyerCompany.toLowerCase()
-  );
+  const matchingBuyer =
+    buyerData.find(
+      (buyer) =>
+        buyer.companyName.toLowerCase() === data.buyerCompany.toLowerCase()
+    ) ||
+    supplierData.find(
+      (supplier) =>
+        supplier.companyName.toLowerCase() === data.buyerCompany.toLowerCase()
+    );
 
   const matchingSellerProfile = sellerProfileData.find(
     (seller) => seller._id === data.supplier
@@ -90,8 +95,22 @@ const DownloadSauda = ({ data }) => {
     ...data,
     consigneeDetails: matchingConsignee || null,
     supplierDetails: matchingSupplier || null,
-    buyerDetails: matchingBuyer || null,
+    buyerDetails: matchingBuyer || (data.billTo === "consignee" ? matchingConsignee : null),
   };
+
+  // Normalize buyer details for consistent field names in PDF (address, gstNo, panNo, etc.)
+  if (transformedData.buyerDetails) {
+    const bd = transformedData.buyerDetails;
+    transformedData.buyerDetails = {
+      ...bd,
+      address: bd.address || bd.location || "",
+      gstNo: bd.gstNo || bd.gst || "",
+      panNo: bd.panNo || bd.pan || "",
+      pinNo: bd.pinNo || bd.pin || "",
+      district: bd.district || "",
+      state: bd.state || "",
+    };
+  }
 
   // Ensure brokerage is fetched from buyer/seller profile if it's 0 or missing in order data
   if (matchingBuyer && (!transformedData.buyerBrokerage?.brokerageBuyer || transformedData.buyerBrokerage.brokerageBuyer === 0)) {
