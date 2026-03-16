@@ -11,6 +11,7 @@ import "react-toastify/dist/ReactToastify.css";
 const DataInput = lazy(() => import("../../common/DataInput/DataInput"));
 const Buttons = lazy(() => import("../../common/Buttons/Buttons"));
 const Captcha = lazy(() => import("../../common/Captcha/Captcha"));
+const Typewriter = lazy(() => import("../../common/Typewriter/Typewriter"));
 
 const LoginForm = () => {
   const [phoneNumber, setPhoneNumber] = useState("");
@@ -95,90 +96,111 @@ const LoginForm = () => {
 
   return (
     <Suspense fallback={<Loading />}>
-      <div className="w-full max-w-md bg-white p-6 rounded-xl shadow-md border border-gray-200">
-        <h2 className="text-xl font-bold mb-4 text-center text-gray-800">
+      <div className="w-full bg-white p-5 sm:p-8 rounded-2xl shadow-xl border border-gray-100">
+        <h2 className="text-xl sm:text-2xl font-extrabold mb-6 text-center text-emerald-800 leading-tight">
           {loginLable.title1}
-          <br />
-          {loginLable.title2}
+          <span className="block text-emerald-600 mt-1 font-semibold">
+            <Typewriter text={loginLable.title2} speed={80} delay={1000} />
+          </span>
         </h2>
-        <div className="mb-4">
-          <label
-            htmlFor="phoneNumber"
-            className="block mb-2 text-gray-700 text-sm font-semibold"
-          >
-            {loginLable.phone_number}
-          </label>
-          <DataInput
-            placeholder={loginLable.phone_number_placeholder}
-            inputType="text"
-            value={phoneNumber}
-            onChange={(e) => setPhoneNumber(e.target.value)}
-            name="phoneNumber"
-            className="w-full p-3 rounded-lg border border-gray-300 shadow-md focus:shadow-lg transition-all"
-            maxLength="10"
-            minLength="10"
-          />
-        </div>
-        <div className="mb-4 relative">
-          <label
-            htmlFor="password"
-            className="block mb-2 text-gray-700 text-sm font-semibold"
-          >
-            {loginLable.password}
-          </label>
-          <div className="relative">
-            <DataInput
-              placeholder={loginLable.password_placeholder}
-              inputType={showPassword ? "text" : "password"}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              name="password"
-              className="w-full p-3 pr-12 rounded-lg border border-gray-300 shadow-md focus:shadow-lg transition-all"
-            />
-            <div
-              className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-600"
-              onClick={() => setShowPassword(!showPassword)}
+        
+        <div className="space-y-4 sm:space-y-5">
+          <div>
+            <label
+              htmlFor="phoneNumber"
+              className="block mb-1.5 text-gray-700 text-sm font-bold ml-1"
             >
-              {showPassword ? (
-                <AiOutlineEye size={20} title={loginLable.show_title} />
-              ) : (
-                <AiOutlineEyeInvisible size={20} title={loginLable.hide_title} />
-              )}
+              {loginLable.phone_number}
+            </label>
+            <DataInput
+              placeholder={loginLable.phone_number_placeholder}
+              inputType="text"
+              value={phoneNumber}
+              onChange={(e) => setPhoneNumber(e.target.value)}
+              name="phoneNumber"
+              className="w-full p-3 sm:p-3.5 rounded-xl border border-gray-300 shadow-sm focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all outline-none"
+              maxLength="10"
+              minLength="10"
+            />
+          </div>
+
+          <div>
+            <label
+              htmlFor="password"
+              className="block mb-1.5 text-gray-700 text-sm font-bold ml-1"
+            >
+              {loginLable.password}
+            </label>
+            <div className="relative group">
+              <DataInput
+                placeholder={loginLable.password_placeholder}
+                inputType={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                name="password"
+                className="w-full p-3 sm:p-3.5 pr-12 rounded-xl border border-gray-300 shadow-sm focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all outline-none"
+              />
+              <button
+                type="button"
+                className="absolute inset-y-0 right-3 flex items-center px-2 text-gray-400 hover:text-emerald-600 transition-colors"
+                onClick={() => setShowPassword(!showPassword)}
+                tabIndex="-1"
+              >
+                {showPassword ? (
+                  <AiOutlineEye size={22} title={loginLable.show_title} />
+                ) : (
+                  <AiOutlineEyeInvisible size={22} title={loginLable.hide_title} />
+                )}
+              </button>
             </div>
           </div>
-        </div>
-        <div className="mb-4">
-          <label className="block mb-2 text-gray-700 text-sm font-semibold">
-            Choose Role
-          </label>
-          <div className="flex flex-wrap justify-center gap-2">
-            {roles.map((role) => (
-              <Buttons
-                key={role}
-                label={role}
-                onClick={() => setUserRole(role)}
-                variant={userRole === role ? "primary" : "secondary"}
-                size="sm"
-                className={`px-3 py-2 rounded-lg shadow-md hover:shadow-lg transform transition-all ${
-                  userRole === role
-                    ? "bg-blue-500 text-white"
-                    : "bg-gray-100 text-gray-700"
-                }`}
-              />
-            ))}
+
+          <div>
+            <label className="block mb-2 text-gray-700 text-sm font-bold ml-1">
+              Select Your Role
+            </label>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+              {roles.map((role) => (
+                <button
+                  key={role}
+                  type="button"
+                  onClick={() => setUserRole(role)}
+                  className={`px-3 py-2 text-xs sm:text-sm font-medium rounded-lg transition-all border ${
+                    userRole === role
+                      ? "bg-emerald-600 text-white border-emerald-600 shadow-md transform scale-105"
+                      : "bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100 hover:border-gray-300"
+                  }`}
+                >
+                  {role}
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
-        <Captcha onValidate={setCaptchaValid} />
-        <div className="flex justify-center mt-4">
-          <Buttons
-            label={loading ? "Logging in..." : "Login"}
-            onClick={handleLogin}
-            type="submit"
-            variant="primary"
-            size="lg"
-            className="w-full py-3 rounded-lg shadow-md bg-blue-600 text-white hover:bg-blue-700 transform transition-all hover:shadow-lg"
-            disabled={loading}
-          />
+
+          <div className="pt-2">
+            <Captcha onValidate={setCaptchaValid} />
+          </div>
+
+          <div className="pt-4">
+            <button
+              onClick={handleLogin}
+              disabled={loading}
+              className={`w-full py-3.5 rounded-xl font-bold text-white shadow-lg transition-all transform active:scale-[0.98] ${
+                loading 
+                  ? "bg-emerald-400 cursor-not-allowed" 
+                  : "bg-emerald-600 hover:bg-emerald-700 hover:shadow-emerald-200"
+              }`}
+            >
+              {loading ? (
+                <span className="flex items-center justify-center gap-2">
+                  <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                  Logging in...
+                </span>
+              ) : (
+                "Sign In"
+              )}
+            </button>
+          </div>
         </div>
       </div>
     </Suspense>

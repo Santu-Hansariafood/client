@@ -4,12 +4,11 @@ import * as Icons from "react-icons/fa";
 import dashboardData from "../../data/dashboardData.json";
 import { prefetchRoute } from "../../utils/LazyPages/LazyPages";
 
-const Sidebar = () => {
+const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
   const location = useLocation();
   const [expandedSection, setExpandedSection] = useState(
     localStorage.getItem("expandedSection") || null
   );
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(
     localStorage.getItem("sidebarCollapsed") === "1"
   );
@@ -37,14 +36,6 @@ const Sidebar = () => {
 
   return (
     <>
-      <button
-        className="lg:hidden fixed top-4 left-4 z-50 text-white p-2.5 rounded-xl shadow-lg focus:outline-none border border-emerald-500/70 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 transition"
-        onClick={() => setIsSidebarOpen((prev) => !prev)}
-        aria-label="Toggle Sidebar"
-      >
-        {isSidebarOpen ? <Icons.FaTimes size={24} /> : <Icons.FaBars size={24} />}
-      </button>
-
       <aside
         className={`fixed top-0 left-0 z-40 h-full w-64 text-slate-100 shadow-2xl transform transition-all duration-300 ease-out border-r border-slate-800/80
           bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950

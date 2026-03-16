@@ -17,6 +17,7 @@ const PrivateLayout = () => {
   const { userRole, logout } = useAuth();
   const navigate = useNavigate();
   const [showLogoutConfirmation, setShowLogoutConfirmation] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const handleLogout = useCallback(() => {
     logout();
@@ -36,9 +37,19 @@ const PrivateLayout = () => {
 
   return (
     <div className="flex h-screen w-full overflow-hidden bg-slate-100">
-      {userRole === "Admin" && <Sidebar />}
+      {userRole === "Admin" && (
+        <Sidebar 
+          isSidebarOpen={isSidebarOpen} 
+          setIsSidebarOpen={setIsSidebarOpen} 
+        />
+      )}
       <div className="flex-1 min-w-0 flex flex-col overflow-hidden">
-        <Header onLogoutClick={() => setShowLogoutConfirmation(true)} />
+        <Header 
+          onLogoutClick={() => setShowLogoutConfirmation(true)} 
+          showMenuButton={userRole === "Admin"}
+          onMenuClick={() => setIsSidebarOpen(!isSidebarOpen)}
+          isSidebarOpen={isSidebarOpen}
+        />
         <main className="flex-1 min-w-0 overflow-auto">
           <Suspense fallback={<PageLoader />}>
             <Outlet />

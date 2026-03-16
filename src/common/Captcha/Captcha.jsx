@@ -105,21 +105,24 @@ const Captcha = ({ onValidate }) => {
   }, [captchaInput, captcha.text, onValidate]);
 
   return (
-    <div className="flex items-center gap-4">
-      <img
-        src={captcha.image}
-        alt="captcha"
-        className="block w-36 h-12 rounded-md shadow-md select-none"
-        style={{ userSelect: "none" }}
-      />
+    <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4 w-full">
+      <div className="flex items-center gap-3 shrink-0">
+        <img
+          src={captcha.image}
+          alt="captcha"
+          className="block w-28 h-10 sm:w-36 sm:h-12 rounded-md shadow-md select-none"
+          style={{ userSelect: "none" }}
+        />
 
-      <AiOutlineReload
-        size={24}
-        className="text-blue-500 cursor-pointer"
-        onClick={refreshCaptcha}
-        title={loginLable.refreshCaptcha}
-      />
-      <div className="flex items-center gap-2">
+        <AiOutlineReload
+          size={24}
+          className="text-blue-500 cursor-pointer hover:rotate-180 transition-transform duration-300"
+          onClick={refreshCaptcha}
+          title={loginLable.refreshCaptcha}
+        />
+      </div>
+
+      <div className="flex items-center gap-2 w-full sm:w-auto">
         <input
           type="text"
           value={captchaInput}
@@ -127,19 +130,19 @@ const Captcha = ({ onValidate }) => {
           placeholder={loginLable.enter_captcha}
           maxLength={6}
           minLength={6}
-          className="p-2 w-40 rounded-lg border border-gray-300 shadow-sm focus:outline-none focus:border-blue-500"
+          className="p-2 flex-grow sm:w-32 md:w-40 rounded-lg border border-gray-300 shadow-sm focus:outline-none focus:border-blue-500 text-sm sm:text-base"
         />
         {isValid === true && (
           <AiOutlineCheckCircle
             size={24}
-            className="text-green-500"
+            className="text-green-500 shrink-0"
             title={loginLable.valid_capcha}
           />
         )}
         {isValid === false && (
           <AiOutlineCloseCircle
             size={24}
-            className="text-red-500"
+            className="text-red-500 shrink-0"
             title={loginLable.invalid_capcha}
           />
         )}
