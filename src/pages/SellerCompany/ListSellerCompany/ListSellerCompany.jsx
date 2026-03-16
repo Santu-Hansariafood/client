@@ -7,7 +7,6 @@ import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 const Tables = lazy(() => import("../../../common/Tables/Tables"));
-const SearchBox = lazy(() => import("../../../common/SearchBox/SearchBox"));
 const Pagination = lazy(() =>
   import("../../../common/Paginations/Paginations")
 );
@@ -25,25 +24,36 @@ const ListSellerCompany = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchResults, setSearchResults] = useState([]);
+  const [totalItems, setTotalItems] = useState(0);
   const [selectedCompany, setSelectedCompany] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [editCompany, setEditCompany] = useState(null);
+  const [searchText, setSearchText] = useState("");
   const itemsPerPage = 10;
 
   useEffect(() => {
     const fetchCompanies = async () => {
       try {
-        const response = await axios.get("/seller-company");
+        setLoading(true);
+        const response = await axios.get("/seller-company", {
+          params: {
+            page: currentPage,
+            limit: itemsPerPage,
+            search: searchText
+          }
+        });
         setCompanies(response.data.data);
         setSearchResults(response.data.data);
+        setTotalItems(response.data.total || response.data.data.length);
         setLoading(false);
       } catch (err) {
-        setError("Failed to fetch companies", err);
+        setError("Failed to fetch companies");
+        console.error(err);
         setLoading(false);
       }
     };
     fetchCompanies();
-  }, []);
+  }, [currentPage, searchText]);
 
   const capitalizeWords = (str) => {
     if (!str) return "";
@@ -69,23 +79,6 @@ const ListSellerCompany = () => {
     }));
   };
 
-  const handleSearch = (filteredItems) => {
-    if (filteredItems.length === 0) {
-      setSearchResults(companies); // Reset when search is empty
-      return;
-    }
-
-    const results = companies.filter(
-      (company) =>
-        filteredItems.includes(company.companyName) ||
-        company.bankDetails?.some((bank) =>
-          filteredItems.includes(bank.accountNumber)
-        )
-    );
-
-    setSearchResults(results);
-  };
-
   const handlePageChange = (pageNumber) => {
     setCurrentPage(pageNumber);
   };
@@ -96,6 +89,7 @@ const ListSellerCompany = () => {
         await axios.delete(`/seller-company/${id}`);
         setCompanies((prev) => prev.filter((company) => company._id !== id));
         setSearchResults((prev) => prev.filter((company) => company._id !== id));
+        setTotalItems((prev) => prev - 1);
         toast.success("Seller company deleted successfully!");
       } catch (err) {
         console.error("Delete error:", err);
@@ -105,6 +99,7 @@ const ListSellerCompany = () => {
   };
 
   const headers = [
+    "Sl No.",
     "Company Name",
     "GST No",
     "PAN No",
@@ -117,41 +112,40 @@ const ListSellerCompany = () => {
     "Actions",
   ];
 
-  const rows = searchResults
-    .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
-    .map((company) => [
-      capitalizeWords(company.companyName),
-      toUpperCase(company.gstNo),
-      toUpperCase(company.panNo),
-      company.aadhaarNo,
-      capitalizeWords(company.address),
-      capitalizeWords(company.state),
-      capitalizeWords(company.district),
-      company.msmeNo || "-",
-      formatBankDetails(company.bankDetails)?.map((bank, index) => (
-        <div key={index} className="text-xs space-y-0.5 mb-2">
-          <strong>Bank {index + 1}:</strong>
-          <div>
-            <span className="font-semibold">Holder:</span> {bank.accountHolderName}
-          </div>
-          <div>
-            <span className="font-semibold">Acc No:</span> {bank.accountNumber}
-          </div>
-          <div>
-            <span className="font-semibold">IFSC:</span> {bank.ifscCode}
-          </div>
-          <div>
-            <span className="font-semibold">Branch:</span> {bank.branchName}
-          </div>
+  const rows = searchResults.map((company, index) => [
+    (currentPage - 1) * itemsPerPage + index + 1,
+    capitalizeWords(company.companyName),
+    toUpperCase(company.gstNo),
+    toUpperCase(company.panNo),
+    company.aadhaarNo,
+    capitalizeWords(company.address),
+    capitalizeWords(company.state),
+    capitalizeWords(company.district),
+    company.msmeNo || "-",
+    formatBankDetails(company.bankDetails)?.map((bank, index) => (
+      <div key={index} className="text-xs space-y-0.5 mb-2">
+        <strong>Bank {index + 1}:</strong>
+        <div>
+          <span className="font-semibold">Holder:</span> {bank.accountHolderName}
         </div>
-      )),
-      <Actions
-        key={company._id}
-        onView={() => setSelectedCompany(company)}
-        onEdit={() => setEditCompany(company)}
-        onDelete={() => handleDelete(company._id)}
-      />,
-    ]);
+        <div>
+          <span className="font-semibold">Acc No:</span> {bank.accountNumber}
+        </div>
+        <div>
+          <span className="font-semibold">IFSC:</span> {bank.ifscCode}
+        </div>
+        <div>
+          <span className="font-semibold">Branch:</span> {bank.branchName}
+        </div>
+      </div>
+    )),
+    <Actions
+      key={company._id}
+      onView={() => setSelectedCompany(company)}
+      onEdit={() => setEditCompany(company)}
+      onDelete={() => handleDelete(company._id)}
+    />,
+  ]);
 
   if (loading) {
     return <Loading />;
@@ -172,31 +166,25 @@ const ListSellerCompany = () => {
         <ToastContainer position="top-right" autoClose={3000} />
         <div className="max-w-7xl mx-auto space-y-6">
           <div className="rounded-2xl border border-amber-200/60 bg-white shadow-lg p-4 sm:p-6">
-            <SearchBox
-              placeholder="Search by name or account number..."
-              items={[
-                ...companies
-                  .map((company) => company.companyName || "")
-                  .filter(Boolean),
-                ...companies.flatMap(
-                  (company) =>
-                    company.bankDetails
-                      ?.map((bank) => bank.accountNumber || "")
-                      .filter(Boolean) || []
-                ),
-              ]}
-              onSearch={(filteredItems) => {
-                handleSearch(filteredItems);
-                setCurrentPage(1);
-              }}
-            />
+            <div className="flex items-center w-full max-w-md bg-white border border-emerald-100 rounded-xl px-4 py-2.5 shadow-md shadow-emerald-900/5 transition-all duration-200 focus-within:ring-2 focus-within:ring-emerald-400/50 focus-within:border-emerald-400">
+              <input
+                type="text"
+                value={searchText}
+                onChange={(e) => {
+                  setSearchText(e.target.value);
+                  setCurrentPage(1);
+                }}
+                placeholder="Search by name, GST, PAN or account number..."
+                className="w-full min-w-0 px-3 py-2 bg-transparent text-slate-800 placeholder-slate-400 focus:outline-none"
+              />
+            </div>
           </div>
 
           <div className="rounded-2xl border border-slate-200 bg-white shadow-sm p-3 sm:p-4">
             <Tables headers={headers} rows={rows} />
             <Pagination
               currentPage={currentPage}
-              totalItems={searchResults.length}
+              totalItems={totalItems}
               itemsPerPage={itemsPerPage}
               onPageChange={handlePageChange}
             />

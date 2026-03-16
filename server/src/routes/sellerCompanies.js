@@ -7,18 +7,32 @@ router.get("/", async (req, res) => {
   try {
     const page = parseInt(req.query.page || "0", 10);
     const limit = parseInt(req.query.limit || "0", 10);
+    const search = req.query.search || "";
+
+    let query = {};
+    if (search) {
+      query = {
+        $or: [
+          { companyName: { $regex: search, $options: "i" } },
+          { gstNo: { $regex: search, $options: "i" } },
+          { panNo: { $regex: search, $options: "i" } },
+          { address: { $regex: search, $options: "i" } },
+          { "bankDetails.accountNumber": { $regex: search, $options: "i" } }
+        ]
+      };
+    }
 
     if (page > 0 && limit > 0) {
-      const items = await SellerCompany.find()
+      const items = await SellerCompany.find(query)
         .sort({ companyName: 1 })
         .skip((page - 1) * limit)
         .limit(limit)
         .lean();
-      const total = await SellerCompany.countDocuments();
+      const total = await SellerCompany.countDocuments(query);
       return res.json({ data: items, total });
     }
 
-    const items = await SellerCompany.find().sort({ companyName: 1 }).lean();
+    const items = await SellerCompany.find(query).sort({ companyName: 1 }).lean();
     res.json({ data: items, total: items.length });
   } catch (error) {
     res.status(500).json({ message: error.message });
