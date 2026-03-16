@@ -269,12 +269,17 @@ const ListConsignee = () => {
           )}
         </PopupBox>
 
-        <EditConsigneePopup
+        <PopupBox
           isOpen={isEditPopupOpen}
           onClose={() => setIsEditPopupOpen(false)}
-          initialData={selectedConsignee || {}}
-          onSubmit={submitEdit}
-        />
+          title={`Edit Consignee: ${selectedConsignee?.name}`}
+        >
+          <EditConsigneePopup
+            initialData={selectedConsignee || {}}
+            onSubmit={submitEdit}
+            onCancel={() => setIsEditPopupOpen(false)}
+          />
+        </PopupBox>
         <PopupBox
           isOpen={isPopupOpen}
           onClose={() => setIsPopupOpen(false)}

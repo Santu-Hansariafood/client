@@ -3,6 +3,9 @@ import axios from "axios";
 import Loading from "../../../common/Loading/Loading";
 import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
 import { FaBuilding } from "react-icons/fa";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
 const Tables = lazy(() => import("../../../common/Tables/Tables"));
 const SearchBox = lazy(() => import("../../../common/SearchBox/SearchBox"));
 const Pagination = lazy(() =>
@@ -43,6 +46,7 @@ const ListSellerCompany = () => {
   }, []);
 
   const capitalizeWords = (str) => {
+    if (!str) return "";
     return str
       .split(" ")
       .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
@@ -50,16 +54,18 @@ const ListSellerCompany = () => {
   };
 
   const toUpperCase = (str) => {
+    if (!str) return "";
     return str.toUpperCase();
   };
 
   const formatBankDetails = (bankDetails) => {
+    if (!bankDetails) return [];
     return bankDetails.map((bank) => ({
       accountHolderName: toUpperCase(bank.accountHolderName),
       accountNumber: toUpperCase(bank.accountNumber),
       ifscCode: toUpperCase(bank.ifscCode),
       branchName: toUpperCase(bank.branchName),
-      // bankName: toUpperCase(bank.bankName),
+      bankName: toUpperCase(bank.bankName),
     }));
   };
 
@@ -82,6 +88,20 @@ const ListSellerCompany = () => {
 
   const handlePageChange = (pageNumber) => {
     setCurrentPage(pageNumber);
+  };
+
+  const handleDelete = async (id) => {
+    if (window.confirm("Are you sure you want to delete this seller company?")) {
+      try {
+        await axios.delete(`/seller-company/${id}`);
+        setCompanies((prev) => prev.filter((company) => company._id !== id));
+        setSearchResults((prev) => prev.filter((company) => company._id !== id));
+        toast.success("Seller company deleted successfully!");
+      } catch (err) {
+        console.error("Delete error:", err);
+        toast.error("Failed to delete seller company.");
+      }
+    }
   };
 
   const headers = [
@@ -109,26 +129,19 @@ const ListSellerCompany = () => {
       capitalizeWords(company.district),
       company.msmeNo || "-",
       formatBankDetails(company.bankDetails)?.map((bank, index) => (
-        <div key={index}>
+        <div key={index} className="text-xs space-y-0.5 mb-2">
           <strong>Bank {index + 1}:</strong>
           <div>
-            <span style={{ fontWeight: "bold" }}>Account Holder Name:</span>{" "}
-            {bank.accountHolderName}
+            <span className="font-semibold">Holder:</span> {bank.accountHolderName}
           </div>
           <div>
-            <span style={{ fontWeight: "bold" }}>Account Number:</span>{" "}
-            {bank.accountNumber}
+            <span className="font-semibold">Acc No:</span> {bank.accountNumber}
           </div>
           <div>
-            <span style={{ fontWeight: "bold" }}>IFSC:</span> {bank.ifscCode}
+            <span className="font-semibold">IFSC:</span> {bank.ifscCode}
           </div>
           <div>
-            <span style={{ fontWeight: "bold" }}>Branch Name:</span>{" "}
-            {bank.branchName}
-          </div>
-          <div>
-            <span style={{ fontWeight: "bold" }}>Bank Name:</span>{" "}
-            {bank.bankName}
+            <span className="font-semibold">Branch:</span> {bank.branchName}
           </div>
         </div>
       )),
@@ -136,7 +149,7 @@ const ListSellerCompany = () => {
         key={company._id}
         onView={() => setSelectedCompany(company)}
         onEdit={() => setEditCompany(company)}
-        onDelete={() => console.log("Delete clicked")}
+        onDelete={() => handleDelete(company._id)}
       />,
     ]);
 
@@ -156,6 +169,7 @@ const ListSellerCompany = () => {
         icon={FaBuilding}
         noContentCard
       >
+        <ToastContainer position="top-right" autoClose={3000} />
         <div className="max-w-7xl mx-auto space-y-6">
           <div className="rounded-2xl border border-amber-200/60 bg-white shadow-lg p-4 sm:p-6">
             <SearchBox
@@ -183,6 +197,7 @@ const ListSellerCompany = () => {
             <Pagination
               currentPage={currentPage}
               totalItems={searchResults.length}
+              itemsPerPage={itemsPerPage}
               onPageChange={handlePageChange}
             />
           </div>
@@ -193,7 +208,7 @@ const ListSellerCompany = () => {
               onClose={() => setSelectedCompany(null)}
               title={capitalizeWords(selectedCompany.companyName)}
             >
-              <div>
+              <div className="space-y-3">
                 <p>
                   <strong>GST No:</strong> {toUpperCase(selectedCompany.gstNo)}
                 </p>
@@ -220,12 +235,12 @@ const ListSellerCompany = () => {
                     <strong>MSME No:</strong> {selectedCompany.msmeNo}
                   </p>
                 )}
-                <p>
+                <div className="mt-4">
                   <strong>Bank Details:</strong>
-                </p>
+                </div>
                 {formatBankDetails(selectedCompany.bankDetails)?.map(
                   (bank, index) => (
-                    <div key={index} className="mb-4 border-b pb-2">
+                    <div key={index} className="mb-4 border-b pb-2 text-sm">
                       <p>
                         <strong>Bank {index + 1}:</strong>
                       </p>
@@ -243,7 +258,7 @@ const ListSellerCompany = () => {
                         <strong>Branch Name:</strong> {bank.branchName}
                       </p>
                       <p>
-                        <strong>Branch Name:</strong> {bank.bankName}
+                        <strong>Bank Name:</strong> {bank.bankName}
                       </p>
                     </div>
                   )

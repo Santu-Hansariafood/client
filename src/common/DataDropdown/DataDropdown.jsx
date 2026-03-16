@@ -7,6 +7,8 @@ const DataDropdown = ({
   onChange,
   placeholder,
   isMulti = false,
+  label,
+  required = false,
 }) => {
   const formattedOptions = options.map((option) => ({
     value: option.value,
@@ -14,8 +16,15 @@ const DataDropdown = ({
   }));
 
   return (
-    <div className="w-full max-w-md relative">
-      <Select
+    <div className="mb-5 w-full">
+      {label && (
+        <label className="block mb-2 text-sm font-medium text-gray-700 tracking-wide">
+          {label} {required && <span className="text-red-500">*</span>}
+        </label>
+      )}
+
+      <div className="relative">
+        <Select
         options={formattedOptions}
         isMulti={isMulti}
         value={selectedOptions}
@@ -125,6 +134,8 @@ DataDropdown.propTypes = {
   onChange: PropTypes.func.isRequired,
   placeholder: PropTypes.string,
   isMulti: PropTypes.bool,
+  label: PropTypes.string,
+  required: PropTypes.bool,
 };
 
 export default DataDropdown;

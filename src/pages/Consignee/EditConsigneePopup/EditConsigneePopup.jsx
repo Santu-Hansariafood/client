@@ -1,17 +1,17 @@
 import PropTypes from "prop-types";
 import { useState, useEffect, lazy, Suspense } from "react";
+import Loading from "../../../common/Loading/Loading";
+import regexPatterns from "../../../utils/regexPatterns/regexPatterns";
+import statesData from "../../../data/state-city.json";
+import { toast } from "react-toastify";
+import Buttons from "../../../common/Buttons/Buttons";
 
 const DataInput = lazy(() => import("../../../common/DataInput/DataInput"));
 const DataDropdown = lazy(
   () => import("../../../common/DataDropdown/DataDropdown"),
 );
 
-import statesData from "../../../data/state-city.json";
-import Loading from "../../../common/Loading/Loading";
-
-import regexPatterns from "../../../utils/regexPatterns/regexPatterns";
-
-const EditConsigneePopup = ({ isOpen, onClose, initialData, onSubmit }) => {
+const EditConsigneePopup = ({ initialData, onSubmit, onCancel }) => {
   const [formData, setFormData] = useState({});
   const [districts, setDistricts] = useState([]);
 
@@ -28,8 +28,6 @@ const EditConsigneePopup = ({ isOpen, onClose, initialData, onSubmit }) => {
       setDistricts(stateInfo ? stateInfo.district : []);
     }
   }, [initialData]);
-
-  if (!isOpen) return null;
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -95,153 +93,157 @@ const EditConsigneePopup = ({ isOpen, onClose, initialData, onSubmit }) => {
 
   return (
     <Suspense fallback={<Loading />}>
-      <div className="fixed inset-0 bg-black/40 flex justify-center items-center z-50">
-        <div className="bg-white p-6 rounded-xl shadow-xl w-11/12 sm:w-3/4 lg:w-1/2 max-h-[90vh] overflow-y-auto relative">
-          <button
-            className="absolute top-3 right-3 text-gray-500 hover:text-gray-800"
-            onClick={onClose}
-          >
-            ✖
-          </button>
+      <div className="bg-white p-2">
+        <form onSubmit={handleSubmit}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2">
+            <DataInput
+              label="Consignee Name"
+              placeholder="Enter Consignee Name"
+              value={formData.name || ""}
+              onChange={handleChange}
+              name="name"
+              required
+            />
 
-          <h2 className="text-2xl font-bold mb-6 text-center">
-            Edit Consignee
-          </h2>
+            <DataInput
+              label="Phone Number"
+              placeholder="Enter Phone Number"
+              value={formData.phone || ""}
+              onChange={handleChange}
+              name="phone"
+              inputType="tel"
+              maxLength="10"
+            />
 
-          <form onSubmit={handleSubmit}>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <DataInput
-                placeholder="Name"
-                value={formData.name || ""}
-                onChange={handleChange}
-                name="name"
-                required
-              />
+            <DataInput
+              label="Email Address"
+              placeholder="Enter Email Address"
+              value={formData.email || ""}
+              onChange={handleChange}
+              name="email"
+              inputType="email"
+            />
 
-              <DataInput
-                placeholder="Phone"
-                value={formData.phone || ""}
-                onChange={handleChange}
-                name="phone"
-                inputType="tel"
-                maxLength="10"
-              />
+            <DataInput
+              label="GST Number"
+              placeholder="Enter GST Number"
+              value={formData.gst || ""}
+              onChange={handleChange}
+              name="gst"
+              maxLength="15"
+            />
 
-              <DataInput
-                placeholder="Email"
-                value={formData.email || ""}
-                onChange={handleChange}
-                name="email"
-                inputType="email"
-              />
+            <DataInput
+              label="PAN Number"
+              placeholder="Enter PAN Number"
+              value={formData.pan || ""}
+              onChange={handleChange}
+              name="pan"
+              maxLength="10"
+            />
 
-              <DataInput
-                placeholder="GST"
-                value={formData.gst || ""}
-                onChange={handleChange}
-                name="gst"
-                maxLength="15"
-              />
+            <DataDropdown
+              label="State"
+              options={statesData.map((state) => ({
+                value: state.state,
+                label: state.state,
+              }))}
+              selectedOptions={{
+                value: formData.state || "",
+                label: formData.state || "Select State",
+              }}
+              onChange={(option) => handleDropdownChange(option, "state")}
+              placeholder="Select State"
+            />
 
-              <DataInput
-                placeholder="PAN"
-                value={formData.pan || ""}
-                onChange={handleChange}
-                name="pan"
-                maxLength="10"
-              />
+            <DataDropdown
+              label="District"
+              options={districts.map((district) => ({
+                value: district,
+                label: district,
+              }))}
+              selectedOptions={{
+                value: formData.district || "",
+                label: formData.district || "Select District",
+              }}
+              onChange={(option) => handleDropdownChange(option, "district")}
+              placeholder="Select District"
+            />
 
-              <DataDropdown
-                options={statesData.map((state) => ({
-                  value: state.state,
-                  label: state.state,
-                }))}
-                selectedOptions={{
-                  value: formData.state || "",
-                  label: formData.state || "Select State",
-                }}
-                onChange={(option) => handleDropdownChange(option, "state")}
-                placeholder="State"
-              />
+            <DataInput
+              label="Location"
+              placeholder="Enter Location"
+              value={formData.location || ""}
+              onChange={handleChange}
+              name="location"
+            />
 
-              <DataDropdown
-                options={districts.map((district) => ({
-                  value: district,
-                  label: district,
-                }))}
-                selectedOptions={{
-                  value: formData.district || "",
-                  label: formData.district || "Select District",
-                }}
-                onChange={(option) => handleDropdownChange(option, "district")}
-                placeholder="District"
-              />
+            <DataInput
+              label="Pin Code"
+              placeholder="Enter Pin Code"
+              value={formData.pin || ""}
+              onChange={handleChange}
+              name="pin"
+              maxLength="6"
+            />
 
-              <DataInput
-                placeholder="Location"
-                value={formData.location || ""}
-                onChange={handleChange}
-                name="location"
-              />
+            <DataInput
+              label="Contact Person"
+              placeholder="Enter Contact Person"
+              value={formData.contactPerson || ""}
+              onChange={handleChange}
+              name="contactPerson"
+            />
 
-              <DataInput
-                placeholder="Pin"
-                value={formData.pin || ""}
-                onChange={handleChange}
-                name="pin"
-                maxLength="6"
-              />
+            <DataInput
+              label="Mandi License"
+              placeholder="Enter Mandi License"
+              value={formData.mandiLicense || ""}
+              onChange={handleChange}
+              name="mandiLicense"
+            />
 
-              <DataInput
-                placeholder="Contact Person"
-                value={formData.contactPerson || ""}
-                onChange={handleChange}
-                name="contactPerson"
-              />
+            <DataDropdown
+              label="Active Status"
+              options={[
+                { value: "Active", label: "Active" },
+                { value: "Inactive", label: "Inactive" },
+              ]}
+              selectedOptions={{
+                value: formData.activeStatus ? "Active" : "Inactive",
+                label: formData.activeStatus ? "Active" : "Inactive",
+              }}
+              onChange={(option) =>
+                handleDropdownChange(option, "activeStatus")
+              }
+              placeholder="Select Status"
+            />
+          </div>
 
-              <DataInput
-                placeholder="Mandi License"
-                value={formData.mandiLicense || ""}
-                onChange={handleChange}
-                name="mandiLicense"
-              />
-
-              <DataDropdown
-                options={[
-                  { value: "Active", label: "Active" },
-                  { value: "Inactive", label: "Inactive" },
-                ]}
-                selectedOptions={{
-                  value: formData.activeStatus ? "Active" : "Inactive",
-                  label: formData.activeStatus ? "Active" : "Inactive",
-                }}
-                onChange={(option) =>
-                  handleDropdownChange(option, "activeStatus")
-                }
-                placeholder="Active Status"
-              />
-            </div>
-
-            <div className="mt-6 flex justify-center">
-              <button
-                type="submit"
-                className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg"
-              >
-                Update Consignee
-              </button>
-            </div>
-          </form>
-        </div>
+          <div className="mt-8 flex justify-end gap-3">
+            <Buttons
+              label="Cancel"
+              variant="secondary"
+              onClick={onCancel}
+              size="lg"
+            />
+            <Buttons
+              label="Update Consignee"
+              variant="primary"
+              type="submit"
+              size="lg"
+            />
+          </div>
+        </form>
       </div>
     </Suspense>
   );
 };
 
 EditConsigneePopup.propTypes = {
-  isOpen: PropTypes.bool.isRequired,
-  onClose: PropTypes.func.isRequired,
   initialData: PropTypes.object.isRequired,
   onSubmit: PropTypes.func.isRequired,
+  onCancel: PropTypes.func.isRequired,
 };
 
 export default EditConsigneePopup;
