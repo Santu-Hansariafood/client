@@ -12,7 +12,6 @@ import { useAuth } from "../../context/AuthContext/AuthContext";
 
 const Cards = lazy(() => import("../../common/Cards/Cards"));
 const Loading = lazy(() => import("../../common/Loading/Loading"));
-const Header = lazy(() => import("../../common/Header/Header"));
 const LogoutConfirmationModal = lazy(() =>
   import("../../common/LogoutConfirmationModal/LogoutConfirmationModal")
 );
@@ -26,7 +25,6 @@ const SellerDashboard = () => {
   const [error, setError] = useState(null);
   const [sellerBidCount, setSellerBidCount] = useState(0);
   const [participateBidCount, setParticipateBidCount] = useState(0);
-  const [showLogoutConfirmation, setShowLogoutConfirmation] = useState(false);
   const [notificationCount, setNotificationCount] = useState(0);
   const [showPopup, setShowPopup] = useState(false);
   const [confirmedBids, setConfirmedBids] = useState([]);
@@ -138,13 +136,13 @@ const SellerDashboard = () => {
       title: "Manage Self-Orders",
       count: 12,
       icon: FaBoxOpen,
-      link: "/manage-self-orders",
+      link: "/manage-order/list-self-order",
     },
     {
       title: "Loading Entry",
       count: 7,
       icon: FaTruckMoving,
-      link: "/loading-entry",
+      link: "/Loading-Entry/list-loading-entry",
     },
     {
       title: "Participate on Bid",
@@ -153,12 +151,6 @@ const SellerDashboard = () => {
       link: "/participate-bid-list",
     },
   ];
-
-  const handleLogout = useCallback(() => {
-    logout();
-    toast.success("Successfully logged out!");
-    navigate("/", { replace: true });
-  }, [logout, navigate]);
 
   const handleBack = () => {
     if (!mobile) {
@@ -171,7 +163,6 @@ const SellerDashboard = () => {
 
   return (
     <Suspense fallback={<Loading />}>
-      <Header onLogoutClick={() => setShowLogoutConfirmation(true)} />
       <div
         className="min-h-screen bg-gradient-to-br from-blue-100 via-white to-purple-200 p-4 sm:p-8 flex flex-col items-center justify-center"
         style={{
@@ -235,29 +226,22 @@ const SellerDashboard = () => {
               </div>
             </div>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 mb-10">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-10">
             {dashboardData.map((item, index) => (
-              <div
-                key={index}
-                onClick={() => navigate(item.link, { state: item.state })}
-                className="cursor-pointer"
-              >
-                <Cards
-                  title={item.title}
-                  count={item.count}
-                  icon={item.icon}
-                  link={item.link}
-                  className="rounded-2xl shadow-lg bg-white/80 hover:bg-blue-50 transition-all border border-blue-100"
-                />
+              <div key={index} className="group relative">
+                <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-3xl blur opacity-20 group-hover:opacity-40 transition duration-500"></div>
+                <div className="relative rounded-3xl overflow-hidden shadow-2xl bg-white/90 backdrop-blur-xl border border-blue-100 hover:scale-[1.02] transition-all duration-300">
+                  <Cards
+                    title={item.title}
+                    count={item.count}
+                    icon={item.icon}
+                    link={item.link}
+                    state={item.state}
+                  />
+                </div>
               </div>
             ))}
           </div>
-          {showLogoutConfirmation && (
-            <LogoutConfirmationModal
-              onConfirm={handleLogout}
-              onCancel={() => setShowLogoutConfirmation(false)}
-            />
-          )}
           <PopupBox
             isOpen={showPopup}
             onClose={() => setShowPopup(false)}

@@ -4,6 +4,7 @@ import { toast } from "react-toastify";
 import { useAuth } from "../context/AuthContext/AuthContext";
 import Sidebar from "../components/Sidebar/Sidebar";
 import Header from "../common/Header/Header";
+import Footer from "../common/Footer/Footer";
 import LogoutConfirmationModal from "../common/LogoutConfirmationModal/LogoutConfirmationModal";
 import { prefetchRoute } from "../utils/LazyPages/LazyPages";
 
@@ -50,10 +51,13 @@ const PrivateLayout = () => {
           onMenuClick={() => setIsSidebarOpen(!isSidebarOpen)}
           isSidebarOpen={isSidebarOpen}
         />
-        <main className="flex-1 min-w-0 overflow-auto">
-          <Suspense fallback={<PageLoader />}>
-            <Outlet />
-          </Suspense>
+        <main className="flex-1 min-w-0 overflow-auto flex flex-col">
+          <div className="flex-1">
+            <Suspense fallback={<PageLoader />}>
+              <Outlet />
+            </Suspense>
+          </div>
+          <Footer />
         </main>
       </div>
       {showLogoutConfirmation && (

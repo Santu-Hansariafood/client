@@ -58,7 +58,6 @@ router.post("/buyers/login", async (req, res) => {
       return res.status(400).json({ message: "Mobile and password are required" });
     }
 
-    // Search for a Buyer whose mobile array contains the given mobile
     const buyer = await Buyer.findOne({ mobile: mobile, password: password });
     
     if (!buyer) {
@@ -98,7 +97,6 @@ router.post("/sellers/login", async (req, res) => {
       return res.status(400).json({ message: "Phone and password are required" });
     }
 
-    // Search for a Seller whose phoneNumbers array has an object with value matching given phone
     const seller = await Seller.findOne({ "phoneNumbers.value": phone, password: password });
     
     if (!seller) {

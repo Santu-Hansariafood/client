@@ -11,10 +11,10 @@ const AdminPageShell = ({
   noContentCard = false,
 }) => (
   <main
-    className={`min-h-[calc(100vh-5rem)] w-full max-w-full overflow-x-hidden px-3 py-6 sm:px-4 sm:py-8 md:px-6 md:py-10 bg-gradient-to-b from-slate-50 to-emerald-50/40 ${mainClassName}`}
+    className={`min-h-[calc(100vh-5rem)] w-full max-w-full overflow-x-hidden px-4 py-8 sm:px-6 sm:py-10 md:px-8 md:py-12 bg-gradient-to-br from-slate-50 via-emerald-50/30 to-slate-100 ${mainClassName}`}
   >
     <div
-      className={`mx-auto w-full max-w-7xl ${noContentCard ? "" : "rounded-2xl border border-amber-200/60 bg-white/95 shadow-lg shadow-slate-200/50 p-4 sm:p-6 md:p-8"} ${contentClassName}`}
+      className={`mx-auto w-full max-w-7xl ${noContentCard ? "" : "rounded-3xl border border-emerald-100 bg-white/80 backdrop-blur-md shadow-2xl shadow-emerald-900/5 p-6 sm:p-8 md:p-10"} ${contentClassName}`}
     >
       {(title || subtitle) && (
         <PageHeader title={title} subtitle={subtitle} icon={icon} />
