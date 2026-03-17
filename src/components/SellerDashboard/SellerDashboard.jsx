@@ -201,19 +201,19 @@ const SellerDashboard = () => {
               ) : sellerDetails ? (
                 <div className="space-y-2">
                   <p>
-                    <span className="font-bold text-blue-700">Name:</span> {sellerDetails.sellerName}
+                    <span className="font-bold text-green-700">Name:</span> {sellerDetails.sellerName}
                   </p>
                   <p>
-                    <span className="font-bold text-blue-700">Phone:</span> {sellerDetails.phoneNumbers.map((p) => p.value).join(", ")}
+                    <span className="font-bold text-green-700">Phone:</span> {sellerDetails.phoneNumbers.map((p) => p.value).join(", ")}
                   </p>
                   <p>
-                    <span className="font-bold text-blue-700">Email:</span> {sellerDetails.emails.map((e) => e.value).join(", ")}
+                    <span className="font-bold text-green-700">Email:</span> {sellerDetails.emails.map((e) => e.value).join(", ")}
                   </p>
                   <p>
-                    <span className="font-bold text-blue-700">Company:</span> {sellerDetails.companies.join(", ")}
+                    <span className="font-bold text-green-700">Company:</span> {sellerDetails.companies.join(", ")}
                   </p>
                   <p>
-                    <span className="font-bold text-blue-700">Commodity:</span> {sellerDetails.commodities.map((c) => c.name).join(", ")}
+                    <span className="font-bold text-green-700">Commodity:</span> {sellerDetails.commodities.map((c) => c.name).join(", ")}
                   </p>
                 </div>
               ) : (

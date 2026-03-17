@@ -1,5 +1,3 @@
-import React from "react";
-
 const Footer = () => {
   const currentYear = new Date().getFullYear();
   
@@ -7,13 +5,18 @@ const Footer = () => {
     <footer className="w-full py-6 px-4 bg-white/80 backdrop-blur-md border-t border-slate-200 mt-auto">
       <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
         <div className="text-slate-600 text-sm font-medium">
-          © {currentYear} Hansaria Food Private Limited. All rights reserved.
+          © 2025 - {currentYear} Hansaria Food Private Limited. All rights reserved.
         </div>
         <div className="flex items-center gap-1 text-slate-500 text-sm">
           <span>Developed by</span>
-          <span className="font-bold bg-gradient-to-r from-emerald-600 to-emerald-800 bg-clip-text text-transparent">
+          <a
+            href="https://www.linkedin.com/in/santude-dev/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-bold bg-gradient-to-r from-emerald-600 to-emerald-800 bg-clip-text text-transparent hover:underline"
+          >
             Santu De
-          </span>
+          </a>
         </div>
       </div>
     </footer>
