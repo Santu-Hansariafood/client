@@ -11,25 +11,26 @@ const Header = ({
   showMenuButton,
   onMenuClick,
   isSidebarOpen,
+  isProfileDropdownOpen,
+  setProfileDropdownOpen,
 }) => {
-  const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef(null);
 
   const toggleDropdown = useCallback(() => {
-    setShowDropdown((prev) => !prev);
-  }, []);
+    setProfileDropdownOpen(prev => !prev);
+  }, [setProfileDropdownOpen]);
 
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
-        setShowDropdown(false);
+        setProfileDropdownOpen(false);
       }
     };
-    if (showDropdown) {
+    if (isProfileDropdownOpen) {
       document.addEventListener("mousedown", handleClickOutside);
     }
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [showDropdown]);
+  }, [isProfileDropdownOpen, setProfileDropdownOpen]);
 
   const title = "Hansaria Food Private Limited";
   const profile = "Profile";
@@ -67,7 +68,7 @@ const Header = ({
             type="button"
             className="flex items-center gap-1.5 sm:gap-2 rounded-xl px-1.5 py-1 sm:px-2 sm:py-1.5 font-medium text-amber-50 hover:bg-white/10 transition-colors focus:outline-none focus:ring-2 focus:ring-amber-400/50"
             onClick={toggleDropdown}
-            aria-expanded={showDropdown}
+            aria-expanded={isProfileDropdownOpen}
             aria-haspopup="true"
           >
             <div className="w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10 rounded-full bg-emerald-700 grid place-items-center ring-1.5 sm:ring-2 ring-amber-300/70 shrink-0">
@@ -80,7 +81,7 @@ const Header = ({
               {profile}
             </span>
           </button>
-          {showDropdown && (
+          {isProfileDropdownOpen && (
             <div className="absolute right-0 mt-2 w-40 sm:w-48 bg-white border border-slate-200 rounded-xl shadow-xl overflow-hidden">
               <div className="md:hidden border-b border-slate-100 px-3 py-2">
                 <PWAInstall />
@@ -89,7 +90,7 @@ const Header = ({
                 type="button"
                 className="w-full px-4 py-3 text-left text-red-600 hover:bg-red-50 flex items-center gap-2 text-sm font-medium"
                 onClick={() => {
-                  setShowDropdown(false);
+                  setProfileDropdownOpen(false);
                   onLogoutClick?.();
                 }}
               >

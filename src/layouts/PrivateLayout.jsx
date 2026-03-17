@@ -5,6 +5,7 @@ import { useAuth } from "../context/AuthContext/AuthContext";
 import Sidebar from "../components/Sidebar/Sidebar";
 import Header from "../common/Header/Header";
 import Footer from "../common/Footer/Footer";
+import MobileFooter from "../common/MobileFooter/MobileFooter";
 import LogoutConfirmationModal from "../common/LogoutConfirmationModal/LogoutConfirmationModal";
 import { prefetchRoute } from "../utils/LazyPages/LazyPages";
 
@@ -20,11 +21,17 @@ const PrivateLayout = () => {
   const [showLogoutConfirmation, setShowLogoutConfirmation] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
+  const [isProfileDropdownOpen, setProfileDropdownOpen] = useState(false);
+
   const handleLogout = useCallback(() => {
     logout();
     toast.success("Successfully logged out!");
     navigate("/", { replace: true });
   }, [logout, navigate]);
+
+  const handleProfileClick = () => {
+    setProfileDropdownOpen(prev => !prev);
+  };
 
   useEffect(() => {
     prefetchRoute("/dashboard");
@@ -50,8 +57,10 @@ const PrivateLayout = () => {
           showMenuButton={userRole === "Admin"}
           onMenuClick={() => setIsSidebarOpen(!isSidebarOpen)}
           isSidebarOpen={isSidebarOpen}
+          isProfileDropdownOpen={isProfileDropdownOpen}
+          setProfileDropdownOpen={setProfileDropdownOpen}
         />
-        <main className="flex-1 min-w-0 overflow-auto flex flex-col">
+        <main className="flex-1 min-w-0 overflow-auto flex flex-col pb-16 md:pb-0">
           <div className="flex-1">
             <Suspense fallback={<PageLoader />}>
               <Outlet />
@@ -59,6 +68,7 @@ const PrivateLayout = () => {
           </div>
           <Footer />
         </main>
+        <MobileFooter onProfileClick={handleProfileClick} />
       </div>
       {showLogoutConfirmation && (
         <LogoutConfirmationModal
