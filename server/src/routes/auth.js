@@ -1,6 +1,8 @@
 import { Router } from "express";
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";
+import Buyer from "../models/Buyer.js";
+import Seller from "../models/Seller.js";
 
 const router = Router();
 
@@ -48,14 +50,15 @@ router.post("/buyers/login", async (req, res) => {
     if (!process.env.JWT_SECRET) {
       return res.status(500).json({ message: "JWT_SECRET is not configured" });
     }
-    const user = await User.findOne({ role: "Buyer", mobile, password });
-    if (!user) return res.status(401).json({ message: "Invalid credentials" });
+    const buyer = await Buyer.findOne({ mobile: mobile, password: password });
+    if (!buyer) return res.status(401).json({ message: "Invalid credentials" });
+    
     const token = jwt.sign(
-      { sub: user._id.toString(), role: "Buyer", mobile: user.mobile || "" },
+      { sub: buyer._id.toString(), role: "Buyer", mobile: mobile },
       process.env.JWT_SECRET,
       { expiresIn: "365d" }
     );
-    res.json({ role: "Buyer", mobile: user.mobile || "", name: user.name, token });
+    res.json({ role: "Buyer", mobile: mobile, name: buyer.name, token });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -67,14 +70,15 @@ router.post("/sellers/login", async (req, res) => {
     if (!process.env.JWT_SECRET) {
       return res.status(500).json({ message: "JWT_SECRET is not configured" });
     }
-    const user = await User.findOne({ role: "Seller", phone, password });
-    if (!user) return res.status(401).json({ message: "Invalid credentials" });
+    const seller = await Seller.findOne({ "phoneNumbers.value": phone, password: password });
+    if (!seller) return res.status(401).json({ message: "Invalid credentials" });
+    
     const token = jwt.sign(
-      { sub: user._id.toString(), role: "Seller", mobile: user.phone || "" },
+      { sub: seller._id.toString(), role: "Seller", mobile: phone },
       process.env.JWT_SECRET,
       { expiresIn: "365d" }
     );
-    res.json({ role: "Seller", mobile: user.phone || "", name: user.name, token });
+    res.json({ role: "Seller", mobile: phone, name: seller.sellerName, token });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
