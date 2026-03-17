@@ -22,11 +22,16 @@ const DownloadSauda = ({ data }) => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [consigneeResponse, supplierResponse, buyerResponse, sellerProfileResponse] = await Promise.all([
+        const [
+          consigneeResponse,
+          supplierResponse,
+          buyerResponse,
+          sellerProfileResponse,
+        ] = await Promise.all([
           axios.get(CONSIGNEE_API_URL),
           axios.get(SUPPLIER_API_URL),
           axios.get(BUYER_API_URL),
-          axios.get(SELLER_PROFILE_API_URL)
+          axios.get(SELLER_PROFILE_API_URL),
         ]);
 
         const cData = Array.isArray(consigneeResponse.data)
@@ -59,43 +64,50 @@ const DownloadSauda = ({ data }) => {
   const normalizedConsigneeKey = (() => {
     const c = data?.consignee;
     if (!c) return "";
-    if (typeof c === "object") return (c.name || c.label || c.value || "").toString();
+    if (typeof c === "object")
+      return (c.name || c.label || c.value || "").toString();
     return String(c);
   })();
 
   const matchingConsignee = consigneeData.find((consignee) => {
     const idMatch =
-      consignee?._id && normalizedConsigneeKey && String(consignee._id) === String(normalizedConsigneeKey);
+      consignee?._id &&
+      normalizedConsigneeKey &&
+      String(consignee._id) === String(normalizedConsigneeKey);
     if (idMatch) return true;
-    const name = (consignee?.name || consignee?.label || "").toString().trim().toLowerCase();
+    const name = (consignee?.name || consignee?.label || "")
+      .toString()
+      .trim()
+      .toLowerCase();
     const key = normalizedConsigneeKey.toString().trim().toLowerCase();
     return name && key && name === key;
   });
 
   const matchingSupplier = supplierData.find(
     (supplier) =>
-      supplier.companyName.toLowerCase() === data.supplierCompany.toLowerCase()
+      supplier.companyName.toLowerCase() === data.supplierCompany.toLowerCase(),
   );
 
   const matchingBuyer =
     buyerData.find(
       (buyer) =>
-        buyer.companyName.toLowerCase() === data.buyerCompany.toLowerCase()
+        buyer.companyName.toLowerCase() === data.buyerCompany.toLowerCase(),
     ) ||
     supplierData.find(
       (supplier) =>
-        supplier.companyName.toLowerCase() === data.buyerCompany.toLowerCase()
+        supplier.companyName.toLowerCase() === data.buyerCompany.toLowerCase(),
     );
 
   const matchingSellerProfile = sellerProfileData.find(
-    (seller) => seller._id === data.supplier
+    (seller) => seller._id === data.supplier,
   );
 
   let transformedData = {
     ...data,
     consigneeDetails: matchingConsignee || null,
     supplierDetails: matchingSupplier || null,
-    buyerDetails: matchingBuyer || (data.billTo === "consignee" ? matchingConsignee : null),
+    buyerDetails:
+      matchingBuyer || (data.billTo === "consignee" ? matchingConsignee : null),
   };
 
   if (transformedData.buyerDetails) {
@@ -111,8 +123,14 @@ const DownloadSauda = ({ data }) => {
     };
   }
 
-  if (matchingBuyer && (!transformedData.buyerBrokerage?.brokerageBuyer || transformedData.buyerBrokerage.brokerageBuyer === 0)) {
-    const buyerProfileBrokerage = matchingBuyer.brokerageByName?.[data.commodity] || matchingBuyer.brokerage?.[data.commodity];
+  if (
+    matchingBuyer &&
+    (!transformedData.buyerBrokerage?.brokerageBuyer ||
+      transformedData.buyerBrokerage.brokerageBuyer === 0)
+  ) {
+    const buyerProfileBrokerage =
+      matchingBuyer.brokerageByName?.[data.commodity] ||
+      matchingBuyer.brokerage?.[data.commodity];
     if (buyerProfileBrokerage !== undefined) {
       transformedData.buyerBrokerage = {
         ...transformedData.buyerBrokerage,
@@ -121,9 +139,13 @@ const DownloadSauda = ({ data }) => {
     }
   }
 
-  if (matchingSellerProfile && (!transformedData.buyerBrokerage?.brokerageSupplier || transformedData.buyerBrokerage.brokerageSupplier === 0)) {
+  if (
+    matchingSellerProfile &&
+    (!transformedData.buyerBrokerage?.brokerageSupplier ||
+      transformedData.buyerBrokerage.brokerageSupplier === 0)
+  ) {
     const supplierProfileBrokerage = matchingSellerProfile.commodities?.find(
-      (c) => c.name === data.commodity
+      (c) => c.name === data.commodity,
     )?.brokerage;
     if (supplierProfileBrokerage !== undefined) {
       transformedData.buyerBrokerage = {
@@ -138,7 +160,6 @@ const DownloadSauda = ({ data }) => {
       ...transformedData,
       buyer: data.consignee,
       buyerCompany: data.consignee,
-      
     };
   }
 
@@ -229,7 +250,7 @@ const DownloadSauda = ({ data }) => {
               </button>
             )}
           </PDFDownloadLink>
-          
+
           <button
             onClick={() => setShowEmailPopup(true)}
             className={`flex items-center justify-center py-2 px-4 rounded-lg focus:outline-none transition duration-300 ${
@@ -256,7 +277,8 @@ const DownloadSauda = ({ data }) => {
           <div className="bg-white p-6 rounded-lg shadow-lg">
             <h3 className="text-lg font-bold mb-4">Send PDF via Email</h3>
             <p className="text-xs text-slate-500 mb-2">
-              Default email is picked from buyer emails. You can change it if needed.
+              Default email is picked from buyer emails. You can change it if
+              needed.
             </p>
             <input
               type="email"

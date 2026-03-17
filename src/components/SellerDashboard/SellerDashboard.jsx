@@ -1,19 +1,14 @@
 import { useEffect, useState, lazy, Suspense, useCallback } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
-import {
-  FaBell,
-  FaGavel,
-  FaBoxOpen,
-  FaTruckMoving,
-} from "react-icons/fa";
+import { FaBell, FaGavel, FaBoxOpen, FaTruckMoving } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext/AuthContext";
 
 const Cards = lazy(() => import("../../common/Cards/Cards"));
 const Loading = lazy(() => import("../../common/Loading/Loading"));
-const LogoutConfirmationModal = lazy(() =>
-  import("../../common/LogoutConfirmationModal/LogoutConfirmationModal")
+const LogoutConfirmationModal = lazy(
+  () => import("../../common/LogoutConfirmationModal/LogoutConfirmationModal"),
 );
 const PopupBox = lazy(() => import("../../common/PopupBox/PopupBox"));
 
@@ -48,7 +43,7 @@ const SellerDashboard = () => {
 
         if (sellersRes.status === 200 && Array.isArray(sellersRes.data)) {
           const seller = sellersRes.data.find((s) =>
-            s.phoneNumbers.some((p) => String(p.value) === String(mobile))
+            s.phoneNumbers.some((p) => String(p.value) === String(mobile)),
           );
 
           if (seller) {
@@ -59,24 +54,24 @@ const SellerDashboard = () => {
             const recentSellerBids = bidsRes.data.filter(
               (bid) =>
                 new Date(bid.createdAt) >= oneDayAgo &&
-                seller.commodities.some((c) => c.name === bid.commodity)
+                seller.commodities.some((c) => c.name === bid.commodity),
             );
 
             setSellerBidCount(recentSellerBids.length);
 
             setParticipateBidCount(
               participateRes.data.filter(
-                (p) => String(p.mobile) === String(mobile)
-              ).length
+                (p) => String(p.mobile) === String(mobile),
+              ).length,
             );
 
             const confirmed = confirmBidsRes.data
               .filter(
-                (bid) => String(bid.phone) === String(mobile) && bid.status
+                (bid) => String(bid.phone) === String(mobile) && bid.status,
               )
               .map((confirmBid) => {
                 const matchedBid = bidsRes.data.find(
-                  (b) => b._id === confirmBid.bidId
+                  (b) => b._id === confirmBid.bidId,
                 );
                 return matchedBid
                   ? {
@@ -166,7 +161,8 @@ const SellerDashboard = () => {
       <div
         className="min-h-screen bg-gradient-to-br from-blue-100 via-white to-purple-200 p-4 sm:p-8 flex flex-col items-center justify-center"
         style={{
-          background: "linear-gradient(135deg, #e0e7ff 0%, #fff 60%, #f3e8ff 100%)",
+          background:
+            "linear-gradient(135deg, #e0e7ff 0%, #fff 60%, #f3e8ff 100%)",
         }}
       >
         <div className="w-full max-w-5xl">
@@ -201,23 +197,30 @@ const SellerDashboard = () => {
               ) : sellerDetails ? (
                 <div className="space-y-2">
                   <p>
-                    <span className="font-bold text-green-700">Name:</span> {sellerDetails.sellerName}
+                    <span className="font-bold text-green-700">Name:</span>{" "}
+                    {sellerDetails.sellerName}
                   </p>
                   <p>
-                    <span className="font-bold text-green-700">Phone:</span> {sellerDetails.phoneNumbers.map((p) => p.value).join(", ")}
+                    <span className="font-bold text-green-700">Phone:</span>{" "}
+                    {sellerDetails.phoneNumbers.map((p) => p.value).join(", ")}
                   </p>
                   <p>
-                    <span className="font-bold text-green-700">Email:</span> {sellerDetails.emails.map((e) => e.value).join(", ")}
+                    <span className="font-bold text-green-700">Email:</span>{" "}
+                    {sellerDetails.emails.map((e) => e.value).join(", ")}
                   </p>
                   <p>
-                    <span className="font-bold text-green-700">Company:</span> {sellerDetails.companies.join(", ")}
+                    <span className="font-bold text-green-700">Company:</span>{" "}
+                    {sellerDetails.companies.join(", ")}
                   </p>
                   <p>
-                    <span className="font-bold text-green-700">Commodity:</span> {sellerDetails.commodities.map((c) => c.name).join(", ")}
+                    <span className="font-bold text-green-700">Commodity:</span>{" "}
+                    {sellerDetails.commodities.map((c) => c.name).join(", ")}
                   </p>
                 </div>
               ) : (
-                <p className="text-red-500 font-semibold">Seller details not available.</p>
+                <p className="text-red-500 font-semibold">
+                  Seller details not available.
+                </p>
               )}
             </div>
             <div className="flex flex-col items-center mt-6 sm:mt-0 w-full sm:w-1/3">
@@ -250,33 +253,55 @@ const SellerDashboard = () => {
             {confirmedBids.length > 0 ? (
               <ul className="space-y-4">
                 {confirmedBids.map((bid, index) => (
-                  <li key={index} className="p-4 bg-white/80 rounded-2xl shadow border border-blue-100">
+                  <li
+                    key={index}
+                    className="p-4 bg-white/80 rounded-2xl shadow border border-blue-100"
+                  >
                     <p>
-                      <span className="font-bold text-blue-700">Group:</span> {bid.group || "N/A"}
+                      <span className="font-bold text-blue-700">Group:</span>{" "}
+                      {bid.group || "N/A"}
                     </p>
                     <p>
-                      <span className="font-bold text-blue-700">Consignee:</span> {bid.consignee || "N/A"}
+                      <span className="font-bold text-blue-700">
+                        Consignee:
+                      </span>{" "}
+                      {bid.consignee || "N/A"}
                     </p>
                     <p>
-                      <span className="font-bold text-blue-700">Origin:</span> {bid.origin || "N/A"}
+                      <span className="font-bold text-blue-700">Origin:</span>{" "}
+                      {bid.origin || "N/A"}
                     </p>
                     <p>
-                      <span className="font-bold text-blue-700">Commodity:</span> {bid.commodity || "N/A"}
+                      <span className="font-bold text-blue-700">
+                        Commodity:
+                      </span>{" "}
+                      {bid.commodity || "N/A"}
                     </p>
                     <p>
-                      <span className="font-bold text-blue-700">Bid Quantity:</span> {bid.bidQuantity || "N/A"}
+                      <span className="font-bold text-blue-700">
+                        Bid Quantity:
+                      </span>{" "}
+                      {bid.bidQuantity || "N/A"}
                     </p>
                     <p>
-                      <span className="font-bold text-blue-700">Bid Rate:</span> {bid.bidRate || "N/A"}
+                      <span className="font-bold text-blue-700">Bid Rate:</span>{" "}
+                      {bid.bidRate || "N/A"}
                     </p>
                     <p>
-                      <span className="font-bold text-blue-700">Confirmed Rate:</span> {bid.rate || "N/A"}
+                      <span className="font-bold text-blue-700">
+                        Confirmed Rate:
+                      </span>{" "}
+                      {bid.rate || "N/A"}
                     </p>
                     <p>
-                      <span className="font-bold text-blue-700">Confirmed Quantity:</span> {bid.quantity || "N/A"}
+                      <span className="font-bold text-blue-700">
+                        Confirmed Quantity:
+                      </span>{" "}
+                      {bid.quantity || "N/A"}
                     </p>
                     <p>
-                      <span className="font-bold text-blue-700">Status:</span> {bid.status}
+                      <span className="font-bold text-blue-700">Status:</span>{" "}
+                      {bid.status}
                     </p>
                   </li>
                 ))}

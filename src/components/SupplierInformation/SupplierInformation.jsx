@@ -9,12 +9,12 @@ import {
 import PropTypes from "prop-types";
 import axios from "axios";
 import Loading from "../../common/Loading/Loading";
-const DataDropdown = lazy(() =>
-  import("../../common/DataDropdown/DataDropdown")
+const DataDropdown = lazy(
+  () => import("../../common/DataDropdown/DataDropdown"),
 );
 const DataInput = lazy(() => import("../../common/DataInput/DataInput"));
-const DateSelector = lazy(() =>
-  import("../../common/DateSelector/DateSelector")
+const DateSelector = lazy(
+  () => import("../../common/DateSelector/DateSelector"),
 );
 
 const SupplierInformation = ({ handleChange, formData }) => {
@@ -37,14 +37,19 @@ const SupplierInformation = ({ handleChange, formData }) => {
   useEffect(() => {
     if (sellers.length > 0 && formData.supplier && !selectedSupplier) {
       setSelectedSupplier(formData.supplier);
-      const selected = sellers.find((seller) => seller._id === formData.supplier);
+      const selected = sellers.find(
+        (seller) => seller._id === formData.supplier,
+      );
       if (selected) {
         handleChange("supplierBrokerage", selected.commodities || []);
         if (selected.commodities?.length) {
-          handleChange("supplierBrokerageDetails", selected.commodities.map((c) => ({
-            name: c.name,
-            brokerage: c.brokerage,
-          })));
+          handleChange(
+            "supplierBrokerageDetails",
+            selected.commodities.map((c) => ({
+              name: c.name,
+              brokerage: c.brokerage,
+            })),
+          );
         }
       }
     }
@@ -56,13 +61,13 @@ const SupplierInformation = ({ handleChange, formData }) => {
         value: seller._id,
         label: seller.sellerName,
       })),
-    [sellers]
+    [sellers],
   );
 
   const companies = useMemo(() => {
     if (selectedSupplier) {
       const supplier = sellers.find(
-        (seller) => seller._id === selectedSupplier
+        (seller) => seller._id === selectedSupplier,
       );
       return (
         supplier?.companies.map((company) => ({
@@ -85,18 +90,25 @@ const SupplierInformation = ({ handleChange, formData }) => {
 
       const rawEmails = selected?.emails || [];
       const sellerEmails = Array.isArray(rawEmails)
-        ? rawEmails.map((e) => (typeof e === "string" ? e : e?.value ?? e?.email ?? "")).filter(Boolean)
+        ? rawEmails
+            .map((e) =>
+              typeof e === "string" ? e : (e?.value ?? e?.email ?? ""),
+            )
+            .filter(Boolean)
         : [];
       handleChange("sellerEmails", sellerEmails.length ? sellerEmails : [""]);
 
       if (selected?.commodities?.length) {
-        handleChange("supplierBrokerageDetails", selected.commodities.map((c) => ({
-          name: c.name,
-          brokerage: c.brokerage,
-        })));
+        handleChange(
+          "supplierBrokerageDetails",
+          selected.commodities.map((c) => ({
+            name: c.name,
+            brokerage: c.brokerage,
+          })),
+        );
       }
     },
-    [sellers, handleChange]
+    [sellers, handleChange],
   );
 
   return (
@@ -112,7 +124,9 @@ const SupplierInformation = ({ handleChange, formData }) => {
           <DataDropdown
             placeholder="Select Supplier"
             options={suppliers}
-            selectedOptions={suppliers.find((s) => s.value === selectedSupplier) || null}
+            selectedOptions={
+              suppliers.find((s) => s.value === selectedSupplier) || null
+            }
             onChange={(opt) => handleSupplierChange(opt?.value)}
           />
         </div>
@@ -124,9 +138,12 @@ const SupplierInformation = ({ handleChange, formData }) => {
             placeholder="Select Supplier Company"
             options={companies}
             selectedOptions={
-              companies.find((c) => c.value === formData.supplierCompany) || null
+              companies.find((c) => c.value === formData.supplierCompany) ||
+              null
             }
-            onChange={(opt) => handleChange("supplierCompany", opt?.value || "")}
+            onChange={(opt) =>
+              handleChange("supplierCompany", opt?.value || "")
+            }
           />
         </div>
         <div>

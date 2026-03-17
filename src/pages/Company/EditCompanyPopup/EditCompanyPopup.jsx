@@ -6,8 +6,8 @@ import Loading from "../../../common/Loading/Loading";
 import regexPatterns from "../../../utils/regexPatterns/regexPatterns";
 
 const DataInput = lazy(() => import("../../../common/DataInput/DataInput"));
-const DataDropdown = lazy(() =>
-  import("../../../common/DataDropdown/DataDropdown")
+const DataDropdown = lazy(
+  () => import("../../../common/DataDropdown/DataDropdown"),
 );
 
 const EditCompanyPopup = ({ company, isOpen, onClose, onUpdate }) => {
@@ -40,13 +40,13 @@ const EditCompanyPopup = ({ company, isOpen, onClose, onUpdate }) => {
         setConsigneeOptions(
           consignees
             .map((c) => ({ value: String(c._id), label: c.name }))
-            .sort((a, b) => a.label.localeCompare(b.label))
+            .sort((a, b) => a.label.localeCompare(b.label)),
         );
 
         setGroupOptions(
           groups
             .map((g) => ({ value: String(g._id), label: g.groupName }))
-            .sort((a, b) => a.label.localeCompare(b.label))
+            .sort((a, b) => a.label.localeCompare(b.label)),
         );
 
         const mappedCommodityOptions = commoditiesData
@@ -70,19 +70,17 @@ const EditCompanyPopup = ({ company, isOpen, onClose, onUpdate }) => {
 
           if (company.groupId) {
             const grp = groups.find(
-              (g) => String(g._id) === String(company.groupId)
+              (g) => String(g._id) === String(company.groupId),
             );
             setSelectedGroup(
-              grp ? { value: String(grp._id), label: grp.groupName } : null
+              grp ? { value: String(grp._id), label: grp.groupName } : null,
             );
           }
 
           if (Array.isArray(company.consigneeIds)) {
             const mapped = company.consigneeIds
               .map((id) => {
-                const c = consignees.find(
-                  (x) => String(x._id) === String(id)
-                );
+                const c = consignees.find((x) => String(x._id) === String(id));
                 return c ? { value: String(c._id), label: c.name } : null;
               })
               .filter(Boolean);
@@ -105,12 +103,12 @@ const EditCompanyPopup = ({ company, isOpen, onClose, onUpdate }) => {
                       }))
                     : [],
                 }))
-              : []
+              : [],
           );
         }
       } catch (error) {
         toast.error(
-          error?.response?.data?.message || "Failed to load required data."
+          error?.response?.data?.message || "Failed to load required data.",
         );
       }
     };
@@ -122,14 +120,14 @@ const EditCompanyPopup = ({ company, isOpen, onClose, onUpdate }) => {
 
   const getCommodityParameterOptions = (commodityId) => {
     const commodity = commodityOptions.find(
-      (c) => c.value === String(commodityId)
+      (c) => c.value === String(commodityId),
     );
     return commodity?.parameters || [];
   };
 
   const getCommodityLabel = (commodityId) => {
     const commodity = commodityOptions.find(
-      (c) => c.value === String(commodityId)
+      (c) => c.value === String(commodityId),
     );
     return commodity?.label || "";
   };
@@ -168,7 +166,11 @@ const EditCompanyPopup = ({ company, isOpen, onClose, onUpdate }) => {
     setCommodityEntries((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const handleParameterValueChange = (commodityIndex, parameterIndex, value) => {
+  const handleParameterValueChange = (
+    commodityIndex,
+    parameterIndex,
+    value,
+  ) => {
     setCommodityEntries((prev) => {
       const updated = [...prev];
       updated[commodityIndex].parameters[parameterIndex].value = value;
@@ -223,7 +225,7 @@ const EditCompanyPopup = ({ company, isOpen, onClose, onUpdate }) => {
       onClose();
     } catch (error) {
       toast.error(
-        error?.response?.data?.message || "Failed to update company."
+        error?.response?.data?.message || "Failed to update company.",
       );
     } finally {
       setIsSubmitting(false);
@@ -300,9 +302,7 @@ const EditCompanyPopup = ({ company, isOpen, onClose, onUpdate }) => {
                   >
                     <button
                       type="button"
-                      onClick={() =>
-                        handleRemoveCommodity(commodityIndex)
-                      }
+                      onClick={() => handleRemoveCommodity(commodityIndex)}
                       className="absolute right-2 top-2 text-red-500"
                     >
                       ✖
@@ -316,10 +316,7 @@ const EditCompanyPopup = ({ company, isOpen, onClose, onUpdate }) => {
                       placeholder="Brokerage"
                       value={entry.brokerage}
                       onChange={(e) =>
-                        handleBrokerageChange(
-                          commodityIndex,
-                          e.target.value
-                        )
+                        handleBrokerageChange(commodityIndex, e.target.value)
                       }
                     />
 
@@ -334,7 +331,7 @@ const EditCompanyPopup = ({ company, isOpen, onClose, onUpdate }) => {
                             handleParameterValueChange(
                               commodityIndex,
                               paramIndex,
-                              e.target.value
+                              e.target.value,
                             )
                           }
                         />

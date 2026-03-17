@@ -40,8 +40,8 @@ const styles = StyleSheet.create({
   },
 
   bold: {
-  fontWeight: "bold",
-},
+    fontWeight: "bold",
+  },
 
   divider: {
     height: 1,
@@ -84,7 +84,6 @@ const styles = StyleSheet.create({
 const SaudaPDF = ({ data }) => (
   <Document>
     <Page style={styles.page} size="A4">
-
       <View style={styles.pageBorder} fixed />
       <View style={styles.innerBorder} fixed />
 
@@ -114,10 +113,10 @@ const SaudaPDF = ({ data }) => (
 
         <Text style={styles.footerText}>
           <Text style={styles.bold}>Contact: </Text>
-          +91 98304 33535 / 93304 33535 | Email: info@hansariafood.com | Website: www.hansariafood.com
+          +91 98304 33535 / 93304 33535 | Email: info@hansariafood.com |
+          Website: www.hansariafood.com
         </Text>
       </View>
-
     </Page>
     <Page style={styles.page} size="A4">
       <View style={styles.pageBorder} fixed />
@@ -138,7 +137,8 @@ const SaudaPDF = ({ data }) => (
 
         <Text style={styles.footerText}>
           <Text style={styles.bold}>Contact: </Text>
-          +91 98304 33535 / 93304 33535 | Email: info@hansariafood.com | Website: www.hansariafood.com
+          +91 98304 33535 / 93304 33535 | Email: info@hansariafood.com |
+          Website: www.hansariafood.com
         </Text>
       </View>
     </Page>

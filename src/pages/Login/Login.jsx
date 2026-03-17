@@ -1,8 +1,8 @@
 import { lazy, Suspense, useMemo } from "react";
 import Loading from "../../common/Loading/Loading";
 
-const LoginCarousel = lazy(() =>
-  import("../../common/LoginCarousel/LoginCarousel")
+const LoginCarousel = lazy(
+  () => import("../../common/LoginCarousel/LoginCarousel"),
 );
 const LoginForm = lazy(() => import("../../components/LoginForm/LoginForm"));
 
@@ -17,9 +17,7 @@ const Login = () => {
           {memoizedCarousel}
         </div>
         <div className="w-full md:w-1/2 flex items-center justify-center p-4 sm:p-6 md:p-10">
-          <div className="w-full max-w-md">
-            {memoizedLoginForm}
-          </div>
+          <div className="w-full max-w-md">{memoizedLoginForm}</div>
         </div>
       </div>
     </Suspense>

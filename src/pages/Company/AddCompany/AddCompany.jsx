@@ -15,8 +15,8 @@ import { FaBuilding } from "react-icons/fa";
 import addCompanyLable from "../../../language/en/addCompany";
 
 const DataInput = lazy(() => import("../../../common/DataInput/DataInput"));
-const DataDropdown = lazy(() =>
-  import("../../../common/DataDropdown/DataDropdown")
+const DataDropdown = lazy(
+  () => import("../../../common/DataDropdown/DataDropdown"),
 );
 const Buttons = lazy(() => import("../../../common/Buttons/Buttons"));
 
@@ -53,7 +53,7 @@ const AddCompany = () => {
               value: item._id,
               label: item.name,
             }))
-            .sort((a, b) => a.label.localeCompare(b.label))
+            .sort((a, b) => a.label.localeCompare(b.label)),
         );
 
         setGroupOptions(
@@ -62,7 +62,7 @@ const AddCompany = () => {
               value: item._id,
               label: item.groupName,
             }))
-            .sort((a, b) => a.label.localeCompare(b.label))
+            .sort((a, b) => a.label.localeCompare(b.label)),
         );
 
         setCommodityOptions(
@@ -70,10 +70,12 @@ const AddCompany = () => {
             value: item._id,
             label: item.name,
             parameters: item.parameters || [],
-          }))
+          })),
         );
       } catch (error) {
-        toast.error(error?.response?.data?.message || "Failed to load dropdown data");
+        toast.error(
+          error?.response?.data?.message || "Failed to load dropdown data",
+        );
       }
     };
 
@@ -91,11 +93,10 @@ const AddCompany = () => {
     ]);
   }, []);
 
-  
   const handleCommodityChange = useCallback(
     (index, selectedCommodity) => {
       const commodity = commodityOptions.find(
-        (item) => item.value === selectedCommodity.value
+        (item) => item.value === selectedCommodity.value,
       );
 
       setSelectedCommodities((prev) => {
@@ -113,16 +114,15 @@ const AddCompany = () => {
         return updated;
       });
     },
-    [commodityOptions]
+    [commodityOptions],
   );
 
   const availableCommodities = useMemo(() => {
     return commodityOptions.filter(
       (commodity) =>
         !selectedCommodities.some(
-          (item) =>
-            item.commodity && item.commodity.value === commodity.value
-        )
+          (item) => item.commodity && item.commodity.value === commodity.value,
+        ),
     );
   }, [commodityOptions, selectedCommodities]);
 
@@ -132,16 +132,16 @@ const AddCompany = () => {
         prev.map((commodity, cIndex) => {
           if (cIndex === commodityIndex) {
             const updatedParams = commodity.parameters.map((param, pIndex) =>
-              pIndex === paramIndex ? { ...param, value } : param
+              pIndex === paramIndex ? { ...param, value } : param,
             );
 
             return { ...commodity, parameters: updatedParams };
           }
           return commodity;
-        })
+        }),
       );
     },
-    []
+    [],
   );
 
   const handleSubmit = useCallback(async () => {
@@ -165,10 +165,12 @@ const AddCompany = () => {
         commodityId: entry.commodity?.value,
         brokerage: Number(entry.brokerage || 0),
 
-        parameters: entry.parameters.map((param) => ({
-          parameterId: param.parameterId || param._id,
-          value: param.value,
-        })).filter((p) => p.parameterId),
+        parameters: entry.parameters
+          .map((param) => ({
+            parameterId: param.parameterId || param._id,
+            value: param.value,
+          }))
+          .filter((p) => p.parameterId),
       })),
     };
 
@@ -185,9 +187,7 @@ const AddCompany = () => {
         setSelectedCommodities([]);
       }
     } catch (error) {
-      toast.error(
-        error.response?.data?.message || "Failed to add company"
-      );
+      toast.error(error.response?.data?.message || "Failed to add company");
     }
   }, [
     companyName,
@@ -211,129 +211,117 @@ const AddCompany = () => {
               {addCompanyLable.company_title}
             </h2>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label className="text-sm font-medium">
-                {addCompanyLable.company_name}
-              </label>
-              <DataInput
-                placeholder="Enter company name"
-                value={companyName}
-                onChange={(e) => setCompanyName(e.target.value)}
-              />
-            </div>
-            <div>
-              <label className="text-sm font-medium">
-                {addCompanyLable.company_email}
-              </label>
-              <DataInput
-                placeholder="Enter email"
-                value={companyEmail}
-                inputType="email"
-                onChange={(e) => setCompanyEmail(e.target.value)}
-              />
-            </div>
-            <div>
-              <label className="text-sm font-medium">
-                {addCompanyLable.consignee_title}
-              </label>
-
-              <DataDropdown
-                options={consigneeOptions}
-                selectedOptions={selectedConsignee}
-                onChange={setSelectedConsignee}
-                isMulti
-                placeholder="Select consignee"
-              />
-            </div>
-            <div>
-              <label className="text-sm font-medium">
-                {addCompanyLable.group_title}
-              </label>
-
-              <DataDropdown
-                options={groupOptions}
-                selectedOptions={selectedGroup}
-                onChange={setSelectedGroup}
-                placeholder="Select group"
-              />
-            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="text-sm font-medium">
+                  {addCompanyLable.company_name}
+                </label>
+                <DataInput
+                  placeholder="Enter company name"
+                  value={companyName}
+                  onChange={(e) => setCompanyName(e.target.value)}
+                />
               </div>
-              {selectedCommodities.map((entry, index) => (
-                <div
-                  key={index}
-                  className="bg-gray-50 p-4 mt-6 rounded-md border border-gray-100"
-                >
-              <DataDropdown
-                options={availableCommodities}
-                selectedOptions={entry.commodity}
-                onChange={(val) =>
-                  handleCommodityChange(index, val)
-                }
-                placeholder="Select commodity"
-              />
-
-              <div className="grid grid-cols-2 gap-4 mt-4">
-
-                {entry.parameters.map((param, pIndex) => (
-                  <div key={param.parameter}>
-                    <label className="text-xs">
-                      {param.parameter}
-                    </label>
-
-                    <DataInput
-                      placeholder={`Enter ${param.parameter}`}
-                      value={param.value}
-                      onChange={(e) =>
-                        handleParameterChange(
-                          index,
-                          pIndex,
-                          e.target.value
-                        )
-                      }
-                    />
-                  </div>
-                ))}
-
-                <div>
-                  <label className="text-xs">
-                    Brokerage per Ton
-                  </label>
-
-                  <DataInput
-                    placeholder="Enter brokerage"
-                    value={entry.brokerage}
-                    onChange={(e) => {
-                      setSelectedCommodities((prev) => {
-                        const updated = [...prev];
-                        updated[index].brokerage =
-                          e.target.value;
-                        return updated;
-                      });
-                    }}
-                  />
-                </div>
+              <div>
+                <label className="text-sm font-medium">
+                  {addCompanyLable.company_email}
+                </label>
+                <DataInput
+                  placeholder="Enter email"
+                  value={companyEmail}
+                  inputType="email"
+                  onChange={(e) => setCompanyEmail(e.target.value)}
+                />
               </div>
-                </div>
-              ))}
+              <div>
+                <label className="text-sm font-medium">
+                  {addCompanyLable.consignee_title}
+                </label>
 
-              <button
-                onClick={handleAddCommodity}
-                className="flex items-center text-blue-600 mt-6"
-              >
-                <FaPlus className="mr-2" />
-                {addCompanyLable.add_another_commodity}
-              </button>
+                <DataDropdown
+                  options={consigneeOptions}
+                  selectedOptions={selectedConsignee}
+                  onChange={setSelectedConsignee}
+                  isMulti
+                  placeholder="Select consignee"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium">
+                  {addCompanyLable.group_title}
+                </label>
 
-              <div className="mt-10 text-center">
-                <Buttons
-                  label="Submit"
-                  variant="primary"
-                  onClick={handleSubmit}
+                <DataDropdown
+                  options={groupOptions}
+                  selectedOptions={selectedGroup}
+                  onChange={setSelectedGroup}
+                  placeholder="Select group"
                 />
               </div>
             </div>
+            {selectedCommodities.map((entry, index) => (
+              <div
+                key={index}
+                className="bg-gray-50 p-4 mt-6 rounded-md border border-gray-100"
+              >
+                <DataDropdown
+                  options={availableCommodities}
+                  selectedOptions={entry.commodity}
+                  onChange={(val) => handleCommodityChange(index, val)}
+                  placeholder="Select commodity"
+                />
+
+                <div className="grid grid-cols-2 gap-4 mt-4">
+                  {entry.parameters.map((param, pIndex) => (
+                    <div key={param.parameter}>
+                      <label className="text-xs">{param.parameter}</label>
+
+                      <DataInput
+                        placeholder={`Enter ${param.parameter}`}
+                        value={param.value}
+                        onChange={(e) =>
+                          handleParameterChange(index, pIndex, e.target.value)
+                        }
+                      />
+                    </div>
+                  ))}
+
+                  <div>
+                    <label className="text-xs">Brokerage per Ton</label>
+
+                    <DataInput
+                      placeholder="Enter brokerage"
+                      value={entry.brokerage}
+                      onChange={(e) => {
+                        setSelectedCommodities((prev) => {
+                          const updated = [...prev];
+                          updated[index].brokerage = e.target.value;
+                          return updated;
+                        });
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+            ))}
+
+            <button
+              onClick={handleAddCommodity}
+              className="flex items-center text-blue-600 mt-6"
+            >
+              <FaPlus className="mr-2" />
+              {addCompanyLable.add_another_commodity}
+            </button>
+
+            <div className="mt-10 text-center">
+              <Buttons
+                label="Submit"
+                variant="primary"
+                onClick={handleSubmit}
+              />
+            </div>
           </div>
+        </div>
       </AdminPageShell>
     </Suspense>
   );

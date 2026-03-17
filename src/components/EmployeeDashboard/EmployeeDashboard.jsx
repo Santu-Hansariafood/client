@@ -1,5 +1,11 @@
 import React, { Suspense, lazy } from "react";
-import { FaUserTie, FaUsers, FaStore, FaTruck, FaClipboardList } from "react-icons/fa";
+import {
+  FaUserTie,
+  FaUsers,
+  FaStore,
+  FaTruck,
+  FaClipboardList,
+} from "react-icons/fa";
 import Loading from "../../common/Loading/Loading";
 import { useAuth } from "../../context/AuthContext/AuthContext";
 
@@ -7,7 +13,7 @@ const Cards = lazy(() => import("../../common/Cards/Cards"));
 
 const EmployeeDashboard = () => {
   const { user } = useAuth();
-  
+
   const dashboardData = [
     {
       title: "Buyer List",
@@ -55,8 +61,12 @@ const EmployeeDashboard = () => {
               </div>
             </div>
             <div className="px-6 py-3 bg-white rounded-2xl shadow-sm border border-slate-100">
-              <span className="text-slate-400 text-sm font-medium mr-2">Status:</span>
-              <span className="text-orange-600 font-bold uppercase text-xs tracking-widest bg-orange-50 px-3 py-1 rounded-full">On Duty</span>
+              <span className="text-slate-400 text-sm font-medium mr-2">
+                Status:
+              </span>
+              <span className="text-orange-600 font-bold uppercase text-xs tracking-widest bg-orange-50 px-3 py-1 rounded-full">
+                On Duty
+              </span>
             </div>
           </div>
 

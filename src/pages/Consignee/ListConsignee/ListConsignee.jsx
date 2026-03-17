@@ -159,7 +159,7 @@ const ListConsignee = () => {
           onDelete={() => handleDelete(consignee)}
         />,
       ]),
-    [consigneeData, currentPage]
+    [consigneeData, currentPage],
   );
 
   return (

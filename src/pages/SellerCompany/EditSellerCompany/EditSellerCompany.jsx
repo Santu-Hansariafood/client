@@ -52,10 +52,10 @@ const EditSellerCompany = ({ company, onSave, onCancel }) => {
       (company.bankDetails || []).map((bank) => ({
         ...bank,
         id: bank.id || bank._id || Date.now() + Math.random(),
-      }))
+      })),
     );
     setSelectedState(
-      stateCityData.find((state) => state.state === company.state) || null
+      stateCityData.find((state) => state.state === company.state) || null,
     );
     setSelectedDistrict({ value: company.district, label: company.district });
     setMsme(!!company.msmeNo);
@@ -63,13 +63,13 @@ const EditSellerCompany = ({ company, onSave, onCancel }) => {
 
     if (company.state) {
       const stateData = stateCityData.find(
-        (state) => state.state === company.state
+        (state) => state.state === company.state,
       );
       setDistrictOptions(
         stateData?.district.map((district) => ({
           value: district,
           label: district,
-        })) || []
+        })) || [],
       );
     }
   }, [company]);
@@ -88,12 +88,14 @@ const EditSellerCompany = ({ company, onSave, onCancel }) => {
 
   const handleBankDetailChange = async (id, name, value) => {
     setBankDetails((prev) =>
-      prev.map((bank) => (bank.id === id ? { ...bank, [name]: value } : bank))
+      prev.map((bank) => (bank.id === id ? { ...bank, [name]: value } : bank)),
     );
 
     if (name === "ifscCode" && value.length === 11) {
       try {
-        const response = await fetch(`https://ifsc.razorpay.com/${value.toUpperCase()}`);
+        const response = await fetch(
+          `https://ifsc.razorpay.com/${value.toUpperCase()}`,
+        );
         if (!response.ok) throw new Error("Invalid IFSC Code");
         const data = await response.json();
         const { BANK, BRANCH } = data;
@@ -101,8 +103,8 @@ const EditSellerCompany = ({ company, onSave, onCancel }) => {
           prev.map((bank) =>
             bank.id === id
               ? { ...bank, bankName: BANK, branchName: BRANCH }
-              : bank
-          )
+              : bank,
+          ),
         );
         toast.success("Bank details fetched successfully!");
       } catch (error) {
@@ -137,13 +139,13 @@ const EditSellerCompany = ({ company, onSave, onCancel }) => {
   const handleStateChange = (selected) => {
     setSelectedState(selected);
     const stateData = stateCityData.find(
-      (state) => state.state === selected?.value
+      (state) => state.state === selected?.value,
     );
     setDistrictOptions(
       stateData?.district.map((district) => ({
         value: district,
         label: district,
-      })) || []
+      })) || [],
     );
   };
 
@@ -175,7 +177,7 @@ const EditSellerCompany = ({ company, onSave, onCancel }) => {
           bank.accountNumber &&
           bank.ifscCode &&
           bank.branchName &&
-          bank.bankName
+          bank.bankName,
       )
     ) {
       toast.error("Please complete all required fields.");
@@ -194,14 +196,14 @@ const EditSellerCompany = ({ company, onSave, onCancel }) => {
     try {
       const response = await axios.put(
         `/seller-company/${company._id}`,
-        payload
+        payload,
       );
       toast.success("Seller company updated successfully!");
       onSave(response.data);
     } catch (error) {
       toast.error(
         error.response?.data?.message ||
-          "Failed to update seller company. Please try again."
+          "Failed to update seller company. Please try again.",
       );
     }
   };
@@ -304,9 +306,7 @@ const EditSellerCompany = ({ company, onSave, onCancel }) => {
       </div>
 
       {/* Bank Details */}
-      <h3 className="text-xl font-semibold text-gray-800 mb-4">
-        Bank Details
-      </h3>
+      <h3 className="text-xl font-semibold text-gray-800 mb-4">Bank Details</h3>
       {bankDetails.map((bank, index) => (
         <div
           key={bank.id}
@@ -321,7 +321,7 @@ const EditSellerCompany = ({ company, onSave, onCancel }) => {
                 handleBankDetailChange(
                   bank.id,
                   "accountHolderName",
-                  e.target.value
+                  e.target.value,
                 )
               }
               placeholder="Enter Account Holder Name"
@@ -331,11 +331,7 @@ const EditSellerCompany = ({ company, onSave, onCancel }) => {
               id={`accountNumber-${bank.id}`}
               value={bank.accountNumber}
               onChange={(e) =>
-                handleBankDetailChange(
-                  bank.id,
-                  "accountNumber",
-                  e.target.value
-                )
+                handleBankDetailChange(bank.id, "accountNumber", e.target.value)
               }
               placeholder="Enter Account Number"
             />

@@ -7,7 +7,9 @@ import Group from "../models/Group.js";
 const router = Router();
 
 const toObjectId = (value) =>
-  mongoose.Types.ObjectId.isValid(value) ? new mongoose.Types.ObjectId(value) : null;
+  mongoose.Types.ObjectId.isValid(value)
+    ? new mongoose.Types.ObjectId(value)
+    : null;
 
 const normalizeObjectIdArray = (value) => {
   if (!Array.isArray(value)) return [];
@@ -27,14 +29,15 @@ const mapCompanyForClient = (company) => {
       (entry.parameters || []).map((p) => [
         String(p.parameterId?._id || p.parameterId),
         p.value ?? "",
-      ])
+      ]),
     );
 
     const commodityParams = (commodityRef?.parameters || []).map((p) => ({
       _id: p.parameterId?._id || p.parameterId,
       parameterId: p.parameterId?._id || p.parameterId,
       parameter: p.parameterId?.name || "",
-      value: storedParamsMap.get(String(p.parameterId?._id || p.parameterId)) ?? "",
+      value:
+        storedParamsMap.get(String(p.parameterId?._id || p.parameterId)) ?? "",
     }));
 
     return {
@@ -51,12 +54,15 @@ const mapCompanyForClient = (company) => {
     companyName: company.companyName,
     companyEmail: company.companyEmail || "",
     consigneeIds,
-    consignee: (company.consigneeIds || []).map((c) => c?.name || "").filter(Boolean),
+    consignee: (company.consigneeIds || [])
+      .map((c) => c?.name || "")
+      .filter(Boolean),
     groupId: company.groupId?._id || company.groupId || null,
     group: company.groupId?.groupName || company.group || "",
     commodities,
     mandiLicense: company.mandiLicense || "",
-    activeStatus: typeof company.activeStatus === "boolean" ? company.activeStatus : true,
+    activeStatus:
+      typeof company.activeStatus === "boolean" ? company.activeStatus : true,
   };
 };
 
@@ -88,7 +94,7 @@ router.get("/", async (req, res) => {
 
       return res.json({
         data: companies.map(mapCompanyForClient),
-        total
+        total,
       });
     }
 
@@ -100,25 +106,27 @@ router.get("/", async (req, res) => {
     res.json(companies.map(mapCompanyForClient));
   } catch (error) {
     res.status(500).json({
-      message: error.message
+      message: error.message,
     });
   }
 });
 
 router.get("/:id", async (req, res) => {
   try {
-    const company = await Company.findById(req.params.id).populate(companyPopulate).lean();
+    const company = await Company.findById(req.params.id)
+      .populate(companyPopulate)
+      .lean();
 
     if (!company) {
       return res.status(404).json({
-        message: "Company not found"
+        message: "Company not found",
       });
     }
 
     res.json(mapCompanyForClient(company));
   } catch (error) {
     res.status(500).json({
-      message: error.message
+      message: error.message,
     });
   }
 });
@@ -130,7 +138,7 @@ router.post("/", async (req, res) => {
 
     if (!companyName) {
       return res.status(400).json({
-        message: "Company name is required"
+        message: "Company name is required",
       });
     }
 
@@ -145,7 +153,9 @@ router.post("/", async (req, res) => {
     }
 
     if (!groupId && body.group) {
-      const group = await Group.findOne({ groupName: body.group }).select("_id").lean();
+      const group = await Group.findOne({ groupName: body.group })
+        .select("_id")
+        .lean();
       groupId = group?._id || null;
     }
 
@@ -173,16 +183,19 @@ router.post("/", async (req, res) => {
       groupId: groupId || null,
       commodities,
       mandiLicense: body.mandiLicense || "",
-      activeStatus: typeof body.activeStatus === "boolean" ? body.activeStatus : true,
+      activeStatus:
+        typeof body.activeStatus === "boolean" ? body.activeStatus : true,
     });
 
     const saved = await company.save();
 
-    const created = await Company.findById(saved._id).populate(companyPopulate).lean();
+    const created = await Company.findById(saved._id)
+      .populate(companyPopulate)
+      .lean();
     res.status(201).json(mapCompanyForClient(created));
   } catch (error) {
     res.status(400).json({
-      message: error.message
+      message: error.message,
     });
   }
 });
@@ -193,7 +206,11 @@ router.put("/:id", async (req, res) => {
     let consigneeIds = normalizeObjectIdArray(body.consigneeIds);
     let groupId = toObjectId(body.groupId);
 
-    if (consigneeIds.length === 0 && Array.isArray(body.consignee) && body.consignee.length) {
+    if (
+      consigneeIds.length === 0 &&
+      Array.isArray(body.consignee) &&
+      body.consignee.length
+    ) {
       const consignees = await Consignee.find({ name: { $in: body.consignee } })
         .select("_id")
         .lean();
@@ -201,7 +218,9 @@ router.put("/:id", async (req, res) => {
     }
 
     if (!groupId && body.group) {
-      const group = await Group.findOne({ groupName: body.group }).select("_id").lean();
+      const group = await Group.findOne({ groupName: body.group })
+        .select("_id")
+        .lean();
       groupId = group?._id || null;
     }
 
@@ -227,7 +246,8 @@ router.put("/:id", async (req, res) => {
             .filter((entry) => entry.commodityId)
         : [],
       mandiLicense: body.mandiLicense || "",
-      activeStatus: typeof body.activeStatus === "boolean" ? body.activeStatus : true,
+      activeStatus:
+        typeof body.activeStatus === "boolean" ? body.activeStatus : true,
     };
 
     const updated = await Company.findByIdAndUpdate(req.params.id, update, {
@@ -239,14 +259,14 @@ router.put("/:id", async (req, res) => {
 
     if (!updated) {
       return res.status(404).json({
-        message: "Company not found"
+        message: "Company not found",
       });
     }
 
     res.json(mapCompanyForClient(updated));
   } catch (error) {
     res.status(400).json({
-      message: error.message
+      message: error.message,
     });
   }
 });
@@ -257,16 +277,16 @@ router.delete("/:id", async (req, res) => {
 
     if (!deleted) {
       return res.status(404).json({
-        message: "Company not found"
+        message: "Company not found",
       });
     }
 
     res.json({
-      message: "Company deleted successfully"
+      message: "Company deleted successfully",
     });
   } catch (error) {
     res.status(500).json({
-      message: error.message
+      message: error.message,
     });
   }
 });

@@ -4,8 +4,8 @@ import { toast } from "react-toastify";
 import axios from "axios";
 import Loading from "../../../common/Loading/Loading";
 const DataInput = lazy(() => import("../../../common/DataInput/DataInput"));
-const DataDropdown = lazy(() =>
-  import("../../../common/DataDropdown/DataDropdown")
+const DataDropdown = lazy(
+  () => import("../../../common/DataDropdown/DataDropdown"),
 );
 
 import regexPatterns from "../../../utils/regexPatterns/regexPatterns";
@@ -55,25 +55,25 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
           groupsData.map((group) => ({
             value: String(group._id),
             label: group.groupName,
-          }))
+          })),
         );
         setCommodities(
           commoditiesData.map((c) => ({
             value: String(c._id),
             label: c.name,
-          }))
+          })),
         );
         setAllConsignees(
           consigneesData.map((c) => ({
             value: String(c._id),
             label: c.name,
-          }))
+          })),
         );
         setCompanies(
           companiesData.map((company) => ({
             value: String(company._id),
             label: company.companyName,
-          }))
+          })),
         );
       } catch (error) {
         toast.error("Failed to fetch required data.", error);
@@ -156,12 +156,20 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (formData.mobile.some((num) => num.trim() && !regexPatterns.mobile.test(num.trim()))) {
+    if (
+      formData.mobile.some(
+        (num) => num.trim() && !regexPatterns.mobile.test(num.trim()),
+      )
+    ) {
       toast.error("Invalid mobile number format.");
       return;
     }
 
-    if (formData.email.some((mail) => mail.trim() && !regexPatterns.email.test(mail.trim()))) {
+    if (
+      formData.email.some(
+        (mail) => mail.trim() && !regexPatterns.email.test(mail.trim()),
+      )
+    ) {
       toast.error("Invalid email format.");
       return;
     }
@@ -179,7 +187,7 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
       });
 
       const consigneeIds = (formData.consignee || []).map(
-        (c) => c.value || c._id || ""
+        (c) => c.value || c._id || "",
       );
 
       const payload = {
@@ -194,10 +202,7 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
         status: formData.status || "Active",
         brokerage: formData.brokerage || {},
       };
-      const response = await axios.put(
-        `/buyers/${formData._id}`,
-        payload
-      );
+      const response = await axios.put(`/buyers/${formData._id}`, payload);
       onUpdate(response.data);
       toast.success("Buyer updated successfully");
     } catch (error) {
@@ -287,7 +292,7 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
                   <DataDropdown
                     options={groups}
                     selectedOptions={groups.find(
-                      (group) => group.value === formData.groupId
+                      (group) => group.value === formData.groupId,
                     )}
                     onChange={handleGroupChange}
                     placeholder="Select group"
@@ -311,10 +316,7 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
                       Mobile Numbers
                     </p>
                     {(formData.mobile || []).map((number, index) => (
-                      <div
-                        key={index}
-                        className="flex items-center gap-2 mb-2"
-                      >
+                      <div key={index} className="flex items-center gap-2 mb-2">
                         <DataInput
                           placeholder="Enter mobile number"
                           value={number}
@@ -345,10 +347,7 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
                       Email Addresses
                     </p>
                     {(formData.email || []).map((email, index) => (
-                      <div
-                        key={index}
-                        className="flex items-center gap-2 mb-2"
-                      >
+                      <div key={index} className="flex items-center gap-2 mb-2">
                         <DataInput
                           placeholder="Enter email address"
                           value={email}
@@ -392,10 +391,7 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
                     </button>
                   </div>
                   {(formData.commodity || []).map((comm, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center gap-2 mb-2"
-                    >
+                    <div key={index} className="flex items-center gap-2 mb-2">
                       <select
                         value={comm}
                         onChange={(e) =>

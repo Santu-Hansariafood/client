@@ -7,11 +7,11 @@ import Loading from "../../../common/Loading/Loading";
 import regexPatterns from "../../../utils/regexPatterns/regexPatterns";
 
 const DataInput = lazy(() => import("../../../common/DataInput/DataInput"));
-const DataDropdown = lazy(() =>
-  import("../../../common/DataDropdown/DataDropdown")
+const DataDropdown = lazy(
+  () => import("../../../common/DataDropdown/DataDropdown"),
 );
-const DropdownSelector = lazy(() =>
-  import("../../../common/DropdownSelector/DropdownSelector")
+const DropdownSelector = lazy(
+  () => import("../../../common/DropdownSelector/DropdownSelector"),
 );
 const Buttons = lazy(() => import("../../../common/Buttons/Buttons"));
 
@@ -71,19 +71,19 @@ const EditSellerDetails = ({ sellerId, onClose, onSave }) => {
           sellerData.phoneNumbers.map((phone) => ({
             id: Date.now(),
             value: phone.value,
-          }))
+          })),
         );
         setEmails(
           sellerData.emails.map((email) => ({
             id: Date.now(),
             value: email.value,
-          }))
+          })),
         );
         setSelectedCommodity(
           sellerData.commodities.map((commodity) => ({
             value: commodity.name,
             label: commodity.name,
-          }))
+          })),
         );
         setBrokerageAmounts(
           sellerData.commodities.reduce(
@@ -91,34 +91,32 @@ const EditSellerDetails = ({ sellerId, onClose, onSave }) => {
               ...acc,
               [commodity.name]: commodity.brokerage,
             }),
-            {}
-          )
+            {},
+          ),
         );
         setSelectedCompany(
           sellerData.companies.map((company) => ({
             value: company,
             label: company,
-          }))
+          })),
         );
         setSelectedStatus(
-          statusOptions.find((option) => option.value === sellerData.status)
+          statusOptions.find((option) => option.value === sellerData.status),
         );
         setSelectedBuyers(
           sellerData.buyers.map((buyer) => ({
             value: buyer.name,
             label: buyer.name,
-          }))
+          })),
         );
 
         setCommodityOptions(
-          commodities.sort((a, b) => a.label.localeCompare(b.label))
+          commodities.sort((a, b) => a.label.localeCompare(b.label)),
         );
         setCompanyOptions(
-          companies.sort((a, b) => a.label.localeCompare(b.label))
+          companies.sort((a, b) => a.label.localeCompare(b.label)),
         );
-        setBuyerOptions(
-          buyers.sort((a, b) => a.label.localeCompare(b.label))
-        );
+        setBuyerOptions(buyers.sort((a, b) => a.label.localeCompare(b.label)));
       } catch (error) {
         toast.error("Failed to load data from the server.", error);
       }
@@ -149,8 +147,8 @@ const EditSellerDetails = ({ sellerId, onClose, onSave }) => {
   const handlePhoneChange = (id, value) => {
     setPhoneNumbers(
       phoneNumbers.map((phone) =>
-        phone.id === id ? { ...phone, value } : phone
-      )
+        phone.id === id ? { ...phone, value } : phone,
+      ),
     );
   };
 
@@ -164,7 +162,7 @@ const EditSellerDetails = ({ sellerId, onClose, onSave }) => {
 
   const handleEmailChange = (id, value) => {
     setEmails(
-      emails.map((email) => (email.id === id ? { ...email, value } : email))
+      emails.map((email) => (email.id === id ? { ...email, value } : email)),
     );
   };
 
@@ -186,7 +184,9 @@ const EditSellerDetails = ({ sellerId, onClose, onSave }) => {
       return;
     }
 
-    if (phoneNumbers.some((p) => p.value && !regexPatterns.mobile.test(p.value))) {
+    if (
+      phoneNumbers.some((p) => p.value && !regexPatterns.mobile.test(p.value))
+    ) {
       toast.error("Invalid phone number format.");
       return;
     }
@@ -215,7 +215,7 @@ const EditSellerDetails = ({ sellerId, onClose, onSave }) => {
     try {
       const response = await axios.put(
         `${apiBaseURL}/sellers/${sellerId}`,
-        payload
+        payload,
       );
       toast.success("Seller details updated successfully!");
       if (onSave) {
@@ -228,7 +228,7 @@ const EditSellerDetails = ({ sellerId, onClose, onSave }) => {
     } catch (error) {
       toast.error(
         error.response?.data?.message ||
-          "An error occurred while updating the form."
+          "An error occurred while updating the form.",
       );
     }
   };
@@ -393,14 +393,14 @@ const EditSellerDetails = ({ sellerId, onClose, onSave }) => {
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Buyers
             </label>
-              <DropdownSelector
-                fetchData={async () => buyerOptions}
-                options={buyerOptions}
-                placeholder="Select buyers"
-                isMulti
-                value={selectedBuyers}
-                onChange={(selected) => setSelectedBuyers(selected || [])}
-              />
+            <DropdownSelector
+              fetchData={async () => buyerOptions}
+              options={buyerOptions}
+              placeholder="Select buyers"
+              isMulti
+              value={selectedBuyers}
+              onChange={(selected) => setSelectedBuyers(selected || [])}
+            />
           </div>
 
           <div className="mt-6 flex justify-end">

@@ -9,21 +9,16 @@ import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
 import { FaUserTie } from "react-icons/fa";
 import regexPatterns from "../../../utils/regexPatterns/regexPatterns";
 
-const DataInput = lazy(() =>
-  import("../../../common/DataInput/DataInput")
+const DataInput = lazy(() => import("../../../common/DataInput/DataInput"));
+const DataDropdown = lazy(
+  () => import("../../../common/DataDropdown/DataDropdown"),
 );
-const DataDropdown = lazy(() =>
-  import("../../../common/DataDropdown/DataDropdown")
+const DropdownSelector = lazy(
+  () => import("../../../common/DropdownSelector/DropdownSelector"),
 );
-const DropdownSelector = lazy(() =>
-  import("../../../common/DropdownSelector/DropdownSelector")
-);
-const Buttons = lazy(() =>
-  import("../../../common/Buttons/Buttons")
-);
+const Buttons = lazy(() => import("../../../common/Buttons/Buttons"));
 
 const AddSellerDetails = () => {
-
   const [sellerName, setSellerName] = useState("");
   const [password, setPassword] = useState("");
 
@@ -31,9 +26,7 @@ const AddSellerDetails = () => {
     { id: Date.now(), value: "" },
   ]);
 
-  const [emails, setEmails] = useState([
-    { id: Date.now(), value: "" },
-  ]);
+  const [emails, setEmails] = useState([{ id: Date.now(), value: "" }]);
 
   const [commodityOptions, setCommodityOptions] = useState([]);
   const [companyOptions, setCompanyOptions] = useState([]);
@@ -54,16 +47,13 @@ const AddSellerDetails = () => {
   ];
 
   useEffect(() => {
-
     const fetchData = async () => {
       try {
-
-        const [commoditiesRes, companiesRes, buyersRes] =
-          await Promise.all([
-            axios.get("/commodities"),
-            axios.get("/seller-company"),
-            axios.get("/buyers"),
-          ]);
+        const [commoditiesRes, companiesRes, buyersRes] = await Promise.all([
+          axios.get("/commodities"),
+          axios.get("/seller-company"),
+          axios.get("/buyers"),
+        ]);
 
         const commodities = commoditiesRes.data.map((item) => ({
           value: item.name,
@@ -81,30 +71,20 @@ const AddSellerDetails = () => {
         }));
 
         setCommodityOptions(
-          commodities.sort((a, b) =>
-            a.label.localeCompare(b.label)
-          )
+          commodities.sort((a, b) => a.label.localeCompare(b.label)),
         );
 
         setCompanyOptions(
-          companies.sort((a, b) =>
-            a.label.localeCompare(b.label)
-          )
+          companies.sort((a, b) => a.label.localeCompare(b.label)),
         );
 
-        setBuyerOptions(
-          buyers.sort((a, b) =>
-            a.label.localeCompare(b.label)
-          )
-        );
-
+        setBuyerOptions(buyers.sort((a, b) => a.label.localeCompare(b.label)));
       } catch (error) {
         toast.error("Failed to load data from server.");
       }
     };
 
     fetchData();
-
   }, []);
 
   const handleCommodityChange = (selected) => {
@@ -119,44 +99,30 @@ const AddSellerDetails = () => {
   };
 
   const addPhoneNumber = () => {
-    setPhoneNumbers((prev) => [
-      ...prev,
-      { id: Date.now(), value: "" },
-    ]);
+    setPhoneNumbers((prev) => [...prev, { id: Date.now(), value: "" }]);
   };
 
   const removePhoneNumber = (id) => {
-    setPhoneNumbers((prev) =>
-      prev.filter((phone) => phone.id !== id)
-    );
+    setPhoneNumbers((prev) => prev.filter((phone) => phone.id !== id));
   };
 
   const handlePhoneChange = (id, value) => {
     setPhoneNumbers((prev) =>
-      prev.map((phone) =>
-        phone.id === id ? { ...phone, value } : phone
-      )
+      prev.map((phone) => (phone.id === id ? { ...phone, value } : phone)),
     );
   };
 
   const addEmail = () => {
-    setEmails((prev) => [
-      ...prev,
-      { id: Date.now(), value: "" },
-    ]);
+    setEmails((prev) => [...prev, { id: Date.now(), value: "" }]);
   };
 
   const removeEmail = (id) => {
-    setEmails((prev) =>
-      prev.filter((email) => email.id !== id)
-    );
+    setEmails((prev) => prev.filter((email) => email.id !== id));
   };
 
   const handleEmailChange = (id, value) => {
     setEmails((prev) =>
-      prev.map((email) =>
-        email.id === id ? { ...email, value } : email
-      )
+      prev.map((email) => (email.id === id ? { ...email, value } : email)),
     );
   };
 
@@ -165,21 +131,19 @@ const AddSellerDetails = () => {
   };
 
   const handleSubmit = async () => {
-
     if (!sellerName || !password) {
       toast.error("Seller name and password required.");
       return;
     }
 
-    if (
-      phoneNumbers.some((p) => !p.value) ||
-      emails.some((e) => !e.value)
-    ) {
+    if (phoneNumbers.some((p) => !p.value) || emails.some((e) => !e.value)) {
       toast.error("Fill all phone numbers and emails.");
       return;
     }
 
-    if (phoneNumbers.some((p) => p.value && !regexPatterns.mobile.test(p.value))) {
+    if (
+      phoneNumbers.some((p) => p.value && !regexPatterns.mobile.test(p.value))
+    ) {
       toast.error("Invalid phone number format.");
       return;
     }
@@ -210,24 +174,17 @@ const AddSellerDetails = () => {
     };
 
     try {
-
       await axios.post(`${apiBaseURL}/sellers`, payload);
 
       toast.success("Seller added successfully");
 
       resetForm();
-
     } catch (error) {
-
-      toast.error(
-        error.response?.data?.message ||
-          "Error submitting form"
-      );
+      toast.error(error.response?.data?.message || "Error submitting form");
     }
   };
 
   const resetForm = () => {
-
     setSellerName("");
     setPassword("");
 
@@ -277,142 +234,115 @@ const AddSellerDetails = () => {
               </div>
             </div>
 
-          {phoneNumbers.map((phone, index) => (
-            <div
-              key={phone.id}
-              className="flex items-center gap-3 mt-4"
-            >
-              <DataInput
-                placeholder={`Phone ${index + 1}`}
-                value={phone.value}
-                inputType="number"
-                onChange={(e) =>
-                  handlePhoneChange(
-                    phone.id,
-                    e.target.value
-                  )
-                }
-              />
-
-              {index === phoneNumbers.length - 1 && (
-                <FaPlusCircle
-                  onClick={addPhoneNumber}
-                  className="text-green-500 cursor-pointer"
+            {phoneNumbers.map((phone, index) => (
+              <div key={phone.id} className="flex items-center gap-3 mt-4">
+                <DataInput
+                  placeholder={`Phone ${index + 1}`}
+                  value={phone.value}
+                  inputType="number"
+                  onChange={(e) => handlePhoneChange(phone.id, e.target.value)}
                 />
-              )}
 
-              {index > 0 && (
-                <FaMinusCircle
-                  onClick={() =>
-                    removePhoneNumber(phone.id)
+                {index === phoneNumbers.length - 1 && (
+                  <FaPlusCircle
+                    onClick={addPhoneNumber}
+                    className="text-green-500 cursor-pointer"
+                  />
+                )}
+
+                {index > 0 && (
+                  <FaMinusCircle
+                    onClick={() => removePhoneNumber(phone.id)}
+                    className="text-red-500 cursor-pointer"
+                  />
+                )}
+              </div>
+            ))}
+
+            {emails.map((email, index) => (
+              <div key={email.id} className="flex items-center gap-3 mt-3">
+                <DataInput
+                  placeholder={`Email ${index + 1}`}
+                  value={email.value}
+                  onChange={(e) => handleEmailChange(email.id, e.target.value)}
+                />
+
+                {index === emails.length - 1 && (
+                  <FaPlusCircle
+                    onClick={addEmail}
+                    className="text-green-500 cursor-pointer"
+                  />
+                )}
+
+                {index > 0 && (
+                  <FaMinusCircle
+                    onClick={() => removeEmail(email.id)}
+                    className="text-red-500 cursor-pointer"
+                  />
+                )}
+              </div>
+            ))}
+
+            <div className="mt-4">
+              <DataDropdown
+                options={commodityOptions}
+                value={selectedCommodity}
+                isMulti
+                placeholder="Select Commodities"
+                onChange={handleCommodityChange}
+              />
+            </div>
+
+            {selectedCommodity.map((c) => (
+              <div key={c.value} className="mt-3">
+                <DataInput
+                  placeholder={`Brokerage for ${c.label}`}
+                  value={brokerageAmounts[c.value] || ""}
+                  onChange={(e) =>
+                    handleBrokerageChange(c.value, e.target.value)
                   }
-                  className="text-red-500 cursor-pointer"
                 />
-              )}
-            </div>
-          ))}
+              </div>
+            ))}
 
-          {emails.map((email, index) => (
-            <div
-              key={email.id}
-              className="flex items-center gap-3 mt-3"
-            >
-              <DataInput
-                placeholder={`Email ${index + 1}`}
-                value={email.value}
-                onChange={(e) =>
-                  handleEmailChange(
-                    email.id,
-                    e.target.value
-                  )
-                }
-              />
-
-              {index === emails.length - 1 && (
-                <FaPlusCircle
-                  onClick={addEmail}
-                  className="text-green-500 cursor-pointer"
-                />
-              )}
-
-              {index > 0 && (
-                <FaMinusCircle
-                  onClick={() =>
-                    removeEmail(email.id)
-                  }
-                  className="text-red-500 cursor-pointer"
-                />
-              )}
-            </div>
-          ))}
-
-          <div className="mt-4">
-            <DataDropdown
-              options={commodityOptions}
-              value={selectedCommodity}
-              isMulti
-              placeholder="Select Commodities"
-              onChange={handleCommodityChange}
-            />
-          </div>
-
-          {selectedCommodity.map((c) => (
-            <div key={c.value} className="mt-3">
-              <DataInput
-                placeholder={`Brokerage for ${c.label}`}
-                value={brokerageAmounts[c.value] || ""}
-                onChange={(e) =>
-                  handleBrokerageChange(
-                    c.value,
-                    e.target.value
-                  )
-                }
+            <div className="mt-4">
+              <DataDropdown
+                options={companyOptions}
+                value={selectedCompany}
+                isMulti
+                placeholder="Select Companies"
+                onChange={handleCompanyChange}
               />
             </div>
-          ))}
 
-          <div className="mt-4">
-            <DataDropdown
-              options={companyOptions}
-              value={selectedCompany}
-              isMulti
-              placeholder="Select Companies"
-              onChange={handleCompanyChange}
-            />
-          </div>
+            <div className="mt-4">
+              <DropdownSelector
+                options={buyerOptions}
+                value={selectedBuyers}
+                isMulti
+                placeholder="Select Buyers"
+                onChange={(selected) => setSelectedBuyers(selected || [])}
+              />
+            </div>
 
-          <div className="mt-4">
-            <DropdownSelector
-              options={buyerOptions}
-              value={selectedBuyers}
-              isMulti
-              placeholder="Select Buyers"
-              onChange={(selected) =>
-                setSelectedBuyers(selected || [])
-              }
-            />
-          </div>
+            <div className="mt-4">
+              <DataDropdown
+                options={statusOptions}
+                value={selectedStatus}
+                placeholder="Select Status"
+                onChange={(selected) => setSelectedStatus(selected)}
+              />
+            </div>
 
-          <div className="mt-4">
-            <DataDropdown
-              options={statusOptions}
-              value={selectedStatus}
-              placeholder="Select Status"
-              onChange={(selected) =>
-                setSelectedStatus(selected)
-              }
-            />
+            <div className="mt-6 flex justify-end">
+              <Buttons
+                label="Submit"
+                onClick={handleSubmit}
+                variant="primary"
+                size="lg"
+              />
+            </div>
           </div>
-
-          <div className="mt-6 flex justify-end">
-            <Buttons
-              label="Submit"
-              onClick={handleSubmit}
-              variant="primary"
-              size="lg"
-            />
-          </div>
-        </div>
 
           <ToastContainer />
         </div>

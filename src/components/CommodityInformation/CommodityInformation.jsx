@@ -1,9 +1,16 @@
-import { useEffect, useState, useMemo, lazy, Suspense, useCallback } from "react";
+import {
+  useEffect,
+  useState,
+  useMemo,
+  lazy,
+  Suspense,
+  useCallback,
+} from "react";
 import PropTypes from "prop-types";
 import axios from "axios";
 import Loading from "../../common/Loading/Loading";
-const DataDropdown = lazy(() =>
-  import("../../common/DataDropdown/DataDropdown")
+const DataDropdown = lazy(
+  () => import("../../common/DataDropdown/DataDropdown"),
 );
 const DataInput = lazy(() => import("../../common/DataInput/DataInput"));
 const Tables = lazy(() => import("../../common/Tables/Tables"));
@@ -23,7 +30,7 @@ const CommodityInformation = ({
       try {
         const { data } = await axios.get("/companies");
         const companyData = data.find(
-          (company) => company.companyName === selectedCompany
+          (company) => company.companyName === selectedCompany,
         );
 
         if (companyData) {
@@ -47,7 +54,9 @@ const CommodityInformation = ({
   useEffect(() => {
     if (commodities.length > 0 && formData.commodity && !selectedCommodity) {
       setSelectedCommodity(formData.commodity);
-      const commodity = commodities.find((item) => item.name === formData.commodity);
+      const commodity = commodities.find(
+        (item) => item.name === formData.commodity,
+      );
       if (commodity) {
         setParameters(commodity.parameters || []);
       }
@@ -62,14 +71,16 @@ const CommodityInformation = ({
       const commodity = commodities.find((item) => item.name === commodityName);
       const updatedParameters = commodity?.parameters || [];
 
-      const rawBrokerage = brokerageMap ? brokerageMap[commodityName] : undefined;
+      const rawBrokerage = brokerageMap
+        ? brokerageMap[commodityName]
+        : undefined;
       const updatedBrokerage =
         typeof rawBrokerage === "number" && !Number.isNaN(rawBrokerage)
           ? rawBrokerage
           : 0;
 
       const companyData = commodities.find(
-        (commodity) => commodity.companyName === selectedCompany
+        (commodity) => commodity.companyName === selectedCompany,
       );
       const companyEmail = companyData?.companyEmail || "";
 
@@ -100,7 +111,7 @@ const CommodityInformation = ({
 
       handleChange("parameters", parametersWithIdAndValue);
     },
-    [parameters, handleChange]
+    [parameters, handleChange],
   );
 
   const commodityOptions = useMemo(
@@ -109,7 +120,7 @@ const CommodityInformation = ({
         value: commodity.name,
         label: commodity.name,
       })),
-    [commodities]
+    [commodities],
   );
 
   const headers = useMemo(() => ["Quality Parameter", "Value in %"], []);
@@ -125,7 +136,7 @@ const CommodityInformation = ({
           onChange={(e) => onParameterChange(index, e.target.value)}
         />,
       ]),
-    [parameters, onParameterChange]
+    [parameters, onParameterChange],
   );
 
   return (
@@ -143,7 +154,7 @@ const CommodityInformation = ({
             options={commodityOptions}
             selectedOptions={
               commodityOptions.find(
-                ({ value }) => value === selectedCommodity
+                ({ value }) => value === selectedCommodity,
               ) || null
             }
             onChange={onCommodityChange}

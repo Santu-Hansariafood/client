@@ -17,8 +17,8 @@ router.get("/", async (req, res) => {
           { gstNo: { $regex: search, $options: "i" } },
           { panNo: { $regex: search, $options: "i" } },
           { address: { $regex: search, $options: "i" } },
-          { "bankDetails.accountNumber": { $regex: search, $options: "i" } }
-        ]
+          { "bankDetails.accountNumber": { $regex: search, $options: "i" } },
+        ],
       };
     }
 
@@ -32,7 +32,9 @@ router.get("/", async (req, res) => {
       return res.json({ data: items, total });
     }
 
-    const items = await SellerCompany.find(query).sort({ companyName: 1 }).lean();
+    const items = await SellerCompany.find(query)
+      .sort({ companyName: 1 })
+      .lean();
     res.json({ data: items, total: items.length });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -47,8 +49,8 @@ router.post("/", async (req, res) => {
       typeof body.bankDetails === "string"
         ? JSON.parse(body.bankDetails || "[]")
         : Array.isArray(body.bankDetails)
-        ? body.bankDetails
-        : [];
+          ? body.bankDetails
+          : [];
 
     const company = await SellerCompany.create({
       companyName: body.companyName,
@@ -67,8 +69,8 @@ router.post("/", async (req, res) => {
         accountNumber: b.accountNumber,
         ifscCode: b.ifscCode,
         branchName: b.branchName,
-        bankName: b.bankName
-      }))
+        bankName: b.bankName,
+      })),
     });
 
     res.status(201).json(company);
@@ -85,8 +87,8 @@ router.put("/:id", async (req, res) => {
       typeof body.bankDetails === "string"
         ? JSON.parse(body.bankDetails || "[]")
         : Array.isArray(body.bankDetails)
-        ? body.bankDetails
-        : [];
+          ? body.bankDetails
+          : [];
 
     const updated = await SellerCompany.findByIdAndUpdate(
       req.params.id,
@@ -107,10 +109,10 @@ router.put("/:id", async (req, res) => {
           accountNumber: b.accountNumber,
           ifscCode: b.ifscCode,
           branchName: b.branchName,
-          bankName: b.bankName
-        }))
+          bankName: b.bankName,
+        })),
       },
-      { new: true, runValidators: true }
+      { new: true, runValidators: true },
     ).lean();
 
     if (!updated) {
@@ -136,4 +138,3 @@ router.delete("/:id", async (req, res) => {
 });
 
 export default router;
-

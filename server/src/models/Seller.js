@@ -1,7 +1,5 @@
 import mongoose from "mongoose";
 
-/* ------------------ Helpers ------------------ */
-
 const formatName = (name) => {
   if (!name) return name;
   return name
@@ -14,7 +12,9 @@ const formatPhone = (phone) => {
   if (!phone) return phone;
   const re = /^(?:\+91|0)?[6-9]\d{9}$/;
   if (!re.test(phone)) {
-    throw new Error("Invalid phone number format. Must be 10 digits with optional +91 or 0 prefix.");
+    throw new Error(
+      "Invalid phone number format. Must be 10 digits with optional +91 or 0 prefix.",
+    );
   }
   return phone;
 };
@@ -34,7 +34,7 @@ const phoneSchema = new mongoose.Schema(
       set: formatPhone,
     },
   },
-  { _id: false }
+  { _id: false },
 );
 
 const emailSchema = new mongoose.Schema(
@@ -46,7 +46,7 @@ const emailSchema = new mongoose.Schema(
       trim: true,
     },
   },
-  { _id: false }
+  { _id: false },
 );
 
 const commoditySchema = new mongoose.Schema(
@@ -54,14 +54,14 @@ const commoditySchema = new mongoose.Schema(
     name: { type: String, required: true },
     brokerage: { type: Number, default: 0 },
   },
-  { _id: false }
+  { _id: false },
 );
 
 const buyerSchema = new mongoose.Schema(
   {
     name: { type: String, set: formatName },
   },
-  { _id: false }
+  { _id: false },
 );
 
 /* ------------------ Seller Schema ------------------ */
@@ -113,7 +113,7 @@ const sellerSchema = new mongoose.Schema(
       default: "active",
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 sellerSchema.index({ sellerName: 1 });

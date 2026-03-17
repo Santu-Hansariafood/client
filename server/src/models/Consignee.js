@@ -5,21 +5,24 @@ const consigneeSchema = new mongoose.Schema(
     name: {
       type: String,
       required: true,
-      trim: true
+      trim: true,
     },
 
     phone: {
       type: String,
       required: true,
       trim: true,
-      match: [/^(?:\+91|0)?[6-9]\d{9}$/, "Please enter a valid Indian mobile number"]
+      match: [
+        /^(?:\+91|0)?[6-9]\d{9}$/,
+        "Please enter a valid Indian mobile number",
+      ],
     },
 
     email: {
       type: String,
       trim: true,
       lowercase: true,
-      match: [/^[^\s@]+@[^\s@]+\.[^\s@]+$/, "Please enter a valid email"]
+      match: [/^[^\s@]+@[^\s@]+\.[^\s@]+$/, "Please enter a valid email"],
     },
 
     gst: {
@@ -28,70 +31,66 @@ const consigneeSchema = new mongoose.Schema(
       uppercase: true,
       match: [
         /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[A-Z0-9]{1}[Z]{1}[A-Z0-9]{1}$/,
-        "Invalid GST number"
-      ]
+        "Invalid GST number",
+      ],
     },
 
     pan: {
       type: String,
       trim: true,
       uppercase: true,
-      match: [
-        /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/,
-        "Invalid PAN number"
-      ]
+      match: [/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/, "Invalid PAN number"],
     },
 
     state: {
       type: String,
-      trim: true
+      trim: true,
     },
 
     district: {
       type: String,
-      trim: true
+      trim: true,
     },
 
     location: {
       type: String,
-      trim: true
+      trim: true,
     },
 
     pin: {
       type: String,
       trim: true,
-      match: [/^[1-9][0-9]{5}$/, "Invalid PIN code"]
+      match: [/^[1-9][0-9]{5}$/, "Invalid PIN code"],
     },
 
     contactPerson: {
       type: String,
-      trim: true
+      trim: true,
     },
 
     mandiLicense: {
       type: String,
-      trim: true
+      trim: true,
     },
 
     activeStatus: {
       type: String,
       enum: ["active", "inactive"],
-      default: "active"
-    }
+      default: "active",
+    },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 function formatName(name) {
   return name
     .toLowerCase()
     .split(" ")
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
     .join(" ");
 }
 
 consigneeSchema.pre("save", function (next) {
-
   if (this.name) {
     this.name = formatName(this.name);
   }

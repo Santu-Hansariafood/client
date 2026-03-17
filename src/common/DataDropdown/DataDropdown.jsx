@@ -72,8 +72,8 @@ const DataDropdown = ({
               backgroundColor: state.isSelected
                 ? "#16a34a"
                 : state.isFocused
-                ? "#dcfce7"
-                : "#ffffff",
+                  ? "#dcfce7"
+                  : "#ffffff",
               color: state.isSelected ? "#ffffff" : "#1e293b",
               padding: "10px 14px",
               fontWeight: state.isSelected ? 600 : 500,
@@ -129,7 +129,7 @@ DataDropdown.propTypes = {
     PropTypes.shape({
       value: PropTypes.string.isRequired,
       label: PropTypes.string.isRequired,
-    })
+    }),
   ).isRequired,
   selectedOptions: PropTypes.oneOfType([PropTypes.array, PropTypes.object]),
   onChange: PropTypes.func.isRequired,

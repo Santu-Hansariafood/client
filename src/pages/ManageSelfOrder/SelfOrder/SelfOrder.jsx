@@ -8,30 +8,31 @@ import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
 import { FaClipboardList } from "react-icons/fa";
 import regexPatterns from "../../../utils/regexPatterns/regexPatterns";
 
-const BuyerInformation = lazy(() =>
-  import("../../../components/BuyerInformation/BuyerInformation")
+const BuyerInformation = lazy(
+  () => import("../../../components/BuyerInformation/BuyerInformation"),
 );
-const CommodityInformation = lazy(() =>
-  import("../../../components/CommodityInformation/CommodityInformation")
+const CommodityInformation = lazy(
+  () => import("../../../components/CommodityInformation/CommodityInformation"),
 );
 const PODetails = lazy(() => import("../../../components/PODetails/PODetails"));
-const QuantityAndPricing = lazy(() =>
-  import("../../../components/QuantityPricing/QuantityPricing")
+const QuantityAndPricing = lazy(
+  () => import("../../../components/QuantityPricing/QuantityPricing"),
 );
-const SupplierInformation = lazy(() =>
-  import("../../../components/SupplierInformation/SupplierInformation")
+const SupplierInformation = lazy(
+  () => import("../../../components/SupplierInformation/SupplierInformation"),
 );
-const BrokerInformation = lazy(() =>
-  import("../../../components/BrokerInformation/BrokerInformation")
+const BrokerInformation = lazy(
+  () => import("../../../components/BrokerInformation/BrokerInformation"),
 );
-const NotesSection = lazy(() =>
-  import("../../../components/NotesSection/NotesSection")
+const NotesSection = lazy(
+  () => import("../../../components/NotesSection/NotesSection"),
 );
-const AdditionalInformation = lazy(() =>
-  import("../../../components/AdditionalInformation/AdditionalInformation")
+const AdditionalInformation = lazy(
+  () =>
+    import("../../../components/AdditionalInformation/AdditionalInformation"),
 );
-const LoadingStation = lazy(() =>
-  import("../../../components/LoadingStation/LoadingStation")
+const LoadingStation = lazy(
+  () => import("../../../components/LoadingStation/LoadingStation"),
 );
 const DataInput = lazy(() => import("../../../common/DataInput/DataInput"));
 
@@ -81,7 +82,7 @@ const SelfOrder = () => {
       const buyerBrokerageVal = _buyerBrokerageMap[formData.commodity] ?? 0;
 
       const supplierBrokerageItem = formData.supplierBrokerage?.find(
-        (b) => b.name === formData.commodity
+        (b) => b.name === formData.commodity,
       );
       const supplierBrokerageVal = supplierBrokerageItem?.brokerage ?? 0;
 
@@ -98,7 +99,12 @@ const SelfOrder = () => {
         }));
       }
     }
-  }, [formData.commodity, _buyerBrokerageMap, formData.supplierBrokerage, formData.buyerBrokerage]);
+  }, [
+    formData.commodity,
+    _buyerBrokerageMap,
+    formData.supplierBrokerage,
+    formData.buyerBrokerage,
+  ]);
 
   const API_BASE_URL = "/self-order";
 
@@ -135,7 +141,9 @@ const SelfOrder = () => {
       const supplierCommodities = formData.supplierBrokerage || []; // This comes from SupplierInformation.jsx
 
       const buyerHasCommodity = buyerCommodities.includes(formData.commodity);
-      const supplierHasCommodity = supplierCommodities.some(c => c.name === formData.commodity);
+      const supplierHasCommodity = supplierCommodities.some(
+        (c) => c.name === formData.commodity,
+      );
 
       if (!buyerHasCommodity) {
         errors.push(`Buyer does not deal in ${formData.commodity}.`);
@@ -145,17 +153,23 @@ const SelfOrder = () => {
       }
     }
 
-    if (formData.buyerEmails?.some(email => email.trim() && !regexPatterns.email.test(email.trim()))) {
+    if (
+      formData.buyerEmails?.some(
+        (email) => email.trim() && !regexPatterns.email.test(email.trim()),
+      )
+    ) {
       errors.push("Invalid buyer email format.");
     }
-    if (formData.sellerEmails?.some(email => email.trim() && !regexPatterns.email.test(email.trim()))) {
+    if (
+      formData.sellerEmails?.some(
+        (email) => email.trim() && !regexPatterns.email.test(email.trim()),
+      )
+    ) {
       errors.push("Invalid seller email format.");
     }
 
     if (errors.length > 0) {
-      errors.forEach((err) =>
-        toast.error(err, { position: "top-right" })
-      );
+      errors.forEach((err) => toast.error(err, { position: "top-right" }));
       return false;
     }
     return true;
@@ -180,17 +194,15 @@ const SelfOrder = () => {
         cd: Number(formData.cd) || 0,
         weight: formData.weight || "",
         buyerBrokerage: {
-          brokerageBuyer: Number(
-            formData.buyerBrokerage?.brokerageBuyer ?? 0
-          ) || 0,
-          brokerageSupplier: Number(
-            formData.buyerBrokerage?.brokerageSupplier ?? 0
-          ) || 0,
+          brokerageBuyer:
+            Number(formData.buyerBrokerage?.brokerageBuyer ?? 0) || 0,
+          brokerageSupplier:
+            Number(formData.buyerBrokerage?.brokerageSupplier ?? 0) || 0,
         },
       };
       console.log(
         "Final Payload being sent to API:",
-        JSON.stringify(payload, null, 2)
+        JSON.stringify(payload, null, 2),
       );
 
       await axios.post(API_BASE_URL, payload);
@@ -205,8 +217,13 @@ const SelfOrder = () => {
 
       setTimeout(() => navigate("/manage-order/list-self-order"), 2000);
     } catch (error) {
-      console.error("Self Order API Error:", error.response?.data || error.message);
-      toast.error(`Failed to create order: ${error.response?.data?.message || error.message}`);
+      console.error(
+        "Self Order API Error:",
+        error.response?.data || error.message,
+      );
+      toast.error(
+        `Failed to create order: ${error.response?.data?.message || error.message}`,
+      );
     } finally {
       setIsLoading(false);
     }
@@ -223,98 +240,106 @@ const SelfOrder = () => {
         noContentCard
       >
         <div className="max-w-4xl mx-auto space-y-6">
+          <div className={sectionClass}>
+            <BuyerInformation formData={formData} handleChange={handleChange} />
+          </div>
 
-        <div className={sectionClass}>
-          <BuyerInformation formData={formData} handleChange={handleChange} />
-        </div>
+          <div className={sectionClass}>
+            <CommodityInformation
+              handleChange={handleChange}
+              selectedCompany={formData.buyerCompany}
+              buyerCommodity={formData.buyerCommodity}
+              brokerageMap={_buyerBrokerageMap}
+              formData={formData}
+            />
+          </div>
 
-        <div className={sectionClass}>
-          <CommodityInformation
-            handleChange={handleChange}
-            selectedCompany={formData.buyerCompany}
-            buyerCommodity={formData.buyerCommodity}
-            brokerageMap={_buyerBrokerageMap}
-            formData={formData}
+          <div className={sectionClass}>
+            <PODetails formData={formData} handleChange={handleChange} />
+          </div>
+
+          <div className={sectionClass}>
+            <LoadingStation formData={formData} handleChange={handleChange} />
+          </div>
+
+          <div className={sectionClass}>
+            <QuantityAndPricing
+              formData={formData}
+              handleChange={handleChange}
+            />
+          </div>
+
+          <div className={sectionClass}>
+            <SupplierInformation
+              formData={formData}
+              handleChange={handleChange}
+            />
+          </div>
+
+          <div className={sectionClass}>
+            <BrokerInformation
+              formData={formData}
+              handleChange={(key, value) => {
+                if (key === "buyerBrokerage") {
+                  setFormData((prev) => ({
+                    ...prev,
+                    buyerBrokerage: { ...prev.buyerBrokerage, ...value },
+                  }));
+                } else {
+                  handleChange(key, value);
+                }
+              }}
+            />
+          </div>
+
+          <div className={sectionClass}>
+            <NotesSection
+              notes={formData.notes}
+              setNotes={(updatedNotes) => handleChange("notes", updatedNotes)}
+            />
+          </div>
+
+          <div className={sectionClass}>
+            <AdditionalInformation
+              formData={formData}
+              handleChange={handleChange}
+            />
+          </div>
+
+          <div className={sectionClass}>
+            <h3 className="text-base font-semibold text-slate-800 dark:text-slate-100 mb-4">
+              Sauda Number
+            </h3>
+            <DataInput
+              placeholder="Enter Sauda No"
+              value={formData.saudaNo}
+              onChange={(e) => handleChange("saudaNo", e.target.value)}
+              name="saudaNo"
+              inputType="text"
+              size="md"
+            />
+          </div>
+
+          <button
+            onClick={handleSubmit}
+            className="w-full py-3.5 rounded-xl font-semibold bg-emerald-600 text-white hover:bg-emerald-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-offset-2"
+            disabled={isLoading}
+          >
+            {isLoading ? "Submitting..." : "Submit Order"}
+          </button>
+
+          <ToastContainer
+            position="top-right"
+            autoClose={5000}
+            hideProgressBar={false}
+            newestOnTop
+            closeOnClick
+            rtl={false}
+            pauseOnFocusLoss
+            draggable
+            pauseOnHover
+            style={{ zIndex: 9999 }}
           />
-        </div>
-
-        <div className={sectionClass}>
-          <PODetails formData={formData} handleChange={handleChange} />
-        </div>
-
-        <div className={sectionClass}>
-          <LoadingStation formData={formData} handleChange={handleChange} />
-        </div>
-
-        <div className={sectionClass}>
-          <QuantityAndPricing formData={formData} handleChange={handleChange} />
-        </div>
-
-        <div className={sectionClass}>
-          <SupplierInformation formData={formData} handleChange={handleChange} />
-        </div>
-
-        <div className={sectionClass}>
-          <BrokerInformation
-            formData={formData}
-            handleChange={(key, value) => {
-              if (key === "buyerBrokerage") {
-                setFormData((prev) => ({
-                  ...prev,
-                  buyerBrokerage: { ...prev.buyerBrokerage, ...value },
-                }));
-              } else {
-                handleChange(key, value);
-              }
-            }}
-          />
-        </div>
-
-        <div className={sectionClass}>
-          <NotesSection
-            notes={formData.notes}
-            setNotes={(updatedNotes) => handleChange("notes", updatedNotes)}
-          />
-        </div>
-
-        <div className={sectionClass}>
-          <AdditionalInformation formData={formData} handleChange={handleChange} />
-        </div>
-
-        <div className={sectionClass}>
-          <h3 className="text-base font-semibold text-slate-800 dark:text-slate-100 mb-4">
-            Sauda Number
-          </h3>
-          <DataInput
-            placeholder="Enter Sauda No"
-            value={formData.saudaNo}
-            onChange={(e) => handleChange("saudaNo", e.target.value)}
-            name="saudaNo"
-            inputType="text"
-            size="md"
-          />
-        </div>
-
-        <button
-          onClick={handleSubmit}
-          className="w-full py-3.5 rounded-xl font-semibold bg-emerald-600 text-white hover:bg-emerald-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-offset-2"
-          disabled={isLoading}
-        >
-          {isLoading ? "Submitting..." : "Submit Order"}
-        </button>
-
-        <ToastContainer
-          position="top-right"
-          autoClose={5000}
-          hideProgressBar={false}
-          newestOnTop
-          closeOnClick
-          rtl={false}
-          pauseOnFocusLoss
-          draggable
-          pauseOnHover
-          style={{ zIndex: 9999 }}
-        />
         </div>
       </AdminPageShell>
     </Suspense>

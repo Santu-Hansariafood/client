@@ -71,28 +71,23 @@ const styles = StyleSheet.create({
 });
 const SaudaHeader = () => (
   <View style={styles.header} fixed>
-
     <View style={styles.row}>
-
       <View style={styles.logoBox}>
         <Image src={logo} style={styles.logo} />
       </View>
 
       <View style={styles.companyBox}>
-        <Text style={styles.companyName}>
-          HANSARIA FOOD PRIVATE LIMITED
-        </Text>
+        <Text style={styles.companyName}>HANSARIA FOOD PRIVATE LIMITED</Text>
 
         <Text style={styles.products}>
           MAIZE | SOYABEAN DOC | MDOC | DDGS | DORB | RICE
         </Text>
 
         <Text style={styles.address}>
-          Primarc Square, Plot No.1, Salt Lake Bypass, LA Block,
-          Sector 3, Bidhannagar, Kolkata – 700106
+          Primarc Square, Plot No.1, Salt Lake Bypass, LA Block, Sector 3,
+          Bidhannagar, Kolkata – 700106
         </Text>
       </View>
-
     </View>
 
     <View style={styles.divider} />
@@ -100,7 +95,6 @@ const SaudaHeader = () => (
     <View style={styles.saudaBox}>
       <Text style={styles.saudaTitle}>SAUDA AGREEMENT</Text>
     </View>
-
   </View>
 );
 

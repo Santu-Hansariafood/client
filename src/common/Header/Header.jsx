@@ -6,7 +6,12 @@ import { IoClose } from "react-icons/io5";
 import PWAInstall from "../PWAInstall/PWAInstall";
 import Typewriter from "../Typewriter/Typewriter";
 
-const Header = ({ onLogoutClick, showMenuButton, onMenuClick, isSidebarOpen }) => {
+const Header = ({
+  onLogoutClick,
+  showMenuButton,
+  onMenuClick,
+  isSidebarOpen,
+}) => {
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef(null);
 
@@ -50,7 +55,10 @@ const Header = ({ onLogoutClick, showMenuButton, onMenuClick, isSidebarOpen }) =
           <Typewriter text={title} speed={80} />
         </h2>
       </div>
-      <div className="flex items-center gap-1.5 sm:gap-3 shrink-0" ref={dropdownRef}>
+      <div
+        className="flex items-center gap-1.5 sm:gap-3 shrink-0"
+        ref={dropdownRef}
+      >
         <div className="hidden md:flex items-center">
           <PWAInstall />
         </div>
@@ -63,9 +71,14 @@ const Header = ({ onLogoutClick, showMenuButton, onMenuClick, isSidebarOpen }) =
             aria-haspopup="true"
           >
             <div className="w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10 rounded-full bg-emerald-700 grid place-items-center ring-1.5 sm:ring-2 ring-amber-300/70 shrink-0">
-              <AiOutlineUser size={18} className="sm:w-[20px] sm:h-[20px] md:w-[22px] md:h-[22px]" />
+              <AiOutlineUser
+                size={18}
+                className="sm:w-[20px] sm:h-[20px] md:w-[22px] md:h-[22px]"
+              />
             </div>
-            <span className="hidden sm:inline text-xs sm:text-sm">{profile}</span>
+            <span className="hidden sm:inline text-xs sm:text-sm">
+              {profile}
+            </span>
           </button>
           {showDropdown && (
             <div className="absolute right-0 mt-2 w-40 sm:w-48 bg-white border border-slate-200 rounded-xl shadow-xl overflow-hidden">

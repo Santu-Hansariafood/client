@@ -11,7 +11,7 @@ const generateCaptcha = () => {
   const chars =
     "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
   const captchaText = Array.from({ length: 6 }, () =>
-    chars.charAt(Math.floor(Math.random() * chars.length))
+    chars.charAt(Math.floor(Math.random() * chars.length)),
   ).join("");
 
   const colors = [
@@ -73,7 +73,7 @@ const generateCaptcha = () => {
           transform="rotate(${Math.random() * 15 - 7}, ${10 + index * 20}, 35)"
         >
           ${char}
-        </text>`
+        </text>`,
         )
         .join("")}
     </svg>`;

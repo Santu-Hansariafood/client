@@ -3,8 +3,8 @@ import PropTypes from "prop-types";
 import axios from "axios";
 import { toast } from "react-toastify";
 const DataInput = lazy(() => import("../../common/DataInput/DataInput"));
-const DataDropdown = lazy(() =>
-  import("../../common/DataDropdown/DataDropdown")
+const DataDropdown = lazy(
+  () => import("../../common/DataDropdown/DataDropdown"),
 );
 
 const API_URL = "/agents";
@@ -37,11 +37,12 @@ const BrokerInformation = ({ formData, handleChange }) => {
   }, []);
 
   const supplierBrokerage = formData.supplierBrokerage?.find(
-    (b) => b.name === formData.commodity
+    (b) => b.name === formData.commodity,
   )?.brokerage;
 
   const buyerBrokerageVal = formData.buyerBrokerage?.brokerageBuyer;
-  const supplierBrokerageVal = supplierBrokerage ?? formData.buyerBrokerage?.brokerageSupplier;
+  const supplierBrokerageVal =
+    supplierBrokerage ?? formData.buyerBrokerage?.brokerageSupplier;
 
   return (
     <>
@@ -50,7 +51,9 @@ const BrokerInformation = ({ formData, handleChange }) => {
       </label>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <div>
-          <label className="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-1">Broker</label>
+          <label className="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-1">
+            Broker
+          </label>
           <DataInput
             placeholder="Broker"
             value="Hansaria Food Private Limited"
@@ -58,7 +61,9 @@ const BrokerInformation = ({ formData, handleChange }) => {
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-1">Agent Name</label>
+          <label className="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-1">
+            Agent Name
+          </label>
           {loading ? (
             <p className="text-sm text-slate-500 py-3">Loading agents...</p>
           ) : (
@@ -79,7 +84,11 @@ const BrokerInformation = ({ formData, handleChange }) => {
           <DataInput
             placeholder="₹ 0"
             inputType="text"
-            value={buyerBrokerageVal !== undefined && buyerBrokerageVal !== "" ? `₹ ${buyerBrokerageVal}` : ""}
+            value={
+              buyerBrokerageVal !== undefined && buyerBrokerageVal !== ""
+                ? `₹ ${buyerBrokerageVal}`
+                : ""
+            }
             readOnly
           />
         </div>
@@ -90,7 +99,11 @@ const BrokerInformation = ({ formData, handleChange }) => {
           <DataInput
             placeholder="₹ 0"
             inputType="text"
-            value={supplierBrokerageVal !== undefined && supplierBrokerageVal !== "" ? `₹ ${supplierBrokerageVal}` : ""}
+            value={
+              supplierBrokerageVal !== undefined && supplierBrokerageVal !== ""
+                ? `₹ ${supplierBrokerageVal}`
+                : ""
+            }
             readOnly
           />
         </div>
@@ -103,10 +116,7 @@ BrokerInformation.propTypes = {
   formData: PropTypes.shape({
     agentName: PropTypes.string,
     buyerBrokerage: PropTypes.shape({
-      brokerageBuyer: PropTypes.oneOfType([
-        PropTypes.string,
-        PropTypes.number,
-      ]),
+      brokerageBuyer: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
       brokerageSupplier: PropTypes.oneOfType([
         PropTypes.string,
         PropTypes.number,
@@ -115,11 +125,8 @@ BrokerInformation.propTypes = {
     supplierBrokerage: PropTypes.arrayOf(
       PropTypes.shape({
         name: PropTypes.string.isRequired,
-        brokerage: PropTypes.oneOfType([
-          PropTypes.string,
-          PropTypes.number,
-        ]),
-      })
+        brokerage: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+      }),
     ),
     commodity: PropTypes.string,
   }).isRequired,

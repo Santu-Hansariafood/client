@@ -69,7 +69,7 @@ const SaudaDetails = ({ data }) => {
           district || ""
         }${district && (state || pinNo) ? ", " : ""}${state || ""}${
           state && pinNo ? " - " : ""
-        }${pinNo || ""}`
+        }${pinNo || ""}`,
       );
     }
     if (panNo) parts.push(`PAN No: ${panNo}`);
@@ -77,18 +77,12 @@ const SaudaDetails = ({ data }) => {
 
     if (parts.length === 0) return null;
 
-    return (
-      <Text style={styles.addressDetails}>
-        {"\n" + parts.join("\n")}
-      </Text>
-    );
+    return <Text style={styles.addressDetails}>{"\n" + parts.join("\n")}</Text>;
   };
 
   return (
     <View style={styles.section}>
-
       <View style={styles.headerRow}>
-
         <View style={styles.headerItem}>
           <Text style={styles.label}>SAUDA NO</Text>
           <Text style={styles.saudaValue}>{data.saudaNo}</Text>
@@ -107,7 +101,6 @@ const SaudaDetails = ({ data }) => {
               .replace(/\//g, "-")}
           </Text>
         </View>
-
       </View>
 
       <View style={styles.grid}>

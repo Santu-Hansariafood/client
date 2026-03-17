@@ -6,9 +6,9 @@ const bankDetailSchema = new mongoose.Schema(
     accountNumber: { type: String, required: true },
     ifscCode: { type: String, required: true },
     branchName: { type: String, required: true },
-    bankName: { type: String, required: true }
+    bankName: { type: String, required: true },
   },
-  { _id: false }
+  { _id: false },
 );
 
 const sellerCompanySchema = new mongoose.Schema(
@@ -24,12 +24,11 @@ const sellerCompanySchema = new mongoose.Schema(
     district: { type: String, required: true, trim: true },
     pinNo: { type: String, default: "", trim: true },
     msmeNo: { type: String, default: "", trim: true },
-    bankDetails: { type: [bankDetailSchema], default: [] }
+    bankDetails: { type: [bankDetailSchema], default: [] },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 sellerCompanySchema.index({ companyName: 1 });
 
 export default mongoose.model("SellerCompany", sellerCompanySchema);
-

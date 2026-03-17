@@ -7,9 +7,9 @@ const Typewriter = ({ text, speed = 100, className = "", delay = 0 }) => {
 
   useEffect(() => {
     let timeout;
-    
+
     if (index < text.length) {
-      const waitTime = (index === 0 && delay > 0) ? delay : speed;
+      const waitTime = index === 0 && delay > 0 ? delay : speed;
       timeout = setTimeout(() => {
         setDisplayedText((prev) => prev + text[index]);
         setIndex((prev) => prev + 1);

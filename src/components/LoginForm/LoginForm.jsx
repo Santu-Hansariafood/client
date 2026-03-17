@@ -25,16 +25,22 @@ const LoginForm = () => {
 
   const roles = useMemo(
     () => ["Admin", "Employee", "Buyer", "Seller", "Transporter"],
-    []
+    [],
   );
 
   const handleLogin = async () => {
     if (!phoneNumber || !password) {
-      toast.error("Please enter valid credentials.", { position: "top-right", autoClose: 3000 });
+      toast.error("Please enter valid credentials.", {
+        position: "top-right",
+        autoClose: 3000,
+      });
       return;
     }
     if (!isCaptchaValid) {
-      toast.error("CAPTCHA is not valid.", { position: "top-right", autoClose: 3000 });
+      toast.error("CAPTCHA is not valid.", {
+        position: "top-right",
+        autoClose: 3000,
+      });
       return;
     }
 
@@ -76,15 +82,24 @@ const LoginForm = () => {
       });
 
       if (response.status === 200) {
-        login({ ...response.data, mobile: phoneNumber, role: userRole, token: response.data.token });
+        login({
+          ...response.data,
+          mobile: phoneNumber,
+          role: userRole,
+          token: response.data.token,
+        });
 
-        toast.success("Login successful!", { position: "top-right", autoClose: 3000 });
+        toast.success("Login successful!", {
+          position: "top-right",
+          autoClose: 3000,
+        });
 
         navigate(roleBasedRoutes[userRole] || "/dashboard", { replace: true });
       }
     } catch (error) {
       console.error("Login Error:", error);
-      const errorMsg = error.response?.data?.message || `Login failed: ${error.message}`;
+      const errorMsg =
+        error.response?.data?.message || `Login failed: ${error.message}`;
       toast.error(errorMsg, {
         position: "top-right",
         autoClose: 3000,
@@ -103,7 +118,7 @@ const LoginForm = () => {
             <Typewriter text={loginLable.title2} speed={80} delay={1000} />
           </span>
         </h2>
-        
+
         <div className="space-y-4 sm:space-y-5">
           <div>
             <label
@@ -149,7 +164,10 @@ const LoginForm = () => {
                 {showPassword ? (
                   <AiOutlineEye size={22} title={loginLable.show_title} />
                 ) : (
-                  <AiOutlineEyeInvisible size={22} title={loginLable.hide_title} />
+                  <AiOutlineEyeInvisible
+                    size={22}
+                    title={loginLable.hide_title}
+                  />
                 )}
               </button>
             </div>
@@ -186,8 +204,8 @@ const LoginForm = () => {
               onClick={handleLogin}
               disabled={loading}
               className={`w-full py-3.5 rounded-xl font-bold text-white shadow-lg transition-all transform active:scale-[0.98] ${
-                loading 
-                  ? "bg-emerald-400 cursor-not-allowed" 
+                loading
+                  ? "bg-emerald-400 cursor-not-allowed"
                   : "bg-emerald-600 hover:bg-emerald-700 hover:shadow-emerald-200"
               }`}
             >

@@ -2,8 +2,8 @@ import { useState, useEffect, lazy, Suspense } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
 const DataInput = lazy(() => import("../../../common/DataInput/DataInput"));
-const DataDropdown = lazy(() =>
-  import("../../../common/DataDropdown/DataDropdown")
+const DataDropdown = lazy(
+  () => import("../../../common/DataDropdown/DataDropdown"),
 );
 const Buttons = lazy(() => import("../../../common/Buttons/Buttons"));
 import stateCityData from "../../../data/state-city.json";
@@ -63,13 +63,13 @@ const AddConsignee = () => {
 
   const handleDropdownChange = (selectedOption, fieldName) => {
     setFormData((prev) => ({
-        ...prev,
-        [fieldName]: selectedOption ? selectedOption.value : "",
+      ...prev,
+      [fieldName]: selectedOption ? selectedOption.value : "",
     }));
 
     if (fieldName === "state") {
       const selectedState = stateCityData.find(
-        (entry) => entry.state === selectedOption.value
+        (entry) => entry.state === selectedOption.value,
       );
       const districts = selectedState
         ? selectedState.district.map((district) => ({
@@ -82,7 +82,6 @@ const AddConsignee = () => {
     }
   };
 
-  
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -128,7 +127,8 @@ const AddConsignee = () => {
       }
     } catch (error) {
       toast.error(
-        error.response?.data?.message || "Failed to add consignee. Please try again."
+        error.response?.data?.message ||
+          "Failed to add consignee. Please try again.",
       );
     }
   };
@@ -219,7 +219,7 @@ const AddConsignee = () => {
                 <DataDropdown
                   options={stateOptions}
                   selectedOptions={stateOptions.find(
-                    (option) => option.value === formData.state
+                    (option) => option.value === formData.state,
                   )}
                   onChange={(selected) =>
                     handleDropdownChange(selected, "state")
@@ -234,7 +234,7 @@ const AddConsignee = () => {
                 <DataDropdown
                   options={districtOptions}
                   selectedOptions={districtOptions.find(
-                    (option) => option.value === formData.district
+                    (option) => option.value === formData.district,
                   )}
                   onChange={(selected) =>
                     handleDropdownChange(selected, "district")
@@ -296,7 +296,7 @@ const AddConsignee = () => {
                 <DataDropdown
                   options={activeOptions}
                   selectedOptions={activeOptions.find(
-                    (option) => option.value === formData.activeStatus
+                    (option) => option.value === formData.activeStatus,
                   )}
                   onChange={(selected) =>
                     handleDropdownChange(selected, "activeStatus")

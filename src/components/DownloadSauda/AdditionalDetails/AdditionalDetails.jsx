@@ -99,7 +99,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#1a365d",
   },
-    signatureSection: {
+  signatureSection: {
     flexDirection: "row",
     justifyContent: "space-between",
     marginTop: 35,
@@ -117,7 +117,7 @@ const styles = StyleSheet.create({
     color: "#374151",
     fontWeight: "bold",
   },
-  
+
   footer: {
     marginTop: 10,
     textAlign: "center",
@@ -139,16 +139,20 @@ const AdditionalDetails = ({ data }) => (
       <View style={styles.gridItem}>
         <Text style={styles.label}>Delivery Date</Text>
         <Text style={styles.value}>
-          {data.deliveryDate 
-            ? new Date(data.deliveryDate).toLocaleDateString("en-GB").replace(/\//g, "-")
+          {data.deliveryDate
+            ? new Date(data.deliveryDate)
+                .toLocaleDateString("en-GB")
+                .replace(/\//g, "-")
             : "N/A"}
         </Text>
       </View>
       <View style={styles.gridItem}>
         <Text style={styles.label}>Loading Date</Text>
         <Text style={styles.value}>
-          {data.loadingDate 
-            ? new Date(data.loadingDate).toLocaleDateString("en-GB").replace(/\//g, "-")
+          {data.loadingDate
+            ? new Date(data.loadingDate)
+                .toLocaleDateString("en-GB")
+                .replace(/\//g, "-")
             : "N/A"}
         </Text>
       </View>
@@ -181,10 +185,10 @@ const AdditionalDetails = ({ data }) => (
       <Text style={styles.bankTitle}>Bank Account Details</Text>
       {data.supplierDetails?.bankDetails?.[0] ? (
         <Text style={styles.bankText}>
-          {data.supplierDetails.bankDetails[0].accountHolderName} | 
-          A/C: {data.supplierDetails.bankDetails[0].accountNumber} | 
-          IFSC: {data.supplierDetails.bankDetails[0].ifscCode} | 
-          Branch: {data.supplierDetails.bankDetails[0].branchName}
+          {data.supplierDetails.bankDetails[0].accountHolderName} | A/C:{" "}
+          {data.supplierDetails.bankDetails[0].accountNumber} | IFSC:{" "}
+          {data.supplierDetails.bankDetails[0].ifscCode} | Branch:{" "}
+          {data.supplierDetails.bankDetails[0].branchName}
         </Text>
       ) : (
         <Text style={styles.bankText}>Bank details not available</Text>
@@ -193,16 +197,22 @@ const AdditionalDetails = ({ data }) => (
 
     <View style={styles.brokerageSection}>
       <View style={styles.brokerageHeader}>
-        <Text style={styles.brokerText}>Broker: HANSARIA FOOD PRIVATE LIMITED</Text>
+        <Text style={styles.brokerText}>
+          Broker: HANSARIA FOOD PRIVATE LIMITED
+        </Text>
       </View>
       <View style={styles.brokerageRow}>
         <View style={styles.brokerageItem}>
           <Text style={styles.label}>Buyer Brokerage</Text>
-          <Text style={styles.value}>Rs. {data.buyerBrokerage?.brokerageBuyer ?? "N/A"} / TON</Text>
+          <Text style={styles.value}>
+            Rs. {data.buyerBrokerage?.brokerageBuyer ?? "N/A"} / TON
+          </Text>
         </View>
         <View style={[styles.brokerageItem, { borderRight: "none" }]}>
           <Text style={styles.label}>Supplier Brokerage</Text>
-          <Text style={styles.value}>Rs. {data.buyerBrokerage?.brokerageSupplier ?? "N/A"} / TON</Text>
+          <Text style={styles.value}>
+            Rs. {data.buyerBrokerage?.brokerageSupplier ?? "N/A"} / TON
+          </Text>
         </View>
       </View>
     </View>
@@ -221,7 +231,8 @@ const AdditionalDetails = ({ data }) => (
 
     <View style={styles.footer}>
       <Text style={styles.footerNote}>
-        * This is a computer-generated Sauda Agreement. No physical signature is required.
+        * This is a computer-generated Sauda Agreement. No physical signature is
+        required.
       </Text>
     </View>
   </View>

@@ -3,9 +3,9 @@ import mongoose from "mongoose";
 const buyerBrokerageSchema = new mongoose.Schema(
   {
     brokerageBuyer: { type: Number, default: 0 },
-    brokerageSupplier: { type: Number, default: 0 }
+    brokerageSupplier: { type: Number, default: 0 },
   },
-  { _id: false }
+  { _id: false },
 );
 
 const selfOrderSchema = new mongoose.Schema(
@@ -41,9 +41,9 @@ const selfOrderSchema = new mongoose.Schema(
     sendPOToBuyer: { type: String, default: "" },
     sendPOToSupplier: { type: String, default: "" },
     billTo: { type: String, default: "" },
-    saudaNo: { type: String, default: "" }
+    saudaNo: { type: String, default: "" },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 selfOrderSchema.index({ supplier: 1 });

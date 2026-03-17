@@ -23,14 +23,16 @@ const Cards = ({ title, count, icon: Icon, link, state }) => {
         >
           <Icon className="text-2xl" loading="lazy" aria-hidden="true" />
         </div>
-        <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-2 group-hover:text-emerald-700 transition-colors">{title}</h3>
-        <p className="text-4xl font-black text-slate-800 tracking-tight">{count}</p>
+        <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-2 group-hover:text-emerald-700 transition-colors">
+          {title}
+        </h3>
+        <p className="text-4xl font-black text-slate-800 tracking-tight">
+          {count}
+        </p>
       </div>
-      
-      <div
-        className="absolute bottom-0 right-0 w-32 h-32 bg-emerald-50 rounded-tl-[100px] -mr-16 -mb-16 group-hover:scale-150 transition-transform duration-500 opacity-50"
-      ></div>
-      
+
+      <div className="absolute bottom-0 right-0 w-32 h-32 bg-emerald-50 rounded-tl-[100px] -mr-16 -mb-16 group-hover:scale-150 transition-transform duration-500 opacity-50"></div>
+
       <div
         className="absolute top-8 right-8 p-3 bg-slate-50 rounded-2xl text-slate-400 
         group-hover:bg-emerald-600 group-hover:text-white group-hover:rotate-45 transition-all duration-300 shadow-sm"

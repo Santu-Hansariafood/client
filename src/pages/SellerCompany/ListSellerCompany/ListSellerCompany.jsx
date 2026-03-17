@@ -7,16 +7,16 @@ import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 const Tables = lazy(() => import("../../../common/Tables/Tables"));
-const Pagination = lazy(() =>
-  import("../../../common/Paginations/Paginations")
+const Pagination = lazy(
+  () => import("../../../common/Paginations/Paginations"),
 );
 const PopupBox = lazy(() => import("../../../common/PopupBox/PopupBox"));
 const Actions = lazy(() => import("../../../common/Actions/Actions"));
-const generatePDF = lazy(() =>
-  import("../../../common/GeneratePdf/GeneratePdf")
+const generatePDF = lazy(
+  () => import("../../../common/GeneratePdf/GeneratePdf"),
 );
-const EditSellerCompany = lazy(() =>
-  import("../EditSellerCompany/EditSellerCompany")
+const EditSellerCompany = lazy(
+  () => import("../EditSellerCompany/EditSellerCompany"),
 );
 
 const ListSellerCompany = () => {
@@ -39,8 +39,8 @@ const ListSellerCompany = () => {
           params: {
             page: currentPage,
             limit: itemsPerPage,
-            search: searchText
-          }
+            search: searchText,
+          },
         });
         setCompanies(response.data.data);
         setSearchResults(response.data.data);
@@ -84,11 +84,15 @@ const ListSellerCompany = () => {
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm("Are you sure you want to delete this seller company?")) {
+    if (
+      window.confirm("Are you sure you want to delete this seller company?")
+    ) {
       try {
         await axios.delete(`/seller-company/${id}`);
         setCompanies((prev) => prev.filter((company) => company._id !== id));
-        setSearchResults((prev) => prev.filter((company) => company._id !== id));
+        setSearchResults((prev) =>
+          prev.filter((company) => company._id !== id),
+        );
         setTotalItems((prev) => prev - 1);
         toast.success("Seller company deleted successfully!");
       } catch (err) {
@@ -126,7 +130,8 @@ const ListSellerCompany = () => {
       <div key={index} className="text-xs space-y-0.5 mb-2">
         <strong>Bank {index + 1}:</strong>
         <div>
-          <span className="font-semibold">Holder:</span> {bank.accountHolderName}
+          <span className="font-semibold">Holder:</span>{" "}
+          {bank.accountHolderName}
         </div>
         <div>
           <span className="font-semibold">Acc No:</span> {bank.accountNumber}
@@ -249,7 +254,7 @@ const ListSellerCompany = () => {
                         <strong>Bank Name:</strong> {bank.bankName}
                       </p>
                     </div>
-                  )
+                  ),
                 )}
                 <button
                   onClick={() => generatePDF(selectedCompany)}
@@ -271,13 +276,17 @@ const ListSellerCompany = () => {
                 onSave={(updatedCompany) => {
                   setCompanies((prev) =>
                     prev.map((company) =>
-                      company._id === updatedCompany._id ? updatedCompany : company
-                    )
+                      company._id === updatedCompany._id
+                        ? updatedCompany
+                        : company,
+                    ),
                   );
                   setSearchResults((prev) =>
                     prev.map((company) =>
-                      company._id === updatedCompany._id ? updatedCompany : company
-                    )
+                      company._id === updatedCompany._id
+                        ? updatedCompany
+                        : company,
+                    ),
                   );
                   setEditCompany(null);
                 }}

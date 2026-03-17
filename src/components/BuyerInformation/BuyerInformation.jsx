@@ -2,8 +2,8 @@ import { useEffect, useState, useMemo, lazy, Suspense } from "react";
 import PropTypes from "prop-types";
 import axios from "axios";
 import Loading from "../../common/Loading/Loading";
-const DataDropdown = lazy(() =>
-  import("../../common/DataDropdown/DataDropdown")
+const DataDropdown = lazy(
+  () => import("../../common/DataDropdown/DataDropdown"),
 );
 const DataInput = lazy(() => import("../../common/DataInput/DataInput"));
 
@@ -40,28 +40,51 @@ const BuyerInformation = ({ formData, handleChange }) => {
     const match = (Array.isArray(buyers) ? buyers : []).find(
       (b) =>
         (b.companyName || "").trim().toLowerCase() ===
-        (formData.buyerCompany || "").trim().toLowerCase()
+        (formData.buyerCompany || "").trim().toLowerCase(),
     );
     if (match) {
       setSelectedCompany(match._id);
       const consigneeId =
-        formData.consignee?._id || formData.consignee?.value || formData.consignee;
+        formData.consignee?._id ||
+        formData.consignee?.value ||
+        formData.consignee;
       if (consigneeId) setSelectedConsignee(String(consigneeId));
-      
+
       const rawEmails = match?.email;
       const buyerEmails = Array.isArray(rawEmails)
-        ? rawEmails.map((e) => (typeof e === "string" ? e : e?.value ?? e?.email ?? "")).filter(Boolean)
+        ? rawEmails
+            .map((e) =>
+              typeof e === "string" ? e : (e?.value ?? e?.email ?? ""),
+            )
+            .filter(Boolean)
         : [];
-      
-      if (!formData.buyerBrokerage || Object.keys(formData.buyerBrokerage).length === 0 || (formData.buyerBrokerage.brokerageBuyer === 0 && formData.buyerBrokerage.brokerageSupplier === 0)) {
-         handleChange("buyerBrokerageMap", match.brokerageByName || match.brokerage || {});
+
+      if (
+        !formData.buyerBrokerage ||
+        Object.keys(formData.buyerBrokerage).length === 0 ||
+        (formData.buyerBrokerage.brokerageBuyer === 0 &&
+          formData.buyerBrokerage.brokerageSupplier === 0)
+      ) {
+        handleChange(
+          "buyerBrokerageMap",
+          match.brokerageByName || match.brokerage || {},
+        );
       } else {
-        handleChange("buyerBrokerageMap", match.brokerageByName || match.brokerage || {});
+        handleChange(
+          "buyerBrokerageMap",
+          match.brokerageByName || match.brokerage || {},
+        );
       }
 
       setInitialized(true);
     }
-  }, [buyers, loading, formData?.buyerCompany, formData?.consignee, initialized]);
+  }, [
+    buyers,
+    loading,
+    formData?.buyerCompany,
+    formData?.consignee,
+    initialized,
+  ]);
 
   const companyOptions = useMemo(
     () =>
@@ -69,7 +92,7 @@ const BuyerInformation = ({ formData, handleChange }) => {
         value: _id,
         label: companyName,
       })),
-    [buyers]
+    [buyers],
   );
 
   const consigneeOptions = useMemo(() => {
@@ -88,7 +111,11 @@ const BuyerInformation = ({ formData, handleChange }) => {
 
     const rawEmails = selectedBuyer?.email;
     const buyerEmails = Array.isArray(rawEmails)
-      ? rawEmails.map((e) => (typeof e === "string" ? e : e?.value ?? e?.email ?? "")).filter(Boolean)
+      ? rawEmails
+          .map((e) =>
+            typeof e === "string" ? e : (e?.value ?? e?.email ?? ""),
+          )
+          .filter(Boolean)
       : [];
     const firstEmail = buyerEmails[0] || "";
     handleChange("buyer", selectedBuyer.name || "");
@@ -96,7 +123,10 @@ const BuyerInformation = ({ formData, handleChange }) => {
     handleChange("buyerEmail", firstEmail);
     handleChange("buyerEmails", buyerEmails.length ? buyerEmails : [""]);
     handleChange("buyerCommodity", selectedBuyer.commodity || []);
-    handleChange("buyerBrokerageMap", selectedBuyer.brokerageByName || selectedBuyer.brokerage || {});
+    handleChange(
+      "buyerBrokerageMap",
+      selectedBuyer.brokerageByName || selectedBuyer.brokerage || {},
+    );
     setSelectedConsignee("");
     handleChange("consignee", "");
   };
@@ -128,13 +158,15 @@ const BuyerInformation = ({ formData, handleChange }) => {
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-1">Consignee</label>
+          <label className="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-1">
+            Consignee
+          </label>
           <DataDropdown
             placeholder="Select Consignee"
             options={consigneeOptions}
             selectedOptions={
               consigneeOptions.find(
-                ({ value }) => value === selectedConsignee
+                ({ value }) => value === selectedConsignee,
               ) || null
             }
             onChange={onConsigneeChange}

@@ -8,30 +8,31 @@ import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
 import { FaEdit } from "react-icons/fa";
 import regexPatterns from "../../../utils/regexPatterns/regexPatterns";
 
-const BuyerInformation = lazy(() =>
-  import("../../../components/BuyerInformation/BuyerInformation")
+const BuyerInformation = lazy(
+  () => import("../../../components/BuyerInformation/BuyerInformation"),
 );
-const CommodityInformation = lazy(() =>
-  import("../../../components/CommodityInformation/CommodityInformation")
+const CommodityInformation = lazy(
+  () => import("../../../components/CommodityInformation/CommodityInformation"),
 );
 const PODetails = lazy(() => import("../../../components/PODetails/PODetails"));
-const QuantityAndPricing = lazy(() =>
-  import("../../../components/QuantityPricing/QuantityPricing")
+const QuantityAndPricing = lazy(
+  () => import("../../../components/QuantityPricing/QuantityPricing"),
 );
-const SupplierInformation = lazy(() =>
-  import("../../../components/SupplierInformation/SupplierInformation")
+const SupplierInformation = lazy(
+  () => import("../../../components/SupplierInformation/SupplierInformation"),
 );
-const BrokerInformation = lazy(() =>
-  import("../../../components/BrokerInformation/BrokerInformation")
+const BrokerInformation = lazy(
+  () => import("../../../components/BrokerInformation/BrokerInformation"),
 );
-const NotesSection = lazy(() =>
-  import("../../../components/NotesSection/NotesSection")
+const NotesSection = lazy(
+  () => import("../../../components/NotesSection/NotesSection"),
 );
-const AdditionalInformation = lazy(() =>
-  import("../../../components/AdditionalInformation/AdditionalInformation")
+const AdditionalInformation = lazy(
+  () =>
+    import("../../../components/AdditionalInformation/AdditionalInformation"),
 );
-const LoadingStation = lazy(() =>
-  import("../../../components/LoadingStation/LoadingStation")
+const LoadingStation = lazy(
+  () => import("../../../components/LoadingStation/LoadingStation"),
 );
 const DataInput = lazy(() => import("../../../common/DataInput/DataInput"));
 
@@ -87,7 +88,7 @@ const EditSelfOrder = () => {
 
       // Get brokerage from Supplier's profile
       const supplierBrokerageItem = formData.supplierBrokerage?.find(
-        (b) => b.name === formData.commodity
+        (b) => b.name === formData.commodity,
       );
       const supplierBrokerageVal = supplierBrokerageItem?.brokerage ?? 0;
 
@@ -105,7 +106,12 @@ const EditSelfOrder = () => {
         }));
       }
     }
-  }, [formData.commodity, _buyerBrokerageMap, formData.supplierBrokerage, formData.buyerBrokerage]);
+  }, [
+    formData.commodity,
+    _buyerBrokerageMap,
+    formData.supplierBrokerage,
+    formData.buyerBrokerage,
+  ]);
 
   const API_BASE_URL = "/self-order";
 
@@ -115,7 +121,9 @@ const EditSelfOrder = () => {
       setFormData({
         ...INITIAL_FORM_DATA,
         ...orderFromState,
-        poDate: orderFromState.poDate ? new Date(orderFromState.poDate) : new Date(),
+        poDate: orderFromState.poDate
+          ? new Date(orderFromState.poDate)
+          : new Date(),
         deliveryDate: orderFromState.deliveryDate
           ? new Date(orderFromState.deliveryDate)
           : new Date(),
@@ -138,8 +146,12 @@ const EditSelfOrder = () => {
           ...INITIAL_FORM_DATA,
           ...data,
           poDate: data.poDate ? new Date(data.poDate) : new Date(),
-          deliveryDate: data.deliveryDate ? new Date(data.deliveryDate) : new Date(),
-          loadingDate: data.loadingDate ? new Date(data.loadingDate) : new Date(),
+          deliveryDate: data.deliveryDate
+            ? new Date(data.deliveryDate)
+            : new Date(),
+          loadingDate: data.loadingDate
+            ? new Date(data.loadingDate)
+            : new Date(),
         });
       } catch {
         toast.error("Failed to fetch order details.");
@@ -185,7 +197,9 @@ const EditSelfOrder = () => {
       const supplierCommodities = formData.supplierBrokerage || []; // This comes from SupplierInformation.jsx
 
       const buyerHasCommodity = buyerCommodities.includes(formData.commodity);
-      const supplierHasCommodity = supplierCommodities.some(c => c.name === formData.commodity);
+      const supplierHasCommodity = supplierCommodities.some(
+        (c) => c.name === formData.commodity,
+      );
 
       if (!buyerHasCommodity) {
         errors.push(`Buyer does not deal in ${formData.commodity}.`);
@@ -196,17 +210,23 @@ const EditSelfOrder = () => {
     }
 
     // Email validation for buyer and seller emails
-    if (formData.buyerEmails?.some(email => email.trim() && !regexPatterns.email.test(email.trim()))) {
+    if (
+      formData.buyerEmails?.some(
+        (email) => email.trim() && !regexPatterns.email.test(email.trim()),
+      )
+    ) {
       errors.push("Invalid buyer email format.");
     }
-    if (formData.sellerEmails?.some(email => email.trim() && !regexPatterns.email.test(email.trim()))) {
+    if (
+      formData.sellerEmails?.some(
+        (email) => email.trim() && !regexPatterns.email.test(email.trim()),
+      )
+    ) {
       errors.push("Invalid seller email format.");
     }
 
     if (errors.length > 0) {
-      errors.forEach((err) =>
-        toast.error(err, { position: "top-right" })
-      );
+      errors.forEach((err) => toast.error(err, { position: "top-right" }));
       return false;
     }
     return true;
@@ -231,12 +251,10 @@ const EditSelfOrder = () => {
         cd: Number(formData.cd) || 0,
         weight: formData.weight || "", // Weight is now text, no Number conversion
         buyerBrokerage: {
-          brokerageBuyer: Number(
-            formData.buyerBrokerage?.brokerageBuyer ?? 0
-          ) || 0,
-          brokerageSupplier: Number(
-            formData.buyerBrokerage?.brokerageSupplier ?? 0
-          ) || 0,
+          brokerageBuyer:
+            Number(formData.buyerBrokerage?.brokerageBuyer ?? 0) || 0,
+          brokerageSupplier:
+            Number(formData.buyerBrokerage?.brokerageSupplier ?? 0) || 0,
         },
       };
 
@@ -248,8 +266,13 @@ const EditSelfOrder = () => {
 
       setTimeout(() => navigate("/manage-order/list-self-order"), 2000);
     } catch (error) {
-      console.error("Update Order API Error:", error.response?.data || error.message);
-      toast.error(`Failed to update order: ${error.response?.data?.message || error.message}`);
+      console.error(
+        "Update Order API Error:",
+        error.response?.data || error.message,
+      );
+      toast.error(
+        `Failed to update order: ${error.response?.data?.message || error.message}`,
+      );
     } finally {
       setIsLoading(false);
     }
@@ -269,101 +292,112 @@ const EditSelfOrder = () => {
         noContentCard
       >
         <div className="max-w-4xl mx-auto space-y-6">
-        <div className={sectionClass}>
-        <BuyerInformation formData={formData} handleChange={handleChange} />
-        </div>
-        <div className={sectionClass}>
-          <CommodityInformation
-            handleChange={handleChange}
-            selectedCompany={formData.buyerCompany}
-            buyerCommodity={formData.buyerCommodity}
-            brokerageMap={_buyerBrokerageMap}
-            formData={formData}
-          />
-        </div>
-        <div className={sectionClass}>
-        <PODetails formData={formData} handleChange={handleChange} />
-        </div>
-        <div className={sectionClass}>
-        <LoadingStation formData={formData} handleChange={handleChange} />
-        </div>
-        <div className={sectionClass}>
-        <QuantityAndPricing formData={formData} handleChange={handleChange} />
-        </div>
-        <div className={sectionClass}>
-        <SupplierInformation formData={formData} handleChange={handleChange} />
-        </div>
-        <div className={sectionClass}>
-        <BrokerInformation
-          formData={formData}
-          handleChange={(key, value) => {
-            if (key === "buyerBrokerage") {
-              setFormData((prev) => ({
-                ...prev,
-                buyerBrokerage: { ...prev.buyerBrokerage, ...value },
-              }));
-            } else {
-              handleChange(key, value);
-            }
-          }}
-        />
-        </div>
-        <div className={sectionClass}>
-        <NotesSection
-          notes={formData.notes}
-          setNotes={(updatedNotes) => handleChange("notes", updatedNotes)}
-        />
-        </div>
-        <div className={sectionClass}>
-        <AdditionalInformation formData={formData} handleChange={handleChange} />
-        </div>
+          <div className={sectionClass}>
+            <BuyerInformation formData={formData} handleChange={handleChange} />
+          </div>
+          <div className={sectionClass}>
+            <CommodityInformation
+              handleChange={handleChange}
+              selectedCompany={formData.buyerCompany}
+              buyerCommodity={formData.buyerCommodity}
+              brokerageMap={_buyerBrokerageMap}
+              formData={formData}
+            />
+          </div>
+          <div className={sectionClass}>
+            <PODetails formData={formData} handleChange={handleChange} />
+          </div>
+          <div className={sectionClass}>
+            <LoadingStation formData={formData} handleChange={handleChange} />
+          </div>
+          <div className={sectionClass}>
+            <QuantityAndPricing
+              formData={formData}
+              handleChange={handleChange}
+            />
+          </div>
+          <div className={sectionClass}>
+            <SupplierInformation
+              formData={formData}
+              handleChange={handleChange}
+            />
+          </div>
+          <div className={sectionClass}>
+            <BrokerInformation
+              formData={formData}
+              handleChange={(key, value) => {
+                if (key === "buyerBrokerage") {
+                  setFormData((prev) => ({
+                    ...prev,
+                    buyerBrokerage: { ...prev.buyerBrokerage, ...value },
+                  }));
+                } else {
+                  handleChange(key, value);
+                }
+              }}
+            />
+          </div>
+          <div className={sectionClass}>
+            <NotesSection
+              notes={formData.notes}
+              setNotes={(updatedNotes) => handleChange("notes", updatedNotes)}
+            />
+          </div>
+          <div className={sectionClass}>
+            <AdditionalInformation
+              formData={formData}
+              handleChange={handleChange}
+            />
+          </div>
 
-        <div className={sectionClass}>
-          <h3 className="text-base font-semibold text-slate-800 mb-3">Sauda number</h3>
-          <div className="flex flex-col sm:flex-row gap-3">
-            <div className="flex-1">
-              <DataInput
-                placeholder="Enter Sauda No"
-                value={formData.saudaNo}
-                onChange={(e) => handleChange("saudaNo", e.target.value)}
-                name="saudaNo"
-                inputType="text"
-                size="md"
-              />
+          <div className={sectionClass}>
+            <h3 className="text-base font-semibold text-slate-800 mb-3">
+              Sauda number
+            </h3>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <div className="flex-1">
+                <DataInput
+                  placeholder="Enter Sauda No"
+                  value={formData.saudaNo}
+                  onChange={(e) => handleChange("saudaNo", e.target.value)}
+                  name="saudaNo"
+                  inputType="text"
+                  size="md"
+                />
+              </div>
             </div>
           </div>
-        </div>
 
-        <div className="flex flex-col sm:flex-row gap-3">
-          <button
-            type="button"
-            onClick={() => navigate("/manage-order/list-self-order")}
-            className="flex-1 py-3 rounded-xl font-semibold bg-slate-100 text-slate-700 border border-slate-200 hover:bg-slate-200 transition-colors"
-          >
-            Cancel
-          </button>
-          <button
-            type="button"
-            onClick={handleSubmit}
-            className="flex-1 py-3 rounded-xl font-semibold bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-60 transition-colors"
-            disabled={isLoading}
-          >
-            {isLoading ? "Updating…" : "Update order"}
-          </button>
-        </div>
+          <div className="flex flex-col sm:flex-row gap-3">
+            <button
+              type="button"
+              onClick={() => navigate("/manage-order/list-self-order")}
+              className="flex-1 py-3 rounded-xl font-semibold bg-slate-100 text-slate-700 border border-slate-200 hover:bg-slate-200 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={handleSubmit}
+              className="flex-1 py-3 rounded-xl font-semibold bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-60 transition-colors"
+              disabled={isLoading}
+            >
+              {isLoading ? "Updating…" : "Update order"}
+            </button>
+          </div>
 
-        <ToastContainer
-          position="top-right"
-          autoClose={5000}
-          hideProgressBar={false}
-          newestOnTop
-          closeOnClick
-          rtl={false}
-          pauseOnFocusLoss
-          draggable
-          pauseOnHover
-          style={{ zIndex: 9999 }}
-        />
+          <ToastContainer
+            position="top-right"
+            autoClose={5000}
+            hideProgressBar={false}
+            newestOnTop
+            closeOnClick
+            rtl={false}
+            pauseOnFocusLoss
+            draggable
+            pauseOnHover
+            style={{ zIndex: 9999 }}
+          />
         </div>
       </AdminPageShell>
     </Suspense>

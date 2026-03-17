@@ -9,8 +9,8 @@ import { FaBuilding } from "react-icons/fa";
 import regexPatterns from "../../../utils/regexPatterns/regexPatterns";
 
 const DataInput = lazy(() => import("../../../common/DataInput/DataInput"));
-const DataDropdown = lazy(() =>
-  import("../../../common/DataDropdown/DataDropdown")
+const DataDropdown = lazy(
+  () => import("../../../common/DataDropdown/DataDropdown"),
 );
 const FileUpload = lazy(() => import("../../../common/FileUpload/FileUpload"));
 const Buttons = lazy(() => import("../../../common/Buttons/Buttons"));
@@ -68,7 +68,7 @@ const AddSellerCompany = () => {
         accountNumber: "",
         ifscCode: "",
         branchName: "",
-        bankName:""
+        bankName: "",
       },
     ]);
     setSelectedState(null);
@@ -93,12 +93,14 @@ const AddSellerCompany = () => {
 
   const handleBankDetailChange = async (id, name, value) => {
     setBankDetails((prev) =>
-      prev.map((bank) => (bank.id === id ? { ...bank, [name]: value } : bank))
+      prev.map((bank) => (bank.id === id ? { ...bank, [name]: value } : bank)),
     );
 
     if (name === "ifscCode" && value.length === 11) {
       try {
-        const response = await fetch(`https://ifsc.razorpay.com/${value.toUpperCase()}`);
+        const response = await fetch(
+          `https://ifsc.razorpay.com/${value.toUpperCase()}`,
+        );
         if (!response.ok) throw new Error("Invalid IFSC Code");
         const data = await response.json();
         const { BANK, BRANCH } = data;
@@ -106,8 +108,8 @@ const AddSellerCompany = () => {
           prev.map((bank) =>
             bank.id === id
               ? { ...bank, bankName: BANK, branchName: BRANCH }
-              : bank
-          )
+              : bank,
+          ),
         );
         toast.success("Bank details fetched successfully!");
       } catch (error) {
@@ -124,13 +126,13 @@ const AddSellerCompany = () => {
   const handleStateChange = (selected) => {
     setSelectedState(selected);
     const stateData = stateCityData.find(
-      (state) => state.state === selected?.value
+      (state) => state.state === selected?.value,
     );
     setDistrictOptions(
       stateData?.district.map((district) => ({
         value: district,
         label: district,
-      })) || []
+      })) || [],
     );
   };
 
@@ -143,7 +145,7 @@ const AddSellerCompany = () => {
         accountNumber: "",
         ifscCode: "",
         branchName: "",
-        bankName: ""
+        bankName: "",
       },
     ]);
   };
@@ -180,7 +182,7 @@ const AddSellerCompany = () => {
           bank.accountNumber &&
           bank.ifscCode &&
           bank.branchName &&
-          bank.bankName
+          bank.bankName,
       )
     ) {
       toast.error("Please complete all required fields.");
@@ -203,7 +205,7 @@ const AddSellerCompany = () => {
     } catch (error) {
       toast.error(
         error.response?.data?.message ||
-          "Failed to add seller company. Please try again."
+          "Failed to add seller company. Please try again.",
       );
     }
   };
@@ -218,377 +220,386 @@ const AddSellerCompany = () => {
       >
         <div className="max-w-6xl mx-auto">
           <div className="w-full bg-white rounded-2xl border border-amber-200/60 shadow-lg p-4 sm:p-6 md:p-8">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-            <div>
-              <label
-                className="text-slate-700 font-semibold"
-                htmlFor="companyName"
-              >
-                Company Name
-              </label>
-              <DataInput
-                id="companyName"
-                placeholder="Enter Company Name"
-                name="companyName"
-                value={companyInfo.companyName}
-                onChange={handleCompanyInfoChange}
-                required
-                maxLength="50"
-              />
-            </div>
-            <div>
-              <label className="text-slate-700 font-semibold" htmlFor="gstNo">
-                GST No
-              </label>
-              <DataInput
-                id="gstNo"
-                placeholder="Enter GST No"
-                name="gstNo"
-                value={companyInfo.gstNo}
-                onChange={handleCompanyInfoChange}
-                required
-                maxLength="15"
-                minLength="15"
-              />
-            </div>
-            <div>
-              <label className="text-slate-700 font-semibold" htmlFor="panNo">
-                PAN No
-              </label>
-              <DataInput
-                id="panNo"
-                placeholder="Enter PAN No"
-                name="panNo"
-                value={companyInfo.panNo}
-                onChange={handleCompanyInfoChange}
-                required
-                maxLength="10"
-                minLength="10"
-              />
-            </div>
-            <div>
-              <label className="text-slate-700 font-semibold" htmlFor="address">
-                Address
-              </label>
-              <DataInput
-                id="address"
-                placeholder="Enter Address"
-                name="address"
-                value={companyInfo.address}
-                onChange={handleCompanyInfoChange}
-                required
-              />
-            </div>
-            <div>
-              <label className="text-slate-700 font-semibold" htmlFor="mobileNo">
-                Mobile Number
-              </label>
-              <DataInput
-                id="mobileNo"
-                placeholder="Enter 10-digit Mobile Number"
-                name="mobileNo"
-                value={companyInfo.mobileNo}
-                onChange={handleCompanyInfoChange}
-                required
-                maxLength="10"
-              />
-            </div>
-            <div>
-              <label className="text-slate-700 font-semibold" htmlFor="email">
-                Email Address
-              </label>
-              <DataInput
-                id="email"
-                placeholder="Enter Email Address"
-                name="email"
-                value={companyInfo.email}
-                onChange={handleCompanyInfoChange}
-                required
-              />
-            </div>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-            <div>
-              <label className="text-slate-700 font-semibold" htmlFor="state">
-                Select State
-              </label>
-              <DataDropdown
-                id="state"
-                options={stateCityData.map((state) => ({
-                  value: state.state,
-                  label: state.state,
-                }))}
-                placeholder="Select State"
-                onChange={handleStateChange}
-              />
-            </div>
-            <div>
-              <label className="text-slate-700 font-semibold" htmlFor="district">
-                Select District
-              </label>
-              <DataDropdown
-                id="district"
-                options={districtOptions}
-                placeholder="Select District"
-                onChange={(selected) => setSelectedDistrict(selected)}
-              />
-            </div>
-            <div>
-              <label className="text-slate-700 font-semibold" htmlFor="pinNo">
-                PIN No
-              </label>
-              <DataInput
-                id="pinNo"
-                placeholder="Enter PIN No"
-                name="pinNo"
-                value={companyInfo.pinNo}
-                onChange={handleCompanyInfoChange}
-                required
-                maxLength="6"
-                minLength="6"
-              />
-            </div>
-            <div>
-              <label
-                className="text-slate-700 font-semibold"
-                htmlFor="aadhaarNo"
-              >
-                Aadhaar No/Director
-              </label>
-              <DataInput
-                id="aadhaarNo"
-                placeholder="Enter Aadhaar No"
-                name="aadhaarNo"
-                value={companyInfo.aadhaarNo}
-                onChange={handleCompanyInfoChange}
-                required
-                maxLength="12"
-                minLength="12"
-              />
-            </div>
-          </div>
-          <h3 className="text-base sm:text-lg font-semibold mb-2 text-slate-800">
-            Bank Details
-          </h3>
-          {bankDetails.map((bank, index) => (
-            <div
-              key={bank.id}
-              className="mb-4 border border-slate-200 p-4 rounded-xl bg-slate-50/40"
-            >
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-                <div>
-                  <label
-                    className="text-slate-700 font-semibold"
-                    htmlFor={`accountHolderName-${bank.id}`}
-                  >
-                    Account Holder Name
-                  </label>
-                  <DataInput
-                    id={`accountHolderName-${bank.id}`}
-                    placeholder="Enter Account Holder Name"
-                    value={bank.accountHolderName}
-                    onChange={(e) =>
-                      handleBankDetailChange(
-                        bank.id,
-                        "accountHolderName",
-                        e.target.value
-                      )
-                    }
-                    required
-                  />
-                </div>
-                <div>
-                  <label
-                    className="text-slate-700 font-semibold"
-                    htmlFor={`accountNumber-${bank.id}`}
-                  >
-                    Bank Account Number
-                  </label>
-                  <DataInput
-                    id={`accountNumber-${bank.id}`}
-                    placeholder="Enter Bank Account Number"
-                    value={bank.accountNumber}
-                    onChange={(e) =>
-                      handleBankDetailChange(
-                        bank.id,
-                        "accountNumber",
-                        e.target.value
-                      )
-                    }
-                    required
-                  />
-                </div>
-                <div>
-                  <label
-                    className="text-slate-700 font-semibold"
-                    htmlFor={`ifscCode-${bank.id}`}
-                  >
-                    IFSC Code
-                  </label>
-                  <DataInput
-                    id={`ifscCode-${bank.id}`}
-                    placeholder="Enter IFSC Code"
-                    value={bank.ifscCode}
-                    onChange={(e) =>
-                      handleBankDetailChange(
-                        bank.id,
-                        "ifscCode",
-                        e.target.value
-                      )
-                    }
-                    required
-                    maxLength="11"
-                    minLength="11"
-                  />
-                </div>
-                <div>
-                  <label
-                    className="text-slate-700 font-semibold"
-                    htmlFor={`bankName-${bank.id}`}
-                  >
-                    Bank Name
-                  </label>
-                  <DataInput
-                    id={`bankName-${bank.id}`}
-                    placeholder="Auto-fetched Bank Name"
-                    value={bank.bankName}
-                    readOnly
-                    required
-                  />
-                </div>
-                <div>
-                  <label
-                    className="text-slate-700 font-semibold"
-                    htmlFor={`branchName-${bank.id}`}
-                  >
-                    Branch Name
-                  </label>
-                  <DataInput
-                    id={`branchName-${bank.id}`}
-                    placeholder="Auto-fetched Branch Name"
-                    value={bank.branchName}
-                    readOnly
-                    required
-                  />
-                </div>
-              </div>
-              {index > 0 && (
-                <Buttons
-                  label="Remove"
-                  onClick={() => removeBankDetail(bank.id)}
-                  variant="danger"
-                  size="sm"
-                />
-              )}
-            </div>
-          ))}
-
-          <div className="flex justify-end">
-            <Buttons
-              label="Add Bank Detail"
-              onClick={addBankDetail}
-              variant="success"
-              size="sm"
-            />
-          </div>
-          <h3 className="text-base sm:text-lg font-semibold mb-2 mt-6 text-slate-800">
-            Upload KYC Documents
-          </h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-            <FileUpload
-              label="Upload Address Proof"
-              accept="image/*"
-              onFileChange={(file) => handleFileUpload("addressProof", file)}
-              minWidth={300}
-              minHeight={300}
-            />
-            <FileUpload
-              label="Upload GST Proof"
-              accept="image/*"
-              onFileChange={(file) => handleFileUpload("gstProof", file)}
-              minWidth={300}
-              minHeight={300}
-            />
-            <FileUpload
-              label="Upload PAN Proof"
-              accept="image/*"
-              onFileChange={(file) => handleFileUpload("panProof", file)}
-              minWidth={300}
-              minHeight={300}
-            />
-            <FileUpload
-              label="Upload Aadhaar Card"
-              accept="image/*"
-              onFileChange={(file) => handleFileUpload("aadhaarCard", file)}
-              minWidth={300}
-              minHeight={300}
-            />
-            <FileUpload
-              label="Upload Check Copy"
-              accept="image/*"
-              onFileChange={(file) => handleFileUpload("checkCopy", file)}
-              minWidth={300}
-              minHeight={300}
-            />
-            <FileUpload
-              label="Upload MSME Copy"
-              accept="image/*"
-              onFileChange={(file) => handleFileUpload("msmeCopy", file)}
-              minWidth={300}
-              minHeight={300}
-            />
-          </div>
-          <div className="mb-4">
-            <label className="text-slate-700 font-semibold">MSME</label>
-            <div className="flex items-center space-x-4 mt-2">
-              <label className="flex items-center space-x-2">
-                <input
-                  type="radio"
-                  name="msme"
-                  value="yes"
-                  onChange={() => setMsme(true)}
-                  className="form-radio text-blue-600"
-                />
-                <span>Yes</span>
-              </label>
-              <label className="flex items-center space-x-2">
-                <input
-                  type="radio"
-                  name="msme"
-                  value="no"
-                  onChange={() => setMsme(false)}
-                  className="form-radio text-blue-600"
-                />
-                <span>No</span>
-              </label>
-            </div>
-            {msme && (
-              <div className="mt-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+              <div>
+                <label
+                  className="text-slate-700 font-semibold"
+                  htmlFor="companyName"
+                >
+                  Company Name
+                </label>
                 <DataInput
-                  placeholder="Enter MSME No"
-                  name="msmeNo"
-                  value={msmeDetails.msmeNo}
-                  onChange={(e) =>
-                    setMsmeDetails((prev) => ({
-                      ...prev,
-                      msmeNo: e.target.value,
-                    }))
-                  }
+                  id="companyName"
+                  placeholder="Enter Company Name"
+                  name="companyName"
+                  value={companyInfo.companyName}
+                  onChange={handleCompanyInfoChange}
+                  required
+                  maxLength="50"
+                />
+              </div>
+              <div>
+                <label className="text-slate-700 font-semibold" htmlFor="gstNo">
+                  GST No
+                </label>
+                <DataInput
+                  id="gstNo"
+                  placeholder="Enter GST No"
+                  name="gstNo"
+                  value={companyInfo.gstNo}
+                  onChange={handleCompanyInfoChange}
+                  required
+                  maxLength="15"
+                  minLength="15"
+                />
+              </div>
+              <div>
+                <label className="text-slate-700 font-semibold" htmlFor="panNo">
+                  PAN No
+                </label>
+                <DataInput
+                  id="panNo"
+                  placeholder="Enter PAN No"
+                  name="panNo"
+                  value={companyInfo.panNo}
+                  onChange={handleCompanyInfoChange}
+                  required
+                  maxLength="10"
+                  minLength="10"
+                />
+              </div>
+              <div>
+                <label
+                  className="text-slate-700 font-semibold"
+                  htmlFor="address"
+                >
+                  Address
+                </label>
+                <DataInput
+                  id="address"
+                  placeholder="Enter Address"
+                  name="address"
+                  value={companyInfo.address}
+                  onChange={handleCompanyInfoChange}
                   required
                 />
               </div>
-            )}
+              <div>
+                <label
+                  className="text-slate-700 font-semibold"
+                  htmlFor="mobileNo"
+                >
+                  Mobile Number
+                </label>
+                <DataInput
+                  id="mobileNo"
+                  placeholder="Enter 10-digit Mobile Number"
+                  name="mobileNo"
+                  value={companyInfo.mobileNo}
+                  onChange={handleCompanyInfoChange}
+                  required
+                  maxLength="10"
+                />
+              </div>
+              <div>
+                <label className="text-slate-700 font-semibold" htmlFor="email">
+                  Email Address
+                </label>
+                <DataInput
+                  id="email"
+                  placeholder="Enter Email Address"
+                  name="email"
+                  value={companyInfo.email}
+                  onChange={handleCompanyInfoChange}
+                  required
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+              <div>
+                <label className="text-slate-700 font-semibold" htmlFor="state">
+                  Select State
+                </label>
+                <DataDropdown
+                  id="state"
+                  options={stateCityData.map((state) => ({
+                    value: state.state,
+                    label: state.state,
+                  }))}
+                  placeholder="Select State"
+                  onChange={handleStateChange}
+                />
+              </div>
+              <div>
+                <label
+                  className="text-slate-700 font-semibold"
+                  htmlFor="district"
+                >
+                  Select District
+                </label>
+                <DataDropdown
+                  id="district"
+                  options={districtOptions}
+                  placeholder="Select District"
+                  onChange={(selected) => setSelectedDistrict(selected)}
+                />
+              </div>
+              <div>
+                <label className="text-slate-700 font-semibold" htmlFor="pinNo">
+                  PIN No
+                </label>
+                <DataInput
+                  id="pinNo"
+                  placeholder="Enter PIN No"
+                  name="pinNo"
+                  value={companyInfo.pinNo}
+                  onChange={handleCompanyInfoChange}
+                  required
+                  maxLength="6"
+                  minLength="6"
+                />
+              </div>
+              <div>
+                <label
+                  className="text-slate-700 font-semibold"
+                  htmlFor="aadhaarNo"
+                >
+                  Aadhaar No/Director
+                </label>
+                <DataInput
+                  id="aadhaarNo"
+                  placeholder="Enter Aadhaar No"
+                  name="aadhaarNo"
+                  value={companyInfo.aadhaarNo}
+                  onChange={handleCompanyInfoChange}
+                  required
+                  maxLength="12"
+                  minLength="12"
+                />
+              </div>
+            </div>
+            <h3 className="text-base sm:text-lg font-semibold mb-2 text-slate-800">
+              Bank Details
+            </h3>
+            {bankDetails.map((bank, index) => (
+              <div
+                key={bank.id}
+                className="mb-4 border border-slate-200 p-4 rounded-xl bg-slate-50/40"
+              >
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                  <div>
+                    <label
+                      className="text-slate-700 font-semibold"
+                      htmlFor={`accountHolderName-${bank.id}`}
+                    >
+                      Account Holder Name
+                    </label>
+                    <DataInput
+                      id={`accountHolderName-${bank.id}`}
+                      placeholder="Enter Account Holder Name"
+                      value={bank.accountHolderName}
+                      onChange={(e) =>
+                        handleBankDetailChange(
+                          bank.id,
+                          "accountHolderName",
+                          e.target.value,
+                        )
+                      }
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label
+                      className="text-slate-700 font-semibold"
+                      htmlFor={`accountNumber-${bank.id}`}
+                    >
+                      Bank Account Number
+                    </label>
+                    <DataInput
+                      id={`accountNumber-${bank.id}`}
+                      placeholder="Enter Bank Account Number"
+                      value={bank.accountNumber}
+                      onChange={(e) =>
+                        handleBankDetailChange(
+                          bank.id,
+                          "accountNumber",
+                          e.target.value,
+                        )
+                      }
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label
+                      className="text-slate-700 font-semibold"
+                      htmlFor={`ifscCode-${bank.id}`}
+                    >
+                      IFSC Code
+                    </label>
+                    <DataInput
+                      id={`ifscCode-${bank.id}`}
+                      placeholder="Enter IFSC Code"
+                      value={bank.ifscCode}
+                      onChange={(e) =>
+                        handleBankDetailChange(
+                          bank.id,
+                          "ifscCode",
+                          e.target.value,
+                        )
+                      }
+                      required
+                      maxLength="11"
+                      minLength="11"
+                    />
+                  </div>
+                  <div>
+                    <label
+                      className="text-slate-700 font-semibold"
+                      htmlFor={`bankName-${bank.id}`}
+                    >
+                      Bank Name
+                    </label>
+                    <DataInput
+                      id={`bankName-${bank.id}`}
+                      placeholder="Auto-fetched Bank Name"
+                      value={bank.bankName}
+                      readOnly
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label
+                      className="text-slate-700 font-semibold"
+                      htmlFor={`branchName-${bank.id}`}
+                    >
+                      Branch Name
+                    </label>
+                    <DataInput
+                      id={`branchName-${bank.id}`}
+                      placeholder="Auto-fetched Branch Name"
+                      value={bank.branchName}
+                      readOnly
+                      required
+                    />
+                  </div>
+                </div>
+                {index > 0 && (
+                  <Buttons
+                    label="Remove"
+                    onClick={() => removeBankDetail(bank.id)}
+                    variant="danger"
+                    size="sm"
+                  />
+                )}
+              </div>
+            ))}
+
+            <div className="flex justify-end">
+              <Buttons
+                label="Add Bank Detail"
+                onClick={addBankDetail}
+                variant="success"
+                size="sm"
+              />
+            </div>
+            <h3 className="text-base sm:text-lg font-semibold mb-2 mt-6 text-slate-800">
+              Upload KYC Documents
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+              <FileUpload
+                label="Upload Address Proof"
+                accept="image/*"
+                onFileChange={(file) => handleFileUpload("addressProof", file)}
+                minWidth={300}
+                minHeight={300}
+              />
+              <FileUpload
+                label="Upload GST Proof"
+                accept="image/*"
+                onFileChange={(file) => handleFileUpload("gstProof", file)}
+                minWidth={300}
+                minHeight={300}
+              />
+              <FileUpload
+                label="Upload PAN Proof"
+                accept="image/*"
+                onFileChange={(file) => handleFileUpload("panProof", file)}
+                minWidth={300}
+                minHeight={300}
+              />
+              <FileUpload
+                label="Upload Aadhaar Card"
+                accept="image/*"
+                onFileChange={(file) => handleFileUpload("aadhaarCard", file)}
+                minWidth={300}
+                minHeight={300}
+              />
+              <FileUpload
+                label="Upload Check Copy"
+                accept="image/*"
+                onFileChange={(file) => handleFileUpload("checkCopy", file)}
+                minWidth={300}
+                minHeight={300}
+              />
+              <FileUpload
+                label="Upload MSME Copy"
+                accept="image/*"
+                onFileChange={(file) => handleFileUpload("msmeCopy", file)}
+                minWidth={300}
+                minHeight={300}
+              />
+            </div>
+            <div className="mb-4">
+              <label className="text-slate-700 font-semibold">MSME</label>
+              <div className="flex items-center space-x-4 mt-2">
+                <label className="flex items-center space-x-2">
+                  <input
+                    type="radio"
+                    name="msme"
+                    value="yes"
+                    onChange={() => setMsme(true)}
+                    className="form-radio text-blue-600"
+                  />
+                  <span>Yes</span>
+                </label>
+                <label className="flex items-center space-x-2">
+                  <input
+                    type="radio"
+                    name="msme"
+                    value="no"
+                    onChange={() => setMsme(false)}
+                    className="form-radio text-blue-600"
+                  />
+                  <span>No</span>
+                </label>
+              </div>
+              {msme && (
+                <div className="mt-4">
+                  <DataInput
+                    placeholder="Enter MSME No"
+                    name="msmeNo"
+                    value={msmeDetails.msmeNo}
+                    onChange={(e) =>
+                      setMsmeDetails((prev) => ({
+                        ...prev,
+                        msmeNo: e.target.value,
+                      }))
+                    }
+                    required
+                  />
+                </div>
+              )}
+            </div>
+            <div className="mt-6 flex justify-end">
+              <Buttons
+                label="Submit"
+                onClick={handleSubmit}
+                type="submit"
+                variant="primary"
+                size="lg"
+              />
+            </div>
           </div>
-          <div className="mt-6 flex justify-end">
-            <Buttons
-              label="Submit"
-              onClick={handleSubmit}
-              type="submit"
-              variant="primary"
-              size="lg"
-            />
-          </div>
-        </div>
 
           <ToastContainer />
         </div>

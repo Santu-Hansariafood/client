@@ -74,7 +74,9 @@ router.get("/:id", async (req, res) => {
 
 router.put("/:id", async (req, res) => {
   try {
-    const item = await SelfOrder.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    const item = await SelfOrder.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+    });
     if (!item) return res.status(404).json({ message: "Order not found" });
     res.json(item);
   } catch (error) {
