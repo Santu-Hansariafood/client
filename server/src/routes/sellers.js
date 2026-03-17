@@ -3,7 +3,6 @@ import Seller from "../models/Seller.js";
 
 const router = Router();
 
-
 const mapSellerForClient = (seller) => {
   const brokerageByName = {};
   if (Array.isArray(seller.commodities)) {
