@@ -30,7 +30,6 @@ const mapBuyerForClient = (buyer) => {
 
   const brokerageByName = {};
   
-  // First, check brokerage from Buyer's own brokerage map
   if (buyer.brokerage) {
     const rawBrokerage = buyer.brokerage;
     (buyer.commodityIds || []).forEach((c) => {
@@ -184,7 +183,6 @@ router.put("/:id", async (req, res) => {
 
     let { companyId, groupId, commodityIds, consigneeIds } = body;
 
-    // Resolve companyId from companyName if needed
     if (!toObjectId(companyId) && body.companyName) {
       const company = await Company.findOne({ companyName: body.companyName })
         .select("_id")
@@ -192,7 +190,6 @@ router.put("/:id", async (req, res) => {
       companyId = company?._id || null;
     }
 
-    // Resolve groupId from group name if needed
     if (!toObjectId(groupId) && body.group) {
       const group = await Group.findOne({ groupName: body.group })
         .select("_id")
@@ -200,7 +197,6 @@ router.put("/:id", async (req, res) => {
       groupId = group?._id || null;
     }
 
-    // Resolve commodityIds from commodity names if needed
     if (Array.isArray(body.commodity)) {
       if (body.commodity.length === 0) {
         commodityIds = [];
@@ -212,7 +208,6 @@ router.put("/:id", async (req, res) => {
       }
     }
 
-    // Resolve consigneeIds from consignee objects/names if needed
     if (Array.isArray(body.consignee)) {
       if (body.consignee.length === 0) {
         consigneeIds = [];
