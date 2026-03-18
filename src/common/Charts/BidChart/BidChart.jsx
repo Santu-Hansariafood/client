@@ -1,14 +1,18 @@
+import { useState, useEffect, useMemo } from "react";
 import {
   AreaChart,
   Area,
+  LineChart,
+  Line,
+  BarChart,
+  Bar,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  Defs,
-  LinearGradient,
 } from "recharts";
+import api from "../../../utils/apiClient/apiClient";
 
 const CustomTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
@@ -24,45 +28,95 @@ const CustomTooltip = ({ active, payload, label }) => {
   return null;
 };
 
-const BidChart = ({ data }) => {
+const BidChart = ({ apiUrl, chartType = "line", data: externalData }) => {
+  const [internalData, setInternalData] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (apiUrl && !externalData) {
+      const fetchData = async () => {
+        setLoading(true);
+        try {
+          const response = await api.get(apiUrl);
+          const rawData = response.data?.data || response.data || [];
+          
+          // Process data for chart (count by date)
+          const counts = {};
+          rawData.forEach(item => {
+            const date = new Date(item.createdAt || item.bidDate || item.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' });
+            counts[date] = (counts[date] || 0) + 1;
+          });
+          
+          const chartData = Object.entries(counts).map(([date, count]) => ({ date, count }));
+          setInternalData(chartData);
+        } catch (error) {
+          console.error("Failed to fetch bid chart data", error);
+        } finally {
+          setLoading(false);
+        }
+      };
+      fetchData();
+    }
+  }, [apiUrl, externalData]);
+
+  const data = useMemo(() => externalData || internalData, [externalData, internalData]);
+
+  if (loading) return <div className="h-[300px] flex items-center justify-center text-slate-400">Loading chart...</div>;
+  if (!data.length) return <div className="h-[300px] flex items-center justify-center text-slate-400">No data available for chart</div>;
+
+  const renderChart = () => {
+    const commonProps = {
+      data,
+      margin: { top: 10, right: 30, left: 0, bottom: 0 },
+    };
+
+    if (chartType === "bar") {
+      return (
+        <BarChart {...commonProps}>
+          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+          <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fill: "#64748b", fontSize: 12 }} dy={10} />
+          <YAxis axisLine={false} tickLine={false} tick={{ fill: "#64748b", fontSize: 12 }} />
+          <Tooltip content={<CustomTooltip />} />
+          <Bar dataKey="count" fill="#FFB800" radius={[4, 4, 0, 0]} />
+        </BarChart>
+      );
+    }
+
+    if (chartType === "line") {
+      return (
+        <LineChart {...commonProps}>
+          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+          <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fill: "#64748b", fontSize: 12 }} dy={10} />
+          <YAxis axisLine={false} tickLine={false} tick={{ fill: "#64748b", fontSize: 12 }} />
+          <Tooltip content={<CustomTooltip />} />
+          <Line type="monotone" dataKey="count" stroke="#FFB800" strokeWidth={3} dot={{ r: 4, fill: "#FFB800" }} activeDot={{ r: 6 }} />
+        </LineChart>
+      );
+    }
+
+    // Default to Premium Area Chart
+    return (
+      <AreaChart {...commonProps}>
+        <defs>
+          <linearGradient id="colorBids" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="5%" stopColor="#FFB800" stopOpacity={0.3} />
+            <stop offset="95%" stopColor="#FFB800" stopOpacity={0} />
+          </linearGradient>
+        </defs>
+        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+        <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fill: "#64748b", fontSize: 12 }} dy={10} />
+        <YAxis axisLine={false} tickLine={false} tick={{ fill: "#64748b", fontSize: 12 }} />
+        <Tooltip content={<CustomTooltip />} />
+        <Area type="monotone" dataKey="count" stroke="#FFB800" strokeWidth={3} fillOpacity={1} fill="url(#colorBids)" animationDuration={1500} />
+      </AreaChart>
+    );
+  };
+
   return (
     <div className="w-full h-[300px] mt-4">
+      <h3 className="text-sm font-semibold text-slate-500 mb-4 uppercase tracking-wider">Bid Count Over Time</h3>
       <ResponsiveContainer width="100%" height="100%">
-        <AreaChart
-          data={data}
-          margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
-        >
-          <defs>
-            <linearGradient id="colorBids" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#FFB800" stopOpacity={0.3} />
-              <stop offset="95%" stopColor="#FFB800" stopOpacity={0} />
-            </linearGradient>
-          </defs>
-          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-          <XAxis
-            dataKey="date"
-            axisLine={false}
-            tickLine={false}
-            tick={{ fill: "#64748b", fontSize: 12 }}
-            dy={10}
-          />
-          <YAxis
-            axisLine={false}
-            tickLine={false}
-            tick={{ fill: "#64748b", fontSize: 12 }}
-          />
-          <Tooltip content={<CustomTooltip />} />
-          <Area
-            type="monotone"
-            dataKey="count"
-            stroke="#FFB800"
-            strokeWidth={3}
-            fillOpacity={1}
-            fill="url(#colorBids)"
-            animationBegin={0}
-            animationDuration={1500}
-          />
-        </AreaChart>
+        {renderChart()}
       </ResponsiveContainer>
     </div>
   );

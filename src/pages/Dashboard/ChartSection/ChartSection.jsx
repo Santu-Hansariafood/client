@@ -16,7 +16,7 @@ const ChartSection = () => {
         <div className="inline-flex rounded-xl bg-slate-100 p-1 border border-slate-200 shadow-sm gap-1">
           <button
             type="button"
-            className={`px-4 py-2 rounded-lg text-sm font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 ${
+            className={`px-4 py-2 rounded-lg text-sm font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-[#8CC63F] focus-visible:ring-offset-2 ${
               chartType === "line"
                 ? "bg-white text-slate-900 shadow-sm"
                 : "text-slate-600 hover:text-slate-900"
@@ -27,7 +27,7 @@ const ChartSection = () => {
           </button>
           <button
             type="button"
-            className={`px-4 py-2 rounded-lg text-sm font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2 ${
+            className={`px-4 py-2 rounded-lg text-sm font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-[#FFB800] focus-visible:ring-offset-2 ${
               chartType === "bar"
                 ? "bg-white text-slate-900 shadow-sm"
                 : "text-slate-600 hover:text-slate-900"
