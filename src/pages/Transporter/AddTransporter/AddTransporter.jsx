@@ -89,7 +89,7 @@ const AddTransporter = () => {
   };
 
   return (
-    <AdminPageShell title="Register Transporter" icon={<FaTruckMoving />}>
+    <AdminPageShell title="Register Transporter" icon={FaTruckMoving}>
       <form onSubmit={handleSubmit} className="space-y-8 bg-white p-6 rounded-xl shadow-sm border border-slate-100">
         <section>
           <h3 className="text-lg font-semibold text-slate-800 mb-4 pb-2 border-b border-slate-100">Basic Details</h3>

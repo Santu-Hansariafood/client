@@ -95,7 +95,7 @@ const ListTransporter = () => {
   ]);
 
   return (
-    <AdminPageShell title="Transporter List" icon={<FaTruckMoving />}>
+    <AdminPageShell title="Transporter List" icon={FaTruckMoving}>
       <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-4">
         <div className="mb-6">
           <SearchBox

@@ -96,7 +96,7 @@ const ListEmployee = () => {
   ]);
 
   return (
-    <AdminPageShell title="Employee List" icon={<FaUsers />}>
+    <AdminPageShell title="Employee List" icon={FaUsers}>
       <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-4">
         <div className="mb-6">
           <SearchBox

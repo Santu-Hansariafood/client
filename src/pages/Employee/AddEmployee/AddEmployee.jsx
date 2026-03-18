@@ -58,7 +58,7 @@ const AddEmployee = () => {
   };
 
   return (
-    <AdminPageShell title="Register Employee" icon={<FaUserPlus />}>
+    <AdminPageShell title="Register Employee" icon={FaUserPlus}>
       <form onSubmit={handleSubmit} className="space-y-6 bg-white p-6 rounded-xl shadow-sm border border-slate-100">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <DataInput label="Full Name" name="name" value={formData.name} onChange={handleChange} required />
