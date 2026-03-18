@@ -60,14 +60,15 @@ const AddTransporter = () => {
 
   const handleDropdownChange = (selectedOption, actionMeta) => {
     const { name } = actionMeta;
+    const value = selectedOption ? selectedOption.value : "";
     if (name.includes(".")) {
       const [parent, child] = name.split(".");
       setFormData((prev) => ({
         ...prev,
-        [parent]: { ...prev[parent], [child]: selectedOption.value }
+        [parent]: { ...prev[parent], [child]: value }
       }));
     } else {
-      setFormData((prev) => ({ ...prev, [name]: selectedOption.value }));
+      setFormData((prev) => ({ ...prev, [name]: value }));
     }
   };
 

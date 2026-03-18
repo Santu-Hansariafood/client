@@ -35,11 +35,18 @@ const AddEmployee = () => {
   };
 
   const handleDropdownChange = (selectedOption, actionMeta) => {
-    setFormData((prev) => ({ ...prev, [actionMeta.name]: selectedOption.value }));
+    setFormData((prev) => ({
+      ...prev,
+      [actionMeta.name]: selectedOption ? selectedOption.value : "",
+    }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!formData.sex) {
+      toast.error("Please select a gender (Sex)");
+      return;
+    }
     try {
       await api.post("/employees", formData);
       toast.success("Employee registered successfully!");

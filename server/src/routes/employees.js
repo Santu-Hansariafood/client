@@ -3,7 +3,6 @@ import Employee from "../models/Employee.js";
 
 const router = Router();
 
-// Get all employees (with pagination)
 router.get("/", async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
@@ -30,7 +29,6 @@ router.get("/", async (req, res) => {
   }
 });
 
-// Get single employee
 router.get("/:id", async (req, res) => {
   try {
     const employee = await Employee.findById(req.params.id);
@@ -41,7 +39,6 @@ router.get("/:id", async (req, res) => {
   }
 });
 
-// Create employee
 router.post("/", async (req, res) => {
   try {
     const employee = new Employee(req.body);
@@ -52,7 +49,6 @@ router.post("/", async (req, res) => {
   }
 });
 
-// Update employee
 router.put("/:id", async (req, res) => {
   try {
     const updated = await Employee.findByIdAndUpdate(req.params.id, req.body, {
@@ -66,7 +62,6 @@ router.put("/:id", async (req, res) => {
   }
 });
 
-// Delete employee
 router.delete("/:id", async (req, res) => {
   try {
     const deleted = await Employee.findByIdAndDelete(req.params.id);

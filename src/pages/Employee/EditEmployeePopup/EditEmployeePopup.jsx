@@ -45,11 +45,18 @@ const EditEmployeePopup = ({ employee, isOpen, onClose, onUpdate }) => {
   };
 
   const handleDropdownChange = (selectedOption, actionMeta) => {
-    setFormData((prev) => ({ ...prev, [actionMeta.name]: selectedOption.value }));
+    setFormData((prev) => ({
+      ...prev,
+      [actionMeta.name]: selectedOption ? selectedOption.value : "",
+    }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!formData.sex) {
+      toast.error("Please select a gender (Sex)");
+      return;
+    }
     try {
       const response = await api.put(`/employees/${employee._id}`, formData);
       toast.success("Employee updated successfully!");

@@ -3,7 +3,6 @@ import Transporter from "../models/Transporter.js";
 
 const router = Router();
 
-// Get all transporters (with pagination)
 router.get("/", async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
@@ -30,7 +29,6 @@ router.get("/", async (req, res) => {
   }
 });
 
-// Get single transporter
 router.get("/:id", async (req, res) => {
   try {
     const transporter = await Transporter.findById(req.params.id);
@@ -41,7 +39,6 @@ router.get("/:id", async (req, res) => {
   }
 });
 
-// Create transporter
 router.post("/", async (req, res) => {
   try {
     const transporter = new Transporter(req.body);
@@ -52,7 +49,6 @@ router.post("/", async (req, res) => {
   }
 });
 
-// Update transporter
 router.put("/:id", async (req, res) => {
   try {
     const updated = await Transporter.findByIdAndUpdate(req.params.id, req.body, {
@@ -66,7 +62,6 @@ router.put("/:id", async (req, res) => {
   }
 });
 
-// Delete transporter
 router.delete("/:id", async (req, res) => {
   try {
     const deleted = await Transporter.findByIdAndDelete(req.params.id);
