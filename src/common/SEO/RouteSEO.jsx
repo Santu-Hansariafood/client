@@ -80,7 +80,11 @@ function shouldNoIndex(pathname) {
 
 const RouteSEO = () => {
   const { pathname } = useLocation();
-  const canonical = `${SITE_URL}${pathname === "/" ? "" : pathname}`;
+  
+  // Consolidate /login and / to the same canonical URL to avoid duplicate indexing
+  const isLoginPage = pathname === "/" || pathname === "/login";
+  const canonical = isLoginPage ? SITE_URL : `${SITE_URL}${pathname}`;
+  
   const noindex = shouldNoIndex(pathname);
   const meta = ROUTE_META.find((m) => m.match.test(pathname));
   const title = meta?.title || `${DEFAULT_TITLE}${pathname !== "/" ? ` — ${pathname}` : ""}`;

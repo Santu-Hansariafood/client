@@ -57,7 +57,7 @@ const AppRoutes = ({ hydrated }) => {
           <Route key={path} path={path} element={<Component />} />
         ))}
       </Route>
-      <Route path="*" element={<Navigate to="/" replace />} />
+      <Route path="*" element={<LazyPages.NotFound />} />
     </Routes>
   );
 };
