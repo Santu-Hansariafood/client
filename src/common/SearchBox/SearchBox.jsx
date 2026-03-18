@@ -27,7 +27,15 @@ const SearchBox = ({
   }, [searchTerm, debounceMs]);
 
   const normalizedItems = useMemo(
-    () => (Array.isArray(items) ? items.map((item) => String(item ?? "")) : []),
+    () =>
+      Array.isArray(items)
+        ? items.map((item) => {
+            if (typeof item === "object" && item !== null) {
+              return Object.values(item).join(" ");
+            }
+            return String(item ?? "");
+          })
+        : [],
     [items]
   );
 

@@ -24,10 +24,11 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
   const toggleSection = useCallback((sectionName) => {
     if (isCollapsed) {
       setIsCollapsed(false);
+      setExpandedSection(sectionName);
       return;
     }
     setExpandedSection((prev) => (prev === sectionName ? null : sectionName));
-  }, []);
+  }, [isCollapsed]);
 
   const renderIcon = useCallback((iconName) => {
     const IconComponent = Icons[iconName];
