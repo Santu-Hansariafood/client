@@ -1,95 +1,96 @@
-import React, { Suspense, lazy } from "react";
-import {
-  FaUserTie,
-  FaUsers,
-  FaStore,
-  FaTruck,
-  FaClipboardList,
-} from "react-icons/fa";
-import Loading from "../../common/Loading/Loading";
-import { useAuth } from "../../context/AuthContext/AuthContext";
-
-const Cards = lazy(() => import("../../common/Cards/Cards"));
+import { useState, useEffect } from "react";
+import axios from "axios";
+import { FaUserTie, FaClock, FaCalendarCheck, FaClipboardList } from "react-icons/fa";
 
 const EmployeeDashboard = () => {
-  const { user } = useAuth();
+  const [employeeInfo, setEmployeeInfo] = useState(null);
+  const [stats, setStats] = useState({
+    totalTasks: 0,
+    pendingBids: 0,
+    activeOrders: 0
+  });
 
-  const dashboardData = [
-    {
-      title: "Buyer List",
-      count: "Manage",
-      icon: FaUsers,
-      link: "/buyer/list",
-    },
-    {
-      title: "Seller List",
-      count: "Manage",
-      icon: FaStore,
-      link: "/seller-details/list",
-    },
-    {
-      title: "Consignee List",
-      count: "Manage",
-      icon: FaTruck,
-      link: "/consignee/list",
-    },
-    {
-      title: "Self Orders",
-      count: "View",
-      icon: FaClipboardList,
-      link: "/manage-order/list-self-order",
-    },
-  ];
+  useEffect(() => {
+    // Get stored user info
+    const user = JSON.parse(localStorage.getItem("user") || "{}");
+    setEmployeeInfo(user);
+    
+    // Fetch relevant stats (mock for now, or real if endpoints exist)
+    // fetchStats();
+  }, []);
 
   return (
-    <Suspense fallback={<Loading />}>
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-amber-50/20 to-orange-50/30 p-6 sm:p-10">
-        <div className="max-w-6xl mx-auto">
-          {/* Welcome Section */}
-          <div className="flex flex-col md:flex-row justify-between items-center mb-12 gap-6 bg-white/40 backdrop-blur-md p-8 rounded-[2.5rem] border border-white/60 shadow-xl shadow-amber-900/5">
-            <div className="flex items-center gap-6">
-              <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center text-white shadow-lg shadow-amber-200">
-                <FaUserTie size={44} />
-              </div>
-              <div>
-                <h1 className="text-3xl font-black text-slate-800 tracking-tight">
-                  Employee Portal
-                </h1>
-                <p className="text-amber-600 font-semibold tracking-wide uppercase text-sm">
-                  Operations & Management
-                </p>
-              </div>
-            </div>
-            <div className="px-6 py-3 bg-white rounded-2xl shadow-sm border border-slate-100">
-              <span className="text-slate-400 text-sm font-medium mr-2">
-                Status:
-              </span>
-              <span className="text-orange-600 font-bold uppercase text-xs tracking-widest bg-orange-50 px-3 py-1 rounded-full">
-                On Duty
-              </span>
-            </div>
-          </div>
+    <div className="p-6 space-y-8">
+      {/* Welcome Header */}
+      <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-800">Welcome back, {employeeInfo?.name}!</h1>
+          <p className="text-slate-500">Here's what's happening in your account today.</p>
+        </div>
+        <div className="flex items-center gap-2 bg-emerald-50 text-emerald-700 px-4 py-2 rounded-lg border border-emerald-100">
+          <FaClock />
+          <span className="font-medium">{new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' })}</span>
+        </div>
+      </header>
 
-          {/* Dashboard Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {dashboardData.map((item, index) => (
-              <div key={index} className="group relative">
-                <div className="absolute -inset-0.5 bg-gradient-to-r from-amber-500 to-orange-500 rounded-3xl blur opacity-20 group-hover:opacity-40 transition duration-500"></div>
-                <div className="relative rounded-3xl overflow-hidden shadow-2xl bg-white/90 backdrop-blur-xl border border-amber-100 hover:scale-[1.02] transition-all duration-300">
-                  <Cards
-                    title={item.title}
-                    count={item.count}
-                    icon={item.icon}
-                    link={item.link}
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
+      {/* Stats Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <StatCard 
+          icon={<FaClipboardList className="text-blue-600" />} 
+          label="Total Saudas" 
+          value="24" 
+          color="bg-blue-50" 
+        />
+        <StatCard 
+          icon={<FaCalendarCheck className="text-emerald-600" />} 
+          label="Active Bids" 
+          value="12" 
+          color="bg-emerald-50" 
+        />
+        <StatCard 
+          icon={<FaUserTie className="text-indigo-600" />} 
+          label="Profile Status" 
+          value="Active" 
+          color="bg-indigo-50" 
+        />
+      </div>
+
+      {/* Profile Details Section */}
+      <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+        <div className="p-6 border-b border-slate-50 flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-slate-800">My Profile Details</h2>
+          <button className="text-sm font-medium text-emerald-600 hover:text-emerald-700">Edit Profile</button>
+        </div>
+        <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-8">
+          <DetailItem label="Full Name" value={employeeInfo?.name} />
+          <DetailItem label="Employee ID" value={employeeInfo?.employeeId || "EMP001"} />
+          <DetailItem label="Email Address" value={employeeInfo?.email || "employee@hansariafood.in"} />
+          <DetailItem label="Mobile Number" value={employeeInfo?.mobile} />
+          <DetailItem label="Role" value="Executive" />
+          <DetailItem label="Department" value="Operations" />
         </div>
       </div>
-    </Suspense>
+    </div>
   );
 };
+
+const StatCard = ({ icon, label, value, color }) => (
+  <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-4">
+    <div className={`p-4 rounded-xl ${color}`}>
+      {icon}
+    </div>
+    <div>
+      <p className="text-sm font-medium text-slate-500">{label}</p>
+      <p className="text-2xl font-bold text-slate-800">{value}</p>
+    </div>
+  </div>
+);
+
+const DetailItem = ({ label, value }) => (
+  <div className="space-y-1">
+    <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">{label}</p>
+    <p className="text-base font-medium text-slate-700">{value || "N/A"}</p>
+  </div>
+);
 
 export default EmployeeDashboard;

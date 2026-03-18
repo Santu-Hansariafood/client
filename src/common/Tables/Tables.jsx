@@ -8,7 +8,7 @@ const Tables = ({ headers, rows }) => {
           rows.map((row, rowIndex) => (
             <div
               key={rowIndex}
-              className="rounded-2xl border border-emerald-100 bg-white overflow-hidden shadow-md shadow-emerald-900/5"
+              className="rounded-2xl border border-[#8CC63F]/20 bg-white overflow-hidden shadow-md shadow-slate-900/5"
             >
               <div className="divide-y divide-slate-100">
                 {row.map((cell, cellIndex) => (
@@ -16,7 +16,7 @@ const Tables = ({ headers, rows }) => {
                     key={cellIndex}
                     className="flex justify-between gap-4 px-4 py-3.5"
                   >
-                    <span className="text-xs font-semibold text-emerald-700/80 uppercase tracking-wider shrink-0">
+                    <span className="text-xs font-semibold text-[#8CC63F] uppercase tracking-wider shrink-0">
                       {headers[cellIndex]}
                     </span>
                     <div className="text-sm text-slate-800 text-right break-words max-w-[60%]">
@@ -28,20 +28,20 @@ const Tables = ({ headers, rows }) => {
             </div>
           ))
         ) : (
-          <div className="rounded-2xl border border-dashed border-emerald-200 bg-emerald-50/40 p-8 text-center">
+          <div className="rounded-2xl border border-dashed border-[#8CC63F]/30 bg-[#8CC63F]/5 p-8 text-center">
             <p className="text-slate-600 font-medium">No data available</p>
           </div>
         )}
       </div>
 
-      <div className="hidden md:block w-full overflow-x-auto rounded-2xl border border-emerald-100 bg-white shadow-lg shadow-emerald-900/5">
+      <div className="hidden md:block w-full overflow-x-auto rounded-2xl border border-[#8CC63F]/20 bg-white shadow-lg shadow-slate-900/5">
         <table className="w-full min-w-[600px] border-collapse">
           <thead>
-            <tr className="bg-gradient-to-r from-emerald-800 to-emerald-700">
+            <tr className="bg-gradient-to-r from-[#8CC63F] to-[#7AB034]">
               {headers.map((header, index) => (
                 <th
                   key={index}
-                  className="px-5 py-4 text-left text-xs font-semibold text-amber-50 uppercase tracking-wider border-b border-emerald-600/50 whitespace-nowrap first:rounded-tl-2xl last:rounded-tr-2xl"
+                  className="px-5 py-4 text-left text-xs font-semibold text-white uppercase tracking-wider border-b border-[#8CC63F]/20 whitespace-nowrap first:rounded-tl-2xl last:rounded-tr-2xl"
                 >
                   {header}
                 </th>
@@ -54,7 +54,7 @@ const Tables = ({ headers, rows }) => {
               rows.map((row, rowIndex) => (
                 <tr
                   key={rowIndex}
-                  className="border-b border-slate-100 last:border-0 odd:bg-white even:bg-slate-50/50 hover:bg-emerald-50/40 transition-colors"
+                  className="border-b border-slate-100 last:border-0 odd:bg-white even:bg-slate-50/50 hover:bg-[#8CC63F]/5 transition-colors"
                 >
                   {row.map((cell, cellIndex) => (
                     <td

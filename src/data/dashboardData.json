@@ -107,6 +107,22 @@
         { "name": "Add Loading Entry", "link": "/Loading-Entry/add-loading-entry", "icon": "FaPlus" },
         { "name": "List Loading Entry", "link": "/Loading-Entry/list-loading-entry", "icon": "FaList" }
       ]
+    },
+    {
+      "section": "Employee Management",
+      "icon": "FaUserTie",
+      "actions": [
+        { "name": "Register Employee", "link": "/employee/add", "icon": "FaUserPlus" },
+        { "name": "Employee List", "link": "/employee/list", "icon": "FaList" }
+      ]
+    },
+    {
+      "section": "Transporter Management",
+      "icon": "FaTruck",
+      "actions": [
+        { "name": "Register Transporter", "link": "/transporter/add", "icon": "FaPlus" },
+        { "name": "Transporter List", "link": "/transporter/list", "icon": "FaList" }
+      ]
     }
   ]
 }

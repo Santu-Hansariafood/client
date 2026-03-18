@@ -9,7 +9,7 @@ const PageHeader = ({ title, subtitle, icon: Icon, className = "" }) => {
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-3">
             {Icon && (
-              <span className="hidden sm:flex shrink-0 w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 items-center justify-center">
+              <span className="hidden sm:flex shrink-0 w-10 h-10 rounded-xl bg-[#8CC63F]/10 text-[#8CC63F] items-center justify-center">
                 <Icon className="text-xl" aria-hidden />
               </span>
             )}
@@ -26,7 +26,7 @@ const PageHeader = ({ title, subtitle, icon: Icon, className = "" }) => {
           </div>
         </div>
       </div>
-      <div className="animate-page-underline mt-4 h-px bg-gradient-to-r from-emerald-500/40 via-amber-400/30 to-transparent rounded-full" />
+      <div className="animate-page-underline mt-4 h-px bg-gradient-to-r from-[#8CC63F]/40 via-[#FFB800]/30 to-transparent rounded-full" />
     </div>
   );
 };

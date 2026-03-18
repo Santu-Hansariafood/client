@@ -1,88 +1,107 @@
-import React, { Suspense, lazy } from "react";
-import {
-  FaTruck,
-  FaMapMarkerAlt,
-  FaCalendarAlt,
-  FaUserCircle,
-} from "react-icons/fa";
-import Loading from "../../common/Loading/Loading";
-import { useAuth } from "../../context/AuthContext/AuthContext";
-
-const Cards = lazy(() => import("../../common/Cards/Cards"));
+import { useState, useEffect } from "react";
+import { FaTruck, FaClock, FaCalendarCheck, FaCreditCard, FaUser } from "react-icons/fa";
 
 const TransporterDashboard = () => {
-  const { user } = useAuth();
+  const [transporterInfo, setTransporterInfo] = useState(null);
 
-  const dashboardData = [
-    {
-      title: "Loading Entries",
-      count: "View",
-      icon: FaTruck,
-      link: "/Loading-Entry/list-loading-entry",
-    },
-    {
-      title: "Manage Locations",
-      count: "List",
-      icon: FaMapMarkerAlt,
-      link: "/manage-bids/bid-location",
-    },
-    {
-      title: "Soudabook",
-      count: "History",
-      icon: FaCalendarAlt,
-      link: "/sodabook/list",
-    },
-  ];
+  useEffect(() => {
+    const user = JSON.parse(localStorage.getItem("user") || "{}");
+    setTransporterInfo(user);
+  }, []);
 
   return (
-    <Suspense fallback={<Loading />}>
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-emerald-50/20 to-teal-50/30 p-6 sm:p-10">
-        <div className="max-w-6xl mx-auto">
-          {/* Welcome Section */}
-          <div className="flex flex-col md:flex-row justify-between items-center mb-12 gap-6 bg-white/40 backdrop-blur-md p-8 rounded-[2.5rem] border border-white/60 shadow-xl shadow-emerald-900/5">
-            <div className="flex items-center gap-6">
-              <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-emerald-600 to-teal-700 flex items-center justify-center text-white shadow-lg shadow-emerald-200">
-                <FaUserCircle size={44} />
-              </div>
-              <div>
-                <h1 className="text-3xl font-black text-slate-800 tracking-tight">
-                  Logistics Center
-                </h1>
-                <p className="text-emerald-600 font-semibold tracking-wide uppercase text-sm">
-                  Transporter Portal
-                </p>
-              </div>
-            </div>
-            <div className="px-6 py-3 bg-white rounded-2xl shadow-sm border border-slate-100">
-              <span className="text-slate-400 text-sm font-medium mr-2">
-                Status:
-              </span>
-              <span className="text-teal-600 font-bold uppercase text-xs tracking-widest bg-teal-50 px-3 py-1 rounded-full">
-                Operational
-              </span>
-            </div>
-          </div>
+    <div className="p-6 space-y-8">
+      {/* Welcome Header */}
+      <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-800">Transporter Portal: {transporterInfo?.name}</h1>
+          <p className="text-slate-500">Manage your vehicles and view logistics details.</p>
+        </div>
+        <div className="flex items-center gap-2 bg-emerald-50 text-emerald-700 px-4 py-2 rounded-lg border border-emerald-100">
+          <FaClock />
+          <span className="font-medium">{new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' })}</span>
+        </div>
+      </header>
 
-          {/* Dashboard Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {dashboardData.map((item, index) => (
-              <div key={index} className="group relative">
-                <div className="absolute -inset-0.5 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-3xl blur opacity-20 group-hover:opacity-40 transition duration-500"></div>
-                <div className="relative rounded-3xl overflow-hidden shadow-2xl bg-white/90 backdrop-blur-xl border border-emerald-100 hover:scale-[1.02] transition-all duration-300">
-                  <Cards
-                    title={item.title}
-                    count={item.count}
-                    icon={item.icon}
-                    link={item.link}
-                  />
-                </div>
-              </div>
-            ))}
+      {/* Stats Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <StatCard 
+          icon={<FaTruck className="text-blue-600" />} 
+          label="Total Trips" 
+          value="48" 
+          color="bg-blue-50" 
+        />
+        <StatCard 
+          icon={<FaCalendarCheck className="text-emerald-600" />} 
+          label="Pending Deliveries" 
+          value="5" 
+          color="bg-emerald-50" 
+        />
+        <StatCard 
+          icon={<FaCreditCard className="text-indigo-600" />} 
+          label="Pending Payments" 
+          value="₹12,500" 
+          color="bg-indigo-50" 
+        />
+        <StatCard 
+          icon={<FaUser className="text-orange-600" />} 
+          label="Status" 
+          value="Verified" 
+          color="bg-orange-50" 
+        />
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Vehicle & Driver Details */}
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+          <div className="p-6 border-b border-slate-50">
+            <h2 className="text-lg font-semibold text-slate-800">Vehicle & Driver Details</h2>
+          </div>
+          <div className="p-6 grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <DetailItem label="Vehicle Number" value={transporterInfo?.vehicleDetails?.number} />
+            <DetailItem label="Vehicle Type" value={transporterInfo?.vehicleDetails?.type} />
+            <DetailItem label="Owner Name" value={transporterInfo?.vehicleDetails?.ownerName} />
+            <DetailItem label="Driver Name" value={transporterInfo?.driverDetails?.name} />
+            <DetailItem label="License Number" value={transporterInfo?.driverDetails?.licenseNumber} />
+            <DetailItem label="Driver Contact" value={transporterInfo?.driverDetails?.phoneNumber} />
+          </div>
+        </div>
+
+        {/* Bank & Payment Details */}
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+          <div className="p-6 border-b border-slate-50">
+            <h2 className="text-lg font-semibold text-slate-800">Bank & Payment Details</h2>
+          </div>
+          <div className="p-6 grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <DetailItem label="Account Holder" value={transporterInfo?.bankDetails?.accountHolderName} />
+            <DetailItem label="Account Number" value={transporterInfo?.bankDetails?.accountNumber} />
+            <DetailItem label="IFSC Code" value={transporterInfo?.bankDetails?.ifscCode} />
+            <DetailItem label="Bank Name" value={transporterInfo?.bankDetails?.bankName} />
+            <DetailItem label="Branch" value={transporterInfo?.bankDetails?.branchName} />
           </div>
         </div>
       </div>
-    </Suspense>
+    </div>
   );
 };
+
+const StatCard = ({ icon, label, value, color }) => (
+  <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-4">
+    <div className={`p-4 rounded-xl ${color}`}>
+      {icon}
+    </div>
+    <div>
+      <p className="text-sm font-medium text-slate-500">{label}</p>
+      <p className="text-xl font-bold text-slate-800">{value}</p>
+    </div>
+  </div>
+);
+
+const DetailItem = ({ label, value }) => (
+  <div className="space-y-1">
+    <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">{label}</p>
+    <p className="text-base font-medium text-slate-700">{value || "Not Provided"}</p>
+  </div>
+);
 
 export default TransporterDashboard;

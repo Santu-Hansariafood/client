@@ -3,6 +3,8 @@ import jwt from "jsonwebtoken";
 import User from "../models/User.js";
 import Buyer from "../models/Buyer.js";
 import Seller from "../models/Seller.js";
+import Employee from "../models/Employee.js";
+import Transporter from "../models/Transporter.js";
 
 const router = Router();
 
@@ -31,14 +33,39 @@ router.post("/employees/login", async (req, res) => {
     if (!process.env.JWT_SECRET) {
       return res.status(500).json({ message: "JWT_SECRET is not configured" });
     }
-    const user = await User.findOne({ role: "Employee", mobile, password });
-    if (!user) return res.status(401).json({ message: "Invalid credentials" });
+    const employee = await Employee.findOne({ mobile, password });
+    if (!employee) return res.status(401).json({ message: "Invalid credentials" });
+    if (employee.status === "Inactive") {
+      return res.status(403).json({ message: "Your account is inactive." });
+    }
     const token = jwt.sign(
-      { sub: user._id.toString(), role: "Employee", mobile: user.mobile || "" },
+      { sub: employee._id.toString(), role: "Employee", mobile: employee.mobile || "" },
       process.env.JWT_SECRET,
       { expiresIn: "365d" }
     );
-    res.json({ role: "Employee", mobile: user.mobile || "", name: user.name, token });
+    res.json({ role: "Employee", mobile: employee.mobile || "", name: employee.name, token });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+router.post("/transporters/login", async (req, res) => {
+  try {
+    const { mobile, password } = req.body;
+    if (!process.env.JWT_SECRET) {
+      return res.status(500).json({ message: "JWT_SECRET is not configured" });
+    }
+    const transporter = await Transporter.findOne({ mobile, password });
+    if (!transporter) return res.status(401).json({ message: "Invalid credentials" });
+    if (transporter.status === "Inactive") {
+      return res.status(403).json({ message: "Your account is inactive." });
+    }
+    const token = jwt.sign(
+      { sub: transporter._id.toString(), role: "Transporter", mobile: transporter.mobile || "" },
+      process.env.JWT_SECRET,
+      { expiresIn: "365d" }
+    );
+    res.json({ role: "Transporter", mobile: transporter.mobile || "", name: transporter.name, token });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
