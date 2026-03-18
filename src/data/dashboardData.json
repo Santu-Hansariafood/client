@@ -118,7 +118,7 @@
     },
     {
       "section": "Transporter Management",
-      "icon": "FaTruck",
+      "icon": "FaTruckMoving",
       "actions": [
         { "name": "Register Transporter", "link": "/transporter/add", "icon": "FaPlus" },
         { "name": "Transporter List", "link": "/transporter/list", "icon": "FaList" }

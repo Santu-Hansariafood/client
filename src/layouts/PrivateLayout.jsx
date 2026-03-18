@@ -39,13 +39,15 @@ const PrivateLayout = () => {
       prefetchRoute("/buyer/list");
       prefetchRoute("/manage-bids/bid-list");
       prefetchRoute("/company/list");
+      prefetchRoute("/employee/list");
+      prefetchRoute("/transporter/list");
     }, 800);
     return () => clearTimeout(id);
   }, []);
 
   return (
     <div className="flex h-screen w-full overflow-hidden bg-slate-100">
-      {userRole === "Admin" && (
+      {(userRole === "Admin" || userRole === "Employee") && (
         <Sidebar
           isSidebarOpen={isSidebarOpen}
           setIsSidebarOpen={setIsSidebarOpen}
@@ -54,7 +56,7 @@ const PrivateLayout = () => {
       <div className="flex-1 min-w-0 flex flex-col overflow-hidden">
         <Header
           onLogoutClick={() => setShowLogoutConfirmation(true)}
-          showMenuButton={userRole === "Admin"}
+          showMenuButton={userRole === "Admin" || userRole === "Employee"}
           onMenuClick={() => setIsSidebarOpen(!isSidebarOpen)}
           isSidebarOpen={isSidebarOpen}
           isProfileDropdownOpen={isProfileDropdownOpen}

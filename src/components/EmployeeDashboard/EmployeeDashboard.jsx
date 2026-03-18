@@ -11,17 +11,13 @@ const EmployeeDashboard = () => {
   });
 
   useEffect(() => {
-    // Get stored user info
     const user = JSON.parse(localStorage.getItem("user") || "{}");
     setEmployeeInfo(user);
     
-    // Fetch relevant stats (mock for now, or real if endpoints exist)
-    // fetchStats();
   }, []);
 
   return (
     <div className="p-6 space-y-8">
-      {/* Welcome Header */}
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-slate-800">Welcome back, {employeeInfo?.name}!</h1>
@@ -32,8 +28,6 @@ const EmployeeDashboard = () => {
           <span className="font-medium">{new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' })}</span>
         </div>
       </header>
-
-      {/* Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         <StatCard 
           icon={<FaClipboardList className="text-blue-600" />} 
@@ -54,8 +48,6 @@ const EmployeeDashboard = () => {
           color="bg-indigo-50" 
         />
       </div>
-
-      {/* Profile Details Section */}
       <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
         <div className="p-6 border-b border-slate-50 flex items-center justify-between">
           <h2 className="text-lg font-semibold text-slate-800">My Profile Details</h2>
