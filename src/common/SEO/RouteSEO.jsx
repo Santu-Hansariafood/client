@@ -16,18 +16,13 @@ const COMMODITY_LIST_DESC =
 const COMMODITY_ADD_DESC =
   "Add commodities with HSN codes and quality parameters for bid management — Hansaria Food trading platform.";
 
-const NOINDEX_PATTERNS = [
-  /^\/manage-order\/edit-self-order\//,
-  /^\/confirm-bids\//,
-  /^\/loading-entry-sauda\//,
-  /^\/manage-order\/add-self-order$/,
-  /^\/Supplier-Bid-List$/,
-  /^\/participate-bid-list$/,
-  /^\/dashboard$/,
-  /^\/employee\//,
-  /^\/buyer\/dashboard$/,
-  /^\/seller\/dashboard$/,
-  /^\/transporter\/dashboard$/,
+const PUBLIC_ROUTES = [
+  /^\/$/,
+  /^\/login$/,
+  /^\/privacy-policy$/,
+  /^\/terms-conditions$/,
+  /^\/broker-commission-policy$/,
+  /^\/teams$/,
 ];
 
 const ROUTE_META = [
@@ -74,7 +69,11 @@ const ROUTE_META = [
 ];
 
 function shouldNoIndex(pathname) {
-  if (NOINDEX_PATTERNS.some((re) => re.test(pathname))) return true;
+  // Index only explicitly public routes
+  const isPublic = PUBLIC_ROUTES.some((re) => re.test(pathname));
+  if (!isPublic) return true;
+  
+  // Also noindex if it contains certain patterns even if matched above (unlikely but safe)
   if (pathname.includes("/edit-")) return true;
   return false;
 }
@@ -98,25 +97,27 @@ const RouteSEO = () => {
       {meta?.keywords && <meta name="keywords" content={meta.keywords} />}
       <link rel="canonical" href={canonical} />
       <meta name="robots" content={robots} />
-      {noindex && <meta name="googlebot" content="noindex, nofollow" />}
+
+      {/* Open Graph / Facebook */}
       <meta property="og:type" content="website" />
-      <meta property="og:site_name" content="Hansaria Food — Bid Portal" />
-      <meta property="og:locale" content="en_IN" />
+      <meta property="og:url" content={canonical} />
       <meta property="og:title" content={title} />
       <meta property="og:description" content={desc} />
-      <meta property="og:url" content={canonical} />
       <meta property="og:image" content={OG_IMAGE} />
-      <meta property="og:image:width" content="512" />
-      <meta property="og:image:height" content="512" />
-      <meta property="og:image:alt" content="Hansaria Food — Commodity & bid portal" />
-      <meta property="og:image:type" content="image/png" />
-      <meta property="og:image:secure_url" content={OG_IMAGE} />
-      <meta property="og:logo" content={OG_IMAGE_192} />
+      <meta property="og:site_name" content="Hansaria Food Bid Portal" />
+      <meta property="og:locale" content="en_IN" />
+
+      {/* Twitter */}
       <meta name="twitter:card" content="summary_large_image" />
+      <meta name="twitter:url" content={canonical} />
       <meta name="twitter:title" content={title} />
       <meta name="twitter:description" content={desc} />
       <meta name="twitter:image" content={OG_IMAGE} />
-      <meta name="twitter:image:alt" content="Hansaria Food — Bid Portal" />
+      <meta name="twitter:site" content="@hansariafood" />
+
+      {/* Mobile Branding */}
+      <meta name="theme-color" content="#064e3b" />
+      <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     </Helmet>
   );
 };

@@ -100,7 +100,7 @@ const BuyerBidsList = () => {
   };
 
   const headers = [
-    "ID",
+    "Sl No",
     "Type",
     "Company",
     "Origin",
@@ -120,7 +120,7 @@ const BuyerBidsList = () => {
   const rows = filteredData
     .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
     .map((bid, index) => [
-      filteredData.length - ((currentPage - 1) * itemsPerPage + index),
+      (currentPage - 1) * itemsPerPage + index + 1,
       bid.type,
       bid.company,
       getOriginName(bid.origin),

@@ -1,35 +1,37 @@
 User-agent: *
 Allow: /
-
-Allow: /commodity/list
-Allow: /quality-parameter/list
-Allow: /terms-conditions
+Allow: /login
 Allow: /privacy-policy
+Allow: /terms-conditions
 Allow: /broker-commission-policy
 Allow: /teams
 
-Disallow: /login
-Disallow: /logout
-Disallow: /register
+# Disallow all authenticated/private routes
 Disallow: /dashboard
-
+Disallow: /employee/
+Disallow: /buyer/
+Disallow: /seller/
+Disallow: /transporter/
+Disallow: /group-of-company/
+Disallow: /company/
+Disallow: /consignee/
+Disallow: /commodity/
+Disallow: /quality-parameter/
+Disallow: /seller-company/
+Disallow: /seller-details/
+Disallow: /manage-bids/
+Disallow: /sodabook/
 Disallow: /manage-order/
-Disallow: /manage-order/edit-self-order/
-
-Disallow: /confirm-bids/
+Disallow: /Loading-Entry/
 Disallow: /loading-entry-sauda/
-
+Disallow: /confirm-bids/
 Disallow: /Supplier-Bid-List
 Disallow: /participate-bid-list
-
-Disallow: /buyer/
-Disallow: /company/
-Disallow: /manage-bids/
-
 Disallow: /api/
 Disallow: /auth/
 Disallow: /admin/
 
+# Block search parameters to avoid duplicate content
 Disallow: /*?*
 
 Sitemap: https://bid.hansariafood.in/sitemap.xml

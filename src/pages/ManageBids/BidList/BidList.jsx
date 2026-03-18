@@ -80,7 +80,7 @@ const BidList = () => {
   };
 
   const headers = [
-    "ID",
+    "Sl No",
     "Group",
     "Consignee",
     "Origin",
@@ -112,8 +112,8 @@ const BidList = () => {
       }));
   }, [bids]);
 
-  const buildRow = (bid, index, listLength) => [
-    listLength - index,
+  const buildRow = (bid, index) => [
+    index + 1,
     bid.group,
     bid.consignee,
     bid.origin,
@@ -216,8 +216,8 @@ const BidList = () => {
                 rows={
                   groupedBids
                     .find((g) => g.group === selectedGroup)
-                    ?.bids.map((bid, idx, arr) =>
-                      buildRow(bid, idx, arr.length)
+                    ?.bids.map((bid, idx) =>
+                      buildRow(bid, idx)
                     ) || []
                 }
               />

@@ -31,7 +31,7 @@ const ListQualityParameter = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
-  const headers = ["Name", "Actions"];
+  const headers = ["Sl No", "Name", "Actions"];
 
   useEffect(() => {
     const fetchQualityParameters = async () => {
@@ -63,6 +63,7 @@ const ListQualityParameter = () => {
       );
       setFilteredData(results);
     }
+    setCurrentPage(1);
   };
   
 
@@ -119,7 +120,8 @@ const ListQualityParameter = () => {
 
   const rows = filteredData
     .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
-    .map((item) => [
+    .map((item, index) => [
+      (currentPage - 1) * itemsPerPage + index + 1,
       item.name,
       <Actions
         key={item._id}

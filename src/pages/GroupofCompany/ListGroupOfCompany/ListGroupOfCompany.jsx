@@ -172,7 +172,7 @@ const ListGroupOfCompany = () => {
           </div>
 
           <div className="overflow-x-auto rounded-xl border border-slate-100">
-            <Tables headers={["Sl. No", "Group Name", "Actions"]} rows={rows} />
+            <Tables headers={["Sl No", "Group Name", "Actions"]} rows={rows} />
           </div>
 
           <div className="mt-4">

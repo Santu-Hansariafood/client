@@ -103,7 +103,7 @@ const ListSellerCompany = () => {
   };
 
   const headers = [
-    "Sl No.",
+    "Sl No",
     "Company Name",
     "GST No",
     "PAN No",

@@ -78,7 +78,7 @@ const ListSellerDetails = () => {
   };
 
   const headers = [
-    "S.No",
+    "Sl No",
     "Seller Name",
     "Emails",
     "Phone Numbers",

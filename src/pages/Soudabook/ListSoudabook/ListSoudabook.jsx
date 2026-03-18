@@ -86,9 +86,12 @@ const ListSoudabook = () => {
     }
   };
 
+  const headers = ["Sl No", "Agent Name", "Actions"];
+
   const rows = useMemo(
     () =>
-      data.map((item) => [
+      data.map((item, index) => [
+        index + 1,
         item.name,
         <Actions
           key={item._id}
@@ -99,8 +102,6 @@ const ListSoudabook = () => {
       ]),
     [data]
   );
-
-  const headers = useMemo(() => ["Agent Name", "Actions"], []);
 
   return (
     <Suspense fallback={<Loading />}>

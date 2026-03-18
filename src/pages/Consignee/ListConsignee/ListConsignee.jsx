@@ -190,7 +190,7 @@ const ListConsignee = () => {
               <div className="overflow-x-auto rounded-xl border border-slate-100 -mx-1 px-1">
                 <Tables
                   headers={[
-                    "Sl No.",
+                    "Sl No",
                     "Name",
                     "Phone",
                     "Email",
@@ -202,7 +202,7 @@ const ListConsignee = () => {
                     "Pin",
                     "Contact Person",
                     "Mandi License",
-                    "Active Status",
+                    "Status",
                     "Actions",
                   ]}
                   rows={formattedRows}

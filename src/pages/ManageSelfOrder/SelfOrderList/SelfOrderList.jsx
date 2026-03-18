@@ -112,6 +112,7 @@ const SelfOrderList = () => {
 
   const headers = useMemo(
     () => [
+      "Sl No",
       "Sauda No",
       "PO Number",
       "Buyer",
@@ -141,7 +142,8 @@ const SelfOrderList = () => {
 
   const rows = useMemo(
     () =>
-      currentItems.map((item) => [
+      currentItems.map((item, index) => [
+        (currentPage - 1) * itemsPerPage + index + 1,
         item.saudaNo,
         item.poNumber,
         item.buyer,
@@ -181,7 +183,7 @@ const SelfOrderList = () => {
           />
         </div>,
       ]),
-    [currentItems, handleView, handleEdit, getConsigneeDisplay]
+    [currentItems, handleView, handleEdit, getConsigneeDisplay, currentPage, itemsPerPage]
   );
 
   const handleSearchChange = useCallback(
@@ -197,10 +199,14 @@ const SelfOrderList = () => {
             (order) =>
               (order.buyer &&
                 order.buyer.toLowerCase().includes(lowerSearch)) ||
+              (order.buyerCompany &&
+                order.buyerCompany.toLowerCase().includes(lowerSearch)) ||
+              (order.commodity &&
+                order.commodity.toLowerCase().includes(lowerSearch)) ||
               (order.saudaNo &&
-                order.saudaNo.toLowerCase().includes(lowerSearch)) ||
+                order.saudaNo.toString().toLowerCase().includes(lowerSearch)) ||
               (order.poNumber &&
-                order.poNumber.toLowerCase().includes(lowerSearch))
+                order.poNumber.toString().toLowerCase().includes(lowerSearch))
           )
         );
       }

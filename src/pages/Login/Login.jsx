@@ -16,7 +16,7 @@ const Login = () => {
         <div className="hidden md:block md:w-1/2 h-full overflow-hidden">
           {memoizedCarousel}
         </div>
-        <div className="w-full md:w-1/2 flex items-center justify-center p-4 sm:p-6 md:p-10">
+        <div className="w-full md:w-1/2 flex items-center justify-center min-h-screen md:min-h-0 p-4 sm:p-6 md:p-10">
           <div className="w-full max-w-md">{memoizedLoginForm}</div>
         </div>
       </div>

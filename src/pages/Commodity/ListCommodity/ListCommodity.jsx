@@ -54,6 +54,7 @@ const ListCommodity = () => {
       );
       setFilteredCommodities(results);
     }
+    setCurrentPage(1);
   };
 
   const handleView = async (id) => {
@@ -113,7 +114,7 @@ const ListCommodity = () => {
   ]);
 
   const tableHeaders = [
-    "Serial No.",
+    "Sl No",
     "Commodity Name",
     "HSN Code",
     "Parameters",

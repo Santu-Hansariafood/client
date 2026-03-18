@@ -10,6 +10,7 @@ import PrintLoadingEntry from "../PrintLoadingEntry/PrintLoadingEntry";
 const PopupBox = lazy(() => import("../../../common/PopupBox/PopupBox"));
 const Tables = lazy(() => import("../../../common/Tables/Tables"));
 const SearchBox = lazy(() => import("../../../common/SearchBox/SearchBox")); // ✅ Import SearchBox
+const Pagination = lazy(() => import("../../../common/Paginations/Paginations"));
 
 const ListLoadingEntry = () => {
   const [loadingEntries, setLoadingEntries] = useState([]);
@@ -19,6 +20,8 @@ const ListLoadingEntry = () => {
   const [popupType, setPopupType] = useState("");
   const [editEntry, setEditEntry] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   useEffect(() => {
     fetchData();
@@ -127,6 +130,7 @@ const ListLoadingEntry = () => {
   };
 
   const headers = [
+    "Sl No",
     "Loading Date",
     "Seller Name",
     "Loading Weight",
@@ -147,54 +151,57 @@ const ListLoadingEntry = () => {
 
   const rows = useMemo(
     () =>
-      filteredEntries.map((entry) => [
-        new Date(entry.loadingDate).toLocaleDateString(),
-        sellerMap[entry.supplier] || "Unknown Supplier",
-        entry.loadingWeight,
-        entry.lorryNumber,
-        entry.addedTransport,
-        entry.driverName,
-        entry.driverPhoneNumber,
-        entry.freightRate,
-        entry.totalFreight,
-        entry.advance,
-        entry.balance,
-        entry.billNumber,
-        new Date(entry.dateOfIssue).toLocaleDateString(),
-        entry.commodity,
-        <div key={`actions-${entry._id}`} className="flex justify-center gap-2">
+      filteredEntries
+        .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+        .map((entry, index) => [
+          (currentPage - 1) * itemsPerPage + index + 1,
+          new Date(entry.loadingDate).toLocaleDateString(),
+          sellerMap[entry.supplier] || "Unknown Supplier",
+          entry.loadingWeight,
+          entry.lorryNumber,
+          entry.addedTransport,
+          entry.driverName,
+          entry.driverPhoneNumber,
+          entry.freightRate,
+          entry.totalFreight,
+          entry.advance,
+          entry.balance,
+          entry.billNumber,
+          new Date(entry.dateOfIssue).toLocaleDateString(),
+          entry.commodity,
+          <div key={`actions-${entry._id}`} className="flex justify-center gap-2">
+            <button
+              onClick={() => handleView(entry)}
+              title="View"
+              className="p-1 text-blue-500 hover:bg-blue-100 rounded"
+            >
+              <MdVisibility size={18} />
+            </button>
+            <button
+              onClick={() => handleEdit(entry)}
+              title="Edit"
+              className="p-1 text-green-500 hover:bg-green-100 rounded"
+            >
+              <MdEdit size={18} />
+            </button>
+            <button
+              onClick={() => handleDelete(entry._id)}
+              title="Delete"
+              className="p-1 text-red-500 hover:bg-red-100 rounded"
+            >
+              <MdDelete size={18} />
+            </button>
+          </div>,
           <button
-            onClick={() => handleView(entry)}
-            title="View"
-            className="p-1 text-blue-500 hover:bg-blue-100 rounded"
+            key={`download-${entry._id}`}
+            onClick={() => handleDownload(entry)}
+            title="Download"
+            className="p-1 text-purple-500 hover:bg-purple-100 rounded flex justify-center"
           >
-            <MdVisibility size={18} />
-          </button>
-          <button
-            onClick={() => handleEdit(entry)}
-            title="Edit"
-            className="p-1 text-green-500 hover:bg-green-100 rounded"
-          >
-            <MdEdit size={18} />
-          </button>
-          <button
-            onClick={() => handleDelete(entry._id)}
-            title="Delete"
-            className="p-1 text-red-500 hover:bg-red-100 rounded"
-          >
-            <MdDelete size={18} />
-          </button>
-        </div>,
-        <button
-          key={`download-${entry._id}`}
-          onClick={() => handleDownload(entry)}
-          title="Download"
-          className="p-1 text-purple-500 hover:bg-purple-100 rounded flex justify-center"
-        >
-          <MdDownload size={18} />
-        </button>,
-      ]),
-    [filteredEntries, sellerMap]
+            <MdDownload size={18} />
+          </button>,
+        ]),
+    [filteredEntries, sellerMap, currentPage, itemsPerPage]
   );
 
   return (
@@ -216,13 +223,14 @@ const ListLoadingEntry = () => {
                 onSearch={(filteredNames) => {
                   if (!filteredNames.length) {
                     setFilteredEntries(loadingEntries);
-                    return;
+                  } else {
+                    setFilteredEntries(
+                      loadingEntries.filter((entry) =>
+                        filteredNames.includes(sellerMap[entry.supplier])
+                      )
+                    );
                   }
-                  setFilteredEntries(
-                    loadingEntries.filter((entry) =>
-                      filteredNames.includes(sellerMap[entry.supplier])
-                    )
-                  );
+                  setCurrentPage(1);
                 }}
               />
 
@@ -232,13 +240,14 @@ const ListLoadingEntry = () => {
                 onSearch={(filteredLorryNumbers) => {
                   if (!filteredLorryNumbers.length) {
                     setFilteredEntries(loadingEntries);
-                    return;
+                  } else {
+                    setFilteredEntries(
+                      loadingEntries.filter((entry) =>
+                        filteredLorryNumbers.includes(entry.lorryNumber)
+                      )
+                    );
                   }
-                  setFilteredEntries(
-                    loadingEntries.filter((entry) =>
-                      filteredLorryNumbers.includes(entry.lorryNumber)
-                    )
-                  );
+                  setCurrentPage(1);
                 }}
               />
             </div>
@@ -246,6 +255,14 @@ const ListLoadingEntry = () => {
 
           <div className="rounded-2xl border border-slate-200 bg-white shadow-sm p-3 sm:p-4">
             <Tables headers={headers} rows={rows} />
+            <div className="mt-4">
+              <Pagination
+                currentPage={currentPage}
+                totalItems={filteredEntries.length}
+                itemsPerPage={itemsPerPage}
+                onPageChange={setCurrentPage}
+              />
+            </div>
           </div>
 
           {selectedEntry && (
