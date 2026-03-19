@@ -33,10 +33,11 @@ const SupplierBidList = () => {
         return;
       }
       const bidsRes = await axios.get("/bids");
+      const items = bidsRes.data?.data || bidsRes.data || [];
       const sevenDaysAgo = new Date();
       sevenDaysAgo.setHours(0, 0, 0, 0);
       sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-      const filteredBids = bidsRes.data
+      const filteredBids = items
         .filter((bid) => {
           const bidDate = new Date(bid.bidDate);
           bidDate.setHours(0, 0, 0, 0);

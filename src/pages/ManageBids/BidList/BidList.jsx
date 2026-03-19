@@ -24,10 +24,11 @@ const BidList = () => {
     const fetchData = async () => {
       try {
         const response = await axios.get("/bids");
+        const items = response.data?.data || response.data || [];
         const sevenDaysAgo = new Date();
         sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-        const filteredBids = response.data.filter(
+        const filteredBids = items.filter(
           (bid) => new Date(bid.bidDate) >= sevenDaysAgo
         );
 

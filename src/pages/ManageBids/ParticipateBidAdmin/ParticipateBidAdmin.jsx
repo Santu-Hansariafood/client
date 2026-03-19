@@ -27,14 +27,17 @@ const ParticipateBidAdmin = () => {
           axios.get("/participatebids"),
         ]);
 
+        const bids = bidsRes.data?.data || bidsRes.data || [];
+        const participations = participateRes.data?.data || participateRes.data || [];
+
         const sevenDaysAgo = new Date();
         sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-        const recentParticipations = participateRes.data.filter(
+        const recentParticipations = participations.filter(
           (pBid) => new Date(pBid.participationDate) >= sevenDaysAgo
         );
 
-        setBids(bidsRes.data);
+        setBids(bids);
         setParticipationBids(recentParticipations);
         setFilteredBids(recentParticipations);
       } catch {

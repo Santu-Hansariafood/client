@@ -47,6 +47,9 @@ const BaseBid = () => {
         axios.get(`${apiBaseUrl}/bid-locations`),
       ]);
 
+      const companies = companiesRes.data?.data || companiesRes.data || [];
+      const origins = originsRes.data?.data || originsRes.data || [];
+
       const formatName = (name) => {
         return name
           .split(" ")
@@ -58,7 +61,7 @@ const BaseBid = () => {
 
       const groupMap = new Map();
 
-      companiesRes.data.forEach((c) => {
+      companies.forEach((c) => {
         const formattedGroupName = formatName(c.group);
         if (groupMap.has(formattedGroupName)) {
           const existingGroup = groupMap.get(formattedGroupName);
@@ -95,7 +98,7 @@ const BaseBid = () => {
       setState((prev) => ({
         ...prev,
         groupOptions: sortedGroupOptions,
-        originOptions: originsRes.data.map((o) => ({
+        originOptions: origins.map((o) => ({
           value: formatName(o.name),
           label: formatName(o.name),
         })),

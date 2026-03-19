@@ -34,8 +34,9 @@ const BuyerBidsList = () => {
     const fetchBids = async () => {
       try {
         const response = await axios.get("/bids");
-        setBids(response.data);
-        setFilteredData(response.data);
+        const items = response.data?.data || response.data || [];
+        setBids(items);
+        setFilteredData(items);
       } catch {
         toast.error("Error fetching bids");
       }
@@ -43,7 +44,8 @@ const BuyerBidsList = () => {
     const fetchCommodities = async () => {
       try {
         const response = await axios.get("/commodities");
-        setCommodities(response.data?.data || response.data || []);
+        const items = response.data?.data || response.data || [];
+        setCommodities(items);
       } catch {
         toast.error("Error fetching commodities");
       }
@@ -51,7 +53,8 @@ const BuyerBidsList = () => {
     const fetchOrigins = async () => {
       try {
         const response = await axios.get("/bid-locations");
-        setOrigins(response.data || []);
+        const items = response.data?.data || response.data || [];
+        setOrigins(items);
       } catch {
         toast.error("Error fetching origins");
       }

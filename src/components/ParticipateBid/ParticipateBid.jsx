@@ -25,9 +25,9 @@ const ParticipateBid = () => {
         axios.get("/confirm-bid"),
       ]);
 
-      setBids(bidsRes.data);
-      setParticipations(participateRes.data);
-      setBidStatuses(confirmBidsRes.data);
+      setBids(bidsRes.data?.data || bidsRes.data || []);
+      setParticipations(participateRes.data?.data || participateRes.data || []);
+      setBidStatuses(confirmBidsRes.data?.data || confirmBidsRes.data || []);
     } catch (error) {
       console.error("Error fetching data", error);
     }
