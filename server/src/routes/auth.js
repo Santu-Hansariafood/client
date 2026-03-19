@@ -43,7 +43,16 @@ router.post("/employees/login", async (req, res) => {
       process.env.JWT_SECRET,
       { expiresIn: "365d" }
     );
-    res.json({ role: "Employee", mobile: employee.mobile || "", name: employee.name, token });
+    res.json({
+      role: "Employee",
+      mobile: employee.mobile || "",
+      name: employee.name,
+      email: employee.email || "",
+      employeeId: employee.employeeId || "",
+      sex: employee.sex || "",
+      status: employee.status || "Active",
+      token,
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -65,7 +74,15 @@ router.post("/transporters/login", async (req, res) => {
       process.env.JWT_SECRET,
       { expiresIn: "365d" }
     );
-    res.json({ role: "Transporter", mobile: transporter.mobile || "", name: transporter.name, token });
+    res.json({
+      role: "Transporter",
+      mobile: transporter.mobile || "",
+      name: transporter.name,
+      email: transporter.email || "",
+      vehicleDetails: transporter.vehicleDetails || {},
+      status: transporter.status || "Active",
+      token,
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -103,7 +120,14 @@ router.post("/buyers/login", async (req, res) => {
     );
 
     console.log(`Buyer login successful: ${buyer.name}`);
-    res.json({ role: "Buyer", mobile: mobile, name: buyer.name, token });
+    res.json({
+      role: "Buyer",
+      mobile: mobile,
+      name: buyer.name,
+      email: buyer.email || [],
+      status: buyer.status || "Active",
+      token,
+    });
   } catch (error) {
     console.error("Buyer login error:", error);
     res.status(500).json({ message: "Internal server error" });
@@ -138,29 +162,17 @@ router.post("/sellers/login", async (req, res) => {
     );
 
     console.log(`Seller login successful: ${seller.sellerName}`);
-    res.json({ role: "Seller", mobile: phone, name: seller.sellerName, token });
+    res.json({
+      role: "Seller",
+      mobile: phone,
+      name: seller.sellerName,
+      emails: seller.emails || [],
+      status: seller.status || "active",
+      token,
+    });
   } catch (error) {
     console.error("Seller login error:", error);
     res.status(500).json({ message: "Internal server error" });
-  }
-});
-
-router.post("/transporters/login", async (req, res) => {
-  try {
-    const { mobile, password } = req.body;
-    if (!process.env.JWT_SECRET) {
-      return res.status(500).json({ message: "JWT_SECRET is not configured" });
-    }
-    const user = await User.findOne({ role: "Transporter", mobile, password });
-    if (!user) return res.status(401).json({ message: "Invalid credentials" });
-    const token = jwt.sign(
-      { sub: user._id.toString(), role: "Transporter", mobile: user.mobile || "" },
-      process.env.JWT_SECRET,
-      { expiresIn: "365d" }
-    );
-    res.json({ role: "Transporter", mobile: user.mobile || "", name: user.name, token });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
   }
 });
 
