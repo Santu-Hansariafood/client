@@ -35,8 +35,11 @@ const BuyerBidsList = () => {
       try {
         const response = await axios.get("/bids");
         const items = response.data?.data || response.data || [];
-        setBids(items);
-        setFilteredData(items);
+        const sorted = items.sort(
+          (a, b) => new Date(b.bidDate) - new Date(a.bidDate)
+        );
+        setBids(sorted);
+        setFilteredData(sorted);
       } catch {
         toast.error("Error fetching bids");
       }
@@ -45,7 +48,10 @@ const BuyerBidsList = () => {
       try {
         const response = await axios.get("/commodities");
         const items = response.data?.data || response.data || [];
-        setCommodities(items);
+        const sorted = items.sort((a, b) =>
+          (a.name || "").localeCompare(b.name || "")
+        );
+        setCommodities(sorted);
       } catch {
         toast.error("Error fetching commodities");
       }
@@ -54,7 +60,10 @@ const BuyerBidsList = () => {
       try {
         const response = await axios.get("/bid-locations");
         const items = response.data?.data || response.data || [];
-        setOrigins(items);
+        const sorted = items.sort((a, b) =>
+          (a.name || "").localeCompare(b.name || "")
+        );
+        setOrigins(sorted);
       } catch {
         toast.error("Error fetching origins");
       }
@@ -147,7 +156,9 @@ const BuyerBidsList = () => {
       </button>,
     ]);
 
-  const companyItems = [...new Set(bids.map((b) => b.company).filter(Boolean))];
+  const companyItems = [...new Set(bids.map((b) => b.company).filter(Boolean))].sort(
+    (a, b) => a.localeCompare(b)
+  );
 
   return (
     <Suspense fallback={<Loading />}>

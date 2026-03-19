@@ -67,6 +67,7 @@ const SearchBox = ({
         value={searchTerm}
         onChange={handleInputChange}
         placeholder={placeholder || "Search..."}
+        autoComplete="off"
         className="w-full min-w-0 px-3 py-2 bg-transparent text-slate-800 placeholder-slate-400 focus:outline-none"
         aria-label={placeholder || "Search"}
       />

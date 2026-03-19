@@ -177,8 +177,6 @@ const ListQualityParameter = () => {
           itemsPerPage={itemsPerPage}
           onPageChange={handlePageChange}
         />
-
-        <ToastContainer />
       </AdminPageShell>
       </div>
     </Suspense>

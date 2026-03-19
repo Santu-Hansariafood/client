@@ -35,14 +35,6 @@ const PrivateLayout = () => {
 
   useEffect(() => {
     prefetchRoute("/dashboard");
-    const id = setTimeout(() => {
-      prefetchRoute("/buyer/list");
-      prefetchRoute("/manage-bids/bid-list");
-      prefetchRoute("/company/list");
-      prefetchRoute("/employee/list");
-      prefetchRoute("/transporter/list");
-    }, 800);
-    return () => clearTimeout(id);
   }, []);
 
   return (

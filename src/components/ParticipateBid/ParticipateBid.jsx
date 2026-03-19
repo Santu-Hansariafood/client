@@ -45,7 +45,7 @@ const ParticipateBid = () => {
 
       const matchedData = participations
         .filter((p) => String(p.mobile) === String(mobile))
-        .map((participation, index) => {
+        .map((participation) => {
           const bid = bids.find((b) => b._id === participation.bidId);
           if (!bid) return null;
 
@@ -56,21 +56,37 @@ const ParticipateBid = () => {
           const bidStatus =
             bidStatuses.find((c) => c.bidId === bid._id)?.status || "Pending";
 
-          return [
-            index + 1,
-            bid.group || "N/A",
-            bid.consignee || "N/A",
-            bid.origin || "N/A",
-            bid.commodity || "Unknown Commodity",
-            bid.quantity || "N/A",
-            bid.rate || "N/A",
-            participation.rate || "N/A",
-            participation.quantity || "N/A",
-            new Date(participation.participationDate).toLocaleString(),
-            bidStatus,
-          ];
+          return {
+            group: bid.group || "N/A",
+            consignee: bid.consignee || "N/A",
+            origin: bid.origin || "N/A",
+            commodity: bid.commodity || "Unknown Commodity",
+            quantity: bid.quantity || "N/A",
+            rate: bid.rate || "N/A",
+            participationRate: participation.rate || "N/A",
+            participationQuantity: participation.quantity || "N/A",
+            participationDate: new Date(
+              participation.participationDate
+            ).toLocaleString(),
+            rawDate: new Date(participation.participationDate),
+            status: bidStatus,
+          };
         })
-        .filter((item) => item !== null);
+        .filter((item) => item !== null)
+        .sort((a, b) => b.rawDate - a.rawDate)
+        .map((item, index) => [
+          index + 1,
+          item.group,
+          item.consignee,
+          item.origin,
+          item.commodity,
+          item.quantity,
+          item.rate,
+          item.participationRate,
+          item.participationQuantity,
+          item.participationDate,
+          item.status,
+        ]);
 
       setFilteredData(matchedData);
       setCurrentPage(1);

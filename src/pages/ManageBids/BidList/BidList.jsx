@@ -46,7 +46,10 @@ const BidList = () => {
   }, []);
 
   const consigneeItems = useMemo(
-    () => [...new Set(bids.map((b) => b.consignee).filter(Boolean))],
+    () =>
+      [...new Set(bids.map((b) => b.consignee).filter(Boolean))].sort((a, b) =>
+        a.localeCompare(b)
+      ),
     [bids]
   );
 

@@ -48,31 +48,17 @@ const DataInput = ({
           onBlur={onBlur}
           minLength={minLength}
           maxLength={maxLength}
+          autoComplete="off"
           required={required}
           disabled={disabled}
           readOnly={readOnly}
-          className={`
-          w-full ${sizeStyles}
-          ${Icon ? "pl-12" : ""}
-          rounded-xl border
-          bg-white/80 backdrop-blur
-          text-gray-800
-          border-gray-300
-          shadow-sm
-          transition-all duration-200
-          placeholder-gray-400
-          focus:outline-none
-          focus:ring-2
-          focus:ring-green-200
-          focus:border-green-500
-          hover:border-green-400
-          ${error ? "border-red-400 focus:ring-red-200 focus:border-red-500" : ""}
-          ${
-            disabled || readOnly
-              ? "bg-gray-100 text-gray-400 cursor-not-allowed border-gray-200"
-              : ""
-          }
-        `}
+          className={`w-full ${Icon ? "pl-12" : "px-5"} py-3 bg-white dark:bg-slate-800/50 border ${
+            error
+              ? "border-red-500 focus:ring-red-200"
+              : "border-slate-200 dark:border-slate-700 focus:ring-green-200 dark:focus:ring-green-900/30 focus:border-green-500"
+          } rounded-xl outline-none focus:ring-4 transition-all duration-200 text-slate-700 dark:text-slate-200 placeholder:text-slate-400 font-medium ${sizeStyles} ${
+            disabled ? "bg-slate-50 cursor-not-allowed opacity-60" : ""
+          }`}
         />
       </div>
 

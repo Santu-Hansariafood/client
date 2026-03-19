@@ -141,7 +141,6 @@ export const AuthProvider = ({ children }) => {
   return (
     <AuthContext.Provider value={value}>
       {children}
-      <ToastContainer />
     </AuthContext.Provider>
   );
 };

@@ -98,10 +98,12 @@ const BaseBid = () => {
       setState((prev) => ({
         ...prev,
         groupOptions: sortedGroupOptions,
-        originOptions: origins.map((o) => ({
-          value: formatName(o.name),
-          label: formatName(o.name),
-        })),
+        originOptions: origins
+          .map((o) => ({
+            value: formatName(o.name),
+            label: formatName(o.name),
+          }))
+          .sort((a, b) => a.label.localeCompare(b.label)),
       }));
     } catch (error) {
       toast.error("Failed to fetch data. Please try again later.", error);
@@ -125,13 +127,17 @@ const BaseBid = () => {
       ...prev,
       selectedGroup,
       consigneeOptions:
-        group?.consignees.map((c) => ({ value: c, label: c })) || [],
+        group?.consignees
+          .map((c) => ({ value: c, label: c }))
+          .sort((a, b) => a.label.localeCompare(b.label)) || [],
       commodityOptions:
-        group?.commodities.map((c) => ({
-          value: c.name,
-          label: c.name,
-          parameters: c.parameters,
-        })) || [],
+        group?.commodities
+          .map((c) => ({
+            value: c.name,
+            label: c.name,
+            parameters: c.parameters,
+          }))
+          .sort((a, b) => a.label.localeCompare(b.label)) || [],
       selectedConsignee: null,
       selectedCommodity: null,
       parameters: [],
@@ -266,7 +272,7 @@ const BaseBid = () => {
         icon={FaGavel}
         noContentCard
       >
-        <div className="max-w-6xl mx-auto">
+        <div className="max-w-4xl mx-auto space-y-8">
           <div className="rounded-2xl border border-amber-200/60 bg-white shadow-lg p-4 sm:p-6 md:p-8">
             <GroupSelection
               state={state}
@@ -286,7 +292,6 @@ const BaseBid = () => {
               handleSubmit={handleSubmit}
             />
           </div>
-          <ToastContainer />
         </div>
       </AdminPageShell>
     </Suspense>

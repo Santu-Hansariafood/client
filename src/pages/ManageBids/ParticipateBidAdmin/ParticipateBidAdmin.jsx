@@ -33,9 +33,12 @@ const ParticipateBidAdmin = () => {
         const sevenDaysAgo = new Date();
         sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-        const recentParticipations = participations.filter(
-          (pBid) => new Date(pBid.participationDate) >= sevenDaysAgo
-        );
+        const recentParticipations = participations
+          .filter((pBid) => new Date(pBid.participationDate) >= sevenDaysAgo)
+          .sort(
+            (a, b) =>
+              new Date(b.participationDate) - new Date(a.participationDate)
+          );
 
         setBids(bids);
         setParticipationBids(recentParticipations);
@@ -113,7 +116,10 @@ const ParticipateBidAdmin = () => {
   ]);
 
   const consigneeItems = useMemo(
-    () => [...new Set(bids.map((b) => b.consignee).filter(Boolean))],
+    () =>
+      [...new Set(bids.map((b) => b.consignee).filter(Boolean))].sort((a, b) =>
+        a.localeCompare(b)
+      ),
     [bids]
   );
 

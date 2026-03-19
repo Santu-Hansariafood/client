@@ -132,8 +132,6 @@ const BidLocation = () => {
         icon={FaMapMarkerAlt}
         noContentCard
       >
-        <ToastContainer position="top-right" autoClose={3000} />
-
         <div className="max-w-6xl mx-auto space-y-6">
           <div className="rounded-2xl border border-amber-200/60 bg-white shadow-lg p-4 sm:p-6">
             <form

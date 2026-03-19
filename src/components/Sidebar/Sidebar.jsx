@@ -110,7 +110,6 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
                       <Link
                         key={idx}
                         to={action.link}
-                        onMouseEnter={() => prefetchRoute(action.link)}
                         className={`group relative flex items-center gap-3 py-2 px-3 rounded-xl text-sm transition
                           ${isActive
                             ? "bg-emerald-500/15 text-emerald-200 font-semibold border border-emerald-500/20"

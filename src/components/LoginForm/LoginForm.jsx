@@ -124,6 +124,7 @@ const LoginForm = () => {
               value={phoneNumber}
               onChange={(e) => setPhoneNumber(e.target.value)}
               name="phoneNumber"
+              autoComplete="off"
               className="w-full p-3 sm:p-3.5 rounded-xl border border-gray-300 shadow-sm focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all outline-none"
               maxLength="10"
               minLength="10"
@@ -144,6 +145,7 @@ const LoginForm = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 name="password"
+                autoComplete="new-password"
                 className="w-full p-3 sm:p-3.5 pr-12 rounded-xl border border-gray-300 shadow-sm focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all outline-none"
               />
               <button
