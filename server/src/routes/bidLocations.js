@@ -22,4 +22,32 @@ router.post("/", async (req, res) => {
   res.status(201).json(item);
 });
 
+router.put("/:id", async (req, res) => {
+  try {
+    const updated = await BidLocation.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { new: true }
+    );
+    if (!updated) {
+      return res.status(404).json({ message: "Bid location not found" });
+    }
+    res.json(updated);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+});
+
+router.delete("/:id", async (req, res) => {
+  try {
+    const deleted = await BidLocation.findByIdAndDelete(req.params.id);
+    if (!deleted) {
+      return res.status(404).json({ message: "Bid location not found" });
+    }
+    res.json({ message: "Bid location deleted successfully" });
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+});
+
 export default router;

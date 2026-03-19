@@ -50,10 +50,9 @@ const BidLocation = () => {
 
     try {
       if (isEditing !== null) {
-        const id = data[isEditing]._id;
-        // console.log(`Updating bid location with ID: ${id}`);
-
-        const response = await axios.put(`${API_URL}/${id}`, { name: inputValue });
+        const response = await axios.put(`${API_URL}/${isEditing}`, {
+          name: inputValue,
+        });
 
         if (response.status === 200) {
           toast.success("Bid location updated successfully");
@@ -61,8 +60,6 @@ const BidLocation = () => {
           throw new Error("Failed to update bid location");
         }
       } else {
-        // console.log(`Creating new bid location: ${inputValue}`);
-
         const response = await axios.post(API_URL, { name: inputValue });
 
         if (response.status === 201) {
@@ -74,38 +71,36 @@ const BidLocation = () => {
 
       setInputValue("");
       setIsEditing(null);
-
-      setTimeout(fetchBidLocations, 500);
+      fetchBidLocations();
     } catch (error) {
-      // console.error("Error saving bid location:", error);
-      toast.error(error.response?.data?.message || "Failed to save bid location");
+      toast.error(
+        error.response?.data?.message || "Failed to save bid location"
+      );
     }
   };
 
-  const handleDelete = async (index) => {
-    const id = data[index]._id;
-    console.log(`Attempting to delete bid location with ID: ${id}`);
-
+  const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this entry?")) {
       try {
         const response = await axios.delete(`${API_URL}/${id}`);
 
         if (response.status === 200) {
           toast.success("Bid location deleted successfully");
-          setTimeout(fetchBidLocations, 500);
+          fetchBidLocations();
         } else {
           throw new Error("Failed to delete bid location");
         }
       } catch (error) {
-        // console.error("Error deleting bid location:", error);
-        toast.error(error.response?.data?.message || "Failed to delete bid location");
+        toast.error(
+          error.response?.data?.message || "Failed to delete bid location"
+        );
       }
     }
   };
 
-  const handleEdit = (index) => {
-    setIsEditing(index);
-    setInputValue(data[index].name);
+  const handleEdit = (item) => {
+    setIsEditing(item._id);
+    setInputValue(item.name);
     toast.info("Editing mode enabled");
   };
 
