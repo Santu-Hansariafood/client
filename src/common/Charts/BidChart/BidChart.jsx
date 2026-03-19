@@ -30,7 +30,9 @@ const CustomTooltip = ({ active, payload, label }) => {
 
 const BidChart = ({ apiUrl, chartType = "line", data: externalData }) => {
   const [internalData, setInternalData] = useState([]);
+  const [rawData, setRawData] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [viewType, setViewType] = useState("monthly");
 
   useEffect(() => {
     if (apiUrl && !externalData) {
@@ -38,17 +40,8 @@ const BidChart = ({ apiUrl, chartType = "line", data: externalData }) => {
         setLoading(true);
         try {
           const response = await api.get(apiUrl);
-          const rawData = response.data?.data || response.data || [];
-          
-          // Process data for chart (count by date)
-          const counts = {};
-          rawData.forEach(item => {
-            const date = new Date(item.createdAt || item.bidDate || item.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' });
-            counts[date] = (counts[date] || 0) + 1;
-          });
-          
-          const chartData = Object.entries(counts).map(([date, count]) => ({ date, count }));
-          setInternalData(chartData);
+          const data = response.data?.data || response.data || [];
+          setRawData(data);
         } catch (error) {
           console.error("Failed to fetch bid chart data", error);
         } finally {
@@ -59,10 +52,72 @@ const BidChart = ({ apiUrl, chartType = "line", data: externalData }) => {
     }
   }, [apiUrl, externalData]);
 
-  const data = useMemo(() => externalData || internalData, [externalData, internalData]);
+  useEffect(() => {
+    if (rawData.length > 0) {
+      const processData = () => {
+        const counts = {};
+        const today = new Date();
 
-  if (loading) return <div className="h-[300px] flex items-center justify-center text-slate-400">Loading chart...</div>;
-  if (!data.length) return <div className="h-[300px] flex items-center justify-center text-slate-400">No data available for chart</div>;
+        rawData.forEach((item) => {
+          const date = new Date(item.createdAt || item.bidDate || item.date);
+          let key;
+
+          if (viewType === "weekly") {
+            // Group by day of the last 7 days
+            const diff = today - date;
+            const daysDiff = Math.floor(diff / (1000 * 60 * 60 * 24));
+            if (daysDiff <= 7) {
+              key = date.toLocaleDateString("en-IN", {
+                weekday: "short",
+                day: "numeric",
+              });
+            }
+          } else if (viewType === "monthly") {
+            // Group by week of the current month or just by date for the month
+            key = date.toLocaleDateString("en-IN", {
+              day: "2-digit",
+              month: "short",
+            });
+          } else if (viewType === "yearly") {
+            // Group by month
+            key = date.toLocaleDateString("en-IN", {
+              month: "long",
+              year: "numeric",
+            });
+          }
+
+          if (key) {
+            counts[key] = (counts[key] || 0) + 1;
+          }
+        });
+
+        // Sort data based on viewType
+        const sortedEntries = Object.entries(counts);
+        if (viewType === "yearly") {
+          sortedEntries.sort((a, b) => new Date(a[0]) - new Date(b[0]));
+        }
+
+        const chartData = sortedEntries.map(([date, count]) => ({
+          date,
+          count,
+        }));
+        setInternalData(chartData);
+      };
+      processData();
+    }
+  }, [rawData, viewType]);
+
+  const data = useMemo(
+    () => externalData || internalData,
+    [externalData, internalData]
+  );
+
+  if (loading)
+    return (
+      <div className="h-[300px] flex items-center justify-center text-slate-400">
+        Loading chart...
+      </div>
+    );
 
   const renderChart = () => {
     const commonProps = {
@@ -73,9 +128,23 @@ const BidChart = ({ apiUrl, chartType = "line", data: externalData }) => {
     if (chartType === "bar") {
       return (
         <BarChart {...commonProps}>
-          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-          <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fill: "#64748b", fontSize: 12 }} dy={10} />
-          <YAxis axisLine={false} tickLine={false} tick={{ fill: "#64748b", fontSize: 12 }} />
+          <CartesianGrid
+            strokeDasharray="3 3"
+            vertical={false}
+            stroke="#f1f5f9"
+          />
+          <XAxis
+            dataKey="date"
+            axisLine={false}
+            tickLine={false}
+            tick={{ fill: "#64748b", fontSize: 12 }}
+            dy={10}
+          />
+          <YAxis
+            axisLine={false}
+            tickLine={false}
+            tick={{ fill: "#64748b", fontSize: 12 }}
+          />
           <Tooltip content={<CustomTooltip />} />
           <Bar dataKey="count" fill="#FFB800" radius={[4, 4, 0, 0]} />
         </BarChart>
@@ -85,11 +154,32 @@ const BidChart = ({ apiUrl, chartType = "line", data: externalData }) => {
     if (chartType === "line") {
       return (
         <LineChart {...commonProps}>
-          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-          <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fill: "#64748b", fontSize: 12 }} dy={10} />
-          <YAxis axisLine={false} tickLine={false} tick={{ fill: "#64748b", fontSize: 12 }} />
+          <CartesianGrid
+            strokeDasharray="3 3"
+            vertical={false}
+            stroke="#f1f5f9"
+          />
+          <XAxis
+            dataKey="date"
+            axisLine={false}
+            tickLine={false}
+            tick={{ fill: "#64748b", fontSize: 12 }}
+            dy={10}
+          />
+          <YAxis
+            axisLine={false}
+            tickLine={false}
+            tick={{ fill: "#64748b", fontSize: 12 }}
+          />
           <Tooltip content={<CustomTooltip />} />
-          <Line type="monotone" dataKey="count" stroke="#FFB800" strokeWidth={3} dot={{ r: 4, fill: "#FFB800" }} activeDot={{ r: 6 }} />
+          <Line
+            type="monotone"
+            dataKey="count"
+            stroke="#FFB800"
+            strokeWidth={3}
+            dot={{ r: 4, fill: "#FFB800" }}
+            activeDot={{ r: 6 }}
+          />
         </LineChart>
       );
     }
@@ -104,20 +194,67 @@ const BidChart = ({ apiUrl, chartType = "line", data: externalData }) => {
           </linearGradient>
         </defs>
         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-        <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fill: "#64748b", fontSize: 12 }} dy={10} />
-        <YAxis axisLine={false} tickLine={false} tick={{ fill: "#64748b", fontSize: 12 }} />
+        <XAxis
+          dataKey="date"
+          axisLine={false}
+          tickLine={false}
+          tick={{ fill: "#64748b", fontSize: 12 }}
+          dy={10}
+        />
+        <YAxis
+          axisLine={false}
+          tickLine={false}
+          tick={{ fill: "#64748b", fontSize: 12 }}
+        />
         <Tooltip content={<CustomTooltip />} />
-        <Area type="monotone" dataKey="count" stroke="#FFB800" strokeWidth={3} fillOpacity={1} fill="url(#colorBids)" animationDuration={1500} />
+        <Area
+          type="monotone"
+          dataKey="count"
+          stroke="#FFB800"
+          strokeWidth={3}
+          fillOpacity={1}
+          fill="url(#colorBids)"
+          animationDuration={1500}
+        />
       </AreaChart>
     );
   };
 
   return (
-    <div className="w-full h-[300px] mt-4">
-      <h3 className="text-sm font-semibold text-slate-500 mb-4 uppercase tracking-wider">Bid Count Over Time</h3>
-      <ResponsiveContainer width="100%" height="100%">
-        {renderChart()}
-      </ResponsiveContainer>
+    <div className="w-full h-auto mt-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+        <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider">
+          Bid Count Over Time
+        </h3>
+
+        <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200 shadow-sm self-end sm:self-auto">
+          {["weekly", "monthly", "yearly"].map((type) => (
+            <button
+              key={type}
+              onClick={() => setViewType(type)}
+              className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all duration-200 capitalize ${
+                viewType === type
+                  ? "bg-white text-amber-600 shadow-sm"
+                  : "text-slate-500 hover:text-slate-700"
+              }`}
+            >
+              {type}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="h-[300px]">
+        {!data.length ? (
+          <div className="h-full flex items-center justify-center text-slate-400">
+            No data available for chart
+          </div>
+        ) : (
+          <ResponsiveContainer width="100%" height="100%">
+            {renderChart()}
+          </ResponsiveContainer>
+        )}
+      </div>
     </div>
   );
 };

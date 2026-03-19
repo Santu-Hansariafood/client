@@ -11,7 +11,6 @@ const AddEmployee = () => {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
-    employeeId: "",
     mobile: "",
     sex: "",
     password: "",
@@ -53,7 +52,6 @@ const AddEmployee = () => {
       setFormData({
         name: "",
         email: "",
-        employeeId: "",
         mobile: "",
         sex: "",
         password: "",
@@ -70,7 +68,6 @@ const AddEmployee = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <DataInput label="Full Name" name="name" value={formData.name} onChange={handleChange} required />
           <DataInput label="Email Address" name="email" type="email" value={formData.email} onChange={handleChange} required />
-          <DataInput label="Employee ID" name="employeeId" value={formData.employeeId} onChange={handleChange} required />
           <DataInput label="Mobile Number" name="mobile" value={formData.mobile} onChange={handleChange} required />
           <DataDropdown label="Sex" name="sex" options={sexOptions} value={sexOptions.find(o => o.value === formData.sex)} onChange={handleDropdownChange} required />
           <DataInput label="Login Password" name="password" type="password" value={formData.password} onChange={handleChange} required />
