@@ -4,6 +4,7 @@ import { toast } from "react-toastify";
 import { FaBell, FaGavel, FaBoxOpen, FaTruckMoving } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext/AuthContext";
+import UserProfileCard from "../UserProfileCard/UserProfileCard";
 
 const Cards = lazy(() => import("../../common/Cards/Cards"));
 const Loading = lazy(() => import("../../common/Loading/Loading"));
@@ -13,7 +14,7 @@ const LogoutConfirmationModal = lazy(
 const PopupBox = lazy(() => import("../../common/PopupBox/PopupBox"));
 
 const SellerDashboard = () => {
-  const { mobile, logout } = useAuth();
+  const { mobile, user, logout } = useAuth();
   const navigate = useNavigate();
   const [sellerDetails, setSellerDetails] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -158,98 +159,49 @@ const SellerDashboard = () => {
 
   return (
     <Suspense fallback={<Loading />}>
-      <div
-        className="min-h-screen bg-gradient-to-br from-blue-100 via-white to-purple-200 p-4 sm:p-8 flex flex-col items-center justify-center"
-        style={{
-          background:
-            "linear-gradient(135deg, #e0e7ff 0%, #fff 60%, #f3e8ff 100%)",
-        }}
-      >
-        <div className="w-full max-w-5xl">
-          <div className="flex flex-col sm:flex-row justify-between items-center mb-8">
-            <button
-              onClick={handleBack}
-              className="flex items-center gap-2 px-5 py-2 bg-white/60 backdrop-blur-md border border-blue-200 text-blue-700 rounded-full shadow-lg hover:bg-blue-100 transition-all"
-            >
-              <span className="font-bold">&#8592; Back</span>
-            </button>
-            <h1 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-700 via-purple-600 to-pink-500 drop-shadow-lg">
-              Seller Dashboard
-            </h1>
-            <div
-              className="relative cursor-pointer"
-              onClick={() => setShowPopup(true)}
-            >
-              <FaBell className="text-3xl text-blue-600 hover:text-pink-500 transition-all" />
-              {notificationCount > 0 && (
-                <span className="absolute -top-2 -right-2 bg-gradient-to-r from-pink-500 to-purple-500 text-white text-xs w-6 h-6 flex items-center justify-center rounded-full shadow-lg border-2 border-white">
-                  {notificationCount}
-                </span>
-              )}
-            </div>
+      <div className="p-6 space-y-8">
+        <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-bold text-slate-800">Welcome back, {user?.name}!</h1>
+            <p className="text-slate-500">Here is your Seller Dashboard.</p>
           </div>
-          <div className="bg-white/70 backdrop-blur-md rounded-3xl shadow-2xl mb-10 flex flex-col sm:flex-row items-center justify-between p-8 border border-blue-100">
-            <div className="text-gray-700 w-full sm:w-2/3">
-              {loading ? (
-                <Loading />
-              ) : error ? (
-                <p className="text-red-500 font-semibold">{error}</p>
-              ) : sellerDetails ? (
-                <div className="space-y-2">
-                  <p>
-                    <span className="font-bold text-green-700">Name:</span>{" "}
-                    {sellerDetails.sellerName}
-                  </p>
-                  <p>
-                    <span className="font-bold text-green-700">Phone:</span>{" "}
-                    {sellerDetails.phoneNumbers.map((p) => p.value).join(", ")}
-                  </p>
-                  <p>
-                    <span className="font-bold text-green-700">Email:</span>{" "}
-                    {sellerDetails.emails.map((e) => e.value).join(", ")}
-                  </p>
-                  <p>
-                    <span className="font-bold text-green-700">Company:</span>{" "}
-                    {sellerDetails.companies.join(", ")}
-                  </p>
-                  <p>
-                    <span className="font-bold text-green-700">Commodity:</span>{" "}
-                    {sellerDetails.commodities.map((c) => c.name).join(", ")}
-                  </p>
-                </div>
-              ) : (
-                <p className="text-red-500 font-semibold">
-                  Seller details not available.
-                </p>
-              )}
-            </div>
-            <div className="flex flex-col items-center mt-6 sm:mt-0 w-full sm:w-1/3">
-              <div className="w-28 h-28 flex items-center justify-center bg-gradient-to-br from-blue-200 via-white to-purple-200 text-blue-800 text-4xl font-extrabold rounded-full border-4 border-blue-300 shadow-xl mb-2">
-                {getInitials(sellerDetails?.sellerName)}
-              </div>
-            </div>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-10">
-            {dashboardData.map((item, index) => (
-              <div key={index} className="group relative">
-                <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-3xl blur opacity-20 group-hover:opacity-40 transition duration-500"></div>
-                <div className="relative rounded-3xl overflow-hidden shadow-2xl bg-white/90 backdrop-blur-xl border border-blue-100 hover:scale-[1.02] transition-all duration-300">
-                  <Cards
-                    title={item.title}
-                    count={item.count}
-                    icon={item.icon}
-                    link={item.link}
-                    state={item.state}
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
-          <PopupBox
-            isOpen={showPopup}
-            onClose={() => setShowPopup(false)}
-            title="Confirmed Bids"
+          <div
+            className="relative cursor-pointer bg-white p-3 rounded-full shadow-sm border border-slate-100"
+            onClick={() => setShowPopup(true)}
           >
+            <FaBell className="text-xl text-emerald-600 hover:text-emerald-700 transition-all" />
+            {notificationCount > 0 && (
+              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full shadow-sm">
+                {notificationCount}
+              </span>
+            )}
+          </div>
+        </header>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+          {dashboardData.map((item, index) => (
+            <div key={index} className="group relative">
+              <div className="absolute -inset-0.5 bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-3xl blur opacity-20 group-hover:opacity-40 transition duration-500"></div>
+              <div className="relative rounded-3xl overflow-hidden shadow-2xl bg-white/90 backdrop-blur-xl border border-emerald-100 hover:scale-[1.02] transition-all duration-300">
+                <Cards
+                  title={item.title}
+                  count={item.count}
+                  icon={item.icon}
+                  link={item.link}
+                  state={item.state}
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <UserProfileCard user={user} />
+
+        <PopupBox
+          isOpen={showPopup}
+          onClose={() => setShowPopup(false)}
+          title="Confirmed Bids"
+        >
             {confirmedBids.length > 0 ? (
               <ul className="space-y-4">
                 {confirmedBids.map((bid, index) => (

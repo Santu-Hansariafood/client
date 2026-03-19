@@ -1,21 +1,18 @@
 import { useState, useEffect } from "react";
 import { FaTruck, FaClock, FaCalendarCheck, FaCreditCard, FaUser } from "react-icons/fa";
+import { useAuth } from "../../context/AuthContext/AuthContext";
+import UserProfileCard from "../UserProfileCard/UserProfileCard";
 
 const TransporterDashboard = () => {
-  const [transporterInfo, setTransporterInfo] = useState(null);
-
-  useEffect(() => {
-    const user = JSON.parse(localStorage.getItem("user") || "{}");
-    setTransporterInfo(user);
-  }, []);
+  const { user } = useAuth();
 
   return (
     <div className="p-6 space-y-8">
       {/* Welcome Header */}
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-800">Transporter Portal: {transporterInfo?.name}</h1>
-          <p className="text-slate-500">Manage your vehicles and view logistics details.</p>
+          <h1 className="text-2xl font-bold text-slate-800">Welcome back, {user?.name}!</h1>
+          <p className="text-slate-500">Here is your Transporter Dashboard.</p>
         </div>
         <div className="flex items-center gap-2 bg-emerald-50 text-emerald-700 px-4 py-2 rounded-lg border border-emerald-100">
           <FaClock />
@@ -46,41 +43,13 @@ const TransporterDashboard = () => {
         <StatCard 
           icon={<FaUser className="text-orange-600" />} 
           label="Status" 
-          value="Verified" 
+          value={user?.status || "Active"} 
           color="bg-orange-50" 
         />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Vehicle & Driver Details */}
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-          <div className="p-6 border-b border-slate-50">
-            <h2 className="text-lg font-semibold text-slate-800">Vehicle & Driver Details</h2>
-          </div>
-          <div className="p-6 grid grid-cols-1 sm:grid-cols-2 gap-6">
-            <DetailItem label="Vehicle Number" value={transporterInfo?.vehicleDetails?.number} />
-            <DetailItem label="Vehicle Type" value={transporterInfo?.vehicleDetails?.type} />
-            <DetailItem label="Owner Name" value={transporterInfo?.vehicleDetails?.ownerName} />
-            <DetailItem label="Driver Name" value={transporterInfo?.driverDetails?.name} />
-            <DetailItem label="License Number" value={transporterInfo?.driverDetails?.licenseNumber} />
-            <DetailItem label="Driver Contact" value={transporterInfo?.driverDetails?.phoneNumber} />
-          </div>
-        </div>
+      <UserProfileCard user={user} />
 
-        {/* Bank & Payment Details */}
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-          <div className="p-6 border-b border-slate-50">
-            <h2 className="text-lg font-semibold text-slate-800">Bank & Payment Details</h2>
-          </div>
-          <div className="p-6 grid grid-cols-1 sm:grid-cols-2 gap-6">
-            <DetailItem label="Account Holder" value={transporterInfo?.bankDetails?.accountHolderName} />
-            <DetailItem label="Account Number" value={transporterInfo?.bankDetails?.accountNumber} />
-            <DetailItem label="IFSC Code" value={transporterInfo?.bankDetails?.ifscCode} />
-            <DetailItem label="Bank Name" value={transporterInfo?.bankDetails?.bankName} />
-            <DetailItem label="Branch" value={transporterInfo?.bankDetails?.branchName} />
-          </div>
-        </div>
-      </div>
     </div>
   );
 };
