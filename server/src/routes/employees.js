@@ -81,7 +81,7 @@ const sendEmployeeRegistrationEmail = async (employeeData) => {
     `;
 
     const mailOptions = {
-      from: `"Hansaria HR" <${process.env.EMAIL_USER}>`,
+      from: `"Hansaria Food Pvt. Ltd." <${process.env.EMAIL_USER}>`,
       to: employeeData.email,
       subject: `Welcome to Team HANS - ${employeeData.employeeId}`,
       html: htmlContent,
