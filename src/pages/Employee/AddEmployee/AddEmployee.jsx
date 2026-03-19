@@ -6,6 +6,7 @@ import { FaUserPlus } from "react-icons/fa";
 import DataInput from "../../../common/DataInput/DataInput";
 import DataDropdown from "../../../common/DataDropdown/DataDropdown";
 import Buttons from "../../../common/Buttons/Buttons";
+import regexPatterns from "../../../utils/regexPatterns/regexPatterns";
 
 const AddEmployee = () => {
   const [formData, setFormData] = useState({
@@ -42,12 +43,43 @@ const AddEmployee = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // 1. Validation Before API Call
+    if (!formData.name.trim()) {
+      toast.error("Please enter a valid name.");
+      return;
+    }
+
+    if (!regexPatterns.email.test(formData.email.trim().toLowerCase())) {
+      toast.error("Please enter a valid email address.");
+      return;
+    }
+
+    if (!regexPatterns.mobile.test(formData.mobile.trim())) {
+      toast.error("Please enter a valid 10-digit mobile number.");
+      return;
+    }
+
     if (!formData.sex) {
       toast.error("Please select a gender (Sex)");
       return;
     }
+
+    if (formData.password.length < 6) {
+      toast.error("Password must be at least 6 characters long.");
+      return;
+    }
+
+    // 2. Trim and Lowercase values
+    const processedData = {
+      ...formData,
+      name: formData.name.trim(),
+      email: formData.email.trim().toLowerCase(),
+      mobile: formData.mobile.trim(),
+    };
+
     try {
-      await api.post("/employees", formData);
+      await api.post("/employees", processedData);
       toast.success("Employee registered successfully!");
       setFormData({
         name: "",
@@ -69,9 +101,23 @@ const AddEmployee = () => {
           <DataInput label="Full Name" name="name" value={formData.name} onChange={handleChange} required />
           <DataInput label="Email Address" name="email" type="email" value={formData.email} onChange={handleChange} required />
           <DataInput label="Mobile Number" name="mobile" value={formData.mobile} onChange={handleChange} required />
-          <DataDropdown label="Sex" name="sex" options={sexOptions} selectedOptions={sexOptions.find(o => o.value === formData.sex)} onChange={handleDropdownChange} required />
+          <DataDropdown 
+            label="Sex" 
+            name="sex" 
+            options={sexOptions} 
+            selectedOptions={sexOptions.find(o => o.value === formData.sex)} 
+            onChange={handleDropdownChange} 
+            required 
+          />
           <DataInput label="Login Password" name="password" type="password" value={formData.password} onChange={handleChange} required />
-          <DataDropdown label="Status" name="status" options={statusOptions} selectedOptions={statusOptions.find(o => o.value === formData.status)} onChange={handleDropdownChange} required />
+          <DataDropdown 
+            label="Status" 
+            name="status" 
+            options={statusOptions} 
+            selectedOptions={statusOptions.find(o => o.value === formData.status)} 
+            onChange={handleDropdownChange} 
+            required 
+          />
         </div>
         <div className="flex justify-end pt-4">
           <Buttons type="submit" label="Register Employee" variant="primary" />
