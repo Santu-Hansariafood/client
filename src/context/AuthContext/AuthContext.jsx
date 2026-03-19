@@ -29,6 +29,14 @@ export const AuthProvider = ({ children }) => {
     return localStorage.getItem("userRole") || "";
   });
 
+  const [user, setUser] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem("user")) || null;
+    } catch {
+      return null;
+    }
+  });
+
   const sessionTimeoutRef = useRef(null);
   const [token, setToken] = useState(() => localStorage.getItem("token") || "");
 
@@ -36,6 +44,7 @@ export const AuthProvider = ({ children }) => {
     setIsAuthenticated(true);
     setMobile(userData.mobile || "");
     setUserRole(userData.role || "");
+    setUser(userData.user || userData);
     if (userData.token) {
       setToken(userData.token);
     }
@@ -43,6 +52,7 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem("isAuthenticated", "true");
     localStorage.setItem("mobile", userData.mobile || "");
     localStorage.setItem("userRole", userData.role || "");
+    localStorage.setItem("user", JSON.stringify(userData.user || userData));
     if (userData.token) {
       localStorage.setItem("token", userData.token);
     }
@@ -53,11 +63,13 @@ export const AuthProvider = ({ children }) => {
     setMobile("");
     setUserRole("");
     setToken("");
+    setUser(null);
 
     localStorage.removeItem("isAuthenticated");
     localStorage.removeItem("mobile");
     localStorage.removeItem("userRole");
     localStorage.removeItem("token");
+    localStorage.removeItem("user");
 
     clearSessionTimer();
   };
@@ -86,6 +98,13 @@ export const AuthProvider = ({ children }) => {
     if (event.key === "userRole") {
       setUserRole(event.newValue || "");
     }
+    if (event.key === "user") {
+      try {
+        setUser(JSON.parse(event.newValue) || null);
+      } catch {
+        setUser(null);
+      }
+    }
   };
 
   useEffect(() => {
@@ -111,11 +130,12 @@ export const AuthProvider = ({ children }) => {
       isAuthenticated,
       mobile,
       userRole,
+      user,
       token,
       login,
       logout,
     }),
-    [isAuthenticated, mobile, userRole, token]
+    [isAuthenticated, mobile, userRole, user, token]
   );
 
   return (

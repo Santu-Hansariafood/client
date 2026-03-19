@@ -1,26 +1,21 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { FaUserTie, FaClock, FaCalendarCheck, FaClipboardList } from "react-icons/fa";
+import { useAuth } from "../../context/AuthContext/AuthContext";
 
 const EmployeeDashboard = () => {
-  const [employeeInfo, setEmployeeInfo] = useState(null);
+  const { user } = useAuth();
   const [stats, setStats] = useState({
     totalTasks: 0,
     pendingBids: 0,
     activeOrders: 0
   });
 
-  useEffect(() => {
-    const user = JSON.parse(localStorage.getItem("user") || "{}");
-    setEmployeeInfo(user);
-    
-  }, []);
-
   return (
     <div className="p-6 space-y-8">
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-800">Welcome back, {employeeInfo?.name}!</h1>
+          <h1 className="text-2xl font-bold text-slate-800">Welcome back, {user?.name}!</h1>
           <p className="text-slate-500">Here's what's happening in your account today.</p>
         </div>
         <div className="flex items-center gap-2 bg-emerald-50 text-emerald-700 px-4 py-2 rounded-lg border border-emerald-100">
@@ -44,7 +39,7 @@ const EmployeeDashboard = () => {
         <StatCard 
           icon={<FaUserTie className="text-indigo-600" />} 
           label="Profile Status" 
-          value="Active" 
+          value={user?.status || "Active"} 
           color="bg-indigo-50" 
         />
       </div>
@@ -54,12 +49,12 @@ const EmployeeDashboard = () => {
           <button className="text-sm font-medium text-emerald-600 hover:text-emerald-700">Edit Profile</button>
         </div>
         <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-8">
-          <DetailItem label="Full Name" value={employeeInfo?.name} />
-          <DetailItem label="Employee ID" value={employeeInfo?.employeeId || "EMP001"} />
-          <DetailItem label="Email Address" value={employeeInfo?.email || "employee@hansariafood.in"} />
-          <DetailItem label="Mobile Number" value={employeeInfo?.mobile} />
-          <DetailItem label="Role" value="Executive" />
-          <DetailItem label="Department" value="Operations" />
+          <DetailItem label="Full Name" value={user?.name} />
+          <DetailItem label="Employee ID" value={user?.employeeId} />
+          <DetailItem label="Email Address" value={user?.email} />
+          <DetailItem label="Mobile Number" value={user?.mobile} />
+          <DetailItem label="Gender" value={user?.sex} />
+          <DetailItem label="Current Role" value={user?.role || "Employee"} />
         </div>
       </div>
     </div>

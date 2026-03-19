@@ -1,48 +1,76 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import LazyPages from "../utils/LazyPages/LazyPages";
 import PrivateRoute from "./PrivateRoute/PrivateRoute";
+import { useAuth } from "../context/AuthContext/AuthContext";
+
+const RoleBasedRoute = ({ children, allowedRoles }) => {
+  const { userRole } = useAuth();
+
+  if (!allowedRoles) return children;
+
+  if (!allowedRoles.includes(userRole)) {
+    // Redirect to their specific dashboard if they try to access something they shouldn't
+    const roleDashboards = {
+      Admin: "/dashboard",
+      Employee: "/employee/dashboard",
+      Buyer: "/buyer/dashboard",
+      Seller: "/seller/dashboard",
+      Transporter: "/transporter/dashboard",
+    };
+    return <Navigate to={roleDashboards[userRole] || "/login"} replace />;
+  }
+
+  return children;
+};
 
 const privateRoutes = [
-  { path: "dashboard", component: LazyPages.Dashboard },
-  { path: "employee/dashboard", component: LazyPages.EmployeeDashboard },
-  { path: "buyer/dashboard", component: LazyPages.BuyerDashboard },
-  { path: "seller/dashboard", component: LazyPages.SellerDashboard },
-  { path: "transporter/dashboard", component: LazyPages.TransporterDashboard },
-  { path: "buyer/add", component: LazyPages.AddBuyer },
-  { path: "buyer/list", component: LazyPages.ListBuyer },
-  { path: "group-of-company/add", component: LazyPages.AddGroupOfCompany },
-  { path: "group-of-company/list", component: LazyPages.ListGroupOfCompany },
-  { path: "company/add", component: LazyPages.AddCompany },
-  { path: "company/list", component: LazyPages.ListCompany },
-  { path: "consignee/add", component: LazyPages.AddConsignee },
-  { path: "consignee/list", component: LazyPages.ListConsignee },
-  { path: "commodity/add", component: LazyPages.AddCommodity },
-  { path: "commodity/list", component: LazyPages.ListCommodity },
-  { path: "quality-parameter/add", component: LazyPages.AddQualityParameter },
-  { path: "quality-parameter/list", component: LazyPages.ListQualityParameter },
-  { path: "seller-company/add", component: LazyPages.AddSellerCompany },
-  { path: "seller-company/list", component: LazyPages.ListSellerCompany },
-  { path: "seller-details/add", component: LazyPages.AddSellerDetails },
-  { path: "seller-details/list", component: LazyPages.ListSellerDetails },
-  { path: "manage-bids/buyer", component: LazyPages.BuyerBid },
-  { path: "manage-bids/bid-list", component: LazyPages.BidList },
-  { path: "manage-bids/bid-list/participate-bid-admin", component: LazyPages.ParticipateBidAdmin },
-  { path: "manage-bids/bid-location", component: LazyPages.BidLocation },
-  { path: "sodabook/add", component: LazyPages.AddSoudabook },
-  { path: "sodabook/list", component: LazyPages.ListSoudabook },
-  { path: "manage-order/add-self-order", component: LazyPages.AddSelfOrder },
-  { path: "manage-order/edit-self-order/:id", component: LazyPages.EditSelfOrder },
-  { path: "manage-order/list-self-order", component: LazyPages.ListSelfOrder },
-  { path: "Loading-Entry/list-loading-entry", component: LazyPages.ListLoadingEntry },
-  { path: "Loading-Entry/add-loading-entry", component: LazyPages.AddLoadingEntry },
-  { path: "employee/add", component: LazyPages.AddEmployee },
-  { path: "employee/list", component: LazyPages.ListEmployee },
-  { path: "transporter/add", component: LazyPages.AddTransporter },
-  { path: "transporter/list", component: LazyPages.ListTransporter },
-  { path: "loading-entry-sauda/:id", component: LazyPages.LoadingEntrySauda },
-  { path: "Supplier-Bid-List", component: LazyPages.SellerBidList },
-  { path: "participate-bid-list", component: LazyPages.ParticipateBid },
-  { path: "confirm-bids/:bidId", component: LazyPages.ConfirmBids },
+  // Admin & Employee Shared Routes
+  { path: "dashboard", component: LazyPages.Dashboard, roles: ["Admin"] },
+  { path: "employee/dashboard", component: LazyPages.EmployeeDashboard, roles: ["Admin", "Employee"] },
+  
+  // Specific Dashboard Routes
+  { path: "buyer/dashboard", component: LazyPages.BuyerDashboard, roles: ["Buyer"] },
+  { path: "seller/dashboard", component: LazyPages.SellerDashboard, roles: ["Seller"] },
+  { path: "transporter/dashboard", component: LazyPages.TransporterDashboard, roles: ["Transporter"] },
+
+  // Admin & Employee only Management Routes
+  { path: "buyer/add", component: LazyPages.AddBuyer, roles: ["Admin", "Employee"] },
+  { path: "buyer/list", component: LazyPages.ListBuyer, roles: ["Admin", "Employee"] },
+  { path: "group-of-company/add", component: LazyPages.AddGroupOfCompany, roles: ["Admin", "Employee"] },
+  { path: "group-of-company/list", component: LazyPages.ListGroupOfCompany, roles: ["Admin", "Employee"] },
+  { path: "company/add", component: LazyPages.AddCompany, roles: ["Admin", "Employee"] },
+  { path: "company/list", component: LazyPages.ListCompany, roles: ["Admin", "Employee"] },
+  { path: "consignee/add", component: LazyPages.AddConsignee, roles: ["Admin", "Employee"] },
+  { path: "consignee/list", component: LazyPages.ListConsignee, roles: ["Admin", "Employee"] },
+  { path: "commodity/add", component: LazyPages.AddCommodity, roles: ["Admin", "Employee"] },
+  { path: "commodity/list", component: LazyPages.ListCommodity, roles: ["Admin", "Employee"] },
+  { path: "quality-parameter/add", component: LazyPages.AddQualityParameter, roles: ["Admin", "Employee"] },
+  { path: "quality-parameter/list", component: LazyPages.ListQualityParameter, roles: ["Admin", "Employee"] },
+  { path: "seller-company/add", component: LazyPages.AddSellerCompany, roles: ["Admin", "Employee"] },
+  { path: "seller-company/list", component: LazyPages.ListSellerCompany, roles: ["Admin", "Employee"] },
+  { path: "seller-details/add", component: LazyPages.AddSellerDetails, roles: ["Admin", "Employee"] },
+  { path: "seller-details/list", component: LazyPages.ListSellerDetails, roles: ["Admin", "Employee"] },
+  { path: "manage-bids/buyer", component: LazyPages.BuyerBid, roles: ["Admin", "Employee"] },
+  { path: "manage-bids/bid-list", component: LazyPages.BidList, roles: ["Admin", "Employee"] },
+  { path: "manage-bids/bid-list/participate-bid-admin", component: LazyPages.ParticipateBidAdmin, roles: ["Admin", "Employee"] },
+  { path: "manage-bids/bid-location", component: LazyPages.BidLocation, roles: ["Admin", "Employee"] },
+  { path: "sodabook/add", component: LazyPages.AddSoudabook, roles: ["Admin", "Employee"] },
+  { path: "sodabook/list", component: LazyPages.ListSoudabook, roles: ["Admin", "Employee"] },
+  { path: "manage-order/add-self-order", component: LazyPages.AddSelfOrder, roles: ["Admin", "Employee"] },
+  { path: "manage-order/edit-self-order/:id", component: LazyPages.EditSelfOrder, roles: ["Admin", "Employee"] },
+  { path: "manage-order/list-self-order", component: LazyPages.ListSelfOrder, roles: ["Admin", "Employee"] },
+  { path: "Loading-Entry/list-loading-entry", component: LazyPages.ListLoadingEntry, roles: ["Admin", "Employee"] },
+  { path: "Loading-Entry/add-loading-entry", component: LazyPages.AddLoadingEntry, roles: ["Admin", "Employee"] },
+  { path: "employee/add", component: LazyPages.AddEmployee, roles: ["Admin"] },
+  { path: "employee/list", component: LazyPages.ListEmployee, roles: ["Admin"] },
+  { path: "transporter/add", component: LazyPages.AddTransporter, roles: ["Admin", "Employee"] },
+  { path: "transporter/list", component: LazyPages.ListTransporter, roles: ["Admin", "Employee"] },
+  { path: "loading-entry-sauda/:id", component: LazyPages.LoadingEntrySauda, roles: ["Admin", "Employee"] },
+  
+  // Specific Bid Routes for Seller/Buyer
+  { path: "Supplier-Bid-List", component: LazyPages.SellerBidList, roles: ["Seller"] },
+  { path: "participate-bid-list", component: LazyPages.ParticipateBid, roles: ["Buyer"] },
+  { path: "confirm-bids/:bidId", component: LazyPages.ConfirmBids, roles: ["Buyer"] },
 ];
 
 const AppRoutes = ({ hydrated }) => {
@@ -57,8 +85,16 @@ const AppRoutes = ({ hydrated }) => {
       <Route path="/login" element={<LazyPages.Login />} />
       <Route path="/teams" element={<LazyPages.Teams />} />
       <Route element={<PrivateRoute />}>
-        {privateRoutes.map(({ path, component: Component }) => (
-          <Route key={path} path={path} element={<Component />} />
+        {privateRoutes.map(({ path, component: Component, roles }) => (
+          <Route
+            key={path}
+            path={path}
+            element={
+              <RoleBasedRoute allowedRoles={roles}>
+                <Component />
+              </RoleBasedRoute>
+            }
+          />
         ))}
       </Route>
       <Route path="*" element={<LazyPages.NotFound />} />
