@@ -10,7 +10,6 @@ import "react-toastify/dist/ReactToastify.css";
 
 const DataInput = lazy(() => import("../../common/DataInput/DataInput"));
 const Buttons = lazy(() => import("../../common/Buttons/Buttons"));
-const Captcha = lazy(() => import("../../common/Captcha/Captcha"));
 const Typewriter = lazy(() => import("../../common/Typewriter/Typewriter"));
 
 const LoginForm = () => {
@@ -19,7 +18,6 @@ const LoginForm = () => {
   const [userRole, setUserRole] = useState("Admin");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [isCaptchaValid, setCaptchaValid] = useState(false);
   const navigate = useNavigate();
   const { login } = useAuth();
 
@@ -31,13 +29,6 @@ const LoginForm = () => {
   const handleLogin = async () => {
     if (!phoneNumber || !password) {
       toast.error("Please enter valid credentials.", {
-        position: "top-right",
-        autoClose: 3000,
-      });
-      return;
-    }
-    if (!isCaptchaValid) {
-      toast.error("CAPTCHA is not valid.", {
         position: "top-right",
         autoClose: 3000,
       });
@@ -193,10 +184,6 @@ const LoginForm = () => {
                 </button>
               ))}
             </div>
-          </div>
-
-          <div className="pt-2">
-            <Captcha onValidate={setCaptchaValid} />
           </div>
 
           <div className="pt-4">

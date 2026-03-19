@@ -8,10 +8,6 @@ const loginLable = {
   choose_role: "Choose Role",
   show_title: "Show",
   hide_title: "Hide",
-  refreshCaptcha: "Refresh CAPTCHA",
-  enter_captcha: "Enter CAPTCHA",
-  invalid_capcha: "Invalid CAPTCHA",
-  valid_capcha: "Valid CAPTCHA",
 };
 
 export default loginLable;
