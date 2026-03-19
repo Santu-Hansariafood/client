@@ -69,11 +69,9 @@ const ROUTE_META = [
 ];
 
 function shouldNoIndex(pathname) {
-  // Index only explicitly public routes
   const isPublic = PUBLIC_ROUTES.some((re) => re.test(pathname));
   if (!isPublic) return true;
   
-  // Also noindex if it contains certain patterns even if matched above (unlikely but safe)
   if (pathname.includes("/edit-")) return true;
   return false;
 }
@@ -81,7 +79,6 @@ function shouldNoIndex(pathname) {
 const RouteSEO = () => {
   const { pathname } = useLocation();
   
-  // Consolidate /login and / to the same canonical URL to avoid duplicate indexing
   const isLoginPage = pathname === "/" || pathname === "/login";
   const canonical = isLoginPage ? SITE_URL : `${SITE_URL}${pathname}`;
   
@@ -102,7 +99,6 @@ const RouteSEO = () => {
       <link rel="canonical" href={canonical} />
       <meta name="robots" content={robots} />
 
-      {/* Open Graph / Facebook */}
       <meta property="og:type" content="website" />
       <meta property="og:url" content={canonical} />
       <meta property="og:title" content={title} />
@@ -111,7 +107,6 @@ const RouteSEO = () => {
       <meta property="og:site_name" content="Hansaria Food Bid Portal" />
       <meta property="og:locale" content="en_IN" />
 
-      {/* Twitter */}
       <meta name="twitter:card" content="summary_large_image" />
       <meta name="twitter:url" content={canonical} />
       <meta name="twitter:title" content={title} />
@@ -119,7 +114,6 @@ const RouteSEO = () => {
       <meta name="twitter:image" content={OG_IMAGE} />
       <meta name="twitter:site" content="@hansariafood" />
 
-      {/* Mobile Branding */}
       <meta name="theme-color" content="#064e3b" />
       <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     </Helmet>

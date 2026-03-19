@@ -33,7 +33,6 @@ axios.interceptors.request.use((config) => {
 registerSW({
   immediate: true,
   onRegisteredSW(swUrl, r) {
-    // no-op
   },
   onNeedRefresh() {},
   onOfflineReady() {}

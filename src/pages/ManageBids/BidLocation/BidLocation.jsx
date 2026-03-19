@@ -112,7 +112,7 @@ const BidLocation = () => {
     fetchBidLocations();
   }, [currentPage]);
 
-  const headers = ["Sl No", "Data", "Actions"];
+  const headers = ["Sl No", "Origin", "Actions"];
   const rows = data.map((row, index) => [
     (currentPage - 1) * itemsPerPage + index + 1,
     row.name,
