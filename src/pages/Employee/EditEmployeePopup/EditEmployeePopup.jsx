@@ -88,9 +88,9 @@ const EditEmployeePopup = ({ employee, isOpen, onClose, onUpdate }) => {
               <DataInput label="Full Name" name="name" value={formData.name} onChange={handleChange} required />
               <DataInput label="Email Address" name="email" type="email" value={formData.email} onChange={handleChange} required />
               <DataInput label="Mobile Number" name="mobile" value={formData.mobile} onChange={handleChange} required />
-              <DataDropdown label="Sex" name="sex" options={sexOptions} value={sexOptions.find(o => o.value === formData.sex)} onChange={handleDropdownChange} required />
+              <DataDropdown label="Sex" name="sex" options={sexOptions} selectedOptions={sexOptions.find(o => o.value === formData.sex)} onChange={handleDropdownChange} required />
               <DataInput label="Login Password" name="password" type="password" value={formData.password} onChange={handleChange} required />
-              <DataDropdown label="Status" name="status" options={statusOptions} value={statusOptions.find(o => o.value === formData.status)} onChange={handleDropdownChange} required />
+              <DataDropdown label="Status" name="status" options={statusOptions} selectedOptions={statusOptions.find(o => o.value === formData.status)} onChange={handleDropdownChange} required />
             </div>
             
             <div className="flex justify-end gap-3 pt-4 border-t border-slate-50">

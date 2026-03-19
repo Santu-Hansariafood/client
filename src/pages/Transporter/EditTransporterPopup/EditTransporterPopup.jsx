@@ -103,7 +103,7 @@ const EditTransporterPopup = ({ transporter, isOpen, onClose, onUpdate }) => {
                 <DataInput label="Email" name="email" type="email" value={formData.email} onChange={handleChange} required />
                 <DataInput label="Mobile" name="mobile" value={formData.mobile} onChange={handleChange} required />
                 <DataInput label="Password" name="password" type="password" value={formData.password} onChange={handleChange} required />
-                <DataDropdown label="Status" name="status" options={statusOptions} value={statusOptions.find(o => o.value === formData.status)} onChange={handleDropdownChange} required />
+                <DataDropdown label="Status" name="status" options={statusOptions} selectedOptions={statusOptions.find(o => o.value === formData.status)} onChange={handleDropdownChange} required />
               </div>
             </section>
 
@@ -111,7 +111,7 @@ const EditTransporterPopup = ({ transporter, isOpen, onClose, onUpdate }) => {
               <h3 className="text-lg font-semibold text-slate-800 mb-4 pb-2 border-b border-slate-100">Vehicle Details</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <DataInput label="Vehicle Number" name="vehicleDetails.number" value={formData.vehicleDetails?.number} onChange={handleChange} required />
-                <DataDropdown label="Vehicle Type" name="vehicleDetails.type" options={vehicleTypeOptions} value={vehicleTypeOptions.find(o => o.value === formData.vehicleDetails?.type)} onChange={handleDropdownChange} required />
+                <DataDropdown label="Vehicle Type" name="vehicleDetails.type" options={vehicleTypeOptions} selectedOptions={vehicleTypeOptions.find(o => o.value === formData.vehicleDetails?.type)} onChange={handleDropdownChange} required />
                 <DataInput label="Owner Name" name="vehicleDetails.ownerName" value={formData.vehicleDetails?.ownerName} onChange={handleChange} required />
               </div>
             </section>

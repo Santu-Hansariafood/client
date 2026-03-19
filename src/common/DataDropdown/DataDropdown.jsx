@@ -9,6 +9,7 @@ const DataDropdown = ({
   isMulti = false,
   label,
   required = false,
+  name,
 }) => {
   const formattedOptions = options.map((option) => ({
     value: option.value,
@@ -25,6 +26,7 @@ const DataDropdown = ({
 
       <div className="relative">
         <Select
+          name={name}
           options={formattedOptions}
           isMulti={isMulti}
           value={selectedOptions}
@@ -137,6 +139,7 @@ DataDropdown.propTypes = {
   isMulti: PropTypes.bool,
   label: PropTypes.string,
   required: PropTypes.bool,
+  name: PropTypes.string,
 };
 
 export default DataDropdown;
