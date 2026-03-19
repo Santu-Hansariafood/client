@@ -4,19 +4,17 @@ import BidLocation from "../models/BidLocation.js";
 const router = Router();
 
 router.get("/", async (req, res) => {
-  const page = parseInt(req.query.page || "0", 10);
-  const limit = parseInt(req.query.limit || "0", 10);
-  if (page > 0 && limit > 0) {
-    const items = await BidLocation.find()
-      .sort({ name: 1 })
-      .skip((page - 1) * limit)
-      .limit(limit)
-      .lean();
-    const total = await BidLocation.countDocuments();
-    return res.json({ data: items, total });
-  }
-  const items = await BidLocation.find().sort({ name: 1 }).lean();
-  res.json(items);
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 10;
+  const skip = (page - 1) * limit;
+
+  const items = await BidLocation.find()
+    .sort({ name: 1 })
+    .skip(skip)
+    .limit(limit)
+    .lean();
+  const total = await BidLocation.countDocuments();
+  res.json({ data: items, total });
 });
 
 router.post("/", async (req, res) => {

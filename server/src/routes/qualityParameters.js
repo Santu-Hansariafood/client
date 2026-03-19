@@ -6,8 +6,17 @@ const router = Router();
 
 router.get("/", async (req, res) => {
   try {
-    const params = await QualityParameter.find({ isActive: true });
-    res.json(params);
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    const params = await QualityParameter.find({ isActive: true })
+      .skip(skip)
+      .limit(limit);
+
+    const total = await QualityParameter.countDocuments({ isActive: true });
+
+    res.json({ data: params, total });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

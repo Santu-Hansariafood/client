@@ -17,23 +17,26 @@ const BidLocation = () => {
   const [data, setData] = useState([]);
   const [isEditing, setIsEditing] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [total, setTotal] = useState(0);
   const itemsPerPage = 10;
 
   const API_URL = "/bid-locations";
 
   const fetchBidLocations = async () => {
     try {
-      const response = await axios.get(API_URL);
-      // console.log("API Response:", response.data);
-
-      if (response.data && Array.isArray(response.data)) {
-        setData(response.data);
+      const response = await axios.get(
+        `${API_URL}?page=${currentPage}&limit=${itemsPerPage}`
+      );
+      if (response.data && Array.isArray(response.data.data)) {
+        setData(response.data.data);
+        setTotal(response.data.total);
       } else {
         throw new Error("Unexpected API response format");
       }
     } catch (error) {
-      // console.error("Error fetching bid locations:", error);
-      toast.error(`Failed to fetch bid locations: ${error?.message || "Unknown error"}`);
+      toast.error(
+        `Failed to fetch bid locations: ${error?.message || "Unknown error"}`
+      );
     }
   };
 
@@ -112,19 +115,17 @@ const BidLocation = () => {
 
   useEffect(() => {
     fetchBidLocations();
-  }, []);
+  }, [currentPage]);
 
   const headers = ["Sl No", "Data", "Actions"];
-  const paginatedData = data.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
-
-  const rows = paginatedData.map((row, index) => [
+  const rows = data.map((row, index) => [
     (currentPage - 1) * itemsPerPage + index + 1,
     row.name,
     <Actions
       key={index}
       onView={() => toast.info(`Viewing: ${row.name}`)}
-      onEdit={() => handleEdit((currentPage - 1) * itemsPerPage + index)}
-      onDelete={() => handleDelete((currentPage - 1) * itemsPerPage + index)}
+      onEdit={() => handleEdit(row)}
+      onDelete={() => handleDelete(row._id)}
     />,
   ]);
 
@@ -169,7 +170,7 @@ const BidLocation = () => {
             <Tables headers={headers} rows={rows} />
             <Pagination
               currentPage={currentPage}
-              totalItems={data.length}
+              totalItems={total}
               itemsPerPage={itemsPerPage}
               onPageChange={handlePageChange}
             />

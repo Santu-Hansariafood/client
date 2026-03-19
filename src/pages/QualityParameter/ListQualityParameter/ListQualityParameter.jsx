@@ -33,19 +33,25 @@ const ListQualityParameter = () => {
 
   const headers = ["Sl No", "Name", "Actions"];
 
+  const [total, setTotal] = useState(0);
+
+  const fetchQualityParameters = async () => {
+    try {
+      const response = await axios.get(
+        `/quality-parameters?page=${currentPage}&limit=${itemsPerPage}`
+      );
+      setQualityParameters(response.data.data);
+      setFilteredData(response.data.data);
+      setTotal(response.data.total);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+      toast.error("Failed to fetch quality parameters.");
+    }
+  };
+
   useEffect(() => {
-    const fetchQualityParameters = async () => {
-      try {
-        const response = await axios.get("/quality-parameters");
-        setQualityParameters(response.data);
-        setFilteredData(response.data);
-      } catch (error) {
-        console.error("Error fetching data:", error);
-        toast.error("Failed to fetch quality parameters.");
-      }
-    };
     fetchQualityParameters();
-  }, []);
+  }, [currentPage]);
 
   const handleAddQualityParameter = (newData) => {
     setQualityParameters([...qualityParameters, newData]);
@@ -82,16 +88,7 @@ const ListQualityParameter = () => {
         `/quality-parameters/${updatedData._id}`,
         updatedData
       );
-      setQualityParameters((prev) =>
-        prev.map((param) =>
-          param._id === updatedData._id ? response.data : param
-        )
-      );
-      setFilteredData((prev) =>
-        prev.map((param) =>
-          param._id === updatedData._id ? response.data : param
-        )
-      );
+      fetchQualityParameters();
       toast.success("Quality parameter updated successfully!");
       setIsEditPopupVisible(false);
       setEditItem(null);
@@ -176,7 +173,7 @@ const ListQualityParameter = () => {
 
         <Pagination
           currentPage={currentPage}
-          totalItems={filteredData.length}
+          totalItems={total}
           itemsPerPage={itemsPerPage}
           onPageChange={handlePageChange}
         />

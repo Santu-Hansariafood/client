@@ -26,24 +26,32 @@ const ListCommodity = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
+  const [total, setTotal] = useState(0);
+
+  const fetchCommodities = async () => {
+    try {
+      const response = await axios.get(
+        `/commodities?page=${currentPage}&limit=${itemsPerPage}`
+      );
+      const items = response.data?.data || response.data || [];
+      const sortedCommodities = items.sort((a, b) =>
+        a.name.localeCompare(b.name)
+      );
+      setCommodities(sortedCommodities);
+      setFilteredCommodities(sortedCommodities);
+      setTotal(response.data.total || 0);
+    } catch (error) {
+      toast.error(
+        error?.response?.data?.message || "Error fetching commodities"
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchCommodities = async () => {
-      try {
-        const response = await axios.get("/commodities");
-        const items = response.data?.data || response.data || [];
-        const sortedCommodities = items.sort((a, b) =>
-          a.name.localeCompare(b.name)
-        );
-        setCommodities(sortedCommodities);
-        setFilteredCommodities(sortedCommodities);
-      } catch (error) {
-        toast.error(error?.response?.data?.message || "Error fetching commodities");
-      } finally {
-        setIsLoading(false);
-      }
-    };
     fetchCommodities();
-  }, []);
+  }, [currentPage]);
 
   const handleSearch = (filteredNames) => {
     if (filteredNames.length === 0) {
@@ -146,7 +154,7 @@ const ListCommodity = () => {
                   <div className="mt-4">
                     <Pagination
                       currentPage={currentPage}
-                      totalItems={filteredCommodities.length}
+                      totalItems={total}
                       itemsPerPage={itemsPerPage}
                       onPageChange={setCurrentPage}
                     />
@@ -185,16 +193,7 @@ const ListCommodity = () => {
                   isOpen={isEditPopupOpen}
                   onClose={() => setIsEditPopupOpen(false)}
                   commodityId={selectedCommodity ? selectedCommodity._id : null}
-                  onUpdate={() => {
-                    axios.get("/commodities").then((response) => {
-                      const items = response.data?.data || response.data || [];
-                      const sortedCommodities = [...items].sort((a, b) =>
-                        (a.name || "").localeCompare(b.name || "")
-                      );
-                      setCommodities(sortedCommodities);
-                      setFilteredCommodities(sortedCommodities);
-                    });
-                  }}
+                  onUpdate={fetchCommodities}
                 />
               )}
             </div>
