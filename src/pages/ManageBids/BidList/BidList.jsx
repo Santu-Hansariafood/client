@@ -41,9 +41,8 @@ const BidList = () => {
     todayStart.setHours(0, 0, 0, 0);
 
     return bids.filter((bid) => {
-      const bidDate = new Date(bid.bidDate);
       const [endHours, endMinutes] = bid.endTime.split(':').map(Number);
-      const bidEndDateTime = new Date(bidDate.getFullYear(), bidDate.getMonth(), bidDate.getDate(), endHours, endMinutes);
+      const bidEndDateTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), endHours, endMinutes);
 
       let matches = false;
 

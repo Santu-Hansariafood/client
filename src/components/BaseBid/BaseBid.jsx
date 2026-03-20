@@ -206,7 +206,7 @@ const BaseBid = () => {
         notes: state.notes,
         quantity: state.quantity,
         rate: state.rate,
-        bidDate: state.bidDate,
+        bidDate: new Date(state.bidDate).toISOString().split('T')[0],
         startTime: state.startTime,
         endTime: state.endTime,
         paymentTerms: state.paymentTerms,
