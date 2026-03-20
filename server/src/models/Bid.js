@@ -17,7 +17,8 @@ const bidSchema = new mongoose.Schema(
     paymentTerms: { type: String, default: "" },
     delivery: { type: String, default: "" },
     company: { type: String, default: "" },
-    unit: { type: String, default: "" }
+    unit: { type: String, default: "" },
+    status: { type: String, enum: ["active", "closed"], default: "active" }
   },
   { timestamps: true }
 );

@@ -65,4 +65,27 @@ router.delete("/:id", async (req, res) => {
   }
 });
 
+router.patch("/:id/status", async (req, res) => {
+  try {
+    const { status } = req.body;
+    if (!["active", "closed"].includes(status)) {
+      return res.status(400).json({ message: "Invalid status" });
+    }
+
+    const updated = await Bid.findByIdAndUpdate(
+      req.params.id,
+      { status },
+      { new: true }
+    );
+
+    if (!updated) {
+      return res.status(404).json({ message: "Bid not found" });
+    }
+
+    res.json(updated);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+});
+
 export default router;

@@ -86,7 +86,8 @@ const SupplierBidList = () => {
       alert("Participation successful!");
       setIsPopupOpen(false);
     } catch (error) {
-      alert("Failed to participate in the bid.");
+      const errorMessage = error.response?.data?.message || "Failed to participate in the bid.";
+      toast.error(errorMessage);
     }
   };
 

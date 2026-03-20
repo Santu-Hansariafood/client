@@ -25,6 +25,7 @@ const AdditionalFields = ({ state, handleChange }) => {
     { label: "End Time", field: "endTime", type: "time" },
     { label: "Payment Terms", field: "paymentTerms", type: "text" },
     { label: "Delivery", field: "delivery", type: "text" },
+    { label: "Status", field: "status", type: "toggle" },
   ];
 
   return (
@@ -38,6 +39,31 @@ const AdditionalFields = ({ state, handleChange }) => {
                 selectedDate={state[field] || getCurrentDate()}
                 onChange={(date) => handleChange(field, date)}
               />
+            ) : type === "toggle" ? (
+              <div className="flex items-center gap-4 py-2">
+                <button
+                  type="button"
+                  onClick={() => handleChange(field, "active")}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                    state[field] === "active"
+                      ? "bg-green-500 text-white shadow-lg shadow-green-200"
+                      : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                  }`}
+                >
+                  Active
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleChange(field, "closed")}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                    state[field] === "closed"
+                      ? "bg-red-500 text-white shadow-lg shadow-red-200"
+                      : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                  }`}
+                >
+                  Closed
+                </button>
+              </div>
             ) : (
               <DataInput
                 placeholder={label}

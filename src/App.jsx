@@ -25,7 +25,18 @@ const App = () => {
       <BrowserRouter>
           <Suspense fallback={<Loading />}>
             <RouteSEO />
-            <ToastContainer position="top-right" autoClose={3000} />
+            <ToastContainer
+              position={window.innerWidth < 640 ? "top-center" : "top-right"}
+              autoClose={3000}
+              hideProgressBar={false}
+              newestOnTop={false}
+              closeOnClick
+              rtl={false}
+              pauseOnFocusLoss
+              draggable
+              pauseOnHover
+              theme="colored"
+            />
             <AppRoutes hydrated={hydrated} />
           </Suspense>
       </BrowserRouter>

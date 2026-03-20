@@ -32,6 +32,7 @@ const BaseBid = () => {
     endTime: "",
     paymentTerms: "",
     delivery: "",
+    status: "active",
     isSubmitting: false,
     groupOptions: [],
     consigneeOptions: [],
@@ -210,6 +211,7 @@ const BaseBid = () => {
         endTime: state.endTime,
         paymentTerms: state.paymentTerms,
         delivery: state.delivery,
+        status: state.status,
       });
 
       const bidId = response.data.bidId || response.data._id || "UNKNOWN_BID";

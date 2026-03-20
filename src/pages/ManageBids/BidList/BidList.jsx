@@ -97,8 +97,8 @@ const BidList = () => {
     "End Time",
     "Payment Terms",
     "Delivery",
-    "Edit",
-    "View",
+    "Status",
+    "Actions",
   ];
 
   const groupedBids = useMemo(() => {
@@ -115,6 +115,18 @@ const BidList = () => {
         consignees: [...new Set(groups[group].map((b) => b.consignee))],
       }));
   }, [bids]);
+
+  const handleStatusUpdate = async (id, status) => {
+    try {
+      await axios.patch(`/bids/${id}/status`, { status });
+      toast.success(`Bid ${status === "closed" ? "closed" : "activated"} successfully!`);
+      setBids((prev) =>
+        prev.map((bid) => (bid._id === id ? { ...bid, status } : bid))
+      );
+    } catch {
+      toast.error("Failed to update status. Please try again.");
+    }
+  };
 
   const buildRow = (bid, index) => [
     index + 1,
@@ -133,30 +145,59 @@ const BidList = () => {
     bid.endTime,
     bid.paymentTerms,
     bid.delivery,
-    <button
-      key={`edit-${bid._id}`}
-      type="button"
-      className="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-100 hover:bg-emerald-100 transition-colors"
-      onClick={() =>
-        setEditableRateQuantity({
-          id: bid._id,
-          rate: bid.rate,
-          quantity: bid.quantity,
-        })
-      }
-      title="Edit rate & quantity"
+    <span
+      key={`status-${bid._id}`}
+      className={`px-2 py-1 rounded-full text-xs font-semibold ${
+        bid.status === "active"
+          ? "bg-green-100 text-green-700"
+          : "bg-red-100 text-red-700"
+      }`}
     >
-      <AiOutlineEdit size={18} />
-    </button>,
-    <button
-      key={`view-${bid._id}`}
-      type="button"
-      className="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-slate-50 text-slate-700 border border-slate-200 hover:bg-slate-100 transition-colors"
-      onClick={() => setSelectedBid(bid)}
-      title="View bid"
-    >
-      <AiOutlineEye size={18} />
-    </button>,
+      {bid.status === "active" ? "Active" : "Closed"}
+    </span>,
+    <div key={`actions-${bid._id}`} className="flex items-center gap-2">
+      <button
+        type="button"
+        className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-100 hover:bg-emerald-100 transition-colors"
+        onClick={() =>
+          setEditableRateQuantity({
+            id: bid._id,
+            rate: bid.rate,
+            quantity: bid.quantity,
+          })
+        }
+        title="Edit rate & quantity"
+      >
+        <AiOutlineEdit size={16} />
+      </button>
+      <button
+        type="button"
+        className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-slate-50 text-slate-700 border border-slate-200 hover:bg-slate-100 transition-colors"
+        onClick={() => setSelectedBid(bid)}
+        title="View bid"
+      >
+        <AiOutlineEye size={16} />
+      </button>
+      {bid.status === "active" ? (
+        <button
+          type="button"
+          className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-red-50 text-red-700 border border-red-100 hover:bg-red-100 transition-colors"
+          onClick={() => handleStatusUpdate(bid._id, "closed")}
+          title="Stop Bidding"
+        >
+          <span className="text-xs font-bold">Stop</span>
+        </button>
+      ) : (
+        <button
+          type="button"
+          className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-green-50 text-green-700 border border-green-100 hover:bg-green-100 transition-colors"
+          onClick={() => handleStatusUpdate(bid._id, "active")}
+          title="Activate Bidding"
+        >
+          <span className="text-xs font-bold">Start</span>
+        </button>
+      )}
+    </div>,
   ];
 
   return (
