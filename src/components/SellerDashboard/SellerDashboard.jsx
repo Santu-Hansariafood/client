@@ -173,40 +173,40 @@ const SellerDashboard = () => {
         subtitle="Here is your Seller Dashboard."
         noContentCard
       >
-        <div className="max-w-7xl mx-auto space-y-10">
-          <div className="flex justify-between items-center bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
+        <div className="max-w-7xl mx-auto space-y-6 sm:space-y-10">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-white p-4 sm:p-6 rounded-2xl sm:rounded-3xl shadow-sm border border-slate-100 gap-4">
             <div>
-              <h2 className="text-xl font-bold text-slate-800">Account Overview</h2>
-              <p className="text-slate-500 text-sm mt-1">Manage your bids and orders in one place.</p>
+              <h2 className="text-lg sm:text-xl font-bold text-slate-800">Account Overview</h2>
+              <p className="text-slate-500 text-xs sm:text-sm mt-1">Manage your bids and orders in one place.</p>
             </div>
             <div
-              className="relative cursor-pointer p-3 bg-emerald-50 text-emerald-600 rounded-2xl hover:bg-emerald-100 transition-colors shadow-sm"
+              className="relative cursor-pointer p-2 sm:p-3 bg-emerald-50 text-emerald-600 rounded-xl sm:rounded-2xl hover:bg-emerald-100 transition-colors shadow-sm self-end sm:self-auto"
               onClick={() => setShowPopup(true)}
             >
-              <FaBell className="text-xl" />
+              <FaBell className="text-lg sm:text-xl" />
               {notificationCount > 0 && (
-                <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white ring-2 ring-white">
+                <span className="absolute -top-1 -right-1 flex h-4 w-4 sm:h-5 sm:w-5 items-center justify-center rounded-full bg-red-500 text-[8px] sm:text-[10px] font-bold text-white ring-2 ring-white">
                   {notificationCount}
                 </span>
               )}
             </div>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
             {dashboardData.map((item, index) => (
               <Cards key={index} {...item} />
             ))}
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
             <div className="lg:col-span-2">
               <UserProfileCard user={user} />
             </div>
-            <div className="bg-white p-8 rounded-3xl shadow-lg border border-slate-100 flex flex-col justify-between overflow-hidden relative group">
+            <div className="bg-white p-6 sm:p-8 rounded-2xl sm:rounded-3xl shadow-lg border border-slate-100 flex flex-col justify-between overflow-hidden relative group">
               <div className="relative z-10">
-                <h3 className="text-xl font-bold text-slate-800 mb-2">Quick Links</h3>
-                <p className="text-slate-500 text-sm mb-6">Access your frequently used sections.</p>
-                <div className="space-y-4">
+                <h3 className="text-lg sm:text-xl font-bold text-slate-800 mb-1 sm:mb-2">Quick Links</h3>
+                <p className="text-slate-500 text-xs sm:text-sm mb-4 sm:mb-6">Access your frequently used sections.</p>
+                <div className="space-y-3 sm:space-y-4">
                   {[
                     { label: "View Active Bids", link: "/Supplier-Bid-List" },
                     { label: "Order History", link: "/manage-order/list-self-order" },
@@ -215,15 +215,15 @@ const SellerDashboard = () => {
                     <button
                       key={i}
                       onClick={() => link.action ? link.action() : navigate(link.link)}
-                      className="w-full flex items-center justify-between p-4 bg-slate-50 rounded-2xl text-slate-700 font-medium hover:bg-emerald-50 hover:text-emerald-700 transition-all group/link"
+                      className="w-full flex items-center justify-between p-3 sm:p-4 bg-slate-50 rounded-xl sm:rounded-2xl text-slate-700 text-sm sm:text-base font-medium hover:bg-emerald-50 hover:text-emerald-700 transition-all group/link"
                     >
                       {link.label}
-                      <FaChevronRight className="text-xs group-hover/link:translate-x-1 transition-transform" />
+                      <FaChevronRight className="text-[10px] sm:text-xs group-hover/link:translate-x-1 transition-transform" />
                     </button>
                   ))}
                 </div>
               </div>
-              <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-50 rounded-bl-full -mr-12 -mt-12 opacity-50"></div>
+              <div className="absolute top-0 right-0 w-24 h-24 sm:w-32 sm:h-32 bg-emerald-50 rounded-bl-full -mr-8 -mt-8 sm:-mr-12 sm:-mt-12 opacity-50"></div>
             </div>
           </div>
 
