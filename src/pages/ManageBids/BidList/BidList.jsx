@@ -13,7 +13,7 @@ const PopupBox = lazy(() => import("../../../common/PopupBox/PopupBox"));
 
 const BidList = () => {
   const [bids, setBids] = useState([]);
-  const [activeTab, setActiveTab] = useState("active"); // "active" or "closed"
+  const [activeTab, setActiveTab] = useState("all"); // "all", "active", or "closed"
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedBid, setSelectedBid] = useState(null);
   const [editableRateQuantity, setEditableRateQuantity] = useState(null);
@@ -35,22 +35,12 @@ const BidList = () => {
   }, []);
 
   const filteredBids = useMemo(() => {
-    const now = new Date();
-    const twoDaysAgo = new Date();
-    twoDaysAgo.setDate(now.getDate() - 2);
-    // Set to start of the day 2 days ago to be more inclusive
-    twoDaysAgo.setHours(0, 0, 0, 0);
-
     return bids.filter((bid) => {
       // Filter by Tab
       if (activeTab === "active") {
         if (bid.status !== "active") return false;
-      } else {
+      } else if (activeTab === "closed") {
         if (bid.status !== "closed") return false;
-        // Only show closed bids from the last 2 days
-        // We use closedAt as the primary date, fall back to updatedAt or bidDate
-        const closeDate = new Date(bid.closedAt || bid.updatedAt || bid.bidDate || bid.createdAt);
-        if (closeDate < twoDaysAgo) return false;
       }
 
       // Filter by Search
@@ -229,9 +219,11 @@ const BidList = () => {
       <AdminPageShell
         title="Bid Management"
         subtitle={
-          activeTab === "active"
-            ? "Manage all active bids"
-            : "View bids closed within the last 2 days"
+          activeTab === "all"
+            ? "Manage all bids"
+            : activeTab === "active"
+              ? "Manage all active bids"
+              : "View all closed bids"
         }
         icon={FaGavel}
         noContentCard
@@ -245,6 +237,16 @@ const BidList = () => {
             <>
               <div className="flex flex-col sm:flex-row gap-4 items-stretch sm:items-center justify-between">
                 <div className="flex bg-slate-100 p-1 rounded-xl w-fit">
+                  <button
+                    onClick={() => setActiveTab("all")}
+                    className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${
+                      activeTab === "all"
+                        ? "bg-white text-slate-800 shadow-sm"
+                        : "text-slate-500 hover:text-slate-700"
+                    }`}
+                  >
+                    All Bids
+                  </button>
                   <button
                     onClick={() => setActiveTab("active")}
                     className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${
@@ -277,8 +279,7 @@ const BidList = () => {
               {groupedBids.length === 0 ? (
                 <div className="text-center py-12 bg-white rounded-2xl border border-slate-100 shadow-sm">
                   <p className="text-slate-500 font-medium">
-                    No {activeTab} bids found
-                    {activeTab === "closed" ? " for the last 2 days" : ""}.
+                    No {activeTab === "all" ? "" : activeTab} bids found.
                   </p>
                 </div>
               ) : (
@@ -291,7 +292,9 @@ const BidList = () => {
                       className={`text-left rounded-2xl border p-5 shadow-md shadow-emerald-900/5 transition-all ${
                         activeTab === "active"
                           ? "border-emerald-100 bg-white hover:border-emerald-200 hover:shadow-lg"
-                          : "border-red-100 bg-white hover:border-red-200 hover:shadow-lg"
+                          : activeTab === "closed"
+                            ? "border-red-100 bg-white hover:border-red-200 hover:shadow-lg"
+                            : "border-slate-100 bg-white hover:border-slate-200 hover:shadow-lg"
                       }`}
                     >
                       <div className="flex flex-wrap justify-between items-center gap-2">
@@ -302,7 +305,9 @@ const BidList = () => {
                           className={`text-sm font-medium px-3 py-1 rounded-full ${
                             activeTab === "active"
                               ? "text-emerald-700 bg-emerald-50"
-                              : "text-red-700 bg-red-50"
+                              : activeTab === "closed"
+                                ? "text-red-700 bg-red-50"
+                                : "text-slate-600 bg-slate-100"
                           }`}
                         >
                           {consignees.length} consignee
