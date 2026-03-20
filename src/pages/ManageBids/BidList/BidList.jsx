@@ -13,37 +13,54 @@ const PopupBox = lazy(() => import("../../../common/PopupBox/PopupBox"));
 
 const BidList = () => {
   const [bids, setBids] = useState([]);
-  const [filteredData, setFilteredData] = useState([]);
+  const [activeTab, setActiveTab] = useState("active"); // "active" or "closed"
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedBid, setSelectedBid] = useState(null);
   const [editableRateQuantity, setEditableRateQuantity] = useState(null);
   const [error, setError] = useState(null);
   const [selectedGroup, setSelectedGroup] = useState(null);
+  const [searchConsignee, setSearchConsignee] = useState("");
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const response = await axios.get("/bids");
         const items = response.data?.data || response.data || [];
-        const sevenDaysAgo = new Date();
-        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-
-        const filteredBids = items.filter(
-          (bid) => new Date(bid.bidDate) >= sevenDaysAgo
-        );
-
-        const sortedBids = filteredBids.sort(
-          (a, b) => new Date(b.bidDate) - new Date(a.bidDate)
-        );
-
-        setBids(sortedBids);
-        setFilteredData(sortedBids);
+        setBids(items);
       } catch {
         setError("Error fetching data. Please try again later.");
       }
     };
     fetchData();
   }, []);
+
+  const filteredBids = useMemo(() => {
+    const now = new Date();
+    const twoDaysAgo = new Date();
+    twoDaysAgo.setDate(now.getDate() - 2);
+
+    return bids.filter((bid) => {
+      // Filter by Tab
+      if (activeTab === "active") {
+        if (bid.status !== "active") return false;
+      } else {
+        if (bid.status !== "closed") return false;
+        // Only show closed bids from the last 2 days
+        const closeDate = new Date(bid.updatedAt || bid.bidDate);
+        if (closeDate < twoDaysAgo) return false;
+      }
+
+      // Filter by Search
+      if (
+        searchConsignee &&
+        !bid.consignee?.toLowerCase().includes(searchConsignee.toLowerCase())
+      ) {
+        return false;
+      }
+
+      return true;
+    }).sort((a, b) => new Date(b.updatedAt || b.bidDate) - new Date(a.updatedAt || a.bidDate));
+  }, [bids, activeTab, searchConsignee]);
 
   const consigneeItems = useMemo(
     () =>
@@ -54,13 +71,12 @@ const BidList = () => {
   );
 
   const handleSearchConsignee = (filteredNames) => {
-    if (!filteredNames || filteredNames.length === 0) {
-      setFilteredData(bids);
-    } else if (filteredNames.length === consigneeItems.length) {
-      setFilteredData(bids);
+    if (typeof filteredNames === "string") {
+      setSearchConsignee(filteredNames);
+    } else if (Array.isArray(filteredNames) && filteredNames.length > 0) {
+      setSearchConsignee(filteredNames[0]);
     } else {
-      const nameSet = new Set(filteredNames);
-      setFilteredData(bids.filter((bid) => nameSet.has(bid.consignee)));
+      setSearchConsignee("");
     }
     setCurrentPage(1);
   };
@@ -103,7 +119,7 @@ const BidList = () => {
 
   const groupedBids = useMemo(() => {
     const groups = {};
-    bids.forEach((bid) => {
+    filteredBids.forEach((bid) => {
       if (!groups[bid.group]) groups[bid.group] = [];
       groups[bid.group].push(bid);
     });
@@ -114,7 +130,7 @@ const BidList = () => {
         bids: groups[group],
         consignees: [...new Set(groups[group].map((b) => b.consignee))],
       }));
-  }, [bids]);
+  }, [filteredBids]);
 
   const handleStatusUpdate = async (id, status) => {
     try {
@@ -204,7 +220,11 @@ const BidList = () => {
     <Suspense fallback={<Loading />}>
       <AdminPageShell
         title="Bid Management"
-        subtitle="Recent bids grouped by company — last 7 days"
+        subtitle={
+          activeTab === "active"
+            ? "Manage all active bids"
+            : "View bids closed within the last 2 days"
+        }
         icon={FaGavel}
         noContentCard
       >
@@ -215,7 +235,29 @@ const BidList = () => {
             </div>
           ) : (
             <>
-              <div className="flex flex-col sm:flex-row gap-4 items-stretch sm:items-center">
+              <div className="flex flex-col sm:flex-row gap-4 items-stretch sm:items-center justify-between">
+                <div className="flex bg-slate-100 p-1 rounded-xl w-fit">
+                  <button
+                    onClick={() => setActiveTab("active")}
+                    className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${
+                      activeTab === "active"
+                        ? "bg-white text-emerald-700 shadow-sm"
+                        : "text-slate-500 hover:text-slate-700"
+                    }`}
+                  >
+                    Active Bids
+                  </button>
+                  <button
+                    onClick={() => setActiveTab("closed")}
+                    className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${
+                      activeTab === "closed"
+                        ? "bg-white text-red-700 shadow-sm"
+                        : "text-slate-500 hover:text-slate-700"
+                    }`}
+                  >
+                    Closed Bids
+                  </button>
+                </div>
                 <SearchBox
                   placeholder="Search by consignee..."
                   items={consigneeItems}
@@ -224,29 +266,48 @@ const BidList = () => {
                 />
               </div>
 
-              <div className="grid gap-4">
-                {groupedBids.map(({ group, consignees }) => (
-                  <button
-                    key={group}
-                    type="button"
-                    onClick={() => setSelectedGroup(group)}
-                    className="text-left rounded-2xl border border-emerald-100 bg-white p-5 shadow-md shadow-emerald-900/5 hover:border-emerald-200 hover:shadow-lg transition-all"
-                  >
-                    <div className="flex flex-wrap justify-between items-center gap-2">
-                      <span className="text-lg font-bold text-slate-800">
-                        {group}
-                      </span>
-                      <span className="text-sm font-medium text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full">
-                        {consignees.length} consignee
-                        {consignees.length !== 1 ? "s" : ""}
-                      </span>
-                    </div>
-                    <p className="mt-2 text-sm text-slate-600 line-clamp-2">
-                      {consignees.join(", ")}
-                    </p>
-                  </button>
-                ))}
-              </div>
+              {groupedBids.length === 0 ? (
+                <div className="text-center py-12 bg-white rounded-2xl border border-slate-100 shadow-sm">
+                  <p className="text-slate-500 font-medium">
+                    No {activeTab} bids found
+                    {activeTab === "closed" ? " for the last 2 days" : ""}.
+                  </p>
+                </div>
+              ) : (
+                <div className="grid gap-4">
+                  {groupedBids.map(({ group, consignees }) => (
+                    <button
+                      key={group}
+                      type="button"
+                      onClick={() => setSelectedGroup(group)}
+                      className={`text-left rounded-2xl border p-5 shadow-md shadow-emerald-900/5 transition-all ${
+                        activeTab === "active"
+                          ? "border-emerald-100 bg-white hover:border-emerald-200 hover:shadow-lg"
+                          : "border-red-100 bg-white hover:border-red-200 hover:shadow-lg"
+                      }`}
+                    >
+                      <div className="flex flex-wrap justify-between items-center gap-2">
+                        <span className="text-lg font-bold text-slate-800">
+                          {group}
+                        </span>
+                        <span
+                          className={`text-sm font-medium px-3 py-1 rounded-full ${
+                            activeTab === "active"
+                              ? "text-emerald-700 bg-emerald-50"
+                              : "text-red-700 bg-red-50"
+                          }`}
+                        >
+                          {consignees.length} consignee
+                          {consignees.length !== 1 ? "s" : ""}
+                        </span>
+                      </div>
+                      <p className="mt-2 text-sm text-slate-600 line-clamp-2">
+                        {consignees.join(", ")}
+                      </p>
+                    </button>
+                  ))}
+                </div>
+              )}
             </>
           )}
 
