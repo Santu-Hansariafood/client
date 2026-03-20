@@ -22,6 +22,16 @@ const UserProfileCard = ({ user }) => {
     }
   };
 
+  const getEmail = () => {
+    if (user.email) return user.email;
+    if (user.emails && user.emails.length > 0) {
+      // Handle both array of objects [{value: "..."}] and array of strings
+      const firstEmail = user.emails[0];
+      return typeof firstEmail === 'object' ? firstEmail.value : firstEmail;
+    }
+    return 'N/A';
+  };
+
   return (
     <div className="bg-white rounded-2xl shadow-lg border border-slate-100 overflow-hidden">
       <div className="p-6 bg-gradient-to-r from-emerald-500 to-emerald-600 flex items-center gap-4">
@@ -33,8 +43,8 @@ const UserProfileCard = ({ user }) => {
           <p className="text-sm text-emerald-100">{user.role}</p>
         </div>
       </div>
-      <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-        <DetailItem icon={<FaEnvelope />} label="Email Address" value={user.email} />
+      <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <DetailItem icon={<FaEnvelope />} label="Email Address" value={getEmail()} />
         <DetailItem icon={<FaPhone />} label="Mobile Number" value={user.mobile} />
         {roleSpecificDetails()}
       </div>
