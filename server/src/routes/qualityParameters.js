@@ -6,17 +6,20 @@ const router = Router();
 
 router.get("/", async (req, res) => {
   try {
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
-    const skip = (page - 1) * limit;
+    const page = parseInt(req.query.page || "0", 10);
+    const limit = parseInt(req.query.limit || "0", 10);
 
-    const params = await QualityParameter.find({ isActive: true })
-      .skip(skip)
-      .limit(limit);
+    if (page > 0 && limit > 0) {
+      const skip = (page - 1) * limit;
+      const params = await QualityParameter.find({ isActive: true })
+        .skip(skip)
+        .limit(limit);
+      const total = await QualityParameter.countDocuments({ isActive: true });
+      return res.json({ data: params, total });
+    }
 
-    const total = await QualityParameter.countDocuments({ isActive: true });
-
-    res.json({ data: params, total });
+    const params = await QualityParameter.find({ isActive: true });
+    res.json(params);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

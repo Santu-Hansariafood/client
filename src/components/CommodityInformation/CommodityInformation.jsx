@@ -28,9 +28,10 @@ const CommodityInformation = ({
   useEffect(() => {
     const fetchCommodities = async () => {
       try {
-        const { data } = await axios.get("/companies");
-        const companyData = data.find(
-          (company) => company.companyName === selectedCompany,
+        const response = await axios.get("/companies");
+        const items = response.data?.data || response.data || [];
+        const companyData = items.find(
+          (company) => company.companyName === selectedCompany
         );
 
         if (companyData) {

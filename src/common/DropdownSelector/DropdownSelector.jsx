@@ -77,11 +77,15 @@ const DropdownSelector = ({ fetchData }) => {
                   No buyers selected
                 </li>
               ) : (
-                selectedItems.map((seller) => (
-                  <li
-                    key={seller.value}
-                    className="flex items-center justify-between gap-3 px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700"
-                  >
+                [...selectedItems]
+                  .sort((a, b) =>
+                    String(a.label || "").localeCompare(String(b.label || ""))
+                  )
+                  .map((seller) => (
+                    <li
+                      key={seller.value}
+                      className="flex items-center justify-between gap-3 px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700"
+                    >
                     <span className="text-sm font-medium text-slate-700 dark:text-slate-300 truncate">
                       {seller.label}
                     </span>

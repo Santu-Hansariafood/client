@@ -27,9 +27,12 @@ const EditCommodityPopup = ({ isOpen, onClose, commodityId, onUpdate }) => {
     const fetchQualityParameters = async () => {
       try {
         const response = await axios.get("/quality-parameters");
-        setQualityOptions(response.data);
+        const items = response.data?.data || response.data || [];
+        setQualityOptions(items);
       } catch (error) {
-        toast.error(error?.response?.data?.message || "Error fetching quality parameters");
+        toast.error(
+          error?.response?.data?.message || "Error fetching quality parameters"
+        );
       }
     };
 

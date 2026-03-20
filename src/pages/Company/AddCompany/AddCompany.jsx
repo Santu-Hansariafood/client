@@ -43,9 +43,10 @@ const AddCompany = () => {
           axios.get("/commodities"),
         ]);
 
-        const consignees = consigneesRes.data.data || consigneesRes.data;
-        const groups = groupsRes.data.data || groupsRes.data;
-        const commodities = commoditiesRes.data.data || commoditiesRes.data;
+        const consignees = consigneesRes.data?.data || consigneesRes.data || [];
+        const groups = groupsRes.data?.data || groupsRes.data || [];
+        const commodities =
+          commoditiesRes.data?.data || commoditiesRes.data || [];
 
         setConsigneeOptions(
           consignees

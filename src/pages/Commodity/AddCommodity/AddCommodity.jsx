@@ -21,7 +21,8 @@ const AddCommodity = () => {
     const fetchParametersOptions = async () => {
       try {
         const response = await axios.get("/quality-parameters");
-        const options = response.data
+        const items = response.data?.data || response.data || [];
+        const options = items
           .map((param) => ({ value: param._id, label: param.name }))
           .sort((a, b) => a.label.localeCompare(b.label));
         setParametersOptions(options);

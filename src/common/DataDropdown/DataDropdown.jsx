@@ -10,11 +10,17 @@ const DataDropdown = ({
   label,
   required = false,
   name,
+  disableSorting = false,
 }) => {
-  const formattedOptions = options.map((option) => ({
-    value: option.value,
-    label: option.label,
-  }));
+  const formattedOptions = options
+    .map((option) => ({
+      value: option.value,
+      label: option.label,
+    }))
+    .sort((a, b) => {
+      if (disableSorting) return 0;
+      return String(a.label || "").localeCompare(String(b.label || ""));
+    });
 
   return (
     <div className="mb-5 w-full">
