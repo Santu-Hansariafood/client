@@ -36,9 +36,17 @@ router.post("/", async (req, res) => {
 
 router.put("/:id", async (req, res) => {
   try {
-    const updated = await Bid.findByIdAndUpdate(req.params.id, req.body, {
+    const { endTime, quantity, rate, ...otherFields } = req.body;
+
+    // Build the update object carefully to avoid overwriting fields unintentionally
+    const updateData = { ...otherFields };
+    if (endTime) updateData.endTime = endTime;
+    if (quantity) updateData.quantity = quantity;
+    if (rate) updateData.rate = rate;
+
+    const updated = await Bid.findByIdAndUpdate(req.params.id, updateData, {
       new: true,
-      runValidators: true
+      runValidators: true,
     });
 
     if (!updated) {

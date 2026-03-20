@@ -20,6 +20,7 @@ const BidList = () => {
   const [error, setError] = useState(null);
   const [selectedGroup, setSelectedGroup] = useState(null);
   const [searchConsignee, setSearchConsignee] = useState("");
+  const [reactivateBid, setReactivateBid] = useState(null); // Holds bid data for reactivation
 
   useEffect(() => {
     const fetchData = async () => {
@@ -35,13 +36,27 @@ const BidList = () => {
   }, []);
 
   const filteredBids = useMemo(() => {
+    const now = new Date();
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+
     return bids.filter((bid) => {
-      // Filter by Tab
-      if (activeTab === "active") {
-        if (bid.status !== "active") return false;
-      } else if (activeTab === "closed") {
-        if (bid.status !== "closed") return false;
+      const bidDate = new Date(bid.bidDate);
+      const [endHours, endMinutes] = bid.endTime.split(':').map(Number);
+      const bidEndDateTime = new Date(bidDate.getFullYear(), bidDate.getMonth(), bidDate.getDate(), endHours, endMinutes);
+
+      let matches = false;
+
+      if (activeTab === 'all') { // Today's Bids
+        const createDate = new Date(bid.createdAt);
+        matches = createDate >= todayStart;
+      } else if (activeTab === 'active') {
+        matches = bid.status === 'active' && now < bidEndDateTime;
+      } else if (activeTab === 'closed') {
+        matches = bid.status === 'closed' || now >= bidEndDateTime;
       }
+
+      if (!matches) return false;
 
       // Filter by Search
       if (
@@ -53,9 +68,8 @@ const BidList = () => {
 
       return true;
     }).sort((a, b) => {
-      // Sort by the most recent relevant date
-      const dateA = new Date(a.closedAt || a.updatedAt || a.bidDate || a.createdAt);
-      const dateB = new Date(b.closedAt || b.updatedAt || b.bidDate || b.createdAt);
+      const dateA = new Date(a.closedAt || a.updatedAt || a.createdAt);
+      const dateB = new Date(b.closedAt || b.updatedAt || b.createdAt);
       return dateB - dateA;
     });
   }, [bids, activeTab, searchConsignee]);
@@ -205,7 +219,7 @@ const BidList = () => {
         <button
           type="button"
           className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-green-50 text-green-700 border border-green-100 hover:bg-green-100 transition-colors"
-          onClick={() => handleStatusUpdate(bid._id, "active")}
+          onClick={() => setReactivateBid({ ...bid, endTime: bid.endTime, quantity: bid.quantity, rate: bid.rate })}
           title="Activate Bidding"
         >
           <span className="text-xs font-bold">Start</span>
@@ -213,6 +227,28 @@ const BidList = () => {
       )}
     </div>,
   ];
+
+  const handleReactivateSubmit = async () => {
+    if (!reactivateBid) return;
+
+    try {
+      const { _id, endTime, quantity, rate } = reactivateBid;
+      await axios.put(`/bids/${_id}`, { endTime, quantity, rate });
+      await axios.patch(`/bids/${_id}/status`, { status: "active" });
+
+      toast.success("Bid reactivated successfully!");
+      setBids((prev) =>
+        prev.map((bid) =>
+          bid._id === _id
+            ? { ...bid, status: "active", endTime, quantity, rate }
+            : bid
+        )
+      );
+      setReactivateBid(null);
+    } catch {
+      toast.error("Failed to reactivate bid. Please try again.");
+    }
+  };
 
   return (
     <Suspense fallback={<Loading />}>
@@ -322,6 +358,66 @@ const BidList = () => {
                 </div>
               )}
             </>
+          )}
+
+          {reactivateBid && (
+            <PopupBox
+              isOpen={!!reactivateBid}
+              onClose={() => setReactivateBid(null)}
+              title="Reactivate Bid"
+            >
+              <div className="space-y-4">
+                <label className="block">
+                  <span className="text-sm font-medium text-slate-700">End Time</span>
+                  <input
+                    type="time"
+                    className="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3 focus:ring-2 focus:ring-emerald-400/50 focus:border-emerald-400 outline-none"
+                    value={reactivateBid.endTime}
+                    onChange={(e) =>
+                      setReactivateBid({ ...reactivateBid, endTime: e.target.value })
+                    }
+                  />
+                </label>
+                <label className="block">
+                  <span className="text-sm font-medium text-slate-700">Quantity</span>
+                  <input
+                    type="number"
+                    className="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3 focus:ring-2 focus:ring-emerald-400/50 focus:border-emerald-400 outline-none"
+                    value={reactivateBid.quantity}
+                    onChange={(e) =>
+                      setReactivateBid({ ...reactivateBid, quantity: e.target.value })
+                    }
+                  />
+                </label>
+                <label className="block">
+                  <span className="text-sm font-medium text-slate-700">Rate</span>
+                  <input
+                    type="number"
+                    className="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3 focus:ring-2 focus:ring-emerald-400/50 focus:border-emerald-400 outline-none"
+                    value={reactivateBid.rate}
+                    onChange={(e) =>
+                      setReactivateBid({ ...reactivateBid, rate: e.target.value })
+                    }
+                  />
+                </label>
+                <div className="flex justify-end gap-4 pt-4">
+                  <button
+                    type="button"
+                    onClick={() => setReactivateBid(null)}
+                    className="px-6 py-2 rounded-lg text-slate-600 bg-slate-100 hover:bg-slate-200 transition-all"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleReactivateSubmit}
+                    className="px-6 py-2 rounded-lg text-white bg-emerald-600 hover:bg-emerald-700 transition-all"
+                  >
+                    Reactivate
+                  </button>
+                </div>
+              </div>
+            </PopupBox>
           )}
 
           {selectedGroup && (
