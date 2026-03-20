@@ -38,6 +38,8 @@ const BidList = () => {
     const now = new Date();
     const twoDaysAgo = new Date();
     twoDaysAgo.setDate(now.getDate() - 2);
+    // Set to start of the day 2 days ago to be more inclusive
+    twoDaysAgo.setHours(0, 0, 0, 0);
 
     return bids.filter((bid) => {
       // Filter by Tab
@@ -46,8 +48,13 @@ const BidList = () => {
       } else {
         if (bid.status !== "closed") return false;
         // Only show closed bids from the last 2 days
-        const closeDate = new Date(bid.updatedAt || bid.bidDate);
-        if (closeDate < twoDaysAgo) return false;
+        // We check both updatedAt (when it was closed) and bidDate (the scheduled date)
+        const updateDate = new Date(bid.updatedAt || 0);
+        const bidDate = new Date(bid.bidDate || 0);
+        const createDate = new Date(bid.createdAt || 0);
+        
+        const latestRelevantDate = Math.max(updateDate, bidDate, createDate);
+        if (latestRelevantDate < twoDaysAgo.getTime()) return false;
       }
 
       // Filter by Search
@@ -59,7 +66,20 @@ const BidList = () => {
       }
 
       return true;
-    }).sort((a, b) => new Date(b.updatedAt || b.bidDate) - new Date(a.updatedAt || a.bidDate));
+    }).sort((a, b) => {
+      // Sort by the most recent relevant date (updatedAt, bidDate, or createdAt)
+      const dateA = Math.max(
+        new Date(a.updatedAt || 0).getTime(),
+        new Date(a.bidDate || 0).getTime(),
+        new Date(a.createdAt || 0).getTime()
+      );
+      const dateB = Math.max(
+        new Date(b.updatedAt || 0).getTime(),
+        new Date(b.bidDate || 0).getTime(),
+        new Date(b.createdAt || 0).getTime()
+      );
+      return dateB - dateA;
+    });
   }, [bids, activeTab, searchConsignee]);
 
   const consigneeItems = useMemo(
