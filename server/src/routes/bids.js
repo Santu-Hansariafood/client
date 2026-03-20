@@ -72,9 +72,16 @@ router.patch("/:id/status", async (req, res) => {
       return res.status(400).json({ message: "Invalid status" });
     }
 
+    const updateFields = { status };
+    if (status === "closed") {
+      updateFields.closedAt = new Date();
+    } else {
+      updateFields.closedAt = null;
+    }
+
     const updated = await Bid.findByIdAndUpdate(
       req.params.id,
-      { status },
+      updateFields,
       { new: true }
     );
 

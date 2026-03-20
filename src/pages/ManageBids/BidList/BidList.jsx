@@ -48,13 +48,9 @@ const BidList = () => {
       } else {
         if (bid.status !== "closed") return false;
         // Only show closed bids from the last 2 days
-        // We check both updatedAt (when it was closed) and bidDate (the scheduled date)
-        const updateDate = new Date(bid.updatedAt || 0);
-        const bidDate = new Date(bid.bidDate || 0);
-        const createDate = new Date(bid.createdAt || 0);
-        
-        const latestRelevantDate = Math.max(updateDate, bidDate, createDate);
-        if (latestRelevantDate < twoDaysAgo.getTime()) return false;
+        // We use closedAt as the primary date, fall back to updatedAt or bidDate
+        const closeDate = new Date(bid.closedAt || bid.updatedAt || bid.bidDate || bid.createdAt);
+        if (closeDate < twoDaysAgo) return false;
       }
 
       // Filter by Search
@@ -67,17 +63,9 @@ const BidList = () => {
 
       return true;
     }).sort((a, b) => {
-      // Sort by the most recent relevant date (updatedAt, bidDate, or createdAt)
-      const dateA = Math.max(
-        new Date(a.updatedAt || 0).getTime(),
-        new Date(a.bidDate || 0).getTime(),
-        new Date(a.createdAt || 0).getTime()
-      );
-      const dateB = Math.max(
-        new Date(b.updatedAt || 0).getTime(),
-        new Date(b.bidDate || 0).getTime(),
-        new Date(b.createdAt || 0).getTime()
-      );
+      // Sort by the most recent relevant date
+      const dateA = new Date(a.closedAt || a.updatedAt || a.bidDate || a.createdAt);
+      const dateB = new Date(b.closedAt || b.updatedAt || b.bidDate || b.createdAt);
       return dateB - dateA;
     });
   }, [bids, activeTab, searchConsignee]);

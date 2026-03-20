@@ -18,7 +18,8 @@ const bidSchema = new mongoose.Schema(
     delivery: { type: String, default: "" },
     company: { type: String, default: "" },
     unit: { type: String, default: "" },
-    status: { type: String, enum: ["active", "closed"], default: "active" }
+    status: { type: String, enum: ["active", "closed"], default: "active" },
+    closedAt: { type: Date, default: null }
   },
   { timestamps: true }
 );
