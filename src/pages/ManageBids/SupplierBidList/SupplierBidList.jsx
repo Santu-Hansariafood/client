@@ -1,8 +1,9 @@
 import { lazy, Suspense, useEffect, useState, useMemo } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
-import { FaRegHandPointer } from "react-icons/fa";
+import { FaRegHandPointer, FaGavel } from "react-icons/fa";
 import { IoArrowBack, IoRefresh } from "react-icons/io5";
+import { toast } from "react-toastify";
 import Loading from "../../../common/Loading/Loading";
 
 const Tables = lazy(() => import("../../../common/Tables/Tables"));
@@ -14,9 +15,10 @@ const SupplierBidList = () => {
   const { commodityNames = [], mobile } = location.state || {};
 
   const [bids, setBids] = useState([]);
+  const [participations, setParticipations] = useState([]);
+  const [activeTab, setActiveTab] = useState("active"); // "active", "participated", "closed"
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [bidCount, setBidCount] = useState(0);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [selectedBid, setSelectedBid] = useState(null);
   const [rate, setRate] = useState("");
@@ -32,22 +34,19 @@ const SupplierBidList = () => {
         setLoading(false);
         return;
       }
-      const bidsRes = await axios.get("/bids");
+      const [bidsRes, participationsRes] = await Promise.all([
+        axios.get("/bids"),
+        axios.get(`/participatebids?mobile=${mobile}`)
+      ]);
+
       const items = bidsRes.data?.data || bidsRes.data || [];
-      const sevenDaysAgo = new Date();
-      sevenDaysAgo.setHours(0, 0, 0, 0);
-      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-      const filteredBids = items
-        .filter((bid) => {
-          const bidDate = new Date(bid.bidDate);
-          bidDate.setHours(0, 0, 0, 0);
-          return (
-            commodityNames.includes(bid.commodity) && bidDate >= sevenDaysAgo
-          );
-        })
-        .sort((a, b) => new Date(b.bidDate) - new Date(a.bidDate));
-      setBids(filteredBids);
-      setBidCount(filteredBids.length);
+      const myParticipations = participationsRes.data?.data || participationsRes.data || [];
+
+      // Only keep bids for selected commodities
+      const relevantBids = items.filter(bid => commodityNames.includes(bid.commodity));
+      
+      setBids(relevantBids);
+      setParticipations(myParticipations);
     } catch (error) {
       setError("Failed to fetch bid data.");
     } finally {
@@ -58,18 +57,25 @@ const SupplierBidList = () => {
   useEffect(() => {
     fetchBids();
     // eslint-disable-next-line
-  }, [commodityNames]);
+  }, [commodityNames, mobile]);
 
   const handleParticipate = (bid) => {
     setSelectedBid(bid);
-    setRate(bid.rate || "");
-    setQuantity(bid.quantity || "");
+    // If already participated, pre-fill with previous values
+    const existingParticipation = participations.find(p => p.bidId === bid._id);
+    if (existingParticipation) {
+      setRate(existingParticipation.rate || "");
+      setQuantity(existingParticipation.quantity || "");
+    } else {
+      setRate(bid.rate || "");
+      setQuantity(bid.quantity || "");
+    }
     setIsPopupOpen(true);
   };
 
   const handleConfirm = async () => {
     if (!rate || !quantity) {
-      alert("Please enter a valid rate and quantity.");
+      toast.error("Please enter a valid rate and quantity.");
       return;
     }
     try {
@@ -83,25 +89,52 @@ const SupplierBidList = () => {
         "/participatebids",
         participationData
       );
-      alert("Participation successful!");
+      toast.success("Participation successful!");
       setIsPopupOpen(false);
+      fetchBids(); // Refresh to update participation status
     } catch (error) {
       const errorMessage = error.response?.data?.message || "Failed to participate in the bid.";
       toast.error(errorMessage);
     }
   };
 
-  const groupedBids = useMemo(() => {
+  const filteredBids = useMemo(() => {
     const now = new Date();
-    const groups = {};
-    bids.forEach((bid) => {
-      if (bid.endTime && new Date(bid.endTime) > now) {
-        if (!groups[bid.group]) groups[bid.group] = [];
-        groups[bid.group].push(bid);
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    sevenDaysAgo.setHours(0, 0, 0, 0);
+
+    return bids.filter((bid) => {
+      const bidDateStr = bid.bidDate ? bid.bidDate.split('T')[0] : new Date().toISOString().split('T')[0];
+      const [year, month, day] = bidDateStr.split('-').map(Number);
+      const [endHours, endMinutes] = bid.endTime.split(':').map(Number);
+      const bidEndDateTime = new Date(year, month - 1, day, endHours, endMinutes, 0, 0);
+
+      const isParticipated = participations.some(p => p.bidId === bid._id);
+      const isClosed = bid.status === 'closed' || now >= bidEndDateTime;
+
+      if (activeTab === "active") {
+        return bid.status === "active" && now < bidEndDateTime;
+      } else if (activeTab === "participated") {
+        return isParticipated;
+      } else if (activeTab === "closed") {
+        // Show closed bids from last 7 days
+        return isClosed && bidEndDateTime >= sevenDaysAgo;
       }
+      return false;
+    }).sort((a, b) => new Date(b.bidDate) - new Date(a.bidDate));
+  }, [bids, participations, activeTab]);
+
+  const groupedBids = useMemo(() => {
+    const groups = {};
+    filteredBids.forEach((bid) => {
+      if (!groups[bid.group]) groups[bid.group] = [];
+      groups[bid.group].push(bid);
     });
     return Object.entries(groups).sort(([a], [b]) => a.localeCompare(b));
-  }, [bids]);
+  }, [filteredBids]);
+
+  const bidCount = filteredBids.length;
 
   return (
     <Suspense fallback={<Loading />}>
@@ -120,16 +153,58 @@ const SupplierBidList = () => {
             <IoRefresh /> Refresh
           </button>
         </div>
-        <h1 className="text-2xl font-bold text-gray-800 mb-4">
-          Manage Bids ({bidCount})
-        </h1>
+        <div className="mb-6">
+          <h1 className="text-3xl font-bold text-slate-800">Manage Bids</h1>
+          <p className="text-slate-500 mt-1">
+            {activeTab === "active"
+              ? "View and participate in active bids"
+              : activeTab === "participated"
+                ? "Bids you have participated in"
+                : "Closed bids from the last 7 days"}
+          </p>
+        </div>
+
+        <div className="flex bg-slate-100 p-1 rounded-xl w-fit mb-6">
+          <button
+            onClick={() => setActiveTab("active")}
+            className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${
+              activeTab === "active"
+                ? "bg-white text-emerald-700 shadow-sm"
+                : "text-slate-500 hover:text-slate-700"
+            }`}
+          >
+            Active Bids
+          </button>
+          <button
+            onClick={() => setActiveTab("participated")}
+            className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${
+              activeTab === "participated"
+                ? "bg-white text-blue-700 shadow-sm"
+                : "text-slate-500 hover:text-slate-700"
+            }`}
+          >
+            Participated Bids
+          </button>
+          <button
+            onClick={() => setActiveTab("closed")}
+            className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${
+              activeTab === "closed"
+                ? "bg-white text-red-700 shadow-sm"
+                : "text-slate-500 hover:text-slate-700"
+            }`}
+          >
+            Closed Bids
+          </button>
+        </div>
+
         {loading ? (
           <p className="text-center text-gray-600">Loading bids...</p>
         ) : error ? (
           <p className="text-red-500">{error}</p>
         ) : groupedBids.length === 0 ? (
           <p className="text-center text-gray-600">
-            No active bids available for {commodityNames.join(", ")} in the last 7 days.
+            No {activeTab} bids available for {commodityNames.join(", ")}
+            {activeTab === "closed" ? " in the last 7 days" : ""}.
           </p>
         ) : (
           <div>
@@ -145,29 +220,44 @@ const SupplierBidList = () => {
                   <div className="mt-2 bg-white rounded shadow p-4">
                     <Tables
                       headers={["Consignee", "Commodity", "Quantity", "Rate", "Bid Date", "Start Time", "End Time", "Payment Terms", "Delivery", "Parameters", "Action"]}
-                      rows={groupBids.map((bid) => [
-                        bid.consignee,
-                        bid.commodity,
-                        bid.quantity,
-                        bid.rate,
-                        bid.bidDate ? new Date(bid.bidDate).toLocaleDateString() : "N/A",
-                        bid.startTime || "-",
-                        bid.endTime || "-",
-                        bid.paymentTerms || "N/A",
-                        bid.delivery || "N/A",
-                        bid.parameters
-                          ? Object.entries(bid.parameters)
-                              .map(([key, value]) => `${key}: ${value}`)
-                              .join(", ")
-                          : "No Parameters",
-                        <button
-                          key={bid._id}
-                          onClick={() => handleParticipate(bid)}
-                          className="flex items-center gap-2 text-blue-500 hover:text-blue-700"
-                        >
-                          <FaRegHandPointer /> Participate
-                        </button>,
-                      ])}
+                      rows={groupBids.map((bid) => {
+                        const isParticipated = participations.some(p => p.bidId === bid._id);
+                        const bidDateStr = bid.bidDate ? bid.bidDate.split('T')[0] : new Date().toISOString().split('T')[0];
+                        const [year, month, day] = bidDateStr.split('-').map(Number);
+                        const [endHours, endMinutes] = bid.endTime.split(':').map(Number);
+                        const bidEndDateTime = new Date(year, month - 1, day, endHours, endMinutes, 0, 0);
+                        const isClosed = bid.status === 'closed' || new Date() >= bidEndDateTime;
+
+                        return [
+                          bid.consignee,
+                          bid.commodity,
+                          bid.quantity,
+                          bid.rate,
+                          bid.bidDate ? new Date(bid.bidDate).toLocaleDateString() : "N/A",
+                          bid.startTime || "-",
+                          bid.endTime || "-",
+                          bid.paymentTerms || "N/A",
+                          bid.delivery || "N/A",
+                          bid.parameters
+                            ? Object.entries(bid.parameters)
+                                .map(([key, value]) => `${key}: ${value}`)
+                                .join(", ")
+                            : "No Parameters",
+                          isClosed ? (
+                            <span key={bid._id} className="text-red-500 font-bold">Closed</span>
+                          ) : (
+                            <button
+                              key={bid._id}
+                              onClick={() => handleParticipate(bid)}
+                              className={`flex items-center gap-2 font-bold ${
+                                isParticipated ? "text-emerald-600" : "text-blue-500 hover:text-blue-700"
+                              }`}
+                            >
+                              <FaRegHandPointer /> {isParticipated ? "Update Bid" : "Participate"}
+                            </button>
+                          ),
+                        ];
+                      })}
                     />
                   </div>
                 )}
