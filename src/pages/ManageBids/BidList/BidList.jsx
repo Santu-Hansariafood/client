@@ -37,18 +37,17 @@ const BidList = () => {
 
   const filteredBids = useMemo(() => {
     const now = new Date();
-    const todayStart = new Date();
-    todayStart.setHours(0, 0, 0, 0);
 
     return bids.filter((bid) => {
+      const bidDateStr = bid.bidDate ? bid.bidDate.split('T')[0] : new Date().toISOString().split('T')[0];
+      const [year, month, day] = bidDateStr.split('-').map(Number);
       const [endHours, endMinutes] = bid.endTime.split(':').map(Number);
-      const bidEndDateTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), endHours, endMinutes);
+      const bidEndDateTime = new Date(year, month - 1, day, endHours, endMinutes, 0, 0);
 
       let matches = false;
 
-      if (activeTab === 'all') { // Today's Bids
-        const createDate = new Date(bid.createdAt);
-        matches = createDate >= todayStart;
+      if (activeTab === 'all') {
+        matches = true;
       } else if (activeTab === 'active') {
         matches = bid.status === 'active' && now < bidEndDateTime;
       } else if (activeTab === 'closed') {
@@ -57,7 +56,6 @@ const BidList = () => {
 
       if (!matches) return false;
 
-      // Filter by Search
       if (
         searchConsignee &&
         !bid.consignee?.toLowerCase().includes(searchConsignee.toLowerCase())
