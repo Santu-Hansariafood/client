@@ -23,7 +23,10 @@ const SupplierBidList = () => {
   const [selectedBid, setSelectedBid] = useState(null);
   const [rate, setRate] = useState("");
   const [quantity, setQuantity] = useState("");
+  const [loadingFrom, setLoadingFrom] = useState("");
+  const [remarks, setRemarks] = useState("");
   const [selectedGroup, setSelectedGroup] = useState(null);
+  const [bidLocations, setBidLocations] = useState([]);
 
   const fetchBids = async () => {
     setLoading(true);
@@ -34,19 +37,22 @@ const SupplierBidList = () => {
         setLoading(false);
         return;
       }
-      const [bidsRes, participationsRes] = await Promise.all([
+      const [bidsRes, participationsRes, locationsRes] = await Promise.all([
         axios.get("/bids"),
-        axios.get(`/participatebids?mobile=${mobile}`)
+        axios.get(`/participatebids?mobile=${mobile}`),
+        axios.get("/bid-locations")
       ]);
 
       const items = bidsRes.data?.data || bidsRes.data || [];
       const myParticipations = participationsRes.data?.data || participationsRes.data || [];
+      const locations = locationsRes.data?.data || locationsRes.data || [];
 
       // Only keep bids for selected commodities
       const relevantBids = items.filter(bid => commodityNames.includes(bid.commodity));
       
       setBids(relevantBids);
       setParticipations(myParticipations);
+      setBidLocations(locations);
     } catch (error) {
       setError("Failed to fetch bid data.");
     } finally {
@@ -66,9 +72,13 @@ const SupplierBidList = () => {
     if (existingParticipation) {
       setRate(existingParticipation.rate || "");
       setQuantity(existingParticipation.quantity || "");
+      setLoadingFrom(existingParticipation.loadingFrom || "");
+      setRemarks(existingParticipation.remarks || "");
     } else {
       setRate(bid.rate || "");
       setQuantity(bid.quantity || "");
+      setLoadingFrom("");
+      setRemarks("");
     }
     setIsPopupOpen(true);
   };
@@ -84,6 +94,8 @@ const SupplierBidList = () => {
         mobile: mobile,
         rate: Number(rate),
         quantity: Number(quantity),
+        loadingFrom,
+        remarks,
       };
       await axios.post(
         "/participatebids",
@@ -289,6 +301,30 @@ const SupplierBidList = () => {
                     value={quantity}
                     onChange={(e) => setQuantity(e.target.value)}
                     className="w-full border rounded px-2 py-1"
+                  />
+                </div>
+                <div>
+                  <label className="block mb-1">Loading From:</label>
+                  <select
+                    value={loadingFrom}
+                    onChange={(e) => setLoadingFrom(e.target.value)}
+                    className="w-full border rounded px-2 py-1"
+                  >
+                    <option value="">Select Location</option>
+                    {bidLocations.map((loc) => (
+                      <option key={loc._id} value={loc.name}>
+                        {loc.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block mb-1">Remarks:</label>
+                  <textarea
+                    value={remarks}
+                    onChange={(e) => setRemarks(e.target.value)}
+                    className="w-full border rounded px-2 py-1"
+                    rows="2"
                   />
                 </div>
                 <button

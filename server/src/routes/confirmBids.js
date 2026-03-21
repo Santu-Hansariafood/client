@@ -1,5 +1,7 @@
 import { Router } from "express";
 import ConfirmBid from "../models/ConfirmBid.js";
+import Notification from "../models/Notification.js";
+import Bid from "../models/Bid.js";
 
 const router = Router();
 
@@ -20,8 +22,28 @@ router.get("/", async (req, res) => {
 });
 
 router.post("/", async (req, res) => {
-  const item = await ConfirmBid.create(req.body);
-  res.status(201).json(item);
+  try {
+    const { bidId, phone, status } = req.body;
+    const item = await ConfirmBid.create(req.body);
+    
+    const bid = await Bid.findById(bidId);
+    if (bid && status === "Confirmed") {
+      // Notify Seller (Seller is the one who participates, and they are notified if their participation is confirmed)
+      // Actually, in this system, 'phone' in ConfirmBid is the mobile of the person whose bid was confirmed.
+      await Notification.create({
+        recipient: phone,
+        recipientRole: "Seller",
+        title: "Bid Accepted",
+        message: `Congratulations! Your bid for ${bid.commodity} has been accepted.`,
+        type: "BidConfirmation",
+        relatedId: bidId
+      });
+    }
+
+    res.status(201).json(item);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
 });
 
 export default router;

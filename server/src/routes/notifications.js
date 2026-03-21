@@ -1,0 +1,54 @@
+import { Router } from "express";
+import Notification from "../models/Notification.js";
+
+const router = Router();
+
+router.get("/", async (req, res) => {
+  try {
+    const { mobile, role } = req.query;
+    const query = { isRead: false };
+
+    if (mobile) {
+      query.$or = [{ recipient: mobile }, { recipient: "all" }];
+    }
+    
+    if (role) {
+      query.recipientRole = role;
+    }
+
+    const items = await Notification.find(query).sort({ createdAt: -1 }).limit(50).lean();
+    res.json(items);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+router.patch("/:id/read", async (req, res) => {
+  try {
+    const updated = await Notification.findByIdAndUpdate(
+      req.params.id,
+      { isRead: true },
+      { new: true }
+    );
+    if (!updated) return res.status(404).json({ message: "Notification not found" });
+    res.json(updated);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+});
+
+router.patch("/read-all", async (req, res) => {
+  try {
+    const { mobile, role } = req.body;
+    const query = { isRead: false };
+    if (mobile) query.recipient = mobile;
+    if (role) query.recipientRole = role;
+
+    await Notification.updateMany(query, { isRead: true });
+    res.json({ message: "All notifications marked as read" });
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+});
+
+export default router;

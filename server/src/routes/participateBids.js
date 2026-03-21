@@ -1,6 +1,7 @@
 import { Router } from "express";
 import ParticipateBid from "../models/ParticipateBid.js";
 import Bid from "../models/Bid.js";
+import Notification from "../models/Notification.js";
 
 const router = Router();
 
@@ -27,7 +28,7 @@ router.get("/", async (req, res) => {
 
 router.post("/", async (req, res) => {
   try {
-    const { bidId, mobile, rate, quantity } = req.body;
+    const { bidId, mobile, rate, quantity, loadingFrom, remarks } = req.body;
 
     if (!bidId || !mobile) {
       return res.status(400).json({ message: "Bid ID and Mobile are required." });
@@ -48,9 +49,29 @@ router.post("/", async (req, res) => {
     // Upsert participation based on bidId and mobile
     const item = await ParticipateBid.findOneAndUpdate(
       { bidId, mobile },
-      { rate, quantity },
+      { rate, quantity, loadingFrom, remarks },
       { upsert: true, new: true, runValidators: true }
     );
+
+    // Create notifications for Admin and Employees
+    await Promise.all([
+      Notification.create({
+        recipient: "all",
+        recipientRole: "Admin",
+        title: "New Bid Participation",
+        message: `A new bid participation has been received for bid ${bid.commodity} from mobile ${mobile}. Rate: ${rate}, Qty: ${quantity}`,
+        type: "BidParticipation",
+        relatedId: bid._id
+      }),
+      Notification.create({
+        recipient: "all",
+        recipientRole: "Employee",
+        title: "New Bid Participation",
+        message: `A new bid participation has been received for bid ${bid.commodity} from mobile ${mobile}. Rate: ${rate}, Qty: ${quantity}`,
+        type: "BidParticipation",
+        relatedId: bid._id
+      })
+    ]);
 
     res.status(201).json(item);
   } catch (error) {

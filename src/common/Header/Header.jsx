@@ -1,10 +1,12 @@
 import { useState, useCallback, useEffect, useRef } from "react";
-import { AiOutlineUser } from "react-icons/ai";
+import { AiOutlineUser, AiOutlineBell } from "react-icons/ai";
 import { RiLogoutBoxLine } from "react-icons/ri";
 import { HiMenuAlt2 } from "react-icons/hi";
 import { IoClose } from "react-icons/io5";
+import axios from "axios";
 import PWAInstall from "../PWAInstall/PWAInstall";
 import Typewriter from "../Typewriter/Typewriter";
+import { useAuth } from "../../context/AuthContext/AuthContext";
 
 const Header = ({
   onLogoutClick,
@@ -14,23 +16,62 @@ const Header = ({
   isProfileDropdownOpen,
   setProfileDropdownOpen,
 }) => {
+  const { userRole, mobile } = useAuth();
   const dropdownRef = useRef(null);
+  const notificationRef = useRef(null);
+  const [notifications, setNotifications] = useState([]);
+  const [showNotifications, setShowNotifications] = useState(false);
+
+  const fetchNotifications = useCallback(async () => {
+    try {
+      const response = await axios.get("/notifications", {
+        params: { mobile, role: userRole }
+      });
+      setNotifications(response.data);
+    } catch (error) {
+      console.error("Failed to fetch notifications", error);
+    }
+  }, [mobile, userRole]);
+
+  useEffect(() => {
+    fetchNotifications();
+    const interval = setInterval(fetchNotifications, 30000); // Poll every 30s
+    return () => clearInterval(interval);
+  }, [fetchNotifications]);
 
   const toggleDropdown = useCallback(() => {
     setProfileDropdownOpen(prev => !prev);
+    setShowNotifications(false);
   }, [setProfileDropdownOpen]);
+
+  const toggleNotifications = () => {
+    setShowNotifications(prev => !prev);
+    setProfileDropdownOpen(false);
+  };
+
+  const markAsRead = async (id) => {
+    try {
+      await axios.patch(`/notifications/${id}/read`);
+      setNotifications(prev => prev.filter(n => n._id !== id));
+    } catch (error) {
+      console.error("Failed to mark notification as read", error);
+    }
+  };
 
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
         setProfileDropdownOpen(false);
       }
+      if (notificationRef.current && !notificationRef.current.contains(e.target)) {
+        setShowNotifications(false);
+      }
     };
-    if (isProfileDropdownOpen) {
+    if (isProfileDropdownOpen || showNotifications) {
       document.addEventListener("mousedown", handleClickOutside);
     }
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [isProfileDropdownOpen, setProfileDropdownOpen]);
+  }, [isProfileDropdownOpen, showNotifications, setProfileDropdownOpen]);
 
   const title = "Hansaria Food Private Limited";
   const profile = "Profile";
@@ -58,12 +99,57 @@ const Header = ({
       </div>
       <div
         className="flex items-center gap-1.5 sm:gap-3 shrink-0"
-        ref={dropdownRef}
       >
         <div className="hidden md:flex items-center">
           <PWAInstall />
         </div>
-        <div className="relative">
+
+        {/* Notifications */}
+        <div className="relative" ref={notificationRef}>
+          <button
+            type="button"
+            className="p-2 rounded-xl text-amber-50 hover:bg-white/10 transition-colors relative"
+            onClick={toggleNotifications}
+          >
+            <AiOutlineBell size={24} />
+            {notifications.length > 0 && (
+              <span className="absolute top-1 right-1 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full ring-2 ring-emerald-800">
+                {notifications.length}
+              </span>
+            )}
+          </button>
+          {showNotifications && (
+            <div className="absolute right-0 mt-2 w-72 sm:w-80 bg-white border border-slate-200 rounded-xl shadow-xl overflow-hidden z-30">
+              <div className="p-3 bg-slate-50 border-b border-slate-100 font-bold text-slate-800 flex justify-between items-center">
+                <span>Notifications</span>
+                <span className="text-xs font-normal text-slate-500">{notifications.length} new</span>
+              </div>
+              <div className="max-h-96 overflow-y-auto">
+                {notifications.length > 0 ? (
+                  notifications.map(n => (
+                    <div 
+                      key={n._id} 
+                      className="p-3 border-b border-slate-50 hover:bg-slate-50 cursor-pointer group"
+                      onClick={() => markAsRead(n._id)}
+                    >
+                      <div className="flex justify-between items-start mb-1">
+                        <span className="text-sm font-bold text-emerald-700">{n.title}</span>
+                        <span className="text-[10px] text-slate-400">{new Date(n.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                      </div>
+                      <p className="text-xs text-slate-600 line-clamp-2">{n.message}</p>
+                    </div>
+                  ))
+                ) : (
+                  <div className="p-8 text-center text-slate-400 text-sm italic">
+                    No new notifications
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="relative" ref={dropdownRef}>
           <button
             type="button"
             className="flex items-center gap-1.5 sm:gap-2 rounded-xl px-1.5 py-1 sm:px-2 sm:py-1.5 font-medium text-amber-50 hover:bg-white/10 transition-colors focus:outline-none focus:ring-2 focus:ring-amber-400/50"

@@ -30,6 +30,7 @@ import consigneeRoutes from "./routes/consignees.js";
 import emailRoutes from "./routes/email.js";
 import employeeRoutes from "./routes/employees.js";
 import transporterRoutes from "./routes/transporters.js";
+import notificationRoutes from "./routes/notifications.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -81,6 +82,7 @@ app.use("/api/consignees", authJwt, consigneeRoutes);
 app.use("/api/email", authJwt, emailRoutes);
 app.use("/api/employees", authJwt, employeeRoutes);
 app.use("/api/transporters", authJwt, transporterRoutes);
+app.use("/api/notifications", authJwt, notificationRoutes);
 
 const PORT = process.env.PORT || 5000;
 
