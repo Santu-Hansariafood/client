@@ -109,7 +109,7 @@ const BidChart = ({ apiUrl, chartType = "line", data: externalData }) => {
 
   const data = useMemo(
     () => externalData || internalData,
-    [externalData, internalData]
+    [externalData, internalData],
   );
 
   if (loading)
@@ -193,7 +193,11 @@ const BidChart = ({ apiUrl, chartType = "line", data: externalData }) => {
             <stop offset="95%" stopColor="#FFB800" stopOpacity={0} />
           </linearGradient>
         </defs>
-        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+        <CartesianGrid
+          strokeDasharray="3 3"
+          vertical={false}
+          stroke="#f1f5f9"
+        />
         <XAxis
           dataKey="date"
           axisLine={false}
@@ -227,14 +231,14 @@ const BidChart = ({ apiUrl, chartType = "line", data: externalData }) => {
           Bid Count Over Time
         </h3>
 
-        <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200 shadow-sm self-end sm:self-auto">
+        <div className="flex justify-center sm:justify-end w-full sm:w-auto bg-slate-100 p-1 rounded-xl border border-slate-200 shadow-sm">
           {["weekly", "monthly", "yearly"].map((type) => (
             <button
               key={type}
               onClick={() => setViewType(type)}
-              className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all duration-200 capitalize ${
+              className={`px-3 sm:px-4 py-1.5 rounded-lg text-xs sm:text-sm font-bold transition-all duration-200 capitalize ${
                 viewType === type
-                  ? "bg-white text-amber-600 shadow-sm"
+                  ? "bg-white text-emerald-600 shadow-sm"
                   : "text-slate-500 hover:text-slate-700"
               }`}
             >
