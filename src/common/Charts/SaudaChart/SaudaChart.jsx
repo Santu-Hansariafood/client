@@ -63,7 +63,6 @@ const SaudaChart = ({ apiUrl, chartType = "line", data: externalData }) => {
           let key;
 
           if (viewType === "weekly") {
-            // Group by day of the last 7 days
             const diff = today - date;
             const daysDiff = Math.floor(diff / (1000 * 60 * 60 * 24));
             if (daysDiff <= 7) {
@@ -73,13 +72,12 @@ const SaudaChart = ({ apiUrl, chartType = "line", data: externalData }) => {
               });
             }
           } else if (viewType === "monthly") {
-            // Group by week of the current month or just by date for the month
             key = date.toLocaleDateString("en-IN", {
               day: "2-digit",
               month: "short",
             });
           } else if (viewType === "yearly") {
-            // Group by month
+
             key = date.toLocaleDateString("en-IN", {
               month: "long",
               year: "numeric",
@@ -91,7 +89,6 @@ const SaudaChart = ({ apiUrl, chartType = "line", data: externalData }) => {
           }
         });
 
-        // Sort data based on viewType
         const sortedEntries = Object.entries(counts);
         if (viewType === "yearly") {
           sortedEntries.sort((a, b) => new Date(a[0]) - new Date(b[0]));
@@ -112,7 +109,7 @@ const SaudaChart = ({ apiUrl, chartType = "line", data: externalData }) => {
 
   const data = useMemo(
     () => externalData || internalData,
-    [externalData, internalData]
+    [externalData, internalData],
   );
 
   if (loading)
@@ -187,7 +184,6 @@ const SaudaChart = ({ apiUrl, chartType = "line", data: externalData }) => {
       );
     }
 
-    // Default to Premium Area Chart
     return (
       <AreaChart {...commonProps}>
         <defs>
@@ -196,7 +192,11 @@ const SaudaChart = ({ apiUrl, chartType = "line", data: externalData }) => {
             <stop offset="95%" stopColor="#8CC63F" stopOpacity={0} />
           </linearGradient>
         </defs>
-        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+        <CartesianGrid
+          strokeDasharray="3 3"
+          vertical={false}
+          stroke="#f1f5f9"
+        />
         <XAxis
           dataKey="date"
           axisLine={false}
@@ -230,12 +230,12 @@ const SaudaChart = ({ apiUrl, chartType = "line", data: externalData }) => {
           Sauda Count Over Time
         </h3>
 
-        <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200 shadow-sm self-end sm:self-auto">
+        <div className="flex justify-center sm:justify-end w-full sm:w-auto bg-slate-100 p-1 rounded-xl border border-slate-200 shadow-sm">
           {["weekly", "monthly", "yearly"].map((type) => (
             <button
               key={type}
               onClick={() => setViewType(type)}
-              className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all duration-200 capitalize ${
+              className={`px-3 sm:px-4 py-1.5 rounded-lg text-xs sm:text-sm font-bold transition-all duration-200 capitalize ${
                 viewType === type
                   ? "bg-white text-emerald-600 shadow-sm"
                   : "text-slate-500 hover:text-slate-700"
