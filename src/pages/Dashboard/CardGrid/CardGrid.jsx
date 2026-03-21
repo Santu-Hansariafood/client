@@ -1,5 +1,5 @@
 import { lazy, Suspense } from "react";
-import { FaUsers, FaStore, FaTruck } from "react-icons/fa";
+import { FaUsers, FaStore, FaTruck, FaGavel } from "react-icons/fa";
 import Loading from "../../../common/Loading/Loading";
 const Cards = lazy(() => import("../../../common/Cards/Cards"));
 
