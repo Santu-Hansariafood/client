@@ -11,8 +11,14 @@ const BuyerDashboard = () => {
   
   const dashboardData = [
     {
-      title: "Manage Bids",
+      title: "Bid List",
       count: "View",
+      icon: FaGavel,
+      link: "/manage-bids/bid-list",
+    },
+    {
+      title: "Create Bid",
+      count: "Add",
       icon: FaGavel,
       link: "/manage-bids/buyer",
     },

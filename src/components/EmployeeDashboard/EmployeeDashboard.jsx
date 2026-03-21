@@ -6,10 +6,40 @@ import { useAuth } from "../../context/AuthContext/AuthContext";
 const EmployeeDashboard = () => {
   const { user } = useAuth();
   const [stats, setStats] = useState({
-    totalTasks: 0,
-    pendingBids: 0,
-    activeOrders: 0
+    totalSaudas: 0,
+    activeBids: 0,
   });
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const [bidsRes, saudasRes] = await Promise.all([
+          axios.get("/bids"),
+          axios.get("/sodabook"),
+        ]);
+        
+        const bids = bidsRes.data?.data || bidsRes.data || [];
+        const saudas = saudasRes.data?.data || saudasRes.data || [];
+        
+        const now = new Date();
+        const activeBids = bids.filter(bid => {
+          const bidDateStr = bid.bidDate ? bid.bidDate.split('T')[0] : new Date().toISOString().split('T')[0];
+          const [year, month, day] = bidDateStr.split('-').map(Number);
+          const [endHours, endMinutes] = bid.endTime.split(':').map(Number);
+          const bidEndDateTime = new Date(year, month - 1, day, endHours, endMinutes, 0, 0);
+          return bid.status === "active" && now < bidEndDateTime;
+        });
+
+        setStats({
+          totalSaudas: saudas.length,
+          activeBids: activeBids.length,
+        });
+      } catch (error) {
+        console.error("Error fetching employee stats", error);
+      }
+    };
+    fetchStats();
+  }, []);
 
   return (
     <div className="p-6 space-y-8">
@@ -27,13 +57,13 @@ const EmployeeDashboard = () => {
         <StatCard 
           icon={<FaClipboardList className="text-blue-600" />} 
           label="Total Saudas" 
-          value="24" 
+          value={stats.totalSaudas} 
           color="bg-blue-50" 
         />
         <StatCard 
           icon={<FaCalendarCheck className="text-emerald-600" />} 
           label="Active Bids" 
-          value="12" 
+          value={stats.activeBids} 
           color="bg-emerald-50" 
         />
         <StatCard 

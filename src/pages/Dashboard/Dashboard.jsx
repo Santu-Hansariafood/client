@@ -13,6 +13,7 @@ const Dashboard = () => {
     sellers: 0,
     consignees: 0,
     orders: 0,
+    bids: 0,
   });
 
   const fetchCounts = useCallback(async () => {
@@ -22,6 +23,7 @@ const Dashboard = () => {
         axios.get("/sellers"),
         axios.get("/consignees"),
         axios.get("/self-order"),
+        axios.get("/bids"),
       ]);
 
       const getCount = (res) => {
@@ -36,6 +38,7 @@ const Dashboard = () => {
         sellers: getCount(responses[1]),
         consignees: getCount(responses[2]),
         orders: getCount(responses[3]),
+        bids: getCount(responses[4]),
       });
     } catch (error) {
       toast.error(error?.response?.data?.message || "Failed to fetch data counts");

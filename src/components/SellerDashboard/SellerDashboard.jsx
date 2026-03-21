@@ -62,19 +62,16 @@ const SellerDashboard = () => {
 
         setSellerDetails(seller);
 
-        // Last 24 hours bids
-        const oneDayAgo = new Date();
-        oneDayAgo.setDate(oneDayAgo.getDate() - 1);
-
-        const recentSellerBids = bids.filter(
+        // All active bids matching seller commodities
+        const activeSellerBids = bids.filter(
           (bid) =>
-            new Date(bid?.createdAt) >= oneDayAgo &&
+            bid.status === "active" &&
             seller?.commodities?.some(
               (c) => c?.name === bid?.commodity
             )
         );
 
-        setSellerBidCount(recentSellerBids.length);
+        setSellerBidCount(activeSellerBids.length);
 
         setParticipateBidCount(
           participate.filter(

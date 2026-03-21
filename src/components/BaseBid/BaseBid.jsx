@@ -9,6 +9,8 @@ import { FaGavel } from "react-icons/fa";
 
 import WhatsAppNotification from "../WhatsAppNotification/WhatsAppNotification"
 
+import { useAuth } from "../../context/AuthContext/AuthContext";
+
 const GroupSelection = lazy(() => import("./GroupSelection"));
 const ParameterInputs = lazy(() => import("./ParameterInputs"));
 const AdditionalFields = lazy(() => import("./AdditionalFields"));
@@ -16,8 +18,9 @@ const SubmitButton = lazy(() => import("./SubmitButton"));
 
 const apiBaseUrl = "";
 
-const BaseBid = () => {
+const BaseBid = ({ type }) => {
   const navigate = useNavigate();
+  const { userRole, mobile } = useAuth();
   const [state, setState] = useState({
     selectedGroup: null,
     selectedConsignee: null,
@@ -43,15 +46,22 @@ const BaseBid = () => {
 
   const fetchData = async () => {
     try {
-      const [companiesRes, originsRes] = await Promise.all([
+      const [companiesRes, originsRes, buyersRes] = await Promise.all([
         axios.get(`${apiBaseUrl}/companies`),
         axios.get(`${apiBaseUrl}/bid-locations`),
+        userRole === "Buyer" ? axios.get(`${apiBaseUrl}/buyers`) : Promise.resolve({ data: [] }),
       ]);
 
       const companies = companiesRes.data?.data || companiesRes.data || [];
       const origins = originsRes.data?.data || originsRes.data || [];
+      const buyers = buyersRes.data?.data || buyersRes.data || [];
+
+      const buyer = userRole === "Buyer" 
+        ? buyers.find(b => b.mobile?.some(m => String(m) === String(mobile)))
+        : null;
 
       const formatName = (name) => {
+        if (!name) return "";
         return name
           .split(" ")
           .map(
@@ -63,6 +73,11 @@ const BaseBid = () => {
       const groupMap = new Map();
 
       companies.forEach((c) => {
+        // If user is buyer, only show their registered group/company
+        if (buyer && String(c._id) !== String(buyer.companyId)) {
+          return;
+        }
+
         const formattedGroupName = formatName(c.group);
         if (groupMap.has(formattedGroupName)) {
           const existingGroup = groupMap.get(formattedGroupName);
@@ -106,8 +121,29 @@ const BaseBid = () => {
           }))
           .sort((a, b) => a.label.localeCompare(b.label)),
       }));
+
+      // If buyer, auto-select group and load options
+      if (buyer && sortedGroupOptions.length > 0) {
+        const group = sortedGroupOptions[0];
+        setState(prev => ({
+          ...prev,
+          selectedGroup: group,
+          consigneeOptions: group.consignees
+            .map((c) => ({ value: c, label: c }))
+            .sort((a, b) => a.label.localeCompare(b.label)) || [],
+          commodityOptions: group.commodities
+            .map((c) => ({
+              value: c.name,
+              label: c.name,
+              parameters: c.parameters,
+            }))
+            .sort((a, b) => a.label.localeCompare(b.label)) || [],
+        }));
+      }
+
     } catch (error) {
-      toast.error("Failed to fetch data. Please try again later.", error);
+      toast.error("Failed to fetch data. Please try again later.");
+      console.error(error);
     }
   };
 
@@ -197,7 +233,7 @@ const BaseBid = () => {
       }, {});
 
       const response = await axios.post(`${apiBaseUrl}/bids`, {
-        type: "buyer",
+        type: type || "buyer",
         group: state.selectedGroup?.value,
         consignee: state.selectedConsignee?.value,
         origin: state.origin?.value,

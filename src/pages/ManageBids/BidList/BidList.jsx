@@ -5,6 +5,7 @@ import { toast } from "react-toastify";
 import Loading from "../../../common/Loading/Loading";
 import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
 import { FaGavel } from "react-icons/fa";
+import { useAuth } from "../../../context/AuthContext/AuthContext";
 
 const Tables = lazy(() => import("../../../common/Tables/Tables"));
 const SearchBox = lazy(() => import("../../../common/SearchBox/SearchBox"));
@@ -12,6 +13,7 @@ const ViewBid = lazy(() => import("../ViewBidPopup/ViewBidPopup"));
 const PopupBox = lazy(() => import("../../../common/PopupBox/PopupBox"));
 
 const BidList = () => {
+  const { userRole, mobile } = useAuth();
   const [bids, setBids] = useState([]);
   const [activeTab, setActiveTab] = useState("all"); // "all", "active", or "closed"
   const [currentPage, setCurrentPage] = useState(1);
@@ -21,24 +23,47 @@ const BidList = () => {
   const [selectedGroup, setSelectedGroup] = useState(null);
   const [searchConsignee, setSearchConsignee] = useState("");
   const [reactivateBid, setReactivateBid] = useState(null); // Holds bid data for reactivation
+  const [buyerGroup, setBuyerGroup] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axios.get("/bids");
-        const items = response.data?.data || response.data || [];
+        const [bidsRes, buyersRes, companiesRes] = await Promise.all([
+          axios.get("/bids"),
+          userRole === "Buyer" ? axios.get("/buyers") : Promise.resolve({ data: [] }),
+          userRole === "Buyer" ? axios.get("/companies") : Promise.resolve({ data: [] }),
+        ]);
+
+        const items = bidsRes.data?.data || bidsRes.data || [];
+        const buyers = buyersRes.data?.data || buyersRes.data || [];
+        const companies = companiesRes.data?.data || companiesRes.data || [];
+
+        if (userRole === "Buyer") {
+          const buyer = buyers.find(b => b.mobile?.some(m => String(m) === String(mobile)));
+          if (buyer) {
+            const company = companies.find(c => String(c._id) === String(buyer.companyId));
+            if (company) {
+              setBuyerGroup(company.group);
+            }
+          }
+        }
         setBids(items);
       } catch {
         setError("Error fetching data. Please try again later.");
       }
     };
     fetchData();
-  }, []);
+  }, [userRole, mobile]);
 
   const filteredBids = useMemo(() => {
     const now = new Date();
 
     return bids.filter((bid) => {
+      // Filter by group if user is a buyer
+      if (userRole === "Buyer" && buyerGroup && bid.group !== buyerGroup) {
+        return false;
+      }
+
       const bidDateStr = bid.bidDate ? bid.bidDate.split('T')[0] : new Date().toISOString().split('T')[0];
       const [year, month, day] = bidDateStr.split('-').map(Number);
       const [endHours, endMinutes] = bid.endTime.split(':').map(Number);
@@ -69,14 +94,14 @@ const BidList = () => {
       const dateB = new Date(b.closedAt || b.updatedAt || b.createdAt);
       return dateB - dateA;
     });
-  }, [bids, activeTab, searchConsignee]);
+  }, [bids, activeTab, searchConsignee, userRole, buyerGroup]);
 
   const consigneeItems = useMemo(
     () =>
-      [...new Set(bids.map((b) => b.consignee).filter(Boolean))].sort((a, b) =>
+      [...new Set(filteredBids.map((b) => b.consignee).filter(Boolean))].sort((a, b) =>
         a.localeCompare(b)
       ),
-    [bids]
+    [filteredBids]
   );
 
   const handleSearchConsignee = (filteredNames) => {
@@ -138,6 +163,7 @@ const BidList = () => {
         group,
         bids: groups[group],
         consignees: [...new Set(groups[group].map((b) => b.consignee))],
+        bidCount: groups[group].length,
       }));
   }, [filteredBids]);
 
@@ -317,7 +343,7 @@ const BidList = () => {
                 </div>
               ) : (
                 <div className="grid gap-4">
-                  {groupedBids.map(({ group, consignees }) => (
+                  {groupedBids.map(({ group, consignees, bidCount }) => (
                     <button
                       key={group}
                       type="button"
@@ -334,18 +360,31 @@ const BidList = () => {
                         <span className="text-lg font-bold text-slate-800">
                           {group}
                         </span>
-                        <span
-                          className={`text-sm font-medium px-3 py-1 rounded-full ${
-                            activeTab === "active"
-                              ? "text-emerald-700 bg-emerald-50"
-                              : activeTab === "closed"
-                                ? "text-red-700 bg-red-50"
-                                : "text-slate-600 bg-slate-100"
-                          }`}
-                        >
-                          {consignees.length} consignee
-                          {consignees.length !== 1 ? "s" : ""}
-                        </span>
+                        <div className="flex gap-2">
+                          <span
+                            className={`text-sm font-medium px-3 py-1 rounded-full ${
+                              activeTab === "active"
+                                ? "text-emerald-700 bg-emerald-50"
+                                : activeTab === "closed"
+                                  ? "text-red-700 bg-red-50"
+                                  : "text-slate-600 bg-slate-100"
+                            }`}
+                          >
+                            {bidCount} bid{bidCount !== 1 ? "s" : ""}
+                          </span>
+                          <span
+                            className={`text-sm font-medium px-3 py-1 rounded-full ${
+                              activeTab === "active"
+                                ? "text-emerald-700 bg-emerald-50"
+                                : activeTab === "closed"
+                                  ? "text-red-700 bg-red-50"
+                                  : "text-slate-600 bg-slate-100"
+                            }`}
+                          >
+                            {consignees.length} consignee
+                            {consignees.length !== 1 ? "s" : ""}
+                          </span>
+                        </div>
                       </div>
                       <p className="mt-2 text-sm text-slate-600 line-clamp-2">
                         {consignees.join(", ")}
