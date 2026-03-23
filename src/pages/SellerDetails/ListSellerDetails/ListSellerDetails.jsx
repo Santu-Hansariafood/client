@@ -181,13 +181,13 @@ const ListSellerDetails = () => {
 
           <div className="rounded-2xl border border-slate-200 bg-white shadow-sm p-3 sm:p-4">
             <Tables headers={headers} rows={rows} />
-            <Pagination
-              currentPage={currentPage}
-              totalItems={filteredData.length}
-              itemsPerPage={itemsPerPage}
-              onPageChange={setCurrentPage}
-            />
           </div>
+          <Pagination
+            currentPage={currentPage}
+            totalItems={filteredData.length}
+            itemsPerPage={itemsPerPage}
+            onPageChange={setCurrentPage}
+          />
 
         {isPopupOpen && (
           <PopupBox
