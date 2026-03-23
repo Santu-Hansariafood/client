@@ -102,7 +102,7 @@ router.post("/buyers/login", async (req, res) => {
       return res.status(400).json({ message: "Mobile and password are required" });
     }
 
-    const buyer = await Buyer.findOne({ mobile: mobile, password: password });
+    const buyer = await Buyer.findOne({ mobile: mobile, password: password }).populate("companyId", "companyName");
     
     if (!buyer) {
       console.warn(`Invalid buyer credentials for mobile: ${mobile}`);
@@ -126,6 +126,8 @@ router.post("/buyers/login", async (req, res) => {
       name: buyer.name,
       email: buyer.email || [],
       status: buyer.status || "Active",
+      companyId: buyer.companyId?._id || buyer.companyId || null,
+      companyName: buyer.companyId?.companyName || "",
       token,
     });
   } catch (error) {

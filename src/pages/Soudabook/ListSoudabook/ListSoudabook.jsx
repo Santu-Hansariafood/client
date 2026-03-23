@@ -26,8 +26,17 @@ const ListSoudabook = () => {
         const response = await axios.get("/self-order");
         let data = response.data?.data || response.data || [];
 
-        if (userRole === "Buyer" && user?.companyId) {
-          data = data.filter(item => String(item.companyId) === String(user.companyId));
+        if (userRole === "Buyer") {
+          const buyerCompanyId = user?.companyId;
+          const buyerCompanyName = user?.companyName;
+
+          data = data.filter(item => {
+            const matchId = buyerCompanyId && item.companyId && String(item.companyId) === String(buyerCompanyId);
+            const matchName = buyerCompanyName && item.buyerCompany && 
+              item.buyerCompany.trim().toLowerCase() === buyerCompanyName.trim().toLowerCase();
+            
+            return matchId || matchName;
+          });
         }
 
         setSaudaData(data.reverse());

@@ -58,9 +58,19 @@ const SelfOrderList = () => {
           if (userRole === "Buyer") {
             const buyers = buyersRes.data?.data || buyersRes.data || [];
             const buyer = buyers.find(b => b.mobile?.some(m => String(m) === String(mobile)));
-            if (buyer && buyer.companyId) {
-              setBuyerCompanyId(buyer.companyId);
-              raw = raw.filter(item => String(item.companyId) === String(buyer.companyId));
+            if (buyer) {
+              const buyerCompanyId = buyer.companyId;
+              const buyerCompanyName = buyer.companyName;
+              
+              setBuyerCompanyId(buyerCompanyId);
+              
+              raw = raw.filter(item => {
+                const matchId = buyerCompanyId && item.companyId && String(item.companyId) === String(buyerCompanyId);
+                const matchName = buyerCompanyName && item.buyerCompany && 
+                  item.buyerCompany.trim().toLowerCase() === buyerCompanyName.trim().toLowerCase();
+                
+                return matchId || matchName;
+              });
             }
           }
 
