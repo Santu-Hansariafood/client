@@ -30,34 +30,47 @@ const ListSellerDetails = () => {
   const [filteredData, setFilteredData] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
+  const [totalItems, setTotalItems] = useState(0);
+  const [searchTerm, setSearchTerm] = useState("");
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [popupMode, setPopupMode] = useState("view");
   const [selectedSeller, setSelectedSeller] = useState(null);
 
   const apiBaseURL = "";
 
-  useEffect(() => {
-    const fetchSellers = async () => {
-      try {
-        const response = await axios.get(`${apiBaseURL}/sellers`);
-        const formattedData = response.data.map((seller) => ({
-          ...seller,
-          sellerName: toTitleCase(seller.sellerName),
-          companies: seller.companies.map((company) => toTitleCase(company)),
-          emails: seller.emails.map((email) => email.value.toLowerCase()),
-        }));
-        const sortedData = formattedData.sort((a, b) =>
-          a.sellerName.localeCompare(b.sellerName)
-        );
-        setData(sortedData);
-        setFilteredData(sortedData);
-      } catch (error) {
-        toast.error("Failed to fetch seller data", error);
-      }
-    };
+  const fetchSellers = async (page = 1, search = "") => {
+    try {
+      const response = await axios.get(`${apiBaseURL}/sellers?page=${page}&limit=${itemsPerPage}&search=${search}`);
+      
+      let sellersList = [];
+      let total = 0;
 
-    fetchSellers();
-  }, []);
+      if (response.data && response.data.data) {
+        sellersList = response.data.data;
+        total = response.data.total;
+      } else {
+        sellersList = response.data;
+        total = response.data.length;
+      }
+
+      const formattedData = sellersList.map((seller) => ({
+        ...seller,
+        sellerName: toTitleCase(seller.sellerName),
+        companies: seller.companies.map((company) => toTitleCase(company)),
+        emails: seller.emails.map((email) => email.value.toLowerCase()),
+      }));
+      
+      setData(formattedData);
+      setFilteredData(formattedData);
+      setTotalItems(total);
+    } catch (error) {
+      toast.error("Failed to fetch seller data", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchSellers(currentPage, searchTerm);
+  }, [currentPage, searchTerm]);
 
   const handleEditSeller = (seller) => {
     setSelectedSeller({
@@ -103,7 +116,6 @@ const ListSellerDetails = () => {
   };
 
   const rows = filteredData
-    .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
     .map((item, index) => [
       (currentPage - 1) * itemsPerPage + index + 1,
       item.sellerName,
@@ -160,23 +172,34 @@ const ListSellerDetails = () => {
       >
         <div className="max-w-7xl mx-auto space-y-6">
           <div className="rounded-2xl border border-amber-200/60 bg-white shadow-lg p-4 sm:p-6">
-            <SearchBox
-              placeholder="Search sellers by name..."
-              items={data.map((item) => item.sellerName)}
-              onSearch={(filteredNames) => {
-                if (!filteredNames.length) {
-                  setFilteredData(data);
-                  return;
-                }
-
-                const filteredSellers = data.filter((seller) =>
-                  filteredNames.includes(seller.sellerName)
-                );
-
-                setFilteredData(filteredSellers);
-                setCurrentPage(1);
-              }}
-            />
+            <div className="relative max-w-md">
+              <input
+                type="text"
+                placeholder="Search sellers by name..."
+                className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                value={searchTerm}
+                onChange={(e) => {
+                  setSearchTerm(e.target.value);
+                  setCurrentPage(1);
+                }}
+              />
+              <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-5 w-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                  />
+                </svg>
+              </div>
+            </div>
           </div>
 
           <div className="rounded-2xl border border-slate-200 bg-white shadow-sm p-3 sm:p-4">
@@ -184,7 +207,7 @@ const ListSellerDetails = () => {
           </div>
           <Pagination
             currentPage={currentPage}
-            totalItems={filteredData.length}
+            totalItems={totalItems}
             itemsPerPage={itemsPerPage}
             onPageChange={setCurrentPage}
           />

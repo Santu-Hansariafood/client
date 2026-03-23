@@ -22,15 +22,20 @@ router.get("/", async (req, res) => {
   try {
     const page = parseInt(req.query.page || "0", 10);
     const limit = parseInt(req.query.limit || "0", 10);
+    const search = req.query.search || "";
+
+    const query = search
+      ? { sellerName: { $regex: search, $options: "i" } }
+      : {};
 
     if (page > 0 && limit > 0) {
-      const items = await Seller.find()
+      const items = await Seller.find(query)
         .sort({ sellerName: 1 })
         .skip((page - 1) * limit)
         .limit(limit)
         .lean();
 
-      const total = await Seller.countDocuments();
+      const total = await Seller.countDocuments(query);
 
       return res.json({
         data: items.map(mapSellerForClient),
@@ -38,7 +43,7 @@ router.get("/", async (req, res) => {
       });
     }
 
-    const items = await Seller.find().sort({ sellerName: 1 }).lean();
+    const items = await Seller.find(query).sort({ sellerName: 1 }).lean();
 
     res.json(items.map(mapSellerForClient));
   } catch (error) {
