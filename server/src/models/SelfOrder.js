@@ -11,6 +11,7 @@ const buyerBrokerageSchema = new mongoose.Schema(
 const selfOrderSchema = new mongoose.Schema(
   {
     buyer: { type: String, required: true },
+    companyId: { type: mongoose.Schema.Types.ObjectId, ref: 'Company' },
     buyerCompany: { type: String, default: "" },
     consignee: { type: String, required: true },
     buyerEmail: { type: String, default: "" },

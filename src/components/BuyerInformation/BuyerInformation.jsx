@@ -119,6 +119,7 @@ const BuyerInformation = ({ formData, handleChange }) => {
       : [];
     const firstEmail = buyerEmails[0] || "";
     handleChange("buyer", selectedBuyer.name || "");
+    handleChange("companyId", selectedBuyer.companyId || null);
     handleChange("buyerCompany", selectedBuyer.companyName || "");
     handleChange("buyerEmail", firstEmail);
     handleChange("buyerEmails", buyerEmails.length ? buyerEmails : [""]);
