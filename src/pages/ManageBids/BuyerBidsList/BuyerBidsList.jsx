@@ -17,6 +17,7 @@ const Pagination = lazy(() =>
 );
 import "react-datepicker/dist/react-datepicker.css";
 
+  const BuyerBidsList = () => {
   const navigate = useNavigate();
   const [bids, setBids] = useState([]);
   const [commodities, setCommodities] = useState([]);
@@ -226,9 +227,6 @@ import "react-datepicker/dist/react-datepicker.css";
   );
 };
 
-BuyerBidsList.propTypes = {
-  headers: PropTypes.arrayOf(PropTypes.string),
-  rows: PropTypes.arrayOf(PropTypes.array),
-};
+
 
 export default BuyerBidsList;
