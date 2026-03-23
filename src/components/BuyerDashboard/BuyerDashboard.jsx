@@ -42,7 +42,7 @@ const BuyerDashboard = () => {
         <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold text-slate-800">Welcome back, {user?.name}!</h1>
-            <p className="text-slate-500">Here is your Buyer Dashboard.</p>
+            <p className="text-slate-500 mt-1">Your central hub for managing bids, orders, and more.</p>
           </div>
         </header>
         
