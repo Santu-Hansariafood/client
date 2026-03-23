@@ -13,6 +13,7 @@ import { FaDownload } from "react-icons/fa";
 import Loading from "../../../common/Loading/Loading";
 import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
 import { FaClipboardList } from "react-icons/fa";
+import { useAuth } from "../../../context/AuthContext/AuthContext";
 
 const Tables = lazy(() => import("../../../common/Tables/Tables"));
 const Pagination = lazy(() =>
@@ -29,6 +30,7 @@ const API_URL = "/self-order";
 
 const SelfOrderList = () => {
   const navigate = useNavigate();
+  const { userRole, mobile } = useAuth();
   const [data, setData] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
   const [consigneeMap, setConsigneeMap] = useState(new Map());
@@ -36,19 +38,32 @@ const SelfOrderList = () => {
   const [itemsPerPage] = useState(10);
   const [selectedItem, setSelectedItem] = useState(null);
   const [searchInput, setSearchInput] = useState("");
+  const [buyerCompanyId, setBuyerCompanyId] = useState(null);
 
   useEffect(() => {
     let isMounted = true;
     const fetchData = async () => {
       try {
-        const [orderRes, consigneeRes] = await Promise.all([
+        const [orderRes, consigneeRes, buyersRes] = await Promise.all([
           axios.get(API_URL),
           axios.get("/consignees").catch(() => ({ data: [] })),
+          userRole === "Buyer" ? axios.get("/buyers") : Promise.resolve({ data: [] }),
         ]);
+        
         if (isMounted) {
-          const raw = Array.isArray(orderRes.data)
+          let raw = Array.isArray(orderRes.data)
             ? orderRes.data
             : orderRes.data?.data || [];
+            
+          if (userRole === "Buyer") {
+            const buyers = buyersRes.data?.data || buyersRes.data || [];
+            const buyer = buyers.find(b => b.mobile?.some(m => String(m) === String(mobile)));
+            if (buyer && buyer.companyId) {
+              setBuyerCompanyId(buyer.companyId);
+              raw = raw.filter(item => String(item.companyId) === String(buyer.companyId));
+            }
+          }
+
           const reversedData = [...raw].reverse();
           setData(reversedData);
           setFilteredData(reversedData);
@@ -69,7 +84,7 @@ const SelfOrderList = () => {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [userRole, mobile]);
 
   const indexOfLastItem = useMemo(
     () => currentPage * itemsPerPage,
@@ -224,7 +239,13 @@ const SelfOrderList = () => {
         noContentCard
       >
         <div className="max-w-full space-y-6">
-          <div className="flex justify-center sm:justify-start">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <button 
+              onClick={() => navigate(-1)} 
+              className="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition"
+            >
+              Back
+            </button>
             <div
               className="flex items-center w-full max-w-md bg-white border border-emerald-100 rounded-xl px-4 py-2.5 shadow-md shadow-emerald-900/5 focus-within:ring-2 focus-within:ring-emerald-400/50 focus-within:border-emerald-400 transition-all"
               role="search"

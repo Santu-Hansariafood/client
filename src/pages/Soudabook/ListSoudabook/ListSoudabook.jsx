@@ -1,134 +1,108 @@
 import { useState, useEffect, useMemo, lazy, Suspense } from "react";
 import axios from "axios";
-import { toast, ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { toast } from "react-toastify";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../../context/AuthContext/AuthContext";
 import Loading from "../../../common/Loading/Loading";
-const DataInput = lazy(() => import("../../../common/DataInput/DataInput"));
-const Tables = lazy(() => import("../../../common/Tables/Tables"));
-const Actions = lazy(() => import("../../../common/Actions/Actions"));
+import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
+import { FaBook } from "react-icons/fa";
 
-const API_URL = "/agents";
+const Tables = lazy(() => import("../../../common/Tables/Tables"));
+const Pagination = lazy(() => import("../../../common/Paginations/Paginations"));
 
 const ListSoudabook = () => {
-  const [agentName, setAgentName] = useState("");
-  const [data, setData] = useState([]);
-  const [loading, setLoading] = useState(false);
-
-  const fetchAgents = async () => {
-    setLoading(true);
-    try {
-      const response = await axios.get(API_URL);
-      setData(response.data);
-    } catch (error) {
-      toast.error("Failed to fetch agents.", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const navigate = useNavigate();
+  const { userRole, user } = useAuth();
+  const [saudaData, setSaudaData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   useEffect(() => {
-    fetchAgents();
-  }, []);
+    const fetchSaudaData = async () => {
+      setLoading(true);
+      try {
+        const response = await axios.get("/self-order");
+        let data = response.data?.data || response.data || [];
 
-  const handleFormSubmit = async (e) => {
-    e.preventDefault();
-    if (agentName.trim() === "") {
-      toast.warning("Agent name cannot be empty.");
-      return;
-    }
-    try {
-      const response = await axios.post(API_URL, { name: agentName });
-      setData((prevData) => [...prevData, response.data]);
-      setAgentName("");
-      toast.success("Agent added successfully.");
-    } catch (error) {
-      toast.error("Failed to add agent.", error);
-    }
-  };
+        if (userRole === "Buyer" && user?.companyId) {
+          data = data.filter(item => String(item.companyId) === String(user.companyId));
+        }
 
-  const handleView = (id) => {
-    const agent = data.find((item) => item._id === id);
-    if (agent) {
-      toast.info(`Viewing agent: ${agent.name}`);
-    }
-  };
+        setSaudaData(data.reverse());
+      } catch (err) {
+        setError("Failed to fetch Sauda book data.");
+        toast.error("Could not load data.");
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const handleEdit = async (id) => {
-    const agent = data.find((item) => item._id === id);
-    if (!agent) return;
+    fetchSaudaData();
+  }, [userRole, user]);
 
-    const newName = prompt("Edit agent name:", agent.name);
-    if (!newName || newName.trim() === "") {
-      toast.warning("Agent name cannot be empty.");
-      return;
-    }
+  const headers = [
+    "Sauda No",
+    "PO Number",
+    "Buyer Company",
+    "Commodity",
+    "Quantity",
+    "Rate",
+    "Date",
+  ];
 
-    try {
-      const response = await axios.put(`${API_URL}/${id}`, { name: newName });
-      setData((prevData) =>
-        prevData.map((item) => (item._id === id ? response.data : item))
-      );
-      toast.success("Agent updated successfully.");
-    } catch (error) {
-      toast.error("Failed to update agent.", error);
-    }
-  };
-
-  const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this agent?")) return;
-
-    try {
-      await axios.delete(`${API_URL}/${id}`);
-      setData((prevData) => prevData.filter((item) => item._id !== id));
-      toast.success("Agent deleted successfully.");
-    } catch (error) {
-      toast.error("Failed to delete agent.", error);
-    }
-  };
-
-  const headers = ["Sl No", "Agent Name", "Actions"];
+  const currentData = useMemo(() => {
+    const indexOfLastItem = currentPage * itemsPerPage;
+    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+    return saudaData.slice(indexOfFirstItem, indexOfLastItem);
+  }, [saudaData, currentPage, itemsPerPage]);
 
   const rows = useMemo(
     () =>
-      data.map((item, index) => [
-        index + 1,
-        item.name,
-        <Actions
-          key={item._id}
-          onView={() => handleView(item._id)}
-          onEdit={() => handleEdit(item._id)}
-          onDelete={() => handleDelete(item._id)}
-        />,
+      currentData.map((item) => [
+        item.saudaNo,
+        item.poNumber,
+        item.buyerCompany,
+        item.commodity,
+        item.quantity,
+        `₹${item.rate}`,
+        new Date(item.createdAt).toLocaleDateString(),
       ]),
-    [data]
+    [currentData]
   );
 
   return (
     <Suspense fallback={<Loading />}>
-      <div className="p-4">
-        <h1 className="text-2xl font-bold mb-4">List Agents</h1>
-        <ToastContainer
-          position="top-right"
-          autoClose={3000}
-          hideProgressBar={true}
-        />
-        <form onSubmit={handleFormSubmit} className="mb-4">
-          <DataInput
-            placeholder="Enter Agent Name"
-            value={agentName}
-            onChange={(e) => setAgentName(e.target.value)}
-            name="agentName"
-            required
-          />
-          <button
-            type="submit"
-            className="bg-gradient-to-r from-emerald-800 to-emerald-700 text-white px-4 py-2 rounded-lg hover:from-emerald-700 hover:to-emerald-600 transition"
+      <AdminPageShell
+        title="Sauda Book"
+        subtitle="Review your completed Saudas"
+        icon={FaBook}
+      >
+        <div className="flex justify-start mb-4">
+          <button 
+            onClick={() => navigate(-1)} 
+            className="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition"
           >
-            Submit
+            Back
           </button>
-        </form>
-        {loading ? <Loading /> : <Tables headers={headers} rows={rows} />}
-      </div>
+        </div>
+        {loading ? (
+          <Loading />
+        ) : error ? (
+          <div className="text-red-500 text-center p-4">{error}</div>
+        ) : (
+          <>
+            <Tables headers={headers} rows={rows} />
+            <Pagination
+              currentPage={currentPage}
+              totalItems={saudaData.length}
+              itemsPerPage={itemsPerPage}
+              onPageChange={setCurrentPage}
+            />
+          </>
+        )}
+      </AdminPageShell>
     </Suspense>
   );
 };
