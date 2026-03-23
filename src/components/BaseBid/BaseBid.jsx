@@ -5,7 +5,7 @@ import "react-toastify/dist/ReactToastify.css";
 import axios from "axios";
 import Loading from "../../common/Loading/Loading";
 import AdminPageShell from "../../common/AdminPageShell/AdminPageShell";
-import { FaGavel } from "react-icons/fa";
+import { FaGavel, FaArrowLeft } from "react-icons/fa";
 
 import WhatsAppNotification from "../WhatsAppNotification/WhatsAppNotification"
 
@@ -309,6 +309,12 @@ const BaseBid = ({ type }) => {
         subtitle="Create a bid with group, consignee, commodity, parameters, and timings"
         icon={FaGavel}
         noContentCard
+        extraHeaderContent={
+          <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-800">
+            <FaArrowLeft />
+            Back
+          </button>
+        }
       >
         <div className="max-w-4xl mx-auto space-y-8">
           <div className="rounded-2xl border border-amber-200/60 bg-white shadow-lg p-4 sm:p-6 md:p-8">

@@ -1,10 +1,10 @@
 import { useState, useEffect, lazy, Suspense } from "react";
-import PropTypes from "prop-types";
+import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import axios from "axios";
 import Loading from "../../../common/Loading/Loading";
 import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
-import { FaGavel } from "react-icons/fa";
+import { FaGavel, FaArrowLeft } from "react-icons/fa";
 
 const Tables = lazy(() => import("../../../common/Tables/Tables"));
 const SearchBox = lazy(() => import("../../../common/SearchBox/SearchBox"));
@@ -17,7 +17,7 @@ const Pagination = lazy(() =>
 );
 import "react-datepicker/dist/react-datepicker.css";
 
-const BuyerBidsList = () => {
+  const navigate = useNavigate();
   const [bids, setBids] = useState([]);
   const [commodities, setCommodities] = useState([]);
   const [origins, setOrigins] = useState([]);
@@ -167,6 +167,12 @@ const BuyerBidsList = () => {
         subtitle="Filter by company, type, and date range"
         icon={FaGavel}
         noContentCard
+        extraHeaderContent={
+          <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-800">
+            <FaArrowLeft />
+            Back
+          </button>
+        }
       >
         <div className="max-w-full space-y-6">
           <div className="flex flex-col lg:flex-row flex-wrap gap-4 items-stretch lg:items-end">
