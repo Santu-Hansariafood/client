@@ -15,7 +15,7 @@ const PopupBox = lazy(() => import("../../../common/PopupBox/PopupBox"));
 const BidList = () => {
   const { userRole, mobile } = useAuth();
   const [bids, setBids] = useState([]);
-  const [activeTab, setActiveTab] = useState("all"); // "all", "active", or "closed"
+  const [activeTab, setActiveTab] = useState("all"); // "all", "active", "closed", or "previous"
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedBid, setSelectedBid] = useState(null);
   const [editableRateQuantity, setEditableRateQuantity] = useState(null);
@@ -57,6 +57,7 @@ const BidList = () => {
 
   const filteredBids = useMemo(() => {
     const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
     return bids.filter((bid) => {
       // Filter by group if user is a buyer
@@ -64,19 +65,25 @@ const BidList = () => {
         return false;
       }
 
-      const bidDateStr = bid.bidDate ? bid.bidDate.split('T')[0] : "";
-      const [year, month, day] = bidDateStr.split('-').map(Number);
-      const [endHours, endMinutes] = bid.endTime.split(':').map(Number);
-      const bidEndDateTime = new Date(year, month - 1, day, endHours, endMinutes, 0, 0);
+      const bidDateStr = (bid.bidDate && typeof bid.bidDate === 'string') ? bid.bidDate.split('T')[0] : "";
+      let bidDate = null;
+      if (bidDateStr) {
+        const [year, month, day] = bidDateStr.split('-').map(Number);
+        if (!isNaN(year) && !isNaN(month) && !isNaN(day)) {
+          bidDate = new Date(year, month - 1, day);
+        }
+      }
 
       let matches = false;
 
       if (activeTab === 'all') {
         matches = true;
       } else if (activeTab === 'active') {
-        matches = bid.status === 'active' && now < bidEndDateTime;
+        matches = bid.status === 'active';
       } else if (activeTab === 'closed') {
-        matches = bid.status === 'closed' || now >= bidEndDateTime;
+        matches = bid.status === 'closed';
+      } else if (activeTab === 'previous') {
+        matches = bidDate && bidDate < today;
       }
 
       if (!matches) return false;
@@ -282,7 +289,9 @@ const BidList = () => {
             ? "Manage all bids"
             : activeTab === "active"
               ? "Manage all active bids"
-              : "View all closed bids"
+              : activeTab === "closed"
+                ? "View all closed bids"
+                : "View all previous back-dated bids"
         }
         icon={FaGavel}
         noContentCard
@@ -326,6 +335,16 @@ const BidList = () => {
                   >
                     Closed Bids
                   </button>
+                  <button
+                    onClick={() => setActiveTab("previous")}
+                    className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${
+                      activeTab === "previous"
+                        ? "bg-white text-amber-700 shadow-sm"
+                        : "text-slate-500 hover:text-slate-700"
+                    }`}
+                  >
+                    Previous Bids
+                  </button>
                 </div>
                 <SearchBox
                   placeholder="Search by consignee..."
@@ -335,62 +354,18 @@ const BidList = () => {
                 />
               </div>
 
-              {groupedBids.length === 0 ? (
+              {filteredBids.length === 0 ? (
                 <div className="text-center py-12 bg-white rounded-2xl border border-slate-100 shadow-sm">
                   <p className="text-slate-500 font-medium">
                     No {activeTab === "all" ? "" : activeTab} bids found.
                   </p>
                 </div>
               ) : (
-                <div className="grid gap-4">
-                  {groupedBids.map(({ group, consignees, bidCount }) => (
-                    <button
-                      key={group}
-                      type="button"
-                      onClick={() => setSelectedGroup(group)}
-                      className={`text-left rounded-2xl border p-5 shadow-md shadow-emerald-900/5 transition-all ${
-                        activeTab === "active"
-                          ? "border-emerald-100 bg-white hover:border-emerald-200 hover:shadow-lg"
-                          : activeTab === "closed"
-                            ? "border-red-100 bg-white hover:border-red-200 hover:shadow-lg"
-                            : "border-slate-100 bg-white hover:border-slate-200 hover:shadow-lg"
-                      }`}
-                    >
-                      <div className="flex flex-wrap justify-between items-center gap-2">
-                        <span className="text-lg font-bold text-slate-800">
-                          {group}
-                        </span>
-                        <div className="flex gap-2">
-                          <span
-                            className={`text-sm font-medium px-3 py-1 rounded-full ${
-                              activeTab === "active"
-                                ? "text-emerald-700 bg-emerald-50"
-                                : activeTab === "closed"
-                                  ? "text-red-700 bg-red-50"
-                                  : "text-slate-600 bg-slate-100"
-                            }`}
-                          >
-                            {bidCount} bid{bidCount !== 1 ? "s" : ""}
-                          </span>
-                          <span
-                            className={`text-sm font-medium px-3 py-1 rounded-full ${
-                              activeTab === "active"
-                                ? "text-emerald-700 bg-emerald-50"
-                                : activeTab === "closed"
-                                  ? "text-red-700 bg-red-50"
-                                  : "text-slate-600 bg-slate-100"
-                            }`}
-                          >
-                            {consignees.length} consignee
-                            {consignees.length !== 1 ? "s" : ""}
-                          </span>
-                        </div>
-                      </div>
-                      <p className="mt-2 text-sm text-slate-600 line-clamp-2">
-                        {consignees.join(", ")}
-                      </p>
-                    </button>
-                  ))}
+                <div className="rounded-2xl border border-emerald-100 bg-white p-4 shadow-lg shadow-emerald-900/5 overflow-hidden">
+                  <Tables
+                    headers={headers}
+                    rows={filteredBids.map((bid, idx) => buildRow(bid, idx))}
+                  />
                 </div>
               )}
             </>
