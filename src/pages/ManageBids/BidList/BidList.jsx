@@ -21,7 +21,7 @@ const BidList = () => {
   const [editableRateQuantity, setEditableRateQuantity] = useState(null);
   const [error, setError] = useState(null);
   const [selectedGroup, setSelectedGroup] = useState(null);
-  const [searchConsignee, setSearchConsignee] = useState("");
+  const [filteredConsignees, setFilteredConsignees] = useState([]);
   const [reactivateBid, setReactivateBid] = useState(null); // Holds bid data for reactivation
   const [buyerGroup, setBuyerGroup] = useState(null);
 
@@ -60,11 +60,6 @@ const BidList = () => {
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
     return bids.filter((bid) => {
-      // Filter by group if user is a buyer
-      if (userRole === "Buyer" && buyerGroup && bid.group !== buyerGroup) {
-        return false;
-      }
-
       const bidDateStr = (bid.bidDate && typeof bid.bidDate === 'string') ? bid.bidDate.split('T')[0] : "";
       let bidDate = null;
       if (bidDateStr) {
@@ -89,8 +84,8 @@ const BidList = () => {
       if (!matches) return false;
 
       if (
-        searchConsignee &&
-        !bid.consignee?.toLowerCase().includes(searchConsignee.toLowerCase())
+        filteredConsignees.length > 0 &&
+        !filteredConsignees.includes(bid.consignee)
       ) {
         return false;
       }
@@ -101,23 +96,25 @@ const BidList = () => {
       const dateB = new Date(b.closedAt || b.updatedAt || b.createdAt);
       return dateB - dateA;
     });
-  }, [bids, activeTab, searchConsignee, userRole, buyerGroup]);
+  }, [bids, activeTab, filteredConsignees]);
 
   const consigneeItems = useMemo(
     () =>
-      [...new Set(filteredBids.map((b) => b.consignee).filter(Boolean))].sort((a, b) =>
+      [...new Set(bids.map((b) => b.consignee).filter(Boolean))].sort((a, b) =>
         a.localeCompare(b)
       ),
-    [filteredBids]
+    [bids]
   );
 
   const handleSearchConsignee = (filteredNames) => {
-    if (typeof filteredNames === "string") {
-      setSearchConsignee(filteredNames);
-    } else if (Array.isArray(filteredNames) && filteredNames.length > 0) {
-      setSearchConsignee(filteredNames[0]);
+    if (Array.isArray(filteredNames)) {
+      if (filteredNames.length === consigneeItems.length) {
+        setFilteredConsignees([]); // No filter applied
+      } else {
+        setFilteredConsignees(filteredNames);
+      }
     } else {
-      setSearchConsignee("");
+      setFilteredConsignees([]);
     }
     setCurrentPage(1);
   };
