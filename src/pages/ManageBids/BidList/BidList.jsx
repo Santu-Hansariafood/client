@@ -60,6 +60,11 @@ const BidList = () => {
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
     return bids.filter((bid) => {
+      // Filter by group if user is a buyer
+      if (userRole === "Buyer" && buyerGroup && bid.group !== buyerGroup) {
+        return false;
+      }
+
       const bidDateStr = (bid.bidDate && typeof bid.bidDate === 'string') ? bid.bidDate.split('T')[0] : "";
       let bidDate = null;
       if (bidDateStr) {
