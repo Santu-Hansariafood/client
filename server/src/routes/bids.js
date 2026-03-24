@@ -7,18 +7,28 @@ router.get("/", async (req, res) => {
   try {
     const page = parseInt(req.query.page || "0", 10);
     const limit = parseInt(req.query.limit || "0", 10);
+    const status = req.query.status;
+    const date = req.query.date;
+
+    const query = {};
+    if (status && status !== "all") {
+      query.status = status;
+    }
+    if (date) {
+      query.bidDate = date;
+    }
 
     if (page > 0 && limit > 0) {
-      const items = await Bid.find()
+      const items = await Bid.find(query)
         .sort({ createdAt: -1 })
         .skip((page - 1) * limit)
         .limit(limit)
         .lean();
-      const total = await Bid.countDocuments();
+      const total = await Bid.countDocuments(query);
       return res.json({ data: items, total });
     }
 
-    const items = await Bid.find().sort({ createdAt: -1 }).lean();
+    const items = await Bid.find(query).sort({ createdAt: -1 }).lean();
     res.json(items);
   } catch (error) {
     res.status(500).json({ message: error.message });
