@@ -7,7 +7,9 @@ const participateBidSchema = new mongoose.Schema(
     rate: { type: Number, required: true },
     quantity: { type: Number, required: true },
     loadingFrom: { type: String, default: "" },
-    remarks: { type: String, default: "" }
+    remarks: { type: String, default: "" },
+    status: { type: String, enum: ["pending", "accepted", "rejected"], default: "pending" },
+    adminNotes: { type: String, default: "" }
   },
   { timestamps: true }
 );

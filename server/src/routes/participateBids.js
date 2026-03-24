@@ -79,4 +79,28 @@ router.post("/", async (req, res) => {
   }
 });
 
+router.patch("/:id/status", async (req, res) => {
+  try {
+    const { status, adminNotes } = req.body;
+    const { id } = req.params;
+
+    if (!["accepted", "rejected"].includes(status)) {
+      return res.status(400).json({ message: "Invalid status." });
+    }
+
+    const participation = await ParticipateBid.findById(id);
+    if (!participation) {
+      return res.status(404).json({ message: "Participation not found." });
+    }
+
+    participation.status = status;
+    participation.adminNotes = adminNotes || "";
+    await participation.save();
+
+    res.json(participation);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 export default router;

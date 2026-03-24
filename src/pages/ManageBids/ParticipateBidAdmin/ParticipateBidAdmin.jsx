@@ -8,7 +8,7 @@ import { FaUsers } from "react-icons/fa";
 
 const Tables = lazy(() => import("../../../common/Tables/Tables"));
 const Pagination = lazy(() => import("../../../common/Paginations/Paginations"));
-const SearchBox = lazy(() => import("../../../common/SearchBox/SearchBox"));
+const InteractionsPopup = lazy(() => import("../InteractionsPopup/InteractionsPopup"));
 
 const ParticipateBidAdmin = () => {
   const [bids, setBids] = useState([]);
@@ -17,7 +17,7 @@ const ParticipateBidAdmin = () => {
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
-  const navigate = useNavigate();
+  const [selectedBidId, setSelectedBidId] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -104,7 +104,7 @@ const ParticipateBidAdmin = () => {
     <button
       key={bid.bidId}
       type="button"
-      onClick={() => navigate(`/confirm-bids/${bid.bidId}`)}
+      onClick={() => setSelectedBidId(bid.bidId)}
       className="font-medium text-emerald-700 hover:text-emerald-800"
     >
       {bid.mobiles.size} interaction{bid.mobiles.size !== 1 ? "s" : ""}
@@ -145,6 +145,7 @@ const ParticipateBidAdmin = () => {
         noContentCard
       >
         <div className="space-y-6">
+          {selectedBidId && <InteractionsPopup bidId={selectedBidId} onClose={() => setSelectedBidId(null)} />}
           <SearchBox
             placeholder="Search by consignee..."
             items={consigneeItems}
