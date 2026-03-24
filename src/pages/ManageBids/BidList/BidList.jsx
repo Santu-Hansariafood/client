@@ -57,6 +57,7 @@ const BidList = () => {
 
   const filteredBids = useMemo(() => {
     const now = new Date();
+    const todayStr = now.toISOString().split('T')[0];
 
     return bids.filter((bid) => {
       // Filter by group if user is a buyer
@@ -64,7 +65,13 @@ const BidList = () => {
         return false;
       }
 
-      const bidDateStr = bid.bidDate ? bid.bidDate.split('T')[0] : new Date().toISOString().split('T')[0];
+      const bidDateStr = bid.bidDate ? bid.bidDate.split('T')[0] : "";
+      
+      // Only display today's bids
+      if (bidDateStr !== todayStr) {
+        return false;
+      }
+
       const [year, month, day] = bidDateStr.split('-').map(Number);
       const [endHours, endMinutes] = bid.endTime.split(':').map(Number);
       const bidEndDateTime = new Date(year, month - 1, day, endHours, endMinutes, 0, 0);

@@ -112,12 +112,16 @@ const SupplierBidList = () => {
 
   const filteredBids = useMemo(() => {
     const now = new Date();
-    const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-    sevenDaysAgo.setHours(0, 0, 0, 0);
+    const todayStr = now.toISOString().split('T')[0];
 
     return bids.filter((bid) => {
-      const bidDateStr = bid.bidDate ? bid.bidDate.split('T')[0] : new Date().toISOString().split('T')[0];
+      const bidDateStr = bid.bidDate ? bid.bidDate.split('T')[0] : "";
+      
+      // Only display today's bids
+      if (bidDateStr !== todayStr) {
+        return false;
+      }
+
       const [year, month, day] = bidDateStr.split('-').map(Number);
       const [endHours, endMinutes] = bid.endTime.split(':').map(Number);
       const bidEndDateTime = new Date(year, month - 1, day, endHours, endMinutes, 0, 0);
@@ -130,8 +134,7 @@ const SupplierBidList = () => {
       } else if (activeTab === "participated") {
         return isParticipated;
       } else if (activeTab === "closed") {
-        // Show closed bids from last 7 days
-        return isClosed && bidEndDateTime >= sevenDaysAgo;
+        return isClosed;
       }
       return false;
     }).sort((a, b) => new Date(b.bidDate) - new Date(a.bidDate));

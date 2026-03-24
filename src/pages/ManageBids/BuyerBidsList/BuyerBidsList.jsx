@@ -76,6 +76,9 @@ import "react-datepicker/dist/react-datepicker.css";
 
   useEffect(() => {
     let data = [...bids];
+    const now = new Date();
+    const todayStr = now.toISOString().split('T')[0];
+
     if (searchCompany.length > 0) {
       const set = new Set(searchCompany);
       data = data.filter((bid) => set.has(bid.company));
@@ -83,11 +86,20 @@ import "react-datepicker/dist/react-datepicker.css";
     if (filterType !== "all") {
       data = data.filter((bid) => bid.type === filterType);
     }
-    if (startDate) {
-      data = data.filter((bid) => new Date(bid.bidDate) >= startDate);
-    }
-    if (endDate) {
-      data = data.filter((bid) => new Date(bid.bidDate) <= endDate);
+    
+    // Default to today's bids if no date range is selected
+    if (!startDate && !endDate) {
+      data = data.filter((bid) => {
+        const bidDateStr = bid.bidDate ? bid.bidDate.split('T')[0] : "";
+        return bidDateStr === todayStr;
+      });
+    } else {
+      if (startDate) {
+        data = data.filter((bid) => new Date(bid.bidDate) >= startDate);
+      }
+      if (endDate) {
+        data = data.filter((bid) => new Date(bid.bidDate) <= endDate);
+      }
     }
     data.sort((a, b) => new Date(b.bidDate) - new Date(a.bidDate));
     setFilteredData(data);

@@ -30,19 +30,22 @@ const ParticipateBidAdmin = () => {
         const bids = bidsRes.data?.data || bidsRes.data || [];
         const participations = participateRes.data?.data || participateRes.data || [];
 
-        const sevenDaysAgo = new Date();
-        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+        const now = new Date();
+        const todayStr = now.toISOString().split('T')[0];
 
-        const recentParticipations = participations
-          .filter((pBid) => new Date(pBid.participationDate) >= sevenDaysAgo)
+        const todayParticipations = participations
+          .filter((pBid) => {
+            const participationDateStr = pBid.participationDate ? pBid.participationDate.split('T')[0] : "";
+            return participationDateStr === todayStr;
+          })
           .sort(
             (a, b) =>
               new Date(b.participationDate) - new Date(a.participationDate)
           );
 
         setBids(bids);
-        setParticipationBids(recentParticipations);
-        setFilteredBids(recentParticipations);
+        setParticipationBids(todayParticipations);
+        setFilteredBids(todayParticipations);
       } catch {
         toast.error("Error fetching data");
       } finally {
@@ -144,7 +147,7 @@ const ParticipateBidAdmin = () => {
     <Suspense fallback={<Loading />}>
       <AdminPageShell
         title="Participate bid (admin)"
-        subtitle="Recent participation activity — last 7 days"
+        subtitle="Today's participation activity"
         icon={FaUsers}
         noContentCard
       >
