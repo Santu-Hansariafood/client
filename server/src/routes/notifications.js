@@ -5,8 +5,12 @@ const router = Router();
 
 router.get("/", async (req, res) => {
   try {
-    const { mobile, role } = req.query;
-    const query = { isRead: false };
+    const { mobile, role, unreadOnly } = req.query;
+    const query = {};
+
+    if (unreadOnly === "true") {
+      query.isRead = false;
+    }
 
     if (mobile) {
       query.$or = [{ recipient: mobile }, { recipient: "all" }];
@@ -16,8 +20,32 @@ router.get("/", async (req, res) => {
       query.recipientRole = role;
     }
 
-    const items = await Notification.find(query).sort({ createdAt: -1 }).limit(50).lean();
+    const items = await Notification.find(query).sort({ createdAt: -1 }).limit(100).lean();
     res.json(items);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+router.patch("/:id/toggle-read", async (req, res) => {
+  try {
+    const notification = await Notification.findById(req.params.id);
+    if (!notification) return res.status(404).json({ message: "Notification not found" });
+    
+    notification.isRead = !notification.isRead;
+    await notification.save();
+    
+    res.json(notification);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+});
+
+router.delete("/:id", async (req, res) => {
+  try {
+    const deleted = await Notification.findByIdAndDelete(req.params.id);
+    if (!deleted) return res.status(404).json({ message: "Notification not found" });
+    res.json({ message: "Notification deleted" });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

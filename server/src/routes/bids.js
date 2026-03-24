@@ -1,5 +1,6 @@
 import { Router } from "express";
 import Bid from "../models/Bid.js";
+import Notification from "../models/Notification.js";
 
 const router = Router();
 
@@ -62,6 +63,19 @@ router.put("/:id", async (req, res) => {
     if (!updated) {
       return res.status(404).json({ message: "Bid not found" });
     }
+
+    // Notify relevant roles about status change
+    const rolesToNotify = ["Employee", "Admin"];
+    await Promise.all(rolesToNotify.map(role => 
+      Notification.create({
+        recipient: "all",
+        recipientRole: role,
+        title: `Bid ${status === 'active' ? 'Activated' : 'Closed'}`,
+        message: `The bid for ${updated.commodity} (${updated.consignee}) has been ${status === 'active' ? 'activated' : 'closed'}.`,
+        type: status === 'active' ? 'BidParticipation' : 'BidRejection', // Reusing types for simplicity
+        relatedId: updated._id
+      })
+    ));
 
     res.json(updated);
   } catch (error) {

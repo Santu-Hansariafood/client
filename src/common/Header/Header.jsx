@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from "react";
-import { AiOutlineUser, AiOutlineBell } from "react-icons/ai";
+import { AiOutlineUser, AiOutlineBell, AiOutlineCheckCircle, AiOutlineEye, AiOutlineEyeInvisible, AiOutlineDelete } from "react-icons/ai";
 import { RiLogoutBoxLine } from "react-icons/ri";
 import { HiMenuAlt2 } from "react-icons/hi";
 import { IoClose } from "react-icons/io5";
@@ -21,17 +21,18 @@ const Header = ({
   const notificationRef = useRef(null);
   const [notifications, setNotifications] = useState([]);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [unreadOnly, setUnreadOnly] = useState(true);
 
   const fetchNotifications = useCallback(async () => {
     try {
       const response = await axios.get("/notifications", {
-        params: { mobile, role: userRole }
+        params: { mobile, role: userRole, unreadOnly: unreadOnly }
       });
       setNotifications(response.data);
     } catch (error) {
       console.error("Failed to fetch notifications", error);
     }
-  }, [mobile, userRole]);
+  }, [mobile, userRole, unreadOnly]);
 
   useEffect(() => {
     fetchNotifications();
@@ -49,12 +50,30 @@ const Header = ({
     setProfileDropdownOpen(false);
   };
 
-  const markAsRead = async (id) => {
+  const toggleReadStatus = async (id) => {
     try {
-      await axios.patch(`/notifications/${id}/read`);
+      await axios.patch(`/notifications/${id}/toggle-read`);
+      fetchNotifications();
+    } catch (error) {
+      console.error("Failed to toggle notification status", error);
+    }
+  };
+
+  const deleteNotification = async (id) => {
+    try {
+      await axios.delete(`/notifications/${id}`);
       setNotifications(prev => prev.filter(n => n._id !== id));
     } catch (error) {
-      console.error("Failed to mark notification as read", error);
+      console.error("Failed to delete notification", error);
+    }
+  };
+
+  const markAllAsRead = async () => {
+    try {
+      await axios.patch("/notifications/read-all", { mobile, role: userRole });
+      fetchNotifications();
+    } catch (error) {
+      console.error("Failed to mark all as read", error);
     }
   };
 
@@ -119,29 +138,78 @@ const Header = ({
             )}
           </button>
           {showNotifications && (
-            <div className="absolute right-0 mt-2 w-72 sm:w-80 bg-white border border-slate-200 rounded-xl shadow-xl overflow-hidden z-30">
+            <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white border border-slate-200 rounded-xl shadow-xl overflow-hidden z-30">
               <div className="p-3 bg-slate-50 border-b border-slate-100 font-bold text-slate-800 flex justify-between items-center">
-                <span>Notifications</span>
-                <span className="text-xs font-normal text-slate-500">{notifications.length} new</span>
+                <div className="flex items-center gap-2">
+                  <span>Notifications</span>
+                  {notifications.filter(n => !n.isRead).length > 0 && (
+                    <span className="bg-red-100 text-red-600 text-[10px] px-2 py-0.5 rounded-full">
+                      {notifications.filter(n => !n.isRead).length} new
+                    </span>
+                  )}
+                </div>
+                <div className="flex items-center gap-2">
+                  <button 
+                    onClick={markAllAsRead}
+                    className="text-xs font-normal text-emerald-600 hover:text-emerald-700 flex items-center gap-1"
+                    title="Mark all as read"
+                  >
+                    <AiOutlineCheckCircle size={14} />
+                    Mark all
+                  </button>
+                </div>
               </div>
+              
+              <div className="flex border-b border-slate-100 bg-white">
+                <button 
+                  className={`flex-1 py-2 text-xs font-medium ${unreadOnly ? 'text-emerald-600 border-b-2 border-emerald-600' : 'text-slate-500 hover:text-slate-700'}`}
+                  onClick={() => setUnreadOnly(true)}
+                >
+                  Unread
+                </button>
+                <button 
+                  className={`flex-1 py-2 text-xs font-medium ${!unreadOnly ? 'text-emerald-600 border-b-2 border-emerald-600' : 'text-slate-500 hover:text-slate-700'}`}
+                  onClick={() => setUnreadOnly(false)}
+                >
+                  All
+                </button>
+              </div>
+
               <div className="max-h-96 overflow-y-auto">
                 {notifications.length > 0 ? (
                   notifications.map(n => (
                     <div 
                       key={n._id} 
-                      className="p-3 border-b border-slate-50 hover:bg-slate-50 cursor-pointer group"
-                      onClick={() => markAsRead(n._id)}
+                      className={`p-3 border-b border-slate-50 hover:bg-slate-50 cursor-default group transition-colors ${!n.isRead ? 'bg-emerald-50/30' : ''}`}
                     >
                       <div className="flex justify-between items-start mb-1">
-                        <span className="text-sm font-bold text-emerald-700">{n.title}</span>
-                        <span className="text-[10px] text-slate-400">{new Date(n.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                        <span className={`text-sm font-bold ${!n.isRead ? 'text-emerald-700' : 'text-slate-600'}`}>{n.title}</span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] text-slate-400">{new Date(n.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                          <div className="hidden group-hover:flex items-center gap-1">
+                            <button 
+                              onClick={() => toggleReadStatus(n._id)}
+                              className="p-1 rounded-md hover:bg-white text-slate-400 hover:text-emerald-600 transition-colors"
+                              title={n.isRead ? "Mark as unread" : "Mark as read"}
+                            >
+                              {n.isRead ? <AiOutlineEyeInvisible size={14} /> : <AiOutlineEye size={14} />}
+                            </button>
+                            <button 
+                              onClick={() => deleteNotification(n._id)}
+                              className="p-1 rounded-md hover:bg-white text-slate-400 hover:text-red-600 transition-colors"
+                              title="Delete notification"
+                            >
+                              <AiOutlineDelete size={14} />
+                            </button>
+                          </div>
+                        </div>
                       </div>
-                      <p className="text-xs text-slate-600 line-clamp-2">{n.message}</p>
+                      <p className={`text-xs ${!n.isRead ? 'text-slate-700' : 'text-slate-500'} line-clamp-2`}>{n.message}</p>
                     </div>
                   ))
                 ) : (
                   <div className="p-8 text-center text-slate-400 text-sm italic">
-                    No new notifications
+                    No {unreadOnly ? 'unread' : ''} notifications
                   </div>
                 )}
               </div>
