@@ -2,28 +2,52 @@ import { Router } from "express";
 import ParticipateBid from "../models/ParticipateBid.js";
 import Bid from "../models/Bid.js";
 import Notification from "../models/Notification.js";
+import Seller from "../models/Seller.js";
 
 const router = Router();
 
 router.get("/", async (req, res) => {
-  const { mobile } = req.query;
+  const { mobile, bidId } = req.query;
   const page = parseInt(req.query.page || "0", 10);
   const limit = parseInt(req.query.limit || "0", 10);
 
   const query = {};
   if (mobile) query.mobile = mobile;
+  if (bidId) query.bidId = bidId;
 
-  if (page > 0 && limit > 0) {
-    const items = await ParticipateBid.find(query)
-      .sort({ createdAt: -1 })
-      .skip((page - 1) * limit)
-      .limit(limit)
-      .lean();
-    const total = await ParticipateBid.countDocuments(query);
-    return res.json({ data: items, total });
+  try {
+    let items;
+    if (page > 0 && limit > 0) {
+      items = await ParticipateBid.find(query)
+        .sort({ createdAt: -1 })
+        .skip((page - 1) * limit)
+        .limit(limit)
+        .lean();
+    } else {
+      items = await ParticipateBid.find(query).sort({ createdAt: -1 }).lean();
+    }
+
+    // Map seller names to the items
+    const mobileNumbers = [...new Set(items.map(item => item.mobile))];
+    const sellers = await Seller.find({ "phoneNumbers.value": { $in: mobileNumbers } }).lean();
+    
+    const itemsWithSellerNames = items.map(item => {
+      const seller = sellers.find(s => s.phoneNumbers.some(p => p.value === item.mobile));
+      return {
+        ...item,
+        sellerName: seller ? seller.sellerName : "Unknown"
+      };
+    });
+
+    if (page > 0 && limit > 0) {
+      const total = await ParticipateBid.countDocuments(query);
+      return res.json({ data: itemsWithSellerNames, total });
+    }
+    
+    res.json(itemsWithSellerNames);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
   }
-  const items = await ParticipateBid.find(query).sort({ createdAt: -1 }).lean();
-  res.json(items);
 });
 
 router.post("/", async (req, res) => {

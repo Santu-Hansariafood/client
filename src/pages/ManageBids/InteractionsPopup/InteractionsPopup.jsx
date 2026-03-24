@@ -22,7 +22,8 @@ const InteractionsPopup = ({ bidId, onClose }) => {
   const handleStatusChange = async (id, status, adminNotes) => {
     try {
       const response = await axios.patch(`/participatebids/${id}/status`, { status, adminNotes });
-      setInteractions(interactions.map(i => i._id === id ? response.data : i));
+      // Update local state with the returned participation object which now includes sellerName
+      setInteractions(interactions.map(i => i._id === id ? { ...response.data, sellerName: i.sellerName } : i));
       toast.success(`Interaction ${status}.`);
     } catch (error) {
       toast.error('Failed to update status.');
@@ -57,20 +58,29 @@ const InteractionCard = ({ interaction, onStatusChange }) => {
     onStatusChange(interaction._id, status, notes);
   };
 
+  const interactionTime = interaction.createdAt 
+    ? new Date(interaction.createdAt).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })
+    : "N/A";
+
   return (
     <div className={`p-4 rounded-lg border ${interaction.status === 'accepted' ? 'border-green-500 bg-green-50' : interaction.status === 'rejected' ? 'border-red-500 bg-red-50' : 'border-gray-200'}`}>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div>
           <p className="text-sm font-medium text-gray-500">Participant</p>
-          <p className="text-lg font-semibold text-gray-800">{interaction.mobile}</p>
+          <p className="text-lg font-semibold text-gray-800">{interaction.sellerName}</p>
+          <p className="text-xs text-gray-400">{interaction.mobile}</p>
         </div>
         <div>
           <p className="text-sm font-medium text-gray-500">Proposed Rate</p>
-          <p className="text-lg font-semibold text-gray-800">{interaction.rate}</p>
+          <p className="text-lg font-semibold text-gray-800">₹{interaction.rate}</p>
         </div>
         <div>
           <p className="text-sm font-medium text-gray-500">Proposed Quantity</p>
-          <p className="text-lg font-semibold text-gray-800">{interaction.quantity}</p>
+          <p className="text-lg font-semibold text-gray-800">{interaction.quantity} units</p>
+        </div>
+        <div>
+          <p className="text-sm font-medium text-gray-500">Interaction Time</p>
+          <p className="text-sm text-gray-600 mt-1">{interactionTime}</p>
         </div>
       </div>
       <div className="mt-4">
