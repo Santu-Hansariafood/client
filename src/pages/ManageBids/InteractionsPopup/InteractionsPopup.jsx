@@ -76,7 +76,7 @@ const InteractionCard = ({ interaction, onStatusChange }) => {
         </div>
         <div>
           <p className="text-sm font-medium text-gray-500">Proposed Quantity</p>
-          <p className="text-lg font-semibold text-gray-800">{interaction.quantity} units</p>
+          <p className="text-lg font-semibold text-gray-800">{interaction.quantity} Tons</p>
         </div>
         <div>
           <p className="text-sm font-medium text-gray-500">Interaction Time</p>
