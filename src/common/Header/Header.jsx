@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { AiOutlineUser, AiOutlineBell, AiOutlineCheckCircle, AiOutlineEye, AiOutlineEyeInvisible, AiOutlineDelete } from "react-icons/ai";
 import { RiLogoutBoxLine } from "react-icons/ri";
 import { HiMenuAlt2 } from "react-icons/hi";
@@ -17,6 +18,7 @@ const Header = ({
   setProfileDropdownOpen,
 }) => {
   const { userRole, mobile } = useAuth();
+  const navigate = useNavigate();
   const dropdownRef = useRef(null);
   const notificationRef = useRef(null);
   const [notifications, setNotifications] = useState([]);
@@ -56,6 +58,20 @@ const Header = ({
       fetchNotifications();
     } catch (error) {
       console.error("Failed to toggle notification status", error);
+    }
+  };
+
+  const handleNotificationClick = async (n) => {
+    if (!n.isRead) {
+      await toggleReadStatus(n._id);
+    }
+    setShowNotifications(false);
+    
+    // Redirect based on role
+    if (userRole === "Admin" || userRole === "Employee") {
+      navigate("/manage-bids/bid-list/participate-bid-admin");
+    } else if (userRole === "Buyer") {
+      navigate("/participate-bid-list");
     }
   };
 
@@ -180,7 +196,8 @@ const Header = ({
                   notifications.map(n => (
                     <div 
                       key={n._id} 
-                      className={`p-3 border-b border-slate-50 hover:bg-slate-50 cursor-default group transition-colors ${!n.isRead ? 'bg-emerald-50/30' : ''}`}
+                      className={`p-3 border-b border-slate-50 hover:bg-slate-50 cursor-pointer group transition-colors ${!n.isRead ? 'bg-emerald-50/30' : ''}`}
+                      onClick={() => handleNotificationClick(n)}
                     >
                       <div className="flex justify-between items-start mb-1">
                         <span className={`text-sm font-bold ${!n.isRead ? 'text-emerald-700' : 'text-slate-600'}`}>{n.title}</span>
@@ -188,14 +205,14 @@ const Header = ({
                           <span className="text-[10px] text-slate-400">{new Date(n.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                           <div className="hidden group-hover:flex items-center gap-1">
                             <button 
-                              onClick={() => toggleReadStatus(n._id)}
+                              onClick={(e) => { e.stopPropagation(); toggleReadStatus(n._id); }}
                               className="p-1 rounded-md hover:bg-white text-slate-400 hover:text-emerald-600 transition-colors"
                               title={n.isRead ? "Mark as unread" : "Mark as read"}
                             >
                               {n.isRead ? <AiOutlineEyeInvisible size={14} /> : <AiOutlineEye size={14} />}
                             </button>
                             <button 
-                              onClick={() => deleteNotification(n._id)}
+                              onClick={(e) => { e.stopPropagation(); deleteNotification(n._id); }}
                               className="p-1 rounded-md hover:bg-white text-slate-400 hover:text-red-600 transition-colors"
                               title="Delete notification"
                             >

@@ -30,22 +30,15 @@ const ParticipateBidAdmin = () => {
         const bids = bidsRes.data?.data || bidsRes.data || [];
         const participations = participateRes.data?.data || participateRes.data || [];
 
-        const now = new Date();
-        const todayStr = now.toISOString().split('T')[0];
-
-        const todayParticipations = participations
-          .filter((pBid) => {
-            const participationDateStr = pBid.participationDate ? pBid.participationDate.split('T')[0] : "";
-            return participationDateStr === todayStr;
-          })
+        const allParticipations = participations
           .sort(
             (a, b) =>
               new Date(b.participationDate) - new Date(a.participationDate)
           );
 
         setBids(bids);
-        setParticipationBids(todayParticipations);
-        setFilteredBids(todayParticipations);
+        setParticipationBids(allParticipations);
+        setFilteredBids(allParticipations);
       } catch {
         toast.error("Error fetching data");
       } finally {
@@ -147,7 +140,7 @@ const ParticipateBidAdmin = () => {
     <Suspense fallback={<Loading />}>
       <AdminPageShell
         title="Participate bid (admin)"
-        subtitle="Today's participation activity"
+        subtitle="Full history of participation activity"
         icon={FaUsers}
         noContentCard
       >

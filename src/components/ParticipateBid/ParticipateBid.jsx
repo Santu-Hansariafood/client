@@ -39,19 +39,11 @@ const ParticipateBid = () => {
 
   useEffect(() => {
     if (bids.length > 0 && participations.length > 0) {
-      const sevenDaysAgo = new Date();
-      sevenDaysAgo.setHours(0, 0, 0, 0);
-      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-
       const matchedData = participations
         .filter((p) => String(p.mobile) === String(mobile))
         .map((participation) => {
           const bid = bids.find((b) => b._id === participation.bidId);
           if (!bid) return null;
-
-          const bidDate = new Date(participation.participationDate);
-          bidDate.setHours(0, 0, 0, 0);
-          if (bidDate < sevenDaysAgo) return null;
 
           const bidStatus =
             bidStatuses.find((c) => c.bidId === bid._id)?.status || "Pending";
