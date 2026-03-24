@@ -8,6 +8,7 @@ import { FaUsers } from "react-icons/fa";
 
 const Tables = lazy(() => import("../../../common/Tables/Tables"));
 const Pagination = lazy(() => import("../../../common/Paginations/Paginations"));
+const SearchBox = lazy(() => import("../../../common/SearchBox/SearchBox"));
 const InteractionsPopup = lazy(() => import("../InteractionsPopup/InteractionsPopup"));
 
 const ParticipateBidAdmin = () => {
