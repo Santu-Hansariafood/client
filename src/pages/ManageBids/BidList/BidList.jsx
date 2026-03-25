@@ -58,10 +58,14 @@ const BidList = () => {
   const filteredBids = useMemo(() => {
     const now = new Date();
     const todayStr = now.toISOString().split('T')[0];
+    const yesterday = new Date(now);
+    yesterday.setDate(now.getDate() - 1);
+    const yesterdayStr = yesterday.toISOString().split('T')[0];
 
     return bids.filter((bid) => {
       const bidDateStr = (bid.bidDate && typeof bid.bidDate === 'string') ? bid.bidDate.split('T')[0] : "";
       const isToday = bidDateStr === todayStr;
+      const isYesterday = bidDateStr === yesterdayStr;
 
       let bidStartTime = null;
       let bidEndTime = null;
@@ -86,7 +90,7 @@ const BidList = () => {
       } else if (activeTab === 'closed') {
         matches = isToday && bidEndTime && now > bidEndTime;
       } else if (activeTab === 'previous') {
-        matches = !isToday;
+        matches = isYesterday;
       }
 
       if (!matches) return false;
@@ -296,7 +300,7 @@ const BidList = () => {
               ? "Today's active bids"
               : activeTab === "closed"
                 ? "Today's closed bids"
-                : "All historical back-dated bids"
+                : "Yesterday's historical bids"
         }
         icon={FaGavel}
         noContentCard
