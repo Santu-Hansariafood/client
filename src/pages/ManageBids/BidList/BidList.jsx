@@ -57,28 +57,36 @@ const BidList = () => {
 
   const filteredBids = useMemo(() => {
     const now = new Date();
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const todayStr = now.toISOString().split('T')[0];
 
     return bids.filter((bid) => {
       const bidDateStr = (bid.bidDate && typeof bid.bidDate === 'string') ? bid.bidDate.split('T')[0] : "";
-      let bidDate = null;
-      if (bidDateStr) {
-        const [year, month, day] = bidDateStr.split('-').map(Number);
-        if (!isNaN(year) && !isNaN(month) && !isNaN(day)) {
-          bidDate = new Date(year, month - 1, day);
+      const isToday = bidDateStr === todayStr;
+
+      let bidStartTime = null;
+      let bidEndTime = null;
+
+      if (isToday) {
+        if (bid.startTime) {
+          const [sH, sM] = bid.startTime.split(':').map(Number);
+          bidStartTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), sH, sM);
+        }
+        if (bid.endTime) {
+          const [eH, eM] = bid.endTime.split(':').map(Number);
+          bidEndTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), eH, eM);
         }
       }
 
       let matches = false;
 
       if (activeTab === 'all') {
-        matches = true;
+        matches = isToday;
       } else if (activeTab === 'active') {
-        matches = bid.status === 'active';
+        matches = isToday && bidStartTime && bidEndTime && now >= bidStartTime && now <= bidEndTime;
       } else if (activeTab === 'closed') {
-        matches = bid.status === 'closed';
+        matches = isToday && bidEndTime && now > bidEndTime;
       } else if (activeTab === 'previous') {
-        matches = bidDate && bidDate < today;
+        matches = !isToday;
       }
 
       if (!matches) return false;
@@ -283,12 +291,12 @@ const BidList = () => {
         title="Bid Management"
         subtitle={
           activeTab === "all"
-            ? "Manage all bids"
+            ? "Today's all bids"
             : activeTab === "active"
-              ? "Manage all active bids"
+              ? "Today's active bids"
               : activeTab === "closed"
-                ? "View all closed bids"
-                : "View all previous back-dated bids"
+                ? "Today's closed bids"
+                : "All historical back-dated bids"
         }
         icon={FaGavel}
         noContentCard
