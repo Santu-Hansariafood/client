@@ -96,19 +96,25 @@ router.get("/", async (req, res) => {
   try {
     const page = parseInt(req.query.page || "0", 10);
     const limit = parseInt(req.query.limit || "0", 10);
+    const mobile = req.query.mobile;
+
+    const query = {};
+    if (mobile) {
+      query.mobile = mobile;
+    }
 
     if (page > 0 && limit > 0) {
-      const items = await Buyer.find()
+      const items = await Buyer.find(query)
         .sort({ name: 1 })
         .skip((page - 1) * limit)
         .limit(limit)
         .populate(buyerPopulate)
         .lean();
-      const total = await Buyer.countDocuments();
+      const total = await Buyer.countDocuments(query);
       return res.json({ data: items.map(mapBuyerForClient), total });
     }
 
-    const items = await Buyer.find().sort({ name: 1 }).populate(buyerPopulate).lean();
+    const items = await Buyer.find(query).sort({ name: 1 }).populate(buyerPopulate).lean();
     res.json(items.map(mapBuyerForClient));
   } catch (error) {
     res.status(500).json({ message: error.message });
