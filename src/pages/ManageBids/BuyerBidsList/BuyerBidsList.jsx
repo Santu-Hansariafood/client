@@ -15,10 +15,12 @@ const ViewBid = lazy(() => import("../ViewBidPopup/ViewBidPopup"));
 const Pagination = lazy(() =>
   import("../../../common/Paginations/Paginations")
 );
+import { useAuth } from "../../../context/AuthContext/AuthContext";
 import "react-datepicker/dist/react-datepicker.css";
 
   const BuyerBidsList = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [bids, setBids] = useState([]);
   const [commodities, setCommodities] = useState([]);
   const [origins, setOrigins] = useState([]);
@@ -78,6 +80,11 @@ import "react-datepicker/dist/react-datepicker.css";
     let data = [...bids];
     const now = new Date();
     const todayStr = now.toISOString().split('T')[0];
+
+    // Always filter by the logged-in buyer's group
+    if (user && user.group) {
+      data = data.filter((bid) => bid.group === user.group);
+    }
 
     if (searchCompany.length > 0) {
       const set = new Set(searchCompany);
