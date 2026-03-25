@@ -81,16 +81,25 @@ router.get("/", async (req, res) => {
   try {
     const page = parseInt(req.query.page || "0", 10);
     const limit = parseInt(req.query.limit || "0", 10);
+    const group = req.query.group;
+
+    const query = {};
+    if (group) {
+      const groupDoc = await Group.findOne({ groupName: group });
+      if (groupDoc) {
+        query.groupId = groupDoc._id;
+      }
+    }
 
     if (page > 0 && limit > 0) {
-      const companies = await Company.find()
+      const companies = await Company.find(query)
         .sort({ companyName: 1 })
         .skip((page - 1) * limit)
         .limit(limit)
         .populate(companyPopulate)
         .lean();
 
-      const total = await Company.countDocuments();
+      const total = await Company.countDocuments(query);
 
       return res.json({
         data: companies.map(mapCompanyForClient),

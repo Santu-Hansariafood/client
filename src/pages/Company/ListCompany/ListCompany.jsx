@@ -5,6 +5,8 @@ import Loading from "../../../common/Loading/Loading";
 import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
 import { FaBuilding } from "react-icons/fa";
 
+import { useAuth } from "../../../context/AuthContext/AuthContext";
+
 const Tables = lazy(() => import("../../../common/Tables/Tables"));
 const Actions = lazy(() => import("../../../common/Actions/Actions"));
 const Pagination = lazy(
@@ -16,6 +18,7 @@ const EditCompanyPopup = lazy(
 );
 
 const ListCompany = () => {
+  const { user } = useAuth();
   const [companyData, setCompanyData] = useState([]);
   const [selectedCompany, setSelectedCompany] = useState(null);
 
@@ -33,7 +36,7 @@ const ListCompany = () => {
       setLoading(true);
 
       const response = await axios.get("/companies", {
-        params: { page: currentPage, limit: itemsPerPage },
+        params: { page: currentPage, limit: itemsPerPage, group: user?.group },
       });
 
       const items = response?.data?.data || [];
@@ -99,7 +102,7 @@ const ListCompany = () => {
     company.companyName || "",
     company.companyEmail || "",
 
-    (Array.isArray(company.consignee) ? company.consignee : []).map((c, i) => (
+    (Array.isArray(company.consignee) ? company.consignee : [company.consignee]).map((c, i) => (
       <div key={i}>{typeof c === "string" ? c : c?.name || ""}</div>
     )),
 
