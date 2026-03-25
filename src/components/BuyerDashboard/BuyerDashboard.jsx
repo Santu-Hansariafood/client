@@ -94,41 +94,22 @@ const BuyerDashboard = () => {
             </p>
           </div>
 
-          {buyerProfile?.consignee && buyerProfile.consignee.length > 0 && (
-            <section className="mb-12">
-              <div className="flex items-center gap-2 mb-6">
-                <FaMapMarkerAlt className="text-blue-500" />
-                <h2 className="text-lg font-bold text-slate-700 tracking-wide">
-                  Associated Consignees
-                </h2>
+          {buyerProfile && (
+            <div className="flex flex-col gap-3">
+              <div className="flex items-center gap-3 bg-white px-5 py-3 rounded-2xl shadow-sm border border-slate-100">
+                <div className="p-2 bg-blue-50 rounded-lg text-blue-600">
+                  <FaBuilding size={20} />
+                </div>
+                <div>
+                  <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400">
+                    Primary Company
+                  </p>
+                  <p className="text-sm font-bold text-slate-800">
+                    {buyerProfile.companyName}
+                  </p>
+                </div>
               </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
-                {buyerProfile.consignee.map((c, idx) => (
-                  <div
-                    key={idx}
-                    className="group relative p-[1px] rounded-2xl bg-gradient-to-br from-blue-400 via-indigo-400 to-purple-500 hover:scale-105 transition-all duration-300"
-                  >
-                    <div className="bg-white rounded-2xl p-4 h-full flex items-center gap-3 shadow-md hover:shadow-xl transition-all">
-                      {/* Icon */}
-                      <div className="p-3 rounded-xl bg-gradient-to-br from-blue-100 to-indigo-100 text-blue-600 group-hover:scale-110 transition">
-                        <FaBuilding size={18} />
-                      </div>
-
-                      {/* Content */}
-                      <div className="flex flex-col">
-                        <p className="text-xs text-slate-400 font-semibold uppercase tracking-wide">
-                          Consignee
-                        </p>
-                        <p className="text-sm font-bold text-slate-800 truncate max-w-[150px]">
-                          {c.label || c}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </section>
+            </div>
           )}
         </header>
 
