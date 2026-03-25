@@ -56,8 +56,10 @@ const ListCompany = () => {
   };
 
   useEffect(() => {
-    fetchCompanyData();
-  }, [currentPage]);
+    if (user) {
+      fetchCompanyData();
+    }
+  }, [currentPage, user]);
 
   const handleView = (index) => {
     setSelectedCompany(companyData[index]);
