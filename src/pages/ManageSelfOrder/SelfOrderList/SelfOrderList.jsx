@@ -135,6 +135,44 @@ const SelfOrderList = () => {
     },
     [consigneeMap],
   );
+  const handleWhatsAppShare = async (item) => {
+    try {
+      const response = await axios.get(`/self-order/pdf/${item._id}`, {
+        responseType: "blob",
+      });
+
+      const blob = response.data;
+
+      // 👉 Create file
+      const file = new File([blob], `Sauda-${item.saudaNo}.pdf`, {
+        type: "application/pdf",
+      });
+
+      // 👉 Force download first
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `Sauda-${item.saudaNo}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+
+      // 👉 Then open share (WhatsApp)
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({
+          title: "Sauda PDF",
+          text: `Sauda No: ${item.saudaNo}`,
+          files: [file],
+        });
+      } else {
+        toast.info("Sharing works only on mobile devices");
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to process PDF");
+    }
+  };
 
   const handleView = useCallback(
     (item) => {
@@ -214,15 +252,13 @@ const SelfOrderList = () => {
             <DownloadSauda
               data={{ ...item, consignee: getConsigneeDisplay(item) }}
               button={
-                <button
-                  type="button"
-                  className="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-100 hover:bg-emerald-100"
-                >
+                <button className="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-100 hover:bg-emerald-100">
                   <FaDownload size={16} />
                 </button>
               }
             />
 
+            {/* ✅ WhatsApp (ONLY MOBILE) */}
             <button
               type="button"
               onClick={() =>
@@ -231,7 +267,7 @@ const SelfOrderList = () => {
                   consignee: getConsigneeDisplay(item),
                 })
               }
-              className="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-green-50 text-green-600 border border-green-100 hover:bg-green-100"
+              className="sm:hidden inline-flex items-center justify-center w-9 h-9 rounded-lg bg-green-50 text-green-600 border border-green-100 hover:bg-green-100"
             >
               <FaWhatsapp size={16} />
             </button>
@@ -276,31 +312,6 @@ const SelfOrderList = () => {
     },
     [data],
   );
-
-  const handleWhatsAppShare = async (item) => {
-    try {
-      const response = await axios.get(`/self-order/pdf/${item._id}`, {
-        responseType: "blob",
-      });
-
-      const file = new File([response.data], `Sauda-${item.saudaNo}.pdf`, {
-        type: "application/pdf",
-      });
-
-      if (navigator.canShare && navigator.canShare({ files: [file] })) {
-        await navigator.share({
-          title: "Sauda PDF",
-          text: `Sauda No: ${item.saudaNo}`,
-          files: [file],
-        });
-      } else {
-        toast.info("Sharing works only on mobile devices");
-      }
-    } catch (error) {
-      console.error(error);
-      toast.error("Failed to share PDF");
-    }
-  };
 
   return (
     <Suspense fallback={<Loading />}>
