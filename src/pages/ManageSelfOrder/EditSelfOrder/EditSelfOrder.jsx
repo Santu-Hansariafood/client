@@ -67,7 +67,7 @@ const INITIAL_FORM_DATA = {
   sellerEmails: [""],
   sendPOToBuyer: "yes",
   sendPOToSupplier: "yes",
-  billTo: "none",
+  billTo: "buyer",
   saudaNo: "",
 };
 

@@ -88,15 +88,30 @@ const DownloadSauda = ({ data }) => {
       supplier.companyName.toLowerCase() === data.supplierCompany.toLowerCase(),
   );
 
+  const rawBuyerKey = data?.buyerCompany ?? data?.buyer ?? "";
+  const normalizedBuyerKey = String(rawBuyerKey || "")
+    .trim()
+    .toLowerCase();
+
   const matchingBuyer =
-    buyerData.find(
-      (buyer) =>
-        buyer.companyName.toLowerCase() === data.buyerCompany.toLowerCase(),
-    ) ||
-    supplierData.find(
-      (supplier) =>
-        supplier.companyName.toLowerCase() === data.buyerCompany.toLowerCase(),
-    );
+    buyerData.find((buyer) => {
+      const idMatch =
+        buyer?._id && rawBuyerKey && String(buyer._id) === String(rawBuyerKey);
+      const nameMatch =
+        buyer?.companyName &&
+        buyer.companyName.toLowerCase() === normalizedBuyerKey;
+      return idMatch || nameMatch;
+    }) ||
+    supplierData.find((supplier) => {
+      const idMatch =
+        supplier?._id &&
+        rawBuyerKey &&
+        String(supplier._id) === String(rawBuyerKey);
+      const nameMatch =
+        supplier?.companyName &&
+        supplier.companyName.toLowerCase() === normalizedBuyerKey;
+      return idMatch || nameMatch;
+    });
 
   const matchingSellerProfile = sellerProfileData.find(
     (seller) => seller._id === data.supplier,
@@ -106,8 +121,9 @@ const DownloadSauda = ({ data }) => {
     ...data,
     consigneeDetails: matchingConsignee || null,
     supplierDetails: matchingSupplier || null,
+    // If debtor is Consignee, buyerDetails must come from consigneeDetails.
     buyerDetails:
-      matchingBuyer || (data.billTo === "consignee" ? matchingConsignee : null),
+      data.billTo === "consignee" ? matchingConsignee || null : matchingBuyer,
   };
 
   if (transformedData.buyerDetails) {
@@ -160,6 +176,17 @@ const DownloadSauda = ({ data }) => {
       ...transformedData,
       buyer: data.consignee,
       buyerCompany: data.consignee,
+    };
+  } else {
+    const buyerName =
+      matchingBuyer?.companyName ||
+      (typeof data?.buyerCompany === "string" ? data.buyerCompany : "") ||
+      (typeof data?.buyer === "string" ? data.buyer : "");
+
+    transformedData = {
+      ...transformedData,
+      buyer: buyerName,
+      buyerCompany: buyerName,
     };
   }
 

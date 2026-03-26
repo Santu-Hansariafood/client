@@ -32,6 +32,12 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#111827",
   },
+  nameValue: {
+    fontSize: 9,
+    fontWeight: "bold",
+    color: "#111827",
+    lineHeight: 1.1,
+  },
 
   saudaValue: {
     fontSize: 11,
@@ -106,7 +112,9 @@ const SaudaDetails = ({ data }) => {
       <View style={styles.grid}>
         <View style={styles.gridItem}>
           <Text style={styles.label}>Buyer Name (Debitor)</Text>
-          <Text style={styles.value}>{data.buyerCompany || data.buyer}</Text>
+          <Text style={styles.nameValue}>
+            {data.buyerCompany || data.buyer}
+          </Text>
           {renderBuyerDetails()}
         </View>
         <View style={styles.gridItem}>
@@ -120,7 +128,7 @@ const SaudaDetails = ({ data }) => {
         </View>
         <View style={[styles.gridItem, { borderRight: "none" }]}>
           <Text style={styles.label}>Ship To (Consignee)</Text>
-          <Text style={styles.value}>{data.consignee}</Text>
+          <Text style={styles.nameValue}>{data.consignee}</Text>
           {data.consigneeDetails && (
             <Text style={styles.addressDetails}>
               {`\n${data.consigneeDetails.location || ""}, ${data.consigneeDetails.district || ""}, ${data.consigneeDetails.state || ""} - ${data.consigneeDetails.pin || ""}\nPAN No : ${data.consigneeDetails.pan || ""}\nGST: ${data.consigneeDetails.gst || ""}`}
