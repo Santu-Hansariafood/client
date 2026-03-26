@@ -195,11 +195,11 @@ const SelfOrderList = () => {
           "N/A",
         item.sellerEmails?.filter(Boolean)?.join(", ") || "N/A",
         <div
-          className="flex flex-col sm:flex-row sm:flex-nowrap gap-2"
+          className="flex flex-col gap-2 items-start min-w-[120px]"
           key={item._id}
         >
-          {/* Row 1 → Actions */}
-          <div className="flex gap-2">
+          {/* Actions Row */}
+          <div className="flex flex-wrap gap-2">
             <Actions
               onView={() => handleView(item)}
               onEdit={() => handleEdit(item)}
@@ -209,15 +209,14 @@ const SelfOrderList = () => {
             />
           </div>
 
-          {/* Row 2 → Download + WhatsApp */}
-          <div className="flex gap-2">
+          {/* Buttons Row */}
+          <div className="flex flex-wrap gap-2">
             <DownloadSauda
               data={{ ...item, consignee: getConsigneeDisplay(item) }}
               button={
                 <button
                   type="button"
-                  className="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-100 hover:bg-emerald-100 transition-colors"
-                  title="Download Sauda PDF"
+                  className="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-100 hover:bg-emerald-100"
                 >
                   <FaDownload size={16} />
                 </button>
@@ -232,8 +231,7 @@ const SelfOrderList = () => {
                   consignee: getConsigneeDisplay(item),
                 })
               }
-              className="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-green-50 text-green-600 border border-green-100 hover:bg-green-100 transition-colors"
-              title="Send via WhatsApp"
+              className="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-green-50 text-green-600 border border-green-100 hover:bg-green-100"
             >
               <FaWhatsapp size={16} />
             </button>
