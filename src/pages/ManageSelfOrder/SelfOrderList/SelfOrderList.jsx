@@ -9,21 +9,21 @@ import {
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import { FaDownload } from "react-icons/fa";
+import { FaDownload, FaWhatsapp } from "react-icons/fa";
 import Loading from "../../../common/Loading/Loading";
 import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
 import { FaClipboardList } from "react-icons/fa";
 import { useAuth } from "../../../context/AuthContext/AuthContext";
 
 const Tables = lazy(() => import("../../../common/Tables/Tables"));
-const Pagination = lazy(() =>
-  import("../../../common/Paginations/Paginations")
+const Pagination = lazy(
+  () => import("../../../common/Paginations/Paginations"),
 );
 const Actions = lazy(() => import("../../../common/Actions/Actions"));
 const PopupBox = lazy(() => import("../../../common/PopupBox/PopupBox"));
 const OrderDetails = lazy(() => import("./OrderDetails/OrderDetails"));
-const DownloadSauda = lazy(() =>
-  import("../../../components/DownloadSauda/DownloadSauda")
+const DownloadSauda = lazy(
+  () => import("../../../components/DownloadSauda/DownloadSauda"),
 );
 
 const API_URL = "/self-order";
@@ -47,28 +47,38 @@ const SelfOrderList = () => {
         const [orderRes, consigneeRes, buyersRes] = await Promise.all([
           axios.get(API_URL),
           axios.get("/consignees").catch(() => ({ data: [] })),
-          userRole === "Buyer" ? axios.get("/buyers") : Promise.resolve({ data: [] }),
+          userRole === "Buyer"
+            ? axios.get("/buyers")
+            : Promise.resolve({ data: [] }),
         ]);
-        
+
         if (isMounted) {
           let raw = Array.isArray(orderRes.data)
             ? orderRes.data
             : orderRes.data?.data || [];
-            
+
           if (userRole === "Buyer") {
             const buyers = buyersRes.data?.data || buyersRes.data || [];
-            const buyer = buyers.find(b => b.mobile?.some(m => String(m) === String(mobile)));
+            const buyer = buyers.find((b) =>
+              b.mobile?.some((m) => String(m) === String(mobile)),
+            );
             if (buyer) {
               const buyerCompanyId = buyer.companyId;
               const buyerCompanyName = buyer.companyName;
-              
+
               setBuyerCompanyId(buyerCompanyId);
-              
-              raw = raw.filter(item => {
-                const matchId = buyerCompanyId && item.companyId && String(item.companyId) === String(buyerCompanyId);
-                const matchName = buyerCompanyName && item.buyerCompany && 
-                  item.buyerCompany.trim().toLowerCase() === buyerCompanyName.trim().toLowerCase();
-                
+
+              raw = raw.filter((item) => {
+                const matchId =
+                  buyerCompanyId &&
+                  item.companyId &&
+                  String(item.companyId) === String(buyerCompanyId);
+                const matchName =
+                  buyerCompanyName &&
+                  item.buyerCompany &&
+                  item.buyerCompany.trim().toLowerCase() ===
+                    buyerCompanyName.trim().toLowerCase();
+
                 return matchId || matchName;
               });
             }
@@ -98,16 +108,16 @@ const SelfOrderList = () => {
 
   const indexOfLastItem = useMemo(
     () => currentPage * itemsPerPage,
-    [currentPage, itemsPerPage]
+    [currentPage, itemsPerPage],
   );
   const indexOfFirstItem = useMemo(
     () => indexOfLastItem - itemsPerPage,
-    [indexOfLastItem, itemsPerPage]
+    [indexOfLastItem, itemsPerPage],
   );
 
   const currentItems = useMemo(
     () => filteredData.slice(indexOfFirstItem, indexOfLastItem),
-    [filteredData, indexOfFirstItem, indexOfLastItem]
+    [filteredData, indexOfFirstItem, indexOfLastItem],
   );
 
   const handlePageChange = useCallback((pageNumber) => {
@@ -123,14 +133,14 @@ const SelfOrderList = () => {
         return consigneeMap.get(c) || consigneeMap.get(c.trim()) || c;
       return consigneeMap.get(String(c)) || "N/A";
     },
-    [consigneeMap]
+    [consigneeMap],
   );
 
   const handleView = useCallback(
     (item) => {
       setSelectedItem({ ...item, consignee: getConsigneeDisplay(item) });
     },
-    [getConsigneeDisplay]
+    [getConsigneeDisplay],
   );
 
   const handleClosePopup = useCallback(() => setSelectedItem(null), []);
@@ -153,7 +163,7 @@ const SelfOrderList = () => {
       "Seller Emails",
       "Action",
     ],
-    []
+    [],
   );
 
   const handleEdit = useCallback(
@@ -162,7 +172,7 @@ const SelfOrderList = () => {
         state: { orderData: item },
       });
     },
-    [navigate]
+    [navigate],
   );
 
   const rows = useMemo(
@@ -185,8 +195,8 @@ const SelfOrderList = () => {
           "N/A",
         item.sellerEmails?.filter(Boolean)?.join(", ") || "N/A",
         <div
-            className="flex flex-nowrap items-center gap-2 whitespace-nowrap"
-            key={item._id}
+          className="flex flex-nowrap items-center gap-2 whitespace-nowrap"
+          key={item._id}
         >
           <Actions
             onView={() => handleView(item)}
@@ -206,9 +216,30 @@ const SelfOrderList = () => {
               </button>
             }
           />
+
+          <button
+            type="button"
+            onClick={() =>
+              handleWhatsAppShare({
+                ...item,
+                consignee: getConsigneeDisplay(item),
+              })
+            }
+            className="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-green-50 text-green-600 border border-green-100 hover:bg-green-100 transition-colors"
+            title="Send via WhatsApp"
+          >
+            <FaWhatsapp size={16} />
+          </button>
         </div>,
       ]),
-    [currentItems, handleView, handleEdit, getConsigneeDisplay, currentPage, itemsPerPage]
+    [
+      currentItems,
+      handleView,
+      handleEdit,
+      getConsigneeDisplay,
+      currentPage,
+      itemsPerPage,
+    ],
   );
 
   const handleSearchChange = useCallback(
@@ -231,14 +262,39 @@ const SelfOrderList = () => {
               (order.saudaNo &&
                 order.saudaNo.toString().toLowerCase().includes(lowerSearch)) ||
               (order.poNumber &&
-                order.poNumber.toString().toLowerCase().includes(lowerSearch))
-          )
+                order.poNumber.toString().toLowerCase().includes(lowerSearch)),
+          ),
         );
       }
       setCurrentPage(1);
     },
-    [data]
+    [data],
   );
+
+  const handleWhatsAppShare = async (item) => {
+    try {
+      const response = await axios.get(`/self-order/pdf/${item._id}`, {
+        responseType: "blob",
+      });
+
+      const file = new File([response.data], `Sauda-${item.saudaNo}.pdf`, {
+        type: "application/pdf",
+      });
+
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({
+          title: "Sauda PDF",
+          text: `Sauda No: ${item.saudaNo}`,
+          files: [file],
+        });
+      } else {
+        toast.info("Sharing works only on mobile devices");
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to share PDF");
+    }
+  };
 
   return (
     <Suspense fallback={<Loading />}>
@@ -250,8 +306,8 @@ const SelfOrderList = () => {
       >
         <div className="max-w-full space-y-6">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <button 
-              onClick={() => navigate(-1)} 
+            <button
+              onClick={() => navigate(-1)}
               className="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition"
             >
               Back
