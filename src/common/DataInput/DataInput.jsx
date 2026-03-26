@@ -22,8 +22,8 @@ const DataInput = ({
     size === "sm"
       ? "px-3 py-2 text-sm"
       : size === "lg"
-        ? "px-6 py-4 text-lg"
-        : "px-5 py-3 text-base";
+      ? "px-6 py-4 text-lg"
+      : "px-5 py-3 text-base";
 
   return (
     <div className="mb-5 w-full">
@@ -52,12 +52,14 @@ const DataInput = ({
           required={required}
           disabled={disabled}
           readOnly={readOnly}
-          className={`w-full ${Icon ? "pl-12" : "px-5"} py-3 bg-white dark:bg-slate-800/50 border ${
+          className={`w-full ${
+            Icon ? "pl-12" : "px-5"
+          } py-3 bg-white border ${
             error
               ? "border-red-500 focus:ring-red-200"
-              : "border-slate-200 dark:border-slate-700 focus:ring-green-200 dark:focus:ring-green-900/30 focus:border-green-500"
-          } rounded-xl outline-none focus:ring-4 transition-all duration-200 text-slate-700 dark:text-slate-200 placeholder:text-slate-400 font-medium ${sizeStyles} ${
-            disabled ? "bg-slate-50 cursor-not-allowed opacity-60" : ""
+              : "border-gray-300 focus:ring-green-200 focus:border-green-500"
+          } rounded-xl outline-none focus:ring-4 transition-all duration-200 text-gray-700 placeholder:text-gray-400 font-medium ${sizeStyles} ${
+            disabled ? "bg-gray-100 cursor-not-allowed opacity-60" : ""
           }`}
         />
       </div>
