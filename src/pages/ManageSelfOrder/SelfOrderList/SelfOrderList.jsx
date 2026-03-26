@@ -38,7 +38,6 @@ const SelfOrderList = () => {
   const [itemsPerPage] = useState(10);
   const [selectedItem, setSelectedItem] = useState(null);
   const [searchInput, setSearchInput] = useState("");
-  const [buyerCompanyId, setBuyerCompanyId] = useState(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -65,8 +64,6 @@ const SelfOrderList = () => {
             if (buyer) {
               const buyerCompanyId = buyer.companyId;
               const buyerCompanyName = buyer.companyName;
-
-              setBuyerCompanyId(buyerCompanyId);
 
               raw = raw.filter((item) => {
                 const matchId =
@@ -143,31 +140,41 @@ const SelfOrderList = () => {
 
       const blob = response.data;
 
-      // 👉 Create file
-      const file = new File([blob], `Sauda-${item.saudaNo}.pdf`, {
-        type: "application/pdf",
-      });
+      const fileName = `Sauda-${item.saudaNo}.pdf`;
+      const file =
+        typeof File !== "undefined"
+          ? new File([blob], fileName, { type: "application/pdf" })
+          : blob;
 
-      // 👉 Force download first
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `Sauda-${item.saudaNo}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      window.URL.revokeObjectURL(url);
+      const shareData = {
+        title: "Sauda PDF",
+        text: `Sauda No: ${item.saudaNo}`,
+        files: [file],
+      };
 
-      // 👉 Then open share (WhatsApp)
-      if (navigator.canShare && navigator.canShare({ files: [file] })) {
-        await navigator.share({
-          title: "Sauda PDF",
-          text: `Sauda No: ${item.saudaNo}`,
-          files: [file],
-        });
-      } else {
-        toast.info("Sharing works only on mobile devices");
+      // canShare(...) might throw in some browsers; wrap it.
+      const canShareFiles = (() => {
+        try {
+          return (
+            typeof navigator !== "undefined" &&
+            typeof navigator.share === "function" &&
+            typeof navigator.canShare === "function" &&
+            navigator.canShare({ files: [file] })
+          );
+        } catch {
+          return false;
+        }
+      })();
+
+      if (canShareFiles) {
+        await navigator.share(shareData);
+        return;
       }
+
+      // Fallback: open WhatsApp with text (PDF attachment is not supported here).
+      const waText = `Sauda No: ${item.saudaNo}`;
+      window.open(`https://wa.me/?text=${encodeURIComponent(waText)}`, "_blank");
+      toast.info("WhatsApp opened (PDF attachment not supported here).");
     } catch (error) {
       console.error(error);
       toast.error("Failed to process PDF");
@@ -236,7 +243,6 @@ const SelfOrderList = () => {
           className="flex flex-col gap-2 items-start min-w-[120px]"
           key={item._id}
         >
-          {/* Actions Row */}
           <div className="flex flex-wrap gap-2">
             <Actions
               onView={() => handleView(item)}
@@ -247,7 +253,6 @@ const SelfOrderList = () => {
             />
           </div>
 
-          {/* Buttons Row */}
           <div className="flex flex-wrap gap-2">
             <DownloadSauda
               data={{ ...item, consignee: getConsigneeDisplay(item) }}
@@ -258,7 +263,6 @@ const SelfOrderList = () => {
               }
             />
 
-            {/* ✅ WhatsApp (ONLY MOBILE) */}
             <button
               type="button"
               onClick={() =>
