@@ -3,9 +3,23 @@ import logo from "../../../assets/Hans.jpg";
 
 const styles = StyleSheet.create({
   header: {
-    paddingBottom: 8,
-    marginBottom: 10,
-    borderBottom: "1.5pt solid #1F7A3E",
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    padding: 12,
+    backgroundColor: "#FFFFFF",
+    borderBottom: "2pt solid #1F7A3E",
+    zIndex: 1000,
+  },
+
+  topBorder: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 4,
+    backgroundColor: "#1F7A3E",
   },
 
   row: {
@@ -14,14 +28,14 @@ const styles = StyleSheet.create({
   },
 
   logoBox: {
-    width: 70,
+    width: 80,
+    alignItems: "center",
     justifyContent: "center",
-    alignItems: "flex-start",
   },
 
   logo: {
-    width: 60,
-    height: 40,
+    width: 65,
+    height: 45,
     objectFit: "contain",
   },
 
@@ -32,52 +46,59 @@ const styles = StyleSheet.create({
   },
 
   companyName: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: "bold",
-    color: "#1F7A3E",
-    marginBottom: 6,
+    color: "#166534",
+    letterSpacing: 1,
   },
 
   products: {
     fontSize: 9,
-    fontWeight: "bold",
-    color: "#1F2937",
-    marginBottom: 2,
+    color: "#374151",
+    marginTop: 3,
+    letterSpacing: 0.5,
   },
 
   address: {
-    fontSize: 7,
-    color: "#4B5563",
-    marginTop: 1,
+    fontSize: 8,
+    color: "#6B7280",
+    marginTop: 2,
   },
 
   divider: {
-    marginTop: 6,
+    marginTop: 8,
     borderBottom: "0.5pt solid #D1D5DB",
   },
 
   saudaBox: {
-    marginTop: 8,
-    backgroundColor: "#E8F5E9",
-    padding: 6,
+    marginTop: 10,
+    backgroundColor: "#E6F4EA",
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    borderLeft: "4pt solid #1F7A3E",
   },
 
   saudaTitle: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: "bold",
-    color: "#1F7A3E",
-    letterSpacing: 1.5,
+    color: "#14532D",
+    letterSpacing: 2,
   },
 });
+
 const SaudaHeader = () => (
   <View style={styles.header} fixed>
+    <View style={styles.topBorder} />
+
     <View style={styles.row}>
       <View style={styles.logoBox}>
         <Image src={logo} style={styles.logo} />
       </View>
 
       <View style={styles.companyBox}>
-        <Text style={styles.companyName}>HANSARIA FOOD PRIVATE LIMITED</Text>
+        <Text style={styles.companyName}>
+          HANSARIA FOOD PRIVATE LIMITED
+        </Text>
 
         <Text style={styles.products}>
           MAIZE | SOYABEAN DOC | MDOC | DDGS | DORB | RICE
