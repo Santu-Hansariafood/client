@@ -30,7 +30,7 @@ const consigneeSchema = new mongoose.Schema(
       trim: true,
       uppercase: true,
       match: [
-        /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[A-Z0-9]{1}[Z]{1}[A-Z0-9]{1}$/,
+        /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[A-Z0-9]{1}[Z]{1}[A-Z0-9]{1}$/i,
         "Invalid GST number",
       ],
     },
@@ -39,7 +39,7 @@ const consigneeSchema = new mongoose.Schema(
       type: String,
       trim: true,
       uppercase: true,
-      match: [/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/, "Invalid PAN number"],
+      match: [/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/i, "Invalid PAN number"],
     },
 
     state: {

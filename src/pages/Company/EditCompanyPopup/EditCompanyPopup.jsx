@@ -248,7 +248,7 @@ const EditCompanyPopup = ({ company, isOpen, onClose, onUpdate }) => {
       return;
     }
 
-    if (!regexPatterns.gst?.test(gstNumber)) {
+    if (!regexPatterns.gstNo?.test(gstNumber)) {
       toast.error("Invalid GST number");
       return;
     }

@@ -151,7 +151,7 @@ router.post("/", async (req, res) => {
       });
     }
 
-    if (body.gstNumber && !/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[A-Z0-9]{1}[Z]{1}[A-Z0-9]{1}$/.test(body.gstNumber)) {
+    if (body.gstNumber && !/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[A-Z0-9]{1}[Z]{1}[A-Z0-9]{1}$/i.test(body.gstNumber)) {
       return res.status(400).json({
         message: "Invalid GST number",
       });
@@ -231,7 +231,7 @@ router.put("/:id", async (req, res) => {
   try {
     const body = req.body || {};
 
-    if (body.gstNumber && !/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[A-Z0-9]{1}[Z]{1}[A-Z0-9]{1}$/.test(body.gstNumber)) {
+    if (body.gstNumber && !/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[A-Z0-9]{1}[Z]{1}[A-Z0-9]{1}$/i.test(body.gstNumber)) {
       return res.status(400).json({
         message: "Invalid GST number",
       });

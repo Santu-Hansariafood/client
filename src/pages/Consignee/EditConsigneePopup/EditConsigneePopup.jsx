@@ -87,6 +87,18 @@ const EditConsigneePopup = ({ initialData, onSubmit, onCancel }) => {
       toast.error("Invalid email format.");
       return;
     }
+    if (formData.gst && !regexPatterns.gstNo.test(formData.gst)) {
+      toast.error("Invalid GST number format.");
+      return;
+    }
+    if (formData.pan && !regexPatterns.panNo.test(formData.pan)) {
+      toast.error("Invalid PAN number format.");
+      return;
+    }
+    if (formData.pin && formData.pin.length !== 6) {
+      toast.error("Pin code must be 6 digits");
+      return;
+    }
 
     onSubmit(formData);
   };
