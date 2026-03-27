@@ -70,6 +70,12 @@ const mapBuyerForClient = (buyer) => {
     consigneeIds,
 
     companyName: buyer.companyId?.companyName || buyer.companyName || "",
+    location: buyer.companyId?.location || "",
+    state: buyer.companyId?.state || "",
+    district: buyer.companyId?.district || "",
+    pinCode: buyer.companyId?.pinCode || "",
+    gstNumber: buyer.companyId?.gstNumber || "",
+    panNumber: buyer.companyId?.panNumber || "",
     group: buyer.groupId?.groupName || buyer.group || "",
     commodity: (buyer.commodityIds || [])
       .map((c) => c?.name || c?.toString?.() || "")
@@ -84,7 +90,7 @@ const mapBuyerForClient = (buyer) => {
 const buyerPopulate = [
   {
     path: "companyId",
-    select: "companyName companyEmail groupId consigneeIds commodities",
+    select: "companyName companyEmail location state district pinCode gstNumber panNumber groupId consigneeIds commodities",
     populate: { path: "commodities.commodityId", select: "name" },
   },
   { path: "groupId", select: "groupName" },

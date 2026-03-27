@@ -9,24 +9,39 @@ const DataInput = lazy(() => import("../../common/DataInput/DataInput"));
 
 const BuyerInformation = ({ formData, handleChange }) => {
   const [buyers, setBuyers] = useState([]);
+  const [consignees, setConsignees] = useState([]);
   const [selectedCompany, setSelectedCompany] = useState(null);
   const [selectedConsignee, setSelectedConsignee] = useState("");
   const [loading, setLoading] = useState(true);
   const [initialized, setInitialized] = useState(false);
 
+  const selectedBuyer = useMemo(
+    () => buyers.find(({ _id }) => _id === selectedCompany),
+    [buyers, selectedCompany]
+  );
+
+  const selectedConsigneeData = useMemo(
+    () => consignees.find(({ _id }) => String(_id) === String(selectedConsignee)),
+    [consignees, selectedConsignee]
+  );
+
   useEffect(() => {
-    const fetchBuyers = async () => {
+    const fetchData = async () => {
       setLoading(true);
       try {
-        const { data } = await axios.get("/buyers");
-        setBuyers(data);
+        const [buyersRes, consigneesRes] = await Promise.all([
+          axios.get("/buyers"),
+          axios.get("/consignees"),
+        ]);
+        setBuyers(buyersRes.data);
+        setConsignees(consigneesRes.data?.data || consigneesRes.data || []);
       } catch (error) {
-        console.error("Error fetching buyers:", error);
+        console.error("Error fetching data:", error);
       } finally {
         setLoading(false);
       }
     };
-    fetchBuyers();
+    fetchData();
   }, []);
 
   const orderId = formData?._id;
@@ -96,20 +111,19 @@ const BuyerInformation = ({ formData, handleChange }) => {
   );
 
   const consigneeOptions = useMemo(() => {
-    const selectedBuyer = buyers.find(({ _id }) => _id === selectedCompany);
     return (
       selectedBuyer?.consignee?.map(({ value, label }) => ({ value, label })) ||
       []
     );
-  }, [selectedCompany, buyers]);
+  }, [selectedBuyer]);
 
   const onCompanyChange = (option) => {
     const companyId = option?.value || null;
     setSelectedCompany(companyId);
 
-    const selectedBuyer = buyers.find(({ _id }) => _id === companyId) || {};
+    const buyerData = buyers.find(({ _id }) => _id === companyId) || {};
 
-    const rawEmails = selectedBuyer?.email;
+    const rawEmails = buyerData?.email;
     const buyerEmails = Array.isArray(rawEmails)
       ? rawEmails
           .map((e) =>
@@ -118,15 +132,21 @@ const BuyerInformation = ({ formData, handleChange }) => {
           .filter(Boolean)
       : [];
     const firstEmail = buyerEmails[0] || "";
-    handleChange("buyer", selectedBuyer.name || "");
-    handleChange("companyId", selectedBuyer.companyId || null);
-    handleChange("buyerCompany", selectedBuyer.companyName || "");
+    handleChange("buyer", buyerData.name || "");
+    handleChange("companyId", buyerData.companyId || null);
+    handleChange("buyerCompany", buyerData.companyName || "");
+    handleChange("location", buyerData.location || "");
+    handleChange("state", buyerData.state || "");
+    handleChange("district", buyerData.district || "");
+    handleChange("pinCode", buyerData.pinCode || "");
+    handleChange("gstNumber", buyerData.gstNumber || "");
+    handleChange("panNumber", buyerData.panNumber || "");
     handleChange("buyerEmail", firstEmail);
     handleChange("buyerEmails", buyerEmails.length ? buyerEmails : [""]);
-    handleChange("buyerCommodity", selectedBuyer.commodity || []);
+    handleChange("buyerCommodity", buyerData.commodity || []);
     handleChange(
       "buyerBrokerageMap",
-      selectedBuyer.brokerageByName || selectedBuyer.brokerage || {},
+      buyerData.brokerageByName || buyerData.brokerage || {},
     );
     setSelectedConsignee("");
     handleChange("consignee", "");
@@ -157,6 +177,46 @@ const BuyerInformation = ({ formData, handleChange }) => {
             }
             onChange={onCompanyChange}
           />
+
+          {selectedBuyer && (
+            <div className="mt-4 p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
+              <div className="flex justify-between items-center pb-2 border-b border-slate-200 mb-2">
+                <span className="text-sm font-bold text-slate-800">
+                  Buyer Name (Debitor)
+                </span>
+                <span className="text-sm font-medium text-emerald-600">
+                  {selectedBuyer.name}
+                </span>
+              </div>
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                <div className="space-y-1">
+                  <p className="text-slate-500">Location</p>
+                  <p className="font-semibold text-slate-700 uppercase">
+                    {selectedBuyer.location || "N/A"}
+                  </p>
+                </div>
+                <div className="space-y-1 text-right">
+                  <p className="text-slate-500">State / District</p>
+                  <p className="font-semibold text-slate-700">
+                    {selectedBuyer.state || "N/A"} /{" "}
+                    {selectedBuyer.district || "N/A"}
+                  </p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-slate-500">GST Number</p>
+                  <p className="font-semibold text-slate-700 uppercase">
+                    {selectedBuyer.gstNumber || "N/A"}
+                  </p>
+                </div>
+                <div className="space-y-1 text-right">
+                  <p className="text-slate-500">PAN Number</p>
+                  <p className="font-semibold text-slate-700 uppercase">
+                    {selectedBuyer.panNumber || "N/A"}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
         <div>
           <label className="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-1">
@@ -172,6 +232,46 @@ const BuyerInformation = ({ formData, handleChange }) => {
             }
             onChange={onConsigneeChange}
           />
+
+          {selectedConsigneeData && (
+            <div className="mt-4 p-4 rounded-xl bg-emerald-50 border border-emerald-100 space-y-2">
+              <div className="flex justify-between items-center pb-2 border-b border-emerald-100 mb-2">
+                <span className="text-sm font-bold text-slate-800">
+                  Consignee Details
+                </span>
+                <span className="text-sm font-medium text-emerald-600">
+                  {selectedConsigneeData.phone}
+                </span>
+              </div>
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                <div className="space-y-1">
+                  <p className="text-slate-500">Location</p>
+                  <p className="font-semibold text-slate-700 uppercase">
+                    {selectedConsigneeData.location || "N/A"}
+                  </p>
+                </div>
+                <div className="space-y-1 text-right">
+                  <p className="text-slate-500">State / District</p>
+                  <p className="font-semibold text-slate-700">
+                    {selectedConsigneeData.state || "N/A"} /{" "}
+                    {selectedConsigneeData.district || "N/A"}
+                  </p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-slate-500">GST Number</p>
+                  <p className="font-semibold text-slate-700 uppercase">
+                    {selectedConsigneeData.gst || "N/A"}
+                  </p>
+                </div>
+                <div className="space-y-1 text-right">
+                  <p className="text-slate-500">PAN Number</p>
+                  <p className="font-semibold text-slate-700 uppercase">
+                    {selectedConsigneeData.pan || "N/A"}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </Suspense>
