@@ -290,6 +290,7 @@ const SelfOrderList = () => {
   const headers = useMemo(
     () => [
       "Sl No",
+      "Date",
       "Sauda No",
       "PO Number",
       "Buyer",
@@ -304,6 +305,7 @@ const SelfOrderList = () => {
       "Agent Name",
       "Buyer Emails",
       "Seller Emails",
+      "WhatsApp Sent",
       "Action",
     ].filter(Boolean),
     [userRole],
@@ -320,89 +322,114 @@ const SelfOrderList = () => {
 
   const rows = useMemo(
     () =>
-      currentItems.map((item, index) => [
-        (currentPage - 1) * itemsPerPage + index + 1,
-        item.saudaNo,
-        item.poNumber,
-        item.buyer,
-        item.buyerCompany,
-        userRole === "Admin" ? (
+      currentItems.map((item, index) => {
+        const slNo = filteredData.length - ((currentPage - 1) * itemsPerPage + index);
+        const formattedDate = item.poDate
+          ? new Date(item.poDate).toLocaleDateString("en-GB")
+          : item.createdAt
+          ? new Date(item.createdAt).toLocaleDateString("en-GB")
+          : "N/A";
+
+        return [
+          slNo,
+          formattedDate,
+          item.saudaNo,
+          item.poNumber,
+          item.buyer,
+          item.buyerCompany,
+          userRole === "Admin" ? (
+            <div className="flex items-center gap-2">
+              <span>{item.buyerMobile || "N/A"}</span>
+              {item.buyerMobile && (
+                <button
+                  onClick={() => handleWhatsAppDirectShare(item, "buyer")}
+                  className={`transition-colors ${
+                    item.whatsappSent
+                      ? "text-green-600"
+                      : "text-slate-400 hover:text-green-500"
+                  }`}
+                  title={
+                    item.whatsappSent
+                      ? "Sent to Buyer"
+                      : "Send to Buyer on WhatsApp"
+                  }
+                >
+                  <FaWhatsapp size={18} />
+                </button>
+              )}
+            </div>
+          ) : null,
+          getConsigneeDisplay(item),
+          item.commodity,
+          item.quantity,
+          item.rate,
+          item.loadingStation || "N/A",
+          item.location,
+          item.agentName,
+          item.buyerEmails?.join(", ") || "N/A",
           <div className="flex items-center gap-2">
-            <span>{item.buyerMobile || "N/A"}</span>
-            {item.buyerMobile && (
+            <span>{item.sellerEmails?.join(", ") || "N/A"}</span>
+            {item.sellerMobile && (
               <button
-                onClick={() => handleWhatsAppDirectShare(item, "buyer")}
-                className={`transition-colors ${
-                  item.whatsappSent
-                    ? "text-green-600"
-                    : "text-slate-400 hover:text-green-500"
-                }`}
-                title={item.whatsappSent ? "Sent to Buyer" : "Send to Buyer on WhatsApp"}
+                onClick={() => handleWhatsAppDirectShare(item, "seller")}
+                className="text-slate-400 hover:text-green-500 transition-colors"
+                title="Send to Seller on WhatsApp"
               >
                 <FaWhatsapp size={18} />
               </button>
             )}
-          </div>
-        ) : null,
-        getConsigneeDisplay(item),
-        item.commodity,
-        item.quantity,
-        item.rate,
-        item.loadingStation || "N/A",
-        item.location,
-        item.agentName,
-        item.buyerEmails?.join(", ") || "N/A",
-        <div className="flex items-center gap-2">
-          <span>{item.sellerEmails?.join(", ") || "N/A"}</span>
-          {item.sellerMobile && (
-            <button
-              onClick={() => handleWhatsAppDirectShare(item, "seller")}
-              className="text-slate-400 hover:text-green-500 transition-colors"
-              title="Send to Seller on WhatsApp"
-            >
-              <FaWhatsapp size={18} />
-            </button>
-          )}
-        </div>,
-        <div
-          className="flex flex-col gap-2 items-start min-w-[120px]"
-          key={item._id}
-        >
-          <div className="flex flex-wrap gap-2">
-            <Actions
-              onView={() => handleView(item)}
-              onEdit={() => handleEdit(item)}
-              onDelete={() =>
-                toast.error(`Deleting PO Number: ${item.poNumber}`)
-              }
-            />
-          </div>
+          </div>,
+          <div className="flex justify-center">
+            {item.whatsappSent ? (
+              <span className="px-2 py-1 rounded-full bg-green-100 text-green-700 text-xs font-bold uppercase tracking-wider">
+                Sent
+              </span>
+            ) : (
+              <span className="px-2 py-1 rounded-full bg-slate-100 text-slate-500 text-xs font-bold uppercase tracking-wider">
+                Pending
+              </span>
+            )}
+          </div>,
+          <div
+            className="flex flex-col gap-2 items-start min-w-[120px]"
+            key={item._id}
+          >
+            <div className="flex flex-wrap gap-2">
+              <Actions
+                onView={() => handleView(item)}
+                onEdit={() => handleEdit(item)}
+                onDelete={() =>
+                  toast.error(`Deleting PO Number: ${item.poNumber}`)
+                }
+              />
+            </div>
 
-          <div className="flex flex-wrap gap-2">
-            <DownloadSauda
-              data={{ ...item, consignee: getConsigneeDisplay(item) }}
-              button={
-                <button className="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-100 hover:bg-emerald-100">
-                  <FaDownload size={16} />
-                </button>
-              }
-            />
+            <div className="flex flex-wrap gap-2">
+              <DownloadSauda
+                data={{ ...item, consignee: getConsigneeDisplay(item) }}
+                button={
+                  <button className="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-100 hover:bg-emerald-100">
+                    <FaDownload size={16} />
+                  </button>
+                }
+              />
 
-            <button
-              type="button"
-              onClick={() =>
-                handleWhatsAppShare({
-                  ...item,
-                  consignee: getConsigneeDisplay(item),
-                })
-              }
-              className="sm:hidden inline-flex items-center justify-center w-9 h-9 rounded-lg bg-green-50 text-green-600 border border-green-100 hover:bg-green-100"
-            >
-              <FaWhatsapp size={16} />
-            </button>
-          </div>
-        </div>,
-      ].filter(Boolean)),
+              <button
+                type="button"
+                onClick={() =>
+                  handleWhatsAppShare({
+                    ...item,
+                    consignee: getConsigneeDisplay(item),
+                  })
+                }
+                className="sm:hidden inline-flex items-center justify-center w-9 h-9 rounded-lg bg-green-50 text-green-600 border border-green-100 hover:bg-green-100"
+              >
+                <FaWhatsapp size={16} />
+              </button>
+            </div>
+          </div>,
+        ].filter(Boolean);
+      }),
     [
       currentItems,
       handleView,
@@ -412,6 +439,8 @@ const SelfOrderList = () => {
       itemsPerPage,
       handleWhatsAppDirectShare,
       userRole,
+      filteredData.length,
+      handleWhatsAppShare,
     ],
   );
 
