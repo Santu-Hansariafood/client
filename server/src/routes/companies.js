@@ -151,6 +151,18 @@ router.post("/", async (req, res) => {
       });
     }
 
+    if (body.gstNumber && !/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[A-Z0-9]{1}[Z]{1}[A-Z0-9]{1}$/.test(body.gstNumber)) {
+      return res.status(400).json({
+        message: "Invalid GST number",
+      });
+    }
+
+    if (body.pinCode && !/^\d{6}$/.test(body.pinCode)) {
+      return res.status(400).json({
+        message: "Invalid PIN code",
+      });
+    }
+
     let consigneeIds = normalizeObjectIdArray(body.consigneeIds);
     let groupId = toObjectId(body.groupId);
 
@@ -188,6 +200,12 @@ router.post("/", async (req, res) => {
     const company = new Company({
       companyName,
       companyEmail: body.companyEmail || "",
+      location: body.location || "",
+      state: body.state || "",
+      district: body.district || "",
+      pinCode: body.pinCode || "",
+      gstNumber: body.gstNumber || "",
+      panNumber: body.panNumber || "",
       consigneeIds,
       groupId: groupId || null,
       commodities,
@@ -212,6 +230,19 @@ router.post("/", async (req, res) => {
 router.put("/:id", async (req, res) => {
   try {
     const body = req.body || {};
+
+    if (body.gstNumber && !/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[A-Z0-9]{1}[Z]{1}[A-Z0-9]{1}$/.test(body.gstNumber)) {
+      return res.status(400).json({
+        message: "Invalid GST number",
+      });
+    }
+
+    if (body.pinCode && !/^\d{6}$/.test(body.pinCode)) {
+      return res.status(400).json({
+        message: "Invalid PIN code",
+      });
+    }
+
     let consigneeIds = normalizeObjectIdArray(body.consigneeIds);
     let groupId = toObjectId(body.groupId);
 
@@ -236,6 +267,12 @@ router.put("/:id", async (req, res) => {
     const update = {
       companyName: body.companyName,
       companyEmail: body.companyEmail,
+      location: body.location,
+      state: body.state,
+      district: body.district,
+      pinCode: body.pinCode,
+      gstNumber: body.gstNumber,
+      panNumber: body.panNumber,
       consigneeIds,
       groupId,
       commodities: Array.isArray(body.commodities)

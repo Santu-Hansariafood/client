@@ -43,6 +43,12 @@ const companySchema = new mongoose.Schema(
       trim: true,
       set: formatName,
     },
+    location: { type: String, trim: true },
+    state: { type: String, trim: true },
+    district: { type: String, trim: true },
+    pinCode: { type: String, trim: true },
+    gstNumber: { type: String, trim: true },
+    panNumber: { type: String, trim: true },
     companyEmail: { type: String, trim: true, lowercase: true },
     consigneeIds: {
       type: [mongoose.Schema.Types.ObjectId],

@@ -4,6 +4,7 @@ import axios from "axios";
 import { toast } from "react-toastify";
 import Loading from "../../../common/Loading/Loading";
 import regexPatterns from "../../../utils/regexPatterns/regexPatterns";
+import statesData from "../../../data/state-city.json";
 
 const DataInput = lazy(() => import("../../../common/DataInput/DataInput"));
 const DataDropdown = lazy(
@@ -13,6 +14,12 @@ const DataDropdown = lazy(
 const EditCompanyPopup = ({ company, isOpen, onClose, onUpdate }) => {
   const [companyName, setCompanyName] = useState("");
   const [companyEmail, setCompanyEmail] = useState("");
+  const [location, setLocation] = useState("");
+  const [state, setState] = useState(null);
+  const [district, setDistrict] = useState(null);
+  const [pinCode, setPinCode] = useState("");
+  const [gstNumber, setGstNumber] = useState("");
+  const [panNumber, setPanNumber] = useState("");
   const [selectedGroup, setSelectedGroup] = useState(null);
   const [selectedConsignees, setSelectedConsignees] = useState([]);
   const [commodityEntries, setCommodityEntries] = useState([]);
@@ -22,6 +29,8 @@ const EditCompanyPopup = ({ company, isOpen, onClose, onUpdate }) => {
   const [groupOptions, setGroupOptions] = useState([]);
   const [commodityOptions, setCommodityOptions] = useState([]);
   const [selectedCommodityToAdd, setSelectedCommodityToAdd] = useState(null);
+  const [stateOptions, setStateOptions] = useState([]);
+  const [districtOptions, setDistrictOptions] = useState([]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -67,6 +76,10 @@ const EditCompanyPopup = ({ company, isOpen, onClose, onUpdate }) => {
         if (company) {
           setCompanyName(company.companyName || "");
           setCompanyEmail(company.companyEmail || "");
+          setLocation(company.location || "");
+          setPinCode(company.pinCode || "");
+          setGstNumber(company.gstNumber || "");
+          setPanNumber(company.panNumber || "");
 
           if (company.groupId) {
             const grp = groups.find(
@@ -116,6 +129,19 @@ const EditCompanyPopup = ({ company, isOpen, onClose, onUpdate }) => {
     if (isOpen) fetchData();
   }, [isOpen, company]);
 
+  useEffect(() => {
+    const formattedStates = statesData.map((item) => ({
+      value: item.state,
+      label: item.state,
+      districts: item.district.map((d) => ({
+        value: d,
+        label: d,
+      })),
+    }));
+
+    setStateOptions(formattedStates);
+  }, []);
+
   if (!isOpen) return null;
 
   const getCommodityParameterOptions = (commodityId) => {
@@ -130,6 +156,24 @@ const EditCompanyPopup = ({ company, isOpen, onClose, onUpdate }) => {
       (c) => c.value === String(commodityId),
     );
     return commodity?.label || "";
+  };
+
+  const handleStateChange = (selected) => {
+    setState(selected);
+    setDistrict(null);
+
+    const found = stateOptions.find((s) => s.value === selected.value);
+    setDistrictOptions(found?.districts || []);
+  };
+
+  const handleGSTChange = (value) => {
+    setGstNumber(value);
+    if (value.length >= 12) {
+      const pan = value.substring(2, 12);
+      setPanNumber(pan);
+    } else {
+      setPanNumber("");
+    }
   };
 
   const handleAddCommodity = () => {
@@ -194,12 +238,33 @@ const EditCompanyPopup = ({ company, isOpen, onClose, onUpdate }) => {
       return;
     }
 
+    if (!gstNumber) {
+      toast.error("GST number required");
+      return;
+    }
+
+    if (!/^\d{6}$/.test(pinCode)) {
+      toast.error("Invalid PIN code");
+      return;
+    }
+
+    if (!regexPatterns.gst?.test(gstNumber)) {
+      toast.error("Invalid GST number");
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
       const payload = {
         companyName,
         companyEmail,
+        location,
+        state: state?.value,
+        district: district?.value,
+        pinCode,
+        gstNumber,
+        panNumber,
         groupId: selectedGroup?.value || null,
         consigneeIds: selectedConsignees.map((c) => c.value),
 
@@ -260,6 +325,44 @@ const EditCompanyPopup = ({ company, isOpen, onClose, onUpdate }) => {
                 placeholder="Company Email"
                 value={companyEmail}
                 onChange={(e) => setCompanyEmail(e.target.value)}
+              />
+
+              <DataInput
+                placeholder="Location"
+                value={location}
+                onChange={(e) => setLocation(e.target.value)}
+              />
+
+              <DataDropdown
+                options={stateOptions}
+                selectedOptions={state}
+                onChange={handleStateChange}
+                placeholder="Select state"
+              />
+
+              <DataDropdown
+                options={districtOptions}
+                selectedOptions={district}
+                onChange={setDistrict}
+                placeholder="Select district"
+              />
+
+              <DataInput
+                placeholder="PIN Code"
+                value={pinCode}
+                onChange={(e) => setPinCode(e.target.value)}
+              />
+
+              <DataInput
+                placeholder="GST Number"
+                value={gstNumber}
+                onChange={(e) => handleGSTChange(e.target.value)}
+              />
+
+              <DataInput
+                placeholder="PAN Number"
+                value={panNumber}
+                disabled
               />
 
               <DataDropdown
