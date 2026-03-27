@@ -132,6 +132,7 @@ const BuyerInformation = ({ formData, handleChange }) => {
           .filter(Boolean)
       : [];
     const firstEmail = buyerEmails[0] || "";
+    const firstMobile = Array.isArray(buyerData.mobile) ? buyerData.mobile[0] : (buyerData.mobile || "");
     handleChange("buyer", buyerData.name || "");
     handleChange("companyId", buyerData.companyId || null);
     handleChange("buyerCompany", buyerData.companyName || "");
@@ -142,6 +143,7 @@ const BuyerInformation = ({ formData, handleChange }) => {
     handleChange("gstNumber", buyerData.gstNumber || "");
     handleChange("panNumber", buyerData.panNumber || "");
     handleChange("buyerEmail", firstEmail);
+    handleChange("buyerMobile", firstMobile);
     handleChange("buyerEmails", buyerEmails.length ? buyerEmails : [""]);
     handleChange("buyerCommodity", buyerData.commodity || []);
     handleChange(

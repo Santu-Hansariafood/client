@@ -131,6 +131,93 @@ const SelfOrderList = () => {
     },
     [consigneeMap],
   );
+  const handleWhatsAppDirectShare = async (item) => {
+    if (!item.buyerMobile) {
+      toast.error("Mobile number not available for this buyer.");
+      return;
+    }
+
+    try {
+      const response = await axios.get(`/self-order/pdf/${item._id}`, {
+        responseType: "blob",
+      });
+
+      const blob = response.data;
+      const fileName = `Sauda-${item.saudaNo}.pdf`;
+      const file = new File([blob], fileName, { type: "application/pdf" });
+
+      // Native Share (Mobile)
+      const shareData = {
+        files: [file],
+        title: "Sauda PDF",
+        text: `Sauda No: ${item.saudaNo}`,
+      };
+
+      const canShareFiles = (() => {
+        try {
+          return (
+            typeof navigator !== "undefined" &&
+            typeof navigator.share === "function" &&
+            typeof navigator.canShare === "function" &&
+            navigator.canShare({ files: [file] })
+          );
+        } catch {
+          return false;
+        }
+      })();
+
+      if (canShareFiles) {
+        await navigator.share(shareData);
+        // After successful share, update status
+        await axios.patch(`/self-order/${item._id}/whatsapp-sent`);
+        // Update local state
+        setData((prev) =>
+          prev.map((order) =>
+            order._id === item._id ? { ...order, whatsappSent: true } : order
+          )
+        );
+        setFilteredData((prev) =>
+          prev.map((order) =>
+            order._id === item._id ? { ...order, whatsappSent: true } : order
+          )
+        );
+        return;
+      }
+
+      // Fallback: Download and open WhatsApp Web with number
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      const cleanMobile = item.buyerMobile.replace(/\D/g, "");
+      const waUrl = `https://wa.me/${cleanMobile.startsWith("91") ? cleanMobile : "91" + cleanMobile}?text=${encodeURIComponent(`Dear Sir, please find attached Sauda No: ${item.saudaNo}`)}`;
+      window.open(waUrl, "_blank");
+
+      // Update status even on fallback if they clicked it
+      await axios.patch(`/self-order/${item._id}/whatsapp-sent`);
+      setData((prev) =>
+        prev.map((order) =>
+          order._id === item._id ? { ...order, whatsappSent: true } : order
+        )
+      );
+      setFilteredData((prev) =>
+        prev.map((order) =>
+          order._id === item._id ? { ...order, whatsappSent: true } : order
+        )
+      );
+
+      toast.info("PDF downloaded. Please attach it in the opened WhatsApp chat.");
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to process WhatsApp share");
+    }
+  };
+
   const handleWhatsAppShare = async (item) => {
     try {
       const response = await axios.get(`/self-order/pdf/${item._id}`, {
@@ -205,6 +292,7 @@ const SelfOrderList = () => {
       "PO Number",
       "Buyer",
       "Buyer Company",
+      userRole === "Admin" ? "Mobile" : null,
       "Consignee",
       "Commodity",
       "Quantity",
@@ -215,8 +303,8 @@ const SelfOrderList = () => {
       "Buyer Emails",
       "Seller Emails",
       "Action",
-    ],
-    [],
+    ].filter(Boolean),
+    [userRole],
   );
 
   const handleEdit = useCallback(
@@ -236,6 +324,24 @@ const SelfOrderList = () => {
         item.poNumber,
         item.buyer,
         item.buyerCompany,
+        userRole === "Admin" ? (
+          <div className="flex items-center gap-2">
+            <span>{item.buyerMobile || "N/A"}</span>
+            {item.buyerMobile && (
+              <button
+                onClick={() => handleWhatsAppDirectShare(item)}
+                className={`transition-colors ${
+                  item.whatsappSent
+                    ? "text-green-600"
+                    : "text-slate-400 hover:text-green-500"
+                }`}
+                title={item.whatsappSent ? "Sent" : "Send on WhatsApp"}
+              >
+                <FaWhatsapp size={18} />
+              </button>
+            )}
+          </div>
+        ) : null,
         getConsigneeDisplay(item),
         item.commodity,
         item.quantity,
@@ -285,7 +391,7 @@ const SelfOrderList = () => {
             </button>
           </div>
         </div>,
-      ]),
+      ].filter(Boolean)),
     [
       currentItems,
       handleView,
@@ -293,6 +399,8 @@ const SelfOrderList = () => {
       getConsigneeDisplay,
       currentPage,
       itemsPerPage,
+      handleWhatsAppDirectShare,
+      userRole,
     ],
   );
 

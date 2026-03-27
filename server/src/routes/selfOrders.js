@@ -93,4 +93,18 @@ router.post("/", async (req, res) => {
   }
 });
 
+router.patch("/:id/whatsapp-sent", async (req, res) => {
+  try {
+    const item = await SelfOrder.findByIdAndUpdate(
+      req.params.id,
+      { whatsappSent: true },
+      { new: true },
+    );
+    if (!item) return res.status(404).json({ message: "Order not found" });
+    res.json(item);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+});
+
 export default router;

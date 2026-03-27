@@ -69,6 +69,7 @@ const INITIAL_FORM_DATA = {
   sendPOToSupplier: "yes",
   billTo: "buyer",
   saudaNo: "",
+  buyerMobile: "",
 };
 
 const EditSelfOrder = () => {

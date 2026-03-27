@@ -43,6 +43,8 @@ const selfOrderSchema = new mongoose.Schema(
     sendPOToSupplier: { type: String, default: "" },
     billTo: { type: String, default: "" },
     saudaNo: { type: String, default: "" },
+    buyerMobile: { type: String, default: "" },
+    whatsappSent: { type: Boolean, default: false },
   },
   { timestamps: true },
 );
