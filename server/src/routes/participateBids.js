@@ -27,7 +27,6 @@ router.get("/", async (req, res) => {
       items = await ParticipateBid.find(query).sort({ createdAt: -1 }).lean();
     }
 
-    // Map seller names to the items
     const mobileNumbers = [...new Set(items.map(item => item.mobile))];
     const sellers = await Seller.find({ "phoneNumbers.value": { $in: mobileNumbers } }).lean();
     
@@ -70,14 +69,12 @@ router.post("/", async (req, res) => {
         .json({ message: "This bid is closed and no longer accepting participations." });
     }
 
-    // Upsert participation based on bidId and mobile
     const item = await ParticipateBid.findOneAndUpdate(
       { bidId, mobile },
       { rate, quantity, loadingFrom, remarks },
       { upsert: true, new: true, runValidators: true }
     );
 
-    // Create notifications for Admin and Employees
     await Promise.all([
       Notification.create({
         recipient: "all",

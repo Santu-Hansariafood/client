@@ -1,6 +1,13 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { AiOutlineUser, AiOutlineBell, AiOutlineCheckCircle, AiOutlineEye, AiOutlineEyeInvisible, AiOutlineDelete } from "react-icons/ai";
+import {
+  AiOutlineUser,
+  AiOutlineBell,
+  AiOutlineCheckCircle,
+  AiOutlineEye,
+  AiOutlineEyeInvisible,
+  AiOutlineDelete,
+} from "react-icons/ai";
 import { RiLogoutBoxLine } from "react-icons/ri";
 import { HiMenuAlt2 } from "react-icons/hi";
 import { IoClose } from "react-icons/io5";
@@ -28,7 +35,7 @@ const Header = ({
   const fetchNotifications = useCallback(async () => {
     try {
       const response = await axios.get("/notifications", {
-        params: { mobile, role: userRole, unreadOnly: unreadOnly }
+        params: { mobile, role: userRole, unreadOnly: unreadOnly },
       });
       setNotifications(response.data);
     } catch (error) {
@@ -43,12 +50,12 @@ const Header = ({
   }, [fetchNotifications]);
 
   const toggleDropdown = useCallback(() => {
-    setProfileDropdownOpen(prev => !prev);
+    setProfileDropdownOpen((prev) => !prev);
     setShowNotifications(false);
   }, [setProfileDropdownOpen]);
 
   const toggleNotifications = () => {
-    setShowNotifications(prev => !prev);
+    setShowNotifications((prev) => !prev);
     setProfileDropdownOpen(false);
   };
 
@@ -66,7 +73,7 @@ const Header = ({
       await toggleReadStatus(n._id);
     }
     setShowNotifications(false);
-    
+
     // Redirect based on role
     if (userRole === "Admin" || userRole === "Employee") {
       navigate("/manage-bids/bid-list/participate-bid-admin");
@@ -78,7 +85,7 @@ const Header = ({
   const deleteNotification = async (id) => {
     try {
       await axios.delete(`/notifications/${id}`);
-      setNotifications(prev => prev.filter(n => n._id !== id));
+      setNotifications((prev) => prev.filter((n) => n._id !== id));
     } catch (error) {
       console.error("Failed to delete notification", error);
     }
@@ -98,7 +105,10 @@ const Header = ({
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
         setProfileDropdownOpen(false);
       }
-      if (notificationRef.current && !notificationRef.current.contains(e.target)) {
+      if (
+        notificationRef.current &&
+        !notificationRef.current.contains(e.target)
+      ) {
         setShowNotifications(false);
       }
     };
@@ -132,9 +142,7 @@ const Header = ({
           <Typewriter text={title} speed={80} />
         </h2>
       </div>
-      <div
-        className="flex items-center gap-1.5 sm:gap-3 shrink-0"
-      >
+      <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
         <div className="hidden md:flex items-center">
           <PWAInstall />
         </div>
@@ -158,14 +166,14 @@ const Header = ({
               <div className="p-3 bg-slate-50 border-b border-slate-100 font-bold text-slate-800 flex justify-between items-center">
                 <div className="flex items-center gap-2">
                   <span>Notifications</span>
-                  {notifications.filter(n => !n.isRead).length > 0 && (
+                  {notifications.filter((n) => !n.isRead).length > 0 && (
                     <span className="bg-red-100 text-red-600 text-[10px] px-2 py-0.5 rounded-full">
-                      {notifications.filter(n => !n.isRead).length} new
+                      {notifications.filter((n) => !n.isRead).length} new
                     </span>
                   )}
                 </div>
                 <div className="flex items-center gap-2">
-                  <button 
+                  <button
                     onClick={markAllAsRead}
                     className="text-xs font-normal text-emerald-600 hover:text-emerald-700 flex items-center gap-1"
                     title="Mark all as read"
@@ -175,16 +183,16 @@ const Header = ({
                   </button>
                 </div>
               </div>
-              
+
               <div className="flex border-b border-slate-100 bg-white">
-                <button 
-                  className={`flex-1 py-2 text-xs font-medium ${unreadOnly ? 'text-emerald-600 border-b-2 border-emerald-600' : 'text-slate-500 hover:text-slate-700'}`}
+                <button
+                  className={`flex-1 py-2 text-xs font-medium ${unreadOnly ? "text-emerald-600 border-b-2 border-emerald-600" : "text-slate-500 hover:text-slate-700"}`}
                   onClick={() => setUnreadOnly(true)}
                 >
                   Unread
                 </button>
-                <button 
-                  className={`flex-1 py-2 text-xs font-medium ${!unreadOnly ? 'text-emerald-600 border-b-2 border-emerald-600' : 'text-slate-500 hover:text-slate-700'}`}
+                <button
+                  className={`flex-1 py-2 text-xs font-medium ${!unreadOnly ? "text-emerald-600 border-b-2 border-emerald-600" : "text-slate-500 hover:text-slate-700"}`}
                   onClick={() => setUnreadOnly(false)}
                 >
                   All
@@ -193,26 +201,47 @@ const Header = ({
 
               <div className="max-h-96 overflow-y-auto">
                 {notifications.length > 0 ? (
-                  notifications.map(n => (
-                    <div 
-                      key={n._id} 
-                      className={`p-3 border-b border-slate-50 hover:bg-slate-50 cursor-pointer group transition-colors ${!n.isRead ? 'bg-emerald-50/30' : ''}`}
+                  notifications.map((n) => (
+                    <div
+                      key={n._id}
+                      className={`p-3 border-b border-slate-50 hover:bg-slate-50 cursor-pointer group transition-colors ${!n.isRead ? "bg-emerald-50/30" : ""}`}
                       onClick={() => handleNotificationClick(n)}
                     >
                       <div className="flex justify-between items-start mb-1">
-                        <span className={`text-sm font-bold ${!n.isRead ? 'text-emerald-700' : 'text-slate-600'}`}>{n.title}</span>
+                        <span
+                          className={`text-sm font-bold ${!n.isRead ? "text-emerald-700" : "text-slate-600"}`}
+                        >
+                          {n.title}
+                        </span>
                         <div className="flex items-center gap-2">
-                          <span className="text-[10px] text-slate-400">{new Date(n.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                          <span className="text-[10px] text-slate-400">
+                            {new Date(n.createdAt).toLocaleTimeString([], {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
+                          </span>
                           <div className="hidden group-hover:flex items-center gap-1">
-                            <button 
-                              onClick={(e) => { e.stopPropagation(); toggleReadStatus(n._id); }}
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                toggleReadStatus(n._id);
+                              }}
                               className="p-1 rounded-md hover:bg-white text-slate-400 hover:text-emerald-600 transition-colors"
-                              title={n.isRead ? "Mark as unread" : "Mark as read"}
+                              title={
+                                n.isRead ? "Mark as unread" : "Mark as read"
+                              }
                             >
-                              {n.isRead ? <AiOutlineEyeInvisible size={14} /> : <AiOutlineEye size={14} />}
+                              {n.isRead ? (
+                                <AiOutlineEyeInvisible size={14} />
+                              ) : (
+                                <AiOutlineEye size={14} />
+                              )}
                             </button>
-                            <button 
-                              onClick={(e) => { e.stopPropagation(); deleteNotification(n._id); }}
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                deleteNotification(n._id);
+                              }}
                               className="p-1 rounded-md hover:bg-white text-slate-400 hover:text-red-600 transition-colors"
                               title="Delete notification"
                             >
@@ -221,12 +250,16 @@ const Header = ({
                           </div>
                         </div>
                       </div>
-                      <p className={`text-xs ${!n.isRead ? 'text-slate-700' : 'text-slate-500'} line-clamp-2`}>{n.message}</p>
+                      <p
+                        className={`text-xs ${!n.isRead ? "text-slate-700" : "text-slate-500"} line-clamp-2`}
+                      >
+                        {n.message}
+                      </p>
                     </div>
                   ))
                 ) : (
                   <div className="p-8 text-center text-slate-400 text-sm italic">
-                    No {unreadOnly ? 'unread' : ''} notifications
+                    No {unreadOnly ? "unread" : ""} notifications
                   </div>
                 )}
               </div>

@@ -83,18 +83,14 @@ const EditSelfOrder = () => {
   const [_buyerBrokerageMap, setBuyerBrokerageMap] = useState({});
 
   useEffect(() => {
-    // Only auto-calculate if we have a commodity selected
     if (formData.commodity) {
-      // Get brokerage from Buyer's profile
       const buyerBrokerageVal = _buyerBrokerageMap[formData.commodity] ?? 0;
 
-      // Get brokerage from Supplier's profile
       const supplierBrokerageItem = formData.supplierBrokerage?.find(
         (b) => b.name === formData.commodity,
       );
       const supplierBrokerageVal = supplierBrokerageItem?.brokerage ?? 0;
 
-      // Only update if the values are different to avoid unnecessary renders
       if (
         formData.buyerBrokerage?.brokerageBuyer !== buyerBrokerageVal ||
         formData.buyerBrokerage?.brokerageSupplier !== supplierBrokerageVal
@@ -193,7 +189,6 @@ const EditSelfOrder = () => {
     if (!formData.commodity) errors.push("Commodity is required.");
     if (!formData.supplier) errors.push("Supplier is required.");
 
-    // Validate if selected commodity exists in both buyer and seller lists
     if (formData.commodity) {
       const buyerCommodities = formData.buyerCommodity || [];
       const supplierCommodities = formData.supplierBrokerage || []; // This comes from SupplierInformation.jsx
@@ -211,7 +206,6 @@ const EditSelfOrder = () => {
       }
     }
 
-    // Email validation for buyer and seller emails
     if (
       formData.buyerEmails?.some(
         (email) => email.trim() && !regexPatterns.email.test(email.trim()),
@@ -251,7 +245,7 @@ const EditSelfOrder = () => {
         rate: Number(formData.rate) || 0,
         gst: Number(formData.gst) || 0,
         cd: Number(formData.cd) || 0,
-        weight: formData.weight || "", // Weight is now text, no Number conversion
+        weight: formData.weight || "",
         buyerBrokerage: {
           brokerageBuyer:
             Number(formData.buyerBrokerage?.brokerageBuyer ?? 0) || 0,

@@ -8,7 +8,9 @@ import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
 import { FaBook } from "react-icons/fa";
 
 const Tables = lazy(() => import("../../../common/Tables/Tables"));
-const Pagination = lazy(() => import("../../../common/Paginations/Paginations"));
+const Pagination = lazy(
+  () => import("../../../common/Paginations/Paginations"),
+);
 
 const ListSoudabook = () => {
   const navigate = useNavigate();
@@ -30,11 +32,17 @@ const ListSoudabook = () => {
           const buyerCompanyId = user?.companyId;
           const buyerCompanyName = user?.companyName;
 
-          data = data.filter(item => {
-            const matchId = buyerCompanyId && item.companyId && String(item.companyId) === String(buyerCompanyId);
-            const matchName = buyerCompanyName && item.buyerCompany && 
-              item.buyerCompany.trim().toLowerCase() === buyerCompanyName.trim().toLowerCase();
-            
+          data = data.filter((item) => {
+            const matchId =
+              buyerCompanyId &&
+              item.companyId &&
+              String(item.companyId) === String(buyerCompanyId);
+            const matchName =
+              buyerCompanyName &&
+              item.buyerCompany &&
+              item.buyerCompany.trim().toLowerCase() ===
+                buyerCompanyName.trim().toLowerCase();
+
             return matchId || matchName;
           });
         }
@@ -78,7 +86,7 @@ const ListSoudabook = () => {
         `₹${item.rate}`,
         new Date(item.createdAt).toLocaleDateString(),
       ]),
-    [currentData]
+    [currentData],
   );
 
   return (
@@ -89,8 +97,8 @@ const ListSoudabook = () => {
         icon={FaBook}
       >
         <div className="flex justify-start mb-4">
-          <button 
-            onClick={() => navigate(-1)} 
+          <button
+            onClick={() => navigate(-1)}
             className="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition"
           >
             Back

@@ -104,7 +104,10 @@ const ListCompany = () => {
     company.companyName || "",
     company.companyEmail || "",
 
-    (Array.isArray(company.consignee) ? company.consignee : [company.consignee]).map((c, i) => (
+    (Array.isArray(company.consignee)
+      ? company.consignee
+      : [company.consignee]
+    ).map((c, i) => (
       <div key={i}>{typeof c === "string" ? c : c?.name || ""}</div>
     )),
 

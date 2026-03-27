@@ -1,8 +1,13 @@
 import { lazy, Suspense, useEffect, useState, useMemo } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
-import { FaRegHandPointer, FaGavel, FaCheckCircle, FaTimesCircle, FaHourglassHalf } from "react-icons/fa";
-import { IoArrowBack, IoRefresh } from "react-icons/io5";
+import {
+  FaRegHandPointer,
+  FaGavel,
+  FaCheckCircle,
+  FaTimesCircle,
+  FaHourglassHalf,
+} from "react-icons/fa";
 import { toast } from "react-toastify";
 import Loading from "../../../common/Loading/Loading";
 import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
@@ -41,16 +46,18 @@ const SupplierBidList = () => {
       const [bidsRes, participationsRes, locationsRes] = await Promise.all([
         axios.get("/bids"),
         axios.get(`/participatebids?mobile=${mobile}`),
-        axios.get("/bid-locations")
+        axios.get("/bid-locations"),
       ]);
 
       const items = bidsRes.data?.data || bidsRes.data || [];
-      const myParticipations = participationsRes.data?.data || participationsRes.data || [];
+      const myParticipations =
+        participationsRes.data?.data || participationsRes.data || [];
       const locations = locationsRes.data?.data || locationsRes.data || [];
 
-      // Only keep bids for selected commodities
-      const relevantBids = items.filter(bid => commodityNames.includes(bid.commodity));
-      
+      const relevantBids = items.filter((bid) =>
+        commodityNames.includes(bid.commodity),
+      );
+
       setBids(relevantBids);
       setParticipations(myParticipations);
       setBidLocations(locations);
@@ -63,13 +70,13 @@ const SupplierBidList = () => {
 
   useEffect(() => {
     fetchBids();
-    // eslint-disable-next-line
   }, [commodityNames, mobile]);
 
   const handleParticipate = (bid) => {
     setSelectedBid(bid);
-    // If already participated, pre-fill with previous values
-    const existingParticipation = participations.find(p => p.bidId === bid._id);
+    const existingParticipation = participations.find(
+      (p) => p.bidId === bid._id,
+    );
     if (existingParticipation) {
       setRate(existingParticipation.rate || "");
       setQuantity(existingParticipation.quantity || "");
@@ -98,47 +105,54 @@ const SupplierBidList = () => {
         loadingFrom,
         remarks,
       };
-      await axios.post(
-        "/participatebids",
-        participationData
-      );
+      await axios.post("/participatebids", participationData);
       toast.success("Participation successful!");
       setIsPopupOpen(false);
-      fetchBids(); // Refresh to update participation status
+      fetchBids();
     } catch (error) {
-      const errorMessage = error.response?.data?.message || "Failed to participate in the bid.";
+      const errorMessage =
+        error.response?.data?.message || "Failed to participate in the bid.";
       toast.error(errorMessage);
     }
   };
 
   const filteredBids = useMemo(() => {
     const now = new Date();
-    const todayStr = now.toISOString().split('T')[0];
+    const todayStr = now.toISOString().split("T")[0];
 
-    return bids.filter((bid) => {
-      const bidDateStr = bid.bidDate ? bid.bidDate.split('T')[0] : "";
-      
-      // Only display today's bids
-      if (bidDateStr !== todayStr) {
+    return bids
+      .filter((bid) => {
+        const bidDateStr = bid.bidDate ? bid.bidDate.split("T")[0] : "";
+
+        if (bidDateStr !== todayStr) {
+          return false;
+        }
+
+        const [year, month, day] = bidDateStr.split("-").map(Number);
+        const [endHours, endMinutes] = bid.endTime.split(":").map(Number);
+        const bidEndDateTime = new Date(
+          year,
+          month - 1,
+          day,
+          endHours,
+          endMinutes,
+          0,
+          0,
+        );
+
+        const isParticipated = participations.some((p) => p.bidId === bid._id);
+        const isClosed = bid.status === "closed" || now >= bidEndDateTime;
+
+        if (activeTab === "active") {
+          return bid.status === "active" && now < bidEndDateTime;
+        } else if (activeTab === "participated") {
+          return isParticipated;
+        } else if (activeTab === "closed") {
+          return isClosed;
+        }
         return false;
-      }
-
-      const [year, month, day] = bidDateStr.split('-').map(Number);
-      const [endHours, endMinutes] = bid.endTime.split(':').map(Number);
-      const bidEndDateTime = new Date(year, month - 1, day, endHours, endMinutes, 0, 0);
-
-      const isParticipated = participations.some(p => p.bidId === bid._id);
-      const isClosed = bid.status === 'closed' || now >= bidEndDateTime;
-
-      if (activeTab === "active") {
-        return bid.status === "active" && now < bidEndDateTime;
-      } else if (activeTab === "participated") {
-        return isParticipated;
-      } else if (activeTab === "closed") {
-        return isClosed;
-      }
-      return false;
-    }).sort((a, b) => new Date(b.bidDate) - new Date(a.bidDate));
+      })
+      .sort((a, b) => new Date(b.bidDate) - new Date(a.bidDate));
   }, [bids, participations, activeTab]);
 
   const groupedBids = useMemo(() => {
@@ -153,22 +167,40 @@ const SupplierBidList = () => {
   const bidCount = filteredBids.length;
 
   const renderBidCard = (bid) => {
-    const isParticipated = participations.some(p => p.bidId === bid._id);
-    const participation = isParticipated ? participations.find(p => p.bidId === bid._id) : null;
+    const isParticipated = participations.some((p) => p.bidId === bid._id);
+    const participation = isParticipated
+      ? participations.find((p) => p.bidId === bid._id)
+      : null;
 
     return (
-      <div key={bid._id} className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300 overflow-hidden border border-slate-100/80">
+      <div
+        key={bid._id}
+        className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300 overflow-hidden border border-slate-100/80"
+      >
         <div className="p-5">
           <div className="flex justify-between items-start">
             <div>
               <p className="text-xs text-slate-500 font-medium">{bid.group}</p>
-              <h3 className="text-lg font-bold text-slate-800 mt-1">{bid.consignee}</h3>
-              <p className="text-sm text-slate-600">{bid.commodity} - {bid.origin}</p>
+              <h3 className="text-lg font-bold text-slate-800 mt-1">
+                {bid.consignee}
+              </h3>
+              <p className="text-sm text-slate-600">
+                {bid.commodity} - {bid.origin}
+              </p>
             </div>
             {isParticipated && (
-              <div className={`text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1.5 ${participation.status === 'accepted' ? 'bg-green-100 text-green-700' : participation.status === 'rejected' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'}`}>
-                {participation.status === 'accepted' ? <FaCheckCircle /> : participation.status === 'rejected' ? <FaTimesCircle /> : <FaHourglassHalf />}
-                {participation.status.charAt(0).toUpperCase() + participation.status.slice(1)}
+              <div
+                className={`text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1.5 ${participation.status === "accepted" ? "bg-green-100 text-green-700" : participation.status === "rejected" ? "bg-red-100 text-red-700" : "bg-blue-100 text-blue-700"}`}
+              >
+                {participation.status === "accepted" ? (
+                  <FaCheckCircle />
+                ) : participation.status === "rejected" ? (
+                  <FaTimesCircle />
+                ) : (
+                  <FaHourglassHalf />
+                )}
+                {participation.status.charAt(0).toUpperCase() +
+                  participation.status.slice(1)}
               </div>
             )}
           </div>
@@ -176,7 +208,9 @@ const SupplierBidList = () => {
           <div className="mt-4 grid grid-cols-2 gap-4 text-sm">
             <div>
               <p className="text-slate-500">Quantity</p>
-              <p className="font-semibold text-slate-700">{bid.quantity} Tons</p>
+              <p className="font-semibold text-slate-700">
+                {bid.quantity} Tons
+              </p>
             </div>
             <div>
               <p className="text-slate-500">Company Rate</p>
@@ -186,11 +220,15 @@ const SupplierBidList = () => {
               <>
                 <div>
                   <p className="text-slate-500">Your Rate</p>
-                  <p className="font-semibold text-blue-700">₹{participation.rate}</p>
+                  <p className="font-semibold text-blue-700">
+                    ₹{participation.rate}
+                  </p>
                 </div>
                 <div>
                   <p className="text-slate-500">Your Quantity</p>
-                  <p className="font-semibold text-blue-700">{participation.quantity} Tons</p>
+                  <p className="font-semibold text-blue-700">
+                    {participation.quantity} Tons
+                  </p>
                 </div>
               </>
             )}
@@ -269,10 +307,16 @@ const SupplierBidList = () => {
         </div>
 
         {isPopupOpen && selectedBid && (
-          <PopupBox isOpen={isPopupOpen} onClose={() => setIsPopupOpen(false)} title={`Participate in: ${selectedBid.consignee}`}>
+          <PopupBox
+            isOpen={isPopupOpen}
+            onClose={() => setIsPopupOpen(false)}
+            title={`Participate in: ${selectedBid.consignee}`}
+          >
             <div className="space-y-4 p-1">
               <label className="block">
-                <span className="text-sm font-medium text-slate-700">Your Rate</span>
+                <span className="text-sm font-medium text-slate-700">
+                  Your Rate
+                </span>
                 <input
                   type="number"
                   className="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3 focus:ring-2 focus:ring-emerald-400/50 focus:border-emerald-400 outline-none"
@@ -282,7 +326,9 @@ const SupplierBidList = () => {
                 />
               </label>
               <label className="block">
-                <span className="text-sm font-medium text-slate-700">Your Quantity (Tons)</span>
+                <span className="text-sm font-medium text-slate-700">
+                  Your Quantity (Tons)
+                </span>
                 <input
                   type="number"
                   className="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3 focus:ring-2 focus:ring-emerald-400/50 focus:border-emerald-400 outline-none"
@@ -292,20 +338,26 @@ const SupplierBidList = () => {
                 />
               </label>
               <label className="block">
-                <span className="text-sm font-medium text-slate-700">Loading From</span>
+                <span className="text-sm font-medium text-slate-700">
+                  Loading From
+                </span>
                 <select
                   className="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3 focus:ring-2 focus:ring-emerald-400/50 focus:border-emerald-400 outline-none bg-white"
                   value={loadingFrom}
                   onChange={(e) => setLoadingFrom(e.target.value)}
                 >
                   <option value="">Select Loading Location</option>
-                  {bidLocations.map(loc => (
-                    <option key={loc._id} value={loc.name}>{loc.name}</option>
+                  {bidLocations.map((loc) => (
+                    <option key={loc._id} value={loc.name}>
+                      {loc.name}
+                    </option>
                   ))}
                 </select>
               </label>
               <label className="block">
-                <span className="text-sm font-medium text-slate-700">Remarks</span>
+                <span className="text-sm font-medium text-slate-700">
+                  Remarks
+                </span>
                 <textarea
                   className="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3 focus:ring-2 focus:ring-emerald-400/50 focus:border-emerald-400 outline-none"
                   value={remarks}

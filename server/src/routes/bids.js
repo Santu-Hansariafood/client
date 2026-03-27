@@ -18,9 +18,7 @@ const closeExpiredBids = async () => {
       if (!bid.bidDate) return false;
       const bidDateStr = bid.bidDate.toISOString().split("T")[0];
 
-      // Close if the date is in the past
       if (bidDateStr < todayStr) return true;
-      // Close if it's today and the end time has passed
       if (bidDateStr === todayStr && bid.endTime && bid.endTime < currentTimeStr)
         return true;
 
@@ -41,7 +39,7 @@ const closeExpiredBids = async () => {
 
 router.get("/", async (req, res) => {
   try {
-    await closeExpiredBids(); // Auto-close expired bids before fetching
+    await closeExpiredBids();
 
     const page = parseInt(req.query.page || "0", 10);
     const limit = parseInt(req.query.limit || "0", 10);
@@ -124,7 +122,6 @@ router.put("/:id", async (req, res) => {
       ":" +
       now.getMinutes().toString().padStart(2, "0");
 
-    // Build the update object carefully
     const updateData = { ...otherFields };
     if (endTime) updateData.endTime = endTime;
     if (quantity) updateData.quantity = quantity;
@@ -156,7 +153,6 @@ router.put("/:id", async (req, res) => {
       runValidators: true,
     });
 
-    // Notify relevant roles about status change
     const rolesToNotify = ["Employee", "Admin"];
     await Promise.all(rolesToNotify.map(role => 
       Notification.create({
@@ -213,7 +209,6 @@ router.patch("/:id/status", async (req, res) => {
 
     if (status === "active") {
       const bidDateStr = bid.bidDate.toISOString().split("T")[0];
-      // Check if it's already expired
       if (bidDateStr < todayStr || (bidDateStr === todayStr && bid.endTime && bid.endTime < currentTimeStr)) {
         finalStatus = "closed";
         closedAt = now;

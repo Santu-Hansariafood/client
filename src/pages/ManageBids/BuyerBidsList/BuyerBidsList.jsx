@@ -8,17 +8,17 @@ import { FaGavel, FaArrowLeft } from "react-icons/fa";
 
 const Tables = lazy(() => import("../../../common/Tables/Tables"));
 const SearchBox = lazy(() => import("../../../common/SearchBox/SearchBox"));
-const DateSelector = lazy(() =>
-  import("../../../common/DateSelector/DateSelector")
+const DateSelector = lazy(
+  () => import("../../../common/DateSelector/DateSelector"),
 );
 const ViewBid = lazy(() => import("../ViewBidPopup/ViewBidPopup"));
-const Pagination = lazy(() =>
-  import("../../../common/Paginations/Paginations")
+const Pagination = lazy(
+  () => import("../../../common/Paginations/Paginations"),
 );
 import { useAuth } from "../../../context/AuthContext/AuthContext";
 import "react-datepicker/dist/react-datepicker.css";
 
-  const BuyerBidsList = () => {
+const BuyerBidsList = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [bids, setBids] = useState([]);
@@ -39,7 +39,7 @@ import "react-datepicker/dist/react-datepicker.css";
         const response = await axios.get("/bids");
         const items = response.data?.data || response.data || [];
         const sorted = items.sort(
-          (a, b) => new Date(b.bidDate) - new Date(a.bidDate)
+          (a, b) => new Date(b.bidDate) - new Date(a.bidDate),
         );
         setBids(sorted);
         setFilteredData(sorted);
@@ -52,7 +52,7 @@ import "react-datepicker/dist/react-datepicker.css";
         const response = await axios.get("/commodities");
         const items = response.data?.data || response.data || [];
         const sorted = items.sort((a, b) =>
-          (a.name || "").localeCompare(b.name || "")
+          (a.name || "").localeCompare(b.name || ""),
         );
         setCommodities(sorted);
       } catch {
@@ -64,7 +64,7 @@ import "react-datepicker/dist/react-datepicker.css";
         const response = await axios.get("/bid-locations");
         const items = response.data?.data || response.data || [];
         const sorted = items.sort((a, b) =>
-          (a.name || "").localeCompare(b.name || "")
+          (a.name || "").localeCompare(b.name || ""),
         );
         setOrigins(sorted);
       } catch {
@@ -79,9 +79,8 @@ import "react-datepicker/dist/react-datepicker.css";
   useEffect(() => {
     let data = [...bids];
     const now = new Date();
-    const todayStr = now.toISOString().split('T')[0];
+    const todayStr = now.toISOString().split("T")[0];
 
-    // Always filter by the logged-in buyer's group
     if (user && user.group) {
       data = data.filter((bid) => bid.group === user.group);
     }
@@ -93,11 +92,10 @@ import "react-datepicker/dist/react-datepicker.css";
     if (filterType !== "all") {
       data = data.filter((bid) => bid.type === filterType);
     }
-    
-    // Default to today's bids if no date range is selected
+
     if (!startDate && !endDate) {
       data = data.filter((bid) => {
-        const bidDateStr = bid.bidDate ? bid.bidDate.split('T')[0] : "";
+        const bidDateStr = bid.bidDate ? bid.bidDate.split("T")[0] : "";
         return bidDateStr === todayStr;
       });
     } else {
@@ -176,9 +174,9 @@ import "react-datepicker/dist/react-datepicker.css";
       </button>,
     ]);
 
-  const companyItems = [...new Set(bids.map((b) => b.company).filter(Boolean))].sort(
-    (a, b) => a.localeCompare(b)
-  );
+  const companyItems = [
+    ...new Set(bids.map((b) => b.company).filter(Boolean)),
+  ].sort((a, b) => a.localeCompare(b));
 
   return (
     <Suspense fallback={<Loading />}>
@@ -188,7 +186,10 @@ import "react-datepicker/dist/react-datepicker.css";
         icon={FaGavel}
         noContentCard
         extraHeaderContent={
-          <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-800">
+          <button
+            onClick={() => navigate(-1)}
+            className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-800"
+          >
             <FaArrowLeft />
             Back
           </button>
@@ -245,7 +246,5 @@ import "react-datepicker/dist/react-datepicker.css";
     </Suspense>
   );
 };
-
-
 
 export default BuyerBidsList;

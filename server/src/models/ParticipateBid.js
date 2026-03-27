@@ -8,10 +8,14 @@ const participateBidSchema = new mongoose.Schema(
     quantity: { type: Number, required: true },
     loadingFrom: { type: String, default: "" },
     remarks: { type: String, default: "" },
-    status: { type: String, enum: ["pending", "accepted", "rejected"], default: "pending" },
-    adminNotes: { type: String, default: "" }
+    status: {
+      type: String,
+      enum: ["pending", "accepted", "rejected"],
+      default: "pending",
+    },
+    adminNotes: { type: String, default: "" },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 participateBidSchema.index({ bidId: 1, mobile: 1 });

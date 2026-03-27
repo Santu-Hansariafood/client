@@ -121,7 +121,6 @@ const DownloadSauda = ({ data }) => {
     ...data,
     consigneeDetails: matchingConsignee || null,
     supplierDetails: matchingSupplier || null,
-    // If debtor is Consignee, buyerDetails must come from consigneeDetails.
     buyerDetails:
       data.billTo === "consignee" ? matchingConsignee || null : matchingBuyer,
   };

@@ -7,9 +7,13 @@ import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
 import { FaUsers } from "react-icons/fa";
 
 const Tables = lazy(() => import("../../../common/Tables/Tables"));
-const Pagination = lazy(() => import("../../../common/Paginations/Paginations"));
+const Pagination = lazy(
+  () => import("../../../common/Paginations/Paginations"),
+);
 const SearchBox = lazy(() => import("../../../common/SearchBox/SearchBox"));
-const InteractionsPopup = lazy(() => import("../InteractionsPopup/InteractionsPopup"));
+const InteractionsPopup = lazy(
+  () => import("../InteractionsPopup/InteractionsPopup"),
+);
 
 const ParticipateBidAdmin = () => {
   const [bids, setBids] = useState([]);
@@ -29,13 +33,13 @@ const ParticipateBidAdmin = () => {
         ]);
 
         const bids = bidsRes.data?.data || bidsRes.data || [];
-        const participations = participateRes.data?.data || participateRes.data || [];
+        const participations =
+          participateRes.data?.data || participateRes.data || [];
 
-        const allParticipations = participations
-          .sort(
-            (a, b) =>
-              new Date(b.participationDate) - new Date(a.participationDate)
-          );
+        const allParticipations = participations.sort(
+          (a, b) =>
+            new Date(b.participationDate) - new Date(a.participationDate),
+        );
 
         setBids(bids);
         setParticipationBids(allParticipations);
@@ -115,9 +119,9 @@ const ParticipateBidAdmin = () => {
   const consigneeItems = useMemo(
     () =>
       [...new Set(bids.map((b) => b.consignee).filter(Boolean))].sort((a, b) =>
-        a.localeCompare(b)
+        a.localeCompare(b),
       ),
-    [bids]
+    [bids],
   );
 
   const handleSearch = (filteredNames) => {
@@ -131,7 +135,7 @@ const ParticipateBidAdmin = () => {
         participationBids.filter((pBid) => {
           const bid = bids.find((b) => b._id === pBid.bidId);
           return bid && nameSet.has(bid.consignee);
-        })
+        }),
       );
     }
     setCurrentPage(1);
@@ -146,7 +150,12 @@ const ParticipateBidAdmin = () => {
         noContentCard
       >
         <div className="space-y-6">
-          {selectedBidId && <InteractionsPopup bidId={selectedBidId} onClose={() => setSelectedBidId(null)} />}
+          {selectedBidId && (
+            <InteractionsPopup
+              bidId={selectedBidId}
+              onClose={() => setSelectedBidId(null)}
+            />
+          )}
           <SearchBox
             placeholder="Search by consignee..."
             items={consigneeItems}

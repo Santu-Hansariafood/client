@@ -43,12 +43,10 @@ const mapBuyerForClient = (buyer) => {
     });
   }
 
-  // Second, check brokerage from Company's commodities array (fallback/override)
   if (buyer.companyId && Array.isArray(buyer.companyId.commodities)) {
     buyer.companyId.commodities.forEach((cc) => {
       const cName = cc.commodityId?.name || cc.commodityId?.toString();
       if (cName && cc.brokerage !== undefined) {
-        // Only set if not already set or if explicitly provided in company profile
         brokerageByName[cName] = cc.brokerage;
       }
     });

@@ -30,8 +30,12 @@ const BidList = () => {
       try {
         const [bidsRes, buyersRes, companiesRes] = await Promise.all([
           axios.get("/bids"),
-          userRole === "Buyer" ? axios.get("/buyers") : Promise.resolve({ data: [] }),
-          userRole === "Buyer" ? axios.get("/companies") : Promise.resolve({ data: [] }),
+          userRole === "Buyer"
+            ? axios.get("/buyers")
+            : Promise.resolve({ data: [] }),
+          userRole === "Buyer"
+            ? axios.get("/companies")
+            : Promise.resolve({ data: [] }),
         ]);
 
         const items = bidsRes.data?.data || bidsRes.data || [];
@@ -39,9 +43,13 @@ const BidList = () => {
         const companies = companiesRes.data?.data || companiesRes.data || [];
 
         if (userRole === "Buyer") {
-          const buyer = buyers.find(b => b.mobile?.some(m => String(m) === String(mobile)));
+          const buyer = buyers.find((b) =>
+            b.mobile?.some((m) => String(m) === String(mobile)),
+          );
           if (buyer) {
-            const company = companies.find(c => String(c._id) === String(buyer.companyId));
+            const company = companies.find(
+              (c) => String(c._id) === String(buyer.companyId),
+            );
             if (company) {
               setBuyerGroup(company.group);
             }
@@ -57,71 +65,93 @@ const BidList = () => {
 
   const filteredBids = useMemo(() => {
     const now = new Date();
-    const todayStr = now.toISOString().split('T')[0];
+    const todayStr = now.toISOString().split("T")[0];
     const yesterday = new Date(now);
     yesterday.setDate(now.getDate() - 1);
-    const yesterdayStr = yesterday.toISOString().split('T')[0];
+    const yesterdayStr = yesterday.toISOString().split("T")[0];
 
-    return bids.filter((bid) => {
-      const bidDateStr = (bid.bidDate && typeof bid.bidDate === 'string') ? bid.bidDate.split('T')[0] : "";
-      const isToday = bidDateStr === todayStr;
-      const isYesterday = bidDateStr === yesterdayStr;
+    return bids
+      .filter((bid) => {
+        const bidDateStr =
+          bid.bidDate && typeof bid.bidDate === "string"
+            ? bid.bidDate.split("T")[0]
+            : "";
+        const isToday = bidDateStr === todayStr;
+        const isYesterday = bidDateStr === yesterdayStr;
 
-      let bidStartTime = null;
-      let bidEndTime = null;
+        let bidStartTime = null;
+        let bidEndTime = null;
 
-      if (isToday) {
-        if (bid.startTime) {
-          const [sH, sM] = bid.startTime.split(':').map(Number);
-          bidStartTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), sH, sM);
+        if (isToday) {
+          if (bid.startTime) {
+            const [sH, sM] = bid.startTime.split(":").map(Number);
+            bidStartTime = new Date(
+              now.getFullYear(),
+              now.getMonth(),
+              now.getDate(),
+              sH,
+              sM,
+            );
+          }
+          if (bid.endTime) {
+            const [eH, eM] = bid.endTime.split(":").map(Number);
+            bidEndTime = new Date(
+              now.getFullYear(),
+              now.getMonth(),
+              now.getDate(),
+              eH,
+              eM,
+            );
+          }
         }
-        if (bid.endTime) {
-          const [eH, eM] = bid.endTime.split(':').map(Number);
-          bidEndTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), eH, eM);
+
+        let matches = false;
+
+        if (activeTab === "all") {
+          matches = isToday;
+        } else if (activeTab === "active") {
+          matches =
+            isToday &&
+            bidStartTime &&
+            bidEndTime &&
+            now >= bidStartTime &&
+            now <= bidEndTime;
+        } else if (activeTab === "closed") {
+          matches = isToday && bidEndTime && now > bidEndTime;
+        } else if (activeTab === "previous") {
+          matches = isYesterday;
         }
-      }
 
-      let matches = false;
+        if (!matches) return false;
 
-      if (activeTab === 'all') {
-        matches = isToday;
-      } else if (activeTab === 'active') {
-        matches = isToday && bidStartTime && bidEndTime && now >= bidStartTime && now <= bidEndTime;
-      } else if (activeTab === 'closed') {
-        matches = isToday && bidEndTime && now > bidEndTime;
-      } else if (activeTab === 'previous') {
-        matches = isYesterday;
-      }
+        if (
+          filteredConsignees.length > 0 &&
+          !filteredConsignees.includes(bid.consignee)
+        ) {
+          return false;
+        }
 
-      if (!matches) return false;
-
-      if (
-        filteredConsignees.length > 0 &&
-        !filteredConsignees.includes(bid.consignee)
-      ) {
-        return false;
-      }
-
-      return true;
-    }).sort((a, b) => {
-      const dateA = new Date(a.closedAt || a.updatedAt || a.createdAt);
-      const dateB = new Date(b.closedAt || b.updatedAt || b.createdAt);
-      return dateB - dateA;
-    });
+        return true;
+      })
+      .sort((a, b) => {
+        const dateA = new Date(a.closedAt || a.updatedAt || a.createdAt);
+        const dateB = new Date(b.closedAt || b.updatedAt || b.createdAt);
+        return dateB - dateA;
+      });
   }, [bids, activeTab, filteredConsignees]);
 
   const consigneeItems = useMemo(
     () =>
       [...new Set(bids.map((b) => b.consignee).filter(Boolean))].sort((a, b) =>
-        a.localeCompare(b)
+        a.localeCompare(b),
       ),
-    [bids]
+    [bids],
   );
 
   const handleSearchConsignee = (filteredNames) => {
     if (Array.isArray(filteredNames)) {
       if (filteredNames.length === consigneeItems.length) {
-        setFilteredConsignees([]); // No filter applied
+        setFilteredConsignees([]);
       } else {
         setFilteredConsignees(filteredNames);
       }
@@ -141,7 +171,7 @@ const BidList = () => {
       await axios.put(`/bids/${id}`, { rate, quantity });
       toast.success("Bid updated successfully!");
       setBids((prev) =>
-        prev.map((bid) => (bid._id === id ? { ...bid, rate, quantity } : bid))
+        prev.map((bid) => (bid._id === id ? { ...bid, rate, quantity } : bid)),
       );
       setEditableRateQuantity(null);
     } catch {
@@ -186,9 +216,11 @@ const BidList = () => {
   const handleStatusUpdate = async (id, status) => {
     try {
       await axios.patch(`/bids/${id}/status`, { status });
-      toast.success(`Bid ${status === "closed" ? "closed" : "activated"} successfully!`);
+      toast.success(
+        `Bid ${status === "closed" ? "closed" : "activated"} successfully!`,
+      );
       setBids((prev) =>
-        prev.map((bid) => (bid._id === id ? { ...bid, status } : bid))
+        prev.map((bid) => (bid._id === id ? { ...bid, status } : bid)),
       );
     } catch {
       toast.error("Failed to update status. Please try again.");
@@ -258,7 +290,14 @@ const BidList = () => {
         <button
           type="button"
           className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-green-50 text-green-700 border border-green-100 hover:bg-green-100 transition-colors"
-          onClick={() => setReactivateBid({ ...bid, endTime: bid.endTime, quantity: bid.quantity, rate: bid.rate })}
+          onClick={() =>
+            setReactivateBid({
+              ...bid,
+              endTime: bid.endTime,
+              quantity: bid.quantity,
+              rate: bid.rate,
+            })
+          }
           title="Activate Bidding"
         >
           <span className="text-xs font-bold">Start</span>
@@ -280,8 +319,8 @@ const BidList = () => {
         prev.map((bid) =>
           bid._id === _id
             ? { ...bid, status: "active", endTime, quantity, rate }
-            : bid
-        )
+            : bid,
+        ),
       );
       setReactivateBid(null);
     } catch {
@@ -388,35 +427,50 @@ const BidList = () => {
             >
               <div className="space-y-4">
                 <label className="block">
-                  <span className="text-sm font-medium text-slate-700">End Time</span>
+                  <span className="text-sm font-medium text-slate-700">
+                    End Time
+                  </span>
                   <input
                     type="time"
                     className="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3 focus:ring-2 focus:ring-emerald-400/50 focus:border-emerald-400 outline-none"
                     value={reactivateBid.endTime}
                     onChange={(e) =>
-                      setReactivateBid({ ...reactivateBid, endTime: e.target.value })
+                      setReactivateBid({
+                        ...reactivateBid,
+                        endTime: e.target.value,
+                      })
                     }
                   />
                 </label>
                 <label className="block">
-                  <span className="text-sm font-medium text-slate-700">Quantity</span>
+                  <span className="text-sm font-medium text-slate-700">
+                    Quantity
+                  </span>
                   <input
                     type="number"
                     className="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3 focus:ring-2 focus:ring-emerald-400/50 focus:border-emerald-400 outline-none"
                     value={reactivateBid.quantity}
                     onChange={(e) =>
-                      setReactivateBid({ ...reactivateBid, quantity: e.target.value })
+                      setReactivateBid({
+                        ...reactivateBid,
+                        quantity: e.target.value,
+                      })
                     }
                   />
                 </label>
                 <label className="block">
-                  <span className="text-sm font-medium text-slate-700">Rate</span>
+                  <span className="text-sm font-medium text-slate-700">
+                    Rate
+                  </span>
                   <input
                     type="number"
                     className="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3 focus:ring-2 focus:ring-emerald-400/50 focus:border-emerald-400 outline-none"
                     value={reactivateBid.rate}
                     onChange={(e) =>
-                      setReactivateBid({ ...reactivateBid, rate: e.target.value })
+                      setReactivateBid({
+                        ...reactivateBid,
+                        rate: e.target.value,
+                      })
                     }
                   />
                 </label>
@@ -451,9 +505,7 @@ const BidList = () => {
                 rows={
                   groupedBids
                     .find((g) => g.group === selectedGroup)
-                    ?.bids.map((bid, idx) =>
-                      buildRow(bid, idx)
-                    ) || []
+                    ?.bids.map((bid, idx) => buildRow(bid, idx)) || []
                 }
               />
             </PopupBox>
