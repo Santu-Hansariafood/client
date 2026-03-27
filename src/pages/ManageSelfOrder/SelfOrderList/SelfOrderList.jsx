@@ -81,9 +81,8 @@ const SelfOrderList = () => {
             }
           }
 
-          const reversedData = [...raw].reverse();
-          setData(reversedData);
-          setFilteredData(reversedData);
+          setData(raw);
+          setFilteredData(raw);
           const consignees = Array.isArray(consigneeRes.data)
             ? consigneeRes.data
             : consigneeRes.data?.data || [];
@@ -171,10 +170,19 @@ const SelfOrderList = () => {
         return;
       }
 
-      // Fallback: open WhatsApp with text (PDF attachment is not supported here).
+      // Fallback: Download the PDF and open WhatsApp Web
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
       const waText = `Sauda No: ${item.saudaNo}`;
       window.open(`https://wa.me/?text=${encodeURIComponent(waText)}`, "_blank");
-      toast.info("WhatsApp opened (PDF attachment not supported here).");
+      toast.info("PDF downloaded. Please attach it in WhatsApp.");
     } catch (error) {
       console.error(error);
       toast.error("Failed to process PDF");

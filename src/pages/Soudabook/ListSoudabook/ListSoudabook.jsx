@@ -39,7 +39,7 @@ const ListSoudabook = () => {
           });
         }
 
-        setSaudaData(data.reverse());
+        setSaudaData(data);
       } catch (err) {
         setError("Failed to fetch Sauda book data.");
         toast.error("Could not load data.");

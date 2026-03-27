@@ -131,9 +131,9 @@ const DownloadSauda = ({ data }) => {
     transformedData.buyerDetails = {
       ...bd,
       address: bd.address || bd.location || "",
-      gstNo: bd.gstNo || bd.gst || "",
-      panNo: bd.panNo || bd.pan || "",
-      pinNo: bd.pinNo || bd.pin || "",
+      gstNo: bd.gstNo || bd.gst || bd.gstNumber || "",
+      panNo: bd.panNo || bd.pan || bd.panNumber || "",
+      pinNo: bd.pinNo || bd.pin || bd.pinCode || "",
       district: bd.district || "",
       state: bd.state || "",
     };
