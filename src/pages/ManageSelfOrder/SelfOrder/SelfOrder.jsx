@@ -71,6 +71,7 @@ const INITIAL_FORM_DATA = {
   billTo: "buyer",
   saudaNo: "",
   buyerMobile: "",
+  sellerMobile: "",
 };
 
 const SelfOrder = () => {

@@ -131,9 +131,12 @@ const SelfOrderList = () => {
     },
     [consigneeMap],
   );
-  const handleWhatsAppDirectShare = async (item) => {
-    if (!item.buyerMobile) {
-      toast.error("Mobile number not available for this buyer.");
+  const handleWhatsAppDirectShare = async (item, target) => {
+    const mobile = target === "buyer" ? item.buyerMobile : item.sellerMobile;
+    const name = target === "buyer" ? "Buyer" : "Seller";
+
+    if (!mobile) {
+      toast.error(`${name} mobile number not available.`);
       return;
     }
 
@@ -146,7 +149,6 @@ const SelfOrderList = () => {
       const fileName = `Sauda-${item.saudaNo}.pdf`;
       const file = new File([blob], fileName, { type: "application/pdf" });
 
-      // Native Share (Mobile)
       const shareData = {
         files: [file],
         title: "Sauda PDF",
@@ -168,9 +170,37 @@ const SelfOrderList = () => {
 
       if (canShareFiles) {
         await navigator.share(shareData);
-        // After successful share, update status
+        if (target === "buyer") {
+          await axios.patch(`/self-order/${item._id}/whatsapp-sent`);
+          setData((prev) =>
+            prev.map((order) =>
+              order._id === item._id ? { ...order, whatsappSent: true } : order
+            )
+          );
+          setFilteredData((prev) =>
+            prev.map((order) =>
+              order._id === item._id ? { ...order, whatsappSent: true } : order
+            )
+          );
+        }
+        return;
+      }
+
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      const cleanMobile = mobile.replace(/\D/g, "");
+      const waUrl = `https://wa.me/${cleanMobile.startsWith("91") ? cleanMobile : "91" + cleanMobile}?text=${encodeURIComponent(`Dear Sir, please find attached Sauda No: ${item.saudaNo}`)}`;
+      window.open(waUrl, "_blank");
+
+      if (target === "buyer") {
         await axios.patch(`/self-order/${item._id}/whatsapp-sent`);
-        // Update local state
         setData((prev) =>
           prev.map((order) =>
             order._id === item._id ? { ...order, whatsappSent: true } : order
@@ -181,40 +211,12 @@ const SelfOrderList = () => {
             order._id === item._id ? { ...order, whatsappSent: true } : order
           )
         );
-        return;
       }
-
-      // Fallback: Download and open WhatsApp Web with number
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = fileName;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-
-      const cleanMobile = item.buyerMobile.replace(/\D/g, "");
-      const waUrl = `https://wa.me/${cleanMobile.startsWith("91") ? cleanMobile : "91" + cleanMobile}?text=${encodeURIComponent(`Dear Sir, please find attached Sauda No: ${item.saudaNo}`)}`;
-      window.open(waUrl, "_blank");
-
-      // Update status even on fallback if they clicked it
-      await axios.patch(`/self-order/${item._id}/whatsapp-sent`);
-      setData((prev) =>
-        prev.map((order) =>
-          order._id === item._id ? { ...order, whatsappSent: true } : order
-        )
-      );
-      setFilteredData((prev) =>
-        prev.map((order) =>
-          order._id === item._id ? { ...order, whatsappSent: true } : order
-        )
-      );
 
       toast.info("PDF downloaded. Please attach it in the opened WhatsApp chat.");
     } catch (error) {
       console.error(error);
-      toast.error("Failed to process WhatsApp share");
+      toast.error(`Failed to process WhatsApp share for ${name}`);
     }
   };
 
@@ -329,13 +331,13 @@ const SelfOrderList = () => {
             <span>{item.buyerMobile || "N/A"}</span>
             {item.buyerMobile && (
               <button
-                onClick={() => handleWhatsAppDirectShare(item)}
+                onClick={() => handleWhatsAppDirectShare(item, "buyer")}
                 className={`transition-colors ${
                   item.whatsappSent
                     ? "text-green-600"
                     : "text-slate-400 hover:text-green-500"
                 }`}
-                title={item.whatsappSent ? "Sent" : "Send on WhatsApp"}
+                title={item.whatsappSent ? "Sent to Buyer" : "Send to Buyer on WhatsApp"}
               >
                 <FaWhatsapp size={18} />
               </button>
@@ -345,14 +347,23 @@ const SelfOrderList = () => {
         getConsigneeDisplay(item),
         item.commodity,
         item.quantity,
-        `₹${item.rate}`,
-        item.state,
+        item.rate,
+        item.loadingStation || "N/A",
         item.location,
         item.agentName,
-        item.buyerEmails?.filter(Boolean)?.join(", ") ||
-          item.buyerEmail ||
-          "N/A",
-        item.sellerEmails?.filter(Boolean)?.join(", ") || "N/A",
+        item.buyerEmails?.join(", ") || "N/A",
+        <div className="flex items-center gap-2">
+          <span>{item.sellerEmails?.join(", ") || "N/A"}</span>
+          {item.sellerMobile && (
+            <button
+              onClick={() => handleWhatsAppDirectShare(item, "seller")}
+              className="text-slate-400 hover:text-green-500 transition-colors"
+              title="Send to Seller on WhatsApp"
+            >
+              <FaWhatsapp size={18} />
+            </button>
+          )}
+        </div>,
         <div
           className="flex flex-col gap-2 items-start min-w-[120px]"
           key={item._id}

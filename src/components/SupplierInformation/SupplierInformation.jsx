@@ -98,6 +98,17 @@ const SupplierInformation = ({ handleChange, formData }) => {
         : [];
       handleChange("sellerEmails", sellerEmails.length ? sellerEmails : [""]);
 
+      const rawPhones = selected?.phoneNumbers || [];
+      const sellerPhones = Array.isArray(rawPhones)
+        ? rawPhones
+            .map((p) =>
+              typeof p === "string" ? p : (p?.value ?? p?.phone ?? ""),
+            )
+            .filter(Boolean)
+        : [];
+      const firstMobile = sellerPhones[0] || "";
+      handleChange("sellerMobile", firstMobile);
+
       if (selected?.commodities?.length) {
         handleChange(
           "supplierBrokerageDetails",

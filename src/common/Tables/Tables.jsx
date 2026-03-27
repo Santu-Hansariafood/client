@@ -54,12 +54,12 @@ const Tables = ({ headers, rows }) => {
               rows.map((row, rowIndex) => (
                 <tr
                   key={rowIndex}
-                  className="border-b border-slate-100 last:border-0 odd:bg-white even:bg-slate-50/50 hover:bg-[#8CC63F]/5 transition-colors"
+                  className="border-b border-slate-200 last:border-0 odd:bg-white even:bg-slate-50/50 hover:bg-[#8CC63F]/5 transition-colors"
                 >
                   {row.map((cell, cellIndex) => (
                     <td
                       key={cellIndex}
-                      className="px-5 py-3.5 text-sm text-slate-800 whitespace-nowrap"
+                      className="px-5 py-3.5 text-sm text-slate-800 whitespace-nowrap border-x border-slate-100"
                     >
                       {cell}
                     </td>

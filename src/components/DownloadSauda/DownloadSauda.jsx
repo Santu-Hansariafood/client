@@ -195,12 +195,17 @@ const DownloadSauda = ({ data }) => {
 
   useEffect(() => {
     if (!showEmailPopup) return;
-    const fromArray = Array.isArray(data?.buyerEmails)
+    const buyerEmails = Array.isArray(data?.buyerEmails)
       ? data.buyerEmails.filter(Boolean)
       : [];
+    const sellerEmails = Array.isArray(data?.sellerEmails)
+      ? data.sellerEmails.filter(Boolean)
+      : [];
     const fromSingle = data?.buyerEmail ? [data.buyerEmail] : [];
-    const defaultEmail = [...fromArray, ...fromSingle][0] || "";
-    setRecipientEmail((prev) => prev || defaultEmail);
+    const allEmails = [
+      ...new Set([...buyerEmails, ...sellerEmails, ...fromSingle]),
+    ].join(", ");
+    setRecipientEmail(allEmails);
   }, [showEmailPopup, data]);
 
   const handleSendEmail = async () => {

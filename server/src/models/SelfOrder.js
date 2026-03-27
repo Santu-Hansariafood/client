@@ -44,6 +44,7 @@ const selfOrderSchema = new mongoose.Schema(
     billTo: { type: String, default: "" },
     saudaNo: { type: String, default: "" },
     buyerMobile: { type: String, default: "" },
+    sellerMobile: { type: String, default: "" },
     whatsappSent: { type: Boolean, default: false },
   },
   { timestamps: true },
