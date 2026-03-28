@@ -109,7 +109,7 @@ router.get("/", async (req, res) => {
 
     if (page > 0 && limit > 0) {
       const items = await Buyer.find(query)
-        .sort({ name: 1 })
+        .sort({ createdAt: -1 })
         .skip((page - 1) * limit)
         .limit(limit)
         .populate(buyerPopulate)
@@ -118,7 +118,7 @@ router.get("/", async (req, res) => {
       return res.json({ data: items.map(mapBuyerForClient), total });
     }
 
-    const items = await Buyer.find(query).sort({ name: 1 }).populate(buyerPopulate).lean();
+    const items = await Buyer.find(query).sort({ createdAt: -1 }).populate(buyerPopulate).lean();
     res.json(items.map(mapBuyerForClient));
   } catch (error) {
     res.status(500).json({ message: error.message });

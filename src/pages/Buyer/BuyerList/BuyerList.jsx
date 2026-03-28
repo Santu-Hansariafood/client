@@ -26,73 +26,61 @@ const BuyerList = () => {
   const [buyersData, setBuyersData] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [selectedBuyer, setSelectedBuyer] = useState(null);
   const [isEditPopupOpen, setIsEditPopupOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const itemsPerPage = 10;
 
   useEffect(() => {
     const fetchBuyersData = async () => {
+      setIsLoading(true);
       try {
-        const response = await axios.get("/buyers");
-        const rawData = Array.isArray(response.data)
-          ? response.data
-          : response.data?.data || [];
-        const sortedData = rawData.sort((a, b) =>
-          (b.createdAt || "").localeCompare(a.createdAt || "")
-        );
-        setBuyersData(sortedData);
-        setFilteredData(sortedData);
+        const response = await axios.get(`/buyers?page=${currentPage}&limit=${itemsPerPage}`);
+        const data = response.data?.data || [];
+        const total = response.data?.total || 0;
+        
+        setBuyersData(data);
+        setFilteredData(data);
+        setTotalItems(total);
       } catch (error) {
         toast.error("Failed to fetch buyers data");
+      } finally {
+        setIsLoading(false);
       }
     };
     fetchBuyersData();
-  }, []);
+  }, [currentPage]);
 
-  const handleSearchByNames = (filteredNames) => {
+  const handleSearchByNames = async (filteredNames) => {
     if (!filteredNames || filteredNames.length === 0) {
-      setFilteredData(buyersData);
+      // Re-fetch current page
       setCurrentPage(1);
       return;
     }
-    if (filteredNames.length === buyersData.length) {
-      setFilteredData(buyersData);
-      setCurrentPage(1);
-      return;
-    }
+    
+    // For search, we might want to fetch filtered data from backend if needed,
+    // but for now, we'll keep the client-side search logic if names are provided.
+    // However, the search box usually sends names.
     const nameSet = new Set(filteredNames);
     setFilteredData(buyersData.filter((b) => nameSet.has(b.name)));
-    setCurrentPage(1);
-  };
-
-  const handleView = (index) => {
-    const actualIndex = firstItemIndex + index;
-    setSelectedBuyer(filteredData[actualIndex]);
-    setIsPopupOpen(true);
-  };
-
-  const handleEdit = (index) => {
-    const actualIndex = firstItemIndex + index;
-    setSelectedBuyer(filteredData[actualIndex]);
-    setIsEditPopupOpen(true);
   };
 
   const handleDelete = async (index) => {
-    const actualIndex = firstItemIndex + index;
-    const buyerToDelete = filteredData[actualIndex];
+    const buyerToDelete = filteredData[index];
+    if (!window.confirm(`Are you sure you want to delete ${buyerToDelete.name}?`)) return;
 
     try {
-      await axios.delete(
-        `/buyers/${buyerToDelete._id}`
-      );
-
-      const updatedData = filteredData.filter((_, i) => i !== actualIndex);
-      setBuyersData(updatedData);
-      setFilteredData(updatedData);
+      await axios.delete(`/buyers/${buyerToDelete._id}`);
       toast.success("Buyer deleted successfully");
+      // Re-fetch current page
+      const response = await axios.get(`/buyers?page=${currentPage}&limit=${itemsPerPage}`);
+      setBuyersData(response.data?.data || []);
+      setFilteredData(response.data?.data || []);
+      setTotalItems(response.data?.total || 0);
     } catch (error) {
-      toast.error("Failed to delete buyer. Please try again.", error);
+      toast.error("Failed to delete buyer");
     }
   };
 
@@ -108,16 +96,9 @@ const BuyerList = () => {
     toast.success("Buyer updated successfully");
   };
 
-  const lastItemIndex = currentPage * itemsPerPage;
-  const firstItemIndex = lastItemIndex - itemsPerPage;
-
-  const currentItems = useMemo(() => {
-    return filteredData.slice(firstItemIndex, lastItemIndex);
-  }, [filteredData, firstItemIndex, lastItemIndex]);
-
   const rows = useMemo(() => {
-    return currentItems.map((buyer, index) => {
-      const slNo = filteredData.length - (firstItemIndex + index);
+    return filteredData.map((buyer, index) => {
+      const slNo = totalItems - ((currentPage - 1) * itemsPerPage + index);
       return [
         slNo,
         toTitleCase(buyer.name || "N/A"),
@@ -134,13 +115,19 @@ const BuyerList = () => {
         toTitleCase(buyer.status || "N/A"),
         <Actions
           key={buyer._id || index}
-          onView={() => handleView(index)}
-          onEdit={() => handleEdit(index)}
+          onView={() => {
+            setSelectedBuyer(buyer);
+            setIsPopupOpen(true);
+          }}
+          onEdit={() => {
+            setSelectedBuyer(buyer);
+            setIsEditPopupOpen(true);
+          }}
           onDelete={() => handleDelete(index)}
         />,
       ];
     });
-  }, [currentItems, firstItemIndex, filteredData.length]);
+  }, [filteredData, currentPage, totalItems]);
 
   return (
     <Suspense fallback={<Loading />}>
@@ -159,33 +146,39 @@ const BuyerList = () => {
                 onSearch={handleSearchByNames}
               />
             </div>
-              <div className="overflow-x-auto rounded-xl border border-gray-100">
-                <Tables
-                  headers={[
-                    "Sl No",
-                    "Name",
-                    "Mobile",
-                    "Email",
-                    "Company",
-                    "Group Company",
-                    "Commodity",
-                    "Consignee",
-                    "Status",
-                    "Actions",
-                  ]}
-                  rows={rows}
-                />
-              </div>
-              <div className="mt-4">
-                <Pagination
-                  currentPage={currentPage}
-                  totalItems={filteredData.length}
-                  itemsPerPage={itemsPerPage}
-                  onPageChange={(page) => setCurrentPage(page)}
-                />
-              </div>
-            </div>
+            {isLoading ? (
+              <Loading />
+            ) : (
+              <>
+                <div className="overflow-x-auto rounded-xl border border-gray-100">
+                  <Tables
+                    headers={[
+                      "Sl No",
+                      "Name",
+                      "Mobile",
+                      "Email",
+                      "Company",
+                      "Group Company",
+                      "Commodity",
+                      "Consignee",
+                      "Status",
+                      "Actions",
+                    ]}
+                    rows={rows}
+                  />
+                </div>
+                <div className="mt-4">
+                  <Pagination
+                    currentPage={currentPage}
+                    totalItems={totalItems}
+                    itemsPerPage={itemsPerPage}
+                    onPageChange={(page) => setCurrentPage(page)}
+                  />
+                </div>
+              </>
+            )}
           </div>
+        </div>
           <PopupBox
             isOpen={isPopupOpen}
             onClose={() => setIsPopupOpen(false)}
