@@ -35,13 +35,16 @@ const BuyerList = () => {
     const fetchBuyersData = async () => {
       try {
         const response = await axios.get("/buyers");
-        const sortedData = response.data.sort((a, b) =>
-          a.name.localeCompare(b.name)
+        const rawData = Array.isArray(response.data)
+          ? response.data
+          : response.data?.data || [];
+        const sortedData = rawData.sort((a, b) =>
+          (b.createdAt || "").localeCompare(a.createdAt || "")
         );
         setBuyersData(sortedData);
         setFilteredData(sortedData);
       } catch (error) {
-        toast.error("Failed to fetch buyers data", error);
+        toast.error("Failed to fetch buyers data");
       }
     };
     fetchBuyersData();
@@ -113,28 +116,31 @@ const BuyerList = () => {
   }, [filteredData, firstItemIndex, lastItemIndex]);
 
   const rows = useMemo(() => {
-    return currentItems.map((buyer, index) => [
-      firstItemIndex + index + 1,
-      toTitleCase(buyer.name || "N/A"),
-      buyer.mobile?.join(", ") || "N/A",
-      buyer.email?.join(", ").toLowerCase() || "N/A",
-      toTitleCase(buyer.companyName || "N/A"),
-      toTitleCase(buyer.group || "N/A"),
-      toTitleCase(buyer.commodity?.join(", ") || "N/A"),
-      buyer.consignee?.map((c) => (
-        <ol key={c.value}>
-          <li>{toTitleCase(c.label)}</li>
-        </ol>
-      )) || "N/A",
-      toTitleCase(buyer.status || "N/A"),
-      <Actions
-        key={index}
-        onView={() => handleView(index)}
-        onEdit={() => handleEdit(index)}
-        onDelete={() => handleDelete(index)}
-      />,
-    ]);
-  }, [currentItems, firstItemIndex]);
+    return currentItems.map((buyer, index) => {
+      const slNo = filteredData.length - (firstItemIndex + index);
+      return [
+        slNo,
+        toTitleCase(buyer.name || "N/A"),
+        buyer.mobile?.join(", ") || "N/A",
+        buyer.email?.join(", ").toLowerCase() || "N/A",
+        toTitleCase(buyer.companyName || "N/A"),
+        toTitleCase(buyer.group || "N/A"),
+        toTitleCase(buyer.commodity?.join(", ") || "N/A"),
+        buyer.consignee?.map((c) => (
+          <ol key={c.value}>
+            <li>{toTitleCase(c.label)}</li>
+          </ol>
+        )) || "N/A",
+        toTitleCase(buyer.status || "N/A"),
+        <Actions
+          key={buyer._id || index}
+          onView={() => handleView(index)}
+          onEdit={() => handleEdit(index)}
+          onDelete={() => handleDelete(index)}
+        />,
+      ];
+    });
+  }, [currentItems, firstItemIndex, filteredData.length]);
 
   return (
     <Suspense fallback={<Loading />}>
