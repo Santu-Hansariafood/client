@@ -6,12 +6,28 @@ import { FaDownload, FaEnvelope } from "react-icons/fa";
 import axios from "axios";
 import { toast } from "react-toastify";
 
-const DownloadSauda = ({ data }) => {
-  const [consigneeData, setConsigneeData] = useState([]);
-  const [supplierData, setSupplierData] = useState([]);
-  const [buyerData, setBuyerData] = useState([]);
-  const [sellerProfileData, setSellerProfileData] = useState([]);
-  const [loading, setLoading] = useState(true);
+const DownloadSauda = ({
+  data,
+  button,
+  consigneeData: initialConsigneeData,
+  supplierData: initialSupplierData,
+  buyerData: initialBuyerData,
+  sellerProfileData: initialSellerProfileData,
+}) => {
+  const [consigneeData, setConsigneeData] = useState(
+    initialConsigneeData || [],
+  );
+  const [supplierData, setSupplierData] = useState(initialSupplierData || []);
+  const [buyerData, setBuyerData] = useState(initialBuyerData || []);
+  const [sellerProfileData, setSellerProfileData] = useState(
+    initialSellerProfileData || [],
+  );
+  const [loading, setLoading] = useState(
+    !initialConsigneeData ||
+      !initialSupplierData ||
+      !initialBuyerData ||
+      !initialSellerProfileData,
+  );
   const [sendingEmail, setSendingEmail] = useState(false);
 
   const CONSIGNEE_API_URL = "/consignees";
@@ -20,6 +36,17 @@ const DownloadSauda = ({ data }) => {
   const SELLER_PROFILE_API_URL = "/sellers";
 
   useEffect(() => {
+    // Only fetch if data is not already provided
+    if (
+      initialConsigneeData &&
+      initialSupplierData &&
+      initialBuyerData &&
+      initialSellerProfileData
+    ) {
+      setLoading(false);
+      return;
+    }
+
     const fetchData = async () => {
       try {
         const [
@@ -59,7 +86,12 @@ const DownloadSauda = ({ data }) => {
     };
 
     fetchData();
-  }, []);
+  }, [
+    initialConsigneeData,
+    initialSupplierData,
+    initialBuyerData,
+    initialSellerProfileData,
+  ]);
 
   const normalizedConsigneeKey = (() => {
     const c = data?.consignee;
@@ -260,47 +292,54 @@ const DownloadSauda = ({ data }) => {
             document={<SaudaPDF data={transformedData} />}
             fileName={`HANS-2025-${data.saudaNo}.pdf`}
           >
-            {({ loading }) => (
-              <button
-                className={`flex items-center justify-center py-2 px-4 rounded-lg focus:outline-none transition duration-300 ${
-                  loading
-                    ? "bg-gray-300 cursor-not-allowed text-gray-600"
-                    : "bg-gradient-to-r from-blue-500 to-blue-700 text-white hover:scale-105"
-                }`}
-                title={loading ? "Generating document..." : "Download PDF"}
-                disabled={loading}
-              >
-                {loading ? (
-                  <span className="text-sm">Generating...</span>
-                ) : (
-                  <>
-                    <FaDownload size={15} className="mr-2 animate-bounce" />
-                    <span className="text-sm font-medium">Download</span>
-                  </>
-                )}
-              </button>
-            )}
+            {({ loading: pdfLoading }) =>
+              button ? (
+                // If a custom button is provided, clone it and handle loading state if needed
+                button
+              ) : (
+                <button
+                  className={`flex items-center justify-center py-2 px-4 rounded-lg focus:outline-none transition duration-300 ${
+                    pdfLoading
+                      ? "bg-gray-300 cursor-not-allowed text-gray-600"
+                      : "bg-gradient-to-r from-blue-500 to-blue-700 text-white hover:scale-105"
+                  }`}
+                  title={pdfLoading ? "Generating document..." : "Download PDF"}
+                  disabled={pdfLoading}
+                >
+                  {pdfLoading ? (
+                    <span className="text-sm">Generating...</span>
+                  ) : (
+                    <>
+                      <FaDownload size={15} className="mr-2 animate-bounce" />
+                      <span className="text-sm font-medium">Download</span>
+                    </>
+                  )}
+                </button>
+              )
+            }
           </PDFDownloadLink>
 
-          <button
-            onClick={() => setShowEmailPopup(true)}
-            className={`flex items-center justify-center py-2 px-4 rounded-lg focus:outline-none transition duration-300 ${
-              sendingEmail
-                ? "bg-gray-300 cursor-not-allowed text-gray-600"
-                : "bg-gradient-to-r from-green-500 to-green-700 text-white hover:scale-105"
-            }`}
-            title={sendingEmail ? "Sending email..." : "Send via Email"}
-            disabled={sendingEmail}
-          >
-            {sendingEmail ? (
-              <span className="text-sm">Sending...</span>
-            ) : (
-              <>
-                <FaEnvelope size={15} className="mr-2" />
-                <span className="text-sm font-medium">Email</span>
-              </>
-            )}
-          </button>
+          {!button && (
+            <button
+              onClick={() => setShowEmailPopup(true)}
+              className={`flex items-center justify-center py-2 px-4 rounded-lg focus:outline-none transition duration-300 ${
+                sendingEmail
+                  ? "bg-gray-300 cursor-not-allowed text-gray-600"
+                  : "bg-gradient-to-r from-green-500 to-green-700 text-white hover:scale-105"
+              }`}
+              title={sendingEmail ? "Sending email..." : "Send via Email"}
+              disabled={sendingEmail}
+            >
+              {sendingEmail ? (
+                <span className="text-sm">Sending...</span>
+              ) : (
+                <>
+                  <FaEnvelope size={15} className="mr-2" />
+                  <span className="text-sm font-medium">Email</span>
+                </>
+              )}
+            </button>
+          )}
         </>
       )}
       {showEmailPopup && (
@@ -342,6 +381,11 @@ const DownloadSauda = ({ data }) => {
 
 DownloadSauda.propTypes = {
   data: PropTypes.object.isRequired,
+  button: PropTypes.node,
+  consigneeData: PropTypes.array,
+  supplierData: PropTypes.array,
+  buyerData: PropTypes.array,
+  sellerProfileData: PropTypes.array,
 };
 
 export default DownloadSauda;

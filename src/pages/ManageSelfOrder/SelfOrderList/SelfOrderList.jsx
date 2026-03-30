@@ -318,7 +318,7 @@ const SelfOrderList = () => {
         : "91" + cleanMobile;
 
       const message = `Sauda No: ${item.saudaNo}`;
-      const waUrl = `whatsapp://send/?phone=${finalMobile}&text=${encodeURIComponent(
+      const waUrl = `https://wa.me/${finalMobile}?text=${encodeURIComponent(
         message,
       )}`;
 
@@ -478,17 +478,24 @@ const SelfOrderList = () => {
           item.location || "N/A",
           item.agentName || "N/A",
           item.buyerEmails?.filter(Boolean).join(", ") || "N/A",
-          <div className="flex items-center gap-2" key={`seller-${item._id}`}>
-            <span>{item.sellerEmails?.filter(Boolean).join(", ") || "N/A"}</span>
-            {item.sellerMobile && (
-              <button
-                onClick={() => handleWhatsAppShare(item, "seller")}
-                className="sm:hidden text-slate-400 hover:text-green-500"
-                title="Send WhatsApp"
-              >
-                <FaWhatsapp size={18} />
-              </button>
-            )}
+          <div className="flex flex-col gap-1" key={`seller-${item._id}`}>
+            <span className="text-xs text-slate-500">
+              {item.sellerEmails?.filter(Boolean).join(", ") || "N/A"}
+            </span>
+            <div className="flex items-center gap-2">
+              <span className="font-medium text-slate-700">
+                {item.sellerMobile || "N/A"}
+              </span>
+              {item.sellerMobile && (
+                <button
+                  onClick={() => handleWhatsAppShare(item, "seller")}
+                  className="sm:hidden text-slate-400 hover:text-green-500"
+                  title="Send WhatsApp"
+                >
+                  <FaWhatsapp size={18} />
+                </button>
+              )}
+            </div>
           </div>,
           <div className="flex justify-center" key={`status-${item._id}`}>
             {item.whatsappSent ? (
@@ -516,8 +523,12 @@ const SelfOrderList = () => {
             <div className="flex gap-2">
               <DownloadSauda
                 data={{ ...item, consignee: getConsigneeDisplay(item) }}
+                consigneeData={consigneeData}
+                supplierData={supplierData}
+                buyerData={buyerData}
+                sellerProfileData={sellerProfileData}
                 button={
-                  <button className="w-9 h-9 rounded-lg bg-emerald-50 text-emerald-700">
+                  <button className="w-9 h-9 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition-colors">
                     <FaDownload size={16} />
                   </button>
                 }
