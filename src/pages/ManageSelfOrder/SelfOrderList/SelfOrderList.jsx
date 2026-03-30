@@ -318,7 +318,7 @@ const SelfOrderList = () => {
         : "91" + cleanMobile;
 
       const message = `Sauda No: ${item.saudaNo}`;
-      const waUrl = `https://wa.me/${finalMobile}?text=${encodeURIComponent(
+      const waUrl = `whatsapp://send/?phone=${finalMobile}&text=${encodeURIComponent(
         message,
       )}`;
 
