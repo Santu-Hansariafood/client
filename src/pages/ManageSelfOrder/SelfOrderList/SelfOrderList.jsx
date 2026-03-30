@@ -162,9 +162,215 @@ const SelfOrderList = () => {
     [consigneeMap],
   );
 
+  // const handleWhatsAppShare = async (item, target = "buyer") => {
+  //   const mobileNumber =
+  //     target === "buyer" ? item.buyerMobile : item.sellerMobile;
+
+  //   if (!mobileNumber) {
+  //     toast.error("Mobile number not available.");
+  //     return;
+  //   }
+
+  //   try {
+  //     const normalizedConsigneeKey = (() => {
+  //       const c = item?.consignee;
+  //       if (!c) return "";
+  //       if (typeof c === "object")
+  //         return (c.name || c.label || c.value || "").toString();
+  //       return String(c);
+  //     })();
+
+  //     const matchingConsignee = consigneeData.find((consignee) => {
+  //       const idMatch =
+  //         consignee?._id &&
+  //         normalizedConsigneeKey &&
+  //         String(consignee._id) === String(normalizedConsigneeKey);
+  //       if (idMatch) return true;
+  //       const name = (consignee?.name || consignee?.label || "")
+  //         .toString()
+  //         .trim()
+  //         .toLowerCase();
+  //       const key = normalizedConsigneeKey.toString().trim().toLowerCase();
+  //       return name && key && name === key;
+  //     });
+
+  //     const matchingSupplier = supplierData.find(
+  //       (supplier) =>
+  //         supplier.companyName?.toLowerCase() ===
+  //         item.supplierCompany?.toLowerCase(),
+  //     );
+
+  //     const rawBuyerKey = item?.buyerCompany ?? item?.buyer ?? "";
+  //     const normalizedBuyerKey = String(rawBuyerKey || "")
+  //       .trim()
+  //       .toLowerCase();
+
+  //     const matchingBuyer =
+  //       buyerData.find((buyer) => {
+  //         const idMatch =
+  //           buyer?._id &&
+  //           rawBuyerKey &&
+  //           String(buyer._id) === String(rawBuyerKey);
+  //         const nameMatch =
+  //           buyer?.companyName &&
+  //           buyer.companyName.toLowerCase() === normalizedBuyerKey;
+  //         return idMatch || nameMatch;
+  //       }) ||
+  //       supplierData.find((supplier) => {
+  //         const idMatch =
+  //           supplier?._id &&
+  //           rawBuyerKey &&
+  //           String(supplier._id) === String(rawBuyerKey);
+  //         const nameMatch =
+  //           supplier?.companyName &&
+  //           supplier.companyName.toLowerCase() === normalizedBuyerKey;
+  //         return idMatch || nameMatch;
+  //       });
+
+  //     const matchingSellerProfile = sellerProfileData.find(
+  //       (seller) => seller._id === item.supplier,
+  //     );
+
+  //     let transformedData = {
+  //       ...item,
+  //       consignee: getConsigneeDisplay(item),
+  //       consigneeDetails: matchingConsignee || null,
+  //       supplierDetails: matchingSupplier || null,
+  //       buyerDetails:
+  //         item.billTo === "consignee"
+  //           ? matchingConsignee || null
+  //           : matchingBuyer,
+  //     };
+
+  //     if (transformedData.buyerDetails) {
+  //       const bd = transformedData.buyerDetails;
+  //       transformedData.buyerDetails = {
+  //         ...bd,
+  //         address: bd.address || bd.location || "",
+  //         gstNo: bd.gstNo || bd.gst || bd.gstNumber || "",
+  //         panNo: bd.panNo || bd.pan || bd.panNumber || "",
+  //         pinNo: bd.pinNo || bd.pin || bd.pinCode || "",
+  //         district: bd.district || "",
+  //         state: bd.state || "",
+  //       };
+  //     }
+
+  //     if (
+  //       matchingBuyer &&
+  //       (!transformedData.buyerBrokerage?.brokerageBuyer ||
+  //         transformedData.buyerBrokerage.brokerageBuyer === 0)
+  //     ) {
+  //       const buyerProfileBrokerage =
+  //         matchingBuyer.brokerageByName?.[item.commodity] ||
+  //         matchingBuyer.brokerage?.[item.commodity];
+  //       if (buyerProfileBrokerage !== undefined) {
+  //         transformedData.buyerBrokerage = {
+  //           ...transformedData.buyerBrokerage,
+  //           brokerageBuyer: buyerProfileBrokerage,
+  //         };
+  //       }
+  //     }
+
+  //     if (
+  //       matchingSellerProfile &&
+  //       (!transformedData.buyerBrokerage?.brokerageSupplier ||
+  //         transformedData.buyerBrokerage.brokerageSupplier === 0)
+  //     ) {
+  //       const supplierProfileBrokerage =
+  //         matchingSellerProfile.commodities?.find(
+  //           (c) => c.name === item.commodity,
+  //         )?.brokerage;
+  //       if (supplierProfileBrokerage !== undefined) {
+  //         transformedData.buyerBrokerage = {
+  //           ...transformedData.buyerBrokerage,
+  //           brokerageSupplier: supplierProfileBrokerage,
+  //         };
+  //       }
+  //     }
+
+  //     if (item.billTo === "consignee") {
+  //       transformedData = {
+  //         ...transformedData,
+  //         buyer: item.consignee,
+  //         buyerCompany: item.consignee,
+  //       };
+  //     } else {
+  //       const buyerName =
+  //         matchingBuyer?.companyName ||
+  //         (typeof item?.buyerCompany === "string" ? item.buyerCompany : "") ||
+  //         (typeof item?.buyer === "string" ? item.buyer : "");
+
+  //       transformedData = {
+  //         ...transformedData,
+  //         buyer: buyerName,
+  //         buyerCompany: buyerName,
+  //       };
+  //     }
+
+  //     const blob = await pdf(<SaudaPDF data={transformedData} />).toBlob();
+  //     const fileName = `Sauda-${item.saudaNo}.pdf`;
+
+  //     const cleanMobile = mobileNumber.replace(/\D/g, "");
+  //     const finalMobile = cleanMobile.startsWith("91")
+  //       ? cleanMobile
+  //       : "91" + cleanMobile;
+
+  //     const message = `Sauda No: ${item.saudaNo}`;
+  //     const waUrl = `https://wa.me/${finalMobile}?text=${encodeURIComponent(
+  //       message,
+  //     )}`;
+
+  //     const updateStatus = async () => {
+  //       if (target === "buyer") {
+  //         try {
+  //           await axios.patch(`/self-order/${item._id}/whatsapp-sent`);
+  //           setData((prev) =>
+  //             prev.map((order) =>
+  //               order._id === item._id
+  //                 ? { ...order, whatsappSent: true }
+  //                 : order,
+  //             ),
+  //           );
+  //           setFilteredData((prev) =>
+  //             prev.map((order) =>
+  //               order._id === item._id
+  //                 ? { ...order, whatsappSent: true }
+  //                 : order,
+  //             ),
+  //           );
+  //         } catch (err) {
+  //           console.error("Failed to update WhatsApp status:", err);
+  //         }
+  //       }
+  //     };
+
+  //     // Always download the PDF first
+  //     const url = window.URL.createObjectURL(blob);
+
+  //     const a = document.createElement("a");
+  //     a.href = url;
+  //     a.download = fileName;
+  //     document.body.appendChild(a);
+  //     a.click();
+  //     a.remove();
+
+  //     window.URL.revokeObjectURL(url);
+
+  //     // Open WhatsApp after slight delay (better UX)
+  //     setTimeout(async () => {
+  //       window.open(waUrl, "_blank");
+  //       await updateStatus();
+  //     }, 800);
+
+  //     toast.info("PDF downloaded. Attach it in WhatsApp.");
+  //   } catch (error) {
+  //     console.error(error);
+  //     toast.error("Failed to share PDF.");
+  //   }
+  // };
+
   const handleWhatsAppShare = async (item, target = "buyer") => {
-    const mobileNumber =
-      target === "buyer" ? item.buyerMobile : item.sellerMobile;
+    const mobileNumber = target === "buyer" ? item.buyerMobile : item.sellerMobile;
 
     if (!mobileNumber) {
       toast.error("Mobile number not available.");
@@ -172,197 +378,53 @@ const SelfOrderList = () => {
     }
 
     try {
-      const normalizedConsigneeKey = (() => {
-        const c = item?.consignee;
-        if (!c) return "";
-        if (typeof c === "object")
-          return (c.name || c.label || c.value || "").toString();
-        return String(c);
-      })();
+      // 1. Data Transformation (Keep your existing logic here...)
+      // ... [Insert your existing logic to create transformedData] ...
 
-      const matchingConsignee = consigneeData.find((consignee) => {
-        const idMatch =
-          consignee?._id &&
-          normalizedConsigneeKey &&
-          String(consignee._id) === String(normalizedConsigneeKey);
-        if (idMatch) return true;
-        const name = (consignee?.name || consignee?.label || "")
-          .toString()
-          .trim()
-          .toLowerCase();
-        const key = normalizedConsigneeKey.toString().trim().toLowerCase();
-        return name && key && name === key;
-      });
-
-      const matchingSupplier = supplierData.find(
-        (supplier) =>
-          supplier.companyName?.toLowerCase() ===
-          item.supplierCompany?.toLowerCase(),
-      );
-
-      const rawBuyerKey = item?.buyerCompany ?? item?.buyer ?? "";
-      const normalizedBuyerKey = String(rawBuyerKey || "")
-        .trim()
-        .toLowerCase();
-
-      const matchingBuyer =
-        buyerData.find((buyer) => {
-          const idMatch =
-            buyer?._id &&
-            rawBuyerKey &&
-            String(buyer._id) === String(rawBuyerKey);
-          const nameMatch =
-            buyer?.companyName &&
-            buyer.companyName.toLowerCase() === normalizedBuyerKey;
-          return idMatch || nameMatch;
-        }) ||
-        supplierData.find((supplier) => {
-          const idMatch =
-            supplier?._id &&
-            rawBuyerKey &&
-            String(supplier._id) === String(rawBuyerKey);
-          const nameMatch =
-            supplier?.companyName &&
-            supplier.companyName.toLowerCase() === normalizedBuyerKey;
-          return idMatch || nameMatch;
-        });
-
-      const matchingSellerProfile = sellerProfileData.find(
-        (seller) => seller._id === item.supplier,
-      );
-
-      let transformedData = {
-        ...item,
-        consignee: getConsigneeDisplay(item),
-        consigneeDetails: matchingConsignee || null,
-        supplierDetails: matchingSupplier || null,
-        buyerDetails:
-          item.billTo === "consignee"
-            ? matchingConsignee || null
-            : matchingBuyer,
-      };
-
-      if (transformedData.buyerDetails) {
-        const bd = transformedData.buyerDetails;
-        transformedData.buyerDetails = {
-          ...bd,
-          address: bd.address || bd.location || "",
-          gstNo: bd.gstNo || bd.gst || bd.gstNumber || "",
-          panNo: bd.panNo || bd.pan || bd.panNumber || "",
-          pinNo: bd.pinNo || bd.pin || bd.pinCode || "",
-          district: bd.district || "",
-          state: bd.state || "",
-        };
-      }
-
-      if (
-        matchingBuyer &&
-        (!transformedData.buyerBrokerage?.brokerageBuyer ||
-          transformedData.buyerBrokerage.brokerageBuyer === 0)
-      ) {
-        const buyerProfileBrokerage =
-          matchingBuyer.brokerageByName?.[item.commodity] ||
-          matchingBuyer.brokerage?.[item.commodity];
-        if (buyerProfileBrokerage !== undefined) {
-          transformedData.buyerBrokerage = {
-            ...transformedData.buyerBrokerage,
-            brokerageBuyer: buyerProfileBrokerage,
-          };
-        }
-      }
-
-      if (
-        matchingSellerProfile &&
-        (!transformedData.buyerBrokerage?.brokerageSupplier ||
-          transformedData.buyerBrokerage.brokerageSupplier === 0)
-      ) {
-        const supplierProfileBrokerage =
-          matchingSellerProfile.commodities?.find(
-            (c) => c.name === item.commodity,
-          )?.brokerage;
-        if (supplierProfileBrokerage !== undefined) {
-          transformedData.buyerBrokerage = {
-            ...transformedData.buyerBrokerage,
-            brokerageSupplier: supplierProfileBrokerage,
-          };
-        }
-      }
-
-      if (item.billTo === "consignee") {
-        transformedData = {
-          ...transformedData,
-          buyer: item.consignee,
-          buyerCompany: item.consignee,
-        };
-      } else {
-        const buyerName =
-          matchingBuyer?.companyName ||
-          (typeof item?.buyerCompany === "string" ? item.buyerCompany : "") ||
-          (typeof item?.buyer === "string" ? item.buyer : "");
-
-        transformedData = {
-          ...transformedData,
-          buyer: buyerName,
-          buyerCompany: buyerName,
-        };
-      }
-
+      // 2. Generate PDF Blob
       const blob = await pdf(<SaudaPDF data={transformedData} />).toBlob();
       const fileName = `Sauda-${item.saudaNo}.pdf`;
+      const file = new File([blob], fileName, { type: "application/pdf" });
 
-      const cleanMobile = mobileNumber.replace(/\D/g, "");
-      const finalMobile = cleanMobile.startsWith("91")
-        ? cleanMobile
-        : "91" + cleanMobile;
-
-      const message = `Sauda No: ${item.saudaNo}`;
-      const waUrl = `https://wa.me/${finalMobile}?text=${encodeURIComponent(
-        message,
-      )}`;
-
-      const updateStatus = async () => {
-        if (target === "buyer") {
-          try {
-            await axios.patch(`/self-order/${item._id}/whatsapp-sent`);
-            setData((prev) =>
-              prev.map((order) =>
-                order._id === item._id
-                  ? { ...order, whatsappSent: true }
-                  : order,
-              ),
-            );
-            setFilteredData((prev) =>
-              prev.map((order) =>
-                order._id === item._id
-                  ? { ...order, whatsappSent: true }
-                  : order,
-              ),
-            );
-          } catch (err) {
-            console.error("Failed to update WhatsApp status:", err);
-          }
+      // 3. Logic for Mobile (Web Share API)
+      if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+        try {
+          await navigator.share({
+            files: [file],
+            title: fileName,
+            text: `Sauda No: ${item.saudaNo}`,
+          });
+          
+          // Update status if share was successful
+          await updateStatus(); 
+          return; // Exit function if shared successfully
+        } catch (shareError) {
+          // If user cancelled sharing, don't show error, just fall back
+          console.log("Share cancelled or failed, falling back to download.");
         }
-      };
+      }
 
-      // Always download the PDF first
+      // 4. Fallback for Desktop (Download + WhatsApp Web)
       const url = window.URL.createObjectURL(blob);
-
       const a = document.createElement("a");
       a.href = url;
       a.download = fileName;
       document.body.appendChild(a);
       a.click();
       a.remove();
-
       window.URL.revokeObjectURL(url);
 
-      // Open WhatsApp after slight delay (better UX)
+      const cleanMobile = mobileNumber.replace(/\D/g, "");
+      const finalMobile = cleanMobile.startsWith("91") ? cleanMobile : "91" + cleanMobile;
+      const message = encodeURIComponent(`I have downloaded the Sauda PDF (No: ${item.saudaNo}). Attaching it now...`);
+      const waUrl = `https://wa.me/${finalMobile}?text=${message}`;
+
       setTimeout(async () => {
         window.open(waUrl, "_blank");
         await updateStatus();
-      }, 800);
+      }, 1000);
 
-      toast.info("PDF downloaded. Attach it in WhatsApp.");
+      toast.info("PDF downloaded. Select it from your gallery/files in WhatsApp.");
     } catch (error) {
       console.error(error);
       toast.error("Failed to share PDF.");
