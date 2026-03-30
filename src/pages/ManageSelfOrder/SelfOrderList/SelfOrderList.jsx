@@ -131,12 +131,13 @@ const SelfOrderList = () => {
     },
     [consigneeMap],
   );
-  const handleWhatsAppDirectShare = async (item, target) => {
-    const mobile = target === "buyer" ? item.buyerMobile : item.sellerMobile;
-    const name = target === "buyer" ? "Buyer" : "Seller";
 
-    if (!mobile) {
-      toast.error(`${name} mobile number not available.`);
+  const handleWhatsAppShare = async (item, target = "buyer") => {
+    const mobileNumber =
+      target === "buyer" ? item.buyerMobile : item.sellerMobile;
+
+    if (!mobileNumber) {
+      toast.error("Mobile number not available.");
       return;
     }
 
@@ -147,137 +148,86 @@ const SelfOrderList = () => {
 
       const blob = response.data;
       const fileName = `Sauda-${item.saudaNo}.pdf`;
-      const file = new File([blob], fileName, { type: "application/pdf" });
 
-      const shareData = {
-        files: [file],
-        title: "Sauda PDF",
-        text: `Sauda No: ${item.saudaNo}`,
-      };
+      // ✅ Clean mobile number
+      const cleanMobile = mobileNumber.replace(/\D/g, "");
+      const finalMobile = cleanMobile.startsWith("91")
+        ? cleanMobile
+        : "91" + cleanMobile;
 
-      const canShareFiles = (() => {
-        try {
-          return (
-            typeof navigator !== "undefined" &&
-            typeof navigator.share === "function" &&
-            typeof navigator.canShare === "function" &&
-            navigator.canShare({ files: [file] })
-          );
-        } catch {
-          return false;
-        }
-      })();
+      const message = `Sauda No: ${item.saudaNo}`;
+      const waUrl = `https://wa.me/${finalMobile}?text=${encodeURIComponent(
+        message,
+      )}`;
 
-      if (canShareFiles) {
-        await navigator.share(shareData);
+      // Update status on backend and locally (usually for buyer)
+      const updateStatus = async () => {
         if (target === "buyer") {
-          await axios.patch(`/self-order/${item._id}/whatsapp-sent`);
-          setData((prev) =>
-            prev.map((order) =>
-              order._id === item._id ? { ...order, whatsappSent: true } : order
-            )
-          );
-          setFilteredData((prev) =>
-            prev.map((order) =>
-              order._id === item._id ? { ...order, whatsappSent: true } : order
-            )
-          );
+          try {
+            await axios.patch(`/self-order/${item._id}/whatsapp-sent`);
+            setData((prev) =>
+              prev.map((order) =>
+                order._id === item._id ? { ...order, whatsappSent: true } : order
+              )
+            );
+            setFilteredData((prev) =>
+              prev.map((order) =>
+                order._id === item._id ? { ...order, whatsappSent: true } : order
+              )
+            );
+          } catch (err) {
+            console.error("Failed to update WhatsApp status:", err);
+          }
         }
-        return;
-      }
-
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = fileName;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-
-      const cleanMobile = mobile.replace(/\D/g, "");
-      const waUrl = `https://wa.me/${cleanMobile.startsWith("91") ? cleanMobile : "91" + cleanMobile}?text=${encodeURIComponent(`Dear Sir, please find attached Sauda No: ${item.saudaNo}`)}`;
-      window.open(waUrl, "_blank");
-
-      if (target === "buyer") {
-        await axios.patch(`/self-order/${item._id}/whatsapp-sent`);
-        setData((prev) =>
-          prev.map((order) =>
-            order._id === item._id ? { ...order, whatsappSent: true } : order
-          )
-        );
-        setFilteredData((prev) =>
-          prev.map((order) =>
-            order._id === item._id ? { ...order, whatsappSent: true } : order
-          )
-        );
-      }
-
-      toast.info("PDF downloaded. Please attach it in the opened WhatsApp chat.");
-    } catch (error) {
-      console.error(error);
-      toast.error(`Failed to process WhatsApp share for ${name}`);
-    }
-  };
-
-  const handleWhatsAppShare = async (item) => {
-    try {
-      const response = await axios.get(`/self-order/pdf/${item._id}`, {
-        responseType: "blob",
-      });
-
-      const blob = response.data;
-
-      const fileName = `Sauda-${item.saudaNo}.pdf`;
-      const file =
-        typeof File !== "undefined"
-          ? new File([blob], fileName, { type: "application/pdf" })
-          : blob;
-
-      const shareData = {
-        title: "Sauda PDF",
-        text: `Sauda No: ${item.saudaNo}`,
-        files: [file],
       };
 
-      // canShare(...) might throw in some browsers; wrap it.
-      const canShareFiles = (() => {
+      // ✅ MOBILE SHARE (BEST CASE)
+      if (
+        navigator.share &&
+        navigator.canShare &&
+        navigator.canShare({
+          files: [new File([blob], fileName, { type: "application/pdf" })],
+        })
+      ) {
         try {
-          return (
-            typeof navigator !== "undefined" &&
-            typeof navigator.share === "function" &&
-            typeof navigator.canShare === "function" &&
-            navigator.canShare({ files: [file] })
-          );
-        } catch {
-          return false;
-        }
-      })();
+          await navigator.share({
+            title: "Sauda PDF",
+            text: message,
+            files: [new File([blob], fileName, { type: "application/pdf" })],
+          });
 
-      if (canShareFiles) {
-        await navigator.share(shareData);
-        return;
+          await updateStatus();
+          toast.success("Shared successfully");
+          return;
+        } catch (err) {
+          console.log("User cancelled share:", err);
+        }
       }
 
-      // Fallback: Download the PDF and open WhatsApp Web
-      const url = URL.createObjectURL(blob);
+      // ✅ FALLBACK (ALL DEVICES)
+      const url = window.URL.createObjectURL(blob);
+
       const a = document.createElement("a");
       a.href = url;
       a.download = fileName;
       document.body.appendChild(a);
       a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      a.remove();
 
-      const waText = `Sauda No: ${item.saudaNo}`;
-      window.open(`https://wa.me/?text=${encodeURIComponent(waText)}`, "_blank");
-      toast.info("PDF downloaded. Please attach it in WhatsApp.");
+      window.URL.revokeObjectURL(url);
+
+      // Open WhatsApp after slight delay (better UX)
+      setTimeout(async () => {
+        window.open(waUrl, "_blank");
+        await updateStatus();
+      }, 800);
+
+      toast.info("PDF downloaded. Attach it in WhatsApp.");
     } catch (error) {
       console.error(error);
-      toast.error("Failed to process PDF");
+      toast.error("Failed to share PDF.");
     }
   };
-
   const handleView = useCallback(
     (item) => {
       setSelectedItem({ ...item, consignee: getConsigneeDisplay(item) });
@@ -288,26 +238,27 @@ const SelfOrderList = () => {
   const handleClosePopup = useCallback(() => setSelectedItem(null), []);
 
   const headers = useMemo(
-    () => [
-      "Sl No",
-      "Date",
-      "Sauda No",
-      "PO Number",
-      "Buyer",
-      "Buyer Company",
-      userRole === "Admin" ? "Mobile" : null,
-      "Consignee",
-      "Commodity",
-      "Quantity",
-      "Rate",
-      "Loading Station",
-      "Location",
-      "Agent Name",
-      "Buyer Emails",
-      "Seller Emails",
-      "WhatsApp Sent",
-      "Action",
-    ].filter(Boolean),
+    () =>
+      [
+        "Sl No",
+        "Date",
+        "Sauda No",
+        "PO Number",
+        "Buyer",
+        "Buyer Company",
+        userRole === "Admin" ? "Mobile" : null,
+        "Consignee",
+        "Commodity",
+        "Quantity",
+        "Rate",
+        "Loading Station",
+        "Location",
+        "Agent Name",
+        "Buyer Emails",
+        "Seller Emails",
+        "WhatsApp Sent",
+        "Action",
+      ].filter(Boolean),
     [userRole],
   );
 
@@ -323,12 +274,14 @@ const SelfOrderList = () => {
   const rows = useMemo(
     () =>
       currentItems.map((item, index) => {
-        const slNo = filteredData.length - ((currentPage - 1) * itemsPerPage + index);
+        const slNo =
+          filteredData.length - ((currentPage - 1) * itemsPerPage + index);
+
         const formattedDate = item.poDate
           ? new Date(item.poDate).toLocaleDateString("en-GB")
           : item.createdAt
-          ? new Date(item.createdAt).toLocaleDateString("en-GB")
-          : "N/A";
+            ? new Date(item.createdAt).toLocaleDateString("en-GB")
+            : "N/A";
 
         return [
           slNo,
@@ -338,21 +291,17 @@ const SelfOrderList = () => {
           item.buyer,
           item.buyerCompany,
           userRole === "Admin" ? (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2" key={`mobile-${item._id}`}>
               <span>{item.buyerMobile || "N/A"}</span>
               {item.buyerMobile && (
                 <button
-                  onClick={() => handleWhatsAppDirectShare(item, "buyer")}
-                  className={`transition-colors ${
+                  onClick={() => handleWhatsAppShare(item, "buyer")}
+                  className={`sm:hidden transition-colors ${
                     item.whatsappSent
                       ? "text-green-600"
                       : "text-slate-400 hover:text-green-500"
                   }`}
-                  title={
-                    item.whatsappSent
-                      ? "Sent to Buyer"
-                      : "Send to Buyer on WhatsApp"
-                  }
+                  title={item.whatsappSent ? "Sent" : "Send WhatsApp"}
                 >
                   <FaWhatsapp size={18} />
                 </button>
@@ -367,62 +316,54 @@ const SelfOrderList = () => {
           item.location,
           item.agentName,
           item.buyerEmails?.join(", ") || "N/A",
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2" key={`seller-${item._id}`}>
             <span>{item.sellerEmails?.join(", ") || "N/A"}</span>
             {item.sellerMobile && (
               <button
-                onClick={() => handleWhatsAppDirectShare(item, "seller")}
-                className="text-slate-400 hover:text-green-500 transition-colors"
-                title="Send to Seller on WhatsApp"
+                onClick={() => handleWhatsAppShare(item, "seller")}
+                className="sm:hidden text-slate-400 hover:text-green-500"
+                title="Send WhatsApp"
               >
                 <FaWhatsapp size={18} />
               </button>
             )}
           </div>,
-          <div className="flex justify-center">
+          <div className="flex justify-center" key={`status-${item._id}`}>
             {item.whatsappSent ? (
-              <span className="px-2 py-1 rounded-full bg-green-100 text-green-700 text-xs font-bold uppercase tracking-wider">
+              <span className="px-2 py-1 rounded-full bg-green-100 text-green-700 text-xs font-bold">
                 Sent
               </span>
             ) : (
-              <span className="px-2 py-1 rounded-full bg-slate-100 text-slate-500 text-xs font-bold uppercase tracking-wider">
+              <span className="px-2 py-1 rounded-full bg-slate-100 text-slate-500 text-xs font-bold">
                 Pending
               </span>
             )}
           </div>,
           <div
             className="flex flex-col gap-2 items-start min-w-[120px]"
-            key={item._id}
+            key={`actions-${item._id}`}
           >
-            <div className="flex flex-wrap gap-2">
-              <Actions
-                onView={() => handleView(item)}
-                onEdit={() => handleEdit(item)}
-                onDelete={() =>
-                  toast.error(`Deleting PO Number: ${item.poNumber}`)
-                }
-              />
-            </div>
+            <Actions
+              onView={() => handleView(item)}
+              onEdit={() => handleEdit(item)}
+              onDelete={() =>
+                toast.error(`Deleting PO Number: ${item.poNumber}`)
+              }
+            />
 
-            <div className="flex flex-wrap gap-2">
+            <div className="flex gap-2">
               <DownloadSauda
                 data={{ ...item, consignee: getConsigneeDisplay(item) }}
                 button={
-                  <button className="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-100 hover:bg-emerald-100">
+                  <button className="w-9 h-9 rounded-lg bg-emerald-50 text-emerald-700">
                     <FaDownload size={16} />
                   </button>
                 }
               />
 
               <button
-                type="button"
-                onClick={() =>
-                  handleWhatsAppShare({
-                    ...item,
-                    consignee: getConsigneeDisplay(item),
-                  })
-                }
-                className="sm:hidden inline-flex items-center justify-center w-9 h-9 rounded-lg bg-green-50 text-green-600 border border-green-100 hover:bg-green-100"
+                onClick={() => handleWhatsAppShare(item)}
+                className="sm:hidden w-9 h-9 rounded-lg bg-green-50 text-green-600"
               >
                 <FaWhatsapp size={16} />
               </button>
@@ -437,7 +378,6 @@ const SelfOrderList = () => {
       getConsigneeDisplay,
       currentPage,
       itemsPerPage,
-      handleWhatsAppDirectShare,
       userRole,
       filteredData.length,
       handleWhatsAppShare,
