@@ -162,269 +162,212 @@ const SelfOrderList = () => {
     [consigneeMap],
   );
 
-  // const handleWhatsAppShare = async (item, target = "buyer") => {
-  //   const mobileNumber =
-  //     target === "buyer" ? item.buyerMobile : item.sellerMobile;
-
-  //   if (!mobileNumber) {
-  //     toast.error("Mobile number not available.");
-  //     return;
-  //   }
-
-  //   try {
-  //     const normalizedConsigneeKey = (() => {
-  //       const c = item?.consignee;
-  //       if (!c) return "";
-  //       if (typeof c === "object")
-  //         return (c.name || c.label || c.value || "").toString();
-  //       return String(c);
-  //     })();
-
-  //     const matchingConsignee = consigneeData.find((consignee) => {
-  //       const idMatch =
-  //         consignee?._id &&
-  //         normalizedConsigneeKey &&
-  //         String(consignee._id) === String(normalizedConsigneeKey);
-  //       if (idMatch) return true;
-  //       const name = (consignee?.name || consignee?.label || "")
-  //         .toString()
-  //         .trim()
-  //         .toLowerCase();
-  //       const key = normalizedConsigneeKey.toString().trim().toLowerCase();
-  //       return name && key && name === key;
-  //     });
-
-  //     const matchingSupplier = supplierData.find(
-  //       (supplier) =>
-  //         supplier.companyName?.toLowerCase() ===
-  //         item.supplierCompany?.toLowerCase(),
-  //     );
-
-  //     const rawBuyerKey = item?.buyerCompany ?? item?.buyer ?? "";
-  //     const normalizedBuyerKey = String(rawBuyerKey || "")
-  //       .trim()
-  //       .toLowerCase();
-
-  //     const matchingBuyer =
-  //       buyerData.find((buyer) => {
-  //         const idMatch =
-  //           buyer?._id &&
-  //           rawBuyerKey &&
-  //           String(buyer._id) === String(rawBuyerKey);
-  //         const nameMatch =
-  //           buyer?.companyName &&
-  //           buyer.companyName.toLowerCase() === normalizedBuyerKey;
-  //         return idMatch || nameMatch;
-  //       }) ||
-  //       supplierData.find((supplier) => {
-  //         const idMatch =
-  //           supplier?._id &&
-  //           rawBuyerKey &&
-  //           String(supplier._id) === String(rawBuyerKey);
-  //         const nameMatch =
-  //           supplier?.companyName &&
-  //           supplier.companyName.toLowerCase() === normalizedBuyerKey;
-  //         return idMatch || nameMatch;
-  //       });
-
-  //     const matchingSellerProfile = sellerProfileData.find(
-  //       (seller) => seller._id === item.supplier,
-  //     );
-
-  //     let transformedData = {
-  //       ...item,
-  //       consignee: getConsigneeDisplay(item),
-  //       consigneeDetails: matchingConsignee || null,
-  //       supplierDetails: matchingSupplier || null,
-  //       buyerDetails:
-  //         item.billTo === "consignee"
-  //           ? matchingConsignee || null
-  //           : matchingBuyer,
-  //     };
-
-  //     if (transformedData.buyerDetails) {
-  //       const bd = transformedData.buyerDetails;
-  //       transformedData.buyerDetails = {
-  //         ...bd,
-  //         address: bd.address || bd.location || "",
-  //         gstNo: bd.gstNo || bd.gst || bd.gstNumber || "",
-  //         panNo: bd.panNo || bd.pan || bd.panNumber || "",
-  //         pinNo: bd.pinNo || bd.pin || bd.pinCode || "",
-  //         district: bd.district || "",
-  //         state: bd.state || "",
-  //       };
-  //     }
-
-  //     if (
-  //       matchingBuyer &&
-  //       (!transformedData.buyerBrokerage?.brokerageBuyer ||
-  //         transformedData.buyerBrokerage.brokerageBuyer === 0)
-  //     ) {
-  //       const buyerProfileBrokerage =
-  //         matchingBuyer.brokerageByName?.[item.commodity] ||
-  //         matchingBuyer.brokerage?.[item.commodity];
-  //       if (buyerProfileBrokerage !== undefined) {
-  //         transformedData.buyerBrokerage = {
-  //           ...transformedData.buyerBrokerage,
-  //           brokerageBuyer: buyerProfileBrokerage,
-  //         };
-  //       }
-  //     }
-
-  //     if (
-  //       matchingSellerProfile &&
-  //       (!transformedData.buyerBrokerage?.brokerageSupplier ||
-  //         transformedData.buyerBrokerage.brokerageSupplier === 0)
-  //     ) {
-  //       const supplierProfileBrokerage =
-  //         matchingSellerProfile.commodities?.find(
-  //           (c) => c.name === item.commodity,
-  //         )?.brokerage;
-  //       if (supplierProfileBrokerage !== undefined) {
-  //         transformedData.buyerBrokerage = {
-  //           ...transformedData.buyerBrokerage,
-  //           brokerageSupplier: supplierProfileBrokerage,
-  //         };
-  //       }
-  //     }
-
-  //     if (item.billTo === "consignee") {
-  //       transformedData = {
-  //         ...transformedData,
-  //         buyer: item.consignee,
-  //         buyerCompany: item.consignee,
-  //       };
-  //     } else {
-  //       const buyerName =
-  //         matchingBuyer?.companyName ||
-  //         (typeof item?.buyerCompany === "string" ? item.buyerCompany : "") ||
-  //         (typeof item?.buyer === "string" ? item.buyer : "");
-
-  //       transformedData = {
-  //         ...transformedData,
-  //         buyer: buyerName,
-  //         buyerCompany: buyerName,
-  //       };
-  //     }
-
-  //     const blob = await pdf(<SaudaPDF data={transformedData} />).toBlob();
-  //     const fileName = `Sauda-${item.saudaNo}.pdf`;
-
-  //     const cleanMobile = mobileNumber.replace(/\D/g, "");
-  //     const finalMobile = cleanMobile.startsWith("91")
-  //       ? cleanMobile
-  //       : "91" + cleanMobile;
-
-  //     const message = `Sauda No: ${item.saudaNo}`;
-  //     const waUrl = `https://wa.me/${finalMobile}?text=${encodeURIComponent(
-  //       message,
-  //     )}`;
-
-  //     const updateStatus = async () => {
-  //       if (target === "buyer") {
-  //         try {
-  //           await axios.patch(`/self-order/${item._id}/whatsapp-sent`);
-  //           setData((prev) =>
-  //             prev.map((order) =>
-  //               order._id === item._id
-  //                 ? { ...order, whatsappSent: true }
-  //                 : order,
-  //             ),
-  //           );
-  //           setFilteredData((prev) =>
-  //             prev.map((order) =>
-  //               order._id === item._id
-  //                 ? { ...order, whatsappSent: true }
-  //                 : order,
-  //             ),
-  //           );
-  //         } catch (err) {
-  //           console.error("Failed to update WhatsApp status:", err);
-  //         }
-  //       }
-  //     };
-
-  //     // Always download the PDF first
-  //     const url = window.URL.createObjectURL(blob);
-
-  //     const a = document.createElement("a");
-  //     a.href = url;
-  //     a.download = fileName;
-  //     document.body.appendChild(a);
-  //     a.click();
-  //     a.remove();
-
-  //     window.URL.revokeObjectURL(url);
-
-  //     // Open WhatsApp after slight delay (better UX)
-  //     setTimeout(async () => {
-  //       window.open(waUrl, "_blank");
-  //       await updateStatus();
-  //     }, 800);
-
-  //     toast.info("PDF downloaded. Attach it in WhatsApp.");
-  //   } catch (error) {
-  //     console.error(error);
-  //     toast.error("Failed to share PDF.");
-  //   }
-  // };
   const handleWhatsAppShare = async (item, target = "buyer") => {
-  const mobileNumber = target === "buyer" ? item.buyerMobile : item.sellerMobile;
+    const mobileNumber =
+      target === "buyer" ? item.buyerMobile : item.sellerMobile;
 
-  if (!mobileNumber) {
-    toast.error("Mobile number not available.");
-    return;
-  }
+    if (!mobileNumber) {
+      toast.error("Mobile number not available.");
+      return;
+    }
 
-  try {
-    // ... [Keep your existing data transformation logic here] ...
+    try {
+      const normalizedConsigneeKey = (() => {
+        const c = item?.consignee;
+        if (!c) return "";
+        if (typeof c === "object")
+          return (c.name || c.label || c.value || "").toString();
+        return String(c);
+      })();
 
-    // 1. Generate and Download the PDF (Required since we can't 'attach' via URL)
-    const blob = await pdf(<SaudaPDF data={transformedData} />).toBlob();
-    const fileName = `Sauda-${item.saudaNo}.pdf`;
-    const url = window.URL.createObjectURL(blob);
+      const matchingConsignee = consigneeData.find((consignee) => {
+        const idMatch =
+          consignee?._id &&
+          normalizedConsigneeKey &&
+          String(consignee._id) === String(normalizedConsigneeKey);
+        if (idMatch) return true;
+        const name = (consignee?.name || consignee?.label || "")
+          .toString()
+          .trim()
+          .toLowerCase();
+        const key = normalizedConsigneeKey.toString().trim().toLowerCase();
+        return name && key && name === key;
+      });
 
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = fileName;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    window.URL.revokeObjectURL(url);
+      const matchingSupplier = supplierData.find(
+        (supplier) =>
+          supplier.companyName?.toLowerCase() ===
+          item.supplierCompany?.toLowerCase(),
+      );
 
-    // 2. Format the Phone Number for the App
-    const cleanMobile = mobileNumber.replace(/\D/g, "");
-    const finalMobile = cleanMobile.startsWith("91") ? cleanMobile : "91" + cleanMobile;
+      const rawBuyerKey = item?.buyerCompany ?? item?.buyer ?? "";
+      const normalizedBuyerKey = String(rawBuyerKey || "")
+        .trim()
+        .toLowerCase();
 
-    // 3. Use the Universal HTTPS Link (This triggers the normal WhatsApp App)
-    const message = encodeURIComponent(`Sauda No: ${item.saudaNo}\nI have downloaded the PDF. Attaching it now...`);
-    
-    // This URL works on Android, iOS, and Desktop without "Unknown Scheme" errors
-    const waUrl = `https://wa.me/${finalMobile}?text=${message}`;
+      const matchingBuyer =
+        buyerData.find((buyer) => {
+          const idMatch =
+            buyer?._id &&
+            rawBuyerKey &&
+            String(buyer._id) === String(rawBuyerKey);
+          const nameMatch =
+            buyer?.companyName &&
+            buyer.companyName.toLowerCase() === normalizedBuyerKey;
+          return idMatch || nameMatch;
+        }) ||
+        supplierData.find((supplier) => {
+          const idMatch =
+            supplier?._id &&
+            rawBuyerKey &&
+            String(supplier._id) === String(rawBuyerKey);
+          const nameMatch =
+            supplier?.companyName &&
+            supplier.companyName.toLowerCase() === normalizedBuyerKey;
+          return idMatch || nameMatch;
+        });
 
-    const updateStatus = async () => {
-      if (target === "buyer") {
-        try {
-          await axios.patch(`/self-order/${item._id}/whatsapp-sent`);
-          // ... update your local state here as you already do
-        } catch (err) {
-          console.error("Status update failed", err);
+      const matchingSellerProfile = sellerProfileData.find(
+        (seller) => seller._id === item.supplier,
+      );
+
+      let transformedData = {
+        ...item,
+        consignee: getConsigneeDisplay(item),
+        consigneeDetails: matchingConsignee || null,
+        supplierDetails: matchingSupplier || null,
+        buyerDetails:
+          item.billTo === "consignee"
+            ? matchingConsignee || null
+            : matchingBuyer,
+      };
+
+      if (transformedData.buyerDetails) {
+        const bd = transformedData.buyerDetails;
+        transformedData.buyerDetails = {
+          ...bd,
+          address: bd.address || bd.location || "",
+          gstNo: bd.gstNo || bd.gst || bd.gstNumber || "",
+          panNo: bd.panNo || bd.pan || bd.panNumber || "",
+          pinNo: bd.pinNo || bd.pin || bd.pinCode || "",
+          district: bd.district || "",
+          state: bd.state || "",
+        };
+      }
+
+      if (
+        matchingBuyer &&
+        (!transformedData.buyerBrokerage?.brokerageBuyer ||
+          transformedData.buyerBrokerage.brokerageBuyer === 0)
+      ) {
+        const buyerProfileBrokerage =
+          matchingBuyer.brokerageByName?.[item.commodity] ||
+          matchingBuyer.brokerage?.[item.commodity];
+        if (buyerProfileBrokerage !== undefined) {
+          transformedData.buyerBrokerage = {
+            ...transformedData.buyerBrokerage,
+            brokerageBuyer: buyerProfileBrokerage,
+          };
         }
       }
-    };
 
-    // 4. Open WhatsApp App after a short delay so the download completes
-    setTimeout(async () => {
-      window.open(waUrl, "_blank", "noopener,noreferrer");
-      await updateStatus();
-    }, 1000);
+      if (
+        matchingSellerProfile &&
+        (!transformedData.buyerBrokerage?.brokerageSupplier ||
+          transformedData.buyerBrokerage.brokerageSupplier === 0)
+      ) {
+        const supplierProfileBrokerage =
+          matchingSellerProfile.commodities?.find(
+            (c) => c.name === item.commodity,
+          )?.brokerage;
+        if (supplierProfileBrokerage !== undefined) {
+          transformedData.buyerBrokerage = {
+            ...transformedData.buyerBrokerage,
+            brokerageSupplier: supplierProfileBrokerage,
+          };
+        }
+      }
 
-    toast.info("PDF Downloaded. Please attach it in the WhatsApp chat that just opened.");
-  } catch (error) {
-    console.error(error);
-    toast.error("Failed to process request.");
-  }
-};
+      if (item.billTo === "consignee") {
+        transformedData = {
+          ...transformedData,
+          buyer: item.consignee,
+          buyerCompany: item.consignee,
+        };
+      } else {
+        const buyerName =
+          matchingBuyer?.companyName ||
+          (typeof item?.buyerCompany === "string" ? item.buyerCompany : "") ||
+          (typeof item?.buyer === "string" ? item.buyer : "");
+
+        transformedData = {
+          ...transformedData,
+          buyer: buyerName,
+          buyerCompany: buyerName,
+        };
+      }
+
+      const blob = await pdf(<SaudaPDF data={transformedData} />).toBlob();
+      const fileName = `Sauda-${item.saudaNo}.pdf`;
+
+      const cleanMobile = mobileNumber.replace(/\D/g, "");
+      const finalMobile = cleanMobile.startsWith("91")
+        ? cleanMobile
+        : "91" + cleanMobile;
+
+      const message = `Sauda No: ${item.saudaNo}`;
+      const waUrl = `https://wa.me/${finalMobile}?text=${encodeURIComponent(
+        message,
+      )}`;
+
+      const updateStatus = async () => {
+        if (target === "buyer") {
+          try {
+            await axios.patch(`/self-order/${item._id}/whatsapp-sent`);
+            setData((prev) =>
+              prev.map((order) =>
+                order._id === item._id
+                  ? { ...order, whatsappSent: true }
+                  : order,
+              ),
+            );
+            setFilteredData((prev) =>
+              prev.map((order) =>
+                order._id === item._id
+                  ? { ...order, whatsappSent: true }
+                  : order,
+              ),
+            );
+          } catch (err) {
+            console.error("Failed to update WhatsApp status:", err);
+          }
+        }
+      };
+
+      // Always download the PDF first
+      const url = window.URL.createObjectURL(blob);
+
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+
+      window.URL.revokeObjectURL(url);
+
+      // Open WhatsApp after slight delay (better UX)
+      setTimeout(async () => {
+        window.open(waUrl, "_blank");
+        await updateStatus();
+      }, 800);
+
+      toast.info("PDF downloaded. Attach it in WhatsApp.");
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to share PDF.");
+    }
+  };
   const handleView = useCallback(
     (item) => {
       setSelectedItem({ ...item, consignee: getConsigneeDisplay(item) });
