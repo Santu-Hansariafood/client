@@ -172,7 +172,6 @@ const SelfOrderList = () => {
     }
 
     try {
-      // ✅ Transform data for SaudaPDF (same logic as DownloadSauda.jsx)
       const normalizedConsigneeKey = (() => {
         const c = item?.consignee;
         if (!c) return "";
@@ -277,9 +276,10 @@ const SelfOrderList = () => {
         (!transformedData.buyerBrokerage?.brokerageSupplier ||
           transformedData.buyerBrokerage.brokerageSupplier === 0)
       ) {
-        const supplierProfileBrokerage = matchingSellerProfile.commodities?.find(
-          (c) => c.name === item.commodity,
-        )?.brokerage;
+        const supplierProfileBrokerage =
+          matchingSellerProfile.commodities?.find(
+            (c) => c.name === item.commodity,
+          )?.brokerage;
         if (supplierProfileBrokerage !== undefined) {
           transformedData.buyerBrokerage = {
             ...transformedData.buyerBrokerage,
@@ -307,11 +307,9 @@ const SelfOrderList = () => {
         };
       }
 
-      // ✅ Generate PDF Blob locally
       const blob = await pdf(<SaudaPDF data={transformedData} />).toBlob();
       const fileName = `Sauda-${item.saudaNo}.pdf`;
 
-      // ✅ Clean mobile number
       const cleanMobile = mobileNumber.replace(/\D/g, "");
       const finalMobile = cleanMobile.startsWith("91")
         ? cleanMobile
@@ -322,20 +320,23 @@ const SelfOrderList = () => {
         message,
       )}`;
 
-      // Update status on backend and locally
       const updateStatus = async () => {
         if (target === "buyer") {
           try {
             await axios.patch(`/self-order/${item._id}/whatsapp-sent`);
             setData((prev) =>
               prev.map((order) =>
-                order._id === item._id ? { ...order, whatsappSent: true } : order
-              )
+                order._id === item._id
+                  ? { ...order, whatsappSent: true }
+                  : order,
+              ),
             );
             setFilteredData((prev) =>
               prev.map((order) =>
-                order._id === item._id ? { ...order, whatsappSent: true } : order
-              )
+                order._id === item._id
+                  ? { ...order, whatsappSent: true }
+                  : order,
+              ),
             );
           } catch (err) {
             console.error("Failed to update WhatsApp status:", err);
@@ -343,7 +344,6 @@ const SelfOrderList = () => {
         }
       };
 
-      // ✅ MOBILE SHARE (BEST CASE)
       if (
         navigator.share &&
         navigator.canShare &&
@@ -353,20 +353,16 @@ const SelfOrderList = () => {
       ) {
         try {
           await navigator.share({
-            title: "Sauda PDF",
-            text: message,
             files: [new File([blob], fileName, { type: "application/pdf" })],
           });
 
           await updateStatus();
-          toast.success("Shared successfully");
+          toast.success("PDF shared successfully");
           return;
         } catch (err) {
           console.log("User cancelled share:", err);
         }
       }
-
-      // ✅ FALLBACK (ALL DEVICES)
       const url = window.URL.createObjectURL(blob);
 
       const a = document.createElement("a");
