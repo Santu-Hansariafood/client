@@ -3,23 +3,24 @@ import PropTypes from "prop-types";
 const Tables = ({ headers, rows }) => {
   return (
     <div className="w-full">
-      <div className="md:hidden space-y-3">
+      {/* Mobile view */}
+      <div className="md:hidden space-y-2.5">
         {rows.length > 0 ? (
           rows.map((row, rowIndex) => (
             <div
               key={rowIndex}
-              className="rounded-2xl border border-[#8CC63F]/20 bg-white overflow-hidden shadow-md shadow-slate-900/5"
+              className="rounded-xl border border-[#8CC63F]/20 bg-white overflow-hidden shadow-sm"
             >
-              <div className="divide-y divide-slate-100">
+              <div className="divide-y divide-slate-50">
                 {row.map((cell, cellIndex) => (
                   <div
                     key={cellIndex}
-                    className="flex justify-between gap-4 px-4 py-3.5"
+                    className="flex items-center justify-between gap-3 px-3.5 py-2.5"
                   >
-                    <span className="text-xs font-semibold text-[#8CC63F] uppercase tracking-wider shrink-0">
+                    <span className="text-[10px] font-bold text-[#8CC63F]/80 uppercase tracking-tight shrink-0">
                       {headers[cellIndex]}
                     </span>
-                    <div className="text-sm text-slate-800 text-right break-words max-w-[60%]">
+                    <div className="text-xs font-medium text-slate-700 text-right break-words max-w-[65%]">
                       {cell}
                     </div>
                   </div>
@@ -28,12 +29,13 @@ const Tables = ({ headers, rows }) => {
             </div>
           ))
         ) : (
-          <div className="rounded-2xl border border-dashed border-[#8CC63F]/30 bg-[#8CC63F]/5 p-8 text-center">
-            <p className="text-slate-600 font-medium">No data available</p>
+          <div className="rounded-xl border border-dashed border-[#8CC63F]/30 bg-[#8CC63F]/5 p-6 text-center">
+            <p className="text-slate-600 text-sm font-medium">No data available</p>
           </div>
         )}
       </div>
 
+      {/* Desktop view */}
       <div className="hidden md:block w-full overflow-x-auto rounded-2xl border border-[#8CC63F]/20 bg-white shadow-lg shadow-slate-900/5">
         <table className="w-full min-w-[600px] border-collapse">
           <thead>

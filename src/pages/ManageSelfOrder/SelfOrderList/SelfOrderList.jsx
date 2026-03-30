@@ -171,6 +171,8 @@ const SelfOrderList = () => {
       return;
     }
 
+    const toastId = toast.loading("Preparing Sauda PDF...");
+
     try {
       const normalizedConsigneeKey = (() => {
         const c = item?.consignee;
@@ -354,17 +356,20 @@ const SelfOrderList = () => {
             title: `Sauda PDF - ${item.saudaNo}`,
             text: message,
           });
+          toast.dismiss(toastId);
           await updateStatus();
           return;
         } catch (err) {
-          // If user cancelled, don't show error
-          if (err.name === "AbortError") return;
+          if (err.name === "AbortError") {
+            toast.dismiss(toastId);
+            return;
+          }
           console.error("Native share failed:", err);
         }
       }
 
       // Fallback: Download and open WhatsApp
-      const waUrl = `https://api.whatsapp.com/send?phone=${finalMobile}&text=${encodeURIComponent(
+      const waUrl = `https://wa.me/${finalMobile}?text=${encodeURIComponent(
         message,
       )}`;
 
@@ -377,14 +382,16 @@ const SelfOrderList = () => {
       a.remove();
       window.URL.revokeObjectURL(url);
 
+      toast.dismiss(toastId);
+      toast.info("PDF downloaded. Opening WhatsApp to send text...");
+
       // Open WhatsApp after slight delay
       setTimeout(async () => {
         window.open(waUrl, "_blank", "noopener,noreferrer");
         await updateStatus();
       }, 1000);
-
-      toast.info("PDF downloaded. Please attach it in WhatsApp.");
     } catch (error) {
+      toast.dismiss(toastId);
       console.error(error);
       toast.error("Failed to share PDF.");
     }
@@ -597,23 +604,23 @@ const SelfOrderList = () => {
         icon={FaClipboardList}
         noContentCard
       >
-        <div className="max-w-full space-y-6">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div className="max-w-full space-y-4 sm:space-y-6">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 px-1 sm:px-0">
             <button
               onClick={() => navigate(-1)}
-              className="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition"
+              className="bg-gray-200 text-gray-600 px-3 py-1.5 rounded-lg text-sm hover:bg-gray-300 transition"
             >
               Back
             </button>
             <div
-              className="flex items-center w-full max-w-md bg-white border border-emerald-100 rounded-xl px-4 py-2.5 shadow-md shadow-emerald-900/5 focus-within:ring-2 focus-within:ring-emerald-400/50 focus-within:border-emerald-400 transition-all"
+              className="flex items-center w-full max-w-md bg-white border border-emerald-100 rounded-xl px-3 py-2 shadow-sm focus-within:ring-2 focus-within:ring-emerald-400/50 focus-within:border-emerald-400 transition-all"
               role="search"
             >
               <svg
                 className="text-emerald-600/70 shrink-0"
                 xmlns="http://www.w3.org/2000/svg"
-                width="20"
-                height="20"
+                width="18"
+                height="18"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
@@ -627,15 +634,15 @@ const SelfOrderList = () => {
               </svg>
               <input
                 type="text"
-                placeholder="Search by buyer, Sauda no, or PO..."
-                className="w-full min-w-0 px-3 py-2 bg-transparent text-slate-800 placeholder-slate-400 focus:outline-none"
+                placeholder="Search..."
+                className="w-full min-w-0 px-2 py-1 bg-transparent text-sm text-slate-800 placeholder-slate-400 focus:outline-none"
                 value={searchInput}
                 onChange={handleSearchChange}
               />
             </div>
           </div>
 
-          <div className="rounded-2xl border border-emerald-100 bg-white p-4 sm:p-6 shadow-lg shadow-emerald-900/5 overflow-hidden">
+          <div className="rounded-xl sm:rounded-2xl border border-emerald-100 bg-white p-2 sm:p-6 shadow-md sm:shadow-lg shadow-emerald-900/5 overflow-hidden">
             <Tables headers={headers} rows={rows} />
           </div>
 
