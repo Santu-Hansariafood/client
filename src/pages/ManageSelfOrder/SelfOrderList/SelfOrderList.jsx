@@ -311,7 +311,6 @@ const SelfOrderList = () => {
 
       const blob = await pdf(<SaudaPDF data={transformedData} />).toBlob();
       const fileName = `Sauda-${item.saudaNo}.pdf`;
-      const file = new File([blob], fileName, { type: "application/pdf" });
 
       const cleanMobile = mobileNumber.replace(/\D/g, "");
       const finalMobile = cleanMobile.startsWith("91")
@@ -344,35 +343,7 @@ const SelfOrderList = () => {
         }
       };
 
-      // Try native sharing first (best for mobile PDF sharing)
-      if (
-        navigator.share &&
-        navigator.canShare &&
-        navigator.canShare({ files: [file] })
-      ) {
-        try {
-          await navigator.share({
-            files: [file],
-            title: `Sauda PDF - ${item.saudaNo}`,
-            text: message,
-          });
-          toast.dismiss(toastId);
-          await updateStatus();
-          return;
-        } catch (err) {
-          if (err.name === "AbortError") {
-            toast.dismiss(toastId);
-            return;
-          }
-          console.error("Native share failed:", err);
-        }
-      }
-
-      // Fallback: Download and open WhatsApp
-      const waUrl = `https://wa.me/${finalMobile}?text=${encodeURIComponent(
-        message,
-      )}`;
-
+      // Always download the PDF first so the user has it ready to attach
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
@@ -383,7 +354,12 @@ const SelfOrderList = () => {
       window.URL.revokeObjectURL(url);
 
       toast.dismiss(toastId);
-      toast.info("PDF downloaded. Opening WhatsApp to send text...");
+      toast.info(`PDF downloaded. Opening WhatsApp for ${finalMobile}...`);
+
+      // Fallback: Use targeted wa.me link to open THAT number's WhatsApp only
+      const waUrl = `https://wa.me/${finalMobile}?text=${encodeURIComponent(
+        message,
+      )}`;
 
       // Open WhatsApp after slight delay
       setTimeout(async () => {
