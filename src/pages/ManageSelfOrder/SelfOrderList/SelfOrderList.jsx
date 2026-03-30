@@ -309,6 +309,7 @@ const SelfOrderList = () => {
 
       const blob = await pdf(<SaudaPDF data={transformedData} />).toBlob();
       const fileName = `Sauda-${item.saudaNo}.pdf`;
+      const file = new File([blob], fileName, { type: "application/pdf" });
 
       const cleanMobile = mobileNumber.replace(/\D/g, "");
       const finalMobile = cleanMobile.startsWith("91")
@@ -316,9 +317,6 @@ const SelfOrderList = () => {
         : "91" + cleanMobile;
 
       const message = `Sauda No: ${item.saudaNo}`;
-      const waUrl = `https://wa.me/${finalMobile}?text=${encodeURIComponent(
-        message,
-      )}`;
 
       const updateStatus = async () => {
         if (target === "buyer") {
@@ -344,25 +342,48 @@ const SelfOrderList = () => {
         }
       };
 
-      // Always download the PDF first
-      const url = window.URL.createObjectURL(blob);
+      // Try native sharing first (best for mobile PDF sharing)
+      if (
+        navigator.share &&
+        navigator.canShare &&
+        navigator.canShare({ files: [file] })
+      ) {
+        try {
+          await navigator.share({
+            files: [file],
+            title: `Sauda PDF - ${item.saudaNo}`,
+            text: message,
+          });
+          await updateStatus();
+          return;
+        } catch (err) {
+          // If user cancelled, don't show error
+          if (err.name === "AbortError") return;
+          console.error("Native share failed:", err);
+        }
+      }
 
+      // Fallback: Download and open WhatsApp
+      const waUrl = `https://api.whatsapp.com/send?phone=${finalMobile}&text=${encodeURIComponent(
+        message,
+      )}`;
+
+      const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
       a.download = fileName;
       document.body.appendChild(a);
       a.click();
       a.remove();
-
       window.URL.revokeObjectURL(url);
 
-      // Open WhatsApp after slight delay (better UX)
+      // Open WhatsApp after slight delay
       setTimeout(async () => {
-        window.open(waUrl, "_blank");
+        window.open(waUrl, "_blank", "noopener,noreferrer");
         await updateStatus();
-      }, 800);
+      }, 1000);
 
-      toast.info("PDF downloaded. Attach it in WhatsApp.");
+      toast.info("PDF downloaded. Please attach it in WhatsApp.");
     } catch (error) {
       console.error(error);
       toast.error("Failed to share PDF.");
