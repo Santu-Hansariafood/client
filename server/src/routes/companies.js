@@ -53,6 +53,12 @@ const mapCompanyForClient = (company) => {
     _id: company._id,
     companyName: company.companyName,
     companyEmail: company.companyEmail || "",
+    location: company.location || "",
+    state: company.state || "",
+    district: company.district || "" ,
+    pinCode: company.pinCode || "",
+    gstNumber: company.gstNumber || "",
+    panNumber: company.panNumber || "",
     consigneeIds,
     consignee: (company.consigneeIds || [])
       .map((c) => c?.name || "")

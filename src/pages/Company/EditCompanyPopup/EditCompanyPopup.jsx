@@ -73,6 +73,17 @@ const EditCompanyPopup = ({ company, isOpen, onClose, onUpdate }) => {
 
         setCommodityOptions(mappedCommodityOptions);
 
+        // Pre-fill state options from JSON to use for mapping
+        const formattedStates = statesData.map((item) => ({
+          value: item.state,
+          label: item.state,
+          districts: item.district.map((d) => ({
+            value: d,
+            label: d,
+          })),
+        }));
+        setStateOptions(formattedStates);
+
         if (company) {
           setCompanyName(company.companyName || "");
           setCompanyEmail(company.companyEmail || "");
@@ -80,6 +91,26 @@ const EditCompanyPopup = ({ company, isOpen, onClose, onUpdate }) => {
           setPinCode(company.pinCode || "");
           setGstNumber(company.gstNumber || "");
           setPanNumber(company.panNumber || "");
+
+          // Prefill State and District
+          if (company.state) {
+            const stateObj = formattedStates.find(
+              (s) => s.value === company.state,
+            );
+            if (stateObj) {
+              setState({ value: stateObj.value, label: stateObj.label });
+              setDistrictOptions(stateObj.districts || []);
+
+              if (company.district) {
+                const distObj = stateObj.districts.find(
+                  (d) => d.value === company.district,
+                );
+                if (distObj) {
+                  setDistrict({ value: distObj.value, label: distObj.label });
+                }
+              }
+            }
+          }
 
           if (company.groupId) {
             const grp = groups.find(
@@ -101,21 +132,32 @@ const EditCompanyPopup = ({ company, isOpen, onClose, onUpdate }) => {
             setSelectedConsignees(mapped);
           }
 
-          // ✅ IMPORTANT FIX (keeps commodity _id)
+          // ✅ IMPORTANT FIX (keeps commodity _id and labels)
           setCommodityEntries(
             Array.isArray(company.commodities)
-              ? company.commodities.map((entry) => ({
-                  _id: entry._id || null,
-                  commodityId: String(entry.commodityId || entry._id || ""),
-                  brokerage: entry.brokerage ?? 0,
-                  parameters: Array.isArray(entry.parameters)
-                    ? entry.parameters.map((p) => ({
-                        parameterId: String(p.parameterId || p._id),
-                        label: p.parameter,
-                        value: p.value ?? "",
-                      }))
-                    : [],
-                }))
+              ? company.commodities.map((entry) => {
+                  const commodityDef = mappedCommodityOptions.find(
+                    (c) => String(c.value) === String(entry.commodityId),
+                  );
+
+                  return {
+                    _id: entry._id || null,
+                    commodityId: String(entry.commodityId || ""),
+                    brokerage: entry.brokerage ?? 0,
+                    parameters: Array.isArray(entry.parameters)
+                      ? entry.parameters.map((p) => {
+                          const paramDef = commodityDef?.parameters?.find(
+                            (pd) => String(pd.value) === String(p.parameterId),
+                          );
+                          return {
+                            parameterId: String(p.parameterId),
+                            label: paramDef?.label || p.label || "Parameter",
+                            value: p.value ?? "",
+                          };
+                        })
+                      : [],
+                  };
+                })
               : [],
           );
         }
@@ -128,19 +170,6 @@ const EditCompanyPopup = ({ company, isOpen, onClose, onUpdate }) => {
 
     if (isOpen) fetchData();
   }, [isOpen, company]);
-
-  useEffect(() => {
-    const formattedStates = statesData.map((item) => ({
-      value: item.state,
-      label: item.state,
-      districts: item.district.map((d) => ({
-        value: d,
-        label: d,
-      })),
-    }));
-
-    setStateOptions(formattedStates);
-  }, []);
 
   if (!isOpen) return null;
 
