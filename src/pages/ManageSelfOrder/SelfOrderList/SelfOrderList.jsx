@@ -344,25 +344,7 @@ const SelfOrderList = () => {
         }
       };
 
-      if (
-        navigator.share &&
-        navigator.canShare &&
-        navigator.canShare({
-          files: [new File([blob], fileName, { type: "application/pdf" })],
-        })
-      ) {
-        try {
-          await navigator.share({
-            files: [new File([blob], fileName, { type: "application/pdf" })],
-          });
-
-          await updateStatus();
-          toast.success("PDF shared successfully");
-          return;
-        } catch (err) {
-          console.log("User cancelled share:", err);
-        }
-      }
+      // Always download the PDF first
       const url = window.URL.createObjectURL(blob);
 
       const a = document.createElement("a");
