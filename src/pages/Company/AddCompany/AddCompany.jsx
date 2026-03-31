@@ -21,6 +21,7 @@ const DataDropdown = lazy(
 const Buttons = lazy(() => import("../../../common/Buttons/Buttons"));
 
 import regexPatterns from "../../../utils/regexPatterns/regexPatterns";
+import { fetchAllPages } from "../../../utils/apiClient/fetchAllPages";
 
 const AddCompany = () => {
   const [companyName, setCompanyName] = useState("");
@@ -48,13 +49,12 @@ const AddCompany = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [consigneesRes, groupsRes, commoditiesRes] = await Promise.all([
-          axios.get("/consignees"),
+        const [consignees, groupsRes, commoditiesRes] = await Promise.all([
+          fetchAllPages("/consignees"),
           axios.get("/groups"),
           axios.get("/commodities"),
         ]);
 
-        const consignees = consigneesRes.data?.data || consigneesRes.data || [];
         const groups = groupsRes.data?.data || groupsRes.data || [];
         const commodities =
           commoditiesRes.data?.data || commoditiesRes.data || [];

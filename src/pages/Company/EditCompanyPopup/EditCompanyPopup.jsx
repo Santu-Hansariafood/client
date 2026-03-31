@@ -5,6 +5,7 @@ import { toast } from "react-toastify";
 import Loading from "../../../common/Loading/Loading";
 import regexPatterns from "../../../utils/regexPatterns/regexPatterns";
 import statesData from "../../../data/state-city.json";
+import { fetchAllPages } from "../../../utils/apiClient/fetchAllPages";
 
 const DataInput = lazy(() => import("../../../common/DataInput/DataInput"));
 const DataDropdown = lazy(
@@ -35,13 +36,12 @@ const EditCompanyPopup = ({ company, isOpen, onClose, onUpdate }) => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [consigneeRes, commodityRes, groupRes] = await Promise.all([
-          axios.get("/consignees"),
+        const [consignees, commodityRes, groupRes] = await Promise.all([
+          fetchAllPages("/consignees"),
           axios.get("/commodities"),
           axios.get("/groups"),
         ]);
 
-        const consignees = consigneeRes.data?.data || consigneeRes.data || [];
         const commoditiesData =
           commodityRes.data?.data || commodityRes.data || [];
         const groups = groupRes.data?.data || groupRes.data || [];
