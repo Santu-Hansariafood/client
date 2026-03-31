@@ -161,255 +161,28 @@ const SelfOrderList = () => {
     },
     [consigneeMap],
   );
+  const openWhatsAppChat = useCallback((mobileNumber, item) => {
+    if (!mobileNumber) {
+      toast.error("Mobile number not available");
+      return;
+    }
 
-  const handleWhatsAppShare = useCallback(
-    async (item, target = "buyer") => {
-      const mobileNumber =
-        target === "buyer" ? item.buyerMobile : item.sellerMobile;
+    const cleanMobile = mobileNumber.replace(/\D/g, "");
 
-      if (!mobileNumber) {
-        toast.error("Mobile number not available.");
-        return;
-      }
-
-      const toastId = toast.loading("Preparing WhatsApp PDF...");
-
-      try {
-        const message = [
-          `Sauda No: ${item.saudaNo || "N/A"}`,
-          `PO Number: ${item.poNumber || "N/A"}`,
-          `Buyer: ${item.buyerCompany || item.buyer || "N/A"}`,
-          `Supplier: ${item.supplierCompany || item.supplier || "N/A"}`,
-        ].join("\n");
-
-        const normalizedConsigneeKey = (() => {
-          const c = item?.consignee;
-          if (!c) return "";
-          if (typeof c === "object")
-            return (c.name || c.label || c.value || "").toString();
-          return String(c);
-        })();
-
-        const matchingConsignee = consigneeData.find((consignee) => {
-          const idMatch =
-            consignee?._id &&
-            normalizedConsigneeKey &&
-            String(consignee._id) === String(normalizedConsigneeKey);
-          if (idMatch) return true;
-          const name = (consignee?.name || consignee?.label || "")
-            .toString()
-            .trim()
-            .toLowerCase();
-          const key = normalizedConsigneeKey.toString().trim().toLowerCase();
-          return name && key && name === key;
-        });
-
-        const matchingSupplier = supplierData.find(
-          (supplier) =>
-            supplier.companyName?.toLowerCase() ===
-            item.supplierCompany?.toLowerCase(),
-        );
-
-        const rawBuyerKey = item?.buyerCompany ?? item?.buyer ?? "";
-        const normalizedBuyerKey = String(rawBuyerKey || "")
-          .trim()
-          .toLowerCase();
-
-        const matchingBuyer =
-          buyerData.find((buyer) => {
-            const idMatch =
-              buyer?._id &&
-              rawBuyerKey &&
-              String(buyer._id) === String(rawBuyerKey);
-            const nameMatch =
-              buyer?.companyName &&
-              buyer.companyName.toLowerCase() === normalizedBuyerKey;
-            return idMatch || nameMatch;
-          }) ||
-          supplierData.find((supplier) => {
-            const idMatch =
-              supplier?._id &&
-              rawBuyerKey &&
-              String(supplier._id) === String(rawBuyerKey);
-            const nameMatch =
-              supplier?.companyName &&
-              supplier.companyName.toLowerCase() === normalizedBuyerKey;
-            return idMatch || nameMatch;
-          });
-
-        const matchingSellerProfile = sellerProfileData.find(
-          (seller) => seller._id === item.supplier,
-        );
-
-        let transformedData = {
-          ...item,
-          consignee: getConsigneeDisplay(item),
-          consigneeDetails: matchingConsignee || null,
-          supplierDetails: matchingSupplier || null,
-          buyerDetails:
-            item.billTo === "consignee"
-              ? matchingConsignee || null
-              : matchingBuyer,
-        };
-
-        if (transformedData.buyerDetails) {
-          const bd = transformedData.buyerDetails;
-          transformedData.buyerDetails = {
-            ...bd,
-            address: bd.address || bd.location || "",
-            gstNo: bd.gstNo || bd.gst || bd.gstNumber || "",
-            panNo: bd.panNo || bd.pan || bd.panNumber || "",
-            pinNo: bd.pinNo || bd.pin || bd.pinCode || "",
-            district: bd.district || "",
-            state: bd.state || "",
-          };
-        }
-
-        if (
-          matchingBuyer &&
-          (!transformedData.buyerBrokerage?.brokerageBuyer ||
-            transformedData.buyerBrokerage.brokerageBuyer === 0)
-        ) {
-          const buyerProfileBrokerage =
-            matchingBuyer.brokerageByName?.[item.commodity] ||
-            matchingBuyer.brokerage?.[item.commodity];
-          if (buyerProfileBrokerage !== undefined) {
-            transformedData.buyerBrokerage = {
-              ...transformedData.buyerBrokerage,
-              brokerageBuyer: buyerProfileBrokerage,
-            };
-          }
-        }
-
-        if (
-          matchingSellerProfile &&
-          (!transformedData.buyerBrokerage?.brokerageSupplier ||
-            transformedData.buyerBrokerage.brokerageSupplier === 0)
-        ) {
-          const supplierProfileBrokerage =
-            matchingSellerProfile.commodities?.find(
-              (c) => c.name === item.commodity,
-            )?.brokerage;
-          if (supplierProfileBrokerage !== undefined) {
-            transformedData.buyerBrokerage = {
-              ...transformedData.buyerBrokerage,
-              brokerageSupplier: supplierProfileBrokerage,
-            };
-          }
-        }
-
-        if (item.billTo === "consignee") {
-          transformedData = {
-            ...transformedData,
-            buyer: item.consignee,
-            buyerCompany: item.consignee,
-          };
-        } else {
-          const buyerName =
-            matchingBuyer?.companyName ||
-            (typeof item?.buyerCompany === "string" ? item.buyerCompany : "") ||
-            (typeof item?.buyer === "string" ? item.buyer : "");
-
-          transformedData = {
-            ...transformedData,
-            buyer: buyerName,
-            buyerCompany: buyerName,
-          };
-        }
-
-        const blob = await pdf(<SaudaPDF data={transformedData} />).toBlob();
-        const fileName = `Sauda-${item.saudaNo}.pdf`;
-
-        const cleanMobile = mobileNumber.replace(/\D/g, "");
-        const finalMobile = cleanMobile.startsWith("91")
+    const finalMobile =
+      cleanMobile.length === 10
+        ? `91${cleanMobile}`
+        : cleanMobile.startsWith("91")
           ? cleanMobile
-          : "91" + cleanMobile;
+          : cleanMobile;
 
-        const updateStatus = async () => {
-          try {
-            await axios.patch(`/self-order/${item._id}/whatsapp-sent`);
-            setData((prev) =>
-              prev.map((order) =>
-                order._id === item._id
-                  ? { ...order, whatsappSent: true }
-                  : order,
-              ),
-            );
-            setFilteredData((prev) =>
-              prev.map((order) =>
-                order._id === item._id
-                  ? { ...order, whatsappSent: true }
-                  : order,
-              ),
-            );
-          } catch (err) {
-            console.error("Failed to update WhatsApp status:", err);
-          }
-        };
+    const message = `Hello, regarding Sauda No: ${item?.saudaNo || ""}`;
 
-        let sharedViaFile = false;
-        try {
-          if (
-            typeof navigator !== "undefined" &&
-            navigator.share &&
-            navigator.canShare &&
-            typeof File !== "undefined"
-          ) {
-            const file = new File([blob], fileName, {
-              type: "application/pdf",
-            });
-            if (navigator.canShare({ files: [file] })) {
-              await navigator.share({
-                files: [file],
-                text: message,
-                title: fileName,
-              });
-              sharedViaFile = true;
-            }
-          }
-        } catch (err) {
-          console.error("Web Share failed:", err);
-        }
+    const url = `https://wa.me/${finalMobile}?text=${encodeURIComponent(message)}`;
 
-        if (!sharedViaFile) {
-          const url = window.URL.createObjectURL(blob);
-        
-          const file = new File([blob], fileName, {
-            type: "application/pdf",
-          });
-        
-          if (navigator.share) {
-            await navigator.share({
-              files: [file],
-              text: message,
-              title: fileName,
-            });
-          } else {
-            const waUrl = `https://wa.me/${finalMobile}?text=${encodeURIComponent(message)}`;
-            window.open(waUrl, "_blank");
-          }
-        }
+    window.open(url, "_blank");
+  }, []);
 
-        await updateStatus();
-
-        toast.dismiss(toastId);
-        toast.success("WhatsApp flow opened with Sauda PDF ready.");
-      } catch (error) {
-        toast.dismiss(toastId);
-        console.error(error);
-        toast.error("Failed to prepare WhatsApp PDF.");
-      }
-    },
-    [
-      buyerData,
-      consigneeData,
-      getConsigneeDisplay,
-      sellerProfileData,
-      setData,
-      setFilteredData,
-      supplierData,
-    ],
-  );
   const handleView = useCallback(
     (item) => {
       setSelectedItem({ ...item, consignee: getConsigneeDisplay(item) });
@@ -477,13 +250,9 @@ const SelfOrderList = () => {
               <span>{item.buyerMobile || "N/A"}</span>
               {item.buyerMobile && (
                 <button
-                  onClick={() => handleWhatsAppShare(item, "buyer")}
-                  className={`sm:hidden transition-colors ${
-                    item.whatsappSent
-                      ? "text-green-600"
-                      : "text-slate-400 hover:text-green-500"
-                  }`}
-                  title={item.whatsappSent ? "Sent" : "Send WhatsApp"}
+                  onClick={() => openWhatsAppChat(item.buyerMobile, item)}
+                  className="text-slate-400 hover:text-green-500"
+                  title="Chat on WhatsApp"
                 >
                   <FaWhatsapp size={18} />
                 </button>
@@ -508,9 +277,9 @@ const SelfOrderList = () => {
               </span>
               {item.sellerMobile && (
                 <button
-                  onClick={() => handleWhatsAppShare(item, "seller")}
-                  className="sm:hidden text-slate-400 hover:text-green-500"
-                  title="Send WhatsApp"
+                  onClick={() => openWhatsAppChat(item.sellerMobile, item)}
+                  className="text-slate-400 hover:text-green-500"
+                  title="Chat on WhatsApp"
                 >
                   <FaWhatsapp size={18} />
                 </button>
@@ -556,7 +325,7 @@ const SelfOrderList = () => {
               />
 
               <button
-                onClick={() => handleWhatsAppShare(item)}
+                onClick={() => openWhatsAppChat(item.buyerMobile, item)}
                 className="sm:hidden w-9 h-9 rounded-lg bg-green-50 text-green-600"
               >
                 <FaWhatsapp size={16} />
@@ -574,7 +343,6 @@ const SelfOrderList = () => {
       itemsPerPage,
       userRole,
       filteredData.length,
-      handleWhatsAppShare,
       consigneeData,
       supplierData,
       buyerData,
