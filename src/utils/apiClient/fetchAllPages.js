@@ -30,11 +30,9 @@ export const fetchAllPages = async (
     const totalPages = toPositiveNumber(payload?.totalPages);
     const totalItems = toPositiveNumber(payload?.total);
 
-    // Stop when backend explicitly says we've reached the end
     if (totalPages && page >= totalPages) break;
     if (totalItems && allItems.length >= totalItems) break;
 
-    // Otherwise, keep going until an empty page is returned
     if (pageItems.length === 0) break;
 
     page += 1;
