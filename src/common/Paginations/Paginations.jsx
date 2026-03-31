@@ -11,14 +11,15 @@ const Pagination = ({
   const totalPages = Math.max(1, Math.ceil(totalItems / itemsPerPage));
   const [currentGroup, setCurrentGroup] = useState(1);
   const pagesPerGroup = 5;
-  const paginationStep = totalPages > 100 ? 100 : 10;
 
   useEffect(() => {
-    setCurrentGroup(Math.floor((currentPage - 1) / pagesPerGroup) * pagesPerGroup + 1);
+    setCurrentGroup(
+      Math.floor((currentPage - 1) / pagesPerGroup) * pagesPerGroup + 1
+    );
   }, [currentPage, totalPages]);
 
   const pageGroups = [];
-  for (let i = 1; i <= totalPages; i += paginationStep) {
+  for (let i = 1; i <= totalPages; i += pagesPerGroup) {
     pageGroups.push(i);
   }
 
@@ -33,14 +34,14 @@ const Pagination = ({
   const goLast = () => onPageChange(totalPages);
 
   const btnBase = "inline-flex items-center justify-center min-w-[2.5rem] h-10 rounded-xl font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-emerald-400/50 focus:ring-offset-2";
-  const btnDisabled = "bg-slate-100 text-slate-400 cursor-not-allowed dark:bg-slate-800 dark:text-slate-500";
-  const btnActive = "bg-slate-900 text-white hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-200 shadow-sm";
-  const btnDefault = "bg-white text-slate-700 hover:bg-slate-50 border border-slate-200 hover:border-slate-300 dark:bg-slate-800 dark:text-slate-200 dark:border-slate-700 dark:hover:bg-slate-700";
+  const btnDisabled = "bg-slate-100 text-slate-400 cursor-not-allowed";
+  const btnActive = "bg-slate-900 text-white hover:bg-slate-800 shadow-sm";
+  const btnDefault = "bg-white text-slate-700 hover:bg-slate-50 border border-slate-200 hover:border-slate-300";
   const btnPrimary = "bg-emerald-600 text-white hover:bg-emerald-700 border-transparent shadow-sm shadow-emerald-500/20";
 
   return (
     <div className="flex flex-col items-center gap-4 mt-6 w-full">
-      <div className="flex items-center justify-between w-full max-w-sm md:hidden gap-3 p-3 rounded-2xl bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700/80 shadow-sm">
+      <div className="flex items-center justify-between w-full max-w-sm md:hidden gap-3 p-3 rounded-2xl bg-slate-50 border border-slate-200 shadow-sm">
         <button
           onClick={() => onPageChange(currentPage - 1)}
           disabled={currentPage === 1}
@@ -49,7 +50,7 @@ const Pagination = ({
           <FaChevronLeft className="w-4 h-4 mr-1" />
           Prev
         </button>
-        <span className="text-sm font-medium text-slate-600 dark:text-slate-300 shrink-0">
+        <span className="text-sm font-medium text-slate-600 shrink-0">
           {currentPage} / {totalPages}
         </span>
         <button
@@ -68,7 +69,10 @@ const Pagination = ({
             {pageGroups.map((group) => (
               <button
                 key={group}
-                onClick={() => setCurrentGroup(group)}
+                onClick={() => {
+                  setCurrentGroup(group);
+                  onPageChange(group);
+                }}
                 className={`${btnBase} px-3 py-2 text-sm ${
                   currentGroup === group ? btnPrimary : btnDefault
                 }`}
@@ -78,7 +82,7 @@ const Pagination = ({
             ))}
           </div>
         )}
-        <div className="flex items-center justify-center gap-1.5 p-2 rounded-2xl bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700/80 shadow-sm">
+        <div className="flex items-center justify-center gap-1.5 p-2 rounded-2xl bg-slate-50 border border-slate-200 shadow-sm">
           <button
             onClick={goFirst}
             disabled={currentPage === 1}

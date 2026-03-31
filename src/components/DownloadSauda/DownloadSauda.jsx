@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, cloneElement } from "react";
 import PropTypes from "prop-types";
 import { PDFDownloadLink, pdf } from "@react-pdf/renderer";
 import SaudaPDF from "./SaudaPDF/SaudaPDF";
@@ -13,6 +13,7 @@ const DownloadSauda = ({
   supplierData: initialSupplierData,
   buyerData: initialBuyerData,
   sellerProfileData: initialSellerProfileData,
+  autoEmail = false,
 }) => {
   const [consigneeData, setConsigneeData] = useState(
     initialConsigneeData || [],
@@ -224,8 +225,7 @@ const DownloadSauda = ({
   const [showEmailPopup, setShowEmailPopup] = useState(false);
   const [recipientEmail, setRecipientEmail] = useState("");
 
-  useEffect(() => {
-    if (!showEmailPopup) return;
+  const computeDefaultEmails = () => {
     const buyerEmails = Array.isArray(data?.buyerEmails)
       ? data.buyerEmails.filter(Boolean)
       : [];
@@ -233,15 +233,18 @@ const DownloadSauda = ({
       ? data.sellerEmails.filter(Boolean)
       : [];
     const fromSingle = data?.buyerEmail ? [data.buyerEmail] : [];
-    const allEmails = [
-      ...new Set([...buyerEmails, ...sellerEmails, ...fromSingle]),
-    ].join(", ");
-    setRecipientEmail(allEmails);
+    const allEmails = [...new Set([...buyerEmails, ...sellerEmails, ...fromSingle])];
+    return allEmails.join(", ");
+  };
+
+  useEffect(() => {
+    if (!showEmailPopup) return;
+    setRecipientEmail(computeDefaultEmails());
   }, [showEmailPopup, data]);
 
-  const handleSendEmail = async () => {
-    if (!recipientEmail) {
-      toast.warning("Please enter a recipient email address.");
+  const sendEmail = async (emailString) => {
+    if (!emailString) {
+      toast.warning("No recipient email addresses found.");
       return;
     }
 
@@ -256,7 +259,7 @@ const DownloadSauda = ({
 
         try {
           await axios.post("/api/email/send-pdf", {
-            email: recipientEmail,
+            email: emailString,
             pdf: base64data,
             saudaNo: data.saudaNo,
           });
@@ -277,6 +280,19 @@ const DownloadSauda = ({
       setSendingEmail(false);
     }
   };
+
+  const handleSendEmail = async () => {
+    if (!recipientEmail) {
+      toast.warning("Please enter a recipient email address.");
+      return;
+    }
+    await sendEmail(recipientEmail);
+  };
+
+  const handleAutoEmail = async () => {
+    const defaultEmails = computeDefaultEmails();
+    await sendEmail(defaultEmails);
+  };
   return (
     <div className="flex items-center justify-center bg-white rounded-lg shadow-md p-2 gap-2">
       {loading ? (
@@ -294,8 +310,16 @@ const DownloadSauda = ({
           >
             {({ loading: pdfLoading }) =>
               button ? (
-                // If a custom button is provided, clone it and handle loading state if needed
-                button
+                cloneElement(button, {
+                  onClick: async (e) => {
+                    if (button.props.onClick) {
+                      button.props.onClick(e);
+                    }
+                    if (!pdfLoading && autoEmail) {
+                      await handleAutoEmail();
+                    }
+                  },
+                })
               ) : (
                 <button
                   className={`flex items-center justify-center py-2 px-4 rounded-lg focus:outline-none transition duration-300 ${
@@ -342,7 +366,7 @@ const DownloadSauda = ({
           )}
         </>
       )}
-      {showEmailPopup && (
+      {showEmailPopup && !autoEmail && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
           <div className="bg-white p-6 rounded-lg shadow-lg">
             <h3 className="text-lg font-bold mb-4">Send PDF via Email</h3>
@@ -386,6 +410,7 @@ DownloadSauda.propTypes = {
   supplierData: PropTypes.array,
   buyerData: PropTypes.array,
   sellerProfileData: PropTypes.array,
+  autoEmail: PropTypes.bool,
 };
 
 export default DownloadSauda;
