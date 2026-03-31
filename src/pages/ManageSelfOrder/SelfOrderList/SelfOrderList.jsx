@@ -14,6 +14,8 @@ import Loading from "../../../common/Loading/Loading";
 import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
 import { FaClipboardList } from "react-icons/fa";
 import { useAuth } from "../../../context/AuthContext/AuthContext";
+import { pdf } from "@react-pdf/renderer";
+import SaudaPDF from "../../../components/DownloadSauda/SaudaPDF/SaudaPDF";
 
 const Tables = lazy(() => import("../../../common/Tables/Tables"));
 const Pagination = lazy(
@@ -170,9 +172,10 @@ const SelfOrderList = () => {
         return;
       }
 
-      const toastId = toast.loading("Opening WhatsApp...");
+      const toastId = toast.loading("Preparing WhatsApp PDF...");
 
       try {
+        // Build message text
         const message = [
           `Sauda No: ${item.saudaNo || "N/A"}`,
           `PO Number: ${item.poNumber || "N/A"}`,
@@ -180,14 +183,149 @@ const SelfOrderList = () => {
           `Supplier: ${item.supplierCompany || item.supplier || "N/A"}`,
         ].join("\n");
 
+        // Build PDF payload similar to DownloadSauda
+        const normalizedConsigneeKey = (() => {
+          const c = item?.consignee;
+          if (!c) return "";
+          if (typeof c === "object")
+            return (c.name || c.label || c.value || "").toString();
+          return String(c);
+        })();
+
+        const matchingConsignee = consigneeData.find((consignee) => {
+          const idMatch =
+            consignee?._id &&
+            normalizedConsigneeKey &&
+            String(consignee._id) === String(normalizedConsigneeKey);
+          if (idMatch) return true;
+          const name = (consignee?.name || consignee?.label || "")
+            .toString()
+            .trim()
+            .toLowerCase();
+          const key = normalizedConsigneeKey.toString().trim().toLowerCase();
+          return name && key && name === key;
+        });
+
+        const matchingSupplier = supplierData.find(
+          (supplier) =>
+            supplier.companyName?.toLowerCase() ===
+            item.supplierCompany?.toLowerCase(),
+        );
+
+        const rawBuyerKey = item?.buyerCompany ?? item?.buyer ?? "";
+        const normalizedBuyerKey = String(rawBuyerKey || "")
+          .trim()
+          .toLowerCase();
+
+        const matchingBuyer =
+          buyerData.find((buyer) => {
+            const idMatch =
+              buyer?._id &&
+              rawBuyerKey &&
+              String(buyer._id) === String(rawBuyerKey);
+            const nameMatch =
+              buyer?.companyName &&
+              buyer.companyName.toLowerCase() === normalizedBuyerKey;
+            return idMatch || nameMatch;
+          }) ||
+          supplierData.find((supplier) => {
+            const idMatch =
+              supplier?._id &&
+              rawBuyerKey &&
+              String(supplier._id) === String(rawBuyerKey);
+            const nameMatch =
+              supplier?.companyName &&
+              supplier.companyName.toLowerCase() === normalizedBuyerKey;
+            return idMatch || nameMatch;
+          });
+
+        const matchingSellerProfile = sellerProfileData.find(
+          (seller) => seller._id === item.supplier,
+        );
+
+        let transformedData = {
+          ...item,
+          consignee: getConsigneeDisplay(item),
+          consigneeDetails: matchingConsignee || null,
+          supplierDetails: matchingSupplier || null,
+          buyerDetails:
+            item.billTo === "consignee"
+              ? matchingConsignee || null
+              : matchingBuyer,
+        };
+
+        if (transformedData.buyerDetails) {
+          const bd = transformedData.buyerDetails;
+          transformedData.buyerDetails = {
+            ...bd,
+            address: bd.address || bd.location || "",
+            gstNo: bd.gstNo || bd.gst || bd.gstNumber || "",
+            panNo: bd.panNo || bd.pan || bd.panNumber || "",
+            pinNo: bd.pinNo || bd.pin || bd.pinCode || "",
+            district: bd.district || "",
+            state: bd.state || "",
+          };
+        }
+
+        if (
+          matchingBuyer &&
+          (!transformedData.buyerBrokerage?.brokerageBuyer ||
+            transformedData.buyerBrokerage.brokerageBuyer === 0)
+        ) {
+          const buyerProfileBrokerage =
+            matchingBuyer.brokerageByName?.[item.commodity] ||
+            matchingBuyer.brokerage?.[item.commodity];
+          if (buyerProfileBrokerage !== undefined) {
+            transformedData.buyerBrokerage = {
+              ...transformedData.buyerBrokerage,
+              brokerageBuyer: buyerProfileBrokerage,
+            };
+          }
+        }
+
+        if (
+          matchingSellerProfile &&
+          (!transformedData.buyerBrokerage?.brokerageSupplier ||
+            transformedData.buyerBrokerage.brokerageSupplier === 0)
+        ) {
+          const supplierProfileBrokerage =
+            matchingSellerProfile.commodities?.find(
+              (c) => c.name === item.commodity,
+            )?.brokerage;
+          if (supplierProfileBrokerage !== undefined) {
+            transformedData.buyerBrokerage = {
+              ...transformedData.buyerBrokerage,
+              brokerageSupplier: supplierProfileBrokerage,
+            };
+          }
+        }
+
+        if (item.billTo === "consignee") {
+          transformedData = {
+            ...transformedData,
+            buyer: item.consignee,
+            buyerCompany: item.consignee,
+          };
+        } else {
+          const buyerName =
+            matchingBuyer?.companyName ||
+            (typeof item?.buyerCompany === "string" ? item.buyerCompany : "") ||
+            (typeof item?.buyer === "string" ? item.buyer : "");
+
+          transformedData = {
+            ...transformedData,
+            buyer: buyerName,
+            buyerCompany: buyerName,
+          };
+        }
+
+        const blob = await pdf(<SaudaPDF data={transformedData} />).toBlob();
+        const fileName = `Sauda-${item.saudaNo}.pdf`;
+
         const cleanMobile = mobileNumber.replace(/\D/g, "");
         const finalMobile = cleanMobile.startsWith("91")
           ? cleanMobile
           : "91" + cleanMobile;
-
-        const waUrl = `https://wa.me/${finalMobile}?text=${encodeURIComponent(
-          message,
-        )}`;
 
         const updateStatus = async () => {
           try {
@@ -211,18 +349,72 @@ const SelfOrderList = () => {
           }
         };
 
-        window.open(waUrl, "_blank", "noopener,noreferrer");
+        // Try using Web Share API to share the PDF directly (mobile browsers)
+        let sharedViaFile = false;
+        try {
+          if (
+            typeof navigator !== "undefined" &&
+            navigator.share &&
+            navigator.canShare &&
+            typeof File !== "undefined"
+          ) {
+            const file = new File([blob], fileName, {
+              type: "application/pdf",
+            });
+            if (navigator.canShare({ files: [file] })) {
+              await navigator.share({
+                files: [file],
+                text: message,
+                title: fileName,
+              });
+              sharedViaFile = true;
+            }
+          }
+        } catch (err) {
+          // Ignore share errors and fall back
+          console.error("Web Share failed:", err);
+        }
+
+        if (!sharedViaFile) {
+          // Fallback: download PDF and open WhatsApp chat with text so user can attach file
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = fileName;
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          window.URL.revokeObjectURL(url);
+
+          const waUrl = `https://wa.me/${finalMobile}?text=${encodeURIComponent(
+            message,
+          )}`;
+          window.open(waUrl, "_blank", "noopener,noreferrer");
+
+          toast.info(
+            "PDF downloaded. Please attach it in the WhatsApp chat if not already attached.",
+          );
+        }
+
         await updateStatus();
 
         toast.dismiss(toastId);
-        toast.success("WhatsApp opened with order details.");
+        toast.success("WhatsApp flow opened with Sauda PDF ready.");
       } catch (error) {
         toast.dismiss(toastId);
         console.error(error);
-        toast.error("Failed to open WhatsApp.");
+        toast.error("Failed to prepare WhatsApp PDF.");
       }
     },
-    [],
+    [
+      buyerData,
+      consigneeData,
+      getConsigneeDisplay,
+      sellerProfileData,
+      setData,
+      setFilteredData,
+      supplierData,
+    ],
   );
   const handleView = useCallback(
     (item) => {
