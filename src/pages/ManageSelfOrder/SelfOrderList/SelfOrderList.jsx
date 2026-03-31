@@ -174,6 +174,13 @@ const SelfOrderList = () => {
     const toastId = toast.loading("Preparing Sauda PDF...");
 
     try {
+      const message = [
+        `Sauda No: ${item.saudaNo || "N/A"}`,
+        `PO Number: ${item.poNumber || "N/A"}`,
+        `Buyer: ${item.buyerCompany || item.buyer || "N/A"}`,
+        `Supplier: ${item.supplierCompany || item.supplier || "N/A"}`,
+      ].join("\n");
+
       const normalizedConsigneeKey = (() => {
         const c = item?.consignee;
         if (!c) return "";
@@ -317,33 +324,55 @@ const SelfOrderList = () => {
         ? cleanMobile
         : "91" + cleanMobile;
 
-      const message = `Sauda No: ${item.saudaNo}`;
-
       const updateStatus = async () => {
-        if (target === "buyer") {
-          try {
-            await axios.patch(`/self-order/${item._id}/whatsapp-sent`);
-            setData((prev) =>
-              prev.map((order) =>
-                order._id === item._id
-                  ? { ...order, whatsappSent: true }
-                  : order,
-              ),
-            );
-            setFilteredData((prev) =>
-              prev.map((order) =>
-                order._id === item._id
-                  ? { ...order, whatsappSent: true }
-                  : order,
-              ),
-            );
-          } catch (err) {
-            console.error("Failed to update WhatsApp status:", err);
-          }
+        try {
+          await axios.patch(`/self-order/${item._id}/whatsapp-sent`);
+          setData((prev) =>
+            prev.map((order) =>
+              order._id === item._id
+                ? { ...order, whatsappSent: true }
+                : order,
+            ),
+          );
+          setFilteredData((prev) =>
+            prev.map((order) =>
+              order._id === item._id
+                ? { ...order, whatsappSent: true }
+                : order,
+            ),
+          );
+        } catch (err) {
+          console.error("Failed to update WhatsApp status:", err);
         }
       };
 
-      // Always download the PDF first so the user has it ready to attach
+      // Best-effort: if browser share supports sending files, let user choose WhatsApp
+      // with the PDF attached automatically. Fallback keeps current behavior:
+      // download PDF -> open WhatsApp -> user attaches.
+      try {
+        if (
+          navigator?.share &&
+          navigator?.canShare &&
+          typeof File !== "undefined"
+        ) {
+          const file = new File([blob], fileName, { type: "application/pdf" });
+          if (navigator.canShare({ files: [file] })) {
+            await navigator.share({
+              files: [file],
+              text: message,
+              title: fileName,
+            });
+            await updateStatus();
+            toast.dismiss(toastId);
+            toast.success("WhatsApp share opened with PDF attached!");
+            return;
+          }
+        }
+      } catch {
+        // Ignore share errors and fall back to download+wa.me
+      }
+
+      // Fallback: Always download the PDF first so the user has it ready to attach
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
@@ -354,9 +383,8 @@ const SelfOrderList = () => {
       window.URL.revokeObjectURL(url);
 
       toast.dismiss(toastId);
-      toast.info(`PDF downloaded. Opening WhatsApp for ${finalMobile}...`);
-
-      // Fallback: Use targeted wa.me link to open THAT number's WhatsApp only
+      toast.success("PDF downloaded successfully!");
+      toast.info("Open WhatsApp and attach the PDF to send.");
       const waUrl = `https://wa.me/${finalMobile}?text=${encodeURIComponent(
         message,
       )}`;

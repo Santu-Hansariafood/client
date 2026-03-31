@@ -7,6 +7,8 @@ import Loading from "../../../common/Loading/Loading";
 import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
 import { FaClipboardList } from "react-icons/fa";
 import regexPatterns from "../../../utils/regexPatterns/regexPatterns";
+import { pdf } from "@react-pdf/renderer";
+import SaudaPDF from "../../../components/DownloadSauda/SaudaPDF/SaudaPDF";
 
 const BuyerInformation = lazy(
   () => import("../../../components/BuyerInformation/BuyerInformation"),
@@ -182,6 +184,242 @@ const SelfOrder = () => {
     setFormData(INITIAL_FORM_DATA);
   };
 
+  const sendOrderEmails = async (order) => {
+    try {
+      const buyerEmails = Array.isArray(order?.buyerEmails)
+        ? order.buyerEmails.filter(Boolean)
+        : [];
+
+      const sellerEmails = Array.isArray(order?.sellerEmails)
+        ? order.sellerEmails.filter(Boolean)
+        : [];
+
+      const buyerFromSingle = order?.buyerEmail ? [order.buyerEmail] : [];
+
+      const buyerEmailsToSend = [
+        ...buyerEmails,
+        ...buyerFromSingle,
+      ].filter((e) => String(e).trim());
+
+      const sellerEmailsToSend = sellerEmails.filter((e) => String(e).trim());
+
+      const shouldSendBuyer = order.sendPOToBuyer === "yes";
+      const shouldSendSupplier = order.sendPOToSupplier === "yes";
+
+      if (
+        (!shouldSendBuyer || buyerEmailsToSend.length === 0) &&
+        (!shouldSendSupplier || sellerEmailsToSend.length === 0)
+      ) {
+        return;
+      }
+
+      const details = {
+        saudaNo: order.saudaNo,
+        poNumber: order.poNumber || "",
+        buyer: order.buyer || "",
+        buyerCompany: order.buyerCompany || "",
+        consignee: order.consignee || "",
+        supplierCompany: order.supplierCompany || "",
+        commodity: order.commodity || "",
+        quantity: order.quantity ?? "",
+        rate: order.rate ?? "",
+      };
+
+      const [
+        consigneeResponse,
+        supplierResponse,
+        buyerResponse,
+        sellerProfileResponse,
+      ] = await Promise.all([
+        axios.get("/consignees"),
+        axios.get("/seller-company"),
+        axios.get("/buyers"),
+        axios.get("/sellers"),
+      ]);
+
+      const consigneeData = Array.isArray(consigneeResponse.data)
+        ? consigneeResponse.data
+        : consigneeResponse.data?.data || [];
+      const supplierData = Array.isArray(supplierResponse.data)
+        ? supplierResponse.data
+        : supplierResponse.data?.data || [];
+      const buyerData = Array.isArray(buyerResponse.data)
+        ? buyerResponse.data
+        : buyerResponse.data?.data || [];
+      const sellerProfileData = Array.isArray(sellerProfileResponse.data)
+        ? sellerProfileResponse.data
+        : sellerProfileResponse.data?.data || [];
+
+      const normalizedConsigneeKey = (() => {
+        const c = order?.consignee;
+        if (!c) return "";
+        if (typeof c === "object")
+          return (c.name || c.label || c.value || "").toString();
+        return String(c);
+      })();
+
+      const matchingConsignee = consigneeData.find((consignee) => {
+        const idMatch =
+          consignee?._id &&
+          normalizedConsigneeKey &&
+          String(consignee._id) === String(normalizedConsigneeKey);
+        if (idMatch) return true;
+        const name = (consignee?.name || consignee?.label || "")
+          .toString()
+          .trim()
+          .toLowerCase();
+        const key = normalizedConsigneeKey.toString().trim().toLowerCase();
+        return name && key && name === key;
+      });
+
+      const matchingSupplier = supplierData.find(
+        (supplier) =>
+          supplier.companyName?.toLowerCase() ===
+          order.supplierCompany?.toLowerCase(),
+      );
+
+      const rawBuyerKey = order?.buyerCompany ?? order?.buyer ?? "";
+      const normalizedBuyerKey = String(rawBuyerKey || "")
+        .trim()
+        .toLowerCase();
+
+      const matchingBuyer =
+        buyerData.find((buyer) => {
+          const idMatch =
+            buyer?._id && rawBuyerKey && String(buyer._id) === String(rawBuyerKey);
+          const nameMatch =
+            buyer?.companyName &&
+            buyer.companyName.toLowerCase() === normalizedBuyerKey;
+          return idMatch || nameMatch;
+        }) ||
+        supplierData.find((supplier) => {
+          const idMatch =
+            supplier?._id &&
+            rawBuyerKey &&
+            String(supplier._id) === String(rawBuyerKey);
+          const nameMatch =
+            supplier?.companyName &&
+            supplier.companyName.toLowerCase() === normalizedBuyerKey;
+          return idMatch || nameMatch;
+        });
+
+      const matchingSellerProfile = sellerProfileData.find(
+        (seller) => seller._id === order.supplier,
+      );
+
+      let transformedData = {
+        ...order,
+        consigneeDetails: matchingConsignee || null,
+        supplierDetails: matchingSupplier || null,
+        buyerDetails:
+          order.billTo === "consignee" ? matchingConsignee || null : matchingBuyer,
+      };
+
+      if (transformedData.buyerDetails) {
+        const bd = transformedData.buyerDetails;
+        transformedData.buyerDetails = {
+          ...bd,
+          address: bd.address || bd.location || "",
+          gstNo: bd.gstNo || bd.gst || bd.gstNumber || "",
+          panNo: bd.panNo || bd.pan || bd.panNumber || "",
+          pinNo: bd.pinNo || bd.pin || bd.pinCode || "",
+          district: bd.district || "",
+          state: bd.state || "",
+        };
+      }
+
+      if (
+        matchingBuyer &&
+        (!transformedData.buyerBrokerage?.brokerageBuyer ||
+          transformedData.buyerBrokerage.brokerageBuyer === 0)
+      ) {
+        const buyerProfileBrokerage =
+          matchingBuyer.brokerageByName?.[order.commodity] ||
+          matchingBuyer.brokerage?.[order.commodity];
+        if (buyerProfileBrokerage !== undefined) {
+          transformedData.buyerBrokerage = {
+            ...transformedData.buyerBrokerage,
+            brokerageBuyer: buyerProfileBrokerage,
+          };
+        }
+      }
+
+      if (
+        matchingSellerProfile &&
+        (!transformedData.buyerBrokerage?.brokerageSupplier ||
+          transformedData.buyerBrokerage.brokerageSupplier === 0)
+      ) {
+        const supplierProfileBrokerage =
+          matchingSellerProfile.commodities?.find(
+            (c) => c.name === order.commodity,
+          )?.brokerage;
+        if (supplierProfileBrokerage !== undefined) {
+          transformedData.buyerBrokerage = {
+            ...transformedData.buyerBrokerage,
+            brokerageSupplier: supplierProfileBrokerage,
+          };
+        }
+      }
+
+      if (order.billTo === "consignee") {
+        transformedData = {
+          ...transformedData,
+          buyer: order.consignee,
+          buyerCompany: order.consignee,
+        };
+      } else {
+        const buyerName =
+          matchingBuyer?.companyName ||
+          (typeof order?.buyerCompany === "string" ? order.buyerCompany : "") ||
+          (typeof order?.buyer === "string" ? order.buyer : "");
+
+        transformedData = {
+          ...transformedData,
+          buyer: buyerName,
+          buyerCompany: buyerName,
+        };
+      }
+
+      const blob = await pdf(<SaudaPDF data={transformedData} />).toBlob();
+
+      const base64data = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(blob);
+        reader.onloadend = () => {
+          try {
+            const result = reader.result;
+            const base64 = typeof result === "string" ? result.split(",")[1] : "";
+            resolve(base64);
+          } catch (e) {
+            reject(e);
+          }
+        };
+        reader.onerror = reject;
+      });
+
+      if (order.sendPOToBuyer === "yes" && buyerEmailsToSend.length > 0) {
+        await axios.post("/api/email/send-pdf", {
+          email: [...new Set(buyerEmailsToSend)].join(", "),
+          pdf: base64data,
+          ...details,
+        });
+      }
+
+      if (
+        order.sendPOToSupplier === "yes" &&
+        sellerEmailsToSend.length > 0
+      ) {
+        await axios.post("/api/email/send-pdf", {
+          email: [...new Set(sellerEmailsToSend)].join(", "),
+          pdf: base64data,
+          ...details,
+        });
+      }
+    } catch (error) {
+      console.error("Auto email error:", error);
+    }
+  };
+
   const handleSubmit = async () => {
     if (!validateFormData()) return;
 
@@ -208,7 +446,12 @@ const SelfOrder = () => {
         JSON.stringify(payload, null, 2),
       );
 
-      await axios.post(API_BASE_URL, payload);
+      const response = await axios.post(API_BASE_URL, payload);
+      const createdOrder = response?.data || payload;
+
+      if (createdOrder.sendPOToBuyer === "yes" || createdOrder.sendPOToSupplier === "yes") {
+        sendOrderEmails(createdOrder);
+      }
 
       resetForm();
 

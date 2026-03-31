@@ -4,10 +4,24 @@ import nodemailer from "nodemailer";
 const router = express.Router();
 
 router.post("/send-pdf", async (req, res) => {
-  const { pdf, email, saudaNo } = req.body;
+  const {
+    pdf,
+    email,
+    saudaNo,
+    poNumber,
+    buyer,
+    buyerCompany,
+    consignee,
+    supplierCompany,
+    commodity,
+    quantity,
+    rate,
+  } = req.body;
 
   if (!pdf || !email || !saudaNo) {
-    return res.status(400).send("Missing required fields: pdf, email, saudaNo");
+    return res
+      .status(400)
+      .send("Missing required fields: pdf, email, saudaNo");
   }
 
   try {
@@ -25,7 +39,16 @@ router.post("/send-pdf", async (req, res) => {
       subject: `Sauda Confirmation - HANS-2025-${saudaNo}`,
       text: `Dear Sir/Madam,
 
-Please find attached the Sauda Confirmation for Sauda No: HANS-2025-${saudaNo}.
+Please find attached the Sauda Confirmation.
+
+Sauda No: HANS-2025-${saudaNo}
+PO Number: ${poNumber || "N/A"}
+Buyer: ${buyerCompany || buyer || "N/A"}
+Consignee: ${consignee || "N/A"}
+Supplier: ${supplierCompany || "N/A"}
+Commodity: ${commodity || "N/A"}
+Quantity: ${quantity || "N/A"}
+Rate: ${rate || "N/A"}
 
 Thank you for your business.
 
