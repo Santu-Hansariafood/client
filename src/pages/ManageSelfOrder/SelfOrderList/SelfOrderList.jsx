@@ -175,7 +175,6 @@ const SelfOrderList = () => {
       const toastId = toast.loading("Preparing WhatsApp PDF...");
 
       try {
-        // Build message text
         const message = [
           `Sauda No: ${item.saudaNo || "N/A"}`,
           `PO Number: ${item.poNumber || "N/A"}`,
@@ -183,7 +182,6 @@ const SelfOrderList = () => {
           `Supplier: ${item.supplierCompany || item.supplier || "N/A"}`,
         ].join("\n");
 
-        // Build PDF payload similar to DownloadSauda
         const normalizedConsigneeKey = (() => {
           const c = item?.consignee;
           if (!c) return "";
@@ -349,7 +347,6 @@ const SelfOrderList = () => {
           }
         };
 
-        // Try using Web Share API to share the PDF directly (mobile browsers)
         let sharedViaFile = false;
         try {
           if (
@@ -371,29 +368,26 @@ const SelfOrderList = () => {
             }
           }
         } catch (err) {
-          // Ignore share errors and fall back
           console.error("Web Share failed:", err);
         }
 
         if (!sharedViaFile) {
-          // Fallback: download PDF and open WhatsApp chat with text so user can attach file
           const url = window.URL.createObjectURL(blob);
-          const a = document.createElement("a");
-          a.href = url;
-          a.download = fileName;
-          document.body.appendChild(a);
-          a.click();
-          a.remove();
-          window.URL.revokeObjectURL(url);
-
-          const waUrl = `https://wa.me/${finalMobile}?text=${encodeURIComponent(
-            message,
-          )}`;
-          window.open(waUrl, "_blank", "noopener,noreferrer");
-
-          toast.info(
-            "PDF downloaded. Please attach it in the WhatsApp chat if not already attached.",
-          );
+        
+          const file = new File([blob], fileName, {
+            type: "application/pdf",
+          });
+        
+          if (navigator.share) {
+            await navigator.share({
+              files: [file],
+              text: message,
+              title: fileName,
+            });
+          } else {
+            const waUrl = `https://wa.me/${finalMobile}?text=${encodeURIComponent(message)}`;
+            window.open(waUrl, "_blank");
+          }
         }
 
         await updateStatus();
