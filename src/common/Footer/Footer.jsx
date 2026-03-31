@@ -11,12 +11,12 @@ const Footer = () => {
         <div className="flex items-center gap-1 text-slate-500 text-sm">
           <span>Developed by</span>
           <a
-            href="https://www.linkedin.com/in/santude-dev/"
+            href="https://www.hansariafood.com"
             target="_blank"
             rel="noopener noreferrer"
             className="font-bold bg-gradient-to-r from-emerald-600 to-emerald-800 bg-clip-text text-transparent hover:underline"
           >
-            Santu De
+            Hansaria Food Private Limited
           </a>
         </div>
       </div>
