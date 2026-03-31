@@ -161,6 +161,108 @@ const SelfOrderList = () => {
     },
     [consigneeMap],
   );
+
+  const handleSmartWhatsApp = useCallback(
+    async (item, target = "buyer") => {
+      const mobileNumber =
+        target === "buyer" ? item.buyerMobile : item.sellerMobile;
+  
+      if (!mobileNumber) {
+        toast.error("Mobile number not available");
+        return;
+      }
+  
+      const toastId = toast.loading("Preparing WhatsApp...");
+  
+      try {
+        // 📱 Format number
+        const cleanMobile = mobileNumber.replace(/\D/g, "");
+        const finalMobile =
+          cleanMobile.length === 10
+            ? `91${cleanMobile}`
+            : cleanMobile.startsWith("91")
+            ? cleanMobile
+            : cleanMobile;
+  
+        // 🧾 Better message
+        const message = `Sauda No: ${item.saudaNo || "N/A"}
+  PO: ${item.poNumber || "N/A"}
+  Buyer: ${item.buyerCompany || item.buyer || "N/A"}
+  Supplier: ${item.supplierCompany || item.supplier || "N/A"}
+  Commodity: ${item.commodity || "N/A"}
+  Qty: ${item.quantity || "0"}`;
+  
+        // 📄 Generate PDF
+        const blob = await pdf(
+          <SaudaPDF
+            data={{ ...item, consignee: getConsigneeDisplay(item) }}
+          />
+        ).toBlob();
+  
+        const fileName = `Sauda-${item.saudaNo}.pdf`;
+  
+        let shared = false;
+  
+        // 📲 Mobile share (PDF attach)
+        try {
+          if (
+            navigator.share &&
+            navigator.canShare &&
+            typeof File !== "undefined"
+          ) {
+            const file = new File([blob], fileName, {
+              type: "application/pdf",
+            });
+  
+            if (navigator.canShare({ files: [file] })) {
+              await navigator.share({
+                files: [file],
+                text: message,
+                title: fileName,
+              });
+              shared = true;
+            }
+          }
+        } catch (err) {
+          console.log("Share failed:", err);
+        }
+  
+        // 🌐 Fallback → WhatsApp
+        if (!shared) {
+          const url = `https://wa.me/${finalMobile}?text=${encodeURIComponent(message)}`;
+          window.open(url, "_blank");
+        }
+  
+        // ✅ Update status
+        try {
+          await axios.patch(`/self-order/${item._id}/whatsapp-sent`);
+  
+          setData((prev) =>
+            prev.map((o) =>
+              o._id === item._id ? { ...o, whatsappSent: true } : o
+            )
+          );
+  
+          setFilteredData((prev) =>
+            prev.map((o) =>
+              o._id === item._id ? { ...o, whatsappSent: true } : o
+            )
+          );
+        } catch (err) {
+          console.error("Status update failed:", err);
+        }
+  
+        toast.dismiss(toastId);
+        toast.success("WhatsApp opened 🚀");
+      } catch (error) {
+        toast.dismiss(toastId);
+        console.error(error);
+        toast.error("Something went wrong");
+      }
+    },
+    [getConsigneeDisplay]
+  );
+
   const openWhatsAppChat = useCallback((mobileNumber, item) => {
     if (!mobileNumber) {
       toast.error("Mobile number not available");
@@ -277,7 +379,7 @@ const SelfOrderList = () => {
               </span>
               {item.sellerMobile && (
                 <button
-                  onClick={() => openWhatsAppChat(item.sellerMobile, item)}
+                  onClick={() => handleSmartWhatsApp(item, "seller")}
                   className="text-slate-400 hover:text-green-500"
                   title="Chat on WhatsApp"
                 >
@@ -325,7 +427,7 @@ const SelfOrderList = () => {
               />
 
               <button
-                onClick={() => openWhatsAppChat(item.buyerMobile, item)}
+                onClick={() => handleSmartWhatsApp(item, "buyer")}
                 className="sm:hidden w-9 h-9 rounded-lg bg-green-50 text-green-600"
               >
                 <FaWhatsapp size={16} />
@@ -338,6 +440,8 @@ const SelfOrderList = () => {
       currentItems,
       handleView,
       handleEdit,
+      handleSmartWhatsApp,
+      openWhatsAppChat,
       getConsigneeDisplay,
       currentPage,
       itemsPerPage,
