@@ -196,6 +196,7 @@ const SelfOrderList = () => {
 
         const fileName = `Sauda-${item.saudaNo}.pdf`;
 
+        // ✅ Try mobile share first
         let shared = false;
 
         try {
@@ -221,9 +222,29 @@ const SelfOrderList = () => {
           console.log("Share failed:", err);
         }
 
+        // ✅ If not shared → upload + send link
         if (!shared) {
-          const url = `https://wa.me/${finalMobile}?text=${encodeURIComponent(message)}`;
-          window.open(url, "_blank");
+          try {
+            const formData = new FormData();
+            formData.append("file", blob, fileName);
+
+            const uploadRes = await axios.post("/upload-pdf", formData, {
+              headers: { "Content-Type": "multipart/form-data" },
+            });
+
+            const fileUrl = uploadRes.data.url;
+
+            const newMessage = `${message}
+
+Download PDF: ${fileUrl}`;
+
+            const url = `https://wa.me/${finalMobile}?text=${encodeURIComponent(newMessage)}`;
+
+            window.open(url, "_blank");
+          } catch (err) {
+            console.error("Upload failed:", err);
+            toast.error("Failed to upload PDF");
+          }
         }
 
         try {
