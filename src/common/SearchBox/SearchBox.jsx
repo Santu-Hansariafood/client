@@ -9,6 +9,7 @@ const SearchBox = ({
   onSearch,
   className = "",
   debounceMs = 250,
+  returnQuery = false,
 }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedTerm, setDebouncedTerm] = useState("");
@@ -40,16 +41,21 @@ const SearchBox = ({
   );
 
   useEffect(() => {
-    const q = String(debouncedTerm ?? "").trim().toLowerCase();
-    if (!q) {
+    const q = String(debouncedTerm ?? "").trim();
+    if (returnQuery) {
+      onSearch(q);
+      return;
+    }
+    const lowered = q.toLowerCase();
+    if (!lowered) {
       onSearch(normalizedItems);
       return;
     }
     const filtered = normalizedItems.filter((item) =>
-      item.toLowerCase().includes(q)
+      item.toLowerCase().includes(lowered)
     );
     onSearch(filtered);
-  }, [debouncedTerm, normalizedItems, onSearch]);
+  }, [debouncedTerm, normalizedItems, onSearch, returnQuery]);
 
   return (
     <div
@@ -92,6 +98,7 @@ SearchBox.propTypes = {
   onSearch: PropTypes.func.isRequired,
   className: PropTypes.string,
   debounceMs: PropTypes.number,
+  returnQuery: PropTypes.bool,
 };
 
 export default SearchBox;

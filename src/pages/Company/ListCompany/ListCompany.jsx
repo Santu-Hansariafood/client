@@ -9,6 +9,7 @@ import { useAuth } from "../../../context/AuthContext/AuthContext";
 
 const Tables = lazy(() => import("../../../common/Tables/Tables"));
 const Actions = lazy(() => import("../../../common/Actions/Actions"));
+const SearchBox = lazy(() => import("../../../common/SearchBox/SearchBox"));
 const Pagination = lazy(
   () => import("../../../common/Paginations/Paginations"),
 );
@@ -30,13 +31,19 @@ const ListCompany = () => {
 
   const [loading, setLoading] = useState(true);
   const [totalItems, setTotalItems] = useState(0);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const fetchCompanyData = async () => {
     try {
       setLoading(true);
 
       const response = await axios.get("/companies", {
-        params: { page: currentPage, limit: itemsPerPage, group: user?.group },
+        params: {
+          page: currentPage,
+          limit: itemsPerPage,
+          group: user?.group,
+          search: searchQuery,
+        },
       });
 
       const items = response?.data?.data || [];
@@ -59,7 +66,12 @@ const ListCompany = () => {
     if (user) {
       fetchCompanyData();
     }
-  }, [currentPage, user]);
+  }, [currentPage, user, searchQuery]);
+
+  const handleSearch = (query) => {
+    setSearchQuery(query);
+    setCurrentPage(1);
+  };
 
   const handleView = (index) => {
     setSelectedCompany(companyData[index]);
@@ -149,6 +161,14 @@ const ListCompany = () => {
       >
         <div className="max-w-6xl mx-auto">
           <div className="bg-white border border-amber-200/80 rounded-2xl shadow-lg p-4 sm:p-6">
+            <div className="mb-4">
+              <SearchBox
+                placeholder="Search by company name..."
+                items={companyData.map((company) => company.companyName || "")}
+                onSearch={handleSearch}
+                returnQuery
+              />
+            </div>
             <div className="overflow-x-auto rounded-xl border border-gray-100">
               {loading ? (
                 <Loading />
