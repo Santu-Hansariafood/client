@@ -19,9 +19,7 @@ router.post("/send-pdf", async (req, res) => {
   } = req.body;
 
   if (!pdf || !email || !saudaNo) {
-    return res
-      .status(400)
-      .send("Missing required fields: pdf, email, saudaNo");
+    return res.status(400).send("Missing required fields: pdf, email, saudaNo");
   }
 
   try {
