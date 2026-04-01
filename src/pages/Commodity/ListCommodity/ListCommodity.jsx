@@ -27,19 +27,24 @@ const ListCommodity = () => {
   const itemsPerPage = 10;
 
   const [total, setTotal] = useState(0);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const fetchCommodities = async () => {
     try {
-      const response = await axios.get(
-        `/commodities?page=${currentPage}&limit=${itemsPerPage}`
-      );
+      const response = await axios.get("/commodities", {
+        params: {
+          page: currentPage,
+          limit: itemsPerPage,
+          search: searchQuery,
+        },
+      });
       const items = response.data?.data || response.data || [];
       const sortedCommodities = items.sort((a, b) =>
         a.name.localeCompare(b.name)
       );
       setCommodities(sortedCommodities);
       setFilteredCommodities(sortedCommodities);
-      setTotal(response.data.total || 0);
+      setTotal(response.data?.total || sortedCommodities.length);
     } catch (error) {
       toast.error(
         error?.response?.data?.message || "Error fetching commodities"
@@ -51,17 +56,10 @@ const ListCommodity = () => {
 
   useEffect(() => {
     fetchCommodities();
-  }, [currentPage]);
+  }, [currentPage, searchQuery]);
 
-  const handleSearch = (filteredNames) => {
-    if (filteredNames.length === 0) {
-      setFilteredCommodities([...commodities]);
-    } else {
-      const results = commodities.filter((commodity) =>
-        filteredNames.includes(commodity.name)
-      );
-      setFilteredCommodities(results);
-    }
+  const handleSearch = (query) => {
+    setSearchQuery(query || "");
     setCurrentPage(1);
   };
 
@@ -101,13 +99,10 @@ const ListCommodity = () => {
     }
   };
 
-  const paginatedData = useMemo(() => {
-    const start = (currentPage - 1) * itemsPerPage;
-    return filteredCommodities.slice(start, start + itemsPerPage);
-  }, [filteredCommodities, currentPage]);
-
-  const tableRows = paginatedData.map((commodity, index) => [
-    (currentPage - 1) * itemsPerPage + index + 1,
+  const tableRows = useMemo(
+    () =>
+      filteredCommodities.map((commodity, index) => [
+        (currentPage - 1) * itemsPerPage + index + 1,
     commodity.name || "N/A",
     commodity.hsnCode || "N/A",
     Array.isArray(commodity.parameters)
@@ -119,7 +114,9 @@ const ListCommodity = () => {
       onEdit={() => handleEdit(commodity._id)}
       onDelete={() => handleDelete(commodity._id)}
     />,
-  ]);
+      ]),
+    [filteredCommodities, currentPage, itemsPerPage],
+  );
 
   const tableHeaders = [
     "Sl No",
@@ -144,6 +141,7 @@ const ListCommodity = () => {
                   placeholder="Search Commodities"
                   items={commodities.map((commodity) => commodity.name || "")}
                   onSearch={handleSearch}
+                  returnQuery
                 />
               </div>
               {filteredCommodities.length > 0 ? (

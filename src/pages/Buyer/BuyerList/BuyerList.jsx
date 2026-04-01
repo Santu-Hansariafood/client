@@ -27,6 +27,7 @@ const BuyerList = () => {
   const [filteredData, setFilteredData] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
+  const [searchQuery, setSearchQuery] = useState("");
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [selectedBuyer, setSelectedBuyer] = useState(null);
   const [isEditPopupOpen, setIsEditPopupOpen] = useState(false);
@@ -37,7 +38,13 @@ const BuyerList = () => {
     const fetchBuyersData = async () => {
       setIsLoading(true);
       try {
-        const response = await axios.get(`/buyers?page=${currentPage}&limit=${itemsPerPage}`);
+        const response = await axios.get("/buyers", {
+          params: {
+            page: currentPage,
+            limit: itemsPerPage,
+            search: searchQuery,
+          },
+        });
         const data = response.data?.data || [];
         const total = response.data?.total || 0;
         
@@ -51,20 +58,11 @@ const BuyerList = () => {
       }
     };
     fetchBuyersData();
-  }, [currentPage]);
+  }, [currentPage, searchQuery]);
 
-  const handleSearchByNames = async (filteredNames) => {
-    if (!filteredNames || filteredNames.length === 0) {
-      // Re-fetch current page
-      setCurrentPage(1);
-      return;
-    }
-    
-    // For search, we might want to fetch filtered data from backend if needed,
-    // but for now, we'll keep the client-side search logic if names are provided.
-    // However, the search box usually sends names.
-    const nameSet = new Set(filteredNames);
-    setFilteredData(buyersData.filter((b) => nameSet.has(b.name)));
+  const handleSearchByNames = (query) => {
+    setSearchQuery(query || "");
+    setCurrentPage(1);
   };
 
   const handleDelete = async (index) => {
@@ -144,6 +142,7 @@ const BuyerList = () => {
                 placeholder="Search buyers by name..."
                 items={buyersData.map((b) => b.name || "")}
                 onSearch={handleSearchByNames}
+                returnQuery
               />
             </div>
             {isLoading ? (

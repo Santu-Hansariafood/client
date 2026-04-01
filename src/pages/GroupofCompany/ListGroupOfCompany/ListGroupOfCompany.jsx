@@ -31,8 +31,9 @@ const toTitleCase = (str) => {
 
 const ListGroupOfCompany = () => {
   const [groupsData, setGroupsData] = useState([]);
-  const [filteredData, setFilteredData] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+  const [searchQuery, setSearchQuery] = useState("");
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [isEditPopupOpen, setIsEditPopupOpen] = useState(false);
   const [selectedGroup, setSelectedGroup] = useState(null);
@@ -42,75 +43,71 @@ const ListGroupOfCompany = () => {
   useEffect(() => {
     const fetchGroups = async () => {
       try {
-        const response = await axios.get("/groups");
-        const uniqueGroups = Array.from(
-          new Map(
-            response.data.map((group) => [
-              toTitleCase(group.groupName),
-              { ...group, groupName: toTitleCase(group.groupName) },
-            ])
-          ).values()
-        ).sort((a, b) => a.groupName.localeCompare(b.groupName));
-        setGroupsData(uniqueGroups);
-        setFilteredData(uniqueGroups);
+        const response = await axios.get("/groups", {
+          params: {
+            page: currentPage,
+            limit: itemsPerPage,
+            search: searchQuery,
+          },
+        });
+        const data = response.data?.data || response.data || [];
+        const normalized = data
+          .map((group) => ({
+            ...group,
+            groupName: toTitleCase(group.groupName || ""),
+          }))
+          .sort((a, b) => a.groupName.localeCompare(b.groupName));
+        const total =
+          typeof response.data?.total === "number"
+            ? response.data.total
+            : normalized.length;
+        setGroupsData(normalized);
+        setTotalItems(total);
       } catch (error) {
         toast.error("Failed to fetch groups", error);
       }
     };
     fetchGroups();
-  }, []);
+  }, [currentPage, searchQuery]);
 
   const handleSearch = useCallback(
-    (filteredNames) => {
-      if (!filteredNames || filteredNames.length === 0) {
-        setFilteredData(groupsData);
-        setCurrentPage(1);
-        return;
-      }
-      if (filteredNames.length === groupsData.length) {
-        setFilteredData(groupsData);
-        setCurrentPage(1);
-        return;
-      }
-      const nameSet = new Set(filteredNames);
-      setFilteredData(groupsData.filter((g) => nameSet.has(g.groupName)));
+    (query) => {
+      setSearchQuery(query || "");
       setCurrentPage(1);
     },
-    [groupsData]
+    [],
   );
 
   const handleView = useCallback(
-    (index) => {
-      setSelectedGroup(filteredData[index]);
+    (group) => {
+      setSelectedGroup(group);
       setIsPopupOpen(true);
     },
-    [filteredData]
+    [],
   );
 
   const handleEdit = useCallback(
-    (index) => {
-      setSelectedGroup(filteredData[index]);
+    (group) => {
+      setSelectedGroup(group);
       setIsEditPopupOpen(true);
     },
-    [filteredData]
+    [],
   );
 
   const handleDelete = useCallback(
-    async (index) => {
-      const groupToDelete = filteredData[index];
+    async (groupToDelete) => {
       try {
         await axios.delete(`/groups/${groupToDelete._id}`);
-        const updatedData = filteredData.filter((_, i) => i !== index);
-        setFilteredData(updatedData);
         setGroupsData((prevData) =>
-          prevData.filter((group) => group._id !== groupToDelete._id)
+          prevData.filter((group) => group._id !== groupToDelete._id),
         );
+        setTotalItems((prev) => Math.max(0, prev - 1));
         toast.success("Group deleted successfully");
       } catch (error) {
         toast.error("Failed to delete group", error);
       }
     },
-    [filteredData]
+    [],
   );
 
   const handleUpdate = useCallback(
@@ -134,24 +131,19 @@ const ListGroupOfCompany = () => {
 
   const startIndex = (currentPage - 1) * itemsPerPage;
 
-  const paginatedData = useMemo(
-    () => filteredData.slice(startIndex, startIndex + itemsPerPage),
-    [filteredData, startIndex, itemsPerPage]
-  );
-
   const rows = useMemo(
     () =>
-      paginatedData.map((group, index) => [
+      groupsData.map((group, index) => [
         startIndex + index + 1,
         group.groupName,
         <Actions
           key={group._id}
-          onView={() => handleView(startIndex + index)}
-          onEdit={() => handleEdit(startIndex + index)}
-          onDelete={() => handleDelete(startIndex + index)}
+          onView={() => handleView(group)}
+          onEdit={() => handleEdit(group)}
+          onDelete={() => handleDelete(group)}
         />,
       ]),
-    [paginatedData, startIndex, handleView, handleEdit, handleDelete]
+    [groupsData, startIndex, handleView, handleEdit, handleDelete],
   );
 
   return (
@@ -178,7 +170,7 @@ const ListGroupOfCompany = () => {
           <div className="mt-4">
             <Pagination
               currentPage={currentPage}
-              totalItems={filteredData.length}
+              totalItems={totalItems}
               itemsPerPage={itemsPerPage}
               onPageChange={setCurrentPage}
             />

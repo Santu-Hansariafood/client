@@ -34,15 +34,21 @@ const ListQualityParameter = () => {
   const headers = ["Sl No", "Name", "Actions"];
 
   const [total, setTotal] = useState(0);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const fetchQualityParameters = async () => {
     try {
-      const response = await axios.get(
-        `/quality-parameters?page=${currentPage}&limit=${itemsPerPage}`
-      );
-      setQualityParameters(response.data.data);
-      setFilteredData(response.data.data);
-      setTotal(response.data.total);
+      const response = await axios.get("/quality-parameters", {
+        params: {
+          page: currentPage,
+          limit: itemsPerPage,
+          search: searchQuery,
+        },
+      });
+      const data = response.data?.data || response.data || [];
+      setQualityParameters(data);
+      setFilteredData(data);
+      setTotal(response.data?.total ?? data.length);
     } catch (error) {
       console.error("Error fetching data:", error);
       toast.error("Failed to fetch quality parameters.");
@@ -51,7 +57,7 @@ const ListQualityParameter = () => {
 
   useEffect(() => {
     fetchQualityParameters();
-  }, [currentPage]);
+  }, [currentPage, searchQuery]);
 
   const handleAddQualityParameter = (newData) => {
     setQualityParameters([...qualityParameters, newData]);
@@ -60,15 +66,8 @@ const ListQualityParameter = () => {
     toast.success("Quality parameter added successfully!");
   };
 
-  const handleSearch = (filteredNames) => {
-    if (filteredNames.length === 0) {
-      setFilteredData([...qualityParameters]);
-    } else {
-      const results = qualityParameters.filter((param) =>
-        filteredNames.includes(param.name)
-      );
-      setFilteredData(results);
-    }
+  const handleSearch = (query) => {
+    setSearchQuery(query || "");
     setCurrentPage(1);
   };
   
@@ -115,18 +114,16 @@ const ListQualityParameter = () => {
     }
   };
 
-  const rows = filteredData
-    .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
-    .map((item, index) => [
-      (currentPage - 1) * itemsPerPage + index + 1,
-      item.name,
-      <Actions
-        key={item._id}
-        onView={() => handleView(item)}
-        onEdit={() => handleEdit(item)}
-        onDelete={() => handleDelete(item)}
-      />,
-    ]);
+  const rows = filteredData.map((item, index) => [
+    (currentPage - 1) * itemsPerPage + index + 1,
+    item.name,
+    <Actions
+      key={item._id}
+      onView={() => handleView(item)}
+      onEdit={() => handleEdit(item)}
+      onDelete={() => handleDelete(item)}
+    />,
+  ]);
 
   const handlePageChange = (pageNumber) => {
     setCurrentPage(pageNumber);
@@ -147,6 +144,7 @@ const ListQualityParameter = () => {
               placeholder="Search by name..."
               items={qualityParameters.map((param) => param.name)}
               onSearch={handleSearch}
+              returnQuery
             />
           </div>
 

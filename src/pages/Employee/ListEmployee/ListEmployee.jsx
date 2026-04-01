@@ -13,10 +13,10 @@ const ListEmployee = () => {
   const [filteredEmployees, setFilteredEmployees] = useState([]);
   const [loading, setLoading] = useState(true);
   
-  // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
   const itemsPerPage = 10;
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Edit State
   const [isEditPopupOpen, setIsEditPopupOpen] = useState(false);
@@ -24,12 +24,17 @@ const ListEmployee = () => {
 
   useEffect(() => {
     fetchEmployees();
-  }, [currentPage]);
+  }, [currentPage, searchQuery]);
 
   const fetchEmployees = async () => {
     try {
-      const response = await api.get(`/employees?page=${currentPage}&limit=${itemsPerPage}`);
-      // The API now returns { data, total, page, limit, totalPages }
+      const response = await api.get("/employees", {
+        params: {
+          page: currentPage,
+          limit: itemsPerPage,
+          search: searchQuery,
+        },
+      });
       const { data, total } = response.data;
       setEmployees(data);
       setFilteredEmployees(data);
@@ -63,15 +68,9 @@ const ListEmployee = () => {
     setFilteredEmployees(prev => prev.map(emp => emp._id === updatedEmployee._id ? updatedEmployee : emp));
   };
 
-  const handleSearch = (filteredNames) => {
-    if (filteredNames.length === 0) {
-      setFilteredEmployees(employees);
-    } else {
-      const results = employees.filter((emp) =>
-        filteredNames.includes(emp.name)
-      );
-      setFilteredEmployees(results);
-    }
+  const handleSearch = (query) => {
+    setSearchQuery(query || "");
+    setCurrentPage(1);
   };
 
   const headers = ["Sl No", "Name", "Emp ID", "Email", "Mobile", "Sex", "Status", "Actions"];
@@ -103,6 +102,7 @@ const ListEmployee = () => {
             items={employees.map((emp) => emp.name)}
             onSearch={handleSearch}
             placeholder="Search by name..."
+            returnQuery
           />
         </div>
         <Tables headers={headers} rows={rows} />
