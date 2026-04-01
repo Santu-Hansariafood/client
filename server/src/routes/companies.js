@@ -88,6 +88,7 @@ router.get("/", async (req, res) => {
     const page = parseInt(req.query.page || "0", 10);
     const limit = parseInt(req.query.limit || "0", 10);
     const group = req.query.group;
+    const search = (req.query.search || "").trim();
 
     const query = {};
     if (group) {
@@ -95,6 +96,9 @@ router.get("/", async (req, res) => {
       if (groupDoc) {
         query.groupId = groupDoc._id;
       }
+    }
+    if (search) {
+      query.companyName = { $regex: new RegExp(search, "i") };
     }
 
     if (page > 0 && limit > 0) {
@@ -113,7 +117,7 @@ router.get("/", async (req, res) => {
       });
     }
 
-    const companies = await Company.find()
+    const companies = await Company.find(query)
       .sort({ companyName: 1 })
       .populate(companyPopulate)
       .lean();

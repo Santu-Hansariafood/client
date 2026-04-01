@@ -6,7 +6,26 @@ const router = Router();
 
 router.get("/", async (req, res) => {
   try {
-    const groups = await Group.find().sort({ groupName: 1 });
+    const page = parseInt(req.query.page || "0", 10);
+    const limit = parseInt(req.query.limit || "0", 10);
+    const search = (req.query.search || "").trim();
+
+    const query = {};
+    if (search) {
+      query.groupName = { $regex: new RegExp(search, "i") };
+    }
+
+    if (page > 0 && limit > 0) {
+      const items = await Group.find(query)
+        .sort({ groupName: 1 })
+        .skip((page - 1) * limit)
+        .limit(limit)
+        .lean();
+      const total = await Group.countDocuments(query);
+      return res.json({ data: items, total });
+    }
+
+    const groups = await Group.find(query).sort({ groupName: 1 }).lean();
     res.json(groups);
   } catch (error) {
     res.status(500).json({ message: error.message });

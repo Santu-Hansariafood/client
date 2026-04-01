@@ -32,7 +32,7 @@ const BuyerList = () => {
   const [selectedBuyer, setSelectedBuyer] = useState(null);
   const [isEditPopupOpen, setIsEditPopupOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const itemsPerPage = 10;
+  const itemsPerPage = 20;
 
   useEffect(() => {
     const fetchBuyersData = async () => {
@@ -95,8 +95,9 @@ const BuyerList = () => {
   };
 
   const rows = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
     return filteredData.map((buyer, index) => {
-      const slNo = totalItems - ((currentPage - 1) * itemsPerPage + index);
+      const slNo = startIndex + index + 1;
       return [
         slNo,
         toTitleCase(buyer.name || "N/A"),
@@ -125,7 +126,7 @@ const BuyerList = () => {
         />,
       ];
     });
-  }, [filteredData, currentPage, totalItems]);
+  }, [filteredData, currentPage]);
 
   return (
     <Suspense fallback={<Loading />}>

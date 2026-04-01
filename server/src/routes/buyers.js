@@ -101,10 +101,27 @@ router.get("/", async (req, res) => {
     const page = parseInt(req.query.page || "0", 10);
     const limit = parseInt(req.query.limit || "0", 10);
     const mobile = req.query.mobile;
+    const search = (req.query.search || "").trim();
 
     const query = {};
     if (mobile) {
       query.mobile = mobile;
+    }
+    if (search) {
+      const regex = new RegExp(search, "i");
+      const [companies, groups] = await Promise.all([
+        Company.find({ companyName: regex }).select("_id").lean(),
+        Group.find({ groupName: regex }).select("_id").lean(),
+      ]);
+      const companyIds = companies.map((c) => c._id);
+      const groupIds = groups.map((g) => g._id);
+      query.$or = [
+        { name: regex },
+        { mobile: { $regex: regex } },
+        { email: { $regex: regex } },
+        ...(companyIds.length ? [{ companyId: { $in: companyIds } }] : []),
+        ...(groupIds.length ? [{ groupId: { $in: groupIds } }] : []),
+      ];
     }
 
     if (page > 0 && limit > 0) {

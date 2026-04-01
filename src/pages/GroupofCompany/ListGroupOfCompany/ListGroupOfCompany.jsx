@@ -38,7 +38,7 @@ const ListGroupOfCompany = () => {
   const [isEditPopupOpen, setIsEditPopupOpen] = useState(false);
   const [selectedGroup, setSelectedGroup] = useState(null);
 
-  const itemsPerPage = 10;
+  const itemsPerPage = 20;
 
   useEffect(() => {
     const fetchGroups = async () => {

@@ -27,7 +27,7 @@ const ListCompany = () => {
   const [isEditPopupOpen, setIsEditPopupOpen] = useState(false);
 
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
+  const itemsPerPage = 20;
 
   const [loading, setLoading] = useState(true);
   const [totalItems, setTotalItems] = useState(0);
@@ -46,30 +46,10 @@ const ListCompany = () => {
         },
       });
 
-      const items = Array.isArray(response?.data?.data)
-        ? response.data.data
-        : [];
-
-      const normalizedQuery = searchQuery.trim().toLowerCase();
-
-      const filteredItems = normalizedQuery
-        ? items.filter((company) =>
-            String(company.companyName || "")
-              .toLowerCase()
-              .includes(normalizedQuery),
-          )
-        : items;
-
-      setCompanyData(filteredItems);
-
-      const backendTotal =
-        typeof response?.data?.total === "number"
-          ? response.data.total
-          : filteredItems.length;
-
-      setTotalItems(
-        normalizedQuery ? filteredItems.length : backendTotal,
-      );
+      const items = Array.isArray(response?.data?.data) ? response.data.data : [];
+      setCompanyData(items);
+      const backendTotal = typeof response?.data?.total === "number" ? response.data.total : items.length;
+      setTotalItems(backendTotal);
     } catch (error) {
       console.error("Fetch Company Error:", error);
 
