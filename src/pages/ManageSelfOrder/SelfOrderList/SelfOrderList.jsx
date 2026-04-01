@@ -173,18 +173,15 @@ const SelfOrderList = () => {
     };
   }, [userRole, mobile, currentPage, itemsPerPage, searchInput, reloadFlag]);
 
-  const currentItems = useMemo(
-    () => {
-      if (!filteredData || filteredData.length === 0) return [];
-      if (totalItems > filteredData.length) {
-        return filteredData;
-      }
-      const start = (currentPage - 1) * itemsPerPage;
-      const end = start + itemsPerPage;
-      return filteredData.slice(start, end);
-    },
-    [filteredData, totalItems, currentPage, itemsPerPage],
-  );
+  const currentItems = useMemo(() => {
+    if (!filteredData || filteredData.length === 0) return [];
+    if (totalItems > filteredData.length) {
+      return filteredData;
+    }
+    const start = (currentPage - 1) * itemsPerPage;
+    const end = start + itemsPerPage;
+    return filteredData.slice(start, end);
+  }, [filteredData, totalItems, currentPage, itemsPerPage]);
 
   const handlePageChange = useCallback((pageNumber) => {
     setCurrentPage(pageNumber);
@@ -412,37 +409,31 @@ Download PDF: ${fileUrl}`
     [navigate],
   );
 
-  const handleDelete = useCallback(
-    async (item) => {
-      if (!item?._id) {
-        toast.error("Missing order id. Cannot delete this order.");
-        return;
-      }
+  const handleDelete = useCallback(async (item) => {
+    if (!item?._id) {
+      toast.error("Missing order id. Cannot delete this order.");
+      return;
+    }
 
-      const confirmDelete = window.confirm(
-        `Are you sure you want to delete PO Number: ${item.poNumber || "N/A"}?`,
-      );
+    const confirmDelete = window.confirm(
+      `Are you sure you want to delete PO Number: ${item.poNumber || "N/A"}?`,
+    );
 
-      if (!confirmDelete) return;
+    if (!confirmDelete) return;
 
-      try {
-        await axios.delete(`${API_URL}/${item._id}`);
-        toast.success("Order deleted successfully");
-        setReloadFlag((prev) => prev + 1);
-      } catch (error) {
-        toast.error(
-          error?.response?.data?.message || "Failed to delete order",
-        );
-      }
-    },
-    [],
-  );
+    try {
+      await axios.delete(`${API_URL}/${item._id}`);
+      toast.success("Order deleted successfully");
+      setReloadFlag((prev) => prev + 1);
+    } catch (error) {
+      toast.error(error?.response?.data?.message || "Failed to delete order");
+    }
+  }, []);
 
   const rows = useMemo(
     () =>
       currentItems.map((item, index) => {
-        const slNo =
-          totalItems - ((currentPage - 1) * itemsPerPage + index);
+        const slNo = totalItems - ((currentPage - 1) * itemsPerPage + index);
 
         const formattedDate = item.poDate
           ? new Date(item.poDate).toLocaleDateString("en-GB")
@@ -565,14 +556,11 @@ Download PDF: ${fileUrl}`
     ],
   );
 
-  const handleSearchChange = useCallback(
-    (e) => {
-      const searchTerm = e.target.value;
-      setSearchInput(searchTerm);
-      setCurrentPage(1);
-    },
-    [],
-  );
+  const handleSearchChange = useCallback((e) => {
+    const searchTerm = e.target.value;
+    setSearchInput(searchTerm);
+    setCurrentPage(1);
+  }, []);
 
   const handleDownloadExcel = useCallback(async () => {
     try {
@@ -620,8 +608,7 @@ Download PDF: ${fileUrl}`
         const lowerSearch = searchInput.toLowerCase();
         exportOrders = exportOrders.filter(
           (order) =>
-            (order.buyer &&
-              order.buyer.toLowerCase().includes(lowerSearch)) ||
+            (order.buyer && order.buyer.toLowerCase().includes(lowerSearch)) ||
             (order.buyerCompany &&
               order.buyerCompany.toLowerCase().includes(lowerSearch)) ||
             (order.commodity &&
@@ -670,10 +657,8 @@ Download PDF: ${fileUrl}`
           "Loading Station": item.loadingStation || "",
           Location: item.location || "",
           "Agent Name": item.agentName || "",
-          "Buyer Emails":
-            item.buyerEmails?.filter(Boolean).join(", ") || "",
-          "Seller Emails":
-            item.sellerEmails?.filter(Boolean).join(", ") || "",
+          "Buyer Emails": item.buyerEmails?.filter(Boolean).join(", ") || "",
+          "Seller Emails": item.sellerEmails?.filter(Boolean).join(", ") || "",
           "Seller Mobile":
             Array.isArray(item.sellerMobile) && item.sellerMobile.length > 0
               ? item.sellerMobile.join(", ")
