@@ -10,7 +10,6 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { FaDownload, FaWhatsapp } from "react-icons/fa";
-import generateExcel from "../../../common/GenerateExcel/GenerateExcel";
 import Loading from "../../../common/Loading/Loading";
 import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
 import { FaClipboardList } from "react-icons/fa";
@@ -692,10 +691,38 @@ Download PDF: ${fileUrl}`
         return;
       }
 
-      generateExcel(excelRows, "SelfOrders.xlsx", "SelfOrders");
+      const headers = Object.keys(excelRows[0]);
+
+      const csvLines = [
+        headers.join(","),
+        ...excelRows.map((row) =>
+          headers
+            .map((key) => {
+              const cell = row[key] ?? "";
+              const value = String(cell).replace(/"/g, '""');
+              return `"${value}"`;
+            })
+            .join(","),
+        ),
+      ];
+
+      const csvContent = csvLines.join("\r\n");
+
+      const blob = new Blob([csvContent], {
+        type: "text/csv;charset=utf-8;",
+      });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", "SelfOrders.csv");
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
       toast.dismiss(toastId);
       toast.success("Excel downloaded");
-    } catch (error) {
+    } catch {
       toast.error("Failed to generate Excel");
     }
   }, [userRole, buyerData, mobile, searchInput, getConsigneeDisplay]);
