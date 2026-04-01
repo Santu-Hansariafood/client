@@ -10,6 +10,7 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { FaDownload, FaWhatsapp } from "react-icons/fa";
+import generateExcel from "../../../common/GenerateExcel/GenerateExcel";
 import Loading from "../../../common/Loading/Loading";
 import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
 import { FaClipboardList } from "react-icons/fa";
@@ -124,6 +125,18 @@ const SelfOrderList = () => {
             }
           }
         }
+
+        filteredOrders = [...filteredOrders].sort((a, b) => {
+          const aDate = a.createdAt || a.poDate;
+          const bDate = b.createdAt || b.poDate;
+          if (aDate && bDate) {
+            const diff = new Date(bDate) - new Date(aDate);
+            if (diff !== 0) return diff;
+          }
+          const aSauda = Number(a.saudaNo) || 0;
+          const bSauda = Number(b.saudaNo) || 0;
+          return bSauda - aSauda;
+        });
 
         setData(filteredOrders);
         setFilteredData(filteredOrders);
@@ -562,6 +575,131 @@ Download PDF: ${fileUrl}`
     [],
   );
 
+  const handleDownloadExcel = useCallback(async () => {
+    try {
+      const toastId = toast.loading("Preparing Excel...");
+      const res = await axios.get(API_URL);
+
+      const orderData = res.data;
+      let raw = [];
+
+      if (orderData && Array.isArray(orderData.data)) {
+        raw = orderData.data;
+      } else if (Array.isArray(orderData)) {
+        raw = orderData;
+      } else {
+        raw = orderData?.data || [];
+      }
+
+      let exportOrders = raw;
+
+      if (userRole === "Buyer" && buyerData.length > 0) {
+        const buyer = buyerData.find((b) =>
+          b.mobile?.some((m) => String(m) === String(mobile)),
+        );
+        if (buyer) {
+          const buyerCompanyId = buyer.companyId;
+          const buyerCompanyName = buyer.companyName;
+
+          exportOrders = raw.filter((item) => {
+            const matchId =
+              buyerCompanyId &&
+              item.companyId &&
+              String(item.companyId) === String(buyerCompanyId);
+            const matchName =
+              buyerCompanyName &&
+              item.buyerCompany &&
+              item.buyerCompany.trim().toLowerCase() ===
+                buyerCompanyName.trim().toLowerCase();
+
+            return matchId || matchName;
+          });
+        }
+      }
+
+      if (searchInput && searchInput.trim() !== "") {
+        const lowerSearch = searchInput.toLowerCase();
+        exportOrders = exportOrders.filter(
+          (order) =>
+            (order.buyer &&
+              order.buyer.toLowerCase().includes(lowerSearch)) ||
+            (order.buyerCompany &&
+              order.buyerCompany.toLowerCase().includes(lowerSearch)) ||
+            (order.commodity &&
+              order.commodity.toLowerCase().includes(lowerSearch)) ||
+            (order.saudaNo &&
+              order.saudaNo.toString().toLowerCase().includes(lowerSearch)) ||
+            (order.poNumber &&
+              order.poNumber.toString().toLowerCase().includes(lowerSearch)),
+        );
+      }
+
+      exportOrders = [...exportOrders].sort((a, b) => {
+        const aDate = a.createdAt || a.poDate;
+        const bDate = b.createdAt || b.poDate;
+        if (aDate && bDate) {
+          const diff = new Date(bDate) - new Date(aDate);
+          if (diff !== 0) return diff;
+        }
+        const aSauda = Number(a.saudaNo) || 0;
+        const bSauda = Number(b.saudaNo) || 0;
+        return bSauda - aSauda;
+      });
+
+      const excelRows = exportOrders.map((item, index) => {
+        const dateValue = item.poDate
+          ? new Date(item.poDate).toLocaleDateString("en-GB")
+          : item.createdAt
+            ? new Date(item.createdAt).toLocaleDateString("en-GB")
+            : "";
+
+        return {
+          "Sl No": index + 1,
+          Date: dateValue,
+          "Sauda No": item.saudaNo || "",
+          "PO Number": item.poNumber || "",
+          Buyer: item.buyer || "",
+          "Buyer Company": item.buyerCompany || "",
+          Mobile:
+            Array.isArray(item.buyerMobile) && item.buyerMobile.length > 0
+              ? item.buyerMobile.join(", ")
+              : item.buyerMobile || "",
+          Consignee: getConsigneeDisplay(item) || "",
+          Commodity: item.commodity || "",
+          Quantity: item.quantity || "",
+          Rate: item.rate || "",
+          "Loading Station": item.loadingStation || "",
+          Location: item.location || "",
+          "Agent Name": item.agentName || "",
+          "Buyer Emails":
+            item.buyerEmails?.filter(Boolean).join(", ") || "",
+          "Seller Emails":
+            item.sellerEmails?.filter(Boolean).join(", ") || "",
+          "Seller Mobile":
+            Array.isArray(item.sellerMobile) && item.sellerMobile.length > 0
+              ? item.sellerMobile.join(", ")
+              : item.sellerMobile || "",
+          "WhatsApp Sent": item.whatsappSent ? "Yes" : "No",
+          "PO Date": item.poDate || "",
+          "Created At": item.createdAt || "",
+          "Order ID": item._id || "",
+        };
+      });
+
+      if (excelRows.length === 0) {
+        toast.dismiss(toastId);
+        toast.info("No data available to download.");
+        return;
+      }
+
+      generateExcel(excelRows, "SelfOrders.xlsx", "SelfOrders");
+      toast.dismiss(toastId);
+      toast.success("Excel downloaded");
+    } catch (error) {
+      toast.error("Failed to generate Excel");
+    }
+  }, [userRole, buyerData, mobile, searchInput, getConsigneeDisplay]);
+
   return (
     <Suspense fallback={<Loading />}>
       <AdminPageShell
@@ -575,6 +713,7 @@ Download PDF: ${fileUrl}`
             onBack={() => navigate(-1)}
             searchInput={searchInput}
             onSearchChange={handleSearchChange}
+            onDownloadExcel={handleDownloadExcel}
           />
 
           <SelfOrderTable headers={headers} rows={rows} />
@@ -601,42 +740,58 @@ Download PDF: ${fileUrl}`
   );
 };
 
-const SelfOrderSearchBar = ({ onBack, searchInput, onSearchChange }) => {
+const SelfOrderSearchBar = ({
+  onBack,
+  searchInput,
+  onSearchChange,
+  onDownloadExcel,
+}) => {
   return (
     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 px-1 sm:px-0">
-      <button
-        onClick={onBack}
-        className="bg-gray-200 text-gray-600 px-3 py-1.5 rounded-lg text-sm hover:bg-gray-300 transition"
-      >
-        Back
-      </button>
-      <div
-        className="flex items-center w-full max-w-md bg-white border border-emerald-100 rounded-xl px-3 py-2 shadow-sm focus-within:ring-2 focus-within:ring-emerald-400/50 focus-within:border-emerald-400 transition-all"
-        role="search"
-      >
-        <svg
-          className="text-emerald-600/70 shrink-0"
-          xmlns="http://www.w3.org/2000/svg"
-          width="18"
-          height="18"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          aria-hidden
+      <div className="flex items-center gap-2">
+        <button
+          onClick={onBack}
+          className="bg-gray-200 text-gray-600 px-3 py-1.5 rounded-lg text-sm hover:bg-gray-300 transition"
         >
-          <circle cx="11" cy="11" r="8" />
-          <line x1="21" y1="21" x2="16.65" y2="16.65" />
-        </svg>
-        <input
-          type="text"
-          placeholder="Search..."
-          className="w-full min-w-0 px-2 py-1 bg-transparent text-sm text-slate-800 placeholder-slate-400 focus:outline-none"
-          value={searchInput}
-          onChange={onSearchChange}
-        />
+          Back
+        </button>
+        <button
+          onClick={onDownloadExcel}
+          className="flex items-center gap-2 bg-emerald-600 text-white px-3 py-1.5 rounded-lg text-sm hover:bg-emerald-700 transition"
+        >
+          <FaDownload size={14} />
+          <span>Download Excel</span>
+        </button>
+      </div>
+      <div className="flex-1 w-full sm:w-auto">
+        <div
+          className="flex items-center w-full max-w-md bg-white border border-emerald-100 rounded-xl px-3 py-2 shadow-sm focus-within:ring-2 focus-within:ring-emerald-400/50 focus-within:border-emerald-400 transition-all"
+          role="search"
+        >
+          <svg
+            className="text-emerald-600/70 shrink-0"
+            xmlns="http://www.w3.org/2000/svg"
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden
+          >
+            <circle cx="11" cy="11" r="8" />
+            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+          </svg>
+          <input
+            type="text"
+            placeholder="Search..."
+            className="w-full min-w-0 px-2 py-1 bg-transparent text-sm text-slate-800 placeholder-slate-400 focus:outline-none"
+            value={searchInput}
+            onChange={onSearchChange}
+          />
+        </div>
       </div>
     </div>
   );
