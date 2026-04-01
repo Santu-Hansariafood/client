@@ -46,11 +46,30 @@ const ListCompany = () => {
         },
       });
 
-      const items = response?.data?.data || [];
-      const total = response?.data?.total ?? items.length;
+      const items = Array.isArray(response?.data?.data)
+        ? response.data.data
+        : [];
 
-      setCompanyData(Array.isArray(items) ? items : []);
-      setTotalItems(total);
+      const normalizedQuery = searchQuery.trim().toLowerCase();
+
+      const filteredItems = normalizedQuery
+        ? items.filter((company) =>
+            String(company.companyName || "")
+              .toLowerCase()
+              .includes(normalizedQuery),
+          )
+        : items;
+
+      setCompanyData(filteredItems);
+
+      const backendTotal =
+        typeof response?.data?.total === "number"
+          ? response.data.total
+          : filteredItems.length;
+
+      setTotalItems(
+        normalizedQuery ? filteredItems.length : backendTotal,
+      );
     } catch (error) {
       console.error("Fetch Company Error:", error);
 
@@ -172,6 +191,10 @@ const ListCompany = () => {
             <div className="overflow-x-auto rounded-xl border border-gray-100">
               {loading ? (
                 <Loading />
+              ) : rows.length === 0 ? (
+                <div className="p-4 text-center text-slate-500">
+                  No companies found.
+                </div>
               ) : (
                 <Tables
                   headers={[
