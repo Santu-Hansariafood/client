@@ -230,11 +230,13 @@ const SelfOrder = () => {
         supplierResponse,
         buyerResponse,
         sellerProfileResponse,
+        companyResponse,
       ] = await Promise.all([
-        axios.get("/consignees"),
+        axios.get("/consignees", { params: { limit: 0 } }),
         axios.get("/seller-company"),
         axios.get("/buyers"),
         axios.get("/sellers"),
+        axios.get("/companies", { params: { limit: 0 } }),
       ]);
 
       const consigneeData = Array.isArray(consigneeResponse.data)
@@ -249,6 +251,9 @@ const SelfOrder = () => {
       const sellerProfileData = Array.isArray(sellerProfileResponse.data)
         ? sellerProfileResponse.data
         : sellerProfileResponse.data?.data || [];
+      const companyData = Array.isArray(companyResponse.data)
+        ? companyResponse.data
+        : companyResponse.data?.data || [];
 
       const normalizedConsigneeKey = (() => {
         const c = order?.consignee;
@@ -283,7 +288,18 @@ const SelfOrder = () => {
         .trim()
         .toLowerCase();
 
+      const matchingCompany =
+        companyData.find((c) => {
+          const idMatch =
+            c?._id && rawBuyerKey && String(c._id) === String(rawBuyerKey);
+          const nameMatch =
+            c?.companyName &&
+            c.companyName.toLowerCase() === normalizedBuyerKey;
+          return idMatch || nameMatch;
+        }) || null;
+
       const matchingBuyer =
+        matchingCompany ||
         buyerData.find((buyer) => {
           const idMatch =
             buyer?._id && rawBuyerKey && String(buyer._id) === String(rawBuyerKey);

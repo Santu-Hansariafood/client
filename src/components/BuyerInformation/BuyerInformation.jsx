@@ -111,11 +111,24 @@ const BuyerInformation = ({ formData, handleChange }) => {
   );
 
   const consigneeOptions = useMemo(() => {
-    return (
-      selectedBuyer?.consignee?.map(({ value, label }) => ({ value, label })) ||
-      []
-    );
-  }, [selectedBuyer]);
+    const fromBuyer =
+      selectedBuyer?.consignee?.map(({ value, label, name }) => ({
+        value,
+        label: label || name || "",
+      })) || [];
+    const allConsignees =
+      consignees.map((c) => ({
+        value: String(c._id),
+        label: c.name || c.label || "",
+      })) || [];
+    const map = new Map();
+    [...fromBuyer, ...allConsignees].forEach((opt) => {
+      if (opt?.value && !map.has(String(opt.value))) {
+        map.set(String(opt.value), opt);
+      }
+    });
+    return Array.from(map.values());
+  }, [selectedBuyer, consignees]);
 
   const onCompanyChange = (option) => {
     const companyId = option?.value || null;
@@ -158,6 +171,7 @@ const BuyerInformation = ({ formData, handleChange }) => {
     const consigneeValue = option?.label || "";
     setSelectedConsignee(option?.value || "");
     handleChange("consignee", consigneeValue);
+    handleChange("billTo", "consignee");
   };
 
   return (
