@@ -111,7 +111,7 @@ const SaudaDetails = ({ data }) => {
 
       <View style={styles.grid}>
         <View style={styles.gridItem}>
-          <Text style={styles.label}>Buyer Name (Debitor)</Text>
+          <Text style={styles.label}>Buyer Name</Text>
           <Text style={styles.nameValue}>
             {data.buyerCompany || data.buyer}
           </Text>
