@@ -27,7 +27,7 @@ const ListCompany = () => {
   const [isEditPopupOpen, setIsEditPopupOpen] = useState(false);
 
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 20;
+  const [itemsPerPage, setItemsPerPage] = useState(20);
 
   const [loading, setLoading] = useState(true);
   const [totalItems, setTotalItems] = useState(0);
@@ -65,7 +65,7 @@ const ListCompany = () => {
     if (user) {
       fetchCompanyData();
     }
-  }, [currentPage, user, searchQuery]);
+  }, [currentPage, user, searchQuery, itemsPerPage]);
 
   const handleSearch = (query) => {
     setSearchQuery(query);
@@ -200,6 +200,10 @@ const ListCompany = () => {
                 totalItems={totalItems}
                 itemsPerPage={itemsPerPage}
                 onPageChange={(page) => setCurrentPage(page)}
+                onPageSizeChange={(size) => {
+                  setItemsPerPage(size);
+                  setCurrentPage(1);
+                }}
               />
             </div>
           </div>

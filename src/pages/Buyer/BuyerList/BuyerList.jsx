@@ -32,7 +32,7 @@ const BuyerList = () => {
   const [selectedBuyer, setSelectedBuyer] = useState(null);
   const [isEditPopupOpen, setIsEditPopupOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const itemsPerPage = 20;
+  const [itemsPerPage, setItemsPerPage] = useState(20);
 
   useEffect(() => {
     const fetchBuyersData = async () => {
@@ -58,7 +58,7 @@ const BuyerList = () => {
       }
     };
     fetchBuyersData();
-  }, [currentPage, searchQuery]);
+  }, [currentPage, searchQuery, itemsPerPage]);
 
   const handleSearchByNames = (query) => {
     setSearchQuery(query || "");
@@ -126,7 +126,7 @@ const BuyerList = () => {
         />,
       ];
     });
-  }, [filteredData, currentPage]);
+  }, [filteredData, currentPage, itemsPerPage]);
 
   return (
     <Suspense fallback={<Loading />}>
@@ -173,6 +173,11 @@ const BuyerList = () => {
                     totalItems={totalItems}
                     itemsPerPage={itemsPerPage}
                     onPageChange={(page) => setCurrentPage(page)}
+                    onPageSizeChange={(size) => {
+                      setItemsPerPage(size);
+                      setCurrentPage(1);
+                    }}
+                    pageSizeOptions={[10, 20, 50, 100]}
                   />
                 </div>
               </>

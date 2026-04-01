@@ -7,10 +7,15 @@ const Pagination = ({
   totalItems,
   itemsPerPage = 10,
   onPageChange,
+  onPageSizeChange,
+  pageSizeOptions = [10, 20, 50, 100],
+  showPageSize = true,
+  showGoTo = true,
 }) => {
   const totalPages = Math.max(1, Math.ceil(totalItems / itemsPerPage));
   const [currentGroup, setCurrentGroup] = useState(1);
   const pagesPerGroup = 5;
+  const [gotoValue, setGotoValue] = useState("");
 
   useEffect(() => {
     setCurrentGroup(
@@ -41,6 +46,35 @@ const Pagination = ({
 
   return (
     <div className="flex flex-col items-center gap-4 mt-6 w-full">
+      <div className="w-full flex items-center justify-between text-sm text-slate-600">
+        <span>
+          Showing{" "}
+          {totalItems === 0
+            ? 0
+            : (currentPage - 1) * itemsPerPage + 1}
+          {" - "}
+          {Math.min(currentPage * itemsPerPage, totalItems)} of {totalItems}
+        </span>
+        {showPageSize && onPageSizeChange && (
+          <div className="flex items-center gap-2">
+            <span>Per page</span>
+            <select
+              className="h-9 px-2 rounded-lg border border-slate-300 bg-white text-slate-700"
+              value={itemsPerPage}
+              onChange={(e) => {
+                const size = Number(e.target.value);
+                onPageSizeChange(size);
+              }}
+            >
+              {pageSizeOptions.map((opt) => (
+                <option key={opt} value={opt}>
+                  {opt}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+      </div>
       <div className="flex items-center justify-between w-full max-w-sm md:hidden gap-3 p-3 rounded-2xl bg-slate-50 border border-slate-200 shadow-sm">
         <button
           onClick={() => onPageChange(currentPage - 1)}
@@ -128,6 +162,38 @@ const Pagination = ({
           >
             <FaAngleDoubleRight className="w-4 h-4" />
           </button>
+          {showGoTo && (
+            <div className="ml-2 flex items-center gap-2">
+              <span className="text-xs text-slate-500">Go to</span>
+              <input
+                type="number"
+                min={1}
+                max={totalPages}
+                value={gotoValue}
+                onChange={(e) => setGotoValue(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    const n = Math.max(1, Math.min(totalPages, Number(gotoValue || "1")));
+                    onPageChange(n);
+                    setGotoValue("");
+                  }
+                }}
+                className="w-16 h-9 px-2 rounded-lg border border-slate-300 bg-white text-slate-700"
+                placeholder="Pg"
+                aria-label="Go to page"
+              />
+              <button
+                onClick={() => {
+                  const n = Math.max(1, Math.min(totalPages, Number(gotoValue || "1")));
+                  onPageChange(n);
+                  setGotoValue("");
+                }}
+                className={`${btnBase} ${btnDefault} h-9 min-w-[2.25rem]`}
+              >
+                Go
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -139,6 +205,10 @@ Pagination.propTypes = {
   totalItems: PropTypes.number.isRequired,
   itemsPerPage: PropTypes.number,
   onPageChange: PropTypes.func.isRequired,
+  onPageSizeChange: PropTypes.func,
+  pageSizeOptions: PropTypes.arrayOf(PropTypes.number),
+  showPageSize: PropTypes.bool,
+  showGoTo: PropTypes.bool,
 };
 
 export default Pagination;

@@ -38,7 +38,7 @@ const ListGroupOfCompany = () => {
   const [isEditPopupOpen, setIsEditPopupOpen] = useState(false);
   const [selectedGroup, setSelectedGroup] = useState(null);
 
-  const itemsPerPage = 20;
+  const [itemsPerPage, setItemsPerPage] = useState(20);
 
   useEffect(() => {
     const fetchGroups = async () => {
@@ -64,11 +64,11 @@ const ListGroupOfCompany = () => {
         setGroupsData(normalized);
         setTotalItems(total);
       } catch (error) {
-        toast.error("Failed to fetch groups", error);
+        toast.error(error?.response?.data?.message || "Failed to fetch groups");
       }
     };
     fetchGroups();
-  }, [currentPage, searchQuery]);
+  }, [currentPage, searchQuery, itemsPerPage]);
 
   const handleSearch = useCallback(
     (query) => {
@@ -159,6 +159,7 @@ const ListGroupOfCompany = () => {
               placeholder="Search groups..."
               items={groupsData.map((group) => group.groupName)}
               onSearch={handleSearch}
+            returnQuery
             />
           </div>
 
@@ -172,6 +173,10 @@ const ListGroupOfCompany = () => {
               totalItems={totalItems}
               itemsPerPage={itemsPerPage}
               onPageChange={setCurrentPage}
+              onPageSizeChange={(size) => {
+                setItemsPerPage(size);
+                setCurrentPage(1);
+              }}
             />
           </div>
         </div>
