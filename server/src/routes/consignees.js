@@ -63,14 +63,6 @@ router.post("/", async (req, res) => {
       });
     }
 
-    const existingPhone = await Consignee.findOne({ phone });
-
-    if (existingPhone) {
-      return res.status(400).json({
-        message: "Phone number already exists"
-      });
-    }
-
     const consignee = new Consignee({
       name,
       phone,
