@@ -31,7 +31,7 @@ const BuyerInformation = ({ formData, handleChange }) => {
       try {
         const [buyersRes, consigneesRes] = await Promise.all([
           axios.get("/buyers"),
-          axios.get("/consignees"),
+          axios.get("/consignees", { params: { limit: 0 } }),
         ]);
         setBuyers(buyersRes.data);
         setConsignees(consigneesRes.data?.data || consigneesRes.data || []);

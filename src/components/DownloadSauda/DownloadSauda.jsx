@@ -23,6 +23,7 @@ const DownloadSauda = ({
   const [sellerProfileData, setSellerProfileData] = useState(
     initialSellerProfileData || [],
   );
+  const [companyData, setCompanyData] = useState([]);
   const [loading, setLoading] = useState(
     !initialConsigneeData ||
       !initialSupplierData ||
@@ -34,6 +35,7 @@ const DownloadSauda = ({
   const CONSIGNEE_API_URL = "/consignees";
   const SUPPLIER_API_URL = "/seller-company";
   const BUYER_API_URL = "/buyers";
+  const COMPANY_API_URL = "/companies";
   const SELLER_PROFILE_API_URL = "/sellers";
 
   useEffect(() => {
@@ -55,11 +57,13 @@ const DownloadSauda = ({
           supplierResponse,
           buyerResponse,
           sellerProfileResponse,
+          companyResponse,
         ] = await Promise.all([
-          axios.get(CONSIGNEE_API_URL),
+          axios.get(CONSIGNEE_API_URL, { params: { limit: 0 } }),
           axios.get(SUPPLIER_API_URL),
           axios.get(BUYER_API_URL),
           axios.get(SELLER_PROFILE_API_URL),
+          axios.get(COMPANY_API_URL, { params: { limit: 0 } }),
         ]);
 
         const cData = Array.isArray(consigneeResponse.data)
@@ -79,6 +83,11 @@ const DownloadSauda = ({
         setSupplierData(sData);
         setBuyerData(bData);
         setSellerProfileData(spData);
+        setCompanyData(
+          (Array.isArray(companyResponse.data)
+            ? companyResponse.data
+            : companyResponse.data?.data) || [],
+        );
       } catch (error) {
         console.error("Error fetching data:", error);
       } finally {
@@ -126,7 +135,18 @@ const DownloadSauda = ({
     .trim()
     .toLowerCase();
 
+  const matchingCompany =
+    companyData.find((c) => {
+      const idMatch =
+        c?._id && rawBuyerKey && String(c._id) === String(rawBuyerKey);
+      const nameMatch =
+        c?.companyName &&
+        c.companyName.toLowerCase() === normalizedBuyerKey;
+      return idMatch || nameMatch;
+    }) || null;
+
   const matchingBuyer =
+    matchingCompany ||
     buyerData.find((buyer) => {
       const idMatch =
         buyer?._id && rawBuyerKey && String(buyer._id) === String(rawBuyerKey);
