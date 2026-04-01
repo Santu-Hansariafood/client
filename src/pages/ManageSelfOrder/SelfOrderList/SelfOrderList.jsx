@@ -646,27 +646,16 @@ Download PDF: ${fileUrl}`
           "PO Number": item.poNumber || "",
           Buyer: item.buyer || "",
           "Buyer Company": item.buyerCompany || "",
-          Mobile:
-            Array.isArray(item.buyerMobile) && item.buyerMobile.length > 0
-              ? item.buyerMobile.join(", ")
-              : item.buyerMobile || "",
+          "Seller Company": item.supplierCompany || "",
+          "Seller Name": item.supplier || "",
           Consignee: getConsigneeDisplay(item) || "",
           Commodity: item.commodity || "",
           Quantity: item.quantity || "",
           Rate: item.rate || "",
-          "Loading Station": item.loadingStation || "",
-          Location: item.location || "",
-          "Agent Name": item.agentName || "",
-          "Buyer Emails": item.buyerEmails?.filter(Boolean).join(", ") || "",
-          "Seller Emails": item.sellerEmails?.filter(Boolean).join(", ") || "",
-          "Seller Mobile":
-            Array.isArray(item.sellerMobile) && item.sellerMobile.length > 0
-              ? item.sellerMobile.join(", ")
-              : item.sellerMobile || "",
-          "WhatsApp Sent": item.whatsappSent ? "Yes" : "No",
-          "PO Date": item.poDate || "",
-          "Created At": item.createdAt || "",
-          "Order ID": item._id || "",
+          "Delivery Date": item.deliveryDate
+            ? new Date(item.deliveryDate).toLocaleDateString("en-GB")
+            : "",
+          "Payment Time": item.paymentTerms || "",
         };
       });
 
