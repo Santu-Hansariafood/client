@@ -196,24 +196,66 @@ Qty: ${item.quantity || "0"}`;
 
         const fileName = `Sauda-${item.saudaNo}.pdf`;
 
-        const formData = new FormData();
-        formData.append("file", blob, fileName);
+        let shared = false;
 
-        const uploadRes = await axios.post("/upload-pdf", formData, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
+        try {
+          if (
+            navigator.share &&
+            navigator.canShare &&
+            typeof File !== "undefined"
+          ) {
+            const file = new File([blob], fileName, {
+              type: "application/pdf",
+            });
 
-        const fileUrl = uploadRes.data.url;
+            if (navigator.canShare({ files: [file] })) {
+              await navigator.share({
+                files: [file],
+                text: message,
+                title: fileName,
+              });
+              shared = true;
+            }
+          }
+        } catch (err) {
+          console.error("Share failed:", err);
+        }
 
-        const newMessage = `${message}
+        if (!shared) {
+          try {
+            const formData = new FormData();
+            formData.append("file", blob, fileName);
 
-Download PDF: ${fileUrl}`;
+            const uploadRes = await axios.post("/upload-pdf", formData, {
+              headers: { "Content-Type": "multipart/form-data" },
+            });
 
-        const url = `https://wa.me/${finalMobile}?text=${encodeURIComponent(
-          newMessage,
-        )}`;
+            const fileUrl = uploadRes?.data?.url || uploadRes?.data?.fileUrl;
 
-        window.open(url, "_blank");
+            const newMessage = fileUrl
+              ? `${message}
+
+Download PDF: ${fileUrl}`
+              : message;
+
+            const url = `https://wa.me/${finalMobile}?text=${encodeURIComponent(
+              newMessage,
+            )}`;
+
+            window.open(url, "_blank");
+          } catch (err) {
+            console.error("Upload failed:", err);
+            toast.error(
+              err?.response?.data?.message ||
+                "Failed to upload PDF for WhatsApp. Sending text only.",
+            );
+
+            const url = `https://wa.me/${finalMobile}?text=${encodeURIComponent(
+              message,
+            )}`;
+            window.open(url, "_blank");
+          }
+        }
 
         try {
           await axios.patch(`/self-order/${item._id}/whatsapp-sent`);
@@ -238,7 +280,9 @@ Download PDF: ${fileUrl}`;
       } catch (error) {
         toast.dismiss(toastId);
         console.error(error);
-        toast.error("Something went wrong");
+        toast.error(
+          error?.message || "Something went wrong while preparing WhatsApp",
+        );
       }
     },
     [getConsigneeDisplay],
