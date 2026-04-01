@@ -33,7 +33,7 @@ const API_URL = "/self-order";
 const SelfOrderList = () => {
   const navigate = useNavigate();
   const { userRole, mobile } = useAuth();
-  const [data, setData] = useState([]);
+  const [, setData] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
   const [consigneeMap, setConsigneeMap] = useState(new Map());
   const [consigneeData, setConsigneeData] = useState([]);
@@ -42,6 +42,8 @@ const SelfOrderList = () => {
   const [sellerProfileData, setSellerProfileData] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
+  const [totalItems, setTotalItems] = useState(0);
+  const [reloadFlag, setReloadFlag] = useState(0);
   const [selectedItem, setSelectedItem] = useState(null);
   const [searchInput, setSearchInput] = useState("");
 
@@ -49,6 +51,8 @@ const SelfOrderList = () => {
     let isMounted = true;
     const fetchData = async () => {
       try {
+        const page = currentPage || 1;
+        const search = searchInput?.trim() || "";
         const [
           orderRes,
           consigneeRes,
@@ -56,72 +60,97 @@ const SelfOrderList = () => {
           supplierRes,
           sellerProfileRes,
         ] = await Promise.all([
-          axios.get(API_URL),
+          axios.get(
+            `${API_URL}?page=${page}&limit=${itemsPerPage}&search=${search}`,
+          ),
           axios.get("/consignees").catch(() => ({ data: [] })),
           axios.get("/buyers").catch(() => ({ data: [] })),
           axios.get("/seller-company").catch(() => ({ data: [] })),
           axios.get("/sellers").catch(() => ({ data: [] })),
         ]);
 
-        if (isMounted) {
-          let raw = Array.isArray(orderRes.data)
-            ? orderRes.data
-            : orderRes.data?.data || [];
+        if (!isMounted) return;
 
-          const allBuyers = Array.isArray(buyersRes.data)
-            ? buyersRes.data
-            : buyersRes.data?.data || [];
+        const orderData = orderRes.data;
+        let raw = [];
+        let total = 0;
 
-          if (userRole === "Buyer") {
-            const buyer = allBuyers.find((b) =>
-              b.mobile?.some((m) => String(m) === String(mobile)),
-            );
-            if (buyer) {
-              const buyerCompanyId = buyer.companyId;
-              const buyerCompanyName = buyer.companyName;
+        if (orderData && Array.isArray(orderData.data)) {
+          raw = orderData.data;
+          total =
+            typeof orderData.total === "number"
+              ? orderData.total
+              : typeof orderData.totalItems === "number"
+                ? orderData.totalItems
+                : raw.length;
+        } else if (Array.isArray(orderData)) {
+          raw = orderData;
+          total = raw.length;
+        } else {
+          raw = orderData?.data || [];
+          total = raw.length;
+        }
 
-              raw = raw.filter((item) => {
-                const matchId =
-                  buyerCompanyId &&
-                  item.companyId &&
-                  String(item.companyId) === String(buyerCompanyId);
-                const matchName =
-                  buyerCompanyName &&
-                  item.buyerCompany &&
-                  item.buyerCompany.trim().toLowerCase() ===
-                    buyerCompanyName.trim().toLowerCase();
+        const allBuyers = Array.isArray(buyersRes.data)
+          ? buyersRes.data
+          : buyersRes.data?.data || [];
 
-                return matchId || matchName;
-              });
+        let filteredOrders = raw;
+
+        if (userRole === "Buyer") {
+          const buyer = allBuyers.find((b) =>
+            b.mobile?.some((m) => String(m) === String(mobile)),
+          );
+          if (buyer) {
+            const buyerCompanyId = buyer.companyId;
+            const buyerCompanyName = buyer.companyName;
+
+            filteredOrders = raw.filter((item) => {
+              const matchId =
+                buyerCompanyId &&
+                item.companyId &&
+                String(item.companyId) === String(buyerCompanyId);
+              const matchName =
+                buyerCompanyName &&
+                item.buyerCompany &&
+                item.buyerCompany.trim().toLowerCase() ===
+                  buyerCompanyName.trim().toLowerCase();
+
+              return matchId || matchName;
+            });
+
+            if (total === raw.length) {
+              total = filteredOrders.length;
             }
           }
-
-          setData(raw);
-          setFilteredData(raw);
-
-          const consignees = Array.isArray(consigneeRes.data)
-            ? consigneeRes.data
-            : consigneeRes.data?.data || [];
-          setConsigneeData(consignees);
-
-          const suppliers = Array.isArray(supplierRes.data)
-            ? supplierRes.data
-            : supplierRes.data?.data || [];
-          setSupplierData(suppliers);
-
-          setBuyerData(allBuyers);
-
-          const sellerProfiles = Array.isArray(sellerProfileRes.data)
-            ? sellerProfileRes.data
-            : sellerProfileRes.data?.data || [];
-          setSellerProfileData(sellerProfiles);
-
-          const map = new Map();
-          consignees.forEach((c) => {
-            if (c?._id) map.set(String(c._id), c.name || c.label || "-");
-          });
-          setConsigneeMap(map);
         }
+
+        setData(filteredOrders);
+        setFilteredData(filteredOrders);
+        setTotalItems(total);
+
+        const consignees = Array.isArray(consigneeRes.data)
+          ? consigneeRes.data
+          : consigneeRes.data?.data || [];
+        setConsigneeData(consignees);
+
+        const suppliers = Array.isArray(supplierRes.data)
+          ? supplierRes.data
+          : supplierRes.data?.data || [];
+        setSupplierData(suppliers);
+
+        setBuyerData(allBuyers);
+
+        const sellerProfiles = Array.isArray(sellerProfileRes.data)
+          ? sellerProfileRes.data
+          : sellerProfileRes.data?.data || [];
+        setSellerProfileData(sellerProfiles);
+
+        const map = new Map();
+        consignees.forEach((c) => {
+          if (c?._id) map.set(String(c._id), c.name || c.label || "-");
+        });
+        setConsigneeMap(map);
       } catch {
         if (isMounted) toast.error("Failed to fetch data from the server.");
       }
@@ -130,20 +159,19 @@ const SelfOrderList = () => {
     return () => {
       isMounted = false;
     };
-  }, [userRole, mobile]);
-
-  const indexOfLastItem = useMemo(
-    () => currentPage * itemsPerPage,
-    [currentPage, itemsPerPage],
-  );
-  const indexOfFirstItem = useMemo(
-    () => indexOfLastItem - itemsPerPage,
-    [indexOfLastItem, itemsPerPage],
-  );
+  }, [userRole, mobile, currentPage, itemsPerPage, searchInput, reloadFlag]);
 
   const currentItems = useMemo(
-    () => filteredData.slice(indexOfFirstItem, indexOfLastItem),
-    [filteredData, indexOfFirstItem, indexOfLastItem],
+    () => {
+      if (!filteredData || filteredData.length === 0) return [];
+      if (totalItems > filteredData.length) {
+        return filteredData;
+      }
+      const start = (currentPage - 1) * itemsPerPage;
+      const end = start + itemsPerPage;
+      return filteredData.slice(start, end);
+    },
+    [filteredData, totalItems, currentPage, itemsPerPage],
   );
 
   const handlePageChange = useCallback((pageNumber) => {
@@ -164,18 +192,29 @@ const SelfOrderList = () => {
 
   const handleSmartWhatsApp = useCallback(
     async (item, target = "buyer") => {
-      const mobileNumber =
+      const mobileValue =
         target === "buyer" ? item.buyerMobile : item.sellerMobile;
 
-      if (!mobileNumber) {
+      if (!mobileValue || (Array.isArray(mobileValue) && !mobileValue[0])) {
         toast.error("Mobile number not available");
         return;
       }
 
+      const mobileNumber = Array.isArray(mobileValue)
+        ? mobileValue[0]
+        : mobileValue;
+
       const toastId = toast.loading("Preparing WhatsApp...");
 
       try {
-        const cleanMobile = mobileNumber.replace(/\D/g, "");
+        const cleanMobile = String(mobileNumber).replace(/\D/g, "");
+
+        if (!cleanMobile || cleanMobile.length < 10) {
+          toast.dismiss(toastId);
+          toast.error("Invalid mobile number");
+          return;
+        }
+
         const finalMobile =
           cleanMobile.length === 10
             ? `91${cleanMobile}`
@@ -289,12 +328,18 @@ Download PDF: ${fileUrl}`
   );
 
   const openWhatsAppChat = useCallback((mobileNumber, item) => {
-    if (!mobileNumber) {
+    if (!mobileNumber || (Array.isArray(mobileNumber) && !mobileNumber[0])) {
       toast.error("Mobile number not available");
       return;
     }
 
-    const cleanMobile = mobileNumber.replace(/\D/g, "");
+    const value = Array.isArray(mobileNumber) ? mobileNumber[0] : mobileNumber;
+    const cleanMobile = String(value).replace(/\D/g, "");
+
+    if (!cleanMobile || cleanMobile.length < 10) {
+      toast.error("Invalid mobile number");
+      return;
+    }
 
     const finalMobile =
       cleanMobile.length === 10
@@ -305,7 +350,9 @@ Download PDF: ${fileUrl}`
 
     const message = `Hello, regarding Sauda No: ${item?.saudaNo || ""}`;
 
-    const url = `https://wa.me/${finalMobile}?text=${encodeURIComponent(message)}`;
+    const url = `https://wa.me/${finalMobile}?text=${encodeURIComponent(
+      message,
+    )}`;
 
     window.open(url, "_blank");
   }, []);
@@ -353,11 +400,37 @@ Download PDF: ${fileUrl}`
     [navigate],
   );
 
+  const handleDelete = useCallback(
+    async (item) => {
+      if (!item?._id) {
+        toast.error("Missing order id. Cannot delete this order.");
+        return;
+      }
+
+      const confirmDelete = window.confirm(
+        `Are you sure you want to delete PO Number: ${item.poNumber || "N/A"}?`,
+      );
+
+      if (!confirmDelete) return;
+
+      try {
+        await axios.delete(`${API_URL}/${item._id}`);
+        toast.success("Order deleted successfully");
+        setReloadFlag((prev) => prev + 1);
+      } catch (error) {
+        toast.error(
+          error?.response?.data?.message || "Failed to delete order",
+        );
+      }
+    },
+    [],
+  );
+
   const rows = useMemo(
     () =>
       currentItems.map((item, index) => {
         const slNo =
-          filteredData.length - ((currentPage - 1) * itemsPerPage + index);
+          totalItems - ((currentPage - 1) * itemsPerPage + index);
 
         const formattedDate = item.poDate
           ? new Date(item.poDate).toLocaleDateString("en-GB")
@@ -431,9 +504,7 @@ Download PDF: ${fileUrl}`
             <Actions
               onView={() => handleView(item)}
               onEdit={() => handleEdit(item)}
-              onDelete={() =>
-                toast.error(`Deleting PO Number: ${item.poNumber}`)
-              }
+              onDelete={() => handleDelete(item)}
             />
 
             <div className="flex gap-2">
@@ -467,13 +538,14 @@ Download PDF: ${fileUrl}`
       currentItems,
       handleView,
       handleEdit,
+      handleDelete,
       handleSmartWhatsApp,
       openWhatsAppChat,
       getConsigneeDisplay,
       currentPage,
       itemsPerPage,
       userRole,
-      filteredData.length,
+      totalItems,
       consigneeData,
       supplierData,
       buyerData,
@@ -485,29 +557,9 @@ Download PDF: ${fileUrl}`
     (e) => {
       const searchTerm = e.target.value;
       setSearchInput(searchTerm);
-      if (!searchTerm || searchTerm.trim() === "") {
-        setFilteredData(data);
-      } else {
-        const lowerSearch = searchTerm.toLowerCase();
-        setFilteredData(
-          data.filter(
-            (order) =>
-              (order.buyer &&
-                order.buyer.toLowerCase().includes(lowerSearch)) ||
-              (order.buyerCompany &&
-                order.buyerCompany.toLowerCase().includes(lowerSearch)) ||
-              (order.commodity &&
-                order.commodity.toLowerCase().includes(lowerSearch)) ||
-              (order.saudaNo &&
-                order.saudaNo.toString().toLowerCase().includes(lowerSearch)) ||
-              (order.poNumber &&
-                order.poNumber.toString().toLowerCase().includes(lowerSearch)),
-          ),
-        );
-      }
       setCurrentPage(1);
     },
-    [data],
+    [],
   );
 
   return (
@@ -529,7 +581,7 @@ Download PDF: ${fileUrl}`
 
           <Pagination
             currentPage={currentPage}
-            totalItems={filteredData.length}
+            totalItems={totalItems}
             itemsPerPage={itemsPerPage}
             onPageChange={handlePageChange}
           />
