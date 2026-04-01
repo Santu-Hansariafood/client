@@ -36,19 +36,12 @@ router.post("/send-pdf", async (req, res) => {
     const mailOptions = {
       from: process.env.EMAIL_USER,
       to: email,
-      subject: `Sauda Confirmation - HANS-2025-${saudaNo}`,
+      subject: `Sauda ID - ${saudaNo} Confirmation From Hansaria Food Pvt. Ltd.`,
+
       text: `Dear Sir/Madam,
 
-Please find attached the Sauda Confirmation.
+Please find attached The Sauda Agreement with this mail.
 
-Sauda No: HANS-2025-${saudaNo}
-PO Number: ${poNumber || "N/A"}
-Buyer: ${buyerCompany || buyer || "N/A"}
-Consignee: ${consignee || "N/A"}
-Supplier: ${supplierCompany || "N/A"}
-Commodity: ${commodity || "N/A"}
-Quantity: ${quantity || "N/A"}
-Rate: ${rate || "N/A"}
 
 Thank you for your business.
 
