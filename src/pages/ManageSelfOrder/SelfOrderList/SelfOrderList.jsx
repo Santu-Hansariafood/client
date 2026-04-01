@@ -201,6 +201,137 @@ const SelfOrderList = () => {
 
   const handleSmartWhatsApp = useCallback(
     async (item, target = "buyer") => {
+      const buildPdfData = () => {
+        const normalizedConsigneeKey = (() => {
+          const c = item?.consignee;
+          if (!c) return "";
+          if (typeof c === "object")
+            return (c.name || c.label || c.value || "").toString();
+          return String(c);
+        })();
+
+        const matchingConsignee =
+          (consigneeData || []).find((consignee) => {
+            const idMatch =
+              consignee?._id &&
+              normalizedConsigneeKey &&
+              String(consignee._id) === String(normalizedConsigneeKey);
+            if (idMatch) return true;
+            const name = (consignee?.name || consignee?.label || "")
+              .toString()
+              .trim()
+              .toLowerCase();
+            const key = normalizedConsigneeKey.toString().trim().toLowerCase();
+            return name && key && name === key;
+          }) || null;
+
+        const matchingSupplier =
+          (supplierData || []).find(
+            (supplier) =>
+              supplier?.companyName &&
+              item?.supplierCompany &&
+              supplier.companyName.toLowerCase() ===
+                item.supplierCompany.toLowerCase(),
+          ) || null;
+
+        const rawBuyerKey = item?.buyerCompany ?? item?.buyer ?? "";
+        const normalizedBuyerKey = String(rawBuyerKey || "")
+          .trim()
+          .toLowerCase();
+
+        const matchingBuyer =
+          (buyerData || []).find((buyer) => {
+            const idMatch =
+              buyer?._id &&
+              rawBuyerKey &&
+              String(buyer._id) === String(rawBuyerKey);
+            const nameMatch =
+              buyer?.companyName &&
+              buyer.companyName.toLowerCase() === normalizedBuyerKey;
+            return idMatch || nameMatch;
+          }) ||
+          (supplierData || []).find((supplier) => {
+            const idMatch =
+              supplier?._id &&
+              rawBuyerKey &&
+              String(supplier._id) === String(rawBuyerKey);
+            const nameMatch =
+              supplier?.companyName &&
+              supplier.companyName.toLowerCase() === normalizedBuyerKey;
+            return idMatch || nameMatch;
+          }) ||
+          null;
+
+        const toUnifiedDetails = (bd) => {
+          if (!bd) return null;
+          return {
+            ...bd,
+            address: bd.address || bd.location || "",
+            gstNo: bd.gstNo || bd.gst || bd.gstNumber || "",
+            panNo: bd.panNo || bd.pan || bd.panNumber || "",
+            pinNo: bd.pinNo || bd.pin || bd.pinCode || "",
+            district: bd.district || "",
+            state: bd.state || "",
+          };
+        };
+
+        const buyerDetails = toUnifiedDetails(matchingBuyer);
+        const supplierDetails = toUnifiedDetails(matchingSupplier);
+        const consigneeDetails = matchingConsignee
+          ? {
+              ...matchingConsignee,
+              address:
+                matchingConsignee.address ||
+                matchingConsignee.location ||
+                "",
+              gstNo:
+                matchingConsignee.gstNo ||
+                matchingConsignee.gst ||
+                matchingConsignee.gstNumber ||
+                "",
+              panNo:
+                matchingConsignee.panNo ||
+                matchingConsignee.pan ||
+                matchingConsignee.panNumber ||
+                "",
+              pin:
+                matchingConsignee.pin ||
+                matchingConsignee.pinNo ||
+                matchingConsignee.pinCode ||
+                "",
+              district: matchingConsignee.district || "",
+              state: matchingConsignee.state || "",
+            }
+          : null;
+
+        let transformed = {
+          ...item,
+          consignee: getConsigneeDisplay(item),
+          consigneeDetails,
+          supplierDetails,
+          buyerDetails,
+        };
+
+        if (item?.billTo === "consignee") {
+          transformed = {
+            ...transformed,
+            buyer: transformed.consignee,
+            buyerCompany: transformed.consignee,
+          };
+        } else {
+          const buyerName =
+            matchingBuyer?.companyName ||
+            (typeof item?.buyerCompany === "string" ? item.buyerCompany : "") ||
+            (typeof item?.buyer === "string" ? item.buyer : "");
+          transformed = {
+            ...transformed,
+            buyer: buyerName,
+            buyerCompany: buyerName,
+          };
+        }
+
+        return transformed;
+      };
       const mobileValue =
         target === "buyer" ? item.buyerMobile : item.sellerMobile;
 
@@ -238,9 +369,8 @@ Supplier: ${item.supplierCompany || item.supplier || "N/A"}
 Commodity: ${item.commodity || "N/A"}
 Qty: ${item.quantity || "0"}`;
 
-        const blob = await pdf(
-          <SaudaPDF data={{ ...item, consignee: getConsigneeDisplay(item) }} />,
-        ).toBlob();
+        const pdfData = buildPdfData();
+        const blob = await pdf(<SaudaPDF data={pdfData} />).toBlob();
 
         const fileName = `Sauda-${item.saudaNo}.pdf`;
 
