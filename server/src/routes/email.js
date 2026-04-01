@@ -4,19 +4,7 @@ import nodemailer from "nodemailer";
 const router = express.Router();
 
 router.post("/send-pdf", async (req, res) => {
-  const {
-    pdf,
-    email,
-    saudaNo,
-    poNumber,
-    buyer,
-    buyerCompany,
-    consignee,
-    supplierCompany,
-    commodity,
-    quantity,
-    rate,
-  } = req.body;
+  const { pdf, email, saudaNo } = req.body;
 
   if (!pdf || !email || !saudaNo) {
     return res.status(400).send("Missing required fields: pdf, email, saudaNo");
@@ -44,10 +32,12 @@ Please find attached The Sauda Agreement with this mail.
 Thank you for your business.
 
 Best Regards,
-Hansaria Food Pvt. Ltd.`,
+Hansaria Food Private Limited
+Contact: +91-8336924066 | +91-9330433535
+Email: sauda@hansariafood.com`,
       attachments: [
         {
-          filename: `HANS-2025-${saudaNo}.pdf`,
+          filename: `HANS-2026-2027-${saudaNo}.pdf`,
           content: pdf,
           encoding: "base64",
         },
