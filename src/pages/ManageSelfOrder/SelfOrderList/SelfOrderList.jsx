@@ -184,11 +184,11 @@ const SelfOrderList = () => {
               : cleanMobile;
 
         const message = `Sauda No: ${item.saudaNo || "N/A"}
-  PO: ${item.poNumber || "N/A"}
-  Buyer: ${item.buyerCompany || item.buyer || "N/A"}
-  Supplier: ${item.supplierCompany || item.supplier || "N/A"}
-  Commodity: ${item.commodity || "N/A"}
-  Qty: ${item.quantity || "0"}`;
+PO: ${item.poNumber || "N/A"}
+Buyer: ${item.buyerCompany || item.buyer || "N/A"}
+Supplier: ${item.supplierCompany || item.supplier || "N/A"}
+Commodity: ${item.commodity || "N/A"}
+Qty: ${item.quantity || "0"}`;
 
         const blob = await pdf(
           <SaudaPDF data={{ ...item, consignee: getConsigneeDisplay(item) }} />,
@@ -196,56 +196,24 @@ const SelfOrderList = () => {
 
         const fileName = `Sauda-${item.saudaNo}.pdf`;
 
-        // ✅ Try mobile share first
-        let shared = false;
+        const formData = new FormData();
+        formData.append("file", blob, fileName);
 
-        try {
-          if (
-            navigator.share &&
-            navigator.canShare &&
-            typeof File !== "undefined"
-          ) {
-            const file = new File([blob], fileName, {
-              type: "application/pdf",
-            });
+        const uploadRes = await axios.post("/upload-pdf", formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
 
-            if (navigator.canShare({ files: [file] })) {
-              await navigator.share({
-                files: [file],
-                text: message,
-                title: fileName,
-              });
-              shared = true;
-            }
-          }
-        } catch (err) {
-          console.log("Share failed:", err);
-        }
+        const fileUrl = uploadRes.data.url;
 
-        // ✅ If not shared → upload + send link
-        if (!shared) {
-          try {
-            const formData = new FormData();
-            formData.append("file", blob, fileName);
-
-            const uploadRes = await axios.post("/upload-pdf", formData, {
-              headers: { "Content-Type": "multipart/form-data" },
-            });
-
-            const fileUrl = uploadRes.data.url;
-
-            const newMessage = `${message}
+        const newMessage = `${message}
 
 Download PDF: ${fileUrl}`;
 
-            const url = `https://wa.me/${finalMobile}?text=${encodeURIComponent(newMessage)}`;
+        const url = `https://wa.me/${finalMobile}?text=${encodeURIComponent(
+          newMessage,
+        )}`;
 
-            window.open(url, "_blank");
-          } catch (err) {
-            console.error("Upload failed:", err);
-            toast.error("Failed to upload PDF");
-          }
-        }
+        window.open(url, "_blank");
 
         try {
           await axios.patch(`/self-order/${item._id}/whatsapp-sent`);
@@ -266,7 +234,7 @@ Download PDF: ${fileUrl}`;
         }
 
         toast.dismiss(toastId);
-        toast.success("WhatsApp opened 🚀");
+        toast.success("WhatsApp opened");
       } catch (error) {
         toast.dismiss(toastId);
         console.error(error);
@@ -390,7 +358,7 @@ Download PDF: ${fileUrl}`;
               <span className="font-medium text-slate-700">
                 {item.sellerMobile || "N/A"}
               </span>
-              {item.sellerMobile && (
+              {item.sellerMobile && userRole === "Admin" && (
                 <button
                   onClick={() => handleSmartWhatsApp(item, "seller")}
                   className="text-slate-400 hover:text-green-500"
@@ -439,12 +407,14 @@ Download PDF: ${fileUrl}`;
                 }
               />
 
-              <button
-                onClick={() => handleSmartWhatsApp(item, "buyer")}
-                className="sm:hidden w-9 h-9 rounded-lg bg-green-50 text-green-600"
-              >
-                <FaWhatsapp size={16} />
-              </button>
+              {item.buyerMobile && userRole === "Admin" && (
+                <button
+                  onClick={() => handleSmartWhatsApp(item, "buyer")}
+                  className="sm:hidden w-9 h-9 rounded-lg bg-green-50 text-green-600"
+                >
+                  <FaWhatsapp size={16} />
+                </button>
+              )}
             </div>
           </div>,
         ].filter(Boolean);
@@ -505,46 +475,13 @@ Download PDF: ${fileUrl}`;
         noContentCard
       >
         <div className="max-w-full space-y-4 sm:space-y-6">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 px-1 sm:px-0">
-            <button
-              onClick={() => navigate(-1)}
-              className="bg-gray-200 text-gray-600 px-3 py-1.5 rounded-lg text-sm hover:bg-gray-300 transition"
-            >
-              Back
-            </button>
-            <div
-              className="flex items-center w-full max-w-md bg-white border border-emerald-100 rounded-xl px-3 py-2 shadow-sm focus-within:ring-2 focus-within:ring-emerald-400/50 focus-within:border-emerald-400 transition-all"
-              role="search"
-            >
-              <svg
-                className="text-emerald-600/70 shrink-0"
-                xmlns="http://www.w3.org/2000/svg"
-                width="18"
-                height="18"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                aria-hidden
-              >
-                <circle cx="11" cy="11" r="8" />
-                <line x1="21" y1="21" x2="16.65" y2="16.65" />
-              </svg>
-              <input
-                type="text"
-                placeholder="Search..."
-                className="w-full min-w-0 px-2 py-1 bg-transparent text-sm text-slate-800 placeholder-slate-400 focus:outline-none"
-                value={searchInput}
-                onChange={handleSearchChange}
-              />
-            </div>
-          </div>
+          <SelfOrderSearchBar
+            onBack={() => navigate(-1)}
+            searchInput={searchInput}
+            onSearchChange={handleSearchChange}
+          />
 
-          <div className="rounded-xl sm:rounded-2xl border border-emerald-100 bg-white p-2 sm:p-6 shadow-md sm:shadow-lg shadow-emerald-900/5 overflow-hidden">
-            <Tables headers={headers} rows={rows} />
-          </div>
+          <SelfOrderTable headers={headers} rows={rows} />
 
           <Pagination
             currentPage={currentPage}
@@ -565,6 +502,55 @@ Download PDF: ${fileUrl}`;
         </div>
       </AdminPageShell>
     </Suspense>
+  );
+};
+
+const SelfOrderSearchBar = ({ onBack, searchInput, onSearchChange }) => {
+  return (
+    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 px-1 sm:px-0">
+      <button
+        onClick={onBack}
+        className="bg-gray-200 text-gray-600 px-3 py-1.5 rounded-lg text-sm hover:bg-gray-300 transition"
+      >
+        Back
+      </button>
+      <div
+        className="flex items-center w-full max-w-md bg-white border border-emerald-100 rounded-xl px-3 py-2 shadow-sm focus-within:ring-2 focus-within:ring-emerald-400/50 focus-within:border-emerald-400 transition-all"
+        role="search"
+      >
+        <svg
+          className="text-emerald-600/70 shrink-0"
+          xmlns="http://www.w3.org/2000/svg"
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden
+        >
+          <circle cx="11" cy="11" r="8" />
+          <line x1="21" y1="21" x2="16.65" y2="16.65" />
+        </svg>
+        <input
+          type="text"
+          placeholder="Search..."
+          className="w-full min-w-0 px-2 py-1 bg-transparent text-sm text-slate-800 placeholder-slate-400 focus:outline-none"
+          value={searchInput}
+          onChange={onSearchChange}
+        />
+      </div>
+    </div>
+  );
+};
+
+const SelfOrderTable = ({ headers, rows }) => {
+  return (
+    <div className="rounded-xl sm:rounded-2xl border border-emerald-100 bg-white p-2 sm:p-6 shadow-md sm:shadow-lg shadow-emerald-900/5 overflow-hidden">
+      <Tables headers={headers} rows={rows} />
+    </div>
   );
 };
 
