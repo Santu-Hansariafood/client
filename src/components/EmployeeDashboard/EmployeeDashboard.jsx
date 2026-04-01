@@ -46,7 +46,7 @@ const EmployeeDashboard = () => {
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-slate-800">Welcome back, {user?.name}!</h1>
-          <p className="text-slate-500">Here's what's happening in your account today.</p>
+          <p className="text-slate-500">Here&apos;s what&apos;s happening in your account today.</p>
         </div>
         <div className="flex items-center gap-2 bg-emerald-50 text-emerald-700 px-4 py-2 rounded-lg border border-emerald-100">
           <FaClock />

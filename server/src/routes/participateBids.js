@@ -102,7 +102,15 @@ router.post("/", async (req, res) => {
 
 router.patch("/:id/status", async (req, res) => {
   try {
-    const { status, adminNotes } = req.body;
+    const {
+      status,
+      adminNotes,
+      acceptanceRate,
+      acceptanceQuantity,
+      acceptedAt,
+      acceptedByMobile,
+      acceptedByRole,
+    } = req.body;
     const { id } = req.params;
 
     if (!["accepted", "rejected"].includes(status)) {
@@ -116,7 +124,96 @@ router.patch("/:id/status", async (req, res) => {
 
     participation.status = status;
     participation.adminNotes = adminNotes || "";
+
+    if (status === "accepted") {
+      participation.acceptedRate = typeof acceptanceRate === "number" ? acceptanceRate : participation.rate;
+      participation.acceptedQuantity = typeof acceptanceQuantity === "number" ? acceptanceQuantity : participation.quantity;
+      participation.acceptedAt = acceptedAt ? new Date(acceptedAt) : new Date();
+      participation.acceptedByMobile = acceptedByMobile || "";
+      participation.acceptedByRole = acceptedByRole || "";
+    } else {
+      participation.acceptedRate = null;
+      participation.acceptedQuantity = null;
+      participation.acceptedAt = null;
+      participation.acceptedByMobile = "";
+      participation.acceptedByRole = "";
+    }
+
     await participation.save();
+
+    const bid = await Bid.findById(participation.bidId);
+
+    if (status === "accepted") {
+      const ConfirmBid = (await import("../models/ConfirmBid.js")).default;
+      const confirmDoc = await ConfirmBid.create({
+        bidId: participation.bidId,
+        phone: participation.mobile,
+        status: "Confirmed",
+        participationId: participation._id,
+        acceptanceRate: participation.acceptedRate,
+        acceptanceQuantity: participation.acceptedQuantity,
+        acceptedAt: participation.acceptedAt,
+        acceptedByMobile: participation.acceptedByMobile,
+        acceptedByRole: participation.acceptedByRole,
+      });
+
+      const sellerMsg = `Bid accepted for ${bid?.commodity || "bid"} at rate ₹${participation.acceptedRate}, qty ${participation.acceptedQuantity}. On ${participation.acceptedAt?.toLocaleString?.() || new Date().toLocaleString()}. Participation ID: ${participation._id}`;
+
+      const buyerMsg = `Seller ${participation.mobile} accepted for ${bid?.commodity || "bid"} at rate ₹${participation.acceptedRate}, qty ${participation.acceptedQuantity}. On ${participation.acceptedAt?.toLocaleString?.() || new Date().toLocaleString()}. Participation ID: ${participation._id}`;
+
+      const notifyBuyerMobile = bid?.createdByMobile || null;
+
+      const notifications = [
+        Notification.create({
+          recipient: participation.mobile,
+          recipientRole: "Seller",
+          title: "Bid Accepted",
+          message: sellerMsg,
+          type: "BidConfirmation",
+          relatedId: confirmDoc._id,
+        }),
+        Notification.create({
+          recipient: notifyBuyerMobile || "all",
+          recipientRole: "Buyer",
+          title: "Bid Accepted",
+          message: buyerMsg,
+          type: "BidConfirmation",
+          relatedId: confirmDoc._id,
+        }),
+      ];
+
+      // Broadcast to Admin and Employee for visibility
+      notifications.push(
+        Notification.create({
+          recipient: "all",
+          recipientRole: "Admin",
+          title: "Bid Accepted",
+          message: `Participation ${participation._id} accepted for ${bid?.commodity || "bid"} at ₹${participation.acceptedRate} / ${participation.acceptedQuantity}.`,
+          type: "BidConfirmation",
+          relatedId: confirmDoc._id,
+        }),
+        Notification.create({
+          recipient: "all",
+          recipientRole: "Employee",
+          title: "Bid Accepted",
+          message: `Participation ${participation._id} accepted for ${bid?.commodity || "bid"} at ₹${participation.acceptedRate} / ${participation.acceptedQuantity}.`,
+          type: "BidConfirmation",
+          relatedId: confirmDoc._id,
+        }),
+      );
+
+      await Promise.all(notifications);
+    } else if (status === "rejected") {
+      const sellerMsg = `Your participation for ${bid?.commodity || "bid"} has been rejected. Participation ID: ${participation._id}${adminNotes ? `, Notes: ${adminNotes}` : ""}`;
+      await Notification.create({
+        recipient: participation.mobile,
+        recipientRole: "Seller",
+        title: "Bid Rejected",
+        message: sellerMsg,
+        type: "BidRejection",
+        relatedId: participation._id,
+      });
+    }
 
     res.json(participation);
   } catch (error) {

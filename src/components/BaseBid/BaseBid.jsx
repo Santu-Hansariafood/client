@@ -248,6 +248,8 @@ const BaseBid = ({ type }) => {
         paymentTerms: state.paymentTerms,
         delivery: state.delivery,
         status: state.status,
+        createdByMobile: mobile || "",
+        createdByRole: userRole || "",
       });
 
       const bidId = response.data.bidId || response.data._id || "UNKNOWN_BID";

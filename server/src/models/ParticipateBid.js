@@ -14,6 +14,15 @@ const participateBidSchema = new mongoose.Schema(
       default: "pending",
     },
     adminNotes: { type: String, default: "" },
+    acceptedRate: { type: Number, default: null },
+    acceptedQuantity: { type: Number, default: null },
+    acceptedAt: { type: Date, default: null },
+    acceptedByMobile: { type: String, default: "" },
+    acceptedByRole: {
+      type: String,
+      enum: ["Admin", "Employee", "Buyer", "Seller", ""],
+      default: "",
+    },
   },
   { timestamps: true },
 );

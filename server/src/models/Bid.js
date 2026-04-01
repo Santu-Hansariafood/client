@@ -19,7 +19,9 @@ const bidSchema = new mongoose.Schema(
     company: { type: String, default: "" },
     unit: { type: String, default: "" },
     status: { type: String, enum: ["active", "closed"], default: "active" },
-    closedAt: { type: Date, default: null }
+    closedAt: { type: Date, default: null },
+    createdByMobile: { type: String, default: "" },
+    createdByRole: { type: String, enum: ["Admin", "Employee", "Buyer", "Seller", ""], default: "" }
   },
   { timestamps: true }
 );

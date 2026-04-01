@@ -122,7 +122,6 @@ const ListGroupOfCompany = () => {
         )
         .sort((a, b) => a.groupName.localeCompare(b.groupName));
       setGroupsData(updatedList);
-      setFilteredData(updatedList);
       setIsEditPopupOpen(false);
       toast.success("Group updated successfully");
     },

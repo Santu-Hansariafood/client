@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
+import { useAuth } from "../../../context/AuthContext/AuthContext";
 
 const InteractionsPopup = ({ bidId, onClose }) => {
   const [interactions, setInteractions] = useState([]);
   const [loading, setLoading] = useState(true);
+  const { mobile: actorMobile, userRole: actorRole } = useAuth();
 
   useEffect(() => {
     const fetchInteractions = async () => {
@@ -19,12 +21,25 @@ const InteractionsPopup = ({ bidId, onClose }) => {
     fetchInteractions();
   }, [bidId]);
 
-  const handleStatusChange = async (id, status, adminNotes) => {
+  const handleStatusChange = async (id, status, adminNotes, acceptance) => {
     try {
-      const response = await axios.patch(`/participatebids/${id}/status`, {
-        status,
-        adminNotes,
-      });
+      const payload =
+        status === "accepted"
+          ? {
+              status,
+              adminNotes,
+              acceptanceRate: acceptance?.rate,
+              acceptanceQuantity: acceptance?.quantity,
+              acceptedAt: acceptance?.acceptedAt || new Date().toISOString(),
+              acceptedByMobile: actorMobile,
+              acceptedByRole: actorRole,
+            }
+          : { status, adminNotes };
+
+      const response = await axios.patch(
+        `/participatebids/${id}/status`,
+        payload
+      );
       // Update local state with the returned participation object which now includes sellerName
       setInteractions(
         interactions.map((i) =>
@@ -69,8 +84,31 @@ const InteractionsPopup = ({ bidId, onClose }) => {
 
 const InteractionCard = ({ interaction, onStatusChange }) => {
   const [notes, setNotes] = useState(interaction.adminNotes || "");
+  const [acceptedRate, setAcceptedRate] = useState(
+    interaction.acceptedRate ?? interaction.rate ?? ""
+  );
+  const [acceptedQuantity, setAcceptedQuantity] = useState(
+    interaction.acceptedQuantity ?? interaction.quantity ?? ""
+  );
+  const [acceptedAt, setAcceptedAt] = useState(
+    interaction.acceptedAt
+      ? new Date(interaction.acceptedAt).toISOString().slice(0, 16)
+      : new Date().toISOString().slice(0, 16)
+  );
 
   const handleSave = (status) => {
+    if (status === "accepted") {
+      if (!acceptedRate || !acceptedQuantity) {
+        return alert("Please enter acceptance rate and quantity.");
+      }
+      const acceptance = {
+        rate: Number(acceptedRate),
+        quantity: Number(acceptedQuantity),
+        acceptedAt: new Date(acceptedAt).toISOString(),
+      };
+      onStatusChange(interaction._id, status, notes, acceptance);
+      return;
+    }
     onStatusChange(interaction._id, status, notes);
   };
 
@@ -110,6 +148,39 @@ const InteractionCard = ({ interaction, onStatusChange }) => {
           <p className="text-sm text-gray-600 mt-1">{interactionTime}</p>
         </div>
       </div>
+      {interaction.status !== "accepted" && (
+        <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <p className="text-sm font-medium text-gray-500">Acceptance Rate</p>
+            <input
+              type="number"
+              className="w-full p-2 border rounded-md focus:ring-2 focus:ring-emerald-500 transition"
+              value={acceptedRate}
+              onChange={(e) => setAcceptedRate(e.target.value)}
+              placeholder="Enter accepted rate"
+            />
+          </div>
+          <div>
+            <p className="text-sm font-medium text-gray-500">Acceptance Quantity</p>
+            <input
+              type="number"
+              className="w-full p-2 border rounded-md focus:ring-2 focus:ring-emerald-500 transition"
+              value={acceptedQuantity}
+              onChange={(e) => setAcceptedQuantity(e.target.value)}
+              placeholder="Enter accepted quantity"
+            />
+          </div>
+          <div>
+            <p className="text-sm font-medium text-gray-500">Accepted On</p>
+            <input
+              type="datetime-local"
+              className="w-full p-2 border rounded-md focus:ring-2 focus:ring-emerald-500 transition"
+              value={acceptedAt}
+              onChange={(e) => setAcceptedAt(e.target.value)}
+            />
+          </div>
+        </div>
+      )}
       <div className="mt-4">
         <textarea
           className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 transition"

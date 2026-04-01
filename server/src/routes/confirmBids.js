@@ -23,20 +23,71 @@ router.get("/", async (req, res) => {
 
 router.post("/", async (req, res) => {
   try {
-    const { bidId, phone, status } = req.body;
-    const item = await ConfirmBid.create(req.body);
+    const {
+      bidId,
+      phone,
+      status,
+      participationId,
+      acceptanceRate,
+      acceptanceQuantity,
+      acceptedAt,
+      acceptedByMobile,
+      acceptedByRole,
+    } = req.body;
+
+    const item = await ConfirmBid.create({
+      bidId,
+      phone,
+      status,
+      participationId: participationId || null,
+      acceptanceRate: typeof acceptanceRate === "number" ? acceptanceRate : null,
+      acceptanceQuantity: typeof acceptanceQuantity === "number" ? acceptanceQuantity : null,
+      acceptedAt: acceptedAt ? new Date(acceptedAt) : null,
+      acceptedByMobile: acceptedByMobile || "",
+      acceptedByRole: acceptedByRole || "",
+    });
     
     const bid = await Bid.findById(bidId);
+
+    // Sync participate bid status if possible
+    if (phone || participationId) {
+      const ParticipateBid = (await import("../models/ParticipateBid.js")).default;
+      const pQuery = participationId ? { _id: participationId } : { bidId, mobile: phone };
+      const participation = await ParticipateBid.findOne(pQuery);
+      if (participation) {
+        if (status === "Confirmed") {
+          participation.status = "accepted";
+          participation.acceptedRate = typeof acceptanceRate === "number" ? acceptanceRate : participation.rate;
+          participation.acceptedQuantity = typeof acceptanceQuantity === "number" ? acceptanceQuantity : participation.quantity;
+          participation.acceptedAt = acceptedAt ? new Date(acceptedAt) : new Date();
+          participation.acceptedByMobile = acceptedByMobile || "";
+          participation.acceptedByRole = acceptedByRole || "";
+        } else if (status === "Rejected") {
+          participation.status = "rejected";
+        }
+        await participation.save();
+      }
+    }
+
     if (bid && status === "Confirmed") {
-      // Notify Seller (Seller is the one who participates, and they are notified if their participation is confirmed)
-      // Actually, in this system, 'phone' in ConfirmBid is the mobile of the person whose bid was confirmed.
+      const sellerMsg = `Bid accepted for ${bid.commodity} at rate ₹${item.acceptanceRate ?? "N/A"}, qty ${item.acceptanceQuantity ?? "N/A"}. ${item.acceptedAt ? new Date(item.acceptedAt).toLocaleString() : ""}`;
       await Notification.create({
         recipient: phone,
         recipientRole: "Seller",
         title: "Bid Accepted",
-        message: `Congratulations! Your bid for ${bid.commodity} has been accepted.`,
+        message: sellerMsg,
         type: "BidConfirmation",
-        relatedId: bidId
+        relatedId: item._id
+      });
+
+      const buyerMsg = `Seller ${phone} accepted for ${bid.commodity} at rate ₹${item.acceptanceRate ?? "N/A"}, qty ${item.acceptanceQuantity ?? "N/A"}.`;
+      await Notification.create({
+        recipient: bid.createdByMobile || "all",
+        recipientRole: "Buyer",
+        title: "Bid Accepted",
+        message: buyerMsg,
+        type: "BidConfirmation",
+        relatedId: item._id
       });
     }
 
