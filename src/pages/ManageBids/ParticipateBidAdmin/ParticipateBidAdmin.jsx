@@ -70,9 +70,15 @@ const ParticipateBidAdmin = () => {
           rate: pBid.rate || 0,
           quantities: pBid.quantity || 0,
           mobiles: new Set(),
+          sellers: new Set(),
         };
       }
       groupedBids[pBid.bidId].mobiles.add(pBid.mobile);
+      const sellerLabel =
+        pBid.sellerName && pBid.sellerName.trim().length > 0
+          ? pBid.sellerName
+          : pBid.mobile;
+      if (sellerLabel) groupedBids[pBid.bidId].sellers.add(sellerLabel);
     });
     return Object.values(groupedBids);
   };
@@ -83,6 +89,7 @@ const ParticipateBidAdmin = () => {
     "Consignee",
     "Origin",
     "Commodity",
+    "Sellers",
     "Bid Qty",
     "Bid Rate",
     "Party Qty",
@@ -102,6 +109,7 @@ const ParticipateBidAdmin = () => {
     bid.consignee,
     bid.origin,
     bid.commodity,
+    Array.from(bid.sellers || []).join(", ") || "N/A",
     bid.quantity,
     bid.rates,
     bid.quantities,

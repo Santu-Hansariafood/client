@@ -38,51 +38,54 @@ const ParticipateBid = () => {
   }, []);
 
   useEffect(() => {
-    if (bids.length > 0 && participations.length > 0) {
-      const matchedData = participations
-        .filter((p) => String(p.mobile) === String(mobile))
-        .map((participation) => {
-          const bid = bids.find((b) => b._id === participation.bidId);
-          if (!bid) return null;
-
-          const bidStatus =
-            bidStatuses.find((c) => c.bidId === bid._id)?.status || "Pending";
-
-          return {
-            group: bid.group || "N/A",
-            consignee: bid.consignee || "N/A",
-            origin: bid.origin || "N/A",
-            commodity: bid.commodity || "Unknown Commodity",
-            quantity: bid.quantity || "N/A",
-            rate: bid.rate || "N/A",
-            participationRate: participation.rate || "N/A",
-            participationQuantity: participation.quantity || "N/A",
-            participationDate: new Date(
-              participation.participationDate
-            ).toLocaleString(),
-            rawDate: new Date(participation.participationDate),
-            status: bidStatus,
-          };
-        })
-        .filter((item) => item !== null)
-        .sort((a, b) => b.rawDate - a.rawDate)
-        .map((item, index) => [
-          index + 1,
-          item.group,
-          item.consignee,
-          item.origin,
-          item.commodity,
-          item.quantity,
-          item.rate,
-          item.participationRate,
-          item.participationQuantity,
-          item.participationDate,
-          item.status,
-        ]);
-
-      setFilteredData(matchedData);
-      setCurrentPage(1);
+    if (bids.length === 0 || participations.length === 0) {
+      setFilteredData([]);
+      return;
     }
+
+    const matchedData = participations
+      .filter((p) => String(p.mobile) === String(mobile))
+      .map((participation) => {
+        const bid = bids.find((b) => b._id === participation.bidId);
+        if (!bid) return null;
+
+        const bidStatus =
+          bidStatuses.find((c) => c.bidId === bid._id)?.status || "Pending";
+
+        return {
+          group: bid.group || "N/A",
+          consignee: bid.consignee || "N/A",
+          origin: bid.origin || "N/A",
+          commodity: bid.commodity || "Unknown Commodity",
+          quantity: bid.quantity || "N/A",
+          rate: bid.rate || "N/A",
+          participationRate: participation.rate || "N/A",
+          participationQuantity: participation.quantity || "N/A",
+          participationDate: new Date(
+            participation.participationDate
+          ).toLocaleString(),
+          rawDate: new Date(participation.participationDate),
+          status: bidStatus,
+        };
+      })
+      .filter((item) => item !== null)
+      .sort((a, b) => b.rawDate - a.rawDate)
+      .map((item, index) => [
+        index + 1,
+        item.group,
+        item.consignee,
+        item.origin,
+        item.commodity,
+        item.quantity,
+        item.rate,
+        item.participationRate,
+        item.participationQuantity,
+        item.participationDate,
+        item.status,
+      ]);
+
+    setFilteredData(matchedData);
+    setCurrentPage(1);
   }, [bids, participations, bidStatuses, mobile]);
 
   const headers = [
@@ -123,17 +126,25 @@ const ParticipateBid = () => {
             Refresh 🔄
           </button>
         </div>
-        <div className="overflow-x-auto">
-          <Tables headers={headers} rows={currentRows} />
-        </div>
-        <div className="mt-4 flex justify-center">
-          <Pagination
-            currentPage={currentPage}
-            totalItems={filteredData.length}
-            itemsPerPage={itemsPerPage}
-            onPageChange={setCurrentPage}
-          />
-        </div>
+        {filteredData.length === 0 ? (
+          <div className="py-8 text-center text-sm text-gray-500">
+            You have not participated in any bids yet.
+          </div>
+        ) : (
+          <>
+            <div className="overflow-x-auto">
+              <Tables headers={headers} rows={currentRows} />
+            </div>
+            <div className="mt-4 flex justify-center">
+              <Pagination
+                currentPage={currentPage}
+                totalItems={filteredData.length}
+                itemsPerPage={itemsPerPage}
+                onPageChange={setCurrentPage}
+              />
+            </div>
+          </>
+        )}
       </div>
     </Suspense>
   );
