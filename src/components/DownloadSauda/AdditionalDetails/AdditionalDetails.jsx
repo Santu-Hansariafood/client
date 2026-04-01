@@ -165,8 +165,8 @@ const AdditionalDetails = ({ data }) => (
         <Text style={styles.value}>{data.state ?? "N/A"}</Text>
       </View>
       <View style={styles.gridItem}>
-        <Text style={styles.label}>Location</Text>
-        <Text style={styles.value}>{data.location ?? "N/A"}</Text>
+        {/* <Text style={styles.label}>Location</Text>
+        <Text style={styles.value}>{data.location ?? "N/A"}</Text> */}
       </View>
     </View>
 

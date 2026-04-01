@@ -184,7 +184,7 @@ const BuyerInformation = ({ formData, handleChange }) => {
             <div className="mt-4 p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
               <div className="flex justify-between items-center pb-2 border-b border-slate-200 mb-2">
                 <span className="text-sm font-bold text-slate-800">
-                  Buyer Name (Debitor)
+                  Buyer Name
                 </span>
                 <span className="text-sm font-medium text-emerald-600">
                   {selectedBuyer.name}
