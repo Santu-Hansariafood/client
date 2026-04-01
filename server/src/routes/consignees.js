@@ -5,36 +5,42 @@ const router = Router();
 
 router.get("/", async (req, res) => {
   try {
-    const { page = 1, limit = 50, search = "" } = req.query;
+    const page = parseInt(req.query.page || "1", 10);
+    const limit = parseInt(req.query.limit || "50", 10);
+    const search = (req.query.search || "").trim();
 
     const query = search
       ? {
           $or: [
             { name: { $regex: search, $options: "i" } },
             { phone: { $regex: search, $options: "i" } },
-            { gst: { $regex: search, $options: "i" } }
-          ]
+            { gst: { $regex: search, $options: "i" } },
+          ],
         }
       : {};
 
-    const consignees = await Consignee.find(query)
-      .sort({ name: 1 })
-      .skip((page - 1) * limit)
-      .limit(Number(limit))
-      .lean();
+    if (page > 0 && limit > 0) {
+      const consignees = await Consignee.find(query)
+        .sort({ name: 1 })
+        .skip((page - 1) * limit)
+        .limit(limit)
+        .lean();
 
-    const total = await Consignee.countDocuments(query);
+      const total = await Consignee.countDocuments(query);
 
-    res.json({
-      data: consignees,
-      total,
-      page: Number(page),
-      pages: Math.ceil(total / limit)
-    });
+      return res.json({
+        data: consignees,
+        total,
+        page,
+        pages: Math.ceil(total / limit),
+      });
+    }
 
+    const consignees = await Consignee.find(query).sort({ name: 1 }).lean();
+    res.json(consignees);
   } catch (error) {
     res.status(500).json({
-      message: error.message
+      message: error.message,
     });
   }
 });

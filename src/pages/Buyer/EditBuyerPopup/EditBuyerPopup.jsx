@@ -39,7 +39,7 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
           await Promise.all([
             axios.get("/groups"),
             axios.get("/commodities"),
-            axios.get("/consignees"),
+            axios.get("/consignees", { params: { limit: 0 } }),
             axios.get("/companies"),
           ]);
 
