@@ -18,6 +18,7 @@ import { pdf } from "@react-pdf/renderer";
 import SaudaPDF from "../../../components/DownloadSauda/SaudaPDF/SaudaPDF";
 import generateExcel from "../../../common/GenerateExcel/GenerateExcel";
 import { fetchAllPages } from "../../../utils/apiClient/fetchAllPages";
+import { buildSaudaPdfData } from "../../../utils/saudaPdf/buildSaudaPdfData";
 
 const Tables = lazy(() => import("../../../common/Tables/Tables"));
 const Pagination = lazy(
@@ -31,7 +32,6 @@ const DownloadSauda = lazy(
 );
 
 const API_URL = "/self-order";
-const normalizeText = (value) => String(value || "").trim().toLowerCase();
 
 const SelfOrderList = () => {
   const navigate = useNavigate();
@@ -196,147 +196,10 @@ const SelfOrderList = () => {
 
   const handleSmartWhatsApp = useCallback(
     async (item, target = "buyer") => {
-      const buildPdfData = () => {
-        const normalizedConsigneeKey = (() => {
-          const c = item?.consignee;
-          if (!c) return "";
-          if (typeof c === "object")
-            return (c.name || c.label || c.value || "").toString();
-          return String(c);
-        })();
-
-        const matchingConsignee =
-          (consigneeData || []).find((consignee) => {
-            const idMatch =
-              consignee?._id &&
-              normalizedConsigneeKey &&
-              String(consignee._id) === String(normalizedConsigneeKey);
-            if (idMatch) return true;
-            const name = (consignee?.name || consignee?.label || "")
-              .toString()
-              .trim()
-              .toLowerCase();
-            const key = normalizedConsigneeKey.toString().trim().toLowerCase();
-            return name && key && name === key;
-          }) || null;
-
-        const matchingSupplier =
-          (supplierData || []).find(
-            (supplier) =>
-              supplier?.companyName &&
-              item?.supplierCompany &&
-              normalizeText(supplier.companyName) ===
-                normalizeText(item.supplierCompany),
-          ) || null;
-
-        const rawBuyerKey = item?.buyerCompany ?? item?.buyer ?? "";
-        const normalizedBuyerKey = String(rawBuyerKey || "")
-          .trim()
-          .toLowerCase();
-
-        const matchingBuyer =
-          (companyData || []).find((company) => {
-            const idMatch =
-              company?._id &&
-              rawBuyerKey &&
-              String(company._id) === String(rawBuyerKey);
-            const nameMatch =
-              company?.companyName &&
-              normalizeText(company.companyName) === normalizedBuyerKey;
-            return idMatch || nameMatch;
-          }) ||
-          (buyerData || []).find((buyer) => {
-            const idMatch =
-              buyer?._id &&
-              rawBuyerKey &&
-              String(buyer._id) === String(rawBuyerKey);
-            const nameMatch =
-              buyer?.companyName &&
-              normalizeText(buyer.companyName) === normalizedBuyerKey;
-            return idMatch || nameMatch;
-          }) ||
-          (supplierData || []).find((supplier) => {
-            const idMatch =
-              supplier?._id &&
-              rawBuyerKey &&
-              String(supplier._id) === String(rawBuyerKey);
-            const nameMatch =
-              supplier?.companyName &&
-              normalizeText(supplier.companyName) === normalizedBuyerKey;
-            return idMatch || nameMatch;
-          }) ||
-          null;
-
-        const toUnifiedDetails = (bd) => {
-          if (!bd) return null;
-          return {
-            ...bd,
-            address: bd.address || bd.location || "",
-            gstNo: bd.gstNo || bd.gst || bd.gstNumber || "",
-            panNo: bd.panNo || bd.pan || bd.panNumber || "",
-            pinNo: bd.pinNo || bd.pin || bd.pinCode || "",
-            district: bd.district || "",
-            state: bd.state || "",
-          };
-        };
-
-        const buyerDetails = toUnifiedDetails(matchingBuyer);
-        const supplierDetails = toUnifiedDetails(matchingSupplier);
-        const consigneeDetails = matchingConsignee
-          ? {
-              ...matchingConsignee,
-              address:
-                matchingConsignee.address ||
-                matchingConsignee.location ||
-                "",
-              gstNo:
-                matchingConsignee.gstNo ||
-                matchingConsignee.gst ||
-                matchingConsignee.gstNumber ||
-                "",
-              panNo:
-                matchingConsignee.panNo ||
-                matchingConsignee.pan ||
-                matchingConsignee.panNumber ||
-                "",
-              pin:
-                matchingConsignee.pin ||
-                matchingConsignee.pinNo ||
-                matchingConsignee.pinCode ||
-                "",
-              district: matchingConsignee.district || "",
-              state: matchingConsignee.state || "",
-            }
-          : null;
-
-        let transformed = {
-          ...item,
-          consignee: getConsigneeDisplay(item),
-          consigneeDetails,
-          supplierDetails,
-          buyerDetails,
-        };
-
-        if (item?.billTo === "consignee") {
-          transformed = {
-            ...transformed,
-            buyer: transformed.consignee,
-            buyerCompany: transformed.consignee,
-          };
-        } else {
-          const buyerName =
-            matchingBuyer?.companyName ||
-            (typeof item?.buyerCompany === "string" ? item.buyerCompany : "") ||
-            (typeof item?.buyer === "string" ? item.buyer : "");
-          transformed = {
-            ...transformed,
-            buyer: buyerName,
-            buyerCompany: buyerName,
-          };
-        }
-
-        return transformed;
-      };
+      if (userRole !== "Admin") {
+        toast.error("Only Admin can send WhatsApp from list.");
+        return;
+      }
       const mobileValue =
         target === "buyer" ? item.buyerMobile : item.sellerMobile;
 
@@ -374,7 +237,14 @@ Supplier: ${item.supplierCompany || item.supplier || "N/A"}
 Commodity: ${item.commodity || "N/A"}
 Qty: ${item.quantity || "0"}`;
 
-        const pdfData = buildPdfData();
+        const pdfData = buildSaudaPdfData({
+          item,
+          consigneeData,
+          supplierData,
+          buyerData,
+          companyData,
+          getConsigneeDisplay,
+        });
         const blob = await pdf(<SaudaPDF data={pdfData} />).toBlob();
 
         const fileName = `Sauda-${item.saudaNo}.pdf`;
@@ -468,7 +338,14 @@ Download PDF: ${fileUrl}`
         );
       }
     },
-    [getConsigneeDisplay, buyerData, supplierData, consigneeData, companyData],
+    [
+      userRole,
+      getConsigneeDisplay,
+      buyerData,
+      supplierData,
+      consigneeData,
+      companyData,
+    ],
   );
 
   const openWhatsAppChat = useCallback((mobileNumber, item) => {

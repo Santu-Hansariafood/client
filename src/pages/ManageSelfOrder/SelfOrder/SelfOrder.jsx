@@ -10,8 +10,7 @@ import regexPatterns from "../../../utils/regexPatterns/regexPatterns";
 import { pdf } from "@react-pdf/renderer";
 import SaudaPDF from "../../../components/DownloadSauda/SaudaPDF/SaudaPDF";
 import { fetchAllPages } from "../../../utils/apiClient/fetchAllPages";
-
-const normalizeText = (value) => String(value || "").trim().toLowerCase();
+import { buildSaudaPdfData } from "../../../utils/saudaPdf/buildSaudaPdfData";
 
 const BuyerInformation = lazy(
   () => import("../../../components/BuyerInformation/BuyerInformation"),
@@ -204,7 +203,7 @@ const SelfOrder = () => {
 
     if (formData.commodity) {
       const buyerCommodities = formData.buyerCommodity || [];
-      const supplierCommodities = formData.supplierBrokerage || []; // This comes from SupplierInformation.jsx
+      const supplierCommodities = formData.supplierBrokerage || [];
 
       const buyerHasCommodity = buyerCommodities.includes(formData.commodity);
       const supplierHasCommodity = supplierCommodities.some(
@@ -295,94 +294,37 @@ const SelfOrder = () => {
         fetchAllPages("/companies", { limit: 200 }),
       ]);
 
-      const normalizedConsigneeKey = (() => {
-        const c = order?.consignee;
-        if (!c) return "";
-        if (typeof c === "object")
-          return (c.name || c.label || c.value || "").toString();
-        return String(c);
-      })();
-
-      const matchingConsignee = consigneeData.find((consignee) => {
-        const idMatch =
-          consignee?._id &&
-          normalizedConsigneeKey &&
-          String(consignee._id) === String(normalizedConsigneeKey);
-        if (idMatch) return true;
-        const name = (consignee?.name || consignee?.label || "")
-          .toString()
-          .trim()
-          .toLowerCase();
-        const key = normalizedConsigneeKey.toString().trim().toLowerCase();
-        return name && key && name === key;
-      });
-
-      const matchingSupplier = supplierData.find(
-        (supplier) =>
-          normalizeText(supplier?.companyName) ===
-          normalizeText(order?.supplierCompany),
-      );
-
-      const rawBuyerKey = order?.buyerCompany ?? order?.buyer ?? "";
-      const normalizedBuyerKey = String(rawBuyerKey || "")
-        .trim()
-        .toLowerCase();
-
-      const matchingCompany =
-        companyData.find((c) => {
-          const idMatch =
-            c?._id && rawBuyerKey && String(c._id) === String(rawBuyerKey);
-          const nameMatch =
-            c?.companyName &&
-            c.companyName.toLowerCase() === normalizedBuyerKey;
-          return idMatch || nameMatch;
-        }) || null;
-
       const matchingBuyer =
-        matchingCompany ||
-        buyerData.find((buyer) => {
-          const idMatch =
-            buyer?._id && rawBuyerKey && String(buyer._id) === String(rawBuyerKey);
-          const nameMatch =
-            buyer?.companyName &&
-            buyer.companyName.toLowerCase() === normalizedBuyerKey;
-          return idMatch || nameMatch;
-        }) ||
-        supplierData.find((supplier) => {
-          const idMatch =
-            supplier?._id &&
-            rawBuyerKey &&
-            String(supplier._id) === String(rawBuyerKey);
-          const nameMatch =
-            supplier?.companyName &&
-            supplier.companyName.toLowerCase() === normalizedBuyerKey;
-          return idMatch || nameMatch;
-        });
+        companyData.find(
+          (c) =>
+            (c?._id && String(c._id) === String(order?.buyerCompany || order?.buyer || "")) ||
+            String(c?.companyName || "").trim().toLowerCase() ===
+              String(order?.buyerCompany || order?.buyer || "").trim().toLowerCase(),
+        ) ||
+        buyerData.find(
+          (b) =>
+            (b?._id && String(b._id) === String(order?.buyerCompany || order?.buyer || "")) ||
+            String(b?.companyName || "").trim().toLowerCase() ===
+              String(order?.buyerCompany || order?.buyer || "").trim().toLowerCase(),
+        );
 
       const matchingSellerProfile = sellerProfileData.find(
         (seller) => seller._id === order.supplier,
       );
 
-      let transformedData = {
-        ...order,
-        consigneeDetails: matchingConsignee || null,
-        supplierDetails: matchingSupplier || null,
-        buyerDetails:
-          order.billTo === "consignee" ? matchingConsignee || null : matchingBuyer,
-      };
-
-      if (transformedData.buyerDetails) {
-        const bd = transformedData.buyerDetails;
-        transformedData.buyerDetails = {
-          ...bd,
-          address: bd.address || bd.location || "",
-          gstNo: bd.gstNo || bd.gst || bd.gstNumber || "",
-          panNo: bd.panNo || bd.pan || bd.panNumber || "",
-          pinNo: bd.pinNo || bd.pin || bd.pinCode || "",
-          district: bd.district || "",
-          state: bd.state || "",
-        };
-      }
+      let transformedData = buildSaudaPdfData({
+        item: order,
+        consigneeData,
+        supplierData,
+        buyerData,
+        companyData,
+        getConsigneeDisplay: (row) => {
+          const c = row?.consignee;
+          if (typeof c === "object" && c?.name) return c.name;
+          if (typeof c === "object" && c?.label) return c.label;
+          return String(c || "N/A");
+        },
+      });
 
       if (
         matchingBuyer &&
@@ -415,25 +357,6 @@ const SelfOrder = () => {
             brokerageSupplier: supplierProfileBrokerage,
           };
         }
-      }
-
-      if (order.billTo === "consignee") {
-        transformedData = {
-          ...transformedData,
-          buyer: order.consignee,
-          buyerCompany: order.consignee,
-        };
-      } else {
-        const buyerName =
-          matchingBuyer?.companyName ||
-          (typeof order?.buyerCompany === "string" ? order.buyerCompany : "") ||
-          (typeof order?.buyer === "string" ? order.buyer : "");
-
-        transformedData = {
-          ...transformedData,
-          buyer: buyerName,
-          buyerCompany: buyerName,
-        };
       }
 
       const blob = await pdf(<SaudaPDF data={transformedData} />).toBlob();

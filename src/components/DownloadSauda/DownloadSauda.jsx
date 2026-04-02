@@ -6,8 +6,7 @@ import { FaDownload, FaEnvelope } from "react-icons/fa";
 import axios from "axios";
 import { toast } from "react-toastify";
 import { fetchAllPages } from "../../utils/apiClient/fetchAllPages";
-
-const normalizeText = (value) => String(value || "").trim().toLowerCase();
+import { buildSaudaPdfData } from "../../utils/saudaPdf/buildSaudaPdfData";
 
 const DownloadSauda = ({
   data,
@@ -82,93 +81,37 @@ const DownloadSauda = ({
     initialSellerProfileData,
   ]);
 
-  const normalizedConsigneeKey = (() => {
-    const c = data?.consignee;
-    if (!c) return "";
-    if (typeof c === "object")
-      return (c.name || c.label || c.value || "").toString();
-    return String(c);
-  })();
-
-  const matchingConsignee = consigneeData.find((consignee) => {
-    const idMatch =
-      consignee?._id &&
-      normalizedConsigneeKey &&
-      String(consignee._id) === String(normalizedConsigneeKey);
-    if (idMatch) return true;
-    const name = (consignee?.name || consignee?.label || "")
-      .toString()
-      .trim()
-      .toLowerCase();
-    const key = normalizedConsigneeKey.toString().trim().toLowerCase();
-    return name && key && name === key;
+  const transformedData = buildSaudaPdfData({
+    item: data,
+    consigneeData,
+    supplierData,
+    buyerData,
+    companyData,
+    getConsigneeDisplay: (row) => {
+      const c = row?.consignee;
+      if (typeof c === "object" && c?.name) return c.name;
+      if (typeof c === "object" && c?.label) return c.label;
+      return String(c || "N/A");
+    },
   });
-
-  const matchingSupplier = supplierData.find(
-    (supplier) =>
-      normalizeText(supplier?.companyName) === normalizeText(data?.supplierCompany),
-  );
-
-  const rawBuyerKey = data?.buyerCompany ?? data?.buyer ?? "";
-  const normalizedBuyerKey = String(rawBuyerKey || "")
-    .trim()
-    .toLowerCase();
-
-  const matchingCompany =
-    companyData.find((c) => {
-      const idMatch =
-        c?._id && rawBuyerKey && String(c._id) === String(rawBuyerKey);
-      const nameMatch =
-        c?.companyName &&
-        c.companyName.toLowerCase() === normalizedBuyerKey;
-      return idMatch || nameMatch;
-    }) || null;
-
-  const matchingBuyer =
-    matchingCompany ||
-    buyerData.find((buyer) => {
-      const idMatch =
-        buyer?._id && rawBuyerKey && String(buyer._id) === String(rawBuyerKey);
-      const nameMatch =
-        buyer?.companyName &&
-        buyer.companyName.toLowerCase() === normalizedBuyerKey;
-      return idMatch || nameMatch;
-    }) ||
-    supplierData.find((supplier) => {
-      const idMatch =
-        supplier?._id &&
-        rawBuyerKey &&
-        String(supplier._id) === String(rawBuyerKey);
-      const nameMatch =
-        supplier?.companyName &&
-        supplier.companyName.toLowerCase() === normalizedBuyerKey;
-      return idMatch || nameMatch;
-    });
 
   const matchingSellerProfile = sellerProfileData.find(
     (seller) => seller._id === data.supplier,
   );
-
-  let transformedData = {
-    ...data,
-    consigneeDetails: matchingConsignee || null,
-    supplierDetails: matchingSupplier || null,
-    buyerDetails:
-      data.billTo === "consignee" ? matchingConsignee || null : matchingBuyer,
-  };
-
-  if (transformedData.buyerDetails) {
-    const bd = transformedData.buyerDetails;
-    transformedData.buyerDetails = {
-      ...bd,
-      address: bd.address || bd.location || "",
-      gstNo: bd.gstNo || bd.gst || bd.gstNumber || "",
-      panNo: bd.panNo || bd.pan || bd.panNumber || "",
-      pinNo: bd.pinNo || bd.pin || bd.pinCode || "",
-      district: bd.district || "",
-      state: bd.state || "",
-    };
-  }
+  const rawBuyerKey = data?.buyerCompany ?? data?.buyer ?? "";
+  const matchingBuyer =
+    companyData.find(
+      (c) =>
+        (c?._id && String(c._id) === String(rawBuyerKey)) ||
+        String(c?.companyName || "").trim().toLowerCase() ===
+          String(rawBuyerKey || "").trim().toLowerCase(),
+    ) ||
+    buyerData.find(
+      (b) =>
+        (b?._id && String(b._id) === String(rawBuyerKey)) ||
+        String(b?.companyName || "").trim().toLowerCase() ===
+          String(rawBuyerKey || "").trim().toLowerCase(),
+    );
 
   if (
     matchingBuyer &&
@@ -200,25 +143,6 @@ const DownloadSauda = ({
         brokerageSupplier: supplierProfileBrokerage,
       };
     }
-  }
-
-  if (data.billTo === "consignee") {
-    transformedData = {
-      ...transformedData,
-      buyer: data.consignee,
-      buyerCompany: data.consignee,
-    };
-  } else {
-    const buyerName =
-      matchingBuyer?.companyName ||
-      (typeof data?.buyerCompany === "string" ? data.buyerCompany : "") ||
-      (typeof data?.buyer === "string" ? data.buyer : "");
-
-    transformedData = {
-      ...transformedData,
-      buyer: buyerName,
-      buyerCompany: buyerName,
-    };
   }
 
   const [showEmailPopup, setShowEmailPopup] = useState(false);
