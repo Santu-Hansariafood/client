@@ -1,40 +1,24 @@
-const escapeCSV = (value) => {
-  if (value === null || value === undefined) return "";
-  const str = String(value);
-  if (/[",\n]/.test(str)) {
-    return `"${str.replace(/"/g, '""')}"`;
-  }
-  return str;
-};
+import * as XLSX from "xlsx";
 
-const generateExcel = (data, fileName = "data.csv") => {
+const generateExcel = (data, fileName = "data.xlsx") => {
   try {
     const rows = Array.isArray(data) ? data : [];
     if (rows.length === 0) {
-      console.warn("No data provided for CSV export");
+      console.warn("No data provided for Excel export");
       return;
     }
 
-    const headers = Object.keys(rows[0] || {});
-    const csvLines = [];
-    csvLines.push(headers.map(escapeCSV).join(","));
-    for (const row of rows) {
-      const line = headers.map((h) => escapeCSV(row[h]));
-      csvLines.push(line.join(","));
-    }
-    const csvContent = "\uFEFF" + csvLines.join("\n"); // UTF-8 BOM for Excel
+    const worksheet = XLSX.utils.json_to_sheet(rows);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Sheet1");
 
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = fileName.endsWith(".csv") ? fileName : `${fileName}.csv`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    const finalFileName = fileName.endsWith(".xlsx")
+      ? fileName
+      : `${fileName}.xlsx`;
+
+    XLSX.writeFile(workbook, finalFileName);
   } catch (error) {
-    console.error("Error generating CSV file:", error);
+    console.error("Error generating Excel file:", error);
   }
 };
 

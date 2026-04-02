@@ -74,7 +74,6 @@ const ListSoudabook = () => {
   }, [saudaData]);
 
   const headers = [
-    "Sl No",
     "Date",
     "Sauda No",
     "PO Number",
@@ -98,8 +97,7 @@ const ListSoudabook = () => {
 
   const rows = useMemo(
     () =>
-      currentData.map((item, idx) => [
-        (currentPage - 1) * itemsPerPage + idx + 1,
+      currentData.map((item) => [
         item.poDate
           ? new Date(item.poDate).toLocaleDateString()
           : new Date(item.createdAt).toLocaleDateString(),
@@ -108,20 +106,21 @@ const ListSoudabook = () => {
         item.buyer || "",
         item.buyerCompany || "",
         item.supplierCompany || "",
-        item.supplier || "",
+        item.supplier?.sellerName || "",
         item.consignee || "",
         item.commodity || "",
         item.quantity ?? "",
         item.rate ?? "",
-        item.deliveryDate ? new Date(item.deliveryDate).toLocaleDateString() : "",
+        item.deliveryDate
+          ? new Date(item.deliveryDate).toLocaleDateString()
+          : "",
         item.paymentTerms || "",
       ]),
     [currentData],
   );
 
   const exportExcel = () => {
-    const data = sortedSaudaData.map((item, idx) => ({
-      "Sl No": idx + 1,
+    const data = sortedSaudaData.map((item) => ({
       Date: item.poDate
         ? new Date(item.poDate).toLocaleDateString()
         : new Date(item.createdAt).toLocaleDateString(),
@@ -130,17 +129,19 @@ const ListSoudabook = () => {
       Buyer: item.buyer || "",
       "Buyer Company": item.buyerCompany || "",
       "Supplier Company": item.supplierCompany || "",
-      "Seller Name": item.supplier || "",
+      "Seller Name": item.supplier?.sellerName || "",
       Consignee: item.consignee || "",
       Commodity: item.commodity || "",
       Quantity: item.quantity ?? "",
       Rate: item.rate ?? "",
+      Tax: "",
+      CD: item.cd || "",
       "Delivery Date": item.deliveryDate
         ? new Date(item.deliveryDate).toLocaleDateString()
         : "",
       "Payment Time": item.paymentTerms || "",
     }));
-    generateExcel(data, "Sauda_List.csv");
+    generateExcel(data, "Sauda_List.xlsx");
   };
 
   return (

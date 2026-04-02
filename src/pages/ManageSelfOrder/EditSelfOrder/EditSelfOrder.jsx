@@ -38,6 +38,7 @@ const DataInput = lazy(() => import("../../../common/DataInput/DataInput"));
 
 const INITIAL_FORM_DATA = {
   buyer: "",
+  companyId: null,
   buyerCompany: "",
   consignee: "",
   buyerEmail: "",
@@ -119,6 +120,7 @@ const EditSelfOrder = () => {
       setFormData({
         ...INITIAL_FORM_DATA,
         ...orderFromState,
+        consignee: orderFromState.consignee || "",
         poDate: orderFromState.poDate
           ? new Date(orderFromState.poDate)
           : new Date(),

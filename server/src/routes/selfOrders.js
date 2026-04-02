@@ -1,6 +1,7 @@
 import { Router } from "express";
 import nodemailer from "nodemailer";
 import SelfOrder from "../models/SelfOrder.js";
+import Seller from "../models/Seller.js";
 
 const router = Router();
 
@@ -51,11 +52,15 @@ router.get("/", async (req, res) => {
         .sort({ createdAt: -1 })
         .skip((page - 1) * limit)
         .limit(limit)
+        .populate("supplier", "sellerName")
         .lean();
       const total = await SelfOrder.countDocuments();
       return res.json({ data: items, total });
     }
-    const items = await SelfOrder.find().sort({ createdAt: -1 }).lean();
+    const items = await SelfOrder.find()
+      .sort({ createdAt: -1 })
+      .populate("supplier", "sellerName")
+      .lean();
     res.json(items);
   } catch (error) {
     res.status(500).json({ message: error.message });
