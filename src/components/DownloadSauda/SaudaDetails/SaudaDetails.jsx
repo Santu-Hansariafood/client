@@ -131,7 +131,7 @@ const SaudaDetails = ({ data }) => {
           <Text style={styles.nameValue}>{data.consignee}</Text>
           {data.consigneeDetails && (
             <Text style={styles.addressDetails}>
-              {`\n${data.consigneeDetails.location || ""}, ${data.consigneeDetails.district || ""}, ${data.consigneeDetails.state || ""} - ${data.consigneeDetails.pin || ""}\nPAN No : ${data.consigneeDetails.pan || ""}\nGST: ${data.consigneeDetails.gst || ""}`}
+              {`\n${data.consigneeDetails.address || data.consigneeDetails.location || ""}, ${data.consigneeDetails.district || ""}, ${data.consigneeDetails.state || ""} - ${data.consigneeDetails.pin || data.consigneeDetails.pinNo || ""}\nPAN No : ${data.consigneeDetails.panNo || data.consigneeDetails.pan || ""}\nGST: ${data.consigneeDetails.gstNo || data.consigneeDetails.gst || ""}`}
             </Text>
           )}
         </View>
