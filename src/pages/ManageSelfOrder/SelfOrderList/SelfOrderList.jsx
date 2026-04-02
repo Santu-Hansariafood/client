@@ -534,10 +534,15 @@ Download PDF: ${fileUrl}`
   const handleEdit = useCallback(
     (item) => {
       navigate(`/manage-order/edit-self-order/${item._id}`, {
-        state: { orderData: item },
+        state: {
+          orderData: item,
+          consigneeData,
+          supplierData,
+          buyerData,
+        },
       });
     },
-    [navigate],
+    [navigate, consigneeData, supplierData, buyerData],
   );
 
   const handleDelete = useCallback(async (item) => {

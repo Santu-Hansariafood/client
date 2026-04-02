@@ -71,10 +71,11 @@ const BrokerInformation = ({ formData, handleChange }) => {
               placeholder="Select Agent"
               options={agentOptions}
               selectedOptions={
-                agentOptions.find((o) => o.value === formData.agentName) || null
+                agentOptions.find(
+                  (o) => o.value === formData.agentName?.toUpperCase(),
+                ) || null
               }
               onChange={(opt) => handleChange("agentName", opt?.value || "")}
-              value={formData.agentName}
             />
           )}
         </div>

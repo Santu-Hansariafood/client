@@ -80,7 +80,52 @@ const SelfOrder = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState(INITIAL_FORM_DATA);
   const [isLoading, setIsLoading] = useState(false);
+  const [buyerOptions, setBuyerOptions] = useState([]);
+  const [supplierOptions, setSupplierOptions] = useState([]);
+  const [companyOptions, setCompanyOptions] = useState([]);
+  const [sellerOptions, setSellerOptions] = useState([]);
   const [_buyerBrokerageMap, setBuyerBrokerageMap] = useState({});
+
+  useEffect(() => {
+    const fetchInitialData = async () => {
+      try {
+        const [sellers, companies, buyers, sellerCompanies] = await Promise.all([
+          axios.get("/sellers"),
+          axios.get("/companies"),
+          axios.get("/buyers"),
+          axios.get("/seller-company"),
+        ]);
+
+        const transform = (data, key, value) =>
+          data.map((item) => ({ label: item[key], value: item[value] }));
+
+        setSellerOptions(
+          transform(sellers.data, "sellerName", "_id").sort((a, b) =>
+            a.label.localeCompare(b.label),
+          ),
+        );
+        setCompanyOptions(
+          transform(companies.data, "companyName", "_id").sort((a, b) =>
+            a.label.localeCompare(b.label),
+          ),
+        );
+        setBuyerOptions(
+          transform(buyers.data, "name", "_id").sort((a, b) =>
+            a.label.localeCompare(b.label),
+          ),
+        );
+        setSupplierOptions(
+          transform(sellerCompanies.data, "companyName", "_id").sort((a, b) =>
+            a.label.localeCompare(b.label),
+          ),
+        );
+      } catch (error) {
+        toast.error("Failed to fetch initial data.");
+      }
+    };
+
+    fetchInitialData();
+  }, []);
 
   useEffect(() => {
     if (formData.commodity) {
@@ -502,7 +547,12 @@ const SelfOrder = () => {
       >
         <div className="max-w-4xl mx-auto space-y-6">
           <div className={sectionClass}>
-            <BuyerInformation formData={formData} handleChange={handleChange} />
+            <BuyerInformation
+              formData={formData}
+              handleChange={handleChange}
+              buyerOptions={buyerOptions}
+              companyOptions={companyOptions}
+            />
           </div>
 
           <div className={sectionClass}>
@@ -534,6 +584,8 @@ const SelfOrder = () => {
             <SupplierInformation
               formData={formData}
               handleChange={handleChange}
+              supplierOptions={supplierOptions}
+              sellerOptions={sellerOptions}
             />
           </div>
 
