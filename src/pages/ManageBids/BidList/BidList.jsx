@@ -356,19 +356,19 @@ const BidList = () => {
         }
         icon={FaGavel}
         noContentCard
-        extraHeaderContent={
-          userRole === "Buyer" && (
-            <button
-              onClick={() => navigate(-1)}
-              className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-800"
-            >
-              <FaArrowLeft />
-              Back
-            </button>
-          )
-        }
       >
         <div className="max-w-6xl mx-auto space-y-6">
+          {userRole === "Buyer" && (
+            <div className="flex justify-start">
+              <button
+                onClick={() => navigate(-1)}
+                className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-gray-600 bg-white rounded-xl border border-slate-200 hover:bg-slate-50 transition-colors shadow-sm"
+              >
+                <FaArrowLeft />
+                Back
+              </button>
+            </div>
+          )}
           {error ? (
             <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-center text-red-700 font-medium">
               {error}

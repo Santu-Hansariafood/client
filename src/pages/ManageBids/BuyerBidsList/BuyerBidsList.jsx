@@ -181,17 +181,17 @@ const BuyerBidsList = () => {
         subtitle="Filter by company, type, and date range"
         icon={FaGavel}
         noContentCard
-        extraHeaderContent={
-          <button
-            onClick={() => navigate(-1)}
-            className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-800"
-          >
-            <FaArrowLeft />
-            Back
-          </button>
-        }
       >
         <div className="max-w-full space-y-6">
+          <div className="flex justify-start">
+            <button
+              onClick={() => navigate(-1)}
+              className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-gray-600 bg-white rounded-xl border border-slate-200 hover:bg-slate-50 transition-colors shadow-sm"
+            >
+              <FaArrowLeft />
+              Back
+            </button>
+          </div>
           <div className="flex flex-col lg:flex-row flex-wrap gap-4 items-stretch lg:items-end">
             <SearchBox
               placeholder="Search by company..."

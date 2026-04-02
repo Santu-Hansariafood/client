@@ -135,19 +135,19 @@ const BidLocation = () => {
         subtitle="Create and manage bid location names used in bids"
         icon={FaMapMarkerAlt}
         noContentCard
-        extraHeaderContent={
-          userRole === "Buyer" && (
-            <button
-              onClick={() => navigate(-1)}
-              className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-800"
-            >
-              <FaArrowLeft />
-              Back
-            </button>
-          )
-        }
       >
         <div className="max-w-6xl mx-auto space-y-6">
+          {userRole === "Buyer" && (
+            <div className="flex justify-start">
+              <button
+                onClick={() => navigate(-1)}
+                className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-gray-600 bg-white rounded-xl border border-slate-200 hover:bg-slate-50 transition-colors shadow-sm"
+              >
+                <FaArrowLeft />
+                Back
+              </button>
+            </div>
+          )}
           <div className="rounded-2xl border border-amber-200/60 bg-white shadow-lg p-4 sm:p-6">
             <form
               onSubmit={handleSubmit}

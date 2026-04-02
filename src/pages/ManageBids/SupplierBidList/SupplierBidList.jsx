@@ -7,16 +7,19 @@ import {
   FaCheckCircle,
   FaTimesCircle,
   FaHourglassHalf,
+  FaArrowLeft,
 } from "react-icons/fa";
 import { toast } from "react-toastify";
 import Loading from "../../../common/Loading/Loading";
 import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
+import { useAuth } from "../../../context/AuthContext/AuthContext";
 
 const Tables = lazy(() => import("../../../common/Tables/Tables"));
 const PopupBox = lazy(() => import("../../../common/PopupBox/PopupBox"));
 
 const SupplierBidList = () => {
   const navigate = useNavigate();
+  const { userRole } = useAuth();
   const location = useLocation();
   const { commodityNames = [], mobile } = location.state || {};
 
@@ -260,7 +263,18 @@ const SupplierBidList = () => {
         icon={FaGavel}
         noContentCard
       >
-        <div className="max-w-6xl mx-auto">
+        <div className="max-w-6xl mx-auto space-y-6">
+          {userRole === "Buyer" && (
+            <div className="flex justify-start mb-6">
+              <button
+                onClick={() => navigate(-1)}
+                className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-gray-600 bg-white rounded-xl border border-slate-200 hover:bg-slate-50 transition-colors shadow-sm"
+              >
+                <FaArrowLeft />
+                Back
+              </button>
+            </div>
+          )}
           <div className="flex bg-slate-100 p-1 rounded-xl w-fit mb-6">
             <button
               onClick={() => setActiveTab("active")}
