@@ -5,6 +5,9 @@ import SaudaPDF from "./SaudaPDF/SaudaPDF";
 import { FaDownload, FaEnvelope } from "react-icons/fa";
 import axios from "axios";
 import { toast } from "react-toastify";
+import { fetchAllPages } from "../../utils/apiClient/fetchAllPages";
+
+const normalizeText = (value) => String(value || "").trim().toLowerCase();
 
 const DownloadSauda = ({
   data,
@@ -51,42 +54,19 @@ const DownloadSauda = ({
 
     const fetchData = async () => {
       try {
-        const [
-          consigneeResponse,
-          supplierResponse,
-          buyerResponse,
-          sellerProfileResponse,
-          companyResponse,
-        ] = await Promise.all([
-          axios.get(CONSIGNEE_API_URL, { params: { limit: 0 } }),
-          axios.get(SUPPLIER_API_URL),
-          axios.get(BUYER_API_URL),
-          axios.get(SELLER_PROFILE_API_URL),
-          axios.get(COMPANY_API_URL, { params: { limit: 0 } }),
+        const [cData, sData, bData, spData, companyRows] = await Promise.all([
+          fetchAllPages(CONSIGNEE_API_URL, { limit: 200 }),
+          fetchAllPages(SUPPLIER_API_URL, { limit: 200 }),
+          fetchAllPages(BUYER_API_URL, { limit: 200 }),
+          fetchAllPages(SELLER_PROFILE_API_URL, { limit: 200 }),
+          fetchAllPages(COMPANY_API_URL, { limit: 200 }),
         ]);
-
-        const cData = Array.isArray(consigneeResponse.data)
-          ? consigneeResponse.data
-          : consigneeResponse.data?.data || [];
-        const sData = Array.isArray(supplierResponse.data)
-          ? supplierResponse.data
-          : supplierResponse.data?.data || [];
-        const bData = Array.isArray(buyerResponse.data)
-          ? buyerResponse.data
-          : buyerResponse.data?.data || [];
-        const spData = Array.isArray(sellerProfileResponse.data)
-          ? sellerProfileResponse.data
-          : sellerProfileResponse.data?.data || [];
 
         setConsigneeData(cData);
         setSupplierData(sData);
         setBuyerData(bData);
         setSellerProfileData(spData);
-        setCompanyData(
-          (Array.isArray(companyResponse.data)
-            ? companyResponse.data
-            : companyResponse.data?.data) || [],
-        );
+        setCompanyData(companyRows);
       } catch (error) {
         console.error("Error fetching data:", error);
       } finally {
@@ -126,7 +106,7 @@ const DownloadSauda = ({
 
   const matchingSupplier = supplierData.find(
     (supplier) =>
-      supplier.companyName.toLowerCase() === data.supplierCompany.toLowerCase(),
+      normalizeText(supplier?.companyName) === normalizeText(data?.supplierCompany),
   );
 
   const rawBuyerKey = data?.buyerCompany ?? data?.buyer ?? "";

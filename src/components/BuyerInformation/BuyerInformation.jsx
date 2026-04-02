@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo, lazy, Suspense } from "react";
 import PropTypes from "prop-types";
-import axios from "axios";
 import Loading from "../../common/Loading/Loading";
+import { fetchAllPages } from "../../utils/apiClient/fetchAllPages";
 const DataDropdown = lazy(
   () => import("../../common/DataDropdown/DataDropdown"),
 );
@@ -41,12 +41,12 @@ const BuyerInformation = ({
     const fetchData = async () => {
       setLoading(true);
       try {
-        const [buyersRes, consigneesRes] = await Promise.all([
-          axios.get("/buyers"),
-          axios.get("/consignees", { params: { limit: 0 } }),
+        const [buyersRows, consigneesRows] = await Promise.all([
+          fetchAllPages("/buyers", { limit: 200 }),
+          fetchAllPages("/consignees", { limit: 200 }),
         ]);
-        setBuyers(buyersRes.data);
-        setConsignees(consigneesRes.data?.data || consigneesRes.data || []);
+        setBuyers(buyersRows);
+        setConsignees(consigneesRows);
       } catch (error) {
         console.error("Error fetching data:", error);
       } finally {

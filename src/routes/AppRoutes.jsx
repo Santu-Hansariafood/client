@@ -66,7 +66,8 @@ const privateRoutes = [
   { path: "Supplier-Bid-List", component: LazyPages.SellerBidList, roles: ["Seller"] },
   { path: "participate-bid-list", component: LazyPages.ParticipateBid, roles: ["Buyer"] },
   { path: "confirm-bids/:bidId", component: LazyPages.ConfirmBids, roles: ["Buyer"] },
-  { path: "buyer/market-analytics", component: LazyPages.BuyerMarketAnalytics, roles: ["Buyer"] }
+  { path: "buyer/market-analytics", component: LazyPages.BuyerMarketAnalytics, roles: ["Buyer"] },
+  { path: "buyer/bid-history", component: LazyPages.BuyerBidHistory, roles: ["Buyer"] }
 ];
 
 const AppRoutes = ({ hydrated }) => {

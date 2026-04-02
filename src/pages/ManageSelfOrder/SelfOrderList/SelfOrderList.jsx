@@ -17,6 +17,7 @@ import { useAuth } from "../../../context/AuthContext/AuthContext";
 import { pdf } from "@react-pdf/renderer";
 import SaudaPDF from "../../../components/DownloadSauda/SaudaPDF/SaudaPDF";
 import generateExcel from "../../../common/GenerateExcel/GenerateExcel";
+import { fetchAllPages } from "../../../utils/apiClient/fetchAllPages";
 
 const Tables = lazy(() => import("../../../common/Tables/Tables"));
 const Pagination = lazy(
@@ -30,6 +31,7 @@ const DownloadSauda = lazy(
 );
 
 const API_URL = "/self-order";
+const normalizeText = (value) => String(value || "").trim().toLowerCase();
 
 const SelfOrderList = () => {
   const navigate = useNavigate();
@@ -41,9 +43,11 @@ const SelfOrderList = () => {
   const [supplierData, setSupplierData] = useState([]);
   const [buyerData, setBuyerData] = useState([]);
   const [sellerProfileData, setSellerProfileData] = useState([]);
+  const [companyData, setCompanyData] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
   const [totalItems, setTotalItems] = useState(0);
+  const [serverPaginated, setServerPaginated] = useState(false);
   const [reloadFlag, setReloadFlag] = useState(0);
   const [selectedItem, setSelectedItem] = useState(null);
   const [searchInput, setSearchInput] = useState("");
@@ -54,27 +58,29 @@ const SelfOrderList = () => {
       try {
         const page = currentPage || 1;
         const search = searchInput?.trim() || "";
-        const [
-          orderRes,
-          consigneeRes,
-          buyersRes,
-          supplierRes,
-          sellerProfileRes,
-        ] = await Promise.all([
+        const [orderRes, consignees, allBuyers, suppliers, sellerProfiles, companies] =
+          await Promise.all([
           axios.get(
             `${API_URL}?page=${page}&limit=${itemsPerPage}&search=${search}`,
           ),
-          axios.get("/consignees").catch(() => ({ data: [] })),
-          axios.get("/buyers").catch(() => ({ data: [] })),
-          axios.get("/seller-company").catch(() => ({ data: [] })),
-          axios.get("/sellers").catch(() => ({ data: [] })),
+          fetchAllPages("/consignees", { limit: 200 }).catch(() => []),
+          fetchAllPages("/buyers", { limit: 200 }).catch(() => []),
+          fetchAllPages("/seller-company", { limit: 200 }).catch(() => []),
+          fetchAllPages("/sellers", { limit: 200 }).catch(() => []),
+          fetchAllPages("/companies", { limit: 200 }).catch(() => []),
         ]);
 
         if (!isMounted) return;
 
-        const orderData = orderRes.data;
+        const orderData = orderRes.data || {};
         let raw = [];
         let total = 0;
+        const hasPaginationMeta =
+          typeof orderData.page === "number" ||
+          typeof orderData.totalPages === "number" ||
+          typeof orderData.limit === "number" ||
+          typeof orderData.total === "number" ||
+          typeof orderData.totalItems === "number";
 
         if (orderData && Array.isArray(orderData.data)) {
           raw = orderData.data;
@@ -91,10 +97,7 @@ const SelfOrderList = () => {
           raw = orderData?.data || [];
           total = raw.length;
         }
-
-        const allBuyers = Array.isArray(buyersRes.data)
-          ? buyersRes.data
-          : buyersRes.data?.data || [];
+        setServerPaginated(hasPaginationMeta);
 
         let filteredOrders = raw;
 
@@ -142,22 +145,13 @@ const SelfOrderList = () => {
         setFilteredData(filteredOrders);
         setTotalItems(total);
 
-        const consignees = Array.isArray(consigneeRes.data)
-          ? consigneeRes.data
-          : consigneeRes.data?.data || [];
         setConsigneeData(consignees);
-
-        const suppliers = Array.isArray(supplierRes.data)
-          ? supplierRes.data
-          : supplierRes.data?.data || [];
         setSupplierData(suppliers);
 
         setBuyerData(allBuyers);
 
-        const sellerProfiles = Array.isArray(sellerProfileRes.data)
-          ? sellerProfileRes.data
-          : sellerProfileRes.data?.data || [];
         setSellerProfileData(sellerProfiles);
+        setCompanyData(companies);
 
         const map = new Map();
         consignees.forEach((c) => {
@@ -176,13 +170,13 @@ const SelfOrderList = () => {
 
   const currentItems = useMemo(() => {
     if (!filteredData || filteredData.length === 0) return [];
-    if (totalItems > filteredData.length) {
+    if (serverPaginated || totalItems > filteredData.length) {
       return filteredData;
     }
     const start = (currentPage - 1) * itemsPerPage;
     const end = start + itemsPerPage;
     return filteredData.slice(start, end);
-  }, [filteredData, totalItems, currentPage, itemsPerPage]);
+  }, [filteredData, totalItems, currentPage, itemsPerPage, serverPaginated]);
 
   const handlePageChange = useCallback((pageNumber) => {
     setCurrentPage(pageNumber);
@@ -231,8 +225,8 @@ const SelfOrderList = () => {
             (supplier) =>
               supplier?.companyName &&
               item?.supplierCompany &&
-              supplier.companyName.toLowerCase() ===
-                item.supplierCompany.toLowerCase(),
+              normalizeText(supplier.companyName) ===
+                normalizeText(item.supplierCompany),
           ) || null;
 
         const rawBuyerKey = item?.buyerCompany ?? item?.buyer ?? "";
@@ -241,6 +235,16 @@ const SelfOrderList = () => {
           .toLowerCase();
 
         const matchingBuyer =
+          (companyData || []).find((company) => {
+            const idMatch =
+              company?._id &&
+              rawBuyerKey &&
+              String(company._id) === String(rawBuyerKey);
+            const nameMatch =
+              company?.companyName &&
+              normalizeText(company.companyName) === normalizedBuyerKey;
+            return idMatch || nameMatch;
+          }) ||
           (buyerData || []).find((buyer) => {
             const idMatch =
               buyer?._id &&
@@ -248,7 +252,7 @@ const SelfOrderList = () => {
               String(buyer._id) === String(rawBuyerKey);
             const nameMatch =
               buyer?.companyName &&
-              buyer.companyName.toLowerCase() === normalizedBuyerKey;
+              normalizeText(buyer.companyName) === normalizedBuyerKey;
             return idMatch || nameMatch;
           }) ||
           (supplierData || []).find((supplier) => {
@@ -258,7 +262,7 @@ const SelfOrderList = () => {
               String(supplier._id) === String(rawBuyerKey);
             const nameMatch =
               supplier?.companyName &&
-              supplier.companyName.toLowerCase() === normalizedBuyerKey;
+              normalizeText(supplier.companyName) === normalizedBuyerKey;
             return idMatch || nameMatch;
           }) ||
           null;
@@ -464,7 +468,7 @@ Download PDF: ${fileUrl}`
         );
       }
     },
-    [getConsigneeDisplay],
+    [getConsigneeDisplay, buyerData, supplierData, consigneeData, companyData],
   );
 
   const openWhatsAppChat = useCallback((mobileNumber, item) => {

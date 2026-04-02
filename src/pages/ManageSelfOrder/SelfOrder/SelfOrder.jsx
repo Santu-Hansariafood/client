@@ -9,6 +9,9 @@ import { FaClipboardList } from "react-icons/fa";
 import regexPatterns from "../../../utils/regexPatterns/regexPatterns";
 import { pdf } from "@react-pdf/renderer";
 import SaudaPDF from "../../../components/DownloadSauda/SaudaPDF/SaudaPDF";
+import { fetchAllPages } from "../../../utils/apiClient/fetchAllPages";
+
+const normalizeText = (value) => String(value || "").trim().toLowerCase();
 
 const BuyerInformation = lazy(
   () => import("../../../components/BuyerInformation/BuyerInformation"),
@@ -283,35 +286,14 @@ const SelfOrder = () => {
         rate: order.rate ?? "",
       };
 
-      const [
-        consigneeResponse,
-        supplierResponse,
-        buyerResponse,
-        sellerProfileResponse,
-        companyResponse,
-      ] = await Promise.all([
-        axios.get("/consignees", { params: { limit: 0 } }),
-        axios.get("/seller-company"),
-        axios.get("/buyers"),
-        axios.get("/sellers"),
-        axios.get("/companies", { params: { limit: 0 } }),
+      const [consigneeData, supplierData, buyerData, sellerProfileData, companyData] =
+        await Promise.all([
+        fetchAllPages("/consignees", { limit: 200 }),
+        fetchAllPages("/seller-company", { limit: 200 }),
+        fetchAllPages("/buyers", { limit: 200 }),
+        fetchAllPages("/sellers", { limit: 200 }),
+        fetchAllPages("/companies", { limit: 200 }),
       ]);
-
-      const consigneeData = Array.isArray(consigneeResponse.data)
-        ? consigneeResponse.data
-        : consigneeResponse.data?.data || [];
-      const supplierData = Array.isArray(supplierResponse.data)
-        ? supplierResponse.data
-        : supplierResponse.data?.data || [];
-      const buyerData = Array.isArray(buyerResponse.data)
-        ? buyerResponse.data
-        : buyerResponse.data?.data || [];
-      const sellerProfileData = Array.isArray(sellerProfileResponse.data)
-        ? sellerProfileResponse.data
-        : sellerProfileResponse.data?.data || [];
-      const companyData = Array.isArray(companyResponse.data)
-        ? companyResponse.data
-        : companyResponse.data?.data || [];
 
       const normalizedConsigneeKey = (() => {
         const c = order?.consignee;
@@ -337,8 +319,8 @@ const SelfOrder = () => {
 
       const matchingSupplier = supplierData.find(
         (supplier) =>
-          supplier.companyName?.toLowerCase() ===
-          order.supplierCompany?.toLowerCase(),
+          normalizeText(supplier?.companyName) ===
+          normalizeText(order?.supplierCompany),
       );
 
       const rawBuyerKey = order?.buyerCompany ?? order?.buyer ?? "";
