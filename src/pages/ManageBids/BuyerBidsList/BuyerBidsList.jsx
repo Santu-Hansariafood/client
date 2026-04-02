@@ -34,47 +34,43 @@ const BuyerBidsList = () => {
   const itemsPerPage = 10;
 
   useEffect(() => {
-    const fetchBids = async () => {
+    const fetchInitialData = async () => {
       try {
-        const response = await axios.get("/bids");
-        const items = response.data?.data || response.data || [];
-        const sorted = items.sort(
-          (a, b) => new Date(b.bidDate) - new Date(a.bidDate),
-        );
-        setBids(sorted);
-        setFilteredData(sorted);
-      } catch {
-        toast.error("Error fetching bids");
+        const [bidsRes, commoditiesRes, originsRes, buyersRes] = await Promise.all([
+          axios.get("/bids"),
+          axios.get("/commodities"),
+          axios.get("/bid-locations"),
+          axios.get(`/buyers?mobile=${user.mobile}`),
+        ]);
+
+        const items = bidsRes.data?.data || bidsRes.data || [];
+        const commodities = commoditiesRes.data?.data || commoditiesRes.data || [];
+        const origins = originsRes.data?.data || originsRes.data || [];
+        const buyer = buyersRes.data?.data?.[0] || buyersRes.data?.[0];
+
+        if (buyer) {
+          const buyerCommodities = buyer.commodities.map(c => c.name);
+          const relevantBids = items.filter(bid => buyerCommodities.includes(bid.commodity));
+          const sorted = relevantBids.sort((a, b) => new Date(b.bidDate) - new Date(a.bidDate));
+          setBids(sorted);
+          setFilteredData(sorted);
+        } else {
+          setBids([]);
+          setFilteredData([]);
+        }
+
+        setCommodities(commodities.sort((a, b) => (a.name || "").localeCompare(b.name || "")));
+        setOrigins(origins.sort((a, b) => (a.name || "").localeCompare(b.name || "")));
+
+      } catch (err) {
+        toast.error("Error fetching initial data");
       }
     };
-    const fetchCommodities = async () => {
-      try {
-        const response = await axios.get("/commodities");
-        const items = response.data?.data || response.data || [];
-        const sorted = items.sort((a, b) =>
-          (a.name || "").localeCompare(b.name || ""),
-        );
-        setCommodities(sorted);
-      } catch {
-        toast.error("Error fetching commodities");
-      }
-    };
-    const fetchOrigins = async () => {
-      try {
-        const response = await axios.get("/bid-locations");
-        const items = response.data?.data || response.data || [];
-        const sorted = items.sort((a, b) =>
-          (a.name || "").localeCompare(b.name || ""),
-        );
-        setOrigins(sorted);
-      } catch {
-        toast.error("Error fetching origins");
-      }
-    };
-    fetchBids();
-    fetchCommodities();
-    fetchOrigins();
-  }, []);
+
+    if (user && user.mobile) {
+      fetchInitialData();
+    }
+  }, [user]);
 
   useEffect(() => {
     let data = [...bids];

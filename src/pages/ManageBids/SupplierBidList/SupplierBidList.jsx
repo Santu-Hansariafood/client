@@ -38,16 +38,21 @@ const SupplierBidList = () => {
     setLoading(true);
     setError(null);
     try {
-      if (commodityNames.length === 0) {
-        setError("No commodities selected.");
-        setLoading(false);
-        return;
-      }
-      const [bidsRes, participationsRes, locationsRes] = await Promise.all([
+      const [sellerRes, bidsRes, participationsRes, locationsRes] = await Promise.all([
+        axios.get(`/sellers?mobile=${mobile}`),
         axios.get("/bids"),
         axios.get(`/participatebids?mobile=${mobile}`),
         axios.get("/bid-locations"),
       ]);
+
+      const seller = sellerRes.data?.data?.[0] || sellerRes.data?.[0];
+      if (!seller) {
+        setError("Could not find seller information.");
+        setLoading(false);
+        return;
+      }
+
+      const sellerCommodities = seller.commodities.map(c => c.name);
 
       const items = bidsRes.data?.data || bidsRes.data || [];
       const myParticipations =
@@ -55,7 +60,7 @@ const SupplierBidList = () => {
       const locations = locationsRes.data?.data || locationsRes.data || [];
 
       const relevantBids = items.filter((bid) =>
-        commodityNames.includes(bid.commodity),
+        sellerCommodities.includes(bid.commodity),
       );
 
       setBids(relevantBids);
