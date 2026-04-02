@@ -413,20 +413,19 @@ const SelfOrder = () => {
         reader.onerror = reject;
       });
 
-      if (order.sendPOToBuyer === "yes" && buyerEmailsToSend.length > 0) {
-        await axios.post("/api/email/send-pdf", {
-          email: [...new Set(buyerEmailsToSend)].join(", "),
-          pdf: base64data,
-          ...details,
-        });
+      const allEmailsToSend = [];
+      if (order.sendPOToBuyer === "yes") {
+        allEmailsToSend.push(...buyerEmailsToSend);
+      }
+      if (order.sendPOToSupplier === "yes") {
+        allEmailsToSend.push(...sellerEmailsToSend);
       }
 
-      if (
-        order.sendPOToSupplier === "yes" &&
-        sellerEmailsToSend.length > 0
-      ) {
+      const uniqueEmails = [...new Set(allEmailsToSend)].filter(Boolean);
+
+      if (uniqueEmails.length > 0) {
         await axios.post("/api/email/send-pdf", {
-          email: [...new Set(sellerEmailsToSend)].join(", "),
+          email: uniqueEmails.join(", "),
           pdf: base64data,
           ...details,
         });

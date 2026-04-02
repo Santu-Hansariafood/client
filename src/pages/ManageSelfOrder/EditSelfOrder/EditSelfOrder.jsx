@@ -82,6 +82,8 @@ const EditSelfOrder = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isFetching, setIsFetching] = useState(false);
   const [_buyerBrokerageMap, setBuyerBrokerageMap] = useState({});
+  const [consignees, setConsignees] = useState([]);
+  const [buyers, setBuyers] = useState([]);
 
   useEffect(() => {
     if (formData.commodity) {
@@ -141,10 +143,17 @@ const EditSelfOrder = () => {
     const fetchOrder = async () => {
       setIsFetching(true);
       try {
-        const { data } = await axios.get(`${API_BASE_URL}/${id}`);
+        const [{ data }, { data: consigneeData }, { data: buyerData }] = 
+          await Promise.all([
+            axios.get(`${API_BASE_URL}/${id}`),
+            axios.get("/consignees"),
+            axios.get("/buyers"),
+          ]);
+
         setFormData({
           ...INITIAL_FORM_DATA,
           ...data,
+          consignee: data.consignee || "",
           poDate: data.poDate ? new Date(data.poDate) : new Date(),
           deliveryDate: data.deliveryDate
             ? new Date(data.deliveryDate)
@@ -153,6 +162,8 @@ const EditSelfOrder = () => {
             ? new Date(data.loadingDate)
             : new Date(),
         });
+        setConsignees(consigneeData.data || consigneeData);
+        setBuyers(buyerData.data || buyerData);
       } catch {
         toast.error("Failed to fetch order details.");
         navigate("/manage-order/list-self-order", { replace: true });
@@ -291,7 +302,12 @@ const EditSelfOrder = () => {
       >
         <div className="max-w-4xl mx-auto space-y-6">
           <div className={sectionClass}>
-            <BuyerInformation formData={formData} handleChange={handleChange} />
+            <BuyerInformation
+              formData={formData}
+              handleChange={handleChange}
+              consignees={consignees}
+              buyers={buyers}
+            />
           </div>
           <div className={sectionClass}>
             <CommodityInformation

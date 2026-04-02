@@ -7,25 +7,37 @@ const DataDropdown = lazy(
 );
 const DataInput = lazy(() => import("../../common/DataInput/DataInput"));
 
-const BuyerInformation = ({ formData, handleChange }) => {
-  const [buyers, setBuyers] = useState([]);
-  const [consignees, setConsignees] = useState([]);
+const BuyerInformation = ({
+  formData,
+  handleChange,
+  buyers: propBuyers,
+  consignees: propConsignees,
+}) => {
+  const [buyers, setBuyers] = useState(propBuyers || []);
+  const [consignees, setConsignees] = useState(propConsignees || []);
   const [selectedCompany, setSelectedCompany] = useState(null);
   const [selectedConsignee, setSelectedConsignee] = useState("");
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!propBuyers || !propConsignees);
   const [initialized, setInitialized] = useState(false);
 
   const selectedBuyer = useMemo(
-    () => buyers.find(({ _id }) => _id === selectedCompany),
+    () => (Array.isArray(buyers) ? buyers : []).find(({ _id }) => _id === selectedCompany),
     [buyers, selectedCompany]
   );
 
   const selectedConsigneeData = useMemo(
-    () => consignees.find(({ _id }) => String(_id) === String(selectedConsignee)),
+    () => (Array.isArray(consignees) ? consignees : []).find(({ _id }) => String(_id) === String(selectedConsignee)),
     [consignees, selectedConsignee]
   );
 
   useEffect(() => {
+    if (propBuyers && propConsignees) {
+      setBuyers(propBuyers);
+      setConsignees(propConsignees);
+      setLoading(false);
+      return;
+    }
+
     const fetchData = async () => {
       setLoading(true);
       try {
@@ -42,7 +54,7 @@ const BuyerInformation = ({ formData, handleChange }) => {
       }
     };
     fetchData();
-  }, []);
+  }, [propBuyers, propConsignees]);
 
   const orderId = formData?._id;
 
@@ -59,11 +71,30 @@ const BuyerInformation = ({ formData, handleChange }) => {
     );
     if (match) {
       setSelectedCompany(match._id);
-      const consigneeId =
+      const consigneeValue =
         formData.consignee?._id ||
         formData.consignee?.value ||
         formData.consignee;
-      if (consigneeId) setSelectedConsignee(String(consigneeId));
+
+      if (consigneeValue) {
+        // Try to find if it's an ID
+        let found = consignees.find(
+          (c) => String(c._id) === String(consigneeValue),
+        );
+        // If not found as ID, try to find by name
+        if (!found) {
+          found = consignees.find(
+            (c) => (c.name || c.label) === consigneeValue,
+          );
+        }
+
+        if (found) {
+          setSelectedConsignee(String(found._id));
+        } else {
+          // Fallback if not found in consignees list but we have a value
+          setSelectedConsignee(String(consigneeValue));
+        }
+      }
 
       const rawEmails = match?.email;
       const buyerEmails = Array.isArray(rawEmails)
@@ -99,6 +130,8 @@ const BuyerInformation = ({ formData, handleChange }) => {
     formData?.buyerCompany,
     formData?.consignee,
     initialized,
+    consignees,
+    handleChange,
   ]);
 
   const companyOptions = useMemo(
