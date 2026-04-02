@@ -28,7 +28,11 @@ const SupplierInformation = ({
 
   useEffect(() => {
     if (formData.supplier && !selectedSupplier) {
-      setSelectedSupplier(formData.supplier);
+      const supplierId =
+        typeof formData.supplier === "object"
+          ? formData.supplier._id
+          : formData.supplier;
+      setSelectedSupplier(supplierId);
     }
   }, [formData.supplier, selectedSupplier]);
 
@@ -37,19 +41,15 @@ const SupplierInformation = ({
       const supplier = sellerOptions.find(
         (seller) => seller.value === selectedSupplier,
       );
-      if (supplier) {
-        return (
-          sellerCompanies
-            .filter((c) => supplier.companies.includes(c.companyName))
-            .map((company) => ({
-              value: company.companyName,
-              label: company.companyName,
-            })) || []
-        );
+      if (supplier && Array.isArray(supplier.companies)) {
+        return supplier.companies.map((company) => ({
+          value: company,
+          label: company,
+        }));
       }
     }
     return [];
-  }, [selectedSupplier, sellerOptions, sellerCompanies]);
+  }, [selectedSupplier, sellerOptions]);
 
   const handleSupplierChange = useCallback(
     (supplierId) => {

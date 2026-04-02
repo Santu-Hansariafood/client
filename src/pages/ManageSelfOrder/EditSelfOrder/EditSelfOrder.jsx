@@ -135,54 +135,68 @@ const EditSelfOrder = () => {
           ? new Date(orderFromState.loadingDate)
           : new Date(),
       });
-      return;
     }
-    if (!id) {
+
+    if (!id && !orderFromState) {
       toast.error("Missing order id. Open edit from the order list.");
       navigate("/manage-order/list-self-order", { replace: true });
       return;
     }
-    const fetchOrder = async () => {
+
+    const fetchData = async () => {
       setIsFetching(true);
       try {
-        const [
-          { data },
-          { data: consigneeData },
-          { data: buyerData },
-          { data: supplierData },
-          { data: sellerCompanyData },
-        ] = await Promise.all([
-          axios.get(`${API_BASE_URL}/${id}`),
-          axios.get("/consignees"),
-          axios.get("/buyers"),
-          axios.get("/sellers"),
-          axios.get("/seller-company"),
-        ]);
+        const promises = [];
+        if (!orderFromState && id) {
+          promises.push(axios.get(`${API_BASE_URL}/${id}`));
+        } else {
+          promises.push(Promise.resolve({ data: orderFromState }));
+        }
 
-        setFormData({
-          ...INITIAL_FORM_DATA,
-          ...data,
-          consignee: data.consignee || "",
-          poDate: data.poDate ? new Date(data.poDate) : new Date(),
-          deliveryDate: data.deliveryDate
-            ? new Date(data.deliveryDate)
-            : new Date(),
-          loadingDate: data.loadingDate
-            ? new Date(data.loadingDate)
-            : new Date(),
-        });
-        setConsignees(consigneeData.data || consigneeData);
-        setBuyers(buyerData.data || buyerData);
-        setSuppliers(supplierData.data || supplierData);
-        setSellerCompanies(sellerCompanyData.data || sellerCompanyData);
-      } catch {
-        toast.error("Failed to fetch order details.");
-        navigate("/manage-order/list-self-order", { replace: true });
+        promises.push(axios.get("/consignees"));
+        promises.push(axios.get("/buyers"));
+        promises.push(axios.get("/sellers"));
+        promises.push(axios.get("/seller-company"));
+
+        const [
+          orderRes,
+          consigneeRes,
+          buyerRes,
+          supplierRes,
+          sellerCompanyRes,
+        ] = await Promise.all(promises);
+
+        if (!orderFromState) {
+          const data = orderRes.data;
+          setFormData({
+            ...INITIAL_FORM_DATA,
+            ...data,
+            consignee: data.consignee || "",
+            poDate: data.poDate ? new Date(data.poDate) : new Date(),
+            deliveryDate: data.deliveryDate
+              ? new Date(data.deliveryDate)
+              : new Date(),
+            loadingDate: data.loadingDate
+              ? new Date(data.loadingDate)
+              : new Date(),
+          });
+        }
+
+        setConsignees(consigneeRes.data?.data || consigneeRes.data || []);
+        setBuyers(buyerRes.data?.data || buyerRes.data || []);
+        setSuppliers(supplierRes.data?.data || supplierRes.data || []);
+        setSellerCompanies(
+          sellerCompanyRes.data?.data || sellerCompanyRes.data || [],
+        );
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        toast.error("Failed to fetch required data.");
       } finally {
         setIsFetching(false);
       }
     };
-    fetchOrder();
+
+    fetchData();
   }, [id, navigate, state?.orderData]);
 
   const handleChange = (field, value) => {
@@ -345,7 +359,11 @@ const EditSelfOrder = () => {
             <SupplierInformation
               formData={formData}
               handleChange={handleChange}
-              suppliers={suppliers}
+              sellerOptions={suppliers.map((s) => ({
+                ...s,
+                label: s.sellerName,
+                value: s._id,
+              }))}
               sellerCompanies={sellerCompanies}
             />
           </div>

@@ -101,7 +101,7 @@ const SelfOrder = () => {
         const sellersData = sellersRes.data || [];
         const companiesData = companiesRes.data || [];
         const buyersData = buyersRes.data || [];
-        const sellerCompaniesData = sellerCompaniesRes.data || [];
+        const sellerCompaniesData = sellerCompaniesRes.data?.data || sellerCompaniesRes.data || [];
 
         setSellerOptions(
           sellersData
@@ -115,19 +115,19 @@ const SelfOrder = () => {
 
         setCompanyOptions(
           companiesData
-            .map((c) => ({ label: c.companyName, value: c._id }))
+            .map((c) => ({ ...c, label: c.companyName, value: c._id }))
             .sort((a, b) => a.label.localeCompare(b.label)),
         );
 
         setBuyerOptions(
           buyersData
-            .map((b) => ({ label: b.name, value: b._id }))
+            .map((b) => ({ ...b, label: b.name, value: b._id }))
             .sort((a, b) => a.label.localeCompare(b.label)),
         );
 
         setSupplierOptions(
           sellerCompaniesData
-            .map((sc) => ({ label: sc.companyName, value: sc._id }))
+            .map((sc) => ({ ...sc, label: sc.companyName, value: sc._id }))
             .sort((a, b) => a.label.localeCompare(b.label)),
         );
 
