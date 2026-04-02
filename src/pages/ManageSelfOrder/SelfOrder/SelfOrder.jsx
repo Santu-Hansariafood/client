@@ -84,41 +84,54 @@ const SelfOrder = () => {
   const [supplierOptions, setSupplierOptions] = useState([]);
   const [companyOptions, setCompanyOptions] = useState([]);
   const [sellerOptions, setSellerOptions] = useState([]);
+  const [sellerCompanies, setSellerCompanies] = useState([]);
   const [_buyerBrokerageMap, setBuyerBrokerageMap] = useState({});
 
   useEffect(() => {
     const fetchInitialData = async () => {
       try {
-        const [sellers, companies, buyers, sellerCompanies] = await Promise.all([
-          axios.get("/sellers"),
-          axios.get("/companies"),
-          axios.get("/buyers"),
-          axios.get("/seller-company"),
-        ]);
+        const [sellersRes, companiesRes, buyersRes, sellerCompaniesRes] =
+          await Promise.all([
+            axios.get("/sellers"),
+            axios.get("/companies"),
+            axios.get("/buyers"),
+            axios.get("/seller-company"),
+          ]);
 
-        const transform = (data, key, value) =>
-          data.map((item) => ({ label: item[key], value: item[value] }));
+        const sellersData = sellersRes.data || [];
+        const companiesData = companiesRes.data || [];
+        const buyersData = buyersRes.data || [];
+        const sellerCompaniesData = sellerCompaniesRes.data || [];
 
         setSellerOptions(
-          transform(sellers.data, "sellerName", "_id").sort((a, b) =>
-            a.label.localeCompare(b.label),
-          ),
+          sellersData
+            .map((seller) => ({
+              ...seller,
+              label: seller.sellerName,
+              value: seller._id,
+            }))
+            .sort((a, b) => a.label.localeCompare(b.label)),
         );
+
         setCompanyOptions(
-          transform(companies.data, "companyName", "_id").sort((a, b) =>
-            a.label.localeCompare(b.label),
-          ),
+          companiesData
+            .map((c) => ({ label: c.companyName, value: c._id }))
+            .sort((a, b) => a.label.localeCompare(b.label)),
         );
+
         setBuyerOptions(
-          transform(buyers.data, "name", "_id").sort((a, b) =>
-            a.label.localeCompare(b.label),
-          ),
+          buyersData
+            .map((b) => ({ label: b.name, value: b._id }))
+            .sort((a, b) => a.label.localeCompare(b.label)),
         );
+
         setSupplierOptions(
-          transform(sellerCompanies.data, "companyName", "_id").sort((a, b) =>
-            a.label.localeCompare(b.label),
-          ),
+          sellerCompaniesData
+            .map((sc) => ({ label: sc.companyName, value: sc._id }))
+            .sort((a, b) => a.label.localeCompare(b.label)),
         );
+
+        setSellerCompanies(sellerCompaniesData);
       } catch (error) {
         toast.error("Failed to fetch initial data.");
       }
@@ -586,6 +599,7 @@ const SelfOrder = () => {
               handleChange={handleChange}
               supplierOptions={supplierOptions}
               sellerOptions={sellerOptions}
+              sellerCompanies={sellerCompanies}
             />
           </div>
 

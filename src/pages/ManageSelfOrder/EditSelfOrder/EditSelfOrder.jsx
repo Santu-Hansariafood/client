@@ -85,6 +85,7 @@ const EditSelfOrder = () => {
   const [consignees, setConsignees] = useState(state?.consigneeData || []);
   const [buyers, setBuyers] = useState(state?.buyerData || []);
   const [suppliers, setSuppliers] = useState(state?.supplierData || []);
+  const [sellerCompanies, setSellerCompanies] = useState([]);
 
   useEffect(() => {
     if (formData.commodity) {
@@ -144,13 +145,19 @@ const EditSelfOrder = () => {
     const fetchOrder = async () => {
       setIsFetching(true);
       try {
-        const [{ data }, { data: consigneeData }, { data: buyerData }, { data: supplierData }] = 
-          await Promise.all([
-            axios.get(`${API_BASE_URL}/${id}`),
-            axios.get("/consignees"),
-            axios.get("/buyers"),
-            axios.get("/sellers"),
-          ]);
+        const [
+          { data },
+          { data: consigneeData },
+          { data: buyerData },
+          { data: supplierData },
+          { data: sellerCompanyData },
+        ] = await Promise.all([
+          axios.get(`${API_BASE_URL}/${id}`),
+          axios.get("/consignees"),
+          axios.get("/buyers"),
+          axios.get("/sellers"),
+          axios.get("/seller-company"),
+        ]);
 
         setFormData({
           ...INITIAL_FORM_DATA,
@@ -167,6 +174,7 @@ const EditSelfOrder = () => {
         setConsignees(consigneeData.data || consigneeData);
         setBuyers(buyerData.data || buyerData);
         setSuppliers(supplierData.data || supplierData);
+        setSellerCompanies(sellerCompanyData.data || sellerCompanyData);
       } catch {
         toast.error("Failed to fetch order details.");
         navigate("/manage-order/list-self-order", { replace: true });
@@ -338,6 +346,7 @@ const EditSelfOrder = () => {
               formData={formData}
               handleChange={handleChange}
               suppliers={suppliers}
+              sellerCompanies={sellerCompanies}
             />
           </div>
           <div className={sectionClass}>

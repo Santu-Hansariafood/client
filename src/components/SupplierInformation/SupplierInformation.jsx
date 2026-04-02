@@ -22,6 +22,7 @@ const SupplierInformation = ({
   formData,
   supplierOptions,
   sellerOptions,
+  sellerCompanies,
 }) => {
   const [selectedSupplier, setSelectedSupplier] = useState(null);
 
@@ -36,15 +37,19 @@ const SupplierInformation = ({
       const supplier = sellerOptions.find(
         (seller) => seller.value === selectedSupplier,
       );
-      return (
-        supplier?.companies.map((company) => ({
-          value: company,
-          label: company,
-        })) || []
-      );
+      if (supplier) {
+        return (
+          sellerCompanies
+            .filter((c) => supplier.companies.includes(c.companyName))
+            .map((company) => ({
+              value: company.companyName,
+              label: company.companyName,
+            })) || []
+        );
+      }
     }
     return [];
-  }, [selectedSupplier, sellerOptions]);
+  }, [selectedSupplier, sellerOptions, sellerCompanies]);
 
   const handleSupplierChange = useCallback(
     (supplierId) => {
