@@ -7,6 +7,7 @@ import Loading from "../../../common/Loading/Loading";
 import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
 import { FaEdit } from "react-icons/fa";
 import regexPatterns from "../../../utils/regexPatterns/regexPatterns";
+import { sendSaudaOrderEmails } from "../../../utils/saudaPdf/sendSaudaOrderEmails";
 
 const BuyerInformation = lazy(
   () => import("../../../components/BuyerInformation/BuyerInformation"),
@@ -292,7 +293,14 @@ const EditSelfOrder = () => {
         },
       };
 
-      await axios.put(`${API_BASE_URL}/${id}`, payload);
+      const response = await axios.put(`${API_BASE_URL}/${id}`, payload);
+      const updatedOrder = response?.data || payload;
+
+      try {
+        await sendSaudaOrderEmails(updatedOrder);
+      } catch (emailError) {
+        console.error("Auto email error:", emailError);
+      }
 
       toast.success("Order updated successfully! Redirecting...", {
         position: "top-right",

@@ -7,10 +7,7 @@ import Loading from "../../../common/Loading/Loading";
 import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
 import { FaClipboardList } from "react-icons/fa";
 import regexPatterns from "../../../utils/regexPatterns/regexPatterns";
-import { pdf } from "@react-pdf/renderer";
-import SaudaPDF from "../../../components/DownloadSauda/SaudaPDF/SaudaPDF";
-import { fetchAllPages } from "../../../utils/apiClient/fetchAllPages";
-import { buildSaudaPdfData } from "../../../utils/saudaPdf/buildSaudaPdfData";
+import { sendSaudaOrderEmails } from "../../../utils/saudaPdf/sendSaudaOrderEmails";
 
 const BuyerInformation = lazy(
   () => import("../../../components/BuyerInformation/BuyerInformation"),
@@ -244,160 +241,6 @@ const SelfOrder = () => {
     setFormData(INITIAL_FORM_DATA);
   };
 
-  const sendOrderEmails = async (order) => {
-    try {
-      const buyerEmails = Array.isArray(order?.buyerEmails)
-        ? order.buyerEmails.filter(Boolean)
-        : [];
-
-      const sellerEmails = Array.isArray(order?.sellerEmails)
-        ? order.sellerEmails.filter(Boolean)
-        : [];
-
-      const buyerFromSingle = order?.buyerEmail ? [order.buyerEmail] : [];
-
-      const buyerEmailsToSend = [
-        ...buyerEmails,
-        ...buyerFromSingle,
-      ].filter((e) => String(e).trim());
-
-      const sellerEmailsToSend = sellerEmails.filter((e) => String(e).trim());
-
-      const shouldSendBuyer = order.sendPOToBuyer === "yes";
-      const shouldSendSupplier = order.sendPOToSupplier === "yes";
-
-      if (
-        (!shouldSendBuyer || buyerEmailsToSend.length === 0) &&
-        (!shouldSendSupplier || sellerEmailsToSend.length === 0)
-      ) {
-        return;
-      }
-
-      const details = {
-        saudaNo: order.saudaNo,
-        poNumber: order.poNumber || "",
-        buyer: order.buyer || "",
-        buyerCompany: order.buyerCompany || "",
-        consignee: order.consignee || "",
-        supplierCompany: order.supplierCompany || "",
-        commodity: order.commodity || "",
-        quantity: order.quantity ?? "",
-        rate: order.rate ?? "",
-      };
-
-      const [consigneeData, supplierData, buyerData, sellerProfileData, companyData] =
-        await Promise.all([
-        fetchAllPages("/consignees", { limit: 200 }),
-        fetchAllPages("/seller-company", { limit: 200 }),
-        fetchAllPages("/buyers", { limit: 200 }),
-        fetchAllPages("/sellers", { limit: 200 }),
-        fetchAllPages("/companies", { limit: 200 }),
-      ]);
-
-      const matchingBuyer =
-        companyData.find(
-          (c) =>
-            (c?._id && String(c._id) === String(order?.buyerCompany || order?.buyer || "")) ||
-            String(c?.companyName || "").trim().toLowerCase() ===
-              String(order?.buyerCompany || order?.buyer || "").trim().toLowerCase(),
-        ) ||
-        buyerData.find(
-          (b) =>
-            (b?._id && String(b._id) === String(order?.buyerCompany || order?.buyer || "")) ||
-            String(b?.companyName || "").trim().toLowerCase() ===
-              String(order?.buyerCompany || order?.buyer || "").trim().toLowerCase(),
-        );
-
-      const matchingSellerProfile = sellerProfileData.find(
-        (seller) => seller._id === order.supplier,
-      );
-
-      let transformedData = buildSaudaPdfData({
-        item: order,
-        consigneeData,
-        supplierData,
-        buyerData,
-        companyData,
-        getConsigneeDisplay: (row) => {
-          const c = row?.consignee;
-          if (typeof c === "object" && c?.name) return c.name;
-          if (typeof c === "object" && c?.label) return c.label;
-          return String(c || "N/A");
-        },
-      });
-
-      if (
-        matchingBuyer &&
-        (!transformedData.buyerBrokerage?.brokerageBuyer ||
-          transformedData.buyerBrokerage.brokerageBuyer === 0)
-      ) {
-        const buyerProfileBrokerage =
-          matchingBuyer.brokerageByName?.[order.commodity] ||
-          matchingBuyer.brokerage?.[order.commodity];
-        if (buyerProfileBrokerage !== undefined) {
-          transformedData.buyerBrokerage = {
-            ...transformedData.buyerBrokerage,
-            brokerageBuyer: buyerProfileBrokerage,
-          };
-        }
-      }
-
-      if (
-        matchingSellerProfile &&
-        (!transformedData.buyerBrokerage?.brokerageSupplier ||
-          transformedData.buyerBrokerage.brokerageSupplier === 0)
-      ) {
-        const supplierProfileBrokerage =
-          matchingSellerProfile.commodities?.find(
-            (c) => c.name === order.commodity,
-          )?.brokerage;
-        if (supplierProfileBrokerage !== undefined) {
-          transformedData.buyerBrokerage = {
-            ...transformedData.buyerBrokerage,
-            brokerageSupplier: supplierProfileBrokerage,
-          };
-        }
-      }
-
-      const blob = await pdf(<SaudaPDF data={transformedData} />).toBlob();
-
-      const base64data = await new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.readAsDataURL(blob);
-        reader.onloadend = () => {
-          try {
-            const result = reader.result;
-            const base64 = typeof result === "string" ? result.split(",")[1] : "";
-            resolve(base64);
-          } catch (e) {
-            reject(e);
-          }
-        };
-        reader.onerror = reject;
-      });
-
-      const allEmailsToSend = [];
-      if (order.sendPOToBuyer === "yes") {
-        allEmailsToSend.push(...buyerEmailsToSend);
-      }
-      if (order.sendPOToSupplier === "yes") {
-        allEmailsToSend.push(...sellerEmailsToSend);
-      }
-
-      const uniqueEmails = [...new Set(allEmailsToSend)].filter(Boolean);
-
-      if (uniqueEmails.length > 0) {
-        await axios.post("/api/email/send-pdf", {
-          email: uniqueEmails.join(", "),
-          pdf: base64data,
-          ...details,
-        });
-      }
-    } catch (error) {
-      console.error("Auto email error:", error);
-    }
-  };
-
   const handleSubmit = async () => {
     if (!validateFormData()) return;
 
@@ -427,8 +270,10 @@ const SelfOrder = () => {
       const response = await axios.post(API_BASE_URL, payload);
       const createdOrder = response?.data || payload;
 
-      if (createdOrder.sendPOToBuyer === "yes" || createdOrder.sendPOToSupplier === "yes") {
-        sendOrderEmails(createdOrder);
+      try {
+        await sendSaudaOrderEmails(createdOrder);
+      } catch (emailError) {
+        console.error("Auto email error:", emailError);
       }
 
       resetForm();
