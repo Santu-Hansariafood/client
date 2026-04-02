@@ -17,43 +17,21 @@ const DateSelector = lazy(
   () => import("../../common/DateSelector/DateSelector"),
 );
 
-const SupplierInformation = ({ handleChange, formData }) => {
-  const [sellers, setSellers] = useState([]);
+const SupplierInformation = ({ handleChange, formData, suppliers: initialSuppliers }) => {
+  const [sellers, setSellers] = useState(initialSuppliers || []);
   const [selectedSupplier, setSelectedSupplier] = useState(null);
 
   useEffect(() => {
-    const fetchSuppliers = async () => {
-      try {
-        const response = await axios.get("/sellers");
-        setSellers(response.data);
-      } catch (error) {
-        console.error("Error fetching suppliers:", error);
-      }
-    };
-
-    fetchSuppliers();
-  }, []);
+    if (initialSuppliers) {
+      setSellers(initialSuppliers);
+    }
+  }, [initialSuppliers]);
 
   useEffect(() => {
     if (sellers.length > 0 && formData.supplier && !selectedSupplier) {
       setSelectedSupplier(formData.supplier);
-      const selected = sellers.find(
-        (seller) => seller._id === formData.supplier,
-      );
-      if (selected) {
-        handleChange("supplierBrokerage", selected.commodities || []);
-        if (selected.commodities?.length) {
-          handleChange(
-            "supplierBrokerageDetails",
-            selected.commodities.map((c) => ({
-              name: c.name,
-              brokerage: c.brokerage,
-            })),
-          );
-        }
-      }
     }
-  }, [sellers, formData.supplier, selectedSupplier, handleChange]);
+  }, [sellers, formData.supplier, selectedSupplier]);
 
   const suppliers = useMemo(
     () =>
@@ -139,6 +117,7 @@ const SupplierInformation = ({ handleChange, formData }) => {
               suppliers.find((s) => s.value === selectedSupplier) || null
             }
             onChange={(opt) => handleSupplierChange(opt?.value)}
+            value={selectedSupplier}
           />
         </div>
         <div>
@@ -155,6 +134,7 @@ const SupplierInformation = ({ handleChange, formData }) => {
             onChange={(opt) =>
               handleChange("supplierCompany", opt?.value || "")
             }
+            value={formData.supplierCompany}
           />
         </div>
         <div>
@@ -195,13 +175,8 @@ const SupplierInformation = ({ handleChange, formData }) => {
 
 SupplierInformation.propTypes = {
   handleChange: PropTypes.func.isRequired,
-  formData: PropTypes.shape({
-    supplier: PropTypes.string,
-    supplierCompany: PropTypes.string,
-    paymentTerms: PropTypes.string,
-    deliveryDate: PropTypes.instanceOf(Date),
-    loadingDate: PropTypes.instanceOf(Date),
-  }).isRequired,
+  formData: PropTypes.object.isRequired,
+  suppliers: PropTypes.array,
 };
 
 export default SupplierInformation;

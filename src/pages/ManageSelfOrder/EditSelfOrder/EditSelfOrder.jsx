@@ -84,6 +84,7 @@ const EditSelfOrder = () => {
   const [_buyerBrokerageMap, setBuyerBrokerageMap] = useState({});
   const [consignees, setConsignees] = useState([]);
   const [buyers, setBuyers] = useState([]);
+  const [suppliers, setSuppliers] = useState([]);
 
   useEffect(() => {
     if (formData.commodity) {
@@ -143,11 +144,12 @@ const EditSelfOrder = () => {
     const fetchOrder = async () => {
       setIsFetching(true);
       try {
-        const [{ data }, { data: consigneeData }, { data: buyerData }] = 
+        const [{ data }, { data: consigneeData }, { data: buyerData }, { data: supplierData }] = 
           await Promise.all([
             axios.get(`${API_BASE_URL}/${id}`),
             axios.get("/consignees"),
             axios.get("/buyers"),
+            axios.get("/sellers"),
           ]);
 
         setFormData({
@@ -164,6 +166,7 @@ const EditSelfOrder = () => {
         });
         setConsignees(consigneeData.data || consigneeData);
         setBuyers(buyerData.data || buyerData);
+        setSuppliers(supplierData.data || supplierData);
       } catch {
         toast.error("Failed to fetch order details.");
         navigate("/manage-order/list-self-order", { replace: true });
@@ -334,6 +337,7 @@ const EditSelfOrder = () => {
             <SupplierInformation
               formData={formData}
               handleChange={handleChange}
+              suppliers={suppliers}
             />
           </div>
           <div className={sectionClass}>

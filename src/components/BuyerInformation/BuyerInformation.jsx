@@ -225,6 +225,7 @@ const BuyerInformation = ({
               null
             }
             onChange={onCompanyChange}
+            value={selectedCompany}
           />
 
           {selectedBuyer && (
@@ -280,6 +281,7 @@ const BuyerInformation = ({
               ) || null
             }
             onChange={onConsigneeChange}
+            value={selectedConsignee}
           />
 
           {selectedConsigneeData && (

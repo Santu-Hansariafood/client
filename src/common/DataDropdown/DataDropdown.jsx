@@ -11,6 +11,7 @@ const DataDropdown = ({
   required = false,
   name,
   disableSorting = false,
+  value,
 }) => {
   const formattedOptions = options
     .map((option) => ({
@@ -21,6 +22,10 @@ const DataDropdown = ({
       if (disableSorting) return 0;
       return String(a.label || "").localeCompare(String(b.label || ""));
     });
+
+  const selectedValue = formattedOptions.find(
+    (option) => option.value === value,
+  );
 
   return (
     <div className="mb-5 w-full">
@@ -35,7 +40,7 @@ const DataDropdown = ({
           name={name}
           options={formattedOptions}
           isMulti={isMulti}
-          value={selectedOptions}
+          value={selectedValue || selectedOptions}
           onChange={onChange}
           placeholder={placeholder || "Select..."}
           className="react-select-container"
@@ -146,6 +151,8 @@ DataDropdown.propTypes = {
   label: PropTypes.string,
   required: PropTypes.bool,
   name: PropTypes.string,
+  disableSorting: PropTypes.bool,
+  value: PropTypes.string,
 };
 
 export default DataDropdown;

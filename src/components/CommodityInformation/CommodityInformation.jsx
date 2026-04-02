@@ -159,6 +159,7 @@ const CommodityInformation = ({
               ) || null
             }
             onChange={onCommodityChange}
+            value={selectedCommodity}
           />
         </div>
         {parameters.length > 0 && (

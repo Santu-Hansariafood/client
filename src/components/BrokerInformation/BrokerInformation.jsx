@@ -74,6 +74,7 @@ const BrokerInformation = ({ formData, handleChange }) => {
                 agentOptions.find((o) => o.value === formData.agentName) || null
               }
               onChange={(opt) => handleChange("agentName", opt?.value || "")}
+              value={formData.agentName}
             />
           )}
         </div>

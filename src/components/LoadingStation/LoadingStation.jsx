@@ -33,6 +33,7 @@ const LoadingStation = ({ formData, handleChange }) => {
             options={stateOptions}
             selectedOptions={stateOptions.find((o) => o.value === state) || null}
             onChange={(opt) => handleInputChange("state", opt?.value ?? "")}
+            value={state}
           />
         </div>
       </div>
