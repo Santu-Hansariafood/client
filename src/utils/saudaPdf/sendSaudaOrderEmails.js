@@ -1,5 +1,6 @@
 import axios from "axios";
 import { pdf } from "@react-pdf/renderer";
+import { createElement } from "react";
 import SaudaPDF from "../../components/DownloadSauda/SaudaPDF/SaudaPDF";
 import { fetchAllPages } from "../apiClient/fetchAllPages";
 import { buildSaudaPdfData } from "./buildSaudaPdfData";
@@ -57,7 +58,7 @@ export const sendSaudaOrderEmails = async (order) => {
     },
   });
 
-  const blob = await pdf(<SaudaPDF data={transformedData} />).toBlob();
+  const blob = await pdf(createElement(SaudaPDF, { data: transformedData })).toBlob();
   const base64data = await new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.readAsDataURL(blob);
