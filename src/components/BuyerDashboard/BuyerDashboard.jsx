@@ -69,14 +69,14 @@ const BuyerDashboard = () => {
       title: "Market Analytics",
       count: "Analyze",
       icon: FaChartLine,
-      link: "/market-analytics",
+      link: "/buyer/market-analytics",
       color: "from-red-400 to-red-600",
     },
     {
       title: "Bid History",
       count: "Review",
       icon: FaHistory,
-      link: "/bid-history",
+      link: "/buyer/bid-history",
       color: "from-indigo-400 to-indigo-600",
     },
   ];

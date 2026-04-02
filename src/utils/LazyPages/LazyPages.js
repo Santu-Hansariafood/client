@@ -46,6 +46,8 @@ const loaders = {
   TermsConditions: () => import("../../common/TermsConditions/TermsConditions"),
   BrokerCommissionPolicy: () => import("../../common/BrokerCommissionPolicy/BrokerCommissionPolicy"),
   Teams: () => import("../../common/Teams/Teams"),
+  BuyerMarketAnalytics: () => import("../../pages/MarketAnalysis/MarketAnalysis"),
+  BuyerBidHistory: () => import("../../pages/BidHistory/BidHistory")
 };
 
 const pathToKey = {
@@ -93,6 +95,8 @@ const pathToKey = {
   "/terms-conditions": "TermsConditions",
   "/broker-commission-policy": "BrokerCommissionPolicy",
   "/teams": "Teams",
+  "/buyer/market-analytics": "BuyerMarketAnalytics",
+  "/buyer/bid-history": "BuyerBidHistory"
 };
 
 const prefetched = new Set();
@@ -166,6 +170,8 @@ const LazyPages = {
   TermsConditions: lazy(loaders.TermsConditions),
   BrokerCommissionPolicy: lazy(loaders.BrokerCommissionPolicy),
   Teams: lazy(loaders.Teams),
+  BuyerMarketAnalytics: lazy(loaders.BuyerMarketAnalytics),
+  BuyerBidHistory: lazy(loaders.BuyerBidHistory)
 };
 
 export default LazyPages;

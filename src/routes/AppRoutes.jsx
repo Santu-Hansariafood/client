@@ -9,7 +9,6 @@ const RoleBasedRoute = ({ children, allowedRoles }) => {
   if (!allowedRoles) return children;
 
   if (!allowedRoles.includes(userRole)) {
-    // Redirect to their specific dashboard if they try to access something they shouldn't
     const roleDashboards = {
       Admin: "/dashboard",
       Employee: "/employee/dashboard",
@@ -24,16 +23,13 @@ const RoleBasedRoute = ({ children, allowedRoles }) => {
 };
 
 const privateRoutes = [
-  // Admin & Employee Shared Routes
   { path: "dashboard", component: LazyPages.Dashboard, roles: ["Admin"] },
   { path: "employee/dashboard", component: LazyPages.EmployeeDashboard, roles: ["Admin", "Employee"] },
   
-  // Specific Dashboard Routes
   { path: "buyer/dashboard", component: LazyPages.BuyerDashboard, roles: ["Buyer"] },
   { path: "seller/dashboard", component: LazyPages.SellerDashboard, roles: ["Seller"] },
   { path: "transporter/dashboard", component: LazyPages.TransporterDashboard, roles: ["Transporter"] },
 
-  // Admin & Employee only Management Routes
   { path: "buyer/add", component: LazyPages.AddBuyer, roles: ["Admin", "Employee"] },
   { path: "buyer/list", component: LazyPages.ListBuyer, roles: ["Admin", "Employee"] },
   { path: "group-of-company/add", component: LazyPages.AddGroupOfCompany, roles: ["Admin", "Employee"] },
@@ -67,10 +63,10 @@ const privateRoutes = [
   { path: "transporter/list", component: LazyPages.ListTransporter, roles: ["Admin", "Employee"] },
   { path: "loading-entry-sauda/:id", component: LazyPages.LoadingEntrySauda, roles: ["Admin", "Employee"] },
   
-  // Specific Bid Routes for Seller/Buyer
   { path: "Supplier-Bid-List", component: LazyPages.SellerBidList, roles: ["Seller"] },
   { path: "participate-bid-list", component: LazyPages.ParticipateBid, roles: ["Buyer"] },
   { path: "confirm-bids/:bidId", component: LazyPages.ConfirmBids, roles: ["Buyer"] },
+  { path: "buyer/market-analytics", component: LazyPages.BuyerMarketAnalytics, roles: ["Buyer"] }
 ];
 
 const AppRoutes = ({ hydrated }) => {
