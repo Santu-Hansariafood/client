@@ -29,7 +29,7 @@ const selfOrderSchema = new mongoose.Schema(
     gst: { type: Number, default: 0 },
     cd: { type: Number, default: 0 },
     weight: { type: String, default: "" },
-    supplier: { type: String, default: "" },
+    supplier: { type: mongoose.Schema.Types.ObjectId, ref: "Seller" },
     supplierCompany: { type: String, default: "" },
     paymentTerms: { type: String, default: "" },
     deliveryDate: { type: Date },
