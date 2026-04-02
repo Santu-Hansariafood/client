@@ -4,7 +4,8 @@ import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import Loading from "../../../common/Loading/Loading";
 import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
-import { FaUsers } from "react-icons/fa";
+import { FaUsers, FaArrowLeft } from "react-icons/fa";
+import { useAuth } from "../../../context/AuthContext/AuthContext";
 
 const Tables = lazy(() => import("../../../common/Tables/Tables"));
 const Pagination = lazy(
@@ -16,6 +17,8 @@ const InteractionsPopup = lazy(
 );
 
 const ParticipateBidAdmin = () => {
+  const navigate = useNavigate();
+  const { userRole, mobile } = useAuth();
   const [bids, setBids] = useState([]);
   const [participationBids, setParticipationBids] = useState([]);
   const [filteredBids, setFilteredBids] = useState([]);
@@ -23,25 +26,56 @@ const ParticipateBidAdmin = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
   const [selectedBidId, setSelectedBidId] = useState(null);
+  const [buyerGroup, setBuyerGroup] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [bidsRes, participateRes] = await Promise.all([
-          axios.get("/bids"),
-          axios.get("/participatebids"),
-        ]);
+        const [bidsRes, participateRes, buyersRes, companiesRes] =
+          await Promise.all([
+            axios.get("/bids"),
+            axios.get("/participatebids"),
+            userRole === "Buyer"
+              ? axios.get("/buyers")
+              : Promise.resolve({ data: [] }),
+            userRole === "Buyer"
+              ? axios.get("/companies")
+              : Promise.resolve({ data: [] }),
+          ]);
 
-        const bids = bidsRes.data?.data || bidsRes.data || [];
+        const bidsData = bidsRes.data?.data || bidsRes.data || [];
         const participations =
           participateRes.data?.data || participateRes.data || [];
+        const buyers = buyersRes.data?.data || buyersRes.data || [];
+        const companies = companiesRes.data?.data || companiesRes.data || [];
+
+        if (userRole === "Buyer") {
+          const buyer = buyers.find((b) =>
+            b.mobile?.some((m) => String(m) === String(mobile)),
+          );
+          if (buyer) {
+            const company = companies.find(
+              (c) => String(c._id) === String(buyer.companyId),
+            );
+            if (company && company.group) {
+              const formattedGroup = company.group
+                .split(" ")
+                .map(
+                  (word) =>
+                    word.charAt(0).toUpperCase() + word.slice(1).toLowerCase(),
+                )
+                .join(" ");
+              setBuyerGroup(formattedGroup);
+            }
+          }
+        }
 
         const allParticipations = participations.sort(
           (a, b) =>
             new Date(b.participationDate) - new Date(a.participationDate),
         );
 
-        setBids(bids);
+        setBids(bidsData);
         setParticipationBids(allParticipations);
         setFilteredBids(allParticipations);
       } catch {
@@ -51,13 +85,19 @@ const ParticipateBidAdmin = () => {
       }
     };
     fetchData();
-  }, []);
+  }, [userRole, mobile]);
 
   const getBidParticipationDetails = (data) => {
     const groupedBids = {};
     data.forEach((pBid) => {
       const matchingBid = bids.find((bid) => bid._id === pBid.bidId);
       if (!matchingBid) return;
+
+      // Filter by buyer group if applicable
+      if (userRole === "Buyer" && buyerGroup && matchingBid.group !== buyerGroup) {
+        return;
+      }
+
       if (!groupedBids[pBid.bidId]) {
         groupedBids[pBid.bidId] = {
           bidId: pBid.bidId,
@@ -156,6 +196,17 @@ const ParticipateBidAdmin = () => {
         subtitle="Full history of participation activity"
         icon={FaUsers}
         noContentCard
+        extraHeaderContent={
+          userRole === "Buyer" && (
+            <button
+              onClick={() => navigate(-1)}
+              className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-800"
+            >
+              <FaArrowLeft />
+              Back
+            </button>
+          )
+        }
       >
         <div className="space-y-6">
           {selectedBidId && (

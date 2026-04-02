@@ -1,10 +1,12 @@
 import { useState, useEffect, lazy, Suspense } from "react";
 import axios from "axios";
 import { toast, ToastContainer } from "react-toastify";
+import { useNavigate } from "react-router-dom";
 import "react-toastify/dist/ReactToastify.css";
 import Loading from "../../../common/Loading/Loading";
 import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
-import { FaMapMarkerAlt } from "react-icons/fa";
+import { FaMapMarkerAlt, FaArrowLeft } from "react-icons/fa";
+import { useAuth } from "../../../context/AuthContext/AuthContext";
 
 const DataInput = lazy(() => import("../../../common/DataInput/DataInput"));
 const Buttons = lazy(() => import("../../../common/Buttons/Buttons"));
@@ -13,6 +15,8 @@ const Actions = lazy(() => import("../../../common/Actions/Actions"));
 const Pagination = lazy(() => import("../../../common/Paginations/Paginations"));
 
 const BidLocation = () => {
+  const navigate = useNavigate();
+  const { userRole } = useAuth();
   const [inputValue, setInputValue] = useState("");
   const [data, setData] = useState([]);
   const [isEditing, setIsEditing] = useState(null);
@@ -131,6 +135,17 @@ const BidLocation = () => {
         subtitle="Create and manage bid location names used in bids"
         icon={FaMapMarkerAlt}
         noContentCard
+        extraHeaderContent={
+          userRole === "Buyer" && (
+            <button
+              onClick={() => navigate(-1)}
+              className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-800"
+            >
+              <FaArrowLeft />
+              Back
+            </button>
+          )
+        }
       >
         <div className="max-w-6xl mx-auto space-y-6">
           <div className="rounded-2xl border border-amber-200/60 bg-white shadow-lg p-4 sm:p-6">

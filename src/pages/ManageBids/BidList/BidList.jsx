@@ -1,10 +1,11 @@
 import { useState, useEffect, lazy, Suspense, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { AiOutlineEye, AiOutlineEdit } from "react-icons/ai";
 import axios from "axios";
 import { toast } from "react-toastify";
 import Loading from "../../../common/Loading/Loading";
 import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
-import { FaGavel } from "react-icons/fa";
+import { FaGavel, FaArrowLeft } from "react-icons/fa";
 import { useAuth } from "../../../context/AuthContext/AuthContext";
 
 const Tables = lazy(() => import("../../../common/Tables/Tables"));
@@ -13,6 +14,7 @@ const ViewBid = lazy(() => import("../ViewBidPopup/ViewBidPopup"));
 const PopupBox = lazy(() => import("../../../common/PopupBox/PopupBox"));
 
 const BidList = () => {
+  const navigate = useNavigate();
   const { userRole, mobile } = useAuth();
   const [bids, setBids] = useState([]);
   const [activeTab, setActiveTab] = useState("all"); // "all", "active", "closed", or "previous"
@@ -50,8 +52,15 @@ const BidList = () => {
             const company = companies.find(
               (c) => String(c._id) === String(buyer.companyId),
             );
-            if (company) {
-              setBuyerGroup(company.group);
+            if (company && company.group) {
+              const formattedGroup = company.group
+                .split(" ")
+                .map(
+                  (word) =>
+                    word.charAt(0).toUpperCase() + word.slice(1).toLowerCase(),
+                )
+                .join(" ");
+              setBuyerGroup(formattedGroup);
             }
           }
         }
@@ -131,6 +140,10 @@ const BidList = () => {
           return false;
         }
 
+        if (userRole === "Buyer" && buyerGroup) {
+          return bid.group === buyerGroup;
+        }
+
         return true;
       })
       .sort((a, b) => {
@@ -138,7 +151,7 @@ const BidList = () => {
         const dateB = new Date(b.closedAt || b.updatedAt || b.createdAt);
         return dateB - dateA;
       });
-  }, [bids, activeTab, filteredConsignees]);
+  }, [bids, activeTab, filteredConsignees, buyerGroup, userRole]);
 
   const consigneeItems = useMemo(
     () =>
@@ -343,6 +356,17 @@ const BidList = () => {
         }
         icon={FaGavel}
         noContentCard
+        extraHeaderContent={
+          userRole === "Buyer" && (
+            <button
+              onClick={() => navigate(-1)}
+              className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-800"
+            >
+              <FaArrowLeft />
+              Back
+            </button>
+          )
+        }
       >
         <div className="max-w-6xl mx-auto space-y-6">
           {error ? (
