@@ -16,6 +16,7 @@ import { FaClipboardList } from "react-icons/fa";
 import { useAuth } from "../../../context/AuthContext/AuthContext";
 import { pdf } from "@react-pdf/renderer";
 import SaudaPDF from "../../../components/DownloadSauda/SaudaPDF/SaudaPDF";
+import generateExcel from "../../../common/GenerateExcel/GenerateExcel";
 
 const Tables = lazy(() => import("../../../common/Tables/Tables"));
 const Pagination = lazy(
@@ -751,43 +752,34 @@ Download PDF: ${fileUrl}`
       }
 
       exportOrders = [...exportOrders].sort((a, b) => {
-        const aDate = a.createdAt || a.poDate;
-        const bDate = b.createdAt || b.poDate;
-        if (aDate && bDate) {
-          const diff = new Date(bDate) - new Date(aDate);
-          if (diff !== 0) return diff;
-        }
         const aSauda = Number(a.saudaNo) || 0;
         const bSauda = Number(b.saudaNo) || 0;
-        return bSauda - aSauda;
+        return aSauda - bSauda;
       });
 
-      const excelRows = exportOrders.map((item, index) => {
-        const dateValue = item.poDate
+      const excelRows = exportOrders.map((item) => ({
+        Date: item.poDate
           ? new Date(item.poDate).toLocaleDateString("en-GB")
           : item.createdAt
             ? new Date(item.createdAt).toLocaleDateString("en-GB")
-            : "";
-
-        return {
-          "Sl No": index + 1,
-          Date: dateValue,
-          "Sauda No": item.saudaNo || "",
-          "PO Number": item.poNumber || "",
-          Buyer: item.buyer || "",
-          "Buyer Company": item.buyerCompany || "",
-          "Seller Company": item.supplierCompany || "",
-          "Seller Name": item.supplier || "",
-          Consignee: getConsigneeDisplay(item) || "",
-          Commodity: item.commodity || "",
-          Quantity: item.quantity || "",
-          Rate: item.rate || "",
-          "Delivery Date": item.deliveryDate
-            ? new Date(item.deliveryDate).toLocaleDateString("en-GB")
             : "",
-          "Payment Time": item.paymentTerms || "",
-        };
-      });
+        "Sauda No": item.saudaNo || "",
+        "PO Number": item.poNumber || "",
+        Buyer: item.buyer || "",
+        "Buyer Company": item.buyerCompany || "",
+        "Seller Company": item.supplierCompany || "",
+        "Seller Name": item.supplier?.sellerName || "",
+        Consignee: getConsigneeDisplay(item) || "",
+        Commodity: item.commodity || "",
+        Quantity: item.quantity || "",
+        Rate: item.rate || "",
+        Tax: "",
+        CD: item.cd || "",
+        "Delivery Date": item.deliveryDate
+          ? new Date(item.deliveryDate).toLocaleDateString("en-GB")
+          : "",
+        "Payment Time": item.paymentTerms || "",
+      }));
 
       if (excelRows.length === 0) {
         toast.dismiss(toastId);
@@ -795,34 +787,7 @@ Download PDF: ${fileUrl}`
         return;
       }
 
-      const headers = Object.keys(excelRows[0]);
-
-      const csvLines = [
-        headers.join(","),
-        ...excelRows.map((row) =>
-          headers
-            .map((key) => {
-              const cell = row[key] ?? "";
-              const value = String(cell).replace(/"/g, '""');
-              return `"${value}"`;
-            })
-            .join(","),
-        ),
-      ];
-
-      const csvContent = csvLines.join("\r\n");
-
-      const blob = new Blob([csvContent], {
-        type: "text/csv;charset=utf-8;",
-      });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.setAttribute("download", "SelfOrders.csv");
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
+      generateExcel(excelRows, "SelfOrders.xlsx");
 
       toast.dismiss(toastId);
       toast.success("Excel downloaded");
