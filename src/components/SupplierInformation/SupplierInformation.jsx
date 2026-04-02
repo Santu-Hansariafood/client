@@ -17,35 +17,24 @@ const DateSelector = lazy(
   () => import("../../common/DateSelector/DateSelector"),
 );
 
-const SupplierInformation = ({ handleChange, formData, suppliers: initialSuppliers }) => {
-  const [sellers, setSellers] = useState(initialSuppliers || []);
+const SupplierInformation = ({
+  handleChange,
+  formData,
+  supplierOptions,
+  sellerOptions,
+}) => {
   const [selectedSupplier, setSelectedSupplier] = useState(null);
 
   useEffect(() => {
-    if (initialSuppliers) {
-      setSellers(initialSuppliers);
-    }
-  }, [initialSuppliers]);
-
-  useEffect(() => {
-    if (sellers.length > 0 && formData.supplier && !selectedSupplier) {
+    if (formData.supplier && !selectedSupplier) {
       setSelectedSupplier(formData.supplier);
     }
-  }, [sellers, formData.supplier, selectedSupplier]);
-
-  const suppliers = useMemo(
-    () =>
-      sellers.map((seller) => ({
-        value: seller._id,
-        label: seller.sellerName,
-      })),
-    [sellers],
-  );
+  }, [formData.supplier, selectedSupplier]);
 
   const companies = useMemo(() => {
     if (selectedSupplier) {
-      const supplier = sellers.find(
-        (seller) => seller._id === selectedSupplier,
+      const supplier = sellerOptions.find(
+        (seller) => seller.value === selectedSupplier,
       );
       return (
         supplier?.companies.map((company) => ({
@@ -55,16 +44,18 @@ const SupplierInformation = ({ handleChange, formData, suppliers: initialSupplie
       );
     }
     return [];
-  }, [selectedSupplier, sellers]);
+  }, [selectedSupplier, sellerOptions]);
 
   const handleSupplierChange = useCallback(
     (supplierId) => {
-      const selected = sellers.find((seller) => seller._id === supplierId);
+      const selected = sellerOptions.find(
+        (seller) => seller.value === supplierId,
+      );
 
       setSelectedSupplier(supplierId);
       handleChange("supplier", supplierId);
       handleChange("supplierBrokerage", selected?.commodities || []);
-      handleChange("supplierName", selected?.sellerName || "");
+      handleChange("supplierName", selected?.label || "");
 
       const rawEmails = selected?.emails || [];
       const sellerEmails = Array.isArray(rawEmails)
@@ -97,7 +88,7 @@ const SupplierInformation = ({ handleChange, formData, suppliers: initialSupplie
         );
       }
     },
-    [sellers, handleChange],
+    [sellerOptions, handleChange],
   );
 
   return (
@@ -112,9 +103,9 @@ const SupplierInformation = ({ handleChange, formData, suppliers: initialSupplie
           </label>
           <DataDropdown
             placeholder="Select Supplier"
-            options={suppliers}
+            options={sellerOptions}
             selectedOptions={
-              suppliers.find((s) => s.value === selectedSupplier) || null
+              sellerOptions.find((s) => s.value === selectedSupplier) || null
             }
             onChange={(opt) => handleSupplierChange(opt?.value)}
             value={selectedSupplier}

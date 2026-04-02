@@ -77,14 +77,14 @@ const INITIAL_FORM_DATA = {
 const EditSelfOrder = () => {
   const navigate = useNavigate();
   const { id } = useParams();
-  const location = useLocation();
-  const [formData, setFormData] = useState(INITIAL_FORM_DATA);
+  const { state } = useLocation();
+  const [formData, setFormData] = useState(state?.orderData || INITIAL_FORM_DATA);
   const [isLoading, setIsLoading] = useState(false);
   const [isFetching, setIsFetching] = useState(false);
   const [_buyerBrokerageMap, setBuyerBrokerageMap] = useState({});
-  const [consignees, setConsignees] = useState([]);
-  const [buyers, setBuyers] = useState([]);
-  const [suppliers, setSuppliers] = useState([]);
+  const [consignees, setConsignees] = useState(state?.consigneeData || []);
+  const [buyers, setBuyers] = useState(state?.buyerData || []);
+  const [suppliers, setSuppliers] = useState(state?.supplierData || []);
 
   useEffect(() => {
     if (formData.commodity) {
@@ -118,7 +118,7 @@ const EditSelfOrder = () => {
   const API_BASE_URL = "/self-order";
 
   useEffect(() => {
-    const orderFromState = location.state?.orderData;
+    const orderFromState = state?.orderData;
     if (orderFromState) {
       setFormData({
         ...INITIAL_FORM_DATA,
@@ -175,7 +175,7 @@ const EditSelfOrder = () => {
       }
     };
     fetchOrder();
-  }, [id, navigate, location.state?.orderData]);
+  }, [id, navigate, state?.orderData]);
 
   const handleChange = (field, value) => {
     if (field === "buyerBrokerageMap") {
