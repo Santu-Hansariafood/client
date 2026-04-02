@@ -1,68 +1,79 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-import { VitePWA } from 'vite-plugin-pwa'
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
+import { VitePWA } from "vite-plugin-pwa";
 
 export default defineConfig({
-  envDir: '.',
+  envDir: ".",
   plugins: [
     react(),
     VitePWA({
-      registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico', 'robots.txt', 'icons/*.png'],
+      registerType: "autoUpdate",
+      includeAssets: ["favicon.ico", "robots.txt", "icons/*.png"],
       manifest: {
-        name: 'Hansaria Food Private Limited',
-        short_name: 'Hansaria',
-        start_url: '/?source=pwa',
-        display: 'standalone',
-        theme_color: '#4CAF50',
-        background_color: '#ffffff',
+        name: "Hansaria Food Private Limited",
+        short_name: "Hansaria",
+        start_url: "/?source=pwa",
+        display: "standalone",
+        theme_color: "#4CAF50",
+        background_color: "#ffffff",
         icons: [
-          { src: '/icons/android-chrome-192x192.png', sizes: '192x192', type: 'image/png', purpose: 'any maskable' },
-          { src: '/icons/android-chrome-512x512.png', sizes: '512x512', type: 'image/png', purpose: 'any maskable' }
-        ]
+          {
+            src: "/icons/android-chrome-192x192.png",
+            sizes: "192x192",
+            type: "image/png",
+            purpose: "any maskable",
+          },
+          {
+            src: "/icons/android-chrome-512x512.png",
+            sizes: "512x512",
+            type: "image/png",
+            purpose: "any maskable",
+          },
+        ],
       },
       workbox: {
-        navigateFallback: '/index.html',
+        navigateFallback: "/index.html",
         runtimeCaching: [
           {
-            urlPattern: ({ request }) => request.destination === 'document',
-            handler: 'NetworkFirst',
-            options: { cacheName: 'pages', networkTimeoutSeconds: 5 }
+            urlPattern: ({ request }) => request.destination === "document",
+            handler: "NetworkFirst",
+            options: { cacheName: "pages", networkTimeoutSeconds: 5 },
           },
           {
-            urlPattern: ({ request }) => ['style', 'script', 'worker'].includes(request.destination),
-            handler: 'StaleWhileRevalidate',
-            options: { cacheName: 'assets' }
+            urlPattern: ({ request }) =>
+              ["style", "script", "worker"].includes(request.destination),
+            handler: "StaleWhileRevalidate",
+            options: { cacheName: "assets" },
           },
           {
-            urlPattern: ({ request }) => request.destination === 'image',
-            handler: 'CacheFirst',
+            urlPattern: ({ request }) => request.destination === "image",
+            handler: "CacheFirst",
             options: {
-              cacheName: 'images',
-              expiration: { maxEntries: 60, maxAgeSeconds: 60 * 60 * 24 * 30 }
-            }
+              cacheName: "images",
+              expiration: { maxEntries: 60, maxAgeSeconds: 60 * 60 * 24 * 30 },
+            },
           },
           {
             urlPattern: /\/api\//,
-            handler: 'NetworkFirst',
-            options: { cacheName: 'api', networkTimeoutSeconds: 10 }
-          }
-        ]
-      }
-    })
+            handler: "NetworkFirst",
+            options: { cacheName: "api", networkTimeoutSeconds: 10 },
+          },
+        ],
+      },
+    }),
   ],
   build: {
     rollupOptions: {
       output: {
         manualChunks: {
-          react: ['react', 'react-dom', 'react-router-dom'],
-          utils: ['axios', 'moment'],
-          ui: ['react-toastify', 'react-helmet-async']
+          react: ["react", "react-dom", "react-router-dom"],
+          utils: ["axios", "moment"],
+          ui: ["react-toastify", "react-helmet-async"],
         },
-        chunkFileNames: 'assets/[name]-[hash].js',
-      }
+        chunkFileNames: "assets/[name]-[hash].js",
+      },
     },
-    chunkSizeWarningLimit: 1600
+    chunkSizeWarningLimit: 1600,
   },
   server: {
     hmr: {
@@ -80,4 +91,4 @@ export default defineConfig({
   preview: {
     allowedHosts: ["bid.hansariafood.in"],
   },
-})
+});
