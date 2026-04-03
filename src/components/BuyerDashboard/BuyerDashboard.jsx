@@ -76,13 +76,13 @@ const BuyerDashboard = () => {
       link: "/manage-bids/bid-list/participate-bid-admin",
       color: "from-emerald-500 to-teal-600",
     },
-    {
-      title: "Bid History",
-      count: "Review",
-      icon: FaHistory,
-      link: "/buyer/bid-history",
-      color: "from-indigo-400 to-blue-600",
-    },
+    // {
+    //   title: "Bid History",
+    //   count: "Review",
+    //   icon: FaHistory,
+    //   link: "/buyer/bid-history",
+    //   color: "from-indigo-400 to-blue-600",
+    // },
   ];
 
   return (
