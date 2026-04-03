@@ -5,7 +5,7 @@ import axios from "axios";
 import { toast } from "react-toastify";
 import Loading from "../../../common/Loading/Loading";
 import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
-import { FaGavel, FaArrowLeft } from "react-icons/fa";
+import { FaGavel, FaArrowLeft, FaUsers } from "react-icons/fa";
 import { useAuth } from "../../../context/AuthContext/AuthContext";
 
 const Tables = lazy(() => import("../../../common/Tables/Tables"));
@@ -290,6 +290,16 @@ const BidList = () => {
       >
         <AiOutlineEye size={16} />
       </button>
+      {userRole === "Buyer" && (
+        <button
+          type="button"
+          className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-indigo-50 text-indigo-700 border border-indigo-100 hover:bg-indigo-100 transition-colors"
+          onClick={() => navigate(`/confirm-bids/${bid._id}`)}
+          title="View bidders"
+        >
+          <FaUsers size={14} />
+        </button>
+      )}
       {bid.status === "active" ? (
         <button
           type="button"

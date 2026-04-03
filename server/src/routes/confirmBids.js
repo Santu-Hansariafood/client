@@ -35,14 +35,34 @@ router.post("/", async (req, res) => {
       acceptedByRole,
     } = req.body;
 
+    const normalizedAcceptedAt =
+      status === "Confirmed"
+        ? acceptedAt
+          ? new Date(acceptedAt)
+          : new Date()
+        : acceptedAt
+          ? new Date(acceptedAt)
+          : null;
+
+    const normalizedAcceptanceRate =
+      typeof acceptanceRate === "number" ? acceptanceRate : null;
+    const normalizedAcceptanceQuantity =
+      typeof acceptanceQuantity === "number" ? acceptanceQuantity : null;
+    const normalizedAcceptanceAmount =
+      typeof normalizedAcceptanceRate === "number" &&
+      typeof normalizedAcceptanceQuantity === "number"
+        ? normalizedAcceptanceRate * normalizedAcceptanceQuantity
+        : null;
+
     const item = await ConfirmBid.create({
       bidId,
       phone,
       status,
       participationId: participationId || null,
-      acceptanceRate: typeof acceptanceRate === "number" ? acceptanceRate : null,
-      acceptanceQuantity: typeof acceptanceQuantity === "number" ? acceptanceQuantity : null,
-      acceptedAt: acceptedAt ? new Date(acceptedAt) : null,
+      acceptanceRate: normalizedAcceptanceRate,
+      acceptanceQuantity: normalizedAcceptanceQuantity,
+      acceptanceAmount: normalizedAcceptanceAmount,
+      acceptedAt: normalizedAcceptedAt,
       acceptedByMobile: acceptedByMobile || "",
       acceptedByRole: acceptedByRole || "",
     });

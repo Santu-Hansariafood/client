@@ -3,16 +3,20 @@ import { useParams } from "react-router-dom";
 import axios from "axios";
 import { toast } from "react-toastify";
 import Loading from "../../common/Loading/Loading";
+import { useAuth } from "../../context/AuthContext/AuthContext";
 const Tables = lazy(() => import("../../common/Tables/Tables"));
 const PopupBox = lazy(() => import("../../common/PopupBox/PopupBox"));
 
 const ConfirmBids = () => {
   const { bidId } = useParams();
+  const { mobile, userRole } = useAuth();
   const [participants, setParticipants] = useState([]);
   const [bidDetails, setBidDetails] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [selectedBid, setSelectedBid] = useState(null);
+  const [approvalRate, setApprovalRate] = useState("");
+  const [approvalQuantity, setApprovalQuantity] = useState("");
 
   const fetchDetails = async () => {
     try {
@@ -24,14 +28,19 @@ const ConfirmBids = () => {
           axios.get("/confirm-bid"),
         ]);
 
-      const matchedBid = bidsRes.data.find((b) => b._id === bidId);
+      const bids = bidsRes.data?.data || bidsRes.data || [];
+      const matchedBid = bids.find((b) => b._id === bidId);
       setBidDetails(matchedBid || null);
 
-      const confirmedBids = confirmRes.data.filter((c) => c.bidId === bidId);
-      const bidParticipants = participateRes.data.filter(
+      const confirmedBidsRaw = confirmRes.data?.data || confirmRes.data || [];
+      const confirmedBids = confirmedBidsRaw.filter((c) => c.bidId === bidId);
+
+      const participationRaw =
+        participateRes.data?.data || participateRes.data || [];
+      const bidParticipants = participationRaw.filter(
         (p) => p.bidId === bidId
       );
-      const sellers = sellersRes.data;
+      const sellers = sellersRes.data?.data || sellersRes.data || [];
 
       const detailedParticipants = bidParticipants.map((p, index) => {
         const seller = sellers.find((s) =>
@@ -40,9 +49,29 @@ const ConfirmBids = () => {
 
         const confirmedBid = confirmedBids.find((c) => c.phone === p.mobile);
         const confirmedStatus = confirmedBid ? confirmedBid.status : "Review";
+        const acceptedRate =
+          typeof confirmedBid?.acceptanceRate === "number"
+            ? confirmedBid.acceptanceRate
+            : null;
+        const acceptedQty =
+          typeof confirmedBid?.acceptanceQuantity === "number"
+            ? confirmedBid.acceptanceQuantity
+            : null;
+        const acceptedAt = confirmedBid?.acceptedAt ? new Date(confirmedBid.acceptedAt) : null;
+        const amountBaseRate =
+          typeof acceptedRate === "number" ? acceptedRate : Number(p.rate);
+        const amountBaseQty =
+          typeof acceptedQty === "number" ? acceptedQty : Number(p.quantity);
+        const amount =
+          typeof confirmedBid?.acceptanceAmount === "number"
+            ? confirmedBid.acceptanceAmount
+            : Number.isFinite(amountBaseRate) && Number.isFinite(amountBaseQty)
+              ? amountBaseRate * amountBaseQty
+              : null;
 
         return {
           slNo: index + 1,
+          participationId: p._id,
           sellerName: seller ? seller.sellerName : "Unknown",
           phone: p.mobile,
           email: seller ? seller.emails[0]?.value : "N/A",
@@ -50,6 +79,10 @@ const ConfirmBids = () => {
           quantity: p.quantity,
           company: seller ? seller.companies.join(", ") : "N/A",
           status: confirmedStatus,
+          acceptedRate,
+          acceptedQty,
+          acceptedAt,
+          amount,
         };
       });
 
@@ -67,12 +100,16 @@ const ConfirmBids = () => {
 
   const openPopup = (bid) => {
     setSelectedBid(bid);
+    setApprovalRate(String(bid?.acceptedRate ?? bid?.rate ?? ""));
+    setApprovalQuantity(String(bid?.acceptedQty ?? bid?.quantity ?? ""));
     setIsPopupOpen(true);
   };
 
   const closePopup = () => {
     setIsPopupOpen(false);
     setSelectedBid(null);
+    setApprovalRate("");
+    setApprovalQuantity("");
   };
 
   const handleStatusChange = async (status) => {
@@ -84,15 +121,25 @@ const ConfirmBids = () => {
     if (!confirmAction) return;
 
     try {
+      const acceptanceRateNumber =
+        approvalRate === "" ? null : Number(approvalRate);
+      const acceptanceQtyNumber =
+        approvalQuantity === "" ? null : Number(approvalQuantity);
+
       await axios.post("/confirm-bid", {
         bidId,
-        sellerName: selectedBid.sellerName,
         phone: selectedBid.phone,
-        email: selectedBid.email,
-        rate: selectedBid.rate,
-        quantity: selectedBid.quantity,
-        company: selectedBid.company,
         status,
+        participationId: selectedBid.participationId,
+        acceptanceRate: Number.isFinite(acceptanceRateNumber)
+          ? acceptanceRateNumber
+          : null,
+        acceptanceQuantity: Number.isFinite(acceptanceQtyNumber)
+          ? acceptanceQtyNumber
+          : null,
+        acceptedAt: status === "Confirmed" ? new Date().toISOString() : null,
+        acceptedByMobile: mobile || "",
+        acceptedByRole: userRole || "",
       });
 
       toast.success(`Bid ${status.toLowerCase()} successfully!`);
@@ -112,6 +159,10 @@ const ConfirmBids = () => {
     "Email",
     "Rate",
     "Quantity",
+    "Approved Rate",
+    "Approved Qty",
+    "Amount",
+    "Approved Time",
     "Status",
     "Action",
   ];
@@ -124,6 +175,10 @@ const ConfirmBids = () => {
     p.email,
     p.rate,
     p.quantity,
+    typeof p.acceptedRate === "number" ? p.acceptedRate : "-",
+    typeof p.acceptedQty === "number" ? p.acceptedQty : "-",
+    typeof p.amount === "number" ? `₹${p.amount}` : "-",
+    p.acceptedAt ? p.acceptedAt.toLocaleString() : "-",
     <span
       className={`px-3 py-1 rounded-full text-white text-sm ${
         p.status === "Confirmed"
@@ -210,6 +265,30 @@ const ConfirmBids = () => {
               <p>
                 <strong>Quantity:</strong> {selectedBid?.quantity} MT
               </p>
+              <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3 text-left">
+                <label className="block">
+                  <span className="text-sm font-medium text-slate-700">
+                    Approve Rate
+                  </span>
+                  <input
+                    type="number"
+                    value={approvalRate}
+                    onChange={(e) => setApprovalRate(e.target.value)}
+                    className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 focus:ring-2 focus:ring-emerald-400/50 focus:border-emerald-400 outline-none"
+                  />
+                </label>
+                <label className="block">
+                  <span className="text-sm font-medium text-slate-700">
+                    Approve Quantity
+                  </span>
+                  <input
+                    type="number"
+                    value={approvalQuantity}
+                    onChange={(e) => setApprovalQuantity(e.target.value)}
+                    className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 focus:ring-2 focus:ring-emerald-400/50 focus:border-emerald-400 outline-none"
+                  />
+                </label>
+              </div>
               <div className="flex justify-center gap-4 mt-4">
                 <button
                   className="bg-green-500 text-white px-4 py-2 rounded"

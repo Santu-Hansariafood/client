@@ -7,6 +7,7 @@ const DataDropdown = ({
   onChange,
   placeholder,
   isMulti = false,
+  isClearable = false,
   label,
   required = false,
   name,
@@ -40,6 +41,7 @@ const DataDropdown = ({
           name={name}
           options={formattedOptions}
           isMulti={isMulti}
+          isClearable={isClearable}
           value={selectedValue || selectedOptions}
           onChange={onChange}
           placeholder={placeholder || "Select..."}
@@ -148,6 +150,7 @@ DataDropdown.propTypes = {
   onChange: PropTypes.func.isRequired,
   placeholder: PropTypes.string,
   isMulti: PropTypes.bool,
+  isClearable: PropTypes.bool,
   label: PropTypes.string,
   required: PropTypes.bool,
   name: PropTypes.string,

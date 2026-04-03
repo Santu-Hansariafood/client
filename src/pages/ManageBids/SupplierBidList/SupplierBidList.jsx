@@ -25,6 +25,7 @@ const SupplierBidList = () => {
 
   const [bids, setBids] = useState([]);
   const [participations, setParticipations] = useState([]);
+  const [allParticipations, setAllParticipations] = useState([]);
   const [activeTab, setActiveTab] = useState("active"); // "active", "participated", "closed"
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -36,15 +37,28 @@ const SupplierBidList = () => {
   const [remarks, setRemarks] = useState("");
   const [selectedGroup, setSelectedGroup] = useState(null);
   const [bidLocations, setBidLocations] = useState([]);
+  const [nowTime, setNowTime] = useState(() => new Date());
+
+  useEffect(() => {
+    const id = setInterval(() => setNowTime(new Date()), 1000);
+    return () => clearInterval(id);
+  }, []);
 
   const fetchBids = async () => {
     setLoading(true);
     setError(null);
     try {
-      const [sellerRes, bidsRes, participationsRes, locationsRes] = await Promise.all([
+      const [
+        sellerRes,
+        bidsRes,
+        myParticipationsRes,
+        allParticipationsRes,
+        locationsRes,
+      ] = await Promise.all([
         axios.get(`/sellers?mobile=${mobile}`),
         axios.get("/bids"),
         axios.get(`/participatebids?mobile=${mobile}`),
+        axios.get("/participatebids"),
         axios.get("/bid-locations"),
       ]);
 
@@ -59,7 +73,9 @@ const SupplierBidList = () => {
 
       const items = bidsRes.data?.data || bidsRes.data || [];
       const myParticipations =
-        participationsRes.data?.data || participationsRes.data || [];
+        myParticipationsRes.data?.data || myParticipationsRes.data || [];
+      const allP =
+        allParticipationsRes.data?.data || allParticipationsRes.data || [];
       const locations = locationsRes.data?.data || locationsRes.data || [];
 
       const relevantBids = items.filter((bid) =>
@@ -68,6 +84,7 @@ const SupplierBidList = () => {
 
       setBids(relevantBids);
       setParticipations(myParticipations);
+      setAllParticipations(allP);
       setBidLocations(locations);
     } catch (error) {
       setError("Failed to fetch bid data.");
@@ -79,6 +96,34 @@ const SupplierBidList = () => {
   useEffect(() => {
     fetchBids();
   }, [commodityNames, mobile]);
+
+  const getBidEndDateTime = (bid) => {
+    const bidDateStr = bid.bidDate ? bid.bidDate.split("T")[0] : "";
+    if (!bidDateStr || !bid.endTime) return null;
+    const [year, month, day] = bidDateStr.split("-").map(Number);
+    const [endHours, endMinutes] = String(bid.endTime).split(":").map(Number);
+    if (!year || !month || !day || Number.isNaN(endHours) || Number.isNaN(endMinutes)) {
+      return null;
+    }
+    return new Date(year, month - 1, day, endHours, endMinutes, 0, 0);
+  };
+
+  const formatCountdown = (msRemaining) => {
+    const totalSeconds = Math.max(0, Math.floor(msRemaining / 1000));
+    const hours = String(Math.floor(totalSeconds / 3600)).padStart(2, "0");
+    const minutes = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, "0");
+    const seconds = String(totalSeconds % 60).padStart(2, "0");
+    return `${hours}:${minutes}:${seconds}`;
+  };
+
+  const participantCountByBidId = useMemo(() => {
+    const map = {};
+    allParticipations.forEach((p) => {
+      if (!p?.bidId) return;
+      map[p.bidId] = (map[p.bidId] || 0) + 1;
+    });
+    return map;
+  }, [allParticipations]);
 
   const handleParticipate = (bid) => {
     setSelectedBid(bid);
@@ -125,8 +170,7 @@ const SupplierBidList = () => {
   };
 
   const filteredBids = useMemo(() => {
-    const now = new Date();
-    const todayStr = now.toISOString().split("T")[0];
+    const todayStr = nowTime.toISOString().split("T")[0];
 
     return bids
       .filter((bid) => {
@@ -136,23 +180,13 @@ const SupplierBidList = () => {
           return false;
         }
 
-        const [year, month, day] = bidDateStr.split("-").map(Number);
-        const [endHours, endMinutes] = bid.endTime.split(":").map(Number);
-        const bidEndDateTime = new Date(
-          year,
-          month - 1,
-          day,
-          endHours,
-          endMinutes,
-          0,
-          0,
-        );
-
+        const bidEndDateTime = getBidEndDateTime(bid);
+        if (!bidEndDateTime) return false;
         const isParticipated = participations.some((p) => p.bidId === bid._id);
-        const isClosed = bid.status === "closed" || now >= bidEndDateTime;
+        const isClosed = bid.status === "closed" || nowTime >= bidEndDateTime;
 
         if (activeTab === "active") {
-          return bid.status === "active" && now < bidEndDateTime;
+          return bid.status === "active" && nowTime < bidEndDateTime;
         } else if (activeTab === "participated") {
           return isParticipated;
         } else if (activeTab === "closed") {
@@ -161,7 +195,7 @@ const SupplierBidList = () => {
         return false;
       })
       .sort((a, b) => new Date(b.bidDate) - new Date(a.bidDate));
-  }, [bids, participations, activeTab]);
+  }, [bids, participations, activeTab, nowTime]);
 
   const groupedBids = useMemo(() => {
     const groups = {};
@@ -172,6 +206,13 @@ const SupplierBidList = () => {
     return Object.entries(groups).sort(([a], [b]) => a.localeCompare(b));
   }, [filteredBids]);
 
+  useEffect(() => {
+    const groupNames = groupedBids.map(([name]) => name);
+    if (groupedBids.length > 0 && (!selectedGroup || !groupNames.includes(selectedGroup))) {
+      setSelectedGroup(groupedBids[0][0]);
+    }
+  }, [groupedBids, selectedGroup]);
+
   const bidCount = filteredBids.length;
 
   const renderBidCard = (bid) => {
@@ -179,6 +220,18 @@ const SupplierBidList = () => {
     const participation = isParticipated
       ? participations.find((p) => p.bidId === bid._id)
       : null;
+    const participationStatus = (participation?.status || "pending").toLowerCase();
+    const bidEndDateTime = getBidEndDateTime(bid);
+    const isClosed = bid.status === "closed" || (bidEndDateTime ? nowTime >= bidEndDateTime : false);
+    const countdownText = bidEndDateTime
+      ? formatCountdown(bidEndDateTime.getTime() - nowTime.getTime())
+      : "00:00:00";
+    const participantCount = participantCountByBidId[bid._id] || 0;
+    const hasNoParticipants = participantCount === 0;
+    const qualityText = Object.entries(bid.parameters || {})
+      .filter(([, value]) => String(value ?? "").trim() !== "" && String(value) !== "0")
+      .map(([key, value]) => `${key}: ${value}%`)
+      .join(", ");
 
     return (
       <div
@@ -195,20 +248,23 @@ const SupplierBidList = () => {
               <p className="text-sm text-slate-600">
                 {bid.commodity} - {bid.origin}
               </p>
+              <p className="text-sm font-semibold text-red-600 mt-1">
+                End time: {bid.endTime} • {isClosed ? "Closed" : countdownText}
+              </p>
             </div>
             {isParticipated && (
               <div
-                className={`text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1.5 ${participation.status === "accepted" ? "bg-green-100 text-green-700" : participation.status === "rejected" ? "bg-red-100 text-red-700" : "bg-blue-100 text-blue-700"}`}
+                className={`text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1.5 ${participationStatus === "accepted" ? "bg-green-100 text-green-700" : participationStatus === "rejected" ? "bg-red-100 text-red-700" : "bg-blue-100 text-blue-700"}`}
               >
-                {participation.status === "accepted" ? (
+                {participationStatus === "accepted" ? (
                   <FaCheckCircle />
-                ) : participation.status === "rejected" ? (
+                ) : participationStatus === "rejected" ? (
                   <FaTimesCircle />
                 ) : (
                   <FaHourglassHalf />
                 )}
-                {participation.status.charAt(0).toUpperCase() +
-                  participation.status.slice(1)}
+                {participationStatus.charAt(0).toUpperCase() +
+                  participationStatus.slice(1)}
               </div>
             )}
           </div>
@@ -223,6 +279,12 @@ const SupplierBidList = () => {
             <div>
               <p className="text-slate-500">Company Rate</p>
               <p className="font-semibold text-slate-700">₹{bid.rate}</p>
+            </div>
+            <div className="col-span-2">
+              <p className="text-slate-500">Quality Parameters</p>
+              <p className="font-semibold text-slate-700">
+                {qualityText || "N/A"}
+              </p>
             </div>
             {isParticipated && (
               <>
@@ -245,10 +307,17 @@ const SupplierBidList = () => {
         <div className="bg-slate-50/70 px-5 py-3">
           <button
             onClick={() => handleParticipate(bid)}
-            className="w-full flex items-center justify-center gap-2 text-sm font-bold text-emerald-600 hover:bg-emerald-50 rounded-lg py-2 transition-colors"
+            disabled={isClosed}
+            className={`w-full flex items-center justify-center gap-2 text-sm font-bold rounded-lg py-2 transition-colors ${isClosed ? "text-slate-400 cursor-not-allowed" : "text-emerald-600 hover:bg-emerald-50"}`}
           >
             <FaRegHandPointer />
-            {isParticipated ? "Update Participation" : "Participate Now"}
+            {isClosed
+              ? activeTab === "closed" && hasNoParticipants
+                ? "Closed • No participants"
+                : "Bid Closed"
+              : isParticipated
+                ? "Update Participation"
+                : "Participate Now"}
           </button>
         </div>
       </div>
@@ -319,8 +388,41 @@ const SupplierBidList = () => {
               No {activeTab} bids found for your selected commodities.
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredBids.map(renderBidCard)}
+            <div className="space-y-6">
+              {groupedBids.map(([groupName, groupBids]) => (
+                <div
+                  key={groupName}
+                  className="rounded-2xl border border-slate-200 bg-white overflow-hidden"
+                >
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setSelectedGroup((prev) =>
+                        prev === groupName ? null : groupName,
+                      )
+                    }
+                    className="w-full flex items-center justify-between px-5 py-4 bg-slate-50 hover:bg-slate-100 transition-colors"
+                  >
+                    <div className="text-left">
+                      <p className="text-sm font-bold text-slate-800">
+                        {groupName}
+                      </p>
+                      <p className="text-xs text-slate-500">
+                        {groupBids.length} bid(s)
+                      </p>
+                    </div>
+                    <div className="text-xs font-semibold text-slate-600">
+                      {selectedGroup === groupName ? "Hide" : "Show"}
+                    </div>
+                  </button>
+
+                  {selectedGroup === groupName && (
+                    <div className="p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {groupBids.map(renderBidCard)}
+                    </div>
+                  )}
+                </div>
+              ))}
             </div>
           )}
         </div>
