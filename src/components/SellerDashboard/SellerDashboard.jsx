@@ -152,50 +152,30 @@ const SellerDashboard = () => {
       <AdminPageShell noContentCard>
         <div className="min-h-screen bg-gradient-to-br from-slate-100 via-white to-slate-200 p-4 sm:p-6 space-y-8">
           <div className="relative overflow-hidden flex justify-between items-center bg-gradient-to-br from-emerald-500 to-green-600 p-6 rounded-3xl shadow-xl text-white">
-            {/* LEFT SIDE */}
             <div>
               <h1 className="text-2xl sm:text-3xl font-bold">
-                Welcome, Mr. {user?.name} 👋
+                Welcome, Mr. {user?.name}
               </h1>
               <p className="text-emerald-100 text-sm">
                 Manage your business efficiently
               </p>
             </div>
 
-            {/* RIGHT SIDE (Badge + Bell FIXED) */}
             <div className="flex items-center gap-4">
-              {/* ✅ Seller Badge */}
-              <div className="flex flex-col items-end leading-tight">
-                {/* Top Row */}
-                <div className="flex items-center gap-2">
-                  {/* Single Icon */}
-                  <img
-                    src="/icons/favicon-16x16.png"
-                    alt="logo"
-                    className="w-4 h-4 rounded-sm"
-                  />
+              <div className="flex items-center gap-3">
+                <img
+                  src="/logo/logo.png"
+                  alt="logo"
+                  className="w-10 h-10 rounded-xl shadow"
+                />
 
-                  {/* Verified Tick */}
-                  <div className="relative flex items-center justify-center">
-                    <span className="w-5 h-5 flex items-center justify-center rounded-full bg-blue-500 text-white text-[10px]">
-                      ✓
-                    </span>
-                    <span className="absolute inset-0 rounded-full bg-blue-400 opacity-50 animate-pulseSlow"></span>
-                  </div>
-                </div>
-
-                {/* Bottom Row */}
-                <div className="flex items-center gap-1 text-[10px] sm:text-xs text-white/90">
-                  <img
-                    src="/icons/favicon-16x16.png"
-                    alt="logo"
-                    className="w-3 h-3 rounded-sm"
-                  />
-                  <span>Trustable Seller</span>
+                <div className="text-xs sm:text-sm">
+                  <p className="font-semibold">Verified Seller</p>
+                  <p className="text-emerald-100 text-[10px]">
+                    Trusted Account
+                  </p>
                 </div>
               </div>
-
-              {/* 🔔 Notification Bell */}
               <div
                 className="relative cursor-pointer p-3 bg-white/20 rounded-2xl hover:bg-white/30 transition"
                 onClick={() => setShowPopup(true)}
@@ -213,11 +193,11 @@ const SellerDashboard = () => {
               </div>
             </div>
           </div>{" "}
-          <div className="grid grid-cols-3 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {dashboardData.map((item, i) => (
               <div
                 key={i}
-                className="bg-white p-3 rounded-2xl shadow hover:shadow-xl transition"
+                className="bg-white p-4 rounded-2xl shadow-md border border-slate-200 hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
               >
                 <Cards {...item} />
               </div>
