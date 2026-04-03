@@ -166,7 +166,7 @@ const SellerDashboard = () => {
                 <img
                   src="/icons/favicon-16x16.png"
                   alt="logo"
-                  className="w-10 h-10 rounded-xl shadow"
+                  className="w-4 h-4 rounded-xl shadow"
                 />
 
                 <div className="text-xs sm:text-sm">

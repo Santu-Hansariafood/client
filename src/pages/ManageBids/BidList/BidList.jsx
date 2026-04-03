@@ -198,7 +198,7 @@ const BidList = () => {
     "Consignee",
     "Origin",
     "Commodity",
-    "Parameters",
+    // "Parameters",
     "Quantity",
     "Rate",
     "Bid Date",
@@ -246,10 +246,10 @@ const BidList = () => {
     bid.consignee,
     bid.origin,
     bid.commodity,
-    Object.entries(bid.parameters || {})
-      .filter(([, value]) => value !== "0")
-      .map(([key, value]) => `${key}: ${value}%`)
-      .join(", "),
+    // Object.entries(bid.parameters || {})
+    //   .filter(([, value]) => value !== "0")
+    //   .map(([key, value]) => `${key}: ${value}%`)
+    //   .join(", "),
     bid.quantity,
     bid.rate,
     formatDate(bid.bidDate),
