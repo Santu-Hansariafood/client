@@ -18,9 +18,10 @@ const PopupBox = lazy(() => import("../../../common/PopupBox/PopupBox"));
 
 const SupplierBidList = () => {
   const navigate = useNavigate();
-  const { userRole } = useAuth();
+  const { userRole, mobile: authMobile } = useAuth();
   const location = useLocation();
-  const { mobile } = location.state || {};
+  const { mobile: routeMobile } = location.state || {};
+  const mobile = routeMobile || authMobile;
 
   const [bids, setBids] = useState([]);
   const [participations, setParticipations] = useState([]);
@@ -37,6 +38,7 @@ const SupplierBidList = () => {
   const [selectedGroup, setSelectedGroup] = useState(null);
   const [bidLocations, setBidLocations] = useState([]);
   const [nowTime, setNowTime] = useState(() => new Date());
+  const [serverNow, setServerNow] = useState(null);
 
   useEffect(() => {
     const id = setInterval(() => setNowTime(new Date()), 1000);
@@ -48,28 +50,42 @@ const SupplierBidList = () => {
     setLoading(true);
     setError(null);
     try {
-      const res = await axios.get(`/bids/supplier-today?mobile=${mobile}`);
+      const res = await axios.get(
+        `/bids/supplier-today?mobile=${encodeURIComponent(mobile)}`,
+      );
       const payload = res.data?.data || res.data || {};
 
       const items = payload.bids || [];
       const myParticipations = payload.myParticipations || [];
       const counts = payload.participantCounts || {};
       const locations = payload.bidLocations || [];
+      const serverNowValue = payload.serverNow || null;
 
       setBids(items);
       setParticipations(myParticipations);
       setParticipantCounts(counts);
       setBidLocations(locations);
-    } catch (error) {
-      setError("Failed to fetch bid data.");
+      setServerNow(serverNowValue);
+    } catch (err) {
+      const message =
+        err?.response?.data?.message ||
+        err?.message ||
+        "Failed to fetch bid data.";
+      setError(message);
     } finally {
       setLoading(false);
     }
   }, [mobile]);
 
   useEffect(() => {
+    if (!mobile) {
+      setError("Mobile number is required.");
+      setLoading(false);
+      return;
+    }
+
     fetchBids();
-  }, [fetchBids]);
+  }, [fetchBids, mobile]);
 
   const getBidEndDateTime = (bid) => {
     const bidDateStr = bid.bidDate ? bid.bidDate.split("T")[0] : "";
@@ -135,7 +151,9 @@ const SupplierBidList = () => {
   };
 
   const filteredBids = useMemo(() => {
-    const todayStr = nowTime.toISOString().split("T")[0];
+    const todayStr = (serverNow ? new Date(serverNow) : nowTime)
+      .toISOString()
+      .split("T")[0];
 
     return bids
       .filter((bid) => {
@@ -166,7 +184,7 @@ const SupplierBidList = () => {
         const bEnd = getBidEndDateTime(b)?.getTime() ?? 0;
         return bEnd - aEnd;
       });
-  }, [bids, participations, activeTab, nowTime]);
+  }, [bids, participations, activeTab, nowTime, serverNow]);
 
   const groupedBids = useMemo(() => {
     const groups = {};

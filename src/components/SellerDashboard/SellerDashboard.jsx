@@ -232,7 +232,11 @@ const SellerDashboard = () => {
               <h3 className="font-bold mb-4">Quick Actions</h3>
 
               {[
-                { label: "Active Bids", link: "/Supplier-Bid-List" },
+                {
+                  label: "Active Bids",
+                  action: () =>
+                    navigate("/Supplier-Bid-List", { state: { mobile } }),
+                },
                 { label: "Orders", link: "/manage-order/list-self-order" },
                 { label: "Notifications", action: () => setShowPopup(true) },
               ].map((l, i) => (
