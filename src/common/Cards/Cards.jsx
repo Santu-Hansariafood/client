@@ -2,7 +2,7 @@ import { useCallback } from "react";
 import { FaArrowRight } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 
-const Cards = ({ title, count, icon: Icon, link, state }) => {
+const Cards = ({ title, count, icon: Icon, link, state, color }) => {
   const navigate = useNavigate();
 
   const handleRedirect = useCallback(() => {
@@ -11,34 +11,109 @@ const Cards = ({ title, count, icon: Icon, link, state }) => {
 
   return (
     <article
-      className="relative bg-white/50 p-4 sm:p-6 lg:p-8 rounded-2xl sm:rounded-3xl transition-all duration-300 hover:bg-white group cursor-pointer overflow-hidden"
       onClick={handleRedirect}
       role="button"
       aria-label={`View details for ${title}`}
+      className="
+        relative group cursor-pointer overflow-hidden
+        rounded-2xl sm:rounded-3xl
+        p-3 sm:p-5 lg:p-6
+
+        /* Base Card Look (IMPORTANT) */
+        bg-white border border-slate-200 shadow-md
+
+        /* Glass Effect */
+        backdrop-blur-xl
+
+        /* Smooth Animation */
+        transition-all duration-300 ease-out
+
+        /* Hover */
+        hover:shadow-2xl hover:-translate-y-1
+        active:scale-95
+      "
     >
-      <div className="relative z-10">
+      {/* Gradient Accent Background */}
+      <div
+        className={`absolute inset-0 opacity-10 group-hover:opacity-20 transition-all duration-300 bg-gradient-to-br ${color}`}
+      />
+
+      {/* Glow Effect */}
+      <div className="absolute -top-10 -right-10 w-24 h-24 bg-slate-100 rounded-full opacity-40 blur-2xl group-hover:scale-125 transition-all duration-500"></div>
+
+      {/* Content */}
+      <div className="relative z-10 flex flex-col items-start">
+        
+        {/* Icon */}
         <div
-          className="flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 bg-gradient-to-br from-emerald-500 to-emerald-700 text-white rounded-xl lg:rounded-2xl mb-4 sm:mb-6 
-          group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-lg shadow-emerald-200"
+          className={`
+            flex items-center justify-center
+            w-9 h-9 sm:w-11 sm:h-11 lg:w-12 lg:h-12
+            rounded-xl
+
+            bg-gradient-to-br ${color}
+            text-white shadow-md
+
+            transition-all duration-300
+            group-hover:scale-110 group-hover:rotate-6
+          `}
         >
-          <Icon className="text-xl sm:text-2xl" loading="lazy" aria-hidden="true" />
+          <Icon className="text-lg sm:text-xl" />
         </div>
-        <h3 className="text-[10px] sm:text-xs lg:text-sm font-semibold text-slate-500 uppercase tracking-wider mb-1 sm:mb-2 group-hover:text-emerald-700 transition-colors">
+
+        {/* Title */}
+        <h3 className="
+          mt-3 sm:mt-4
+          text-[10px] sm:text-xs
+          font-semibold
+          text-slate-500 uppercase tracking-wider
+          group-hover:text-slate-700
+        ">
           {title}
         </h3>
-        <p className="text-2xl sm:text-3xl lg:text-4xl font-black text-slate-800 tracking-tight">
+
+        {/* Count / Action */}
+        <p className="
+          text-lg sm:text-2xl lg:text-3xl
+          font-bold
+          text-slate-800
+          tracking-tight
+        ">
           {count}
         </p>
       </div>
 
-      <div className="absolute bottom-0 right-0 w-24 h-24 sm:w-28 sm:h-28 lg:w-32 lg:h-32 bg-emerald-50 rounded-tl-[100px] -mr-12 -mb-12 lg:-mr-16 lg:-mb-16 group-hover:scale-150 transition-transform duration-500 opacity-50"></div>
-
+      {/* Arrow Button */}
       <div
-        className="absolute top-4 right-4 sm:top-6 sm:right-6 lg:top-8 lg:right-8 p-2 sm:p-3 bg-slate-50 rounded-xl lg:rounded-2xl text-slate-400 
-        group-hover:bg-emerald-600 group-hover:text-white group-hover:rotate-45 transition-all duration-300 shadow-sm"
+        className="
+          absolute top-2 right-2 sm:top-4 sm:right-4
+          p-1.5 sm:p-2
+          rounded-lg
+
+          bg-slate-100 text-slate-400
+
+          transition-all duration-300
+          group-hover:bg-gradient-to-br group-hover:from-slate-800 group-hover:to-slate-900
+          group-hover:text-white group-hover:rotate-45
+        "
       >
-        <FaArrowRight className="text-base lg:text-lg" loading="lazy" aria-hidden="true" />
+        <FaArrowRight className="text-xs sm:text-sm" />
       </div>
+
+      {/* Bottom Curve Accent */}
+      <div className="
+        absolute bottom-0 right-0
+        w-20 h-20 sm:w-24 sm:h-24
+        bg-slate-100
+        rounded-tl-[100px]
+        -mr-10 -mb-10
+        opacity-40
+        group-hover:scale-150
+        transition-transform duration-500
+      "></div>
+
+      {/* Subtle Border Glow */}
+      <div className="absolute inset-0 rounded-2xl ring-1 ring-inset ring-white/40 pointer-events-none"></div>
     </article>
   );
 };

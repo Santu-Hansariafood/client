@@ -134,24 +134,47 @@ const BuyerDashboard = () => {
           </section>
         )}
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3 sm:gap-4 md:gap-5">
           {dashboardData.map((item, index) => (
             <div
               key={index}
-              className="group relative rounded-3xl overflow-hidden"
+              className="group relative rounded-2xl overflow-hidden"
             >
               <div
-                className={`absolute inset-0 bg-gradient-to-br ${item.color} opacity-0 group-hover:opacity-20 blur-2xl transition`}
-              ></div>
+                className="
+      relative 
+      bg-white 
+      border border-slate-200 
+      shadow-md 
+      rounded-2xl 
+      p-3 sm:p-4
+      transition-all duration-300
 
-              <div className="relative bg-white/80 backdrop-blur-xl border border-white/40 shadow-xl rounded-3xl p-6 hover:shadow-2xl transition-all duration-500 hover:-translate-y-2">
-                <Cards
-                  title={item.title}
-                  count={item.count}
-                  icon={item.icon}
-                  link={item.link}
-                  color={item.color}
-                />
+      /* Always visible as card */
+      hover:shadow-2xl hover:-translate-y-1
+
+      /* Mobile touch feedback */
+      active:scale-95
+    "
+              >
+                {/* Stronger Gradient Background (VISIBLE even without hover) */}
+                <div
+                  className={`absolute inset-0 opacity-10 group-hover:opacity-20 transition-all duration-300 bg-gradient-to-br ${item.color}`}
+                ></div>
+
+                {/* Icon Background Glow */}
+                <div className="absolute -top-6 -right-6 w-20 h-20 bg-slate-100 rounded-full opacity-40"></div>
+
+                {/* Content */}
+                <div className="relative z-10">
+                  <Cards
+                    title={item.title}
+                    count={item.count}
+                    icon={item.icon}
+                    link={item.link}
+                    color={item.color}
+                  />
+                </div>
               </div>
             </div>
           ))}
