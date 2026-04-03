@@ -35,7 +35,6 @@ const SupplierBidList = () => {
   const [quantity, setQuantity] = useState("");
   const [loadingFrom, setLoadingFrom] = useState("");
   const [remarks, setRemarks] = useState("");
-  const [selectedGroup, setSelectedGroup] = useState(null);
   const [bidLocations, setBidLocations] = useState([]);
   const [nowTime, setNowTime] = useState(() => new Date());
   const [serverNow, setServerNow] = useState(null);
@@ -195,19 +194,7 @@ const SupplierBidList = () => {
     return Object.entries(groups).sort(([a], [b]) => a.localeCompare(b));
   }, [filteredBids]);
 
-  useEffect(() => {
-    const groupNames = groupedBids.map(([name]) => name);
-    if (groupedBids.length > 0 && (!selectedGroup || !groupNames.includes(selectedGroup))) {
-      setSelectedGroup(groupedBids[0][0]);
-    }
-  }, [groupedBids, selectedGroup]);
-
   const bidCount = filteredBids.length;
-  const selectedGroupBids = useMemo(() => {
-    if (!selectedGroup) return [];
-    const match = groupedBids.find(([groupName]) => groupName === selectedGroup);
-    return match ? match[1] : [];
-  }, [groupedBids, selectedGroup]);
 
   const renderBidCard = (bid) => {
     const isParticipated = participations.some((p) => p.bidId === bid._id);
@@ -393,41 +380,24 @@ const SupplierBidList = () => {
             </div>
           ) : (
             <div className="space-y-4">
-              <div className="rounded-2xl border border-slate-200 bg-white p-3 sm:p-4">
-                <p className="text-sm font-semibold text-slate-700 mb-3">
-                  Groups (click to view bids)
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {groupedBids.map(([groupName, groupBids]) => (
-                    <button
-                      key={groupName}
-                      type="button"
-                      onClick={() => setSelectedGroup(groupName)}
-                      className={`px-4 py-2 rounded-xl text-sm font-bold border transition-colors ${
-                        selectedGroup === groupName
-                          ? "bg-emerald-600 text-white border-emerald-600"
-                          : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
-                      }`}
-                    >
-                      {groupName} ({groupBids.length})
-                    </button>
-                  ))}
+              {groupedBids.map(([groupName, groupBids]) => (
+                <div
+                  key={groupName}
+                  className="rounded-2xl border border-emerald-100 bg-white p-4 shadow-lg shadow-emerald-900/5"
+                >
+                  <div className="flex items-center justify-between mb-4">
+                    <p className="text-sm font-bold text-slate-800">
+                      {groupName} Bids
+                    </p>
+                    <p className="text-xs font-semibold text-slate-500">
+                      {groupBids.length} bid(s)
+                    </p>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {groupBids.map(renderBidCard)}
+                  </div>
                 </div>
-              </div>
-
-              <div className="rounded-2xl border border-emerald-100 bg-white p-4 shadow-lg shadow-emerald-900/5">
-                <div className="flex items-center justify-between mb-4">
-                  <p className="text-sm font-bold text-slate-800">
-                    {selectedGroup || "Group"} Bids
-                  </p>
-                  <p className="text-xs font-semibold text-slate-500">
-                    {selectedGroupBids.length} bid(s)
-                  </p>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {selectedGroupBids.map(renderBidCard)}
-                </div>
-              </div>
+              ))}
             </div>
           )}
         </div>
