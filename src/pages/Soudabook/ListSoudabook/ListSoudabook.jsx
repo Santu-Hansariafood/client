@@ -15,7 +15,7 @@ const Pagination = lazy(
 
 const ListSoudabook = () => {
   const navigate = useNavigate();
-  const { userRole, user } = useAuth();
+  const { userRole, user, mobile } = useAuth();
   const [saudaData, setSaudaData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -26,7 +26,10 @@ const ListSoudabook = () => {
     const fetchSaudaData = async () => {
       setLoading(true);
       try {
-        const response = await axios.get("/self-order");
+        const [response, sellersRes] = await Promise.all([
+          axios.get("/self-order"),
+          axios.get("/sellers"),
+        ]);
         let data = response.data?.data || response.data || [];
 
         if (userRole === "Buyer") {
@@ -46,6 +49,16 @@ const ListSoudabook = () => {
 
             return matchId || matchName;
           });
+        } else if (userRole === "Seller") {
+          const seller = sellersRes.data.find((s) =>
+            s.phoneNumbers?.some((p) => String(p.value) === String(mobile))
+          );
+          data = data.filter((item) => {
+            return (
+              String(item.sellerMobile) === String(mobile) ||
+              (seller && String(item.supplier) === String(seller._id))
+            );
+          });
         }
 
         setSaudaData(data);
@@ -58,7 +71,7 @@ const ListSoudabook = () => {
     };
 
     fetchSaudaData();
-  }, [userRole, user]);
+  }, [userRole, user, mobile]);
 
   const sortedSaudaData = useMemo(() => {
     const copy = Array.isArray(saudaData) ? [...saudaData] : [];

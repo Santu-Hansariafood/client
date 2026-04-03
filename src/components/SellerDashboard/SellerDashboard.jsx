@@ -7,6 +7,7 @@ import {
   FaBoxOpen,
   FaTruckMoving,
   FaChevronRight,
+  FaBook,
 } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext/AuthContext";
@@ -28,7 +29,7 @@ const SellerDashboard = () => {
   const [sellerBidCount, setSellerBidCount] = useState(0);
   const [participateBidCount, setParticipateBidCount] = useState(0);
   const [orderCount, setOrderCount] = useState(0);
-  const [loadingCount, setLoadingCount] = useState(0);
+  const [saudaCount, setSaudaCount] = useState(0);
   const [notificationCount, setNotificationCount] = useState(0);
   const [showPopup, setShowPopup] = useState(false);
   const [confirmedBids, setConfirmedBids] = useState([]);
@@ -44,14 +45,13 @@ const SellerDashboard = () => {
       try {
         setLoading(true);
 
-        const [sellersRes, bidsRes, participateRes, confirmBidsRes, ordersRes, loadingRes] =
+        const [sellersRes, bidsRes, participateRes, confirmBidsRes, ordersRes] =
           await Promise.all([
             axios.get("/sellers"),
             axios.get("/bids"),
             axios.get("/participatebids"),
             axios.get("/confirm-bid"),
             axios.get("/self-order"),
-            axios.get("/loading-entries"),
           ]);
 
         const sellers = sellersRes?.data || [];
@@ -59,7 +59,6 @@ const SellerDashboard = () => {
         const participate = participateRes?.data?.data || participateRes?.data || [];
         const confirmBids = confirmBidsRes?.data?.data || confirmBidsRes?.data || [];
         const orders = ordersRes?.data?.data || ordersRes?.data || [];
-        const loadings = loadingRes?.data?.data || loadingRes?.data || [];
 
         const seller = sellers.find((s) =>
           s?.phoneNumbers?.some((p) => String(p?.value) === String(mobile)),
@@ -92,11 +91,7 @@ const SellerDashboard = () => {
           );
         });
         setOrderCount(sellerOrders.length);
-
-        const sellerLoadings = loadings.filter(
-          (e) => String(e.supplier) === String(seller._id)
-        );
-        setLoadingCount(sellerLoadings.length);
+        setSaudaCount(sellerOrders.length);
 
         const confirmed = confirmBids
           .filter((bid) => String(bid?.phone) === String(mobile) && bid?.status)
@@ -148,10 +143,10 @@ const SellerDashboard = () => {
       color: "from-blue-400 to-indigo-600",
     },
     {
-      title: "Loading",
-      count: loadingCount,
-      icon: FaTruckMoving,
-      link: "/Loading-Entry/list-loading-entry",
+      title: "Sauda Book",
+      count: saudaCount,
+      icon: FaBook,
+      link: "/sodabook/list",
       color: "from-orange-400 to-amber-500",
     },
     {
