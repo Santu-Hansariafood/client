@@ -1,6 +1,10 @@
 import { Router } from "express";
 import Bid from "../models/Bid.js";
 import Notification from "../models/Notification.js";
+import Seller from "../models/Seller.js";
+import ParticipateBid from "../models/ParticipateBid.js";
+import BidLocation from "../models/BidLocation.js";
+import { invalidate } from "../middleware/cache.js";
 
 const router = Router();
 
@@ -36,6 +40,82 @@ const closeExpiredBids = async () => {
     console.error("Error auto-closing bids:", error);
   }
 };
+
+router.get("/supplier-today", async (req, res) => {
+  try {
+    await closeExpiredBids();
+
+    const mobile = String(req.query.mobile || "").trim();
+    const dateStr = String(req.query.date || "").trim();
+
+    if (!mobile) {
+      return res.status(400).json({ message: "mobile is required" });
+    }
+
+    const seller = await Seller.findOne({ "phoneNumbers.value": mobile }).lean();
+    if (!seller) {
+      return res.status(404).json({ message: "Seller not found" });
+    }
+
+    const sellerCommodities = Array.isArray(seller.commodities)
+      ? seller.commodities.map((c) => c?.name).filter(Boolean)
+      : [];
+
+    const baseDate = dateStr ? new Date(dateStr) : new Date();
+    const dayStr = baseDate.toISOString().split("T")[0];
+    const start = new Date(`${dayStr}T00:00:00.000Z`);
+    const end = new Date(`${dayStr}T00:00:00.000Z`);
+    end.setUTCDate(end.getUTCDate() + 1);
+
+    const bids = await Bid.find({
+      bidDate: { $gte: start, $lt: end },
+      ...(sellerCommodities.length > 0
+        ? { commodity: { $in: sellerCommodities } }
+        : {}),
+    })
+      .select(
+        "_id type group consignee origin commodity parameters notes quantity rate bidDate startTime endTime paymentTerms delivery company unit status closedAt createdByMobile createdByRole",
+      )
+      .sort({ createdAt: -1 })
+      .lean();
+
+    const bidIds = bids.map((b) => b._id);
+
+    const myParticipations = bidIds.length
+      ? await ParticipateBid.find({ mobile, bidId: { $in: bidIds } })
+          .sort({ createdAt: -1 })
+          .lean()
+      : [];
+
+    const participantCountsAgg = bidIds.length
+      ? await ParticipateBid.aggregate([
+          { $match: { bidId: { $in: bidIds } } },
+          { $group: { _id: "$bidId", count: { $sum: 1 } } },
+        ])
+      : [];
+
+    const participantCounts = participantCountsAgg.reduce((acc, row) => {
+      if (!row?._id) return acc;
+      acc[String(row._id)] = row.count || 0;
+      return acc;
+    }, {});
+
+    const bidLocations = await BidLocation.find()
+      .select("_id name")
+      .sort({ name: 1 })
+      .lean();
+
+    res.json({
+      bids,
+      myParticipations,
+      participantCounts,
+      bidLocations,
+      serverNow: new Date().toISOString(),
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
 
 router.get("/", async (req, res) => {
   try {
@@ -100,6 +180,7 @@ router.post("/", async (req, res) => {
       status: finalStatus,
       closedAt,
     });
+    invalidate("/api/bids");
     res.status(201).json(item);
   } catch (error) {
     res.status(400).json({ message: error.message });
@@ -165,6 +246,7 @@ router.put("/:id", async (req, res) => {
       })
     ));
 
+    invalidate("/api/bids");
     res.json(updated);
   } catch (error) {
     res.status(400).json({ message: error.message });
@@ -179,6 +261,7 @@ router.delete("/:id", async (req, res) => {
       return res.status(404).json({ message: "Bid not found" });
     }
 
+    invalidate("/api/bids");
     res.json({ message: "Bid deleted successfully" });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -225,6 +308,7 @@ router.patch("/:id/status", async (req, res) => {
       { new: true }
     );
 
+    invalidate("/api/bids");
     res.json(updated);
   } catch (error) {
     res.status(400).json({ message: error.message });

@@ -23,10 +23,13 @@ router.get("/", async (req, res) => {
     const page = parseInt(req.query.page || "0", 10);
     const limit = parseInt(req.query.limit || "0", 10);
     const search = req.query.search || "";
+    const mobile = String(req.query.mobile || "").trim();
 
-    const query = search
-      ? { sellerName: { $regex: search, $options: "i" } }
-      : {};
+    const query = mobile
+      ? { "phoneNumbers.value": mobile }
+      : search
+        ? { sellerName: { $regex: search, $options: "i" } }
+        : {};
 
     if (page > 0 && limit > 0) {
       const items = await Seller.find(query)

@@ -24,7 +24,7 @@ const SupplierBidList = () => {
 
   const [bids, setBids] = useState([]);
   const [participations, setParticipations] = useState([]);
-  const [allParticipations, setAllParticipations] = useState([]);
+  const [participantCounts, setParticipantCounts] = useState({});
   const [activeTab, setActiveTab] = useState("all"); // "all", "active", "participated", "closed"
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -47,43 +47,17 @@ const SupplierBidList = () => {
     setLoading(true);
     setError(null);
     try {
-      const [
-        sellerRes,
-        bidsRes,
-        myParticipationsRes,
-        allParticipationsRes,
-        locationsRes,
-      ] = await Promise.all([
-        axios.get(`/sellers?mobile=${mobile}`),
-        axios.get("/bids"),
-        axios.get(`/participatebids?mobile=${mobile}`),
-        axios.get("/participatebids"),
-        axios.get("/bid-locations"),
-      ]);
+      const res = await axios.get(`/bids/supplier-today?mobile=${mobile}`);
+      const payload = res.data?.data || res.data || {};
 
-      const seller = sellerRes.data?.data?.[0] || sellerRes.data?.[0];
-      if (!seller) {
-        setError("Could not find seller information.");
-        setLoading(false);
-        return;
-      }
+      const items = payload.bids || [];
+      const myParticipations = payload.myParticipations || [];
+      const counts = payload.participantCounts || {};
+      const locations = payload.bidLocations || [];
 
-      const sellerCommodities = seller.commodities.map(c => c.name);
-
-      const items = bidsRes.data?.data || bidsRes.data || [];
-      const myParticipations =
-        myParticipationsRes.data?.data || myParticipationsRes.data || [];
-      const allP =
-        allParticipationsRes.data?.data || allParticipationsRes.data || [];
-      const locations = locationsRes.data?.data || locationsRes.data || [];
-
-      const relevantBids = items.filter((bid) =>
-        sellerCommodities.includes(bid.commodity),
-      );
-
-      setBids(relevantBids);
+      setBids(items);
       setParticipations(myParticipations);
-      setAllParticipations(allP);
+      setParticipantCounts(counts);
       setBidLocations(locations);
     } catch (error) {
       setError("Failed to fetch bid data.");
@@ -114,15 +88,6 @@ const SupplierBidList = () => {
     const seconds = String(totalSeconds % 60).padStart(2, "0");
     return `${hours}:${minutes}:${seconds}`;
   };
-
-  const participantCountByBidId = useMemo(() => {
-    const map = {};
-    allParticipations.forEach((p) => {
-      if (!p?.bidId) return;
-      map[p.bidId] = (map[p.bidId] || 0) + 1;
-    });
-    return map;
-  }, [allParticipations]);
 
   const handleParticipate = (bid) => {
     setSelectedBid(bid);
@@ -236,7 +201,7 @@ const SupplierBidList = () => {
     const countdownText = bidEndDateTime
       ? formatCountdown(bidEndDateTime.getTime() - nowTime.getTime())
       : "00:00:00";
-    const participantCount = participantCountByBidId[bid._id] || 0;
+    const participantCount = participantCounts[String(bid._id)] || 0;
     const hasNoParticipants = participantCount === 0;
     const qualityText = Object.entries(bid.parameters || {})
       .filter(([, value]) => String(value ?? "").trim() !== "" && String(value) !== "0")

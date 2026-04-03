@@ -3,6 +3,7 @@ import ParticipateBid from "../models/ParticipateBid.js";
 import Bid from "../models/Bid.js";
 import Notification from "../models/Notification.js";
 import Seller from "../models/Seller.js";
+import { invalidate } from "../middleware/cache.js";
 
 const router = Router();
 
@@ -94,6 +95,7 @@ router.post("/", async (req, res) => {
       })
     ]);
 
+    invalidate("/api/bids");
     res.status(201).json(item);
   } catch (error) {
     res.status(500).json({ message: error.message || "An unexpected error occurred." });
