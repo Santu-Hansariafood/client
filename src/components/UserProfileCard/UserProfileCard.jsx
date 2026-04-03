@@ -89,14 +89,10 @@ const UserProfileCard = ({ user }) => {
 
               <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/20 border border-white/30">
                 <img
-                  src="/logo/hansaria.png"
+                  src="/icons/favicon-16x16.png"
                   alt="Hansaria Food"
                   className="w-4 h-4 rounded-full object-cover"
                 />
-
-                <span className="text-[10px] text-white font-semibold">
-                  Hansaria Food
-                </span>
               </div>
             </div>
           )}
