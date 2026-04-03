@@ -35,6 +35,7 @@ const SupplierBidList = () => {
   const [quantity, setQuantity] = useState("");
   const [loadingFrom, setLoadingFrom] = useState("");
   const [remarks, setRemarks] = useState("");
+  const [sellerCompany, setSellerCompany] = useState("");
   const [bidLocations, setBidLocations] = useState([]);
   const [nowTime, setNowTime] = useState(() => new Date());
   const [serverNow, setServerNow] = useState(null);
@@ -115,16 +116,25 @@ const SupplierBidList = () => {
     const existingParticipation = participations.find(
       (p) => p.bidId === bid._id,
     );
+    const companies = Array.isArray(sellerInfo?.companies)
+      ? sellerInfo.companies.filter(Boolean)
+      : [];
     if (existingParticipation) {
       setRate(existingParticipation.rate || "");
       setQuantity(existingParticipation.quantity || "");
       setLoadingFrom(existingParticipation.loadingFrom || "");
       setRemarks(existingParticipation.remarks || "");
+      setSellerCompany(existingParticipation.sellerCompany || "");
     } else {
       setRate(bid.rate || "");
       setQuantity(bid.quantity || "");
       setLoadingFrom("");
       setRemarks("");
+      if (companies.length === 1) {
+        setSellerCompany(String(companies[0] || "").trim());
+      } else {
+        setSellerCompany("");
+      }
     }
     setIsPopupOpen(true);
   };
@@ -132,6 +142,13 @@ const SupplierBidList = () => {
   const handleConfirm = async () => {
     if (!rate || !quantity) {
       toast.error("Please enter a valid rate and quantity.");
+      return;
+    }
+    const companies = Array.isArray(sellerInfo?.companies)
+      ? sellerInfo.companies.filter(Boolean)
+      : [];
+    if (companies.length > 1 && !String(sellerCompany || "").trim()) {
+      toast.error("Please select your company.");
       return;
     }
     try {
@@ -142,6 +159,7 @@ const SupplierBidList = () => {
         quantity: Number(quantity),
         loadingFrom,
         remarks,
+        sellerCompany: String(sellerCompany || "").trim(),
       };
       await axios.post("/participatebids", participationData);
       toast.success("Participation successful!");
@@ -327,6 +345,11 @@ const SupplierBidList = () => {
       ? participations.find((p) => p.bidId === bid._id)
       : null;
     const participationStatus = (participation?.status || "pending").toLowerCase();
+    const isRevised =
+      participation?.createdAt &&
+      participation?.updatedAt &&
+      new Date(participation.updatedAt).getTime() >
+        new Date(participation.createdAt).getTime();
     const bidEndDateTime = getBidEndDateTime(bid);
     const isClosed = bid.status === "closed" || (bidEndDateTime ? nowTime >= bidEndDateTime : false);
     const countdownText = bidEndDateTime
@@ -409,6 +432,47 @@ const SupplierBidList = () => {
                     {participation.quantity} Tons
                   </p>
                 </div>
+                {participation?.sellerCompany && (
+                  <div className="col-span-2">
+                    <p className="text-slate-500">Your Company</p>
+                    <p className="font-semibold text-slate-700">
+                      {participation.sellerCompany}
+                    </p>
+                  </div>
+                )}
+                {participationStatus === "accepted" &&
+                  (participation?.acceptedRate || participation?.acceptedQuantity) && (
+                    <div className="col-span-2 grid grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-slate-500">Accepted Rate</p>
+                        <p className="font-semibold text-green-700">
+                          ₹{participation.acceptedRate ?? participation.rate}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-slate-500">Accepted Quantity</p>
+                        <p className="font-semibold text-green-700">
+                          {participation.acceptedQuantity ?? participation.quantity} Tons
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                {participationStatus === "rejected" &&
+                  String(participation?.adminNotes || "").trim() !== "" && (
+                    <div className="col-span-2">
+                      <p className="text-slate-500">Rejection Notes</p>
+                      <p className="font-semibold text-red-700">
+                        {participation.adminNotes}
+                      </p>
+                    </div>
+                  )}
+                {participationStatus === "pending" && isRevised && (
+                  <div className="col-span-2">
+                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-700">
+                      Revised
+                    </span>
+                  </div>
+                )}
               </>
             )}
           </div>
@@ -638,6 +702,31 @@ const SupplierBidList = () => {
             title={`Participate in: ${selectedBid.consignee}`}
           >
             <div className="space-y-4 p-1">
+              {Array.isArray(sellerInfo?.companies) &&
+                sellerInfo.companies.filter(Boolean).length > 0 && (
+                  <label className="block">
+                    <span className="text-sm font-medium text-slate-700">
+                      Your Company
+                    </span>
+                    <select
+                      className="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3 focus:ring-2 focus:ring-emerald-400/50 focus:border-emerald-400 outline-none bg-white"
+                      value={sellerCompany}
+                      onChange={(e) => setSellerCompany(e.target.value)}
+                      disabled={sellerInfo.companies.filter(Boolean).length === 1}
+                    >
+                      {sellerInfo.companies.filter(Boolean).length > 1 && (
+                        <option value="">Select Company</option>
+                      )}
+                      {sellerInfo.companies
+                        .filter(Boolean)
+                        .map((companyName) => (
+                          <option key={companyName} value={companyName}>
+                            {companyName}
+                          </option>
+                        ))}
+                    </select>
+                  </label>
+                )}
               <label className="block">
                 <span className="text-sm font-medium text-slate-700">
                   Your Rate

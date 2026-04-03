@@ -4,6 +4,7 @@ const participateBidSchema = new mongoose.Schema(
   {
     bidId: { type: mongoose.Schema.Types.ObjectId, ref: "Bid", required: true },
     mobile: { type: String, required: true },
+    sellerCompany: { type: String, default: "" },
     rate: { type: Number, required: true },
     quantity: { type: Number, required: true },
     loadingFrom: { type: String, default: "" },

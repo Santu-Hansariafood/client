@@ -52,10 +52,15 @@ router.get("/", async (req, res) => {
 
 router.post("/", async (req, res) => {
   try {
-    const { bidId, mobile, rate, quantity, loadingFrom, remarks } = req.body;
+    const { bidId, mobile, rate, quantity, loadingFrom, remarks, sellerCompany } =
+      req.body;
 
     if (!bidId || !mobile) {
       return res.status(400).json({ message: "Bid ID and Mobile are required." });
+    }
+
+    if (typeof rate !== "number" || typeof quantity !== "number") {
+      return res.status(400).json({ message: "Rate and quantity are required." });
     }
 
     const bid = await Bid.findById(bidId);
@@ -70,18 +75,51 @@ router.post("/", async (req, res) => {
         .json({ message: "This bid is closed and no longer accepting participations." });
     }
 
+    const seller = await Seller.findOne({ "phoneNumbers.value": mobile }).lean();
+    const sellerName = seller?.sellerName || "Unknown";
+    const sellerCompanies = Array.isArray(seller?.companies)
+      ? seller.companies.filter(Boolean)
+      : [];
+
+    const providedCompany = String(sellerCompany || "").trim();
+    let resolvedCompany = "";
+    if (sellerCompanies.length === 1) {
+      resolvedCompany = String(sellerCompanies[0] || "").trim();
+    } else if (sellerCompanies.length > 1) {
+      if (!providedCompany) {
+        return res
+          .status(400)
+          .json({ message: "Please select your company before participating." });
+      }
+      const match = sellerCompanies.find(
+        (c) => String(c || "").trim().toLowerCase() === providedCompany.toLowerCase(),
+      );
+      if (!match) {
+        return res.status(400).json({ message: "Invalid company selected." });
+      }
+      resolvedCompany = String(match || "").trim();
+    }
+
     const item = await ParticipateBid.findOneAndUpdate(
       { bidId, mobile },
-      { rate, quantity, loadingFrom, remarks },
+      { rate, quantity, loadingFrom, remarks, sellerCompany: resolvedCompany },
       { upsert: true, new: true, runValidators: true }
     );
+
+    const bidGroup = bid?.group || "N/A";
+    const bidConsignee = bid?.consignee || "N/A";
+    const bidOrigin = bid?.origin || "N/A";
+    const bidCommodity = bid?.commodity || "N/A";
+    const companyLabel = resolvedCompany || "N/A";
+
+    const message = `Bid: ${bidCommodity} (${bidOrigin} → ${bidConsignee}) • Group: ${bidGroup} • Seller: ${sellerName} (${mobile}) • Company: ${companyLabel} • Rate: ${rate} • Qty: ${quantity} • Participation: ${item._id}`;
 
     await Promise.all([
       Notification.create({
         recipient: "all",
         recipientRole: "Admin",
         title: "New Bid Participation",
-        message: `A new bid participation has been received for bid ${bid.commodity} from mobile ${mobile}. Rate: ${rate}, Qty: ${quantity}`,
+        message,
         type: "BidParticipation",
         relatedId: bid._id
       }),
@@ -89,7 +127,7 @@ router.post("/", async (req, res) => {
         recipient: "all",
         recipientRole: "Employee",
         title: "New Bid Participation",
-        message: `A new bid participation has been received for bid ${bid.commodity} from mobile ${mobile}. Rate: ${rate}, Qty: ${quantity}`,
+        message,
         type: "BidParticipation",
         relatedId: bid._id
       })
@@ -144,6 +182,11 @@ router.patch("/:id/status", async (req, res) => {
     await participation.save();
 
     const bid = await Bid.findById(participation.bidId);
+    const bidGroup = bid?.group || "N/A";
+    const bidConsignee = bid?.consignee || "N/A";
+    const bidOrigin = bid?.origin || "N/A";
+    const bidCommodity = bid?.commodity || "N/A";
+    const companyLabel = participation?.sellerCompany || "N/A";
 
     if (status === "accepted") {
       const ConfirmBid = (await import("../models/ConfirmBid.js")).default;
@@ -159,9 +202,13 @@ router.patch("/:id/status", async (req, res) => {
         acceptedByRole: participation.acceptedByRole,
       });
 
-      const sellerMsg = `Bid accepted for ${bid?.commodity || "bid"} at rate ₹${participation.acceptedRate}, qty ${participation.acceptedQuantity}. On ${participation.acceptedAt?.toLocaleString?.() || new Date().toLocaleString()}. Participation ID: ${participation._id}`;
+      const acceptedAtText = participation.acceptedAt
+        ? new Date(participation.acceptedAt).toLocaleString()
+        : new Date().toLocaleString();
 
-      const buyerMsg = `Seller ${participation.mobile} accepted for ${bid?.commodity || "bid"} at rate ₹${participation.acceptedRate}, qty ${participation.acceptedQuantity}. On ${participation.acceptedAt?.toLocaleString?.() || new Date().toLocaleString()}. Participation ID: ${participation._id}`;
+      const sellerMsg = `Bid accepted • ${bidCommodity} (${bidOrigin} → ${bidConsignee}) • Group: ${bidGroup} • Company: ${companyLabel} • Accepted Rate: ₹${participation.acceptedRate} • Accepted Qty: ${participation.acceptedQuantity} • On: ${acceptedAtText} • Participation: ${participation._id}`;
+
+      const buyerMsg = `Seller accepted • ${bidCommodity} (${bidOrigin} → ${bidConsignee}) • Group: ${bidGroup} • Seller: ${participation.mobile} • Company: ${companyLabel} • Accepted Rate: ₹${participation.acceptedRate} • Accepted Qty: ${participation.acceptedQuantity} • On: ${acceptedAtText} • Participation: ${participation._id}`;
 
       const notifyBuyerMobile = bid?.createdByMobile || null;
 
@@ -190,7 +237,7 @@ router.patch("/:id/status", async (req, res) => {
           recipient: "all",
           recipientRole: "Admin",
           title: "Bid Accepted",
-          message: `Participation ${participation._id} accepted for ${bid?.commodity || "bid"} at ₹${participation.acceptedRate} / ${participation.acceptedQuantity}.`,
+          message: `Accepted • ${bidCommodity} (${bidOrigin} → ${bidConsignee}) • Group: ${bidGroup} • Seller: ${participation.mobile} • Company: ${companyLabel} • ₹${participation.acceptedRate} / ${participation.acceptedQuantity} • Participation: ${participation._id}`,
           type: "BidConfirmation",
           relatedId: confirmDoc._id,
         }),
@@ -198,7 +245,7 @@ router.patch("/:id/status", async (req, res) => {
           recipient: "all",
           recipientRole: "Employee",
           title: "Bid Accepted",
-          message: `Participation ${participation._id} accepted for ${bid?.commodity || "bid"} at ₹${participation.acceptedRate} / ${participation.acceptedQuantity}.`,
+          message: `Accepted • ${bidCommodity} (${bidOrigin} → ${bidConsignee}) • Group: ${bidGroup} • Seller: ${participation.mobile} • Company: ${companyLabel} • ₹${participation.acceptedRate} / ${participation.acceptedQuantity} • Participation: ${participation._id}`,
           type: "BidConfirmation",
           relatedId: confirmDoc._id,
         }),
@@ -206,7 +253,7 @@ router.patch("/:id/status", async (req, res) => {
 
       await Promise.all(notifications);
     } else if (status === "rejected") {
-      const sellerMsg = `Your participation for ${bid?.commodity || "bid"} has been rejected. Participation ID: ${participation._id}${adminNotes ? `, Notes: ${adminNotes}` : ""}`;
+      const sellerMsg = `Bid rejected • ${bidCommodity} (${bidOrigin} → ${bidConsignee}) • Group: ${bidGroup} • Company: ${companyLabel} • Participation: ${participation._id}${adminNotes ? ` • Notes: ${adminNotes}` : ""}`;
       await Notification.create({
         recipient: participation.mobile,
         recipientRole: "Seller",
