@@ -163,29 +163,25 @@ const SellerDashboard = () => {
             <div className="flex items-center gap-4">
               <div className="flex flex-col items-end gap-1">
                 <div className="flex items-center gap-2">
-                  <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/20 backdrop-blur-md border border-white/30">
-                    <img
-                      src="/icons/favicon-16x16.png"
-                      alt="Hansaria"
-                      className="w-4 h-4 rounded-full"
-                    />
-                    <span className="text-[10px] sm:text-xs font-semibold text-white">
-                      Hansaria
-                    </span>
-                  </div>
+                  <img
+                    src="/icons/favicon-16x16.png"
+                    alt="logo"
+                    className="w-4 h-4 rounded-sm object-cover"
+                  />
 
-                  <div className="relative">
-                    <span className="w-5 h-5 flex items-center justify-center rounded-full bg-blue-500 text-white text-[10px]">
+                  <div className="relative flex items-center justify-center">
+                    <span className="w-5 h-5 flex items-center justify-center rounded-full bg-blue-500 text-white text-[10px] shadow-md">
                       ✓
                     </span>
-                    <span className="absolute inset-0 animate-pulseSlow bg-blue-400 opacity-50 rounded-full"></span>
+                    <span className="absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-50 animate-pulseSlow"></span>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-1 text-[10px] text-white/90">
+                <div className="flex items-center gap-1 text-[10px] sm:text-xs text-white/90 font-medium">
                   <img
                     src="/icons/favicon-16x16.png"
-                    className="w-3 h-3 rounded-full"
+                    alt="logo"
+                    className="w-3 h-3 rounded-sm"
                   />
                   <span>Trustable Seller</span>
                 </div>
