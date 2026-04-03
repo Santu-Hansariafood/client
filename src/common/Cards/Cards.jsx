@@ -18,17 +18,9 @@ const Cards = ({ title, count, icon: Icon, link, state, color }) => {
         relative group cursor-pointer overflow-hidden
         rounded-2xl sm:rounded-3xl
         p-3 sm:p-5 lg:p-6
-
-        /* Base Card Look (IMPORTANT) */
         bg-white border border-slate-200 shadow-md
-
-        /* Glass Effect */
         backdrop-blur-xl
-
-        /* Smooth Animation */
         transition-all duration-300 ease-out
-
-        /* Hover */
         hover:shadow-2xl hover:-translate-y-1
         active:scale-95
       "
@@ -53,7 +45,7 @@ const Cards = ({ title, count, icon: Icon, link, state, color }) => {
             group-hover:scale-110 group-hover:rotate-6
           `}
         >
-          <Icon className="text-lg sm:text-xl" />
+          <Icon className="text-xl sm:text-xl lg:text-2xl" />
         </div>
 
         <h3
@@ -70,11 +62,12 @@ const Cards = ({ title, count, icon: Icon, link, state, color }) => {
 
         <p
           className="
-          text-lg sm:text-2xl lg:text-3xl
-          font-bold
-          text-slate-800
-          tracking-tight
-        "
+  hidden sm:block
+  text-lg sm:text-2xl lg:text-3xl
+  font-bold
+  text-slate-800
+  tracking-tight
+"
         >
           {count}
         </p>
