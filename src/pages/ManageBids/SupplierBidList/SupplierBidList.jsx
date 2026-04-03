@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useState, useMemo } from "react";
+import { lazy, Suspense, useEffect, useState, useMemo, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 import {
@@ -20,7 +20,7 @@ const SupplierBidList = () => {
   const navigate = useNavigate();
   const { userRole } = useAuth();
   const location = useLocation();
-  const { commodityNames = [], mobile } = location.state || {};
+  const { mobile } = location.state || {};
 
   const [bids, setBids] = useState([]);
   const [participations, setParticipations] = useState([]);
@@ -43,7 +43,8 @@ const SupplierBidList = () => {
     return () => clearInterval(id);
   }, []);
 
-  const fetchBids = async () => {
+  const fetchBids = useCallback(async () => {
+    if (!mobile) return;
     setLoading(true);
     setError(null);
     try {
@@ -64,11 +65,11 @@ const SupplierBidList = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [mobile]);
 
   useEffect(() => {
     fetchBids();
-  }, [commodityNames, mobile]);
+  }, [fetchBids]);
 
   const getBidEndDateTime = (bid) => {
     const bidDateStr = bid.bidDate ? bid.bidDate.split("T")[0] : "";
