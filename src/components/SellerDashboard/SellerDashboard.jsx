@@ -1,7 +1,13 @@
 import { useEffect, useState, lazy, Suspense } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
-import { FaBell, FaGavel, FaBoxOpen, FaTruckMoving, FaChevronRight } from "react-icons/fa";
+import {
+  FaBell,
+  FaGavel,
+  FaBoxOpen,
+  FaTruckMoving,
+  FaChevronRight,
+} from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext/AuthContext";
 import UserProfileCard from "../UserProfileCard/UserProfileCard";
@@ -27,7 +33,7 @@ const SellerDashboard = () => {
 
   useEffect(() => {
     if (!mobile) {
-      setError("Mobile number is required for verification.");
+      setError("Mobile number is required.");
       setLoading(false);
       return;
     }
@@ -56,13 +62,12 @@ const SellerDashboard = () => {
         );
 
         if (!seller) {
-          setError("No seller found for this mobile number.");
+          setError("No seller found.");
           return;
         }
 
         setSellerDetails(seller);
 
-        // All active bids matching seller commodities
         const activeSellerBids = bids.filter(
           (bid) =>
             bid.status === "active" &&
@@ -92,12 +97,7 @@ const SellerDashboard = () => {
             return matchedBid
               ? {
                   ...confirmBid,
-                  group: matchedBid.group,
-                  consignee: matchedBid.consignee,
-                  origin: matchedBid.origin,
-                  commodity: matchedBid.commodity,
-                  bidRate: matchedBid.rate,
-                  bidQuantity: matchedBid.quantity,
+                  ...matchedBid,
                 }
               : null;
           })
@@ -106,9 +106,9 @@ const SellerDashboard = () => {
         setConfirmedBids(confirmed);
         setNotificationCount(confirmed.length);
       } catch (err) {
-        console.error(err); // 🔥 important
-        setError("Failed to fetch seller details.");
-        toast.error("Server error while loading dashboard");
+        console.error(err);
+        toast.error("Error loading dashboard");
+        setError("Something went wrong.");
       } finally {
         setLoading(false);
       }
@@ -123,136 +123,132 @@ const SellerDashboard = () => {
       count: sellerBidCount,
       icon: FaGavel,
       link: "/Supplier-Bid-List",
+      color: "from-emerald-400 to-green-600",
       state: sellerDetails
         ? {
             commodities: sellerDetails.commodities?.map((c) => c._id),
-            commodityNames: sellerDetails.commodities?.map((c) => c.name),
             mobile,
           }
         : {},
     },
     {
-      title: "Manage Self-Orders",
+      title: "Orders",
       count: 12,
       icon: FaBoxOpen,
       link: "/manage-order/list-self-order",
+      color: "from-blue-400 to-indigo-600",
     },
     {
-      title: "Loading Entry",
+      title: "Loading",
       count: 7,
       icon: FaTruckMoving,
       link: "/Loading-Entry/list-loading-entry",
+      color: "from-orange-400 to-amber-500",
     },
     {
-      title: "Participate on Bid",
+      title: "Participate",
       count: participateBidCount,
       icon: FaGavel,
       link: "/participate-bid-list",
+      color: "from-purple-400 to-violet-600",
     },
   ];
 
-  if (loading) {
-    return <Loading />;
-  }
-
-  if (error) {
-    return (
-      <div className="p-6 text-center text-red-500 font-semibold">
-        {error}
-      </div>
-    );
-  }
+  if (loading) return <Loading />;
+  if (error) return <div className="text-center text-red-500 p-6">{error}</div>;
 
   return (
     <Suspense fallback={<Loading />}>
-      <AdminPageShell
-        title={`Welcome back, ${user?.name}!`}
-        subtitle="Here is your Seller Dashboard."
-        noContentCard
-      >
-        <div className="max-w-7xl mx-auto space-y-6 sm:space-y-10">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-white p-4 sm:p-6 rounded-2xl sm:rounded-3xl shadow-sm border border-slate-100 gap-4">
+      <AdminPageShell noContentCard>
+        <div className="min-h-screen bg-gradient-to-br from-slate-100 via-white to-slate-200 p-4 sm:p-6 space-y-8">
+
+          {/* 🔥 Header */}
+          <div className="relative overflow-hidden flex justify-between items-center bg-gradient-to-br from-emerald-500 to-green-600 p-6 rounded-3xl shadow-xl text-white">
+
             <div>
-              <h2 className="text-lg sm:text-xl font-bold text-slate-800">Account Overview</h2>
-              <p className="text-slate-500 text-xs sm:text-sm mt-1">Manage your bids and orders in one place.</p>
+              <h1 className="text-2xl sm:text-3xl font-bold">
+                Welcome, Mr. {user?.name} 👋
+              </h1>
+              <p className="text-emerald-100 text-sm">
+                Manage your business efficiently
+              </p>
             </div>
+
             <div
-              className="relative cursor-pointer p-2 sm:p-3 bg-emerald-50 text-emerald-600 rounded-xl sm:rounded-2xl hover:bg-emerald-100 transition-colors shadow-sm self-end sm:self-auto"
+              className="relative cursor-pointer p-3 bg-white/20 rounded-2xl"
               onClick={() => setShowPopup(true)}
             >
-              <FaBell className="text-lg sm:text-xl" />
+              <FaBell />
               {notificationCount > 0 && (
-                <span className="absolute -top-1 -right-1 flex h-4 w-4 sm:h-5 sm:w-5 items-center justify-center rounded-full bg-red-500 text-[8px] sm:text-[10px] font-bold text-white ring-2 ring-white">
-                  {notificationCount}
-                </span>
+                <>
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs px-1 rounded-full">
+                    {notificationCount}
+                  </span>
+                  <span className="absolute inset-0 animate-pulseSlow bg-white/20 rounded-2xl"></span>
+                </>
               )}
             </div>
           </div>
 
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-            {dashboardData.map((item, index) => (
-              <Cards key={index} {...item} />
+          {/* 📊 Cards */}
+          <div className="grid grid-cols-3 md:grid-cols-4 gap-4">
+            {dashboardData.map((item, i) => (
+              <div key={i} className="group">
+                <div className="bg-white p-3 rounded-2xl shadow hover:shadow-xl transition">
+                  <Cards {...item} />
+                </div>
+              </div>
             ))}
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
-            <div className="lg:col-span-2">
+          {/* 👤 Profile + Quick Links */}
+          <div className="grid lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2 bg-white/70 backdrop-blur-xl p-6 rounded-3xl shadow">
               <UserProfileCard user={user} />
             </div>
-            <div className="bg-white p-6 sm:p-8 rounded-2xl sm:rounded-3xl shadow-lg border border-slate-100 flex flex-col justify-between overflow-hidden relative group">
-              <div className="relative z-10">
-                <h3 className="text-lg sm:text-xl font-bold text-slate-800 mb-1 sm:mb-2">Quick Links</h3>
-                <p className="text-slate-500 text-xs sm:text-sm mb-4 sm:mb-6">Access your frequently used sections.</p>
-                <div className="space-y-3 sm:space-y-4">
-                  {[
-                    { label: "View Active Bids", link: "/Supplier-Bid-List" },
-                    { label: "Order History", link: "/manage-order/list-self-order" },
-                    { label: "Notification Settings", action: () => setShowPopup(true) }
-                  ].map((link, i) => (
-                    <button
-                      key={i}
-                      onClick={() => link.action ? link.action() : navigate(link.link)}
-                      className="w-full flex items-center justify-between p-3 sm:p-4 bg-slate-50 rounded-xl sm:rounded-2xl text-slate-700 text-sm sm:text-base font-medium hover:bg-emerald-50 hover:text-emerald-700 transition-all group/link"
-                    >
-                      {link.label}
-                      <FaChevronRight className="text-[10px] sm:text-xs group-hover/link:translate-x-1 transition-transform" />
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <div className="absolute top-0 right-0 w-24 h-24 sm:w-32 sm:h-32 bg-emerald-50 rounded-bl-full -mr-8 -mt-8 sm:-mr-12 sm:-mt-12 opacity-50"></div>
+
+            <div className="bg-white/70 backdrop-blur-xl p-6 rounded-3xl shadow">
+              <h3 className="font-bold mb-4">Quick Actions</h3>
+
+              {[
+                { label: "Active Bids", link: "/Supplier-Bid-List" },
+                { label: "Orders", link: "/manage-order/list-self-order" },
+                { label: "Notifications", action: () => setShowPopup(true) },
+              ].map((l, i) => (
+                <button
+                  key={i}
+                  onClick={() =>
+                    l.action ? l.action() : navigate(l.link)
+                  }
+                  className="w-full flex justify-between p-3 bg-slate-50 rounded-xl mb-2 hover:bg-emerald-50"
+                >
+                  {l.label}
+                  <FaChevronRight />
+                </button>
+              ))}
             </div>
           </div>
 
+          {/* 🔔 Popup */}
           <PopupBox
             isOpen={showPopup}
             onClose={() => setShowPopup(false)}
             title="Notifications"
           >
-            <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
-              {confirmedBids.length > 0 ? (
-                confirmedBids.map((bid, index) => (
-                  <div key={index} className="p-4 bg-slate-50 rounded-2xl border border-slate-100 hover:border-emerald-200 transition-colors">
-                    <div className="flex justify-between items-start mb-2">
-                      <h4 className="font-bold text-slate-800">{bid.commodity}</h4>
-                      <span className="px-2 py-1 bg-emerald-100 text-emerald-700 text-[10px] font-bold rounded-full uppercase tracking-wider">
-                        Confirmed
-                      </span>
-                    </div>
-                    <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm text-slate-500">
-                      <p>Group: <span className="text-slate-700 font-medium">{bid.group}</span></p>
-                      <p>Consignee: <span className="text-slate-700 font-medium">{bid.consignee}</span></p>
-                      <p>Origin: <span className="text-slate-700 font-medium">{bid.origin}</span></p>
-                      <p>Qty: <span className="text-slate-700 font-medium">{bid.quantity}</span></p>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div className="text-center py-12 text-slate-400 italic">
-                  No notifications found.
+            {confirmedBids.length > 0 ? (
+              confirmedBids.map((bid, i) => (
+                <div key={i} className="p-4 bg-slate-50 rounded-xl mb-2">
+                  <h4 className="font-bold">{bid.commodity}</h4>
+                  <p className="text-sm text-slate-500">
+                    {bid.origin} → {bid.consignee}
+                  </p>
                 </div>
-              )}
-            </div>
+              ))
+            ) : (
+              <p className="text-center text-slate-400">
+                No notifications
+              </p>
+            )}
           </PopupBox>
         </div>
       </AdminPageShell>
