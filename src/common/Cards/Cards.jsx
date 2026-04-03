@@ -33,18 +33,13 @@ const Cards = ({ title, count, icon: Icon, link, state, color }) => {
         active:scale-95
       "
     >
-      {/* Gradient Accent Background */}
       <div
         className={`absolute inset-0 opacity-10 group-hover:opacity-20 transition-all duration-300 bg-gradient-to-br ${color}`}
       />
 
-      {/* Glow Effect */}
       <div className="absolute -top-10 -right-10 w-24 h-24 bg-slate-100 rounded-full opacity-40 blur-2xl group-hover:scale-125 transition-all duration-500"></div>
 
-      {/* Content */}
       <div className="relative z-10 flex flex-col items-start">
-        
-        {/* Icon */}
         <div
           className={`
             flex items-center justify-center
@@ -61,29 +56,30 @@ const Cards = ({ title, count, icon: Icon, link, state, color }) => {
           <Icon className="text-lg sm:text-xl" />
         </div>
 
-        {/* Title */}
-        <h3 className="
+        <h3
+          className="
           mt-3 sm:mt-4
           text-[10px] sm:text-xs
           font-semibold
           text-slate-500 uppercase tracking-wider
           group-hover:text-slate-700
-        ">
+        "
+        >
           {title}
         </h3>
 
-        {/* Count / Action */}
-        <p className="
+        <p
+          className="
           text-lg sm:text-2xl lg:text-3xl
           font-bold
           text-slate-800
           tracking-tight
-        ">
+        "
+        >
           {count}
         </p>
       </div>
 
-      {/* Arrow Button */}
       <div
         className="
           absolute top-2 right-2 sm:top-4 sm:right-4
@@ -100,8 +96,8 @@ const Cards = ({ title, count, icon: Icon, link, state, color }) => {
         <FaArrowRight className="text-xs sm:text-sm" />
       </div>
 
-      {/* Bottom Curve Accent */}
-      <div className="
+      <div
+        className="
         absolute bottom-0 right-0
         w-20 h-20 sm:w-24 sm:h-24
         bg-slate-100
@@ -110,9 +106,9 @@ const Cards = ({ title, count, icon: Icon, link, state, color }) => {
         opacity-40
         group-hover:scale-150
         transition-transform duration-500
-      "></div>
+      "
+      ></div>
 
-      {/* Subtle Border Glow */}
       <div className="absolute inset-0 rounded-2xl ring-1 ring-inset ring-white/40 pointer-events-none"></div>
     </article>
   );

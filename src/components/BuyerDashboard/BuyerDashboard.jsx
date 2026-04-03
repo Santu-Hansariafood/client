@@ -1,11 +1,10 @@
-import React, { Suspense, lazy, useEffect, useState } from "react";
+import { Suspense, lazy, useEffect, useState } from "react";
 import {
   FaGavel,
   FaBook,
   FaBoxOpen,
   FaChartLine,
   FaHistory,
-  FaBuilding,
   FaMapMarkerAlt,
 } from "react-icons/fa";
 import Loading from "../../common/Loading/Loading";
@@ -96,18 +95,34 @@ const BuyerDashboard = () => {
           </div>
 
           {buyerProfile && (
-            <div className="backdrop-blur-xl bg-white/70 border border-white/40 shadow-lg rounded-2xl px-6 py-4 flex items-center gap-4">
-              <div className="p-3 bg-gradient-to-br from-blue-500 to-indigo-600 text-white rounded-xl shadow-md">
-                <FaBuilding />
+            <div className="relative z-10 flex flex-col gap-1">
+              <div className="flex items-center flex-wrap gap-2">
+                <div className="flex items-center gap-1">
+                  <span className="text-[10px] sm:text-xs font-semibold tracking-widest uppercase text-indigo-500">
+                    Trustable Buyer
+                  </span>
+                  <div className="relative flex items-center justify-center">
+                    <span className="w-4 h-4 flex items-center justify-center rounded-full bg-blue-500 text-white text-[10px] shadow-md">
+                      ✓
+                    </span>
+                    <span className="absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-50 animate-pulseSlow"></span>
+                  </div>
+                </div>
+
+                <div
+                  className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-indigo-50 border border-indigo-100 
+      transition-all duration-300 hover:scale-105"
+                >
+                  <img
+                    src="/icons/favicon-16x16.png"
+                    alt="Hansaria Food"
+                    className="w-4 h-4 rounded-full object-cover"
+                  />
+                </div>
               </div>
-              <div>
-                <p className="text-xs uppercase tracking-widest text-slate-400 font-semibold">
-                  Company
-                </p>
-                <p className="font-bold text-slate-800 text-sm">
-                  {buyerProfile.companyName}
-                </p>
-              </div>
+              <h3 className="text-sm sm:text-base font-bold text-slate-800 leading-tight">
+                {toTitleCase(buyerProfile.companyName)}
+              </h3>
             </div>
           )}
         </header>
@@ -142,30 +157,23 @@ const BuyerDashboard = () => {
             >
               <div
                 className="
-      relative 
-      bg-white 
-      border border-slate-200 
-      shadow-md 
-      rounded-2xl 
-      p-3 sm:p-4
-      transition-all duration-300
-
-      /* Always visible as card */
-      hover:shadow-2xl hover:-translate-y-1
-
-      /* Mobile touch feedback */
-      active:scale-95
-    "
+                            relative 
+                            bg-white 
+                            border border-slate-200 
+                            shadow-md 
+                            rounded-2xl 
+                            p-3 sm:p-4
+                            transition-all duration-300
+                            hover:shadow-2xl hover:-translate-y-1
+                            active:scale-95
+                    "
               >
-                {/* Stronger Gradient Background (VISIBLE even without hover) */}
                 <div
                   className={`absolute inset-0 opacity-10 group-hover:opacity-20 transition-all duration-300 bg-gradient-to-br ${item.color}`}
                 ></div>
 
-                {/* Icon Background Glow */}
                 <div className="absolute -top-6 -right-6 w-20 h-20 bg-slate-100 rounded-full opacity-40"></div>
 
-                {/* Content */}
                 <div className="relative z-10">
                   <Cards
                     title={item.title}
