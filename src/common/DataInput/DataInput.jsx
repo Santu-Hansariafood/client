@@ -49,6 +49,7 @@ const DataInput = ({
           minLength={minLength}
           maxLength={maxLength}
           autoComplete="off"
+          onWheel={(e) => e.target.blur()}
           required={required}
           disabled={disabled}
           readOnly={readOnly}
