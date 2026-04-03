@@ -112,7 +112,7 @@ router.post("/", async (req, res) => {
     const bidCommodity = bid?.commodity || "N/A";
     const companyLabel = resolvedCompany || "N/A";
 
-    const message = `Bid: ${bidCommodity} (${bidOrigin} → ${bidConsignee}) • Group: ${bidGroup} • Seller: ${sellerName} (${mobile}) • Company: ${companyLabel} • Rate: ${rate} • Qty: ${quantity} • Participation: ${item._id}`;
+    const message = `Bid: ${bidCommodity} (${bidOrigin} → ${bidConsignee}) • Group: ${bidGroup} • Seller: ${sellerName} (${mobile}) • Company: ${companyLabel} • Rate: ₹${rate} • Qty: ${quantity} Tons • Loading From: ${loadingFrom || "N/A"} • Remarks: ${remarks || "N/A"} • ID: ${item._id}`;
 
     await Promise.all([
       Notification.create({

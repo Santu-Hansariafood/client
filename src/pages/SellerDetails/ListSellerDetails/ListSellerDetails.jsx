@@ -276,9 +276,9 @@ const ListSellerDetails = () => {
                   {toTitleCase(selectedSeller.status)}
                 </p>
                 <p>
-                  <strong>Buyers:</strong>{" "}
-                  {selectedSeller.buyers
-                    .map((buyer) => toTitleCase(buyer.name))
+                  <strong>Groups:</strong>{" "}
+                  {(selectedSeller.groups || [])
+                    .map((group) => toTitleCase(group.name))
                     .join(", ")}
                 </p>
               </div>

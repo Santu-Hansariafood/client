@@ -57,7 +57,7 @@ const commoditySchema = new mongoose.Schema(
   { _id: false },
 );
 
-const buyerSchema = new mongoose.Schema(
+const groupSchema = new mongoose.Schema(
   {
     name: { type: String, set: formatName },
   },
@@ -90,7 +90,7 @@ const sellerSchema = new mongoose.Schema(
 
     commodities: [commoditySchema],
 
-    buyers: [buyerSchema],
+    groups: [groupSchema],
 
     gstNumber: {
       type: String,

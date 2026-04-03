@@ -119,10 +119,23 @@ const InteractionCard = ({ interaction, onStatusChange }) => {
       })
     : "N/A";
 
+  const isRevised =
+    interaction.createdAt &&
+    interaction.updatedAt &&
+    new Date(interaction.updatedAt).getTime() >
+      new Date(interaction.createdAt).getTime();
+
   return (
     <div
-      className={`p-4 rounded-lg border ${interaction.status === "accepted" ? "border-green-500 bg-green-50" : interaction.status === "rejected" ? "border-red-500 bg-red-50" : "border-gray-200"}`}
+      className={`p-4 rounded-lg border relative ${interaction.status === "accepted" ? "border-green-500 bg-green-50" : interaction.status === "rejected" ? "border-red-500 bg-red-50" : "border-gray-200"}`}
     >
+      {isRevised && interaction.status === "pending" && (
+        <div className="absolute top-2 right-2">
+          <span className="px-2 py-0.5 bg-amber-100 text-amber-700 text-[10px] font-bold rounded-full border border-amber-200">
+            Revised
+          </span>
+        </div>
+      )}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div>
           <p className="text-sm font-medium text-gray-500">Participant</p>

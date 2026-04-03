@@ -30,11 +30,11 @@ const AddSellerDetails = () => {
 
   const [commodityOptions, setCommodityOptions] = useState([]);
   const [companyOptions, setCompanyOptions] = useState([]);
-  const [buyerOptions, setBuyerOptions] = useState([]);
+  const [groupOptions, setGroupOptions] = useState([]);
 
   const [selectedCommodity, setSelectedCommodity] = useState([]);
   const [selectedCompany, setSelectedCompany] = useState([]);
-  const [selectedBuyers, setSelectedBuyers] = useState([]);
+  const [selectedGroups, setSelectedGroups] = useState([]);
   const [selectedStatus, setSelectedStatus] = useState(null);
 
   const [brokerageAmounts, setBrokerageAmounts] = useState({});
@@ -49,10 +49,10 @@ const AddSellerDetails = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [commoditiesRes, companiesRes, buyersRes] = await Promise.all([
+        const [commoditiesRes, companiesRes, groupsRes] = await Promise.all([
           axios.get("/commodities"),
           axios.get("/seller-company"),
-          axios.get("/buyers"),
+          axios.get("/groups"),
         ]);
 
         const commodities = commoditiesRes.data.map((item) => ({
@@ -65,10 +65,12 @@ const AddSellerDetails = () => {
           label: item.companyName,
         }));
 
-        const buyers = buyersRes.data.map((item) => ({
-          value: item._id,
-          label: item.name,
-        }));
+        const groups = (groupsRes.data.data || groupsRes.data || []).map(
+          (item) => ({
+            value: item._id,
+            label: item.groupName,
+          }),
+        );
 
         setCommodityOptions(
           commodities.sort((a, b) => a.label.localeCompare(b.label)),
@@ -78,7 +80,7 @@ const AddSellerDetails = () => {
           companies.sort((a, b) => a.label.localeCompare(b.label)),
         );
 
-        setBuyerOptions(buyers.sort((a, b) => a.label.localeCompare(b.label)));
+        setGroupOptions(groups.sort((a, b) => a.label.localeCompare(b.label)));
       } catch (error) {
         toast.error("Failed to load data from server.");
       }
@@ -168,8 +170,8 @@ const AddSellerDetails = () => {
       })),
       companies: selectedCompany.map((c) => c.value),
       status: selectedStatus?.value,
-      buyers: selectedBuyers.map((b) => ({
-        name: b.label,
+      groups: selectedGroups.map((g) => ({
+        name: g.label,
       })),
     };
 
@@ -193,7 +195,7 @@ const AddSellerDetails = () => {
 
     setSelectedCommodity([]);
     setSelectedCompany([]);
-    setSelectedBuyers([]);
+    setSelectedGroups([]);
 
     setBrokerageAmounts({});
     setSelectedStatus(null);
@@ -317,11 +319,11 @@ const AddSellerDetails = () => {
 
             <div className="mt-4">
               <DropdownSelector
-                options={buyerOptions}
-                value={selectedBuyers}
+                options={groupOptions}
+                value={selectedGroups}
                 isMulti
-                placeholder="Select Buyers"
-                onChange={(selected) => setSelectedBuyers(selected || [])}
+                placeholder="Select Groups"
+                onChange={(selected) => setSelectedGroups(selected || [])}
               />
             </div>
 

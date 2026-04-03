@@ -367,33 +367,42 @@ const SupplierBidList = () => {
         key={bid._id}
         className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300 overflow-hidden border border-slate-100/80"
       >
-        <div className="p-5">
-          <div className="flex justify-between items-start">
-            <div>
-              <p className="text-xs text-slate-500 font-medium">{bid.group}</p>
-              <h3 className="text-lg font-bold text-slate-800 mt-1">
+        <div className="p-4 sm:p-5">
+          <div className="flex justify-between items-start gap-2">
+            <div className="min-w-0 flex-1">
+              <p className="text-[10px] sm:text-xs text-slate-500 font-medium truncate uppercase tracking-wider">{bid.group}</p>
+              <h3 className="text-base sm:text-lg font-bold text-slate-800 mt-0.5 sm:mt-1 truncate">
                 {bid.consignee}
               </h3>
-              <p className="text-sm text-slate-600">
+              <p className="text-xs sm:text-sm text-slate-600 truncate">
                 {bid.commodity} - {bid.origin}
               </p>
-              <p className="text-sm font-semibold text-red-600 mt-1">
-                End time: {bid.endTime} • {isClosed ? "Closed" : countdownText}
-              </p>
-              <p className="text-xs font-semibold text-slate-500 mt-1">
-                Interactions: {participantCount}
-              </p>
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1.5">
+                <p className="text-[11px] sm:text-sm font-semibold text-red-600 flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-red-600 animate-pulse" />
+                  Ends: {bid.endTime} {!isClosed && `• ${countdownText}`}
+                </p>
+                <p className="text-[10px] sm:text-xs font-semibold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md">
+                  Interactions: {participantCount}
+                </p>
+              </div>
             </div>
             {isParticipated && (
               <div
-                className={`text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1.5 ${participationStatus === "accepted" ? "bg-green-100 text-green-700" : participationStatus === "rejected" ? "bg-red-100 text-red-700" : "bg-blue-100 text-blue-700"}`}
+                className={`text-[10px] sm:text-xs font-bold px-2 sm:px-3 py-1 rounded-full flex items-center gap-1 sm:gap-1.5 whitespace-nowrap shadow-sm ${
+                  participationStatus === "accepted"
+                    ? "bg-green-100 text-green-700 ring-1 ring-green-200"
+                    : participationStatus === "rejected"
+                      ? "bg-red-100 text-red-700 ring-1 ring-red-200"
+                      : "bg-blue-100 text-blue-700 ring-1 ring-blue-200"
+                }`}
               >
                 {participationStatus === "accepted" ? (
-                  <FaCheckCircle />
+                  <FaCheckCircle className="text-xs" />
                 ) : participationStatus === "rejected" ? (
-                  <FaTimesCircle />
+                  <FaTimesCircle className="text-xs" />
                 ) : (
-                  <FaHourglassHalf />
+                  <FaHourglassHalf className="text-[10px]" />
                 )}
                 {participationStatus.charAt(0).toUpperCase() +
                   participationStatus.slice(1)}
@@ -401,75 +410,75 @@ const SupplierBidList = () => {
             )}
           </div>
 
-          <div className="mt-4 grid grid-cols-2 gap-4 text-sm">
-            <div>
-              <p className="text-slate-500">Quantity</p>
-              <p className="font-semibold text-slate-700">
-                {bid.quantity} Tons
+          <div className="mt-4 sm:mt-5 grid grid-cols-2 gap-3 sm:gap-4">
+            <div className="bg-slate-50/50 p-2.5 rounded-xl border border-slate-100">
+              <p className="text-[10px] sm:text-xs text-slate-500 font-medium">Quantity</p>
+              <p className="text-sm sm:text-base font-bold text-slate-700">
+                {bid.quantity} <span className="text-[10px] sm:text-xs font-normal">Tons</span>
               </p>
             </div>
-            <div>
-              <p className="text-slate-500">Company Rate</p>
-              <p className="font-semibold text-slate-700">₹{bid.rate}</p>
+            <div className="bg-slate-50/50 p-2.5 rounded-xl border border-slate-100">
+              <p className="text-[10px] sm:text-xs text-slate-500 font-medium">Rate</p>
+              <p className="text-sm sm:text-base font-bold text-slate-700">₹{bid.rate}</p>
             </div>
-            <div className="col-span-2">
-              <p className="text-slate-500">Quality Parameters</p>
-              <p className="font-semibold text-slate-700">
+            
+            <div className="col-span-2 bg-slate-50/50 p-2.5 rounded-xl border border-slate-100">
+              <p className="text-[10px] sm:text-xs text-slate-500 font-medium">Quality Parameters</p>
+              <p className="text-[11px] sm:text-sm font-semibold text-slate-700 mt-0.5 leading-tight">
                 {qualityText || "N/A"}
               </p>
             </div>
+
             {isParticipated && (
               <>
-                <div>
-                  <p className="text-slate-500">Your Rate</p>
-                  <p className="font-semibold text-blue-700">
-                    ₹{participation.rate}
-                  </p>
+                <div className="bg-blue-50/30 p-2.5 rounded-xl border border-blue-100/50">
+                  <p className="text-[10px] sm:text-xs text-blue-600 font-medium">Your Rate</p>
+                  <p className="text-sm sm:text-base font-bold text-blue-700">₹{participation.rate}</p>
                 </div>
-                <div>
-                  <p className="text-slate-500">Your Quantity</p>
-                  <p className="font-semibold text-blue-700">
-                    {participation.quantity} Tons
+                <div className="bg-blue-50/30 p-2.5 rounded-xl border border-blue-100/50">
+                  <p className="text-[10px] sm:text-xs text-blue-600 font-medium">Your Quantity</p>
+                  <p className="text-sm sm:text-base font-bold text-blue-700">
+                    {participation.quantity} <span className="text-[10px] sm:text-xs font-normal">Tons</span>
                   </p>
                 </div>
                 {participation?.sellerCompany && (
-                  <div className="col-span-2">
-                    <p className="text-slate-500">Your Company</p>
-                    <p className="font-semibold text-slate-700">
+                  <div className="col-span-2 bg-slate-50/50 p-2.5 rounded-xl border border-slate-100">
+                    <p className="text-[10px] sm:text-xs text-slate-500 font-medium">Your Company</p>
+                    <p className="text-xs sm:text-sm font-semibold text-slate-700 mt-0.5 truncate">
                       {participation.sellerCompany}
                     </p>
                   </div>
                 )}
-                {participationStatus === "accepted" &&
-                  (participation?.acceptedRate || participation?.acceptedQuantity) && (
-                    <div className="col-span-2 grid grid-cols-2 gap-4">
-                      <div>
-                        <p className="text-slate-500">Accepted Rate</p>
-                        <p className="font-semibold text-green-700">
-                          ₹{participation.acceptedRate ?? participation.rate}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-slate-500">Accepted Quantity</p>
-                        <p className="font-semibold text-green-700">
-                          {participation.acceptedQuantity ?? participation.quantity} Tons
-                        </p>
-                      </div>
+                {participationStatus === "accepted" && (
+                  <div className="col-span-2 bg-green-50/30 p-2.5 rounded-xl border border-green-100/50 grid grid-cols-2 gap-2">
+                    <div>
+                      <p className="text-[10px] sm:text-xs text-green-600 font-medium">Accepted Rate</p>
+                      <p className="text-sm sm:text-base font-bold text-green-700">
+                        ₹{participation.acceptedRate ?? participation.rate}
+                      </p>
                     </div>
-                  )}
+                    <div>
+                      <p className="text-[10px] sm:text-xs text-green-600 font-medium">Accepted Quantity</p>
+                      <p className="text-sm sm:text-base font-bold text-green-700">
+                        {participation.acceptedQuantity ?? participation.quantity} <span className="text-[10px] sm:text-xs font-normal">Tons</span>
+                      </p>
+                    </div>
+                  </div>
+                )}
                 {participationStatus === "rejected" &&
                   String(participation?.adminNotes || "").trim() !== "" && (
-                    <div className="col-span-2">
-                      <p className="text-slate-500">Rejection Notes</p>
-                      <p className="font-semibold text-red-700">
+                    <div className="col-span-2 bg-red-50/30 p-2.5 rounded-xl border border-red-100/50">
+                      <p className="text-[10px] sm:text-xs text-red-600 font-medium">Rejection Notes</p>
+                      <p className="text-xs sm:text-sm font-semibold text-red-700 mt-0.5 leading-tight">
                         {participation.adminNotes}
                       </p>
                     </div>
                   )}
                 {participationStatus === "pending" && isRevised && (
                   <div className="col-span-2">
-                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-700">
-                      Revised
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] sm:text-xs font-bold bg-amber-100 text-amber-700 ring-1 ring-amber-200">
+                      <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                      Revised Participation
                     </span>
                   </div>
                 )}
@@ -477,13 +486,19 @@ const SupplierBidList = () => {
             )}
           </div>
         </div>
-        <div className="bg-slate-50/70 px-5 py-3">
+        <div className="bg-slate-50/70 px-4 sm:px-5 py-3 border-t border-slate-100">
           <button
             onClick={() => handleParticipate(bid)}
             disabled={isClosed}
-            className={`w-full flex items-center justify-center gap-2 text-sm font-bold rounded-lg py-2 transition-colors ${isClosed ? "text-slate-400 cursor-not-allowed" : "text-emerald-600 hover:bg-emerald-50"}`}
+            className={`w-full flex items-center justify-center gap-2 text-xs sm:text-sm font-bold rounded-xl py-2.5 sm:py-3 transition-all ${
+              isClosed
+                ? "bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200"
+                : isParticipated
+                  ? "bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 shadow-sm"
+                  : "bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 shadow-sm"
+            }`}
           >
-            <FaRegHandPointer />
+            <FaRegHandPointer className="text-base" />
             {isClosed
               ? activeTab === "closed" && hasNoParticipants
                 ? "Closed • No participants"

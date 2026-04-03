@@ -35,17 +35,18 @@ const EditSellerDetails = ({ sellerId, onClose, onSave }) => {
   const [brokerageAmounts, setBrokerageAmounts] = useState({});
   const [selectedCompany, setSelectedCompany] = useState([]);
   const [selectedStatus, setSelectedStatus] = useState(null);
-  const [selectedBuyers, setSelectedBuyers] = useState([]);
-  const [buyerOptions, setBuyerOptions] = useState([]);
+  const [selectedGroups, setSelectedGroups] = useState([]);
+  const [groupOptions, setGroupOptions] = useState([]);
+  const [fullSellerData, setFullSellerData] = useState({});
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [commoditiesRes, companiesRes, buyersRes, sellerRes] =
+        const [commoditiesRes, companiesRes, groupsRes, sellerRes] =
           await Promise.all([
             axios.get(`${apiBaseURL}/commodities`),
             axios.get(`${apiBaseURL}/seller-company`),
-            axios.get(`${apiBaseURL}/buyers`),
+            axios.get(`${apiBaseURL}/groups`),
             axios.get(`${apiBaseURL}/sellers/${sellerId}`),
           ]);
 
@@ -59,34 +60,37 @@ const EditSellerDetails = ({ sellerId, onClose, onSave }) => {
           label: item.companyName,
         }));
 
-        const buyers = buyersRes.data.map((item) => ({
-          value: item.name,
-          label: item.name,
-        }));
+        const groups = (groupsRes.data.data || groupsRes.data || []).map(
+          (item) => ({
+            value: item._id,
+            label: item.groupName,
+          }),
+        );
 
         const sellerData = sellerRes.data;
+        setFullSellerData(sellerData);
         setSellerName(sellerData.sellerName);
         setPassword(sellerData.password);
         setPhoneNumbers(
-          sellerData.phoneNumbers.map((phone) => ({
-            id: Date.now(),
+          (sellerData.phoneNumbers || []).map((phone) => ({
+            id: Date.now() + Math.random(),
             value: phone.value,
           })),
         );
         setEmails(
-          sellerData.emails.map((email) => ({
-            id: Date.now(),
+          (sellerData.emails || []).map((email) => ({
+            id: Date.now() + Math.random(),
             value: email.value,
           })),
         );
         setSelectedCommodity(
-          sellerData.commodities.map((commodity) => ({
+          (sellerData.commodities || []).map((commodity) => ({
             value: commodity.name,
             label: commodity.name,
           })),
         );
         setBrokerageAmounts(
-          sellerData.commodities.reduce(
+          (sellerData.commodities || []).reduce(
             (acc, commodity) => ({
               ...acc,
               [commodity.name]: commodity.brokerage,
@@ -95,7 +99,7 @@ const EditSellerDetails = ({ sellerId, onClose, onSave }) => {
           ),
         );
         setSelectedCompany(
-          sellerData.companies.map((company) => ({
+          (sellerData.companies || []).map((company) => ({
             value: company,
             label: company,
           })),
@@ -103,10 +107,10 @@ const EditSellerDetails = ({ sellerId, onClose, onSave }) => {
         setSelectedStatus(
           statusOptions.find((option) => option.value === sellerData.status),
         );
-        setSelectedBuyers(
-          sellerData.buyers.map((buyer) => ({
-            value: buyer.name,
-            label: buyer.name,
+        setSelectedGroups(
+          (sellerData.groups || []).map((group) => ({
+            value: group.name,
+            label: group.name,
           })),
         );
 
@@ -116,9 +120,9 @@ const EditSellerDetails = ({ sellerId, onClose, onSave }) => {
         setCompanyOptions(
           companies.sort((a, b) => a.label.localeCompare(b.label)),
         );
-        setBuyerOptions(buyers.sort((a, b) => a.label.localeCompare(b.label)));
+        setGroupOptions(groups.sort((a, b) => a.label.localeCompare(b.label)));
       } catch (error) {
-        toast.error("Failed to load data from the server.", error);
+        toast.error("Failed to load data from the server.");
       }
     };
 
@@ -197,6 +201,7 @@ const EditSellerDetails = ({ sellerId, onClose, onSave }) => {
     }
 
     const payload = {
+      ...fullSellerData,
       sellerName,
       password,
       phoneNumbers: phoneNumbers.map((phone) => ({ value: phone.value })),
@@ -207,8 +212,8 @@ const EditSellerDetails = ({ sellerId, onClose, onSave }) => {
       })),
       companies: selectedCompany.map((company) => company.value),
       status: selectedStatus?.value,
-      buyers: selectedBuyers.map((buyer) => ({
-        name: buyer.value,
+      groups: selectedGroups.map((group) => ({
+        name: group.label,
       })),
     };
 
@@ -240,9 +245,10 @@ const EditSellerDetails = ({ sellerId, onClose, onSave }) => {
     setEmails([{ id: Date.now(), value: "" }]);
     setSelectedCommodity([]);
     setBrokerageAmounts({});
-    setSelectedBuyers([]);
+    setSelectedGroups([]);
     setSelectedCompany([]);
     setSelectedStatus(null);
+    setFullSellerData({});
   };
 
   return (
@@ -391,15 +397,14 @@ const EditSellerDetails = ({ sellerId, onClose, onSave }) => {
           </div>
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Buyers
+              Groups
             </label>
             <DropdownSelector
-              fetchData={async () => buyerOptions}
-              options={buyerOptions}
-              placeholder="Select buyers"
+              options={groupOptions}
+              placeholder="Select groups"
               isMulti
-              value={selectedBuyers}
-              onChange={(selected) => setSelectedBuyers(selected || [])}
+              value={selectedGroups}
+              onChange={(selected) => setSelectedGroups(selected || [])}
             />
           </div>
 

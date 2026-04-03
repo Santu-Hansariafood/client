@@ -124,6 +124,7 @@ router.get("/supplier-today", async (req, res) => {
         sellerName: seller.sellerName || "",
         companies: Array.isArray(seller.companies) ? seller.companies : [],
         commodities: sellerCommodityDetails,
+        groups: Array.isArray(seller.groups) ? seller.groups : [],
       },
       serverNow: new Date().toISOString(),
     });
