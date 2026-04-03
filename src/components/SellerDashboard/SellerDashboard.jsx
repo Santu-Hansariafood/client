@@ -56,9 +56,7 @@ const SellerDashboard = () => {
         const confirmBids = confirmBidsRes?.data || [];
 
         const seller = sellers.find((s) =>
-          s?.phoneNumbers?.some(
-            (p) => String(p?.value) === String(mobile)
-          )
+          s?.phoneNumbers?.some((p) => String(p?.value) === String(mobile)),
         );
 
         if (!seller) {
@@ -71,28 +69,20 @@ const SellerDashboard = () => {
         const activeSellerBids = bids.filter(
           (bid) =>
             bid.status === "active" &&
-            seller?.commodities?.some(
-              (c) => c?.name === bid?.commodity
-            )
+            seller?.commodities?.some((c) => c?.name === bid?.commodity),
         );
 
         setSellerBidCount(activeSellerBids.length);
 
         setParticipateBidCount(
-          participate.filter(
-            (p) => String(p?.mobile) === String(mobile)
-          ).length
+          participate.filter((p) => String(p?.mobile) === String(mobile))
+            .length,
         );
 
         const confirmed = confirmBids
-          .filter(
-            (bid) =>
-              String(bid?.phone) === String(mobile) && bid?.status
-          )
+          .filter((bid) => String(bid?.phone) === String(mobile) && bid?.status)
           .map((confirmBid) => {
-            const matchedBid = bids.find(
-              (b) => b?._id === confirmBid?.bidId
-            );
+            const matchedBid = bids.find((b) => b?._id === confirmBid?.bidId);
 
             return matchedBid
               ? {
@@ -161,10 +151,7 @@ const SellerDashboard = () => {
     <Suspense fallback={<Loading />}>
       <AdminPageShell noContentCard>
         <div className="min-h-screen bg-gradient-to-br from-slate-100 via-white to-slate-200 p-4 sm:p-6 space-y-8">
-
-          {/* 🔥 Header */}
           <div className="relative overflow-hidden flex justify-between items-center bg-gradient-to-br from-emerald-500 to-green-600 p-6 rounded-3xl shadow-xl text-white">
-
             <div>
               <h1 className="text-2xl sm:text-3xl font-bold">
                 Welcome, Mr. {user?.name} 👋
@@ -173,35 +160,63 @@ const SellerDashboard = () => {
                 Manage your business efficiently
               </p>
             </div>
+            <div className="flex items-center gap-4">
+              <div className="flex flex-col items-end gap-1">
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/20 backdrop-blur-md border border-white/30">
+                    <img
+                      src="/icons/favicon-16x16.png"
+                      alt="Hansaria"
+                      className="w-4 h-4 rounded-full"
+                    />
+                    <span className="text-[10px] sm:text-xs font-semibold text-white">
+                      Hansaria
+                    </span>
+                  </div>
 
-            <div
-              className="relative cursor-pointer p-3 bg-white/20 rounded-2xl"
-              onClick={() => setShowPopup(true)}
-            >
-              <FaBell />
-              {notificationCount > 0 && (
-                <>
-                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs px-1 rounded-full">
-                    {notificationCount}
-                  </span>
-                  <span className="absolute inset-0 animate-pulseSlow bg-white/20 rounded-2xl"></span>
-                </>
-              )}
+                  <div className="relative">
+                    <span className="w-5 h-5 flex items-center justify-center rounded-full bg-blue-500 text-white text-[10px]">
+                      ✓
+                    </span>
+                    <span className="absolute inset-0 animate-pulseSlow bg-blue-400 opacity-50 rounded-full"></span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-1 text-[10px] text-white/90">
+                  <img
+                    src="/icons/favicon-16x16.png"
+                    className="w-3 h-3 rounded-full"
+                  />
+                  <span>Trustable Seller</span>
+                </div>
+              </div>
+              <div
+                className="relative cursor-pointer p-3 bg-white/20 rounded-2xl hover:bg-white/30 transition"
+                onClick={() => setShowPopup(true)}
+              >
+                <FaBell />
+
+                {notificationCount > 0 && (
+                  <>
+                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs px-1 rounded-full">
+                      {notificationCount}
+                    </span>
+                    <span className="absolute inset-0 animate-pulseSlow bg-white/20 rounded-2xl"></span>
+                  </>
+                )}
+              </div>
             </div>
           </div>
-
-          {/* 📊 Cards */}
           <div className="grid grid-cols-3 md:grid-cols-4 gap-4">
             {dashboardData.map((item, i) => (
-              <div key={i} className="group">
-                <div className="bg-white p-3 rounded-2xl shadow hover:shadow-xl transition">
-                  <Cards {...item} />
-                </div>
+              <div
+                key={i}
+                className="bg-white p-3 rounded-2xl shadow hover:shadow-xl transition"
+              >
+                <Cards {...item} />
               </div>
             ))}
           </div>
-
-          {/* 👤 Profile + Quick Links */}
           <div className="grid lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2 bg-white/70 backdrop-blur-xl p-6 rounded-3xl shadow">
               <UserProfileCard user={user} />
@@ -217,9 +232,7 @@ const SellerDashboard = () => {
               ].map((l, i) => (
                 <button
                   key={i}
-                  onClick={() =>
-                    l.action ? l.action() : navigate(l.link)
-                  }
+                  onClick={() => (l.action ? l.action() : navigate(l.link))}
                   className="w-full flex justify-between p-3 bg-slate-50 rounded-xl mb-2 hover:bg-emerald-50"
                 >
                   {l.label}
@@ -228,8 +241,6 @@ const SellerDashboard = () => {
               ))}
             </div>
           </div>
-
-          {/* 🔔 Popup */}
           <PopupBox
             isOpen={showPopup}
             onClose={() => setShowPopup(false)}
@@ -245,9 +256,7 @@ const SellerDashboard = () => {
                 </div>
               ))
             ) : (
-              <p className="text-center text-slate-400">
-                No notifications
-              </p>
+              <p className="text-center text-slate-400">No notifications</p>
             )}
           </PopupBox>
         </div>
