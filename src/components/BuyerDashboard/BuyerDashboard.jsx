@@ -70,6 +70,13 @@ const BuyerDashboard = () => {
       color: "from-rose-400 to-red-600",
     },
     {
+      title: "Participate Bid List",
+      count: "View",
+      icon: FaGavel,
+      link: "/manage-bids/bid-list/participate-bid-admin",
+      color: "from-emerald-500 to-teal-600",
+    },
+    {
       title: "Bid History",
       count: "Review",
       icon: FaHistory,

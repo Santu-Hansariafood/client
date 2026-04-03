@@ -27,6 +27,7 @@ const ParticipateBidAdmin = () => {
   const itemsPerPage = 10;
   const [selectedBidId, setSelectedBidId] = useState(null);
   const [buyerGroup, setBuyerGroup] = useState(null);
+  const [isBuyerAdmin, setIsBuyerAdmin] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -54,6 +55,7 @@ const ParticipateBidAdmin = () => {
             b.mobile?.some((m) => String(m) === String(mobile)),
           );
           if (buyer) {
+            setIsBuyerAdmin(buyer.isAdmin || false);
             const company = companies.find(
               (c) => String(c._id) === String(buyer.companyId),
             );
@@ -94,8 +96,16 @@ const ParticipateBidAdmin = () => {
       if (!matchingBid) return;
 
       // Filter by buyer group if applicable
-      if (userRole === "Buyer" && buyerGroup && matchingBid.group !== buyerGroup) {
-        return;
+      if (userRole === "Buyer") {
+        if (buyerGroup && matchingBid.group !== buyerGroup) {
+          return;
+        }
+        // Additional filter for buyers: must be admin or the creator of the bid
+        const isCreator =
+          String(matchingBid.createdByMobile) === String(mobile);
+        if (!isBuyerAdmin && !isCreator) {
+          return;
+        }
       }
 
       if (!groupedBids[pBid.bidId]) {
@@ -192,8 +202,8 @@ const ParticipateBidAdmin = () => {
   return (
     <Suspense fallback={<Loading />}>
       <AdminPageShell
-        title="Participate bid (admin)"
-        subtitle="Full history of participation activity"
+        title={userRole === "Buyer" ? "Participate bid list" : "Participate bid (admin)"}
+        subtitle={userRole === "Buyer" ? "View your company's bid activity" : "Full history of participation activity"}
         icon={FaUsers}
         noContentCard
       >

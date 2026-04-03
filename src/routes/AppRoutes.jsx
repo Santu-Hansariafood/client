@@ -48,7 +48,7 @@ const privateRoutes = [
   { path: "seller-details/list", component: LazyPages.ListSellerDetails, roles: ["Admin", "Employee"] },
   { path: "manage-bids/buyer", component: LazyPages.BuyerBid, roles: ["Admin", "Employee", "Buyer"] },
   { path: "manage-bids/bid-list", component: LazyPages.BidList, roles: ["Admin", "Employee", "Buyer"] },
-  { path: "manage-bids/bid-list/participate-bid-admin", component: LazyPages.ParticipateBidAdmin, roles: ["Admin", "Employee"] },
+  { path: "manage-bids/bid-list/participate-bid-admin", component: LazyPages.ParticipateBidAdmin, roles: ["Admin", "Employee", "Buyer"] },
   { path: "manage-bids/bid-location", component: LazyPages.BidLocation, roles: ["Admin", "Employee"] },
   { path: "sodabook/add", component: LazyPages.AddSoudabook, roles: ["Admin", "Employee"] },
   { path: "sodabook/list", component: LazyPages.ListSoudabook, roles: ["Admin", "Employee", "Buyer", "Seller"] },

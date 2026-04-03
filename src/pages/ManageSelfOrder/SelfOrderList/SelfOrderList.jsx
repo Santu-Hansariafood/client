@@ -408,7 +408,7 @@ Download PDF: ${fileUrl}`
         "Date",
         "Sauda No",
         "PO Number",
-        "Buyer",
+        userRole === "Admin" || userRole === "Employee" ? "Buyer" : null,
         "Buyer Company",
         userRole === "Admin" ? "Mobile" : null,
         "Consignee",
@@ -418,10 +418,12 @@ Download PDF: ${fileUrl}`
         "Loading Station",
         "Location",
         "Agent Name",
-        "Buyer Emails",
-        "Seller Emails",
-        "WhatsApp Sent",
-        "Action",
+        userRole === "Admin" || userRole === "Employee" ? "Buyer Emails" : null,
+        userRole === "Admin" || userRole === "Employee"
+          ? "Seller Emails"
+          : null,
+        userRole === "Admin" || userRole === "Employee" ? "WhatsApp Sent" : null,
+        userRole === "Admin" || userRole === "Employee" ? "Action" : null,
       ].filter(Boolean),
     [userRole],
   );
@@ -477,7 +479,9 @@ Download PDF: ${fileUrl}`
           formattedDate,
           item.saudaNo || "N/A",
           item.poNumber || "N/A",
-          item.buyer || "N/A",
+          userRole === "Admin" || userRole === "Employee"
+            ? item.buyer || "N/A"
+            : null,
           item.buyerCompany || "N/A",
           userRole === "Admin" ? (
             <div className="flex items-center gap-2" key={`mobile-${item._id}`}>
@@ -500,72 +504,80 @@ Download PDF: ${fileUrl}`
           item.loadingStation || "N/A",
           item.location || "N/A",
           item.agentName || "N/A",
-          item.buyerEmails?.filter(Boolean).join(", ") || "N/A",
-          <div className="flex flex-col gap-1" key={`seller-${item._id}`}>
-            <span className="text-xs text-slate-500">
-              {item.sellerEmails?.filter(Boolean).join(", ") || "N/A"}
-            </span>
-            <div className="flex items-center gap-2">
-              <span className="font-medium text-slate-700">
-                {item.sellerMobile || "N/A"}
+          userRole === "Admin" || userRole === "Employee"
+            ? item.buyerEmails?.filter(Boolean).join(", ") || "N/A"
+            : null,
+          userRole === "Admin" || userRole === "Employee" ? (
+            <div className="flex flex-col gap-1" key={`seller-${item._id}`}>
+              <span className="text-xs text-slate-500">
+                {item.sellerEmails?.filter(Boolean).join(", ") || "N/A"}
               </span>
-              {item.sellerMobile && userRole === "Admin" && (
-                <button
-                  onClick={() => handleSmartWhatsApp(item, "seller")}
-                  className="text-slate-400 hover:text-green-500"
-                  title="Chat on WhatsApp"
-                >
-                  <FaWhatsapp size={18} />
-                </button>
+              <div className="flex items-center gap-2">
+                <span className="font-medium text-slate-700">
+                  {item.sellerMobile || "N/A"}
+                </span>
+                {item.sellerMobile && userRole === "Admin" && (
+                  <button
+                    onClick={() => handleSmartWhatsApp(item, "seller")}
+                    className="text-slate-400 hover:text-green-500"
+                    title="Chat on WhatsApp"
+                  >
+                    <FaWhatsapp size={18} />
+                  </button>
+                )}
+              </div>
+            </div>
+          ) : null,
+          userRole === "Admin" || userRole === "Employee" ? (
+            <div className="flex justify-center" key={`status-${item._id}`}>
+              {item.whatsappSent ? (
+                <span className="px-2 py-1 rounded-full bg-green-100 text-green-700 text-xs font-bold">
+                  Sent
+                </span>
+              ) : (
+                <span className="px-2 py-1 rounded-full bg-slate-100 text-slate-500 text-xs font-bold">
+                  Pending
+                </span>
               )}
             </div>
-          </div>,
-          <div className="flex justify-center" key={`status-${item._id}`}>
-            {item.whatsappSent ? (
-              <span className="px-2 py-1 rounded-full bg-green-100 text-green-700 text-xs font-bold">
-                Sent
-              </span>
-            ) : (
-              <span className="px-2 py-1 rounded-full bg-slate-100 text-slate-500 text-xs font-bold">
-                Pending
-              </span>
-            )}
-          </div>,
-          <div
-            className="flex flex-col gap-2 items-start min-w-[120px]"
-            key={`actions-${item._id}`}
-          >
-            <Actions
-              onView={() => handleView(item)}
-              onEdit={() => handleEdit(item)}
-              onDelete={() => handleDelete(item)}
-            />
-
-            <div className="flex gap-2">
-              <DownloadSauda
-                data={{ ...item, consignee: getConsigneeDisplay(item) }}
-                consigneeData={consigneeData}
-                supplierData={supplierData}
-                buyerData={buyerData}
-                sellerProfileData={sellerProfileData}
-                autoEmail
-                button={
-                  <button className="w-9 h-9 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition-colors">
-                    <FaDownload size={16} />
-                  </button>
-                }
+          ) : null,
+          userRole === "Admin" || userRole === "Employee" ? (
+            <div
+              className="flex flex-col gap-2 items-start min-w-[120px]"
+              key={`actions-${item._id}`}
+            >
+              <Actions
+                onView={() => handleView(item)}
+                onEdit={() => handleEdit(item)}
+                onDelete={() => handleDelete(item)}
               />
 
-              {item.buyerMobile && userRole === "Admin" && (
-                <button
-                  onClick={() => handleSmartWhatsApp(item, "buyer")}
-                  className="sm:hidden w-9 h-9 rounded-lg bg-green-50 text-green-600"
-                >
-                  <FaWhatsapp size={16} />
-                </button>
-              )}
+              <div className="flex gap-2">
+                <DownloadSauda
+                  data={{ ...item, consignee: getConsigneeDisplay(item) }}
+                  consigneeData={consigneeData}
+                  supplierData={supplierData}
+                  buyerData={buyerData}
+                  sellerProfileData={sellerProfileData}
+                  autoEmail
+                  button={
+                    <button className="w-9 h-9 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition-colors">
+                      <FaDownload size={16} />
+                    </button>
+                  }
+                />
+
+                {item.buyerMobile && userRole === "Admin" && (
+                  <button
+                    onClick={() => handleSmartWhatsApp(item, "buyer")}
+                    className="sm:hidden w-9 h-9 rounded-lg bg-green-50 text-green-600"
+                  >
+                    <FaWhatsapp size={16} />
+                  </button>
+                )}
+              </div>
             </div>
-          </div>,
+          ) : null,
         ].filter(Boolean);
       }),
     [
