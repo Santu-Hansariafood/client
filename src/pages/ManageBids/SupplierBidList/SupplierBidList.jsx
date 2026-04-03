@@ -18,7 +18,7 @@ const PopupBox = lazy(() => import("../../../common/PopupBox/PopupBox"));
 
 const SupplierBidList = () => {
   const navigate = useNavigate();
-  const { userRole, mobile: authMobile } = useAuth();
+  const { mobile: authMobile } = useAuth();
   const location = useLocation();
   const { mobile: routeMobile } = location.state || {};
   const mobile = routeMobile || authMobile;
@@ -38,6 +38,9 @@ const SupplierBidList = () => {
   const [bidLocations, setBidLocations] = useState([]);
   const [nowTime, setNowTime] = useState(() => new Date());
   const [serverNow, setServerNow] = useState(null);
+  const [selectedGroupName, setSelectedGroupName] = useState(null);
+  const [selectedCompanyName, setSelectedCompanyName] = useState(null);
+  const [sellerInfo, setSellerInfo] = useState(null);
 
   useEffect(() => {
     const id = setInterval(() => setNowTime(new Date()), 1000);
@@ -59,12 +62,14 @@ const SupplierBidList = () => {
       const counts = payload.participantCounts || {};
       const locations = payload.bidLocations || [];
       const serverNowValue = payload.serverNow || null;
+      const seller = payload.seller || null;
 
       setBids(items);
       setParticipations(myParticipations);
       setParticipantCounts(counts);
       setBidLocations(locations);
       setServerNow(serverNowValue);
+      setSellerInfo(seller);
     } catch (err) {
       const message =
         err?.response?.data?.message ||
@@ -185,16 +190,136 @@ const SupplierBidList = () => {
       });
   }, [bids, participations, activeTab, nowTime, serverNow]);
 
-  const groupedBids = useMemo(() => {
-    const groups = {};
+  const normalizeGroupName = useCallback(
+    (value) => String(value ?? "").trim() || "Ungrouped",
+    [],
+  );
+
+  const normalizeCompanyName = useCallback(
+    (value) => String(value ?? "").trim() || "Unknown Company",
+    [],
+  );
+
+  const normalizeCommodityName = useCallback(
+    (value) => String(value ?? "").trim() || "Unknown Commodity",
+    [],
+  );
+
+  const groupIndex = useMemo(() => {
+    const groups = new Map();
+
     filteredBids.forEach((bid) => {
-      if (!groups[bid.group]) groups[bid.group] = [];
-      groups[bid.group].push(bid);
+      const groupName = normalizeGroupName(bid.group);
+      const companyName = normalizeCompanyName(bid.consignee);
+      const commodityName = normalizeCommodityName(bid.commodity);
+
+      if (!groups.has(groupName)) {
+        groups.set(groupName, {
+          groupName,
+          bidCount: 0,
+          commodities: new Set(),
+          companies: new Map(),
+        });
+      }
+
+      const entry = groups.get(groupName);
+      entry.bidCount += 1;
+      entry.commodities.add(commodityName);
+
+      if (!entry.companies.has(companyName)) {
+        entry.companies.set(companyName, {
+          companyName,
+          bidCount: 0,
+          commodities: new Set(),
+        });
+      }
+
+      const companyEntry = entry.companies.get(companyName);
+      companyEntry.bidCount += 1;
+      companyEntry.commodities.add(commodityName);
     });
-    return Object.entries(groups).sort(([a], [b]) => a.localeCompare(b));
-  }, [filteredBids]);
+
+    return Array.from(groups.values())
+      .map((g) => ({
+        ...g,
+        commodities: Array.from(g.commodities).sort((a, b) => a.localeCompare(b)),
+        companies: Array.from(g.companies.values())
+          .map((c) => ({
+            ...c,
+            commodities: Array.from(c.commodities).sort((a, b) =>
+              a.localeCompare(b),
+            ),
+          }))
+          .sort((a, b) => a.companyName.localeCompare(b.companyName)),
+        companyCount: g.companies.size,
+      }))
+      .sort((a, b) => a.groupName.localeCompare(b.groupName));
+  }, [filteredBids, normalizeCommodityName, normalizeCompanyName, normalizeGroupName]);
+
+  useEffect(() => {
+    if (!selectedGroupName) {
+      if (selectedCompanyName) setSelectedCompanyName(null);
+      return;
+    }
+
+    const groupExists = groupIndex.some((g) => g.groupName === selectedGroupName);
+    if (!groupExists) {
+      setSelectedGroupName(null);
+      setSelectedCompanyName(null);
+      return;
+    }
+
+    if (selectedCompanyName) {
+      const group = groupIndex.find((g) => g.groupName === selectedGroupName);
+      const companyExists = group?.companies.some(
+        (c) => c.companyName === selectedCompanyName,
+      );
+      if (!companyExists) setSelectedCompanyName(null);
+    }
+  }, [groupIndex, selectedCompanyName, selectedGroupName]);
 
   const bidCount = filteredBids.length;
+
+  const displayedBids = useMemo(() => {
+    return filteredBids.filter((bid) => {
+      if (selectedGroupName && normalizeGroupName(bid.group) !== selectedGroupName) {
+        return false;
+      }
+      if (
+        selectedCompanyName &&
+        normalizeCompanyName(bid.consignee) !== selectedCompanyName
+      ) {
+        return false;
+      }
+      return true;
+    });
+  }, [
+    filteredBids,
+    normalizeCompanyName,
+    normalizeGroupName,
+    selectedCompanyName,
+    selectedGroupName,
+  ]);
+
+  const subtitleText = useMemo(() => {
+    if (selectedGroupName && selectedCompanyName) {
+      return `${displayedBids.length} ${activeTab} bid(s) • ${selectedGroupName} → ${selectedCompanyName}`;
+    }
+    if (selectedGroupName) {
+      return `Select a company in ${selectedGroupName} to view ${activeTab} bids`;
+    }
+    return `Select a group to view ${activeTab} bids`;
+  }, [activeTab, displayedBids.length, selectedCompanyName, selectedGroupName]);
+
+  const mappedCommodityText = useMemo(() => {
+    const commodities = sellerInfo?.commodities;
+    if (!Array.isArray(commodities) || commodities.length === 0) return "";
+    return commodities
+      .map((c) => String(c?.name || "").trim())
+      .filter(Boolean)
+      .sort((a, b) => a.localeCompare(b))
+      .join(", ");
+  }, [sellerInfo]);
 
   const renderBidCard = (bid) => {
     const isParticipated = participations.some((p) => p.bidId === bid._id);
@@ -231,6 +356,9 @@ const SupplierBidList = () => {
               </p>
               <p className="text-sm font-semibold text-red-600 mt-1">
                 End time: {bid.endTime} • {isClosed ? "Closed" : countdownText}
+              </p>
+              <p className="text-xs font-semibold text-slate-500 mt-1">
+                Interactions: {participantCount}
               </p>
             </div>
             {isParticipated && (
@@ -309,20 +437,29 @@ const SupplierBidList = () => {
     <Suspense fallback={<Loading />}>
       <AdminPageShell
         title="Supplier Bids"
-        subtitle={`You have ${bidCount} ${activeTab} bid(s) for your selected commodities`}
+        subtitle={subtitleText}
         icon={FaGavel}
         noContentCard
       >
         <div className="max-w-6xl mx-auto space-y-6">
-          {userRole === "Buyer" && (
-            <div className="flex justify-start mb-6">
-              <button
-                onClick={() => navigate(-1)}
-                className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-gray-600 bg-white rounded-xl border border-slate-200 hover:bg-slate-50 transition-colors shadow-sm"
-              >
-                <FaArrowLeft />
-                Back
-              </button>
+          <div className="flex justify-start mb-2">
+            <button
+              onClick={() => navigate(-1)}
+              className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-gray-600 bg-white rounded-xl border border-slate-200 hover:bg-slate-50 transition-colors shadow-sm"
+            >
+              <FaArrowLeft />
+              Back
+            </button>
+          </div>
+
+          {mappedCommodityText && (
+            <div className="bg-white rounded-2xl border border-slate-200 px-5 py-4 shadow-sm">
+              <p className="text-xs font-semibold text-slate-500">
+                Mapped Commodities
+              </p>
+              <p className="text-sm font-bold text-slate-800 mt-1">
+                {mappedCommodityText}
+              </p>
             </div>
           )}
           <div className="flex bg-slate-100 p-1 rounded-xl w-fit mb-6">
@@ -379,26 +516,118 @@ const SupplierBidList = () => {
               No {activeTab} bids found for your selected commodities.
             </div>
           ) : (
-            <div className="space-y-4">
-              {groupedBids.map(([groupName, groupBids]) => (
-                <div
-                  key={groupName}
-                  className="rounded-2xl border border-emerald-100 bg-white p-4 shadow-lg shadow-emerald-900/5"
-                >
-                  <div className="flex items-center justify-between mb-4">
-                    <p className="text-sm font-bold text-slate-800">
-                      {groupName} Bids
-                    </p>
-                    <p className="text-xs font-semibold text-slate-500">
-                      {groupBids.length} bid(s)
-                    </p>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {groupBids.map(renderBidCard)}
+            <>
+              {(selectedGroupName || selectedCompanyName) && (
+                <div className="flex flex-wrap items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedGroupName(null);
+                      setSelectedCompanyName(null);
+                    }}
+                    className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-gray-600 bg-white rounded-xl border border-slate-200 hover:bg-slate-50 transition-colors shadow-sm"
+                  >
+                    <FaArrowLeft />
+                    Groups
+                  </button>
+                  {selectedGroupName && selectedCompanyName && (
+                    <button
+                      type="button"
+                      onClick={() => setSelectedCompanyName(null)}
+                      className="px-4 py-2 text-sm font-semibold text-slate-700 bg-white rounded-xl border border-slate-200 hover:bg-slate-50 transition-colors shadow-sm"
+                    >
+                      Companies
+                    </button>
+                  )}
+                  {selectedGroupName && (
+                    <span className="px-4 py-2 text-sm font-semibold text-slate-700 bg-white rounded-xl border border-slate-200 shadow-sm">
+                      {selectedGroupName}
+                    </span>
+                  )}
+                  {selectedCompanyName && (
+                    <span className="px-4 py-2 text-sm font-semibold text-slate-700 bg-slate-100 rounded-xl border border-slate-200">
+                      {selectedCompanyName}
+                    </span>
+                  )}
+                </div>
+              )}
+
+              {!selectedGroupName ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {groupIndex.map((g) => (
+                    <button
+                      key={g.groupName}
+                      type="button"
+                      onClick={() => {
+                        setSelectedGroupName(g.groupName);
+                        setSelectedCompanyName(null);
+                      }}
+                      className="text-left bg-white rounded-2xl border border-emerald-100 p-5 shadow-lg shadow-emerald-900/5 hover:shadow-xl transition-shadow"
+                    >
+                      <p className="text-sm font-bold text-slate-800">{g.groupName}</p>
+                      <p className="text-xs font-semibold text-slate-500 mt-2">
+                        {g.companyCount} company(s) • {g.bidCount} bid(s)
+                      </p>
+                      {g.commodities.length > 0 && (
+                        <p className="text-xs font-semibold text-slate-600 mt-2">
+                          {g.commodities.slice(0, 3).join(", ")}
+                          {g.commodities.length > 3 ? "…" : ""}
+                        </p>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              ) : !selectedCompanyName ? (
+                <div className="space-y-4">
+                  <div className="rounded-2xl border border-emerald-100 bg-white p-4 shadow-lg shadow-emerald-900/5">
+                    <div className="flex items-center justify-between mb-4">
+                      <p className="text-sm font-bold text-slate-800">
+                        {selectedGroupName} Companies
+                      </p>
+                      <p className="text-xs font-semibold text-slate-500">
+                        {groupIndex.find((g) => g.groupName === selectedGroupName)
+                          ?.companyCount || 0}{" "}
+                        company(s)
+                      </p>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {(
+                        groupIndex.find((g) => g.groupName === selectedGroupName)
+                          ?.companies || []
+                      ).map((c) => (
+                        <button
+                          key={c.companyName}
+                          type="button"
+                          onClick={() => setSelectedCompanyName(c.companyName)}
+                          className="text-left bg-white rounded-2xl border border-slate-200 p-5 shadow-sm hover:shadow-md transition-shadow"
+                        >
+                          <p className="text-sm font-bold text-slate-800">
+                            {c.companyName}
+                          </p>
+                          <p className="text-xs font-semibold text-slate-500 mt-2">
+                            {c.bidCount} bid(s)
+                          </p>
+                          {c.commodities.length > 0 && (
+                            <p className="text-xs font-semibold text-slate-600 mt-2">
+                              {c.commodities.slice(0, 3).join(", ")}
+                              {c.commodities.length > 3 ? "…" : ""}
+                            </p>
+                          )}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 </div>
-              ))}
-            </div>
+              ) : displayedBids.length === 0 ? (
+                <div className="text-center py-12 bg-white rounded-2xl border border-slate-200 text-slate-500 font-medium">
+                  No {activeTab} bids found for {selectedCompanyName}.
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {displayedBids.map(renderBidCard)}
+                </div>
+              )}
+            </>
           )}
         </div>
 

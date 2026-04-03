@@ -57,9 +57,18 @@ router.get("/supplier-today", async (req, res) => {
       return res.status(404).json({ message: "Seller not found" });
     }
 
-    const sellerCommodities = Array.isArray(seller.commodities)
-      ? seller.commodities.map((c) => c?.name).filter(Boolean)
+    const sellerCommodityDetails = Array.isArray(seller.commodities)
+      ? seller.commodities
+          .map((c) => ({
+            name: String(c?.name || "").trim(),
+            brokerage: Number(c?.brokerage || 0),
+          }))
+          .filter((c) => Boolean(c.name))
       : [];
+
+    const sellerCommodities = [
+      ...new Set(sellerCommodityDetails.map((c) => c.name)),
+    ];
 
     const baseDate = dateStr ? new Date(dateStr) : new Date();
     const dayStr = baseDate.toISOString().split("T")[0];
@@ -110,6 +119,12 @@ router.get("/supplier-today", async (req, res) => {
       myParticipations,
       participantCounts,
       bidLocations,
+      seller: {
+        _id: seller._id,
+        sellerName: seller.sellerName || "",
+        companies: Array.isArray(seller.companies) ? seller.companies : [],
+        commodities: sellerCommodityDetails,
+      },
       serverNow: new Date().toISOString(),
     });
   } catch (error) {
