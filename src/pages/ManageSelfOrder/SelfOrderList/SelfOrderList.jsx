@@ -127,6 +127,20 @@ const SelfOrderList = () => {
               total = filteredOrders.length;
             }
           }
+        } else if (userRole === "Seller") {
+          const seller = sellerProfiles.find((s) =>
+            s.phoneNumbers?.some((p) => String(p.value) === String(mobile))
+          );
+          
+          filteredOrders = raw.filter((item) => {
+            return (
+              String(item.sellerMobile) === String(mobile) ||
+              (seller && String(item.supplier) === String(seller._id))
+            );
+          });
+          if (total === raw.length) {
+            total = filteredOrders.length;
+          }
         }
 
         filteredOrders = [...filteredOrders].sort((a, b) => {

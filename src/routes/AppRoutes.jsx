@@ -54,8 +54,8 @@ const privateRoutes = [
   { path: "sodabook/list", component: LazyPages.ListSoudabook, roles: ["Admin", "Employee", "Buyer"] },
   { path: "manage-order/add-self-order", component: LazyPages.AddSelfOrder, roles: ["Admin", "Employee"] },
   { path: "manage-order/edit-self-order/:id", component: LazyPages.EditSelfOrder, roles: ["Admin", "Employee"] },
-  { path: "manage-order/list-self-order", component: LazyPages.ListSelfOrder, roles: ["Admin", "Employee", "Buyer"] },
-  { path: "Loading-Entry/list-loading-entry", component: LazyPages.ListLoadingEntry, roles: ["Admin", "Employee"] },
+  { path: "manage-order/list-self-order", component: LazyPages.ListSelfOrder, roles: ["Admin", "Employee", "Buyer", "Seller"] },
+  { path: "Loading-Entry/list-loading-entry", component: LazyPages.ListLoadingEntry, roles: ["Admin", "Employee", "Seller"] },
   { path: "Loading-Entry/add-loading-entry", component: LazyPages.AddLoadingEntry, roles: ["Admin", "Employee"] },
   { path: "employee/add", component: LazyPages.AddEmployee, roles: ["Admin"] },
   { path: "employee/list", component: LazyPages.ListEmployee, roles: ["Admin"] },
@@ -64,7 +64,7 @@ const privateRoutes = [
   { path: "loading-entry-sauda/:id", component: LazyPages.LoadingEntrySauda, roles: ["Admin", "Employee"] },
   
   { path: "Supplier-Bid-List", component: LazyPages.SellerBidList, roles: ["Seller"] },
-  { path: "participate-bid-list", component: LazyPages.ParticipateBid, roles: ["Buyer"] },
+  { path: "participate-bid-list", component: LazyPages.ParticipateBid, roles: ["Buyer", "Seller"] },
   { path: "confirm-bids/:bidId", component: LazyPages.ConfirmBids, roles: ["Buyer"] },
   { path: "buyer/market-analytics", component: LazyPages.BuyerMarketAnalytics, roles: ["Buyer"] },
   { path: "buyer/bid-history", component: LazyPages.BuyerBidHistory, roles: ["Buyer"] }

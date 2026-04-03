@@ -27,6 +27,8 @@ const SellerDashboard = () => {
 
   const [sellerBidCount, setSellerBidCount] = useState(0);
   const [participateBidCount, setParticipateBidCount] = useState(0);
+  const [orderCount, setOrderCount] = useState(0);
+  const [loadingCount, setLoadingCount] = useState(0);
   const [notificationCount, setNotificationCount] = useState(0);
   const [showPopup, setShowPopup] = useState(false);
   const [confirmedBids, setConfirmedBids] = useState([]);
@@ -42,18 +44,22 @@ const SellerDashboard = () => {
       try {
         setLoading(true);
 
-        const [sellersRes, bidsRes, participateRes, confirmBidsRes] =
+        const [sellersRes, bidsRes, participateRes, confirmBidsRes, ordersRes, loadingRes] =
           await Promise.all([
             axios.get("/sellers"),
             axios.get("/bids"),
             axios.get("/participatebids"),
             axios.get("/confirm-bid"),
+            axios.get("/self-order"),
+            axios.get("/loading-entries"),
           ]);
 
         const sellers = sellersRes?.data || [];
-        const bids = bidsRes?.data || [];
-        const participate = participateRes?.data || [];
-        const confirmBids = confirmBidsRes?.data || [];
+        const bids = bidsRes?.data?.data || bidsRes?.data || [];
+        const participate = participateRes?.data?.data || participateRes?.data || [];
+        const confirmBids = confirmBidsRes?.data?.data || confirmBidsRes?.data || [];
+        const orders = ordersRes?.data?.data || ordersRes?.data || [];
+        const loadings = loadingRes?.data?.data || loadingRes?.data || [];
 
         const seller = sellers.find((s) =>
           s?.phoneNumbers?.some((p) => String(p?.value) === String(mobile)),
@@ -78,6 +84,19 @@ const SellerDashboard = () => {
           participate.filter((p) => String(p?.mobile) === String(mobile))
             .length,
         );
+
+        const sellerOrders = orders.filter((item) => {
+          return (
+            String(item.sellerMobile) === String(mobile) ||
+            String(item.supplier) === String(seller._id)
+          );
+        });
+        setOrderCount(sellerOrders.length);
+
+        const sellerLoadings = loadings.filter(
+          (e) => String(e.supplier) === String(seller._id)
+        );
+        setLoadingCount(sellerLoadings.length);
 
         const confirmed = confirmBids
           .filter((bid) => String(bid?.phone) === String(mobile) && bid?.status)
@@ -123,14 +142,14 @@ const SellerDashboard = () => {
     },
     {
       title: "Orders",
-      count: 12,
+      count: orderCount,
       icon: FaBoxOpen,
       link: "/manage-order/list-self-order",
       color: "from-blue-400 to-indigo-600",
     },
     {
       title: "Loading",
-      count: 7,
+      count: loadingCount,
       icon: FaTruckMoving,
       link: "/Loading-Entry/list-loading-entry",
       color: "from-orange-400 to-amber-500",

@@ -13,6 +13,7 @@ const SearchBox = lazy(() => import("../../../common/SearchBox/SearchBox")); // 
 const Pagination = lazy(() => import("../../../common/Paginations/Paginations"));
 
 const ListLoadingEntry = () => {
+  const { userRole, mobile } = useAuth();
   const [loadingEntries, setLoadingEntries] = useState([]);
   const [filteredEntries, setFilteredEntries] = useState([]);
   const [sellerMap, setSellerMap] = useState({});
@@ -25,7 +26,7 @@ const ListLoadingEntry = () => {
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [userRole, mobile]);
 
   const fetchData = async () => {
     try {
@@ -37,8 +38,21 @@ const ListLoadingEntry = () => {
         sellersRes.data.map((seller) => [seller._id, seller.sellerName])
       );
       setSellerMap(sellerMapping);
-      setLoadingEntries(entriesRes.data);
-      setFilteredEntries(entriesRes.data); // ✅ Initialize filtered data
+      
+      let entries = entriesRes.data;
+      if (userRole === "Seller") {
+        const seller = sellersRes.data.find((s) =>
+          s.phoneNumbers?.some((p) => String(p.value) === String(mobile))
+        );
+        if (seller) {
+          entries = entries.filter((e) => String(e.supplier) === String(seller._id));
+        } else {
+          entries = [];
+        }
+      }
+      
+      setLoadingEntries(entries);
+      setFilteredEntries(entries); // ✅ Initialize filtered data
     } catch (error) {
       toast.error("Failed to fetch data");
     }
