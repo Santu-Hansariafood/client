@@ -135,9 +135,36 @@ const BuyerDashboard = () => {
                   ? buyerProfile.companyNames.join(", ")
                   : toTitleCase(buyerProfile.companyName || "")}
               </h3>
+              {buyerProfile.group && (
+                <p className="text-[11px] sm:text-xs font-semibold text-slate-500">
+                  Group: {toTitleCase(buyerProfile.group)}
+                </p>
+              )}
             </div>
           )}
         </header>
+
+        {buyerProfile?.companyNames?.length > 0 && (
+          <section className="mb-6">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <h2 className="text-xs font-bold text-slate-600 uppercase tracking-widest">
+                  Your Companies
+                </h2>
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {buyerProfile.companyNames.map((name, idx) => (
+                <div
+                  key={`${name}-${idx}`}
+                  className="px-3 py-1 rounded-full text-xs sm:text-sm font-medium bg-white shadow-sm border border-slate-200"
+                >
+                  {toTitleCase(name)}
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
 
         {buyerProfile?.consignee?.length > 0 && (
           <section className="mb-10">

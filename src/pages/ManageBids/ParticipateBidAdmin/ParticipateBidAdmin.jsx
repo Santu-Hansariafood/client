@@ -106,9 +106,18 @@ const ParticipateBidAdmin = () => {
 
       // Filter by buyer groups if applicable
       if (userRole === "Buyer") {
+        const normalizedGroup =
+          (matchingBid.group || "")
+            .split(" ")
+            .map(
+              (word) =>
+                word.charAt(0).toUpperCase() + word.slice(1).toLowerCase(),
+            )
+            .join(" ");
+
         if (
           buyerGroups.length > 0 &&
-          !buyerGroups.includes(String(matchingBid.group))
+          !buyerGroups.includes(normalizedGroup)
         ) {
           return;
         }
