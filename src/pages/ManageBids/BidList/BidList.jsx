@@ -83,10 +83,10 @@ const BidList = () => {
 
   const filteredBids = useMemo(() => {
     const now = new Date();
-    const todayStr = now.toISOString().split("T")[0];
+    const todayStr = now.toLocaleDateString("en-CA"); // YYYY-MM-DD in local time
     const yesterday = new Date(now);
     yesterday.setDate(now.getDate() - 1);
-    const yesterdayStr = yesterday.toISOString().split("T")[0];
+    const yesterdayStr = yesterday.toLocaleDateString("en-CA");
 
     return bids
       .filter((bid) => {
@@ -149,8 +149,20 @@ const BidList = () => {
           return false;
         }
 
-        if (userRole === "Buyer" && buyerGroups.length > 0) {
-          return buyerGroups.includes(bid.group);
+        if (userRole === "Buyer") {
+          // If buyerGroups is empty, buyer shouldn't see anything
+          if (!buyerGroups || buyerGroups.length === 0) return false;
+
+          const bidGroupNormalized = (bid.group || "")
+            .trim()
+            .split(" ")
+            .map(
+              (word) =>
+                word.charAt(0).toUpperCase() + word.slice(1).toLowerCase(),
+            )
+            .join(" ");
+
+          return buyerGroups.includes(bidGroupNormalized);
         }
 
         return true;
@@ -160,7 +172,7 @@ const BidList = () => {
         const dateB = new Date(b.closedAt || b.updatedAt || b.createdAt);
         return dateB - dateA;
       });
-  }, [bids, activeTab, filteredConsignees, buyerGroup, userRole]);
+  }, [bids, activeTab, filteredConsignees, buyerGroups, userRole]);
 
   const consigneeItems = useMemo(
     () =>
