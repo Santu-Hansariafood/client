@@ -76,7 +76,7 @@ const BaseBid = ({ type }) => {
 
       companies.forEach((c) => {
         // If user is buyer, only show their registered groups/companies
-        if (buyer && !buyerCompanyIds.includes(String(c._id))) {
+        if (userRole === "Buyer" && !buyerCompanyIds.includes(String(c._id))) {
           return;
         }
 
@@ -125,7 +125,7 @@ const BaseBid = ({ type }) => {
       }));
 
       // If buyer, auto-select group and load options
-      if (buyer && sortedGroupOptions.length > 0) {
+      if (userRole === "Buyer" && sortedGroupOptions.length > 0) {
         const group = sortedGroupOptions[0];
         setState(prev => ({
           ...prev,
