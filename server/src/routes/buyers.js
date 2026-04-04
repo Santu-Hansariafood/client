@@ -23,7 +23,7 @@ const normalizeObjectIdArray = (value) => {
 };
 
 const mapBuyerForClient = (buyer) => {
-  const companyId = buyer.companyId?._id || buyer.companyId || null;
+  const companyIds = (buyer.companyIds || []).map((c) => c?._id || c).filter(Boolean);
   const groupId = buyer.groupId?._id || buyer.groupId || null;
   const commodityIds = (buyer.commodityIds || []).map((c) => c?._id || c).filter(Boolean);
   const consigneeIds = (buyer.consigneeIds || []).map((c) => c?._id || c).filter(Boolean);
@@ -43,14 +43,8 @@ const mapBuyerForClient = (buyer) => {
     });
   }
 
-  if (buyer.companyId && Array.isArray(buyer.companyId.commodities)) {
-    buyer.companyId.commodities.forEach((cc) => {
-      const cName = cc.commodityId?.name || cc.commodityId?.toString();
-      if (cName && cc.brokerage !== undefined) {
-        brokerageByName[cName] = cc.brokerage;
-      }
-    });
-  }
+  // Use the first company for some legacy fields if needed
+  const firstCompany = (buyer.companyIds || [])[0] || {};
 
   return {
     _id: buyer._id,
@@ -62,18 +56,19 @@ const mapBuyerForClient = (buyer) => {
     brokerage: buyer.brokerage || {},
     brokerageByName,
 
-    companyId,
+    companyIds,
     groupId,
     commodityIds,
     consigneeIds,
 
-    companyName: buyer.companyId?.companyName || buyer.companyName || "",
-    location: buyer.companyId?.location || "",
-    state: buyer.companyId?.state || "",
-    district: buyer.companyId?.district || "",
-    pinCode: buyer.companyId?.pinCode || "",
-    gstNumber: buyer.companyId?.gstNumber || "",
-    panNumber: buyer.companyId?.panNumber || "",
+    companyNames: (buyer.companyIds || []).map((c) => c?.companyName || ""),
+    companyName: firstCompany.companyName || buyer.companyName || "",
+    location: firstCompany.location || "",
+    state: firstCompany.state || "",
+    district: firstCompany.district || "",
+    pinCode: firstCompany.pinCode || "",
+    gstNumber: firstCompany.gstNumber || "",
+    panNumber: firstCompany.panNumber || "",
     group: buyer.groupId?.groupName || buyer.group || "",
     commodity: (buyer.commodityIds || [])
       .map((c) => c?.name || c?.toString?.() || "")
@@ -87,7 +82,7 @@ const mapBuyerForClient = (buyer) => {
 
 const buyerPopulate = [
   {
-    path: "companyId",
+    path: "companyIds",
     select: "companyName companyEmail location state district pinCode gstNumber panNumber groupId consigneeIds commodities",
     populate: { path: "commodities.commodityId", select: "name" },
   },
@@ -119,7 +114,7 @@ router.get("/", async (req, res) => {
         { name: regex },
         { mobile: { $regex: regex } },
         { email: { $regex: regex } },
-        ...(companyIds.length ? [{ companyId: { $in: companyIds } }] : []),
+        ...(companyIds.length ? [{ companyIds: { $in: companyIds } }] : []),
         ...(groupIds.length ? [{ groupId: { $in: groupIds } }] : []),
       ];
     }
@@ -156,14 +151,14 @@ router.post("/", async (req, res) => {
   try {
     const body = req.body || {};
 
-    let companyId = toObjectId(body.companyId);
+    let companyIds = normalizeObjectIdArray(body.companyIds);
     let groupId = toObjectId(body.groupId);
     let commodityIds = normalizeObjectIdArray(body.commodityIds);
     let consigneeIds = normalizeObjectIdArray(body.consigneeIds);
 
-    if (!companyId && body.companyName) {
+    if (companyIds.length === 0 && body.companyName) {
       const company = await Company.findOne({ companyName: body.companyName }).select("_id").lean();
-      companyId = company?._id || null;
+      if (company) companyIds = [company._id];
     }
     if (!groupId && body.group) {
       const group = await Group.findOne({ groupName: body.group }).select("_id").lean();
@@ -190,7 +185,7 @@ router.post("/", async (req, res) => {
       password: body.password || "",
       status: body.status || "Active",
       brokerage: body.brokerage || {},
-      companyId,
+      companyIds,
       groupId,
       commodityIds,
       consigneeIds,
@@ -208,13 +203,14 @@ router.put("/:id", async (req, res) => {
     const { id } = req.params;
     const body = req.body || {};
 
-    let { companyId, groupId, commodityIds, consigneeIds } = body;
+    let { companyIds, groupId, commodityIds, consigneeIds } = body;
+    companyIds = normalizeObjectIdArray(companyIds);
 
-    if (!toObjectId(companyId) && body.companyName) {
+    if (companyIds.length === 0 && body.companyName) {
       const company = await Company.findOne({ companyName: body.companyName })
         .select("_id")
         .lean();
-      companyId = company?._id || null;
+      if (company) companyIds = [company._id];
     }
 
     if (!toObjectId(groupId) && body.group) {
@@ -256,7 +252,7 @@ router.put("/:id", async (req, res) => {
       password: body.password || "",
       status: body.status || "Active",
       brokerage: body.brokerage || {},
-      companyId: toObjectId(companyId) || null,
+      companyIds,
       groupId: toObjectId(groupId) || null,
       commodityIds: normalizeObjectIdArray(commodityIds),
       consigneeIds: normalizeObjectIdArray(consigneeIds),

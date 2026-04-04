@@ -26,7 +26,7 @@ const ParticipateBidAdmin = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
   const [selectedBidId, setSelectedBidId] = useState(null);
-  const [buyerGroup, setBuyerGroup] = useState(null);
+  const [buyerGroups, setBuyerGroups] = useState([]);
   const [isBuyerAdmin, setIsBuyerAdmin] = useState(false);
 
   useEffect(() => {
@@ -56,19 +56,28 @@ const ParticipateBidAdmin = () => {
           );
           if (buyer) {
             setIsBuyerAdmin(buyer.isAdmin || false);
-            const company = companies.find(
-              (c) => String(c._id) === String(buyer.companyId),
+            const buyerCompanyIds = (buyer.companyIds || []).map((id) =>
+              String(id),
             );
-            if (company && company.group) {
-              const formattedGroup = company.group
-                .split(" ")
-                .map(
-                  (word) =>
-                    word.charAt(0).toUpperCase() + word.slice(1).toLowerCase(),
-                )
-                .join(" ");
-              setBuyerGroup(formattedGroup);
-            }
+            const buyerCompanies = companies.filter((c) =>
+              buyerCompanyIds.includes(String(c._id)),
+            );
+
+            const groups = buyerCompanies
+              .map((c) => c.group)
+              .filter(Boolean)
+              .map((group) =>
+                group
+                  .split(" ")
+                  .map(
+                    (word) =>
+                      word.charAt(0).toUpperCase() +
+                      word.slice(1).toLowerCase(),
+                  )
+                  .join(" "),
+              );
+
+            setBuyerGroups([...new Set(groups)]);
           }
         }
 
@@ -95,9 +104,12 @@ const ParticipateBidAdmin = () => {
       const matchingBid = bids.find((bid) => bid._id === pBid.bidId);
       if (!matchingBid) return;
 
-      // Filter by buyer group if applicable
+      // Filter by buyer groups if applicable
       if (userRole === "Buyer") {
-        if (buyerGroup && matchingBid.group !== buyerGroup) {
+        if (
+          buyerGroups.length > 0 &&
+          !buyerGroups.includes(String(matchingBid.group))
+        ) {
           return;
         }
         // Additional filter for buyers: must be admin or the creator of the bid

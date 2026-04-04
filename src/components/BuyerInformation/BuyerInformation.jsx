@@ -2,6 +2,7 @@ import { useEffect, useState, useMemo, lazy, Suspense } from "react";
 import PropTypes from "prop-types";
 import Loading from "../../common/Loading/Loading";
 import { fetchAllPages } from "../../utils/apiClient/fetchAllPages";
+import { useAuth } from "../../context/AuthContext/AuthContext";
 const DataDropdown = lazy(
   () => import("../../common/DataDropdown/DataDropdown"),
 );
@@ -13,40 +14,28 @@ const BuyerInformation = ({
   buyers: propBuyers,
   consignees: propConsignees,
 }) => {
+  const { userRole, mobile } = useAuth();
   const [buyers, setBuyers] = useState(propBuyers || []);
   const [consignees, setConsignees] = useState(propConsignees || []);
-  const [selectedCompany, setSelectedCompany] = useState(null);
+  const [companies, setCompanies] = useState([]);
+  const [selectedBuyerId, setSelectedBuyerId] = useState(null);
+  const [selectedCompanyId, setSelectedCompanyId] = useState(null);
   const [selectedConsignee, setSelectedConsignee] = useState("");
-  const [loading, setLoading] = useState(!propBuyers || !propConsignees);
+  const [loading, setLoading] = useState(true);
   const [initialized, setInitialized] = useState(false);
 
-  const selectedBuyer = useMemo(
-    () => (Array.isArray(buyers) ? buyers : []).find(({ _id }) => _id === selectedCompany),
-    [buyers, selectedCompany]
-  );
-
-  const selectedConsigneeData = useMemo(
-    () => (Array.isArray(consignees) ? consignees : []).find(({ _id }) => String(_id) === String(selectedConsignee)),
-    [consignees, selectedConsignee]
-  );
-
   useEffect(() => {
-    if (propBuyers && propConsignees) {
-      setBuyers(propBuyers);
-      setConsignees(propConsignees);
-      setLoading(false);
-      return;
-    }
-
     const fetchData = async () => {
       setLoading(true);
       try {
-        const [buyersRows, consigneesRows] = await Promise.all([
+        const [buyersRows, consigneesRows, companiesRows] = await Promise.all([
           fetchAllPages("/buyers", { limit: 200 }),
           fetchAllPages("/consignees", { limit: 200 }),
+          fetchAllPages("/companies", { limit: 200 }),
         ]);
         setBuyers(buyersRows);
         setConsignees(consigneesRows);
+        setCompanies(companiesRows);
       } catch (error) {
         console.error("Error fetching data:", error);
       } finally {
@@ -54,120 +43,118 @@ const BuyerInformation = ({
       }
     };
     fetchData();
-  }, [propBuyers, propConsignees]);
+  }, []);
 
-  const orderId = formData?._id;
+  const selectedBuyer = useMemo(
+    () =>
+      (Array.isArray(buyers) ? buyers : []).find(
+        ({ _id }) => _id === selectedBuyerId,
+      ),
+    [buyers, selectedBuyerId],
+  );
 
-  useEffect(() => {
-    if (orderId) setInitialized(false);
-  }, [orderId]);
+  const selectedCompany = useMemo(
+    () =>
+      (Array.isArray(companies) ? companies : []).find(
+        ({ _id }) => _id === selectedCompanyId,
+      ),
+    [companies, selectedCompanyId],
+  );
 
+  const selectedConsigneeData = useMemo(
+    () =>
+      (Array.isArray(consignees) ? consignees : []).find(
+        ({ _id }) => String(_id) === String(selectedConsignee),
+      ),
+    [consignees, selectedConsignee],
+  );
+
+  // Filter buyers based on role
+  const buyerOptions = useMemo(() => {
+    let filteredBuyers = Array.isArray(buyers) ? buyers : [];
+    if (userRole === "Buyer") {
+      filteredBuyers = filteredBuyers.filter((b) =>
+        b.mobile?.some((m) => String(m) === String(mobile)),
+      );
+    }
+    return filteredBuyers.map((b) => ({
+      value: b._id,
+      label: b.name,
+    }));
+  }, [buyers, userRole, mobile]);
+
+  // Filter companies based on selected buyer
+  const companyOptions = useMemo(() => {
+    if (!selectedBuyer) return [];
+    const linkedCompanyIds = (selectedBuyer.companyIds || []).map((id) =>
+      String(id),
+    );
+    return (Array.isArray(companies) ? companies : [])
+      .filter((c) => linkedCompanyIds.includes(String(c._id)))
+      .map((c) => ({
+        value: c._id,
+        label: c.companyName,
+      }));
+  }, [selectedBuyer, companies]);
+
+  // Handle initial data for editing
   useEffect(() => {
     if (loading || initialized || !formData?.buyerCompany) return;
-    const match = (Array.isArray(buyers) ? buyers : []).find(
+
+    // Find buyer by name or ID
+    const matchBuyer = (Array.isArray(buyers) ? buyers : []).find(
       (b) =>
-        (b.companyName || "").trim().toLowerCase() ===
-        (formData.buyerCompany || "").trim().toLowerCase(),
+        b.name === formData.buyer ||
+        b.mobile?.some((m) => String(m) === String(formData.buyerMobile)),
     );
-    if (match) {
-      setSelectedCompany(match._id);
+
+    if (matchBuyer) {
+      setSelectedBuyerId(matchBuyer._id);
+
+      // Find company by name or ID
+      const matchCompany = (Array.isArray(companies) ? companies : []).find(
+        (c) =>
+          (c.companyName || "").trim().toLowerCase() ===
+          (formData.buyerCompany || "").trim().toLowerCase(),
+      );
+
+      if (matchCompany) {
+        setSelectedCompanyId(matchCompany._id);
+      }
+
       const consigneeValue =
         formData.consignee?._id ||
         formData.consignee?.value ||
         formData.consignee;
 
       if (consigneeValue) {
-        // Try to find if it's an ID
         let found = consignees.find(
-          (c) => String(c._id) === String(consigneeValue),
+          (c) =>
+            String(c._id) === String(consigneeValue) ||
+            (c.name || c.label) === consigneeValue,
         );
-        // If not found as ID, try to find by name
-        if (!found) {
-          found = consignees.find(
-            (c) => (c.name || c.label) === consigneeValue,
-          );
-        }
-
-        if (found) {
-          setSelectedConsignee(String(found._id));
-        } else {
-          // Fallback if not found in consignees list but we have a value
-          setSelectedConsignee(String(consigneeValue));
-        }
-      }
-
-      const rawEmails = match?.email;
-      const buyerEmails = Array.isArray(rawEmails)
-        ? rawEmails
-            .map((e) =>
-              typeof e === "string" ? e : (e?.value ?? e?.email ?? ""),
-            )
-            .filter(Boolean)
-        : [];
-
-      if (
-        !formData.buyerBrokerage ||
-        Object.keys(formData.buyerBrokerage).length === 0 ||
-        (formData.buyerBrokerage.brokerageBuyer === 0 &&
-          formData.buyerBrokerage.brokerageSupplier === 0)
-      ) {
-        handleChange(
-          "buyerBrokerageMap",
-          match.brokerageByName || match.brokerage || {},
-        );
-      } else {
-        handleChange(
-          "buyerBrokerageMap",
-          match.brokerageByName || match.brokerage || {},
-        );
+        if (found) setSelectedConsignee(String(found._id));
       }
 
       setInitialized(true);
     }
-  }, [
-    buyers,
-    loading,
-    formData?.buyerCompany,
-    formData?.consignee,
-    initialized,
-    consignees,
-    handleChange,
-  ]);
+  }, [buyers, companies, consignees, loading, formData, initialized]);
 
-  const companyOptions = useMemo(
-    () =>
-      buyers.map(({ _id, companyName }) => ({
-        value: _id,
-        label: companyName,
-      })),
-    [buyers],
-  );
-
-  const consigneeOptions = useMemo(() => {
-    const fromBuyer =
-      selectedBuyer?.consignee?.map(({ value, label, name }) => ({
-        value,
-        label: label || name || "",
-      })) || [];
-    const allConsignees =
-      consignees.map((c) => ({
-        value: String(c._id),
-        label: c.name || c.label || "",
-      })) || [];
-    const map = new Map();
-    [...fromBuyer, ...allConsignees].forEach((opt) => {
-      if (opt?.value && !map.has(String(opt.value))) {
-        map.set(String(opt.value), opt);
-      }
-    });
-    return Array.from(map.values());
-  }, [selectedBuyer, consignees]);
+  const onBuyerChange = (option) => {
+    const buyerId = option?.value || null;
+    setSelectedBuyerId(buyerId);
+    setSelectedCompanyId(null); // Reset company when buyer changes
+    handleChange("buyer", option?.label || "");
+    handleChange("buyerCompany", "");
+    handleChange("companyId", null);
+  };
 
   const onCompanyChange = (option) => {
     const companyId = option?.value || null;
-    setSelectedCompany(companyId);
+    setSelectedCompanyId(companyId);
 
-    const buyerData = buyers.find(({ _id }) => _id === companyId) || {};
+    const companyData = companies.find(({ _id }) => _id === companyId) || {};
+    const buyerData = selectedBuyer || {};
 
     const rawEmails = buyerData?.email;
     const buyerEmails = Array.isArray(rawEmails)
@@ -178,20 +165,22 @@ const BuyerInformation = ({
           .filter(Boolean)
       : [];
     const firstEmail = buyerEmails[0] || "";
-    const firstMobile = Array.isArray(buyerData.mobile) ? buyerData.mobile[0] : (buyerData.mobile || "");
-    handleChange("buyer", buyerData.name || "");
-    handleChange("companyId", buyerData.companyId || null);
-    handleChange("buyerCompany", buyerData.companyName || "");
-    handleChange("location", buyerData.location || "");
-    handleChange("state", buyerData.state || "");
-    handleChange("district", buyerData.district || "");
-    handleChange("pinCode", buyerData.pinCode || "");
-    handleChange("gstNumber", buyerData.gstNumber || "");
-    handleChange("panNumber", buyerData.panNumber || "");
+    const firstMobile = Array.isArray(buyerData.mobile)
+      ? buyerData.mobile[0]
+      : buyerData.mobile || "";
+
+    handleChange("companyId", companyId);
+    handleChange("buyerCompany", companyData.companyName || "");
+    handleChange("location", companyData.location || "");
+    handleChange("state", companyData.state || "");
+    handleChange("district", companyData.district || "");
+    handleChange("pinCode", companyData.pinCode || "");
+    handleChange("gstNumber", companyData.gstNumber || "");
+    handleChange("panNumber", companyData.panNumber || "");
     handleChange("buyerEmail", firstEmail);
     handleChange("buyerMobile", firstMobile);
     handleChange("buyerEmails", buyerEmails.length ? buyerEmails : [""]);
-    handleChange("buyerCommodity", buyerData.commodity || []);
+    handleChange("buyerCommodity", companyData.commodities || []);
     handleChange(
       "buyerBrokerageMap",
       buyerData.brokerageByName || buyerData.brokerage || {},
@@ -199,6 +188,19 @@ const BuyerInformation = ({
     setSelectedConsignee("");
     handleChange("consignee", "");
   };
+
+  const consigneeOptions = useMemo(() => {
+    if (!selectedCompany) return [];
+    const fromCompany =
+      selectedCompany?.consigneeIds?.map((id, idx) => {
+        const c = consignees.find((con) => String(con._id) === String(id));
+        return {
+          value: String(id),
+          label: c?.name || "Consignee",
+        };
+      }) || [];
+    return fromCompany.sort((a, b) => a.label.localeCompare(b.label));
+  }, [selectedCompany, consignees]);
 
   const onConsigneeChange = (option) => {
     const consigneeValue = option?.label || "";
@@ -215,53 +217,70 @@ const BuyerInformation = ({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-1">
-            Select Company
+            Select Buyer
           </label>
           <DataDropdown
-            placeholder="Select Company"
-            options={companyOptions}
+            placeholder="Select Buyer"
+            options={buyerOptions}
             selectedOptions={
-              companyOptions.find(({ value }) => value === selectedCompany) ||
+              buyerOptions.find(({ value }) => value === selectedBuyerId) ||
               null
             }
-            onChange={onCompanyChange}
-            value={selectedCompany}
+            onChange={onBuyerChange}
+            value={selectedBuyerId}
           />
 
-          {selectedBuyer && (
+          <div className="mt-4">
+            <label className="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-1">
+              Select Company
+            </label>
+            <DataDropdown
+              placeholder="Select Company"
+              options={companyOptions}
+              selectedOptions={
+                companyOptions.find(({ value }) => value === selectedCompanyId) ||
+                null
+              }
+              onChange={onCompanyChange}
+              value={selectedCompanyId}
+              disabled={!selectedBuyerId}
+            />
+          </div>
+
+          {selectedCompany && (
             <div className="mt-4 p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
               <div className="flex justify-between items-center pb-2 border-b border-slate-200 mb-2">
                 <span className="text-sm font-bold text-slate-800">
-                  Buyer Name
+                  Company Details
                 </span>
                 <span className="text-sm font-medium text-emerald-600">
-                  {selectedBuyer.name}
+                  {selectedCompany.companyName}
                 </span>
               </div>
               <div className="grid grid-cols-2 gap-2 text-xs">
                 <div className="space-y-1">
                   <p className="text-slate-500">Location</p>
                   <p className="font-semibold text-slate-700 uppercase">
-                    {selectedBuyer.location || "N/A"}
+                    {selectedCompany.location || "N/A"}
                   </p>
                 </div>
                 <div className="space-y-1 text-right">
                   <p className="text-slate-500">State / District</p>
                   <p className="font-semibold text-slate-700">
-                    {selectedBuyer.state || "N/A"} /{" "}
-                    {selectedBuyer.district || "N/A"}
+                    {selectedCompany.state || "N/A"} /{" "}
+                    {selectedCompany.district || "N/A"}
                   </p>
                 </div>
                 <div className="space-y-1">
                   <p className="text-slate-500">GST Number</p>
                   <p className="font-semibold text-slate-700 uppercase">
-                    {selectedBuyer.gstNumber || "N/A"}
+                    {selectedCompany.gstNumber || "N/A"}
                   </p>
                 </div>
                 <div className="space-y-1 text-right">
                   <p className="text-slate-500">PAN Number</p>
                   <p className="font-semibold text-slate-700 uppercase">
-                    {selectedBuyer.panNumber || "N/A"}
+                    {selectedCompany.panNumber || "N/A"}
                   </p>
                 </div>
               </div>
@@ -282,6 +301,7 @@ const BuyerInformation = ({
             }
             onChange={onConsigneeChange}
             value={selectedConsignee}
+            disabled={!selectedCompanyId}
           />
 
           {selectedConsigneeData && (

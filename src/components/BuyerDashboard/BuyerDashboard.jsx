@@ -131,7 +131,9 @@ const BuyerDashboard = () => {
                 </div>
               </div>
               <h3 className="text-sm sm:text-base font-bold text-slate-800 leading-tight">
-                {toTitleCase(buyerProfile.companyName || "")}
+                {(buyerProfile.companyNames || []).length > 0
+                  ? buyerProfile.companyNames.join(", ")
+                  : toTitleCase(buyerProfile.companyName || "")}
               </h3>
             </div>
           )}

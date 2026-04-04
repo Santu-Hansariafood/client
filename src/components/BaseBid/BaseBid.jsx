@@ -72,9 +72,11 @@ const BaseBid = ({ type }) => {
 
       const groupMap = new Map();
 
+      const buyerCompanyIds = (buyer?.companyIds || []).map((id) => String(id));
+
       companies.forEach((c) => {
-        // If user is buyer, only show their registered group/company
-        if (buyer && String(c._id) !== String(buyer.companyId)) {
+        // If user is buyer, only show their registered groups/companies
+        if (buyer && !buyerCompanyIds.includes(String(c._id))) {
           return;
         }
 

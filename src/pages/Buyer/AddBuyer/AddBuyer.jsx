@@ -19,7 +19,7 @@ const AddBuyer = () => {
     mobile: [""],
     email: [""],
     group: null,
-    company: null,
+    company: [],
     password: "",
     commodity: [],
     brokerage: {},
@@ -79,36 +79,70 @@ const AddBuyer = () => {
     const fieldName = actionMeta.name;
 
     if (fieldName === "company") {
-      const selectedCompanyId = selectedOption?.value || "";
-      const selectedCompany = companiesData.find((c) => String(c._id) === String(selectedCompanyId));
+      const selectedCompanies = selectedOption || [];
+      const selectedCompanyIds = selectedCompanies.map((c) => String(c.value));
+      const selectedCompaniesData = companiesData.filter((c) =>
+        selectedCompanyIds.includes(String(c._id)),
+      );
 
-      const companyCommodities = (selectedCompany?.commodities || []).map((c) => ({
-        value: String(c._id || c.commodityId),
-        label: c.name,
-        brokerage: c.brokerage ?? 0,
-      }));
-      const companyConsignees = Array.isArray(selectedCompany?.consigneeIds)
-        ? selectedCompany.consigneeIds.map((id, idx) => ({
-            value: String(id),
-            label: selectedCompany.consignee?.[idx] || "Consignee",
-          }))
-        : [];
+      // Accumulate commodities and consignees from all selected companies
+      const allCommoditiesMap = new Map();
+      const allConsigneesMap = new Map();
+
+      selectedCompaniesData.forEach((company) => {
+        (company.commodities || []).forEach((c) => {
+          const commodityId = String(c._id || c.commodityId);
+          if (!allCommoditiesMap.has(commodityId)) {
+            allCommoditiesMap.set(commodityId, {
+              value: commodityId,
+              label: c.name,
+              brokerage: c.brokerage ?? 0,
+            });
+          }
+        });
+
+        if (Array.isArray(company.consigneeIds)) {
+          company.consigneeIds.forEach((id, idx) => {
+            const consigneeId = String(id);
+            if (!allConsigneesMap.has(consigneeId)) {
+              allConsigneesMap.set(consigneeId, {
+                value: consigneeId,
+                label: company.consignee?.[idx] || "Consignee",
+              });
+            }
+          });
+        }
+      });
+
+      const combinedCommodities = Array.from(allCommoditiesMap.values()).sort(
+        (a, b) => a.label.localeCompare(b.label),
+      );
+      const combinedConsignees = Array.from(allConsigneesMap.values()).sort(
+        (a, b) => a.label.localeCompare(b.label),
+      );
 
       const newBrokerage = {};
-      for (const c of companyCommodities) {
+      combinedCommodities.forEach((c) => {
         newBrokerage[c.value] = Number(c.brokerage || 0);
+      });
+
+      // Auto-set group if only one company is selected and it has a group
+      let autoGroup = formData.group;
+      if (selectedCompaniesData.length === 1) {
+        const selectedCompany = selectedCompaniesData[0];
+        if (selectedCompany?.groupId && selectedCompany?.group) {
+          autoGroup = {
+            value: String(selectedCompany.groupId),
+            label: selectedCompany.group,
+          };
+        }
       }
 
-      const autoGroup =
-        selectedCompany?.groupId && selectedCompany?.group
-          ? { value: String(selectedCompany.groupId), label: selectedCompany.group }
-          : null;
-
-      setCommodityOptions(companyCommodities.sort((a, b) => a.label.localeCompare(b.label)));
-      setConsigneeOptions(companyConsignees.sort((a, b) => a.label.localeCompare(b.label)));
+      setCommodityOptions(combinedCommodities);
+      setConsigneeOptions(combinedConsignees);
       setFormData((prev) => ({
         ...prev,
-        company: selectedOption,
+        company: selectedCompanies,
         group: autoGroup,
         commodity: [],
         consignee: [],
@@ -190,7 +224,11 @@ const AddBuyer = () => {
       try {
         const payload = {
           ...formData,
-          companyId: formData.company?.value || null,
+          companyIds: Array.isArray(formData.company)
+            ? formData.company.map((c) => c.value)
+            : formData.company?.value
+              ? [formData.company.value]
+              : [],
           groupId: formData.group?.value || null,
           commodityIds: formData.commodity.map((item) => item.value),
           consigneeIds: (formData.consignee || []).map((c) => c.value),
@@ -199,7 +237,7 @@ const AddBuyer = () => {
             Object.entries(formData.brokerage).map(([key, value]) => [
               key,
               Number(value),
-            ])
+            ]),
           ),
         };
 
@@ -210,7 +248,7 @@ const AddBuyer = () => {
           mobile: [""],
           email: [""],
           group: null,
-          company: null,
+          company: [],
           password: "",
           commodity: [],
           brokerage: {},
@@ -272,6 +310,7 @@ const AddBuyer = () => {
                   handleDropdownChange(selected, { name: "company" })
                 }
                 placeholder="Select Company Name"
+                isMulti
                 className="w-full"
               />
             </div>

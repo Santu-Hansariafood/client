@@ -16,6 +16,8 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
   const [groups, setGroups] = useState([]);
   const [commodities, setCommodities] = useState([]);
   const [allConsignees, setAllConsignees] = useState([]);
+  const [companiesData, setCompaniesData] = useState([]);
+  const [consigneeOptions, setConsigneeOptions] = useState([]);
 
   useEffect(() => {
     if (buyer) {
@@ -26,7 +28,14 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
         password: buyer.password || "",
         commodity: Array.isArray(buyer.commodity) ? buyer.commodity : [""],
         consignee: Array.isArray(buyer.consignee) ? buyer.consignee : [],
-        companyName: buyer.companyName || "",
+        selectedCompanies: buyer.companyIds
+          ? (buyer.companyIds || []).map((id, idx) => ({
+              value: id,
+              label: (buyer.companyNames || [])[idx] || "Unknown Company",
+            }))
+          : buyer.companyId
+            ? [{ value: buyer.companyId, label: buyer.companyName }]
+            : [],
         group: buyer.group || "",
       });
     }
@@ -48,9 +57,10 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
           commoditiesRes.data?.data || commoditiesRes.data || [];
         const consigneesData =
           consigneesRes.data?.data || consigneesRes.data || [];
-        const companiesData =
+        const companiesDataFull =
           companiesRes.data?.data || companiesRes.data || [];
 
+        setCompaniesData(companiesDataFull);
         setGroups(
           groupsData.map((group) => ({
             value: String(group._id),
@@ -70,7 +80,7 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
           })),
         );
         setCompanies(
-          companiesData.map((company) => ({
+          companiesDataFull.map((company) => ({
             value: String(company._id),
             label: company.companyName,
           })),
@@ -84,6 +94,40 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
       fetchData();
     }
   }, [isOpen]);
+
+  useEffect(() => {
+    if (formData?.selectedCompanies?.length > 0 && companiesData.length > 0) {
+      const selectedCompanyIds = formData.selectedCompanies.map((c) =>
+        String(c.value),
+      );
+      const selectedCompaniesData = companiesData.filter((c) =>
+        selectedCompanyIds.includes(String(c._id)),
+      );
+
+      const allConsigneesMap = new Map();
+      selectedCompaniesData.forEach((company) => {
+        if (Array.isArray(company.consigneeIds)) {
+          company.consigneeIds.forEach((id, idx) => {
+            const consigneeId = String(id);
+            if (!allConsigneesMap.has(consigneeId)) {
+              allConsigneesMap.set(consigneeId, {
+                value: consigneeId,
+                label: company.consignee?.[idx] || "Consignee",
+              });
+            }
+          });
+        }
+      });
+
+      setConsigneeOptions(
+        Array.from(allConsigneesMap.values()).sort((a, b) =>
+          a.label.localeCompare(b.label),
+        ),
+      );
+    } else {
+      setConsigneeOptions([]);
+    }
+  }, [formData?.selectedCompanies, companiesData]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -105,11 +149,11 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
     }));
   };
 
-  const handleCompanyChange = (selectedCompany) => {
+  const handleCompanyChange = (selectedCompanies) => {
     setFormData((prevData) => ({
       ...prevData,
-      companyName: selectedCompany?.label || "",
-      companyId: selectedCompany?.value || "",
+      selectedCompanies: selectedCompanies || [],
+      consignee: [], // Reset consignees when companies change
     }));
   };
 
@@ -195,7 +239,7 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
         password: formData.password,
         mobile: formData.mobile,
         email: formData.email,
-        companyId: formData.companyId || null,
+        companyIds: (formData.selectedCompanies || []).map((c) => c.value),
         groupId: formData.groupId || null,
         commodityIds,
         consigneeIds,
@@ -259,16 +303,10 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
                   </label>
                   <DataDropdown
                     options={companies}
-                    selectedOptions={
-                      formData.companyId
-                        ? {
-                            value: formData.companyId,
-                            label: formData.companyName,
-                          }
-                        : null
-                    }
+                    selectedOptions={formData.selectedCompanies || []}
                     onChange={handleCompanyChange}
-                    placeholder="Select company"
+                    placeholder="Select companies"
+                    isMulti
                   />
                 </div>
 
@@ -441,7 +479,7 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
                     ))}
                   </div>
                   <DataDropdown
-                    options={allConsignees || []}
+                    options={consigneeOptions || []}
                     selectedOptions={null}
                     onChange={(selectedConsignee) => {
                       addConsignee({

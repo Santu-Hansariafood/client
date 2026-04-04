@@ -26,29 +26,39 @@ const ListSoudabook = () => {
     const fetchSaudaData = async () => {
       setLoading(true);
       try {
-        const [response, sellersRes] = await Promise.all([
+        const [response, sellersRes, buyersRes] = await Promise.all([
           axios.get("/self-order"),
           axios.get("/sellers"),
+          axios.get("/buyers"),
         ]);
         let data = response.data?.data || response.data || [];
+        const allBuyers = buyersRes.data?.data || buyersRes.data || [];
 
         if (userRole === "Buyer") {
-          const buyerCompanyId = user?.companyId;
-          const buyerCompanyName = user?.companyName;
+          const buyer = allBuyers.find((b) =>
+            b.mobile?.some((m) => String(m) === String(mobile)),
+          );
+          if (buyer) {
+            const buyerCompanyIds = (buyer.companyIds || []).map((id) =>
+              String(id),
+            );
+            const buyerCompanyNames = (buyer.companyNames || []).map((name) =>
+              name.trim().toLowerCase(),
+            );
 
-          data = data.filter((item) => {
-            const matchId =
-              buyerCompanyId &&
-              item.companyId &&
-              String(item.companyId) === String(buyerCompanyId);
-            const matchName =
-              buyerCompanyName &&
-              item.buyerCompany &&
-              item.buyerCompany.trim().toLowerCase() ===
-                buyerCompanyName.trim().toLowerCase();
+            data = data.filter((item) => {
+              const matchId =
+                item.companyId &&
+                buyerCompanyIds.includes(String(item.companyId));
+              const matchName =
+                item.buyerCompany &&
+                buyerCompanyNames.includes(
+                  item.buyerCompany.trim().toLowerCase(),
+                );
 
-            return matchId || matchName;
-          });
+              return matchId || matchName;
+            });
+          }
         } else if (userRole === "Seller") {
           const seller = sellersRes.data.find((s) =>
             s.phoneNumbers?.some((p) => String(p.value) === String(mobile))

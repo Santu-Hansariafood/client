@@ -102,21 +102,26 @@ router.post("/buyers/login", async (req, res) => {
       return res.status(400).json({ message: "Mobile and password are required" });
     }
 
-    const buyer = await Buyer.findOne({ mobile: mobile, password: password }).populate("companyId", "companyName");
-    
+    const buyer = await Buyer.findOne({
+      mobile: mobile,
+      password: password,
+    }).populate("companyIds", "companyName");
+
     if (!buyer) {
       console.warn(`Invalid buyer credentials for mobile: ${mobile}`);
       return res.status(401).json({ message: "Invalid credentials" });
     }
-    
+
     if (buyer.status === "Inactive") {
-      return res.status(403).json({ message: "Your account is inactive. Please contact support." });
+      return res
+        .status(403)
+        .json({ message: "Your account is inactive. Please contact support." });
     }
 
     const token = jwt.sign(
       { sub: buyer._id.toString(), role: "Buyer", mobile: mobile },
       process.env.JWT_SECRET,
-      { expiresIn: "365d" }
+      { expiresIn: "365d" },
     );
 
     console.log(`Buyer login successful: ${buyer.name}`);
@@ -126,8 +131,8 @@ router.post("/buyers/login", async (req, res) => {
       name: buyer.name,
       email: buyer.email || [],
       status: buyer.status || "Active",
-      companyId: buyer.companyId?._id || buyer.companyId || null,
-      companyName: buyer.companyId?.companyName || "",
+      companyIds: (buyer.companyIds || []).map((c) => c._id || c),
+      companyNames: (buyer.companyIds || []).map((c) => c.companyName || ""),
       token,
     });
   } catch (error) {

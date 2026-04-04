@@ -106,19 +106,22 @@ const SelfOrderList = () => {
             b.mobile?.some((m) => String(m) === String(mobile)),
           );
           if (buyer) {
-            const buyerCompanyId = buyer.companyId;
-            const buyerCompanyName = buyer.companyName;
+            const buyerCompanyIds = (buyer.companyIds || []).map((id) =>
+              String(id),
+            );
+            const buyerCompanyNames = (buyer.companyNames || []).map((name) =>
+              name.trim().toLowerCase(),
+            );
 
             filteredOrders = raw.filter((item) => {
               const matchId =
-                buyerCompanyId &&
                 item.companyId &&
-                String(item.companyId) === String(buyerCompanyId);
+                buyerCompanyIds.includes(String(item.companyId));
               const matchName =
-                buyerCompanyName &&
                 item.buyerCompany &&
-                item.buyerCompany.trim().toLowerCase() ===
-                  buyerCompanyName.trim().toLowerCase();
+                buyerCompanyNames.includes(
+                  item.buyerCompany.trim().toLowerCase(),
+                );
 
               return matchId || matchName;
             });

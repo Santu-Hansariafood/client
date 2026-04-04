@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 const buyerSchema = new mongoose.Schema(
   {
     name: { type: String, required: true },
-    companyId: { type: mongoose.Schema.Types.ObjectId, ref: "Company", default: null },
+    companyIds: { type: [mongoose.Schema.Types.ObjectId], ref: "Company", default: [] },
     groupId: { type: mongoose.Schema.Types.ObjectId, ref: "Group", default: null },
     mobile: { type: [String], default: [] },
     email: { type: [String], default: [] },
@@ -17,7 +17,7 @@ const buyerSchema = new mongoose.Schema(
 );
 
 buyerSchema.index({ name: 1 });
-buyerSchema.index({ companyId: 1 });
+buyerSchema.index({ companyIds: 1 });
 buyerSchema.index({ groupId: 1 });
 buyerSchema.index({ mobile: 1 });
 

@@ -103,7 +103,7 @@ const BuyerList = () => {
         toTitleCase(buyer.name || "N/A"),
         buyer.mobile?.join(", ") || "N/A",
         buyer.email?.join(", ").toLowerCase() || "N/A",
-        toTitleCase(buyer.companyName || "N/A"),
+        (buyer.companyNames || []).join(", ") || "N/A",
         toTitleCase(buyer.group || "N/A"),
         toTitleCase(buyer.commodity?.join(", ") || "N/A"),
         buyer.consignee?.map((c) => (

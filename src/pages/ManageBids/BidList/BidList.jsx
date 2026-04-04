@@ -25,7 +25,7 @@ const BidList = () => {
   const [selectedGroup, setSelectedGroup] = useState(null);
   const [filteredConsignees, setFilteredConsignees] = useState([]);
   const [reactivateBid, setReactivateBid] = useState(null); // Holds bid data for reactivation
-  const [buyerGroup, setBuyerGroup] = useState(null);
+  const [buyerGroups, setBuyerGroups] = useState([]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -49,19 +49,28 @@ const BidList = () => {
             b.mobile?.some((m) => String(m) === String(mobile)),
           );
           if (buyer) {
-            const company = companies.find(
-              (c) => String(c._id) === String(buyer.companyId),
+            const buyerCompanyIds = (buyer.companyIds || []).map((id) =>
+              String(id),
             );
-            if (company && company.group) {
-              const formattedGroup = company.group
-                .split(" ")
-                .map(
-                  (word) =>
-                    word.charAt(0).toUpperCase() + word.slice(1).toLowerCase(),
-                )
-                .join(" ");
-              setBuyerGroup(formattedGroup);
-            }
+            const buyerCompanies = companies.filter((c) =>
+              buyerCompanyIds.includes(String(c._id)),
+            );
+
+            const groups = buyerCompanies
+              .map((c) => c.group)
+              .filter(Boolean)
+              .map((group) =>
+                group
+                  .split(" ")
+                  .map(
+                    (word) =>
+                      word.charAt(0).toUpperCase() +
+                      word.slice(1).toLowerCase(),
+                  )
+                  .join(" "),
+              );
+
+            setBuyerGroups([...new Set(groups)]);
           }
         }
         setBids(items);
@@ -140,8 +149,8 @@ const BidList = () => {
           return false;
         }
 
-        if (userRole === "Buyer" && buyerGroup) {
-          return bid.group === buyerGroup;
+        if (userRole === "Buyer" && buyerGroups.length > 0) {
+          return buyerGroups.includes(bid.group);
         }
 
         return true;
