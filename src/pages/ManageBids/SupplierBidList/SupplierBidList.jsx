@@ -35,6 +35,8 @@ const SupplierBidList = () => {
   const [quantity, setQuantity] = useState("");
   const [loadingFrom, setLoadingFrom] = useState("");
   const [remarks, setRemarks] = useState("");
+  const [deliveryDate, setDeliveryDate] = useState("");
+  const [paymentTerms, setPaymentTerms] = useState("");
   const [sellerCompany, setSellerCompany] = useState("");
   const [bidLocations, setBidLocations] = useState([]);
   const [nowTime, setNowTime] = useState(() => new Date());
@@ -124,12 +126,22 @@ const SupplierBidList = () => {
       setQuantity(existingParticipation.quantity || "");
       setLoadingFrom(existingParticipation.loadingFrom || "");
       setRemarks(existingParticipation.remarks || "");
+      setDeliveryDate(
+        existingParticipation.deliveryDate
+          ? new Date(existingParticipation.deliveryDate)
+              .toISOString()
+              .split("T")[0]
+          : "",
+      );
+      setPaymentTerms(existingParticipation.paymentTerms || "");
       setSellerCompany(existingParticipation.sellerCompany || "");
     } else {
       setRate(bid.rate || "");
       setQuantity(bid.quantity || "");
       setLoadingFrom("");
       setRemarks("");
+      setDeliveryDate("");
+      setPaymentTerms("");
       if (companies.length === 1) {
         setSellerCompany(String(companies[0] || "").trim());
       } else {
@@ -159,6 +171,8 @@ const SupplierBidList = () => {
         quantity: Number(quantity),
         loadingFrom,
         remarks,
+        deliveryDate,
+        paymentTerms,
         sellerCompany: String(sellerCompany || "").trim(),
       };
       await axios.post("/participatebids", participationData);
@@ -783,6 +797,31 @@ const SupplierBidList = () => {
                   ))}
                 </select>
               </label>
+              <div className="grid grid-cols-2 gap-4">
+                <label className="block">
+                  <span className="text-sm font-medium text-slate-700">
+                    Delivery Date
+                  </span>
+                  <input
+                    type="date"
+                    className="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3 focus:ring-2 focus:ring-emerald-400/50 focus:border-emerald-400 outline-none"
+                    value={deliveryDate}
+                    onChange={(e) => setDeliveryDate(e.target.value)}
+                  />
+                </label>
+                <label className="block">
+                  <span className="text-sm font-medium text-slate-700">
+                    Payment Terms
+                  </span>
+                  <input
+                    type="text"
+                    className="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3 focus:ring-2 focus:ring-emerald-400/50 focus:border-emerald-400 outline-none"
+                    value={paymentTerms}
+                    onChange={(e) => setPaymentTerms(e.target.value)}
+                    placeholder="e.g. 15 Days"
+                  />
+                </label>
+              </div>
               <label className="block">
                 <span className="text-sm font-medium text-slate-700">
                   Remarks
@@ -792,7 +831,7 @@ const SupplierBidList = () => {
                   value={remarks}
                   onChange={(e) => setRemarks(e.target.value)}
                   placeholder="Any additional remarks?"
-                  rows={3}
+                  rows={2}
                 />
               </label>
               <div className="flex justify-end gap-4 pt-4">

@@ -8,6 +8,8 @@ const participateBidSchema = new mongoose.Schema(
     rate: { type: Number, required: true },
     quantity: { type: Number, required: true },
     loadingFrom: { type: String, default: "" },
+    deliveryDate: { type: Date, default: null },
+    paymentTerms: { type: String, default: "" },
     remarks: { type: String, default: "" },
     status: {
       type: String,

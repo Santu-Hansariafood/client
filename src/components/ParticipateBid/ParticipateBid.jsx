@@ -61,6 +61,10 @@ const ParticipateBid = () => {
           rate: bid.rate || "N/A",
           participationRate: participation.rate || "N/A",
           participationQuantity: participation.quantity || "N/A",
+          deliveryDate: participation.deliveryDate
+            ? new Date(participation.deliveryDate).toLocaleDateString()
+            : "N/A",
+          paymentTerms: participation.paymentTerms || "N/A",
           participationDate: new Date(
             participation.participationDate
           ).toLocaleString(),
@@ -80,6 +84,8 @@ const ParticipateBid = () => {
         item.rate,
         item.participationRate,
         item.participationQuantity,
+        item.deliveryDate,
+        item.paymentTerms,
         item.participationDate,
         item.status,
       ]);
@@ -98,6 +104,8 @@ const ParticipateBid = () => {
     "Bid Rate",
     "Participation Rate",
     "Participation Quantity",
+    "Delivery Date",
+    "Payment Terms",
     "Participation Date",
     "Status",
   ];
@@ -108,43 +116,66 @@ const ParticipateBid = () => {
 
   return (
     <Suspense fallback={<Loading />}>
-      <div className="p-4 sm:p-6 bg-white shadow-md rounded-md w-full max-w-6xl mx-auto">
-        <div className="flex justify-between items-center mb-4">
-          <button
-            onClick={() => navigate(-2)}
-            className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition"
-          >
-            ← Back
-          </button>
-          <h2 className="text-xl sm:text-2xl font-semibold text-gray-800 text-center flex-grow">
-            Participated Bids
-          </h2>
-          <button
-            onClick={fetchBidsAndParticipations}
-            className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition"
-          >
-            Refresh 🔄
-          </button>
-        </div>
-        {filteredData.length === 0 ? (
-          <div className="py-8 text-center text-sm text-gray-500">
-            You have not participated in any bids yet.
+      <div className="p-4 sm:p-6 bg-slate-50 min-h-screen">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => navigate(-2)}
+                className="p-2.5 bg-white border border-slate-200 text-slate-600 rounded-xl hover:bg-slate-50 transition-all shadow-sm group"
+              >
+                <span className="group-hover:-translate-x-1 inline-block transition-transform">
+                  ←
+                </span>{" "}
+                Back
+              </button>
+              <div>
+                <h2 className="text-2xl font-bold text-slate-900">
+                  Participated Bids
+                </h2>
+                <p className="text-sm text-slate-500 font-medium">
+                  Track your active and historical bid participations
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={fetchBidsAndParticipations}
+              className="flex items-center gap-2 px-5 py-2.5 bg-emerald-600 text-white font-bold rounded-xl hover:bg-emerald-700 transition-all shadow-md shadow-emerald-200"
+            >
+              Refresh 🔄
+            </button>
           </div>
-        ) : (
-          <>
-            <div className="overflow-x-auto">
-              <Tables headers={headers} rows={currentRows} />
+
+          {filteredData.length === 0 ? (
+            <div className="py-20 text-center bg-white rounded-3xl border border-slate-200 shadow-sm">
+              <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span className="text-2xl">📝</span>
+              </div>
+              <h3 className="text-lg font-bold text-slate-800">No Bids Found</h3>
+              <p className="text-slate-500 mt-1 max-w-xs mx-auto">
+                You haven't participated in any bids yet. Start bidding to see
+                them here!
+              </p>
             </div>
-            <div className="mt-4 flex justify-center">
-              <Pagination
-                currentPage={currentPage}
-                totalItems={filteredData.length}
-                itemsPerPage={itemsPerPage}
-                onPageChange={setCurrentPage}
-              />
+          ) : (
+            <div className="space-y-6">
+              <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
+                <div className="overflow-x-auto">
+                  <Tables headers={headers} rows={currentRows} />
+                </div>
+              </div>
+
+              <div className="flex justify-center pb-8">
+                <Pagination
+                  currentPage={currentPage}
+                  totalItems={filteredData.length}
+                  itemsPerPage={itemsPerPage}
+                  onPageChange={setCurrentPage}
+                />
+              </div>
             </div>
-          </>
-        )}
+          )}
+        </div>
       </div>
     </Suspense>
   );

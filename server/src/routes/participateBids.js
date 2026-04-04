@@ -52,8 +52,17 @@ router.get("/", async (req, res) => {
 
 router.post("/", async (req, res) => {
   try {
-    const { bidId, mobile, rate, quantity, loadingFrom, remarks, sellerCompany } =
-      req.body;
+    const {
+      bidId,
+      mobile,
+      rate,
+      quantity,
+      loadingFrom,
+      remarks,
+      sellerCompany,
+      deliveryDate,
+      paymentTerms,
+    } = req.body;
 
     if (!bidId || !mobile) {
       return res.status(400).json({ message: "Bid ID and Mobile are required." });
@@ -102,7 +111,15 @@ router.post("/", async (req, res) => {
 
     const item = await ParticipateBid.findOneAndUpdate(
       { bidId, mobile },
-      { rate, quantity, loadingFrom, remarks, sellerCompany: resolvedCompany },
+      {
+        rate,
+        quantity,
+        loadingFrom,
+        remarks,
+        sellerCompany: resolvedCompany,
+        deliveryDate: deliveryDate ? new Date(deliveryDate) : null,
+        paymentTerms: paymentTerms || "",
+      },
       { upsert: true, new: true, runValidators: true }
     );
 

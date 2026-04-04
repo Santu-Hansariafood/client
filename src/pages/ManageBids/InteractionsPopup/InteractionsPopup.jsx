@@ -161,6 +161,45 @@ const InteractionCard = ({ interaction, onStatusChange }) => {
           <p className="text-sm text-gray-600 mt-1">{interactionTime}</p>
         </div>
       </div>
+
+      <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4 border-t pt-4 border-gray-100">
+        <div>
+          <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">
+            Delivery Date
+          </p>
+          <p className="text-sm font-semibold text-slate-700 mt-0.5">
+            {interaction.deliveryDate
+              ? new Date(interaction.deliveryDate).toLocaleDateString()
+              : "N/A"}
+          </p>
+        </div>
+        <div>
+          <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">
+            Payment Terms
+          </p>
+          <p className="text-sm font-semibold text-slate-700 mt-0.5">
+            {interaction.paymentTerms || "N/A"}
+          </p>
+        </div>
+        <div>
+          <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">
+            Loading From
+          </p>
+          <p className="text-sm font-semibold text-slate-700 mt-0.5">
+            {interaction.loadingFrom || "N/A"}
+          </p>
+        </div>
+        {interaction.remarks && (
+          <div className="md:col-span-3">
+            <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Seller Remarks
+            </p>
+            <p className="text-sm italic text-slate-600 mt-0.5 bg-white/50 p-2 rounded border border-gray-100">
+              "{interaction.remarks}"
+            </p>
+          </div>
+        )}
+      </div>
       {interaction.status !== "accepted" && (
         <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
