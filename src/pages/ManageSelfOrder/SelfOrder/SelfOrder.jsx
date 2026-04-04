@@ -202,9 +202,15 @@ const SelfOrder = () => {
       const buyerCommodities = formData.buyerCommodity || [];
       const supplierCommodities = formData.supplierBrokerage || [];
 
-      const buyerHasCommodity = buyerCommodities.includes(formData.commodity);
+      const buyerHasCommodity = buyerCommodities.some(
+        (c) =>
+          (typeof c === "string" ? c : c.name)?.trim().toLowerCase() ===
+          formData.commodity.trim().toLowerCase(),
+      );
       const supplierHasCommodity = supplierCommodities.some(
-        (c) => c.name === formData.commodity,
+        (c) =>
+          (typeof c === "string" ? c : c.name)?.trim().toLowerCase() ===
+          formData.commodity.trim().toLowerCase(),
       );
 
       if (!buyerHasCommodity) {

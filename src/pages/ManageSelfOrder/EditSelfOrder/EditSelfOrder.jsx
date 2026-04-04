@@ -232,9 +232,11 @@ const EditSelfOrder = () => {
       const buyerCommodities = formData.buyerCommodity || [];
       const supplierCommodities = formData.supplierBrokerage || []; // This comes from SupplierInformation.jsx
 
-      const buyerHasCommodity = buyerCommodities.includes(formData.commodity);
+      const buyerHasCommodity = buyerCommodities.some(
+        (c) => (typeof c === "string" ? c : c.name) === formData.commodity,
+      );
       const supplierHasCommodity = supplierCommodities.some(
-        (c) => c.name === formData.commodity,
+        (c) => (typeof c === "string" ? c : c.name) === formData.commodity,
       );
 
       if (!buyerHasCommodity) {
