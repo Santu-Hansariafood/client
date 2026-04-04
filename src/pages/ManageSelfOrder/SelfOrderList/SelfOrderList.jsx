@@ -58,8 +58,14 @@ const SelfOrderList = () => {
       try {
         const page = currentPage || 1;
         const search = searchInput?.trim() || "";
-        const [orderRes, consignees, allBuyers, suppliers, sellerProfiles, companies] =
-          await Promise.all([
+        const [
+          orderRes,
+          consignees,
+          allBuyers,
+          suppliers,
+          sellerProfiles,
+          companies,
+        ] = await Promise.all([
           axios.get(
             `${API_URL}?page=${page}&limit=${itemsPerPage}&search=${search}`,
           ),
@@ -132,9 +138,9 @@ const SelfOrderList = () => {
           }
         } else if (userRole === "Seller") {
           const seller = sellerProfiles.find((s) =>
-            s.phoneNumbers?.some((p) => String(p.value) === String(mobile))
+            s.phoneNumbers?.some((p) => String(p.value) === String(mobile)),
           );
-          
+
           filteredOrders = raw.filter((item) => {
             return (
               String(item.sellerMobile) === String(mobile) ||
@@ -269,23 +275,29 @@ Qty: ${item.quantity || "0"}`;
         let shared = false;
 
         try {
-          if (
-            navigator.share &&
-            navigator.canShare &&
-            typeof File !== "undefined"
-          ) {
-            const file = new File([blob], fileName, {
-              type: "application/pdf",
-            });
+          const isMobile = /Android|iPhone|iPad|iPod/i.test(
+            navigator.userAgent,
+          );
 
-            if (navigator.canShare({ files: [file] })) {
+          try {
+            if (isMobile && navigator.share && typeof File !== "undefined") {
+              const file = new File([blob], fileName, {
+                type: "application/pdf",
+              });
+
               await navigator.share({
                 files: [file],
                 text: message,
                 title: fileName,
               });
-              shared = true;
+
+              toast.dismiss(toastId);
+              toast.success("Tap WhatsApp and send");
+
+              return;
             }
+          } catch (err) {
+            console.error("Web Share failed:", err);
           }
         } catch (err) {
           console.error("Share failed:", err);
@@ -346,7 +358,7 @@ Download PDF: ${fileUrl}`
         }
 
         toast.dismiss(toastId);
-        toast.success("WhatsApp opened");
+        toast.success("Select WhatsApp to send PDF");
       } catch (error) {
         toast.dismiss(toastId);
         console.error(error);
@@ -425,7 +437,9 @@ Download PDF: ${fileUrl}`
         userRole === "Admin" || userRole === "Employee"
           ? "Seller Emails"
           : null,
-        userRole === "Admin" || userRole === "Employee" ? "WhatsApp Sent" : null,
+        userRole === "Admin" || userRole === "Employee"
+          ? "WhatsApp Sent"
+          : null,
         userRole === "Admin" || userRole === "Employee" ? "Action" : null,
       ].filter(Boolean),
     [userRole],
