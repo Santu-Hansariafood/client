@@ -161,15 +161,29 @@ router.post("/", async (req, res) => {
       });
     }
 
-    if (
-      body.gstNumber &&
-      !/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[A-Z0-9]{1}[Z]{1}[A-Z0-9]{1}$/i.test(
-        body.gstNumber,
-      )
-    ) {
-      return res.status(400).json({
-        message: "Invalid GST number",
-      });
+    if (body.gstNumber && body.gstNumber !== "0") {
+      if (
+        !/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[A-Z0-9]{1}[Z]{1}[A-Z0-9]{1}$/i.test(
+          body.gstNumber,
+        )
+      ) {
+        return res.status(400).json({
+          message: "Invalid GST number",
+        });
+      }
+    }
+
+    if (body.gstNumber === "0") {
+      if (!body.panNumber) {
+        return res.status(400).json({
+          message: "PAN number is required when GST is 0",
+        });
+      }
+      if (!/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/i.test(body.panNumber)) {
+        return res.status(400).json({
+          message: "Invalid PAN number format",
+        });
+      }
     }
 
     if (body.pinCode && !/^\d{6}$/.test(body.pinCode)) {
@@ -246,15 +260,29 @@ router.put("/:id", async (req, res) => {
   try {
     const body = req.body || {};
 
-    if (
-      body.gstNumber &&
-      !/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[A-Z0-9]{1}[Z]{1}[A-Z0-9]{1}$/i.test(
-        body.gstNumber,
-      )
-    ) {
-      return res.status(400).json({
-        message: "Invalid GST number",
-      });
+    if (body.gstNumber && body.gstNumber !== "0") {
+      if (
+        !/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[A-Z0-9]{1}[Z]{1}[A-Z0-9]{1}$/i.test(
+          body.gstNumber,
+        )
+      ) {
+        return res.status(400).json({
+          message: "Invalid GST number",
+        });
+      }
+    }
+
+    if (body.gstNumber === "0") {
+      if (!body.panNumber) {
+        return res.status(400).json({
+          message: "PAN number is required when GST is 0",
+        });
+      }
+      if (!/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/i.test(body.panNumber)) {
+        return res.status(400).json({
+          message: "Invalid PAN number format",
+        });
+      }
     }
 
     if (body.pinCode && !/^\d{6}$/.test(body.pinCode)) {

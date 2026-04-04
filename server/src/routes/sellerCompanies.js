@@ -45,6 +45,31 @@ router.post("/", async (req, res) => {
   try {
     const body = req.body || {};
 
+    if (body.gstNo && body.gstNo !== "0") {
+      if (
+        !/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[A-Z0-9]{1}[Z]{1}[A-Z0-9]{1}$/i.test(
+          body.gstNo,
+        )
+      ) {
+        return res.status(400).json({
+          message: "Invalid GST number",
+        });
+      }
+    }
+
+    if (body.gstNo === "0") {
+      if (!body.panNo) {
+        return res.status(400).json({
+          message: "PAN number is required when GST is 0",
+        });
+      }
+      if (!/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/i.test(body.panNo)) {
+        return res.status(400).json({
+          message: "Invalid PAN number format",
+        });
+      }
+    }
+
     const bankDetails =
       typeof body.bankDetails === "string"
         ? JSON.parse(body.bankDetails || "[]")
@@ -82,6 +107,31 @@ router.post("/", async (req, res) => {
 router.put("/:id", async (req, res) => {
   try {
     const body = req.body || {};
+
+    if (body.gstNo && body.gstNo !== "0") {
+      if (
+        !/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[A-Z0-9]{1}[Z]{1}[A-Z0-9]{1}$/i.test(
+          body.gstNo,
+        )
+      ) {
+        return res.status(400).json({
+          message: "Invalid GST number",
+        });
+      }
+    }
+
+    if (body.gstNo === "0") {
+      if (!body.panNo) {
+        return res.status(400).json({
+          message: "PAN number is required when GST is 0",
+        });
+      }
+      if (!/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/i.test(body.panNo)) {
+        return res.status(400).json({
+          message: "Invalid PAN number format",
+        });
+      }
+    }
 
     const bankDetails =
       typeof body.bankDetails === "string"

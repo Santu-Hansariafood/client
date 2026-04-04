@@ -83,9 +83,15 @@ const AddSellerCompany = () => {
     const { name, value } = e.target;
     let newCompanyInfo = { ...companyInfo, [name]: value };
 
-    if (name === "gstNo" && value.length === 15) {
-      const pan = value.substring(2, 12).toUpperCase();
-      newCompanyInfo.panNo = pan;
+    if (name === "gstNo") {
+      if (value === "0") {
+        newCompanyInfo.panNo = "";
+      } else if (value.length >= 12) {
+        const pan = value.substring(2, 12).toUpperCase();
+        newCompanyInfo.panNo = pan;
+      } else {
+        newCompanyInfo.panNo = "";
+      }
     }
 
     setCompanyInfo(newCompanyInfo);
@@ -165,6 +171,22 @@ const AddSellerCompany = () => {
     if (companyInfo.email && !validateEmail(companyInfo.email)) {
       toast.error("Please enter a valid email address.");
       return;
+    }
+
+    if (companyInfo.gstNo === "0") {
+      if (!companyInfo.panNo) {
+        toast.error("PAN number is required when GST is 0");
+        return;
+      }
+      if (!/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/i.test(companyInfo.panNo)) {
+        toast.error("Invalid PAN number format");
+        return;
+      }
+    } else {
+      if (!regexPatterns.gstNo?.test(companyInfo.gstNo)) {
+        toast.error("Invalid GST number");
+        return;
+      }
     }
 
     if (
@@ -250,7 +272,6 @@ const AddSellerCompany = () => {
                   onChange={handleCompanyInfoChange}
                   required
                   maxLength="15"
-                  minLength="15"
                 />
               </div>
               <div>
@@ -259,13 +280,18 @@ const AddSellerCompany = () => {
                 </label>
                 <DataInput
                   id="panNo"
-                  placeholder="Enter PAN No"
+                  placeholder={
+                    companyInfo.gstNo === "0"
+                      ? "Enter PAN No"
+                      : "Auto-filled PAN"
+                  }
                   name="panNo"
                   value={companyInfo.panNo}
                   onChange={handleCompanyInfoChange}
                   required
                   maxLength="10"
                   minLength="10"
+                  disabled={companyInfo.gstNo !== "0"}
                 />
               </div>
               <div>

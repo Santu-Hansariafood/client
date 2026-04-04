@@ -37,8 +37,14 @@ const EditConsigneePopup = ({ initialData, onSubmit, onCancel }) => {
       [name]: value,
     };
 
-    if (name === "gst" && value.length === 15) {
-      updated.pan = value.substring(2, 12).toUpperCase();
+    if (name === "gst") {
+      if (value === "0") {
+        updated.pan = "";
+      } else if (value.length === 15) {
+        updated.pan = value.substring(2, 12).toUpperCase();
+      } else {
+        updated.pan = "";
+      }
     }
 
     setFormData(updated);
@@ -87,11 +93,28 @@ const EditConsigneePopup = ({ initialData, onSubmit, onCancel }) => {
       toast.error("Invalid email format.");
       return;
     }
-    if (formData.gst && !regexPatterns.gstNo.test(formData.gst)) {
-      toast.error("Invalid GST number format.");
-      return;
+
+    if (formData.gst === "0") {
+      if (!formData.pan) {
+        toast.error("PAN number is required when GST is 0");
+        return;
+      }
+      if (!/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/i.test(formData.pan)) {
+        toast.error("Invalid PAN number format.");
+        return;
+      }
+    } else {
+      if (formData.gst && !regexPatterns.gstNo.test(formData.gst)) {
+        toast.error("Invalid GST number format.");
+        return;
+      }
     }
-    if (formData.pan && !regexPatterns.panNo.test(formData.pan)) {
+
+    if (
+      formData.gst !== "0" &&
+      formData.pan &&
+      !regexPatterns.panNo.test(formData.pan)
+    ) {
       toast.error("Invalid PAN number format.");
       return;
     }
@@ -147,11 +170,14 @@ const EditConsigneePopup = ({ initialData, onSubmit, onCancel }) => {
 
             <DataInput
               label="PAN Number"
-              placeholder="Enter PAN Number"
+              placeholder={
+                formData.gst === "0" ? "Enter PAN Number" : "Auto-filled PAN"
+              }
               value={formData.pan || ""}
               onChange={handleChange}
               name="pan"
               maxLength="10"
+              disabled={formData.gst !== "0"}
             />
 
             <DataDropdown

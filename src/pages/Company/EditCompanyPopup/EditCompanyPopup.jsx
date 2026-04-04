@@ -197,8 +197,11 @@ const EditCompanyPopup = ({ company, isOpen, onClose, onUpdate }) => {
 
   const handleGSTChange = (value) => {
     setGstNumber(value);
-    if (value.length >= 12) {
-      const pan = value.substring(2, 12);
+
+    if (value === "0") {
+      setPanNumber("");
+    } else if (value.length >= 12) {
+      const pan = value.substring(2, 12).toUpperCase();
       setPanNumber(pan);
     } else {
       setPanNumber("");
@@ -272,13 +275,24 @@ const EditCompanyPopup = ({ company, isOpen, onClose, onUpdate }) => {
       return;
     }
 
-    if (!/^\d{6}$/.test(pinCode)) {
-      toast.error("Invalid PIN code");
-      return;
+    if (gstNumber === "0") {
+      if (!panNumber) {
+        toast.error("PAN number is required when GST is 0");
+        return;
+      }
+      if (!/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/i.test(panNumber)) {
+        toast.error("Invalid PAN number format");
+        return;
+      }
+    } else {
+      if (!regexPatterns.gstNo?.test(gstNumber)) {
+        toast.error("Invalid GST number");
+        return;
+      }
     }
 
-    if (!regexPatterns.gstNo?.test(gstNumber)) {
-      toast.error("Invalid GST number");
+    if (!/^\d{6}$/.test(pinCode)) {
+      toast.error("Invalid PIN code");
       return;
     }
 
@@ -391,7 +405,8 @@ const EditCompanyPopup = ({ company, isOpen, onClose, onUpdate }) => {
               <DataInput
                 placeholder="PAN Number"
                 value={panNumber}
-                disabled
+                onChange={(e) => setPanNumber(e.target.value.toUpperCase())}
+                disabled={gstNumber !== "0"}
               />
 
               <DataDropdown

@@ -180,8 +180,10 @@ const AddCompany = () => {
   const handleGSTChange = useCallback((value) => {
     setGstNumber(value);
 
-    if (value.length >= 12) {
-      const pan = value.substring(2, 12);
+    if (value === "0") {
+      setPanNumber("");
+    } else if (value.length >= 12) {
+      const pan = value.substring(2, 12).toUpperCase();
       setPanNumber(pan);
     } else {
       setPanNumber("");
@@ -204,6 +206,22 @@ const AddCompany = () => {
       return;
     }
 
+    if (gstNumber === "0") {
+      if (!panNumber) {
+        toast.error("PAN number is required when GST is 0");
+        return;
+      }
+      if (!/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/i.test(panNumber)) {
+        toast.error("Invalid PAN number format");
+        return;
+      }
+    } else {
+      if (!regexPatterns.gstNo?.test(gstNumber)) {
+        toast.error("Invalid GST number");
+        return;
+      }
+    }
+
     if (!/^\d{6}$/.test(pinCode)) {
       toast.error("Invalid PIN code");
       return;
@@ -211,11 +229,6 @@ const AddCompany = () => {
 
     if (selectedCommodities.length === 0) {
       toast.error("At least one commodity required");
-      return;
-    }
-
-    if (!regexPatterns.gstNo?.test(gstNumber)) {
-      toast.error("Invalid GST number");
       return;
     }
 
@@ -367,9 +380,14 @@ const AddCompany = () => {
               <div>
                 <label className="text-sm font-medium">PAN Number</label>
                 <DataInput
-                  placeholder="Auto-filled PAN"
+                  placeholder={
+                    gstNumber === "0" ? "Enter PAN Number" : "Auto-filled PAN"
+                  }
                   value={panNumber}
-                  disabled
+                  onChange={(e) =>
+                    gstNumber === "0" && setPanNumber(e.target.value)
+                  }
+                  disabled={gstNumber !== "0"}
                 />
               </div>
               <div>

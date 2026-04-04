@@ -78,9 +78,15 @@ const EditSellerCompany = ({ company, onSave, onCancel }) => {
     const { name, value } = e.target;
     let newCompanyInfo = { ...companyInfo, [name]: value };
 
-    if (name === "gstNo" && value.length === 15) {
-      const pan = value.substring(2, 12).toUpperCase();
-      newCompanyInfo.panNo = pan;
+    if (name === "gstNo") {
+      if (value === "0") {
+        newCompanyInfo.panNo = "";
+      } else if (value.length >= 12) {
+        const pan = value.substring(2, 12).toUpperCase();
+        newCompanyInfo.panNo = pan;
+      } else {
+        newCompanyInfo.panNo = "";
+      }
     }
 
     setCompanyInfo(newCompanyInfo);
@@ -162,6 +168,22 @@ const EditSellerCompany = ({ company, onSave, onCancel }) => {
       return;
     }
 
+    if (companyInfo.gstNo === "0") {
+      if (!companyInfo.panNo) {
+        toast.error("PAN number is required when GST is 0");
+        return;
+      }
+      if (!/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/i.test(companyInfo.panNo)) {
+        toast.error("Invalid PAN number format");
+        return;
+      }
+    } else {
+      if (!regexPatterns.gstNo?.test(companyInfo.gstNo)) {
+        toast.error("Invalid GST number");
+        return;
+      }
+    }
+
     if (
       !companyInfo.companyName ||
       !companyInfo.gstNo ||
@@ -237,7 +259,10 @@ const EditSellerCompany = ({ company, onSave, onCancel }) => {
           name="panNo"
           value={companyInfo.panNo}
           onChange={handleCompanyInfoChange}
-          placeholder="Enter PAN Number"
+          placeholder={
+            companyInfo.gstNo === "0" ? "Enter PAN Number" : "Auto-filled PAN"
+          }
+          disabled={companyInfo.gstNo !== "0"}
         />
         <DataInput
           label="Aadhaar Number"

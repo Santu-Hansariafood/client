@@ -53,9 +53,15 @@ const AddConsignee = () => {
       [name]: value,
     };
 
-    if (name === "gst" && value.length === 15) {
-      const pan = value.substring(2, 12).toUpperCase();
-      newFormData.pan = pan;
+    if (name === "gst") {
+      if (value === "0") {
+        newFormData.pan = "";
+      } else if (value.length === 15) {
+        const pan = value.substring(2, 12).toUpperCase();
+        newFormData.pan = pan;
+      } else {
+        newFormData.pan = "";
+      }
     }
 
     setFormData(newFormData);
@@ -93,11 +99,28 @@ const AddConsignee = () => {
       toast.error("Invalid email format.");
       return;
     }
-    if (formData.gst && !regexPatterns.gstNo.test(formData.gst)) {
-      toast.error("Invalid GST number format.");
-      return;
+
+    if (formData.gst === "0") {
+      if (!formData.pan) {
+        toast.error("PAN number is required when GST is 0");
+        return;
+      }
+      if (!/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/i.test(formData.pan)) {
+        toast.error("Invalid PAN number format.");
+        return;
+      }
+    } else {
+      if (formData.gst && !regexPatterns.gstNo.test(formData.gst)) {
+        toast.error("Invalid GST number format.");
+        return;
+      }
     }
-    if (formData.pan && !regexPatterns.panNo.test(formData.pan)) {
+
+    if (
+      formData.gst !== "0" &&
+      formData.pan &&
+      !regexPatterns.panNo.test(formData.pan)
+    ) {
       toast.error("Invalid PAN number format.");
       return;
     }
@@ -194,7 +217,6 @@ const AddConsignee = () => {
                   value={formData.gst}
                   onChange={handleInputChange}
                   maxLength="15"
-                  minLength="15"
                   required
                 />
               </div>
@@ -203,13 +225,16 @@ const AddConsignee = () => {
                   {addConsigneeLable.consignee_pan}
                 </label>
                 <DataInput
-                  placeholder="Enter PAN"
+                  placeholder={
+                    formData.gst === "0" ? "Enter PAN" : "Auto-filled PAN"
+                  }
                   name="pan"
                   value={formData.pan}
                   onChange={handleInputChange}
                   maxLength="10"
                   minLength="10"
                   required
+                  disabled={formData.gst !== "0"}
                 />
               </div>
               <div>

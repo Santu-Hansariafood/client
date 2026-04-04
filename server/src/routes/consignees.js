@@ -69,6 +69,31 @@ router.post("/", async (req, res) => {
       });
     }
 
+    if (gst && gst !== "0") {
+      if (
+        !/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[A-Z0-9]{1}[Z]{1}[A-Z0-9]{1}$/i.test(
+          gst,
+        )
+      ) {
+        return res.status(400).json({
+          message: "Invalid GST number",
+        });
+      }
+    }
+
+    if (gst === "0") {
+      if (!pan) {
+        return res.status(400).json({
+          message: "PAN number is required when GST is 0",
+        });
+      }
+      if (!/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/i.test(pan)) {
+        return res.status(400).json({
+          message: "Invalid PAN number format",
+        });
+      }
+    }
+
     const consignee = new Consignee({
       name,
       phone,
@@ -98,6 +123,32 @@ router.post("/", async (req, res) => {
 
 router.put("/:id", async (req, res) => {
   try {
+    const { gst, pan } = req.body;
+
+    if (gst && gst !== "0") {
+      if (
+        !/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[A-Z0-9]{1}[Z]{1}[A-Z0-9]{1}$/i.test(
+          gst,
+        )
+      ) {
+        return res.status(400).json({
+          message: "Invalid GST number",
+        });
+      }
+    }
+
+    if (gst === "0") {
+      if (!pan) {
+        return res.status(400).json({
+          message: "PAN number is required when GST is 0",
+        });
+      }
+      if (!/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/i.test(pan)) {
+        return res.status(400).json({
+          message: "Invalid PAN number format",
+        });
+      }
+    }
 
     const updated = await Consignee.findByIdAndUpdate(
       req.params.id,
