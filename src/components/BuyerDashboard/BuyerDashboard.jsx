@@ -94,10 +94,7 @@ const BuyerDashboard = () => {
         <header className="mb-10 flex flex-col md:flex-row justify-between gap-6">
           <div>
             <h1 className="text-4xl font-extrabold text-slate-900">
-              Welcome,{" "}
-              <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                {toTitleCase(user?.name || "")}
-              </span>
+              Welcome Mr. {toTitleCase(user?.name || "")},
             </h1>
             <p className="text-slate-500 mt-2 text-lg">
               Manage bids, orders & analytics in one place.
