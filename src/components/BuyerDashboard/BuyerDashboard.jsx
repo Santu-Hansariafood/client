@@ -18,10 +18,13 @@ const Cards = lazy(() => import("../../common/Cards/Cards"));
 const BuyerDashboard = () => {
   const { user, mobile } = useAuth();
   const [buyerProfile, setBuyerProfile] = useState(null);
+  const [showAllConsignee, setShowAllConsignee] = useState(false);
 
   useEffect(() => {
     const fetchProfile = async () => {
       try {
+        if (!mobile) return;
+
         const response = await axios.get(`/buyers?mobile=${mobile}`);
         if (response.data?.length > 0) {
           setBuyerProfile(response.data[0]);
@@ -93,7 +96,7 @@ const BuyerDashboard = () => {
             <h1 className="text-4xl font-extrabold text-slate-900">
               Welcome,{" "}
               <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                {toTitleCase(user?.name)}
+                {toTitleCase(user?.name || "")}
               </span>
             </h1>
             <p className="text-slate-500 mt-2 text-lg">
@@ -128,7 +131,7 @@ const BuyerDashboard = () => {
                 </div>
               </div>
               <h3 className="text-sm sm:text-base font-bold text-slate-800 leading-tight">
-                {toTitleCase(buyerProfile.companyName)}
+                {toTitleCase(buyerProfile.companyName || "")}
               </h3>
             </div>
           )}
@@ -136,18 +139,35 @@ const BuyerDashboard = () => {
 
         {buyerProfile?.consignee?.length > 0 && (
           <section className="mb-10">
-            <div className="flex items-center gap-2 mb-4">
-              <FaMapMarkerAlt className="text-slate-400" />
-              <h2 className="text-sm font-bold text-slate-500 uppercase tracking-widest">
-                Consignees
-              </h2>
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <FaMapMarkerAlt className="text-slate-400" />
+                <h2 className="text-sm font-bold text-slate-500 uppercase tracking-widest">
+                  Consignees
+                </h2>
+              </div>
+
+              {buyerProfile.consignee.length > 3 && (
+                <button
+                  onClick={() => setShowAllConsignee(!showAllConsignee)}
+                  className="text-xs text-indigo-600 font-semibold hover:underline"
+                >
+                  {showAllConsignee ? "Show Less" : "View All"}
+                </button>
+              )}
             </div>
 
-            <div className="flex flex-wrap gap-3">
+            <div
+              className={`flex flex-wrap gap-3 transition-all duration-300 ${
+                showAllConsignee
+                  ? "max-h-[500px]"
+                  : "max-h-[60px] overflow-hidden"
+              }`}
+            >
               {buyerProfile.consignee.map((c, idx) => (
                 <div
-                  key={idx}
-                  className="px-4 py-2 rounded-full text-sm font-medium bg-white shadow-sm border border-slate-200 hover:shadow-md hover:-translate-y-0.5 transition-all"
+                  key={c.id || idx}
+                  className="px-4 py-2 rounded-full text-sm font-medium bg-white shadow-sm border border-slate-200 hover:shadow-md hover:-translate-y-0.5 transition-all cursor-pointer"
                 >
                   {c.label || c}
                 </div>
