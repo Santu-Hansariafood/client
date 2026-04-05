@@ -41,7 +41,9 @@ const Dashboard = () => {
         bids: getCount(responses[4]),
       });
     } catch (error) {
-      toast.error(error?.response?.data?.message || "Failed to fetch data counts");
+      toast.error(
+        error?.response?.data?.message || "Failed to fetch data counts",
+      );
     }
   }, []);
 
@@ -57,15 +59,16 @@ const Dashboard = () => {
         icon={FaTachometerAlt}
         noContentCard
       >
-        <div className="max-w-6xl mx-auto space-y-12">
-          <div className="relative group">
-            <div className="absolute -inset-1 bg-gradient-to-r from-emerald-600 to-teal-600 rounded-3xl blur opacity-25 group-hover:opacity-40 transition duration-1000 group-hover:duration-200"></div>
-            <div className="relative">
+        <div className="relative">
+          <div className="absolute inset-0 -z-10 bg-gradient-to-br from-slate-50 via-emerald-50/30 to-slate-100" />
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
+            <div className="animate-fade-in-up">
               <CardGrid counts={counts} />
             </div>
-          </div>
-          <div className="bg-white/40 backdrop-blur-sm rounded-3xl p-8 border border-white/50 shadow-xl shadow-slate-200/50">
-            <ChartSection />
+
+            <div className="bg-white/70 backdrop-blur-md rounded-2xl p-5 sm:p-6 border border-slate-200 shadow-sm animate-fade-in-up delay-100">
+              <ChartSection />
+            </div>
           </div>
         </div>
       </AdminPageShell>
