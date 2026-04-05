@@ -583,15 +583,6 @@ Download PDF: ${fileUrl}`
                     </button>
                   }
                 />
-
-                {item.buyerMobile && userRole === "Admin" && (
-                  <button
-                    onClick={() => handleSmartWhatsApp(item, "buyer")}
-                    className="sm:hidden w-9 h-9 rounded-lg bg-green-50 text-green-600"
-                  >
-                    <FaWhatsapp size={16} />
-                  </button>
-                )}
               </div>
             </div>
           ) : null,
