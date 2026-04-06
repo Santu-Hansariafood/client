@@ -44,33 +44,38 @@ const EditSellerDetails = ({ sellerId, onClose, onSave }) => {
       try {
         const [commoditiesRes, companiesRes, groupsRes, sellerRes] =
           await Promise.all([
-            axios.get(`${apiBaseURL}/commodities`),
-            axios.get(`${apiBaseURL}/seller-company`),
-            axios.get(`${apiBaseURL}/groups`),
+            axios.get("/commodities"),
+            axios.get("/seller-company"),
+            axios.get("/groups"),
             axios.get(`${apiBaseURL}/sellers/${sellerId}`),
           ]);
 
-        const commodities = commoditiesRes.data.map((item) => ({
-          value: item.name,
-          label: item.name,
-        }));
+        const commodities =
+          (commoditiesRes.data?.data || commoditiesRes.data || []).map(
+            (item) => ({
+              value: item.name,
+              label: item.name,
+            }),
+          );
 
-        const companies = companiesRes.data.data.map((item) => ({
-          value: item.companyName,
-          label: item.companyName,
-        }));
+        const companies =
+          (companiesRes.data?.data || companiesRes.data || []).map((item) => ({
+            value: item.companyName,
+            label: item.companyName,
+          }));
 
-        const groups = (groupsRes.data.data || groupsRes.data || []).map(
+        const groups = (groupsRes.data?.data || groupsRes.data || []).map(
           (item) => ({
             value: item._id,
             label: item.groupName,
           }),
         );
 
-        const sellerData = sellerRes.data;
+        const sellerData = sellerRes.data?.data || sellerRes.data || {};
+
         setFullSellerData(sellerData);
-        setSellerName(sellerData.sellerName);
-        setPassword(sellerData.password);
+        setSellerName(sellerData.sellerName || "");
+        setPassword(sellerData.password || "");
         setPhoneNumbers(
           (sellerData.phoneNumbers || []).map((phone) => ({
             id: Date.now() + Math.random(),
@@ -105,13 +110,8 @@ const EditSellerDetails = ({ sellerId, onClose, onSave }) => {
           })),
         );
         setSelectedStatus(
-          statusOptions.find((option) => option.value === sellerData.status),
-        );
-        setSelectedGroups(
-          (sellerData.groups || []).map((group) => ({
-            value: group.name,
-            label: group.name,
-          })),
+          statusOptions.find((option) => option.value === sellerData.status) ||
+            null,
         );
 
         setCommodityOptions(
@@ -121,6 +121,14 @@ const EditSellerDetails = ({ sellerId, onClose, onSave }) => {
           companies.sort((a, b) => a.label.localeCompare(b.label)),
         );
         setGroupOptions(groups.sort((a, b) => a.label.localeCompare(b.label)));
+
+        const selectedGroupValues = (sellerData.groups || [])
+          .map((group) => group.name)
+          .filter(Boolean);
+
+        setSelectedGroups(
+          groups.filter((g) => selectedGroupValues.includes(g.label)),
+        );
       } catch (error) {
         toast.error("Failed to load data from the server.");
       }
