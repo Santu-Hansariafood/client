@@ -443,6 +443,21 @@ const SupplierBidList = () => {
               </p>
             </div>
 
+            <div className="col-span-2 grid grid-cols-2 gap-3 sm:gap-4">
+              <div className="bg-slate-50/50 p-2.5 rounded-xl border border-slate-100">
+                <p className="text-[10px] sm:text-xs text-slate-500 font-medium">Payment Terms</p>
+                <p className="text-[11px] sm:text-sm font-semibold text-slate-700 mt-0.5">
+                  {bid.paymentTerms || "N/A"}
+                </p>
+              </div>
+              <div className="bg-slate-50/50 p-2.5 rounded-xl border border-slate-100">
+                <p className="text-[10px] sm:text-xs text-slate-500 font-medium">Expected Delivery</p>
+                <p className="text-[11px] sm:text-sm font-semibold text-slate-700 mt-0.5">
+                  {bid.delivery ? `${bid.delivery} days` : "N/A"}
+                </p>
+              </div>
+            </div>
+
             {isParticipated && (
               <>
                 <div className="bg-blue-50/30 p-2.5 rounded-xl border border-blue-100/50">
@@ -455,6 +470,28 @@ const SupplierBidList = () => {
                     {participation.quantity} <span className="text-[10px] sm:text-xs font-normal">Tons</span>
                   </p>
                 </div>
+                {(participation.deliveryDate || participation.paymentTerms) && (
+                  <div className="col-span-2 grid grid-cols-2 gap-3 sm:gap-4">
+                    <div className="bg-blue-50/30 p-2.5 rounded-xl border border-blue-100/50">
+                      <p className="text-[10px] sm:text-xs text-blue-600 font-medium">
+                        Expected Delivery Date
+                      </p>
+                      <p className="text-[11px] sm:text-sm font-semibold text-blue-700 mt-0.5">
+                        {participation.deliveryDate
+                          ? new Date(participation.deliveryDate).toLocaleDateString()
+                          : "N/A"}
+                      </p>
+                    </div>
+                    <div className="bg-blue-50/30 p-2.5 rounded-xl border border-blue-100/50">
+                      <p className="text-[10px] sm:text-xs text-blue-600 font-medium">
+                        Your Payment Terms
+                      </p>
+                      <p className="text-[11px] sm:text-sm font-semibold text-blue-700 mt-0.5">
+                        {participation.paymentTerms || "N/A"}
+                      </p>
+                    </div>
+                  </div>
+                )}
                 {participation?.sellerCompany && (
                   <div className="col-span-2 bg-slate-50/50 p-2.5 rounded-xl border border-slate-100">
                     <p className="text-[10px] sm:text-xs text-slate-500 font-medium">Your Company</p>

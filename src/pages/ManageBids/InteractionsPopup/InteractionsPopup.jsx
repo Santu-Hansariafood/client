@@ -53,19 +53,21 @@ const InteractionsPopup = ({ bidId, onClose }) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-      <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-        <div className="flex justify-between items-center border-b pb-3 mb-4">
-          <h2 className="text-2xl font-bold text-gray-800">Bid Interactions</h2>
+    <div className="fixed inset-0 bg-slate-900/70 backdrop-blur-sm flex justify-center items-center z-50">
+      <div className="bg-white/95 rounded-3xl shadow-2xl border border-slate-100 p-6 sm:p-8 w-full max-w-5xl max-h-[90vh] overflow-y-auto">
+        <div className="flex justify-between items-center border-b pb-4 mb-5">
+          <h2 className="text-xl sm:text-2xl font-bold text-slate-900">
+            Bid Interactions
+          </h2>
           <button
             onClick={onClose}
-            className="text-gray-500 hover:text-gray-800 text-2xl"
+            className="text-slate-400 hover:text-slate-700 text-2xl leading-none"
           >
             &times;
           </button>
         </div>
         {loading ? (
-          <p>Loading...</p>
+          <p className="text-sm text-slate-500">Loading...</p>
         ) : (
           <div className="space-y-4">
             {interactions.map((interaction) => (
@@ -127,7 +129,13 @@ const InteractionCard = ({ interaction, onStatusChange }) => {
 
   return (
     <div
-      className={`p-4 rounded-lg border relative ${interaction.status === "accepted" ? "border-green-500 bg-green-50" : interaction.status === "rejected" ? "border-red-500 bg-red-50" : "border-gray-200"}`}
+      className={`p-4 sm:p-5 rounded-2xl border relative shadow-sm ${
+        interaction.status === "accepted"
+          ? "border-emerald-200 bg-emerald-50/70"
+          : interaction.status === "rejected"
+            ? "border-rose-200 bg-rose-50/70"
+            : "border-slate-200 bg-slate-50/60"
+      }`}
     >
       {isRevised && interaction.status === "pending" && (
         <div className="absolute top-2 right-2">
@@ -138,34 +146,42 @@ const InteractionCard = ({ interaction, onStatusChange }) => {
       )}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div>
-          <p className="text-sm font-medium text-gray-500">Participant</p>
-          <p className="text-lg font-semibold text-gray-800">
+          <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+            Participant
+          </p>
+          <p className="text-lg font-semibold text-slate-900 mt-0.5">
             {interaction.sellerName}
           </p>
-          <p className="text-xs text-gray-400">{interaction.mobile}</p>
+          <p className="text-xs text-slate-500">{interaction.mobile}</p>
         </div>
         <div>
-          <p className="text-sm font-medium text-gray-500">Proposed Rate</p>
-          <p className="text-lg font-semibold text-gray-800">
+          <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+            Proposed Rate
+          </p>
+          <p className="text-lg font-semibold text-slate-900 mt-0.5">
             ₹{interaction.rate}
           </p>
         </div>
         <div>
-          <p className="text-sm font-medium text-gray-500">Proposed Quantity</p>
-          <p className="text-lg font-semibold text-gray-800">
+          <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+            Proposed Quantity
+          </p>
+          <p className="text-lg font-semibold text-slate-900 mt-0.5">
             {interaction.quantity} Tons
           </p>
         </div>
         <div>
-          <p className="text-sm font-medium text-gray-500">Interaction Time</p>
-          <p className="text-sm text-gray-600 mt-1">{interactionTime}</p>
+          <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+            Interaction Time
+          </p>
+          <p className="text-sm text-slate-700 mt-1">{interactionTime}</p>
         </div>
       </div>
 
       <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4 border-t pt-4 border-gray-100">
         <div>
           <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">
-            Delivery Date
+            Expected Delivery Date
           </p>
           <p className="text-sm font-semibold text-slate-700 mt-0.5">
             {interaction.deliveryDate
@@ -235,7 +251,7 @@ const InteractionCard = ({ interaction, onStatusChange }) => {
       )}
       <div className="mt-4">
         <textarea
-          className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 transition"
+          className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 transition bg-white/70"
           placeholder="Add admin notes..."
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
@@ -245,7 +261,7 @@ const InteractionCard = ({ interaction, onStatusChange }) => {
         {interaction.status !== "accepted" && (
           <button
             onClick={() => handleSave("accepted")}
-            className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition"
+            className="px-4 py-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700 transition shadow-sm"
           >
             Accept
           </button>
@@ -253,7 +269,7 @@ const InteractionCard = ({ interaction, onStatusChange }) => {
         {interaction.status !== "rejected" && (
           <button
             onClick={() => handleSave("rejected")}
-            className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition"
+            className="px-4 py-2 bg-rose-500 text-white rounded-md hover:bg-rose-600 transition shadow-sm"
           >
             Reject
           </button>
