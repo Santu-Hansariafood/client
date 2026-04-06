@@ -10,9 +10,6 @@ const DataInput = lazy(() => import("../../../common/DataInput/DataInput"));
 const DataDropdown = lazy(
   () => import("../../../common/DataDropdown/DataDropdown"),
 );
-const DropdownSelector = lazy(
-  () => import("../../../common/DropdownSelector/DropdownSelector"),
-);
 const Buttons = lazy(() => import("../../../common/Buttons/Buttons"));
 
 const apiBaseURL = "";
@@ -340,7 +337,7 @@ const EditSellerDetails = ({ sellerId, onClose, onSave }) => {
           <DataDropdown
             options={commodityOptions}
             placeholder="Select commodities"
-            value={selectedCommodity}
+            selectedOptions={selectedCommodity}
             onChange={handleCommodityChange}
             isMulti
           />
@@ -367,7 +364,7 @@ const EditSellerDetails = ({ sellerId, onClose, onSave }) => {
               <DataDropdown
                 options={companyOptions}
                 placeholder="Select companies"
-                value={selectedCompany}
+                selectedOptions={selectedCompany}
                 onChange={handleCompanyChange}
                 isMulti
               />
@@ -379,7 +376,7 @@ const EditSellerDetails = ({ sellerId, onClose, onSave }) => {
               <DataDropdown
                 options={statusOptions}
                 placeholder="Select status"
-                value={selectedStatus}
+                selectedOptions={selectedStatus}
                 onChange={(selected) => setSelectedStatus(selected)}
               />
             </div>
@@ -403,11 +400,11 @@ const EditSellerDetails = ({ sellerId, onClose, onSave }) => {
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Groups
             </label>
-            <DropdownSelector
+            <DataDropdown
               options={groupOptions}
               placeholder="Select groups"
               isMulti
-              value={selectedGroups}
+              selectedOptions={selectedGroups}
               onChange={(selected) => setSelectedGroups(selected || [])}
             />
           </div>

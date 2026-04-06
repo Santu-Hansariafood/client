@@ -13,9 +13,6 @@ const DataInput = lazy(() => import("../../../common/DataInput/DataInput"));
 const DataDropdown = lazy(
   () => import("../../../common/DataDropdown/DataDropdown"),
 );
-const DropdownSelector = lazy(
-  () => import("../../../common/DropdownSelector/DropdownSelector"),
-);
 const Buttons = lazy(() => import("../../../common/Buttons/Buttons"));
 
 const AddSellerDetails = () => {
@@ -288,7 +285,7 @@ const AddSellerDetails = () => {
             <div className="mt-4">
               <DataDropdown
                 options={commodityOptions}
-                value={selectedCommodity}
+                selectedOptions={selectedCommodity}
                 isMulti
                 placeholder="Select Commodities"
                 onChange={handleCommodityChange}
@@ -310,7 +307,7 @@ const AddSellerDetails = () => {
             <div className="mt-4">
               <DataDropdown
                 options={companyOptions}
-                value={selectedCompany}
+                selectedOptions={selectedCompany}
                 isMulti
                 placeholder="Select Companies"
                 onChange={handleCompanyChange}
@@ -318,9 +315,9 @@ const AddSellerDetails = () => {
             </div>
 
             <div className="mt-4">
-              <DropdownSelector
+              <DataDropdown
                 options={groupOptions}
-                value={selectedGroups}
+                selectedOptions={selectedGroups}
                 isMulti
                 placeholder="Select Groups"
                 onChange={(selected) => setSelectedGroups(selected || [])}
@@ -330,7 +327,7 @@ const AddSellerDetails = () => {
             <div className="mt-4">
               <DataDropdown
                 options={statusOptions}
-                value={selectedStatus}
+                selectedOptions={selectedStatus}
                 placeholder="Select Status"
                 onChange={(selected) => setSelectedStatus(selected)}
               />
