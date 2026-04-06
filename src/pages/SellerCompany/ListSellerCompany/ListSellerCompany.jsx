@@ -12,9 +12,7 @@ const Pagination = lazy(
 );
 const PopupBox = lazy(() => import("../../../common/PopupBox/PopupBox"));
 const Actions = lazy(() => import("../../../common/Actions/Actions"));
-const generatePDF = lazy(
-  () => import("../../../common/GeneratePdf/GeneratePdf"),
-);
+import generatePDF from "../../../common/GeneratePdf/GeneratePdf";
 const EditSellerCompany = lazy(
   () => import("../EditSellerCompany/EditSellerCompany"),
 );
@@ -23,37 +21,65 @@ const ListSellerCompany = () => {
   const [companies, setCompanies] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [searchResults, setSearchResults] = useState([]);
   const [totalItems, setTotalItems] = useState(0);
   const [selectedCompany, setSelectedCompany] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [editCompany, setEditCompany] = useState(null);
   const [searchText, setSearchText] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState(searchText);
+  const [searchLoading, setSearchLoading] = useState(false);
   const itemsPerPage = 10;
 
   useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearch(searchText);
+    }, 500);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [searchText]);
+
+  useEffect(() => {
+    const controller = new AbortController();
+
     const fetchCompanies = async () => {
       try {
-        setLoading(true);
+        if (!debouncedSearch && currentPage === 1) {
+          setLoading(true);
+        }
+
+        setSearchLoading(true);
+
         const response = await axios.get("/seller-company", {
+          signal: controller.signal, // ✅ important
           params: {
             page: currentPage,
             limit: itemsPerPage,
-            search: searchText,
+            search: debouncedSearch || undefined,
           },
         });
-        setCompanies(response.data.data);
-        setSearchResults(response.data.data);
-        setTotalItems(response.data.total || response.data.data.length);
+
+        setCompanies(response.data?.data || []);
+        setTotalItems(response.data?.total ?? response.data?.data?.length ?? 0);
         setLoading(false);
+        setSearchLoading(false);
       } catch (err) {
-        setError("Failed to fetch companies");
+        if (err.name === "CanceledError") return;
+
+        setError(err.response?.data?.message || "Failed to fetch companies");
         console.error(err);
         setLoading(false);
+        setSearchLoading(false);
       }
     };
+
     fetchCompanies();
-  }, [currentPage, searchText]);
+
+    return () => {
+      controller.abort(); // ✅ cancel previous request
+    };
+  }, [currentPage, debouncedSearch]);
 
   const capitalizeWords = (str) => {
     if (!str) return "";
@@ -90,9 +116,9 @@ const ListSellerCompany = () => {
       try {
         await axios.delete(`/seller-company/${id}`);
         setCompanies((prev) => prev.filter((company) => company._id !== id));
-        setSearchResults((prev) =>
-          prev.filter((company) => company._id !== id),
-        );
+        // setSearchResults((prev) =>
+        //   prev.filter((company) => company._id !== id),
+        // );
         setTotalItems((prev) => prev - 1);
         toast.success("Seller company deleted successfully!");
       } catch (err) {
@@ -116,7 +142,7 @@ const ListSellerCompany = () => {
     "Actions",
   ];
 
-  const rows = searchResults.map((company, index) => [
+  const rows = companies.map((company, index) => [
     (currentPage - 1) * itemsPerPage + index + 1,
     capitalizeWords(company.companyName),
     toUpperCase(company.gstNo),
@@ -275,13 +301,6 @@ const ListSellerCompany = () => {
                 company={editCompany}
                 onSave={(updatedCompany) => {
                   setCompanies((prev) =>
-                    prev.map((company) =>
-                      company._id === updatedCompany._id
-                        ? updatedCompany
-                        : company,
-                    ),
-                  );
-                  setSearchResults((prev) =>
                     prev.map((company) =>
                       company._id === updatedCompany._id
                         ? updatedCompany
