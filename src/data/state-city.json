@@ -188,7 +188,21 @@
     "state": "Dadra and Nagar Haveli"
   },
   {
-    "district": ["Delhi", "New Delhi*"],
+    "district": [
+      "Central Delhi",
+      "Central North Delhi",
+      "East Delhi",
+      "New Delhi",
+      "North Delhi",
+      "North East Delhi",
+      "North West Delhi",
+      "Old Delhi",
+      "Outer North Delhi",
+      "South Delhi",
+      "South East Delhi",
+      "South West Delhi",
+      "West Delhi"
+    ],
     "state": "Delhi"
   },
   {
