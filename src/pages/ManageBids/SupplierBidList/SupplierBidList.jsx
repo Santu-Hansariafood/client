@@ -195,9 +195,8 @@ const SupplierBidList = () => {
   };
 
   const filteredBids = useMemo(() => {
-    const todayStr = (serverNow ? new Date(serverNow) : nowTime)
-      .toISOString()
-      .split("T")[0];
+    const currentTime = serverNow ? new Date(serverNow) : nowTime;
+    const todayStr = currentTime.toISOString().split("T")[0];
 
     return bids
       .filter((bid) => {
@@ -210,15 +209,18 @@ const SupplierBidList = () => {
         const bidEndDateTime = getBidEndDateTime(bid);
         if (!bidEndDateTime) return false;
         const isParticipated = participations.some((p) => p.bidId === bid._id);
-        const isClosed = bid.status === "closed" || nowTime >= bidEndDateTime;
+        const isClosed = bid.status === "closed";
 
         if (activeTab === "all") {
           return true;
-        } else if (activeTab === "active") {
-          return bid.status === "active" && nowTime < bidEndDateTime;
-        } else if (activeTab === "participated") {
+        }
+        if (activeTab === "active") {
+          return bid.status === "active";
+        }
+        if (activeTab === "participated") {
           return isParticipated;
-        } else if (activeTab === "closed") {
+        }
+        if (activeTab === "closed") {
           return isClosed;
         }
         return false;
@@ -373,10 +375,11 @@ const SupplierBidList = () => {
       new Date(participation.updatedAt).getTime() >
         new Date(participation.createdAt).getTime();
     const bidEndDateTime = getBidEndDateTime(bid);
-    const isClosed = bid.status === "closed" || (bidEndDateTime ? nowTime >= bidEndDateTime : false);
-    const countdownText = bidEndDateTime
-      ? formatCountdown(bidEndDateTime.getTime() - nowTime.getTime())
-      : "00:00:00";
+    const isClosed = bid.status === "closed";
+    const countdownText =
+      bidEndDateTime && !isClosed
+        ? formatCountdown(bidEndDateTime.getTime() - nowTime.getTime())
+        : "00:00:00";
     const participantCount = participantCounts[String(bid._id)] || 0;
     const hasNoParticipants = participantCount === 0;
     const qualityText = Object.entries(bid.parameters || {})
