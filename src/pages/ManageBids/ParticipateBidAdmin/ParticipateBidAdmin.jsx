@@ -170,7 +170,9 @@ const ParticipateBidAdmin = () => {
 
   const filteredData = getBidParticipationDetails(filteredBids);
   const totalItems = filteredData.length;
-  const indexOfLastItem = currentPage * itemsPerPage;
+  const totalPages = Math.max(1, Math.ceil(totalItems / itemsPerPage));
+  const safeCurrentPage = Math.min(currentPage, totalPages);
+  const indexOfLastItem = safeCurrentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = filteredData.slice(indexOfFirstItem, indexOfLastItem);
 
@@ -220,6 +222,15 @@ const ParticipateBidAdmin = () => {
     setCurrentPage(1);
   };
 
+  const handlePageChange = (page) => {
+    if (Number.isNaN(page)) return;
+    const nextPage = Math.max(
+      1,
+      Math.min(page, Math.max(1, Math.ceil(totalItems / itemsPerPage))),
+    );
+    setCurrentPage(nextPage);
+  };
+
   return (
     <Suspense fallback={<Loading />}>
       <AdminPageShell
@@ -259,10 +270,10 @@ const ParticipateBidAdmin = () => {
                 <Tables headers={headers} rows={rows} />
               </div>
               <Pagination
-                currentPage={currentPage}
+                currentPage={safeCurrentPage}
                 totalItems={totalItems}
                 itemsPerPage={itemsPerPage}
-                onPageChange={setCurrentPage}
+                onPageChange={handlePageChange}
               />
             </>
           )}
