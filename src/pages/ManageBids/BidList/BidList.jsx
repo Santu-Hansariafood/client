@@ -24,8 +24,9 @@ const BidList = () => {
   const [error, setError] = useState(null);
   const [selectedGroup, setSelectedGroup] = useState(null);
   const [filteredConsignees, setFilteredConsignees] = useState([]);
-  const [reactivateBid, setReactivateBid] = useState(null); // Holds bid data for reactivation
+  const [reactivateBid, setReactivateBid] = useState(null);
   const [buyerGroups, setBuyerGroups] = useState([]);
+  const [isBuyerAdmin, setIsBuyerAdmin] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -49,6 +50,7 @@ const BidList = () => {
             b.mobile?.some((m) => String(m) === String(mobile)),
           );
           if (buyer) {
+            setIsBuyerAdmin(buyer.isAdmin || false);
             const buyerCompanyIds = (buyer.companyIds || []).map((id) =>
               String(id),
             );
@@ -71,7 +73,13 @@ const BidList = () => {
               );
 
             setBuyerGroups([...new Set(groups)]);
+          } else {
+            setIsBuyerAdmin(false);
+            setBuyerGroups([]);
           }
+        } else {
+          setIsBuyerAdmin(false);
+          setBuyerGroups([]);
         }
         setBids(items);
       } catch {
@@ -150,7 +158,6 @@ const BidList = () => {
         }
 
         if (userRole === "Buyer") {
-          // If buyerGroups is empty, buyer shouldn't see anything
           if (!buyerGroups || buyerGroups.length === 0) return false;
 
           const bidGroupNormalized = (bid.group || "")
@@ -162,7 +169,20 @@ const BidList = () => {
             )
             .join(" ");
 
-          return buyerGroups.includes(bidGroupNormalized);
+          if (!buyerGroups.includes(bidGroupNormalized)) return false;
+
+          if (isBuyerAdmin) return true;
+
+          const role = String(bid.createdByRole || "").toLowerCase();
+          const creatorMobile = String(bid.createdByMobile || "");
+          const currentMobile = String(mobile || "");
+
+          const createdByAdminOrEmployee =
+            role === "admin" || role === "employee";
+          const createdByCurrentBuyer =
+            creatorMobile !== "" && creatorMobile === currentMobile;
+
+          return createdByAdminOrEmployee || createdByCurrentBuyer;
         }
 
         return true;
@@ -172,7 +192,7 @@ const BidList = () => {
         const dateB = new Date(b.closedAt || b.updatedAt || b.createdAt);
         return dateB - dateA;
       });
-  }, [bids, activeTab, filteredConsignees, buyerGroups, userRole]);
+  }, [bids, activeTab, filteredConsignees, buyerGroups, userRole, isBuyerAdmin, mobile]);
 
   const consigneeItems = useMemo(
     () =>
