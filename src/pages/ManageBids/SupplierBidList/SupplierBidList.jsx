@@ -126,13 +126,17 @@ const SupplierBidList = () => {
       setQuantity(existingParticipation.quantity || "");
       setLoadingFrom(existingParticipation.loadingFrom || "");
       setRemarks(existingParticipation.remarks || "");
-      setDeliveryDate(
-        existingParticipation.deliveryDate
-          ? new Date(existingParticipation.deliveryDate)
-              .toISOString()
-              .split("T")[0]
-          : "",
-      );
+
+      const rawDeliveryDate = existingParticipation.deliveryDate;
+      let normalizedDeliveryDate = "";
+      if (rawDeliveryDate) {
+        const parsed = new Date(rawDeliveryDate);
+        if (!Number.isNaN(parsed.getTime())) {
+          normalizedDeliveryDate = parsed.toISOString().split("T")[0];
+        }
+      }
+      setDeliveryDate(normalizedDeliveryDate);
+
       setPaymentTerms(existingParticipation.paymentTerms || "");
       setSellerCompany(existingParticipation.sellerCompany || "");
     } else {
@@ -196,7 +200,9 @@ const SupplierBidList = () => {
 
   const filteredBids = useMemo(() => {
     const currentTime = serverNow ? new Date(serverNow) : nowTime;
-    const todayStr = currentTime.toISOString().split("T")[0];
+    const todayStr = Number.isNaN(currentTime.getTime())
+      ? nowTime.toISOString().split("T")[0]
+      : currentTime.toISOString().split("T")[0];
 
     return bids
       .filter((bid) => {
