@@ -126,7 +126,7 @@ const BidList = () => {
         let matches = false;
 
         if (activeTab === "all") {
-          matches = isToday;
+          matches = true;
         } else if (activeTab === "active") {
           matches =
             isToday &&

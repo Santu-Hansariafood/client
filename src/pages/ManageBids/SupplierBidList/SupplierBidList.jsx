@@ -140,8 +140,16 @@ const SupplierBidList = () => {
       setQuantity(bid.quantity || "");
       setLoadingFrom("");
       setRemarks("");
-      setDeliveryDate("");
-      setPaymentTerms("");
+      let defaultDeliveryDate = "";
+      if (bid.bidDate && bid.delivery) {
+        const baseDate = new Date(bid.bidDate);
+        if (!Number.isNaN(baseDate.getTime())) {
+          baseDate.setDate(baseDate.getDate() + Number(bid.delivery));
+          defaultDeliveryDate = baseDate.toISOString().split("T")[0];
+        }
+      }
+      setDeliveryDate(defaultDeliveryDate);
+      setPaymentTerms(bid.paymentTerms || "");
       if (companies.length === 1) {
         setSellerCompany(String(companies[0] || "").trim());
       } else {
