@@ -404,9 +404,11 @@ const SupplierBidList = () => {
                   <span className="w-1.5 h-1.5 rounded-full bg-red-600 animate-pulse" />
                   Ends: {bid.endTime} {!isClosed && `• ${countdownText}`}
                 </p>
-                <p className="text-[10px] sm:text-xs font-semibold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md">
-                  Interactions: {participantCount}
-                </p>
+                {!isClosed && (
+                  <p className="text-[10px] sm:text-xs font-semibold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md">
+                    Interactions: {participantCount}
+                  </p>
+                )}
               </div>
             </div>
             {isParticipated && (
@@ -439,10 +441,12 @@ const SupplierBidList = () => {
                 {bid.quantity} <span className="text-[10px] sm:text-xs font-normal">Tons</span>
               </p>
             </div>
-            <div className="bg-slate-50/50 p-2.5 rounded-xl border border-slate-100">
-              <p className="text-[10px] sm:text-xs text-slate-500 font-medium">Rate</p>
-              <p className="text-sm sm:text-base font-bold text-slate-700">₹{bid.rate}</p>
-            </div>
+            {!isClosed && (
+              <div className="bg-slate-50/50 p-2.5 rounded-xl border border-slate-100">
+                <p className="text-[10px] sm:text-xs text-slate-500 font-medium">Rate</p>
+                <p className="text-sm sm:text-base font-bold text-slate-700">₹{bid.rate}</p>
+              </div>
+            )}
             
             <div className="col-span-2 bg-slate-50/50 p-2.5 rounded-xl border border-slate-100">
               <p className="text-[10px] sm:text-xs text-slate-500 font-medium">Quality Parameters</p>
