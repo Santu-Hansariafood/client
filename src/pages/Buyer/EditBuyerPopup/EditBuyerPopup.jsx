@@ -1,14 +1,81 @@
 import PropTypes from "prop-types";
-import { useState, useEffect, lazy, Suspense } from "react";
+import {
+  useState,
+  useEffect,
+  useRef,
+  useMemo,
+  useCallback,
+  lazy,
+  Suspense,
+} from "react";
 import { toast } from "react-toastify";
 import axios from "axios";
 import Loading from "../../../common/Loading/Loading";
+import { fetchAllPages } from "../../../utils/apiClient/fetchAllPages";
 const DataInput = lazy(() => import("../../../common/DataInput/DataInput"));
 const DataDropdown = lazy(
   () => import("../../../common/DataDropdown/DataDropdown"),
 );
 
 import regexPatterns from "../../../utils/regexPatterns/regexPatterns";
+
+const isAbortError = (err) =>
+  err?.code === "ERR_CANCELED" || err?.name === "CanceledError";
+
+const sortIdsKey = (rows) =>
+  (rows || [])
+    .map((c) => String(c.value ?? c._id ?? ""))
+    .filter(Boolean)
+    .sort()
+    .join(",");
+
+const normalizeConsigneeRow = (c) => {
+  if (!c || typeof c !== "object") return null;
+  const value = String(c.value ?? c._id ?? "");
+  if (!value) return null;
+  const label = c.label || c.name || "Consignee";
+  return { value, label };
+};
+
+const buildConsigneeListFromBuyer = (buyer) => {
+  if (Array.isArray(buyer.consignee) && buyer.consignee.length > 0) {
+    return buyer.consignee
+      .map(normalizeConsigneeRow)
+      .filter(Boolean);
+  }
+  const ids = buyer.consigneeIds;
+  if (Array.isArray(ids) && ids.length > 0) {
+    const names = buyer.consigneeNames || [];
+    return ids.map((id, idx) => ({
+      value: String(id),
+      label: names[idx] || "Consignee",
+    }));
+  }
+  return [];
+};
+
+const buildFormStateFromBuyer = (buyer) => ({
+  ...buyer,
+  mobile: Array.isArray(buyer.mobile) ? buyer.mobile : [""],
+  email: Array.isArray(buyer.email) ? buyer.email : [""],
+  password: buyer.password || "",
+  commodity: Array.isArray(buyer.commodity) ? buyer.commodity : [""],
+  consignee: buildConsigneeListFromBuyer(buyer),
+  selectedCompanies: buyer.companyIds?.length
+    ? (buyer.companyIds || []).map((id, idx) => ({
+        value: String(id),
+        label: (buyer.companyNames || [])[idx] || "Unknown Company",
+      }))
+    : buyer.companyId
+      ? [
+          {
+            value: String(buyer.companyId),
+            label: buyer.companyName || "Unknown Company",
+          },
+        ]
+      : [],
+  group: buyer.group || "",
+});
 
 const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
   const [formData, setFormData] = useState(null);
@@ -18,49 +85,96 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
   const [allConsignees, setAllConsignees] = useState([]);
   const [companiesData, setCompaniesData] = useState([]);
   const [consigneeOptions, setConsigneeOptions] = useState([]);
+  const [referenceDataLoading, setReferenceDataLoading] = useState(false);
+  const [referenceDataError, setReferenceDataError] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const buyerRef = useRef(buyer);
+  const dialogPanelRef = useRef(null);
+  buyerRef.current = buyer;
 
   useEffect(() => {
-    if (buyer) {
-      setFormData({
-        ...buyer,
-        mobile: Array.isArray(buyer.mobile) ? buyer.mobile : [""],
-        email: Array.isArray(buyer.email) ? buyer.email : [""],
-        password: buyer.password || "",
-        commodity: Array.isArray(buyer.commodity) ? buyer.commodity : [""],
-        consignee: Array.isArray(buyer.consignee) ? buyer.consignee : [],
-        selectedCompanies: buyer.companyIds
-          ? (buyer.companyIds || []).map((id, idx) => ({
-              value: id,
-              label: (buyer.companyNames || [])[idx] || "Unknown Company",
-            }))
-          : buyer.companyId
-            ? [{ value: buyer.companyId, label: buyer.companyName }]
-            : [],
-        group: buyer.group || "",
-      });
+    if (!isOpen) {
+      setFormData(null);
+      setReferenceDataError(null);
+      setIsSubmitting(false);
     }
-  }, [buyer]);
+  }, [isOpen]);
 
   useEffect(() => {
+    if (!isOpen || !buyerRef.current?._id) return;
+    setFormData(buildFormStateFromBuyer(buyerRef.current));
+  }, [isOpen, buyer?._id]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [isOpen]);
+
+  const handleClose = useCallback(() => {
+    onClose();
+  }, [onClose]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const onKeyDown = (e) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        handleClose();
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [isOpen, handleClose]);
+
+  useEffect(() => {
+    if (!isOpen || referenceDataLoading || !buyer?._id) return;
+    const id = requestAnimationFrame(() => {
+      const first =
+        dialogPanelRef.current?.querySelector(
+          'input[name="name"], input:not([type="hidden"])',
+        ) || dialogPanelRef.current?.querySelector("input");
+      first?.focus();
+    });
+    return () => cancelAnimationFrame(id);
+  }, [isOpen, referenceDataLoading, buyer?._id]);
+
+  const addableConsigneeOptions = useMemo(() => {
+    const chosen = new Set(
+      (formData?.consignee || []).map((c) => String(c.value)),
+    );
+    return (consigneeOptions || []).filter((o) => !chosen.has(String(o.value)));
+  }, [consigneeOptions, formData?.consignee]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const controller = new AbortController();
+    const { signal } = controller;
+    let alive = true;
+
     const fetchData = async () => {
+      setReferenceDataLoading(true);
+      setReferenceDataError(null);
       try {
-        const [groupsRes, commoditiesRes, consigneesRes, companiesRes] =
+        const [groupsRes, commoditiesRes, consigneesRows, companiesRows] =
           await Promise.all([
-            axios.get("/groups"),
-            axios.get("/commodities"),
-            axios.get("/consignees", { params: { limit: 0 } }),
-            axios.get("/companies"),
+            axios.get("/groups", { signal }),
+            axios.get("/commodities", { signal }),
+            fetchAllPages("/consignees", { limit: 200, signal }).catch(() => []),
+            fetchAllPages("/companies", { limit: 200, signal }).catch(() => []),
           ]);
+
+        if (!alive) return;
 
         const groupsData = groupsRes.data?.data || groupsRes.data || [];
         const commoditiesData =
           commoditiesRes.data?.data || commoditiesRes.data || [];
-        const consigneesData =
-          consigneesRes.data?.data || consigneesRes.data || [];
-        const companiesDataFull =
-          companiesRes.data?.data || companiesRes.data || [];
 
-        setCompaniesData(companiesDataFull);
+        setCompaniesData(companiesRows);
         setGroups(
           groupsData.map((group) => ({
             value: String(group._id),
@@ -74,28 +188,42 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
           })),
         );
         setAllConsignees(
-          consigneesData.map((c) => ({
+          consigneesRows.map((c) => ({
             value: String(c._id),
-            label: c.name,
+            label: c.name || "Consignee",
           })),
         );
         setCompanies(
-          companiesDataFull.map((company) => ({
+          companiesRows.map((company) => ({
             value: String(company._id),
             label: company.companyName,
           })),
         );
       } catch (error) {
-        toast.error("Failed to fetch required data.", error);
+        if (!alive || isAbortError(error)) return;
+        console.error(error);
+        const msg =
+          "Could not load dropdown data. Check your connection and try again.";
+        setReferenceDataError(msg);
+        toast.error("Failed to fetch required data.");
+      } finally {
+        if (alive) setReferenceDataLoading(false);
       }
     };
 
-    if (isOpen) {
-      fetchData();
-    }
+    fetchData();
+
+    return () => {
+      alive = false;
+      controller.abort();
+    };
   }, [isOpen]);
 
   useEffect(() => {
+    const labelById = new Map(
+      allConsignees.map((o) => [String(o.value), o.label]),
+    );
+
     if (formData?.selectedCompanies?.length > 0 && companiesData.length > 0) {
       const selectedCompanyIds = formData.selectedCompanies.map((c) =>
         String(c.value),
@@ -110,9 +238,14 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
           company.consigneeIds.forEach((id, idx) => {
             const consigneeId = String(id);
             if (!allConsigneesMap.has(consigneeId)) {
+              const fromCompany = company.consignee?.[idx];
+              const label =
+                (typeof fromCompany === "string" && fromCompany) ||
+                labelById.get(consigneeId) ||
+                "Consignee";
               allConsigneesMap.set(consigneeId, {
                 value: consigneeId,
-                label: company.consignee?.[idx] || "Consignee",
+                label,
               });
             }
           });
@@ -127,78 +260,116 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
     } else {
       setConsigneeOptions([]);
     }
-  }, [formData?.selectedCompanies, companiesData]);
+  }, [formData?.selectedCompanies, companiesData, allConsignees]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
+    setFormData((prev) => (prev ? { ...prev, [name]: value } : prev));
   };
 
   const handleArrayChange = (name, index, updatedValue) => {
-    const updatedArray = [...formData[name]];
-    updatedArray[index] = updatedValue;
-    setFormData({ ...formData, [name]: updatedArray });
+    setFormData((prev) => {
+      if (!prev) return prev;
+      const updatedArray = [...(prev[name] || [])];
+      updatedArray[index] = updatedValue;
+      return { ...prev, [name]: updatedArray };
+    });
   };
 
   const handleGroupChange = (selectedGroup) => {
-    setFormData((prevData) => ({
-      ...prevData,
-      group: selectedGroup.label,
-      groupId: selectedGroup.value,
-      consignee: [],
-    }));
+    setFormData((prevData) => {
+      if (!prevData) return prevData;
+      const nextGroupId = selectedGroup?.value ?? "";
+      const prevGroupId = String(prevData.groupId ?? "");
+      const same = String(nextGroupId) === prevGroupId;
+      return {
+        ...prevData,
+        group: selectedGroup?.label ?? "",
+        groupId: nextGroupId,
+        consignee: same ? prevData.consignee : [],
+      };
+    });
   };
 
   const handleCompanyChange = (selectedCompanies) => {
-    setFormData((prevData) => ({
-      ...prevData,
-      selectedCompanies: selectedCompanies || [],
-      consignee: [], // Reset consignees when companies change
-    }));
+    const next = selectedCompanies || [];
+    setFormData((prevData) => {
+      if (!prevData) return prevData;
+      const prevKey = sortIdsKey(prevData.selectedCompanies);
+      const nextKey = sortIdsKey(next);
+      return {
+        ...prevData,
+        selectedCompanies: next,
+        consignee: prevKey === nextKey ? prevData.consignee : [],
+      };
+    });
   };
 
   const addField = (name) => {
-    setFormData({
-      ...formData,
-      [name]: [...formData[name], ""],
-    });
+    setFormData((prev) =>
+      prev ? { ...prev, [name]: [...(prev[name] || []), ""] } : prev,
+    );
   };
 
   const removeField = (name, index) => {
-    setFormData({
-      ...formData,
-      [name]: formData[name].filter((_, i) => i !== index),
-    });
-  };
-
-  const handleBrokerageChange = (commodity, value) => {
-    setFormData({
-      ...formData,
-      brokerage: {
-        ...formData.brokerage,
-        [commodity]: value,
-      },
-    });
+    setFormData((prev) =>
+      prev
+        ? {
+            ...prev,
+            [name]: (prev[name] || []).filter((_, i) => i !== index),
+          }
+        : prev,
+    );
   };
 
   const addConsignee = (consignee) => {
-    if (!formData.consignee.some((c) => c.value === consignee.value)) {
-      setFormData({
-        ...formData,
-        consignee: [...formData.consignee, consignee],
-      });
-    } else {
-      toast.warning("Consignee already added");
-    }
+    if (!consignee?.value) return;
+    setFormData((prev) => {
+      if (!prev) return prev;
+      const id = String(consignee.value);
+      if ((prev.consignee || []).some((c) => String(c.value) === id)) {
+        toast.warning("Consignee already added");
+        return prev;
+      }
+      return {
+        ...prev,
+        consignee: [
+          ...(prev.consignee || []),
+          { value: id, label: consignee.label || "Consignee" },
+        ],
+      };
+    });
   };
 
   const removeConsignee = (index) => {
-    const updatedConsignees = formData.consignee.filter((_, i) => i !== index);
-    setFormData({ ...formData, consignee: updatedConsignees });
+    setFormData((prev) =>
+      prev
+        ? {
+            ...prev,
+            consignee: (prev.consignee || []).filter((_, i) => i !== index),
+          }
+        : prev,
+    );
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!formData?._id || isSubmitting || referenceDataLoading) return;
+
+    const nameTrimmed = (formData.name || "").trim();
+    if (!nameTrimmed) {
+      toast.error("Buyer name is required.");
+      return;
+    }
+
+    if (
+      !(formData.mobile || []).some(
+        (num) => num.trim() && regexPatterns.mobile.test(num.trim()),
+      )
+    ) {
+      toast.error("Enter at least one valid mobile number.");
+      return;
+    }
 
     if (
       formData.mobile.some(
@@ -218,6 +389,7 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
       return;
     }
 
+    setIsSubmitting(true);
     try {
       const commodityIds = (formData.commodity || []).map((comm) => {
         if (typeof comm === "string") {
@@ -231,28 +403,36 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
       });
 
       const consigneeIds = (formData.consignee || []).map(
-        (c) => c.value || c._id || "",
+        (c) => String(c.value || c._id || ""),
       );
 
       const payload = {
-        name: formData.name,
-        password: formData.password,
-        mobile: formData.mobile,
-        email: formData.email,
-        companyIds: (formData.selectedCompanies || []).map((c) => c.value),
+        name: nameTrimmed,
+        mobile: (formData.mobile || []).map((m) => String(m).trim()),
+        email: (formData.email || []).map((m) => String(m).trim()),
+        companyIds: (formData.selectedCompanies || []).map((c) =>
+          String(c.value),
+        ),
         groupId: formData.groupId || null,
-        commodityIds,
-        consigneeIds,
+        commodityIds: commodityIds.filter(Boolean),
+        consigneeIds: consigneeIds.filter(Boolean),
         status: formData.status || "Active",
         brokerage: formData.brokerage || {},
       };
+
+      const passwordTrimmed = (formData.password || "").trim();
+      if (passwordTrimmed) {
+        payload.password = passwordTrimmed;
+      }
+
       const response = await axios.put(`/buyers/${formData._id}`, payload);
       onUpdate(response.data);
-      toast.success("Buyer updated successfully");
     } catch (error) {
       const message =
         error.response?.data?.message || "An error occurred while updating.";
       toast.error(message);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -260,11 +440,34 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
 
   return (
     <Suspense fallback={<Loading />}>
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/70 backdrop-blur-sm">
-        <div className="relative w-full max-w-4xl mx-4 rounded-2xl bg-white/95 shadow-2xl border border-slate-200">
-          <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-gradient-to-r from-emerald-500/10 via-sky-500/5 to-transparent rounded-t-2xl">
+      <div
+        className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/70 backdrop-blur-sm p-4"
+        role="presentation"
+        onClick={handleClose}
+      >
+        <div
+          ref={dialogPanelRef}
+          className="relative w-full max-w-4xl mx-auto rounded-2xl bg-white/95 shadow-2xl border border-slate-200 max-h-[90vh] flex flex-col"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="edit-buyer-title"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {referenceDataLoading && (
+            <div
+              className="absolute inset-0 z-20 flex items-center justify-center rounded-2xl bg-white/85 backdrop-blur-[2px]"
+              aria-busy="true"
+              aria-live="polite"
+            >
+              <Loading />
+            </div>
+          )}
+          <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-gradient-to-r from-emerald-500/10 via-sky-500/5 to-transparent rounded-t-2xl shrink-0">
             <div>
-              <h2 className="text-lg sm:text-xl font-semibold text-slate-900 tracking-tight">
+              <h2
+                id="edit-buyer-title"
+                className="text-lg sm:text-xl font-semibold text-slate-900 tracking-tight"
+              >
                 Edit Buyer
               </h2>
               <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
@@ -272,17 +475,31 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
               </p>
             </div>
             <button
-              className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 hover:text-red-500 hover:border-red-200 shadow-sm transition"
-              onClick={onClose}
+              className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 hover:text-red-500 hover:border-red-200 shadow-sm transition disabled:opacity-50"
+              onClick={handleClose}
               title="Close"
               type="button"
+              disabled={isSubmitting}
+              aria-label="Close dialog"
             >
               ✖
             </button>
           </div>
 
-          <div className="max-h-[80vh] overflow-y-auto px-6 pb-6 pt-4">
-            <form onSubmit={handleSubmit} className="space-y-6">
+          {referenceDataError && (
+            <div
+              className="mx-6 mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900"
+              role="alert"
+            >
+              {referenceDataError}
+            </div>
+          )}
+
+          <div className="min-h-0 flex-1 overflow-y-auto px-6 pb-6 pt-4">
+            <form
+              onSubmit={handleSubmit}
+              className={`space-y-6 ${isSubmitting ? "opacity-70 pointer-events-none" : ""}`}
+            >
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div className="space-y-1.5">
                   <label className="block text-xs font-semibold tracking-wide text-slate-600">
@@ -294,6 +511,7 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
                     value={formData.name || ""}
                     onChange={handleChange}
                     required
+                    disabled={referenceDataLoading || isSubmitting}
                   />
                 </div>
 
@@ -307,6 +525,7 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
                     onChange={handleCompanyChange}
                     placeholder="Select companies"
                     isMulti
+                    isDisabled={referenceDataLoading || isSubmitting}
                   />
                 </div>
 
@@ -314,12 +533,16 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
                   <label className="block text-xs font-semibold tracking-wide text-slate-600">
                     Password
                   </label>
+                  <p className="text-[11px] text-slate-400 mb-1">
+                    Leave blank to keep the current password.
+                  </p>
                   <DataInput
-                    placeholder="Enter password"
+                    placeholder="New password (optional)"
                     name="password"
                     value={formData.password || ""}
                     onChange={handleChange}
-                    required
+                    inputType="password"
+                    disabled={referenceDataLoading || isSubmitting}
                   />
                 </div>
 
@@ -330,10 +553,12 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
                   <DataDropdown
                     options={groups}
                     selectedOptions={groups.find(
-                      (group) => group.value === formData.groupId,
+                      (group) =>
+                        String(group.value) === String(formData.groupId ?? ""),
                     )}
                     onChange={handleGroupChange}
                     placeholder="Select group"
+                    isDisabled={referenceDataLoading || isSubmitting}
                   />
                 </div>
               </div>
@@ -462,11 +687,15 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
                   <div className="space-y-2">
                     {(formData.consignee || []).map((consignee, index) => (
                       <div
-                        key={index}
+                        key={`${consignee.value}-${index}`}
                         className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2 border border-slate-100"
                       >
                         <span className="text-sm text-slate-700">
-                          {consignee.label}
+                          {consignee.label ||
+                            allConsignees.find(
+                              (a) => String(a.value) === String(consignee.value),
+                            )?.label ||
+                            "Consignee"}
                         </span>
                         <button
                           type="button"
@@ -479,15 +708,17 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
                     ))}
                   </div>
                   <DataDropdown
-                    options={consigneeOptions || []}
+                    options={addableConsigneeOptions}
                     selectedOptions={null}
                     onChange={(selectedConsignee) => {
+                      if (!selectedConsignee) return;
                       addConsignee({
                         label: selectedConsignee.label,
                         value: selectedConsignee.value,
                       });
                     }}
                     placeholder="Add consignee"
+                    isDisabled={referenceDataLoading || isSubmitting}
                   />
                 </div>
               </div>
@@ -502,7 +733,8 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
                     name="status"
                     value={formData.status || "Active"}
                     onChange={handleChange}
-                    className="rounded-lg border border-slate-200 px-3 py-1.5 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white"
+                    disabled={referenceDataLoading || isSubmitting}
+                    className="rounded-lg border border-slate-200 px-3 py-1.5 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white disabled:opacity-60"
                   >
                     <option value="Active">Active</option>
                     <option value="Inactive">Inactive</option>
@@ -510,9 +742,10 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
 
                   <button
                     type="submit"
-                    className="inline-flex items-center justify-center rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-emerald-700 transition"
+                    disabled={referenceDataLoading || isSubmitting}
+                    className="inline-flex items-center justify-center rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-emerald-700 transition disabled:opacity-60 disabled:pointer-events-none"
                   >
-                    Save changes
+                    {isSubmitting ? "Saving…" : "Save changes"}
                   </button>
                 </div>
               </div>
@@ -525,7 +758,7 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
 };
 
 EditBuyerPopup.propTypes = {
-  buyer: PropTypes.object.isRequired,
+  buyer: PropTypes.object,
   isOpen: PropTypes.bool.isRequired,
   onClose: PropTypes.func.isRequired,
   onUpdate: PropTypes.func.isRequired,

@@ -99,45 +99,68 @@ const BuyerInformation = ({
 
   // Handle initial data for editing
   useEffect(() => {
-    if (loading || initialized || !formData?.buyerCompany) return;
+    if (loading || initialized) return;
 
-    // Find buyer by name or ID
-    const matchBuyer = (Array.isArray(buyers) ? buyers : []).find(
+    const hasEditHints =
+      formData?.buyer ||
+      formData?.buyerCompany ||
+      formData?.companyId != null ||
+      formData?.buyerMobile;
+    if (!hasEditHints) return;
+
+    const buyerList = Array.isArray(buyers) ? buyers : [];
+    const companyList = Array.isArray(companies) ? companies : [];
+
+    const matchCompany =
+      companyList.find(
+        (c) =>
+          formData.companyId != null &&
+          String(c._id) === String(formData.companyId),
+      ) ||
+      companyList.find(
+        (c) =>
+          (formData.buyerCompany || "").trim() &&
+          (c.companyName || "").trim().toLowerCase() ===
+            (formData.buyerCompany || "").trim().toLowerCase(),
+      );
+
+    let matchBuyer = buyerList.find(
       (b) =>
         b.name === formData.buyer ||
         b.mobile?.some((m) => String(m) === String(formData.buyerMobile)),
     );
 
-    if (matchBuyer) {
-      setSelectedBuyerId(matchBuyer._id);
-
-      // Find company by name or ID
-      const matchCompany = (Array.isArray(companies) ? companies : []).find(
-        (c) =>
-          (c.companyName || "").trim().toLowerCase() ===
-          (formData.buyerCompany || "").trim().toLowerCase(),
+    if (!matchBuyer && matchCompany) {
+      matchBuyer = buyerList.find((b) =>
+        (b.companyIds || []).some(
+          (cid) => String(cid) === String(matchCompany._id),
+        ),
       );
-
-      if (matchCompany) {
-        setSelectedCompanyId(matchCompany._id);
-      }
-
-      const consigneeValue =
-        formData.consignee?._id ||
-        formData.consignee?.value ||
-        formData.consignee;
-
-      if (consigneeValue) {
-        let found = consignees.find(
-          (c) =>
-            String(c._id) === String(consigneeValue) ||
-            (c.name || c.label) === consigneeValue,
-        );
-        if (found) setSelectedConsignee(String(found._id));
-      }
-
-      setInitialized(true);
     }
+
+    if (!matchBuyer) return;
+
+    setSelectedBuyerId(matchBuyer._id);
+
+    if (matchCompany) {
+      setSelectedCompanyId(matchCompany._id);
+    }
+
+    const consigneeValue =
+      formData.consignee?._id ||
+      formData.consignee?.value ||
+      formData.consignee;
+
+    if (consigneeValue) {
+      const found = consignees.find(
+        (c) =>
+          String(c._id) === String(consigneeValue) ||
+          (c.name || c.label) === consigneeValue,
+      );
+      if (found) setSelectedConsignee(String(found._id));
+    }
+
+    setInitialized(true);
   }, [buyers, companies, consignees, loading, formData, initialized]);
 
   const onBuyerChange = (option) => {

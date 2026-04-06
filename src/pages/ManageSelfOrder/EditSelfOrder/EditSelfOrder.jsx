@@ -8,6 +8,7 @@ import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
 import { FaEdit } from "react-icons/fa";
 import regexPatterns from "../../../utils/regexPatterns/regexPatterns";
 import { sendSaudaOrderEmails } from "../../../utils/saudaPdf/sendSaudaOrderEmails";
+import { fetchAllPages } from "../../../utils/apiClient/fetchAllPages";
 
 const BuyerInformation = lazy(
   () => import("../../../components/BuyerInformation/BuyerInformation"),
@@ -147,25 +148,24 @@ const EditSelfOrder = () => {
     const fetchData = async () => {
       setIsFetching(true);
       try {
-        const promises = [];
-        if (!orderFromState && id) {
-          promises.push(axios.get(`${API_BASE_URL}/${id}`));
-        } else {
-          promises.push(Promise.resolve({ data: orderFromState }));
-        }
-
-        promises.push(axios.get("/consignees"));
-        promises.push(axios.get("/buyers"));
-        promises.push(axios.get("/sellers"));
-        promises.push(axios.get("/seller-company"));
+        const orderPromise =
+          !orderFromState && id
+            ? axios.get(`${API_BASE_URL}/${id}`)
+            : Promise.resolve({ data: orderFromState });
 
         const [
           orderRes,
-          consigneeRes,
-          buyerRes,
-          supplierRes,
-          sellerCompanyRes,
-        ] = await Promise.all(promises);
+          consigneesRows,
+          buyersRows,
+          suppliersRows,
+          sellerCompaniesRows,
+        ] = await Promise.all([
+          orderPromise,
+          fetchAllPages("/consignees", { limit: 200 }).catch(() => []),
+          fetchAllPages("/buyers", { limit: 200 }).catch(() => []),
+          fetchAllPages("/sellers", { limit: 200 }).catch(() => []),
+          fetchAllPages("/seller-company", { limit: 200 }).catch(() => []),
+        ]);
 
         if (!orderFromState) {
           const data = orderRes.data;
@@ -183,12 +183,10 @@ const EditSelfOrder = () => {
           });
         }
 
-        setConsignees(consigneeRes.data?.data || consigneeRes.data || []);
-        setBuyers(buyerRes.data?.data || buyerRes.data || []);
-        setSuppliers(supplierRes.data?.data || supplierRes.data || []);
-        setSellerCompanies(
-          sellerCompanyRes.data?.data || sellerCompanyRes.data || [],
-        );
+        setConsignees(consigneesRows);
+        setBuyers(buyersRows);
+        setSuppliers(suppliersRows);
+        setSellerCompanies(sellerCompaniesRows);
       } catch (error) {
         console.error("Error fetching data:", error);
         toast.error("Failed to fetch required data.");

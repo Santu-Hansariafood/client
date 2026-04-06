@@ -13,7 +13,7 @@ const toPositiveNumber = (value) => {
 
 export const fetchAllPages = async (
   url,
-  { params = {}, limit = 200, maxPages = 100 } = {},
+  { params = {}, limit = 200, maxPages = 100, signal } = {},
 ) => {
   const allItems = [];
   let page = 1;
@@ -21,6 +21,7 @@ export const fetchAllPages = async (
   while (page <= maxPages) {
     const response = await axios.get(url, {
       params: { ...params, page, limit },
+      signal,
     });
     const payload = response?.data;
     const pageItems = toItemsArray(payload);
