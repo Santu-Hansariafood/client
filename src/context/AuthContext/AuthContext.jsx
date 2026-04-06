@@ -12,10 +12,24 @@ import "react-toastify/dist/ReactToastify.css";
 
 const AuthContext = createContext();
 
+const getTodayKey = () => {
+  try {
+    return new Date().toLocaleDateString("en-CA");
+  } catch {
+    return "";
+  }
+};
+
 export const AuthProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
     try {
-      return JSON.parse(localStorage.getItem("isAuthenticated")) || false;
+      const stored = JSON.parse(localStorage.getItem("isAuthenticated"));
+      const loginDate = localStorage.getItem("loginDate");
+      const today = getTodayKey();
+      if (stored && loginDate === today) {
+        return true;
+      }
+      return false;
     } catch {
       return false;
     }
@@ -53,9 +67,11 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem("mobile", userData.mobile || "");
     localStorage.setItem("userRole", userData.role || "");
     localStorage.setItem("user", JSON.stringify(userData.user || userData));
+    localStorage.setItem("loginDate", getTodayKey());
     if (userData.token) {
       localStorage.setItem("token", userData.token);
     }
+    startSessionTimer();
   };
 
   const logout = () => {
@@ -70,11 +86,27 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem("userRole");
     localStorage.removeItem("token");
     localStorage.removeItem("user");
+    localStorage.removeItem("loginDate");
 
     clearSessionTimer();
   };
 
-  const startSessionTimer = () => {};
+  const startSessionTimer = () => {
+    clearSessionTimer();
+    if (!isAuthenticated) {
+      return;
+    }
+    const now = new Date();
+    const midnight = new Date(now);
+    midnight.setHours(24, 0, 0, 0);
+    const msUntilMidnight = midnight.getTime() - now.getTime();
+    if (msUntilMidnight <= 0) {
+      return;
+    }
+    sessionTimeoutRef.current = setTimeout(() => {
+      logout();
+    }, msUntilMidnight);
+  };
 
   const clearSessionTimer = () => {
     if (sessionTimeoutRef.current) {
@@ -83,8 +115,7 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const handleUserActivity = () => {
-  };
+  const handleUserActivity = () => {};
 
   const synchronizeAuthState = (event) => {
     if (event.key === "isAuthenticated") {
@@ -120,9 +151,14 @@ export const AuthProvider = ({ children }) => {
       );
       window.removeEventListener("storage", synchronizeAuthState);
     };
-  }, [isAuthenticated]);
+  }, []);
 
   useEffect(() => {
+    if (isAuthenticated) {
+      startSessionTimer();
+    } else {
+      clearSessionTimer();
+    }
   }, [isAuthenticated]);
 
   const value = useMemo(

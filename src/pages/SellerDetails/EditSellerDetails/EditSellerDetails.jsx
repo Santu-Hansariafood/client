@@ -50,21 +50,17 @@ const EditSellerDetails = ({ sellerId, onClose, onSave }) => {
             axios.get(`${apiBaseURL}/sellers/${sellerId}`),
           ]);
 
-        const commodities =
-          (commoditiesRes.data?.data || commoditiesRes.data || []).map(
-            (item) => ({
-              value: item.name,
-              label: item.name,
-            }),
-          );
+        const commodities = commoditiesRes.data.map((item) => ({
+          value: item.name,
+          label: item.name,
+        }));
 
-        const companies =
-          (companiesRes.data?.data || companiesRes.data || []).map((item) => ({
-            value: item.companyName,
-            label: item.companyName,
-          }));
+        const companies = companiesRes.data.data.map((item) => ({
+          value: item.companyName,
+          label: item.companyName,
+        }));
 
-        const groups = (groupsRes.data?.data || groupsRes.data || []).map(
+        const groups = (groupsRes.data.data || groupsRes.data || []).map(
           (item) => ({
             value: item._id,
             label: item.groupName,
