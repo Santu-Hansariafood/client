@@ -147,9 +147,15 @@ const SupplierBidList = () => {
       let defaultDeliveryDate = "";
       if (bid.bidDate && bid.delivery) {
         const baseDate = new Date(bid.bidDate);
-        if (!Number.isNaN(baseDate.getTime())) {
-          baseDate.setDate(baseDate.getDate() + Number(bid.delivery));
-          defaultDeliveryDate = baseDate.toISOString().split("T")[0];
+        const deliveryDays = Number(bid.delivery);
+        if (
+          !Number.isNaN(baseDate.getTime()) &&
+          !Number.isNaN(deliveryDays)
+        ) {
+          baseDate.setDate(baseDate.getDate() + deliveryDays);
+          if (!Number.isNaN(baseDate.getTime())) {
+            defaultDeliveryDate = baseDate.toISOString().split("T")[0];
+          }
         }
       }
       setDeliveryDate(defaultDeliveryDate);
