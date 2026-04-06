@@ -7,7 +7,6 @@ import {
   useMemo,
 } from "react";
 import PropTypes from "prop-types";
-import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 const AuthContext = createContext();
