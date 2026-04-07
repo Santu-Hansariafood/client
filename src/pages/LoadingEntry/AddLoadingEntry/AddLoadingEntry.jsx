@@ -37,7 +37,6 @@ const fetchData = async (url, key) => {
 const AddLoadingEntry = () => {
   const [suppliers, setSuppliers] = useState([]);
   const [consignees, setConsignees] = useState([]);
-  const [allOrders, setAllOrders] = useState([]); 
   const [selectedSupplier, setSelectedSupplier] = useState(null);
   const [selectedConsignee, setSelectedConsignee] = useState(null);
   const [saudaSearch, setSaudaSearch] = useState(""); // Add sauda search
@@ -46,74 +45,40 @@ const AddLoadingEntry = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const loadSuppliers = async () => {
+    const loadDropdowns = async () => {
       setLoading(true);
-      const suppliersData = await fetchData("/sellers", "sellerName");
-      setSuppliers(suppliersData);
+      try {
+        const [suppliersData, consigneesRes] = await Promise.all([
+          fetchData("/sellers", "sellerName"),
+          axios.get("/consignees"),
+        ]);
+        const consigneesData = (consigneesRes.data || []).map((c) => ({
+          value: c._id,
+          label: `${capitalizeWords(c.name)} - ${capitalizeWords(c.location || "N/A")}, ${capitalizeWords(c.district || "N/A")}, ${capitalizeWords(c.state || "N/A")}`,
+          name: c.name,
+        }));
+        setSuppliers(suppliersData);
+        setConsignees(consigneesData);
+      } catch (err) {
+        console.error("Error loading dropdowns:", err);
+      }
       setLoading(false);
     };
-    loadSuppliers();
+    loadDropdowns();
   }, []);
 
-  // When selectedSupplier changes, fetch its orders and extract unique consignees
-  useEffect(() => {
-    const loadSupplierData = async () => {
-      if (selectedSupplier) {
-        setLoading(true);
-        try {
-          const response = await axios.get("/self-order");
-          const supplierOrders = response.data.filter(
-            (order) =>
-              order.supplier === selectedSupplier.value &&
-              order.supplierCompany === selectedSupplier.company
-          );
-          setAllOrders(supplierOrders);
-
-          // Extract unique consignees from the supplier's orders
-          const uniqueConsignees = Array.from(
-            new Set(supplierOrders.map((o) => o.consignee))
-          )
-            .filter(Boolean)
-            .map((name) => {
-              const order = supplierOrders.find((o) => o.consignee === name);
-              return {
-                value: name, 
-                label: `${capitalizeWords(name)} - ${capitalizeWords(order.location || "N/A")}, ${capitalizeWords(order.state || "N/A")}`,
-                name: name,
-              };
-            });
-
-          setConsignees(uniqueConsignees);
-          setSelectedConsignee(null); 
-          setSaudaSearch(""); // Reset sauda search
-          setOrders([]); 
-        } catch (error) {
-          console.error("Error loading supplier orders:", error);
-        } finally {
-          setLoading(false);
-        }
-      } else {
-        setConsignees([]);
-        setAllOrders([]);
-        setOrders([]);
-        setSaudaSearch("");
-      }
-    };
-    loadSupplierData();
-  }, [selectedSupplier]);
-
   const handleSearch = async () => {
-    if (selectedSupplier) {
+    if (selectedSupplier && selectedConsignee) {
       setLoading(true);
       
-      let orderData = [...allOrders];
-
-      // Filter by consignee if selected
-      if (selectedConsignee) {
-        orderData = orderData.filter(
-          (order) => order.consignee === selectedConsignee.name
+      try {
+        const response = await axios.get("/self-order");
+        let orderData = response.data.filter(
+          (order) =>
+            order.supplier === selectedSupplier.value &&
+            order.supplierCompany === selectedSupplier.company &&
+            order.consignee === selectedConsignee.name
         );
-      }
 
       // Filter by sauda number if entered
       if (saudaSearch.trim()) {
@@ -140,7 +105,11 @@ const AddLoadingEntry = () => {
       });
 
       setOrders(orderData);
-      setLoading(false);
+      } catch (err) {
+        console.error("Error fetching orders:", err);
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
