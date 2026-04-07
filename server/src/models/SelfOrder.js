@@ -46,6 +46,7 @@ const selfOrderSchema = new mongoose.Schema(
     buyerMobile: { type: String, default: "" },
     sellerMobile: { type: String, default: "" },
     whatsappSent: { type: Boolean, default: false },
+    status: { type: String, enum: ["active", "closed"], default: "active" },
   },
   { timestamps: true },
 );

@@ -13,6 +13,24 @@ const capitalizeWords = (str) =>
 const fetchData = async (url, key) => {
   try {
     const response = await axios.get(url);
+    if (url === "/sellers") {
+      // Flatten sellers to their companies
+      return response.data.flatMap((seller) =>
+        (seller.companies || []).map((company) => ({
+          value: seller._id,
+          label: capitalizeWords(company),
+          company: company,
+          sellerName: seller.sellerName,
+        }))
+      );
+    }
+    if (url === "/consignees") {
+      return response.data.map((c) => ({
+        value: c._id,
+        label: `${capitalizeWords(c.name)} - ${capitalizeWords(c.location || "N/A")}, ${capitalizeWords(c.district || "N/A")}, ${capitalizeWords(c.state || "N/A")}`,
+        name: c.name,
+      }));
+    }
     return response.data.map((item) => ({
       value: item._id,
       label: capitalizeWords(item[key]),
@@ -23,11 +41,14 @@ const fetchData = async (url, key) => {
   }
 };
 
-const fetchOrders = async (supplierId, consignee) => {
+const fetchOrders = async (supplierId, supplierCompany, consigneeName) => {
   try {
     const response = await axios.get("/self-order");
     return response.data.filter(
-      (order) => order.supplier === supplierId && order.consignee === consignee
+      (order) =>
+        order.supplier === supplierId &&
+        order.supplierCompany === supplierCompany &&
+        order.consignee === consigneeName
     );
   } catch (error) {
     console.error("Error fetching orders:", error);
@@ -63,13 +84,39 @@ const AddLoadingEntry = () => {
       setLoading(true);
       let orderData = await fetchOrders(
         selectedSupplier.value,
-        selectedConsignee.label
+        selectedSupplier.company,
+        selectedConsignee.name
       );
-      orderData.sort((a, b) => {
-        return a.buyer.localeCompare(b.buyer) || a.consignee.localeCompare(b.consignee);
+
+      // Add "isClosed" status based on tolerance (+/- 5%)
+      orderData = orderData.map((order) => {
+        const quantity = order.quantity || 0;
+        const pendingQuantity = order.pendingQuantity || 0;
+        const tolerance = quantity * 0.05;
+        const isClosed = order.status === "closed" || Math.abs(pendingQuantity) <= tolerance;
+        return { ...order, isClosed };
       });
+
+      // Sort: incomplete on top, then by date (newest first)
+      orderData.sort((a, b) => {
+        if (a.isClosed !== b.isClosed) {
+          return a.isClosed ? 1 : -1;
+        }
+        return new Date(b.poDate || b.createdAt) - new Date(a.poDate || a.createdAt);
+      });
+
       setOrders(orderData);
       setLoading(false);
+    }
+  };
+
+  const toggleSaudaStatus = async (order) => {
+    try {
+      const newStatus = order.status === "closed" ? "active" : "closed";
+      await axios.put(`/self-order/${order._id}`, { status: newStatus });
+      handleSearch(); // Refresh list
+    } catch (error) {
+      console.error("Error updating sauda status:", error);
     }
   };
 
@@ -127,6 +174,7 @@ const AddLoadingEntry = () => {
           {orders.length > 0 ? (
             <Tables
               headers={[
+                "Date",
                 "Sauda No",
                 "Seller Name",
                 "Company",
@@ -135,9 +183,11 @@ const AddLoadingEntry = () => {
                 "Quantity",
                 "Rate",
                 "Pending Quantity",
+                "Status",
                 "Action",
               ]}
               rows={orders.map((order) => [
+                new Date(order.poDate || order.createdAt).toLocaleDateString(),
                 order.saudaNo,
                 capitalizeWords(order.supplierCompany),
                 capitalizeWords(order.buyerCompany),
@@ -146,19 +196,43 @@ const AddLoadingEntry = () => {
                 order.quantity,
                 order.rate,
                 capitalizeWords(order.pendingQuantity),
-                <button
-                  key={order._id || order.saudaNo}
-                  onClick={() =>
-                    navigate(`/loading-entry-sauda/${order.supplier}`, {
-                      state: { order },
-                    })
-                  }
-                  className="inline-flex items-center justify-center w-9 h-9 rounded-lg text-emerald-700 hover:bg-emerald-50 transition"
-                  aria-label="Add loading entry"
-                  title="Add loading entry"
+                <span
+                  key={`status-${order._id}`}
+                  className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                    order.isClosed
+                      ? "bg-red-100 text-red-700"
+                      : "bg-emerald-100 text-emerald-700"
+                  }`}
                 >
-                  <FaPlus />
-                </button>,
+                  {order.isClosed ? "Closed" : "Active"}
+                </span>,
+                <div key={`actions-${order._id}`} className="flex gap-2">
+                  {!order.isClosed && (
+                    <button
+                      onClick={() =>
+                        navigate(`/loading-entry-sauda/${order.supplier}`, {
+                          state: { order },
+                        })
+                      }
+                      className="inline-flex items-center justify-center w-9 h-9 rounded-lg text-emerald-700 hover:bg-emerald-50 transition"
+                      aria-label="Add loading entry"
+                      title="Add loading entry"
+                    >
+                      <FaPlus />
+                    </button>
+                  )}
+                  <button
+                    onClick={() => toggleSaudaStatus(order)}
+                    className={`inline-flex items-center justify-center px-2 py-1 rounded-lg text-xs font-semibold transition ${
+                      order.status === "closed"
+                        ? "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                        : "bg-amber-100 text-amber-700 hover:bg-amber-200"
+                    }`}
+                    title={order.status === "closed" ? "Reopen Sauda" : "Close Sauda"}
+                  >
+                    {order.status === "closed" ? "Reopen" : "Close"}
+                  </button>
+                </div>,
               ])}
             />
           ) : (
