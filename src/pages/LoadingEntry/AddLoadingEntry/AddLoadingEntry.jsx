@@ -117,7 +117,7 @@ const AddLoadingEntry = () => {
   useEffect(() => {
     const autoFillSauda = async () => {
       const trimmedSauda = saudaSearch.trim();
-      if (trimmedSauda.length >= 2) { // Changed to 2 characters to be more responsive
+      if (trimmedSauda.length >= 3) { // Use 3 chars for exact match intent
         try {
           const response = await axios.get("/self-order");
           const allOrders = Array.isArray(response.data) ? response.data : (response.data?.data || []);
@@ -140,6 +140,20 @@ const AddLoadingEntry = () => {
               (c) => c.name === matchedOrder.consignee
             );
             if (consigneeOption) setSelectedConsignee(consigneeOption);
+
+            // Update the orders list with just this one match
+            const processedOrder = {
+              ...matchedOrder,
+              isClosed: matchedOrder.status === "closed" || Math.abs(matchedOrder.pendingQuantity || 0) <= (matchedOrder.quantity || 0) * 0.05
+            };
+            setOrders([processedOrder]);
+
+            // Automatically open the popup for this sauda
+            if (!processedOrder.isClosed) {
+              handleOpenPopup(processedOrder);
+            } else {
+              toast.info(`Sauda ${matchedOrder.saudaNo} is already closed.`);
+            }
           }
         } catch (err) {
           console.error("Error auto-filling sauda details:", err);
@@ -147,7 +161,7 @@ const AddLoadingEntry = () => {
       }
     };
 
-    const timer = setTimeout(autoFillSauda, 300); // Shorter debounce
+    const timer = setTimeout(autoFillSauda, 500); // Debounce to allow full typing
     return () => clearTimeout(timer);
   }, [saudaSearch, suppliers, consignees]);
 
@@ -442,11 +456,13 @@ const AddLoadingEntry = () => {
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 bg-slate-50 rounded-xl text-sm border border-slate-100">
                 <div>
                   <p className="text-slate-500">Total Quantity</p>
-                  <p className="font-bold text-slate-800">{selectedOrder.quantity} Tons</p>
+                  <p className="font-bold text-slate-800">{(selectedOrder.quantity || 0).toFixed(2)} Tons</p>
                 </div>
                 <div>
                   <p className="text-slate-500">Already Loaded</p>
-                  <p className="font-bold text-slate-800">{(selectedOrder.quantity - selectedOrder.pendingQuantity).toFixed(2)} Tons</p>
+                  <p className="font-bold text-slate-800">
+                    {((selectedOrder.quantity || 0) - (selectedOrder.pendingQuantity || 0)).toFixed(2)} Tons
+                  </p>
                 </div>
                 <div>
                   <p className="text-slate-500 text-emerald-600">Currently Adding</p>
@@ -454,7 +470,9 @@ const AddLoadingEntry = () => {
                 </div>
                 <div>
                   <p className="text-slate-500 text-amber-600">New Pending</p>
-                  <p className="font-bold text-amber-700">{(selectedOrder.pendingQuantity - calculateTotalLoadingWeight()).toFixed(2)} Tons</p>
+                  <p className="font-bold text-amber-700">
+                    {((selectedOrder.pendingQuantity || 0) - calculateTotalLoadingWeight()).toFixed(2)} Tons
+                  </p>
                 </div>
               </div>
 
