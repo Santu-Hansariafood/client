@@ -191,19 +191,6 @@ const ParticipateBidAdmin = () => {
     "Interactions",
   ];
 
-  const displayBids = useMemo(() => {
-    if (!selectedDate) return filteredBids;
-    
-    const targetDate = new Date(selectedDate);
-    targetDate.setHours(0, 0, 0, 0);
-    
-    return filteredBids.filter(pBid => {
-      const pDate = new Date(pBid.createdAt || pBid.participationDate);
-      pDate.setHours(0, 0, 0, 0);
-      return pDate.getTime() === targetDate.getTime();
-    });
-  }, [filteredBids, selectedDate]);
-
   const filteredData = getBidParticipationDetails(displayBids);
   const totalItems = filteredData.length;
   const totalPages = Math.max(1, Math.ceil(totalItems / itemsPerPage));
