@@ -13,9 +13,13 @@ const capitalizeWords = (str) =>
 const fetchData = async (url, key) => {
   try {
     const response = await axios.get(url);
+    const data = Array.isArray(response.data) 
+      ? response.data 
+      : (response.data?.data || []);
+
     if (url === "/sellers") {
       // Flatten sellers to their companies
-      return response.data.flatMap((seller) =>
+      return data.flatMap((seller) =>
         (seller.companies || []).map((company) => ({
           value: seller._id,
           label: capitalizeWords(company),
@@ -24,7 +28,7 @@ const fetchData = async (url, key) => {
         }))
       );
     }
-    return response.data.map((item) => ({
+    return data.map((item) => ({
       value: item._id,
       label: capitalizeWords(item[key]),
     }));
@@ -52,7 +56,13 @@ const AddLoadingEntry = () => {
           fetchData("/sellers", "sellerName"),
           axios.get("/consignees"),
         ]);
-        const consigneesData = (consigneesRes.data || []).map((c) => ({
+        
+        // The consignees route might return { data: [...] } or just [...]
+        const rawConsignees = Array.isArray(consigneesRes.data) 
+          ? consigneesRes.data 
+          : (consigneesRes.data?.data || []);
+
+        const consigneesData = rawConsignees.map((c) => ({
           value: c._id,
           label: `${capitalizeWords(c.name)} - ${capitalizeWords(c.location || "N/A")}, ${capitalizeWords(c.district || "N/A")}, ${capitalizeWords(c.state || "N/A")}`,
           name: c.name,
@@ -67,15 +77,55 @@ const AddLoadingEntry = () => {
     loadDropdowns();
   }, []);
 
+  // Auto-fill logic when Sauda No is entered
+  useEffect(() => {
+    const autoFillSauda = async () => {
+      const trimmedSauda = saudaSearch.trim();
+      if (trimmedSauda.length >= 2) { // Changed to 2 characters to be more responsive
+        try {
+          const response = await axios.get("/self-order");
+          const allOrders = Array.isArray(response.data) ? response.data : (response.data?.data || []);
+          
+          const matchedOrder = allOrders.find(
+            (order) => order.saudaNo?.toLowerCase() === trimmedSauda.toLowerCase()
+          );
+
+          if (matchedOrder) {
+            // Find and set the supplier
+            const supplierOption = suppliers.find(
+              (s) => 
+                String(s.value) === String(matchedOrder.supplier?._id || matchedOrder.supplier) && 
+                s.company === matchedOrder.supplierCompany
+            );
+            if (supplierOption) setSelectedSupplier(supplierOption);
+
+            // Find and set the consignee
+            const consigneeOption = consignees.find(
+              (c) => c.name === matchedOrder.consignee
+            );
+            if (consigneeOption) setSelectedConsignee(consigneeOption);
+          }
+        } catch (err) {
+          console.error("Error auto-filling sauda details:", err);
+        }
+      }
+    };
+
+    const timer = setTimeout(autoFillSauda, 300); // Shorter debounce
+    return () => clearTimeout(timer);
+  }, [saudaSearch, suppliers, consignees]);
+
   const handleSearch = async () => {
     if (selectedSupplier && selectedConsignee) {
       setLoading(true);
       
       try {
         const response = await axios.get("/self-order");
-        let orderData = response.data.filter(
+        const allOrders = Array.isArray(response.data) ? response.data : (response.data?.data || []);
+        
+        let orderData = allOrders.filter(
           (order) =>
-            order.supplier === selectedSupplier.value &&
+            String(order.supplier?._id || order.supplier) === String(selectedSupplier.value) &&
             order.supplierCompany === selectedSupplier.company &&
             order.consignee === selectedConsignee.name
         );
