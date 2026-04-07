@@ -1,5 +1,5 @@
-import jsPDF from "jspdf";
-import "jspdf-autotable";
+import { jsPDF } from "jspdf";
+import { autoTable } from "jspdf-autotable";
 import axios from "axios";
 import logo from "../../../assets/Hans.png";
 
@@ -129,7 +129,7 @@ const PrintLoadingEntry = async (data) => {
     doc.setTextColor(26, 54, 93);
     doc.text(title.toUpperCase(), 15, y);
 
-    doc.autoTable({
+    autoTable(doc, {
       startY: y + 2,
       head: [headers],
       body: [body],
