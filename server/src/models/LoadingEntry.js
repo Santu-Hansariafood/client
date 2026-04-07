@@ -17,8 +17,10 @@ const loadingEntrySchema = new mongoose.Schema(
     documentUrl: { type: String, default: "" },
     saudaNo: { type: String, required: true },
     supplier: { type: mongoose.Schema.Types.ObjectId, ref: "Seller", required: true },
+    supplierCompany: { type: String, default: "" },
     consignee: { type: String, required: true },
     commodity: { type: String, default: "" },
+    bags: { type: Number, default: 0 },
   },
   { timestamps: true }
 );

@@ -273,8 +273,10 @@ const AddLoadingEntry = () => {
           ...entry,
           saudaNo: selectedOrder.saudaNo,
           supplier: selectedOrder.supplier?._id || selectedOrder.supplier,
+          supplierCompany: selectedOrder.supplierCompany,
           consignee: selectedOrder.consignee,
           commodity: selectedOrder.commodity,
+          bags: entry.bags,
         }))
       };
 
@@ -296,6 +298,7 @@ const AddLoadingEntry = () => {
         ...entry,
         saudaNo: selectedOrder.saudaNo,
         supplier: selectedOrder.supplier,
+        supplierCompany: selectedOrder.supplierCompany,
         consignee: selectedOrder.consignee,
         commodity: selectedOrder.commodity,
         bags: entry.bags,

@@ -1,7 +1,7 @@
 import jsPDF from "jspdf";
 import "jspdf-autotable";
 import axios from "axios";
-import logo from "../../../assets/Hans.webp";
+import logo from "../../../assets/Hans.png";
 
 const PrintLoadingEntry = async (data) => {
   const doc = new jsPDF();
@@ -14,7 +14,11 @@ const PrintLoadingEntry = async (data) => {
 
   const logoWidth = 30;
   const logoHeight = 20;
-  doc.addImage(logo, "PNG", 15, 15, logoWidth, logoHeight);
+  try {
+    doc.addImage(logo, "PNG", 15, 15, logoWidth, logoHeight);
+  } catch (e) {
+    console.error("Logo error:", e);
+  }
 
   doc.setFontSize(18);
   doc.setFont("helvetica", "bold");
@@ -44,13 +48,18 @@ const PrintLoadingEntry = async (data) => {
 
   const supplierId = typeof data.supplier === 'object' ? data.supplier?._id : data.supplier;
 
+  console.log("Generating PDF for:", { saudaNo: data.saudaNo, supplierId });
+
   const buyerDetails = ordersData.find((order) => order.saudaNo === data.saudaNo) || {};
   const sellerDetails = sellersData.find((seller) => String(seller._id) === String(supplierId)) || {};
+  
+  const sellerCompanyName = data.supplierCompany || (sellerDetails.companies?.[0] || "");
+  
   const companyDetails =
     companiesData.find(
       (company) =>
         company.companyName?.trim().toLowerCase() ===
-        (sellerDetails.companies?.[0] || "").trim().toLowerCase()
+        sellerCompanyName.trim().toLowerCase()
     ) || {};
   const consigneeDetails =
     consigneesData.find(
@@ -84,30 +93,36 @@ const PrintLoadingEntry = async (data) => {
       margin: { left: 15, right: 15 },
       styles: { overflow: 'linebreak' }
     });
-    return doc.autoTable.previous.finalY + 8;
+    return doc.lastAutoTable.finalY + 8;
+  };
+
+  const formatDate = (date) => {
+    if (!date) return "N/A";
+    const d = new Date(date);
+    return isNaN(d.getTime()) ? "N/A" : d.toLocaleDateString();
   };
 
   let yPosition = 50;
   yPosition = addTableSection("Seller & PO Details", yPosition, ["Seller Name", "GST No", "Challan No", "Date", "Buyer PO No"], [
     sellerDetails.sellerName || "N/A",
     companyDetails.gstNo || "N/A",
-    data.billNumber,
-    new Date(data.loadingDate).toLocaleDateString(),
+    data.billNumber || "N/A",
+    formatDate(data.loadingDate),
     data.saudaNo || "N/A",
   ]);
 
   yPosition = addTableSection("Buyer & Delivery", yPosition, ["Buyer Name", "Consignee", "Delivery Address"], [
     buyerDetails.buyer || "N/A",
-    data.consignee,
+    data.consignee || "N/A",
     consigneeDetails.location || "N/A",
   ]);
 
   yPosition = addTableSection("Goods & Transport", yPosition, ["Product", "Bags", "Weight", "Lorry No", "Transport"], [
-    data.commodity,
+    data.commodity || "N/A",
     data.bags || "N/A",
-    `${data.loadingWeight} TONS`,
-    data.lorryNumber,
-    data.addedTransport,
+    `${data.loadingWeight || 0} TONS`,
+    data.lorryNumber || "N/A",
+    data.addedTransport || "N/A",
   ]);
 
   yPosition = addTableSection("Freight Summary", yPosition, ["Rate", "Total Freight", "Advance", "Balance Due"], [

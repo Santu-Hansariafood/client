@@ -74,8 +74,10 @@ router.post("/", async (req, res) => {
     // Automatically update the pending quantity in the SelfOrder
     const selfOrder = await SelfOrder.findOne({ saudaNo: entry.saudaNo });
     if (selfOrder) {
-      const newPending = (selfOrder.pendingQuantity || 0) - (entry.loadingWeight || 0);
-      selfOrder.pendingQuantity = Math.max(0, newPending); // Avoid negative quantity
+      // Recalculate based on all entries for this sauda to be accurate
+      const allEntries = await LoadingEntry.find({ saudaNo: entry.saudaNo });
+      const totalLoaded = allEntries.reduce((sum, e) => sum + (e.loadingWeight || 0), 0);
+      selfOrder.pendingQuantity = Math.max(0, (selfOrder.quantity || 0) - totalLoaded);
 
       // Status logic: ±5% tolerance
       const tolerance = (selfOrder.quantity || 0) * 0.05;
