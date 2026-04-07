@@ -12,6 +12,7 @@ const Pagination = lazy(
   () => import("../../../common/Paginations/Paginations"),
 );
 const SearchBox = lazy(() => import("../../../common/SearchBox/SearchBox"));
+const DateSelector = lazy(() => import("../../../common/DateSelector/DateSelector"));
 const InteractionsPopup = lazy(
   () => import("../InteractionsPopup/InteractionsPopup"),
 );
@@ -28,6 +29,7 @@ const ParticipateBidAdmin = () => {
   const [selectedBidId, setSelectedBidId] = useState(null);
   const [buyerGroups, setBuyerGroups] = useState([]);
   const [isBuyerAdmin, setIsBuyerAdmin] = useState(false);
+  const [selectedDate, setSelectedDate] = useState(new Date());
 
   useEffect(() => {
     const fetchData = async () => {
@@ -83,7 +85,7 @@ const ParticipateBidAdmin = () => {
 
         const allParticipations = participations.sort(
           (a, b) =>
-            new Date(b.participationDate) - new Date(a.participationDate),
+            new Date(b.createdAt || b.participationDate) - new Date(a.createdAt || a.participationDate),
         );
 
         setBids(bidsData);
@@ -97,6 +99,20 @@ const ParticipateBidAdmin = () => {
     };
     fetchData();
   }, [userRole, mobile]);
+
+  // Filter by date
+  const displayBids = useMemo(() => {
+    if (!selectedDate) return filteredBids;
+    
+    const targetDate = new Date(selectedDate);
+    targetDate.setHours(0, 0, 0, 0);
+    
+    return filteredBids.filter(pBid => {
+      const pDate = new Date(pBid.createdAt || pBid.participationDate);
+      pDate.setHours(0, 0, 0, 0);
+      return pDate.getTime() === targetDate.getTime();
+    });
+  }, [filteredBids, selectedDate]);
 
   const getBidParticipationDetails = (data) => {
     const groupedBids = {};
@@ -139,12 +155,17 @@ const ParticipateBidAdmin = () => {
           quantity: matchingBid.quantity || 0,
           rates: matchingBid.rate || 0,
           rate: pBid.rate || 0,
-          quantities: pBid.quantity || 0,
+          date: pBid.createdAt || pBid.participationDate,
+          quantities: 0,
+          acceptanceQuantity: 0,
           mobiles: new Set(),
           sellers: new Set(),
         };
       }
       groupedBids[pBid.bidId].mobiles.add(pBid.mobile);
+      groupedBids[pBid.bidId].quantities += (pBid.quantity || 0);
+      groupedBids[pBid.bidId].acceptanceQuantity += (pBid.acceptedQuantity || 0);
+      
       const sellerLabel =
         pBid.sellerName && pBid.sellerName.trim().length > 0
           ? pBid.sellerName
@@ -156,6 +177,7 @@ const ParticipateBidAdmin = () => {
 
   const headers = [
     "Sl No",
+    "Date",
     "Group",
     "Consignee",
     "Origin",
@@ -165,10 +187,24 @@ const ParticipateBidAdmin = () => {
     "Bid Rate",
     "Party Qty",
     "Party Rate",
+    "Acceptance Qty",
     "Interactions",
   ];
 
-  const filteredData = getBidParticipationDetails(filteredBids);
+  const displayBids = useMemo(() => {
+    if (!selectedDate) return filteredBids;
+    
+    const targetDate = new Date(selectedDate);
+    targetDate.setHours(0, 0, 0, 0);
+    
+    return filteredBids.filter(pBid => {
+      const pDate = new Date(pBid.createdAt || pBid.participationDate);
+      pDate.setHours(0, 0, 0, 0);
+      return pDate.getTime() === targetDate.getTime();
+    });
+  }, [filteredBids, selectedDate]);
+
+  const filteredData = getBidParticipationDetails(displayBids);
   const totalItems = filteredData.length;
   const totalPages = Math.max(1, Math.ceil(totalItems / itemsPerPage));
   const safeCurrentPage = Math.min(currentPage, totalPages);
@@ -178,6 +214,7 @@ const ParticipateBidAdmin = () => {
 
   const rows = currentItems.map((bid, index) => [
     indexOfFirstItem + index + 1,
+    new Date(bid.date).toLocaleDateString(),
     bid.group,
     bid.consignee,
     bid.origin,
@@ -187,6 +224,7 @@ const ParticipateBidAdmin = () => {
     bid.rates,
     bid.quantities,
     bid.rate,
+    `${bid.acceptanceQuantity} Tons`,
     <button
       key={bid.bidId}
       type="button"
@@ -206,9 +244,7 @@ const ParticipateBidAdmin = () => {
   );
 
   const handleSearch = (filteredNames) => {
-    if (!filteredNames || filteredNames.length === 0) {
-      setFilteredBids(participationBids);
-    } else if (filteredNames.length === consigneeItems.length) {
+    if (!filteredNames || filteredNames.length === 0 || filteredNames.length === consigneeItems.length) {
       setFilteredBids(participationBids);
     } else {
       const nameSet = new Set(filteredNames);
@@ -240,8 +276,8 @@ const ParticipateBidAdmin = () => {
         noContentCard
       >
         <div className="space-y-6">
-          {userRole === "Buyer" && (
-            <div className="flex justify-start">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            {userRole === "Buyer" && (
               <button
                 onClick={() => navigate(-1)}
                 className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-gray-600 bg-white rounded-xl border border-slate-200 hover:bg-slate-50 transition-colors shadow-sm"
@@ -249,19 +285,31 @@ const ParticipateBidAdmin = () => {
                 <FaArrowLeft />
                 Back
               </button>
+            )}
+            <div className="flex flex-1 items-center gap-4 w-full md:w-auto">
+              <div className="w-full md:w-64">
+                <DateSelector 
+                  selectedDate={selectedDate} 
+                  onChange={setSelectedDate} 
+                />
+              </div>
+              <div className="flex-1">
+                <SearchBox
+                  placeholder="Search by consignee..."
+                  items={consigneeItems}
+                  onSearch={handleSearch}
+                />
+              </div>
             </div>
-          )}
+          </div>
+
           {selectedBidId && (
             <InteractionsPopup
               bidId={selectedBidId}
               onClose={() => setSelectedBidId(null)}
             />
           )}
-          <SearchBox
-            placeholder="Search by consignee..."
-            items={consigneeItems}
-            onSearch={handleSearch}
-          />
+          
           {loading ? (
             <Loading />
           ) : (
