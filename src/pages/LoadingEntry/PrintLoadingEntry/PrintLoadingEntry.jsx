@@ -30,25 +30,32 @@ const PrintLoadingEntry = async (data) => {
   doc.setDrawColor(226, 232, 240);
   doc.line(15, 42, pageWidth - 15, 42);
 
-  const [orders, sellers, companies, consignees] = await Promise.all([
+  const [ordersRes, sellersRes, companiesRes, consigneesRes] = await Promise.all([
     axios.get("/self-order"),
     axios.get("/sellers"),
     axios.get("/seller-company"),
     axios.get("/consignees"),
   ]);
 
-  const buyerDetails = orders.data.find((order) => order.saudaNo === data.saudaNo) || {};
-  const sellerDetails = sellers.data.find((seller) => seller._id === data.supplier) || {};
+  const ordersData = Array.isArray(ordersRes.data) ? ordersRes.data : (ordersRes.data?.data || []);
+  const sellersData = Array.isArray(sellersRes.data) ? sellersRes.data : (sellersRes.data?.data || []);
+  const companiesData = Array.isArray(companiesRes.data) ? companiesRes.data : (companiesRes.data?.data || []);
+  const consigneesData = Array.isArray(consigneesRes.data) ? consigneesRes.data : (consigneesRes.data?.data || []);
+
+  const supplierId = typeof data.supplier === 'object' ? data.supplier?._id : data.supplier;
+
+  const buyerDetails = ordersData.find((order) => order.saudaNo === data.saudaNo) || {};
+  const sellerDetails = sellersData.find((seller) => String(seller._id) === String(supplierId)) || {};
   const companyDetails =
-    companies.data.data.find(
+    companiesData.find(
       (company) =>
-        company.companyName.trim().toLowerCase() ===
+        company.companyName?.trim().toLowerCase() ===
         (sellerDetails.companies?.[0] || "").trim().toLowerCase()
     ) || {};
   const consigneeDetails =
-    consignees.data.find(
+    consigneesData.find(
       (consignee) =>
-        consignee.name.trim().toLowerCase() === data.consignee.trim().toLowerCase()
+        consignee.name?.trim().toLowerCase() === data.consignee?.trim().toLowerCase()
     ) || {};
 
   const addTableSection = (title, yPosition, headers, body) => {

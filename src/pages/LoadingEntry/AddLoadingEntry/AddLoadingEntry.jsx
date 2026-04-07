@@ -70,6 +70,7 @@ const AddLoadingEntry = () => {
   const INITIAL_ENTRY = {
     loadingDate: new Date().toISOString().split('T')[0],
     loadingWeight: "",
+    bags: "",
     lorryNumber: "",
     addedTransport: "",
     driverName: "",
@@ -187,9 +188,12 @@ const AddLoadingEntry = () => {
         );
       }
 
-      // Add "isClosed" status primarily based on explicit status
+      // Add "isClosed" status based on tolerance (+/- 5%)
       orderData = orderData.map((order) => {
-        const isClosed = order.status === "closed";
+        const quantity = order.quantity || 0;
+        const pendingQuantity = order.pendingQuantity || 0;
+        const tolerance = quantity * 0.05;
+        const isClosed = order.status === "closed" || Math.abs(pendingQuantity) <= tolerance;
         return { ...order, isClosed };
       });
 
@@ -294,6 +298,7 @@ const AddLoadingEntry = () => {
         supplier: selectedOrder.supplier,
         consignee: selectedOrder.consignee,
         commodity: selectedOrder.commodity,
+        bags: entry.bags,
       };
       const fileUrl = await PrintLoadingEntry(fullEntry);
       if (fileUrl) {
@@ -451,50 +456,53 @@ const AddLoadingEntry = () => {
           <PopupBox
             isOpen={isPopupOpen}
             onClose={() => setIsPopupOpen(false)}
-            title={`Loading Entries for Sauda: ${selectedOrder.saudaNo}`}
-            maxWidth="max-w-6xl"
+            title={`Add Loading Entry - Sauda: ${selectedOrder.saudaNo}`}
+            maxWidth="max-w-7xl"
           >
             <div className="space-y-6">
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 bg-slate-50 rounded-xl text-sm border border-slate-100">
-                <div>
-                  <p className="text-slate-500">Total Quantity</p>
-                  <p className="font-bold text-slate-800">{(selectedOrder.quantity || 0).toFixed(2)} Tons</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 p-4 bg-slate-50 rounded-2xl text-sm border border-slate-100 shadow-inner">
+                <div className="bg-white p-3 rounded-xl border border-slate-200">
+                  <p className="text-slate-500 font-medium">Total Quantity</p>
+                  <p className="font-bold text-slate-800 text-lg">{(selectedOrder.quantity || 0).toFixed(2)} Tons</p>
                 </div>
-                <div>
-                  <p className="text-slate-500">Already Loaded</p>
-                  <p className="font-bold text-slate-800">
+                <div className="bg-white p-3 rounded-xl border border-slate-200">
+                  <p className="text-slate-500 font-medium">Already Loaded</p>
+                  <p className="font-bold text-slate-800 text-lg">
                     {((selectedOrder.quantity || 0) - (selectedOrder.pendingQuantity || 0)).toFixed(2)} Tons
                   </p>
                 </div>
-                <div>
-                  <p className="text-slate-500 text-emerald-600">Currently Adding</p>
-                  <p className="font-bold text-emerald-700">{calculateTotalLoadingWeight().toFixed(2)} Tons</p>
+                <div className="bg-white p-3 rounded-xl border border-emerald-100">
+                  <p className="text-emerald-600 font-medium">Currently Adding</p>
+                  <p className="font-bold text-emerald-700 text-lg">{calculateTotalLoadingWeight().toFixed(2)} Tons</p>
                 </div>
-                <div>
-                  <p className="text-slate-500 text-amber-600">New Pending</p>
-                  <p className="font-bold text-amber-700">
+                <div className="bg-white p-3 rounded-xl border border-amber-100">
+                  <p className="text-amber-600 font-medium">Remaining Pending</p>
+                  <p className="font-bold text-amber-700 text-lg">
                     {((selectedOrder.pendingQuantity || 0) - calculateTotalLoadingWeight()).toFixed(2)} Tons
                   </p>
                 </div>
               </div>
 
-              <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
+              <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar p-1">
                 {loadingEntries.map((entry, index) => (
-                  <div key={index} className="p-4 border border-slate-200 rounded-2xl space-y-4 relative bg-white shadow-sm">
-                    <div className="flex justify-between items-center border-b border-slate-100 pb-2">
-                      <span className="text-sm font-bold text-slate-700 bg-slate-100 px-3 py-1 rounded-full">Entry #{index + 1}</span>
+                  <div key={index} className="p-5 border border-slate-200 rounded-3xl space-y-6 relative bg-white shadow-sm hover:shadow-md transition-shadow">
+                    <div className="flex justify-between items-center border-b border-slate-100 pb-3">
+                      <div className="flex items-center gap-3">
+                        <span className="flex items-center justify-center w-8 h-8 rounded-full bg-emerald-600 text-white font-bold text-sm">{index + 1}</span>
+                        <h4 className="font-bold text-slate-700">Loading Specification</h4>
+                      </div>
                       <div className="flex gap-2">
                         <button
                           onClick={() => handleDownloadPDF(entry)}
-                          className="p-2 text-purple-600 hover:bg-purple-50 rounded-lg transition"
-                          title="Download PDF"
+                          className="flex items-center gap-2 px-3 py-1.5 text-purple-600 bg-purple-50 hover:bg-purple-100 rounded-xl transition text-sm font-bold border border-purple-100"
+                          title="Download Lorry Challan"
                         >
-                          <FaDownload />
+                          <FaDownload /> Challan
                         </button>
                         {loadingEntries.length > 1 && (
                           <button
                             onClick={() => handleRemoveEntry(index)}
-                            className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition"
+                            className="p-2 text-red-500 bg-red-50 hover:bg-red-100 rounded-xl transition border border-red-100"
                             title="Remove Entry"
                           >
                             <FaTrash />
@@ -503,16 +511,16 @@ const AddLoadingEntry = () => {
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div>
-                        <label className="block text-xs font-semibold text-slate-500 mb-1 uppercase">Loading Date</label>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                      <div className="space-y-1.5">
+                        <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider">Loading Date</label>
                         <DateSelector
                           selectedDate={entry.loadingDate}
                           onChange={(date) => handleEntryChange(index, "loadingDate", date)}
                         />
                       </div>
-                      <div>
-                        <label className="block text-xs font-semibold text-slate-500 mb-1 uppercase">Quantity (Tons)</label>
+                      <div className="space-y-1.5">
+                        <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider">Weight (Tons)</label>
                         <DataInput
                           type="number"
                           value={entry.loadingWeight}
@@ -520,57 +528,66 @@ const AddLoadingEntry = () => {
                           placeholder="0.00"
                         />
                       </div>
-                      <div>
-                        <label className="block text-xs font-semibold text-slate-500 mb-1 uppercase">Lorry No</label>
+                      <div className="space-y-1.5">
+                        <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider">Bags Count</label>
+                        <DataInput
+                          type="number"
+                          value={entry.bags}
+                          onChange={(e) => handleEntryChange(index, "bags", e.target.value)}
+                          placeholder="No. of bags"
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider">Lorry Number</label>
                         <DataInput
                           value={entry.lorryNumber}
                           onChange={(e) => handleEntryChange(index, "lorryNumber", e.target.value)}
-                          placeholder="Lorry Number"
+                          placeholder="e.g. RJ 14 GA 1234"
                         />
                       </div>
-                      <div>
-                        <label className="block text-xs font-semibold text-slate-500 mb-1 uppercase">Transporter Name</label>
+                      <div className="space-y-1.5">
+                        <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider">Transporter</label>
                         <DataInput
                           value={entry.addedTransport}
                           onChange={(e) => handleEntryChange(index, "addedTransport", e.target.value)}
-                          placeholder="Transporter Name"
+                          placeholder="Name of transport"
                         />
                       </div>
-                      <div>
-                        <label className="block text-xs font-semibold text-slate-500 mb-1 uppercase">Driver Name</label>
+                      <div className="space-y-1.5">
+                        <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider">Driver Name</label>
                         <DataInput
                           value={entry.driverName}
                           onChange={(e) => handleEntryChange(index, "driverName", e.target.value)}
-                          placeholder="Driver Name"
+                          placeholder="Name"
                         />
                       </div>
-                      <div>
-                        <label className="block text-xs font-semibold text-slate-500 mb-1 uppercase">Driver No</label>
+                      <div className="space-y-1.5">
+                        <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider">Driver Mobile</label>
                         <DataInput
                           value={entry.driverPhoneNumber}
                           onChange={(e) => handleEntryChange(index, "driverPhoneNumber", e.target.value)}
-                          placeholder="Driver Mobile"
+                          placeholder="Phone number"
                         />
                       </div>
-                      <div>
-                        <label className="block text-xs font-semibold text-slate-500 mb-1 uppercase">Freight Rate</label>
+                      <div className="space-y-1.5">
+                        <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider">Freight Rate</label>
                         <DataInput
                           type="number"
                           value={entry.freightRate}
                           onChange={(e) => handleEntryChange(index, "freightRate", e.target.value)}
-                          placeholder="Rate per Ton"
+                          placeholder="Rs. per ton"
                         />
                       </div>
-                      <div>
-                        <label className="block text-xs font-semibold text-slate-500 mb-1 uppercase">Bill No</label>
+                      <div className="space-y-1.5">
+                        <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider">Bill Number</label>
                         <DataInput
                           value={entry.billNumber}
                           onChange={(e) => handleEntryChange(index, "billNumber", e.target.value)}
-                          placeholder="Bill Number"
+                          placeholder="Invoice no."
                         />
                       </div>
-                      <div>
-                        <label className="block text-xs font-semibold text-slate-500 mb-1 uppercase">Bill Issue Date</label>
+                      <div className="space-y-1.5">
+                        <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider">Bill Issue Date</label>
                         <DateSelector
                           selectedDate={entry.dateOfIssue}
                           onChange={(date) => handleEntryChange(index, "dateOfIssue", date)}
@@ -578,49 +595,51 @@ const AddLoadingEntry = () => {
                       </div>
                     </div>
                     
-                    <div className="grid grid-cols-3 gap-4 pt-2 border-t border-slate-50">
-                      <div className="text-center">
-                        <p className="text-[10px] text-slate-400 uppercase">Total Freight</p>
-                        <p className="font-bold text-slate-700">₹ {entry.totalFreight}</p>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                      <div className="flex flex-col items-center justify-center">
+                        <p className="text-[10px] text-slate-400 uppercase font-bold tracking-widest mb-1">Total Freight</p>
+                        <p className="font-bold text-slate-800 text-lg">₹ {entry.totalFreight}</p>
                       </div>
-                      <div className="text-center">
-                        <p className="text-[10px] text-slate-400 uppercase">Advance</p>
-                        <DataInput
-                          type="number"
-                          className="text-center font-bold"
-                          value={entry.advance}
-                          onChange={(e) => handleEntryChange(index, "advance", e.target.value)}
-                        />
+                      <div className="flex flex-col items-center justify-center">
+                        <p className="text-[10px] text-slate-400 uppercase font-bold tracking-widest mb-1">Advance Amount</p>
+                        <div className="max-w-[120px]">
+                          <DataInput
+                            type="number"
+                            className="text-center font-bold !py-1"
+                            value={entry.advance}
+                            onChange={(e) => handleEntryChange(index, "advance", e.target.value)}
+                          />
+                        </div>
                       </div>
-                      <div className="text-center">
-                        <p className="text-[10px] text-slate-400 uppercase">Balance</p>
-                        <p className="font-bold text-amber-600">₹ {entry.balance}</p>
+                      <div className="flex flex-col items-center justify-center">
+                        <p className="text-[10px] text-slate-400 uppercase font-bold tracking-widest mb-1">Balance Due</p>
+                        <p className="font-bold text-amber-600 text-lg">₹ {entry.balance}</p>
                       </div>
                     </div>
                   </div>
                 ))}
               </div>
 
-              <div className="flex flex-col sm:flex-row justify-between items-center gap-4 pt-4 border-t border-slate-100">
+              <div className="flex flex-col sm:flex-row justify-between items-center gap-4 pt-6 border-t border-slate-100">
                 <button
                   onClick={handleAddMore}
-                  className="flex items-center gap-2 px-6 py-2.5 bg-slate-800 text-white rounded-xl hover:bg-slate-900 transition font-bold shadow-md shadow-slate-200"
+                  className="w-full sm:w-auto flex items-center justify-center gap-2 px-8 py-3 bg-slate-800 text-white rounded-2xl hover:bg-slate-900 transition-all font-bold shadow-lg shadow-slate-200 active:scale-95"
                 >
-                  <FaPlus /> Add More Entries
+                  <FaPlus /> Add More Lorry
                 </button>
-                <div className="flex gap-3">
+                <div className="flex gap-3 w-full sm:w-auto">
                   <button
                     onClick={() => setIsPopupOpen(false)}
-                    className="px-6 py-2.5 bg-slate-100 text-slate-600 rounded-xl hover:bg-slate-200 transition font-bold"
+                    className="flex-1 sm:flex-none px-8 py-3 bg-white text-slate-600 rounded-2xl hover:bg-slate-50 transition font-bold border border-slate-200"
                   >
                     Cancel
                   </button>
                   <button
                     onClick={handleSaveEntries}
                     disabled={isSaving}
-                    className="px-10 py-2.5 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition font-bold shadow-md shadow-emerald-200 disabled:opacity-50"
+                    className="flex-1 sm:flex-none px-12 py-3 bg-emerald-600 text-white rounded-2xl hover:bg-emerald-700 transition-all font-bold shadow-lg shadow-emerald-200 disabled:opacity-50 active:scale-95"
                   >
-                    {isSaving ? "Saving..." : "Save All Entries"}
+                    {isSaving ? "Saving..." : "Save All Lorry"}
                   </button>
                 </div>
               </div>
