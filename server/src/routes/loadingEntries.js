@@ -28,6 +28,45 @@ router.get("/sauda/:saudaNo", async (req, res) => {
   }
 });
 
+// Create multiple loading entries (Bulk)
+router.post("/bulk", async (req, res) => {
+  try {
+    const { entries, saudaNo } = req.body;
+    
+    if (!entries || !Array.isArray(entries) || entries.length === 0) {
+      return res.status(400).json({ message: "No entries provided" });
+    }
+
+    // Save all entries
+    const savedEntries = await LoadingEntry.insertMany(entries);
+
+    // Automatically update the pending quantity in the SelfOrder
+    const selfOrder = await SelfOrder.findOne({ saudaNo });
+    if (selfOrder) {
+      // Recalculate based on all entries for this sauda
+      const allEntries = await LoadingEntry.find({ saudaNo });
+      const totalLoaded = allEntries.reduce((sum, e) => sum + (e.loadingWeight || 0), 0);
+      selfOrder.pendingQuantity = Math.max(0, (selfOrder.quantity || 0) - totalLoaded);
+
+      // Check for +/- 5% tolerance to automatically close
+      const quantity = selfOrder.quantity || 0;
+      const tolerance = quantity * 0.05;
+      if (Math.abs(selfOrder.pendingQuantity) <= tolerance) {
+        selfOrder.status = "closed";
+      } else if (selfOrder.status === "closed" && selfOrder.pendingQuantity > tolerance) {
+        selfOrder.status = "active";
+      }
+
+      await selfOrder.save();
+    }
+
+    res.status(201).json({ message: "Bulk entries saved successfully", count: savedEntries.length });
+  } catch (error) {
+    console.error("Bulk save error:", error);
+    res.status(400).json({ message: error.message });
+  }
+});
+
 // Create a new loading entry
 router.post("/", async (req, res) => {
   try {
