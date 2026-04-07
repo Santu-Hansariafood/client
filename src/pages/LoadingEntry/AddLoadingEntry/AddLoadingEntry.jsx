@@ -187,12 +187,9 @@ const AddLoadingEntry = () => {
         );
       }
 
-      // Add "isClosed" status based on tolerance (+/- 5%)
+      // Add "isClosed" status primarily based on explicit status
       orderData = orderData.map((order) => {
-        const quantity = order.quantity || 0;
-        const pendingQuantity = order.pendingQuantity || 0;
-        const tolerance = quantity * 0.05;
-        const isClosed = order.status === "closed" || Math.abs(pendingQuantity) <= tolerance;
+        const isClosed = order.status === "closed";
         return { ...order, isClosed };
       });
 
@@ -412,28 +409,33 @@ const AddLoadingEntry = () => {
                   >
                     {order.isClosed ? "Closed" : "Active"}
                   </span>,
-                  <div key={`actions-${order._id}`} className="flex gap-2">
-                    {!order.isClosed && (
+                  <div key={`actions-${order._id}`} className="flex items-center gap-3">
+                    {order.status !== "closed" ? (
+                      <>
+                        <button
+                          onClick={() => handleOpenPopup(order)}
+                          className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 text-emerald-700 rounded-lg hover:bg-emerald-100 transition text-xs font-bold whitespace-nowrap"
+                          title="Add Loading Entry"
+                        >
+                          <FaPlus /> Add Loading Entry
+                        </button>
+                        <button
+                          onClick={() => toggleSaudaStatus(order)}
+                          className="px-2.5 py-1.5 bg-amber-50 text-amber-700 rounded-lg hover:bg-amber-100 transition text-xs font-bold"
+                          title="Close Sauda"
+                        >
+                          Close
+                        </button>
+                      </>
+                    ) : (
                       <button
-                        onClick={() => handleOpenPopup(order)}
-                        className="inline-flex items-center justify-center w-9 h-9 rounded-lg text-emerald-700 hover:bg-emerald-50 transition"
-                        aria-label="Add loading entry"
-                        title="Add loading entry"
+                        onClick={() => toggleSaudaStatus(order)}
+                        className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition text-xs font-bold"
+                        title="Reopen Sauda"
                       >
-                        <FaPlus />
+                        Reopen to Add
                       </button>
                     )}
-                    <button
-                      onClick={() => toggleSaudaStatus(order)}
-                      className={`inline-flex items-center justify-center px-2 py-1 rounded-lg text-xs font-semibold transition ${
-                        order.status === "closed"
-                          ? "bg-slate-100 text-slate-700 hover:bg-slate-200"
-                          : "bg-amber-100 text-amber-700 hover:bg-amber-200"
-                      }`}
-                      title={order.status === "closed" ? "Reopen Sauda" : "Close Sauda"}
-                    >
-                      {order.status === "closed" ? "Reopen" : "Close"}
-                    </button>
                   </div>,
                 ])}
               />

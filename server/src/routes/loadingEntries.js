@@ -48,15 +48,6 @@ router.post("/bulk", async (req, res) => {
       const totalLoaded = allEntries.reduce((sum, e) => sum + (e.loadingWeight || 0), 0);
       selfOrder.pendingQuantity = Math.max(0, (selfOrder.quantity || 0) - totalLoaded);
 
-      // Check for +/- 5% tolerance to automatically close
-      const quantity = selfOrder.quantity || 0;
-      const tolerance = quantity * 0.05;
-      if (Math.abs(selfOrder.pendingQuantity) <= tolerance) {
-        selfOrder.status = "closed";
-      } else if (selfOrder.status === "closed" && selfOrder.pendingQuantity > tolerance) {
-        selfOrder.status = "active";
-      }
-
       await selfOrder.save();
     }
 
@@ -77,13 +68,6 @@ router.post("/", async (req, res) => {
     if (selfOrder) {
       const newPending = (selfOrder.pendingQuantity || 0) - (entry.loadingWeight || 0);
       selfOrder.pendingQuantity = Math.max(0, newPending); // Avoid negative quantity
-
-      // Check for +/- 5% tolerance to automatically close
-      const quantity = selfOrder.quantity || 0;
-      const tolerance = quantity * 0.05;
-      if (Math.abs(selfOrder.pendingQuantity) <= tolerance) {
-        selfOrder.status = "closed";
-      }
 
       await selfOrder.save();
     }
@@ -113,15 +97,6 @@ router.put("/:id", async (req, res) => {
         const totalLoaded = allEntries.reduce((sum, e) => sum + (e.loadingWeight || 0), 0);
         selfOrder.pendingQuantity = Math.max(0, (selfOrder.quantity || 0) - totalLoaded);
 
-        // Check for +/- 5% tolerance to automatically close
-        const quantity = selfOrder.quantity || 0;
-        const tolerance = quantity * 0.05;
-        if (Math.abs(selfOrder.pendingQuantity) <= tolerance) {
-          selfOrder.status = "closed";
-        } else if (selfOrder.status === "closed" && selfOrder.pendingQuantity > tolerance) {
-          selfOrder.status = "active";
-        }
-
         await selfOrder.save();
       }
     }
@@ -147,13 +122,6 @@ router.delete("/:id", async (req, res) => {
       const allEntries = await LoadingEntry.find({ saudaNo });
       const totalLoaded = allEntries.reduce((sum, e) => sum + (e.loadingWeight || 0), 0);
       selfOrder.pendingQuantity = Math.max(0, (selfOrder.quantity || 0) - totalLoaded);
-
-      // Re-evaluate status
-      const quantity = selfOrder.quantity || 0;
-      const tolerance = quantity * 0.05;
-      if (selfOrder.status === "closed" && selfOrder.pendingQuantity > tolerance) {
-        selfOrder.status = "active";
-      }
 
       await selfOrder.save();
     }
