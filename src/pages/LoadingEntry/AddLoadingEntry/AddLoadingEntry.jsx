@@ -2,13 +2,16 @@ import axios from "axios";
 import React, { useState, useEffect } from "react";
 import { FaPlus } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 import DataDropdown from "../../../common/DataDropdown/DataDropdown";
 import Tables from "../../../common/Tables/Tables";
 import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
 import { FaTruckLoading } from "react-icons/fa";
 
-const capitalizeWords = (str) =>
-  str.toLowerCase().replace(/\b\w/g, (char) => char.toUpperCase());
+const capitalizeWords = (str) => {
+  if (!str) return "";
+  return String(str).toLowerCase().replace(/\b\w/g, (char) => char.toUpperCase());
+};
 
 const fetchData = async (url, key) => {
   try {
@@ -38,6 +41,12 @@ const fetchData = async (url, key) => {
   }
 };
 
+const formatDate = (date) => {
+  if (!date) return "N/A";
+  const d = new Date(date);
+  return isNaN(d.getTime()) ? "N/A" : d.toLocaleDateString();
+};
+
 const AddLoadingEntry = () => {
   const [suppliers, setSuppliers] = useState([]);
   const [consignees, setConsignees] = useState([]);
@@ -57,7 +66,7 @@ const AddLoadingEntry = () => {
           axios.get("/consignees", { params: { limit: 0 } }), // Request full list
         ]);
         
-        // The consignees route might return { data: [...] } or just [...]
+        // Use consistent data extraction
         const rawConsignees = Array.isArray(consigneesRes.data) 
           ? consigneesRes.data 
           : (consigneesRes.data?.data || []);
@@ -67,10 +76,15 @@ const AddLoadingEntry = () => {
           label: `${capitalizeWords(c.name)} - ${capitalizeWords(c.location || "N/A")}, ${capitalizeWords(c.district || "N/A")}, ${capitalizeWords(c.state || "N/A")}`,
           name: c.name,
         }));
+        
+        console.log("Suppliers loaded:", suppliersData.length);
+        console.log("Consignees loaded:", consigneesData.length);
+        
         setSuppliers(suppliersData);
         setConsignees(consigneesData);
       } catch (err) {
         console.error("Error loading dropdowns:", err);
+        toast.error("Error loading dropdown data");
       }
       setLoading(false);
     };
@@ -252,7 +266,7 @@ const AddLoadingEntry = () => {
                 "Action",
               ]}
               rows={orders.map((order) => [
-                new Date(order.poDate || order.createdAt).toLocaleDateString(),
+                formatDate(order.poDate || order.createdAt),
                 order.saudaNo,
                 capitalizeWords(order.supplierCompany),
                 capitalizeWords(order.buyerCompany),

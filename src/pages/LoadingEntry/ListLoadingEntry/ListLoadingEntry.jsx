@@ -2,6 +2,7 @@ import React, { lazy, useEffect, useState, useMemo } from "react";
 import axios from "axios";
 import { MdVisibility, MdEdit, MdDelete, MdDownload } from "react-icons/md";
 import { toast } from "react-toastify";
+import { useAuth } from "../../../context/AuthContext/AuthContext";
 import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
 import Loading from "../../../common/Loading/Loading";
 import { FaClipboardList } from "react-icons/fa";
@@ -11,6 +12,12 @@ const PopupBox = lazy(() => import("../../../common/PopupBox/PopupBox"));
 const Tables = lazy(() => import("../../../common/Tables/Tables"));
 const SearchBox = lazy(() => import("../../../common/SearchBox/SearchBox")); // ✅ Import SearchBox
 const Pagination = lazy(() => import("../../../common/Paginations/Paginations"));
+
+const formatDate = (date) => {
+  if (!date) return "N/A";
+  const d = new Date(date);
+  return isNaN(d.getTime()) ? "N/A" : d.toLocaleDateString();
+};
 
 const ListLoadingEntry = () => {
   const { userRole, mobile } = useAuth();
@@ -34,14 +41,18 @@ const ListLoadingEntry = () => {
         axios.get("/loading-entries"),
         axios.get("/sellers"),
       ]);
+
+      const sellersData = Array.isArray(sellersRes.data) ? sellersRes.data : (sellersRes.data?.data || []);
+      const entriesData = Array.isArray(entriesRes.data) ? entriesRes.data : (entriesRes.data?.data || []);
+
       const sellerMapping = Object.fromEntries(
-        sellersRes.data.map((seller) => [seller._id, seller.sellerName])
+        sellersData.map((seller) => [seller._id, seller.sellerName])
       );
       setSellerMap(sellerMapping);
       
-      let entries = entriesRes.data;
+      let entries = entriesData;
       if (userRole === "Seller") {
-        const seller = sellersRes.data.find((s) =>
+        const seller = sellersData.find((s) =>
           s.phoneNumbers?.some((p) => String(p.value) === String(mobile))
         );
         if (seller) {
@@ -54,6 +65,7 @@ const ListLoadingEntry = () => {
       setLoadingEntries(entries);
       setFilteredEntries(entries); // ✅ Initialize filtered data
     } catch (error) {
+      console.error("Error fetching data:", error);
       toast.error("Failed to fetch data");
     }
   };
@@ -169,7 +181,7 @@ const ListLoadingEntry = () => {
         .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
         .map((entry, index) => [
           (currentPage - 1) * itemsPerPage + index + 1,
-          new Date(entry.loadingDate).toLocaleDateString(),
+          formatDate(entry.loadingDate),
           sellerMap[entry.supplier] || "Unknown Supplier",
           entry.loadingWeight,
           entry.lorryNumber,
@@ -181,7 +193,7 @@ const ListLoadingEntry = () => {
           entry.advance,
           entry.balance,
           entry.billNumber,
-          new Date(entry.dateOfIssue).toLocaleDateString(),
+          formatDate(entry.dateOfIssue),
           entry.commodity,
           <div key={`actions-${entry._id}`} className="flex justify-center gap-2">
             <button
