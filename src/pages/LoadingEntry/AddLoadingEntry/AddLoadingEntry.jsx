@@ -54,7 +54,7 @@ const AddLoadingEntry = () => {
       try {
         const [suppliersData, consigneesRes] = await Promise.all([
           fetchData("/sellers", "sellerName"),
-          axios.get("/consignees"),
+          axios.get("/consignees", { params: { limit: 0 } }), // Request full list
         ]);
         
         // The consignees route might return { data: [...] } or just [...]
