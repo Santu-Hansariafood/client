@@ -24,13 +24,6 @@ const fetchData = async (url, key) => {
         }))
       );
     }
-    if (url === "/consignees") {
-      return response.data.map((c) => ({
-        value: c._id,
-        label: `${capitalizeWords(c.name)} - ${capitalizeWords(c.location || "N/A")}, ${capitalizeWords(c.district || "N/A")}, ${capitalizeWords(c.state || "N/A")}`,
-        name: c.name,
-      }));
-    }
     return response.data.map((item) => ({
       value: item._id,
       label: capitalizeWords(item[key]),
@@ -41,52 +34,93 @@ const fetchData = async (url, key) => {
   }
 };
 
-const fetchOrders = async (supplierId, supplierCompany, consigneeName) => {
-  try {
-    const response = await axios.get("/self-order");
-    return response.data.filter(
-      (order) =>
-        order.supplier === supplierId &&
-        order.supplierCompany === supplierCompany &&
-        order.consignee === consigneeName
-    );
-  } catch (error) {
-    console.error("Error fetching orders:", error);
-    return [];
-  }
-};
-
 const AddLoadingEntry = () => {
   const [suppliers, setSuppliers] = useState([]);
   const [consignees, setConsignees] = useState([]);
+  const [allOrders, setAllOrders] = useState([]); 
   const [selectedSupplier, setSelectedSupplier] = useState(null);
   const [selectedConsignee, setSelectedConsignee] = useState(null);
+  const [saudaSearch, setSaudaSearch] = useState(""); // Add sauda search
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
-    const loadDropdowns = async () => {
+    const loadSuppliers = async () => {
       setLoading(true);
-      const [suppliersData, consigneesData] = await Promise.all([
-        fetchData("/sellers", "sellerName"),
-        fetchData("/consignees", "name"),
-      ]);
+      const suppliersData = await fetchData("/sellers", "sellerName");
       setSuppliers(suppliersData);
-      setConsignees(consigneesData);
       setLoading(false);
     };
-    loadDropdowns();
+    loadSuppliers();
   }, []);
 
+  // When selectedSupplier changes, fetch its orders and extract unique consignees
+  useEffect(() => {
+    const loadSupplierData = async () => {
+      if (selectedSupplier) {
+        setLoading(true);
+        try {
+          const response = await axios.get("/self-order");
+          const supplierOrders = response.data.filter(
+            (order) =>
+              order.supplier === selectedSupplier.value &&
+              order.supplierCompany === selectedSupplier.company
+          );
+          setAllOrders(supplierOrders);
+
+          // Extract unique consignees from the supplier's orders
+          const uniqueConsignees = Array.from(
+            new Set(supplierOrders.map((o) => o.consignee))
+          )
+            .filter(Boolean)
+            .map((name) => {
+              const order = supplierOrders.find((o) => o.consignee === name);
+              return {
+                value: name, 
+                label: `${capitalizeWords(name)} - ${capitalizeWords(order.location || "N/A")}, ${capitalizeWords(order.state || "N/A")}`,
+                name: name,
+              };
+            });
+
+          setConsignees(uniqueConsignees);
+          setSelectedConsignee(null); 
+          setSaudaSearch(""); // Reset sauda search
+          setOrders([]); 
+        } catch (error) {
+          console.error("Error loading supplier orders:", error);
+        } finally {
+          setLoading(false);
+        }
+      } else {
+        setConsignees([]);
+        setAllOrders([]);
+        setOrders([]);
+        setSaudaSearch("");
+      }
+    };
+    loadSupplierData();
+  }, [selectedSupplier]);
+
   const handleSearch = async () => {
-    if (selectedSupplier && selectedConsignee) {
+    if (selectedSupplier) {
       setLoading(true);
-      let orderData = await fetchOrders(
-        selectedSupplier.value,
-        selectedSupplier.company,
-        selectedConsignee.name
-      );
+      
+      let orderData = [...allOrders];
+
+      // Filter by consignee if selected
+      if (selectedConsignee) {
+        orderData = orderData.filter(
+          (order) => order.consignee === selectedConsignee.name
+        );
+      }
+
+      // Filter by sauda number if entered
+      if (saudaSearch.trim()) {
+        orderData = orderData.filter((order) =>
+          order.saudaNo?.toLowerCase().includes(saudaSearch.toLowerCase())
+        );
+      }
 
       // Add "isClosed" status based on tolerance (+/- 5%)
       orderData = orderData.map((order) => {
@@ -133,7 +167,7 @@ const AddLoadingEntry = () => {
             <p className="text-center text-slate-500 font-medium">Loading...</p>
           ) : (
             <div className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <label className="block mb-1 text-sm font-semibold text-slate-700">
                     Supplier
@@ -156,6 +190,18 @@ const AddLoadingEntry = () => {
                     onChange={setSelectedConsignee}
                     placeholder="Select Consignee"
                     isMulti={false}
+                  />
+                </div>
+                <div>
+                  <label className="block mb-1 text-sm font-semibold text-slate-700">
+                    Sauda No
+                  </label>
+                  <input
+                    type="text"
+                    value={saudaSearch}
+                    onChange={(e) => setSaudaSearch(e.target.value)}
+                    placeholder="Search by Sauda No"
+                    className="w-full rounded-xl border border-slate-200 px-4 py-2.5 focus:ring-2 focus:ring-emerald-400/50 focus:border-emerald-400 outline-none transition"
                   />
                 </div>
               </div>
