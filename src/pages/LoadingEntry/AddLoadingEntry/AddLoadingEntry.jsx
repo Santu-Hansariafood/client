@@ -1,40 +1,45 @@
-import axios from "axios";
-import React, { useState, useEffect, lazy, Suspense } from "react";
+import { useState, useEffect, lazy, Suspense } from "react";
 import { FaPlus, FaTrash, FaDownload } from "react-icons/fa";
-import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import DataDropdown from "../../../common/DataDropdown/DataDropdown";
-import Tables from "../../../common/Tables/Tables";
-import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
 import { FaTruckLoading } from "react-icons/fa";
-import PrintLoadingEntry from "../PrintLoadingEntry/PrintLoadingEntry";
+import axios from "axios";
 import Loading from "../../../common/Loading/Loading";
-
+import PrintLoadingEntry from "../PrintLoadingEntry/PrintLoadingEntry";
+const DataDropdown = lazy(
+  () => import("../../../common/DataDropdown/DataDropdown"),
+);
+const Tables = lazy(() => import("../../../common/Tables/Tables"));
+const AdminPageShell = lazy(
+  () => import("../../../common/AdminPageShell/AdminPageShell"),
+);
 const PopupBox = lazy(() => import("../../../common/PopupBox/PopupBox"));
 const DataInput = lazy(() => import("../../../common/DataInput/DataInput"));
-const DateSelector = lazy(() => import("../../../common/DateSelector/DateSelector"));
+const DateSelector = lazy(
+  () => import("../../../common/DateSelector/DateSelector"),
+);
 
 const capitalizeWords = (str) => {
   if (!str) return "";
-  return String(str).toLowerCase().replace(/\b\w/g, (char) => char.toUpperCase());
+  return String(str)
+    .toLowerCase()
+    .replace(/\b\w/g, (char) => char.toUpperCase());
 };
 
 const fetchData = async (url, key) => {
   try {
     const response = await axios.get(url);
-    const data = Array.isArray(response.data) 
-      ? response.data 
-      : (response.data?.data || []);
+    const data = Array.isArray(response.data)
+      ? response.data
+      : response.data?.data || [];
 
     if (url === "/sellers") {
-      // Flatten sellers to their companies
       return data.flatMap((seller) =>
         (seller.companies || []).map((company) => ({
           value: seller._id,
           label: capitalizeWords(company),
           company: company,
           sellerName: seller.sellerName,
-        }))
+        })),
       );
     }
     return data.map((item) => ({
@@ -65,10 +70,9 @@ const AddLoadingEntry = () => {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [loadingEntries, setLoadingEntries] = useState([]);
   const [isSaving, setIsSaving] = useState(false);
-  const navigate = useNavigate();
 
   const INITIAL_ENTRY = {
-    loadingDate: new Date().toISOString().split('T')[0],
+    loadingDate: new Date().toISOString().split("T")[0],
     loadingWeight: "",
     bags: "",
     lorryNumber: "",
@@ -80,7 +84,7 @@ const AddLoadingEntry = () => {
     advance: 0,
     balance: 0,
     billNumber: "",
-    dateOfIssue: new Date().toISOString().split('T')[0],
+    dateOfIssue: new Date().toISOString().split("T")[0],
   };
 
   useEffect(() => {
@@ -89,20 +93,19 @@ const AddLoadingEntry = () => {
       try {
         const [suppliersData, consigneesRes] = await Promise.all([
           fetchData("/sellers", "sellerName"),
-          axios.get("/consignees", { params: { limit: 0 } }), // Request full list
+          axios.get("/consignees", { params: { limit: 0 } }),
         ]);
-        
-        // Use consistent data extraction
-        const rawConsignees = Array.isArray(consigneesRes.data) 
-          ? consigneesRes.data 
-          : (consigneesRes.data?.data || []);
+
+        const rawConsignees = Array.isArray(consigneesRes.data)
+          ? consigneesRes.data
+          : consigneesRes.data?.data || [];
 
         const consigneesData = rawConsignees.map((c) => ({
           value: c._id,
           label: `${capitalizeWords(c.name)} - ${capitalizeWords(c.location || "N/A")}, ${capitalizeWords(c.district || "N/A")}, ${capitalizeWords(c.state || "N/A")}`,
           name: c.name,
         }));
-        
+
         setSuppliers(suppliersData);
         setConsignees(consigneesData);
       } catch (err) {
@@ -114,42 +117,44 @@ const AddLoadingEntry = () => {
     loadDropdowns();
   }, []);
 
-  // Auto-fill logic when Sauda No is entered
   useEffect(() => {
     const autoFillSauda = async () => {
       const trimmedSauda = saudaSearch.trim();
-      if (trimmedSauda.length >= 3) { // Use 3 chars for exact match intent
+      if (trimmedSauda.length >= 3) {
         try {
           const response = await axios.get("/self-order");
-          const allOrders = Array.isArray(response.data) ? response.data : (response.data?.data || []);
-          
+          const allOrders = Array.isArray(response.data)
+            ? response.data
+            : response.data?.data || [];
+
           const matchedOrder = allOrders.find(
-            (order) => order.saudaNo?.toLowerCase() === trimmedSauda.toLowerCase()
+            (order) =>
+              order.saudaNo?.toLowerCase() === trimmedSauda.toLowerCase(),
           );
 
           if (matchedOrder) {
-            // Find and set the supplier
             const supplierOption = suppliers.find(
-              (s) => 
-                String(s.value) === String(matchedOrder.supplier?._id || matchedOrder.supplier) && 
-                s.company === matchedOrder.supplierCompany
+              (s) =>
+                String(s.value) ===
+                  String(matchedOrder.supplier?._id || matchedOrder.supplier) &&
+                s.company === matchedOrder.supplierCompany,
             );
             if (supplierOption) setSelectedSupplier(supplierOption);
 
-            // Find and set the consignee
             const consigneeOption = consignees.find(
-              (c) => c.name === matchedOrder.consignee
+              (c) => c.name === matchedOrder.consignee,
             );
             if (consigneeOption) setSelectedConsignee(consigneeOption);
 
-            // Update the orders list with just this one match
             const processedOrder = {
               ...matchedOrder,
-              isClosed: matchedOrder.status === "closed" || Math.abs(matchedOrder.pendingQuantity || 0) <= (matchedOrder.quantity || 0) * 0.05
+              isClosed:
+                matchedOrder.status === "closed" ||
+                Math.abs(matchedOrder.pendingQuantity || 0) <=
+                  (matchedOrder.quantity || 0) * 0.05,
             };
             setOrders([processedOrder]);
 
-            // Automatically open the popup for this sauda
             if (!processedOrder.isClosed) {
               handleOpenPopup(processedOrder);
             } else {
@@ -162,50 +167,58 @@ const AddLoadingEntry = () => {
       }
     };
 
-    const timer = setTimeout(autoFillSauda, 500); // Debounce to allow full typing
+    const timer = setTimeout(autoFillSauda, 500);
     return () => clearTimeout(timer);
   }, [saudaSearch, suppliers, consignees]);
 
   const handleSearch = async () => {
     if (selectedSupplier && selectedConsignee) {
       setLoading(true);
-      
+
       try {
         const response = await axios.get("/self-order");
-        const allOrders = Array.isArray(response.data) ? response.data : (response.data?.data || []);
-        
+        const allOrders = Array.isArray(response.data)
+          ? response.data
+          : response.data?.data || [];
+
         let orderData = allOrders.filter(
           (order) =>
-            String(order.supplier?._id || order.supplier) === String(selectedSupplier.value) &&
+            String(order.supplier?._id || order.supplier) ===
+              String(selectedSupplier.value) &&
             order.supplierCompany === selectedSupplier.company &&
-            order.consignee === selectedConsignee.name
+            order.consignee === selectedConsignee.name,
         );
 
-      // Filter by sauda number if entered
-      if (saudaSearch.trim()) {
-        orderData = orderData.filter((order) =>
-          order.saudaNo?.toLowerCase().includes(saudaSearch.toLowerCase())
-        );
-      }
-
-      // Add "isClosed" status based on tolerance (+/- 5%)
-      orderData = orderData.map((order) => {
-        const quantity = order.quantity || 0;
-        const pendingQuantity = order.pendingQuantity || 0;
-        const tolerance = quantity * 0.05;
-        const isClosed = order.status === "closed" || Math.abs(pendingQuantity) <= tolerance;
-        return { ...order, isClosed };
-      });
-
-      // Sort: incomplete on top, then by date (newest first)
-      orderData.sort((a, b) => {
-        if (a.isClosed !== b.isClosed) {
-          return a.isClosed ? 1 : -1;
+        if (saudaSearch.trim()) {
+          orderData = orderData.filter((order) =>
+            order.saudaNo?.toLowerCase().includes(saudaSearch.toLowerCase()),
+          );
         }
-        return new Date(b.poDate || b.createdAt) - new Date(a.poDate || a.createdAt);
-      });
 
-      setOrders(orderData);
+        orderData = orderData.map((order) => {
+          const quantity = order.quantity || 0;
+          const pendingQuantity = order.pendingQuantity || 0;
+          const tolerance = quantity * 0.05;
+          const isClosed =
+            order.status === "closed" || Math.abs(pendingQuantity) <= tolerance;
+          return { ...order, isClosed };
+        });
+
+        orderData.sort((a, b) => {
+          if (a.isClosed !== b.isClosed) {
+            return a.isClosed ? 1 : -1;
+          }
+          const getTime = (d) => {
+            const t = new Date(d).getTime();
+            return isNaN(t) ? 0 : t;
+          };
+
+          return (
+            getTime(b.poDate || b.createdAt) - getTime(a.poDate || a.createdAt)
+          );
+        });
+
+        setOrders(orderData);
       } catch (err) {
         console.error("Error fetching orders:", err);
       } finally {
@@ -218,7 +231,7 @@ const AddLoadingEntry = () => {
     try {
       const newStatus = order.status === "closed" ? "active" : "closed";
       await axios.put(`/self-order/${order._id}`, { status: newStatus });
-      handleSearch(); // Refresh list
+      handleSearch();
     } catch (error) {
       console.error("Error updating sauda status:", error);
     }
@@ -243,33 +256,73 @@ const AddLoadingEntry = () => {
 
   const handleEntryChange = (index, field, value) => {
     const newEntries = [...loadingEntries];
-    newEntries[index][field] = value;
 
-    // Recalculate freight if weight or rate changed
-    if (field === "loadingWeight" || field === "freightRate" || field === "advance") {
+    if (field === "loadingDate" || field === "dateOfIssue") {
+      const d = new Date(value);
+      newEntries[index][field] = !isNaN(d.getTime())
+        ? d.toISOString().split("T")[0]
+        : "";
+    } else {
+      newEntries[index][field] = value;
+    }
+
+    if (
+      field === "loadingWeight" ||
+      field === "freightRate" ||
+      field === "advance"
+    ) {
       const weight = parseFloat(newEntries[index].loadingWeight) || 0;
       const rate = parseFloat(newEntries[index].freightRate) || 0;
       const advance = parseFloat(newEntries[index].advance) || 0;
-      
-      newEntries[index].totalFreight = (weight * rate).toFixed(2);
-      newEntries[index].balance = (newEntries[index].totalFreight - advance).toFixed(2);
+
+      const total = +(weight * rate).toFixed(2);
+      const balance = +(total - advance).toFixed(2);
+
+      newEntries[index].totalFreight = total;
+      newEntries[index].balance = balance;
     }
 
     setLoadingEntries(newEntries);
   };
-
   const calculateTotalLoadingWeight = () => {
-    return loadingEntries.reduce((sum, entry) => sum + (parseFloat(entry.loadingWeight) || 0), 0);
+    return loadingEntries.reduce(
+      (sum, entry) => sum + (parseFloat(entry.loadingWeight) || 0),
+      0,
+    );
   };
 
   const handleSaveEntries = async () => {
     if (!selectedOrder) return;
-    
+
     setIsSaving(true);
+
+    for (const entry of loadingEntries) {
+      const weight = parseFloat(entry.loadingWeight) || 0;
+      const rate = parseFloat(entry.freightRate) || 0;
+      const advance = parseFloat(entry.advance) || 0;
+
+      // ✅ Negative validation HERE
+      if (weight < 0 || rate < 0 || advance < 0) {
+        toast.error("Values cannot be negative");
+        setIsSaving(false);
+        return;
+      }
+
+      // ✅ Phone validation (already correct)
+      if (
+        entry.driverPhoneNumber &&
+        !/^\d{10}$/.test(entry.driverPhoneNumber)
+      ) {
+        toast.error("Invalid phone number");
+        setIsSaving(false);
+        return;
+      }
+    }
+
     try {
       const payload = {
         saudaNo: selectedOrder.saudaNo,
-        entries: loadingEntries.map(entry => ({
+        entries: loadingEntries.map((entry) => ({
           ...entry,
           saudaNo: selectedOrder.saudaNo,
           supplier: selectedOrder.supplier?._id || selectedOrder.supplier,
@@ -277,13 +330,13 @@ const AddLoadingEntry = () => {
           consignee: selectedOrder.consignee,
           commodity: selectedOrder.commodity,
           bags: entry.bags,
-        }))
+        })),
       };
 
       await axios.post("/loading-entries/bulk", payload);
       toast.success("All loading entries saved successfully");
       setIsPopupOpen(false);
-      handleSearch(); // Refresh the list to update pending quantities
+      handleSearch();
     } catch (error) {
       console.error("Error saving entries:", error);
       toast.error(error.response?.data?.message || "Failed to save entries");
@@ -291,13 +344,12 @@ const AddLoadingEntry = () => {
       setIsSaving(false);
     }
   };
-
   const handleDownloadPDF = async (entry) => {
     try {
       const fullEntry = {
         ...entry,
         saudaNo: selectedOrder.saudaNo,
-        supplier: selectedOrder.supplier,
+        supplier: selectedOrder.supplier?._id || selectedOrder.supplier,
         supplierCompany: selectedOrder.supplierCompany,
         consignee: selectedOrder.consignee,
         commodity: selectedOrder.commodity,
@@ -329,7 +381,7 @@ const AddLoadingEntry = () => {
         <div className="max-w-7xl mx-auto space-y-6">
           <div className="rounded-2xl border border-amber-200/60 bg-white shadow-lg p-4 sm:p-6">
             {loading ? (
-              <p className="text-center text-slate-500 font-medium">Loading...</p>
+              <Loading />
             ) : (
               <div className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -339,7 +391,9 @@ const AddLoadingEntry = () => {
                     </label>
                     <DataDropdown
                       options={suppliers}
-                      selectedOptions={selectedSupplier ? [selectedSupplier] : []}
+                      selectedOptions={
+                        selectedSupplier ? [selectedSupplier] : []
+                      }
                       onChange={setSelectedSupplier}
                       placeholder="Select Supplier"
                       isMulti={false}
@@ -351,7 +405,9 @@ const AddLoadingEntry = () => {
                     </label>
                     <DataDropdown
                       options={consignees}
-                      selectedOptions={selectedConsignee ? [selectedConsignee] : []}
+                      selectedOptions={
+                        selectedConsignee ? [selectedConsignee] : []
+                      }
                       onChange={setSelectedConsignee}
                       placeholder="Select Consignee"
                       isMulti={false}
@@ -406,7 +462,7 @@ const AddLoadingEntry = () => {
                   capitalizeWords(order.commodity),
                   order.quantity,
                   order.rate,
-                  capitalizeWords(order.pendingQuantity),
+                  order.pendingQuantity,
                   <span
                     key={`status-${order._id}`}
                     className={`px-2 py-1 rounded-full text-xs font-semibold ${
@@ -417,7 +473,10 @@ const AddLoadingEntry = () => {
                   >
                     {order.isClosed ? "Closed" : "Active"}
                   </span>,
-                  <div key={`actions-${order._id}`} className="flex items-center gap-3">
+                  <div
+                    key={`actions-${order._id}`}
+                    className="flex items-center gap-3"
+                  >
                     {order.status !== "closed" ? (
                       <>
                         <button
@@ -466,33 +525,57 @@ const AddLoadingEntry = () => {
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 p-4 bg-slate-50 rounded-2xl text-sm border border-slate-100 shadow-inner">
                 <div className="bg-white p-3 rounded-xl border border-slate-200">
                   <p className="text-slate-500 font-medium">Total Quantity</p>
-                  <p className="font-bold text-slate-800 text-lg">{(selectedOrder.quantity || 0).toFixed(2)} Tons</p>
+                  <p className="font-bold text-slate-800 text-lg">
+                    {(selectedOrder.quantity || 0).toFixed(2)} Tons
+                  </p>
                 </div>
                 <div className="bg-white p-3 rounded-xl border border-slate-200">
                   <p className="text-slate-500 font-medium">Already Loaded</p>
                   <p className="font-bold text-slate-800 text-lg">
-                    {((selectedOrder.quantity || 0) - (selectedOrder.pendingQuantity || 0)).toFixed(2)} Tons
+                    {(
+                      (selectedOrder.quantity || 0) -
+                      (selectedOrder.pendingQuantity || 0)
+                    ).toFixed(2)}{" "}
+                    Tons
                   </p>
                 </div>
                 <div className="bg-white p-3 rounded-xl border border-emerald-100">
-                  <p className="text-emerald-600 font-medium">Currently Adding</p>
-                  <p className="font-bold text-emerald-700 text-lg">{calculateTotalLoadingWeight().toFixed(2)} Tons</p>
+                  <p className="text-emerald-600 font-medium">
+                    Currently Adding
+                  </p>
+                  <p className="font-bold text-emerald-700 text-lg">
+                    {calculateTotalLoadingWeight().toFixed(2)} Tons
+                  </p>
                 </div>
                 <div className="bg-white p-3 rounded-xl border border-amber-100">
-                  <p className="text-amber-600 font-medium">Remaining Pending</p>
+                  <p className="text-amber-600 font-medium">
+                    Remaining Pending
+                  </p>
                   <p className="font-bold text-amber-700 text-lg">
-                    {((selectedOrder.pendingQuantity || 0) - calculateTotalLoadingWeight()).toFixed(2)} Tons
+                    {Math.max(
+                      0,
+                      (selectedOrder.pendingQuantity || 0) -
+                        calculateTotalLoadingWeight(),
+                    ).toFixed(2)}{" "}
+                    Tons
                   </p>
                 </div>
               </div>
 
               <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar p-1">
                 {loadingEntries.map((entry, index) => (
-                  <div key={index} className="p-5 border border-slate-200 rounded-3xl space-y-6 relative bg-white shadow-sm hover:shadow-md transition-shadow">
+                  <div
+                    key={index}
+                    className="p-5 border border-slate-200 rounded-3xl space-y-6 relative bg-white shadow-sm hover:shadow-md transition-shadow"
+                  >
                     <div className="flex justify-between items-center border-b border-slate-100 pb-3">
                       <div className="flex items-center gap-3">
-                        <span className="flex items-center justify-center w-8 h-8 rounded-full bg-emerald-600 text-white font-bold text-sm">{index + 1}</span>
-                        <h4 className="font-bold text-slate-700">Loading Specification</h4>
+                        <span className="flex items-center justify-center w-8 h-8 rounded-full bg-emerald-600 text-white font-bold text-sm">
+                          {index + 1}
+                        </span>
+                        <h4 className="font-bold text-slate-700">
+                          Loading Specification
+                        </h4>
                       </div>
                       <div className="flex gap-2">
                         <button
@@ -516,107 +599,191 @@ const AddLoadingEntry = () => {
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                       <div className="space-y-1.5">
-                        <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider">Loading Date</label>
+                        <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                          Loading Date
+                        </label>
                         <DateSelector
                           selectedDate={entry.loadingDate}
-                          onChange={(date) => handleEntryChange(index, "loadingDate", date)}
+                          onChange={(date) =>
+                            handleEntryChange(index, "loadingDate", date)
+                          }
                         />
                       </div>
                       <div className="space-y-1.5">
-                        <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider">Weight (Tons)</label>
+                        <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                          Weight (Tons)
+                        </label>
                         <DataInput
                           type="number"
                           value={entry.loadingWeight}
-                          onChange={(e) => handleEntryChange(index, "loadingWeight", e.target.value)}
+                          onChange={(e) =>
+                            handleEntryChange(
+                              index,
+                              "loadingWeight",
+                              e.target.value,
+                            )
+                          }
                           placeholder="0.00"
                         />
                       </div>
                       <div className="space-y-1.5">
-                        <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider">Bags Count</label>
+                        <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                          Bags Count
+                        </label>
                         <DataInput
                           type="number"
                           value={entry.bags}
-                          onChange={(e) => handleEntryChange(index, "bags", e.target.value)}
+                          onChange={(e) =>
+                            handleEntryChange(index, "bags", e.target.value)
+                          }
                           placeholder="No. of bags"
                         />
                       </div>
                       <div className="space-y-1.5">
-                        <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider">Lorry Number</label>
+                        <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                          Lorry Number
+                        </label>
                         <DataInput
                           value={entry.lorryNumber}
-                          onChange={(e) => handleEntryChange(index, "lorryNumber", e.target.value)}
+                          onChange={(e) =>
+                            handleEntryChange(
+                              index,
+                              "lorryNumber",
+                              e.target.value,
+                            )
+                          }
                           placeholder="e.g. RJ 14 GA 1234"
                         />
                       </div>
                       <div className="space-y-1.5">
-                        <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider">Transporter</label>
+                        <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                          Transporter
+                        </label>
                         <DataInput
                           value={entry.addedTransport}
-                          onChange={(e) => handleEntryChange(index, "addedTransport", e.target.value)}
+                          onChange={(e) =>
+                            handleEntryChange(
+                              index,
+                              "addedTransport",
+                              e.target.value,
+                            )
+                          }
                           placeholder="Name of transport"
                         />
                       </div>
                       <div className="space-y-1.5">
-                        <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider">Driver Name</label>
+                        <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                          Driver Name
+                        </label>
                         <DataInput
                           value={entry.driverName}
-                          onChange={(e) => handleEntryChange(index, "driverName", e.target.value)}
+                          onChange={(e) =>
+                            handleEntryChange(
+                              index,
+                              "driverName",
+                              e.target.value,
+                            )
+                          }
                           placeholder="Name"
                         />
                       </div>
                       <div className="space-y-1.5">
-                        <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider">Driver Mobile</label>
+                        <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                          Driver Mobile
+                        </label>
                         <DataInput
                           value={entry.driverPhoneNumber}
-                          onChange={(e) => handleEntryChange(index, "driverPhoneNumber", e.target.value)}
+                          onChange={(e) =>
+                            handleEntryChange(
+                              index,
+                              "driverPhoneNumber",
+                              e.target.value,
+                            )
+                          }
                           placeholder="Phone number"
                         />
                       </div>
                       <div className="space-y-1.5">
-                        <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider">Freight Rate</label>
+                        <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                          Freight Rate
+                        </label>
                         <DataInput
                           type="number"
                           value={entry.freightRate}
-                          onChange={(e) => handleEntryChange(index, "freightRate", e.target.value)}
+                          onChange={(e) =>
+                            handleEntryChange(
+                              index,
+                              "freightRate",
+                              e.target.value,
+                            )
+                          }
                           placeholder="Rs. per ton"
                         />
                       </div>
                       <div className="space-y-1.5">
-                        <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider">Bill Number</label>
+                        <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                          Bill Number
+                        </label>
                         <DataInput
                           value={entry.billNumber}
-                          onChange={(e) => handleEntryChange(index, "billNumber", e.target.value)}
+                          onChange={(e) =>
+                            handleEntryChange(
+                              index,
+                              "billNumber",
+                              e.target.value,
+                            )
+                          }
                           placeholder="Invoice no."
                         />
                       </div>
                       <div className="space-y-1.5">
-                        <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider">Bill Issue Date</label>
+                        <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                          Bill Issue Date
+                        </label>
                         <DateSelector
                           selectedDate={entry.dateOfIssue}
-                          onChange={(date) => handleEntryChange(index, "dateOfIssue", date)}
+                          onChange={(date) =>
+                            handleEntryChange(index, "dateOfIssue", date)
+                          }
                         />
                       </div>
                     </div>
-                    
+
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 p-4 bg-slate-50 rounded-2xl border border-slate-100">
                       <div className="flex flex-col items-center justify-center">
-                        <p className="text-[10px] text-slate-400 uppercase font-bold tracking-widest mb-1">Total Freight</p>
-                        <p className="font-bold text-slate-800 text-lg">₹ {entry.totalFreight}</p>
+                        <p className="text-[10px] text-slate-400 uppercase font-bold tracking-widest mb-1">
+                          Total Freight
+                        </p>
+                        <p className="font-bold text-slate-800 text-lg">
+                          ₹ {Number(entry.totalFreight).toFixed(2)}
+                        </p>
                       </div>
                       <div className="flex flex-col items-center justify-center">
-                        <p className="text-[10px] text-slate-400 uppercase font-bold tracking-widest mb-1">Advance Amount</p>
+                        <p className="text-[10px] text-slate-400 uppercase font-bold tracking-widest mb-1">
+                          Advance Amount
+                        </p>
                         <div className="max-w-[120px]">
                           <DataInput
                             type="number"
                             className="text-center font-bold !py-1"
                             value={entry.advance}
-                            onChange={(e) => handleEntryChange(index, "advance", e.target.value)}
+                            onChange={(e) =>
+                              handleEntryChange(
+                                index,
+                                "advance",
+                                e.target.value,
+                              )
+                            }
                           />
                         </div>
                       </div>
                       <div className="flex flex-col items-center justify-center">
-                        <p className="text-[10px] text-slate-400 uppercase font-bold tracking-widest mb-1">Balance Due</p>
-                        <p className="font-bold text-amber-600 text-lg">₹ {entry.balance}</p>
+                        <p className="text-[10px] text-slate-400 uppercase font-bold tracking-widest mb-1">
+                          Balance Due
+                        </p>
+                        <p className="font-bold text-amber-600 text-lg">
+                          ₹ {Number(entry.balance).toFixed(2)}
+                        </p>
                       </div>
                     </div>
                   </div>

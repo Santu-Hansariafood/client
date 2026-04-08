@@ -1,14 +1,19 @@
 import { jsPDF } from "jspdf";
-import { autoTable } from "jspdf-autotable";
+import autoTable from "jspdf-autotable";
 import axios from "axios";
 import logo from "../../../assets/Hans.png";
+import signature from "../../../assets/signature.png";
+import stamp from "../../../assets/stamp.png";
+import QRCode from "qrcode";
 
 const PrintLoadingEntry = async (data) => {
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.width;
   const pageHeight = doc.internal.pageSize.height;
 
-  /* ---------------------- Helpers ---------------------- */
+  const primary = [22, 163, 74];
+  const light = [240, 253, 244];
+  const darkText = [31, 41, 55];
 
   const safeFetch = async (url) => {
     try {
@@ -35,7 +40,7 @@ const PrintLoadingEntry = async (data) => {
   };
 
   const formatCurrency = (val) =>
-    `₹ ${Number(val || 0).toLocaleString("en-IN")}`;
+    `Rs. ${Number(val || 0).toLocaleString("en-IN")}`;
 
   const getBase64Image = (img) => {
     return new Promise((resolve) => {
@@ -54,40 +59,41 @@ const PrintLoadingEntry = async (data) => {
     });
   };
 
-  /* ---------------------- Layout ---------------------- */
+  const [logoBase64, signBase64, stampBase64] = await Promise.all([
+    getBase64Image(logo),
+    getBase64Image(signature),
+    getBase64Image(stamp),
+  ]);
 
-  doc.setDrawColor(26, 54, 93);
-  doc.setLineWidth(0.2);
-  doc.rect(10, 10, pageWidth - 20, pageHeight - 20);
+  doc.setFillColor(...light);
+  doc.rect(0, 0, pageWidth, 40, "F");
 
-  /* ---------------------- Logo ---------------------- */
-
-  const logoBase64 = await getBase64Image(logo);
   if (logoBase64) {
-    doc.addImage(logoBase64, "PNG", 15, 15, 30, 20);
+    doc.addImage(logoBase64, "PNG", 14, 10, 28, 18);
   }
 
-  /* ---------------------- Header ---------------------- */
-
-  doc.setFontSize(18);
   doc.setFont("helvetica", "bold");
-  doc.setTextColor(26, 54, 93);
-  doc.text("LORRY CHALLAN", pageWidth - 15, 25, { align: "right" });
+  doc.setFontSize(16);
+  doc.setTextColor(...primary);
+  doc.text("HANSARIA FOOD PVT. LTD.", 50, 18);
+
+  doc.setFontSize(9);
+  doc.setTextColor(100);
+  doc.text("Broker & Commission Agent", 50, 24);
+
+  doc.setFontSize(14);
+  doc.setTextColor(...primary);
+  doc.text("LORRY CHALLAN", pageWidth - 15, 18, { align: "right" });
 
   doc.setFontSize(8);
-  doc.setFont("helvetica", "normal");
-  doc.setTextColor(74, 85, 104);
-  doc.text("HANSARIA FOOD PVT. LTD.", pageWidth - 15, 30, {
-    align: "right",
-  });
-  doc.text("Broker and Commission Agent", pageWidth - 15, 34, {
+  doc.setTextColor(120);
+  doc.text(`Date: ${formatDate(data.loadingDate)}`, pageWidth - 15, 24, {
     align: "right",
   });
 
-  doc.setDrawColor(226, 232, 240);
+  doc.setDrawColor(...primary);
+  doc.setLineWidth(0.8);
   doc.line(15, 42, pageWidth - 15, 42);
-
-  /* ---------------------- Fetch Data ---------------------- */
 
   const [ordersData, sellersData, companiesData, consigneesData] =
     await Promise.all([
@@ -98,9 +104,7 @@ const PrintLoadingEntry = async (data) => {
     ]);
 
   const supplierId =
-    typeof data.supplier === "object"
-      ? data.supplier?._id
-      : data.supplier;
+    typeof data.supplier === "object" ? data.supplier?._id : data.supplier;
 
   const buyerDetails =
     ordersData.find((o) => o.saudaNo === data.saudaNo) || {};
@@ -108,76 +112,58 @@ const PrintLoadingEntry = async (data) => {
   const sellerDetails =
     sellersData.find((s) => String(s._id) === String(supplierId)) || {};
 
-  const sellerCompanyName =
-    data.supplierCompany || sellerDetails.companies?.[0] || "";
-
   const companyDetails =
     companiesData.find(
-      (c) => normalize(c.companyName) === normalize(sellerCompanyName)
+      (c) =>
+        normalize(c.companyName) === normalize(data.supplierCompany),
     ) || {};
 
   const consigneeDetails =
     consigneesData.find(
-      (c) => normalize(c.name) === normalize(data.consignee)
+      (c) => normalize(c.name) === normalize(data.consignee),
     ) || {};
 
-  /* ---------------------- Table Helper ---------------------- */
-
-  const addTableSection = (title, y, headers, body) => {
-    doc.setFontSize(9);
+  const addTable = (title, y, headers, body) => {
+    doc.setFontSize(10);
+    doc.setTextColor(...primary);
     doc.setFont("helvetica", "bold");
-    doc.setTextColor(26, 54, 93);
-    doc.text(title.toUpperCase(), 15, y);
+    doc.text(title, 15, y);
 
     autoTable(doc, {
-      startY: y + 2,
+      startY: y + 4,
       head: [headers],
       body: [body],
-      theme: "striped",
-      pageBreak: "auto",
+      theme: "grid",
       headStyles: {
-        fillColor: [26, 54, 93],
-        textColor: [255, 255, 255],
+        fillColor: primary,
+        textColor: 255,
         fontSize: 8,
       },
       bodyStyles: {
         fontSize: 8,
-        textColor: [45, 55, 72],
+        textColor: darkText,
       },
-      alternateRowStyles: {
-        fillColor: [248, 250, 252],
-      },
-      styles: {
-        overflow: "linebreak",
-        cellPadding: 3,
-      },
+      styles: { cellPadding: 3 },
       margin: { left: 15, right: 15 },
     });
 
     return doc.lastAutoTable.finalY + 8;
   };
 
-  /* ---------------------- Data Sections ---------------------- */
-
   let y = 50;
 
-  y = addTableSection(
-    "Seller & PO Details",
-    y,
-    ["Seller Name", "GST No", "Challan No", "Date", "Buyer PO No"],
+  y = addTable("Seller Details", y,
+    ["Seller", "GST", "Challan No", "PO No"],
     [
       sellerDetails.sellerName || "N/A",
       companyDetails.gstNo || "N/A",
       data.billNumber || "N/A",
-      formatDate(data.loadingDate),
       data.saudaNo || "N/A",
     ]
   );
 
-  y = addTableSection(
-    "Buyer & Delivery",
-    y,
-    ["Buyer Name", "Consignee", "Delivery Address"],
+  y = addTable("Buyer & Delivery", y,
+    ["Buyer", "Consignee", "Address"],
     [
       buyerDetails.buyer || "N/A",
       data.consignee || "N/A",
@@ -185,64 +171,65 @@ const PrintLoadingEntry = async (data) => {
     ]
   );
 
-  y = addTableSection(
-    "Goods & Transport",
-    y,
-    ["Product", "Bags", "Weight", "Lorry No", "Transport"],
+  y = addTable("Transport Details", y,
+    ["Product", "Bags", "Weight", "Lorry No"],
     [
       data.commodity || "N/A",
       data.bags || "N/A",
-      `${Number(data.loadingWeight || 0)} TONS`,
-      data.lorryNumber || "N/A",
-      data.addedTransport || "N/A",
+      `${Number(data.loadingWeight || 0)} Tons`,
+      (data.lorryNumber || "").toUpperCase(),
     ]
   );
 
   const totalFreight = Number(data.totalFreight) || 0;
   const advance = Number(data.advance) || 0;
-  const balance = totalFreight - advance;
 
-  y = addTableSection(
-    "Freight Summary",
-    y,
-    ["Rate", "Total Freight", "Advance", "Balance Due"],
+  y = addTable("Freight Summary", y,
+    ["Rate", "Total", "Advance", "Balance"],
     [
       formatCurrency(data.freightRate),
       formatCurrency(totalFreight),
       formatCurrency(advance),
-      formatCurrency(balance),
+      formatCurrency(totalFreight - advance),
     ]
   );
 
-  /* ---------------------- Signatures ---------------------- */
+  const qrData = `Challan: ${data.billNumber}\nLorry: ${data.lorryNumber}\nAmount: ${totalFreight}`;
+  const qrImage = await QRCode.toDataURL(qrData);
 
-  y += 5;
+  doc.addImage(qrImage, "PNG", pageWidth - 45, pageHeight - 60, 30, 30);
+  doc.setFontSize(7);
+  doc.text("Scan for details", pageWidth - 30, pageHeight - 25, { align: "center" });
+
+  let signY = pageHeight - 50;
 
   doc.setFontSize(9);
-  doc.setFont("helvetica", "bold");
-  doc.text("Driver Signature", 15, y);
-  doc.line(15, y + 12, 60, y + 12);
+  doc.setTextColor(80);
+  doc.text("Driver Signature", 20, signY);
+  doc.line(20, signY + 12, 70, signY + 12);
 
-  doc.text("Authorized Signatory", pageWidth - 15, y, {
-    align: "right",
-  });
-  doc.line(pageWidth - 60, y + 12, pageWidth - 15, y + 12);
+  doc.text("Authorized Signatory", pageWidth - 20, signY, { align: "right" });
 
-  /* ---------------------- Footer ---------------------- */
+  if (signBase64) {
+    doc.addImage(signBase64, "PNG", pageWidth - 70, signY - 10, 40, 15);
+  }
 
-  doc.setFontSize(7);
-  doc.setTextColor(113, 128, 150);
+  if (stampBase64) {
+    doc.addImage(stampBase64, "PNG", pageWidth - 90, signY - 5, 35, 35);
+  }
+
+  doc.line(pageWidth - 70, signY + 12, pageWidth - 20, signY + 12);
+
+  doc.setFontSize(8);
+  doc.setTextColor(120);
   doc.text(
-    "* This is a computer-generated document and does not require a physical signature.",
+    "This is a system generated document.",
     pageWidth / 2,
-    pageHeight - 12,
+    pageHeight - 10,
     { align: "center" }
   );
 
-  /* ---------------------- Output ---------------------- */
-
-  const pdfBlob = doc.output("blob");
-  return URL.createObjectURL(pdfBlob);
+  return URL.createObjectURL(doc.output("blob"));
 };
 
 export default PrintLoadingEntry;
