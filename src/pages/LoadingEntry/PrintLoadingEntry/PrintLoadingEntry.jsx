@@ -17,10 +17,10 @@ const PrintLoadingEntry = async (data) => {
   const pageHeight = doc.internal.pageSize.height;
   const margin = 14;
 
-  const primary = [15, 23, 42]; // Dark Navy
-  const teal = [13, 148, 136]; // Teal
-  const accent = [245, 158, 11]; // Amber/Gold for premium touch
-  const light = [248, 250, 252];
+  const primary = [21, 128, 61]; // Professional Green (Emerald 700)
+  const secondary = [234, 179, 8]; // Vibrant Yellow (Amber 500)
+  const dark = [15, 23, 42]; // Slate 900
+  const light = [254, 252, 232]; // Very light yellow for stripe
   const gray = [71, 85, 105];
   const lightGray = [226, 232, 240];
 
@@ -72,50 +72,55 @@ const PrintLoadingEntry = async (data) => {
   ]);
 
   // --- Background Design ---
-  doc.setFillColor(252, 252, 252);
+  doc.setFillColor(255, 255, 255);
   doc.rect(0, 0, pageWidth, pageHeight, "F");
   
-  // Subtle Side Accent
-  doc.setFillColor(...primary);
-  doc.rect(0, 0, 2, pageHeight, "F");
+  // Subtle Side Accent - Yellow
+  doc.setFillColor(...secondary);
+  doc.rect(0, 0, 2.5, pageHeight, "F");
 
   // --- Header ---
-  // Top Banner
+  // Top Banner - Green
   doc.setFillColor(...primary);
-  doc.rect(0, 0, pageWidth, 40, "F");
+  doc.rect(0, 0, pageWidth, 42, "F");
 
+  // Logo Area
   if (logo64) {
-    // White circular background for logo
+    // White background for logo with slight shadow/border effect
     doc.setFillColor(255, 255, 255);
-    doc.roundedRect(12, 8, 24, 24, 3, 3, "F");
-    doc.addImage(logo64, "PNG", 14, 10, 20, 20);
+    doc.roundedRect(12, 8, 26, 26, 3, 3, "F");
+    doc.addImage(logo64, "PNG", 14, 10, 22, 22);
   }
 
   // Company Details
   doc.setTextColor(255, 255, 255);
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(18);
-  doc.text("HANSARIA FOOD PVT. LTD.", 42, 18);
+  doc.setFontSize(20);
+  doc.text("HANSARIA FOOD PVT. LTD.", 44, 18);
 
   doc.setFont("helvetica", "normal");
   doc.setFontSize(10);
-  doc.setTextColor(200, 200, 200);
-  doc.text("Broker & Commission Agent | Premium Quality Food Products", 42, 24);
-  doc.text("Email: info@hansariafood.com | Contact: +91-XXXXXXXXXX", 42, 29);
-
-  // Document Title
-  doc.setFillColor(...accent);
-  doc.rect(pageWidth - 65, 12, 65, 10, "F");
   doc.setTextColor(255, 255, 255);
-  doc.setFontSize(12);
-  doc.setFont("helvetica", "bold");
-  doc.text("LORRY CHALLAN", pageWidth - 32.5, 18.5, { align: "center" });
+  doc.text("Broker & Commission Agent | Premium Quality Food Products", 44, 24);
+  
+  doc.setFontSize(9);
+  doc.setTextColor(240, 240, 240);
+  doc.text("Email: info@hansariafood.com | Contact: +91-XXXXXXXXXX", 44, 30);
+  doc.text("GSTIN: XXXXXXXXXXXXXXXXX", 44, 35);
 
-  // Date & Number
+  // Document Title Box - Yellow
+  doc.setFillColor(...secondary);
+  doc.rect(pageWidth - 70, 12, 70, 12, "F");
+  doc.setTextColor(...dark);
+  doc.setFontSize(14);
+  doc.setFont("helvetica", "bold");
+  doc.text("LORRY CHALLAN", pageWidth - 35, 20, { align: "center" });
+
+  // Date & Number Area
   doc.setFontSize(9);
   doc.setTextColor(255, 255, 255);
-  doc.text(`DATE: ${formatDate(data.loadingDate)}`, pageWidth - 14, 28, { align: "right" });
-  doc.text(`CHALLAN NO: ${data.billNumber || "N/A"}`, pageWidth - 14, 33, { align: "right" });
+  doc.text(`DATE: ${formatDate(data.loadingDate)}`, pageWidth - 14, 32, { align: "right" });
+  doc.text(`CHALLAN NO: ${data.billNumber || "N/A"}`, pageWidth - 14, 37, { align: "right" });
 
   // --- Data Fetching & Matching ---
   const [orders, sellers, companies, consignees] = await Promise.all([
@@ -126,11 +131,11 @@ const PrintLoadingEntry = async (data) => {
   ]);
 
   const supplierId = typeof data.supplier === "object" ? data.supplier?._id : data.supplier;
-  const buyer = orders.find((o) => o.saudaNo === data.saudaNo) || {};
+  const buyer = orders.find((o) => String(o.saudaNo) === String(data.saudaNo)) || {};
   const seller = sellers.find((s) => String(s._id) === String(supplierId)) || {};
   const company = companies.find((c) => normalize(c.companyName) === normalize(data.supplierCompany)) || {};
   
-  // Robust Consignee Matching
+  // Robust Consignee Matching from API
   const consignee = consignees.find((c) => 
     String(c._id) === String(data.consignee) || 
     normalize(c.name) === normalize(data.consignee)
@@ -145,16 +150,19 @@ const PrintLoadingEntry = async (data) => {
     .filter(Boolean)
     .join(", ");
 
-  const addTable = (title, y, head, body, colors = teal) => {
-    // Table Title with underline
-    doc.setTextColor(...primary);
+  const addTable = (title, y, head, body, colors = primary) => {
+    // Table Title with colored block
+    doc.setFillColor(...secondary);
+    doc.rect(margin, y - 5, 4, 6, "F");
+    
+    doc.setTextColor(...dark);
     doc.setFont("helvetica", "bold");
     doc.setFontSize(10);
-    doc.text(title.toUpperCase(), margin, y);
+    doc.text(title.toUpperCase(), margin + 6, y);
     
-    doc.setDrawColor(...colors);
-    doc.setLineWidth(0.5);
-    doc.line(margin, y + 1.5, margin + 25, y + 1.5);
+    doc.setDrawColor(...lightGray);
+    doc.setLineWidth(0.1);
+    doc.line(margin, y + 2, pageWidth - margin, y + 2);
 
     autoTable(doc, {
       startY: y + 4,
@@ -164,65 +172,72 @@ const PrintLoadingEntry = async (data) => {
       headStyles: {
         fillColor: colors,
         textColor: 255,
-        fontSize: 8,
+        fontSize: 8.5,
         fontStyle: "bold",
         halign: "center",
       },
       bodyStyles: {
-        fontSize: 8,
-        textColor: [30, 41, 59],
+        fontSize: 8.5,
+        textColor: [15, 23, 42],
         halign: "center",
+        lineColor: [226, 232, 240],
       },
       columnStyles: {
         0: { halign: "left" },
       },
       margin: { left: margin, right: margin },
       styles: {
-        cellPadding: 3,
+        cellPadding: 4,
+        overflow: "linebreak",
+      },
+      alternateRowStyles: {
+        fillColor: light,
       },
     });
 
-    return doc.lastAutoTable.finalY + 10;
+    return doc.lastAutoTable.finalY + 12;
   };
 
-  let currentY = 50;
+  let currentY = 55;
 
   // --- Parties Section ---
-  doc.setDrawColor(...lightGray);
-  doc.setLineWidth(0.2);
-  doc.line(margin, currentY, pageWidth - margin, currentY);
-  currentY += 5;
-
   currentY = addTable(
     "Parties Information",
     currentY,
-    ["Seller Name", "Seller Company", "Buyer Name", "Consignee"],
+    ["Seller Name", "Seller Company", "Buyer Name", "Consignee Name"],
     [
       seller.sellerName || "N/A",
       data.supplierCompany || "N/A",
       buyer.buyer || "N/A",
-      data.consignee || "N/A",
+      consignee.name || data.consignee || "N/A",
     ],
     primary
   );
 
-  // Address Section (Special Layout)
+  // Delivery Address Block - Highlighted
+  doc.setFillColor(...light);
+  doc.setDrawColor(...secondary);
+  doc.setLineWidth(0.5);
+  doc.roundedRect(margin, currentY - 5, pageWidth - (margin * 2), 22, 2, 2, "FD");
+
   doc.setTextColor(...primary);
   doc.setFont("helvetica", "bold");
-  doc.text("DELIVERY ADDRESS", margin, currentY);
-  currentY += 4;
+  doc.setFontSize(10);
+  doc.text("DELIVERY ADDRESS", margin + 5, currentY + 2);
+  
   doc.setFont("helvetica", "normal");
-  doc.setFontSize(9);
-  doc.setTextColor(...gray);
-  const splitAddress = doc.splitTextToSize(fullAddress || "Address details not available", pageWidth - (margin * 2));
-  doc.text(splitAddress, margin, currentY);
-  currentY += (splitAddress.length * 5) + 5;
+  doc.setFontSize(9.5);
+  doc.setTextColor(...dark);
+  const addressText = fullAddress || "Consignee address details not found in database. Please check Consignee API.";
+  const splitAddress = doc.splitTextToSize(addressText, pageWidth - (margin * 2) - 10);
+  doc.text(splitAddress, margin + 5, currentY + 8);
+  currentY += 25;
 
   // --- Transport Section ---
   currentY = addTable(
-    "Transport & Goods",
+    "Transport & Goods Details",
     currentY,
-    ["Commodity", "No. of Bags", "Weight", "Lorry Number"],
+    ["Commodity", "Bags", "Weight", "Vehicle Number"],
     [
       data.commodity || "N/A",
       data.bags || "N/A",
@@ -237,74 +252,83 @@ const PrintLoadingEntry = async (data) => {
   const balance = total - advance;
 
   currentY = addTable(
-    "Financial Summary",
+    "Freight & Payment Summary",
     currentY,
-    ["Freight Rate", "Total Freight", "Advance Paid", "Balance Amount"],
+    ["Freight Rate", "Total Freight", "Advance Paid", "Balance Payable"],
     [
       formatCurrency(data.freightRate),
       formatCurrency(total),
       formatCurrency(advance),
       formatCurrency(balance),
     ],
-    teal
+    primary
   );
 
   // --- Footer Section ---
-  const footerY = pageHeight - 65;
+  const footerY = pageHeight - 75;
   
-  // QR Code - Center
+  // QR Code Area
   try {
-    const qrText = `Challan: ${data.billNumber}\nLorry: ${data.lorryNumber}\nWeight: ${data.loadingWeight}T\nBalance: ${balance}`;
+    const qrText = `CHALLAN: ${data.billNumber}\nVEHICLE: ${data.lorryNumber}\nWEIGHT: ${data.loadingWeight}T\nBAL: ${balance}`;
     const qr = await QRCode.toDataURL(qrText);
-    const qrSize = 35;
+    const qrSize = 32;
     const qrX = (pageWidth - qrSize) / 2;
     
-    // QR Border
-    doc.setDrawColor(...lightGray);
-    doc.setLineWidth(0.5);
-    doc.roundedRect(qrX - 2, footerY - 2, qrSize + 4, qrSize + 10, 2, 2, "D");
+    // Design around QR
+    doc.setDrawColor(...secondary);
+    doc.setLineWidth(0.8);
+    doc.rect(qrX - 1, footerY - 1, qrSize + 2, qrSize + 2, "D");
     
     doc.addImage(qr, "PNG", qrX, footerY, qrSize, qrSize);
-    doc.setFontSize(7);
-    doc.setTextColor(...gray);
-    doc.text("SCAN FOR VERIFICATION", pageWidth / 2, footerY + qrSize + 5, { align: "center" });
+    doc.setFontSize(7.5);
+    doc.setTextColor(...primary);
+    doc.setFont("helvetica", "bold");
+    doc.text("SCAN FOR INSTANT VERIFICATION", pageWidth / 2, footerY + qrSize + 6, { align: "center" });
   } catch {}
 
-  // Signatures
-  const signBaseY = pageHeight - 35;
+  // Signature Blocks
+  const signBaseY = pageHeight - 38;
   
   doc.setFont("helvetica", "bold");
   doc.setFontSize(9);
-  doc.setTextColor(...primary);
+  doc.setTextColor(...dark);
   
-  // Left: Driver
-  doc.text("DRIVER SIGNATURE", margin + 10, signBaseY);
-  doc.setDrawColor(...lightGray);
-  doc.line(margin, signBaseY + 8, margin + 50, signBaseY + 8);
+  // Driver Side
+  doc.text("DRIVER'S SIGNATURE", margin + 5, signBaseY);
+  doc.setDrawColor(...primary);
+  doc.setLineWidth(0.5);
+  doc.line(margin, signBaseY + 10, margin + 55, signBaseY + 10);
 
-  // Right: Authorized
-  doc.text("FOR HANSARIA FOOD PVT. LTD.", pageWidth - margin - 50, signBaseY, { align: "center" });
+  // Authorized Side
+  doc.setTextColor(...primary);
+  doc.text("FOR HANSARIA FOOD PVT. LTD.", pageWidth - margin - 60, signBaseY, { align: "center" });
   
   if (sign64) {
-    doc.addImage(sign64, "PNG", pageWidth - margin - 45, signBaseY + 2, 30, 10);
+    doc.addImage(sign64, "PNG", pageWidth - margin - 50, signBaseY + 2, 35, 12);
   }
   if (stamp64) {
-    doc.setGState(new doc.GState({ opacity: 0.7 })); // Subtle transparency for stamp
-    doc.addImage(stamp64, "PNG", pageWidth - margin - 55, signBaseY - 10, 25, 25);
+    doc.setGState(new doc.GState({ opacity: 0.6 }));
+    doc.addImage(stamp64, "PNG", pageWidth - margin - 65, signBaseY - 15, 30, 30);
     doc.setGState(new doc.GState({ opacity: 1.0 }));
   }
   
-  doc.line(pageWidth - margin - 50, signBaseY + 12, pageWidth - margin, signBaseY + 12);
+  doc.setDrawColor(...primary);
+  doc.line(pageWidth - margin - 65, signBaseY + 15, pageWidth - margin, signBaseY + 15);
   doc.setFont("helvetica", "normal");
   doc.setFontSize(8);
-  doc.text("Authorized Signatory", pageWidth - margin - 25, signBaseY + 16, { align: "center" });
+  doc.setTextColor(...gray);
+  doc.text("Authorized Signatory", pageWidth - margin - 32.5, signBaseY + 20, { align: "center" });
 
-  // Bottom Footer
+  // Bottom Strip
   doc.setFillColor(...primary);
-  doc.rect(0, pageHeight - 5, pageWidth, 5, "F");
+  doc.rect(0, pageHeight - 8, pageWidth, 8, "F");
+  
+  doc.setFillColor(...secondary);
+  doc.rect(0, pageHeight - 8.5, pageWidth, 0.5, "F");
+
   doc.setTextColor(255, 255, 255);
-  doc.setFontSize(7);
-  doc.text("This is a computer generated document and does not require a physical signature.", pageWidth / 2, pageHeight - 1.5, { align: "center" });
+  doc.setFontSize(8);
+  doc.text("Terms & Conditions: This is an electronic challan. Goods received in good condition.", pageWidth / 2, pageHeight - 3, { align: "center" });
 
   return URL.createObjectURL(doc.output("blob"));
 };
