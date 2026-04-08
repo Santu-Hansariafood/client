@@ -268,30 +268,53 @@ Qty: ${item.quantity || "0"}`;
           companyData,
           getConsigneeDisplay,
         });
-        const blob = await pdf(<SaudaPDF data={pdfData} />).toBlob();
+        let blob;
+
+        try {
+          blob = await pdf(<SaudaPDF data={pdfData} />).toBlob();
+
+          if (!blob || blob.size === 0) {
+            throw new Error("Empty PDF generated");
+          }
+        } catch (err) {
+          console.error("PDF generation failed:", err);
+          toast.dismiss(toastId);
+          toast.error("Failed to generate PDF");
+          return;
+        }
 
         const fileName = `Sauda-${item.saudaNo}.pdf`;
 
-        // Always trigger a local download as a fallback/primary action
         try {
           const url = window.URL.createObjectURL(blob);
           const link = document.createElement("a");
+
           link.href = url;
           link.download = fileName;
           document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-          window.URL.revokeObjectURL(url);
-        } catch (downloadErr) {
-          console.error("Local download failed:", downloadErr);
-        }
 
+          link.dispatchEvent(
+            new MouseEvent("click", {
+              bubbles: true,
+              cancelable: true,
+              view: window,
+            }),
+          );
+
+          document.body.removeChild(link);
+
+          setTimeout(() => {
+            window.URL.revokeObjectURL(url);
+          }, 2000);
+        } catch (downloadErr) {
+          console.error("Download failed:", downloadErr);
+        }
         let shared = false;
 
         try {
-          const isMobile = /Android|iPhone|iPad|iPod/i.test(
-            navigator.userAgent,
-          );
+          const isMobile =
+            typeof navigator !== "undefined" &&
+            /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
           try {
             if (isMobile && navigator.share && typeof File !== "undefined") {
@@ -327,6 +350,10 @@ Qty: ${item.quantity || "0"}`;
             });
 
             const fileUrl = uploadRes?.data?.url || uploadRes?.data?.fileUrl;
+
+            if (!fileUrl) {
+              throw new Error("No file URL returned from upload");
+            }
 
             const newMessage = fileUrl
               ? `${message}

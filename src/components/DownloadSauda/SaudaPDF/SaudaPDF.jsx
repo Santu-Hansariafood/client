@@ -23,7 +23,9 @@ const styles = StyleSheet.create({
     left: 8,
     right: 8,
     bottom: 8,
-    border: "1 solid #1F7A3E",
+    borderWidth: 1,
+    borderColor: "#1F7A3E",
+    borderStyle: "solid",
   },
 
   innerBorder: {
@@ -32,7 +34,9 @@ const styles = StyleSheet.create({
     left: 12,
     right: 12,
     bottom: 12,
-    border: "0.5 solid #E5E7EB",
+    borderWidth: 0.5,
+    borderColor: "#E5E7EB",
+    borderStyle: "solid",
   },
 
   section: {
@@ -76,7 +80,7 @@ const styles = StyleSheet.create({
     left: "20%",
     fontSize: 60,
     color: "#F3F4F6",
-    transform: "rotate(-25deg)",
+    transform: [{ rotate: "-25deg" }],
     opacity: 0.3,
   },
 });
