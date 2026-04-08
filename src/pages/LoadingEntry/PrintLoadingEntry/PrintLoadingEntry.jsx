@@ -4,7 +4,7 @@ import axios from "axios";
 import logo from "../../../assets/Hans.png";
 import signature from "../../../assets/signature.png";
 import stamp from "../../../assets/stamp.png";
-import QRCode from "qrcode";
+// import QRCode from "qrcode";
 
 const PrintLoadingEntry = async (data) => {
   const doc = new jsPDF({
@@ -77,26 +77,20 @@ const PrintLoadingEntry = async (data) => {
   doc.setFillColor(...secondary);
   doc.rect(0, 0, 2.5, pageHeight, "F");
 
-  // --- Header ---
-  // Top Banner - Green
   doc.setFillColor(...primary);
   doc.rect(0, 0, pageWidth, 42, "F");
 
-  // Logo Area
   if (logo64) {
-    // White background for logo with slight shadow/border effect
     doc.setFillColor(255, 255, 255);
     doc.roundedRect(12, 8, 26, 26, 3, 3, "F");
     doc.addImage(logo64, "PNG", 14, 10, 22, 22);
   }
 
-  // Company Details
   doc.setTextColor(255, 255, 255);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(20);
   doc.text("HANSARIA FOOD PVT. LTD.", 44, 18);
 
-  // Subtle separator line in header
   doc.setDrawColor(255, 255, 255);
   doc.setLineWidth(0.3);
   doc.line(44, 20, 120, 20);
@@ -111,7 +105,6 @@ const PrintLoadingEntry = async (data) => {
   doc.text("Email: info@hansariafood.com | Web: www.hansariafood.com", 44, 30);
   doc.text("Contact: +91-XXXXXXXXXX | GSTIN: XXXXXXXXXXXXXXXXX", 44, 34);
 
-  // Document Title Box - Yellow
   doc.setFillColor(...secondary);
   doc.rect(pageWidth - 65, 12, 65, 12, "F");
   doc.setTextColor(...dark);
@@ -119,13 +112,10 @@ const PrintLoadingEntry = async (data) => {
   doc.setFont("helvetica", "bold");
   doc.text("LORRY CHALLAN", pageWidth - 32.5, 20, { align: "center" });
 
-  // Date & Number Area
   doc.setFontSize(8.5);
   doc.setTextColor(255, 255, 255);
   doc.text(`DATE: ${formatDate(data.loadingDate)}`, pageWidth - 14, 31, { align: "right" });
   doc.text(`CHALLAN NO: ${data.billNumber || "N/A"}`, pageWidth - 14, 36, { align: "right" });
-
-  // --- Data Fetching & Matching ---
 
   const [orders, sellers, companies, consignees] = await Promise.all([
     safeFetch("/self-order?limit=0"),
@@ -139,8 +129,6 @@ const PrintLoadingEntry = async (data) => {
   const seller = sellers.find((s) => String(s._id) === String(supplierId)) || {};
   const company = companies.find((c) => normalize(c.companyName) === normalize(data.supplierCompany)) || {};
   
-  // Robust Consignee Matching from API
-  // Check by ID first, then by exact name, then by label match
   const consignee = consignees.find((c) => 
     (c._id && String(c._id) === String(data.consignee)) || 
     normalize(c.name) === normalize(data.consignee) ||
@@ -157,7 +145,6 @@ const PrintLoadingEntry = async (data) => {
   const fullAddress = addressLines.join(", ");
 
   const addTable = (title, y, head, body, colors = primary) => {
-    // Table Title with colored block
     doc.setFillColor(...secondary);
     doc.rect(margin, y - 5, 4, 6, "F");
     
@@ -206,7 +193,6 @@ const PrintLoadingEntry = async (data) => {
 
   let currentY = 55;
 
-  // --- Parties Section ---
   currentY = addTable(
     "Parties Information",
     currentY,
@@ -220,12 +206,10 @@ const PrintLoadingEntry = async (data) => {
     primary
   );
 
-  // Delivery Address Block - Highlighted
   doc.setFillColor(...light);
   doc.setDrawColor(...secondary);
   doc.setLineWidth(0.5);
   
-  // Measure address height
   const addressText = fullAddress || "Address details not found in database. Please verify Consignee record.";
   const splitAddress = doc.splitTextToSize(addressText, pageWidth - (margin * 2) - 10);
   const addressBlockHeight = Math.max(22, (splitAddress.length * 5) + 12);
@@ -243,7 +227,6 @@ const PrintLoadingEntry = async (data) => {
   doc.text(splitAddress, margin + 5, currentY + 8);
   currentY += addressBlockHeight + 5;
 
-  // --- Transport Section ---
   currentY = addTable(
     "Transport & Goods Details",
     currentY,
@@ -273,42 +256,36 @@ const PrintLoadingEntry = async (data) => {
     primary
   );
 
-  // --- Footer Section ---
-  const footerY = pageHeight - 75;
+  // const footerY = pageHeight - 75;
   
-  // QR Code Area
-  try {
-    const qrText = `https://www.hansariafood.com`;
-    const qr = await QRCode.toDataURL(qrText);
-    const qrSize = 30;
-    const qrX = (pageWidth - qrSize) / 2;
+  // try {
+  //   const qrText = `https://www.hansariafood.com`;
+  //   const qr = await QRCode.toDataURL(qrText);
+  //   const qrSize = 30;
+  //   const qrX = (pageWidth - qrSize) / 2;
     
-    // Design around QR
-    doc.setDrawColor(...secondary);
-    doc.setLineWidth(0.5);
-    doc.roundedRect(qrX - 2, footerY - 2, qrSize + 4, qrSize + 10, 2, 2, "D");
+  //   doc.setDrawColor(...secondary);
+  //   doc.setLineWidth(0.5);
+  //   doc.roundedRect(qrX - 2, footerY - 2, qrSize + 4, qrSize + 10, 2, 2, "D");
     
-    doc.addImage(qr, "PNG", qrX, footerY, qrSize, qrSize);
-    doc.setFontSize(7.5);
-    doc.setTextColor(...primary);
-    doc.setFont("helvetica", "bold");
-    doc.text("SCAN TO VISIT WEBSITE", pageWidth / 2, footerY + qrSize + 5, { align: "center" });
-  } catch {}
+  //   doc.addImage(qr, "PNG", qrX, footerY, qrSize, qrSize);
+  //   doc.setFontSize(7.5);
+  //   doc.setTextColor(...primary);
+  //   doc.setFont("helvetica", "bold");
+  //   doc.text("SCAN TO VISIT WEBSITE", pageWidth / 2, footerY + qrSize + 5, { align: "center" });
+  // } catch {}
 
-  // Signature Blocks
   const signBaseY = pageHeight - 38;
   
   doc.setFont("helvetica", "bold");
   doc.setFontSize(9);
   doc.setTextColor(...dark);
   
-  // Driver Side
   doc.text("DRIVER'S SIGNATURE", margin + 5, signBaseY);
   doc.setDrawColor(...primary);
   doc.setLineWidth(0.5);
   doc.line(margin, signBaseY + 10, margin + 55, signBaseY + 10);
 
-  // Authorized Side
   doc.setTextColor(...primary);
   doc.text("FOR HANSARIA FOOD PVT. LTD.", pageWidth - margin - 60, signBaseY, { align: "center" });
   
@@ -328,7 +305,6 @@ const PrintLoadingEntry = async (data) => {
   doc.setTextColor(...gray);
   doc.text("Authorized Signatory", pageWidth - margin - 32.5, signBaseY + 20, { align: "center" });
 
-  // Bottom Strip
   doc.setFillColor(...primary);
   doc.rect(0, pageHeight - 8, pageWidth, 8, "F");
   
