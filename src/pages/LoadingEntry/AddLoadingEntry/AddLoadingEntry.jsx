@@ -61,6 +61,8 @@ const formatDate = (date) => {
   return isNaN(d.getTime()) ? "N/A" : d.toLocaleDateString();
 };
 
+const normalize = (str) => (str || "").toString().trim().toLowerCase();
+
 const AddLoadingEntry = () => {
   const { userRole, mobile } = useAuth();
   const [suppliers, setSuppliers] = useState([]);
@@ -162,7 +164,7 @@ const AddLoadingEntry = () => {
                 (s) =>
                   String(s.value) ===
                     String(matchedOrder.supplier?._id || matchedOrder.supplier) &&
-                  s.company === matchedOrder.supplierCompany,
+                  normalize(s.company) === normalize(matchedOrder.supplierCompany),
               );
               if (!isMyOrder) {
                 toast.error("Access denied for this Sauda.");
@@ -174,14 +176,21 @@ const AddLoadingEntry = () => {
               (s) =>
                 String(s.value) ===
                   String(matchedOrder.supplier?._id || matchedOrder.supplier) &&
-                s.company === matchedOrder.supplierCompany,
+                normalize(s.company) === normalize(matchedOrder.supplierCompany),
             );
-            if (supplierOption) setSelectedSupplier(supplierOption);
+            if (supplierOption) {
+              setSelectedSupplier(supplierOption);
+            }
 
             const consigneeOption = consignees.find(
-              (c) => normalize(c.name) === normalize(matchedOrder.consignee),
+              (c) => 
+                String(c.value) === String(matchedOrder.consignee?._id || matchedOrder.consignee) ||
+                normalize(c.name) === normalize(matchedOrder.consignee) ||
+                normalize(c.label).includes(normalize(matchedOrder.consignee)),
             );
-            if (consigneeOption) setSelectedConsignee(consigneeOption);
+            if (consigneeOption) {
+              setSelectedConsignee(consigneeOption);
+            }
 
             const processedOrder = {
               ...matchedOrder,
@@ -222,7 +231,7 @@ const AddLoadingEntry = () => {
           (order) =>
             String(order.supplier?._id || order.supplier) ===
               String(selectedSupplier.value) &&
-            order.supplierCompany === selectedSupplier.company &&
+            normalize(order.supplierCompany) === normalize(selectedSupplier.company) &&
             normalize(order.consignee) === normalize(selectedConsignee.name),
         );
 
