@@ -77,41 +77,55 @@ const PrintLoadingEntry = async (data) => {
   doc.setFillColor(...secondary);
   doc.rect(0, 0, 2.5, pageHeight, "F");
 
+  // --- Header ---
+  // Top Banner - Green
   doc.setFillColor(...primary);
   doc.rect(0, 0, pageWidth, 42, "F");
 
+  // Logo Area
   if (logo64) {
+    // White background for logo with slight shadow/border effect
     doc.setFillColor(255, 255, 255);
     doc.roundedRect(12, 8, 26, 26, 3, 3, "F");
     doc.addImage(logo64, "PNG", 14, 10, 22, 22);
   }
 
+  // Company Details
   doc.setTextColor(255, 255, 255);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(20);
   doc.text("HANSARIA FOOD PVT. LTD.", 44, 18);
 
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(10);
-  doc.setTextColor(255, 255, 255);
-  doc.text("Broker & Commission Agent | Premium Quality Food Products", 44, 24);
-  
-  doc.setFontSize(9);
-  doc.setTextColor(240, 240, 240);
-  doc.text("Email: info@hansariafood.com | Contact: +91-XXXXXXXXXX", 44, 30);
-  doc.text("GSTIN: XXXXXXXXXXXXXXXXX", 44, 35);
+  // Subtle separator line in header
+  doc.setDrawColor(255, 255, 255);
+  doc.setLineWidth(0.3);
+  doc.line(44, 20, 120, 20);
 
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(9);
+  doc.setTextColor(255, 255, 255);
+  doc.text("Broker & Commission Agent | Premium Quality Food Products", 44, 25);
+  
+  doc.setFontSize(8);
+  doc.setTextColor(240, 240, 240);
+  doc.text("Email: info@hansariafood.com | Web: www.hansariafood.com", 44, 30);
+  doc.text("Contact: +91-XXXXXXXXXX | GSTIN: XXXXXXXXXXXXXXXXX", 44, 34);
+
+  // Document Title Box - Yellow
   doc.setFillColor(...secondary);
-  doc.rect(pageWidth - 70, 12, 70, 12, "F");
+  doc.rect(pageWidth - 65, 12, 65, 12, "F");
   doc.setTextColor(...dark);
   doc.setFontSize(14);
   doc.setFont("helvetica", "bold");
-  doc.text("LORRY CHALLAN", pageWidth - 35, 20, { align: "center" });
+  doc.text("LORRY CHALLAN", pageWidth - 32.5, 20, { align: "center" });
 
-  doc.setFontSize(9);
+  // Date & Number Area
+  doc.setFontSize(8.5);
   doc.setTextColor(255, 255, 255);
-  doc.text(`DATE: ${formatDate(data.loadingDate)}`, pageWidth - 14, 32, { align: "right" });
-  doc.text(`CHALLAN NO: ${data.billNumber || "N/A"}`, pageWidth - 14, 37, { align: "right" });
+  doc.text(`DATE: ${formatDate(data.loadingDate)}`, pageWidth - 14, 31, { align: "right" });
+  doc.text(`CHALLAN NO: ${data.billNumber || "N/A"}`, pageWidth - 14, 36, { align: "right" });
+
+  // --- Data Fetching & Matching ---
 
   const [orders, sellers, companies, consignees] = await Promise.all([
     safeFetch("/self-order"),
@@ -250,24 +264,26 @@ const PrintLoadingEntry = async (data) => {
     primary
   );
 
+  // --- Footer Section ---
   const footerY = pageHeight - 75;
   
+  // QR Code Area
   try {
-    const qrText = `CHALLAN: ${data.billNumber}\nVEHICLE: ${data.lorryNumber}\nWEIGHT: ${data.loadingWeight}T\nBAL: ${balance}`;
+    const qrText = `https://www.hansariafood.com`;
     const qr = await QRCode.toDataURL(qrText);
-    const qrSize = 32;
+    const qrSize = 30;
     const qrX = (pageWidth - qrSize) / 2;
     
     // Design around QR
     doc.setDrawColor(...secondary);
-    doc.setLineWidth(0.8);
-    doc.rect(qrX - 1, footerY - 1, qrSize + 2, qrSize + 2, "D");
+    doc.setLineWidth(0.5);
+    doc.roundedRect(qrX - 2, footerY - 2, qrSize + 4, qrSize + 10, 2, 2, "D");
     
     doc.addImage(qr, "PNG", qrX, footerY, qrSize, qrSize);
     doc.setFontSize(7.5);
     doc.setTextColor(...primary);
     doc.setFont("helvetica", "bold");
-    doc.text("SCAN FOR INSTANT VERIFICATION", pageWidth / 2, footerY + qrSize + 6, { align: "center" });
+    doc.text("SCAN TO VISIT WEBSITE", pageWidth / 2, footerY + qrSize + 5, { align: "center" });
   } catch {}
 
   // Signature Blocks
