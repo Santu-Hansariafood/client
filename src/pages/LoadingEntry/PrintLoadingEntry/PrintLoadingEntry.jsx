@@ -8,237 +8,227 @@ import QRCode from "qrcode";
 
 const PrintLoadingEntry = async (data) => {
   const doc = new jsPDF();
+
   const pageWidth = doc.internal.pageSize.width;
   const pageHeight = doc.internal.pageSize.height;
 
-  const primary = [22, 163, 74];
-  const light = [240, 253, 244];
-  const darkText = [31, 41, 55];
+  const primary = [15, 23, 42];
+  const teal = [13, 148, 136];
+  const accent = [99, 102, 241];
+  const light = [248, 250, 252];
+  const gray = [100, 116, 139];
+
+  const normalize = (str) => (str || "").toString().trim().toLowerCase();
+
+  const formatDate = (date) => {
+    const d = new Date(date);
+    return isNaN(d) ? "N/A" : d.toLocaleDateString("en-IN");
+  };
+
+  const formatCurrency = (val) =>
+    `₹ ${Number(val || 0).toLocaleString("en-IN")}`;
 
   const safeFetch = async (url) => {
     try {
       const res = await axios.get(url);
       return Array.isArray(res.data) ? res.data : res.data?.data || [];
-    } catch (e) {
-      console.error(`Error fetching ${url}`, e);
+    } catch {
       return [];
     }
   };
 
-  const normalize = (str) => (str || "").toString().trim().toLowerCase();
-
-  const formatDate = (date) => {
-    if (!date) return "N/A";
-    const d = new Date(date);
-    return isNaN(d.getTime())
-      ? "N/A"
-      : d.toLocaleDateString("en-IN", {
-          day: "2-digit",
-          month: "short",
-          year: "numeric",
-        });
-  };
-
-  const formatCurrency = (val) =>
-    `Rs. ${Number(val || 0).toLocaleString("en-IN")}`;
-
-  const getBase64Image = (img) => {
-    return new Promise((resolve) => {
+  const getBase64 = (img) =>
+    new Promise((resolve) => {
       const image = new Image();
-      image.crossOrigin = "Anonymous";
       image.src = img;
+      image.crossOrigin = "Anonymous";
+
       image.onload = () => {
         const canvas = document.createElement("canvas");
         canvas.width = image.width;
         canvas.height = image.height;
-        const ctx = canvas.getContext("2d");
-        ctx.drawImage(image, 0, 0);
+        canvas.getContext("2d").drawImage(image, 0, 0);
         resolve(canvas.toDataURL("image/png"));
       };
+
       image.onerror = () => resolve(null);
     });
-  };
 
-  const [logoBase64, signBase64, stampBase64] = await Promise.all([
-    getBase64Image(logo),
-    getBase64Image(signature),
-    getBase64Image(stamp),
+  const [logo64, sign64, stamp64] = await Promise.all([
+    getBase64(logo),
+    getBase64(signature),
+    getBase64(stamp),
   ]);
 
-  doc.setFillColor(...light);
-  doc.rect(0, 0, pageWidth, 40, "F");
+  doc.setFillColor(...primary);
+  doc.rect(0, 0, pageWidth, 32, "F");
 
-  if (logoBase64) {
-    doc.addImage(logoBase64, "PNG", 14, 10, 28, 18);
+  doc.setFillColor(...teal);
+  doc.rect(0, 32, pageWidth, 6, "F");
+
+  if (logo64) {
+    doc.addImage(logo64, "PNG", 12, 6, 22, 18);
   }
 
+  doc.setTextColor(255);
+  doc.setFontSize(15);
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(16);
-  doc.setTextColor(...primary);
-  doc.text("HANSARIA FOOD PVT. LTD.", 50, 18);
+  doc.text("HANSARIA FOOD PVT. LTD.", 40, 16);
 
   doc.setFontSize(9);
-  doc.setTextColor(100);
-  doc.text("Broker & Commission Agent", 50, 24);
+  doc.setTextColor(220);
+  doc.text("Broker & Commission Agent", 40, 22);
 
-  doc.setFontSize(14);
-  doc.setTextColor(...primary);
-  doc.text("LORRY CHALLAN", pageWidth - 15, 18, { align: "right" });
+  doc.setFontSize(13);
+  doc.text("LORRY CHALLAN", pageWidth - 15, 16, { align: "right" });
 
   doc.setFontSize(8);
-  doc.setTextColor(120);
-  doc.text(`Date: ${formatDate(data.loadingDate)}`, pageWidth - 15, 24, {
+  doc.text(`Date: ${formatDate(data.loadingDate)}`, pageWidth - 15, 22, {
     align: "right",
   });
 
-  doc.setDrawColor(...primary);
-  doc.setLineWidth(0.8);
-  doc.line(15, 42, pageWidth - 15, 42);
-
-  const [ordersData, sellersData, companiesData, consigneesData] =
-    await Promise.all([
-      safeFetch("/self-order"),
-      safeFetch("/sellers"),
-      safeFetch("/seller-company"),
-      safeFetch("/consignees"),
-    ]);
+  const [orders, sellers, companies, consignees] = await Promise.all([
+    safeFetch("/self-order"),
+    safeFetch("/sellers"),
+    safeFetch("/seller-company"),
+    safeFetch("/consignees"),
+  ]);
 
   const supplierId =
     typeof data.supplier === "object" ? data.supplier?._id : data.supplier;
 
-  const buyerDetails =
-    ordersData.find((o) => o.saudaNo === data.saudaNo) || {};
+  const buyer = orders.find((o) => o.saudaNo === data.saudaNo) || {};
 
-  const sellerDetails =
-    sellersData.find((s) => String(s._id) === String(supplierId)) || {};
+  const seller =
+    sellers.find((s) => String(s._id) === String(supplierId)) || {};
 
-  const companyDetails =
-    companiesData.find(
-      (c) =>
-        normalize(c.companyName) === normalize(data.supplierCompany),
+  const company =
+    companies.find(
+      (c) => normalize(c.companyName) === normalize(data.supplierCompany),
     ) || {};
 
-  const consigneeDetails =
-    consigneesData.find(
-      (c) => normalize(c.name) === normalize(data.consignee),
-    ) || {};
+  const consignee =
+    consignees.find((c) => normalize(c.name) === normalize(data.consignee)) ||
+    {};
 
-  const addTable = (title, y, headers, body) => {
-    doc.setFontSize(10);
-    doc.setTextColor(...primary);
+  const fullAddress = [
+    consignee.location,
+    consignee.district,
+    consignee.state,
+    consignee.pin,
+  ]
+    .filter(Boolean)
+    .join(", ");
+
+  const addTable = (title, y, head, body) => {
+    doc.setTextColor(...teal);
     doc.setFont("helvetica", "bold");
-    doc.text(title, 15, y);
+    doc.text(title, 14, y);
 
     autoTable(doc, {
       startY: y + 4,
-      head: [headers],
+      head: [head],
       body: [body],
       theme: "grid",
       headStyles: {
-        fillColor: primary,
+        fillColor: teal,
         textColor: 255,
         fontSize: 8,
       },
       bodyStyles: {
         fontSize: 8,
-        textColor: darkText,
       },
-      styles: { cellPadding: 3 },
-      margin: { left: 15, right: 15 },
+      alternateRowStyles: {
+        fillColor: light,
+      },
+      margin: { left: 14, right: 14 },
     });
 
-    return doc.lastAutoTable.finalY + 8;
+    return doc.lastAutoTable.finalY + 6;
   };
 
-  let y = 50;
+  let y = 45;
 
-  y = addTable("Seller Details", y,
-    ["Seller", "GST", "Challan No", "PO No"],
+  y = addTable(
+    "Seller Details",
+    y,
+    ["Seller", "GST", "Challan", "PO"],
     [
-      sellerDetails.sellerName || "N/A",
-      companyDetails.gstNo || "N/A",
+      seller.sellerName || "N/A",
+      company.gstNo || "N/A",
       data.billNumber || "N/A",
       data.saudaNo || "N/A",
-    ]
+    ],
   );
 
-  y = addTable("Buyer & Delivery", y,
+  y = addTable(
+    "Buyer & Consignee",
+    y,
     ["Buyer", "Consignee", "Address"],
-    [
-      buyerDetails.buyer || "N/A",
-      data.consignee || "N/A",
-      `${consigneeDetails.location || "N/A"}, ${consigneeDetails.district || ""}, ${consigneeDetails.state || ""} ${consigneeDetails.pin || ""}`.replace(/, ,/g, ",").trim().replace(/,$/, ""),
-    ]
+    [buyer.buyer || "N/A", data.consignee || "N/A", fullAddress || "N/A"],
   );
 
-  y = addTable("Transport Details", y,
-    ["Product", "Bags", "Weight", "Lorry No"],
+  y = addTable(
+    "Transport",
+    y,
+    ["Product", "Bags", "Weight", "Lorry"],
     [
       data.commodity || "N/A",
       data.bags || "N/A",
-      `${Number(data.loadingWeight || 0)} Tons`,
-      (data.lorryNumber || "").toUpperCase(),
-    ]
+      `${data.loadingWeight || 0} Tons`,
+      data.lorryNumber || "N/A",
+    ],
   );
 
-  const totalFreight = Number(data.totalFreight) || 0;
-  const advance = Number(data.advance) || 0;
+  const total = Number(data.totalFreight || 0);
+  const advance = Number(data.advance || 0);
 
-  y = addTable("Freight Summary", y,
+  y = addTable(
+    "Freight",
+    y,
     ["Rate", "Total", "Advance", "Balance"],
     [
       formatCurrency(data.freightRate),
-      formatCurrency(totalFreight),
+      formatCurrency(total),
       formatCurrency(advance),
-      formatCurrency(totalFreight - advance),
-    ]
+      formatCurrency(total - advance),
+    ],
   );
 
-  const qrData = `Challan: ${data.billNumber}\nLorry: ${data.lorryNumber}\nAmount: ${totalFreight}`;
-  const qrImage = await QRCode.toDataURL(qrData);
+  try {
+    const qr = await QRCode.toDataURL(`Challan: ${data.billNumber}`);
 
-  // Add Scanner center of the page below Freight Summary with border and design
-  const qrSize = 35;
-  const qrX = (pageWidth - qrSize) / 2;
-  const qrY = y + 5;
+    const size = 30;
+    const x = (pageWidth - size) / 2;
 
-  // Draw border around QR
-  doc.setDrawColor(...primary);
-  doc.setLineWidth(0.5);
-  doc.roundedRect(qrX - 5, qrY - 5, qrSize + 10, qrSize + 15, 3, 3, "D");
+    doc.addImage(qr, "PNG", x, y + 5, size, size);
+  } catch {}
 
-  doc.addImage(qrImage, "PNG", qrX, qrY, qrSize, qrSize);
-  doc.setFontSize(8);
-  doc.setTextColor(...primary);
-  doc.text("SCAN FOR DETAILS", pageWidth / 2, qrY + qrSize + 6, { align: "center" });
+  const signY = pageHeight - 40;
 
-  let signY = pageHeight - 50;
-
-  doc.setFontSize(9);
-  doc.setTextColor(80);
+  doc.setTextColor(...gray);
   doc.text("Driver Signature", 20, signY);
-  doc.line(20, signY + 12, 70, signY + 12);
+  doc.line(20, signY + 10, 70, signY + 10);
 
-  doc.text("Authorized Signatory", pageWidth - 20, signY, { align: "right" });
+  doc.text("Authorized Signatory", pageWidth - 20, signY, {
+    align: "right",
+  });
 
-  if (signBase64) {
-    doc.addImage(signBase64, "PNG", pageWidth - 70, signY - 10, 40, 15);
+  if (sign64) {
+    doc.addImage(sign64, "PNG", pageWidth - 70, signY - 10, 35, 12);
   }
 
-  if (stampBase64) {
-    doc.addImage(stampBase64, "PNG", pageWidth - 90, signY - 5, 35, 35);
+  if (stamp64) {
+    doc.addImage(stamp64, "PNG", pageWidth - 90, signY - 5, 30, 30);
   }
 
-  doc.line(pageWidth - 70, signY + 12, pageWidth - 20, signY + 12);
+  doc.line(pageWidth - 70, signY + 10, pageWidth - 20, signY + 10);
 
   doc.setFontSize(8);
-  doc.setTextColor(120);
-  doc.text(
-    "This is a system generated document.",
-    pageWidth / 2,
-    pageHeight - 10,
-    { align: "center" }
-  );
+  doc.setTextColor(150);
+  doc.text("System Generated Document", pageWidth / 2, pageHeight - 8, {
+    align: "center",
+  });
 
   return URL.createObjectURL(doc.output("blob"));
 };
