@@ -17,10 +17,10 @@ const PrintLoadingEntry = async (data) => {
   const pageHeight = doc.internal.pageSize.height;
   const margin = 14;
 
-  const primary = [21, 128, 61]; // Professional Green (Emerald 700)
-  const secondary = [234, 179, 8]; // Vibrant Yellow (Amber 500)
-  const dark = [15, 23, 42]; // Slate 900
-  const light = [254, 252, 232]; // Very light yellow for stripe
+  const primary = [21, 128, 61];
+  const secondary = [234, 179, 8];
+  const dark = [15, 23, 42];
+  const light = [254, 252, 232];
   const gray = [71, 85, 105];
   const lightGray = [226, 232, 240];
 
@@ -36,7 +36,7 @@ const PrintLoadingEntry = async (data) => {
   };
 
   const formatCurrency = (val) =>
-    `INR ${Number(val || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}`;
+    `Rs. ${Number(val || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}`;
 
   const safeFetch = async (url) => {
     try {
@@ -71,28 +71,21 @@ const PrintLoadingEntry = async (data) => {
     getBase64(stamp),
   ]);
 
-  // --- Background Design ---
   doc.setFillColor(255, 255, 255);
   doc.rect(0, 0, pageWidth, pageHeight, "F");
   
-  // Subtle Side Accent - Yellow
   doc.setFillColor(...secondary);
   doc.rect(0, 0, 2.5, pageHeight, "F");
 
-  // --- Header ---
-  // Top Banner - Green
   doc.setFillColor(...primary);
   doc.rect(0, 0, pageWidth, 42, "F");
 
-  // Logo Area
   if (logo64) {
-    // White background for logo with slight shadow/border effect
     doc.setFillColor(255, 255, 255);
     doc.roundedRect(12, 8, 26, 26, 3, 3, "F");
     doc.addImage(logo64, "PNG", 14, 10, 22, 22);
   }
 
-  // Company Details
   doc.setTextColor(255, 255, 255);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(20);
@@ -108,7 +101,6 @@ const PrintLoadingEntry = async (data) => {
   doc.text("Email: info@hansariafood.com | Contact: +91-XXXXXXXXXX", 44, 30);
   doc.text("GSTIN: XXXXXXXXXXXXXXXXX", 44, 35);
 
-  // Document Title Box - Yellow
   doc.setFillColor(...secondary);
   doc.rect(pageWidth - 70, 12, 70, 12, "F");
   doc.setTextColor(...dark);
@@ -116,13 +108,11 @@ const PrintLoadingEntry = async (data) => {
   doc.setFont("helvetica", "bold");
   doc.text("LORRY CHALLAN", pageWidth - 35, 20, { align: "center" });
 
-  // Date & Number Area
   doc.setFontSize(9);
   doc.setTextColor(255, 255, 255);
   doc.text(`DATE: ${formatDate(data.loadingDate)}`, pageWidth - 14, 32, { align: "right" });
   doc.text(`CHALLAN NO: ${data.billNumber || "N/A"}`, pageWidth - 14, 37, { align: "right" });
 
-  // --- Data Fetching & Matching ---
   const [orders, sellers, companies, consignees] = await Promise.all([
     safeFetch("/self-order"),
     safeFetch("/sellers"),
@@ -138,7 +128,8 @@ const PrintLoadingEntry = async (data) => {
   // Robust Consignee Matching from API
   const consignee = consignees.find((c) => 
     String(c._id) === String(data.consignee) || 
-    normalize(c.name) === normalize(data.consignee)
+    normalize(c.name) === normalize(data.consignee) ||
+    normalize(c.label) === normalize(data.consignee)
   ) || {};
 
   const fullAddress = [
@@ -151,7 +142,6 @@ const PrintLoadingEntry = async (data) => {
     .join(", ");
 
   const addTable = (title, y, head, body, colors = primary) => {
-    // Table Title with colored block
     doc.setFillColor(...secondary);
     doc.rect(margin, y - 5, 4, 6, "F");
     
@@ -200,7 +190,6 @@ const PrintLoadingEntry = async (data) => {
 
   let currentY = 55;
 
-  // --- Parties Section ---
   currentY = addTable(
     "Parties Information",
     currentY,
@@ -214,7 +203,6 @@ const PrintLoadingEntry = async (data) => {
     primary
   );
 
-  // Delivery Address Block - Highlighted
   doc.setFillColor(...light);
   doc.setDrawColor(...secondary);
   doc.setLineWidth(0.5);
@@ -233,7 +221,6 @@ const PrintLoadingEntry = async (data) => {
   doc.text(splitAddress, margin + 5, currentY + 8);
   currentY += 25;
 
-  // --- Transport Section ---
   currentY = addTable(
     "Transport & Goods Details",
     currentY,
@@ -246,7 +233,6 @@ const PrintLoadingEntry = async (data) => {
     ]
   );
 
-  // --- Freight Section ---
   const total = Number(data.totalFreight || 0);
   const advance = Number(data.advance || 0);
   const balance = total - advance;
@@ -264,10 +250,8 @@ const PrintLoadingEntry = async (data) => {
     primary
   );
 
-  // --- Footer Section ---
   const footerY = pageHeight - 75;
   
-  // QR Code Area
   try {
     const qrText = `CHALLAN: ${data.billNumber}\nVEHICLE: ${data.lorryNumber}\nWEIGHT: ${data.loadingWeight}T\nBAL: ${balance}`;
     const qr = await QRCode.toDataURL(qrText);

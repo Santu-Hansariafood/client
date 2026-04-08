@@ -5,6 +5,7 @@ import { FaTruckLoading } from "react-icons/fa";
 import axios from "axios";
 import Loading from "../../../common/Loading/Loading";
 import PrintLoadingEntry from "../PrintLoadingEntry/PrintLoadingEntry";
+import { useAuth } from "../../../context/AuthContext/AuthContext";
 const DataDropdown = lazy(
   () => import("../../../common/DataDropdown/DataDropdown"),
 );
@@ -39,12 +40,14 @@ const fetchData = async (url, key) => {
           label: capitalizeWords(company),
           company: company,
           sellerName: seller.sellerName,
+          phoneNumbers: seller.phoneNumbers || [],
         })),
       );
     }
     return data.map((item) => ({
       value: item._id,
       label: capitalizeWords(item[key]),
+      ...item,
     }));
   } catch (error) {
     console.error(`Error fetching ${key}:`, error);
@@ -59,6 +62,7 @@ const formatDate = (date) => {
 };
 
 const AddLoadingEntry = () => {
+  const { userRole, mobile } = useAuth();
   const [suppliers, setSuppliers] = useState([]);
   const [consignees, setConsignees] = useState([]);
   const [selectedSupplier, setSelectedSupplier] = useState(null);
@@ -70,6 +74,14 @@ const AddLoadingEntry = () => {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [loadingEntries, setLoadingEntries] = useState([]);
   const [isSaving, setIsSaving] = useState(false);
+
+  if (userRole !== "Admin" && userRole !== "Employee" && userRole !== "Seller") {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh] text-slate-500 font-medium">
+        You do not have permission to access this page.
+      </div>
+    );
+  }
 
   const INITIAL_ENTRY = {
     loadingDate: new Date().toISOString().split("T")[0],
@@ -85,6 +97,7 @@ const AddLoadingEntry = () => {
     balance: 0,
     billNumber: "",
     dateOfIssue: new Date().toISOString().split("T")[0],
+    status: "open",
   };
 
   useEffect(() => {
@@ -106,7 +119,17 @@ const AddLoadingEntry = () => {
           name: c.name,
         }));
 
-        setSuppliers(suppliersData);
+        let filteredSuppliers = suppliersData;
+        if (userRole === "Seller") {
+          filteredSuppliers = suppliersData.filter((s) =>
+            s.phoneNumbers?.some((p) => String(p.value) === String(mobile)),
+          );
+          if (filteredSuppliers.length === 1) {
+            setSelectedSupplier(filteredSuppliers[0]);
+          }
+        }
+
+        setSuppliers(filteredSuppliers);
         setConsignees(consigneesData);
       } catch (err) {
         console.error("Error loading dropdowns:", err);
@@ -115,7 +138,7 @@ const AddLoadingEntry = () => {
       setLoading(false);
     };
     loadDropdowns();
-  }, []);
+  }, [userRole, mobile]);
 
   useEffect(() => {
     const autoFillSauda = async () => {
@@ -127,12 +150,26 @@ const AddLoadingEntry = () => {
             ? response.data
             : response.data?.data || [];
 
-          const matchedOrder = allOrders.find(
+          let matchedOrder = allOrders.find(
             (order) =>
               order.saudaNo?.toLowerCase() === trimmedSauda.toLowerCase(),
           );
 
           if (matchedOrder) {
+            // If seller, ensure they can only access their own orders
+            if (userRole === "Seller") {
+              const isMyOrder = suppliers.some(
+                (s) =>
+                  String(s.value) ===
+                    String(matchedOrder.supplier?._id || matchedOrder.supplier) &&
+                  s.company === matchedOrder.supplierCompany,
+              );
+              if (!isMyOrder) {
+                toast.error("Access denied for this Sauda.");
+                return;
+              }
+            }
+
             const supplierOption = suppliers.find(
               (s) =>
                 String(s.value) ===
@@ -142,7 +179,7 @@ const AddLoadingEntry = () => {
             if (supplierOption) setSelectedSupplier(supplierOption);
 
             const consigneeOption = consignees.find(
-              (c) => c.name === matchedOrder.consignee,
+              (c) => normalize(c.name) === normalize(matchedOrder.consignee),
             );
             if (consigneeOption) setSelectedConsignee(consigneeOption);
 
@@ -169,7 +206,7 @@ const AddLoadingEntry = () => {
 
     const timer = setTimeout(autoFillSauda, 500);
     return () => clearTimeout(timer);
-  }, [saudaSearch, suppliers, consignees]);
+  }, [saudaSearch, suppliers, consignees, userRole]);
 
   const handleSearch = async () => {
     if (selectedSupplier && selectedConsignee) {
@@ -186,7 +223,7 @@ const AddLoadingEntry = () => {
             String(order.supplier?._id || order.supplier) ===
               String(selectedSupplier.value) &&
             order.supplierCompany === selectedSupplier.company &&
-            order.consignee === selectedConsignee.name,
+            normalize(order.consignee) === normalize(selectedConsignee.name),
         );
 
         if (saudaSearch.trim()) {
@@ -228,6 +265,10 @@ const AddLoadingEntry = () => {
   };
 
   const toggleSaudaStatus = async (order) => {
+    if (userRole === "Seller") {
+      toast.error("Only Admin/Employee can change Sauda status.");
+      return;
+    }
     try {
       const newStatus = order.status === "closed" ? "active" : "closed";
       await axios.put(`/self-order/${order._id}`, { status: newStatus });
@@ -330,6 +371,7 @@ const AddLoadingEntry = () => {
           consignee: selectedOrder.consignee,
           commodity: selectedOrder.commodity,
           bags: entry.bags,
+          status: entry.status || "open",
         })),
       };
 
@@ -373,8 +415,8 @@ const AddLoadingEntry = () => {
   return (
     <Suspense fallback={<Loading />}>
       <AdminPageShell
-        title="Add Loading Entry"
-        subtitle="Select supplier and consignee to find sauda entries for loading"
+        title={userRole === "Seller" ? "Add Your Loading Entry" : "Add Loading Entry"}
+        subtitle={userRole === "Seller" ? "Create challans for your orders" : "Select supplier and consignee to find sauda entries for loading"}
         icon={FaTruckLoading}
         noContentCard
       >

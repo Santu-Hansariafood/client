@@ -203,20 +203,24 @@ const ListLoadingEntry = () => {
             >
               <MdVisibility size={18} />
             </button>
-            <button
-              onClick={() => handleEdit(entry)}
-              title="Edit"
-              className="p-1 text-green-500 hover:bg-green-100 rounded"
-            >
-              <MdEdit size={18} />
-            </button>
-            <button
-              onClick={() => handleDelete(entry._id)}
-              title="Delete"
-              className="p-1 text-red-500 hover:bg-red-100 rounded"
-            >
-              <MdDelete size={18} />
-            </button>
+            {(userRole === "Admin" || userRole === "Employee") && (
+              <>
+                <button
+                  onClick={() => handleEdit(entry)}
+                  title="Edit"
+                  className="p-1 text-green-500 hover:bg-green-100 rounded"
+                >
+                  <MdEdit size={18} />
+                </button>
+                <button
+                  onClick={() => handleDelete(entry._id)}
+                  title="Delete"
+                  className="p-1 text-red-500 hover:bg-red-100 rounded"
+                >
+                  <MdDelete size={18} />
+                </button>
+              </>
+            )}
           </div>,
           <button
             key={`download-${entry._id}`}
@@ -233,8 +237,8 @@ const ListLoadingEntry = () => {
   return (
     <React.Suspense fallback={<Loading />}>
       <AdminPageShell
-        title="Loading Entries"
-        subtitle="Search, view, edit, and download loading entry documents"
+        title={userRole === "Seller" ? "Your Loading Entries" : "Loading Entries"}
+        subtitle={userRole === "Seller" ? "View and download your loading documents" : "Search, view, edit, and download loading entry documents"}
         icon={FaClipboardList}
         noContentCard
       >
