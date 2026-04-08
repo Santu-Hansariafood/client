@@ -36,7 +36,6 @@ const API_URL = "/self-order";
 const SelfOrderList = () => {
   const navigate = useNavigate();
   const { userRole, mobile } = useAuth();
-  const [, setData] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
   const [consigneeMap, setConsigneeMap] = useState(new Map());
   const [consigneeData, setConsigneeData] = useState([]);
@@ -164,7 +163,7 @@ const SelfOrderList = () => {
           return bSauda - aSauda;
         });
 
-        setData(filteredOrders);
+        
         setFilteredData(filteredOrders);
         setTotalItems(total);
 
@@ -310,32 +309,32 @@ const SelfOrderList = () => {
         } catch (downloadErr) {
           console.error("Download failed:", downloadErr);
         }
-        let shared = false;
+        
 
-        const isMobile =
-          typeof navigator !== "undefined" &&
-          /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(
-            navigator.userAgent,
-          );
+        // const isMobile =
+        //   typeof navigator !== "undefined" &&
+        //   /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(
+        //     navigator.userAgent,
+        //   );
 
-        if (isMobile && navigator.share && typeof File !== "undefined") {
-          try {
-            const file = new File([blob], fileName, {
-              type: "application/pdf",
-            });
+        // if (isMobile && navigator.share && typeof File !== "undefined") {
+        //   try {
+        //     const formData = new FormData();
+        //     formData.append("file", blob, fileName);
 
-            await navigator.share({
-              files: [file],
-              text: message,
-              title: fileName,
-            });
+        //     const uploadRes = await axios.post("/upload-pdf", formData);
+        //     const fileUrl = uploadRes?.data?.url || uploadRes?.data?.fileUrl;
 
-            toast.success("Select WhatsApp and send PDF");
-            return;
-          } catch (err) {
-            return;
-          }
-        }
+        //     const finalMessage = fileUrl
+        //       ? `${message}\n\nDownload PDF: ${fileUrl}`
+        //       : message;
+
+        //     const whatsappUrl = `https://wa.me/${finalMobile}?text=${encodeURIComponent(finalMessage)}`;
+        //     window.open(whatsappUrl, "_blank");
+        //   } catch (err) {
+        //     return;
+        //   }
+        // }
 
         let finalMessage = message;
 
@@ -381,7 +380,7 @@ const SelfOrderList = () => {
         }
 
         toast.dismiss(toastId);
-        toast.success("Select WhatsApp to send PDF");
+        
       } catch (error) {
         toast.dismiss(toastId);
         console.error(error);
@@ -444,15 +443,13 @@ const SelfOrderList = () => {
         "Date",
         "Sauda No",
         "PO Number",
-        userRole === "Admin" || userRole === "Employee" ? "Buyer" : null,
         "Buyer Company",
         userRole === "Admin" ? "Mobile" : null,
         "Consignee",
         "Commodity",
         "Quantity",
         "Rate",
-        "Loading Station",
-        "Location",
+        "Seller",
         "Agent Name",
         userRole === "Admin" || userRole === "Employee" ? "Buyer Emails" : null,
         userRole === "Admin" || userRole === "Employee"
@@ -517,16 +514,24 @@ const SelfOrderList = () => {
           formattedDate,
           item.saudaNo || "N/A",
           item.poNumber || "N/A",
-          userRole === "Admin" || userRole === "Employee"
-            ? item.buyer || "N/A"
-            : null,
           item.buyerCompany || "N/A",
           userRole === "Admin" ? (
             <div className="flex items-center gap-2" key={`mobile-${item._id}`}>
               <span>{item.buyerMobile || "N/A"}</span>
               {item.buyerMobile && (
                 <button
-                  onClick={() => handleSmartWhatsApp(item, "buyer")}
+                  onClick={() => {
+                    const isMobile =
+                      typeof navigator !== "undefined" &&
+                      /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(
+                        navigator.userAgent,
+                      );
+                    if (isMobile) {
+                      openWhatsAppChat(item.buyerMobile, item);
+                    } else {
+                      handleSmartWhatsApp(item, "buyer");
+                    }
+                  }}
                   className="text-slate-400 hover:text-green-500"
                   title="Chat on WhatsApp"
                 >
@@ -539,8 +544,28 @@ const SelfOrderList = () => {
           item.commodity || "N/A",
           item.quantity || "0",
           item.rate || "0",
-          item.loadingStation || "N/A",
-          item.location || "N/A",
+          (
+            <div className="flex items-center gap-2" key={`sellername-${item._id}`}>
+              <span className="font-semibold text-slate-700">
+                {item?.supplier?.sellerName || item.supplierCompany || "N/A"}
+              </span>
+              <DownloadSauda
+                data={{ ...item, consignee: getConsigneeDisplay(item) }}
+                consigneeData={consigneeData}
+                supplierData={supplierData}
+                buyerData={buyerData}
+                sellerProfileData={sellerProfileData}
+                button={
+                  <button
+                    className="w-7 h-7 rounded-md bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition-colors"
+                    title="Download Sauda"
+                  >
+                    <FaDownload size={14} />
+                  </button>
+                }
+              />
+            </div>
+          ),
           item.agentName || "N/A",
           userRole === "Admin" || userRole === "Employee"
             ? item.buyerEmails?.filter(Boolean).join(", ") || "N/A"
@@ -556,7 +581,18 @@ const SelfOrderList = () => {
                 </span>
                 {item.sellerMobile && userRole === "Admin" && (
                   <button
-                    onClick={() => handleSmartWhatsApp(item, "seller")}
+                    onClick={() => {
+                      const isMobile =
+                        typeof navigator !== "undefined" &&
+                        /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(
+                          navigator.userAgent,
+                        );
+                      if (isMobile) {
+                        openWhatsAppChat(item.sellerMobile, item);
+                      } else {
+                        handleSmartWhatsApp(item, "seller");
+                      }
+                    }}
                     className="text-slate-400 hover:text-green-500"
                     title="Chat on WhatsApp"
                   >
@@ -580,31 +616,27 @@ const SelfOrderList = () => {
             </div>
           ) : null,
           userRole === "Admin" || userRole === "Employee" ? (
-            <div
-              className="flex flex-col gap-2 items-start min-w-[120px]"
-              key={`actions-${item._id}`}
-            >
+            <div className="flex items-center gap-2 min-w-[160px]" key={`actions-${item._id}`}>
               <Actions
                 onView={() => handleView(item)}
                 onEdit={() => handleEdit(item)}
                 onDelete={() => handleDelete(item)}
               />
-
-              <div className="flex gap-2">
-                <DownloadSauda
-                  data={{ ...item, consignee: getConsigneeDisplay(item) }}
-                  consigneeData={consigneeData}
-                  supplierData={supplierData}
-                  buyerData={buyerData}
-                  sellerProfileData={sellerProfileData}
-                  autoEmail
-                  button={
-                    <button className="w-9 h-9 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition-colors">
-                      <FaDownload size={16} />
-                    </button>
-                  }
-                />
-              </div>
+              <DownloadSauda
+                data={{ ...item, consignee: getConsigneeDisplay(item) }}
+                consigneeData={consigneeData}
+                supplierData={supplierData}
+                buyerData={buyerData}
+                sellerProfileData={sellerProfileData}
+                button={
+                  <button
+                    className="w-9 h-9 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition-colors"
+                    title="Download Sauda"
+                  >
+                    <FaDownload size={16} />
+                  </button>
+                }
+              />
             </div>
           ) : null,
         ].filter(Boolean);
