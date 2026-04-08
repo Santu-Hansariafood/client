@@ -319,8 +319,7 @@ const SelfOrder = () => {
             <BuyerInformation
               formData={formData}
               handleChange={handleChange}
-              buyerOptions={buyerOptions}
-              companyOptions={companyOptions}
+              buyers={buyerOptions}
             />
           </div>
 

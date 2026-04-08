@@ -26,7 +26,7 @@ const SupplierBidList = () => {
   const [bids, setBids] = useState([]);
   const [participations, setParticipations] = useState([]);
   const [participantCounts, setParticipantCounts] = useState({});
-  const [activeTab, setActiveTab] = useState("all"); // "all", "active", "participated", "closed"
+  const [activeTab, setActiveTab] = useState("active"); // "active", "participated", "closed", "accepted", "rejected"
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
@@ -205,27 +205,18 @@ const SupplierBidList = () => {
   };
 
   const filteredBids = useMemo(() => {
-    const currentTime = serverNow ? new Date(serverNow) : nowTime;
-    const todayStr = Number.isNaN(currentTime.getTime())
-      ? nowTime.toISOString().split("T")[0]
-      : currentTime.toISOString().split("T")[0];
-
     return bids
       .filter((bid) => {
-        const bidDateStr = bid.bidDate ? bid.bidDate.split("T")[0] : "";
-
-        if (bidDateStr !== todayStr) {
-          return false;
-        }
-
         const bidEndDateTime = getBidEndDateTime(bid);
-        if (!bidEndDateTime) return false;
+        if (!bidEndDateTime && bid.status === "active") return true;
+        if (!bidEndDateTime && bid.status !== "active") return false;
+
         const isParticipated = participations.some((p) => p.bidId === bid._id);
         const isClosed = bid.status === "closed";
+        const participation = participations.find((p) => p.bidId === bid._id);
+        const isAccepted = participation?.status === "accepted";
+        const isRejected = participation?.status === "rejected";
 
-        if (activeTab === "all") {
-          return true;
-        }
         if (activeTab === "active") {
           return bid.status === "active";
         }
@@ -235,6 +226,12 @@ const SupplierBidList = () => {
         if (activeTab === "closed") {
           return isClosed;
         }
+        if (activeTab === "accepted") {
+          return isAccepted;
+        }
+        if (activeTab === "rejected") {
+          return isRejected;
+        }
         return false;
       })
       .sort((a, b) => {
@@ -242,7 +239,7 @@ const SupplierBidList = () => {
         const bEnd = getBidEndDateTime(b)?.getTime() ?? 0;
         return bEnd - aEnd;
       });
-  }, [bids, participations, activeTab, nowTime, serverNow]);
+  }, [bids, participations, activeTab]);
 
   const normalizeGroupName = useCallback(
     (value) => String(value ?? "").trim() || "Ungrouped",
@@ -619,17 +616,7 @@ const SupplierBidList = () => {
               </p>
             </div>
           )}
-          <div className="flex bg-slate-100 p-1 rounded-xl w-fit mb-6">
-            <button
-              onClick={() => setActiveTab("all")}
-              className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${
-                activeTab === "all"
-                  ? "bg-white text-slate-800 shadow-sm"
-                  : "text-slate-500 hover:text-slate-700"
-              }`}
-            >
-              Today Bids
-            </button>
+          <div className="flex flex-wrap gap-2 sm:gap-4 p-1.5 bg-slate-100 rounded-xl mb-6">
             <button
               onClick={() => setActiveTab("active")}
               className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${
@@ -638,17 +625,7 @@ const SupplierBidList = () => {
                   : "text-slate-500 hover:text-slate-700"
               }`}
             >
-              Active Bids
-            </button>
-            <button
-              onClick={() => setActiveTab("participated")}
-              className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${
-                activeTab === "participated"
-                  ? "bg-white text-blue-700 shadow-sm"
-                  : "text-slate-500 hover:text-slate-700"
-              }`}
-            >
-              Participated
+              active bid
             </button>
             <button
               onClick={() => setActiveTab("closed")}
@@ -658,7 +635,37 @@ const SupplierBidList = () => {
                   : "text-slate-500 hover:text-slate-700"
               }`}
             >
-              Closed Bids
+              closed
+            </button>
+            <button
+              onClick={() => setActiveTab("participated")}
+              className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${
+                activeTab === "participated"
+                  ? "bg-white text-blue-700 shadow-sm"
+                  : "text-slate-500 hover:text-slate-700"
+              }`}
+            >
+              participate
+            </button>
+            <button
+              onClick={() => setActiveTab("accepted")}
+              className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${
+                activeTab === "accepted"
+                  ? "bg-white text-green-700 shadow-sm"
+                  : "text-slate-500 hover:text-slate-700"
+              }`}
+            >
+              accepted
+            </button>
+            <button
+              onClick={() => setActiveTab("rejected")}
+              className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${
+                activeTab === "rejected"
+                  ? "bg-white text-red-500 shadow-sm"
+                  : "text-slate-500 hover:text-slate-700"
+              }`}
+            >
+              rejected
             </button>
           </div>
 

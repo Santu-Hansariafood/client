@@ -37,13 +37,35 @@ const Header = ({
       const response = await axios.get("/notifications", {
         params: { mobile, role: userRole, unreadOnly: unreadOnly },
       });
+      
+      // If we have new unread notifications, show a browser notification
+      if (response.data.length > notifications.length) {
+        const newNotifications = response.data.filter(
+          (n) => !notifications.find((oldN) => oldN._id === n._id)
+        );
+        
+        if (newNotifications.length > 0 && Notification.permission === "granted") {
+          newNotifications.forEach((n) => {
+            new window.Notification(n.title, {
+              body: n.message,
+              icon: "/logo/logo.png", // Ensure this path is correct
+            });
+          });
+        }
+      }
+      
       setNotifications(response.data);
     } catch (error) {
       console.error("Failed to fetch notifications", error);
     }
-  }, [mobile, userRole, unreadOnly]);
+  }, [mobile, userRole, unreadOnly, notifications]);
 
   useEffect(() => {
+    // Request notification permission on mount
+    if ("Notification" in window && Notification.permission === "default") {
+      Notification.requestPermission();
+    }
+    
     fetchNotifications();
     const interval = setInterval(fetchNotifications, 30000); // Poll every 30s
     return () => clearInterval(interval);

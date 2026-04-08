@@ -123,7 +123,7 @@ const SellerDashboard = () => {
 
   const dashboardData = [
     {
-      title: "Your Bids",
+      title: "todays Buying",
       count: sellerBidCount,
       icon: FaGavel,
       link: "/Supplier-Bid-List",

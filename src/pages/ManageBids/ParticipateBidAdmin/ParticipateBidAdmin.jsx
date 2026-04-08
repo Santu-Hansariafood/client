@@ -158,6 +158,7 @@ const ParticipateBidAdmin = () => {
           date: pBid.createdAt || pBid.participationDate,
           quantities: 0,
           acceptanceQuantity: 0,
+          acceptanceRate: 0,
           mobiles: new Set(),
           sellers: new Set(),
         };
@@ -165,6 +166,7 @@ const ParticipateBidAdmin = () => {
       groupedBids[pBid.bidId].mobiles.add(pBid.mobile);
       groupedBids[pBid.bidId].quantities += (pBid.quantity || 0);
       groupedBids[pBid.bidId].acceptanceQuantity += (pBid.acceptedQuantity || 0);
+      if (pBid.acceptedRate) groupedBids[pBid.bidId].acceptanceRate = pBid.acceptedRate;
       
       const sellerLabel =
         pBid.sellerName && pBid.sellerName.trim().length > 0
@@ -188,6 +190,7 @@ const ParticipateBidAdmin = () => {
     "Party Qty",
     "Party Rate",
     "Acceptance Qty",
+    "Acceptance Rate",
     "Interactions",
   ];
 
@@ -212,6 +215,7 @@ const ParticipateBidAdmin = () => {
     bid.quantities,
     bid.rate,
     `${bid.acceptanceQuantity} Tons`,
+    bid.acceptanceRate ? `₹${bid.acceptanceRate}` : "N/A",
     <button
       key={bid.bidId}
       type="button"

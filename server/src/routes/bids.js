@@ -76,11 +76,24 @@ router.get("/supplier-today", async (req, res) => {
     const end = new Date(`${dayStr}T00:00:00.000Z`);
     end.setUTCDate(end.getUTCDate() + 1);
 
+    const myParticipationsAll = await ParticipateBid.find({ mobile }).lean();
+    const myParticipatedBidIds = myParticipationsAll.map(p => p.bidId);
+
     const bids = await Bid.find({
-      bidDate: { $gte: start, $lt: end },
-      ...(sellerCommodities.length > 0
-        ? { commodity: { $in: sellerCommodities } }
-        : {}),
+      $or: [
+        { _id: { $in: myParticipatedBidIds } },
+        {
+          $and: [
+            { commodity: { $in: sellerCommodities } },
+            {
+              $or: [
+                { bidDate: { $gte: start, $lt: end } },
+                { status: "active" }
+              ]
+            }
+          ]
+        }
+      ]
     })
       .select(
         "_id type group consignee origin commodity parameters notes quantity rate bidDate startTime endTime paymentTerms delivery company unit status closedAt createdByMobile createdByRole",
@@ -90,11 +103,9 @@ router.get("/supplier-today", async (req, res) => {
 
     const bidIds = bids.map((b) => b._id);
 
-    const myParticipations = bidIds.length
-      ? await ParticipateBid.find({ mobile, bidId: { $in: bidIds } })
-          .sort({ createdAt: -1 })
-          .lean()
-      : [];
+    const myParticipations = myParticipationsAll.filter(p => 
+      bidIds.some(bidId => String(bidId) === String(p.bidId))
+    );
 
     const participantCountsAgg = bidIds.length
       ? await ParticipateBid.aggregate([
@@ -196,6 +207,36 @@ router.post("/", async (req, res) => {
       status: finalStatus,
       closedAt,
     });
+
+    // Notify relevant sellers
+    try {
+      const sellers = await Seller.find({
+        "commodities.name": item.commodity,
+      }).lean();
+
+      if (sellers.length > 0) {
+        const notifications = sellers.flatMap((seller) => {
+          const phones = Array.isArray(seller.phoneNumbers)
+            ? seller.phoneNumbers.map((p) => p.value).filter(Boolean)
+            : [];
+          return phones.map((phone) => ({
+            recipient: phone,
+            recipientRole: "Seller",
+            title: "New Bid Available",
+            message: `New bid for ${item.commodity} (${item.origin} → ${item.consignee}) is now active. Check details and participate!`,
+            type: "BidParticipation", // Or a new type if preferred
+            relatedId: item._id,
+          }));
+        });
+
+        if (notifications.length > 0) {
+          await Notification.insertMany(notifications);
+        }
+      }
+    } catch (notifyError) {
+      console.error("Error creating bid notifications:", notifyError);
+    }
+
     invalidate("/api/bids");
     res.status(201).json(item);
   } catch (error) {

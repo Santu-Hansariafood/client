@@ -27,12 +27,14 @@ const SupplierInformation = ({
   const [selectedSupplier, setSelectedSupplier] = useState(null);
 
   useEffect(() => {
-    if (formData.supplier && !selectedSupplier) {
+    if (formData.supplier) {
       const supplierId =
         typeof formData.supplier === "object"
           ? formData.supplier._id
           : formData.supplier;
-      setSelectedSupplier(supplierId);
+      if (supplierId !== selectedSupplier) {
+        setSelectedSupplier(supplierId);
+      }
     }
   }, [formData.supplier, selectedSupplier]);
 

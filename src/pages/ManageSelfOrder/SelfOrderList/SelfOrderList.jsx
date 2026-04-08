@@ -272,6 +272,20 @@ Qty: ${item.quantity || "0"}`;
 
         const fileName = `Sauda-${item.saudaNo}.pdf`;
 
+        // Always trigger a local download as a fallback/primary action
+        try {
+          const url = window.URL.createObjectURL(blob);
+          const link = document.createElement("a");
+          link.href = url;
+          link.download = fileName;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          window.URL.revokeObjectURL(url);
+        } catch (downloadErr) {
+          console.error("Local download failed:", downloadErr);
+        }
+
         let shared = false;
 
         try {

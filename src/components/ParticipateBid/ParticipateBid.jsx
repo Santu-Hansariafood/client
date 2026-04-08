@@ -61,6 +61,8 @@ const ParticipateBid = () => {
           rate: bid.rate || "N/A",
           participationRate: participation.rate || "N/A",
           participationQuantity: participation.quantity || "N/A",
+          acceptedRate: participation.acceptedRate,
+          acceptedQuantity: participation.acceptedQuantity,
           deliveryDate: participation.deliveryDate
             ? new Date(participation.deliveryDate).toLocaleDateString()
             : "N/A",
@@ -84,6 +86,8 @@ const ParticipateBid = () => {
         item.rate,
         item.participationRate,
         item.participationQuantity,
+        item.acceptedRate || "N/A",
+        item.acceptedQuantity || "N/A",
         item.deliveryDate,
         item.paymentTerms,
         item.participationDate,
@@ -104,6 +108,8 @@ const ParticipateBid = () => {
     "Bid Rate",
     "Participation Rate",
     "Participation Quantity",
+    "Accepted Rate",
+    "Accepted Quantity",
     "Delivery Date",
     "Payment Terms",
     "Participation Date",

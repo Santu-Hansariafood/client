@@ -1,4 +1,4 @@
-import { lazy, Suspense, useState, useEffect } from "react";
+import { lazy, Suspense, useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -7,7 +7,6 @@ import Loading from "../../../common/Loading/Loading";
 import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
 import { FaEdit } from "react-icons/fa";
 import regexPatterns from "../../../utils/regexPatterns/regexPatterns";
-import { sendSaudaOrderEmails } from "../../../utils/saudaPdf/sendSaudaOrderEmails";
 import { fetchAllPages } from "../../../utils/apiClient/fetchAllPages";
 
 const BuyerInformation = lazy(
@@ -38,6 +37,8 @@ const LoadingStation = lazy(
 );
 const DataInput = lazy(() => import("../../../common/DataInput/DataInput"));
 
+const API_BASE_URL = "/self-order";
+
 const INITIAL_FORM_DATA = {
   buyer: "",
   companyId: null,
@@ -49,7 +50,7 @@ const INITIAL_FORM_DATA = {
   commodity: "",
   parameters: [],
   poNumber: "",
-  poDate: new Date(),
+  poDate: null,
   state: "",
   location: "",
   quantity: "",
@@ -61,8 +62,8 @@ const INITIAL_FORM_DATA = {
   supplier: "",
   supplierCompany: "",
   paymentTerms: "",
-  deliveryDate: new Date(),
-  loadingDate: new Date(),
+  deliveryDate: null,
+  loadingDate: null,
   notes: [""],
   broker: "",
   agentName: "",
@@ -88,6 +89,8 @@ const EditSelfOrder = () => {
   const [buyers, setBuyers] = useState(state?.buyerData || []);
   const [suppliers, setSuppliers] = useState(state?.supplierData || []);
   const [sellerCompanies, setSellerCompanies] = useState([]);
+  
+  const abortControllerRef = useRef(null);
 
   useEffect(() => {
     if (formData.commodity) {
@@ -118,27 +121,9 @@ const EditSelfOrder = () => {
     formData.buyerBrokerage,
   ]);
 
-  const API_BASE_URL = "/self-order";
-
   useEffect(() => {
     const orderFromState = state?.orderData;
-    if (orderFromState) {
-      setFormData({
-        ...INITIAL_FORM_DATA,
-        ...orderFromState,
-        consignee: orderFromState.consignee || "",
-        poDate: orderFromState.poDate
-          ? new Date(orderFromState.poDate)
-          : new Date(),
-        deliveryDate: orderFromState.deliveryDate
-          ? new Date(orderFromState.deliveryDate)
-          : new Date(),
-        loadingDate: orderFromState.loadingDate
-          ? new Date(orderFromState.loadingDate)
-          : new Date(),
-      });
-    }
-
+    
     if (!id && !orderFromState) {
       toast.error("Missing order id. Open edit from the order list.");
       navigate("/manage-order/list-self-order", { replace: true });
@@ -146,11 +131,17 @@ const EditSelfOrder = () => {
     }
 
     const fetchData = async () => {
+      // Abort previous request if any
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+      abortControllerRef.current = new AbortController();
+
       setIsFetching(true);
       try {
         const orderPromise =
           !orderFromState && id
-            ? axios.get(`${API_BASE_URL}/${id}`)
+            ? axios.get(`${API_BASE_URL}/${id}`, { signal: abortControllerRef.current.signal })
             : Promise.resolve({ data: orderFromState });
 
         const [
@@ -167,8 +158,8 @@ const EditSelfOrder = () => {
           fetchAllPages("/seller-company", { limit: 200 }).catch(() => []),
         ]);
 
-        if (!orderFromState) {
-          const data = orderRes.data;
+        const data = orderRes.data;
+        if (data) {
           setFormData({
             ...INITIAL_FORM_DATA,
             ...data,
@@ -188,6 +179,7 @@ const EditSelfOrder = () => {
         setSuppliers(suppliersRows);
         setSellerCompanies(sellerCompaniesRows);
       } catch (error) {
+        if (axios.isCancel(error)) return;
         console.error("Error fetching data:", error);
         toast.error("Failed to fetch required data.");
       } finally {
@@ -196,9 +188,15 @@ const EditSelfOrder = () => {
     };
 
     fetchData();
+
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
   }, [id, navigate, state?.orderData]);
 
-  const handleChange = (field, value) => {
+  const handleChange = useCallback((field, value) => {
     if (field === "buyerBrokerageMap") {
       setBuyerBrokerageMap(value || {});
       return;
@@ -217,9 +215,9 @@ const EditSelfOrder = () => {
       }
       return { ...prev, [field]: value };
     });
-  };
+  }, []);
 
-  const validateFormData = () => {
+  const validateFormData = useCallback(() => {
     const errors = [];
     if (!formData.buyer) errors.push("Buyer name is required.");
     if (!formData.saudaNo) errors.push("Sauda No is required.");
@@ -228,7 +226,7 @@ const EditSelfOrder = () => {
 
     if (formData.commodity) {
       const buyerCommodities = formData.buyerCommodity || [];
-      const supplierCommodities = formData.supplierBrokerage || []; // This comes from SupplierInformation.jsx
+      const supplierCommodities = formData.supplierBrokerage || [];
 
       const buyerHasCommodity = buyerCommodities.some(
         (c) => (typeof c === "string" ? c : c.name) === formData.commodity,
@@ -265,9 +263,9 @@ const EditSelfOrder = () => {
       return false;
     }
     return true;
-  };
+  }, [formData]);
 
-  const handleSubmit = async () => {
+  const handleSubmit = useCallback(async () => {
     if (!validateFormData()) return;
     if (!id) {
       toast.error("Cannot update: missing order id.");
@@ -293,14 +291,7 @@ const EditSelfOrder = () => {
         },
       };
 
-      const response = await axios.put(`${API_BASE_URL}/${id}`, payload);
-      const updatedOrder = response?.data || payload;
-
-      try {
-        await sendSaudaOrderEmails(updatedOrder);
-      } catch (emailError) {
-        console.error("Auto email error:", emailError);
-      }
+      await axios.put(`${API_BASE_URL}/${id}`, payload);
 
       toast.success("Order updated successfully! Redirecting...", {
         position: "top-right",
@@ -312,13 +303,12 @@ const EditSelfOrder = () => {
         "Update Order API Error:",
         error.response?.data || error.message,
       );
-      toast.error(
-        `Failed to update order: ${error.response?.data?.message || error.message}`,
-      );
+      const errorMsg = error.response?.data?.message || error.message || "Failed to update order";
+      toast.error(`Update failed: ${errorMsg}`);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [formData, id, navigate, validateFormData]);
 
   if (isFetching) return <Loading />;
 
@@ -421,18 +411,18 @@ const EditSelfOrder = () => {
             </div>
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-3">
+          <div className="flex flex-col sm:flex-row gap-3 pb-8">
             <button
               type="button"
               onClick={() => navigate("/manage-order/list-self-order")}
-              className="flex-1 py-3 rounded-xl font-semibold bg-slate-100 text-slate-700 border border-slate-200 hover:bg-slate-200 transition-colors"
+              className="flex-1 py-3.5 rounded-xl font-bold bg-slate-100 text-slate-600 border border-slate-200 hover:bg-slate-200 transition-all duration-200"
             >
               Cancel
             </button>
             <button
               type="button"
               onClick={handleSubmit}
-              className="flex-1 py-3 rounded-xl font-semibold bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-60 transition-colors"
+              className="flex-1 py-3.5 rounded-xl font-bold bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-emerald-600/20 transition-all duration-200"
               disabled={isLoading}
             >
               {isLoading ? "Updating…" : "Update order"}
@@ -458,3 +448,4 @@ const EditSelfOrder = () => {
 };
 
 export default EditSelfOrder;
+
