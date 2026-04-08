@@ -246,19 +246,20 @@ const SelfOrderList = () => {
           return;
         }
 
-        const finalMobile =
-          cleanMobile.length === 10
-            ? `91${cleanMobile}`
-            : cleanMobile.startsWith("91")
-              ? cleanMobile
-              : cleanMobile;
+        let finalMobile = cleanMobile;
+
+        if (finalMobile.length === 10) {
+          finalMobile = `91${finalMobile}`;
+        }
+
+        finalMobile = finalMobile.replace(/^0+/, "");
 
         const message = `Sauda No: ${item.saudaNo || "N/A"}
-PO: ${item.poNumber || "N/A"}
-Buyer: ${item.buyerCompany || item.buyer || "N/A"}
-Supplier: ${item.supplierCompany || item.supplier || "N/A"}
-Commodity: ${item.commodity || "N/A"}
-Qty: ${item.quantity || "0"}`;
+  PO: ${item.poNumber || "N/A"}
+  Buyer: ${item.buyerCompany || item.buyer || "N/A"}
+  Supplier: ${item.supplierCompany || item.supplier || "N/A"}
+  Commodity: ${item.commodity || "N/A"}
+  Qty: ${item.quantity || "0"}`;
 
         const pdfData = buildSaudaPdfData({
           item,
@@ -311,74 +312,55 @@ Qty: ${item.quantity || "0"}`;
         }
         let shared = false;
 
-        try {
-          const isMobile =
-            typeof navigator !== "undefined" &&
-            /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+        const isMobile =
+          typeof navigator !== "undefined" &&
+          /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(
+            navigator.userAgent,
+          );
 
+        if (isMobile && navigator.share && typeof File !== "undefined") {
           try {
-            if (isMobile && navigator.share && typeof File !== "undefined") {
-              const file = new File([blob], fileName, {
-                type: "application/pdf",
-              });
-
-              await navigator.share({
-                files: [file],
-                text: message,
-                title: fileName,
-              });
-
-              toast.dismiss(toastId);
-              toast.success("Tap WhatsApp and send");
-
-              return;
-            }
-          } catch (err) {
-            console.error("Web Share failed:", err);
-          }
-        } catch (err) {
-          console.error("Share failed:", err);
-        }
-
-        if (!shared) {
-          try {
-            const formData = new FormData();
-            formData.append("file", blob, fileName);
-
-            const uploadRes = await axios.post("/upload-pdf", formData, {
-              headers: { "Content-Type": "multipart/form-data" },
+            const file = new File([blob], fileName, {
+              type: "application/pdf",
             });
 
-            const fileUrl = uploadRes?.data?.url || uploadRes?.data?.fileUrl;
+            await navigator.share({
+              files: [file],
+              text: message,
+              title: fileName,
+            });
 
-            if (!fileUrl) {
-              throw new Error("No file URL returned from upload");
-            }
-
-            const newMessage = fileUrl
-              ? `${message}
-
-Download PDF: ${fileUrl}`
-              : message;
-
-            const url = `https://wa.me/${finalMobile}?text=${encodeURIComponent(
-              newMessage,
-            )}`;
-
-            window.open(url, "_blank");
+            toast.success("Select WhatsApp and send PDF");
+            return;
           } catch (err) {
-            console.error("Upload failed:", err);
-            toast.error(
-              err?.response?.data?.message ||
-                "Failed to upload PDF for WhatsApp. Sending text only.",
-            );
-
-            const url = `https://wa.me/${finalMobile}?text=${encodeURIComponent(
-              message,
-            )}`;
-            window.open(url, "_blank");
+            return;
           }
         }
+
+        let finalMessage = message;
+
+        try {
+          const formData = new FormData();
+          formData.append("file", blob, fileName);
+
+          const uploadRes = await axios.post("/upload-pdf", formData, {
+            headers: { "Content-Type": "multipart/form-data" },
+          });
+
+          const fileUrl = uploadRes?.data?.url || uploadRes?.data?.fileUrl;
+
+          if (fileUrl) {
+            finalMessage = `${message}\n\nDownload PDF: ${fileUrl}`;
+          }
+        } catch (err) {
+          console.error("Upload failed:", err);
+          toast.error("PDF upload failed, sending text only");
+        }
+
+        const whatsappUrl = `https://wa.me/${finalMobile}?text=${encodeURIComponent(finalMessage)}`;
+        window.open(whatsappUrl, "_blank");
+
+        toast.success("Opening WhatsApp...");
 
         try {
           await axios.patch(`/self-order/${item._id}/whatsapp-sent`);
@@ -432,20 +414,18 @@ Download PDF: ${fileUrl}`
       return;
     }
 
-    const finalMobile =
-      cleanMobile.length === 10
-        ? `91${cleanMobile}`
-        : cleanMobile.startsWith("91")
-          ? cleanMobile
-          : cleanMobile;
+    let finalMobile = cleanMobile;
+    if (finalMobile.length === 10) {
+      finalMobile = `91${finalMobile}`;
+    }
 
+    finalMobile = finalMobile.replace(/^0+/, "");
     const message = `Hello, regarding Sauda No: ${item?.saudaNo || ""}`;
 
-    const url = `https://wa.me/${finalMobile}?text=${encodeURIComponent(
-      message,
-    )}`;
+    const fallbackMessage = message;
 
-    window.open(url, "_blank");
+    const whatsappUrl = `https://wa.me/${finalMobile}?text=${encodeURIComponent(fallbackMessage)}`;
+    window.open(whatsappUrl, "_blank");
   }, []);
 
   const handleView = useCallback(
