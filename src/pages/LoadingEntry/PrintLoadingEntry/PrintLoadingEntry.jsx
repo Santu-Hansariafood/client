@@ -128,10 +128,10 @@ const PrintLoadingEntry = async (data) => {
   // --- Data Fetching & Matching ---
 
   const [orders, sellers, companies, consignees] = await Promise.all([
-    safeFetch("/self-order"),
-    safeFetch("/sellers"),
-    safeFetch("/seller-company"),
-    safeFetch("/consignees"),
+    safeFetch("/self-order?limit=0"),
+    safeFetch("/sellers?limit=0"),
+    safeFetch("/seller-company?limit=0"),
+    safeFetch("/consignees?limit=0"),
   ]);
 
   const supplierId = typeof data.supplier === "object" ? data.supplier?._id : data.supplier;
@@ -140,22 +140,24 @@ const PrintLoadingEntry = async (data) => {
   const company = companies.find((c) => normalize(c.companyName) === normalize(data.supplierCompany)) || {};
   
   // Robust Consignee Matching from API
+  // Check by ID first, then by exact name, then by label match
   const consignee = consignees.find((c) => 
-    String(c._id) === String(data.consignee) || 
+    (c._id && String(c._id) === String(data.consignee)) || 
     normalize(c.name) === normalize(data.consignee) ||
-    normalize(c.label) === normalize(data.consignee)
+    normalize(c.label)?.includes(normalize(data.consignee))
   ) || {};
 
-  const fullAddress = [
+  const addressLines = [
     consignee.location,
     consignee.district,
     consignee.state,
-    consignee.pin,
-  ]
-    .filter(Boolean)
-    .join(", ");
+    consignee.pin ? `PIN: ${consignee.pin}` : null,
+  ].filter(Boolean);
+
+  const fullAddress = addressLines.join(", ");
 
   const addTable = (title, y, head, body, colors = primary) => {
+    // Table Title with colored block
     doc.setFillColor(...secondary);
     doc.rect(margin, y - 5, 4, 6, "F");
     
@@ -190,8 +192,8 @@ const PrintLoadingEntry = async (data) => {
         0: { halign: "left" },
       },
       margin: { left: margin, right: margin },
-      styles: {
-        cellPadding: 4,
+      styles: { 
+        cellPadding: 4, 
         overflow: "linebreak",
       },
       alternateRowStyles: {
@@ -204,6 +206,7 @@ const PrintLoadingEntry = async (data) => {
 
   let currentY = 55;
 
+  // --- Parties Section ---
   currentY = addTable(
     "Parties Information",
     currentY,
@@ -217,10 +220,17 @@ const PrintLoadingEntry = async (data) => {
     primary
   );
 
+  // Delivery Address Block - Highlighted
   doc.setFillColor(...light);
   doc.setDrawColor(...secondary);
   doc.setLineWidth(0.5);
-  doc.roundedRect(margin, currentY - 5, pageWidth - (margin * 2), 22, 2, 2, "FD");
+  
+  // Measure address height
+  const addressText = fullAddress || "Address details not found in database. Please verify Consignee record.";
+  const splitAddress = doc.splitTextToSize(addressText, pageWidth - (margin * 2) - 10);
+  const addressBlockHeight = Math.max(22, (splitAddress.length * 5) + 12);
+  
+  doc.roundedRect(margin, currentY - 5, pageWidth - (margin * 2), addressBlockHeight, 2, 2, "FD");
 
   doc.setTextColor(...primary);
   doc.setFont("helvetica", "bold");
@@ -230,11 +240,10 @@ const PrintLoadingEntry = async (data) => {
   doc.setFont("helvetica", "normal");
   doc.setFontSize(9.5);
   doc.setTextColor(...dark);
-  const addressText = fullAddress || "Consignee address details not found in database. Please check Consignee API.";
-  const splitAddress = doc.splitTextToSize(addressText, pageWidth - (margin * 2) - 10);
   doc.text(splitAddress, margin + 5, currentY + 8);
-  currentY += 25;
+  currentY += addressBlockHeight + 5;
 
+  // --- Transport Section ---
   currentY = addTable(
     "Transport & Goods Details",
     currentY,
