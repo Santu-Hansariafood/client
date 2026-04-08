@@ -167,7 +167,7 @@ const PrintLoadingEntry = async (data) => {
     [
       buyerDetails.buyer || "N/A",
       data.consignee || "N/A",
-      consigneeDetails.location || "N/A",
+      `${consigneeDetails.location || "N/A"}, ${consigneeDetails.district || ""}, ${consigneeDetails.state || ""} ${consigneeDetails.pin || ""}`.replace(/, ,/g, ",").trim().replace(/,$/, ""),
     ]
   );
 
@@ -197,9 +197,20 @@ const PrintLoadingEntry = async (data) => {
   const qrData = `Challan: ${data.billNumber}\nLorry: ${data.lorryNumber}\nAmount: ${totalFreight}`;
   const qrImage = await QRCode.toDataURL(qrData);
 
-  doc.addImage(qrImage, "PNG", pageWidth - 45, pageHeight - 60, 30, 30);
-  doc.setFontSize(7);
-  doc.text("Scan for details", pageWidth - 30, pageHeight - 25, { align: "center" });
+  // Add Scanner center of the page below Freight Summary with border and design
+  const qrSize = 35;
+  const qrX = (pageWidth - qrSize) / 2;
+  const qrY = y + 5;
+
+  // Draw border around QR
+  doc.setDrawColor(...primary);
+  doc.setLineWidth(0.5);
+  doc.roundedRect(qrX - 5, qrY - 5, qrSize + 10, qrSize + 15, 3, 3, "D");
+
+  doc.addImage(qrImage, "PNG", qrX, qrY, qrSize, qrSize);
+  doc.setFontSize(8);
+  doc.setTextColor(...primary);
+  doc.text("SCAN FOR DETAILS", pageWidth / 2, qrY + qrSize + 6, { align: "center" });
 
   let signY = pageHeight - 50;
 
