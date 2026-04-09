@@ -103,14 +103,22 @@ const DownloadSauda = ({
     companyData.find(
       (c) =>
         (c?._id && String(c._id) === String(rawBuyerKey)) ||
-        String(c?.companyName || "").trim().toLowerCase() ===
-          String(rawBuyerKey || "").trim().toLowerCase(),
+        String(c?.companyName || "")
+          .trim()
+          .toLowerCase() ===
+          String(rawBuyerKey || "")
+            .trim()
+            .toLowerCase(),
     ) ||
     buyerData.find(
       (b) =>
         (b?._id && String(b._id) === String(rawBuyerKey)) ||
-        String(b?.companyName || "").trim().toLowerCase() ===
-          String(rawBuyerKey || "").trim().toLowerCase(),
+        String(b?.companyName || "")
+          .trim()
+          .toLowerCase() ===
+          String(rawBuyerKey || "")
+            .trim()
+            .toLowerCase(),
     );
 
   if (
@@ -156,7 +164,9 @@ const DownloadSauda = ({
       ? data.sellerEmails.filter(Boolean)
       : [];
     const fromSingle = data?.buyerEmail ? [data.buyerEmail] : [];
-    const allEmails = [...new Set([...buyerEmails, ...sellerEmails, ...fromSingle])];
+    const allEmails = [
+      ...new Set([...buyerEmails, ...sellerEmails, ...fromSingle]),
+    ];
     return allEmails.join(", ");
   };
 

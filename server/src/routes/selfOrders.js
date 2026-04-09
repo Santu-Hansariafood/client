@@ -47,17 +47,34 @@ router.get("/", async (req, res) => {
   try {
     const page = parseInt(req.query.page || "0", 10);
     const limit = parseInt(req.query.limit || "0", 10);
+    const search = (req.query.search || "").trim();
+
+    let query = {};
+    if (search) {
+      const searchRegex = new RegExp(search, "i");
+      query = {
+        $or: [
+          { saudaNo: { $regex: searchRegex } },
+          { poNumber: { $regex: searchRegex } },
+          { buyer: { $regex: searchRegex } },
+          { buyerCompany: { $regex: searchRegex } },
+          { supplierCompany: { $regex: searchRegex } },
+          { commodity: { $regex: searchRegex } },
+        ],
+      };
+    }
+
     if (page > 0 && limit > 0) {
-      const items = await SelfOrder.find()
+      const items = await SelfOrder.find(query)
         .sort({ createdAt: -1 })
         .skip((page - 1) * limit)
         .limit(limit)
         .populate("supplier", "sellerName")
         .lean();
-      const total = await SelfOrder.countDocuments();
+      const total = await SelfOrder.countDocuments(query);
       return res.json({ data: items, total });
     }
-    const items = await SelfOrder.find()
+    const items = await SelfOrder.find(query)
       .sort({ createdAt: -1 })
       .populate("supplier", "sellerName")
       .lean();

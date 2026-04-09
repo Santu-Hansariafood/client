@@ -167,6 +167,38 @@ const BuyerInformation = ({
 
     if (matchCompany) {
       setSelectedCompanyId(matchCompany._id);
+      
+      // Auto-trigger onCompanyChange logic to populate parent state
+      const buyerData = matchBuyer;
+      const companyData = matchCompany;
+
+      const rawEmails = buyerData?.email;
+      const buyerEmails = Array.isArray(rawEmails)
+        ? rawEmails
+            .map((e) => typeof e === "string" ? e : (e?.value ?? e?.email ?? ""))
+            .filter(Boolean)
+        : [];
+      const firstEmail = buyerEmails[0] || "";
+      const firstMobile = Array.isArray(buyerData.mobile)
+        ? buyerData.mobile[0]
+        : buyerData.mobile || "";
+
+      handleChange("companyId", companyData._id);
+      handleChange("buyerCompany", companyData.companyName || "");
+      handleChange("location", companyData.location || "");
+      handleChange("state", companyData.state || "");
+      handleChange("district", companyData.district || "");
+      handleChange("pinCode", companyData.pinCode || "");
+      handleChange("gstNumber", companyData.gstNumber || "");
+      handleChange("panNumber", companyData.panNumber || "");
+      handleChange("buyerEmail", firstEmail);
+      handleChange("buyerMobile", firstMobile);
+      handleChange("buyerEmails", buyerEmails.length ? buyerEmails : [""]);
+      handleChange("buyerCommodity", companyData.commodities || []);
+      handleChange(
+        "buyerBrokerageMap",
+        buyerData.brokerageByName || buyerData.brokerage || {},
+      );
     }
 
     const consigneeValue =
@@ -180,11 +212,14 @@ const BuyerInformation = ({
           String(c._id) === String(consigneeValue) ||
           (c.name || c.label) === consigneeValue,
       );
-      if (found) setSelectedConsignee(String(found._id));
+      if (found) {
+        setSelectedConsignee(String(found._id));
+        handleChange("consignee", found.name || found.label || "");
+      }
     }
 
     setInitialized(true);
-  }, [buyers, companies, consignees, loading, formData, initialized]);
+  }, [buyers, companies, consignees, loading, formData, initialized, handleChange]);
 
   const onBuyerChange = (option) => {
     const buyerId = option?.value || null;
