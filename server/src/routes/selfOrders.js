@@ -108,7 +108,14 @@ router.put("/:id", async (req, res) => {
 
 router.post("/", async (req, res) => {
   try {
-    const item = await SelfOrder.create(req.body);
+    const data = req.body;
+    if (data.pendingQuantity === undefined || data.pendingQuantity === null || data.pendingQuantity === "") {
+      data.pendingQuantity = data.quantity || 0;
+    }
+    if (!data.status) {
+      data.status = "active";
+    }
+    const item = await SelfOrder.create(data);
     res.status(201).json(item);
   } catch (error) {
     res.status(400).json({ message: error.message });

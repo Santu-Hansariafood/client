@@ -26,6 +26,8 @@ const ListLoadingEntry = () => {
   const [filteredEntries, setFilteredEntries] = useState([]);
   const [sellerMap, setSellerMap] = useState({});
   const [buyerMap, setBuyerMap] = useState({});
+  const [statusMap, setStatusMap] = useState({});
+  const [alreadyLoadedMap, setAlreadyLoadedMap] = useState({});
   const [transporters, setTransporters] = useState([]);
   const [transporterMap, setTransporterMap] = useState({});
   const [selectedEntry, setSelectedEntry] = useState(null);
@@ -62,6 +64,19 @@ const ListLoadingEntry = () => {
         ordersData.map((order) => [order.saudaNo, order.buyer])
       );
       setBuyerMap(buyerMapping);
+
+      const statusMapping = Object.fromEntries(
+        ordersData.map((order) => [order.saudaNo, order.status || "active"])
+      );
+      setStatusMap(statusMapping);
+
+      const alreadyLoadedMapping = Object.fromEntries(
+        ordersData.map((order) => [
+          order.saudaNo,
+          (order.quantity || 0) - (order.pendingQuantity || 0),
+        ])
+      );
+      setAlreadyLoadedMap(alreadyLoadedMapping);
 
       const transporterMapping = Object.fromEntries(
         transportersData.map((t) => [t._id, t.name])
@@ -184,6 +199,8 @@ const ListLoadingEntry = () => {
     "Sauda No",
     "Seller Name",
     "Loading Weight",
+    "Already Loaded",
+    "Status",
     "Lorry Number",
     "Transport",
     "Driver",
@@ -209,6 +226,17 @@ const ListLoadingEntry = () => {
           entry.saudaNo || "N/A",
           sellerMap[entry.supplier] || "Unknown Supplier",
           entry.loadingWeight,
+          (alreadyLoadedMap[entry.saudaNo] || 0).toFixed(2),
+          <span
+            key={`status-${entry._id}`}
+            className={`px-2 py-1 rounded-full text-xs font-semibold ${
+              statusMap[entry.saudaNo] === "closed"
+                ? "bg-red-100 text-red-700"
+                : "bg-emerald-100 text-emerald-700"
+            }`}
+          >
+            {statusMap[entry.saudaNo] === "closed" ? "Closed" : "Active"}
+          </span>,
           entry.lorryNumber,
           transporterMap[entry.transporterId] || entry.addedTransport || "N/A",
           entry.driverName,

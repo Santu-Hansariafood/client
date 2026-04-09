@@ -275,10 +275,14 @@ const EditSelfOrder = () => {
     setIsLoading(true);
 
     try {
+      const quantity = Number(formData.quantity) || 0;
+      const pendingQuantity = formData.pendingQuantity !== "" ? Number(formData.pendingQuantity) : quantity;
+
       const payload = {
         ...formData,
-        quantity: Number(formData.quantity) || 0,
-        pendingQuantity: Number(formData.pendingQuantity) || 0,
+        quantity: quantity,
+        pendingQuantity: pendingQuantity,
+        status: formData.status || "active",
         rate: Number(formData.rate) || 0,
         gst: Number(formData.gst) || 0,
         cd: Number(formData.cd) || 0,
