@@ -24,7 +24,7 @@ const selfOrderSchema = new mongoose.Schema(
     state: { type: String, default: "" },
     location: { type: String, default: "" },
     quantity: { type: Number, default: 0 },
-    pendingQuantity: { type: Number, default: 0 },
+    pendingQuantity: { type: Number },
     rate: { type: Number, default: 0 },
     gst: { type: Number, default: 0 },
     cd: { type: Number, default: 0 },

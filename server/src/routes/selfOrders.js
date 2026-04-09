@@ -95,16 +95,24 @@ router.get("/pending/list", async (req, res) => {
 
     let query = {
       status: "active",
-      pendingQuantity: { $gt: 0 }
+      $or: [
+        { pendingQuantity: { $gt: 0 } },
+        { pendingQuantity: { $exists: false } },
+        { pendingQuantity: 0 }
+      ]
     };
 
     if (search) {
       const searchRegex = new RegExp(search, "i");
-      query.$or = [
-        { supplierCompany: { $regex: searchRegex } },
-        { saudaNo: { $regex: searchRegex } },
-        { buyerCompany: { $regex: searchRegex } },
-        { commodity: { $regex: searchRegex } }
+      query.$and = [
+        {
+          $or: [
+            { supplierCompany: { $regex: searchRegex } },
+            { saudaNo: { $regex: searchRegex } },
+            { buyerCompany: { $regex: searchRegex } },
+            { commodity: { $regex: searchRegex } }
+          ]
+        }
       ];
     }
 

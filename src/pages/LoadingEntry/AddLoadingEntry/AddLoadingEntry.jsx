@@ -219,12 +219,23 @@ const AddLoadingEntry = () => {
               setSelectedConsignee(consigneeOption);
             }
 
+            const quantity = matchedOrder.quantity || 0;
+            // Fix: Treat missing or 0 pendingQuantity as full quantity if status is active
+            let pendingQuantity = matchedOrder.pendingQuantity;
+            if ((pendingQuantity === undefined || pendingQuantity === null || (pendingQuantity === 0 && matchedOrder.status === "active")) && matchedOrder.status !== "closed") {
+              pendingQuantity = quantity;
+            } else {
+              pendingQuantity = pendingQuantity || 0;
+            }
+
+            const tolerance = quantity * 0.05;
+            const isClosed =
+              matchedOrder.status === "closed" || Math.abs(pendingQuantity) <= tolerance;
+            
             const processedOrder = {
               ...matchedOrder,
-              isClosed:
-                matchedOrder.status === "closed" ||
-                Math.abs(matchedOrder.pendingQuantity || 0) <=
-                  (matchedOrder.quantity || 0) * 0.05,
+              pendingQuantity,
+              isClosed,
             };
             setOrders([processedOrder]);
 
@@ -271,11 +282,18 @@ const AddLoadingEntry = () => {
 
         orderData = orderData.map((order) => {
           const quantity = order.quantity || 0;
-          const pendingQuantity = order.pendingQuantity || 0;
+          // Fix: Treat missing or 0 pendingQuantity as full quantity if status is active
+          let pendingQuantity = order.pendingQuantity;
+          if ((pendingQuantity === undefined || pendingQuantity === null || (pendingQuantity === 0 && order.status === "active")) && order.status !== "closed") {
+            pendingQuantity = quantity;
+          } else {
+            pendingQuantity = pendingQuantity || 0;
+          }
+
           const tolerance = quantity * 0.05;
           const isClosed =
             order.status === "closed" || Math.abs(pendingQuantity) <= tolerance;
-          return { ...order, isClosed };
+          return { ...order, pendingQuantity, isClosed };
         });
 
         orderData.sort((a, b) => {

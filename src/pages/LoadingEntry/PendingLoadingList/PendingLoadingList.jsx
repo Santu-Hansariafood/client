@@ -74,19 +74,31 @@ const PendingLoadingList = () => {
       
       const exportData = response.data.data || [];
       
-      const excelRows = exportData.map((item, index) => ({
-        "Sl No": index + 1,
-        "Date": formatDate(item.poDate || item.createdAt),
-        "Sauda No": item.saudaNo || "N/A",
-        "Seller Company": item.supplierCompany || "N/A",
-        "Seller Name": item.supplier?.sellerName || "N/A",
-        "Buyer Company": item.buyerCompany || "N/A",
-        "Commodity": item.commodity || "N/A",
-        "Total Quantity": item.quantity || 0,
-        "Pending Quantity": item.pendingQuantity || 0,
-        "Loaded Quantity": (item.quantity || 0) - (item.pendingQuantity || 0),
-        "Rate": item.rate || 0,
-      }));
+      const excelRows = exportData.map((item, index) => {
+        const quantity = item.quantity || 0;
+        let pendingQuantity = item.pendingQuantity;
+        // Fix: Treat missing or 0 pendingQuantity as full quantity if status is active
+        if ((pendingQuantity === undefined || pendingQuantity === null || (pendingQuantity === 0 && item.status === "active")) && item.status !== "closed") {
+          pendingQuantity = quantity;
+        } else {
+          pendingQuantity = pendingQuantity || 0;
+        }
+        const loadedQuantity = quantity - pendingQuantity;
+
+        return {
+          "Sl No": index + 1,
+          "Date": formatDate(item.poDate || item.createdAt),
+          "Sauda No": item.saudaNo || "N/A",
+          "Seller Company": item.supplierCompany || "N/A",
+          "Seller Name": item.supplier?.sellerName || "N/A",
+          "Buyer Company": item.buyerCompany || "N/A",
+          "Commodity": item.commodity || "N/A",
+          "Total Quantity": quantity,
+          "Pending Quantity": pendingQuantity,
+          "Loaded Quantity": loadedQuantity.toFixed(2),
+          "Rate": item.rate || 0,
+        };
+      });
 
       if (excelRows.length === 0) {
         toast.dismiss(toastId);
@@ -118,25 +130,37 @@ const PendingLoadingList = () => {
     "Status"
   ];
 
-  const rows = data.map((item, index) => [
-    (currentPage - 1) * itemsPerPage + index + 1,
-    formatDate(item.poDate || item.createdAt),
-    item.saudaNo || "N/A",
-    <span key={`seller-co-${item._id}`} className="font-semibold text-slate-700">{item.supplierCompany || "N/A"}</span>,
-    item.supplier?.sellerName || "N/A",
-    item.buyerCompany || "N/A",
-    item.commodity || "N/A",
-    item.quantity || 0,
-    <span key={`pending-${item._id}`} className="text-amber-600 font-bold">{item.pendingQuantity || 0}</span>,
-    ((item.quantity || 0) - (item.pendingQuantity || 0)).toFixed(2),
-    item.rate || 0,
-    <span
-      key={`status-${item._id}`}
-      className="px-2 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700"
-    >
-      Active
-    </span>,
-  ]);
+  const rows = data.map((item, index) => {
+    const quantity = item.quantity || 0;
+    let pendingQuantity = item.pendingQuantity;
+    // Fix: Treat missing or 0 pendingQuantity as full quantity if status is active
+    if ((pendingQuantity === undefined || pendingQuantity === null || (pendingQuantity === 0 && item.status === "active")) && item.status !== "closed") {
+      pendingQuantity = quantity;
+    } else {
+      pendingQuantity = pendingQuantity || 0;
+    }
+    const loadedQuantity = quantity - pendingQuantity;
+
+    return [
+      (currentPage - 1) * itemsPerPage + index + 1,
+      formatDate(item.poDate || item.createdAt),
+      item.saudaNo || "N/A",
+      <span key={`seller-co-${item._id}`} className="font-semibold text-slate-700">{item.supplierCompany || "N/A"}</span>,
+      item.supplier?.sellerName || "N/A",
+      item.buyerCompany || "N/A",
+      item.commodity || "N/A",
+      quantity,
+      <span key={`pending-${item._id}`} className="text-amber-600 font-bold">{pendingQuantity}</span>,
+      loadedQuantity.toFixed(2),
+      item.rate || 0,
+      <span
+        key={`status-${item._id}`}
+        className="px-2 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700"
+      >
+        Active
+      </span>,
+    ];
+  });
 
   return (
     <Suspense fallback={<Loading />}>

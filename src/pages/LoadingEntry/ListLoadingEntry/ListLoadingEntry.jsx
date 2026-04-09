@@ -71,10 +71,17 @@ const ListLoadingEntry = () => {
       setStatusMap(statusMapping);
 
       const alreadyLoadedMapping = Object.fromEntries(
-        ordersData.map((order) => [
-          order.saudaNo,
-          (order.quantity || 0) - (order.pendingQuantity || 0),
-        ])
+        ordersData.map((order) => {
+          const quantity = order.quantity || 0;
+          let pendingQuantity = order.pendingQuantity;
+          // Fix: If status is active but pending is 0, treat it as 0 loaded
+          if ((pendingQuantity === undefined || pendingQuantity === null || (pendingQuantity === 0 && order.status === "active")) && order.status !== "closed") {
+            pendingQuantity = quantity;
+          } else {
+            pendingQuantity = pendingQuantity || 0;
+          }
+          return [order.saudaNo, quantity - pendingQuantity];
+        })
       );
       setAlreadyLoadedMap(alreadyLoadedMapping);
 
