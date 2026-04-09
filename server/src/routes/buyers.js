@@ -130,7 +130,11 @@ router.get("/", async (req, res) => {
       return res.json({ data: items.map(mapBuyerForClient), total });
     }
 
-    const items = await Buyer.find(query).sort({ name: 1, _id: 1 }).populate(buyerPopulate).lean();
+    const items = await Buyer.find(query)
+      .sort({ name: 1, _id: 1 })
+      .limit(100)
+      .populate(buyerPopulate)
+      .lean();
     res.json(items.map(mapBuyerForClient));
   } catch (error) {
     res.status(500).json({ message: error.message });

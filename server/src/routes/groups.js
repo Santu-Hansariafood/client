@@ -25,7 +25,10 @@ router.get("/", async (req, res) => {
       return res.json({ data: items, total });
     }
 
-    const groups = await Group.find(query).sort({ groupName: 1 }).lean();
+    const groups = await Group.find(query)
+      .sort({ groupName: 1 })
+      .limit(100)
+      .lean();
     res.json(groups);
   } catch (error) {
     res.status(500).json({ message: error.message });

@@ -55,5 +55,11 @@ selfOrderSchema.index({ supplier: 1 });
 selfOrderSchema.index({ consignee: 1 });
 selfOrderSchema.index({ createdAt: -1 });
 selfOrderSchema.index({ saudaNo: 1 });
+selfOrderSchema.index({ status: 1 });
+selfOrderSchema.index({ pendingQuantity: 1 });
+selfOrderSchema.index({ poDate: -1 });
+selfOrderSchema.index({ buyerCompany: 1 });
+selfOrderSchema.index({ supplierCompany: 1 });
+selfOrderSchema.index({ commodity: 1 });
 
 export default mongoose.model("SelfOrder", selfOrderSchema);

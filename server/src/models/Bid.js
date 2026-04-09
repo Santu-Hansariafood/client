@@ -29,5 +29,9 @@ const bidSchema = new mongoose.Schema(
 bidSchema.index({ createdAt: -1 });
 bidSchema.index({ commodity: 1 });
 bidSchema.index({ group: 1 });
+bidSchema.index({ status: 1, bidDate: -1 });
+bidSchema.index({ type: 1 });
+bidSchema.index({ consignee: 1 });
+bidSchema.index({ origin: 1 });
 
 export default mongoose.model("Bid", bidSchema);

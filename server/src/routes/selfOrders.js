@@ -66,7 +66,7 @@ router.get("/", async (req, res) => {
 
     if (page > 0 && limit > 0) {
       const items = await SelfOrder.find(query)
-        .sort({ createdAt: -1 })
+        .sort({ poDate: -1, createdAt: -1 })
         .skip((page - 1) * limit)
         .limit(limit)
         .populate("supplier", "sellerName")
@@ -74,8 +74,11 @@ router.get("/", async (req, res) => {
       const total = await SelfOrder.countDocuments(query);
       return res.json({ data: items, total });
     }
+
+    // Default limit if not specified to prevent loading too much data
     const items = await SelfOrder.find(query)
-      .sort({ createdAt: -1 })
+      .sort({ poDate: -1, createdAt: -1 })
+      .limit(100)
       .populate("supplier", "sellerName")
       .lean();
     res.json(items);

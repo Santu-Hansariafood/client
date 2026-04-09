@@ -31,6 +31,8 @@ const participateBidSchema = new mongoose.Schema(
 );
 
 participateBidSchema.index({ bidId: 1, mobile: 1 });
+participateBidSchema.index({ mobile: 1 });
+participateBidSchema.index({ status: 1 });
 participateBidSchema.index({ createdAt: -1 });
 
 export default mongoose.model("ParticipateBid", participateBidSchema);

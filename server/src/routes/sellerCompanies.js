@@ -34,6 +34,7 @@ router.get("/", async (req, res) => {
 
     const items = await SellerCompany.find(query)
       .sort({ companyName: 1 })
+      .limit(100)
       .lean();
     res.json({ data: items, total: items.length });
   } catch (error) {

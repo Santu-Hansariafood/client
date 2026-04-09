@@ -17,7 +17,10 @@ router.get("/", async (req, res) => {
     const total = await ConfirmBid.countDocuments();
     return res.json({ data: items, total });
   }
-  const items = await ConfirmBid.find().sort({ createdAt: -1 }).lean();
+  const items = await ConfirmBid.find()
+    .sort({ createdAt: -1 })
+    .limit(100)
+    .lean();
   res.json(items);
 });
 

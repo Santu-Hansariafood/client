@@ -19,7 +19,10 @@ router.get("/", async (req, res) => {
       return res.json({ data: items, total });
     }
 
-    const items = await BidLocation.find().sort({ name: 1 }).lean();
+    const items = await BidLocation.find()
+      .sort({ name: 1 })
+      .limit(100)
+      .lean();
     res.json(items);
   } catch (error) {
     res.status(500).json({ message: error.message });

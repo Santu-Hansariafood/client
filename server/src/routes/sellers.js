@@ -46,7 +46,10 @@ router.get("/", async (req, res) => {
       });
     }
 
-    const items = await Seller.find(query).sort({ sellerName: 1 }).lean();
+    const items = await Seller.find(query)
+      .sort({ sellerName: 1 })
+      .limit(100)
+      .lean();
 
     res.json(items.map(mapSellerForClient));
   } catch (error) {

@@ -64,27 +64,27 @@ app.use("/api", apiKey);
 // Public auth endpoints (still require API key)
 app.use("/api", authRoutes);
 // All remaining API routes require JWT
-app.use("/api/sellers", authJwt, sellerRoutes);
-app.use("/api/buyers", authJwt, buyerRoutes);
+app.use("/api/sellers", cache(30), authJwt, sellerRoutes);
+app.use("/api/buyers", cache(30), authJwt, buyerRoutes);
 app.use("/api/commodities", cache(60), authJwt, commodityRoutes);
 app.use("/api/companies", cache(60), authJwt, companyRoutes);
 app.use("/api/seller-company", cache(60), authJwt, sellerCompanyRoutes);
 app.use("/api/bid-locations", cache(60), authJwt, bidLocationRoutes);
 app.use("/api/bids", cache(10), authJwt, bidRoutes);
-app.use("/api/participatebids", authJwt, participateRoutes);
+app.use("/api/participatebids", cache(5), authJwt, participateRoutes);
 app.use("/api/confirm-bid", cache(10), authJwt, confirmBidRoutes);
 app.use("/api/agents", cache(120), authJwt, agentRoutes);
-app.use("/api/self-order", authJwt, selfOrderRoutes);
-app.use("/api/sauda-no", authJwt, saudaNoRoutes);
+app.use("/api/self-order", cache(5), authJwt, selfOrderRoutes);
+app.use("/api/sauda-no", cache(60), authJwt, saudaNoRoutes);
 app.use("/api/whatsapp", authJwt, whatsappRoutes);
-app.use("/api/quality-parameters", authJwt, qualityParameterRoutes);
-app.use("/api/groups", authJwt, groupRoutes);
-app.use("/api/consignees", authJwt, consigneeRoutes);
+app.use("/api/quality-parameters", cache(60), authJwt, qualityParameterRoutes);
+app.use("/api/groups", cache(60), authJwt, groupRoutes);
+app.use("/api/consignees", cache(30), authJwt, consigneeRoutes);
 app.use("/api/email", authJwt, emailRoutes);
 app.use("/api/employees", authJwt, employeeRoutes);
-app.use("/api/transporters", authJwt, transporterRoutes);
-app.use("/api/notifications", authJwt, notificationRoutes);
-app.use("/api/loading-entries", authJwt, loadingEntryRoutes);
+app.use("/api/transporters", cache(60), authJwt, transporterRoutes);
+app.use("/api/notifications", cache(5), authJwt, notificationRoutes);
+app.use("/api/loading-entries", cache(5), authJwt, loadingEntryRoutes);
 
 const PORT = process.env.PORT || 5000;
 

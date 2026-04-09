@@ -118,6 +118,9 @@ const sellerSchema = new mongoose.Schema(
 
 sellerSchema.index({ sellerName: 1 });
 sellerSchema.index({ "phoneNumbers.value": 1 });
+sellerSchema.index({ "companies": 1 });
+sellerSchema.index({ createdAt: -1 });
+sellerSchema.index({ "phoneNumbers.value": 1 });
 sellerSchema.index({ "emails.value": 1 });
 sellerSchema.index({ companies: 1 });
 

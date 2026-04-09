@@ -12,22 +12,23 @@ const closeExpiredBids = async () => {
   try {
     const now = new Date();
     const todayStr = now.toISOString().split("T")[0];
+    const startOfToday = new Date(todayStr);
     const currentTimeStr =
       now.getHours().toString().padStart(2, "0") +
       ":" +
       now.getMinutes().toString().padStart(2, "0");
 
-    const activeBids = await Bid.find({ status: "active" });
-    const bidsToClose = activeBids.filter((bid) => {
-      if (!bid.bidDate) return false;
-      const bidDateStr = bid.bidDate.toISOString().split("T")[0];
-
-      if (bidDateStr < todayStr) return true;
-      if (bidDateStr === todayStr && bid.endTime && bid.endTime < currentTimeStr)
-        return true;
-
-      return false;
-    });
+    // Efficiently find bids that should be closed using a single query
+    const bidsToClose = await Bid.find({
+      status: "active",
+      $or: [
+        { bidDate: { $lt: startOfToday } },
+        { 
+          bidDate: { $gte: startOfToday, $lt: new Date(startOfToday.getTime() + 86400000) }, 
+          endTime: { $lt: currentTimeStr } 
+        }
+      ]
+    }).select("_id").lean();
 
     if (bidsToClose.length > 0) {
       const ids = bidsToClose.map((b) => b._id);
@@ -171,7 +172,10 @@ router.get("/", async (req, res) => {
       return res.json({ data: items, total });
     }
 
-    const items = await Bid.find(query).sort({ createdAt: -1 }).lean();
+    const items = await Bid.find(query)
+      .sort({ createdAt: -1 })
+      .limit(100)
+      .lean();
     res.json(items);
   } catch (error) {
     res.status(500).json({ message: error.message });

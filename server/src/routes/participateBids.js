@@ -25,7 +25,10 @@ router.get("/", async (req, res) => {
         .limit(limit)
         .lean();
     } else {
-      items = await ParticipateBid.find(query).sort({ createdAt: -1 }).lean();
+      items = await ParticipateBid.find(query)
+        .sort({ createdAt: -1 })
+        .limit(100)
+        .lean();
     }
 
     const mobileNumbers = [...new Set(items.map(item => item.mobile))];

@@ -9,6 +9,7 @@ router.get("/", async (req, res) => {
   try {
     const items = await LoadingEntry.find()
       .sort({ loadingDate: -1, createdAt: -1 })
+      .limit(100)
       .lean();
     res.json(items);
   } catch (error) {

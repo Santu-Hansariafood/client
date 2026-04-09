@@ -36,7 +36,10 @@ router.get("/", async (req, res) => {
       });
     }
 
-    const consignees = await Consignee.find(query).sort({ name: 1 }).lean();
+    const consignees = await Consignee.find(query)
+      .sort({ name: 1 })
+      .limit(100)
+      .lean();
     res.json(consignees);
   } catch (error) {
     res.status(500).json({

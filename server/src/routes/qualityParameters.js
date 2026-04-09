@@ -13,12 +13,15 @@ router.get("/", async (req, res) => {
       const skip = (page - 1) * limit;
       const params = await QualityParameter.find({ isActive: true })
         .skip(skip)
-        .limit(limit);
+        .limit(limit)
+        .lean();
       const total = await QualityParameter.countDocuments({ isActive: true });
       return res.json({ data: params, total });
     }
 
-    const params = await QualityParameter.find({ isActive: true });
+    const params = await QualityParameter.find({ isActive: true })
+      .limit(100)
+      .lean();
     res.json(params);
   } catch (error) {
     res.status(500).json({ message: error.message });
