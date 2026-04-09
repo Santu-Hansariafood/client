@@ -78,7 +78,11 @@ const AddLoadingEntry = () => {
   const [loadingEntries, setLoadingEntries] = useState([]);
   const [isSaving, setIsSaving] = useState(false);
 
-  if (userRole !== "Admin" && userRole !== "Employee" && userRole !== "Seller") {
+  if (
+    userRole !== "Admin" &&
+    userRole !== "Employee" &&
+    userRole !== "Seller"
+  ) {
     return (
       <div className="flex items-center justify-center min-h-[60vh] text-slate-500 font-medium">
         You do not have permission to access this page.
@@ -108,11 +112,12 @@ const AddLoadingEntry = () => {
     const loadDropdowns = async () => {
       setLoading(true);
       try {
-        const [suppliersData, consigneesRes, transportersRes] = await Promise.all([
-          fetchData("/sellers", "sellerName"),
-          axios.get("/consignees", { params: { limit: 0 } }),
-          axios.get("/transporters", { params: { limit: 0 } }),
-        ]);
+        const [suppliersData, consigneesRes, transportersRes] =
+          await Promise.all([
+            fetchData("/sellers", "sellerName"),
+            axios.get("/consignees", { params: { limit: 0 } }),
+            axios.get("/transporters", { params: { limit: 0 } }),
+          ]);
 
         const rawConsignees = Array.isArray(consigneesRes.data)
           ? consigneesRes.data
@@ -178,8 +183,11 @@ const AddLoadingEntry = () => {
               const isMyOrder = suppliers.some(
                 (s) =>
                   String(s.value) ===
-                    String(matchedOrder.supplier?._id || matchedOrder.supplier) &&
-                  normalize(s.company) === normalize(matchedOrder.supplierCompany),
+                    String(
+                      matchedOrder.supplier?._id || matchedOrder.supplier,
+                    ) &&
+                  normalize(s.company) ===
+                    normalize(matchedOrder.supplierCompany),
               );
               if (!isMyOrder) {
                 toast.error("Access denied for this Sauda.");
@@ -191,15 +199,19 @@ const AddLoadingEntry = () => {
               (s) =>
                 String(s.value) ===
                   String(matchedOrder.supplier?._id || matchedOrder.supplier) &&
-                normalize(s.company) === normalize(matchedOrder.supplierCompany),
+                normalize(s.company) ===
+                  normalize(matchedOrder.supplierCompany),
             );
             if (supplierOption) {
               setSelectedSupplier(supplierOption);
             }
 
             const consigneeOption = consignees.find(
-              (c) => 
-                String(c.value) === String(matchedOrder.consignee?._id || matchedOrder.consignee) ||
+              (c) =>
+                String(c.value) ===
+                  String(
+                    matchedOrder.consignee?._id || matchedOrder.consignee,
+                  ) ||
                 normalize(c.name) === normalize(matchedOrder.consignee) ||
                 normalize(c.label).includes(normalize(matchedOrder.consignee)),
             );
@@ -246,7 +258,8 @@ const AddLoadingEntry = () => {
           (order) =>
             String(order.supplier?._id || order.supplier) ===
               String(selectedSupplier.value) &&
-            normalize(order.supplierCompany) === normalize(selectedSupplier.company) &&
+            normalize(order.supplierCompany) ===
+              normalize(selectedSupplier.company) &&
             normalize(order.consignee) === normalize(selectedConsignee.name),
         );
 
@@ -366,14 +379,12 @@ const AddLoadingEntry = () => {
       const rate = parseFloat(entry.freightRate) || 0;
       const advance = parseFloat(entry.advance) || 0;
 
-      // ✅ Negative validation HERE
       if (weight < 0 || rate < 0 || advance < 0) {
         toast.error("Values cannot be negative");
         setIsSaving(false);
         return;
       }
 
-      // ✅ Phone validation (already correct)
       if (
         entry.driverPhoneNumber &&
         !/^\d{10}$/.test(entry.driverPhoneNumber)
@@ -439,8 +450,14 @@ const AddLoadingEntry = () => {
   return (
     <Suspense fallback={<Loading />}>
       <AdminPageShell
-        title={userRole === "Seller" ? "Add Your Loading Entry" : "Add Loading Entry"}
-        subtitle={userRole === "Seller" ? "Create challans for your orders" : "Select supplier and consignee to find sauda entries for loading"}
+        title={
+          userRole === "Seller" ? "Add Your Loading Entry" : "Add Loading Entry"
+        }
+        subtitle={
+          userRole === "Seller"
+            ? "Create challans for your orders"
+            : "Select supplier and consignee to find sauda entries for loading"
+        }
         icon={FaTruckLoading}
         noContentCard
       >
@@ -585,7 +602,7 @@ const AddLoadingEntry = () => {
             isOpen={isPopupOpen}
             onClose={() => setIsPopupOpen(false)}
             title={`Add Loading Entry - Sauda: ${selectedOrder.saudaNo}`}
-            maxWidth="max-w-7xl"
+            maxWidth="max-w-[98vw]"
           >
             <div className="space-y-6">
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 p-4 bg-slate-50 rounded-2xl text-sm border border-slate-100 shadow-inner">
@@ -628,7 +645,7 @@ const AddLoadingEntry = () => {
                 </div>
               </div>
 
-              <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar p-1">
+              <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-2 custom-scrollbar p-2">
                 {loadingEntries.map((entry, index) => (
                   <div
                     key={index}
@@ -663,7 +680,7 @@ const AddLoadingEntry = () => {
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
                       <div className="space-y-1.5">
                         <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider">
                           Loading Date
@@ -738,9 +755,10 @@ const AddLoadingEntry = () => {
                           }
                           onChange={(option) => {
                             const newEntries = [...loadingEntries];
-                            newEntries[index].transporterId = option?.value || "";
-                            newEntries[index].addedTransport = option?.name || "";
-                            // Optionally auto-fill driver name if the transporter has it
+                            newEntries[index].transporterId =
+                              option?.value || "";
+                            newEntries[index].addedTransport =
+                              option?.name || "";
                             setLoadingEntries(newEntries);
                           }}
                           placeholder="Select Transporter"

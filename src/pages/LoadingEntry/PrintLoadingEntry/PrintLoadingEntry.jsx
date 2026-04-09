@@ -4,7 +4,6 @@ import axios from "axios";
 import logo from "../../../assets/Hans.png";
 import signature from "../../../assets/signature.png";
 import stamp from "../../../assets/stamp.png";
-import QRCode from "qrcode";
 
 const PrintLoadingEntry = async (data) => {
   const doc = new jsPDF({
@@ -28,11 +27,13 @@ const PrintLoadingEntry = async (data) => {
 
   const formatDate = (date) => {
     const d = new Date(date);
-    return isNaN(d) ? "N/A" : d.toLocaleDateString("en-IN", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    });
+    return isNaN(d)
+      ? "N/A"
+      : d.toLocaleDateString("en-IN", {
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+        });
   };
 
   const formatCurrency = (val) =>
@@ -73,7 +74,7 @@ const PrintLoadingEntry = async (data) => {
 
   doc.setFillColor(255, 255, 255);
   doc.rect(0, 0, pageWidth, pageHeight, "F");
-  
+
   doc.setFillColor(...secondary);
   doc.rect(0, 0, 2.5, pageHeight, "F");
 
@@ -99,7 +100,7 @@ const PrintLoadingEntry = async (data) => {
   doc.setFontSize(9);
   doc.setTextColor(255, 255, 255);
   doc.text("Broker & Commission Agent | Premium Quality Food Products", 44, 25);
-  
+
   doc.setFontSize(8);
   doc.setTextColor(240, 240, 240);
   doc.text("Email: info@hansariafood.com | Web: www.hansariafood.com", 44, 30);
@@ -114,34 +115,44 @@ const PrintLoadingEntry = async (data) => {
 
   doc.setFontSize(8.5);
   doc.setTextColor(255, 255, 255);
-  doc.text(`DATE: ${formatDate(data.loadingDate)}`, pageWidth - 14, 31, { align: "right" });
-  doc.text(`CHALLAN NO: ${data.billNumber || "N/A"}`, pageWidth - 14, 36, { align: "right" });
+  doc.text(`DATE: ${formatDate(data.loadingDate)}`, pageWidth - 14, 31, {
+    align: "right",
+  });
+  doc.text(`CHALLAN NO: ${data.billNumber || "N/A"}`, pageWidth - 14, 36, {
+    align: "right",
+  });
 
-  // --- Data Fetching & Matching ---
-  const [orders, sellers, companies, consignees, transporters] = await Promise.all([
-    safeFetch("/self-order?limit=0"),
-    safeFetch("/sellers?limit=0"),
-    safeFetch("/seller-company?limit=0"),
-    safeFetch("/consignees?limit=0"),
-    safeFetch("/transporters?limit=0"),
-  ]);
+  const [orders, sellers, companies, consignees, transporters] =
+    await Promise.all([
+      safeFetch("/self-order?limit=0"),
+      safeFetch("/sellers?limit=0"),
+      safeFetch("/seller-company?limit=0"),
+      safeFetch("/consignees?limit=0"),
+      safeFetch("/transporters?limit=0"),
+    ]);
 
-  const supplierId = typeof data.supplier === "object" ? data.supplier?._id : data.supplier;
-  const buyer = orders.find((o) => String(o.saudaNo) === String(data.saudaNo)) || {};
-  const seller = sellers.find((s) => String(s._id) === String(supplierId)) || {};
-  const company = companies.find((c) => normalize(c.companyName) === normalize(data.supplierCompany)) || {};
-  
-  const transporter = transporters.find((t) => 
-    String(t._id) === String(data.transporterId)
-  ) || {};
+  const supplierId =
+    typeof data.supplier === "object" ? data.supplier?._id : data.supplier;
+  const buyer =
+    orders.find((o) => String(o.saudaNo) === String(data.saudaNo)) || {};
+  const seller =
+    sellers.find((s) => String(s._id) === String(supplierId)) || {};
+  const company =
+    companies.find(
+      (c) => normalize(c.companyName) === normalize(data.supplierCompany),
+    ) || {};
 
-  // Robust Consignee Matching from API
-  // Check by ID first, then by exact name, then by label match
-  const consignee = consignees.find((c) => 
-    (c._id && String(c._id) === String(data.consignee)) || 
-    normalize(c.name) === normalize(data.consignee) ||
-    normalize(c.label)?.includes(normalize(data.consignee))
-  ) || {};
+  const transporter =
+    transporters.find((t) => String(t._id) === String(data.transporterId)) ||
+    {};
+
+  const consignee =
+    consignees.find(
+      (c) =>
+        (c._id && String(c._id) === String(data.consignee)) ||
+        normalize(c.name) === normalize(data.consignee) ||
+        normalize(c.label)?.includes(normalize(data.consignee)),
+    ) || {};
 
   const addressLines = [
     consignee.location,
@@ -153,20 +164,20 @@ const PrintLoadingEntry = async (data) => {
   const fullAddress = addressLines.join(", ");
 
   const addTable = (title, y, head, body, colors = primary) => {
-    // Table Title with colored block
     doc.setFillColor(...secondary);
     doc.rect(margin, y - 5, 4, 6, "F");
-    
+
     doc.setTextColor(...dark);
     doc.setFont("helvetica", "bold");
     doc.setFontSize(10);
     doc.text(title.toUpperCase(), margin + 6, y);
-    
+
     doc.setDrawColor(...lightGray);
     doc.setLineWidth(0.1);
     doc.line(margin, y + 2, pageWidth - margin, y + 2);
 
-    autoTable(doc, {      startY: y + 4,
+    autoTable(doc, {
+      startY: y + 4,
       head: [head],
       body: [body],
       theme: "striped",
@@ -201,7 +212,6 @@ const PrintLoadingEntry = async (data) => {
 
   let currentY = 55;
 
-  // --- Parties Section ---
   currentY = addTable(
     "Parties Information",
     currentY,
@@ -212,33 +222,43 @@ const PrintLoadingEntry = async (data) => {
       buyer.buyer || "N/A",
       consignee.name || data.consignee || "N/A",
     ],
-    primary
+    primary,
   );
 
-  // Delivery Address Block - Highlighted
   doc.setFillColor(...light);
   doc.setDrawColor(...secondary);
   doc.setLineWidth(0.5);
-  
-  // Measure address height
-  const addressText = fullAddress || "Address details not found in database. Please verify Consignee record.";
-  const splitAddress = doc.splitTextToSize(addressText, pageWidth - (margin * 2) - 10);
-  const addressBlockHeight = Math.max(22, (splitAddress.length * 5) + 12);
-  
-  doc.roundedRect(margin, currentY - 5, pageWidth - (margin * 2), addressBlockHeight, 2, 2, "FD");
+
+  const addressText =
+    fullAddress ||
+    "Address details not found in database. Please verify Consignee record.";
+  const splitAddress = doc.splitTextToSize(
+    addressText,
+    pageWidth - margin * 2 - 10,
+  );
+  const addressBlockHeight = Math.max(22, splitAddress.length * 5 + 12);
+
+  doc.roundedRect(
+    margin,
+    currentY - 5,
+    pageWidth - margin * 2,
+    addressBlockHeight,
+    2,
+    2,
+    "FD",
+  );
 
   doc.setTextColor(...primary);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(10);
   doc.text("DELIVERY ADDRESS", margin + 5, currentY + 2);
-  
+
   doc.setFont("helvetica", "normal");
   doc.setFontSize(9.5);
   doc.setTextColor(...dark);
   doc.text(splitAddress, margin + 5, currentY + 8);
   currentY += addressBlockHeight + 5;
 
-  // --- Transport Section ---
   currentY = addTable(
     "Transport & Goods Details",
     currentY,
@@ -248,10 +268,9 @@ const PrintLoadingEntry = async (data) => {
       data.bags || "N/A",
       `${data.loadingWeight || 0} Tons`,
       (data.lorryNumber || "N/A").toUpperCase(),
-    ]
+    ],
   );
 
-  // --- Transporter Section ---
   currentY = addTable(
     "Transporter Information",
     currentY,
@@ -262,10 +281,9 @@ const PrintLoadingEntry = async (data) => {
       data.driverPhoneNumber || transporter.mobile || "N/A",
       (data.lorryNumber || "N/A").toUpperCase(),
     ],
-    primary
+    primary,
   );
 
-  // --- Freight Section ---
   const total = Number(data.totalFreight || 0);
   const advance = Number(data.advance || 0);
   const balance = total - advance;
@@ -280,72 +298,69 @@ const PrintLoadingEntry = async (data) => {
       formatCurrency(advance),
       formatCurrency(balance),
     ],
-    primary
+    primary,
   );
 
-  // --- Footer Section ---
-  const footerY = pageHeight - 75;
-  
-  // QR Code Area
-  try {
-    const qrText = `https://www.hansariafood.com`;
-    const qr = await QRCode.toDataURL(qrText);
-    const qrSize = 30;
-    const qrX = (pageWidth - qrSize) / 2;
-    
-    // Design around QR
-    doc.setDrawColor(...secondary);
-    doc.setLineWidth(0.5);
-    doc.roundedRect(qrX - 2, footerY - 2, qrSize + 4, qrSize + 10, 2, 2, "D");
-    
-    doc.addImage(qr, "PNG", qrX, footerY, qrSize, qrSize);
-    doc.setFontSize(7.5);
-    doc.setTextColor(...primary);
-    doc.setFont("helvetica", "bold");
-    doc.text("SCAN TO VISIT WEBSITE", pageWidth / 2, footerY + qrSize + 5, { align: "center" });
-  } catch {}
-
-  // Signature Blocks
-
   const signBaseY = pageHeight - 38;
-  
+
   doc.setFont("helvetica", "bold");
   doc.setFontSize(9);
   doc.setTextColor(...dark);
-  
+
   doc.text("DRIVER'S SIGNATURE", margin + 5, signBaseY);
   doc.setDrawColor(...primary);
   doc.setLineWidth(0.5);
   doc.line(margin, signBaseY + 10, margin + 55, signBaseY + 10);
 
   doc.setTextColor(...primary);
-  doc.text("FOR HANSARIA FOOD PVT. LTD.", pageWidth - margin - 60, signBaseY, { align: "center" });
-  
+  doc.text("FOR HANSARIA FOOD PVT. LTD.", pageWidth - margin - 60, signBaseY, {
+    align: "center",
+  });
+
   if (sign64) {
     doc.addImage(sign64, "PNG", pageWidth - margin - 50, signBaseY + 2, 35, 12);
   }
   if (stamp64) {
     doc.setGState(new doc.GState({ opacity: 0.6 }));
-    doc.addImage(stamp64, "PNG", pageWidth - margin - 65, signBaseY - 15, 30, 30);
+    doc.addImage(
+      stamp64,
+      "PNG",
+      pageWidth - margin - 65,
+      signBaseY - 15,
+      30,
+      30,
+    );
     doc.setGState(new doc.GState({ opacity: 1.0 }));
   }
-  
+
   doc.setDrawColor(...primary);
-  doc.line(pageWidth - margin - 65, signBaseY + 15, pageWidth - margin, signBaseY + 15);
+  doc.line(
+    pageWidth - margin - 65,
+    signBaseY + 15,
+    pageWidth - margin,
+    signBaseY + 15,
+  );
   doc.setFont("helvetica", "normal");
   doc.setFontSize(8);
   doc.setTextColor(...gray);
-  doc.text("Authorized Signatory", pageWidth - margin - 32.5, signBaseY + 20, { align: "center" });
+  doc.text("Authorized Signatory", pageWidth - margin - 32.5, signBaseY + 20, {
+    align: "center",
+  });
 
   doc.setFillColor(...primary);
   doc.rect(0, pageHeight - 8, pageWidth, 8, "F");
-  
+
   doc.setFillColor(...secondary);
   doc.rect(0, pageHeight - 8.5, pageWidth, 0.5, "F");
 
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(8);
-  doc.text("Terms & Conditions: This is an electronic challan. Goods received in good condition.", pageWidth / 2, pageHeight - 3, { align: "center" });
+  doc.text(
+    "Terms & Conditions: This is an electronic challan. Goods received in good condition.",
+    pageWidth / 2,
+    pageHeight - 3,
+    { align: "center" },
+  );
 
   return URL.createObjectURL(doc.output("blob"));
 };
