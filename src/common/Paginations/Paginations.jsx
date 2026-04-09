@@ -1,6 +1,11 @@
 import PropTypes from "prop-types";
-import { useState, useEffect } from "react";
-import { FaChevronLeft, FaChevronRight, FaAngleDoubleLeft, FaAngleDoubleRight } from "react-icons/fa";
+import { useState } from "react";
+import {
+  FaChevronLeft,
+  FaChevronRight,
+  FaAngleDoubleLeft,
+  FaAngleDoubleRight,
+} from "react-icons/fa";
 
 const Pagination = ({
   currentPage,
@@ -13,58 +18,58 @@ const Pagination = ({
   showGoTo = true,
 }) => {
   const totalPages = Math.max(1, Math.ceil(totalItems / itemsPerPage));
-  const [currentGroup, setCurrentGroup] = useState(1);
-  const pagesPerGroup = 5;
   const [gotoValue, setGotoValue] = useState("");
 
-  useEffect(() => {
-    setCurrentGroup(
-      Math.floor((currentPage - 1) / pagesPerGroup) * pagesPerGroup + 1
-    );
-  }, [currentPage, totalPages]);
+  const getVisiblePages = () => {
+    const pages = [];
+    const delta = 1;
 
-  const pageGroups = [];
-  for (let i = 1; i <= totalPages; i += pagesPerGroup) {
-    pageGroups.push(i);
-  }
+    const rangeStart = Math.max(2, currentPage - delta);
+    const rangeEnd = Math.min(totalPages - 1, currentPage + delta);
 
-  const pageNumbers = [];
-  const start = currentGroup;
-  const end = Math.min(start + pagesPerGroup - 1, totalPages);
-  for (let i = start; i <= end; i++) {
-    pageNumbers.push(i);
-  }
+    pages.push(1);
 
-  const goFirst = () => onPageChange(1);
-  const goLast = () => onPageChange(totalPages);
+    if (rangeStart > 2) pages.push("...");
 
-  const btnBase = "inline-flex items-center justify-center min-w-[2.5rem] h-10 rounded-xl font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-emerald-400/50 focus:ring-offset-2";
-  const btnDisabled = "bg-slate-100 text-slate-400 cursor-not-allowed";
-  const btnActive = "bg-slate-900 text-white hover:bg-slate-800 shadow-sm";
-  const btnDefault = "bg-white text-slate-700 hover:bg-slate-50 border border-slate-200 hover:border-slate-300";
-  const btnPrimary = "bg-emerald-600 text-white hover:bg-emerald-700 border-transparent shadow-sm shadow-emerald-500/20";
+    for (let i = rangeStart; i <= rangeEnd; i++) {
+      pages.push(i);
+    }
+
+    if (rangeEnd < totalPages - 1) pages.push("...");
+
+    if (totalPages > 1) pages.push(totalPages);
+
+    return pages;
+  };
+
+  const btnBase =
+    "inline-flex items-center justify-center min-w-[2.4rem] h-9 px-2 rounded-xl text-sm font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-emerald-400/50";
+
+  const btnDefault =
+    "bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 hover:border-slate-300";
+
+  const btnActive =
+    "bg-emerald-600 text-white shadow-md shadow-emerald-500/20 hover:bg-emerald-700";
+
+  const btnDisabled =
+    "bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200";
 
   return (
-    <div className="flex flex-col items-center gap-4 mt-6 w-full">
-      <div className="w-full flex items-center justify-between text-sm text-slate-600">
+    <div className="w-full flex flex-col gap-3 mt-6">
+      <div className="flex flex-col sm:flex-row justify-between items-center gap-2 text-sm text-slate-600">
         <span>
           Showing{" "}
-          {totalItems === 0
-            ? 0
-            : (currentPage - 1) * itemsPerPage + 1}
-          {" - "}
+          {totalItems === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1} -{" "}
           {Math.min(currentPage * itemsPerPage, totalItems)} of {totalItems}
         </span>
+
         {showPageSize && onPageSizeChange && (
           <div className="flex items-center gap-2">
-            <span>Per page</span>
+            <span>Rows</span>
             <select
-              className="h-9 px-2 rounded-lg border border-slate-300 bg-white text-slate-700"
               value={itemsPerPage}
-              onChange={(e) => {
-                const size = Number(e.target.value);
-                onPageSizeChange(size);
-              }}
+              onChange={(e) => onPageSizeChange(Number(e.target.value))}
+              className="h-9 px-2 rounded-lg border border-slate-300 bg-white text-slate-700 focus:ring-2 focus:ring-emerald-400/40"
             >
               {pageSizeOptions.map((opt) => (
                 <option key={opt} value={opt}>
@@ -75,126 +80,102 @@ const Pagination = ({
           </div>
         )}
       </div>
-      <div className="flex items-center justify-between w-full max-w-sm md:hidden gap-3 p-3 rounded-2xl bg-slate-50 border border-slate-200 shadow-sm">
+
+      <div className="flex flex-wrap items-center justify-center gap-1.5 p-2 rounded-2xl bg-white/80 backdrop-blur border border-slate-200 shadow-sm">
+
+        <button
+          onClick={() => onPageChange(1)}
+          disabled={currentPage === 1}
+          className={`${btnBase} ${
+            currentPage === 1 ? btnDisabled : btnDefault
+          }`}
+        >
+          <FaAngleDoubleLeft />
+        </button>
+
         <button
           onClick={() => onPageChange(currentPage - 1)}
           disabled={currentPage === 1}
-          className={`${btnBase} flex-1 py-2.5 ${currentPage === 1 ? btnDisabled : btnActive}`}
+          className={`${btnBase} ${
+            currentPage === 1 ? btnDisabled : btnDefault
+          }`}
         >
-          <FaChevronLeft className="w-4 h-4 mr-1" />
-          Prev
+          <FaChevronLeft />
         </button>
-        <span className="text-sm font-medium text-slate-600 shrink-0">
-          {currentPage} / {totalPages}
-        </span>
+
+        {getVisiblePages().map((page, index) => (
+          <button
+            key={index}
+            onClick={() => typeof page === "number" && onPageChange(page)}
+            disabled={page === "..."}
+            className={`${btnBase} ${
+              currentPage === page
+                ? btnActive
+                : page === "..."
+                ? "cursor-default text-slate-400"
+                : btnDefault
+            }`}
+          >
+            {page}
+          </button>
+        ))}
+
         <button
           onClick={() => onPageChange(currentPage + 1)}
-          disabled={currentPage === totalPages || totalPages === 0}
-          className={`${btnBase} flex-1 py-2.5 ${currentPage === totalPages || totalPages === 0 ? btnDisabled : btnActive}`}
+          disabled={currentPage === totalPages}
+          className={`${btnBase} ${
+            currentPage === totalPages ? btnDisabled : btnDefault
+          }`}
         >
-          Next
-          <FaChevronRight className="w-4 h-4 ml-1" />
+          <FaChevronRight />
         </button>
-      </div>
 
-      <div className="hidden md:flex flex-col items-center w-full gap-4">
-        {pageGroups.length > 1 && (
-          <div className="flex flex-wrap justify-center gap-2">
-            {pageGroups.map((group) => (
-              <button
-                key={group}
-                onClick={() => {
-                  setCurrentGroup(group);
-                  onPageChange(group);
-                }}
-                className={`${btnBase} px-3 py-2 text-sm ${
-                  currentGroup === group ? btnPrimary : btnDefault
-                }`}
-              >
-                {group}
-              </button>
-            ))}
-          </div>
-        )}
-        <div className="flex items-center justify-center gap-1.5 p-2 rounded-2xl bg-slate-50 border border-slate-200 shadow-sm">
-          <button
-            onClick={goFirst}
-            disabled={currentPage === 1}
-            className={`${btnBase} ${currentPage === 1 ? btnDisabled : btnDefault}`}
-            title="First page"
-          >
-            <FaAngleDoubleLeft className="w-4 h-4" />
-          </button>
-          <button
-            onClick={() => onPageChange(currentPage - 1)}
-            disabled={currentPage === 1}
-            className={`${btnBase} ${currentPage === 1 ? btnDisabled : btnDefault}`}
-            title="Previous"
-          >
-            <FaChevronLeft className="w-4 h-4" />
-          </button>
+        <button
+          onClick={() => onPageChange(totalPages)}
+          disabled={currentPage === totalPages}
+          className={`${btnBase} ${
+            currentPage === totalPages ? btnDisabled : btnDefault
+          }`}
+        >
+          <FaAngleDoubleRight />
+        </button>
 
-          <div className="flex items-center gap-1 mx-1">
-            {pageNumbers.map((number) => (
-              <button
-                key={number}
-                onClick={() => onPageChange(number)}
-                className={`${btnBase} ${currentPage === number ? btnPrimary : btnDefault}`}
-              >
-                {number}
-              </button>
-            ))}
-          </div>
-
-          <button
-            onClick={() => onPageChange(currentPage + 1)}
-            disabled={currentPage === totalPages}
-            className={`${btnBase} ${currentPage === totalPages ? btnDisabled : btnDefault}`}
-            title="Next"
-          >
-            <FaChevronRight className="w-4 h-4" />
-          </button>
-          <button
-            onClick={goLast}
-            disabled={currentPage === totalPages || totalPages === 0}
-            className={`${btnBase} ${currentPage === totalPages || totalPages === 0 ? btnDisabled : btnDefault}`}
-            title="Last page"
-          >
-            <FaAngleDoubleRight className="w-4 h-4" />
-          </button>
-          {showGoTo && (
-            <div className="ml-2 flex items-center gap-2">
-              <span className="text-xs text-slate-500">Go to</span>
-              <input
-                type="number"
-                min={1}
-                max={totalPages}
-                value={gotoValue}
-                onChange={(e) => setGotoValue(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    const n = Math.max(1, Math.min(totalPages, Number(gotoValue || "1")));
-                    onPageChange(n);
-                    setGotoValue("");
-                  }
-                }}
-                className="w-16 h-9 px-2 rounded-lg border border-slate-300 bg-white text-slate-700"
-                placeholder="Pg"
-                aria-label="Go to page"
-              />
-              <button
-                onClick={() => {
-                  const n = Math.max(1, Math.min(totalPages, Number(gotoValue || "1")));
+        {showGoTo && (
+          <div className="ml-2 flex items-center gap-2">
+            <input
+              type="number"
+              min={1}
+              max={totalPages}
+              value={gotoValue}
+              onChange={(e) => setGotoValue(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  const n = Math.max(
+                    1,
+                    Math.min(totalPages, Number(gotoValue || "1"))
+                  );
                   onPageChange(n);
                   setGotoValue("");
-                }}
-                className={`${btnBase} ${btnDefault} h-9 min-w-[2.25rem]`}
-              >
-                Go
-              </button>
-            </div>
-          )}
-        </div>
+                }
+              }}
+              className="w-16 h-9 px-2 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-emerald-400/40"
+              placeholder="Pg"
+            />
+            <button
+              onClick={() => {
+                const n = Math.max(
+                  1,
+                  Math.min(totalPages, Number(gotoValue || "1"))
+                );
+                onPageChange(n);
+                setGotoValue("");
+              }}
+              className={`${btnBase} ${btnDefault}`}
+            >
+              Go
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
