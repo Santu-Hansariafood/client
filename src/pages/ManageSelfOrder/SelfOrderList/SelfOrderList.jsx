@@ -163,7 +163,6 @@ const SelfOrderList = () => {
           return bSauda - aSauda;
         });
 
-        
         setFilteredData(filteredOrders);
         setTotalItems(total);
 
@@ -309,7 +308,6 @@ const SelfOrderList = () => {
         } catch (downloadErr) {
           console.error("Download failed:", downloadErr);
         }
-        
 
         // const isMobile =
         //   typeof navigator !== "undefined" &&
@@ -380,7 +378,6 @@ const SelfOrderList = () => {
         }
 
         toast.dismiss(toastId);
-        
       } catch (error) {
         toast.dismiss(toastId);
         console.error(error);
@@ -510,11 +507,31 @@ const SelfOrderList = () => {
             : "N/A";
 
         return [
-          slNo,
+          <div className="flex items-center gap-2" key={`sl-${item._id}`}>
+            <span>{slNo}</span>
+
+            <DownloadSauda
+              data={{ ...item, consignee: getConsigneeDisplay(item) }}
+              consigneeData={consigneeData}
+              supplierData={supplierData}
+              buyerData={buyerData}
+              sellerProfileData={sellerProfileData}
+              button={
+                <button
+                  className="flex items-center justify-center w-7 h-7 rounded-md bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition"
+                  title="Download Sauda"
+                >
+                  <FaDownload size={13} />
+                </button>
+              }
+            />
+          </div>,
+
           formattedDate,
           item.saudaNo || "N/A",
           item.poNumber || "N/A",
           item.buyerCompany || "N/A",
+
           userRole === "Admin" ? (
             <div className="flex items-center gap-2" key={`mobile-${item._id}`}>
               <span>{item.buyerMobile || "N/A"}</span>
@@ -533,43 +550,30 @@ const SelfOrderList = () => {
                     }
                   }}
                   className="text-slate-400 hover:text-green-500"
-                  title="Chat on WhatsApp"
                 >
                   <FaWhatsapp size={18} />
                 </button>
               )}
             </div>
           ) : null,
+
           getConsigneeDisplay(item) || "N/A",
           item.commodity || "N/A",
           item.quantity || "0",
           item.rate || "0",
-          (
-            <div className="flex items-center gap-2" key={`sellername-${item._id}`}>
-              <span className="font-semibold text-slate-700">
-                {item?.supplier?.sellerName || item.supplierCompany || "N/A"}
-              </span>
-              <DownloadSauda
-                data={{ ...item, consignee: getConsigneeDisplay(item) }}
-                consigneeData={consigneeData}
-                supplierData={supplierData}
-                buyerData={buyerData}
-                sellerProfileData={sellerProfileData}
-                button={
-                  <button
-                    className="w-7 h-7 rounded-md bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition-colors"
-                    title="Download Sauda"
-                  >
-                    <FaDownload size={14} />
-                  </button>
-                }
-              />
-            </div>
-          ),
+
+          <div className="flex items-center" key={`seller-${item._id}`}>
+            <span className="font-semibold text-slate-700 leading-none">
+              {item?.supplier?.sellerName || item.supplierCompany || "N/A"}
+            </span>
+          </div>,
+
           item.agentName || "N/A",
+
           userRole === "Admin" || userRole === "Employee"
             ? item.buyerEmails?.filter(Boolean).join(", ") || "N/A"
             : null,
+
           userRole === "Admin" || userRole === "Employee" ? (
             <div className="flex flex-col gap-1" key={`seller-${item._id}`}>
               <span className="text-xs text-slate-500">
@@ -594,7 +598,6 @@ const SelfOrderList = () => {
                       }
                     }}
                     className="text-slate-400 hover:text-green-500"
-                    title="Chat on WhatsApp"
                   >
                     <FaWhatsapp size={18} />
                   </button>
@@ -602,6 +605,8 @@ const SelfOrderList = () => {
               </div>
             </div>
           ) : null,
+
+          // Status
           userRole === "Admin" || userRole === "Employee" ? (
             <div className="flex justify-center" key={`status-${item._id}`}>
               {item.whatsappSent ? (
@@ -615,27 +620,17 @@ const SelfOrderList = () => {
               )}
             </div>
           ) : null,
+
+          // ✅ Actions (Download REMOVED from here)
           userRole === "Admin" || userRole === "Employee" ? (
-            <div className="flex items-center gap-2 min-w-[160px]" key={`actions-${item._id}`}>
+            <div
+              className="flex items-center gap-2 min-w-[120px]"
+              key={`actions-${item._id}`}
+            >
               <Actions
                 onView={() => handleView(item)}
                 onEdit={() => handleEdit(item)}
                 onDelete={() => handleDelete(item)}
-              />
-              <DownloadSauda
-                data={{ ...item, consignee: getConsigneeDisplay(item) }}
-                consigneeData={consigneeData}
-                supplierData={supplierData}
-                buyerData={buyerData}
-                sellerProfileData={sellerProfileData}
-                button={
-                  <button
-                    className="w-9 h-9 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition-colors"
-                    title="Download Sauda"
-                  >
-                    <FaDownload size={16} />
-                  </button>
-                }
               />
             </div>
           ) : null,
