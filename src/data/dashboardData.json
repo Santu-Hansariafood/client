@@ -105,7 +105,8 @@
       "icon": "FaTruckLoading",
       "actions": [
         { "name": "Add Loading Entry", "link": "/Loading-Entry/add-loading-entry", "icon": "FaPlus" },
-        { "name": "List Loading Entry", "link": "/Loading-Entry/list-loading-entry", "icon": "FaList" }
+        { "name": "List Loading Entry", "link": "/Loading-Entry/list-loading-entry", "icon": "FaList" },
+        { "name": "Pending Loading List", "link": "/Loading-Entry/pending-loading-list", "icon": "FaClock" }
       ]
     },
     {

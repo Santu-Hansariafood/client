@@ -84,6 +84,56 @@ router.get("/", async (req, res) => {
   }
 });
 
+// Get pending self orders for loading entries
+router.get("/pending/list", async (req, res) => {
+  try {
+    const page = parseInt(req.query.page || "1", 10);
+    const limit = parseInt(req.query.limit || "10", 10);
+    const search = (req.query.search || "").trim();
+    const startDate = req.query.startDate;
+    const endDate = req.query.endDate;
+
+    let query = {
+      status: "active",
+      pendingQuantity: { $gt: 0 }
+    };
+
+    if (search) {
+      const searchRegex = new RegExp(search, "i");
+      query.$or = [
+        { supplierCompany: { $regex: searchRegex } },
+        { saudaNo: { $regex: searchRegex } },
+        { buyerCompany: { $regex: searchRegex } },
+        { commodity: { $regex: searchRegex } }
+      ];
+    }
+
+    if (startDate || endDate) {
+      query.poDate = {};
+      if (startDate) query.poDate.$gte = new Date(startDate);
+      if (endDate) query.poDate.$lte = new Date(endDate);
+    }
+
+    const items = await SelfOrder.find(query)
+      .sort({ poDate: -1, createdAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .populate("supplier", "sellerName")
+      .lean();
+
+    const total = await SelfOrder.countDocuments(query);
+
+    res.json({
+      data: items,
+      total,
+      page,
+      totalPages: Math.ceil(total / limit)
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 router.get("/:id", async (req, res) => {
   try {
     const item = await SelfOrder.findById(req.params.id).lean();

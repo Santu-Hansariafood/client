@@ -57,6 +57,7 @@ const privateRoutes = [
   { path: "manage-order/list-self-order", component: LazyPages.ListSelfOrder, roles: ["Admin", "Employee", "Buyer", "Seller"] },
   { path: "Loading-Entry/list-loading-entry", component: LazyPages.ListLoadingEntry, roles: ["Admin", "Employee"] },
   { path: "Loading-Entry/add-loading-entry", component: LazyPages.AddLoadingEntry, roles: ["Admin", "Employee"] },
+  { path: "Loading-Entry/pending-loading-list", component: LazyPages.PendingLoadingList, roles: ["Admin", "Employee"] },
   { path: "employee/add", component: LazyPages.AddEmployee, roles: ["Admin"] },
   { path: "employee/list", component: LazyPages.ListEmployee, roles: ["Admin"] },
   { path: "transporter/add", component: LazyPages.AddTransporter, roles: ["Admin", "Employee"] },
