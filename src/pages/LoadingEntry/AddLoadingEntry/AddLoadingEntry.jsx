@@ -602,10 +602,10 @@ const AddLoadingEntry = () => {
             isOpen={isPopupOpen}
             onClose={() => setIsPopupOpen(false)}
             title={`Add Loading Entry - Sauda: ${selectedOrder.saudaNo}`}
-            maxWidth="max-w-[98vw]"
+            maxWidth="max-w-[98vw] max-w-none"
           >
             <div className="space-y-6">
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 p-4 bg-slate-50 rounded-2xl text-sm border border-slate-100 shadow-inner">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 bg-slate-50 rounded-2xl text-sm border border-slate-100 shadow-inner">
                 <div className="bg-white p-3 rounded-xl border border-slate-200">
                   <p className="text-slate-500 font-medium">Total Quantity</p>
                   <p className="font-bold text-slate-800 text-lg">
@@ -649,7 +649,7 @@ const AddLoadingEntry = () => {
                 {loadingEntries.map((entry, index) => (
                   <div
                     key={index}
-                    className="p-5 border border-slate-200 rounded-3xl space-y-6 relative bg-white shadow-sm hover:shadow-md transition-shadow"
+                    className="p-3 sm:p-4 border border-slate-200 rounded-3xl space-y-6 relative bg-white shadow-sm hover:shadow-md transition-shadow"
                   >
                     <div className="flex justify-between items-center border-b border-slate-100 pb-3">
                       <div className="flex items-center gap-3">
@@ -680,7 +680,7 @@ const AddLoadingEntry = () => {
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6 gap-3 w-full">
                       <div className="space-y-1.5">
                         <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider">
                           Loading Date
