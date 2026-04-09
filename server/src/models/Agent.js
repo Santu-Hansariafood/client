@@ -14,7 +14,7 @@ const agentSchema = new mongoose.Schema(
           .replace(/\b\w/g, (c) => c.toUpperCase()),
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 export default mongoose.model("Agent", agentSchema);

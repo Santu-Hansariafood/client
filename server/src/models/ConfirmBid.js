@@ -7,17 +7,25 @@ const confirmBidSchema = new mongoose.Schema(
     status: {
       type: String,
       enum: ["Confirmed", "Rejected", "Review"],
-      default: "Review"
+      default: "Review",
     },
-    participationId: { type: mongoose.Schema.Types.ObjectId, ref: "ParticipateBid", default: null },
+    participationId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "ParticipateBid",
+      default: null,
+    },
     acceptanceRate: { type: Number, default: null },
     acceptanceQuantity: { type: Number, default: null },
     acceptanceAmount: { type: Number, default: null },
     acceptedAt: { type: Date, default: null },
     acceptedByMobile: { type: String, default: "" },
-    acceptedByRole: { type: String, enum: ["Admin", "Employee", "Buyer", "Seller", ""], default: "" }
+    acceptedByRole: {
+      type: String,
+      enum: ["Admin", "Employee", "Buyer", "Seller", ""],
+      default: "",
+    },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 confirmBidSchema.index({ bidId: 1 });

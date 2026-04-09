@@ -19,9 +19,14 @@ router.post("/admin/login", async (req, res) => {
     const token = jwt.sign(
       { sub: user._id.toString(), role: "Admin", mobile: user.mobile || "" },
       process.env.JWT_SECRET,
-      { expiresIn: "365d" }
+      { expiresIn: "365d" },
     );
-    res.json({ role: "Admin", mobile: user.mobile || "", name: user.name, token });
+    res.json({
+      role: "Admin",
+      mobile: user.mobile || "",
+      name: user.name,
+      token,
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -34,14 +39,19 @@ router.post("/employees/login", async (req, res) => {
       return res.status(500).json({ message: "JWT_SECRET is not configured" });
     }
     const employee = await Employee.findOne({ mobile, password });
-    if (!employee) return res.status(401).json({ message: "Invalid credentials" });
+    if (!employee)
+      return res.status(401).json({ message: "Invalid credentials" });
     if (employee.status === "Inactive") {
       return res.status(403).json({ message: "Your account is inactive." });
     }
     const token = jwt.sign(
-      { sub: employee._id.toString(), role: "Employee", mobile: employee.mobile || "" },
+      {
+        sub: employee._id.toString(),
+        role: "Employee",
+        mobile: employee.mobile || "",
+      },
       process.env.JWT_SECRET,
-      { expiresIn: "365d" }
+      { expiresIn: "365d" },
     );
     res.json({
       role: "Employee",
@@ -65,14 +75,19 @@ router.post("/transporters/login", async (req, res) => {
       return res.status(500).json({ message: "JWT_SECRET is not configured" });
     }
     const transporter = await Transporter.findOne({ mobile, password });
-    if (!transporter) return res.status(401).json({ message: "Invalid credentials" });
+    if (!transporter)
+      return res.status(401).json({ message: "Invalid credentials" });
     if (transporter.status === "Inactive") {
       return res.status(403).json({ message: "Your account is inactive." });
     }
     const token = jwt.sign(
-      { sub: transporter._id.toString(), role: "Transporter", mobile: transporter.mobile || "" },
+      {
+        sub: transporter._id.toString(),
+        role: "Transporter",
+        mobile: transporter.mobile || "",
+      },
       process.env.JWT_SECRET,
-      { expiresIn: "365d" }
+      { expiresIn: "365d" },
     );
     res.json({
       role: "Transporter",
@@ -99,7 +114,9 @@ router.post("/buyers/login", async (req, res) => {
     }
 
     if (!mobile || !password) {
-      return res.status(400).json({ message: "Mobile and password are required" });
+      return res
+        .status(400)
+        .json({ message: "Mobile and password are required" });
     }
 
     const buyer = await Buyer.findOne({
@@ -152,20 +169,25 @@ router.post("/sellers/login", async (req, res) => {
     }
 
     if (!phone || !password) {
-      return res.status(400).json({ message: "Phone and password are required" });
+      return res
+        .status(400)
+        .json({ message: "Phone and password are required" });
     }
 
-    const seller = await Seller.findOne({ "phoneNumbers.value": phone, password: password });
-    
+    const seller = await Seller.findOne({
+      "phoneNumbers.value": phone,
+      password: password,
+    });
+
     if (!seller) {
       console.warn(`Invalid seller credentials for phone: ${phone}`);
       return res.status(401).json({ message: "Invalid credentials" });
     }
-    
+
     const token = jwt.sign(
       { sub: seller._id.toString(), role: "Seller", mobile: phone },
       process.env.JWT_SECRET,
-      { expiresIn: "365d" }
+      { expiresIn: "365d" },
     );
 
     console.log(`Seller login successful: ${seller.sellerName}`);

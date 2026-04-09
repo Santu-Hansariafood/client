@@ -19,8 +19,7 @@ const Buttons = ({
       "bg-slate-600 text-white hover:bg-slate-700 focus:ring-slate-500",
     danger:
       "bg-red-500 text-white hover:bg-red-600 focus:ring-red-500 shadow-md shadow-red-500/20",
-    success:
-      "bg-teal-600 text-white hover:bg-teal-700 focus:ring-teal-500",
+    success: "bg-teal-600 text-white hover:bg-teal-700 focus:ring-teal-500",
     outline:
       "bg-white text-emerald-700 border-2 border-emerald-500 hover:bg-emerald-50 focus:ring-emerald-400",
     ghost:

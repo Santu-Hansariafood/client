@@ -1,4 +1,3 @@
-
 import { Router } from "express";
 import Group from "../models/Group.js";
 
@@ -47,7 +46,9 @@ router.post("/", async (req, res) => {
 
 router.put("/:id", async (req, res) => {
   try {
-    const group = await Group.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    const group = await Group.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+    });
     if (!group) return res.status(404).json({ message: "Group not found" });
     res.json(group);
   } catch (error) {

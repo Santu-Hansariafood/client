@@ -19,7 +19,7 @@ const companyCommodityParameterSchema = new mongoose.Schema(
     },
     value: { type: String, default: "" },
   },
-  { _id: false }
+  { _id: false },
 );
 
 const companyCommoditySchema = new mongoose.Schema(
@@ -32,7 +32,7 @@ const companyCommoditySchema = new mongoose.Schema(
     brokerage: { type: Number, default: 0 },
     parameters: { type: [companyCommodityParameterSchema], default: [] },
   },
-  { _id: false }
+  { _id: false },
 );
 
 const companySchema = new mongoose.Schema(
@@ -55,12 +55,16 @@ const companySchema = new mongoose.Schema(
       ref: "Consignee",
       default: [],
     },
-    groupId: { type: mongoose.Schema.Types.ObjectId, ref: "Group", default: null },
+    groupId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Group",
+      default: null,
+    },
     commodities: { type: [companyCommoditySchema], default: [] },
     mandiLicense: { type: String, trim: true, default: "" },
     activeStatus: { type: Boolean, default: true },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 companySchema.index({ companyName: 1 });

@@ -9,7 +9,9 @@ import Consignee from "../models/Consignee.js";
 const router = Router();
 
 const toObjectId = (value) =>
-  mongoose.Types.ObjectId.isValid(value) ? new mongoose.Types.ObjectId(value) : null;
+  mongoose.Types.ObjectId.isValid(value)
+    ? new mongoose.Types.ObjectId(value)
+    : null;
 
 const normalizeStringArray = (value) => {
   if (Array.isArray(value)) return value.map((v) => String(v)).filter(Boolean);
@@ -23,27 +25,33 @@ const normalizeObjectIdArray = (value) => {
 };
 
 const mapBuyerForClient = (buyer) => {
-  const companyIds = (buyer.companyIds || []).map((c) => c?._id || c).filter(Boolean);
+  const companyIds = (buyer.companyIds || [])
+    .map((c) => c?._id || c)
+    .filter(Boolean);
   const groupId = buyer.groupId?._id || buyer.groupId || null;
-  const commodityIds = (buyer.commodityIds || []).map((c) => c?._id || c).filter(Boolean);
-  const consigneeIds = (buyer.consigneeIds || []).map((c) => c?._id || c).filter(Boolean);
+  const commodityIds = (buyer.commodityIds || [])
+    .map((c) => c?._id || c)
+    .filter(Boolean);
+  const consigneeIds = (buyer.consigneeIds || [])
+    .map((c) => c?._id || c)
+    .filter(Boolean);
 
   const brokerageByName = {};
-  
+
   if (buyer.brokerage) {
     const rawBrokerage = buyer.brokerage;
     (buyer.commodityIds || []).forEach((c) => {
       if (c && c.name) {
         const cid = c._id ? c._id.toString() : c.toString();
-        const value = typeof rawBrokerage.get === "function" 
-          ? rawBrokerage.get(cid) 
-          : rawBrokerage[cid];
+        const value =
+          typeof rawBrokerage.get === "function"
+            ? rawBrokerage.get(cid)
+            : rawBrokerage[cid];
         if (value !== undefined) brokerageByName[c.name] = value;
       }
     });
   }
 
-  // Use the first company for some legacy fields if needed
   const firstCompany = (buyer.companyIds || [])[0] || {};
 
   return {
@@ -83,7 +91,8 @@ const mapBuyerForClient = (buyer) => {
 const buyerPopulate = [
   {
     path: "companyIds",
-    select: "companyName companyEmail location state district pinCode gstNumber panNumber groupId consigneeIds commodities",
+    select:
+      "companyName companyEmail location state district pinCode gstNumber panNumber groupId consigneeIds commodities",
     populate: { path: "commodities.commodityId", select: "name" },
   },
   { path: "groupId", select: "groupName" },
@@ -143,7 +152,9 @@ router.get("/", async (req, res) => {
 
 router.get("/:id", async (req, res) => {
   try {
-    const buyer = await Buyer.findById(req.params.id).populate(buyerPopulate).lean();
+    const buyer = await Buyer.findById(req.params.id)
+      .populate(buyerPopulate)
+      .lean();
     if (!buyer) return res.status(404).json({ message: "Buyer not found" });
     res.json(mapBuyerForClient(buyer));
   } catch (error) {
@@ -161,15 +172,21 @@ router.post("/", async (req, res) => {
     let consigneeIds = normalizeObjectIdArray(body.consigneeIds);
 
     if (companyIds.length === 0 && body.companyName) {
-      const company = await Company.findOne({ companyName: body.companyName }).select("_id").lean();
+      const company = await Company.findOne({ companyName: body.companyName })
+        .select("_id")
+        .lean();
       if (company) companyIds = [company._id];
     }
     if (!groupId && body.group) {
-      const group = await Group.findOne({ groupName: body.group }).select("_id").lean();
+      const group = await Group.findOne({ groupName: body.group })
+        .select("_id")
+        .lean();
       groupId = group?._id || null;
     }
     if (commodityIds.length === 0 && Array.isArray(body.commodity)) {
-      const commodities = await Commodity.find({ name: { $in: body.commodity } })
+      const commodities = await Commodity.find({
+        name: { $in: body.commodity },
+      })
         .select("_id")
         .lean();
       commodityIds = commodities.map((c) => c._id);
@@ -178,7 +195,9 @@ router.post("/", async (req, res) => {
       const names = body.consignee
         .map((c) => (typeof c === "string" ? c : c?.label || c?.name || ""))
         .filter(Boolean);
-      const consignees = await Consignee.find({ name: { $in: names } }).select("_id name").lean();
+      const consignees = await Consignee.find({ name: { $in: names } })
+        .select("_id name")
+        .lean();
       consigneeIds = consignees.map((c) => c._id);
     }
 
@@ -195,7 +214,9 @@ router.post("/", async (req, res) => {
       consigneeIds,
     });
 
-    const created = await Buyer.findById(item._id).populate(buyerPopulate).lean();
+    const created = await Buyer.findById(item._id)
+      .populate(buyerPopulate)
+      .lean();
     res.status(201).json(mapBuyerForClient(created));
   } catch (error) {
     res.status(400).json({ message: error.message });
@@ -228,7 +249,9 @@ router.put("/:id", async (req, res) => {
       if (body.commodity.length === 0) {
         commodityIds = [];
       } else {
-        const commodities = await Commodity.find({ name: { $in: body.commodity } })
+        const commodities = await Commodity.find({
+          name: { $in: body.commodity },
+        })
           .select("_id")
           .lean();
         commodityIds = commodities.map((c) => c._id);

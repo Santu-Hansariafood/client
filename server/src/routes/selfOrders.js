@@ -75,7 +75,6 @@ router.get("/", async (req, res) => {
       return res.json({ data: items, total });
     }
 
-    // Default limit if not specified to prevent loading too much data
     const items = await SelfOrder.find(query)
       .sort({ poDate: -1, createdAt: -1 })
       .limit(100)
@@ -87,7 +86,6 @@ router.get("/", async (req, res) => {
   }
 });
 
-// Get pending self orders for loading entries
 router.get("/pending/list", async (req, res) => {
   try {
     const page = parseInt(req.query.page || "1", 10);
@@ -101,8 +99,8 @@ router.get("/pending/list", async (req, res) => {
       $or: [
         { pendingQuantity: { $gt: 0 } },
         { pendingQuantity: { $exists: false } },
-        { pendingQuantity: 0 }
-      ]
+        { pendingQuantity: 0 },
+      ],
     };
 
     if (search) {
@@ -113,9 +111,9 @@ router.get("/pending/list", async (req, res) => {
             { supplierCompany: { $regex: searchRegex } },
             { saudaNo: { $regex: searchRegex } },
             { buyerCompany: { $regex: searchRegex } },
-            { commodity: { $regex: searchRegex } }
-          ]
-        }
+            { commodity: { $regex: searchRegex } },
+          ],
+        },
       ];
     }
 
@@ -138,7 +136,7 @@ router.get("/pending/list", async (req, res) => {
       data: items,
       total,
       page,
-      totalPages: Math.ceil(total / limit)
+      totalPages: Math.ceil(total / limit),
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -170,7 +168,11 @@ router.put("/:id", async (req, res) => {
 router.post("/", async (req, res) => {
   try {
     const data = req.body;
-    if (data.pendingQuantity === undefined || data.pendingQuantity === null || data.pendingQuantity === "") {
+    if (
+      data.pendingQuantity === undefined ||
+      data.pendingQuantity === null ||
+      data.pendingQuantity === ""
+    ) {
       data.pendingQuantity = data.quantity || 0;
     }
     if (!data.status) {

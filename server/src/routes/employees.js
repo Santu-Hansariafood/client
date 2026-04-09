@@ -123,7 +123,8 @@ router.get("/", async (req, res) => {
 router.get("/:id", async (req, res) => {
   try {
     const employee = await Employee.findById(req.params.id);
-    if (!employee) return res.status(404).json({ message: "Employee not found" });
+    if (!employee)
+      return res.status(404).json({ message: "Employee not found" });
     res.json(employee);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -136,10 +137,10 @@ router.post("/", async (req, res) => {
     const employeeData = { ...req.body, employeeId };
     const employee = new Employee(employeeData);
     const saved = await employee.save();
-    
+
     // Send email asynchronously
     sendEmployeeRegistrationEmail(saved);
-    
+
     res.status(201).json(saved);
   } catch (error) {
     res.status(400).json({ message: error.message });
@@ -152,7 +153,8 @@ router.put("/:id", async (req, res) => {
       new: true,
       runValidators: true,
     });
-    if (!updated) return res.status(404).json({ message: "Employee not found" });
+    if (!updated)
+      return res.status(404).json({ message: "Employee not found" });
     res.json(updated);
   } catch (error) {
     res.status(400).json({ message: error.message });
@@ -162,7 +164,8 @@ router.put("/:id", async (req, res) => {
 router.delete("/:id", async (req, res) => {
   try {
     const deleted = await Employee.findByIdAndDelete(req.params.id);
-    if (!deleted) return res.status(404).json({ message: "Employee not found" });
+    if (!deleted)
+      return res.status(404).json({ message: "Employee not found" });
     res.json({ message: "Employee deleted successfully" });
   } catch (error) {
     res.status(500).json({ message: error.message });

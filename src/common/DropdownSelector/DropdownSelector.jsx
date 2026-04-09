@@ -79,25 +79,25 @@ const DropdownSelector = ({ fetchData }) => {
               ) : (
                 [...selectedItems]
                   .sort((a, b) =>
-                    String(a.label || "").localeCompare(String(b.label || ""))
+                    String(a.label || "").localeCompare(String(b.label || "")),
                   )
                   .map((seller) => (
                     <li
                       key={seller.value}
                       className="flex items-center justify-between gap-3 px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700"
                     >
-                    <span className="text-sm font-medium text-slate-700 dark:text-slate-300 truncate">
-                      {seller.label}
-                    </span>
-                    <button
-                      onClick={() => handleRemove(seller)}
-                      className="shrink-0 p-1.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors focus:outline-none focus:ring-2 focus:ring-red-400/40"
-                      aria-label={`Remove ${seller.label}`}
-                    >
-                      <IoClose size={18} />
-                    </button>
-                  </li>
-                ))
+                      <span className="text-sm font-medium text-slate-700 dark:text-slate-300 truncate">
+                        {seller.label}
+                      </span>
+                      <button
+                        onClick={() => handleRemove(seller)}
+                        className="shrink-0 p-1.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors focus:outline-none focus:ring-2 focus:ring-red-400/40"
+                        aria-label={`Remove ${seller.label}`}
+                      >
+                        <IoClose size={18} />
+                      </button>
+                    </li>
+                  ))
               )}
             </ul>
           </div>

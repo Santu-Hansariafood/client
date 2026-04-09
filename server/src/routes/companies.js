@@ -55,7 +55,7 @@ const mapCompanyForClient = (company) => {
     companyEmail: company.companyEmail || "",
     location: company.location || "",
     state: company.state || "",
-    district: company.district || "" ,
+    district: company.district || "",
     pinCode: company.pinCode || "",
     gstNumber: company.gstNumber || "",
     panNumber: company.panNumber || "",

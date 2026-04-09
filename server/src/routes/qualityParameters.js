@@ -1,4 +1,3 @@
-
 import { Router } from "express";
 import QualityParameter from "../models/QualityParameter.js";
 
@@ -40,8 +39,13 @@ router.post("/", async (req, res) => {
 
 router.put("/:id", async (req, res) => {
   try {
-    const param = await QualityParameter.findByIdAndUpdate(req.params.id, req.body, { new: true });
-    if (!param) return res.status(404).json({ message: "Quality Parameter not found" });
+    const param = await QualityParameter.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { new: true },
+    );
+    if (!param)
+      return res.status(404).json({ message: "Quality Parameter not found" });
     res.json(param);
   } catch (error) {
     res.status(400).json({ message: error.message });
@@ -51,7 +55,8 @@ router.put("/:id", async (req, res) => {
 router.delete("/:id", async (req, res) => {
   try {
     const param = await QualityParameter.findByIdAndDelete(req.params.id);
-    if (!param) return res.status(404).json({ message: "Quality Parameter not found" });
+    if (!param)
+      return res.status(404).json({ message: "Quality Parameter not found" });
     res.json({ message: "Quality Parameter deleted" });
   } catch (error) {
     res.status(500).json({ message: error.message });

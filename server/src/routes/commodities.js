@@ -6,7 +6,9 @@ import QualityParameter from "../models/QualityParameter.js";
 const router = Router();
 
 const toObjectId = (value) =>
-  mongoose.Types.ObjectId.isValid(value) ? new mongoose.Types.ObjectId(value) : null;
+  mongoose.Types.ObjectId.isValid(value)
+    ? new mongoose.Types.ObjectId(value)
+    : null;
 
 const commodityPopulate = [{ path: "parameters.parameterId", select: "name" }];
 
@@ -85,7 +87,9 @@ router.get("/", async (req, res) => {
 
 router.get("/:id", async (req, res) => {
   try {
-    const item = await Commodity.findById(req.params.id).populate(commodityPopulate).lean();
+    const item = await Commodity.findById(req.params.id)
+      .populate(commodityPopulate)
+      .lean();
 
     if (!item) {
       return res.status(404).json({ message: "Commodity not found" });
@@ -107,7 +111,9 @@ router.post("/", async (req, res) => {
       });
     }
 
-    const normalizedParameters = await normalizeCommodityParameters(parameters || []);
+    const normalizedParameters = await normalizeCommodityParameters(
+      parameters || [],
+    );
 
     const commodity = new Commodity({
       name,
@@ -117,7 +123,9 @@ router.post("/", async (req, res) => {
 
     const saved = await commodity.save();
 
-    const created = await Commodity.findById(saved._id).populate(commodityPopulate).lean();
+    const created = await Commodity.findById(saved._id)
+      .populate(commodityPopulate)
+      .lean();
     res.status(201).json(mapCommodityForClient(created));
   } catch (error) {
     if (error.code === 11000) {
@@ -147,7 +155,8 @@ router.put("/:id", async (req, res) => {
       .populate(commodityPopulate)
       .lean();
 
-    if (!updated) return res.status(404).json({ message: "Commodity not found" });
+    if (!updated)
+      return res.status(404).json({ message: "Commodity not found" });
     res.json(mapCommodityForClient(updated));
   } catch (error) {
     res.status(400).json({ message: error.message });
@@ -157,7 +166,8 @@ router.put("/:id", async (req, res) => {
 router.delete("/:id", async (req, res) => {
   try {
     const deleted = await Commodity.findByIdAndDelete(req.params.id).lean();
-    if (!deleted) return res.status(404).json({ message: "Commodity not found" });
+    if (!deleted)
+      return res.status(404).json({ message: "Commodity not found" });
     res.json({ message: "Commodity deleted successfully" });
   } catch (error) {
     res.status(400).json({ message: "Invalid ID" });

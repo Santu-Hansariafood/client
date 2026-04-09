@@ -3,8 +3,6 @@ import Agent from "../models/Agent.js";
 
 const router = Router();
 
-
-// GET ALL AGENTS (with optional pagination)
 router.get("/", async (req, res) => {
   try {
     const page = parseInt(req.query.page || "0", 10);
@@ -35,8 +33,6 @@ router.get("/", async (req, res) => {
   }
 });
 
-
-// CREATE AGENT
 router.post("/", async (req, res) => {
   try {
     if (!req.body.name || req.body.name.trim() === "") {
@@ -61,8 +57,6 @@ router.post("/", async (req, res) => {
   }
 });
 
-
-// UPDATE AGENT
 router.put("/:id", async (req, res) => {
   try {
     if (!req.body.name || req.body.name.trim() === "") {
@@ -75,7 +69,7 @@ router.put("/:id", async (req, res) => {
       {
         new: true,
         runValidators: true,
-      }
+      },
     );
 
     if (!updated) {
@@ -98,8 +92,6 @@ router.put("/:id", async (req, res) => {
   }
 });
 
-
-// DELETE AGENT
 router.delete("/:id", async (req, res) => {
   try {
     const deleted = await Agent.findByIdAndDelete(req.params.id);
@@ -119,6 +111,5 @@ router.delete("/:id", async (req, res) => {
     });
   }
 });
-
 
 export default router;

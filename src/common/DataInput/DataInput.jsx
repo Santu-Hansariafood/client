@@ -22,8 +22,8 @@ const DataInput = ({
     size === "sm"
       ? "px-3 py-2 text-sm"
       : size === "lg"
-      ? "px-6 py-4 text-lg"
-      : "px-5 py-3 text-base";
+        ? "px-6 py-4 text-lg"
+        : "px-5 py-3 text-base";
 
   return (
     <div className="mb-5 w-full">
@@ -53,9 +53,7 @@ const DataInput = ({
           required={required}
           disabled={disabled}
           readOnly={readOnly}
-          className={`w-full ${
-            Icon ? "pl-12" : "px-5"
-          } py-3 bg-white border ${
+          className={`w-full ${Icon ? "pl-12" : "px-5"} py-3 bg-white border ${
             error
               ? "border-red-500 focus:ring-red-200"
               : "border-gray-300 focus:ring-green-200 focus:border-green-500"

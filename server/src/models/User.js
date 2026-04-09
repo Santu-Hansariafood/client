@@ -3,12 +3,16 @@ import mongoose from "mongoose";
 const userSchema = new mongoose.Schema(
   {
     name: { type: String, required: true },
-    role: { type: String, required: true, enum: ["Admin", "Employee", "Buyer", "Seller", "Transporter"] },
+    role: {
+      type: String,
+      required: true,
+      enum: ["Admin", "Employee", "Buyer", "Seller", "Transporter"],
+    },
     mobile: { type: String },
     phone: { type: String },
-    password: { type: String, required: true }
+    password: { type: String, required: true },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 userSchema.index({ role: 1, mobile: 1 });

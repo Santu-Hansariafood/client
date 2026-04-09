@@ -9,9 +9,9 @@ const employeeSchema = new mongoose.Schema(
     sex: { type: String, enum: ["Male", "Female", "Other"] },
     password: { type: String, required: true },
     role: { type: String, default: "Employee" },
-    status: { type: String, enum: ["Active", "Inactive"], default: "Active" }
+    status: { type: String, enum: ["Active", "Inactive"], default: "Active" },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 employeeSchema.index({ email: 1 });

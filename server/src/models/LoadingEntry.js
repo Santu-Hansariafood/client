@@ -17,13 +17,17 @@ const loadingEntrySchema = new mongoose.Schema(
     dateOfIssue: { type: Date },
     documentUrl: { type: String, default: "" },
     saudaNo: { type: String, required: true },
-    supplier: { type: mongoose.Schema.Types.ObjectId, ref: "Seller", required: true },
+    supplier: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Seller",
+      required: true,
+    },
     supplierCompany: { type: String, default: "" },
     consignee: { type: String, required: true },
     commodity: { type: String, default: "" },
     bags: { type: Number, default: 0 },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 loadingEntrySchema.index({ saudaNo: 1 });

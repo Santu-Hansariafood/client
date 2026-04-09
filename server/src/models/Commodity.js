@@ -5,10 +5,10 @@ const commodityParameterSchema = new mongoose.Schema(
     parameterId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "QualityParameter",
-      required: true
-    }
+      required: true,
+    },
   },
-  { _id: false }
+  { _id: false },
 );
 
 const commoditySchema = new mongoose.Schema(
@@ -17,18 +17,18 @@ const commoditySchema = new mongoose.Schema(
       type: String,
       required: true,
       unique: true,
-      trim: true
+      trim: true,
     },
 
     hsnCode: {
       type: String,
       required: true,
-      trim: true
+      trim: true,
     },
 
-    parameters: [commodityParameterSchema]
+    parameters: [commodityParameterSchema],
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 export default mongoose.model("Commodity", commoditySchema);

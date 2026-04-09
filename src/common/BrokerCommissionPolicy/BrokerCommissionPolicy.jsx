@@ -1,9 +1,13 @@
 import { useEffect } from "react";
-import { FaHandshake, FaMoneyBillWave, FaFileInvoice, FaArrowLeft } from "react-icons/fa";
+import {
+  FaHandshake,
+  FaMoneyBillWave,
+  FaFileInvoice,
+  FaArrowLeft,
+} from "react-icons/fa";
 import { Link } from "react-router-dom";
 
 const BrokerCommissionPolicy = () => {
-
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
@@ -36,8 +40,8 @@ const BrokerCommissionPolicy = () => {
               <li>Offline confirmed trades introduced by Hansaria</li>
             </ul>
             <p className="mt-3">
-              It applies to all commodities including maize, soya, DDGS,
-              oil cakes, grains, and other feed raw materials.
+              It applies to all commodities including maize, soya, DDGS, oil
+              cakes, grains, and other feed raw materials.
             </p>
           </Section>
           <Section icon={<FaMoneyBillWave />} title="3. Commission Structure">
@@ -61,7 +65,9 @@ const BrokerCommissionPolicy = () => {
           <Section title="4. Liability to Pay Commission">
             Unless agreed otherwise in writing:
             <ul className="list-disc ml-6 mt-2 space-y-2">
-              <li>Commission may be payable by buyer, seller, or both parties</li>
+              <li>
+                Commission may be payable by buyer, seller, or both parties
+              </li>
               <li>Payment responsibility is confirmed at deal finalisation</li>
               <li>
                 Once a trade is confirmed, commission becomes payable even if
@@ -71,7 +77,9 @@ const BrokerCommissionPolicy = () => {
           </Section>
           <Section icon={<FaFileInvoice />} title="5. Payment Terms">
             <ul className="list-disc ml-6 space-y-2">
-              <li>Commission invoices must be paid within the stated due date</li>
+              <li>
+                Commission invoices must be paid within the stated due date
+              </li>
               <li>Late payments may attract interest or penalties</li>
               <li>Non-payment may lead to suspension of trading privileges</li>
             </ul>
@@ -93,14 +101,12 @@ const BrokerCommissionPolicy = () => {
               <li>Resources or logistics were already deployed</li>
             </ul>
             <p className="mt-3">
-              Any waiver of commission is solely at the Company&rsquo;s discretion.
+              Any waiver of commission is solely at the Company&rsquo;s
+              discretion.
             </p>
-
           </Section>
           <Section title="8. Additional Service Charges">
-
             Separate charges may apply for optional services such as:
-
             <ul className="list-disc ml-6 mt-2 space-y-2">
               <li>Inspection and quality verification</li>
               <li>Warehousing or storage</li>
@@ -108,61 +114,47 @@ const BrokerCommissionPolicy = () => {
               <li>Documentation and compliance support</li>
               <li>Logistics coordination</li>
             </ul>
-
           </Section>
 
           <Section title="9. Taxes">
-
             All commissions and service fees are exclusive of applicable taxes.
             GST or other statutory taxes will be charged as per Indian law.
-
           </Section>
 
           <Section title="10. Right to Modify Rates">
-
             Hansaria reserves the right to revise brokerage rates depending on:
-
             <ul className="list-disc ml-6 mt-2 space-y-2">
               <li>Market volatility</li>
               <li>Operational costs</li>
               <li>Regulatory changes</li>
               <li>Business policy updates</li>
             </ul>
-
           </Section>
 
           <Section title="11. Dispute Resolution">
-
             Any dispute regarding commission must be raised within
             <strong> 7 days </strong> of the invoice date.
-
           </Section>
 
           <Section title="12. Acceptance of Policy">
-
             By engaging in any trade facilitated by Hansaria, all parties
             acknowledge and agree to this Broker Commission Policy.
-
           </Section>
 
           {/* Highlight Clause */}
 
           <div className="bg-green-50 border-l-4 border-green-600 p-6 rounded-xl mt-8">
-
             <p className="font-semibold text-gray-800">
               Brokerage is earned once a transaction is confirmed between
               parties introduced by the Company, regardless of whether the
               contract is later completed or performed.
             </p>
-
           </div>
-
         </div>
 
         {/* Back Button */}
 
         <div className="text-center mt-10">
-
           <Link
             to="/"
             className="inline-flex items-center gap-2 bg-green-700 text-white px-6 py-3 rounded-xl shadow-lg hover:bg-green-800 transition"
@@ -170,21 +162,16 @@ const BrokerCommissionPolicy = () => {
             <FaArrowLeft />
             Back to Home
           </Link>
-
         </div>
-
       </div>
     </div>
   );
 };
 
 const Section = ({ title, children, icon }) => {
-
   return (
     <div className="mb-10 group">
-
       <div className="flex items-center gap-3 mb-3">
-
         {icon && (
           <span className="text-green-600 text-xl group-hover:scale-110 transition">
             {icon}
@@ -194,15 +181,11 @@ const Section = ({ title, children, icon }) => {
         <h2 className="text-xl md:text-2xl font-semibold text-gray-800">
           {title}
         </h2>
-
       </div>
 
-      <div className="text-gray-700 leading-relaxed ml-1">
-        {children}
-      </div>
+      <div className="text-gray-700 leading-relaxed ml-1">{children}</div>
 
       <div className="h-[1px] bg-gray-200 mt-6"></div>
-
     </div>
   );
 };

@@ -8,25 +8,25 @@ const transporterSchema = new mongoose.Schema(
     password: { type: String, required: true },
     vehicleDetails: {
       number: { type: String },
-      type: { type: String }, // lorry or pickup
-      ownerName: { type: String }
+      type: { type: String },
+      ownerName: { type: String },
     },
     driverDetails: {
       name: { type: String },
       licenseNumber: { type: String },
-      phoneNumber: { type: String }
+      phoneNumber: { type: String },
     },
     bankDetails: {
       accountHolderName: { type: String },
       accountNumber: { type: String },
       ifscCode: { type: String },
       bankName: { type: String },
-      branchName: { type: String }
+      branchName: { type: String },
     },
     role: { type: String, default: "Transporter" },
-    status: { type: String, enum: ["Active", "Inactive"], default: "Active" }
+    status: { type: String, enum: ["Active", "Inactive"], default: "Active" },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 transporterSchema.index({ email: 1 });

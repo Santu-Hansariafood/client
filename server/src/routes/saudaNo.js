@@ -5,9 +5,7 @@ const router = Router();
 
 router.post("/", async (_req, res) => {
   try {
-    const lastOrder = await SelfOrder.findOne()
-      .sort({ createdAt: -1 })
-      .lean();
+    const lastOrder = await SelfOrder.findOne().sort({ createdAt: -1 }).lean();
 
     const extractNumber = (value) => {
       if (!value) return 0;
@@ -27,4 +25,3 @@ router.post("/", async (_req, res) => {
 });
 
 export default router;
-

@@ -2,9 +2,9 @@ import mongoose from "mongoose";
 
 const bidLocationSchema = new mongoose.Schema(
   {
-    name: { type: String, required: true }
+    name: { type: String, required: true },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 bidLocationSchema.index({ name: 1 });

@@ -3,17 +3,33 @@ import mongoose from "mongoose";
 const buyerSchema = new mongoose.Schema(
   {
     name: { type: String, required: true },
-    companyIds: { type: [mongoose.Schema.Types.ObjectId], ref: "Company", default: [] },
-    groupId: { type: mongoose.Schema.Types.ObjectId, ref: "Group", default: null },
+    companyIds: {
+      type: [mongoose.Schema.Types.ObjectId],
+      ref: "Company",
+      default: [],
+    },
+    groupId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Group",
+      default: null,
+    },
     mobile: { type: [String], default: [] },
     email: { type: [String], default: [] },
     password: { type: String, default: "" },
-    commodityIds: { type: [mongoose.Schema.Types.ObjectId], ref: "Commodity", default: [] },
-    consigneeIds: { type: [mongoose.Schema.Types.ObjectId], ref: "Consignee", default: [] },
+    commodityIds: {
+      type: [mongoose.Schema.Types.ObjectId],
+      ref: "Commodity",
+      default: [],
+    },
+    consigneeIds: {
+      type: [mongoose.Schema.Types.ObjectId],
+      ref: "Consignee",
+      default: [],
+    },
     brokerage: { type: Map, of: Number, default: {} },
-    status: { type: String, enum: ["Active", "Inactive"], default: "Active" }
+    status: { type: String, enum: ["Active", "Inactive"], default: "Active" },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 buyerSchema.index({ name: 1 });

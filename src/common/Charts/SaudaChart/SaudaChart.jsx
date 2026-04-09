@@ -77,7 +77,6 @@ const SaudaChart = ({ apiUrl, chartType = "line", data: externalData }) => {
               month: "short",
             });
           } else if (viewType === "yearly") {
-
             key = date.toLocaleDateString("en-IN", {
               month: "long",
               year: "numeric",

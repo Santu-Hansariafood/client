@@ -48,7 +48,6 @@ router.get("/", async (req, res) => {
   }
 });
 
-
 router.post("/", async (req, res) => {
   try {
     const {
@@ -63,12 +62,12 @@ router.post("/", async (req, res) => {
       pin,
       contactPerson,
       mandiLicense,
-      activeStatus
+      activeStatus,
     } = req.body;
 
     if (!name || !phone) {
       return res.status(400).json({
-        message: "Name and Phone are required"
+        message: "Name and Phone are required",
       });
     }
 
@@ -109,20 +108,18 @@ router.post("/", async (req, res) => {
       pin,
       contactPerson,
       mandiLicense,
-      activeStatus
+      activeStatus,
     });
 
     const saved = await consignee.save();
 
     res.status(201).json(saved);
-
   } catch (error) {
     res.status(400).json({
-      message: error.message
+      message: error.message,
     });
   }
 });
-
 
 router.put("/:id", async (req, res) => {
   try {
@@ -153,49 +150,41 @@ router.put("/:id", async (req, res) => {
       }
     }
 
-    const updated = await Consignee.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      {
-        new: true,
-        runValidators: true
-      }
-    );
+    const updated = await Consignee.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+      runValidators: true,
+    });
 
     if (!updated) {
       return res.status(404).json({
-        message: "Consignee not found"
+        message: "Consignee not found",
       });
     }
 
     res.json(updated);
-
   } catch (error) {
     res.status(400).json({
-      message: error.message
+      message: error.message,
     });
   }
 });
 
-
 router.delete("/:id", async (req, res) => {
   try {
-
     const deleted = await Consignee.findByIdAndDelete(req.params.id);
 
     if (!deleted) {
       return res.status(404).json({
-        message: "Consignee not found"
+        message: "Consignee not found",
       });
     }
 
     res.json({
-      message: "Consignee deleted successfully"
+      message: "Consignee deleted successfully",
     });
-
   } catch (error) {
     res.status(500).json({
-      message: error.message
+      message: error.message,
     });
   }
 });

@@ -18,23 +18,27 @@ const closeExpiredBids = async () => {
       ":" +
       now.getMinutes().toString().padStart(2, "0");
 
-    // Efficiently find bids that should be closed using a single query
     const bidsToClose = await Bid.find({
       status: "active",
       $or: [
         { bidDate: { $lt: startOfToday } },
-        { 
-          bidDate: { $gte: startOfToday, $lt: new Date(startOfToday.getTime() + 86400000) }, 
-          endTime: { $lt: currentTimeStr } 
-        }
-      ]
-    }).select("_id").lean();
+        {
+          bidDate: {
+            $gte: startOfToday,
+            $lt: new Date(startOfToday.getTime() + 86400000),
+          },
+          endTime: { $lt: currentTimeStr },
+        },
+      ],
+    })
+      .select("_id")
+      .lean();
 
     if (bidsToClose.length > 0) {
       const ids = bidsToClose.map((b) => b._id);
       await Bid.updateMany(
         { _id: { $in: ids } },
-        { $set: { status: "closed", closedAt: now } }
+        { $set: { status: "closed", closedAt: now } },
       );
     }
   } catch (error) {
@@ -53,7 +57,9 @@ router.get("/supplier-today", async (req, res) => {
       return res.status(400).json({ message: "mobile is required" });
     }
 
-    const seller = await Seller.findOne({ "phoneNumbers.value": mobile }).lean();
+    const seller = await Seller.findOne({
+      "phoneNumbers.value": mobile,
+    }).lean();
     if (!seller) {
       return res.status(404).json({ message: "Seller not found" });
     }
@@ -78,7 +84,7 @@ router.get("/supplier-today", async (req, res) => {
     end.setUTCDate(end.getUTCDate() + 1);
 
     const myParticipationsAll = await ParticipateBid.find({ mobile }).lean();
-    const myParticipatedBidIds = myParticipationsAll.map(p => p.bidId);
+    const myParticipatedBidIds = myParticipationsAll.map((p) => p.bidId);
 
     const bids = await Bid.find({
       $or: [
@@ -89,12 +95,12 @@ router.get("/supplier-today", async (req, res) => {
             {
               $or: [
                 { bidDate: { $gte: start, $lt: end } },
-                { status: "active" }
-              ]
-            }
-          ]
-        }
-      ]
+                { status: "active" },
+              ],
+            },
+          ],
+        },
+      ],
     })
       .select(
         "_id type group consignee origin commodity parameters notes quantity rate bidDate startTime endTime paymentTerms delivery company unit status closedAt createdByMobile createdByRole",
@@ -104,8 +110,8 @@ router.get("/supplier-today", async (req, res) => {
 
     const bidIds = bids.map((b) => b._id);
 
-    const myParticipations = myParticipationsAll.filter(p => 
-      bidIds.some(bidId => String(bidId) === String(p.bidId))
+    const myParticipations = myParticipationsAll.filter((p) =>
+      bidIds.some((bidId) => String(bidId) === String(p.bidId)),
     );
 
     const participantCountsAgg = bidIds.length
@@ -198,7 +204,10 @@ router.post("/", async (req, res) => {
     if (finalStatus === "active" && bidDate) {
       const bDate = new Date(bidDate);
       const bidDateStr = bDate.toISOString().split("T")[0];
-      if (bidDateStr < todayStr || (bidDateStr === todayStr && endTime && endTime < currentTimeStr)) {
+      if (
+        bidDateStr < todayStr ||
+        (bidDateStr === todayStr && endTime && endTime < currentTimeStr)
+      ) {
         finalStatus = "closed";
         closedAt = now;
       }
@@ -212,7 +221,6 @@ router.post("/", async (req, res) => {
       closedAt,
     });
 
-    // Notify relevant sellers
     try {
       const sellers = await Seller.find({
         "commodities.name": item.commodity,
@@ -228,7 +236,7 @@ router.post("/", async (req, res) => {
             recipientRole: "Seller",
             title: "New Bid Available",
             message: `New bid for ${item.commodity} (${item.origin} → ${item.consignee}) is now active. Check details and participate!`,
-            type: "BidParticipation", // Or a new type if preferred
+            type: "BidParticipation",
             relatedId: item._id,
           }));
         });
@@ -250,7 +258,8 @@ router.post("/", async (req, res) => {
 
 router.put("/:id", async (req, res) => {
   try {
-    const { endTime, quantity, rate, status, bidDate, ...otherFields } = req.body;
+    const { endTime, quantity, rate, status, bidDate, ...otherFields } =
+      req.body;
 
     const bid = await Bid.findById(req.params.id);
     if (!bid) {
@@ -277,7 +286,10 @@ router.put("/:id", async (req, res) => {
       const bDate = bidDate ? new Date(bidDate) : bid.bidDate;
       const bEndTime = endTime || bid.endTime;
       const bidDateStr = bDate.toISOString().split("T")[0];
-      if (bidDateStr < todayStr || (bidDateStr === todayStr && bEndTime && bEndTime < currentTimeStr)) {
+      if (
+        bidDateStr < todayStr ||
+        (bidDateStr === todayStr && bEndTime && bEndTime < currentTimeStr)
+      ) {
         finalStatus = "closed";
         closedAt = now;
       } else {
@@ -296,16 +308,18 @@ router.put("/:id", async (req, res) => {
     });
 
     const rolesToNotify = ["Employee", "Admin"];
-    await Promise.all(rolesToNotify.map(role => 
-      Notification.create({
-        recipient: "all",
-        recipientRole: role,
-        title: `Bid ${finalStatus === 'active' ? 'Activated' : 'Closed'}`,
-        message: `The bid for ${updated.commodity} (${updated.consignee}) has been ${finalStatus === 'active' ? 'activated' : 'closed'}.`,
-        type: finalStatus === 'active' ? 'BidParticipation' : 'BidRejection', // Reusing types for simplicity
-        relatedId: updated._id
-      })
-    ));
+    await Promise.all(
+      rolesToNotify.map((role) =>
+        Notification.create({
+          recipient: "all",
+          recipientRole: role,
+          title: `Bid ${finalStatus === "active" ? "Activated" : "Closed"}`,
+          message: `The bid for ${updated.commodity} (${updated.consignee}) has been ${finalStatus === "active" ? "activated" : "closed"}.`,
+          type: finalStatus === "active" ? "BidParticipation" : "BidRejection", // Reusing types for simplicity
+          relatedId: updated._id,
+        }),
+      ),
+    );
 
     invalidate("/api/bids");
     res.json(updated);
@@ -353,7 +367,10 @@ router.patch("/:id/status", async (req, res) => {
 
     if (status === "active") {
       const bidDateStr = bid.bidDate.toISOString().split("T")[0];
-      if (bidDateStr < todayStr || (bidDateStr === todayStr && bid.endTime && bid.endTime < currentTimeStr)) {
+      if (
+        bidDateStr < todayStr ||
+        (bidDateStr === todayStr && bid.endTime && bid.endTime < currentTimeStr)
+      ) {
         finalStatus = "closed";
         closedAt = now;
       } else {
@@ -366,7 +383,7 @@ router.patch("/:id/status", async (req, res) => {
     const updated = await Bid.findByIdAndUpdate(
       req.params.id,
       { status: finalStatus, closedAt },
-      { new: true }
+      { new: true },
     );
 
     invalidate("/api/bids");

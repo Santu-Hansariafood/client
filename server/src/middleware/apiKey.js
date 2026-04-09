@@ -7,4 +7,3 @@ export default function apiKey(req, res, next) {
   }
   next();
 }
-

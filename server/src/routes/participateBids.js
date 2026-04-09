@@ -31,14 +31,18 @@ router.get("/", async (req, res) => {
         .lean();
     }
 
-    const mobileNumbers = [...new Set(items.map(item => item.mobile))];
-    const sellers = await Seller.find({ "phoneNumbers.value": { $in: mobileNumbers } }).lean();
-    
-    const itemsWithSellerNames = items.map(item => {
-      const seller = sellers.find(s => s.phoneNumbers.some(p => p.value === item.mobile));
+    const mobileNumbers = [...new Set(items.map((item) => item.mobile))];
+    const sellers = await Seller.find({
+      "phoneNumbers.value": { $in: mobileNumbers },
+    }).lean();
+
+    const itemsWithSellerNames = items.map((item) => {
+      const seller = sellers.find((s) =>
+        s.phoneNumbers.some((p) => p.value === item.mobile),
+      );
       return {
         ...item,
-        sellerName: seller ? seller.sellerName : "Unknown"
+        sellerName: seller ? seller.sellerName : "Unknown",
       };
     });
 
@@ -46,7 +50,7 @@ router.get("/", async (req, res) => {
       const total = await ParticipateBid.countDocuments(query);
       return res.json({ data: itemsWithSellerNames, total });
     }
-    
+
     res.json(itemsWithSellerNames);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -68,11 +72,15 @@ router.post("/", async (req, res) => {
     } = req.body;
 
     if (!bidId || !mobile) {
-      return res.status(400).json({ message: "Bid ID and Mobile are required." });
+      return res
+        .status(400)
+        .json({ message: "Bid ID and Mobile are required." });
     }
 
     if (typeof rate !== "number" || typeof quantity !== "number") {
-      return res.status(400).json({ message: "Rate and quantity are required." });
+      return res
+        .status(400)
+        .json({ message: "Rate and quantity are required." });
     }
 
     const bid = await Bid.findById(bidId);
@@ -84,10 +92,14 @@ router.post("/", async (req, res) => {
     if (bid.status === "closed") {
       return res
         .status(403)
-        .json({ message: "This bid is closed and no longer accepting participations." });
+        .json({
+          message: "This bid is closed and no longer accepting participations.",
+        });
     }
 
-    const seller = await Seller.findOne({ "phoneNumbers.value": mobile }).lean();
+    const seller = await Seller.findOne({
+      "phoneNumbers.value": mobile,
+    }).lean();
     const sellerName = seller?.sellerName || "Unknown";
     const sellerCompanies = Array.isArray(seller?.companies)
       ? seller.companies.filter(Boolean)
@@ -101,10 +113,15 @@ router.post("/", async (req, res) => {
       if (!providedCompany) {
         return res
           .status(400)
-          .json({ message: "Please select your company before participating." });
+          .json({
+            message: "Please select your company before participating.",
+          });
       }
       const match = sellerCompanies.find(
-        (c) => String(c || "").trim().toLowerCase() === providedCompany.toLowerCase(),
+        (c) =>
+          String(c || "")
+            .trim()
+            .toLowerCase() === providedCompany.toLowerCase(),
       );
       if (!match) {
         return res.status(400).json({ message: "Invalid company selected." });
@@ -123,7 +140,7 @@ router.post("/", async (req, res) => {
         deliveryDate: deliveryDate ? new Date(deliveryDate) : null,
         paymentTerms: paymentTerms || "",
       },
-      { upsert: true, new: true, runValidators: true }
+      { upsert: true, new: true, runValidators: true },
     );
 
     const bidGroup = bid?.group || "N/A";
@@ -141,7 +158,7 @@ router.post("/", async (req, res) => {
         title: "New Bid Participation",
         message,
         type: "BidParticipation",
-        relatedId: bid._id
+        relatedId: bid._id,
       }),
       Notification.create({
         recipient: "all",
@@ -149,14 +166,16 @@ router.post("/", async (req, res) => {
         title: "New Bid Participation",
         message,
         type: "BidParticipation",
-        relatedId: bid._id
-      })
+        relatedId: bid._id,
+      }),
     ]);
 
     invalidate("/api/bids");
     res.status(201).json(item);
   } catch (error) {
-    res.status(500).json({ message: error.message || "An unexpected error occurred." });
+    res
+      .status(500)
+      .json({ message: error.message || "An unexpected error occurred." });
   }
 });
 
@@ -186,8 +205,14 @@ router.patch("/:id/status", async (req, res) => {
     participation.adminNotes = adminNotes || "";
 
     if (status === "accepted") {
-      participation.acceptedRate = typeof acceptanceRate === "number" ? acceptanceRate : participation.rate;
-      participation.acceptedQuantity = typeof acceptanceQuantity === "number" ? acceptanceQuantity : participation.quantity;
+      participation.acceptedRate =
+        typeof acceptanceRate === "number"
+          ? acceptanceRate
+          : participation.rate;
+      participation.acceptedQuantity =
+        typeof acceptanceQuantity === "number"
+          ? acceptanceQuantity
+          : participation.quantity;
       participation.acceptedAt = acceptedAt ? new Date(acceptedAt) : new Date();
       participation.acceptedByMobile = acceptedByMobile || "";
       participation.acceptedByRole = acceptedByRole || "";
@@ -251,7 +276,6 @@ router.patch("/:id/status", async (req, res) => {
         }),
       ];
 
-      // Broadcast to Admin and Employee for visibility
       notifications.push(
         Notification.create({
           recipient: "all",

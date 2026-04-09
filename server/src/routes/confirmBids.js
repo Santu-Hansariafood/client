@@ -69,20 +69,30 @@ router.post("/", async (req, res) => {
       acceptedByMobile: acceptedByMobile || "",
       acceptedByRole: acceptedByRole || "",
     });
-    
+
     const bid = await Bid.findById(bidId);
 
-    // Sync participate bid status if possible
     if (phone || participationId) {
-      const ParticipateBid = (await import("../models/ParticipateBid.js")).default;
-      const pQuery = participationId ? { _id: participationId } : { bidId, mobile: phone };
+      const ParticipateBid = (await import("../models/ParticipateBid.js"))
+        .default;
+      const pQuery = participationId
+        ? { _id: participationId }
+        : { bidId, mobile: phone };
       const participation = await ParticipateBid.findOne(pQuery);
       if (participation) {
         if (status === "Confirmed") {
           participation.status = "accepted";
-          participation.acceptedRate = typeof acceptanceRate === "number" ? acceptanceRate : participation.rate;
-          participation.acceptedQuantity = typeof acceptanceQuantity === "number" ? acceptanceQuantity : participation.quantity;
-          participation.acceptedAt = acceptedAt ? new Date(acceptedAt) : new Date();
+          participation.acceptedRate =
+            typeof acceptanceRate === "number"
+              ? acceptanceRate
+              : participation.rate;
+          participation.acceptedQuantity =
+            typeof acceptanceQuantity === "number"
+              ? acceptanceQuantity
+              : participation.quantity;
+          participation.acceptedAt = acceptedAt
+            ? new Date(acceptedAt)
+            : new Date();
           participation.acceptedByMobile = acceptedByMobile || "";
           participation.acceptedByRole = acceptedByRole || "";
         } else if (status === "Rejected") {
@@ -100,7 +110,7 @@ router.post("/", async (req, res) => {
         title: "Bid Accepted",
         message: sellerMsg,
         type: "BidConfirmation",
-        relatedId: item._id
+        relatedId: item._id,
       });
 
       const buyerMsg = `Seller ${phone} accepted for ${bid.commodity} at rate ₹${item.acceptanceRate ?? "N/A"}, qty ${item.acceptanceQuantity ?? "N/A"}.`;
@@ -110,7 +120,7 @@ router.post("/", async (req, res) => {
         title: "Bid Accepted",
         message: buyerMsg,
         type: "BidConfirmation",
-        relatedId: item._id
+        relatedId: item._id,
       });
     }
 

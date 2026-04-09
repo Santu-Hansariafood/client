@@ -10,7 +10,9 @@ router.get("/", async (req, res) => {
     const skip = (page - 1) * limit;
 
     const transporters = await Transporter.find()
-      .select("name mobile status vehicleDetails.number driverDetails.name driverDetails.licenseNumber")
+      .select(
+        "name mobile status vehicleDetails.number driverDetails.name driverDetails.licenseNumber",
+      )
       .sort({ name: 1 })
       .skip(skip)
       .limit(limit);
@@ -32,7 +34,8 @@ router.get("/", async (req, res) => {
 router.get("/:id", async (req, res) => {
   try {
     const transporter = await Transporter.findById(req.params.id);
-    if (!transporter) return res.status(404).json({ message: "Transporter not found" });
+    if (!transporter)
+      return res.status(404).json({ message: "Transporter not found" });
     res.json(transporter);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -51,11 +54,16 @@ router.post("/", async (req, res) => {
 
 router.put("/:id", async (req, res) => {
   try {
-    const updated = await Transporter.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-      runValidators: true,
-    });
-    if (!updated) return res.status(404).json({ message: "Transporter not found" });
+    const updated = await Transporter.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      {
+        new: true,
+        runValidators: true,
+      },
+    );
+    if (!updated)
+      return res.status(404).json({ message: "Transporter not found" });
     res.json(updated);
   } catch (error) {
     res.status(400).json({ message: error.message });
@@ -65,7 +73,8 @@ router.put("/:id", async (req, res) => {
 router.delete("/:id", async (req, res) => {
   try {
     const deleted = await Transporter.findByIdAndDelete(req.params.id);
-    if (!deleted) return res.status(404).json({ message: "Transporter not found" });
+    if (!deleted)
+      return res.status(404).json({ message: "Transporter not found" });
     res.json({ message: "Transporter deleted successfully" });
   } catch (error) {
     res.status(500).json({ message: error.message });

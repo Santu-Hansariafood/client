@@ -6,7 +6,7 @@ import { FaCalendarAlt } from "react-icons/fa";
 
 const DateSelector = ({ selectedDate, onChange }) => {
   const [currentDate, setCurrentDate] = useState(
-    selectedDate ? new Date(selectedDate) : null
+    selectedDate ? new Date(selectedDate) : null,
   );
 
   useEffect(() => {

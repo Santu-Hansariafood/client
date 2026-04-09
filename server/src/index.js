@@ -59,11 +59,8 @@ app.get("/api/keep-alive", (_, res) => {
   res.json({ ok: true });
 });
 
-// API key required for all API endpoints
 app.use("/api", apiKey);
-// Public auth endpoints (still require API key)
 app.use("/api", authRoutes);
-// All remaining API routes require JWT
 app.use("/api/sellers", cache(30), authJwt, sellerRoutes);
 app.use("/api/buyers", cache(30), authJwt, buyerRoutes);
 app.use("/api/commodities", cache(60), authJwt, commodityRoutes);
