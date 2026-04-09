@@ -5,7 +5,7 @@ const router = Router();
 
 router.get("/", async (req, res) => {
   try {
-    const { mobile, role, unreadOnly } = req.query;
+    const { mobile, role, unreadOnly, todayOnly } = req.query;
     const query = {};
 
     if (unreadOnly === "true") {
@@ -20,11 +20,12 @@ router.get("/", async (req, res) => {
       query.recipientRole = role;
     }
 
-    // Only fetch notifications for the current day (start of today in local time or UTC?)
-    // Usually, "if the day is over" means relative to the current date.
-    const now = new Date();
-    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    query.createdAt = { $gte: startOfToday };
+    // Default to today's notifications if todayOnly is true or not specified
+    if (todayOnly !== "false") {
+      const now = new Date();
+      const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      query.createdAt = { $gte: startOfToday };
+    }
 
     const items = await Notification.find(query).sort({ createdAt: -1 }).limit(100).lean();
     res.json(items);

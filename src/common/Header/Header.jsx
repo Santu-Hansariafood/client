@@ -31,34 +31,41 @@ const Header = ({
   const [notifications, setNotifications] = useState([]);
   const [showNotifications, setShowNotifications] = useState(false);
   const [unreadOnly, setUnreadOnly] = useState(true);
+  const [lastFetched, setLastFetched] = useState(0);
 
-  const fetchNotifications = useCallback(async () => {
+  const fetchNotifications = useCallback(async (force = false) => {
+    // Only fetch if forced or if 1 minute has passed since last fetch
+    const now = Date.now();
+    if (!force && now - lastFetched < 60000) return;
+
     try {
       const response = await axios.get("/notifications", {
-        params: { mobile, role: userRole, unreadOnly: unreadOnly },
+        params: { mobile, role: userRole, unreadOnly: unreadOnly, todayOnly: "true" },
       });
       
-      // If we have new unread notifications, show a browser notification
-      if (response.data.length > notifications.length) {
-        const newNotifications = response.data.filter(
-          (n) => !notifications.find((oldN) => oldN._id === n._id)
-        );
-        
-        if (newNotifications.length > 0 && Notification.permission === "granted") {
-          newNotifications.forEach((n) => {
-            new window.Notification(n.title, {
-              body: n.message,
-              icon: "/logo/logo.png", // Ensure this path is correct
+      setNotifications((prev) => {
+        // If we have new unread notifications, show a browser notification
+        if (response.data.length > prev.length) {
+          const newNotifications = response.data.filter(
+            (n) => !prev.find((oldN) => oldN._id === n._id)
+          );
+          
+          if (newNotifications.length > 0 && Notification.permission === "granted") {
+            newNotifications.forEach((n) => {
+              new window.Notification(n.title, {
+                body: n.message,
+                icon: "/logo/logo.png",
+              });
             });
-          });
+          }
         }
-      }
-      
-      setNotifications(response.data);
+        return response.data;
+      });
+      setLastFetched(now);
     } catch (error) {
       console.error("Failed to fetch notifications", error);
     }
-  }, [mobile, userRole, unreadOnly, notifications]);
+  }, [mobile, userRole, unreadOnly, lastFetched]);
 
   useEffect(() => {
     // Request notification permission on mount
@@ -66,8 +73,8 @@ const Header = ({
       Notification.requestPermission();
     }
     
-    fetchNotifications();
-    const interval = setInterval(fetchNotifications, 30000); // Poll every 30s
+    fetchNotifications(true);
+    const interval = setInterval(() => fetchNotifications(), 60000); // Check every minute
     return () => clearInterval(interval);
   }, [fetchNotifications]);
 
@@ -84,7 +91,7 @@ const Header = ({
   const toggleReadStatus = async (id) => {
     try {
       await axios.patch(`/notifications/${id}/toggle-read`);
-      fetchNotifications();
+      fetchNotifications(true);
     } catch (error) {
       console.error("Failed to toggle notification status", error);
     }
@@ -116,7 +123,7 @@ const Header = ({
   const markAllAsRead = async () => {
     try {
       await axios.patch("/notifications/read-all", { mobile, role: userRole });
-      fetchNotifications();
+      fetchNotifications(true);
     } catch (error) {
       console.error("Failed to mark all as read", error);
     }
