@@ -4,7 +4,7 @@ import axios from "axios";
 import logo from "../../../assets/Hans.png";
 import signature from "../../../assets/signature.png";
 import stamp from "../../../assets/stamp.png";
-// import QRCode from "qrcode";
+import QRCode from "qrcode";
 
 const PrintLoadingEntry = async (data) => {
   const doc = new jsPDF({
@@ -117,11 +117,13 @@ const PrintLoadingEntry = async (data) => {
   doc.text(`DATE: ${formatDate(data.loadingDate)}`, pageWidth - 14, 31, { align: "right" });
   doc.text(`CHALLAN NO: ${data.billNumber || "N/A"}`, pageWidth - 14, 36, { align: "right" });
 
-  const [orders, sellers, companies, consignees] = await Promise.all([
+  // --- Data Fetching & Matching ---
+  const [orders, sellers, companies, consignees, transporters] = await Promise.all([
     safeFetch("/self-order?limit=0"),
     safeFetch("/sellers?limit=0"),
     safeFetch("/seller-company?limit=0"),
     safeFetch("/consignees?limit=0"),
+    safeFetch("/transporters?limit=0"),
   ]);
 
   const supplierId = typeof data.supplier === "object" ? data.supplier?._id : data.supplier;
@@ -129,6 +131,12 @@ const PrintLoadingEntry = async (data) => {
   const seller = sellers.find((s) => String(s._id) === String(supplierId)) || {};
   const company = companies.find((c) => normalize(c.companyName) === normalize(data.supplierCompany)) || {};
   
+  const transporter = transporters.find((t) => 
+    String(t._id) === String(data.transporterId)
+  ) || {};
+
+  // Robust Consignee Matching from API
+  // Check by ID first, then by exact name, then by label match
   const consignee = consignees.find((c) => 
     (c._id && String(c._id) === String(data.consignee)) || 
     normalize(c.name) === normalize(data.consignee) ||
@@ -145,6 +153,7 @@ const PrintLoadingEntry = async (data) => {
   const fullAddress = addressLines.join(", ");
 
   const addTable = (title, y, head, body, colors = primary) => {
+    // Table Title with colored block
     doc.setFillColor(...secondary);
     doc.rect(margin, y - 5, 4, 6, "F");
     
@@ -157,8 +166,7 @@ const PrintLoadingEntry = async (data) => {
     doc.setLineWidth(0.1);
     doc.line(margin, y + 2, pageWidth - margin, y + 2);
 
-    autoTable(doc, {
-      startY: y + 4,
+    autoTable(doc, {      startY: y + 4,
       head: [head],
       body: [body],
       theme: "striped",
@@ -179,8 +187,8 @@ const PrintLoadingEntry = async (data) => {
         0: { halign: "left" },
       },
       margin: { left: margin, right: margin },
-      styles: { 
-        cellPadding: 4, 
+      styles: {
+        cellPadding: 4,
         overflow: "linebreak",
       },
       alternateRowStyles: {
@@ -193,6 +201,7 @@ const PrintLoadingEntry = async (data) => {
 
   let currentY = 55;
 
+  // --- Parties Section ---
   currentY = addTable(
     "Parties Information",
     currentY,
@@ -206,10 +215,12 @@ const PrintLoadingEntry = async (data) => {
     primary
   );
 
+  // Delivery Address Block - Highlighted
   doc.setFillColor(...light);
   doc.setDrawColor(...secondary);
   doc.setLineWidth(0.5);
   
+  // Measure address height
   const addressText = fullAddress || "Address details not found in database. Please verify Consignee record.";
   const splitAddress = doc.splitTextToSize(addressText, pageWidth - (margin * 2) - 10);
   const addressBlockHeight = Math.max(22, (splitAddress.length * 5) + 12);
@@ -227,6 +238,7 @@ const PrintLoadingEntry = async (data) => {
   doc.text(splitAddress, margin + 5, currentY + 8);
   currentY += addressBlockHeight + 5;
 
+  // --- Transport Section ---
   currentY = addTable(
     "Transport & Goods Details",
     currentY,
@@ -239,6 +251,21 @@ const PrintLoadingEntry = async (data) => {
     ]
   );
 
+  // --- Transporter Section ---
+  currentY = addTable(
+    "Transporter Information",
+    currentY,
+    ["Transporter Name", "Driver Name", "Driver Contact", "Vehicle Number"],
+    [
+      transporter.name || data.addedTransport || "N/A",
+      data.driverName || "N/A",
+      data.driverPhoneNumber || transporter.mobile || "N/A",
+      (data.lorryNumber || "N/A").toUpperCase(),
+    ],
+    primary
+  );
+
+  // --- Freight Section ---
   const total = Number(data.totalFreight || 0);
   const advance = Number(data.advance || 0);
   const balance = total - advance;
@@ -256,24 +283,29 @@ const PrintLoadingEntry = async (data) => {
     primary
   );
 
-  // const footerY = pageHeight - 75;
+  // --- Footer Section ---
+  const footerY = pageHeight - 75;
   
-  // try {
-  //   const qrText = `https://www.hansariafood.com`;
-  //   const qr = await QRCode.toDataURL(qrText);
-  //   const qrSize = 30;
-  //   const qrX = (pageWidth - qrSize) / 2;
+  // QR Code Area
+  try {
+    const qrText = `https://www.hansariafood.com`;
+    const qr = await QRCode.toDataURL(qrText);
+    const qrSize = 30;
+    const qrX = (pageWidth - qrSize) / 2;
     
-  //   doc.setDrawColor(...secondary);
-  //   doc.setLineWidth(0.5);
-  //   doc.roundedRect(qrX - 2, footerY - 2, qrSize + 4, qrSize + 10, 2, 2, "D");
+    // Design around QR
+    doc.setDrawColor(...secondary);
+    doc.setLineWidth(0.5);
+    doc.roundedRect(qrX - 2, footerY - 2, qrSize + 4, qrSize + 10, 2, 2, "D");
     
-  //   doc.addImage(qr, "PNG", qrX, footerY, qrSize, qrSize);
-  //   doc.setFontSize(7.5);
-  //   doc.setTextColor(...primary);
-  //   doc.setFont("helvetica", "bold");
-  //   doc.text("SCAN TO VISIT WEBSITE", pageWidth / 2, footerY + qrSize + 5, { align: "center" });
-  // } catch {}
+    doc.addImage(qr, "PNG", qrX, footerY, qrSize, qrSize);
+    doc.setFontSize(7.5);
+    doc.setTextColor(...primary);
+    doc.setFont("helvetica", "bold");
+    doc.text("SCAN TO VISIT WEBSITE", pageWidth / 2, footerY + qrSize + 5, { align: "center" });
+  } catch {}
+
+  // Signature Blocks
 
   const signBaseY = pageHeight - 38;
   

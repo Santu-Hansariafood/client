@@ -67,6 +67,7 @@ const AddLoadingEntry = () => {
   const { userRole, mobile } = useAuth();
   const [suppliers, setSuppliers] = useState([]);
   const [consignees, setConsignees] = useState([]);
+  const [transporters, setTransporters] = useState([]);
   const [selectedSupplier, setSelectedSupplier] = useState(null);
   const [selectedConsignee, setSelectedConsignee] = useState(null);
   const [saudaSearch, setSaudaSearch] = useState(""); // Add sauda search
@@ -90,6 +91,7 @@ const AddLoadingEntry = () => {
     loadingWeight: "",
     bags: "",
     lorryNumber: "",
+    transporterId: "",
     addedTransport: "",
     driverName: "",
     driverPhoneNumber: "",
@@ -106,9 +108,10 @@ const AddLoadingEntry = () => {
     const loadDropdowns = async () => {
       setLoading(true);
       try {
-        const [suppliersData, consigneesRes] = await Promise.all([
+        const [suppliersData, consigneesRes, transportersRes] = await Promise.all([
           fetchData("/sellers", "sellerName"),
           axios.get("/consignees", { params: { limit: 0 } }),
+          axios.get("/transporters", { params: { limit: 0 } }),
         ]);
 
         const rawConsignees = Array.isArray(consigneesRes.data)
@@ -119,6 +122,17 @@ const AddLoadingEntry = () => {
           value: c._id,
           label: `${capitalizeWords(c.name)} - ${capitalizeWords(c.location || "N/A")}, ${capitalizeWords(c.district || "N/A")}, ${capitalizeWords(c.state || "N/A")}`,
           name: c.name,
+        }));
+
+        const rawTransporters = Array.isArray(transportersRes.data)
+          ? transportersRes.data
+          : transportersRes.data?.data || [];
+
+        const transportersData = rawTransporters.map((t) => ({
+          value: t._id,
+          label: `${capitalizeWords(t.name)} - ${t.mobile}`,
+          name: t.name,
+          mobile: t.mobile,
         }));
 
         let filteredSuppliers = suppliersData;
@@ -133,6 +147,7 @@ const AddLoadingEntry = () => {
 
         setSuppliers(filteredSuppliers);
         setConsignees(consigneesData);
+        setTransporters(transportersData);
       } catch (err) {
         console.error("Error loading dropdowns:", err);
         toast.error("Error loading dropdown data");
@@ -710,16 +725,26 @@ const AddLoadingEntry = () => {
                         <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider">
                           Transporter
                         </label>
-                        <DataInput
-                          value={entry.addedTransport}
-                          onChange={(e) =>
-                            handleEntryChange(
-                              index,
-                              "addedTransport",
-                              e.target.value,
-                            )
+                        <DataDropdown
+                          options={transporters}
+                          selectedOptions={
+                            entry.transporterId
+                              ? [
+                                  transporters.find(
+                                    (t) => t.value === entry.transporterId,
+                                  ),
+                                ].filter(Boolean)
+                              : []
                           }
-                          placeholder="Name of transport"
+                          onChange={(option) => {
+                            const newEntries = [...loadingEntries];
+                            newEntries[index].transporterId = option?.value || "";
+                            newEntries[index].addedTransport = option?.name || "";
+                            // Optionally auto-fill driver name if the transporter has it
+                            setLoadingEntries(newEntries);
+                          }}
+                          placeholder="Select Transporter"
+                          isMulti={false}
                         />
                       </div>
                       <div className="space-y-1.5">

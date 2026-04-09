@@ -5,6 +5,7 @@ const loadingEntrySchema = new mongoose.Schema(
     loadingDate: { type: Date, required: true },
     loadingWeight: { type: Number, required: true },
     lorryNumber: { type: String, required: true },
+    transporterId: { type: mongoose.Schema.Types.ObjectId, ref: "Transporter" },
     addedTransport: { type: String, default: "" },
     driverName: { type: String, default: "" },
     driverPhoneNumber: { type: String, required: true },

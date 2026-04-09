@@ -12,6 +12,7 @@ const PopupBox = lazy(() => import("../../../common/PopupBox/PopupBox"));
 const Tables = lazy(() => import("../../../common/Tables/Tables"));
 const SearchBox = lazy(() => import("../../../common/SearchBox/SearchBox")); // ✅ Import SearchBox
 const Pagination = lazy(() => import("../../../common/Paginations/Paginations"));
+const DataDropdown = lazy(() => import("../../../common/DataDropdown/DataDropdown"));
 
 const formatDate = (date) => {
   if (!date) return "N/A";
@@ -24,6 +25,9 @@ const ListLoadingEntry = () => {
   const [loadingEntries, setLoadingEntries] = useState([]);
   const [filteredEntries, setFilteredEntries] = useState([]);
   const [sellerMap, setSellerMap] = useState({});
+  const [buyerMap, setBuyerMap] = useState({});
+  const [transporters, setTransporters] = useState([]);
+  const [transporterMap, setTransporterMap] = useState({});
   const [selectedEntry, setSelectedEntry] = useState(null);
   const [popupType, setPopupType] = useState("");
   const [editEntry, setEditEntry] = useState(null);
@@ -37,18 +41,37 @@ const ListLoadingEntry = () => {
 
   const fetchData = async () => {
     try {
-      const [entriesRes, sellersRes] = await Promise.all([
+      const [entriesRes, sellersRes, transportersRes, ordersRes] = await Promise.all([
         axios.get("/loading-entries"),
         axios.get("/sellers"),
+        axios.get("/transporters", { params: { limit: 0 } }),
+        axios.get("/self-order", { params: { limit: 0 } }),
       ]);
 
       const sellersData = Array.isArray(sellersRes.data) ? sellersRes.data : (sellersRes.data?.data || []);
       const entriesData = Array.isArray(entriesRes.data) ? entriesRes.data : (entriesRes.data?.data || []);
+      const transportersData = Array.isArray(transportersRes.data) ? transportersRes.data : (transportersRes.data?.data || []);
+      const ordersData = Array.isArray(ordersRes.data) ? ordersRes.data : (ordersRes.data?.data || []);
 
       const sellerMapping = Object.fromEntries(
         sellersData.map((seller) => [seller._id, seller.sellerName])
       );
       setSellerMap(sellerMapping);
+
+      const buyerMapping = Object.fromEntries(
+        ordersData.map((order) => [order.saudaNo, order.buyer])
+      );
+      setBuyerMap(buyerMapping);
+
+      const transporterMapping = Object.fromEntries(
+        transportersData.map((t) => [t._id, t.name])
+      );
+      setTransporterMap(transporterMapping);
+      setTransporters(transportersData.map(t => ({
+        value: t._id,
+        label: `${t.name} - ${t.mobile}`,
+        name: t.name
+      })));
       
       let entries = entriesData;
       if (userRole === "Seller") {
@@ -158,6 +181,7 @@ const ListLoadingEntry = () => {
   const headers = [
     "Sl No",
     "Loading Date",
+    "Sauda No",
     "Seller Name",
     "Loading Weight",
     "Lorry Number",
@@ -182,10 +206,11 @@ const ListLoadingEntry = () => {
         .map((entry, index) => [
           (currentPage - 1) * itemsPerPage + index + 1,
           formatDate(entry.loadingDate),
+          entry.saudaNo || "N/A",
           sellerMap[entry.supplier] || "Unknown Supplier",
           entry.loadingWeight,
           entry.lorryNumber,
-          entry.addedTransport,
+          transporterMap[entry.transporterId] || entry.addedTransport || "N/A",
           entry.driverName,
           entry.driverPhoneNumber,
           entry.freightRate,
@@ -244,19 +269,41 @@ const ListLoadingEntry = () => {
       >
         <div className="max-w-7xl mx-auto space-y-6">
           <div className="rounded-2xl border border-amber-200/60 bg-white shadow-lg p-4 sm:p-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               <SearchBox
-                placeholder="Search by Seller Name..."
-                items={loadingEntries.map(
-                  (entry) => sellerMap[entry.supplier] || "Unknown Supplier"
-                )}
+                placeholder="Search by Seller/Buyer Name..."
+                items={[
+                  ...new Set([
+                    ...loadingEntries.map((e) => sellerMap[e.supplier] || ""),
+                    ...loadingEntries.map((e) => buyerMap[e.saudaNo] || ""),
+                  ]),
+                ].filter(Boolean)}
                 onSearch={(filteredNames) => {
                   if (!filteredNames.length) {
                     setFilteredEntries(loadingEntries);
                   } else {
                     setFilteredEntries(
+                      loadingEntries.filter(
+                        (entry) =>
+                          filteredNames.includes(sellerMap[entry.supplier]) ||
+                          filteredNames.includes(buyerMap[entry.saudaNo])
+                      )
+                    );
+                  }
+                  setCurrentPage(1);
+                }}
+              />
+
+              <SearchBox
+                placeholder="Search by Sauda No..."
+                items={[...new Set(loadingEntries.map((e) => e.saudaNo || ""))].filter(Boolean)}
+                onSearch={(filteredSaudas) => {
+                  if (!filteredSaudas.length) {
+                    setFilteredEntries(loadingEntries);
+                  } else {
+                    setFilteredEntries(
                       loadingEntries.filter((entry) =>
-                        filteredNames.includes(sellerMap[entry.supplier])
+                        filteredSaudas.includes(entry.saudaNo)
                       )
                     );
                   }
@@ -266,7 +313,7 @@ const ListLoadingEntry = () => {
 
               <SearchBox
                 placeholder="Search by Lorry Number..."
-                items={loadingEntries.map((entry) => entry.lorryNumber)}
+                items={[...new Set(loadingEntries.map((entry) => entry.lorryNumber))].filter(Boolean)}
                 onSearch={(filteredLorryNumbers) => {
                   if (!filteredLorryNumbers.length) {
                     setFilteredEntries(loadingEntries);
@@ -304,11 +351,11 @@ const ListLoadingEntry = () => {
                 setEditEntry(null);
               }}
               title={popupType === "view" ? "Loading Entry Details" : "Edit Entry"}
-            maxWidth="max-w-3xl"
+            maxWidth="max-w-7xl"
           >
             {popupType === "view" ? (
               <div className="space-y-6 p-2">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                   <div className="space-y-4">
                     <h4 className="text-sm font-bold text-slate-400 uppercase tracking-wider border-b pb-1">Basic Info</h4>
                     <div className="grid grid-cols-2 gap-2 text-sm">
@@ -329,7 +376,7 @@ const ListLoadingEntry = () => {
                       <span className="text-slate-500">Lorry No:</span>
                       <span className="font-semibold text-slate-800">{selectedEntry.lorryNumber}</span>
                       <span className="text-slate-500">Transporter:</span>
-                      <span className="font-semibold text-slate-800">{selectedEntry.addedTransport || "N/A"}</span>
+                      <span className="font-semibold text-slate-800">{transporterMap[selectedEntry.transporterId] || selectedEntry.addedTransport || "N/A"}</span>
                       <span className="text-slate-500">Driver Name:</span>
                       <span className="font-semibold text-slate-800">{selectedEntry.driverName || "N/A"}</span>
                       <span className="text-slate-500">Driver Phone:</span>
@@ -379,7 +426,7 @@ const ListLoadingEntry = () => {
             ) : (
                 editEntry && (
                   <div className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                       <div>
                         <label className="block text-sm font-semibold text-slate-700 mb-1">
                           Loading Date
@@ -388,6 +435,18 @@ const ListLoadingEntry = () => {
                           type="date"
                           name="loadingDate"
                           value={editEntry.loadingDate || ""}
+                          onChange={handleEditFieldChange}
+                          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-slate-700 mb-1">
+                          Sauda No
+                        </label>
+                        <input
+                          type="text"
+                          name="saudaNo"
+                          value={editEntry.saudaNo || ""}
                           onChange={handleEditFieldChange}
                           className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
                         />
@@ -414,6 +473,32 @@ const ListLoadingEntry = () => {
                           value={editEntry.lorryNumber || ""}
                           onChange={handleEditFieldChange}
                           className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-slate-700 mb-1">
+                          Transporter
+                        </label>
+                        <DataDropdown
+                          options={transporters}
+                          selectedOptions={
+                            editEntry.transporterId
+                              ? [
+                                  transporters.find(
+                                    (t) => t.value === editEntry.transporterId,
+                                  ),
+                                ].filter(Boolean)
+                              : []
+                          }
+                          onChange={(option) => {
+                            setEditEntry((prev) => ({
+                              ...prev,
+                              transporterId: option?.value || "",
+                              addedTransport: option?.name || "",
+                            }));
+                          }}
+                          placeholder="Select Transporter"
+                          isMulti={false}
                         />
                       </div>
                       <div>
