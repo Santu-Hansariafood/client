@@ -76,8 +76,8 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem("token", tokenValue);
     }
     
-    // Use the actual value instead of relying on state which updates asynchronously
     startSessionTimer(true);
+    return true;
   };
 
   const logout = () => {

@@ -61,15 +61,19 @@ const LoginForm = () => {
         password,
       });
 
-      login({
+      const success = login({
         ...response.data,
         mobile: phoneNumber,
         role: userRole,
         token: response.data.token,
       });
 
-      toast.success("Login successful!");
-      navigate(roleBasedRoutes[userRole], { replace: true });
+      if (success) {
+        toast.success("Login successful!");
+        setTimeout(() => {
+          navigate(roleBasedRoutes[userRole], { replace: true });
+        }, 100);
+      }
     } catch (error) {
       const errorMsg =
         error.response?.data?.message || "Login failed. Try again.";

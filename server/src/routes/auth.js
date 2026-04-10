@@ -1,11 +1,9 @@
 import { Router } from "express";
 import jwt from "jsonwebtoken";
 import nodemailer from "nodemailer";
-import fs from "fs/promises"; // Import fs/promises for async file operations
-import path from "path"; // Import path for resolving file paths
-import { fileURLToPath } from "url"; // Import fileURLToPath for __dirname equivalent
-
-// Helper to get __dirname in ES module
+import fs from "fs/promises";
+import path from "path";
+import { fileURLToPath } from "url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -86,7 +84,7 @@ router.post("/forgot-password", async (req, res) => {
     }
 
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    const otpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+    const otpExpires = new Date(Date.now() + 10 * 60 * 1000);
 
     user.otp = otp;
     user.otpExpires = otpExpires;
@@ -230,6 +228,12 @@ router.post("/admin/login", async (req, res) => {
       role: "Admin",
       mobile: normalizedMobile,
       name: user.name,
+      user: {
+        id: user._id,
+        name: user.name,
+        role: "Admin",
+        mobile: normalizedMobile,
+      },
       token,
     });
   } catch (error) {
@@ -281,10 +285,16 @@ router.post("/employees/login", async (req, res) => {
       role: "Employee",
       mobile: normalizedMobile,
       name: employee.name,
-      email: employee.email || "",
-      employeeId: employee.employeeId || "",
-      sex: employee.sex || "",
-      status: employee.status || "Active",
+      user: {
+        id: employee._id,
+        name: employee.name,
+        role: "Employee",
+        mobile: normalizedMobile,
+        email: employee.email || "",
+        employeeId: employee.employeeId || "",
+        sex: employee.sex || "",
+        status: employee.status || "Active",
+      },
       token,
     });
   } catch (error) {
@@ -336,9 +346,15 @@ router.post("/transporters/login", async (req, res) => {
       role: "Transporter",
       mobile: normalizedMobile,
       name: transporter.name,
-      email: transporter.email || "",
-      vehicleDetails: transporter.vehicleDetails || {},
-      status: transporter.status || "Active",
+      user: {
+        id: transporter._id,
+        name: transporter.name,
+        role: "Transporter",
+        mobile: normalizedMobile,
+        email: transporter.email || "",
+        vehicleDetails: transporter.vehicleDetails || {},
+        status: transporter.status || "Active",
+      },
       token,
     });
   } catch (error) {
@@ -397,10 +413,16 @@ router.post("/buyers/login", async (req, res) => {
       role: "Buyer",
       mobile: normalizedMobile,
       name: buyer.name,
-      email: buyer.email || [],
-      status: buyer.status || "Active",
-      companyIds: (buyer.companyIds || []).map((c) => c._id || c),
-      companyNames: (buyer.companyIds || []).map((c) => c.companyName || ""),
+      user: {
+        id: buyer._id,
+        name: buyer.name,
+        role: "Buyer",
+        mobile: normalizedMobile,
+        email: buyer.email || [],
+        status: buyer.status || "Active",
+        companyIds: (buyer.companyIds || []).map((c) => c._id || c),
+        companyNames: (buyer.companyIds || []).map((c) => c.companyName || ""),
+      },
       token,
     });
   } catch (error) {
@@ -457,8 +479,14 @@ router.post("/sellers/login", async (req, res) => {
       role: "Seller",
       mobile: normalizedPhone,
       name: seller.sellerName,
-      emails: seller.emails || [],
-      status: seller.status || "active",
+      user: {
+        id: seller._id,
+        name: seller.sellerName,
+        role: "Seller",
+        mobile: normalizedPhone,
+        emails: seller.emails || [],
+        status: seller.status || "active",
+      },
       token,
     });
   } catch (error) {
