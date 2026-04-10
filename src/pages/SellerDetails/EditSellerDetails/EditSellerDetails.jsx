@@ -105,19 +105,19 @@ const EditSellerDetails = ({ sellerId, onClose, onSave }) => {
         );
 
         setCommodityOptions(
-          commodities.sort((a, b) => a.label.localeCompare(b.label)),
+          commodityOpts.sort((a, b) => a.label.localeCompare(b.label)),
         );
         setCompanyOptions(
-          companies.sort((a, b) => a.label.localeCompare(b.label)),
+          companyOpts.sort((a, b) => a.label.localeCompare(b.label)),
         );
-        setGroupOptions(groups.sort((a, b) => a.label.localeCompare(b.label)));
+        setGroupOptions(groupOpts.sort((a, b) => a.label.localeCompare(b.label)));
 
         const selectedGroupValues = (sellerData.groups || [])
           .map((group) => group.name)
           .filter(Boolean);
 
         setSelectedGroups(
-          groups.filter((g) => selectedGroupValues.includes(g.label)),
+          groupOpts.filter((g) => selectedGroupValues.includes(g.label)),
         );
       } catch (error) {
         toast.error("Failed to load data from the server.");
