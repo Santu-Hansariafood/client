@@ -30,7 +30,7 @@ const PrivateLayout = () => {
   }, [logout, navigate]);
 
   const handleProfileClick = () => {
-    setProfileDropdownOpen(prev => !prev);
+    setProfileDropdownOpen((prev) => !prev);
   };
 
   useEffect(() => {

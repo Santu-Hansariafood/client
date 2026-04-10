@@ -21,7 +21,9 @@ const BuyerInformation = ({
   const [selectedBuyerId, setSelectedBuyerId] = useState(null);
   const [selectedCompanyId, setSelectedCompanyId] = useState(null);
   const [selectedConsignee, setSelectedConsignee] = useState("");
-  const [loading, setLoading] = useState(!propBuyers || propBuyers.length === 0);
+  const [loading, setLoading] = useState(
+    !propBuyers || propBuyers.length === 0,
+  );
   const [initialized, setInitialized] = useState(false);
 
   useEffect(() => {
@@ -40,7 +42,9 @@ const BuyerInformation = ({
       if (propBuyers?.length > 0 && propConsignees?.length > 0) {
         // If data is already provided via props, just fetch companies
         try {
-          const companiesRows = await fetchAllPages("/companies", { limit: 200 });
+          const companiesRows = await fetchAllPages("/companies", {
+            limit: 200,
+          });
           setCompanies(companiesRows);
         } catch (error) {
           console.error("Error fetching companies:", error);
@@ -167,7 +171,7 @@ const BuyerInformation = ({
 
     if (matchCompany) {
       setSelectedCompanyId(matchCompany._id);
-      
+
       // Auto-trigger onCompanyChange logic to populate parent state
       const buyerData = matchBuyer;
       const companyData = matchCompany;
@@ -175,7 +179,9 @@ const BuyerInformation = ({
       const rawEmails = buyerData?.email;
       const buyerEmails = Array.isArray(rawEmails)
         ? rawEmails
-            .map((e) => typeof e === "string" ? e : (e?.value ?? e?.email ?? ""))
+            .map((e) =>
+              typeof e === "string" ? e : (e?.value ?? e?.email ?? ""),
+            )
             .filter(Boolean)
         : [];
       const firstEmail = buyerEmails[0] || "";
@@ -219,12 +225,20 @@ const BuyerInformation = ({
     }
 
     setInitialized(true);
-  }, [buyers, companies, consignees, loading, formData, initialized, handleChange]);
+  }, [
+    buyers,
+    companies,
+    consignees,
+    loading,
+    formData,
+    initialized,
+    handleChange,
+  ]);
 
   const onBuyerChange = (option) => {
     const buyerId = option?.value || null;
     setSelectedBuyerId(buyerId);
-    setSelectedCompanyId(null); // Reset company when buyer changes
+    setSelectedCompanyId(null);
     handleChange("buyer", option?.label || "");
     handleChange("buyerCompany", "");
     handleChange("companyId", null);
@@ -319,8 +333,9 @@ const BuyerInformation = ({
               placeholder="Select Company"
               options={companyOptions}
               selectedOptions={
-                companyOptions.find(({ value }) => value === selectedCompanyId) ||
-                null
+                companyOptions.find(
+                  ({ value }) => value === selectedCompanyId,
+                ) || null
               }
               onChange={onCompanyChange}
               value={selectedCompanyId}

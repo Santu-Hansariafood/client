@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
 import { useAuth } from "../../../context/AuthContext/AuthContext";
+import Loading from "../../../common/Loading/Loading";
 
 const InteractionsPopup = ({ bidId, onClose }) => {
   const [interactions, setInteractions] = useState([]);
@@ -14,7 +15,7 @@ const InteractionsPopup = ({ bidId, onClose }) => {
         const response = await axios.get(`/participatebids?bidId=${bidId}`);
         setInteractions(response.data.data || response.data);
       } catch (error) {
-        toast.error("Failed to fetch interactions.");
+        toast.error("Failed to fetch interactions.", error);
       }
       setLoading(false);
     };
@@ -38,9 +39,8 @@ const InteractionsPopup = ({ bidId, onClose }) => {
 
       const response = await axios.patch(
         `/participatebids/${id}/status`,
-        payload
+        payload,
       );
-      // Update local state with the returned participation object which now includes sellerName
       setInteractions(
         interactions.map((i) =>
           i._id === id ? { ...response.data, sellerName: i.sellerName } : i,
@@ -48,7 +48,7 @@ const InteractionsPopup = ({ bidId, onClose }) => {
       );
       toast.success(`Interaction ${status}.`);
     } catch (error) {
-      toast.error("Failed to update status.");
+      toast.error("Failed to update status.", error);
     }
   };
 
@@ -67,7 +67,7 @@ const InteractionsPopup = ({ bidId, onClose }) => {
           </button>
         </div>
         {loading ? (
-          <p className="text-sm text-slate-500">Loading...</p>
+          <Loading/>
         ) : (
           <div className="space-y-4">
             {interactions.map((interaction) => (
@@ -87,15 +87,15 @@ const InteractionsPopup = ({ bidId, onClose }) => {
 const InteractionCard = ({ interaction, onStatusChange }) => {
   const [notes, setNotes] = useState(interaction.adminNotes || "");
   const [acceptedRate, setAcceptedRate] = useState(
-    interaction.acceptedRate ?? interaction.rate ?? ""
+    interaction.acceptedRate ?? interaction.rate ?? "",
   );
   const [acceptedQuantity, setAcceptedQuantity] = useState(
-    interaction.acceptedQuantity ?? interaction.quantity ?? ""
+    interaction.acceptedQuantity ?? interaction.quantity ?? "",
   );
   const [acceptedAt, setAcceptedAt] = useState(
     interaction.acceptedAt
       ? new Date(interaction.acceptedAt).toISOString().slice(0, 16)
-      : new Date().toISOString().slice(0, 16)
+      : new Date().toISOString().slice(0, 16),
   );
 
   const handleSave = (status) => {
@@ -229,7 +229,9 @@ const InteractionCard = ({ interaction, onStatusChange }) => {
             />
           </div>
           <div>
-            <p className="text-sm font-medium text-gray-500">Acceptance Quantity</p>
+            <p className="text-sm font-medium text-gray-500">
+              Acceptance Quantity
+            </p>
             <input
               type="number"
               className="w-full p-2 border rounded-md focus:ring-2 focus:ring-emerald-500 transition"

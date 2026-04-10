@@ -31,7 +31,7 @@ const CommodityInformation = ({
         const response = await axios.get("/companies");
         const items = response.data?.data || response.data || [];
         const companyData = items.find(
-          (company) => company.companyName === selectedCompany
+          (company) => company.companyName === selectedCompany,
         );
 
         if (companyData) {

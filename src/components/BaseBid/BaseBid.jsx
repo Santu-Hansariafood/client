@@ -1,5 +1,5 @@
 import { useState, useEffect, lazy, Suspense } from "react";
-import { toast, ToastContainer } from "react-toastify";
+import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import "react-toastify/dist/ReactToastify.css";
 import axios from "axios";
@@ -75,7 +75,6 @@ const BaseBid = ({ type }) => {
       const buyerCompanyIds = (buyer?.companyIds || []).map((id) => String(id));
 
       companies.forEach((c) => {
-        // If user is buyer, only show their registered groups/companies
         if (userRole === "Buyer" && !buyerCompanyIds.includes(String(c._id))) {
           return;
         }
@@ -124,7 +123,6 @@ const BaseBid = ({ type }) => {
           .sort((a, b) => a.label.localeCompare(b.label)),
       }));
 
-      // If buyer, auto-select group and load options
       if (userRole === "Buyer" && sortedGroupOptions.length > 0) {
         const group = sortedGroupOptions[0];
         setState(prev => ({

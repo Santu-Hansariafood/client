@@ -6,8 +6,8 @@ import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
 import { FaCubes } from "react-icons/fa";
 import { AiOutlinePlus, AiOutlineMinus } from "react-icons/ai";
 const DataInput = lazy(() => import("../../../common/DataInput/DataInput"));
-const DataDropdown = lazy(() =>
-  import("../../../common/DataDropdown/DataDropdown")
+const DataDropdown = lazy(
+  () => import("../../../common/DataDropdown/DataDropdown"),
 );
 const Buttons = lazy(() => import("../../../common/Buttons/Buttons"));
 
@@ -27,7 +27,10 @@ const AddCommodity = () => {
           .sort((a, b) => a.label.localeCompare(b.label));
         setParametersOptions(options);
       } catch (error) {
-        toast.error(error?.response?.data?.message || "Failed to load parameters. Please try again.");
+        toast.error(
+          error?.response?.data?.message ||
+            "Failed to load parameters. Please try again.",
+        );
       }
     };
 
@@ -63,9 +66,11 @@ const AddCommodity = () => {
     const formData = {
       name: commodityName,
       hsnCode,
-      parameters: extraFields.map((field) => ({
-        parameterId: field.parameter?.value,
-      })).filter((p) => p.parameterId),
+      parameters: extraFields
+        .map((field) => ({
+          parameterId: field.parameter?.value,
+        }))
+        .filter((p) => p.parameterId),
     };
 
     try {
@@ -75,8 +80,7 @@ const AddCommodity = () => {
       setHsnCode("");
       setExtraFields([{ parameter: "" }]);
     } catch (error) {
-      const errorMessage =
-        error.response?.data?.message || error.message;
+      const errorMessage = error.response?.data?.message || error.message;
       toast.error(`Failed to add commodity: ${errorMessage}`);
     }
   };
@@ -86,7 +90,7 @@ const AddCommodity = () => {
       .map((field) => field.parameter?.value)
       .filter(Boolean);
     return parametersOptions.filter(
-      (option) => !selectedParameters.includes(option.value)
+      (option) => !selectedParameters.includes(option.value),
     );
   };
 
@@ -103,66 +107,66 @@ const AddCommodity = () => {
             <h2 className="text-xl sm:text-2xl font-bold mb-8 text-center text-slate-800">
               Add Commodity
             </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <DataInput
-              placeholder="Enter commodity name"
-              value={commodityName}
-              onChange={handleInputChange}
-              name="commodityName"
-              required
-            />
-            <DataInput
-              placeholder="Enter HSN code"
-              value={hsnCode}
-              onChange={handleInputChange}
-              name="hsnCode"
-              required
-            />
-          </div>
-
-              <button
-                onClick={handleAddField}
-                className="mt-4 text-green-700 flex items-center space-x-2"
-              >
-                <AiOutlinePlus size={20} />
-                <span className="font-medium">Add Quality Parameter</span>
-              </button>
-
-              {extraFields.map((field, index) => (
-                <div
-                  key={index}
-                  className="mt-4 grid grid-cols-3 gap-4 items-center bg-gray-50 p-4 rounded-lg shadow-sm"
-                >
-              <DataDropdown
-                options={getFilteredOptions(index)}
-                selectedOptions={field.parameter}
-                onChange={(option) =>
-                  handleExtraFieldChange(index, "parameter", option)
-                }
-                placeholder="Select Parameter"
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <DataInput
+                placeholder="Enter commodity name"
+                value={commodityName}
+                onChange={handleInputChange}
+                name="commodityName"
+                required
               />
-              <div className="col-span-2 flex justify-end">
-                <button
-                  onClick={() => handleRemoveField(index)}
-                  className="text-red-500 flex items-center space-x-2"
-                >
-                  <AiOutlineMinus size={20} />
-                  <span>Remove</span>
-                </button>
-              </div>
-                </div>
-              ))}
+              <DataInput
+                placeholder="Enter HSN code"
+                value={hsnCode}
+                onChange={handleInputChange}
+                name="hsnCode"
+                required
+              />
+            </div>
 
-              <div className="flex justify-center mt-8">
-                <Buttons
-                  label="Submit"
-                  onClick={handleSubmit}
-                  variant="primary"
-                  size="md"
+            <button
+              onClick={handleAddField}
+              className="mt-4 text-green-700 flex items-center space-x-2"
+            >
+              <AiOutlinePlus size={20} />
+              <span className="font-medium">Add Quality Parameter</span>
+            </button>
+
+            {extraFields.map((field, index) => (
+              <div
+                key={index}
+                className="mt-4 grid grid-cols-3 gap-4 items-center bg-gray-50 p-4 rounded-lg shadow-sm"
+              >
+                <DataDropdown
+                  options={getFilteredOptions(index)}
+                  selectedOptions={field.parameter}
+                  onChange={(option) =>
+                    handleExtraFieldChange(index, "parameter", option)
+                  }
+                  placeholder="Select Parameter"
                 />
+                <div className="col-span-2 flex justify-end">
+                  <button
+                    onClick={() => handleRemoveField(index)}
+                    className="text-red-500 flex items-center space-x-2"
+                  >
+                    <AiOutlineMinus size={20} />
+                    <span>Remove</span>
+                  </button>
+                </div>
               </div>
+            ))}
+
+            <div className="flex justify-center mt-8">
+              <Buttons
+                label="Submit"
+                onClick={handleSubmit}
+                variant="primary"
+                size="md"
+              />
             </div>
           </div>
+        </div>
       </AdminPageShell>
     </Suspense>
   );

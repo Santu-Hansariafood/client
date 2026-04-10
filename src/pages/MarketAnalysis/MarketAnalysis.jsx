@@ -10,7 +10,9 @@ const MarketAnalysis = () => {
       <div className="w-full max-w-3xl">
         <div className="bg-white shadow-lg rounded-2xl p-5 sm:p-8 text-center mb-5">
           <h2 className="text-2xl font-semibold mb-3">Market Analysis</h2>
-          <p className="text-gray-600 mb-6">Playing zone while this page goes live.</p>
+          <p className="text-gray-600 mb-6">
+            Playing zone while this page goes live.
+          </p>
           <button
             onClick={() => navigate(-1)}
             className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"

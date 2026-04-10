@@ -108,7 +108,8 @@ const AdditionalInformation = ({ formData, handleChange }) => {
         Additional Information
       </label>
       <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">
-        Emails are filled from the selected company and supplier. You can add or edit as needed.
+        Emails are filled from the selected company and supplier. You can add or
+        edit as needed.
       </p>
       <div className="mb-6">
         <label className="block mb-2 text-sm font-medium text-slate-700 dark:text-slate-300">
@@ -128,7 +129,9 @@ const AdditionalInformation = ({ formData, handleChange }) => {
         </label>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm text-slate-600 dark:text-slate-400">To Buyer</label>
+            <label className="block text-sm text-slate-600 dark:text-slate-400">
+              To Buyer
+            </label>
             <div className="flex gap-2">
               <label className="flex items-center">
                 <input
@@ -157,7 +160,9 @@ const AdditionalInformation = ({ formData, handleChange }) => {
             </div>
           </div>
           <div>
-            <label className="block text-sm text-slate-600 dark:text-slate-400">To Supplier</label>
+            <label className="block text-sm text-slate-600 dark:text-slate-400">
+              To Supplier
+            </label>
             <div className="flex gap-2">
               <label className="flex items-center">
                 <input
@@ -197,7 +202,9 @@ const AdditionalInformation = ({ formData, handleChange }) => {
               type="radio"
               name="billTo"
               value="buyer"
-              checked={formData.billTo === "buyer" || formData.billTo === "none"}
+              checked={
+                formData.billTo === "buyer" || formData.billTo === "none"
+              }
               onChange={(e) => handleRadioChange("billTo", e.target.value)}
             />
             <span className="ml-2">Buyer</span>
@@ -225,7 +232,6 @@ AdditionalInformation.propTypes = {
     sellerEmails: PropTypes.arrayOf(PropTypes.string).isRequired,
     sendPOToBuyer: PropTypes.oneOf(["yes", "no", ""]).isRequired,
     sendPOToSupplier: PropTypes.oneOf(["yes", "no", ""]).isRequired,
-    // Legacy orders may still store billTo as "none"; we treat it as Buyer.
     billTo: PropTypes.oneOf(["buyer", "consignee", "none", ""]).isRequired,
   }).isRequired,
   handleChange: PropTypes.func.isRequired,

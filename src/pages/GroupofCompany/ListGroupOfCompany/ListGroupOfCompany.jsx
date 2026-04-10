@@ -16,8 +16,8 @@ const Tables = lazy(() => import("../../../common/Tables/Tables"));
 const Actions = lazy(() => import("../../../common/Actions/Actions"));
 const SearchBox = lazy(() => import("../../../common/SearchBox/SearchBox"));
 const PopupBox = lazy(() => import("../../../common/PopupBox/PopupBox"));
-const Pagination = lazy(() =>
-  import("../../../common/Paginations/Paginations")
+const Pagination = lazy(
+  () => import("../../../common/Paginations/Paginations"),
 );
 const EditGroupPopup = lazy(() => import("../EditGroupPopup/EditGroupPopup"));
 
@@ -70,45 +70,33 @@ const ListGroupOfCompany = () => {
     fetchGroups();
   }, [currentPage, searchQuery, itemsPerPage]);
 
-  const handleSearch = useCallback(
-    (query) => {
-      setSearchQuery(query || "");
-      setCurrentPage(1);
-    },
-    [],
-  );
+  const handleSearch = useCallback((query) => {
+    setSearchQuery(query || "");
+    setCurrentPage(1);
+  }, []);
 
-  const handleView = useCallback(
-    (group) => {
-      setSelectedGroup(group);
-      setIsPopupOpen(true);
-    },
-    [],
-  );
+  const handleView = useCallback((group) => {
+    setSelectedGroup(group);
+    setIsPopupOpen(true);
+  }, []);
 
-  const handleEdit = useCallback(
-    (group) => {
-      setSelectedGroup(group);
-      setIsEditPopupOpen(true);
-    },
-    [],
-  );
+  const handleEdit = useCallback((group) => {
+    setSelectedGroup(group);
+    setIsEditPopupOpen(true);
+  }, []);
 
-  const handleDelete = useCallback(
-    async (groupToDelete) => {
-      try {
-        await axios.delete(`/groups/${groupToDelete._id}`);
-        setGroupsData((prevData) =>
-          prevData.filter((group) => group._id !== groupToDelete._id),
-        );
-        setTotalItems((prev) => Math.max(0, prev - 1));
-        toast.success("Group deleted successfully");
-      } catch (error) {
-        toast.error("Failed to delete group", error);
-      }
-    },
-    [],
-  );
+  const handleDelete = useCallback(async (groupToDelete) => {
+    try {
+      await axios.delete(`/groups/${groupToDelete._id}`);
+      setGroupsData((prevData) =>
+        prevData.filter((group) => group._id !== groupToDelete._id),
+      );
+      setTotalItems((prev) => Math.max(0, prev - 1));
+      toast.success("Group deleted successfully");
+    } catch (error) {
+      toast.error("Failed to delete group", error);
+    }
+  }, []);
 
   const handleUpdate = useCallback(
     (updatedGroup) => {
@@ -118,14 +106,14 @@ const ListGroupOfCompany = () => {
       };
       const updatedList = groupsData
         .map((group) =>
-          group._id === formattedGroup._id ? formattedGroup : group
+          group._id === formattedGroup._id ? formattedGroup : group,
         )
         .sort((a, b) => a.groupName.localeCompare(b.groupName));
       setGroupsData(updatedList);
       setIsEditPopupOpen(false);
       toast.success("Group updated successfully");
     },
-    [groupsData]
+    [groupsData],
   );
 
   const startIndex = (currentPage - 1) * itemsPerPage;
@@ -159,7 +147,7 @@ const ListGroupOfCompany = () => {
               placeholder="Search groups..."
               items={groupsData.map((group) => group.groupName)}
               onSearch={handleSearch}
-            returnQuery
+              returnQuery
             />
           </div>
 

@@ -37,7 +37,7 @@ const QuantityPricing = ({ formData = {}, handleChange }) => {
         type: "text",
       },
     ],
-    []
+    [],
   );
 
   return (
@@ -48,7 +48,9 @@ const QuantityPricing = ({ formData = {}, handleChange }) => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {inputFields.map(({ label, field, placeholder, type }) => (
           <div key={field}>
-            <label className="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-1">{label}</label>
+            <label className="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-1">
+              {label}
+            </label>
             <DataInput
               placeholder={placeholder}
               inputType={type}

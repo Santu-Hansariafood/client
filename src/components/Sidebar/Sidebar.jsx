@@ -7,10 +7,10 @@ import { prefetchRoute } from "../../utils/LazyPages/LazyPages";
 const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
   const location = useLocation();
   const [expandedSection, setExpandedSection] = useState(
-    localStorage.getItem("expandedSection") || null
+    localStorage.getItem("expandedSection") || null,
   );
   const [isCollapsed, setIsCollapsed] = useState(
-    localStorage.getItem("sidebarCollapsed") === "1"
+    localStorage.getItem("sidebarCollapsed") === "1",
   );
 
   useEffect(() => {
@@ -21,18 +21,23 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
     localStorage.setItem("sidebarCollapsed", isCollapsed ? "1" : "0");
   }, [isCollapsed]);
 
-  const toggleSection = useCallback((sectionName) => {
-    if (isCollapsed) {
-      setIsCollapsed(false);
-      setExpandedSection(sectionName);
-      return;
-    }
-    setExpandedSection((prev) => (prev === sectionName ? null : sectionName));
-  }, [isCollapsed]);
+  const toggleSection = useCallback(
+    (sectionName) => {
+      if (isCollapsed) {
+        setIsCollapsed(false);
+        setExpandedSection(sectionName);
+        return;
+      }
+      setExpandedSection((prev) => (prev === sectionName ? null : sectionName));
+    },
+    [isCollapsed],
+  );
 
   const renderIcon = useCallback((iconName) => {
     const IconComponent = Icons[iconName];
-    return IconComponent ? <IconComponent className="text-xl drop-shadow" /> : null;
+    return IconComponent ? (
+      <IconComponent className="text-xl drop-shadow" />
+    ) : null;
   }, []);
 
   return (
@@ -64,11 +69,14 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
             aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
             onClick={() => setIsCollapsed((v) => !v)}
           >
-            {isCollapsed ? <Icons.FaAngleRight size={18} /> : <Icons.FaAngleLeft size={18} />}
+            {isCollapsed ? (
+              <Icons.FaAngleRight size={18} />
+            ) : (
+              <Icons.FaAngleLeft size={18} />
+            )}
           </button>
         </div>
 
-        {/* Nav */}
         <nav
           className={`flex-1 overflow-y-auto no-scrollbar ${
             isCollapsed ? "px-2 py-3" : "px-3 py-4"
@@ -79,7 +87,9 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
               <button
                 type="button"
                 className={`w-full flex items-center ${
-                  isCollapsed ? "justify-center py-2.5 px-2" : "justify-between py-2 px-3"
+                  isCollapsed
+                    ? "justify-center py-2.5 px-2"
+                    : "justify-between py-2 px-3"
                 } rounded-xl text-slate-300 hover:bg-slate-800/70 hover:text-white transition text-left border border-transparent hover:border-slate-700/60`}
                 onClick={() => toggleSection(section.section)}
               >
@@ -88,7 +98,9 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
                     {renderIcon(section.icon || section.actions?.[0]?.icon)}
                   </span>
                   {!isCollapsed && (
-                    <span className="text-sm font-medium truncate">{section.section}</span>
+                    <span className="text-sm font-medium truncate">
+                      {section.section}
+                    </span>
                   )}
                 </div>
                 {!isCollapsed && (
@@ -111,16 +123,19 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
                         key={idx}
                         to={action.link}
                         className={`group relative flex items-center gap-3 py-2 px-3 rounded-xl text-sm transition
-                          ${isActive
-                            ? "bg-emerald-500/15 text-emerald-200 font-semibold border border-emerald-500/20"
-                            : "text-slate-300/80 hover:bg-slate-800/70 hover:text-white border border-transparent hover:border-slate-700/60"
+                          ${
+                            isActive
+                              ? "bg-emerald-500/15 text-emerald-200 font-semibold border border-emerald-500/20"
+                              : "text-slate-300/80 hover:bg-slate-800/70 hover:text-white border border-transparent hover:border-slate-700/60"
                           }`}
                         onClick={() => setIsSidebarOpen(false)}
                       >
                         {isActive && (
                           <span className="absolute left-1 top-1/2 -translate-y-1/2 h-6 w-1 rounded-full bg-emerald-400/80" />
                         )}
-                        <span className={`shrink-0 ${isActive ? "text-emerald-200" : "text-slate-300/70 group-hover:text-slate-200"}`}>
+                        <span
+                          className={`shrink-0 ${isActive ? "text-emerald-200" : "text-slate-300/70 group-hover:text-slate-200"}`}
+                        >
                           {renderIcon(action.icon)}
                         </span>
                         <span className="truncate">{action.name}</span>

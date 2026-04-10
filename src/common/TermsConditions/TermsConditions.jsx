@@ -9,28 +9,24 @@ const TermsConditions = () => {
 
   return (
     <div className="bg-gradient-to-br from-green-50 via-white to-green-100 min-h-screen py-20 px-6">
-
       <div className="max-w-5xl mx-auto">
-
         <div className="text-center mb-14">
           <h1 className="text-5xl font-bold text-green-700 mb-4">
             Terms & Conditions
           </h1>
 
-          <p className="text-gray-600 text-lg">
-            Hansaria Food Private Limited
-          </p>
+          <p className="text-gray-600 text-lg">Hansaria Food Private Limited</p>
         </div>
 
         <div className="backdrop-blur-lg bg-white/80 border border-gray-200 shadow-xl rounded-3xl p-10 md:p-14">
-
           <Section title="1. Acceptance of Terms">
-            These Terms and Conditions (&quot;Terms&quot;) govern access to and use of
-            services provided by Hansaria Food Private Limited (&quot;Company&quot;,
-            &quot;Hansaria&quot;, &quot;we&quot;, &quot;us&quot;, &quot;our&quot;). By accessing or using our platform,
-            website, applications, or services (&quot;Platform&quot;), you agree to be
-            legally bound by these Terms. If you do not agree, you must not use
-            the Platform.
+            These Terms and Conditions (&quot;Terms&quot;) govern access to and
+            use of services provided by Hansaria Food Private Limited
+            (&quot;Company&quot;, &quot;Hansaria&quot;, &quot;we&quot;,
+            &quot;us&quot;, &quot;our&quot;). By accessing or using our
+            platform, website, applications, or services (&quot;Platform&quot;),
+            you agree to be legally bound by these Terms. If you do not agree,
+            you must not use the Platform.
           </Section>
 
           <Section title="2. Nature of Services">
@@ -38,7 +34,6 @@ const TermsConditions = () => {
             connecting buyers, sellers, feed mills, suppliers, and commodity
             traders dealing in agricultural and feed products including maize,
             soya, DDGS, oil cakes, grains, and related commodities.
-
             <ul className="list-disc ml-6 mt-3 space-y-2">
               <li>Intermediary broker</li>
               <li>Transaction facilitator</li>
@@ -85,8 +80,8 @@ const TermsConditions = () => {
           </Section>
 
           <Section title="9. Quality and Disputes">
-            Quality disputes must generally be reported within{" "}
-            <b>48 hours</b> of delivery with proper evidence.
+            Quality disputes must generally be reported within <b>48 hours</b>{" "}
+            of delivery with proper evidence.
           </Section>
 
           <Section title="10. Prohibited Use">
@@ -96,8 +91,7 @@ const TermsConditions = () => {
 
           <Section title="11. Intellectual Property">
             All platform content, trademarks, logos, and software are owned or
-            licensed by Hansaria and protected under intellectual property
-            laws.
+            licensed by Hansaria and protected under intellectual property laws.
           </Section>
 
           <Section title="12. Limitation of Liability">
@@ -143,11 +137,9 @@ const TermsConditions = () => {
               info@hansariafood.com
             </a>
           </Section>
-
         </div>
 
         <div className="text-center mt-14">
-
           <Link
             to="/"
             className="inline-flex items-center gap-3 bg-green-600 text-white px-8 py-4 rounded-full text-lg font-semibold shadow-lg hover:bg-green-700 hover:scale-105 transition"
@@ -155,9 +147,7 @@ const TermsConditions = () => {
             <FaArrowLeft />
             Back to Home
           </Link>
-
         </div>
-
       </div>
     </div>
   );
@@ -166,13 +156,9 @@ const TermsConditions = () => {
 const Section = ({ title, children }) => {
   return (
     <div className="mb-8 p-6 rounded-xl border border-gray-200 bg-white/70 hover:shadow-md transition">
-      <h2 className="text-xl font-semibold text-gray-800 mb-3">
-        {title}
-      </h2>
+      <h2 className="text-xl font-semibold text-gray-800 mb-3">{title}</h2>
 
-      <div className="text-gray-700 leading-relaxed">
-        {children}
-      </div>
+      <div className="text-gray-700 leading-relaxed">{children}</div>
     </div>
   );
 };

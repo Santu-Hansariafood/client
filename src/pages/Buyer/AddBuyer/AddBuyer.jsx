@@ -5,8 +5,8 @@ import Loading from "../../../common/Loading/Loading";
 import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
 import { FaUserPlus } from "react-icons/fa";
 const DataInput = lazy(() => import("../../../common/DataInput/DataInput"));
-const DataDropdown = lazy(() =>
-  import("../../../common/DataDropdown/DataDropdown")
+const DataDropdown = lazy(
+  () => import("../../../common/DataDropdown/DataDropdown"),
 );
 const Buttons = lazy(() => import("../../../common/Buttons/Buttons"));
 import buyerLabels from "../../../language/en/buyer";
@@ -40,7 +40,7 @@ const AddBuyer = () => {
       { value: "Active", label: "Active" },
       { value: "Inactive", label: "Inactive" },
     ],
-    []
+    [],
   );
 
   useEffect(() => {
@@ -51,24 +51,28 @@ const AddBuyer = () => {
           axios.get("/groups"),
         ]);
 
-        const companies = companiesResponse.data?.data || companiesResponse.data || [];
+        const companies =
+          companiesResponse.data?.data || companiesResponse.data || [];
         const groups = groupsResponse.data?.data || groupsResponse.data || [];
 
         setCompaniesData(companies);
         setCompanyOptions(
           companies
             .map((c) => ({ value: String(c._id), label: c.companyName }))
-            .sort((a, b) => a.label.localeCompare(b.label))
+            .sort((a, b) => a.label.localeCompare(b.label)),
         );
         setGroupOptions(
           groups
             .map((g) => ({ value: String(g._id), label: g.groupName }))
-            .sort((a, b) => a.label.localeCompare(b.label))
+            .sort((a, b) => a.label.localeCompare(b.label)),
         );
         setCommodityOptions([]);
         setConsigneeOptions([]);
       } catch (error) {
-        toast.error(error?.response?.data?.message || "Failed to load dropdown data. Please try again.");
+        toast.error(
+          error?.response?.data?.message ||
+            "Failed to load dropdown data. Please try again.",
+        );
       }
     };
 
@@ -85,7 +89,6 @@ const AddBuyer = () => {
         selectedCompanyIds.includes(String(c._id)),
       );
 
-      // Accumulate commodities and consignees from all selected companies
       const allCommoditiesMap = new Map();
       const allConsigneesMap = new Map();
 
@@ -126,7 +129,6 @@ const AddBuyer = () => {
         newBrokerage[c.value] = Number(c.brokerage || 0);
       });
 
-      // Auto-set group if only one company is selected and it has a group
       let autoGroup = formData.group;
       if (selectedCompaniesData.length === 1) {
         const selectedCompany = selectedCompaniesData[0];
@@ -258,7 +260,10 @@ const AddBuyer = () => {
         setTimeout(() => setSuccessMessage(""), 3000);
       } catch (error) {
         setSuccessMessage("");
-        toast.error(error?.response?.data?.message || "Failed to add buyer. Please try again.");
+        toast.error(
+          error?.response?.data?.message ||
+            "Failed to add buyer. Please try again.",
+        );
       }
     }
   };
@@ -273,233 +278,246 @@ const AddBuyer = () => {
       >
         <div className="max-w-4xl mx-auto">
           <div className="max-w-2xl mx-auto p-4 sm:p-8 border border-amber-200/80 rounded-2xl shadow-lg bg-white">
-              {successMessage && (
-                <div className="mb-4 p-3 rounded-lg bg-green-100 text-green-800 text-center font-semibold animate-fade-in">
-                  {successMessage}
-                </div>
-              )}
-              <form onSubmit={handleSubmit} className="space-y-8">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {/* Name */}
-            <div>
-              <label className="block text-gray-800 mb-2 font-medium" htmlFor="name">
-                {buyerLabels.title_name}
-              </label>
-              <DataInput
-                name="name"
-                placeholder="Enter Name"
-                value={formData.name}
-                onChange={handleInputChange}
-                required
-                className="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-              />
-              {errors.name && (
-                <p className="text-red-500 text-xs mt-1">{errors.name}</p>
-              )}
-            </div>
-            {/* Company Name */}
-            <div>
-              <label className="block text-gray-800 mb-2 font-medium" htmlFor="companyName">
-                {buyerLabels.company_name_title}
-              </label>
-              <DataDropdown
-                name="company"
-                options={companyOptions}
-                selectedOptions={formData.company}
-                onChange={(selected) =>
-                  handleDropdownChange(selected, { name: "company" })
-                }
-                placeholder="Select Company Name"
-                isMulti
-                className="w-full"
-              />
-            </div>
-            {/* Group */}
-            <div>
-              <label className="block text-gray-800 mb-2 font-medium" htmlFor="group">
-                {buyerLabels.company_name}
-              </label>
-              <DataDropdown
-                name="group"
-                options={groupOptions}
-                selectedOptions={formData.group}
-                onChange={(selected) =>
-                  handleDropdownChange(selected, { name: "group" })
-                }
-                placeholder="Select Group of Company"
-                className="w-full"
-              />
-            </div>
-            {/* Password */}
-            <div>
-              <label className="block text-gray-800 mb-2 font-medium" htmlFor="password">
-                {buyerLabels.password_title}
-              </label>
-              <DataInput
-                name="password"
-                placeholder="Enter Password"
-                inputType="password"
-                value={formData.password}
-                onChange={handleInputChange}
-                required
-                minLength="4"
-                maxLength="25"
-                className="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-              />
-            </div>
-            {/* Mobile Numbers */}
-            <div>
-              <label className="block text-gray-800 mb-2 font-medium">
-                {buyerLabels.mobile_title}
-              </label>
-              {formData.mobile.map((mobile, index) => (
-                <div key={index} className="flex items-center gap-2 mb-2">
-                  <DataInput
-                    name={`mobile-${index}`}
-                    placeholder="Enter Mobile"
-                    inputType="tel"
-                    value={mobile}
-                    onChange={(e) => handleInputChange(e, index, "mobile")}
-                    required
-                    maxLength="10"
-                    minLength="10"
-                    className="flex-1 rounded-lg border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                  />
-                  {formData.mobile.length > 1 && (
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveField("mobile", index)}
-                      className="text-red-500 hover:text-red-700 transition"
-                    >
-                      <FaTrash />
-                    </button>
-                  )}
-                </div>
-              ))}
-              <button
-                type="button"
-                onClick={() => handleAddField("mobile")}
-                className="text-blue-600 flex items-center mt-2 hover:underline"
-              >
-                <FaPlus className="mr-1" /> {buyerLabels.add_mobile}
-              </button>
-              {errors.mobile && (
-                <p className="text-red-500 text-xs mt-1">{errors.mobile}</p>
-              )}
-            </div>
-            {/* Emails */}
-            <div>
-              <label className="block text-gray-800 mb-2 font-medium">
-                {buyerLabels.email_title}
-              </label>
-              {formData.email.map((email, index) => (
-                <div key={index} className="flex items-center gap-2 mb-2">
-                  <DataInput
-                    name={`email-${index}`}
-                    placeholder="Enter Email"
-                    inputType="email"
-                    value={email}
-                    onChange={(e) => handleInputChange(e, index, "email")}
-                    required
-                    className="flex-1 rounded-lg border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                  />
-                  {formData.email.length > 1 && (
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveField("email", index)}
-                      className="text-red-500 hover:text-red-700 transition"
-                    >
-                      <FaTrash />
-                    </button>
-                  )}
-                </div>
-              ))}
-              <button
-                type="button"
-                onClick={() => handleAddField("email")}
-                className="text-blue-600 flex items-center mt-2 hover:underline"
-              >
-                <FaPlus className="mr-1" /> {buyerLabels.add_email}
-              </button>
-              {errors.email && (
-                <p className="text-red-500 text-xs mt-1">{errors.email}</p>
-              )}
-            </div>
-            {/* Commodity & Brokerage */}
-            <div>
-              <label className="block text-gray-800 mb-2 font-medium" htmlFor="commodity">
-                {buyerLabels.commodity_title}
-              </label>
-              <DataDropdown
-                name="commodity"
-                options={commodityOptions}
-                selectedOptions={formData.commodity}
-                onChange={(selected) =>
-                  handleDropdownChange(selected, { name: "commodity" })
-                }
-                placeholder="Select Commodity"
-                isMulti
-                className="w-full"
-              />
-              {formData.commodity.map((commodity) => (
-                <div key={commodity.value} className="mt-4">
-                  <label className="block text-gray-700 mb-2">
-                    {buyerLabels.brokerage_per_ton_title} {commodity.label}
+            {successMessage && (
+              <div className="mb-4 p-3 rounded-lg bg-green-100 text-green-800 text-center font-semibold animate-fade-in">
+                {successMessage}
+              </div>
+            )}
+            <form onSubmit={handleSubmit} className="space-y-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div>
+                  <label
+                    className="block text-gray-800 mb-2 font-medium"
+                    htmlFor="name"
+                  >
+                    {buyerLabels.title_name}
                   </label>
                   <DataInput
-                    name={`brokerage-${commodity.value}`}
-                    placeholder={`Brokerage for ${commodity.label}`}
-                    value={formData.brokerage[commodity.value]}
-                    inputType="number"
-                    readOnly
-                    className="w-full rounded-lg border-gray-300 bg-gray-100"
+                    name="name"
+                    placeholder="Enter Name"
+                    value={formData.name}
+                    onChange={handleInputChange}
+                    required
+                    className="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                  />
+                  {errors.name && (
+                    <p className="text-red-500 text-xs mt-1">{errors.name}</p>
+                  )}
+                </div>
+                <div>
+                  <label
+                    className="block text-gray-800 mb-2 font-medium"
+                    htmlFor="companyName"
+                  >
+                    {buyerLabels.company_name_title}
+                  </label>
+                  <DataDropdown
+                    name="company"
+                    options={companyOptions}
+                    selectedOptions={formData.company}
+                    onChange={(selected) =>
+                      handleDropdownChange(selected, { name: "company" })
+                    }
+                    placeholder="Select Company Name"
+                    isMulti
+                    className="w-full"
                   />
                 </div>
-              ))}
-            </div>
-            {/* Consignee */}
-            <div>
-              <label className="block text-gray-800 mb-2 font-medium" htmlFor="consignee">
-                {buyerLabels.consignee_title}
-              </label>
-              <DataDropdown
-                name="consignee"
-                options={consigneeOptions}
-                selectedOptions={formData.consignee}
-                onChange={(selected) =>
-                  handleDropdownChange(selected, { name: "consignee" })
-                }
-                placeholder="Select Consignee"
-                isMulti
-                className="w-full"
-              />
-            </div>
-            <div>
-              <label className="block text-gray-800 mb-2 font-medium" htmlFor="status">
-                {buyerLabels.status_title}
-              </label>
-              <DataDropdown
-                name="status"
-                options={statusOptions}
-                selectedOptions={formData.status}
-                onChange={(selected) =>
-                  handleDropdownChange(selected, { name: "status" })
-                }
-                placeholder="Select Status"
-                className="w-full"
-              />
-            </div>
-          </div>
-          <div className="flex justify-end mt-8">
-            <Buttons
-              label="Submit"
-              type="submit"
-              variant="primary"
-              size="md"
-              className="px-8 py-2 rounded-lg shadow-md bg-blue-600 hover:bg-blue-700 text-white font-semibold transition"
-            />
-          </div>
-        </form>
+                <div>
+                  <label
+                    className="block text-gray-800 mb-2 font-medium"
+                    htmlFor="group"
+                  >
+                    {buyerLabels.company_name}
+                  </label>
+                  <DataDropdown
+                    name="group"
+                    options={groupOptions}
+                    selectedOptions={formData.group}
+                    onChange={(selected) =>
+                      handleDropdownChange(selected, { name: "group" })
+                    }
+                    placeholder="Select Group of Company"
+                    className="w-full"
+                  />
+                </div>
+                <div>
+                  <label
+                    className="block text-gray-800 mb-2 font-medium"
+                    htmlFor="password"
+                  >
+                    {buyerLabels.password_title}
+                  </label>
+                  <DataInput
+                    name="password"
+                    placeholder="Enter Password"
+                    inputType="password"
+                    value={formData.password}
+                    onChange={handleInputChange}
+                    required
+                    minLength="4"
+                    maxLength="25"
+                    className="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                  />
+                </div>
+                <div>
+                  <label className="block text-gray-800 mb-2 font-medium">
+                    {buyerLabels.mobile_title}
+                  </label>
+                  {formData.mobile.map((mobile, index) => (
+                    <div key={index} className="flex items-center gap-2 mb-2">
+                      <DataInput
+                        name={`mobile-${index}`}
+                        placeholder="Enter Mobile"
+                        inputType="tel"
+                        value={mobile}
+                        onChange={(e) => handleInputChange(e, index, "mobile")}
+                        required
+                        maxLength="10"
+                        minLength="10"
+                        className="flex-1 rounded-lg border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                      />
+                      {formData.mobile.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveField("mobile", index)}
+                          className="text-red-500 hover:text-red-700 transition"
+                        >
+                          <FaTrash />
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={() => handleAddField("mobile")}
+                    className="text-blue-600 flex items-center mt-2 hover:underline"
+                  >
+                    <FaPlus className="mr-1" /> {buyerLabels.add_mobile}
+                  </button>
+                  {errors.mobile && (
+                    <p className="text-red-500 text-xs mt-1">{errors.mobile}</p>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-gray-800 mb-2 font-medium">
+                    {buyerLabels.email_title}
+                  </label>
+                  {formData.email.map((email, index) => (
+                    <div key={index} className="flex items-center gap-2 mb-2">
+                      <DataInput
+                        name={`email-${index}`}
+                        placeholder="Enter Email"
+                        inputType="email"
+                        value={email}
+                        onChange={(e) => handleInputChange(e, index, "email")}
+                        required
+                        className="flex-1 rounded-lg border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                      />
+                      {formData.email.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveField("email", index)}
+                          className="text-red-500 hover:text-red-700 transition"
+                        >
+                          <FaTrash />
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={() => handleAddField("email")}
+                    className="text-blue-600 flex items-center mt-2 hover:underline"
+                  >
+                    <FaPlus className="mr-1" /> {buyerLabels.add_email}
+                  </button>
+                  {errors.email && (
+                    <p className="text-red-500 text-xs mt-1">{errors.email}</p>
+                  )}
+                </div>
+                <div>
+                  <label
+                    className="block text-gray-800 mb-2 font-medium"
+                    htmlFor="commodity"
+                  >
+                    {buyerLabels.commodity_title}
+                  </label>
+                  <DataDropdown
+                    name="commodity"
+                    options={commodityOptions}
+                    selectedOptions={formData.commodity}
+                    onChange={(selected) =>
+                      handleDropdownChange(selected, { name: "commodity" })
+                    }
+                    placeholder="Select Commodity"
+                    isMulti
+                    className="w-full"
+                  />
+                  {formData.commodity.map((commodity) => (
+                    <div key={commodity.value} className="mt-4">
+                      <label className="block text-gray-700 mb-2">
+                        {buyerLabels.brokerage_per_ton_title} {commodity.label}
+                      </label>
+                      <DataInput
+                        name={`brokerage-${commodity.value}`}
+                        placeholder={`Brokerage for ${commodity.label}`}
+                        value={formData.brokerage[commodity.value]}
+                        inputType="number"
+                        readOnly
+                        className="w-full rounded-lg border-gray-300 bg-gray-100"
+                      />
+                    </div>
+                  ))}
+                </div>
+                <div>
+                  <label
+                    className="block text-gray-800 mb-2 font-medium"
+                    htmlFor="consignee"
+                  >
+                    {buyerLabels.consignee_title}
+                  </label>
+                  <DataDropdown
+                    name="consignee"
+                    options={consigneeOptions}
+                    selectedOptions={formData.consignee}
+                    onChange={(selected) =>
+                      handleDropdownChange(selected, { name: "consignee" })
+                    }
+                    placeholder="Select Consignee"
+                    isMulti
+                    className="w-full"
+                  />
+                </div>
+                <div>
+                  <label
+                    className="block text-gray-800 mb-2 font-medium"
+                    htmlFor="status"
+                  >
+                    {buyerLabels.status_title}
+                  </label>
+                  <DataDropdown
+                    name="status"
+                    options={statusOptions}
+                    selectedOptions={formData.status}
+                    onChange={(selected) =>
+                      handleDropdownChange(selected, { name: "status" })
+                    }
+                    placeholder="Select Status"
+                    className="w-full"
+                  />
+                </div>
+              </div>
+              <div className="flex justify-end mt-8">
+                <Buttons
+                  label="Submit"
+                  type="submit"
+                  variant="primary"
+                  size="md"
+                  className="px-8 py-2 rounded-lg shadow-md bg-blue-600 hover:bg-blue-700 text-white font-semibold transition"
+                />
+              </div>
+            </form>
           </div>
         </div>
       </AdminPageShell>

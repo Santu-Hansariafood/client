@@ -90,33 +90,66 @@ const AddEmployee = () => {
         status: "Active",
       });
     } catch (error) {
-      toast.error(error.response?.data?.message || "Failed to register employee");
+      toast.error(
+        error.response?.data?.message || "Failed to register employee",
+      );
     }
   };
 
   return (
     <AdminPageShell title="Register Employee" icon={FaUserPlus}>
-      <form onSubmit={handleSubmit} className="space-y-6 bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+      <form
+        onSubmit={handleSubmit}
+        className="space-y-6 bg-white p-6 rounded-xl shadow-sm border border-slate-100"
+      >
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <DataInput label="Full Name" name="name" value={formData.name} onChange={handleChange} required />
-          <DataInput label="Email Address" name="email" type="email" value={formData.email} onChange={handleChange} required />
-          <DataInput label="Mobile Number" name="mobile" value={formData.mobile} onChange={handleChange} required />
-          <DataDropdown 
-            label="Sex" 
-            name="sex" 
-            options={sexOptions} 
-            selectedOptions={sexOptions.find(o => o.value === formData.sex)} 
-            onChange={handleDropdownChange} 
-            required 
+          <DataInput
+            label="Full Name"
+            name="name"
+            value={formData.name}
+            onChange={handleChange}
+            required
           />
-          <DataInput label="Login Password" name="password" type="password" value={formData.password} onChange={handleChange} required />
-          <DataDropdown 
-            label="Status" 
-            name="status" 
-            options={statusOptions} 
-            selectedOptions={statusOptions.find(o => o.value === formData.status)} 
-            onChange={handleDropdownChange} 
-            required 
+          <DataInput
+            label="Email Address"
+            name="email"
+            type="email"
+            value={formData.email}
+            onChange={handleChange}
+            required
+          />
+          <DataInput
+            label="Mobile Number"
+            name="mobile"
+            value={formData.mobile}
+            onChange={handleChange}
+            required
+          />
+          <DataDropdown
+            label="Sex"
+            name="sex"
+            options={sexOptions}
+            selectedOptions={sexOptions.find((o) => o.value === formData.sex)}
+            onChange={handleDropdownChange}
+            required
+          />
+          <DataInput
+            label="Login Password"
+            name="password"
+            type="password"
+            value={formData.password}
+            onChange={handleChange}
+            required
+          />
+          <DataDropdown
+            label="Status"
+            name="status"
+            options={statusOptions}
+            selectedOptions={statusOptions.find(
+              (o) => o.value === formData.status,
+            )}
+            onChange={handleDropdownChange}
+            required
           />
         </div>
         <div className="flex justify-end pt-4">

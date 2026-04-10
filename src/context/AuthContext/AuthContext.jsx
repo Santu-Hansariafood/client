@@ -140,13 +140,13 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const activityEvents = ["mousemove", "keypress", "click"];
     activityEvents.forEach((event) =>
-      window.addEventListener(event, handleUserActivity)
+      window.addEventListener(event, handleUserActivity),
     );
     window.addEventListener("storage", synchronizeAuthState);
 
     return () => {
       activityEvents.forEach((event) =>
-        window.removeEventListener(event, handleUserActivity)
+        window.removeEventListener(event, handleUserActivity),
       );
       window.removeEventListener("storage", synchronizeAuthState);
     };
@@ -170,14 +170,10 @@ export const AuthProvider = ({ children }) => {
       login,
       logout,
     }),
-    [isAuthenticated, mobile, userRole, user, token]
+    [isAuthenticated, mobile, userRole, user, token],
   );
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
 AuthProvider.propTypes = {

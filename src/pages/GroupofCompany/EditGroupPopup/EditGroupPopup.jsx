@@ -24,10 +24,7 @@ const EditGroupPopup = ({ isOpen, group, onClose, onUpdate }) => {
 
   const handleSubmit = async () => {
     try {
-      const response = await axios.put(
-        `/groups/${group._id}`,
-        formData
-      );
+      const response = await axios.put(`/groups/${group._id}`, formData);
       onUpdate(response.data);
       toast.success("Group updated successfully");
       onClose();

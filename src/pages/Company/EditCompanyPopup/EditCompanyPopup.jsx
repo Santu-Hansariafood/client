@@ -92,7 +92,6 @@ const EditCompanyPopup = ({ company, isOpen, onClose, onUpdate }) => {
           setGstNumber(company.gstNumber || "");
           setPanNumber(company.panNumber || "");
 
-          // Prefill State and District
           if (company.state) {
             const stateObj = formattedStates.find(
               (s) => s.value === company.state,
@@ -132,7 +131,6 @@ const EditCompanyPopup = ({ company, isOpen, onClose, onUpdate }) => {
             setSelectedConsignees(mapped);
           }
 
-          // ✅ IMPORTANT FIX (keeps commodity _id and labels)
           setCommodityEntries(
             Array.isArray(company.commodities)
               ? company.commodities.map((entry) => {

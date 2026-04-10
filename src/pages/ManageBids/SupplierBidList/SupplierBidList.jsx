@@ -1,4 +1,11 @@
-import { lazy, Suspense, useEffect, useState, useMemo, useCallback } from "react";
+import {
+  lazy,
+  Suspense,
+  useEffect,
+  useState,
+  useMemo,
+  useCallback,
+} from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 import {
@@ -26,7 +33,7 @@ const SupplierBidList = () => {
   const [bids, setBids] = useState([]);
   const [participations, setParticipations] = useState([]);
   const [participantCounts, setParticipantCounts] = useState({});
-  const [activeTab, setActiveTab] = useState("active"); // "active", "participated", "closed", "accepted", "rejected"
+  const [activeTab, setActiveTab] = useState("active");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
@@ -99,7 +106,13 @@ const SupplierBidList = () => {
     if (!bidDateStr || !bid.endTime) return null;
     const [year, month, day] = bidDateStr.split("-").map(Number);
     const [endHours, endMinutes] = String(bid.endTime).split(":").map(Number);
-    if (!year || !month || !day || Number.isNaN(endHours) || Number.isNaN(endMinutes)) {
+    if (
+      !year ||
+      !month ||
+      !day ||
+      Number.isNaN(endHours) ||
+      Number.isNaN(endMinutes)
+    ) {
       return null;
     }
     return new Date(year, month - 1, day, endHours, endMinutes, 0, 0);
@@ -108,7 +121,10 @@ const SupplierBidList = () => {
   const formatCountdown = (msRemaining) => {
     const totalSeconds = Math.max(0, Math.floor(msRemaining / 1000));
     const hours = String(Math.floor(totalSeconds / 3600)).padStart(2, "0");
-    const minutes = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, "0");
+    const minutes = String(Math.floor((totalSeconds % 3600) / 60)).padStart(
+      2,
+      "0",
+    );
     const seconds = String(totalSeconds % 60).padStart(2, "0");
     return `${hours}:${minutes}:${seconds}`;
   };
@@ -148,10 +164,7 @@ const SupplierBidList = () => {
       if (bid.bidDate && bid.delivery) {
         const baseDate = new Date(bid.bidDate);
         const deliveryDays = Number(bid.delivery);
-        if (
-          !Number.isNaN(baseDate.getTime()) &&
-          !Number.isNaN(deliveryDays)
-        ) {
+        if (!Number.isNaN(baseDate.getTime()) && !Number.isNaN(deliveryDays)) {
           baseDate.setDate(baseDate.getDate() + deliveryDays);
           if (!Number.isNaN(baseDate.getTime())) {
             defaultDeliveryDate = baseDate.toISOString().split("T")[0];
@@ -293,7 +306,9 @@ const SupplierBidList = () => {
     return Array.from(groups.values())
       .map((g) => ({
         ...g,
-        commodities: Array.from(g.commodities).sort((a, b) => a.localeCompare(b)),
+        commodities: Array.from(g.commodities).sort((a, b) =>
+          a.localeCompare(b),
+        ),
         companies: Array.from(g.companies.values())
           .map((c) => ({
             ...c,
@@ -305,7 +320,12 @@ const SupplierBidList = () => {
         companyCount: g.companies.size,
       }))
       .sort((a, b) => a.groupName.localeCompare(b.groupName));
-  }, [filteredBids, normalizeCommodityName, normalizeCompanyName, normalizeGroupName]);
+  }, [
+    filteredBids,
+    normalizeCommodityName,
+    normalizeCompanyName,
+    normalizeGroupName,
+  ]);
 
   useEffect(() => {
     if (!selectedGroupName) {
@@ -313,7 +333,9 @@ const SupplierBidList = () => {
       return;
     }
 
-    const groupExists = groupIndex.some((g) => g.groupName === selectedGroupName);
+    const groupExists = groupIndex.some(
+      (g) => g.groupName === selectedGroupName,
+    );
     if (!groupExists) {
       setSelectedGroupName(null);
       setSelectedCompanyName(null);
@@ -333,7 +355,10 @@ const SupplierBidList = () => {
 
   const displayedBids = useMemo(() => {
     return filteredBids.filter((bid) => {
-      if (selectedGroupName && normalizeGroupName(bid.group) !== selectedGroupName) {
+      if (
+        selectedGroupName &&
+        normalizeGroupName(bid.group) !== selectedGroupName
+      ) {
         return false;
       }
       if (
@@ -377,7 +402,9 @@ const SupplierBidList = () => {
     const participation = isParticipated
       ? participations.find((p) => p.bidId === bid._id)
       : null;
-    const participationStatus = (participation?.status || "pending").toLowerCase();
+    const participationStatus = (
+      participation?.status || "pending"
+    ).toLowerCase();
     const isRevised =
       participation?.createdAt &&
       participation?.updatedAt &&
@@ -392,7 +419,10 @@ const SupplierBidList = () => {
     const participantCount = participantCounts[String(bid._id)] || 0;
     const hasNoParticipants = participantCount === 0;
     const qualityText = Object.entries(bid.parameters || {})
-      .filter(([, value]) => String(value ?? "").trim() !== "" && String(value) !== "0")
+      .filter(
+        ([, value]) =>
+          String(value ?? "").trim() !== "" && String(value) !== "0",
+      )
       .map(([key, value]) => `${key}: ${value}%`)
       .join(", ");
 
@@ -404,7 +434,9 @@ const SupplierBidList = () => {
         <div className="p-4 sm:p-5">
           <div className="flex justify-between items-start gap-2">
             <div className="min-w-0 flex-1">
-              <p className="text-[10px] sm:text-xs text-slate-500 font-medium truncate uppercase tracking-wider">{bid.group}</p>
+              <p className="text-[10px] sm:text-xs text-slate-500 font-medium truncate uppercase tracking-wider">
+                {bid.group}
+              </p>
               <h3 className="text-base sm:text-lg font-bold text-slate-800 mt-0.5 sm:mt-1 truncate">
                 {bid.consignee}
               </h3>
@@ -448,20 +480,29 @@ const SupplierBidList = () => {
 
           <div className="mt-4 sm:mt-5 grid grid-cols-2 gap-3 sm:gap-4">
             <div className="bg-slate-50/50 p-2.5 rounded-xl border border-slate-100">
-              <p className="text-[10px] sm:text-xs text-slate-500 font-medium">Quantity</p>
+              <p className="text-[10px] sm:text-xs text-slate-500 font-medium">
+                Quantity
+              </p>
               <p className="text-sm sm:text-base font-bold text-slate-700">
-                {bid.quantity} <span className="text-[10px] sm:text-xs font-normal">Tons</span>
+                {bid.quantity}{" "}
+                <span className="text-[10px] sm:text-xs font-normal">Tons</span>
               </p>
             </div>
             {!isClosed && (
               <div className="bg-slate-50/50 p-2.5 rounded-xl border border-slate-100">
-                <p className="text-[10px] sm:text-xs text-slate-500 font-medium">Rate</p>
-                <p className="text-sm sm:text-base font-bold text-slate-700">₹{bid.rate}</p>
+                <p className="text-[10px] sm:text-xs text-slate-500 font-medium">
+                  Rate
+                </p>
+                <p className="text-sm sm:text-base font-bold text-slate-700">
+                  ₹{bid.rate}
+                </p>
               </div>
             )}
-            
+
             <div className="col-span-2 bg-slate-50/50 p-2.5 rounded-xl border border-slate-100">
-              <p className="text-[10px] sm:text-xs text-slate-500 font-medium">Quality Parameters</p>
+              <p className="text-[10px] sm:text-xs text-slate-500 font-medium">
+                Quality Parameters
+              </p>
               <p className="text-[11px] sm:text-sm font-semibold text-slate-700 mt-0.5 leading-tight">
                 {qualityText || "N/A"}
               </p>
@@ -469,13 +510,17 @@ const SupplierBidList = () => {
 
             <div className="col-span-2 grid grid-cols-2 gap-3 sm:gap-4">
               <div className="bg-slate-50/50 p-2.5 rounded-xl border border-slate-100">
-                <p className="text-[10px] sm:text-xs text-slate-500 font-medium">Payment Terms</p>
+                <p className="text-[10px] sm:text-xs text-slate-500 font-medium">
+                  Payment Terms
+                </p>
                 <p className="text-[11px] sm:text-sm font-semibold text-slate-700 mt-0.5">
                   {bid.paymentTerms || "N/A"}
                 </p>
               </div>
               <div className="bg-slate-50/50 p-2.5 rounded-xl border border-slate-100">
-                <p className="text-[10px] sm:text-xs text-slate-500 font-medium">Expected Delivery</p>
+                <p className="text-[10px] sm:text-xs text-slate-500 font-medium">
+                  Expected Delivery
+                </p>
                 <p className="text-[11px] sm:text-sm font-semibold text-slate-700 mt-0.5">
                   {bid.delivery ? `${bid.delivery} days` : "N/A"}
                 </p>
@@ -485,13 +530,22 @@ const SupplierBidList = () => {
             {isParticipated && (
               <>
                 <div className="bg-blue-50/30 p-2.5 rounded-xl border border-blue-100/50">
-                  <p className="text-[10px] sm:text-xs text-blue-600 font-medium">Your Rate</p>
-                  <p className="text-sm sm:text-base font-bold text-blue-700">₹{participation.rate}</p>
+                  <p className="text-[10px] sm:text-xs text-blue-600 font-medium">
+                    Your Rate
+                  </p>
+                  <p className="text-sm sm:text-base font-bold text-blue-700">
+                    ₹{participation.rate}
+                  </p>
                 </div>
                 <div className="bg-blue-50/30 p-2.5 rounded-xl border border-blue-100/50">
-                  <p className="text-[10px] sm:text-xs text-blue-600 font-medium">Your Quantity</p>
+                  <p className="text-[10px] sm:text-xs text-blue-600 font-medium">
+                    Your Quantity
+                  </p>
                   <p className="text-sm sm:text-base font-bold text-blue-700">
-                    {participation.quantity} <span className="text-[10px] sm:text-xs font-normal">Tons</span>
+                    {participation.quantity}{" "}
+                    <span className="text-[10px] sm:text-xs font-normal">
+                      Tons
+                    </span>
                   </p>
                 </div>
                 {(participation.deliveryDate || participation.paymentTerms) && (
@@ -502,7 +556,9 @@ const SupplierBidList = () => {
                       </p>
                       <p className="text-[11px] sm:text-sm font-semibold text-blue-700 mt-0.5">
                         {participation.deliveryDate
-                          ? new Date(participation.deliveryDate).toLocaleDateString()
+                          ? new Date(
+                              participation.deliveryDate,
+                            ).toLocaleDateString()
                           : "N/A"}
                       </p>
                     </div>
@@ -518,7 +574,9 @@ const SupplierBidList = () => {
                 )}
                 {participation?.sellerCompany && (
                   <div className="col-span-2 bg-slate-50/50 p-2.5 rounded-xl border border-slate-100">
-                    <p className="text-[10px] sm:text-xs text-slate-500 font-medium">Your Company</p>
+                    <p className="text-[10px] sm:text-xs text-slate-500 font-medium">
+                      Your Company
+                    </p>
                     <p className="text-xs sm:text-sm font-semibold text-slate-700 mt-0.5 truncate">
                       {participation.sellerCompany}
                     </p>
@@ -527,15 +585,23 @@ const SupplierBidList = () => {
                 {participationStatus === "accepted" && (
                   <div className="col-span-2 bg-green-50/30 p-2.5 rounded-xl border border-green-100/50 grid grid-cols-2 gap-2">
                     <div>
-                      <p className="text-[10px] sm:text-xs text-green-600 font-medium">Accepted Rate</p>
+                      <p className="text-[10px] sm:text-xs text-green-600 font-medium">
+                        Accepted Rate
+                      </p>
                       <p className="text-sm sm:text-base font-bold text-green-700">
                         ₹{participation.acceptedRate ?? participation.rate}
                       </p>
                     </div>
                     <div>
-                      <p className="text-[10px] sm:text-xs text-green-600 font-medium">Accepted Quantity</p>
+                      <p className="text-[10px] sm:text-xs text-green-600 font-medium">
+                        Accepted Quantity
+                      </p>
                       <p className="text-sm sm:text-base font-bold text-green-700">
-                        {participation.acceptedQuantity ?? participation.quantity} <span className="text-[10px] sm:text-xs font-normal">Tons</span>
+                        {participation.acceptedQuantity ??
+                          participation.quantity}{" "}
+                        <span className="text-[10px] sm:text-xs font-normal">
+                          Tons
+                        </span>
                       </p>
                     </div>
                   </div>
@@ -543,7 +609,9 @@ const SupplierBidList = () => {
                 {participationStatus === "rejected" &&
                   String(participation?.adminNotes || "").trim() !== "" && (
                     <div className="col-span-2 bg-red-50/30 p-2.5 rounded-xl border border-red-100/50">
-                      <p className="text-[10px] sm:text-xs text-red-600 font-medium">Rejection Notes</p>
+                      <p className="text-[10px] sm:text-xs text-red-600 font-medium">
+                        Rejection Notes
+                      </p>
                       <p className="text-xs sm:text-sm font-semibold text-red-700 mt-0.5 leading-tight">
                         {participation.adminNotes}
                       </p>
@@ -728,7 +796,9 @@ const SupplierBidList = () => {
                       }}
                       className="text-left bg-white rounded-2xl border border-emerald-100 p-5 shadow-lg shadow-emerald-900/5 hover:shadow-xl transition-shadow"
                     >
-                      <p className="text-sm font-bold text-slate-800">{g.groupName}</p>
+                      <p className="text-sm font-bold text-slate-800">
+                        {g.groupName}
+                      </p>
                       <p className="text-xs font-semibold text-slate-500 mt-2">
                         {g.companyCount} company(s) • {g.bidCount} bid(s)
                       </p>
@@ -749,15 +819,17 @@ const SupplierBidList = () => {
                         {selectedGroupName} Companies
                       </p>
                       <p className="text-xs font-semibold text-slate-500">
-                        {groupIndex.find((g) => g.groupName === selectedGroupName)
-                          ?.companyCount || 0}{" "}
+                        {groupIndex.find(
+                          (g) => g.groupName === selectedGroupName,
+                        )?.companyCount || 0}{" "}
                         company(s)
                       </p>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                       {(
-                        groupIndex.find((g) => g.groupName === selectedGroupName)
-                          ?.companies || []
+                        groupIndex.find(
+                          (g) => g.groupName === selectedGroupName,
+                        )?.companies || []
                       ).map((c) => (
                         <button
                           key={c.companyName}
@@ -812,7 +884,9 @@ const SupplierBidList = () => {
                       className="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3 focus:ring-2 focus:ring-emerald-400/50 focus:border-emerald-400 outline-none bg-white"
                       value={sellerCompany}
                       onChange={(e) => setSellerCompany(e.target.value)}
-                      disabled={sellerInfo.companies.filter(Boolean).length === 1}
+                      disabled={
+                        sellerInfo.companies.filter(Boolean).length === 1
+                      }
                     >
                       {sellerInfo.companies.filter(Boolean).length > 1 && (
                         <option value="">Select Company</option>

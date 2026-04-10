@@ -32,16 +32,14 @@ const SupplierInformation = ({
         typeof formData.supplier === "object"
           ? formData.supplier._id
           : formData.supplier;
-      
+
       if (supplierId !== selectedSupplier) {
         setSelectedSupplier(supplierId);
-        
-        // Auto-trigger population logic if not already fully set
+
         const selected = sellerOptions.find(
           (seller) => seller.value === supplierId,
         );
         if (selected) {
-          // Only trigger if essential fields are missing to avoid unnecessary updates
           if (!formData.sellerMobile || !formData.supplierBrokerage) {
             handleChange("supplierBrokerage", selected.commodities || []);
             handleChange("supplierName", selected.label || "");
@@ -49,15 +47,22 @@ const SupplierInformation = ({
             const rawEmails = selected.emails || [];
             const sellerEmails = Array.isArray(rawEmails)
               ? rawEmails
-                  .map((e) => typeof e === "string" ? e : (e?.value ?? e?.email ?? ""))
+                  .map((e) =>
+                    typeof e === "string" ? e : (e?.value ?? e?.email ?? ""),
+                  )
                   .filter(Boolean)
               : [];
-            handleChange("sellerEmails", sellerEmails.length ? sellerEmails : [""]);
+            handleChange(
+              "sellerEmails",
+              sellerEmails.length ? sellerEmails : [""],
+            );
 
             const rawPhones = selected.phoneNumbers || [];
             const sellerPhones = Array.isArray(rawPhones)
               ? rawPhones
-                  .map((p) => typeof p === "string" ? p : (p?.value ?? p?.phone ?? ""))
+                  .map((p) =>
+                    typeof p === "string" ? p : (p?.value ?? p?.phone ?? ""),
+                  )
                   .filter(Boolean)
               : [];
             const firstMobile = sellerPhones[0] || "";
@@ -76,7 +81,14 @@ const SupplierInformation = ({
         }
       }
     }
-  }, [formData.supplier, formData.sellerMobile, formData.supplierBrokerage, selectedSupplier, sellerOptions, handleChange]);
+  }, [
+    formData.supplier,
+    formData.sellerMobile,
+    formData.supplierBrokerage,
+    selectedSupplier,
+    sellerOptions,
+    handleChange,
+  ]);
 
   const companies = useMemo(() => {
     if (selectedSupplier) {

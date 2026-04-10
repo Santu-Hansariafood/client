@@ -109,10 +109,10 @@ const SudokuGame = () => {
     );
 
     if (ok) {
-      setStatus(`🎉 Solved in ${formatTime(time)}`);
+      setStatus(`Solved in ${formatTime(time)}`);
       setRunning(false);
     } else {
-      setStatus("❌ Some cells are incorrect");
+      setStatus("Some cells are incorrect");
     }
   };
 

@@ -16,19 +16,19 @@ const AddTransporter = () => {
     vehicleDetails: {
       number: "",
       type: "Lorry",
-      ownerName: ""
+      ownerName: "",
     },
     driverDetails: {
       name: "",
       licenseNumber: "",
-      phoneNumber: ""
+      phoneNumber: "",
     },
     bankDetails: {
       accountHolderName: "",
       accountNumber: "",
       ifscCode: "",
       bankName: "",
-      branchName: ""
+      branchName: "",
     },
     status: "Active",
   });
@@ -51,7 +51,7 @@ const AddTransporter = () => {
       const [parent, child] = name.split(".");
       setFormData((prev) => ({
         ...prev,
-        [parent]: { ...prev[parent], [child]: value }
+        [parent]: { ...prev[parent], [child]: value },
       }));
     } else {
       setFormData((prev) => ({ ...prev, [name]: value }));
@@ -65,7 +65,7 @@ const AddTransporter = () => {
       const [parent, child] = name.split(".");
       setFormData((prev) => ({
         ...prev,
-        [parent]: { ...prev[parent], [child]: value }
+        [parent]: { ...prev[parent], [child]: value },
       }));
     } else {
       setFormData((prev) => ({ ...prev, [name]: value }));
@@ -78,62 +78,187 @@ const AddTransporter = () => {
       await api.post("/transporters", formData);
       toast.success("Transporter registered successfully!");
       setFormData({
-        name: "", email: "", mobile: "", password: "",
+        name: "",
+        email: "",
+        mobile: "",
+        password: "",
         vehicleDetails: { number: "", type: "Lorry", ownerName: "" },
         driverDetails: { name: "", licenseNumber: "", phoneNumber: "" },
-        bankDetails: { accountHolderName: "", accountNumber: "", ifscCode: "", bankName: "", branchName: "" },
+        bankDetails: {
+          accountHolderName: "",
+          accountNumber: "",
+          ifscCode: "",
+          bankName: "",
+          branchName: "",
+        },
         status: "Active",
       });
     } catch (error) {
-      toast.error(error.response?.data?.message || "Failed to register transporter");
+      toast.error(
+        error.response?.data?.message || "Failed to register transporter",
+      );
     }
   };
 
   return (
     <AdminPageShell title="Register Transporter" icon={FaTruckMoving}>
-      <form onSubmit={handleSubmit} className="space-y-8 bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+      <form
+        onSubmit={handleSubmit}
+        className="space-y-8 bg-white p-6 rounded-xl shadow-sm border border-slate-100"
+      >
         <section>
-          <h3 className="text-lg font-semibold text-slate-800 mb-4 pb-2 border-b border-slate-100">Basic Details</h3>
+          <h3 className="text-lg font-semibold text-slate-800 mb-4 pb-2 border-b border-slate-100">
+            Basic Details
+          </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <DataInput label="Transporter Name" name="name" value={formData.name} onChange={handleChange} required />
-            <DataInput label="Email" name="email" type="email" value={formData.email} onChange={handleChange} required />
-            <DataInput label="Mobile" name="mobile" value={formData.mobile} onChange={handleChange} required />
-            <DataInput label="Password" name="password" type="password" value={formData.password} onChange={handleChange} required />
-            <DataDropdown label="Status" name="status" options={statusOptions} selectedOptions={statusOptions.find(o => o.value === formData.status)} onChange={handleDropdownChange} required />
+            <DataInput
+              label="Transporter Name"
+              name="name"
+              value={formData.name}
+              onChange={handleChange}
+              required
+            />
+            <DataInput
+              label="Email"
+              name="email"
+              type="email"
+              value={formData.email}
+              onChange={handleChange}
+              required
+            />
+            <DataInput
+              label="Mobile"
+              name="mobile"
+              value={formData.mobile}
+              onChange={handleChange}
+              required
+            />
+            <DataInput
+              label="Password"
+              name="password"
+              type="password"
+              value={formData.password}
+              onChange={handleChange}
+              required
+            />
+            <DataDropdown
+              label="Status"
+              name="status"
+              options={statusOptions}
+              selectedOptions={statusOptions.find(
+                (o) => o.value === formData.status,
+              )}
+              onChange={handleDropdownChange}
+              required
+            />
           </div>
         </section>
 
         <section>
-          <h3 className="text-lg font-semibold text-slate-800 mb-4 pb-2 border-b border-slate-100">Vehicle Details</h3>
+          <h3 className="text-lg font-semibold text-slate-800 mb-4 pb-2 border-b border-slate-100">
+            Vehicle Details
+          </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <DataInput label="Vehicle Number" name="vehicleDetails.number" value={formData.vehicleDetails.number} onChange={handleChange} required />
-            <DataDropdown label="Vehicle Type" name="vehicleDetails.type" options={vehicleTypeOptions} selectedOptions={vehicleTypeOptions.find(o => o.value === formData.vehicleDetails.type)} onChange={handleDropdownChange} required />
-            <DataInput label="Owner Name" name="vehicleDetails.ownerName" value={formData.vehicleDetails.ownerName} onChange={handleChange} required />
+            <DataInput
+              label="Vehicle Number"
+              name="vehicleDetails.number"
+              value={formData.vehicleDetails.number}
+              onChange={handleChange}
+              required
+            />
+            <DataDropdown
+              label="Vehicle Type"
+              name="vehicleDetails.type"
+              options={vehicleTypeOptions}
+              selectedOptions={vehicleTypeOptions.find(
+                (o) => o.value === formData.vehicleDetails.type,
+              )}
+              onChange={handleDropdownChange}
+              required
+            />
+            <DataInput
+              label="Owner Name"
+              name="vehicleDetails.ownerName"
+              value={formData.vehicleDetails.ownerName}
+              onChange={handleChange}
+              required
+            />
           </div>
         </section>
 
         <section>
-          <h3 className="text-lg font-semibold text-slate-800 mb-4 pb-2 border-b border-slate-100">Driver Details</h3>
+          <h3 className="text-lg font-semibold text-slate-800 mb-4 pb-2 border-b border-slate-100">
+            Driver Details
+          </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <DataInput label="Driver Name" name="driverDetails.name" value={formData.driverDetails.name} onChange={handleChange} required />
-            <DataInput label="License Number" name="driverDetails.licenseNumber" value={formData.driverDetails.licenseNumber} onChange={handleChange} required />
-            <DataInput label="Driver Phone" name="driverDetails.phoneNumber" value={formData.driverDetails.phoneNumber} onChange={handleChange} required />
+            <DataInput
+              label="Driver Name"
+              name="driverDetails.name"
+              value={formData.driverDetails.name}
+              onChange={handleChange}
+              required
+            />
+            <DataInput
+              label="License Number"
+              name="driverDetails.licenseNumber"
+              value={formData.driverDetails.licenseNumber}
+              onChange={handleChange}
+              required
+            />
+            <DataInput
+              label="Driver Phone"
+              name="driverDetails.phoneNumber"
+              value={formData.driverDetails.phoneNumber}
+              onChange={handleChange}
+              required
+            />
           </div>
         </section>
 
         <section>
-          <h3 className="text-lg font-semibold text-slate-800 mb-4 pb-2 border-b border-slate-100">Bank Details</h3>
+          <h3 className="text-lg font-semibold text-slate-800 mb-4 pb-2 border-b border-slate-100">
+            Bank Details
+          </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <DataInput label="Account Holder" name="bankDetails.accountHolderName" value={formData.bankDetails.accountHolderName} onChange={handleChange} />
-            <DataInput label="Account Number" name="bankDetails.accountNumber" value={formData.bankDetails.accountNumber} onChange={handleChange} />
-            <DataInput label="IFSC Code" name="bankDetails.ifscCode" value={formData.bankDetails.ifscCode} onChange={handleChange} />
-            <DataInput label="Bank Name" name="bankDetails.bankName" value={formData.bankDetails.bankName} onChange={handleChange} />
-            <DataInput label="Branch Name" name="bankDetails.branchName" value={formData.bankDetails.branchName} onChange={handleChange} />
+            <DataInput
+              label="Account Holder"
+              name="bankDetails.accountHolderName"
+              value={formData.bankDetails.accountHolderName}
+              onChange={handleChange}
+            />
+            <DataInput
+              label="Account Number"
+              name="bankDetails.accountNumber"
+              value={formData.bankDetails.accountNumber}
+              onChange={handleChange}
+            />
+            <DataInput
+              label="IFSC Code"
+              name="bankDetails.ifscCode"
+              value={formData.bankDetails.ifscCode}
+              onChange={handleChange}
+            />
+            <DataInput
+              label="Bank Name"
+              name="bankDetails.bankName"
+              value={formData.bankDetails.bankName}
+              onChange={handleChange}
+            />
+            <DataInput
+              label="Branch Name"
+              name="bankDetails.branchName"
+              value={formData.bankDetails.branchName}
+              onChange={handleChange}
+            />
           </div>
         </section>
 
         <div className="flex justify-end pt-4">
-          <Buttons type="submit" label="Register Transporter" variant="primary" />
+          <Buttons
+            type="submit"
+            label="Register Transporter"
+            variant="primary"
+          />
         </div>
       </form>
     </AdminPageShell>

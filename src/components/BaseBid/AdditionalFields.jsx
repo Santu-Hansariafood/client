@@ -1,8 +1,8 @@
 import { lazy, Suspense, useEffect } from "react";
 import Loading from "../../common/Loading/Loading";
 const DataInput = lazy(() => import("../../common/DataInput/DataInput"));
-const DateSelector = lazy(() =>
-  import("../../common/DateSelector/DateSelector")
+const DateSelector = lazy(
+  () => import("../../common/DateSelector/DateSelector"),
 );
 
 const AdditionalFields = ({ state, handleChange }) => {

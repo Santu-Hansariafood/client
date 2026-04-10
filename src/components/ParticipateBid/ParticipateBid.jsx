@@ -68,7 +68,7 @@ const ParticipateBid = () => {
             : "N/A",
           paymentTerms: participation.paymentTerms || "N/A",
           participationDate: new Date(
-            participation.participationDate
+            participation.participationDate,
           ).toLocaleString(),
           rawDate: new Date(participation.participationDate),
           status: bidStatus,
@@ -157,7 +157,9 @@ const ParticipateBid = () => {
               <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <span className="text-2xl">📝</span>
               </div>
-              <h3 className="text-lg font-bold text-slate-800">No Bids Found</h3>
+              <h3 className="text-lg font-bold text-slate-800">
+                No Bids Found
+              </h3>
               <p className="text-slate-500 mt-1 max-w-xs mx-auto">
                 You haven't participated in any bids yet. Start bidding to see
                 them here!

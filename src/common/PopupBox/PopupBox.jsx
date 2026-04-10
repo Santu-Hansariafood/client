@@ -20,7 +20,6 @@ const PopupBox = ({
         className={`relative ${width} ${height} bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 flex flex-col overflow-hidden`}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* 🔥 HEADER (Sticky) */}
         <div className="sticky top-0 z-10 flex items-center justify-between px-5 py-4 border-b border-emerald-600/20 bg-gradient-to-r from-emerald-800 to-emerald-700">
           <h3 className="text-lg font-semibold text-amber-50 tracking-tight">
             {title}
@@ -35,7 +34,6 @@ const PopupBox = ({
           </button>
         </div>
 
-        {/* 🔥 BODY (Scrollable) */}
         <div className="flex-1 overflow-y-auto px-3 sm:px-5 py-4 text-slate-600 dark:text-slate-300">
           {children}
         </div>

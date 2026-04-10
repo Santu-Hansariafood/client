@@ -9,12 +9,12 @@ import { FaUsersCog } from "react-icons/fa";
 const Tables = lazy(() => import("../../../common/Tables/Tables"));
 const SearchBox = lazy(() => import("../../../common/SearchBox/SearchBox"));
 const Actions = lazy(() => import("../../../common/Actions/Actions"));
-const Pagination = lazy(() =>
-  import("../../../common/Paginations/Paginations")
+const Pagination = lazy(
+  () => import("../../../common/Paginations/Paginations"),
 );
 const PopupBox = lazy(() => import("../../../common/PopupBox/PopupBox"));
-const EditSellerDetails = lazy(() =>
-  import("../EditSellerDetails/EditSellerDetails")
+const EditSellerDetails = lazy(
+  () => import("../EditSellerDetails/EditSellerDetails"),
 );
 
 const toTitleCase = (str) => {
@@ -40,8 +40,10 @@ const ListSellerDetails = () => {
 
   const fetchSellers = async (page = 1, search = "") => {
     try {
-      const response = await axios.get(`${apiBaseURL}/sellers?page=${page}&limit=${itemsPerPage}&search=${search}`);
-      
+      const response = await axios.get(
+        `${apiBaseURL}/sellers?page=${page}&limit=${itemsPerPage}&search=${search}`,
+      );
+
       let sellersList = [];
       let total = 0;
 
@@ -59,7 +61,7 @@ const ListSellerDetails = () => {
         companies: seller.companies.map((company) => toTitleCase(company)),
         emails: seller.emails.map((email) => email.value.toLowerCase()),
       }));
-      
+
       setData(formattedData);
       setFilteredData(formattedData);
       setTotalItems(total);
@@ -109,58 +111,54 @@ const ListSellerDetails = () => {
       setFilteredData(updatedData);
       toast.success("Seller deleted successfully");
     } catch (error) {
-      toast.error(
-        error.response?.data?.message || "Failed to delete seller"
-      );
+      toast.error(error.response?.data?.message || "Failed to delete seller");
     }
   };
 
-  const rows = filteredData
-    .map((item, index) => [
-      (currentPage - 1) * itemsPerPage + index + 1,
-      item.sellerName,
-      item.emails
-        .map((email) => (
-          <a
-            key={email}
-            href={`mailto:${email}`}
-            className="text-blue-600 underline hover:text-blue-800 transition-colors duration-150"
-          >
-            {email}
-          </a>
-        ))
-        .reduce((prev, curr) => [prev, ", ", curr]),
-      item.phoneNumbers
-        .map((phone) => (
-          <a
-            key={phone.value}
-            href={`tel:${phone.value}`}
-            className="text-blue-600 underline hover:text-blue-800 transition-colors duration-150"
-          >
-            {phone.value}
-          </a>
-        ))
-        .reduce((prev, curr) => [prev, ", ", curr]),
-      item.commodities
-        .map(
-          (commodity) =>
-            <span key={commodity.name}>
-              {`${toTitleCase(commodity.name)} (Brokerage: ₹${commodity.brokerage} per ton)`}<br />
-            </span>
-        ),
-      item.companies.join(", "),
-      toTitleCase(item.status),
-      <Actions
-        key={item._id}
-        onView={() => {
-          setSelectedSeller(item);
-          setPopupMode("view");
-          setIsPopupOpen(true);
-        }}
-        onEdit={() => handleEditSeller(item)}
-        onDelete={() => handleDeleteSeller(item._id)}
-      />,
-    ]);
+  const rows = filteredData.map((item, index) => [
+    (currentPage - 1) * itemsPerPage + index + 1,
+    item.sellerName,
+    item.emails
+      .map((email) => (
+        <a
+          key={email}
+          href={`mailto:${email}`}
+          className="text-blue-600 underline hover:text-blue-800 transition-colors duration-150"
+        >
+          {email}
+        </a>
+      ))
+      .reduce((prev, curr) => [prev, ", ", curr]),
+    item.phoneNumbers
+      .map((phone) => (
+        <a
+          key={phone.value}
+          href={`tel:${phone.value}`}
+          className="text-blue-600 underline hover:text-blue-800 transition-colors duration-150"
+        >
+          {phone.value}
+        </a>
+      ))
+      .reduce((prev, curr) => [prev, ", ", curr]),
+    item.commodities.map((commodity) => (
+      <span key={commodity.name}>
+        {`${toTitleCase(commodity.name)} (Brokerage: ₹${commodity.brokerage} per ton)`}
+        <br />
+      </span>
+    )),
+    item.companies.join(", "),
+    toTitleCase(item.status),
+    <Actions
+      key={item._id}
+      onView={() => {
+        setSelectedSeller(item);
+        setPopupMode("view");
+        setIsPopupOpen(true);
+      }}
+      onEdit={() => handleEditSeller(item)}
+      onDelete={() => handleDeleteSeller(item._id)}
+    />,
+  ]);
 
   return (
     <Suspense fallback={<Loading />}>
@@ -212,96 +210,99 @@ const ListSellerDetails = () => {
             onPageChange={setCurrentPage}
           />
 
-        {isPopupOpen && (
-          <PopupBox
-            title={
-              popupMode === "view"
-                ? "View Seller Details"
-                : "Edit Seller Details"
-            }
-            isOpen={isPopupOpen}
-            onClose={handlePopupClose}
-          >
-            {popupMode === "view" && selectedSeller && (
-              <div>
-                <h2 className="text-xl font-bold mb-4">Seller Details</h2>
-                <p>
-                  <strong>Name:</strong> {selectedSeller.sellerName}
-                </p>
-                <p>
-                  <strong>Password:</strong> {selectedSeller.password}
-                </p>
-                <p>
-                  <strong>Email:</strong>{" "}
-                  {selectedSeller.emails.map((email, idx) => (
-                    <span key={email}>
-                      <a
-                        href={`mailto:${email}`}
-                        className="text-blue-600 underline hover:text-blue-800 transition-colors duration-150"
-                      >
-                        {email}
-                      </a>
-                      {idx < selectedSeller.emails.length - 1 ? ", " : ""}
-                    </span>
-                  ))}
-                </p>
-                <p>
-                  <strong>Phone Numbers:</strong>{" "}
-                  {selectedSeller.phoneNumbers.map((phone, idx) => (
-                    <span key={phone.value}>
-                      <a
-                        href={`tel:${phone.value}`}
-                        className="text-blue-600 underline hover:text-blue-800 transition-colors duration-150"
-                      >
-                        {phone.value}
-                      </a>
-                      {idx < selectedSeller.phoneNumbers.length - 1 ? ", " : ""}
-                    </span>
-                  ))}
-                </p>
-                <p>
-                  <strong>Commodities:</strong>{" "}
-                  {selectedSeller.commodities.map((commodity, idx) => (
-                    <span key={commodity.name}>
-                      {`${toTitleCase(commodity.name)} (Brokerage: ₹${commodity.brokerage} per ton)`}<br />
-                    </span>
-                  ))}
-                </p>
-                <p>
-                  <strong>Companies:</strong>{" "}
-                  {selectedSeller.companies.join(", ")}
-                </p>
-                <p>
-                  <strong>Status:</strong>{" "}
-                  {toTitleCase(selectedSeller.status)}
-                </p>
-                <p>
-                  <strong>Groups:</strong>{" "}
-                  {(selectedSeller.groups || [])
-                    .map((group) => toTitleCase(group.name))
-                    .join(", ")}
-                </p>
-              </div>
-            )}
+          {isPopupOpen && (
+            <PopupBox
+              title={
+                popupMode === "view"
+                  ? "View Seller Details"
+                  : "Edit Seller Details"
+              }
+              isOpen={isPopupOpen}
+              onClose={handlePopupClose}
+            >
+              {popupMode === "view" && selectedSeller && (
+                <div>
+                  <h2 className="text-xl font-bold mb-4">Seller Details</h2>
+                  <p>
+                    <strong>Name:</strong> {selectedSeller.sellerName}
+                  </p>
+                  <p>
+                    <strong>Password:</strong> {selectedSeller.password}
+                  </p>
+                  <p>
+                    <strong>Email:</strong>{" "}
+                    {selectedSeller.emails.map((email, idx) => (
+                      <span key={email}>
+                        <a
+                          href={`mailto:${email}`}
+                          className="text-blue-600 underline hover:text-blue-800 transition-colors duration-150"
+                        >
+                          {email}
+                        </a>
+                        {idx < selectedSeller.emails.length - 1 ? ", " : ""}
+                      </span>
+                    ))}
+                  </p>
+                  <p>
+                    <strong>Phone Numbers:</strong>{" "}
+                    {selectedSeller.phoneNumbers.map((phone, idx) => (
+                      <span key={phone.value}>
+                        <a
+                          href={`tel:${phone.value}`}
+                          className="text-blue-600 underline hover:text-blue-800 transition-colors duration-150"
+                        >
+                          {phone.value}
+                        </a>
+                        {idx < selectedSeller.phoneNumbers.length - 1
+                          ? ", "
+                          : ""}
+                      </span>
+                    ))}
+                  </p>
+                  <p>
+                    <strong>Commodities:</strong>{" "}
+                    {selectedSeller.commodities.map((commodity, idx) => (
+                      <span key={commodity.name}>
+                        {`${toTitleCase(commodity.name)} (Brokerage: ₹${commodity.brokerage} per ton)`}
+                        <br />
+                      </span>
+                    ))}
+                  </p>
+                  <p>
+                    <strong>Companies:</strong>{" "}
+                    {selectedSeller.companies.join(", ")}
+                  </p>
+                  <p>
+                    <strong>Status:</strong>{" "}
+                    {toTitleCase(selectedSeller.status)}
+                  </p>
+                  <p>
+                    <strong>Groups:</strong>{" "}
+                    {(selectedSeller.groups || [])
+                      .map((group) => toTitleCase(group.name))
+                      .join(", ")}
+                  </p>
+                </div>
+              )}
 
-            {popupMode === "edit" && selectedSeller && (
-              <EditSellerDetails
-                sellerId={selectedSeller._id}
-                onClose={handlePopupClose}
-                onSave={(updatedSeller) => {
-                  const updatedData = data.map((seller) =>
-                    seller._id === updatedSeller._id ? updatedSeller : seller
-                  );
-                  setData(updatedData);
-                  setFilteredData(updatedData);
-                  setSelectedSeller(updatedSeller);
-                }}
-              />
-            )}
-          </PopupBox>
-        )}
+              {popupMode === "edit" && selectedSeller && (
+                <EditSellerDetails
+                  sellerId={selectedSeller._id}
+                  onClose={handlePopupClose}
+                  onSave={(updatedSeller) => {
+                    const updatedData = data.map((seller) =>
+                      seller._id === updatedSeller._id ? updatedSeller : seller,
+                    );
+                    setData(updatedData);
+                    setFilteredData(updatedData);
+                    setSelectedSeller(updatedSeller);
+                  }}
+                />
+              )}
+            </PopupBox>
+          )}
 
-        <ToastContainer />
+          <ToastContainer />
         </div>
       </AdminPageShell>
     </Suspense>

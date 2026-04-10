@@ -16,14 +16,11 @@ const WhatsAppNotification = async ({ bidData, bidId }) => {
         apiKey,
       });
 
-      const response = await axios.post(
-        `/whatsapp/send`,
-        {
-          bidId,
-          bidData,
-          apiKey,
-        }
-      );
+      const response = await axios.post(`/whatsapp/send`, {
+        bidId,
+        bidData,
+        apiKey,
+      });
 
       if (response.status === 200) {
         console.log("WhatsApp notifications triggered successfully");
@@ -35,7 +32,7 @@ const WhatsAppNotification = async ({ bidData, bidId }) => {
     } catch (error) {
       console.error(
         "Error notifying sellers:",
-        error.response?.data || error.message
+        error.response?.data || error.message,
       );
       return false;
     }

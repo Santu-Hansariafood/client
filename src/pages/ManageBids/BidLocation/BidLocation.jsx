@@ -12,7 +12,9 @@ const DataInput = lazy(() => import("../../../common/DataInput/DataInput"));
 const Buttons = lazy(() => import("../../../common/Buttons/Buttons"));
 const Tables = lazy(() => import("../../../common/Tables/Tables"));
 const Actions = lazy(() => import("../../../common/Actions/Actions"));
-const Pagination = lazy(() => import("../../../common/Paginations/Paginations"));
+const Pagination = lazy(
+  () => import("../../../common/Paginations/Paginations"),
+);
 
 const BidLocation = () => {
   const navigate = useNavigate();
@@ -29,7 +31,7 @@ const BidLocation = () => {
   const fetchBidLocations = async () => {
     try {
       const response = await axios.get(
-        `${API_URL}?page=${currentPage}&limit=${itemsPerPage}`
+        `${API_URL}?page=${currentPage}&limit=${itemsPerPage}`,
       );
       if (response.data && Array.isArray(response.data.data)) {
         setData(response.data.data);
@@ -39,7 +41,7 @@ const BidLocation = () => {
       }
     } catch (error) {
       toast.error(
-        `Failed to fetch bid locations: ${error?.message || "Unknown error"}`
+        `Failed to fetch bid locations: ${error?.message || "Unknown error"}`,
       );
     }
   };
@@ -78,7 +80,7 @@ const BidLocation = () => {
       fetchBidLocations();
     } catch (error) {
       toast.error(
-        error.response?.data?.message || "Failed to save bid location"
+        error.response?.data?.message || "Failed to save bid location",
       );
     }
   };
@@ -96,7 +98,7 @@ const BidLocation = () => {
         }
       } catch (error) {
         toast.error(
-          error.response?.data?.message || "Failed to delete bid location"
+          error.response?.data?.message || "Failed to delete bid location",
         );
       }
     }

@@ -70,7 +70,12 @@ const AddQualityParameter = () => {
                 />
               </div>
               <div className="flex justify-end">
-                <Buttons label="Submit" type="submit" variant="primary" size="md" />
+                <Buttons
+                  label="Submit"
+                  type="submit"
+                  variant="primary"
+                  size="md"
+                />
               </div>
             </form>
           </div>

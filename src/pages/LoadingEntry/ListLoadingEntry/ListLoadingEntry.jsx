@@ -10,9 +10,13 @@ import { FaClipboardList } from "react-icons/fa";
 import PrintLoadingEntry from "../PrintLoadingEntry/PrintLoadingEntry";
 const PopupBox = lazy(() => import("../../../common/PopupBox/PopupBox"));
 const Tables = lazy(() => import("../../../common/Tables/Tables"));
-const SearchBox = lazy(() => import("../../../common/SearchBox/SearchBox")); // ✅ Import SearchBox
-const Pagination = lazy(() => import("../../../common/Paginations/Paginations"));
-const DataDropdown = lazy(() => import("../../../common/DataDropdown/DataDropdown"));
+const SearchBox = lazy(() => import("../../../common/SearchBox/SearchBox"));
+const Pagination = lazy(
+  () => import("../../../common/Paginations/Paginations"),
+);
+const DataDropdown = lazy(
+  () => import("../../../common/DataDropdown/DataDropdown"),
+);
 
 const formatDate = (date) => {
   if (!date) return "N/A";
@@ -43,30 +47,39 @@ const ListLoadingEntry = () => {
 
   const fetchData = async () => {
     try {
-      const [entriesRes, sellersRes, transportersRes, ordersRes] = await Promise.all([
-        axios.get("/loading-entries"),
-        axios.get("/sellers"),
-        axios.get("/transporters", { params: { limit: 0 } }),
-        axios.get("/self-order", { params: { limit: 0 } }),
-      ]);
+      const [entriesRes, sellersRes, transportersRes, ordersRes] =
+        await Promise.all([
+          axios.get("/loading-entries"),
+          axios.get("/sellers"),
+          axios.get("/transporters", { params: { limit: 0 } }),
+          axios.get("/self-order", { params: { limit: 0 } }),
+        ]);
 
-      const sellersData = Array.isArray(sellersRes.data) ? sellersRes.data : (sellersRes.data?.data || []);
-      const entriesData = Array.isArray(entriesRes.data) ? entriesRes.data : (entriesRes.data?.data || []);
-      const transportersData = Array.isArray(transportersRes.data) ? transportersRes.data : (transportersRes.data?.data || []);
-      const ordersData = Array.isArray(ordersRes.data) ? ordersRes.data : (ordersRes.data?.data || []);
+      const sellersData = Array.isArray(sellersRes.data)
+        ? sellersRes.data
+        : sellersRes.data?.data || [];
+      const entriesData = Array.isArray(entriesRes.data)
+        ? entriesRes.data
+        : entriesRes.data?.data || [];
+      const transportersData = Array.isArray(transportersRes.data)
+        ? transportersRes.data
+        : transportersRes.data?.data || [];
+      const ordersData = Array.isArray(ordersRes.data)
+        ? ordersRes.data
+        : ordersRes.data?.data || [];
 
       const sellerMapping = Object.fromEntries(
-        sellersData.map((seller) => [seller._id, seller.sellerName])
+        sellersData.map((seller) => [seller._id, seller.sellerName]),
       );
       setSellerMap(sellerMapping);
 
       const buyerMapping = Object.fromEntries(
-        ordersData.map((order) => [order.saudaNo, order.buyer])
+        ordersData.map((order) => [order.saudaNo, order.buyer]),
       );
       setBuyerMap(buyerMapping);
 
       const statusMapping = Object.fromEntries(
-        ordersData.map((order) => [order.saudaNo, order.status || "active"])
+        ordersData.map((order) => [order.saudaNo, order.status || "active"]),
       );
       setStatusMap(statusMapping);
 
@@ -74,41 +87,49 @@ const ListLoadingEntry = () => {
         ordersData.map((order) => {
           const quantity = order.quantity || 0;
           let pendingQuantity = order.pendingQuantity;
-          // Fix: If status is active but pending is 0, treat it as 0 loaded
-          if ((pendingQuantity === undefined || pendingQuantity === null || (pendingQuantity === 0 && order.status === "active")) && order.status !== "closed") {
+          if (
+            (pendingQuantity === undefined ||
+              pendingQuantity === null ||
+              (pendingQuantity === 0 && order.status === "active")) &&
+            order.status !== "closed"
+          ) {
             pendingQuantity = quantity;
           } else {
             pendingQuantity = pendingQuantity || 0;
           }
           return [order.saudaNo, quantity - pendingQuantity];
-        })
+        }),
       );
       setAlreadyLoadedMap(alreadyLoadedMapping);
 
       const transporterMapping = Object.fromEntries(
-        transportersData.map((t) => [t._id, t.name])
+        transportersData.map((t) => [t._id, t.name]),
       );
       setTransporterMap(transporterMapping);
-      setTransporters(transportersData.map(t => ({
-        value: t._id,
-        label: `${t.name} - ${t.mobile}`,
-        name: t.name
-      })));
-      
+      setTransporters(
+        transportersData.map((t) => ({
+          value: t._id,
+          label: `${t.name} - ${t.mobile}`,
+          name: t.name,
+        })),
+      );
+
       let entries = entriesData;
       if (userRole === "Seller") {
         const seller = sellersData.find((s) =>
-          s.phoneNumbers?.some((p) => String(p.value) === String(mobile))
+          s.phoneNumbers?.some((p) => String(p.value) === String(mobile)),
         );
         if (seller) {
-          entries = entries.filter((e) => String(e.supplier) === String(seller._id));
+          entries = entries.filter(
+            (e) => String(e.supplier) === String(seller._id),
+          );
         } else {
           entries = [];
         }
       }
-      
+
       setLoadingEntries(entries);
-      setFilteredEntries(entries); // ✅ Initialize filtered data
+      setFilteredEntries(entries);
     } catch (error) {
       console.error("Error fetching data:", error);
       toast.error("Failed to fetch data");
@@ -161,9 +182,7 @@ const ListLoadingEntry = () => {
       setEditEntry(null);
       fetchData();
     } catch (error) {
-      toast.error(
-        error.response?.data?.message || "Failed to update entry"
-      );
+      toast.error(error.response?.data?.message || "Failed to update entry");
     } finally {
       setIsSaving(false);
     }
@@ -176,7 +195,7 @@ const ListLoadingEntry = () => {
         toast.success("Entry deleted successfully");
         fetchData();
       } catch (error) {
-        toast.error("Failed to delete entry");
+        toast.error("Failed to delete entry", error);
       }
     }
   };
@@ -196,7 +215,7 @@ const ListLoadingEntry = () => {
         toast.error("Failed to generate download.");
       }
     } catch (error) {
-      toast.error("Error generating download.");
+      toast.error("Error generating download.", error);
     }
   };
 
@@ -255,7 +274,10 @@ const ListLoadingEntry = () => {
           entry.billNumber,
           formatDate(entry.dateOfIssue),
           entry.commodity,
-          <div key={`actions-${entry._id}`} className="flex justify-center gap-2">
+          <div
+            key={`actions-${entry._id}`}
+            className="flex justify-center gap-2"
+          >
             <button
               onClick={() => handleView(entry)}
               title="View"
@@ -291,14 +313,20 @@ const ListLoadingEntry = () => {
             <MdDownload size={18} />
           </button>,
         ]),
-    [filteredEntries, sellerMap, currentPage, itemsPerPage]
+    [filteredEntries, sellerMap, currentPage, itemsPerPage],
   );
 
   return (
     <React.Suspense fallback={<Loading />}>
       <AdminPageShell
-        title={userRole === "Seller" ? "Your Loading Entries" : "Loading Entries"}
-        subtitle={userRole === "Seller" ? "View and download your loading documents" : "Search, view, edit, and download loading entry documents"}
+        title={
+          userRole === "Seller" ? "Your Loading Entries" : "Loading Entries"
+        }
+        subtitle={
+          userRole === "Seller"
+            ? "View and download your loading documents"
+            : "Search, view, edit, and download loading entry documents"
+        }
         icon={FaClipboardList}
         noContentCard
       >
@@ -321,8 +349,8 @@ const ListLoadingEntry = () => {
                       loadingEntries.filter(
                         (entry) =>
                           filteredNames.includes(sellerMap[entry.supplier]) ||
-                          filteredNames.includes(buyerMap[entry.saudaNo])
-                      )
+                          filteredNames.includes(buyerMap[entry.saudaNo]),
+                      ),
                     );
                   }
                   setCurrentPage(1);
@@ -331,15 +359,17 @@ const ListLoadingEntry = () => {
 
               <SearchBox
                 placeholder="Search by Sauda No..."
-                items={[...new Set(loadingEntries.map((e) => e.saudaNo || ""))].filter(Boolean)}
+                items={[
+                  ...new Set(loadingEntries.map((e) => e.saudaNo || "")),
+                ].filter(Boolean)}
                 onSearch={(filteredSaudas) => {
                   if (!filteredSaudas.length) {
                     setFilteredEntries(loadingEntries);
                   } else {
                     setFilteredEntries(
                       loadingEntries.filter((entry) =>
-                        filteredSaudas.includes(entry.saudaNo)
-                      )
+                        filteredSaudas.includes(entry.saudaNo),
+                      ),
                     );
                   }
                   setCurrentPage(1);
@@ -348,15 +378,17 @@ const ListLoadingEntry = () => {
 
               <SearchBox
                 placeholder="Search by Lorry Number..."
-                items={[...new Set(loadingEntries.map((entry) => entry.lorryNumber))].filter(Boolean)}
+                items={[
+                  ...new Set(loadingEntries.map((entry) => entry.lorryNumber)),
+                ].filter(Boolean)}
                 onSearch={(filteredLorryNumbers) => {
                   if (!filteredLorryNumbers.length) {
                     setFilteredEntries(loadingEntries);
                   } else {
                     setFilteredEntries(
                       loadingEntries.filter((entry) =>
-                        filteredLorryNumbers.includes(entry.lorryNumber)
-                      )
+                        filteredLorryNumbers.includes(entry.lorryNumber),
+                      ),
                     );
                   }
                   setCurrentPage(1);
@@ -385,80 +417,122 @@ const ListLoadingEntry = () => {
                 setSelectedEntry(null);
                 setEditEntry(null);
               }}
-              title={popupType === "view" ? "Loading Entry Details" : "Edit Entry"}
-            maxWidth="max-w-7xl"
-          >
-            {popupType === "view" ? (
-              <div className="space-y-6 p-2">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                  <div className="space-y-4">
-                    <h4 className="text-sm font-bold text-slate-400 uppercase tracking-wider border-b pb-1">Basic Info</h4>
-                    <div className="grid grid-cols-2 gap-2 text-sm">
-                      <span className="text-slate-500">Loading Date:</span>
-                      <span className="font-semibold text-slate-800">{formatDate(selectedEntry.loadingDate)}</span>
-                      <span className="text-slate-500">Sauda No:</span>
-                      <span className="font-semibold text-slate-800">{selectedEntry.saudaNo}</span>
-                      <span className="text-slate-500">Seller:</span>
-                      <span className="font-semibold text-slate-800">{sellerMap[selectedEntry.supplier] || "N/A"}</span>
-                      <span className="text-slate-500">Commodity:</span>
-                      <span className="font-semibold text-slate-800">{selectedEntry.commodity || "N/A"}</span>
+              title={
+                popupType === "view" ? "Loading Entry Details" : "Edit Entry"
+              }
+              maxWidth="max-w-7xl"
+            >
+              {popupType === "view" ? (
+                <div className="space-y-6 p-2">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div className="space-y-4">
+                      <h4 className="text-sm font-bold text-slate-400 uppercase tracking-wider border-b pb-1">
+                        Basic Info
+                      </h4>
+                      <div className="grid grid-cols-2 gap-2 text-sm">
+                        <span className="text-slate-500">Loading Date:</span>
+                        <span className="font-semibold text-slate-800">
+                          {formatDate(selectedEntry.loadingDate)}
+                        </span>
+                        <span className="text-slate-500">Sauda No:</span>
+                        <span className="font-semibold text-slate-800">
+                          {selectedEntry.saudaNo}
+                        </span>
+                        <span className="text-slate-500">Seller:</span>
+                        <span className="font-semibold text-slate-800">
+                          {sellerMap[selectedEntry.supplier] || "N/A"}
+                        </span>
+                        <span className="text-slate-500">Commodity:</span>
+                        <span className="font-semibold text-slate-800">
+                          {selectedEntry.commodity || "N/A"}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="space-y-4">
+                      <h4 className="text-sm font-bold text-slate-400 uppercase tracking-wider border-b pb-1">
+                        Transport Details
+                      </h4>
+                      <div className="grid grid-cols-2 gap-2 text-sm">
+                        <span className="text-slate-500">Lorry No:</span>
+                        <span className="font-semibold text-slate-800">
+                          {selectedEntry.lorryNumber}
+                        </span>
+                        <span className="text-slate-500">Transporter:</span>
+                        <span className="font-semibold text-slate-800">
+                          {transporterMap[selectedEntry.transporterId] ||
+                            selectedEntry.addedTransport ||
+                            "N/A"}
+                        </span>
+                        <span className="text-slate-500">Driver Name:</span>
+                        <span className="font-semibold text-slate-800">
+                          {selectedEntry.driverName || "N/A"}
+                        </span>
+                        <span className="text-slate-500">Driver Phone:</span>
+                        <span className="font-semibold text-slate-800">
+                          {selectedEntry.driverPhoneNumber || "N/A"}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="space-y-4">
+                      <h4 className="text-sm font-bold text-slate-400 uppercase tracking-wider border-b pb-1">
+                        Weight & Billing
+                      </h4>
+                      <div className="grid grid-cols-2 gap-2 text-sm">
+                        <span className="text-slate-500">Weight:</span>
+                        <span className="font-semibold text-slate-800">
+                          {selectedEntry.loadingWeight} Tons
+                        </span>
+                        <span className="text-slate-500">Bill No:</span>
+                        <span className="font-semibold text-slate-800">
+                          {selectedEntry.billNumber || "N/A"}
+                        </span>
+                        <span className="text-slate-500">Bill Date:</span>
+                        <span className="font-semibold text-slate-800">
+                          {formatDate(selectedEntry.dateOfIssue)}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="space-y-4">
+                      <h4 className="text-sm font-bold text-slate-400 uppercase tracking-wider border-b pb-1">
+                        Financial Summary
+                      </h4>
+                      <div className="grid grid-cols-2 gap-2 text-sm p-3 bg-slate-50 rounded-xl border border-slate-100">
+                        <span className="text-slate-500">Freight Rate:</span>
+                        <span className="font-bold text-slate-800">
+                          ₹ {selectedEntry.freightRate}
+                        </span>
+                        <span className="text-slate-500">Total Freight:</span>
+                        <span className="font-bold text-slate-800">
+                          ₹ {selectedEntry.totalFreight}
+                        </span>
+                        <span className="text-slate-500">Advance:</span>
+                        <span className="font-bold text-emerald-600">
+                          ₹ {selectedEntry.advance}
+                        </span>
+                        <span className="text-slate-500">Balance Due:</span>
+                        <span className="font-bold text-amber-600">
+                          ₹ {selectedEntry.balance}
+                        </span>
+                      </div>
                     </div>
                   </div>
 
-                  <div className="space-y-4">
-                    <h4 className="text-sm font-bold text-slate-400 uppercase tracking-wider border-b pb-1">Transport Details</h4>
-                    <div className="grid grid-cols-2 gap-2 text-sm">
-                      <span className="text-slate-500">Lorry No:</span>
-                      <span className="font-semibold text-slate-800">{selectedEntry.lorryNumber}</span>
-                      <span className="text-slate-500">Transporter:</span>
-                      <span className="font-semibold text-slate-800">{transporterMap[selectedEntry.transporterId] || selectedEntry.addedTransport || "N/A"}</span>
-                      <span className="text-slate-500">Driver Name:</span>
-                      <span className="font-semibold text-slate-800">{selectedEntry.driverName || "N/A"}</span>
-                      <span className="text-slate-500">Driver Phone:</span>
-                      <span className="font-semibold text-slate-800">{selectedEntry.driverPhoneNumber || "N/A"}</span>
-                    </div>
-                  </div>
-
-                  <div className="space-y-4">
-                    <h4 className="text-sm font-bold text-slate-400 uppercase tracking-wider border-b pb-1">Weight & Billing</h4>
-                    <div className="grid grid-cols-2 gap-2 text-sm">
-                      <span className="text-slate-500">Weight:</span>
-                      <span className="font-semibold text-slate-800">{selectedEntry.loadingWeight} Tons</span>
-                      <span className="text-slate-500">Bill No:</span>
-                      <span className="font-semibold text-slate-800">{selectedEntry.billNumber || "N/A"}</span>
-                      <span className="text-slate-500">Bill Date:</span>
-                      <span className="font-semibold text-slate-800">{formatDate(selectedEntry.dateOfIssue)}</span>
-                    </div>
-                  </div>
-
-                  <div className="space-y-4">
-                    <h4 className="text-sm font-bold text-slate-400 uppercase tracking-wider border-b pb-1">Financial Summary</h4>
-                    <div className="grid grid-cols-2 gap-2 text-sm p-3 bg-slate-50 rounded-xl border border-slate-100">
-                      <span className="text-slate-500">Freight Rate:</span>
-                      <span className="font-bold text-slate-800">₹ {selectedEntry.freightRate}</span>
-                      <span className="text-slate-500">Total Freight:</span>
-                      <span className="font-bold text-slate-800">₹ {selectedEntry.totalFreight}</span>
-                      <span className="text-slate-500">Advance:</span>
-                      <span className="font-bold text-emerald-600">₹ {selectedEntry.advance}</span>
-                      <span className="text-slate-500">Balance Due:</span>
-                      <span className="font-bold text-amber-600">₹ {selectedEntry.balance}</span>
-                    </div>
+                  <div className="flex justify-end pt-4 border-t">
+                    <button
+                      onClick={() => {
+                        setPopupType("");
+                        setSelectedEntry(null);
+                      }}
+                      className="px-6 py-2 bg-slate-800 text-white rounded-xl font-bold hover:bg-slate-900 transition"
+                    >
+                      Close
+                    </button>
                   </div>
                 </div>
-
-                <div className="flex justify-end pt-4 border-t">
-                  <button
-                    onClick={() => {
-                      setPopupType("");
-                      setSelectedEntry(null);
-                    }}
-                    className="px-6 py-2 bg-slate-800 text-white rounded-xl font-bold hover:bg-slate-900 transition"
-                  >
-                    Close
-                  </button>
-                </div>
-              </div>
-            ) : (
+              ) : (
                 editEntry && (
                   <div className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">

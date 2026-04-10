@@ -4,7 +4,7 @@ const styles = StyleSheet.create({
   table: {
     marginVertical: 10,
   },
-    tableHeader: {
+  tableHeader: {
     backgroundColor: "#1F7A3E",
     flexDirection: "row",
     padding: 6,
@@ -24,14 +24,14 @@ const styles = StyleSheet.create({
     padding: 6,
     backgroundColor: "#F9FAFB",
   },
-  
+
   tableCell: {
     fontSize: 8,
     flex: 1,
     textAlign: "center",
     color: "#2d3748",
   },
-  
+
   qualitySection: {
     marginTop: 10,
   },
@@ -65,7 +65,11 @@ const styles = StyleSheet.create({
 
 const CommodityTable = ({ data }) => {
   const filteredParameters = data.parameters.filter(
-    (param) => param.value !== "0" && param.value !== "" && param.value !== null && param.value !== undefined
+    (param) =>
+      param.value !== "0" &&
+      param.value !== "" &&
+      param.value !== null &&
+      param.value !== undefined,
   );
 
   return (
@@ -92,7 +96,8 @@ const CommodityTable = ({ data }) => {
           <View style={styles.parameterGrid}>
             {filteredParameters.map((param) => (
               <Text key={param._id} style={styles.parameterCell}>
-                <Text style={styles.bold}>{param.parameter}:</Text> {param.value}%
+                <Text style={styles.bold}>{param.parameter}:</Text>{" "}
+                {param.value}%
               </Text>
             ))}
           </View>

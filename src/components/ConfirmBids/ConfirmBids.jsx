@@ -37,14 +37,12 @@ const ConfirmBids = () => {
 
       const participationRaw =
         participateRes.data?.data || participateRes.data || [];
-      const bidParticipants = participationRaw.filter(
-        (p) => p.bidId === bidId
-      );
+      const bidParticipants = participationRaw.filter((p) => p.bidId === bidId);
       const sellers = sellersRes.data?.data || sellersRes.data || [];
 
       const detailedParticipants = bidParticipants.map((p, index) => {
         const seller = sellers.find((s) =>
-          s.phoneNumbers.some((phone) => phone.value === String(p.mobile))
+          s.phoneNumbers.some((phone) => phone.value === String(p.mobile)),
         );
 
         const confirmedBid = confirmedBids.find((c) => c.phone === p.mobile);
@@ -57,7 +55,9 @@ const ConfirmBids = () => {
           typeof confirmedBid?.acceptanceQuantity === "number"
             ? confirmedBid.acceptanceQuantity
             : null;
-        const acceptedAt = confirmedBid?.acceptedAt ? new Date(confirmedBid.acceptedAt) : null;
+        const acceptedAt = confirmedBid?.acceptedAt
+          ? new Date(confirmedBid.acceptedAt)
+          : null;
         const amountBaseRate =
           typeof acceptedRate === "number" ? acceptedRate : Number(p.rate);
         const amountBaseQty =
@@ -116,7 +116,7 @@ const ConfirmBids = () => {
     if (!selectedBid) return;
 
     const confirmAction = window.confirm(
-      `Are you sure you want to ${status.toLowerCase()} this bid?`
+      `Are you sure you want to ${status.toLowerCase()} this bid?`,
     );
     if (!confirmAction) return;
 
@@ -184,8 +184,8 @@ const ConfirmBids = () => {
         p.status === "Confirmed"
           ? "bg-green-500"
           : p.status === "Rejected"
-          ? "bg-red-500"
-          : "bg-yellow-500"
+            ? "bg-red-500"
+            : "bg-yellow-500"
       }`}
       key={p.phone}
     >

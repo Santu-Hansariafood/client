@@ -3,11 +3,11 @@ import axios from "axios";
 import { FaPlus, FaTrash, FaCheck } from "react-icons/fa";
 import { toast } from "react-toastify";
 import Loading from "../../../common/Loading/Loading";
-const DateSelector = lazy(() =>
-  import("../../../common/DateSelector/DateSelector")
+const DateSelector = lazy(
+  () => import("../../../common/DateSelector/DateSelector"),
 );
-const DataDropdown = lazy(() =>
-  import("../../../common/DataDropdown/DataDropdown")
+const DataDropdown = lazy(
+  () => import("../../../common/DataDropdown/DataDropdown"),
 );
 const DataInput = lazy(() => import("../../../common/DataInput/DataInput"));
 

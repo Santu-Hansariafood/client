@@ -55,7 +55,6 @@ const LoginCarousel = () => {
       <Slider {...settings} className="h-full">
         {carouselSlides.map((slide, index) => (
           <div key={index} className="relative h-screen">
-            
             <LazyImage
               src={slide.image}
               alt={`Slide ${index + 1}`}
@@ -65,14 +64,12 @@ const LoginCarousel = () => {
             <div className="absolute inset-0 bg-black/40"></div>
 
             <div className="absolute inset-0 flex flex-col justify-center items-center text-center px-6 text-white">
-              
               <h1 className="text-4xl md:text-6xl font-bold mb-6 drop-shadow-lg">
                 {slide.title}
               </h1>
               <p className="text-lg md:text-2xl italic max-w-2xl leading-relaxed">
                 “{slide.quote}”
               </p>
-
             </div>
           </div>
         ))}

@@ -61,7 +61,7 @@ const ListSoudabook = () => {
           }
         } else if (userRole === "Seller") {
           const seller = sellersRes.data.find((s) =>
-            s.phoneNumbers?.some((p) => String(p.value) === String(mobile))
+            s.phoneNumbers?.some((p) => String(p.value) === String(mobile)),
           );
           data = data.filter((item) => {
             return (

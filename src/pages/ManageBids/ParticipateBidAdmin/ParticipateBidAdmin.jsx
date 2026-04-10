@@ -12,7 +12,9 @@ const Pagination = lazy(
   () => import("../../../common/Paginations/Paginations"),
 );
 const SearchBox = lazy(() => import("../../../common/SearchBox/SearchBox"));
-const DateSelector = lazy(() => import("../../../common/DateSelector/DateSelector"));
+const DateSelector = lazy(
+  () => import("../../../common/DateSelector/DateSelector"),
+);
 const InteractionsPopup = lazy(
   () => import("../InteractionsPopup/InteractionsPopup"),
 );
@@ -85,7 +87,8 @@ const ParticipateBidAdmin = () => {
 
         const allParticipations = participations.sort(
           (a, b) =>
-            new Date(b.createdAt || b.participationDate) - new Date(a.createdAt || a.participationDate),
+            new Date(b.createdAt || b.participationDate) -
+            new Date(a.createdAt || a.participationDate),
         );
 
         setBids(bidsData);
@@ -100,14 +103,13 @@ const ParticipateBidAdmin = () => {
     fetchData();
   }, [userRole, mobile]);
 
-  // Filter by date
   const displayBids = useMemo(() => {
     if (!selectedDate) return filteredBids;
-    
+
     const targetDate = new Date(selectedDate);
     targetDate.setHours(0, 0, 0, 0);
-    
-    return filteredBids.filter(pBid => {
+
+    return filteredBids.filter((pBid) => {
       const pDate = new Date(pBid.createdAt || pBid.participationDate);
       pDate.setHours(0, 0, 0, 0);
       return pDate.getTime() === targetDate.getTime();
@@ -120,24 +122,18 @@ const ParticipateBidAdmin = () => {
       const matchingBid = bids.find((bid) => bid._id === pBid.bidId);
       if (!matchingBid) return;
 
-      // Filter by buyer groups if applicable
       if (userRole === "Buyer") {
-        const normalizedGroup =
-          (matchingBid.group || "")
-            .split(" ")
-            .map(
-              (word) =>
-                word.charAt(0).toUpperCase() + word.slice(1).toLowerCase(),
-            )
-            .join(" ");
+        const normalizedGroup = (matchingBid.group || "")
+          .split(" ")
+          .map(
+            (word) =>
+              word.charAt(0).toUpperCase() + word.slice(1).toLowerCase(),
+          )
+          .join(" ");
 
-        if (
-          buyerGroups.length > 0 &&
-          !buyerGroups.includes(normalizedGroup)
-        ) {
+        if (buyerGroups.length > 0 && !buyerGroups.includes(normalizedGroup)) {
           return;
         }
-        // Additional filter for buyers: must be admin or the creator of the bid
         const isCreator =
           String(matchingBid.createdByMobile) === String(mobile);
         if (!isBuyerAdmin && !isCreator) {
@@ -164,10 +160,11 @@ const ParticipateBidAdmin = () => {
         };
       }
       groupedBids[pBid.bidId].mobiles.add(pBid.mobile);
-      groupedBids[pBid.bidId].quantities += (pBid.quantity || 0);
-      groupedBids[pBid.bidId].acceptanceQuantity += (pBid.acceptedQuantity || 0);
-      if (pBid.acceptedRate) groupedBids[pBid.bidId].acceptanceRate = pBid.acceptedRate;
-      
+      groupedBids[pBid.bidId].quantities += pBid.quantity || 0;
+      groupedBids[pBid.bidId].acceptanceQuantity += pBid.acceptedQuantity || 0;
+      if (pBid.acceptedRate)
+        groupedBids[pBid.bidId].acceptanceRate = pBid.acceptedRate;
+
       const sellerLabel =
         pBid.sellerName && pBid.sellerName.trim().length > 0
           ? pBid.sellerName
@@ -235,7 +232,11 @@ const ParticipateBidAdmin = () => {
   );
 
   const handleSearch = (filteredNames) => {
-    if (!filteredNames || filteredNames.length === 0 || filteredNames.length === consigneeItems.length) {
+    if (
+      !filteredNames ||
+      filteredNames.length === 0 ||
+      filteredNames.length === consigneeItems.length
+    ) {
       setFilteredBids(participationBids);
     } else {
       const nameSet = new Set(filteredNames);
@@ -261,8 +262,16 @@ const ParticipateBidAdmin = () => {
   return (
     <Suspense fallback={<Loading />}>
       <AdminPageShell
-        title={userRole === "Buyer" ? "Participate bid list" : "Participate bid (admin)"}
-        subtitle={userRole === "Buyer" ? "View your company's bid activity" : "Full history of participation activity"}
+        title={
+          userRole === "Buyer"
+            ? "Participate bid list"
+            : "Participate bid (admin)"
+        }
+        subtitle={
+          userRole === "Buyer"
+            ? "View your company's bid activity"
+            : "Full history of participation activity"
+        }
         icon={FaUsers}
         noContentCard
       >
@@ -279,9 +288,9 @@ const ParticipateBidAdmin = () => {
             )}
             <div className="flex flex-1 items-center gap-4 w-full md:w-auto">
               <div className="w-full md:w-64">
-                <DateSelector 
-                  selectedDate={selectedDate} 
-                  onChange={setSelectedDate} 
+                <DateSelector
+                  selectedDate={selectedDate}
+                  onChange={setSelectedDate}
                 />
               </div>
               <div className="flex-1">
@@ -300,7 +309,7 @@ const ParticipateBidAdmin = () => {
               onClose={() => setSelectedBidId(null)}
             />
           )}
-          
+
           {loading ? (
             <Loading />
           ) : (

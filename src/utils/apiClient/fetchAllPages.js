@@ -41,4 +41,3 @@ export const fetchAllPages = async (
 
   return allItems;
 };
-

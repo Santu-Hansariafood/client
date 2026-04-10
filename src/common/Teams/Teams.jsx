@@ -33,7 +33,7 @@ const Teams = () => {
           }
         });
       },
-      { threshold: 0.25 }
+      { threshold: 0.25 },
     );
 
     refs.current.forEach((el) => el && observer.observe(el));
@@ -43,9 +43,7 @@ const Teams = () => {
 
   return (
     <section className="bg-gray-50">
-
       <header className="relative h-screen flex flex-col justify-center items-center text-center px-6 bg-gradient-to-br from-green-50 via-white to-green-100">
-
         <Link
           to="/"
           className="absolute top-8 left-8 flex items-center gap-2 px-5 py-2 bg-green-700 text-white rounded-lg shadow hover:bg-green-800 transition"
@@ -58,7 +56,6 @@ const Teams = () => {
         <div className="absolute bottom-0 right-0 w-72 h-72 bg-green-400 rounded-full blur-3xl opacity-30"></div>
 
         <div className="relative z-10 max-w-3xl">
-
           <h1 className="text-5xl md:text-6xl font-extrabold bg-gradient-to-r from-green-700 to-green-500 bg-clip-text text-transparent">
             Our Leadership
           </h1>
@@ -66,7 +63,8 @@ const Teams = () => {
           <p className="mt-6 text-lg md:text-xl text-gray-600 leading-relaxed">
             Meet the experienced leadership team behind
             <span className="font-semibold text-green-700">
-              {" "}Hansaria Food Private Limited
+              {" "}
+              Hansaria Food Private Limited
             </span>
             , guiding innovation, trust, and long-term growth in India’s
             agricultural commodity trading industry.
@@ -75,14 +73,11 @@ const Teams = () => {
           <div className="flex justify-center mt-8">
             <div className="h-1 w-28 bg-green-600 rounded-full"></div>
           </div>
-
         </div>
       </header>
 
       <div className="max-w-7xl mx-auto px-6 py-20">
-
         {teamData.map((member, index) => {
-
           const isVisible = visible.has(index.toString());
 
           return (
@@ -95,12 +90,9 @@ const Teams = () => {
               ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-20"}
               `}
             >
-
               {/* IMAGE */}
               <div className="md:w-1/2 w-full">
-
                 <div className="relative group">
-
                   <img
                     src={member.image}
                     alt={`${member.name} - ${member.position} at Hansaria Food Private Limited`}
@@ -110,14 +102,11 @@ const Teams = () => {
                   />
 
                   <div className="absolute inset-0 rounded-3xl bg-gradient-to-t from-black/10 to-transparent"></div>
-
                 </div>
-
               </div>
 
               {/* CONTENT */}
               <div className="md:w-1/2 w-full">
-
                 <h2 className="text-3xl md:text-4xl font-bold text-gray-800">
                   {member.name}
                 </h2>
@@ -148,7 +137,6 @@ const Teams = () => {
 
                 {/* SOCIAL */}
                 <div className="flex gap-5 mt-6 text-2xl">
-
                   {member.social.facebook && (
                     <a
                       href={member.social.facebook}
@@ -181,11 +169,8 @@ const Teams = () => {
                       <FaLinkedin />
                     </a>
                   )}
-
                 </div>
-
               </div>
-
             </article>
           );
         })}

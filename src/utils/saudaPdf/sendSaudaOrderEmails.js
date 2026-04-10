@@ -26,9 +26,13 @@ export const sendSaudaOrderEmails = async (order) => {
   const shouldSendSupplier = order?.sendPOToSupplier === "yes";
   if (!shouldSendBuyer && !shouldSendSupplier) return;
 
-  const buyerEmails = Array.isArray(order?.buyerEmails) ? order.buyerEmails : [];
+  const buyerEmails = Array.isArray(order?.buyerEmails)
+    ? order.buyerEmails
+    : [];
   const buyerFromSingle = order?.buyerEmail ? [order.buyerEmail] : [];
-  const sellerEmails = Array.isArray(order?.sellerEmails) ? order.sellerEmails : [];
+  const sellerEmails = Array.isArray(order?.sellerEmails)
+    ? order.sellerEmails
+    : [];
 
   const recipients = collectUniqueEmails([
     ...(shouldSendBuyer ? [...buyerEmails, ...buyerFromSingle] : []),
@@ -37,12 +41,13 @@ export const sendSaudaOrderEmails = async (order) => {
 
   if (recipients.length === 0) return;
 
-  const [consigneeData, supplierData, buyerData, companyData] = await Promise.all([
-    fetchAllPages("/consignees", { limit: 200 }),
-    fetchAllPages("/seller-company", { limit: 200 }),
-    fetchAllPages("/buyers", { limit: 200 }),
-    fetchAllPages("/companies", { limit: 200 }),
-  ]);
+  const [consigneeData, supplierData, buyerData, companyData] =
+    await Promise.all([
+      fetchAllPages("/consignees", { limit: 200 }),
+      fetchAllPages("/seller-company", { limit: 200 }),
+      fetchAllPages("/buyers", { limit: 200 }),
+      fetchAllPages("/companies", { limit: 200 }),
+    ]);
 
   const transformedData = buildSaudaPdfData({
     item: order,
@@ -58,7 +63,9 @@ export const sendSaudaOrderEmails = async (order) => {
     },
   });
 
-  const blob = await pdf(createElement(SaudaPDF, { data: transformedData })).toBlob();
+  const blob = await pdf(
+    createElement(SaudaPDF, { data: transformedData }),
+  ).toBlob();
   const base64data = await new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.readAsDataURL(blob);
@@ -88,4 +95,3 @@ export const sendSaudaOrderEmails = async (order) => {
     rate: order?.rate ?? "",
   });
 };
-

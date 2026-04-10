@@ -123,7 +123,7 @@ const BidIntroduction = () => {
                 <td className="p-3 border">
                   <select
                     className={`w-full px-2 py-1 border rounded-md focus:ring-2 focus:ring-indigo-400 outline-none ${getStatusColor(
-                      status
+                      status,
                     )}`}
                     value={status}
                     onChange={(e) => setStatus(e.target.value)}

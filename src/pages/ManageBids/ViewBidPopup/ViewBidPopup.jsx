@@ -78,7 +78,7 @@ const ViewBidPopup = ({ bidId, onClose }) => {
     doc.setFont("helvetica", "normal");
 
     const parameterRows = Object.entries(bidDetails.parameters).map(
-      ([key, value]) => [key, `${value}%`]
+      ([key, value]) => [key, `${value}%`],
     );
 
     doc.autoTable({
@@ -98,7 +98,7 @@ const ViewBidPopup = ({ bidId, onClose }) => {
     doc.text(
       bidDetails.notes || "No additional notes provided.",
       15,
-      finalY + 5
+      finalY + 5,
     );
 
     finalY += 15;
@@ -109,19 +109,19 @@ const ViewBidPopup = ({ bidId, onClose }) => {
       "Corporate Office: Primarc Square, Plot No.1, Salt Lake Bypass, LA Block, Sector: 3, Bidhannagar, Kolkata, West Bengal 700098",
       105,
       finalY + 5,
-      { align: "center" }
+      { align: "center" },
     );
     doc.text(
       "Registered Office: 207, Maharshi Debendranath Road, 6th Floor, Room No. 111, Kolkata - 700 007",
       105,
       finalY + 10,
-      { align: "center" }
+      { align: "center" },
     );
     doc.text(
       "Contact: +91-93304 33535, +91-98304 33535 | Email: info@hansariafood.com | www.hansariafood.com",
       105,
       finalY + 15,
-      { align: "center" }
+      { align: "center" },
     );
     doc.line(15, finalY + 18, 195, finalY + 18);
 

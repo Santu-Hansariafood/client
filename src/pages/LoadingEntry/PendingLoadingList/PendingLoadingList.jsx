@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, lazy, Suspense } from "react";
+import { useState, useEffect, useCallback, lazy, Suspense } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
 import { FaTruckLoading, FaSearch, FaDownload } from "react-icons/fa";
@@ -62,7 +62,6 @@ const PendingLoadingList = () => {
   const handleDownloadExcel = async () => {
     try {
       const toastId = toast.loading("Preparing Excel...");
-      // Fetch all pending entries for export (no limit)
       const response = await axios.get("/self-order/pending/list", {
         params: {
           limit: 1000,
@@ -77,7 +76,6 @@ const PendingLoadingList = () => {
       const excelRows = exportData.map((item, index) => {
         const quantity = item.quantity || 0;
         let pendingQuantity = item.pendingQuantity;
-        // Fix: Treat missing or 0 pendingQuantity as full quantity if status is active
         if ((pendingQuantity === undefined || pendingQuantity === null || (pendingQuantity === 0 && item.status === "active")) && item.status !== "closed") {
           pendingQuantity = quantity;
         } else {
@@ -133,7 +131,6 @@ const PendingLoadingList = () => {
   const rows = data.map((item, index) => {
     const quantity = item.quantity || 0;
     let pendingQuantity = item.pendingQuantity;
-    // Fix: Treat missing or 0 pendingQuantity as full quantity if status is active
     if ((pendingQuantity === undefined || pendingQuantity === null || (pendingQuantity === 0 && item.status === "active")) && item.status !== "closed") {
       pendingQuantity = quantity;
     } else {

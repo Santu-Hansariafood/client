@@ -18,7 +18,6 @@ const ListEmployee = () => {
   const itemsPerPage = 10;
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Edit State
   const [isEditPopupOpen, setIsEditPopupOpen] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
 
@@ -41,7 +40,7 @@ const ListEmployee = () => {
       setTotalItems(total);
       setLoading(false);
     } catch (error) {
-      toast.error("Failed to fetch employees");
+      toast.error("Failed to fetch employees", error);
       setLoading(false);
     }
   };
@@ -53,7 +52,7 @@ const ListEmployee = () => {
         toast.success("Employee deleted");
         fetchEmployees();
       } catch (error) {
-        toast.error("Failed to delete employee");
+        toast.error("Failed to delete employee", error);
       }
     }
   };

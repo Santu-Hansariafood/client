@@ -1,4 +1,7 @@
-const normalizeText = (value) => String(value || "").trim().toLowerCase();
+const normalizeText = (value) =>
+  String(value || "")
+    .trim()
+    .toLowerCase();
 
 const toUnifiedDetails = (entity) => {
   if (!entity) return null;
@@ -37,7 +40,8 @@ export const buildSaudaPdfData = ({
   const normalizedConsigneeKey = (() => {
     const c = item?.consignee;
     if (!c) return "";
-    if (typeof c === "object") return (c.name || c.label || c.value || "").toString();
+    if (typeof c === "object")
+      return (c.name || c.label || c.value || "").toString();
     return String(c);
   })();
 
@@ -57,7 +61,8 @@ export const buildSaudaPdfData = ({
   const matchingSupplier =
     (supplierData || []).find(
       (supplier) =>
-        normalizeText(supplier?.companyName) === normalizeText(item?.supplierCompany),
+        normalizeText(supplier?.companyName) ===
+        normalizeText(item?.supplierCompany),
     ) || null;
 
   const rawBuyerKey = item?.buyerCompany ?? item?.buyer ?? "";
@@ -66,19 +71,27 @@ export const buildSaudaPdfData = ({
   const matchingBuyer =
     (companyData || []).find((company) => {
       const idMatch =
-        company?._id && rawBuyerKey && String(company._id) === String(rawBuyerKey);
-      const nameMatch = normalizeText(company?.companyName) === normalizedBuyerKey;
+        company?._id &&
+        rawBuyerKey &&
+        String(company._id) === String(rawBuyerKey);
+      const nameMatch =
+        normalizeText(company?.companyName) === normalizedBuyerKey;
       return idMatch || nameMatch;
     }) ||
     (buyerData || []).find((buyer) => {
-      const idMatch = buyer?._id && rawBuyerKey && String(buyer._id) === String(rawBuyerKey);
-      const nameMatch = normalizeText(buyer?.companyName) === normalizedBuyerKey;
+      const idMatch =
+        buyer?._id && rawBuyerKey && String(buyer._id) === String(rawBuyerKey);
+      const nameMatch =
+        normalizeText(buyer?.companyName) === normalizedBuyerKey;
       return idMatch || nameMatch;
     }) ||
     (supplierData || []).find((supplier) => {
       const idMatch =
-        supplier?._id && rawBuyerKey && String(supplier._id) === String(rawBuyerKey);
-      const nameMatch = normalizeText(supplier?.companyName) === normalizedBuyerKey;
+        supplier?._id &&
+        rawBuyerKey &&
+        String(supplier._id) === String(rawBuyerKey);
+      const nameMatch =
+        normalizeText(supplier?.companyName) === normalizedBuyerKey;
       return idMatch || nameMatch;
     }) ||
     null;
@@ -119,4 +132,3 @@ export const buildSaudaPdfData = ({
 
   return transformed;
 };
-

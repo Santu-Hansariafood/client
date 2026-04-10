@@ -1,23 +1,29 @@
-import { StrictMode, Suspense } from 'react';
-import { createRoot } from 'react-dom/client';
-import { HelmetProvider } from 'react-helmet-async';
+import { StrictMode, Suspense } from "react";
+import { createRoot } from "react-dom/client";
+import { HelmetProvider } from "react-helmet-async";
 import axios from "axios";
 import "react-toastify/dist/ReactToastify.css";
-import './index.css';
-import App from './App.jsx';
-import Loading from './common/Loading/Loading';
+import "./index.css";
+import App from "./App.jsx";
+import Loading from "./common/Loading/Loading";
 
-import reportWebVitals from './reportWebVitals';
-import { registerSW } from 'virtual:pwa-register';
+import reportWebVitals from "./reportWebVitals";
+import { registerSW } from "virtual:pwa-register";
 
-const rootElement = document.getElementById('root');
+const rootElement = document.getElementById("root");
 const root = createRoot(rootElement);
 
 axios.defaults.baseURL = import.meta.env.VITE_API_BASE_URL || "/api";
 axios.defaults.timeout = 15000;
 axios.interceptors.request.use((config) => {
-  if (typeof config.url === "string" && config.url.startsWith("/") && !config.url.startsWith("//")) {
-    config.url = config.url.startsWith("/api/") ? config.url.slice(5) : config.url.slice(1);
+  if (
+    typeof config.url === "string" &&
+    config.url.startsWith("/") &&
+    !config.url.startsWith("//")
+  ) {
+    config.url = config.url.startsWith("/api/")
+      ? config.url.slice(5)
+      : config.url.slice(1);
   }
   const apiKey = import.meta.env.VITE_API_KEY;
   if (apiKey) {
@@ -32,10 +38,9 @@ axios.interceptors.request.use((config) => {
 
 registerSW({
   immediate: true,
-  onRegisteredSW(swUrl, r) {
-  },
+  onRegisteredSW(swUrl, r) {},
   onNeedRefresh() {},
-  onOfflineReady() {}
+  onOfflineReady() {},
 });
 
 root.render(
@@ -45,7 +50,7 @@ root.render(
         <App />
       </Suspense>
     </HelmetProvider>
-  </StrictMode>
+  </StrictMode>,
 );
 
 reportWebVitals(console.log);

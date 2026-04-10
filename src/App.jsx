@@ -23,22 +23,22 @@ const App = () => {
       </Helmet>
 
       <BrowserRouter>
-          <Suspense fallback={<Loading />}>
-            <RouteSEO />
-            <ToastContainer
-              position={window.innerWidth < 640 ? "top-center" : "top-right"}
-              autoClose={3000}
-              hideProgressBar={false}
-              newestOnTop={false}
-              closeOnClick
-              rtl={false}
-              pauseOnFocusLoss
-              draggable
-              pauseOnHover
-              theme="colored"
-            />
-            <AppRoutes hydrated={hydrated} />
-          </Suspense>
+        <Suspense fallback={<Loading />}>
+          <RouteSEO />
+          <ToastContainer
+            position={window.innerWidth < 640 ? "top-center" : "top-right"}
+            autoClose={3000}
+            hideProgressBar={false}
+            newestOnTop={false}
+            closeOnClick
+            rtl={false}
+            pauseOnFocusLoss
+            draggable
+            pauseOnHover
+            theme="colored"
+          />
+          <AppRoutes hydrated={hydrated} />
+        </Suspense>
       </BrowserRouter>
     </AuthProvider>
   );

@@ -46,9 +46,14 @@ const ListCompany = () => {
         },
       });
 
-      const items = Array.isArray(response?.data?.data) ? response.data.data : [];
+      const items = Array.isArray(response?.data?.data)
+        ? response.data.data
+        : [];
       setCompanyData(items);
-      const backendTotal = typeof response?.data?.total === "number" ? response.data.total : items.length;
+      const backendTotal =
+        typeof response?.data?.total === "number"
+          ? response.data.total
+          : items.length;
       setTotalItems(backendTotal);
     } catch (error) {
       console.error("Fetch Company Error:", error);

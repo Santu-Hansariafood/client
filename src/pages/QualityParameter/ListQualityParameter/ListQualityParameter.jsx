@@ -1,25 +1,25 @@
 import { useState, useEffect, lazy, Suspense } from "react";
 import axios from "axios";
 import PropTypes from "prop-types";
-import { toast, ToastContainer } from "react-toastify";
+import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Loading from "../../../common/Loading/Loading";
 import { FaUsers } from "react-icons/fa";
-const AdminPageShell = lazy(() =>
-  import("../../../common/AdminPageShell/AdminPageShell")
+const AdminPageShell = lazy(
+  () => import("../../../common/AdminPageShell/AdminPageShell"),
 );
-import"../../../common/AdminPageShell/AdminPageShell";
-const AddQualityParameter = lazy(() =>
-  import("../AddQualityParameter/AddQualityParameter")
+import "../../../common/AdminPageShell/AdminPageShell";
+const AddQualityParameter = lazy(
+  () => import("../AddQualityParameter/AddQualityParameter"),
 );
-const EditQualityParameter = lazy(() =>
-  import("../EditQualityParameter/EditQualityParameter")
+const EditQualityParameter = lazy(
+  () => import("../EditQualityParameter/EditQualityParameter"),
 );
 const Tables = lazy(() => import("../../../common/Tables/Tables"));
 const Actions = lazy(() => import("../../../common/Actions/Actions"));
 const SearchBox = lazy(() => import("../../../common/SearchBox/SearchBox"));
-const Pagination = lazy(() =>
-  import("../../../common/Paginations/Paginations")
+const Pagination = lazy(
+  () => import("../../../common/Paginations/Paginations"),
 );
 
 const ListQualityParameter = () => {
@@ -70,7 +70,6 @@ const ListQualityParameter = () => {
     setSearchQuery(query || "");
     setCurrentPage(1);
   };
-  
 
   const handleView = (item) => {
     console.log("Viewing:", item);
@@ -85,7 +84,7 @@ const ListQualityParameter = () => {
     try {
       const response = await axios.put(
         `/quality-parameters/${updatedData._id}`,
-        updatedData
+        updatedData,
       );
       fetchQualityParameters();
       toast.success("Quality parameter updated successfully!");
@@ -100,11 +99,9 @@ const ListQualityParameter = () => {
   const handleDelete = async (item) => {
     try {
       console.log("Deleting ID:", item._id);
-      await axios.delete(
-        `/quality-parameters/${item._id}`
-      );
+      await axios.delete(`/quality-parameters/${item._id}`);
       setQualityParameters((prev) =>
-        prev.filter((param) => param._id !== item._id)
+        prev.filter((param) => param._id !== item._id),
       );
       setFilteredData((prev) => prev.filter((param) => param._id !== item._id));
       toast.success("Quality parameter deleted successfully!");
@@ -138,44 +135,44 @@ const ListQualityParameter = () => {
           icon={FaUsers}
           noContentCard
         >
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
-          <div className="w-full md:w-1/2">
-            <SearchBox
-              placeholder="Search by name..."
-              items={qualityParameters.map((param) => param.name)}
-              onSearch={handleSearch}
-              returnQuery
-            />
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
+            <div className="w-full md:w-1/2">
+              <SearchBox
+                placeholder="Search by name..."
+                items={qualityParameters.map((param) => param.name)}
+                onSearch={handleSearch}
+                returnQuery
+              />
+            </div>
+
+            <button
+              onClick={() => setShowAddForm(!showAddForm)}
+              className="bg-gradient-to-r from-emerald-800 to-emerald-700 text-white px-4 py-2 rounded-lg hover:from-emerald-700 hover:to-emerald-600 transition whitespace-nowrap"
+            >
+              {showAddForm ? "Cancel" : "Add New Quality Parameter"}
+            </button>
           </div>
+          {showAddForm && (
+            <AddQualityParameter onSubmit={handleAddQualityParameter} />
+          )}
 
-          <button
-            onClick={() => setShowAddForm(!showAddForm)}
-            className="bg-gradient-to-r from-emerald-800 to-emerald-700 text-white px-4 py-2 rounded-lg hover:from-emerald-700 hover:to-emerald-600 transition whitespace-nowrap"
-          >
-            {showAddForm ? "Cancel" : "Add New Quality Parameter"}
-          </button>
-        </div>
-        {showAddForm && (
-          <AddQualityParameter onSubmit={handleAddQualityParameter} />
-        )}
+          {isEditPopupVisible && editItem && (
+            <EditQualityParameter
+              item={editItem}
+              onClose={() => setIsEditPopupVisible(false)}
+              onSubmit={handleUpdateQualityParameter}
+            />
+          )}
 
-        {isEditPopupVisible && editItem && (
-          <EditQualityParameter
-            item={editItem}
-            onClose={() => setIsEditPopupVisible(false)}
-            onSubmit={handleUpdateQualityParameter}
+          <Tables headers={headers} rows={rows} />
+
+          <Pagination
+            currentPage={currentPage}
+            totalItems={total}
+            itemsPerPage={itemsPerPage}
+            onPageChange={handlePageChange}
           />
-        )}
-
-        <Tables headers={headers} rows={rows} />
-
-        <Pagination
-          currentPage={currentPage}
-          totalItems={total}
-          itemsPerPage={itemsPerPage}
-          onPageChange={handlePageChange}
-        />
-      </AdminPageShell>
+        </AdminPageShell>
       </div>
     </Suspense>
   );

@@ -58,9 +58,8 @@ const Pagination = ({
     <div className="w-full flex flex-col gap-3 mt-6">
       <div className="flex flex-col sm:flex-row justify-between items-center gap-2 text-sm text-slate-600">
         <span>
-          Showing{" "}
-          {totalItems === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1} -{" "}
-          {Math.min(currentPage * itemsPerPage, totalItems)} of {totalItems}
+          Showing {totalItems === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1}{" "}
+          - {Math.min(currentPage * itemsPerPage, totalItems)} of {totalItems}
         </span>
 
         {showPageSize && onPageSizeChange && (
@@ -82,7 +81,6 @@ const Pagination = ({
       </div>
 
       <div className="flex flex-wrap items-center justify-center gap-1.5 p-2 rounded-2xl bg-white/80 backdrop-blur border border-slate-200 shadow-sm">
-
         <button
           onClick={() => onPageChange(1)}
           disabled={currentPage === 1}
@@ -112,8 +110,8 @@ const Pagination = ({
               currentPage === page
                 ? btnActive
                 : page === "..."
-                ? "cursor-default text-slate-400"
-                : btnDefault
+                  ? "cursor-default text-slate-400"
+                  : btnDefault
             }`}
           >
             {page}
@@ -152,7 +150,7 @@ const Pagination = ({
                 if (e.key === "Enter") {
                   const n = Math.max(
                     1,
-                    Math.min(totalPages, Number(gotoValue || "1"))
+                    Math.min(totalPages, Number(gotoValue || "1")),
                   );
                   onPageChange(n);
                   setGotoValue("");
@@ -165,7 +163,7 @@ const Pagination = ({
               onClick={() => {
                 const n = Math.max(
                   1,
-                  Math.min(totalPages, Number(gotoValue || "1"))
+                  Math.min(totalPages, Number(gotoValue || "1")),
                 );
                 onPageChange(n);
                 setGotoValue("");

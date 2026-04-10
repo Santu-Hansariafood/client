@@ -1,4 +1,11 @@
-import { lazy, Suspense, useState, useEffect, useCallback, useRef } from "react";
+import {
+  lazy,
+  Suspense,
+  useState,
+  useEffect,
+  useCallback,
+  useRef,
+} from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -81,7 +88,9 @@ const EditSelfOrder = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const { state } = useLocation();
-  const [formData, setFormData] = useState(state?.orderData || INITIAL_FORM_DATA);
+  const [formData, setFormData] = useState(
+    state?.orderData || INITIAL_FORM_DATA,
+  );
   const [isLoading, setIsLoading] = useState(false);
   const [isFetching, setIsFetching] = useState(false);
   const [_buyerBrokerageMap, setBuyerBrokerageMap] = useState({});
@@ -89,7 +98,7 @@ const EditSelfOrder = () => {
   const [buyers, setBuyers] = useState(state?.buyerData || []);
   const [suppliers, setSuppliers] = useState(state?.supplierData || []);
   const [sellerCompanies, setSellerCompanies] = useState([]);
-  
+
   const abortControllerRef = useRef(null);
 
   useEffect(() => {
@@ -123,7 +132,7 @@ const EditSelfOrder = () => {
 
   useEffect(() => {
     const orderFromState = state?.orderData;
-    
+
     if (!id && !orderFromState) {
       toast.error("Missing order id. Open edit from the order list.");
       navigate("/manage-order/list-self-order", { replace: true });
@@ -141,7 +150,9 @@ const EditSelfOrder = () => {
       try {
         const orderPromise =
           !orderFromState && id
-            ? axios.get(`${API_BASE_URL}/${id}`, { signal: abortControllerRef.current.signal })
+            ? axios.get(`${API_BASE_URL}/${id}`, {
+                signal: abortControllerRef.current.signal,
+              })
             : Promise.resolve({ data: orderFromState });
 
         const [
@@ -276,7 +287,10 @@ const EditSelfOrder = () => {
 
     try {
       const quantity = Number(formData.quantity) || 0;
-      const pendingQuantity = formData.pendingQuantity !== "" ? Number(formData.pendingQuantity) : quantity;
+      const pendingQuantity =
+        formData.pendingQuantity !== ""
+          ? Number(formData.pendingQuantity)
+          : quantity;
 
       const payload = {
         ...formData,
@@ -307,7 +321,10 @@ const EditSelfOrder = () => {
         "Update Order API Error:",
         error.response?.data || error.message,
       );
-      const errorMsg = error.response?.data?.message || error.message || "Failed to update order";
+      const errorMsg =
+        error.response?.data?.message ||
+        error.message ||
+        "Failed to update order";
       toast.error(`Update failed: ${errorMsg}`);
     } finally {
       setIsLoading(false);
@@ -452,4 +469,3 @@ const EditSelfOrder = () => {
 };
 
 export default EditSelfOrder;
-

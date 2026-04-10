@@ -33,46 +33,54 @@ const Header = ({
   const [unreadOnly, setUnreadOnly] = useState(true);
   const [lastFetched, setLastFetched] = useState(0);
 
-  const fetchNotifications = useCallback(async (force = false) => {
-    // Only fetch if forced or if 1 minute has passed since last fetch
-    const now = Date.now();
-    if (!force && now - lastFetched < 60000) return;
+  const fetchNotifications = useCallback(
+    async (force = false) => {
+      const now = Date.now();
+      if (!force && now - lastFetched < 60000) return;
 
-    try {
-      const response = await axios.get("/notifications", {
-        params: { mobile, role: userRole, unreadOnly: unreadOnly, todayOnly: "true" },
-      });
-      
-      setNotifications((prev) => {
-        // If we have new unread notifications, show a browser notification
-        if (response.data.length > prev.length) {
-          const newNotifications = response.data.filter(
-            (n) => !prev.find((oldN) => oldN._id === n._id)
-          );
-          
-          if (newNotifications.length > 0 && Notification.permission === "granted") {
-            newNotifications.forEach((n) => {
-              new window.Notification(n.title, {
-                body: n.message,
-                icon: "/logo/logo.png",
+      try {
+        const response = await axios.get("/notifications", {
+          params: {
+            mobile,
+            role: userRole,
+            unreadOnly: unreadOnly,
+            todayOnly: "true",
+          },
+        });
+
+        setNotifications((prev) => {
+          if (response.data.length > prev.length) {
+            const newNotifications = response.data.filter(
+              (n) => !prev.find((oldN) => oldN._id === n._id),
+            );
+
+            if (
+              newNotifications.length > 0 &&
+              Notification.permission === "granted"
+            ) {
+              newNotifications.forEach((n) => {
+                new window.Notification(n.title, {
+                  body: n.message,
+                  icon: "/logo/logo.png",
+                });
               });
-            });
+            }
           }
-        }
-        return response.data;
-      });
-      setLastFetched(now);
-    } catch (error) {
-      console.error("Failed to fetch notifications", error);
-    }
-  }, [mobile, userRole, unreadOnly, lastFetched]);
+          return response.data;
+        });
+        setLastFetched(now);
+      } catch (error) {
+        console.error("Failed to fetch notifications", error);
+      }
+    },
+    [mobile, userRole, unreadOnly, lastFetched],
+  );
 
   useEffect(() => {
-    // Request notification permission on mount
     if ("Notification" in window && Notification.permission === "default") {
       Notification.requestPermission();
     }
-    
+
     fetchNotifications(true);
     const interval = setInterval(() => fetchNotifications(), 60000); // Check every minute
     return () => clearInterval(interval);
@@ -103,7 +111,6 @@ const Header = ({
     }
     setShowNotifications(false);
 
-    // Redirect based on role
     if (userRole === "Admin" || userRole === "Employee") {
       navigate("/manage-bids/bid-list/participate-bid-admin");
     } else if (userRole === "Buyer") {
@@ -176,7 +183,6 @@ const Header = ({
           <PWAInstall />
         </div>
 
-        {/* Notifications */}
         <div className="relative" ref={notificationRef}>
           <button
             type="button"

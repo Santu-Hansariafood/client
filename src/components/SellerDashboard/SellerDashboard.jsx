@@ -56,8 +56,10 @@ const SellerDashboard = () => {
 
         const sellers = sellersRes?.data || [];
         const bids = bidsRes?.data?.data || bidsRes?.data || [];
-        const participate = participateRes?.data?.data || participateRes?.data || [];
-        const confirmBids = confirmBidsRes?.data?.data || confirmBidsRes?.data || [];
+        const participate =
+          participateRes?.data?.data || participateRes?.data || [];
+        const confirmBids =
+          confirmBidsRes?.data?.data || confirmBidsRes?.data || [];
         const orders = ordersRes?.data?.data || ordersRes?.data || [];
 
         const seller = sellers.find((s) =>

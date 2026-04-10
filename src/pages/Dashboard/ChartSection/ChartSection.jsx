@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { lazy, Suspense } from "react";
 
-const SaudaChart = lazy(() =>
-  import("../../../common/Charts/SaudaChart/SaudaChart")
+const SaudaChart = lazy(
+  () => import("../../../common/Charts/SaudaChart/SaudaChart"),
 );
 const BidChart = lazy(() => import("../../../common/Charts/BidChart/BidChart"));
 import Loading from "../../../common/Loading/Loading";

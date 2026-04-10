@@ -23,8 +23,16 @@
       "section": "Group of Company",
       "icon": "FaBuilding",
       "actions": [
-        { "name": "Add Group", "link": "/group-of-company/add", "icon": "FaPlus" },
-        { "name": "List Groups", "link": "/group-of-company/list", "icon": "FaList" }
+        {
+          "name": "Add Group",
+          "link": "/group-of-company/add",
+          "icon": "FaPlus"
+        },
+        {
+          "name": "List Groups",
+          "link": "/group-of-company/list",
+          "icon": "FaList"
+        }
       ]
     },
     {
@@ -40,7 +48,11 @@
       "icon": "FaTruck",
       "actions": [
         { "name": "Add Consignee", "link": "/consignee/add", "icon": "FaPlus" },
-        { "name": "Consignee List", "link": "/consignee/list", "icon": "FaList" }
+        {
+          "name": "Consignee List",
+          "link": "/consignee/list",
+          "icon": "FaList"
+        }
       ]
     },
     {
@@ -48,41 +60,85 @@
       "icon": "FaCubes",
       "actions": [
         { "name": "Add Commodity", "link": "/commodity/add", "icon": "FaPlus" },
-        { "name": "Commodity List", "link": "/commodity/list", "icon": "FaList" }
+        {
+          "name": "Commodity List",
+          "link": "/commodity/list",
+          "icon": "FaList"
+        }
       ]
     },
     {
       "section": "Quality Parameter",
       "icon": "FaCheckCircle",
       "actions": [
-        { "name": "Add Quality Parameter", "link": "/quality-parameter/add", "icon": "FaPlus" },
-        { "name": "List Quality Parameters", "link": "/quality-parameter/list", "icon": "FaList" }
+        {
+          "name": "Add Quality Parameter",
+          "link": "/quality-parameter/add",
+          "icon": "FaPlus"
+        },
+        {
+          "name": "List Quality Parameters",
+          "link": "/quality-parameter/list",
+          "icon": "FaList"
+        }
       ]
     },
     {
       "section": "Seller Company",
       "icon": "FaStore",
       "actions": [
-        { "name": "Add Seller Company", "link": "/seller-company/add", "icon": "FaPlus" },
-        { "name": "Seller Company List", "link": "/seller-company/list", "icon": "FaList" }
+        {
+          "name": "Add Seller Company",
+          "link": "/seller-company/add",
+          "icon": "FaPlus"
+        },
+        {
+          "name": "Seller Company List",
+          "link": "/seller-company/list",
+          "icon": "FaList"
+        }
       ]
     },
     {
       "section": "Seller Details",
       "icon": "FaUserTie",
       "actions": [
-        { "name": "Add Seller Details", "link": "/seller-details/add", "icon": "FaPlus" },
-        { "name": "Seller Details List", "link": "/seller-details/list", "icon": "FaList" }
+        {
+          "name": "Add Seller Details",
+          "link": "/seller-details/add",
+          "icon": "FaPlus"
+        },
+        {
+          "name": "Seller Details List",
+          "link": "/seller-details/list",
+          "icon": "FaList"
+        }
       ]
     },
     {
       "section": "Manage Bids",
       "icon": "FaGavel",
       "actions": [
-        { "name": "Buyer Bid", "link": "/manage-bids/buyer", "icon": "FaHandshake" },
-        { "name": "Bid List", "link": "/manage-bids/bid-list", "icon": "FaList" },
-        { "name": "Participate Bid", "link": "/manage-bids/bid-list/participate-bid-admin", "icon": "FaUsers" },
-        { "name": "Bid Location", "link": "/manage-bids/bid-location", "icon": "FaMapMarkerAlt" }
+        {
+          "name": "Buyer Bid",
+          "link": "/manage-bids/buyer",
+          "icon": "FaHandshake"
+        },
+        {
+          "name": "Bid List",
+          "link": "/manage-bids/bid-list",
+          "icon": "FaList"
+        },
+        {
+          "name": "Participate Bid",
+          "link": "/manage-bids/bid-list/participate-bid-admin",
+          "icon": "FaUsers"
+        },
+        {
+          "name": "Bid Location",
+          "link": "/manage-bids/bid-location",
+          "icon": "FaMapMarkerAlt"
+        }
       ]
     },
     {
@@ -96,24 +152,48 @@
       "section": "Manage Order",
       "icon": "FaClipboardList",
       "actions": [
-        { "name": "Add SelfOrder", "link": "/manage-order/add-self-order", "icon": "FaPlus" },
-        { "name": "List SelfOrder", "link": "/manage-order/list-self-order", "icon": "FaList" }
+        {
+          "name": "Add SelfOrder",
+          "link": "/manage-order/add-self-order",
+          "icon": "FaPlus"
+        },
+        {
+          "name": "List SelfOrder",
+          "link": "/manage-order/list-self-order",
+          "icon": "FaList"
+        }
       ]
     },
     {
       "section": "Loading Entry",
       "icon": "FaTruckLoading",
       "actions": [
-        { "name": "Add Loading Entry", "link": "/Loading-Entry/add-loading-entry", "icon": "FaPlus" },
-        { "name": "List Loading Entry", "link": "/Loading-Entry/list-loading-entry", "icon": "FaList" },
-        { "name": "Pending Loading List", "link": "/Loading-Entry/pending-loading-list", "icon": "FaClock" }
+        {
+          "name": "Add Loading Entry",
+          "link": "/Loading-Entry/add-loading-entry",
+          "icon": "FaPlus"
+        },
+        {
+          "name": "List Loading Entry",
+          "link": "/Loading-Entry/list-loading-entry",
+          "icon": "FaList"
+        },
+        {
+          "name": "Pending Loading List",
+          "link": "/Loading-Entry/pending-loading-list",
+          "icon": "FaClock"
+        }
       ]
     },
     {
       "section": "Employee Management",
       "icon": "FaUserTie",
       "actions": [
-        { "name": "Register Employee", "link": "/employee/add", "icon": "FaUserPlus" },
+        {
+          "name": "Register Employee",
+          "link": "/employee/add",
+          "icon": "FaUserPlus"
+        },
         { "name": "Employee List", "link": "/employee/list", "icon": "FaList" }
       ]
     },
@@ -121,8 +201,16 @@
       "section": "Transporter Management",
       "icon": "FaTruckMoving",
       "actions": [
-        { "name": "Register Transporter", "link": "/transporter/add", "icon": "FaPlus" },
-        { "name": "Transporter List", "link": "/transporter/list", "icon": "FaList" }
+        {
+          "name": "Register Transporter",
+          "link": "/transporter/add",
+          "icon": "FaPlus"
+        },
+        {
+          "name": "Transporter List",
+          "link": "/transporter/list",
+          "icon": "FaList"
+        }
       ]
     }
   ]

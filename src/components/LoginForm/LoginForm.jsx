@@ -23,7 +23,7 @@ const LoginForm = () => {
 
   const roles = useMemo(
     () => ["Buyer", "Seller", "Transporter", "Employee", "Admin"],
-    []
+    [],
   );
 
   const handleLogin = async () => {
@@ -80,9 +80,7 @@ const LoginForm = () => {
   return (
     <Suspense fallback={<Loading />}>
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-50 to-gray-100 px-4">
-        
         <div className="w-full max-w-md backdrop-blur-lg bg-white/80 p-8 rounded-3xl shadow-2xl border border-gray-200 transition-all duration-300">
-          
           {/* Header */}
           <div className="text-center mb-8">
             <h2 className="text-3xl font-bold text-gray-800 tracking-tight">
@@ -95,7 +93,6 @@ const LoginForm = () => {
 
           {/* Form */}
           <div className="space-y-6">
-            
             {/* Phone */}
             <div className="focus-within:scale-[1.01] transition">
               <DataInput

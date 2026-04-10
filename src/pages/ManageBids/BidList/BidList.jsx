@@ -17,7 +17,7 @@ const BidList = () => {
   const navigate = useNavigate();
   const { userRole, mobile } = useAuth();
   const [bids, setBids] = useState([]);
-  const [activeTab, setActiveTab] = useState("all"); // "all", "active", "closed", or "previous"
+  const [activeTab, setActiveTab] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedBid, setSelectedBid] = useState(null);
   const [editableRateQuantity, setEditableRateQuantity] = useState(null);
@@ -91,7 +91,7 @@ const BidList = () => {
 
   const filteredBids = useMemo(() => {
     const now = new Date();
-    const todayStr = now.toLocaleDateString("en-CA"); // YYYY-MM-DD in local time
+    const todayStr = now.toLocaleDateString("en-CA");
     const yesterday = new Date(now);
     yesterday.setDate(now.getDate() - 1);
     const yesterdayStr = yesterday.toLocaleDateString("en-CA");
@@ -192,7 +192,15 @@ const BidList = () => {
         const dateB = new Date(b.closedAt || b.updatedAt || b.createdAt);
         return dateB - dateA;
       });
-  }, [bids, activeTab, filteredConsignees, buyerGroups, userRole, isBuyerAdmin, mobile]);
+  }, [
+    bids,
+    activeTab,
+    filteredConsignees,
+    buyerGroups,
+    userRole,
+    isBuyerAdmin,
+    mobile,
+  ]);
 
   const consigneeItems = useMemo(
     () =>
@@ -239,7 +247,6 @@ const BidList = () => {
     "Consignee",
     "Origin",
     "Commodity",
-    // "Parameters",
     "Quantity",
     "Rate",
     "Bid Date",
@@ -287,10 +294,6 @@ const BidList = () => {
     bid.consignee,
     bid.origin,
     bid.commodity,
-    // Object.entries(bid.parameters || {})
-    //   .filter(([, value]) => value !== "0")
-    //   .map(([key, value]) => `${key}: ${value}%`)
-    //   .join(", "),
     bid.quantity,
     bid.rate,
     formatDate(bid.bidDate),

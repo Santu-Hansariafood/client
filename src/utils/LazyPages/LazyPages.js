@@ -6,49 +6,77 @@ const loaders = {
   AddBuyer: () => import("../../pages/Buyer/AddBuyer/AddBuyer"),
   ListBuyer: () => import("../../pages/Buyer/BuyerList/BuyerList"),
   AddCommodity: () => import("../../pages/Commodity/AddCommodity/AddCommodity"),
-  ListCommodity: () => import("../../pages/Commodity/ListCommodity/ListCommodity"),
+  ListCommodity: () =>
+    import("../../pages/Commodity/ListCommodity/ListCommodity"),
   AddCompany: () => import("../../pages/Company/AddCompany/AddCompany"),
   ListCompany: () => import("../../pages/Company/ListCompany/ListCompany"),
   AddConsignee: () => import("../../pages/Consignee/AddConsignee/AddConsignee"),
-  ListConsignee: () => import("../../pages/Consignee/ListConsignee/ListConsignee"),
-  AddGroupOfCompany: () => import("../../pages/GroupofCompany/AddGroupOfCompany/AddGroupOfCompany"),
-  ListGroupOfCompany: () => import("../../pages/GroupofCompany/ListGroupOfCompany/ListGroupOfCompany"),
-  AddQualityParameter: () => import("../../pages/QualityParameter/AddQualityParameter/AddQualityParameter"),
-  ListQualityParameter: () => import("../../pages/QualityParameter/ListQualityParameter/ListQualityParameter"),
-  AddSellerDetails: () => import("../../pages/SellerDetails/AddSellerDetails/AddSellerDetails"),
-  ListSellerDetails: () => import("../../pages/SellerDetails/ListSellerDetails/ListSellerDetails"),
-  AddSellerCompany: () => import("../../pages/SellerCompany/AddSellerCompany/AddSellerCompany"),
-  ListSellerCompany: () => import("../../pages/SellerCompany/ListSellerCompany/ListSellerCompany"),
+  ListConsignee: () =>
+    import("../../pages/Consignee/ListConsignee/ListConsignee"),
+  AddGroupOfCompany: () =>
+    import("../../pages/GroupofCompany/AddGroupOfCompany/AddGroupOfCompany"),
+  ListGroupOfCompany: () =>
+    import("../../pages/GroupofCompany/ListGroupOfCompany/ListGroupOfCompany"),
+  AddQualityParameter: () =>
+    import("../../pages/QualityParameter/AddQualityParameter/AddQualityParameter"),
+  ListQualityParameter: () =>
+    import("../../pages/QualityParameter/ListQualityParameter/ListQualityParameter"),
+  AddSellerDetails: () =>
+    import("../../pages/SellerDetails/AddSellerDetails/AddSellerDetails"),
+  ListSellerDetails: () =>
+    import("../../pages/SellerDetails/ListSellerDetails/ListSellerDetails"),
+  AddSellerCompany: () =>
+    import("../../pages/SellerCompany/AddSellerCompany/AddSellerCompany"),
+  ListSellerCompany: () =>
+    import("../../pages/SellerCompany/ListSellerCompany/ListSellerCompany"),
   BuyerBid: () => import("../../pages/ManageBids/BuyerBid/BuyerBid"),
   BidLocation: () => import("../../pages/ManageBids/BidLocation/BidLocation"),
   AddSoudabook: () => import("../../pages/Soudabook/AddSoudabook/AddSoudabook"),
-  ListSoudabook: () => import("../../pages/Soudabook/ListSoudabook/ListSoudabook"),
+  ListSoudabook: () =>
+    import("../../pages/Soudabook/ListSoudabook/ListSoudabook"),
   BidList: () => import("../../pages/ManageBids/BidList/BidList"),
   AddSelfOrder: () => import("../../pages/ManageSelfOrder/SelfOrder/SelfOrder"),
-  EditSelfOrder: () => import("../../pages/ManageSelfOrder/EditSelfOrder/EditSelfOrder"),
-  ListSelfOrder: () => import("../../pages/ManageSelfOrder/SelfOrderList/SelfOrderList"),
-  AddLoadingEntry: () => import("../../pages/LoadingEntry/AddLoadingEntry/AddLoadingEntry"),
-  ListLoadingEntry: () => import("../../pages/LoadingEntry/ListLoadingEntry/ListLoadingEntry"),
+  EditSelfOrder: () =>
+    import("../../pages/ManageSelfOrder/EditSelfOrder/EditSelfOrder"),
+  ListSelfOrder: () =>
+    import("../../pages/ManageSelfOrder/SelfOrderList/SelfOrderList"),
+  AddLoadingEntry: () =>
+    import("../../pages/LoadingEntry/AddLoadingEntry/AddLoadingEntry"),
+  ListLoadingEntry: () =>
+    import("../../pages/LoadingEntry/ListLoadingEntry/ListLoadingEntry"),
   AddEmployee: () => import("../../pages/Employee/AddEmployee/AddEmployee"),
   ListEmployee: () => import("../../pages/Employee/ListEmployee/ListEmployee"),
-  AddTransporter: () => import("../../pages/Transporter/AddTransporter/AddTransporter"),
-  ListTransporter: () => import("../../pages/Transporter/ListTransporter/ListTransporter"),
-  SellerDashboard: () => import("../../components/SellerDashboard/SellerDashboard"),
-  BuyerDashboard: () => import("../../components/BuyerDashboard/BuyerDashboard"),
-  TransporterDashboard: () => import("../../components/TransporterDashboard/TransporterDashboard"),
-  EmployeeDashboard: () => import("../../components/EmployeeDashboard/EmployeeDashboard"),
-  SellerBidList: () => import("../../pages/ManageBids/SupplierBidList/SupplierBidList"),
-  ParticipateBid: () => import("../../components/ParticipateBid/ParticipateBid"),
-  ParticipateBidAdmin: () => import("../../pages/ManageBids/ParticipateBidAdmin/ParticipateBidAdmin"),
+  AddTransporter: () =>
+    import("../../pages/Transporter/AddTransporter/AddTransporter"),
+  ListTransporter: () =>
+    import("../../pages/Transporter/ListTransporter/ListTransporter"),
+  SellerDashboard: () =>
+    import("../../components/SellerDashboard/SellerDashboard"),
+  BuyerDashboard: () =>
+    import("../../components/BuyerDashboard/BuyerDashboard"),
+  TransporterDashboard: () =>
+    import("../../components/TransporterDashboard/TransporterDashboard"),
+  EmployeeDashboard: () =>
+    import("../../components/EmployeeDashboard/EmployeeDashboard"),
+  SellerBidList: () =>
+    import("../../pages/ManageBids/SupplierBidList/SupplierBidList"),
+  ParticipateBid: () =>
+    import("../../components/ParticipateBid/ParticipateBid"),
+  ParticipateBidAdmin: () =>
+    import("../../pages/ManageBids/ParticipateBidAdmin/ParticipateBidAdmin"),
   ConfirmBids: () => import("../../components/ConfirmBids/ConfirmBids"),
-  LoadingEntrySauda: () => import("../../pages/LoadingEntry/LoadingEntrySauda/LoadingEntrySauda"),
-  PendingLoadingList: () => import("../../pages/LoadingEntry/PendingLoadingList/PendingLoadingList"),
+  LoadingEntrySauda: () =>
+    import("../../pages/LoadingEntry/LoadingEntrySauda/LoadingEntrySauda"),
+  PendingLoadingList: () =>
+    import("../../pages/LoadingEntry/PendingLoadingList/PendingLoadingList"),
   PrivacyPolicy: () => import("../../common/PrivacyPolicy/PrivacyPolicy"),
   TermsConditions: () => import("../../common/TermsConditions/TermsConditions"),
-  BrokerCommissionPolicy: () => import("../../common/BrokerCommissionPolicy/BrokerCommissionPolicy"),
+  BrokerCommissionPolicy: () =>
+    import("../../common/BrokerCommissionPolicy/BrokerCommissionPolicy"),
   Teams: () => import("../../common/Teams/Teams"),
-  BuyerMarketAnalytics: () => import("../../pages/MarketAnalysis/MarketAnalysis"),
-  BuyerBidHistory: () => import("../../pages/BidHistory/BidHistory")
+  BuyerMarketAnalytics: () =>
+    import("../../pages/MarketAnalysis/MarketAnalysis"),
+  BuyerBidHistory: () => import("../../pages/BidHistory/BidHistory"),
 };
 
 const pathToKey = {
@@ -98,7 +126,7 @@ const pathToKey = {
   "/broker-commission-policy": "BrokerCommissionPolicy",
   "/teams": "Teams",
   "/buyer/market-analytics": "BuyerMarketAnalytics",
-  "/buyer/bid-history": "BuyerBidHistory"
+  "/buyer/bid-history": "BuyerBidHistory",
 };
 
 const prefetched = new Set();
@@ -118,8 +146,10 @@ export function prefetchRouteByPathname(pathname) {
   if (prefetched.has(pathname)) return;
   let key = pathToKey[pathname];
   if (!key && pathname.startsWith("/confirm-bids/")) key = "ConfirmBids";
-  if (!key && pathname.startsWith("/manage-order/edit-self-order/")) key = "EditSelfOrder";
-  if (!key && pathname.startsWith("/loading-entry-sauda/")) key = "LoadingEntrySauda";
+  if (!key && pathname.startsWith("/manage-order/edit-self-order/"))
+    key = "EditSelfOrder";
+  if (!key && pathname.startsWith("/loading-entry-sauda/"))
+    key = "LoadingEntrySauda";
   if (key && loaders[key]) {
     prefetched.add(pathname);
     loaders[key]();
@@ -174,7 +204,7 @@ const LazyPages = {
   BrokerCommissionPolicy: lazy(loaders.BrokerCommissionPolicy),
   Teams: lazy(loaders.Teams),
   BuyerMarketAnalytics: lazy(loaders.BuyerMarketAnalytics),
-  BuyerBidHistory: lazy(loaders.BuyerBidHistory)
+  BuyerBidHistory: lazy(loaders.BuyerBidHistory),
 };
 
 export default LazyPages;

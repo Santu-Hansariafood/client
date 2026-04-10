@@ -100,7 +100,8 @@ const SelfOrder = () => {
         const sellersData = sellersRes.data || [];
         const companiesData = companiesRes.data || [];
         const buyersData = buyersRes.data || [];
-        const sellerCompaniesData = sellerCompaniesRes.data?.data || sellerCompaniesRes.data || [];
+        const sellerCompaniesData =
+          sellerCompaniesRes.data?.data || sellerCompaniesRes.data || [];
 
         setSellerOptions(
           sellersData
@@ -254,8 +255,11 @@ const SelfOrder = () => {
 
     try {
       const quantity = Number(formData.quantity) || 0;
-      const pendingQuantity = formData.pendingQuantity !== "" ? Number(formData.pendingQuantity) : quantity;
-      
+      const pendingQuantity =
+        formData.pendingQuantity !== ""
+          ? Number(formData.pendingQuantity)
+          : quantity;
+
       const payload = {
         ...formData,
         quantity: quantity,

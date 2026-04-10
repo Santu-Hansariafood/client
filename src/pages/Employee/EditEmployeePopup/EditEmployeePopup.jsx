@@ -74,9 +74,14 @@ const EditEmployeePopup = ({ employee, isOpen, onClose, onUpdate }) => {
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         <div className="p-6 border-b border-slate-100 flex items-center justify-between sticky top-0 bg-white z-10">
           <h2 className="text-xl font-bold text-slate-800">Edit Employee</h2>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 transition-colors text-2xl">×</button>
+          <button
+            onClick={onClose}
+            className="text-slate-400 hover:text-slate-600 transition-colors text-2xl"
+          >
+            ×
+          </button>
         </div>
-        
+
         {loading || !formData ? (
           <div className="p-12 text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#8CC63F] mx-auto mb-4"></div>
@@ -85,17 +90,70 @@ const EditEmployeePopup = ({ employee, isOpen, onClose, onUpdate }) => {
         ) : (
           <form onSubmit={handleSubmit} className="p-6 space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <DataInput label="Full Name" name="name" value={formData.name} onChange={handleChange} required />
-              <DataInput label="Email Address" name="email" type="email" value={formData.email} onChange={handleChange} required />
-              <DataInput label="Mobile Number" name="mobile" value={formData.mobile} onChange={handleChange} required />
-              <DataDropdown label="Sex" name="sex" options={sexOptions} selectedOptions={sexOptions.find(o => o.value === formData.sex)} onChange={handleDropdownChange} required />
-              <DataInput label="Login Password" name="password" type="password" value={formData.password} onChange={handleChange} required />
-              <DataDropdown label="Status" name="status" options={statusOptions} selectedOptions={statusOptions.find(o => o.value === formData.status)} onChange={handleDropdownChange} required />
+              <DataInput
+                label="Full Name"
+                name="name"
+                value={formData.name}
+                onChange={handleChange}
+                required
+              />
+              <DataInput
+                label="Email Address"
+                name="email"
+                type="email"
+                value={formData.email}
+                onChange={handleChange}
+                required
+              />
+              <DataInput
+                label="Mobile Number"
+                name="mobile"
+                value={formData.mobile}
+                onChange={handleChange}
+                required
+              />
+              <DataDropdown
+                label="Sex"
+                name="sex"
+                options={sexOptions}
+                selectedOptions={sexOptions.find(
+                  (o) => o.value === formData.sex,
+                )}
+                onChange={handleDropdownChange}
+                required
+              />
+              <DataInput
+                label="Login Password"
+                name="password"
+                type="password"
+                value={formData.password}
+                onChange={handleChange}
+                required
+              />
+              <DataDropdown
+                label="Status"
+                name="status"
+                options={statusOptions}
+                selectedOptions={statusOptions.find(
+                  (o) => o.value === formData.status,
+                )}
+                onChange={handleDropdownChange}
+                required
+              />
             </div>
-            
+
             <div className="flex justify-end gap-3 pt-4 border-t border-slate-50">
-              <Buttons type="button" label="Cancel" onClick={onClose} variant="secondary" />
-              <Buttons type="submit" label="Update Employee" variant="primary" />
+              <Buttons
+                type="button"
+                label="Cancel"
+                onClick={onClose}
+                variant="secondary"
+              />
+              <Buttons
+                type="submit"
+                label="Update Employee"
+                variant="primary"
+              />
             </div>
           </form>
         )}

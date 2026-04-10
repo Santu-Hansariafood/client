@@ -37,7 +37,7 @@ const SearchBox = ({
             return String(item ?? "");
           })
         : [],
-    [items]
+    [items],
   );
 
   useEffect(() => {
@@ -52,7 +52,7 @@ const SearchBox = ({
       return;
     }
     const filtered = normalizedItems.filter((item) =>
-      item.toLowerCase().includes(lowered)
+      item.toLowerCase().includes(lowered),
     );
     onSearch(filtered);
   }, [debouncedTerm, normalizedItems, onSearch, returnQuery]);

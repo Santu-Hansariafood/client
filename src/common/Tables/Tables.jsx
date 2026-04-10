@@ -3,7 +3,6 @@ import PropTypes from "prop-types";
 const Tables = ({ headers, rows }) => {
   return (
     <div className="w-full">
-      {/* Mobile view */}
       <div className="md:hidden space-y-2.5">
         {rows.length > 0 ? (
           rows.map((row, rowIndex) => (
@@ -30,12 +29,13 @@ const Tables = ({ headers, rows }) => {
           ))
         ) : (
           <div className="rounded-xl border border-dashed border-[#8CC63F]/30 bg-[#8CC63F]/5 p-6 text-center">
-            <p className="text-slate-600 text-sm font-medium">No data available</p>
+            <p className="text-slate-600 text-sm font-medium">
+              No data available
+            </p>
           </div>
         )}
       </div>
 
-      {/* Desktop view */}
       <div className="hidden md:block w-full overflow-x-auto rounded-2xl border border-[#8CC63F]/20 bg-white shadow-lg shadow-slate-900/5">
         <table className="w-full min-w-[600px] border-collapse">
           <thead>

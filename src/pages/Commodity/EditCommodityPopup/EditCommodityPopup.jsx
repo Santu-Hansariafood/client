@@ -18,7 +18,9 @@ const EditCommodityPopup = ({ isOpen, onClose, commodityId, onUpdate }) => {
         const response = await axios.get(`/commodities/${commodityId}`);
         setCommodity(response.data);
       } catch (error) {
-        toast.error(error?.response?.data?.message || "Error fetching commodity");
+        toast.error(
+          error?.response?.data?.message || "Error fetching commodity",
+        );
       } finally {
         setIsLoading(false);
       }
@@ -31,7 +33,7 @@ const EditCommodityPopup = ({ isOpen, onClose, commodityId, onUpdate }) => {
         setQualityOptions(items);
       } catch (error) {
         toast.error(
-          error?.response?.data?.message || "Error fetching quality parameters"
+          error?.response?.data?.message || "Error fetching quality parameters",
         );
       }
     };
@@ -54,12 +56,16 @@ const EditCommodityPopup = ({ isOpen, onClose, commodityId, onUpdate }) => {
     }
 
     const selectedQuality = qualityOptions.find(
-      (option) => option._id === newQuality
+      (option) => option._id === newQuality,
     );
 
     const updatedParameters = [
       ...(commodity.parameters || []),
-      { parameter: selectedQuality.name, parameterId: newQuality, _id: newQuality },
+      {
+        parameter: selectedQuality.name,
+        parameterId: newQuality,
+        _id: newQuality,
+      },
     ];
 
     setCommodity((prev) => ({ ...prev, parameters: updatedParameters }));
@@ -71,7 +77,7 @@ const EditCommodityPopup = ({ isOpen, onClose, commodityId, onUpdate }) => {
       window.confirm("Are you sure you want to remove this quality parameter?")
     ) {
       const updatedParameters = commodity.parameters.filter(
-        (_, i) => i !== index
+        (_, i) => i !== index,
       );
       setCommodity((prev) => ({ ...prev, parameters: updatedParameters }));
     }
@@ -92,7 +98,10 @@ const EditCommodityPopup = ({ isOpen, onClose, commodityId, onUpdate }) => {
       toast.success("Commodity updated successfully!");
       onClose();
     } catch (error) {
-      toast.error(error?.response?.data?.message || "Failed to update commodity. Please try again.");
+      toast.error(
+        error?.response?.data?.message ||
+          "Failed to update commodity. Please try again.",
+      );
     } finally {
       setIsLoading(false);
     }
@@ -103,8 +112,8 @@ const EditCommodityPopup = ({ isOpen, onClose, commodityId, onUpdate }) => {
   const availableOptions = qualityOptions.filter(
     (option) =>
       !commodity?.parameters?.some(
-        (param) => (param.parameterId || param._id) === option._id
-      )
+        (param) => (param.parameterId || param._id) === option._id,
+      ),
   );
 
   return (

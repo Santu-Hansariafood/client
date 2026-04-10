@@ -13,12 +13,10 @@ const ListTransporter = () => {
   const [filteredTransporters, setFilteredTransporters] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
   const itemsPerPage = 10;
 
-  // Edit State
   const [isEditPopupOpen, setIsEditPopupOpen] = useState(false);
   const [selectedTransporter, setSelectedTransporter] = useState(null);
 
@@ -28,7 +26,9 @@ const ListTransporter = () => {
 
   const fetchTransporters = async () => {
     try {
-      const response = await api.get(`/transporters?page=${currentPage}&limit=${itemsPerPage}`);
+      const response = await api.get(
+        `/transporters?page=${currentPage}&limit=${itemsPerPage}`,
+      );
       const { data, total } = response.data;
       setTransporters(data);
       setFilteredTransporters(data);
@@ -58,8 +58,16 @@ const ListTransporter = () => {
   };
 
   const handleUpdate = (updatedTransporter) => {
-    setTransporters(prev => prev.map(t => t._id === updatedTransporter._id ? updatedTransporter : t));
-    setFilteredTransporters(prev => prev.map(t => t._id === updatedTransporter._id ? updatedTransporter : t));
+    setTransporters((prev) =>
+      prev.map((t) =>
+        t._id === updatedTransporter._id ? updatedTransporter : t,
+      ),
+    );
+    setFilteredTransporters((prev) =>
+      prev.map((t) =>
+        t._id === updatedTransporter._id ? updatedTransporter : t,
+      ),
+    );
   };
 
   const handleSearch = (filteredNames) => {
@@ -67,13 +75,22 @@ const ListTransporter = () => {
       setFilteredTransporters(transporters);
     } else {
       const results = transporters.filter((t) =>
-        filteredNames.includes(t.name)
+        filteredNames.includes(t.name),
       );
       setFilteredTransporters(results);
     }
   };
 
-  const headers = ["Sl No", "Name", "Mobile", "Vehicle No", "Driver", "License", "Status", "Actions"];
+  const headers = [
+    "Sl No",
+    "Name",
+    "Mobile",
+    "Vehicle No",
+    "Driver",
+    "License",
+    "Status",
+    "Actions",
+  ];
   const rows = filteredTransporters.map((t, index) => [
     (currentPage - 1) * itemsPerPage + index + 1,
     t.name,
@@ -81,17 +98,26 @@ const ListTransporter = () => {
     t.vehicleDetails?.number || "N/A",
     t.driverDetails?.name || "N/A",
     t.driverDetails?.licenseNumber || "N/A",
-    <span key={t._id} className={`px-2 py-1 rounded-full text-xs font-medium ${t.status === "Active" ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"}`}>
+    <span
+      key={t._id}
+      className={`px-2 py-1 rounded-full text-xs font-medium ${t.status === "Active" ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"}`}
+    >
       {t.status}
     </span>,
     <div key={`actions-${t._id}`} className="flex gap-2">
-      <button onClick={() => handleEdit(t)} className="p-2 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors">
+      <button
+        onClick={() => handleEdit(t)}
+        className="p-2 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
+      >
         <FaEdit />
       </button>
-      <button onClick={() => handleDelete(t._id)} className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors">
+      <button
+        onClick={() => handleDelete(t._id)}
+        className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+      >
         <FaTrash />
       </button>
-    </div>
+    </div>,
   ]);
 
   return (
@@ -105,7 +131,7 @@ const ListTransporter = () => {
           />
         </div>
         <Tables headers={headers} rows={rows} />
-        
+
         <div className="mt-6">
           <Pagination
             currentPage={currentPage}

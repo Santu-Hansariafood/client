@@ -4,8 +4,8 @@ import axios from "axios";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 const DataInput = lazy(() => import("../../../common/DataInput/DataInput"));
-const DateSelector = lazy(() =>
-  import("../../../common/DateSelector/DateSelector")
+const DateSelector = lazy(
+  () => import("../../../common/DateSelector/DateSelector"),
 );
 const FileUpload = lazy(() => import("../../../common/FileUpload/FileUpload"));
 const SearchBox = lazy(() => import("../../../common/SearchBox/SearchBox"));
@@ -13,7 +13,7 @@ import "tailwindcss/tailwind.css";
 import Loading from "../../../common/Loading/Loading";
 
 const LoadingEntry = () => {
-    const location = useLocation();
+  const location = useLocation();
   const orderData = location.state?.order || {};
 
   const [formData, setFormData] = useState({
@@ -37,8 +37,11 @@ const LoadingEntry = () => {
   });
 
   useEffect(() => {
-    const calculatedTotalFreight = (parseFloat(formData.loadingWeight) || 0) * (parseFloat(formData.freightRate) || 0);
-    const calculatedBalance = calculatedTotalFreight - (parseFloat(formData.advance) || 0);
+    const calculatedTotalFreight =
+      (parseFloat(formData.loadingWeight) || 0) *
+      (parseFloat(formData.freightRate) || 0);
+    const calculatedBalance =
+      calculatedTotalFreight - (parseFloat(formData.advance) || 0);
     setFormData((prevData) => ({
       ...prevData,
       totalFreight: calculatedTotalFreight.toFixed(2),
@@ -82,20 +85,25 @@ const LoadingEntry = () => {
         <h1 className="text-2xl font-bold text-center text-blue-700 mb-4">
           Loading Entry
         </h1>
-        <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <form
+          onSubmit={handleSubmit}
+          className="grid grid-cols-1 md:grid-cols-3 gap-6"
+        >
           <div>
             <label>Loading Date</label>
             <DateSelector
               name="loadingDate"
               value={formData.loadingDate}
-              onChange={(date) => handleChange({ target: { name: "loadingDate", value: date } })}
+              onChange={(date) =>
+                handleChange({ target: { name: "loadingDate", value: date } })
+              }
             />
           </div>
           <div>
             <label>Loading Weight in Tons</label>
             <DataInput
-  inputType="number"
-  name="loadingWeight"
+              inputType="number"
+              name="loadingWeight"
               value={formData.loadingWeight}
               placeholder="Enter weight in Tons"
               onChange={handleChange}
@@ -201,7 +209,9 @@ const LoadingEntry = () => {
             <DateSelector
               name="dateOfIssue"
               value={formData.dateOfIssue}
-              onChange={(date) => handleChange({ target: { name: "dateOfIssue", value: date } })}
+              onChange={(date) =>
+                handleChange({ target: { name: "dateOfIssue", value: date } })
+              }
             />
           </div>
           <div className="md:col-span-3">
@@ -209,11 +219,18 @@ const LoadingEntry = () => {
             <FileUpload
               label="Upload File"
               accept=".jpg,.png,.pdf"
-              onFileChange={(file) => handleChange({ target: { name: "documentUrl", value: file.name } })}
+              onFileChange={(file) =>
+                handleChange({
+                  target: { name: "documentUrl", value: file.name },
+                })
+              }
             />
           </div>
           <div className="md:col-span-3 flex justify-center">
-            <button type="submit" className="px-6 py-2 bg-blue-600 text-white font-bold rounded hover:bg-blue-700">
+            <button
+              type="submit"
+              className="px-6 py-2 bg-blue-600 text-white font-bold rounded hover:bg-blue-700"
+            >
               Submit
             </button>
           </div>

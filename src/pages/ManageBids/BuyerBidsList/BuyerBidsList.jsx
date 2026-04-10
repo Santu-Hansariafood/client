@@ -36,22 +36,28 @@ const BuyerBidsList = () => {
   useEffect(() => {
     const fetchInitialData = async () => {
       try {
-        const [bidsRes, commoditiesRes, originsRes, buyersRes] = await Promise.all([
-          axios.get("/bids"),
-          axios.get("/commodities"),
-          axios.get("/bid-locations"),
-          axios.get(`/buyers?mobile=${user.mobile}`),
-        ]);
+        const [bidsRes, commoditiesRes, originsRes, buyersRes] =
+          await Promise.all([
+            axios.get("/bids"),
+            axios.get("/commodities"),
+            axios.get("/bid-locations"),
+            axios.get(`/buyers?mobile=${user.mobile}`),
+          ]);
 
         const items = bidsRes.data?.data || bidsRes.data || [];
-        const commodities = commoditiesRes.data?.data || commoditiesRes.data || [];
+        const commodities =
+          commoditiesRes.data?.data || commoditiesRes.data || [];
         const origins = originsRes.data?.data || originsRes.data || [];
         const buyer = buyersRes.data?.data?.[0] || buyersRes.data?.[0];
 
         if (buyer) {
-          const buyerCommodities = buyer.commodities.map(c => c.name);
-          const relevantBids = items.filter(bid => buyerCommodities.includes(bid.commodity));
-          const sorted = relevantBids.sort((a, b) => new Date(b.bidDate) - new Date(a.bidDate));
+          const buyerCommodities = buyer.commodities.map((c) => c.name);
+          const relevantBids = items.filter((bid) =>
+            buyerCommodities.includes(bid.commodity),
+          );
+          const sorted = relevantBids.sort(
+            (a, b) => new Date(b.bidDate) - new Date(a.bidDate),
+          );
           setBids(sorted);
           setFilteredData(sorted);
         } else {
@@ -59,11 +65,16 @@ const BuyerBidsList = () => {
           setFilteredData([]);
         }
 
-        setCommodities(commodities.sort((a, b) => (a.name || "").localeCompare(b.name || "")));
-        setOrigins(origins.sort((a, b) => (a.name || "").localeCompare(b.name || "")));
-
+        setCommodities(
+          commodities.sort((a, b) =>
+            (a.name || "").localeCompare(b.name || ""),
+          ),
+        );
+        setOrigins(
+          origins.sort((a, b) => (a.name || "").localeCompare(b.name || "")),
+        );
       } catch (err) {
-        toast.error("Error fetching initial data");
+        toast.error("Error fetching initial data", err);
       }
     };
 

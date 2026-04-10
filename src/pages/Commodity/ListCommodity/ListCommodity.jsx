@@ -9,11 +9,11 @@ const Tables = lazy(() => import("../../../common/Tables/Tables"));
 const Actions = lazy(() => import("../../../common/Actions/Actions"));
 const SearchBox = lazy(() => import("../../../common/SearchBox/SearchBox"));
 const PopupBox = lazy(() => import("../../../common/PopupBox/PopupBox"));
-const Pagination = lazy(() =>
-  import("../../../common/Paginations/Paginations")
+const Pagination = lazy(
+  () => import("../../../common/Paginations/Paginations"),
 );
-const EditCommodityPopup = lazy(() =>
-  import("../EditCommodityPopup/EditCommodityPopup")
+const EditCommodityPopup = lazy(
+  () => import("../EditCommodityPopup/EditCommodityPopup"),
 );
 
 const ListCommodity = () => {
@@ -40,14 +40,14 @@ const ListCommodity = () => {
       });
       const items = response.data?.data || response.data || [];
       const sortedCommodities = items.sort((a, b) =>
-        a.name.localeCompare(b.name)
+        a.name.localeCompare(b.name),
       );
       setCommodities(sortedCommodities);
       setFilteredCommodities(sortedCommodities);
       setTotal(response.data?.total || sortedCommodities.length);
     } catch (error) {
       toast.error(
-        error?.response?.data?.message || "Error fetching commodities"
+        error?.response?.data?.message || "Error fetching commodities",
       );
     } finally {
       setIsLoading(false);
@@ -81,14 +81,14 @@ const ListCommodity = () => {
   const handleDelete = async (id) => {
     try {
       const confirmDelete = window.confirm(
-        "Are you sure you want to delete this commodity?"
+        "Are you sure you want to delete this commodity?",
       );
       if (!confirmDelete) return;
 
       await axios.delete(`/commodities/${id}`);
 
       const updatedCommodities = commodities.filter(
-        (commodity) => commodity._id !== id
+        (commodity) => commodity._id !== id,
       );
       setCommodities(updatedCommodities);
       setFilteredCommodities(updatedCommodities);
@@ -103,17 +103,17 @@ const ListCommodity = () => {
     () =>
       filteredCommodities.map((commodity, index) => [
         (currentPage - 1) * itemsPerPage + index + 1,
-    commodity.name || "N/A",
-    commodity.hsnCode || "N/A",
-    Array.isArray(commodity.parameters)
-      ? commodity.parameters.map((param) => param.parameter).join(", ")
-      : "N/A",
-    <Actions
-      key={commodity._id}
-      onView={() => handleView(commodity._id)}
-      onEdit={() => handleEdit(commodity._id)}
-      onDelete={() => handleDelete(commodity._id)}
-    />,
+        commodity.name || "N/A",
+        commodity.hsnCode || "N/A",
+        Array.isArray(commodity.parameters)
+          ? commodity.parameters.map((param) => param.parameter).join(", ")
+          : "N/A",
+        <Actions
+          key={commodity._id}
+          onView={() => handleView(commodity._id)}
+          onEdit={() => handleEdit(commodity._id)}
+          onDelete={() => handleDelete(commodity._id)}
+        />,
       ]),
     [filteredCommodities, currentPage, itemsPerPage],
   );
@@ -136,66 +136,66 @@ const ListCommodity = () => {
       >
         <div className="max-w-6xl mx-auto">
           <div className="bg-white border border-amber-200/80 rounded-2xl shadow-lg p-4 sm:p-6">
-              <div className="mb-6 flex justify-between items-center">
-                <SearchBox
-                  placeholder="Search Commodities"
-                  items={commodities.map((commodity) => commodity.name || "")}
-                  onSearch={handleSearch}
-                  returnQuery
-                />
-              </div>
-              {filteredCommodities.length > 0 ? (
-                <>
-                  <div className="overflow-x-auto rounded-xl border border-gray-100">
-                    <Tables headers={tableHeaders} rows={tableRows} />
-                  </div>
-                  <div className="mt-4">
-                    <Pagination
-                      currentPage={currentPage}
-                      totalItems={total}
-                      itemsPerPage={itemsPerPage}
-                      onPageChange={setCurrentPage}
-                    />
-                  </div>
-                </>
-              ) : (
-                <p>No commodities found.</p>
-              )}
-              <PopupBox
-                isOpen={isPopupOpen}
-                onClose={() => setIsPopupOpen(false)}
-                title="Commodity Details"
-              >
-            {selectedCommodity && (
-              <div>
-                <p>
-                  <strong>Name:</strong> {selectedCommodity.name || "N/A"}
-                </p>
-                <p>
-                  <strong>HSN Code:</strong>{" "}
-                  {selectedCommodity.hsnCode || "N/A"}
-                </p>
-                <p>
-                  <strong>Parameters:</strong>{" "}
-                  {selectedCommodity.parameters
-                    ? selectedCommodity.parameters
-                        .map((param) => param.parameter)
-                        .join(", ")
-                    : "N/A"}
-                </p>
-              </div>
-            )}
-              </PopupBox>
-              {isEditPopupOpen && (
-                <EditCommodityPopup
-                  isOpen={isEditPopupOpen}
-                  onClose={() => setIsEditPopupOpen(false)}
-                  commodityId={selectedCommodity ? selectedCommodity._id : null}
-                  onUpdate={fetchCommodities}
-                />
-              )}
+            <div className="mb-6 flex justify-between items-center">
+              <SearchBox
+                placeholder="Search Commodities"
+                items={commodities.map((commodity) => commodity.name || "")}
+                onSearch={handleSearch}
+                returnQuery
+              />
             </div>
+            {filteredCommodities.length > 0 ? (
+              <>
+                <div className="overflow-x-auto rounded-xl border border-gray-100">
+                  <Tables headers={tableHeaders} rows={tableRows} />
+                </div>
+                <div className="mt-4">
+                  <Pagination
+                    currentPage={currentPage}
+                    totalItems={total}
+                    itemsPerPage={itemsPerPage}
+                    onPageChange={setCurrentPage}
+                  />
+                </div>
+              </>
+            ) : (
+              <p>No commodities found.</p>
+            )}
+            <PopupBox
+              isOpen={isPopupOpen}
+              onClose={() => setIsPopupOpen(false)}
+              title="Commodity Details"
+            >
+              {selectedCommodity && (
+                <div>
+                  <p>
+                    <strong>Name:</strong> {selectedCommodity.name || "N/A"}
+                  </p>
+                  <p>
+                    <strong>HSN Code:</strong>{" "}
+                    {selectedCommodity.hsnCode || "N/A"}
+                  </p>
+                  <p>
+                    <strong>Parameters:</strong>{" "}
+                    {selectedCommodity.parameters
+                      ? selectedCommodity.parameters
+                          .map((param) => param.parameter)
+                          .join(", ")
+                      : "N/A"}
+                  </p>
+                </div>
+              )}
+            </PopupBox>
+            {isEditPopupOpen && (
+              <EditCommodityPopup
+                isOpen={isEditPopupOpen}
+                onClose={() => setIsEditPopupOpen(false)}
+                commodityId={selectedCommodity ? selectedCommodity._id : null}
+                onUpdate={fetchCommodities}
+              />
+            )}
           </div>
+        </div>
       </AdminPageShell>
     </Suspense>
   );

@@ -8,7 +8,6 @@ const TransporterDashboard = () => {
 
   return (
     <div className="p-6 space-y-8">
-      {/* Welcome Header */}
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-slate-800">Welcome back, {user?.name}!</h1>
@@ -20,7 +19,6 @@ const TransporterDashboard = () => {
         </div>
       </header>
 
-      {/* Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard 
           icon={<FaTruck className="text-blue-600" />} 

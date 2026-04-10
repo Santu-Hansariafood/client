@@ -178,7 +178,6 @@ const AddLoadingEntry = () => {
           );
 
           if (matchedOrder) {
-            // If seller, ensure they can only access their own orders
             if (userRole === "Seller") {
               const isMyOrder = suppliers.some(
                 (s) =>
@@ -220,7 +219,6 @@ const AddLoadingEntry = () => {
             }
 
             const quantity = matchedOrder.quantity || 0;
-            // Fix: Treat missing or 0 pendingQuantity as full quantity if status is active
             let pendingQuantity = matchedOrder.pendingQuantity;
             if ((pendingQuantity === undefined || pendingQuantity === null || (pendingQuantity === 0 && matchedOrder.status === "active")) && matchedOrder.status !== "closed") {
               pendingQuantity = quantity;
@@ -282,7 +280,6 @@ const AddLoadingEntry = () => {
 
         orderData = orderData.map((order) => {
           const quantity = order.quantity || 0;
-          // Fix: Treat missing or 0 pendingQuantity as full quantity if status is active
           let pendingQuantity = order.pendingQuantity;
           if ((pendingQuantity === undefined || pendingQuantity === null || (pendingQuantity === 0 && order.status === "active")) && order.status !== "closed") {
             pendingQuantity = quantity;

@@ -1,9 +1,13 @@
 import { useEffect } from "react";
-import { FaShieldAlt, FaDatabase, FaUserLock, FaArrowLeft } from "react-icons/fa";
+import {
+  FaShieldAlt,
+  FaDatabase,
+  FaUserLock,
+  FaArrowLeft,
+} from "react-icons/fa";
 import { Link } from "react-router-dom";
 
 const PrivacyPolicy = () => {
-
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
@@ -16,28 +20,39 @@ const PrivacyPolicy = () => {
             Privacy Policy
           </h1>
           <p className="text-gray-600 mt-4 max-w-2xl mx-auto">
-            <strong>Hansaria Food Private Limited</strong> is committed to protecting
-            your personal and business data. This policy explains how we collect,
-            use, and safeguard your information.
+            <strong>Hansaria Food Private Limited</strong> is committed to
+            protecting your personal and business data. This policy explains how
+            we collect, use, and safeguard your information.
           </p>
         </div>
         <div className="bg-white rounded-3xl shadow-xl p-10 md:p-14">
-
           <Section icon={<FaShieldAlt />} title="1. Introduction">
-            Hansaria Food Private Limited (&quot;Company&quot;, &quot;Hansaria&quot;, &quot;we&quot;, &quot;us&quot;, &quot;our&quot;)
-            operates a commodity trading and brokerage platform dealing in
-            agricultural products such as maize, soya, DDGS, oil cakes, and grains.
-            <br /><br />
+            Hansaria Food Private Limited (&quot;Company&quot;,
+            &quot;Hansaria&quot;, &quot;we&quot;, &quot;us&quot;,
+            &quot;our&quot;) operates a commodity trading and brokerage platform
+            dealing in agricultural products such as maize, soya, DDGS, oil
+            cakes, and grains.
+            <br />
+            <br />
             This policy explains how personal and business data is collected,
             processed, stored, and protected globally.
           </Section>
 
           <Section icon={<FaDatabase />} title="2. Information We Collect">
             <ul className="list-disc ml-6 space-y-2">
-              <li><b>Identity & Contact:</b> Name, email, phone, address.</li>
-              <li><b>Business Data:</b> Company name, GST, registration details.</li>
-              <li><b>Transaction Data:</b> Orders, invoices, communications.</li>
-              <li><b>Technical Data:</b> IP address, browser type, device information.</li>
+              <li>
+                <b>Identity & Contact:</b> Name, email, phone, address.
+              </li>
+              <li>
+                <b>Business Data:</b> Company name, GST, registration details.
+              </li>
+              <li>
+                <b>Transaction Data:</b> Orders, invoices, communications.
+              </li>
+              <li>
+                <b>Technical Data:</b> IP address, browser type, device
+                information.
+              </li>
             </ul>
 
             <p className="mt-3 text-gray-600">
@@ -85,15 +100,15 @@ const PrivacyPolicy = () => {
           </Section>
 
           <Section title="7. Data Retention">
-            We retain information only for the duration necessary for operational,
-            legal, or regulatory purposes. After that, data is securely deleted,
-            anonymised, or archived.
+            We retain information only for the duration necessary for
+            operational, legal, or regulatory purposes. After that, data is
+            securely deleted, anonymised, or archived.
           </Section>
 
           <Section title="8. Security Measures">
-            We use modern administrative, technical, and organisational safeguards
-            including encryption, controlled access, and monitoring systems to
-            protect personal data.
+            We use modern administrative, technical, and organisational
+            safeguards including encryption, controlled access, and monitoring
+            systems to protect personal data.
           </Section>
 
           <Section title="9. User Rights">
@@ -144,7 +159,6 @@ const PrivacyPolicy = () => {
               </a>
             </p>
           </Section>
-
         </div>
 
         <div className="text-center mt-10">
@@ -156,7 +170,6 @@ const PrivacyPolicy = () => {
             Back to Home
           </Link>
         </div>
-
       </div>
     </div>
   );
@@ -165,7 +178,6 @@ const PrivacyPolicy = () => {
 const Section = ({ title, children, icon }) => {
   return (
     <div className="mb-10 group">
-
       <div className="flex items-center gap-3 mb-3">
         {icon && (
           <span className="text-green-600 text-xl group-hover:scale-110 transition">
@@ -177,12 +189,9 @@ const Section = ({ title, children, icon }) => {
         </h2>
       </div>
 
-      <div className="text-gray-700 leading-relaxed ml-1">
-        {children}
-      </div>
+      <div className="text-gray-700 leading-relaxed ml-1">{children}</div>
 
       <div className="h-[1px] bg-gray-200 mt-6"></div>
-
     </div>
   );
 };
