@@ -6,7 +6,7 @@ import {
   useMemo,
   useCallback,
 } from "react";
-import axios from "axios";
+import api from "../../../utils/apiClient/apiClient";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { FaDownload, FaWhatsapp } from "react-icons/fa";
@@ -67,7 +67,7 @@ const SelfOrderList = () => {
           sellerProfiles,
           companies,
         ] = await Promise.all([
-          axios.get(
+          api.get(
             `${API_URL}?page=${page}&limit=${itemsPerPage}&search=${search}`,
           ),
           fetchAllPages("/consignees", { limit: 200 }).catch(() => []),
@@ -342,7 +342,7 @@ const SelfOrderList = () => {
           const formData = new FormData();
           formData.append("file", blob, fileName);
 
-          const uploadRes = await axios.post("/upload-pdf", formData, {
+          const uploadRes = await api.post("/upload-pdf", formData, {
             headers: { "Content-Type": "multipart/form-data" },
           });
 
@@ -362,7 +362,7 @@ const SelfOrderList = () => {
         toast.success("Opening WhatsApp...");
 
         try {
-          await axios.patch(`/self-order/${item._id}/whatsapp-sent`);
+          await api.patch(`/self-order/${item._id}/whatsapp-sent`);
 
           setData((prev) =>
             prev.map((o) =>
@@ -489,7 +489,7 @@ const SelfOrderList = () => {
     if (!confirmDelete) return;
 
     try {
-      await axios.delete(`${API_URL}/${item._id}`);
+      await api.delete(`${API_URL}/${item._id}`);
       toast.success("Order deleted successfully");
       setReloadFlag((prev) => prev + 1);
     } catch (error) {
@@ -666,7 +666,7 @@ const SelfOrderList = () => {
   const handleDownloadExcel = useCallback(async () => {
     try {
       const toastId = toast.loading("Preparing Excel...");
-      const res = await axios.get(API_URL, {
+      const res = await api.get(API_URL, {
         params: {
           export: true,
           startDate: startDate || undefined,

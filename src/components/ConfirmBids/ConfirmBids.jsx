@@ -1,6 +1,6 @@
 import { useEffect, useState, lazy, Suspense } from "react";
 import { useParams } from "react-router-dom";
-import axios from "axios";
+import api from "../../utils/apiClient/apiClient";
 import { toast } from "react-toastify";
 import Loading from "../../common/Loading/Loading";
 import { useAuth } from "../../context/AuthContext/AuthContext";
@@ -22,10 +22,10 @@ const ConfirmBids = () => {
     try {
       const [participateRes, sellersRes, bidsRes, confirmRes] =
         await Promise.all([
-          axios.get("/participatebids"),
-          axios.get("/sellers"),
-          axios.get("/bids"),
-          axios.get("/confirm-bid"),
+          api.get("/participatebids"),
+          api.get("/sellers"),
+          api.get("/bids"),
+          api.get("/confirm-bid"),
         ]);
 
       const bids = bidsRes.data?.data || bidsRes.data || [];
@@ -126,7 +126,7 @@ const ConfirmBids = () => {
       const acceptanceQtyNumber =
         approvalQuantity === "" ? null : Number(approvalQuantity);
 
-      await axios.post("/confirm-bid", {
+      await api.post("/confirm-bid", {
         bidId,
         phone: selectedBid.phone,
         status,

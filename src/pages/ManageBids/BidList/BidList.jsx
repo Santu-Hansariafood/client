@@ -1,7 +1,7 @@
 import { useState, useEffect, lazy, Suspense, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { AiOutlineEye, AiOutlineEdit } from "react-icons/ai";
-import axios from "axios";
+import api from "../../../utils/apiClient/apiClient";
 import { toast } from "react-toastify";
 import Loading from "../../../common/Loading/Loading";
 import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
@@ -32,12 +32,12 @@ const BidList = () => {
     const fetchData = async () => {
       try {
         const [bidsRes, buyersRes, companiesRes] = await Promise.all([
-          axios.get("/bids"),
+          api.get("/bids"),
           userRole === "Buyer"
-            ? axios.get("/buyers")
+            ? api.get("/buyers")
             : Promise.resolve({ data: [] }),
           userRole === "Buyer"
-            ? axios.get("/companies")
+            ? api.get("/companies")
             : Promise.resolve({ data: [] }),
         ]);
 
@@ -230,7 +230,7 @@ const BidList = () => {
     if (!editableRateQuantity) return;
     try {
       const { id, rate, quantity } = editableRateQuantity;
-      await axios.put(`/bids/${id}`, { rate, quantity });
+      await api.put(`/bids/${id}`, { rate, quantity });
       toast.success("Bid updated successfully!");
       setBids((prev) =>
         prev.map((bid) => (bid._id === id ? { ...bid, rate, quantity } : bid)),
@@ -276,7 +276,7 @@ const BidList = () => {
 
   const handleStatusUpdate = async (id, status) => {
     try {
-      await axios.patch(`/bids/${id}/status`, { status });
+      await api.patch(`/bids/${id}/status`, { status });
       toast.success(
         `Bid ${status === "closed" ? "closed" : "activated"} successfully!`,
       );
@@ -378,8 +378,8 @@ const BidList = () => {
 
     try {
       const { _id, endTime, quantity, rate } = reactivateBid;
-      await axios.put(`/bids/${_id}`, { endTime, quantity, rate });
-      await axios.patch(`/bids/${_id}/status`, { status: "active" });
+      await api.put(`/bids/${_id}`, { endTime, quantity, rate });
+      await api.patch(`/bids/${_id}/status`, { status: "active" });
 
       toast.success("Bid reactivated successfully!");
       setBids((prev) =>

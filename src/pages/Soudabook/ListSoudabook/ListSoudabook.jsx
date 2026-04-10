@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, lazy, Suspense } from "react";
-import axios from "axios";
+import api from "../../../utils/apiClient/apiClient";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../../context/AuthContext/AuthContext";
@@ -27,9 +27,9 @@ const ListSoudabook = () => {
       setLoading(true);
       try {
         const [response, sellersRes, buyersRes] = await Promise.all([
-          axios.get("/self-order"),
-          axios.get("/sellers"),
-          axios.get("/buyers"),
+          api.get("/self-order"),
+          api.get("/sellers"),
+          api.get("/buyers"),
         ]);
         let data = response.data?.data || response.data || [];
         const allBuyers = buyersRes.data?.data || buyersRes.data || [];

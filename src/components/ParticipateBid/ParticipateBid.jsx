@@ -1,6 +1,6 @@
 import { lazy, Suspense, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from "../../utils/apiClient/apiClient";
 import { useAuth } from "../../context/AuthContext/AuthContext";
 import Loading from "../../common/Loading/Loading";
 
@@ -20,9 +20,9 @@ const ParticipateBid = () => {
   const fetchBidsAndParticipations = async () => {
     try {
       const [bidsRes, participateRes, confirmBidsRes] = await Promise.all([
-        axios.get("/bids"),
-        axios.get("/participatebids"),
-        axios.get("/confirm-bid"),
+        api.get("/bids"),
+        api.get("/participatebids"),
+        api.get("/confirm-bid"),
       ]);
 
       setBids(bidsRes.data?.data || bidsRes.data || []);
@@ -161,7 +161,7 @@ const ParticipateBid = () => {
                 No Bids Found
               </h3>
               <p className="text-slate-500 mt-1 max-w-xs mx-auto">
-                You haven't participated in any bids yet. Start bidding to see
+                You haven&apos;t participated in any bids yet. Start bidding to see
                 them here!
               </p>
             </div>

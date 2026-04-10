@@ -39,43 +39,41 @@ const __dirname = path.dirname(__filename);
 dotenv.config({ path: path.resolve(__dirname, "../../.env") });
 
 const app = express();
+app.set("trust proxy", 1);
+
+app.use(compression({ level: 6 }));
+
 const corsOrigin = (process.env.CORS_ORIGIN || "*").trim();
 const corsOrigins =
   corsOrigin && corsOrigin !== "*"
-    ? corsOrigin
-        .split(",")
-        .map((s) => s.trim())
-        .filter(Boolean)
-    : null;
+    ? corsOrigin.split(",").map((s) => s.trim()).filter(Boolean)
+    : "*";
 
-// Improved CORS for Android WebView/TWA
 app.use(
   cors({
-    origin: (origin, callback) => {
-      // Allow requests with no origin (like mobile apps, curl, or WebViews with null origin)
-      if (!origin || origin === "null" || origin.startsWith("file://") || origin.startsWith("android-app://") || origin.startsWith("capacitor://") || origin.startsWith("app://")) {
-        return callback(null, true);
-      }
-      if (!corsOrigins || corsOrigins.includes(origin) || corsOrigins.includes("*")) {
-        return callback(null, true);
-      }
-      callback(new Error("Not allowed by CORS"));
-    },
+    origin: corsOrigins,
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allowedHeaders: ["Content-Type", "Authorization", "x-api-key", "Origin", "Accept", "X-Requested-With"],
+    exposedHeaders: ["X-Cache"],
+    maxAge: 86400,
   })
 );
 
+app.use(express.json({ limit: "5mb" }));
+app.use(express.urlencoded({ extended: true, limit: "5mb" }));
+
+// Performance Monitoring
 app.use((req, res, next) => {
-  if (process.env.NODE_ENV !== "production") {
-    console.log(`${req.method} ${req.url} - Origin: ${req.get("Origin") || "None"}`);
-  }
+  const start = Date.now();
+  res.on("finish", () => {
+    const duration = Date.now() - start;
+    if (duration > 500) {
+      console.warn(`SLOW: ${req.method} ${req.originalUrl} - ${duration}ms`);
+    }
+  });
   next();
 });
-
-app.use(express.json({ limit: "1mb" }));
-app.use(compression());
 
 app.get("/api/keep-alive", (_, res) => {
   res.json({ ok: true });

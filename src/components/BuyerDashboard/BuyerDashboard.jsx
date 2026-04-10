@@ -10,7 +10,7 @@ import {
 import Loading from "../../common/Loading/Loading";
 import { useAuth } from "../../context/AuthContext/AuthContext";
 import UserProfileCard from "../UserProfileCard/UserProfileCard";
-import axios from "axios";
+import api from "../../utils/apiClient/apiClient";
 import { toTitleCase } from "../../utils/textUtils/textUtils";
 
 const Cards = lazy(() => import("../../common/Cards/Cards"));
@@ -25,7 +25,7 @@ const BuyerDashboard = () => {
       try {
         if (!mobile) return;
 
-        const response = await axios.get(`/buyers?mobile=${mobile}`);
+        const response = await api.get(`/buyers?mobile=${mobile}`);
         if (response.data?.length > 0) {
           setBuyerProfile(response.data[0]);
         }

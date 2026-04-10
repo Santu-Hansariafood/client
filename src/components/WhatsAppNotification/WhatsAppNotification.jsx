@@ -1,4 +1,4 @@
-import axios from "axios";
+import api from "../../utils/apiClient/apiClient";
 
 const WhatsAppNotification = async ({ bidData, bidId }) => {
   const notifyRelevantSellers = async () => {
@@ -8,7 +8,7 @@ const WhatsAppNotification = async ({ bidData, bidId }) => {
         return false;
       }
 
-      const apiKey = "cdbcead5dfba4eb7a4b3f16b62dc2bb8";
+      const apiKey = import.meta.env.VITE_API_KEY;
 
       console.log("Sending WhatsApp Notification with data:", {
         bidId,
@@ -16,7 +16,7 @@ const WhatsAppNotification = async ({ bidData, bidId }) => {
         apiKey,
       });
 
-      const response = await axios.post(`/whatsapp/send`, {
+      const response = await api.post(`/whatsapp/send`, {
         bidId,
         bidData,
         apiKey,

@@ -1,5 +1,5 @@
 import { useState, useEffect, lazy, Suspense } from "react";
-import axios from "axios";
+import api from "../../../utils/apiClient/apiClient";
 import { toast } from "react-toastify";
 const DataInput = lazy(() => import("../../../common/DataInput/DataInput"));
 const DataDropdown = lazy(
@@ -91,11 +91,12 @@ const AddConsignee = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (formData.phone && !regexPatterns.mobile.test(formData.phone)) {
+    if (!regexPatterns.phoneNumber.test(formData.phone)) {
       toast.error("Invalid phone number format.");
       return;
     }
-    if (formData.email && !regexPatterns.email.test(formData.email)) {
+
+    if (formData.email && !regexPatterns.emailId.test(formData.email)) {
       toast.error("Invalid email format.");
       return;
     }
@@ -130,7 +131,7 @@ const AddConsignee = () => {
     }
 
     try {
-      const response = await axios.post("/consignees", formData);
+      const response = await api.post("/consignees", formData);
       if (response.status === 201) {
         toast.success("Consignee added successfully!");
         setFormData({

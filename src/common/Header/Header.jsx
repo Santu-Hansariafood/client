@@ -11,7 +11,7 @@ import {
 import { RiLogoutBoxLine } from "react-icons/ri";
 import { HiMenuAlt2 } from "react-icons/hi";
 import { IoClose } from "react-icons/io5";
-import axios from "axios";
+import api from "../../utils/apiClient/apiClient";
 import PWAInstall from "../PWAInstall/PWAInstall";
 import Typewriter from "../Typewriter/Typewriter";
 import { useAuth } from "../../context/AuthContext/AuthContext";
@@ -39,7 +39,7 @@ const Header = ({
       if (!force && now - lastFetched < 60000) return;
 
       try {
-        const response = await axios.get("/notifications", {
+        const response = await api.get("/notifications", {
           params: {
             mobile,
             role: userRole,
@@ -98,7 +98,7 @@ const Header = ({
 
   const toggleReadStatus = async (id) => {
     try {
-      await axios.patch(`/notifications/${id}/toggle-read`);
+      await api.patch(`/notifications/${id}/toggle-read`);
       fetchNotifications(true);
     } catch (error) {
       console.error("Failed to toggle notification status", error);
@@ -120,7 +120,7 @@ const Header = ({
 
   const deleteNotification = async (id) => {
     try {
-      await axios.delete(`/notifications/${id}`);
+      await api.delete(`/notifications/${id}`);
       setNotifications((prev) => prev.filter((n) => n._id !== id));
     } catch (error) {
       console.error("Failed to delete notification", error);
@@ -129,7 +129,7 @@ const Header = ({
 
   const markAllAsRead = async () => {
     try {
-      await axios.patch("/notifications/read-all", { mobile, role: userRole });
+      await api.patch("/notifications/read-all", { mobile, role: userRole });
       fetchNotifications(true);
     } catch (error) {
       console.error("Failed to mark all as read", error);
