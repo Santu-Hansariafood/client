@@ -95,4 +95,13 @@ router.patch("/read-all", async (req, res) => {
   }
 });
 
+router.delete("/admin/clear-all", async (req, res) => {
+  try {
+    const result = await Notification.deleteMany({});
+    res.json({ message: `Cleared ${result.deletedCount} notifications` });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 export default router;

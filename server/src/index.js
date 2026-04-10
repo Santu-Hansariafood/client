@@ -32,6 +32,7 @@ import employeeRoutes from "./routes/employees.js";
 import transporterRoutes from "./routes/transporters.js";
 import notificationRoutes from "./routes/notifications.js";
 import loadingEntryRoutes from "./routes/loadingEntries.js";
+import { startNotificationCleanup } from "./lib/scheduler.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -87,6 +88,7 @@ const PORT = process.env.PORT || 5000;
 
 const start = async () => {
   await connect();
+  startNotificationCleanup(12); // Daily cleanup at 12:00 PM
   app.listen(PORT, () => {
     console.log(`server running on port ${PORT}`);
   });
