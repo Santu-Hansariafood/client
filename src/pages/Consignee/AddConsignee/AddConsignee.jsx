@@ -176,7 +176,7 @@ const AddConsignee = () => {
                   name="name"
                   value={formData.name}
                   onChange={handleInputChange}
-                  required
+                  required={formData.gst === "0"}
                 />
               </div>
               <div>
