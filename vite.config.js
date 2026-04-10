@@ -8,26 +8,72 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: "autoUpdate",
-      includeAssets: ["favicon.ico", "robots.txt", "icons/*.png"],
+      includeAssets: [
+        "icons/favicon.ico",
+        "robots.txt",
+        "icons/*.png",
+        "logo/*.png",
+        "images/*.png",
+      ],
       manifest: {
+        id: "/",
         name: "Hansaria Food Private Limited",
-        short_name: "Hansaria",
-        start_url: "/?source=pwa",
+        short_name: "Hansaria Food",
+        description:
+          "Hansaria Food Private Limited is a trusted poultry and feed meal trading and brokerage company connecting buyers and sellers across India.",
+        start_url: "/",
+        scope: "/",
         display: "standalone",
-        theme_color: "#4CAF50",
+        orientation: "portrait-primary",
+        theme_color: "#064e3b",
         background_color: "#ffffff",
+        lang: "en",
+        dir: "ltr",
+        categories: ["business", "food", "agriculture"],
         icons: [
           {
             src: "/icons/android-chrome-192x192.png",
             sizes: "192x192",
             type: "image/png",
-            purpose: "any maskable",
+            purpose: "any",
+          },
+          {
+            src: "/icons/android-chrome-192x192.png",
+            sizes: "192x192",
+            type: "image/png",
+            purpose: "maskable",
           },
           {
             src: "/icons/android-chrome-512x512.png",
             sizes: "512x512",
             type: "image/png",
-            purpose: "any maskable",
+            purpose: "any",
+          },
+          {
+            src: "/icons/android-chrome-512x512.png",
+            sizes: "512x512",
+            type: "image/png",
+            purpose: "maskable",
+          },
+          {
+            src: "/icons/apple-touch-icon.png",
+            sizes: "180x180",
+            type: "image/png",
+            purpose: "any",
+          },
+        ],
+        shortcuts: [
+          {
+            name: "Commodity List",
+            short_name: "Commodities",
+            url: "/commodity/list",
+            icons: [{ src: "/icons/favicon-32x32.png", sizes: "32x32" }],
+          },
+          {
+            name: "Quality Parameters",
+            short_name: "Parameters",
+            url: "/quality-parameter/list",
+            icons: [{ src: "/icons/favicon-32x32.png", sizes: "32x32" }],
           },
         ],
       },
@@ -54,11 +100,22 @@ export default defineConfig({
             },
           },
           {
-            urlPattern: /\/api\//,
+            urlPattern: ({ url }) =>
+              url.pathname.includes("/api/") ||
+              url.hostname.includes("api.hansariafood.in"),
             handler: "NetworkFirst",
-            options: { cacheName: "api", networkTimeoutSeconds: 10 },
+            options: {
+              cacheName: "api",
+              networkTimeoutSeconds: 10,
+              cacheableResponse: {
+                statuses: [0, 200],
+              },
+            },
           },
         ],
+      },
+      devOptions: {
+        enabled: true,
       },
     }),
   ],
@@ -92,5 +149,12 @@ export default defineConfig({
   preview: {
     host: true, // Allow external access (mobile)
     allowedHosts: true,
+    proxy: {
+      "/api": {
+        target: "http://localhost:5000",
+        changeOrigin: true,
+        secure: false,
+      },
+    },
   },
 });

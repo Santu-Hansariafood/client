@@ -179,7 +179,7 @@ const Header = ({
         </h2>
       </div>
       <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
-        <div className="hidden md:flex items-center">
+        <div className="flex items-center">
           <PWAInstall />
         </div>
 
