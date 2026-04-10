@@ -2,7 +2,8 @@ import { useState, useEffect, lazy, Suspense } from "react";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import "react-toastify/dist/ReactToastify.css";
-import axios from "axios";
+import api from "../../utils/apiClient/apiClient";
+import { fetchAllPages } from "../../utils/apiClient/fetchAllPages";
 import Loading from "../../common/Loading/Loading";
 import AdminPageShell from "../../common/AdminPageShell/AdminPageShell";
 import { FaGavel, FaArrowLeft } from "react-icons/fa";
@@ -46,15 +47,11 @@ const BaseBid = ({ type }) => {
 
   const fetchData = async () => {
     try {
-      const [companiesRes, originsRes, buyersRes] = await Promise.all([
-        axios.get(`${apiBaseUrl}/companies`),
-        axios.get(`${apiBaseUrl}/bid-locations`),
-        userRole === "Buyer" ? axios.get(`${apiBaseUrl}/buyers`) : Promise.resolve({ data: [] }),
+      const [companies, origins, buyers] = await Promise.all([
+        fetchAllPages("/companies"),
+        fetchAllPages("/bid-locations"),
+        userRole === "Buyer" ? fetchAllPages("/buyers") : Promise.resolve([]),
       ]);
-
-      const companies = companiesRes.data?.data || companiesRes.data || [];
-      const origins = originsRes.data?.data || originsRes.data || [];
-      const buyers = buyersRes.data?.data || buyersRes.data || [];
 
       const buyer = userRole === "Buyer" 
         ? buyers.find(b => b.mobile?.some(m => String(m) === String(mobile)))
@@ -232,7 +229,7 @@ const BaseBid = ({ type }) => {
         return acc;
       }, {});
 
-      const response = await axios.post(`${apiBaseUrl}/bids`, {
+      const response = await api.post("/bids", {
         type: type || "buyer",
         group: state.selectedGroup?.value,
         consignee: state.selectedConsignee?.value,

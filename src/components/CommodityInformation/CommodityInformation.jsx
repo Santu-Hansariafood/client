@@ -7,7 +7,8 @@ import {
   useCallback,
 } from "react";
 import PropTypes from "prop-types";
-import axios from "axios";
+import api from "../../utils/apiClient/apiClient";
+import { fetchAllPages } from "../../utils/apiClient/fetchAllPages";
 import Loading from "../../common/Loading/Loading";
 const DataDropdown = lazy(
   () => import("../../common/DataDropdown/DataDropdown"),
@@ -28,8 +29,7 @@ const CommodityInformation = ({
   useEffect(() => {
     const fetchCommodities = async () => {
       try {
-        const response = await axios.get("/companies");
-        const items = response.data?.data || response.data || [];
+        const items = await fetchAllPages("/companies");
         const companyData = items.find(
           (company) => company.companyName === selectedCompany,
         );

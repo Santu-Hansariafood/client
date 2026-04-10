@@ -1,5 +1,6 @@
 import { useState, useEffect, lazy, Suspense } from "react";
-import axios from "axios";
+import api from "../../../utils/apiClient/apiClient";
+import { fetchAllPages } from "../../../utils/apiClient/fetchAllPages";
 import { ToastContainer, toast } from "react-toastify";
 import { FaPlusCircle, FaMinusCircle } from "react-icons/fa";
 import "react-toastify/dist/ReactToastify.css";
@@ -39,32 +40,28 @@ const EditSellerDetails = ({ sellerId, onClose, onSave }) => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [commoditiesRes, companiesRes, groupsRes, sellerRes] =
+        const [commodities, companies, groups, sellerData] =
           await Promise.all([
-            axios.get("/commodities"),
-            axios.get("/seller-company"),
-            axios.get("/groups"),
-            axios.get(`${apiBaseURL}/sellers/${sellerId}`),
+            fetchAllPages("/commodities"),
+            fetchAllPages("/seller-company"),
+            fetchAllPages("/groups"),
+            api.get(`/sellers/${sellerId}`).then(res => res.data?.data || res.data || {}),
           ]);
 
-        const commodities = commoditiesRes.data.map((item) => ({
+        const commodityOpts = commodities.map((item) => ({
           value: item.name,
           label: item.name,
         }));
 
-        const companies = companiesRes.data.data.map((item) => ({
+        const companyOpts = companies.map((item) => ({
           value: item.companyName,
           label: item.companyName,
         }));
 
-        const groups = (groupsRes.data.data || groupsRes.data || []).map(
-          (item) => ({
-            value: item._id,
-            label: item.groupName,
-          }),
-        );
-
-        const sellerData = sellerRes.data?.data || sellerRes.data || {};
+        const groupOpts = groups.map((item) => ({
+          value: item._id,
+          label: item.groupName,
+        }));
 
         setFullSellerData(sellerData);
         setSellerName(sellerData.sellerName || "");
@@ -219,8 +216,8 @@ const EditSellerDetails = ({ sellerId, onClose, onSave }) => {
     };
 
     try {
-      const response = await axios.put(
-        `${apiBaseURL}/sellers/${sellerId}`,
+      const response = await api.put(
+        `/sellers/${sellerId}`,
         payload,
       );
       toast.success("Seller details updated successfully!");

@@ -2,7 +2,8 @@ import { lazy, Suspense, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import axios from "axios";
+import api from "../../../utils/apiClient/apiClient";
+import { fetchAllPages } from "../../../utils/apiClient/fetchAllPages";
 import Loading from "../../../common/Loading/Loading";
 import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
 import { FaClipboardList } from "react-icons/fa";
@@ -89,19 +90,13 @@ const SelfOrder = () => {
   useEffect(() => {
     const fetchInitialData = async () => {
       try {
-        const [sellersRes, companiesRes, buyersRes, sellerCompaniesRes] =
+        const [sellersData, companiesData, buyersData, sellerCompaniesData] =
           await Promise.all([
-            axios.get("/sellers"),
-            axios.get("/companies"),
-            axios.get("/buyers"),
-            axios.get("/seller-company"),
+            fetchAllPages("/sellers"),
+            fetchAllPages("/companies"),
+            fetchAllPages("/buyers"),
+            fetchAllPages("/seller-company"),
           ]);
-
-        const sellersData = sellersRes.data || [];
-        const companiesData = companiesRes.data || [];
-        const buyersData = buyersRes.data || [];
-        const sellerCompaniesData =
-          sellerCompaniesRes.data?.data || sellerCompaniesRes.data || [];
 
         setSellerOptions(
           sellersData
@@ -281,7 +276,7 @@ const SelfOrder = () => {
         JSON.stringify(payload, null, 2),
       );
 
-      const response = await axios.post(API_BASE_URL, payload);
+      const response = await api.post(API_BASE_URL, payload);
       const createdOrder = response?.data || payload;
 
       try {

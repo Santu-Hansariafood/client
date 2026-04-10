@@ -9,7 +9,7 @@ import {
   Suspense,
 } from "react";
 import { toast } from "react-toastify";
-import axios from "axios";
+import api from "../../../utils/apiClient/apiClient";
 import Loading from "../../../common/Loading/Loading";
 import { fetchAllPages } from "../../../utils/apiClient/fetchAllPages";
 const DataInput = lazy(() => import("../../../common/DataInput/DataInput"));
@@ -160,19 +160,15 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
       setReferenceDataLoading(true);
       setReferenceDataError(null);
       try {
-        const [groupsRes, commoditiesRes, consigneesRows, companiesRows] =
+        const [groupsData, commoditiesData, consigneesRows, companiesRows] =
           await Promise.all([
-            axios.get("/groups", { signal }),
-            axios.get("/commodities", { signal }),
+            fetchAllPages("/groups", { signal }).catch(() => []),
+            fetchAllPages("/commodities", { signal }).catch(() => []),
             fetchAllPages("/consignees", { limit: 200, signal }).catch(() => []),
             fetchAllPages("/companies", { limit: 200, signal }).catch(() => []),
           ]);
 
         if (!alive) return;
-
-        const groupsData = groupsRes.data?.data || groupsRes.data || [];
-        const commoditiesData =
-          commoditiesRes.data?.data || commoditiesRes.data || [];
 
         setCompaniesData(companiesRows);
         setGroups(
@@ -425,7 +421,7 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
         payload.password = passwordTrimmed;
       }
 
-      const response = await axios.put(`/buyers/${formData._id}`, payload);
+      const response = await api.put(`/buyers/${formData._id}`, payload);
       onUpdate(response.data);
     } catch (error) {
       const message =

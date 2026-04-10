@@ -1,5 +1,6 @@
 import { useState, useEffect, Suspense, lazy } from "react";
-import axios from "axios";
+import api from "../../../utils/apiClient/apiClient";
+import { fetchAllPages } from "../../../utils/apiClient/fetchAllPages";
 import { FaPlus, FaTrash, FaCheck } from "react-icons/fa";
 import { toast } from "react-toastify";
 import Loading from "../../../common/Loading/Loading";
@@ -32,48 +33,29 @@ const AddSoudabook = () => {
   ]);
 
   useEffect(() => {
-    const fetchSellers = async () => {
+    const fetchInitialData = async () => {
       try {
-        const response = await axios.get("/sellers");
-        const sellerOptions = response.data.map((seller) => ({
-          value: seller._id,
-          label: seller.sellerName,
-        }));
-        setSellers(sellerOptions);
+        const [sellersData, commoditiesData, buyersData] = await Promise.all([
+          fetchAllPages("/sellers"),
+          fetchAllPages("/commodities"),
+          fetchAllPages("/buyers"),
+        ]);
+
+        setSellers(
+          sellersData.map((s) => ({ value: s._id, label: s.sellerName })),
+        );
+        setItems(
+          commoditiesData.map((i) => ({ value: i._id, label: i.name })),
+        );
+        setBuyers(
+          buyersData.map((b) => ({ value: b._id, label: b.name })),
+        );
       } catch (error) {
-        toast.error("Error fetching sellers:", error);
+        toast.error("Error fetching initial data.");
       }
     };
 
-    const fetchItems = async () => {
-      try {
-        const response = await axios.get("/commodities");
-        const itemOptions = response.data.map((item) => ({
-          value: item._id,
-          label: item.name,
-        }));
-        setItems(itemOptions);
-      } catch (error) {
-        toast.error("Error fetching items:", error);
-      }
-    };
-
-    const fetchBuyers = async () => {
-      try {
-        const response = await axios.get("/buyers");
-        const buyerOptions = response.data.map((buyer) => ({
-          value: buyer._id,
-          label: buyer.name,
-        }));
-        setBuyers(buyerOptions);
-      } catch (error) {
-        toast.error("Error fetching buyers:", error);
-      }
-    };
-
-    fetchSellers();
-    fetchItems();
-    fetchBuyers();
+    fetchInitialData();
   }, []);
 
   const handleAddRow = () => {

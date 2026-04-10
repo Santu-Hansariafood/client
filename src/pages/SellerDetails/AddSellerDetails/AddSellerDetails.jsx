@@ -1,5 +1,6 @@
 import { useState, useEffect, lazy, Suspense } from "react";
-import axios from "axios";
+import api from "../../../utils/apiClient/apiClient";
+import { fetchAllPages } from "../../../utils/apiClient/fetchAllPages";
 import { ToastContainer, toast } from "react-toastify";
 import { FaPlusCircle, FaMinusCircle } from "react-icons/fa";
 import "react-toastify/dist/ReactToastify.css";
@@ -46,38 +47,36 @@ const AddSellerDetails = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [commoditiesRes, companiesRes, groupsRes] = await Promise.all([
-          axios.get("/commodities"),
-          axios.get("/seller-company"),
-          axios.get("/groups"),
+        const [commodities, companies, groups] = await Promise.all([
+          fetchAllPages("/commodities"),
+          fetchAllPages("/seller-company"),
+          fetchAllPages("/groups"),
         ]);
 
-        const commodities = commoditiesRes.data.map((item) => ({
+        const commodityOpts = commodities.map((item) => ({
           value: item.name,
           label: item.name,
         }));
 
-        const companies = companiesRes.data.data.map((item) => ({
+        const companyOpts = companies.map((item) => ({
           value: item.companyName,
           label: item.companyName,
         }));
 
-        const groups = (groupsRes.data.data || groupsRes.data || []).map(
-          (item) => ({
-            value: item._id,
-            label: item.groupName,
-          }),
-        );
+        const groupOpts = groups.map((item) => ({
+          value: item._id,
+          label: item.groupName,
+        }));
 
         setCommodityOptions(
-          commodities.sort((a, b) => a.label.localeCompare(b.label)),
+          commodityOpts.sort((a, b) => a.label.localeCompare(b.label)),
         );
 
         setCompanyOptions(
-          companies.sort((a, b) => a.label.localeCompare(b.label)),
+          companyOpts.sort((a, b) => a.label.localeCompare(b.label)),
         );
 
-        setGroupOptions(groups.sort((a, b) => a.label.localeCompare(b.label)));
+        setGroupOptions(groupOpts.sort((a, b) => a.label.localeCompare(b.label)));
       } catch (error) {
         toast.error("Failed to load data from server.");
       }
@@ -173,7 +172,7 @@ const AddSellerDetails = () => {
     };
 
     try {
-      await axios.post(`${apiBaseURL}/sellers`, payload);
+      await api.post("/sellers", payload);
 
       toast.success("Seller added successfully");
 

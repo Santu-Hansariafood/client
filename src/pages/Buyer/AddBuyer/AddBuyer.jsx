@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, lazy, Suspense } from "react";
-import axios from "axios";
+import api from "../../../utils/apiClient/apiClient";
+import { fetchAllPages } from "../../../utils/apiClient/fetchAllPages";
 import { toast } from "react-toastify";
 import Loading from "../../../common/Loading/Loading";
 import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
@@ -46,14 +47,10 @@ const AddBuyer = () => {
   useEffect(() => {
     const fetchDropdownData = async () => {
       try {
-        const [companiesResponse, groupsResponse] = await Promise.all([
-          axios.get("/companies"),
-          axios.get("/groups"),
+        const [companies, groups] = await Promise.all([
+          fetchAllPages("/companies"),
+          fetchAllPages("/groups"),
         ]);
-
-        const companies =
-          companiesResponse.data?.data || companiesResponse.data || [];
-        const groups = groupsResponse.data?.data || groupsResponse.data || [];
 
         setCompaniesData(companies);
         setCompanyOptions(
@@ -243,7 +240,7 @@ const AddBuyer = () => {
           ),
         };
 
-        await axios.post("/buyers", payload);
+        await api.post("/buyers", payload);
         setSuccessMessage("Buyer added successfully!");
         setFormData({
           name: "",
