@@ -1,6 +1,14 @@
 import { Router } from "express";
 import jwt from "jsonwebtoken";
 import nodemailer from "nodemailer";
+import fs from "fs/promises"; // Import fs/promises for async file operations
+import path from "path"; // Import path for resolving file paths
+import { fileURLToPath } from "url"; // Import fileURLToPath for __dirname equivalent
+
+// Helper to get __dirname in ES module
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 import User from "../models/User.js";
 import Buyer from "../models/Buyer.js";
 import Seller from "../models/Seller.js";
@@ -84,11 +92,17 @@ router.post("/forgot-password", async (req, res) => {
     user.otpExpires = otpExpires;
     await user.save();
 
+    const templatePath = path.join(__dirname, "../templates/otp-email.html");
+    let emailTemplate = await fs.readFile(templatePath, "utf8");
+
+    emailTemplate = emailTemplate.replace("{{otp}}", otp);
+    emailTemplate = emailTemplate.replace("{{year}}", new Date().getFullYear());
+
     const mailOptions = {
       from: process.env.EMAIL_USER,
       to: email,
       subject: "Password Reset OTP - Hansaria Food Private Limited",
-      text: `Your OTP for password reset is: ${otp}. This OTP is valid for 10 minutes. If you did not request a password reset, please ignore this email.`,
+      html: emailTemplate,
     };
 
     await transporter.sendMail(mailOptions);
