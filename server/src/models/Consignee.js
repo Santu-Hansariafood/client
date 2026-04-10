@@ -29,10 +29,17 @@ const consigneeSchema = new mongoose.Schema(
       type: String,
       trim: true,
       uppercase: true,
-      match: [
-        /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[A-Z0-9]{1}[Z]{1}[A-Z0-9]{1}$/i,
-        "Invalid GST number",
-      ],
+      validate: {
+        validator: function (v) {
+          if (!v) return true;
+          const value = String(v).trim().toUpperCase();
+          if (value === "0") return true;
+          return /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[A-Z0-9]{1}[Z]{1}[A-Z0-9]{1}$/i.test(
+            value,
+          );
+        },
+        message: "Invalid GST number",
+      },
     },
 
     pan: {
