@@ -1,5 +1,6 @@
 import { Router } from "express";
 import jwt from "jsonwebtoken";
+import nodemailer from "nodemailer";
 import User from "../models/User.js";
 import Buyer from "../models/Buyer.js";
 import Seller from "../models/Seller.js";
@@ -7,6 +8,165 @@ import Employee from "../models/Employee.js";
 import Transporter from "../models/Transporter.js";
 
 const router = Router();
+
+const transporter = nodemailer.createTransport({
+  service: process.env.EMAIL_SERVICE,
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+  },
+});
+
+const getModelByRole = (role) => {
+  switch (role) {
+    case "Admin":
+      return User;
+    case "Buyer":
+      return Buyer;
+    case "Seller":
+      return Seller;
+    case "Employee":
+      return Employee;
+    case "Transporter":
+      return Transporter;
+    default:
+      return null;
+  }
+};
+
+const getEmailByRole = (user, role) => {
+  switch (role) {
+    case "Admin":
+    case "Employee":
+    case "Transporter":
+      return user.email;
+    case "Buyer":
+      return Array.isArray(user.email) ? user.email[0] : user.email;
+    case "Seller":
+      return Array.isArray(user.emails) ? user.emails[0]?.value : null;
+    default:
+      return null;
+  }
+};
+
+router.post("/forgot-password", async (req, res) => {
+  try {
+    const { mobile, role } = req.body;
+    let normalizedMobile = String(mobile || "").trim();
+    const phoneRegex = /^(?:\+91|0)?([6-9]\d{9})$/;
+    const phoneMatch = normalizedMobile.match(phoneRegex);
+    if (phoneMatch) {
+      normalizedMobile = phoneMatch[1];
+    }
+
+    const Model = getModelByRole(role);
+    if (!Model) return res.status(400).json({ message: "Invalid role" });
+
+    const query =
+      role === "Seller"
+        ? { "phoneNumbers.value": normalizedMobile }
+        : { mobile: normalizedMobile };
+
+    const user = await Model.findOne(query);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    const email = getEmailByRole(user, role);
+    if (!email) {
+      return res.status(400).json({
+        message: "No email address found for this account. Please contact support.",
+      });
+    }
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const otpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
+    user.otp = otp;
+    user.otpExpires = otpExpires;
+    await user.save();
+
+    const mailOptions = {
+      from: process.env.EMAIL_USER,
+      to: email,
+      subject: "Password Reset OTP - Hansaria Food Private Limited",
+      text: `Your OTP for password reset is: ${otp}. This OTP is valid for 10 minutes. If you did not request a password reset, please ignore this email.`,
+    };
+
+    await transporter.sendMail(mailOptions);
+    res.json({ message: "OTP sent to your registered email address" });
+  } catch (error) {
+    console.error("Forgot password error:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+router.post("/verify-otp", async (req, res) => {
+  try {
+    const { mobile, role, otp } = req.body;
+    let normalizedMobile = String(mobile || "").trim();
+    const phoneRegex = /^(?:\+91|0)?([6-9]\d{9})$/;
+    const phoneMatch = normalizedMobile.match(phoneRegex);
+    if (phoneMatch) {
+      normalizedMobile = phoneMatch[1];
+    }
+
+    const Model = getModelByRole(role);
+    if (!Model) return res.status(400).json({ message: "Invalid role" });
+
+    const query =
+      role === "Seller"
+        ? { "phoneNumbers.value": normalizedMobile }
+        : { mobile: normalizedMobile };
+
+    const user = await Model.findOne(query);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    if (!user.otp || user.otp !== otp || user.otpExpires < new Date()) {
+      return res.status(400).json({ message: "Invalid or expired OTP" });
+    }
+
+    res.json({ message: "OTP verified successfully" });
+  } catch (error) {
+    console.error("Verify OTP error:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+router.post("/reset-password", async (req, res) => {
+  try {
+    const { mobile, role, otp, newPassword } = req.body;
+    let normalizedMobile = String(mobile || "").trim();
+    const phoneRegex = /^(?:\+91|0)?([6-9]\d{9})$/;
+    const phoneMatch = normalizedMobile.match(phoneRegex);
+    if (phoneMatch) {
+      normalizedMobile = phoneMatch[1];
+    }
+
+    const Model = getModelByRole(role);
+    if (!Model) return res.status(400).json({ message: "Invalid role" });
+
+    const query =
+      role === "Seller"
+        ? { "phoneNumbers.value": normalizedMobile }
+        : { mobile: normalizedMobile };
+
+    const user = await Model.findOne(query);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    if (!user.otp || user.otp !== otp || user.otpExpires < new Date()) {
+      return res.status(400).json({ message: "Invalid or expired OTP" });
+    }
+
+    user.password = newPassword;
+    user.otp = undefined;
+    user.otpExpires = undefined;
+    await user.save();
+
+    res.json({ message: "Password reset successfully" });
+  } catch (error) {
+    console.error("Reset password error:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
 
 router.post("/admin/login", async (req, res) => {
   try {

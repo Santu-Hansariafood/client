@@ -10,9 +10,21 @@ const employeeSchema = new mongoose.Schema(
     password: { type: String, required: true },
     role: { type: String, default: "Employee" },
     status: { type: String, enum: ["Active", "Inactive"], default: "Active" },
+    otp: { type: String },
+    otpExpires: { type: Date },
   },
   { timestamps: true },
 );
+
+employeeSchema.pre("save", function (next) {
+  if (this.mobile) {
+    const match = String(this.mobile).trim().match(/^(?:\+91|0)?([6-9]\d{9})$/);
+    if (match) {
+      this.mobile = match[1];
+    }
+  }
+  next();
+});
 
 employeeSchema.index({ email: 1 });
 employeeSchema.index({ employeeId: 1 });

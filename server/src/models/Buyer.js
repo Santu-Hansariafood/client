@@ -28,6 +28,8 @@ const buyerSchema = new mongoose.Schema(
     },
     brokerage: { type: Map, of: Number, default: {} },
     status: { type: String, enum: ["Active", "Inactive"], default: "Active" },
+    otp: { type: String },
+    otpExpires: { type: Date },
   },
   { timestamps: true },
 );

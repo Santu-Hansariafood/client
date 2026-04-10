@@ -25,9 +25,21 @@ const transporterSchema = new mongoose.Schema(
     },
     role: { type: String, default: "Transporter" },
     status: { type: String, enum: ["Active", "Inactive"], default: "Active" },
+    otp: { type: String },
+    otpExpires: { type: Date },
   },
   { timestamps: true },
 );
+
+transporterSchema.pre("save", function (next) {
+  if (this.mobile) {
+    const match = String(this.mobile).trim().match(/^(?:\+91|0)?([6-9]\d{9})$/);
+    if (match) {
+      this.mobile = match[1];
+    }
+  }
+  next();
+});
 
 transporterSchema.index({ email: 1 });
 transporterSchema.index({ mobile: 1 });
