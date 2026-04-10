@@ -76,7 +76,6 @@ export default defineConfig({
     chunkSizeWarningLimit: 1600,
   },
   server: {
-    host: true, // Allow external access (mobile)
     hmr: {
       overlay: false,
     },
@@ -87,10 +86,9 @@ export default defineConfig({
         secure: false,
       },
     },
-    allowedHosts: true, // Allow access from any host (mobile IP, etc.)
+    allowedHosts: ["bid.hansariafood.in"],
   },
   preview: {
-    host: true, // Allow external access (mobile)
-    allowedHosts: true,
+    allowedHosts: ["bid.hansariafood.in"],
   },
 });
