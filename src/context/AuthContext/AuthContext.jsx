@@ -54,23 +54,30 @@ export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(() => localStorage.getItem("token") || "");
 
   const login = (userData) => {
+    const role = userData.role || "";
+    const mobileValue = userData.mobile || "";
+    const userValue = userData.user || userData;
+    const tokenValue = userData.token || "";
+
     setIsAuthenticated(true);
-    setMobile(userData.mobile || "");
-    setUserRole(userData.role || "");
-    setUser(userData.user || userData);
-    if (userData.token) {
-      setToken(userData.token);
+    setMobile(mobileValue);
+    setUserRole(role);
+    setUser(userValue);
+    if (tokenValue) {
+      setToken(tokenValue);
     }
 
     localStorage.setItem("isAuthenticated", "true");
-    localStorage.setItem("mobile", userData.mobile || "");
-    localStorage.setItem("userRole", userData.role || "");
-    localStorage.setItem("user", JSON.stringify(userData.user || userData));
+    localStorage.setItem("mobile", mobileValue);
+    localStorage.setItem("userRole", role);
+    localStorage.setItem("user", JSON.stringify(userValue));
     localStorage.setItem("loginDate", getTodayKey());
-    if (userData.token) {
-      localStorage.setItem("token", userData.token);
+    if (tokenValue) {
+      localStorage.setItem("token", tokenValue);
     }
-    startSessionTimer();
+    
+    // Use the actual value instead of relying on state which updates asynchronously
+    startSessionTimer(true);
   };
 
   const logout = () => {
@@ -90,9 +97,9 @@ export const AuthProvider = ({ children }) => {
     clearSessionTimer();
   };
 
-  const startSessionTimer = () => {
+  const startSessionTimer = (force = false) => {
     clearSessionTimer();
-    if (!isAuthenticated) {
+    if (!isAuthenticated && !force) {
       return;
     }
     const now = new Date();

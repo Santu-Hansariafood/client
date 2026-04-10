@@ -202,17 +202,30 @@ router.post("/admin/login", async (req, res) => {
     if (phoneMatch) {
       normalizedMobile = phoneMatch[1];
     }
+    
+    console.log(`Admin login attempt: mobile=${normalizedMobile}`);
 
     if (!process.env.JWT_SECRET) {
+      console.error("JWT_SECRET is not configured");
       return res.status(500).json({ message: "JWT_SECRET is not configured" });
     }
-    const user = await User.findOne({ role: "Admin", mobile: normalizedMobile, password });
-    if (!user) return res.status(401).json({ message: "Invalid credentials" });
+    const user = await User.findOne({
+      role: "Admin",
+      mobile: normalizedMobile,
+      password,
+    });
+    if (!user) {
+      console.log(`Admin login failed: mobile=${normalizedMobile}`);
+      return res.status(401).json({ message: "Invalid credentials" });
+    }
+
     const token = jwt.sign(
       { sub: user._id.toString(), role: "Admin", mobile: normalizedMobile },
       process.env.JWT_SECRET,
       { expiresIn: "365d" },
     );
+
+    console.log(`Admin login successful: ${user.name}`);
     res.json({
       role: "Admin",
       mobile: normalizedMobile,
@@ -220,6 +233,7 @@ router.post("/admin/login", async (req, res) => {
       token,
     });
   } catch (error) {
+    console.error(`Admin login error: ${error.message}`);
     res.status(500).json({ message: error.message });
   }
 });
@@ -233,16 +247,25 @@ router.post("/employees/login", async (req, res) => {
     if (phoneMatch) {
       normalizedMobile = phoneMatch[1];
     }
+    
+    console.log(`Employee login attempt: mobile=${normalizedMobile}`);
 
     if (!process.env.JWT_SECRET) {
+      console.error("JWT_SECRET is not configured");
       return res.status(500).json({ message: "JWT_SECRET is not configured" });
     }
-    const employee = await Employee.findOne({ mobile: normalizedMobile, password });
-    if (!employee)
+    const employee = await Employee.findOne({
+      mobile: normalizedMobile,
+      password,
+    });
+    if (!employee) {
+      console.log(`Employee login failed: mobile=${normalizedMobile}`);
       return res.status(401).json({ message: "Invalid credentials" });
+    }
     if (employee.status === "Inactive") {
       return res.status(403).json({ message: "Your account is inactive." });
     }
+
     const token = jwt.sign(
       {
         sub: employee._id.toString(),
@@ -252,6 +275,8 @@ router.post("/employees/login", async (req, res) => {
       process.env.JWT_SECRET,
       { expiresIn: "365d" },
     );
+
+    console.log(`Employee login successful: ${employee.name}`);
     res.json({
       role: "Employee",
       mobile: normalizedMobile,
@@ -263,6 +288,7 @@ router.post("/employees/login", async (req, res) => {
       token,
     });
   } catch (error) {
+    console.error(`Employee login error: ${error.message}`);
     res.status(500).json({ message: error.message });
   }
 });
@@ -276,16 +302,25 @@ router.post("/transporters/login", async (req, res) => {
     if (phoneMatch) {
       normalizedMobile = phoneMatch[1];
     }
+    
+    console.log(`Transporter login attempt: mobile=${normalizedMobile}`);
 
     if (!process.env.JWT_SECRET) {
+      console.error("JWT_SECRET is not configured");
       return res.status(500).json({ message: "JWT_SECRET is not configured" });
     }
-    const transporter = await Transporter.findOne({ mobile: normalizedMobile, password });
-    if (!transporter)
+    const transporter = await Transporter.findOne({
+      mobile: normalizedMobile,
+      password,
+    });
+    if (!transporter) {
+      console.log(`Transporter login failed: mobile=${normalizedMobile}`);
       return res.status(401).json({ message: "Invalid credentials" });
+    }
     if (transporter.status === "Inactive") {
       return res.status(403).json({ message: "Your account is inactive." });
     }
+
     const token = jwt.sign(
       {
         sub: transporter._id.toString(),
@@ -295,6 +330,8 @@ router.post("/transporters/login", async (req, res) => {
       process.env.JWT_SECRET,
       { expiresIn: "365d" },
     );
+
+    console.log(`Transporter login successful: ${transporter.name}`);
     res.json({
       role: "Transporter",
       mobile: normalizedMobile,
@@ -305,6 +342,7 @@ router.post("/transporters/login", async (req, res) => {
       token,
     });
   } catch (error) {
+    console.error(`Transporter login error: ${error.message}`);
     res.status(500).json({ message: error.message });
   }
 });
