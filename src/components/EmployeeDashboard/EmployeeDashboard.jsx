@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import axios from "axios";
+import api from "../../utils/apiClient/apiClient";
 import {
   FaUserTie,
   FaClock,
@@ -19,8 +19,8 @@ const EmployeeDashboard = () => {
     const fetchStats = async () => {
       try {
         const [bidsRes, saudasRes] = await Promise.all([
-          axios.get("/bids"),
-          axios.get("/sodabook"),
+          api.get("/bids"),
+          api.get("/sodabook"),
         ]);
 
         const bids = bidsRes.data?.data || bidsRes.data || [];

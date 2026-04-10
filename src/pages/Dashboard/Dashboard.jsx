@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, lazy, Suspense } from "react";
 import { toast } from "react-toastify";
-import axios from "axios";
+import api from "../../utils/apiClient/apiClient";
 import Loading from "../../common/Loading/Loading";
 import AdminPageShell from "../../common/AdminPageShell/AdminPageShell";
 import { FaTachometerAlt } from "react-icons/fa";
@@ -19,11 +19,11 @@ const Dashboard = () => {
   const fetchCounts = useCallback(async () => {
     try {
       const responses = await Promise.all([
-        axios.get("/buyers"),
-        axios.get("/sellers"),
-        axios.get("/consignees"),
-        axios.get("/self-order"),
-        axios.get("/bids"),
+        api.get("/buyers"),
+        api.get("/sellers"),
+        api.get("/consignees"),
+        api.get("/self-order"),
+        api.get("/bids"),
       ]);
 
       const getCount = (res) => {

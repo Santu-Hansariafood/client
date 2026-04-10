@@ -47,12 +47,33 @@ const corsOrigins =
         .map((s) => s.trim())
         .filter(Boolean)
     : null;
+
+// Improved CORS for Android WebView/TWA
 app.use(
   cors({
-    origin: corsOrigins || true,
-    credentials: true
+    origin: (origin, callback) => {
+      // Allow requests with no origin (like mobile apps, curl, or WebViews with null origin)
+      if (!origin || origin === "null" || origin.startsWith("file://") || origin.startsWith("android-app://") || origin.startsWith("capacitor://") || origin.startsWith("app://")) {
+        return callback(null, true);
+      }
+      if (!corsOrigins || corsOrigins.includes(origin) || corsOrigins.includes("*")) {
+        return callback(null, true);
+      }
+      callback(new Error("Not allowed by CORS"));
+    },
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+    allowedHeaders: ["Content-Type", "Authorization", "x-api-key", "Origin", "Accept", "X-Requested-With"],
   })
 );
+
+app.use((req, res, next) => {
+  if (process.env.NODE_ENV !== "production") {
+    console.log(`${req.method} ${req.url} - Origin: ${req.get("Origin") || "None"}`);
+  }
+  next();
+});
+
 app.use(express.json({ limit: "1mb" }));
 app.use(compression());
 
