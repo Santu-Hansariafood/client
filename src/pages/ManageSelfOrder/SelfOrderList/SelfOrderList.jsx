@@ -50,6 +50,8 @@ const SelfOrderList = () => {
   const [reloadFlag, setReloadFlag] = useState(0);
   const [selectedItem, setSelectedItem] = useState(null);
   const [searchInput, setSearchInput] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
 
   useEffect(() => {
     let isMounted = true;
@@ -664,7 +666,13 @@ const SelfOrderList = () => {
   const handleDownloadExcel = useCallback(async () => {
     try {
       const toastId = toast.loading("Preparing Excel...");
-      const res = await axios.get(API_URL);
+      const res = await axios.get(API_URL, {
+        params: {
+          export: true,
+          startDate: startDate || undefined,
+          endDate: endDate || undefined,
+        },
+      });
 
       const orderData = res.data;
       let raw = [];
@@ -765,7 +773,7 @@ const SelfOrderList = () => {
     } catch {
       toast.error("Failed to generate Excel");
     }
-  }, [userRole, buyerData, mobile, searchInput, getConsigneeDisplay]);
+  }, [userRole, buyerData, mobile, searchInput, getConsigneeDisplay, startDate, endDate]);
 
   return (
     <Suspense fallback={<Loading />}>
@@ -781,6 +789,10 @@ const SelfOrderList = () => {
             searchInput={searchInput}
             onSearchChange={handleSearchChange}
             onDownloadExcel={handleDownloadExcel}
+            startDate={startDate}
+            endDate={endDate}
+            onStartDateChange={(e) => setStartDate(e.target.value)}
+            onEndDateChange={(e) => setEndDate(e.target.value)}
           />
 
           <SelfOrderTable headers={headers} rows={rows} />
@@ -812,10 +824,14 @@ const SelfOrderSearchBar = ({
   searchInput,
   onSearchChange,
   onDownloadExcel,
+  startDate,
+  endDate,
+  onStartDateChange,
+  onEndDateChange,
 }) => {
   return (
-    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 px-1 sm:px-0">
-      <div className="flex items-center gap-2">
+    <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 px-1 sm:px-0">
+      <div className="flex items-center gap-2 flex-wrap">
         <button
           onClick={onBack}
           className="bg-gray-200 text-gray-600 px-3 py-1.5 rounded-lg text-sm hover:bg-gray-300 transition"
@@ -829,6 +845,26 @@ const SelfOrderSearchBar = ({
           <FaDownload size={14} />
           <span>Download Excel</span>
         </button>
+        <div className="flex items-center gap-2">
+          <div className="flex flex-col">
+            <label className="text-xs text-slate-600">Start Date</label>
+            <input
+              type="date"
+              value={startDate}
+              onChange={onStartDateChange}
+              className="px-3 py-1.5 rounded-lg border border-emerald-100"
+            />
+          </div>
+          <div className="flex flex-col">
+            <label className="text-xs text-slate-600">End Date</label>
+            <input
+              type="date"
+              value={endDate}
+              onChange={onEndDateChange}
+              className="px-3 py-1.5 rounded-lg border border-emerald-100"
+            />
+          </div>
+        </div>
       </div>
       <div className="flex-1 w-full sm:w-auto">
         <div

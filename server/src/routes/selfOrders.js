@@ -50,6 +50,9 @@ router.get("/", async (req, res) => {
     const search = (req.query.search || "").trim();
     const sellerMobile = req.query.sellerMobile;
     const supplier = req.query.supplier;
+    const startDate = req.query.startDate;
+    const endDate = req.query.endDate;
+    const exportAll = String(req.query.export || "").toLowerCase() === "true";
 
     let query = {};
     if (search) {
@@ -82,6 +85,20 @@ router.get("/", async (req, res) => {
 
     if (supplier) {
       query.supplier = supplier;
+    }
+
+    if (startDate || endDate) {
+      query.poDate = {};
+      if (startDate) query.poDate.$gte = new Date(startDate);
+      if (endDate) query.poDate.$lte = new Date(endDate);
+    }
+
+    if (exportAll) {
+      const items = await SelfOrder.find(query)
+        .sort({ poDate: -1, createdAt: -1 })
+        .populate("supplier", "sellerName")
+        .lean();
+      return res.json(items);
     }
 
     if (page > 0 && limit > 0) {

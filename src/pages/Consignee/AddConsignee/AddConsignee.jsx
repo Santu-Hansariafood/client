@@ -176,7 +176,7 @@ const AddConsignee = () => {
                   name="name"
                   value={formData.name}
                   onChange={handleInputChange}
-                  required={formData.gst === "0"}
+                  required
                 />
               </div>
               <div>
@@ -233,7 +233,7 @@ const AddConsignee = () => {
                   onChange={handleInputChange}
                   maxLength="10"
                   minLength="10"
-                  required
+                  required={formData.gst === "0"}
                   disabled={formData.gst !== "0"}
                 />
               </div>
