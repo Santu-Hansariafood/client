@@ -32,6 +32,16 @@ const buyerSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
+buyerSchema.pre("save", function (next) {
+  if (this.mobile && Array.isArray(this.mobile)) {
+    this.mobile = this.mobile.map((phone) => {
+      const match = String(phone).trim().match(/^(?:\+91|0)?([6-9]\d{9})$/);
+      return match ? match[1] : phone;
+    });
+  }
+  next();
+});
+
 buyerSchema.index({ name: 1 });
 buyerSchema.index({ companyIds: 1 });
 buyerSchema.index({ groupId: 1 });

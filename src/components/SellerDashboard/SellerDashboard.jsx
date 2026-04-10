@@ -54,6 +54,11 @@ const SellerDashboard = () => {
             axios.get("/self-order"),
           ]);
 
+        const normalizePhone = (p) => {
+          const m = String(p || "").trim().match(/^(?:\+91|0)?([6-9]\d{9})$/);
+          return m ? m[1] : p;
+        };
+
         const sellers = sellersRes?.data || [];
         const bids = bidsRes?.data?.data || bidsRes?.data || [];
         const participate =
@@ -63,7 +68,7 @@ const SellerDashboard = () => {
         const orders = ordersRes?.data?.data || ordersRes?.data || [];
 
         const seller = sellers.find((s) =>
-          s?.phoneNumbers?.some((p) => String(p?.value) === String(mobile)),
+          s?.phoneNumbers?.some((p) => normalizePhone(p?.value) === normalizePhone(mobile)),
         );
 
         if (!seller) {
@@ -82,13 +87,13 @@ const SellerDashboard = () => {
         setSellerBidCount(activeSellerBids.length);
 
         setParticipateBidCount(
-          participate.filter((p) => String(p?.mobile) === String(mobile))
+          participate.filter((p) => normalizePhone(p?.mobile) === normalizePhone(mobile))
             .length,
         );
 
         const sellerOrders = orders.filter((item) => {
           return (
-            String(item.sellerMobile) === String(mobile) ||
+            normalizePhone(item.sellerMobile) === normalizePhone(mobile) ||
             String(item.supplier) === String(seller._id)
           );
         });
@@ -96,7 +101,7 @@ const SellerDashboard = () => {
         setSaudaCount(sellerOrders.length);
 
         const confirmed = confirmBids
-          .filter((bid) => String(bid?.phone) === String(mobile) && bid?.status)
+          .filter((bid) => normalizePhone(bid?.phone) === normalizePhone(mobile) && bid?.status)
           .map((confirmBid) => {
             const matchedBid = bids.find((b) => b?._id === confirmBid?.bidId);
 

@@ -23,7 +23,12 @@ router.get("/", async (req, res) => {
     const page = parseInt(req.query.page || "0", 10);
     const limit = parseInt(req.query.limit || "0", 10);
     const search = req.query.search || "";
-    const mobile = String(req.query.mobile || "").trim();
+    let mobile = String(req.query.mobile || "").trim();
+    const phoneRegex = /^(?:\+91|0)?([6-9]\d{9})$/;
+    const phoneMatch = mobile.match(phoneRegex);
+    if (phoneMatch) {
+      mobile = phoneMatch[1];
+    }
 
     const query = mobile
       ? { "phoneNumbers.value": mobile }

@@ -10,13 +10,15 @@ const formatName = (name) => {
 
 const formatPhone = (phone) => {
   if (!phone) return phone;
-  const re = /^(?:\+91|0)?[6-9]\d{9}$/;
-  if (!re.test(phone)) {
+  const re = /^(?:\+91|0)?([6-9]\d{9})$/;
+  const match = phone.match(re);
+  if (!match) {
     throw new Error(
       "Invalid phone number format. Must be 10 digits with optional +91 or 0 prefix.",
     );
   }
-  return phone;
+  // Return only the 10 digit part
+  return match[1];
 };
 
 const upperCase = (val) => {
