@@ -90,7 +90,9 @@ const start = async () => {
   await connect();
   startNotificationCleanup(12); // Daily cleanup at 12:00 PM
   app.listen(PORT, () => {
-    console.log(`server running on port ${PORT}`);
+    console.log(`Server running on port ${PORT}`);
+    console.log(`CORS allowed origins: ${process.env.CORS_ORIGIN || "*"}`);
+    console.log(`API Key loaded: ${process.env.API_KEY ? "Yes (starts with " + process.env.API_KEY.slice(0, 4) + ")" : "No"}`);
   });
 };
 
