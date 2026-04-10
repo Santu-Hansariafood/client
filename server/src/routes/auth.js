@@ -93,7 +93,13 @@ router.post("/forgot-password", async (req, res) => {
     await user.save();
 
     const templatePath = path.join(__dirname, "../templates/otp-email.html");
-    let emailTemplate = await fs.readFile(templatePath, "utf8");
+    let emailTemplate;
+    try {
+      emailTemplate = await fs.readFile(templatePath, "utf8");
+    } catch (readError) {
+      console.error("Error reading email template:", readError);
+      return res.status(500).json({ message: "Failed to load email template." });
+    }
 
     emailTemplate = emailTemplate.replace("{{otp}}", otp);
     emailTemplate = emailTemplate.replace("{{year}}", new Date().getFullYear());
@@ -105,7 +111,12 @@ router.post("/forgot-password", async (req, res) => {
       html: emailTemplate,
     };
 
-    await transporter.sendMail(mailOptions);
+    try {
+      await transporter.sendMail(mailOptions);
+    } catch (mailError) {
+      console.error("Error sending OTP email:", mailError);
+      return res.status(500).json({ message: "Failed to send OTP email." });
+    }
     res.json({ message: "OTP sent to your registered email address" });
   } catch (error) {
     console.error("Forgot password error:", error);
