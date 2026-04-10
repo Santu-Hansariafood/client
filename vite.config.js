@@ -99,19 +99,6 @@ export default defineConfig({
               expiration: { maxEntries: 60, maxAgeSeconds: 60 * 60 * 24 * 30 },
             },
           },
-          {
-            urlPattern: ({ url }) =>
-              url.pathname.includes("/api/") ||
-              url.hostname.includes("api.hansariafood.in"),
-            handler: "NetworkFirst",
-            options: {
-              cacheName: "api",
-              networkTimeoutSeconds: 10,
-              cacheableResponse: {
-                statuses: [0, 200],
-              },
-            },
-          },
         ],
       },
       devOptions: {

@@ -19,15 +19,6 @@ const apiBaseURL = rawBaseURL.endsWith("/") ? rawBaseURL : `${rawBaseURL}/`;
 axios.defaults.baseURL = apiBaseURL;
 axios.defaults.timeout = 15000;
 axios.interceptors.request.use((config) => {
-  if (
-    typeof config.url === "string" &&
-    config.url.startsWith("/") &&
-    !config.url.startsWith("//")
-  ) {
-    config.url = config.url.startsWith("/api/")
-      ? config.url.slice(5)
-      : config.url.slice(1);
-  }
   const apiKey = import.meta.env.VITE_API_KEY;
   if (apiKey) {
     config.headers["x-api-key"] = apiKey;
@@ -36,6 +27,19 @@ axios.interceptors.request.use((config) => {
   if (token) {
     config.headers["Authorization"] = `Bearer ${token}`;
   }
+
+  if (
+    typeof config.url === "string" &&
+    !config.url.startsWith("http") &&
+    !config.url.startsWith("//")
+  ) {
+    if (config.url.startsWith("/api/")) {
+      config.url = config.url.slice(5);
+    } else if (config.url.startsWith("/")) {
+      config.url = config.url.slice(1);
+    }
+  }
+
   return config;
 });
 

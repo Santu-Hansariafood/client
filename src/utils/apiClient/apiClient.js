@@ -9,15 +9,6 @@ const instance = axios.create({
 });
 
 instance.interceptors.request.use((config) => {
-  if (
-    typeof config.url === "string" &&
-    config.url.startsWith("/") &&
-    !config.url.startsWith("//")
-  ) {
-    config.url = config.url.startsWith("/api/")
-      ? config.url.slice(5)
-      : config.url.slice(1);
-  }
   const apiKey = import.meta.env.VITE_API_KEY;
   if (apiKey) {
     config.headers["x-api-key"] = apiKey;
@@ -26,6 +17,19 @@ instance.interceptors.request.use((config) => {
   if (token) {
     config.headers["Authorization"] = `Bearer ${token}`;
   }
+
+  if (
+    typeof config.url === "string" &&
+    !config.url.startsWith("http") &&
+    !config.url.startsWith("//")
+  ) {
+    if (config.url.startsWith("/api/")) {
+      config.url = config.url.slice(5);
+    } else if (config.url.startsWith("/")) {
+      config.url = config.url.slice(1);
+    }
+  }
+
   return config;
 });
 
