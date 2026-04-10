@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect, useState } from "react";
-import axios from "axios";
+import api from "../../../utils/apiClient/apiClient";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Loading from "../../../common/Loading/Loading";
@@ -40,8 +40,8 @@ const ListSellerDetails = () => {
 
   const fetchSellers = async (page = 1, search = "") => {
     try {
-      const response = await axios.get(
-        `${apiBaseURL}/sellers?page=${page}&limit=${itemsPerPage}&search=${search}`,
+      const response = await api.get(
+        `/sellers?page=${page}&limit=${itemsPerPage}&search=${search}`,
       );
 
       let sellersList = [];
@@ -105,7 +105,7 @@ const ListSellerDetails = () => {
 
   const handleDeleteSeller = async (sellerId) => {
     try {
-      await axios.delete(`${apiBaseURL}/sellers/${sellerId}`);
+      await api.delete(`/sellers/${sellerId}`);
       const updatedData = data.filter((seller) => seller._id !== sellerId);
       setData(updatedData);
       setFilteredData(updatedData);

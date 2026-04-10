@@ -48,6 +48,8 @@ router.get("/", async (req, res) => {
     const page = parseInt(req.query.page || "0", 10);
     const limit = parseInt(req.query.limit || "0", 10);
     const search = (req.query.search || "").trim();
+    const sellerMobile = req.query.sellerMobile;
+    const supplier = req.query.supplier;
 
     let query = {};
     if (search) {
@@ -62,6 +64,24 @@ router.get("/", async (req, res) => {
           { commodity: { $regex: searchRegex } },
         ],
       };
+    }
+
+    if (sellerMobile) {
+      const phoneRegex = /^(?:\+91|0)?([6-9]\d{9})$/;
+      const phoneMatch = String(sellerMobile).match(phoneRegex);
+      const normalizedMobile = phoneMatch ? phoneMatch[1] : sellerMobile;
+      
+      query = {
+        ...query,
+        $or: [
+          { sellerMobile: normalizedMobile },
+          { sellerMobile: { $regex: new RegExp(normalizedMobile + "$") } }
+        ]
+      };
+    }
+
+    if (supplier) {
+      query.supplier = supplier;
     }
 
     if (page > 0 && limit > 0) {

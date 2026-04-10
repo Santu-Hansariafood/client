@@ -1,5 +1,5 @@
 import { useEffect, useState, lazy, Suspense } from "react";
-import axios from "axios";
+import api from "../../utils/apiClient/apiClient";
 import { toast } from "react-toastify";
 import {
   FaBell,
@@ -45,13 +45,13 @@ const SellerDashboard = () => {
       try {
         setLoading(true);
 
-        const [sellersRes, bidsRes, participateRes, confirmBidsRes, ordersRes] =
+        const [sellersRes, bidsRes, participateRes, ordersRes, notificationsRes] =
           await Promise.all([
-            axios.get("/sellers"),
-            axios.get("/bids"),
-            axios.get("/participatebids"),
-            axios.get("/confirm-bid"),
-            axios.get("/self-order"),
+            api.get(`/sellers?mobile=${mobile}`),
+            api.get("/bids?status=active"),
+            api.get(`/participatebids?mobile=${mobile}`),
+            api.get(`/self-order?sellerMobile=${mobile}`),
+            api.get(`/notifications?mobile=${mobile}&role=Seller&todayOnly=false`),
           ]);
 
         const normalizePhone = (p) => {
@@ -63,9 +63,8 @@ const SellerDashboard = () => {
         const bids = bidsRes?.data?.data || bidsRes?.data || [];
         const participate =
           participateRes?.data?.data || participateRes?.data || [];
-        const confirmBids =
-          confirmBidsRes?.data?.data || confirmBidsRes?.data || [];
         const orders = ordersRes?.data?.data || ordersRes?.data || [];
+        const notifications = notificationsRes?.data || [];
 
         const seller = sellers.find((s) =>
           s?.phoneNumbers?.some((p) => normalizePhone(p?.value) === normalizePhone(mobile)),
@@ -86,36 +85,13 @@ const SellerDashboard = () => {
 
         setSellerBidCount(activeSellerBids.length);
 
-        setParticipateBidCount(
-          participate.filter((p) => normalizePhone(p?.mobile) === normalizePhone(mobile))
-            .length,
-        );
+        setParticipateBidCount(participate.length);
 
-        const sellerOrders = orders.filter((item) => {
-          return (
-            normalizePhone(item.sellerMobile) === normalizePhone(mobile) ||
-            String(item.supplier) === String(seller._id)
-          );
-        });
-        setOrderCount(sellerOrders.length);
-        setSaudaCount(sellerOrders.length);
+        setOrderCount(orders.length);
+        setSaudaCount(orders.length);
 
-        const confirmed = confirmBids
-          .filter((bid) => normalizePhone(bid?.phone) === normalizePhone(mobile) && bid?.status)
-          .map((confirmBid) => {
-            const matchedBid = bids.find((b) => b?._id === confirmBid?.bidId);
-
-            return matchedBid
-              ? {
-                  ...confirmBid,
-                  ...matchedBid,
-                }
-              : null;
-          })
-          .filter(Boolean);
-
-        setConfirmedBids(confirmed);
-        setNotificationCount(confirmed.length);
+        setConfirmedBids(notifications);
+        setNotificationCount(notifications.filter(n => !n.isRead).length);
       } catch (err) {
         console.error(err);
         toast.error("Error loading dashboard");
@@ -258,16 +234,42 @@ const SellerDashboard = () => {
             title="Notifications"
           >
             {confirmedBids.length > 0 ? (
-              confirmedBids.map((bid, i) => (
-                <div key={i} className="p-4 bg-slate-50 rounded-xl mb-2">
-                  <h4 className="font-bold">{bid.commodity}</h4>
-                  <p className="text-sm text-slate-500">
-                    {bid.origin} → {bid.consignee}
+              confirmedBids.map((notif, i) => (
+                <div
+                  key={i}
+                  className={`p-4 rounded-xl mb-2 border ${
+                    notif.isRead ? "bg-slate-50 border-slate-100" : "bg-emerald-50 border-emerald-100"
+                  }`}
+                  onClick={async () => {
+                    if (!notif.isRead) {
+                      try {
+                        await api.patch(`/notifications/${notif._id}/read`);
+                        setConfirmedBids(prev => 
+                          prev.map(n => n._id === notif._id ? { ...n, isRead: true } : n)
+                        );
+                        setNotificationCount(prev => Math.max(0, prev - 1));
+                      } catch (err) {
+                        console.error("Failed to mark notification as read", err);
+                      }
+                    }
+                  }}
+                >
+                  <div className="flex justify-between items-start">
+                    <h4 className={`font-bold ${notif.isRead ? "text-slate-700" : "text-emerald-800"}`}>
+                      {notif.title}
+                    </h4>
+                    {!notif.isRead && (
+                      <span className="w-2 h-2 bg-emerald-500 rounded-full"></span>
+                    )}
+                  </div>
+                  <p className="text-sm text-slate-600 mt-1">{notif.message}</p>
+                  <p className="text-[10px] text-slate-400 mt-2">
+                    {new Date(notif.createdAt).toLocaleString()}
                   </p>
                 </div>
               ))
             ) : (
-              <p className="text-center text-slate-400">No notifications</p>
+              <p className="text-center text-slate-400 py-8">No notifications</p>
             )}
           </PopupBox>
         </div>
