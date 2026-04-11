@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { emitNotification } from "../lib/socket.js";
 
 const notificationSchema = new mongoose.Schema(
   {
@@ -27,5 +28,13 @@ notificationSchema.index({ createdAt: -1 });
 notificationSchema.index({ recipient: 1 });
 notificationSchema.index({ recipientRole: 1 });
 notificationSchema.index({ isRead: 1 });
+
+notificationSchema.post("save", function (doc) {
+  emitNotification(doc);
+});
+
+notificationSchema.post("insertMany", function (docs) {
+  docs.forEach((doc) => emitNotification(doc));
+});
 
 export default mongoose.model("Notification", notificationSchema);

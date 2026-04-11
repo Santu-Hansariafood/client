@@ -33,6 +33,8 @@ import transporterRoutes from "./routes/transporters.js";
 import notificationRoutes from "./routes/notifications.js";
 import loadingEntryRoutes from "./routes/loadingEntries.js";
 import { startNotificationCleanup } from "./lib/scheduler.js";
+import http from "http";
+import { initSocket } from "./lib/socket.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -104,11 +106,13 @@ app.use("/api/notifications", cache(5), authJwt, notificationRoutes);
 app.use("/api/loading-entries", cache(5), authJwt, loadingEntryRoutes);
 
 const PORT = process.env.PORT || 5000;
+const server = http.createServer(app);
+const io = initSocket(server);
 
 const start = async () => {
   await connect();
   startNotificationCleanup(12); // Daily cleanup at 12:00 PM
-  app.listen(PORT, () => {
+  server.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
     console.log(`CORS allowed origins: ${process.env.CORS_ORIGIN || "*"}`);
     console.log(`API Key loaded: ${process.env.API_KEY ? "Yes (starts with " + process.env.API_KEY.slice(0, 4) + ")" : "No"}`);

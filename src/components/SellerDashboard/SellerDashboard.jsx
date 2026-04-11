@@ -11,6 +11,7 @@ import {
 } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext/AuthContext";
+import { useNotifications } from "../../context/NotificationContext/NotificationContext";
 import UserProfileCard from "../UserProfileCard/UserProfileCard";
 import AdminPageShell from "../../common/AdminPageShell/AdminPageShell";
 
@@ -20,6 +21,7 @@ const PopupBox = lazy(() => import("../../common/PopupBox/PopupBox"));
 
 const SellerDashboard = () => {
   const { mobile, user } = useAuth();
+  const { notifications: confirmedBids, unreadCount: notificationCount, markAsRead } = useNotifications();
   const navigate = useNavigate();
 
   const [sellerDetails, setSellerDetails] = useState(null);
@@ -30,9 +32,7 @@ const SellerDashboard = () => {
   const [participateBidCount, setParticipateBidCount] = useState(0);
   const [orderCount, setOrderCount] = useState(0);
   const [saudaCount, setSaudaCount] = useState(0);
-  const [notificationCount, setNotificationCount] = useState(0);
   const [showPopup, setShowPopup] = useState(false);
-  const [confirmedBids, setConfirmedBids] = useState([]);
 
   useEffect(() => {
     if (!mobile) {
@@ -45,13 +45,12 @@ const SellerDashboard = () => {
       try {
         setLoading(true);
 
-        const [sellersRes, bidsRes, participateRes, ordersRes, notificationsRes] =
+        const [sellersRes, bidsRes, participateRes, ordersRes] =
           await Promise.all([
             api.get(`/sellers?mobile=${mobile}`),
             api.get("/bids?status=active"),
             api.get(`/participatebids?mobile=${mobile}`),
             api.get(`/self-order?sellerMobile=${mobile}`),
-            api.get(`/notifications?mobile=${mobile}&role=Seller&todayOnly=false`),
           ]);
 
         const normalizePhone = (p) => {
@@ -64,7 +63,6 @@ const SellerDashboard = () => {
         const participate =
           participateRes?.data?.data || participateRes?.data || [];
         const orders = ordersRes?.data?.data || ordersRes?.data || [];
-        const notifications = notificationsRes?.data || [];
 
         const seller = sellers.find((s) =>
           s?.phoneNumbers?.some((p) => normalizePhone(p?.value) === normalizePhone(mobile)),
@@ -89,9 +87,6 @@ const SellerDashboard = () => {
 
         setOrderCount(orders.length);
         setSaudaCount(orders.length);
-
-        setConfirmedBids(notifications);
-        setNotificationCount(notifications.filter(n => !n.isRead).length);
       } catch (err) {
         console.error(err);
         toast.error("Error loading dashboard");
@@ -242,15 +237,7 @@ const SellerDashboard = () => {
                   }`}
                   onClick={async () => {
                     if (!notif.isRead) {
-                      try {
-                        await api.patch(`/notifications/${notif._id}/read`);
-                        setConfirmedBids(prev => 
-                          prev.map(n => n._id === notif._id ? { ...n, isRead: true } : n)
-                        );
-                        setNotificationCount(prev => Math.max(0, prev - 1));
-                      } catch (err) {
-                        console.error("Failed to mark notification as read", err);
-                      }
+                      await markAsRead(notif._id);
                     }
                   }}
                 >

@@ -15,6 +15,7 @@ import api from "../../utils/apiClient/apiClient";
 import PWAInstall from "../PWAInstall/PWAInstall";
 import Typewriter from "../Typewriter/Typewriter";
 import { useAuth } from "../../context/AuthContext/AuthContext";
+import { useNotifications } from "../../context/NotificationContext/NotificationContext";
 
 const Header = ({
   onLogoutClick,
@@ -25,66 +26,28 @@ const Header = ({
   setProfileDropdownOpen,
 }) => {
   const { userRole, mobile } = useAuth();
+  const {
+    notifications,
+    unreadCount,
+    markAsRead,
+    markAllRead,
+    deleteNotification: deleteNotificationFromContext,
+  } = useNotifications();
   const navigate = useNavigate();
   const dropdownRef = useRef(null);
   const notificationRef = useRef(null);
-  const [notifications, setNotifications] = useState([]);
   const [showNotifications, setShowNotifications] = useState(false);
   const [unreadOnly, setUnreadOnly] = useState(true);
-  const [lastFetched, setLastFetched] = useState(0);
 
-  const fetchNotifications = useCallback(
-    async (force = false) => {
-      const now = Date.now();
-      if (!force && now - lastFetched < 60000) return;
-
-      try {
-        const response = await api.get("/notifications", {
-          params: {
-            mobile,
-            role: userRole,
-            unreadOnly: unreadOnly,
-            todayOnly: "true",
-          },
-        });
-
-        setNotifications((prev) => {
-          if (response.data.length > prev.length) {
-            const newNotifications = response.data.filter(
-              (n) => !prev.find((oldN) => oldN._id === n._id),
-            );
-
-            if (
-              newNotifications.length > 0 &&
-              Notification.permission === "granted"
-            ) {
-              newNotifications.forEach((n) => {
-                new window.Notification(n.title, {
-                  body: n.message,
-                  icon: "/logo/logo.png",
-                });
-              });
-            }
-          }
-          return response.data;
-        });
-        setLastFetched(now);
-      } catch (error) {
-        console.error("Failed to fetch notifications", error);
-      }
-    },
-    [mobile, userRole, unreadOnly, lastFetched],
-  );
+  const filteredNotifications = unreadOnly
+    ? notifications.filter((n) => !n.isRead)
+    : notifications;
 
   useEffect(() => {
     if ("Notification" in window && Notification.permission === "default") {
       Notification.requestPermission();
     }
-
-    fetchNotifications(true);
-    const interval = setInterval(() => fetchNotifications(), 60000); // Check every minute
-    return () => clearInterval(interval);
-  }, [fetchNotifications]);
+  }, []);
 
   const toggleDropdown = useCallback(() => {
     setProfileDropdownOpen((prev) => !prev);
@@ -96,18 +59,9 @@ const Header = ({
     setProfileDropdownOpen(false);
   };
 
-  const toggleReadStatus = async (id) => {
-    try {
-      await api.patch(`/notifications/${id}/toggle-read`);
-      fetchNotifications(true);
-    } catch (error) {
-      console.error("Failed to toggle notification status", error);
-    }
-  };
-
   const handleNotificationClick = async (n) => {
     if (!n.isRead) {
-      await toggleReadStatus(n._id);
+      await markAsRead(n._id);
     }
     setShowNotifications(false);
 
@@ -119,21 +73,11 @@ const Header = ({
   };
 
   const deleteNotification = async (id) => {
-    try {
-      await api.delete(`/notifications/${id}`);
-      setNotifications((prev) => prev.filter((n) => n._id !== id));
-    } catch (error) {
-      console.error("Failed to delete notification", error);
-    }
+    await deleteNotificationFromContext(id);
   };
 
   const markAllAsRead = async () => {
-    try {
-      await api.patch("/notifications/read-all", { mobile, role: userRole });
-      fetchNotifications(true);
-    } catch (error) {
-      console.error("Failed to mark all as read", error);
-    }
+    await markAllRead();
   };
 
   useEffect(() => {
@@ -190,9 +134,9 @@ const Header = ({
             onClick={toggleNotifications}
           >
             <AiOutlineBell size={24} />
-            {notifications.length > 0 && (
+            {unreadCount > 0 && (
               <span className="absolute top-1 right-1 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full ring-2 ring-emerald-800">
-                {notifications.length}
+                {unreadCount}
               </span>
             )}
           </button>
@@ -201,9 +145,9 @@ const Header = ({
               <div className="p-3 bg-slate-50 border-b border-slate-100 font-bold text-slate-800 flex justify-between items-center">
                 <div className="flex items-center gap-2">
                   <span>Notifications</span>
-                  {notifications.filter((n) => !n.isRead).length > 0 && (
+                  {unreadCount > 0 && (
                     <span className="bg-red-100 text-red-600 text-[10px] px-2 py-0.5 rounded-full">
-                      {notifications.filter((n) => !n.isRead).length} new
+                      {unreadCount} new
                     </span>
                   )}
                 </div>
@@ -235,8 +179,8 @@ const Header = ({
               </div>
 
               <div className="max-h-96 overflow-y-auto">
-                {notifications.length > 0 ? (
-                  notifications.map((n) => (
+                {filteredNotifications.length > 0 ? (
+                  filteredNotifications.map((n) => (
                     <div
                       key={n._id}
                       className={`p-3 border-b border-slate-50 hover:bg-slate-50 cursor-pointer group transition-colors ${!n.isRead ? "bg-emerald-50/30" : ""}`}
@@ -259,7 +203,7 @@ const Header = ({
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
-                                toggleReadStatus(n._id);
+                                markAsRead(n._id);
                               }}
                               className="p-1 rounded-md hover:bg-white text-slate-400 hover:text-emerald-600 transition-colors"
                               title={

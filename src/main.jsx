@@ -17,7 +17,7 @@ const rawBaseURL = import.meta.env.VITE_API_BASE_URL || "/api";
 const apiBaseURL = rawBaseURL.endsWith("/") ? rawBaseURL : `${rawBaseURL}/`;
 
 axios.defaults.baseURL = apiBaseURL;
-axios.defaults.timeout = 15000;
+axios.defaults.timeout = 5000;
 axios.interceptors.request.use((config) => {
   const apiKey = import.meta.env.VITE_API_KEY;
   if (apiKey) {
