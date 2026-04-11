@@ -27,7 +27,7 @@ const AddConsignee = () => {
     pin: "",
     contactPerson: "",
     mandiLicense: "",
-    activeStatus: "",
+    activeStatus: "active",
   });
 
   const [stateOptions, setStateOptions] = useState([]);
@@ -146,7 +146,7 @@ const AddConsignee = () => {
           pin: "",
           contactPerson: "",
           mandiLicense: "",
-          activeStatus: "",
+          activeStatus: "active",
         });
       }
     } catch (error) {

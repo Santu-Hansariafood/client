@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef, lazy, Suspense } from "react";
-import axios from "axios";
+import api from "../../../utils/apiClient/apiClient";
 import { toast } from "react-toastify";
 import { FaTruck } from "react-icons/fa";
 import Loading from "../../../common/Loading/Loading";
@@ -46,7 +46,7 @@ const ListConsignee = () => {
         return;
       }
 
-      const response = await axios.get("/consignees", {
+      const response = await api.get("/consignees", {
         params: {
           page: currentPage,
           limit: ITEMS_PER_PAGE,
@@ -110,12 +110,12 @@ const ListConsignee = () => {
 
   const submitEdit = async (updatedData) => {
     try {
-      await axios.put(`/consignees/${selectedConsignee._id}`, updatedData);
+      await api.put(`/consignees/${selectedConsignee._id}`, updatedData);
 
       toast.success("Consignee updated successfully");
 
       setIsEditPopupOpen(false);
-
+      cacheRef.current.clear(); // Clear cache to reflect updates
       fetchConsignees();
     } catch (error) {
       toast.error(error?.response?.data?.message || "Error updating consignee");
@@ -124,12 +124,10 @@ const ListConsignee = () => {
 
   const submitDelete = async () => {
     try {
-      await axios.delete(`/consignees/${selectedConsignee._id}`);
-
+      await api.delete(`/consignees/${selectedConsignee._id}`);
       toast.success("Consignee deleted successfully");
-
       setIsPopupOpen(false);
-
+      cacheRef.current.clear(); // Clear cache to reflect deletion
       fetchConsignees();
     } catch (error) {
       toast.error(error?.response?.data?.message || "Error deleting consignee");
@@ -151,7 +149,7 @@ const ListConsignee = () => {
         consignee.pin,
         consignee.contactPerson,
         consignee.mandiLicense,
-        consignee.activeStatus ? "Active" : "Inactive",
+        consignee.activeStatus === "active" ? "Active" : "Inactive",
         <Actions
           key={consignee._id}
           onView={() => handleView(consignee)}
@@ -263,7 +261,7 @@ const ListConsignee = () => {
               </p>
               <p>
                 <strong>Active Status:</strong>{" "}
-                {selectedConsignee.activeStatus ? "Active" : "Inactive"}
+                {selectedConsignee.activeStatus === "active" ? "Active" : "Inactive"}
               </p>
             </div>
           )}
