@@ -91,12 +91,12 @@ const AddConsignee = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!regexPatterns.phoneNumber.test(formData.phone)) {
+    if (formData.phone && !regexPatterns.mobile.test(formData.phone)) {
       toast.error("Invalid phone number format.");
       return;
     }
 
-    if (formData.email && !regexPatterns.emailId.test(formData.email)) {
+    if (formData.email && !regexPatterns.email.test(formData.email)) {
       toast.error("Invalid email format.");
       return;
     }
