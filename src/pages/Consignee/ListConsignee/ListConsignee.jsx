@@ -115,7 +115,7 @@ const ListConsignee = () => {
       toast.success("Consignee updated successfully");
 
       setIsEditPopupOpen(false);
-      cacheRef.current.clear(); // Clear cache to reflect updates
+      cacheRef.current.clear();
       fetchConsignees();
     } catch (error) {
       toast.error(error?.response?.data?.message || "Error updating consignee");
@@ -127,7 +127,7 @@ const ListConsignee = () => {
       await api.delete(`/consignees/${selectedConsignee._id}`);
       toast.success("Consignee deleted successfully");
       setIsPopupOpen(false);
-      cacheRef.current.clear(); // Clear cache to reflect deletion
+      cacheRef.current.clear();
       fetchConsignees();
     } catch (error) {
       toast.error(error?.response?.data?.message || "Error deleting consignee");
@@ -261,7 +261,9 @@ const ListConsignee = () => {
               </p>
               <p>
                 <strong>Active Status:</strong>{" "}
-                {selectedConsignee.activeStatus === "active" ? "Active" : "Inactive"}
+                {selectedConsignee.activeStatus === "active"
+                  ? "Active"
+                  : "Inactive"}
               </p>
             </div>
           )}

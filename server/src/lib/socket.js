@@ -7,7 +7,10 @@ export const initSocket = (server) => {
   const corsOrigin = (process.env.CORS_ORIGIN || "*").trim();
   const corsOrigins =
     corsOrigin && corsOrigin !== "*"
-      ? corsOrigin.split(",").map((s) => s.trim()).filter(Boolean)
+      ? corsOrigin
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean)
       : "*";
 
   io = new Server(server, {
@@ -19,10 +22,10 @@ export const initSocket = (server) => {
     },
   });
 
-  // Authentication middleware for Socket.io
   io.use((socket, next) => {
-    const token = socket.handshake.auth.token || socket.handshake.headers.authorization;
-    
+    const token =
+      socket.handshake.auth.token || socket.handshake.headers.authorization;
+
     if (!token) {
       return next(new Error("Authentication error: No token provided"));
     }
@@ -40,21 +43,21 @@ export const initSocket = (server) => {
 
   io.on("connection", (socket) => {
     const { mobile, role } = socket.user;
-    
-    console.log(`User connected: ${mobile} (${role}) - Socket ID: ${socket.id}`);
 
-    // Automatically join rooms based on authenticated user data
+    console.log(
+      `User connected: ${mobile} (${role}) - Socket ID: ${socket.id}`,
+    );
+
     if (mobile) {
       socket.join(mobile);
       console.log(`Socket ${socket.id} joined room: ${mobile}`);
     }
-    
+
     if (role) {
       socket.join(role);
       console.log(`Socket ${socket.id} joined role room: ${role}`);
     }
-    
-    // Join general 'all' room
+
     socket.join("all");
 
     socket.on("disconnect", (reason) => {
@@ -82,10 +85,8 @@ export const emitNotification = (notification) => {
   const { recipient, recipientRole } = notification;
 
   if (recipient === "all") {
-    // Send to everyone in the role room
     io.to(recipientRole).emit("notification", notification);
   } else {
-    // Send to specific user room
     io.to(recipient).emit("notification", notification);
   }
 };

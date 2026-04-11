@@ -40,13 +40,14 @@ const EditSellerDetails = ({ sellerId, onClose, onSave }) => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [commodities, companies, groups, sellerData] =
-          await Promise.all([
-            fetchAllPages("/commodities"),
-            fetchAllPages("/seller-company"),
-            fetchAllPages("/groups"),
-            api.get(`/sellers/${sellerId}`).then(res => res.data?.data || res.data || {}),
-          ]);
+        const [commodities, companies, groups, sellerData] = await Promise.all([
+          fetchAllPages("/commodities"),
+          fetchAllPages("/seller-company"),
+          fetchAllPages("/groups"),
+          api
+            .get(`/sellers/${sellerId}`)
+            .then((res) => res.data?.data || res.data || {}),
+        ]);
 
         const commodityOpts = commodities.map((item) => ({
           value: item.name,
@@ -110,7 +111,9 @@ const EditSellerDetails = ({ sellerId, onClose, onSave }) => {
         setCompanyOptions(
           companyOpts.sort((a, b) => a.label.localeCompare(b.label)),
         );
-        setGroupOptions(groupOpts.sort((a, b) => a.label.localeCompare(b.label)));
+        setGroupOptions(
+          groupOpts.sort((a, b) => a.label.localeCompare(b.label)),
+        );
 
         const selectedGroupValues = (sellerData.groups || [])
           .map((group) => group.name)
@@ -120,7 +123,7 @@ const EditSellerDetails = ({ sellerId, onClose, onSave }) => {
           groupOpts.filter((g) => selectedGroupValues.includes(g.label)),
         );
       } catch (error) {
-        toast.error("Failed to load data from the server.");
+        toast.error("Failed to load data from the server.", error);
       }
     };
 
@@ -216,10 +219,7 @@ const EditSellerDetails = ({ sellerId, onClose, onSave }) => {
     };
 
     try {
-      const response = await api.put(
-        `/sellers/${sellerId}`,
-        payload,
-      );
+      const response = await api.put(`/sellers/${sellerId}`, payload);
       toast.success("Seller details updated successfully!");
       if (onSave) {
         onSave(response.data);

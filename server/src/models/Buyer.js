@@ -37,7 +37,9 @@ const buyerSchema = new mongoose.Schema(
 buyerSchema.pre("save", function (next) {
   if (this.mobile && Array.isArray(this.mobile)) {
     this.mobile = this.mobile.map((phone) => {
-      const match = String(phone).trim().match(/^(?:\+91|0)?([6-9]\d{9})$/);
+      const match = String(phone)
+        .trim()
+        .match(/^(?:\+91|0)?([6-9]\d{9})$/);
       return match ? match[1] : phone;
     });
   }

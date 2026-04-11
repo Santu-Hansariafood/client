@@ -75,7 +75,7 @@ export const AuthProvider = ({ children }) => {
     if (tokenValue) {
       localStorage.setItem("token", tokenValue);
     }
-    
+
     startSessionTimer(true);
     return true;
   };

@@ -33,7 +33,9 @@ const transporterSchema = new mongoose.Schema(
 
 transporterSchema.pre("save", function (next) {
   if (this.mobile) {
-    const match = String(this.mobile).trim().match(/^(?:\+91|0)?([6-9]\d{9})$/);
+    const match = String(this.mobile)
+      .trim()
+      .match(/^(?:\+91|0)?([6-9]\d{9})$/);
     if (match) {
       this.mobile = match[1];
     }

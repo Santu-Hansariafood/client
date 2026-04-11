@@ -1,11 +1,15 @@
 import { useState } from "react";
 import api from "../../utils/apiClient/apiClient";
 import { toast } from "react-toastify";
-import { AiOutlineArrowLeft, AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
+import {
+  AiOutlineArrowLeft,
+  AiOutlineEye,
+  AiOutlineEyeInvisible,
+} from "react-icons/ai";
 import DataInput from "../../common/DataInput/DataInput";
 
 const ForgotPassword = ({ onBack, userRole }) => {
-  const [step, setStep] = useState(1); // 1: Mobile, 2: OTP, 3: New Password
+  const [step, setStep] = useState(1);
   const [mobile, setMobile] = useState("");
   const [otp, setOtp] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -67,7 +71,9 @@ const ForgotPassword = ({ onBack, userRole }) => {
         otp,
         newPassword,
       });
-      toast.success("Password reset successfully. Please login with your new password.");
+      toast.success(
+        "Password reset successfully. Please login with your new password.",
+      );
       onBack();
     } catch (error) {
       toast.error(error.response?.data?.message || "Failed to reset password.");
@@ -156,7 +162,11 @@ const ForgotPassword = ({ onBack, userRole }) => {
               className="absolute right-4 top-[38px] text-gray-400 hover:text-emerald-600 transition"
               onClick={() => setShowPassword(!showPassword)}
             >
-              {showPassword ? <AiOutlineEye size={20} /> : <AiOutlineEyeInvisible size={20} />}
+              {showPassword ? (
+                <AiOutlineEye size={20} />
+              ) : (
+                <AiOutlineEyeInvisible size={20} />
+              )}
             </button>
           </div>
           <DataInput

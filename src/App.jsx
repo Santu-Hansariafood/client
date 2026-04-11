@@ -14,8 +14,12 @@ import "./App.css";
 const ErrorFallback = ({ error }) => (
   <div className="min-h-screen flex items-center justify-center p-4 bg-slate-50">
     <div className="bg-white p-8 rounded-2xl shadow-xl border border-red-100 max-w-md w-full text-center">
-      <h2 className="text-2xl font-bold text-slate-800 mb-4">Something went wrong</h2>
-      <p className="text-slate-600 mb-6">The application encountered an error. Please try restarting the app.</p>
+      <h2 className="text-2xl font-bold text-slate-800 mb-4">
+        Something went wrong
+      </h2>
+      <p className="text-slate-600 mb-6">
+        The application encountered an error. Please try restarting the app.
+      </p>
       <pre className="text-xs bg-slate-100 p-4 rounded-lg overflow-auto text-left mb-6 max-h-40">
         {error.message}
       </pre>

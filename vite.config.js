@@ -120,7 +120,7 @@ export default defineConfig({
     chunkSizeWarningLimit: 1600,
   },
   server: {
-    host: true, // Allow external access (mobile)
+    host: true,
     hmr: {
       overlay: false,
     },
@@ -131,10 +131,10 @@ export default defineConfig({
         secure: false,
       },
     },
-    allowedHosts: true, // Allow access from any host (mobile IP, etc.)
+    allowedHosts: true,
   },
   preview: {
-    host: true, // Allow external access (mobile)
+    host: true,
     allowedHosts: true,
     proxy: {
       "/api": {

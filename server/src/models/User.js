@@ -20,13 +20,17 @@ const userSchema = new mongoose.Schema(
 
 userSchema.pre("save", function (next) {
   if (this.mobile) {
-    const match = String(this.mobile).trim().match(/^(?:\+91|0)?([6-9]\d{9})$/);
+    const match = String(this.mobile)
+      .trim()
+      .match(/^(?:\+91|0)?([6-9]\d{9})$/);
     if (match) {
       this.mobile = match[1];
     }
   }
   if (this.phone) {
-    const match = String(this.phone).trim().match(/^(?:\+91|0)?([6-9]\d{9})$/);
+    const match = String(this.phone)
+      .trim()
+      .match(/^(?:\+91|0)?([6-9]\d{9})$/);
     if (match) {
       this.phone = match[1];
     }

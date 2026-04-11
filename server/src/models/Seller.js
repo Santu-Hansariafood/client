@@ -17,7 +17,6 @@ const formatPhone = (phone) => {
       "Invalid phone number format. Must be 10 digits with optional +91 or 0 prefix.",
     );
   }
-  // Return only the 10 digit part
   return match[1];
 };
 
@@ -25,8 +24,6 @@ const upperCase = (val) => {
   if (!val) return val;
   return val.toUpperCase();
 };
-
-/* ------------------ Schemas ------------------ */
 
 const phoneSchema = new mongoose.Schema(
   {
@@ -65,8 +62,6 @@ const groupSchema = new mongoose.Schema(
   },
   { _id: false },
 );
-
-/* ------------------ Seller Schema ------------------ */
 
 const sellerSchema = new mongoose.Schema(
   {

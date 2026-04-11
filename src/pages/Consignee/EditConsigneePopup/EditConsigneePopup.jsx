@@ -248,8 +248,10 @@ const EditConsigneePopup = ({ initialData, onSubmit, onCancel }) => {
                 { value: "inactive", label: "Inactive" },
               ]}
               selectedOptions={{
-                value: formData.activeStatus === "active" ? "active" : "inactive",
-                label: formData.activeStatus === "active" ? "Active" : "Inactive",
+                value:
+                  formData.activeStatus === "active" ? "active" : "inactive",
+                label:
+                  formData.activeStatus === "active" ? "Active" : "Inactive",
               }}
               onChange={(option) =>
                 handleDropdownChange(option, "activeStatus")

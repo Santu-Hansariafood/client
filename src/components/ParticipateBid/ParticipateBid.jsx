@@ -161,8 +161,8 @@ const ParticipateBid = () => {
                 No Bids Found
               </h3>
               <p className="text-slate-500 mt-1 max-w-xs mx-auto">
-                You haven&apos;t participated in any bids yet. Start bidding to see
-                them here!
+                You haven&apos;t participated in any bids yet. Start bidding to
+                see them here!
               </p>
             </div>
           ) : (

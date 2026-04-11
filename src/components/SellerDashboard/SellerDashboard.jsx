@@ -5,7 +5,6 @@ import {
   FaBell,
   FaGavel,
   FaBoxOpen,
-  FaTruckMoving,
   FaChevronRight,
   FaBook,
 } from "react-icons/fa";
@@ -21,7 +20,11 @@ const PopupBox = lazy(() => import("../../common/PopupBox/PopupBox"));
 
 const SellerDashboard = () => {
   const { mobile, user } = useAuth();
-  const { notifications: confirmedBids, unreadCount: notificationCount, markAsRead } = useNotifications();
+  const {
+    notifications: confirmedBids,
+    unreadCount: notificationCount,
+    markAsRead,
+  } = useNotifications();
   const navigate = useNavigate();
 
   const [sellerDetails, setSellerDetails] = useState(null);
@@ -54,7 +57,9 @@ const SellerDashboard = () => {
           ]);
 
         const normalizePhone = (p) => {
-          const m = String(p || "").trim().match(/^(?:\+91|0)?([6-9]\d{9})$/);
+          const m = String(p || "")
+            .trim()
+            .match(/^(?:\+91|0)?([6-9]\d{9})$/);
           return m ? m[1] : p;
         };
 
@@ -65,7 +70,9 @@ const SellerDashboard = () => {
         const orders = ordersRes?.data?.data || ordersRes?.data || [];
 
         const seller = sellers.find((s) =>
-          s?.phoneNumbers?.some((p) => normalizePhone(p?.value) === normalizePhone(mobile)),
+          s?.phoneNumbers?.some(
+            (p) => normalizePhone(p?.value) === normalizePhone(mobile),
+          ),
         );
 
         if (!seller) {
@@ -233,7 +240,9 @@ const SellerDashboard = () => {
                 <div
                   key={i}
                   className={`p-4 rounded-xl mb-2 border ${
-                    notif.isRead ? "bg-slate-50 border-slate-100" : "bg-emerald-50 border-emerald-100"
+                    notif.isRead
+                      ? "bg-slate-50 border-slate-100"
+                      : "bg-emerald-50 border-emerald-100"
                   }`}
                   onClick={async () => {
                     if (!notif.isRead) {
@@ -242,7 +251,9 @@ const SellerDashboard = () => {
                   }}
                 >
                   <div className="flex justify-between items-start">
-                    <h4 className={`font-bold ${notif.isRead ? "text-slate-700" : "text-emerald-800"}`}>
+                    <h4
+                      className={`font-bold ${notif.isRead ? "text-slate-700" : "text-emerald-800"}`}
+                    >
                       {notif.title}
                     </h4>
                     {!notif.isRead && (
@@ -256,7 +267,9 @@ const SellerDashboard = () => {
                 </div>
               ))
             ) : (
-              <p className="text-center text-slate-400 py-8">No notifications</p>
+              <p className="text-center text-slate-400 py-8">
+                No notifications
+              </p>
             )}
           </PopupBox>
         </div>

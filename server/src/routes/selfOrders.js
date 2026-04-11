@@ -73,13 +73,13 @@ router.get("/", async (req, res) => {
       const phoneRegex = /^(?:\+91|0)?([6-9]\d{9})$/;
       const phoneMatch = String(sellerMobile).match(phoneRegex);
       const normalizedMobile = phoneMatch ? phoneMatch[1] : sellerMobile;
-      
+
       query = {
         ...query,
         $or: [
           { sellerMobile: normalizedMobile },
-          { sellerMobile: { $regex: new RegExp(normalizedMobile + "$") } }
-        ]
+          { sellerMobile: { $regex: new RegExp(normalizedMobile + "$") } },
+        ],
       };
     }
 

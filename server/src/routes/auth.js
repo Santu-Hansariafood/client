@@ -79,7 +79,8 @@ router.post("/forgot-password", async (req, res) => {
     const email = getEmailByRole(user, role);
     if (!email) {
       return res.status(400).json({
-        message: "No email address found for this account. Please contact support.",
+        message:
+          "No email address found for this account. Please contact support.",
       });
     }
 
@@ -96,7 +97,9 @@ router.post("/forgot-password", async (req, res) => {
       emailTemplate = await fs.readFile(templatePath, "utf8");
     } catch (readError) {
       console.error("Error reading email template:", readError);
-      return res.status(500).json({ message: "Failed to load email template." });
+      return res
+        .status(500)
+        .json({ message: "Failed to load email template." });
     }
 
     emailTemplate = emailTemplate.replace("{{otp}}", otp);
@@ -200,7 +203,7 @@ router.post("/admin/login", async (req, res) => {
     if (phoneMatch) {
       normalizedMobile = phoneMatch[1];
     }
-    
+
     console.log(`Admin login attempt: mobile=${normalizedMobile}`);
 
     if (!process.env.JWT_SECRET) {
@@ -251,7 +254,7 @@ router.post("/employees/login", async (req, res) => {
     if (phoneMatch) {
       normalizedMobile = phoneMatch[1];
     }
-    
+
     console.log(`Employee login attempt: mobile=${normalizedMobile}`);
 
     if (!process.env.JWT_SECRET) {
@@ -312,7 +315,7 @@ router.post("/transporters/login", async (req, res) => {
     if (phoneMatch) {
       normalizedMobile = phoneMatch[1];
     }
-    
+
     console.log(`Transporter login attempt: mobile=${normalizedMobile}`);
 
     if (!process.env.JWT_SECRET) {
@@ -372,7 +375,7 @@ router.post("/buyers/login", async (req, res) => {
     if (phoneMatch) {
       normalizedMobile = phoneMatch[1];
     }
-    
+
     console.log(`Buyer login attempt: mobile=${normalizedMobile}`);
 
     if (!process.env.JWT_SECRET) {
@@ -440,7 +443,7 @@ router.post("/sellers/login", async (req, res) => {
     if (phoneMatch) {
       normalizedPhone = phoneMatch[1];
     }
-    
+
     console.log(`Seller login attempt: phone=${normalizedPhone}`);
 
     if (!process.env.JWT_SECRET) {

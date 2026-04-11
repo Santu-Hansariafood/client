@@ -773,7 +773,15 @@ const SelfOrderList = () => {
     } catch {
       toast.error("Failed to generate Excel");
     }
-  }, [userRole, buyerData, mobile, searchInput, getConsigneeDisplay, startDate, endDate]);
+  }, [
+    userRole,
+    buyerData,
+    mobile,
+    searchInput,
+    getConsigneeDisplay,
+    startDate,
+    endDate,
+  ]);
 
   return (
     <Suspense fallback={<Loading />}>

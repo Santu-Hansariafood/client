@@ -48,7 +48,10 @@ app.use(compression({ level: 6 }));
 const corsOrigin = (process.env.CORS_ORIGIN || "*").trim();
 const corsOrigins =
   corsOrigin && corsOrigin !== "*"
-    ? corsOrigin.split(",").map((s) => s.trim()).filter(Boolean)
+    ? corsOrigin
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean)
     : "*";
 
 app.use(
@@ -56,10 +59,17 @@ app.use(
     origin: corsOrigins,
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
-    allowedHeaders: ["Content-Type", "Authorization", "x-api-key", "Origin", "Accept", "X-Requested-With"],
+    allowedHeaders: [
+      "Content-Type",
+      "Authorization",
+      "x-api-key",
+      "Origin",
+      "Accept",
+      "X-Requested-With",
+    ],
     exposedHeaders: ["X-Cache"],
     maxAge: 86400,
-  })
+  }),
 );
 
 app.use(express.json({ limit: "5mb" }));
@@ -115,7 +125,9 @@ const start = async () => {
   server.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
     console.log(`CORS allowed origins: ${process.env.CORS_ORIGIN || "*"}`);
-    console.log(`API Key loaded: ${process.env.API_KEY ? "Yes (starts with " + process.env.API_KEY.slice(0, 4) + ")" : "No"}`);
+    console.log(
+      `API Key loaded: ${process.env.API_KEY ? "Yes (starts with " + process.env.API_KEY.slice(0, 4) + ")" : "No"}`,
+    );
   });
 };
 

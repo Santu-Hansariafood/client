@@ -75,7 +75,9 @@ const LoadingEntry = () => {
         documentUrl: "",
       });
     } catch (error) {
-      toast.error(error?.response?.data?.message || "Failed to add loading entry");
+      toast.error(
+        error?.response?.data?.message || "Failed to add loading entry",
+      );
     }
   };
 
