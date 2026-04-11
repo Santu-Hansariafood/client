@@ -1,6 +1,6 @@
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
-import axios from "axios";
+import api from "../../../utils/apiClient/apiClient";
 import logo from "../../../assets/Hans.png";
 import signature from "../../../assets/signature.png";
 import stamp from "../../../assets/stamp.png";
@@ -41,7 +41,7 @@ const PrintLoadingEntry = async (data) => {
 
   const safeFetch = async (url) => {
     try {
-      const res = await axios.get(url);
+      const res = await api.get(url);
       return Array.isArray(res.data) ? res.data : res.data?.data || [];
     } catch {
       return [];

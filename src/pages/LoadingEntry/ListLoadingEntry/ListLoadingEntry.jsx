@@ -1,5 +1,5 @@
 import React, { lazy, useEffect, useState, useMemo } from "react";
-import axios from "axios";
+import api from "../../../utils/apiClient/apiClient";
 import { MdVisibility, MdEdit, MdDelete, MdDownload } from "react-icons/md";
 import { toast } from "react-toastify";
 import { useAuth } from "../../../context/AuthContext/AuthContext";
@@ -49,10 +49,10 @@ const ListLoadingEntry = () => {
     try {
       const [entriesRes, sellersRes, transportersRes, ordersRes] =
         await Promise.all([
-          axios.get("/loading-entries"),
-          axios.get("/sellers"),
-          axios.get("/transporters", { params: { limit: 0 } }),
-          axios.get("/self-order", { params: { limit: 0 } }),
+          api.get("/loading-entries"),
+          api.get("/sellers"),
+          api.get("/transporters", { params: { limit: 0 } }),
+          api.get("/self-order", { params: { limit: 0 } }),
         ]);
 
       const sellersData = Array.isArray(sellersRes.data)
@@ -175,7 +175,7 @@ const ListLoadingEntry = () => {
           : null,
       };
 
-      await axios.put(`/loading-entries/${editEntry._id}`, payload);
+      await api.put(`/loading-entries/${editEntry._id}`, payload);
       toast.success("Entry updated successfully");
       setPopupType("");
       setSelectedEntry(null);
@@ -191,7 +191,7 @@ const ListLoadingEntry = () => {
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this entry?")) {
       try {
-        await axios.delete(`/loading-entries/${id}`);
+        await api.delete(`/loading-entries/${id}`);
         toast.success("Entry deleted successfully");
         fetchData();
       } catch (error) {

@@ -2,7 +2,7 @@ import { useState, useEffect, lazy, Suspense } from "react";
 import { FaPlus, FaTrash, FaDownload } from "react-icons/fa";
 import { toast } from "react-toastify";
 import { FaTruckLoading } from "react-icons/fa";
-import axios from "axios";
+import api from "../../../utils/apiClient/apiClient";
 import Loading from "../../../common/Loading/Loading";
 import PrintLoadingEntry from "../PrintLoadingEntry/PrintLoadingEntry";
 import { useAuth } from "../../../context/AuthContext/AuthContext";
@@ -28,21 +28,26 @@ const capitalizeWords = (str) => {
 
 const fetchData = async (url, key) => {
   try {
-    const response = await axios.get(url);
+    const response = await api.get(url);
     const data = Array.isArray(response.data)
       ? response.data
       : response.data?.data || [];
 
     if (url === "/sellers") {
-      return data.flatMap((seller) =>
-        (seller.companies || []).map((company) => ({
+      return data.flatMap((seller) => {
+        const companies =
+          Array.isArray(seller.companies) && seller.companies.length > 0
+            ? seller.companies
+            : [seller.sellerName || "Unknown Seller"];
+
+        return companies.map((company) => ({
           value: seller._id,
           label: capitalizeWords(company),
           company: company,
           sellerName: seller.sellerName,
           phoneNumbers: seller.phoneNumbers || [],
-        })),
-      );
+        }));
+      });
     }
     return data.map((item) => ({
       value: item._id,
@@ -76,6 +81,7 @@ const AddLoadingEntry = () => {
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [loadingEntries, setLoadingEntries] = useState([]);
+  const [existingEntries, setExistingEntries] = useState([]); // Added for history
   const [isSaving, setIsSaving] = useState(false);
 
   if (
@@ -115,8 +121,8 @@ const AddLoadingEntry = () => {
         const [suppliersData, consigneesRes, transportersRes] =
           await Promise.all([
             fetchData("/sellers", "sellerName"),
-            axios.get("/consignees", { params: { limit: 0 } }),
-            axios.get("/transporters", { params: { limit: 0 } }),
+            api.get("/consignees", { params: { limit: 0 } }),
+            api.get("/transporters", { params: { limit: 0 } }),
           ]);
 
         const rawConsignees = Array.isArray(consigneesRes.data)
@@ -167,7 +173,7 @@ const AddLoadingEntry = () => {
       const trimmedSauda = saudaSearch.trim();
       if (trimmedSauda.length >= 3) {
         try {
-          const response = await axios.get("/self-order");
+          const response = await api.get("/self-order");
           const allOrders = Array.isArray(response.data)
             ? response.data
             : response.data?.data || [];
@@ -189,7 +195,7 @@ const AddLoadingEntry = () => {
                     normalize(matchedOrder.supplierCompany),
               );
               if (!isMyOrder) {
-                toast.error("Access denied for this Sauda.");
+                // No toast error here to avoid flickering while typing
                 return;
               }
             }
@@ -220,7 +226,12 @@ const AddLoadingEntry = () => {
 
             const quantity = matchedOrder.quantity || 0;
             let pendingQuantity = matchedOrder.pendingQuantity;
-            if ((pendingQuantity === undefined || pendingQuantity === null || (pendingQuantity === 0 && matchedOrder.status === "active")) && matchedOrder.status !== "closed") {
+            if (
+              (pendingQuantity === undefined ||
+                pendingQuantity === null ||
+                (pendingQuantity === 0 && matchedOrder.status === "active")) &&
+              matchedOrder.status !== "closed"
+            ) {
               pendingQuantity = quantity;
             } else {
               pendingQuantity = pendingQuantity || 0;
@@ -228,20 +239,16 @@ const AddLoadingEntry = () => {
 
             const tolerance = quantity * 0.05;
             const isClosed =
-              matchedOrder.status === "closed" || Math.abs(pendingQuantity) <= tolerance;
-            
+              matchedOrder.status === "closed" ||
+              Math.abs(pendingQuantity) <= tolerance;
+
             const processedOrder = {
               ...matchedOrder,
               pendingQuantity,
               isClosed,
             };
-            setOrders([processedOrder]);
 
-            if (!processedOrder.isClosed) {
-              handleOpenPopup(processedOrder);
-            } else {
-              toast.info(`Sauda ${matchedOrder.saudaNo} is already closed.`);
-            }
+            setOrders([processedOrder]);
           }
         } catch (err) {
           console.error("Error auto-filling sauda details:", err);
@@ -249,70 +256,131 @@ const AddLoadingEntry = () => {
       }
     };
 
-    const timer = setTimeout(autoFillSauda, 500);
+    const timer = setTimeout(autoFillSauda, 800);
     return () => clearTimeout(timer);
   }, [saudaSearch, suppliers, consignees, userRole]);
 
   const handleSearch = async () => {
-    if (selectedSupplier && selectedConsignee) {
-      setLoading(true);
+    const trimmedSauda = saudaSearch.trim();
+    if (!selectedSupplier && !selectedConsignee && !trimmedSauda) {
+      toast.info("Please provide at least one search criteria.");
+      return;
+    }
 
-      try {
-        const response = await axios.get("/self-order");
-        const allOrders = Array.isArray(response.data)
-          ? response.data
-          : response.data?.data || [];
+    setLoading(true);
+    try {
+      const response = await api.get("/self-order");
+      const allOrders = Array.isArray(response.data)
+        ? response.data
+        : response.data?.data || [];
 
-        let orderData = allOrders.filter(
+      let orderData = allOrders;
+
+      // Filter by Supplier
+      if (selectedSupplier) {
+        orderData = orderData.filter(
           (order) =>
             String(order.supplier?._id || order.supplier) ===
               String(selectedSupplier.value) &&
             normalize(order.supplierCompany) ===
-              normalize(selectedSupplier.company) &&
+              normalize(selectedSupplier.company),
+        );
+      }
+
+      // Filter by Consignee
+      if (selectedConsignee) {
+        orderData = orderData.filter(
+          (order) =>
             normalize(order.consignee) === normalize(selectedConsignee.name),
         );
+      }
 
-        if (saudaSearch.trim()) {
-          orderData = orderData.filter((order) =>
-            order.saudaNo?.toLowerCase().includes(saudaSearch.toLowerCase()),
-          );
+      // Filter by Sauda No
+      if (trimmedSauda) {
+        orderData = orderData.filter((order) =>
+          order.saudaNo?.toLowerCase().includes(trimmedSauda.toLowerCase()),
+        );
+      }
+
+      if (orderData.length === 0) {
+        toast.info("No matching Sauda found.");
+        setOrders([]);
+        return;
+      }
+
+      // Process matched orders
+      const processedOrders = orderData.map((order) => {
+        const quantity = order.quantity || 0;
+        let pendingQuantity = order.pendingQuantity;
+        if (
+          (pendingQuantity === undefined ||
+            pendingQuantity === null ||
+            (pendingQuantity === 0 && order.status === "active")) &&
+          order.status !== "closed"
+        ) {
+          pendingQuantity = quantity;
+        } else {
+          pendingQuantity = pendingQuantity || 0;
         }
 
-        orderData = orderData.map((order) => {
-          const quantity = order.quantity || 0;
-          let pendingQuantity = order.pendingQuantity;
-          if ((pendingQuantity === undefined || pendingQuantity === null || (pendingQuantity === 0 && order.status === "active")) && order.status !== "closed") {
-            pendingQuantity = quantity;
-          } else {
-            pendingQuantity = pendingQuantity || 0;
-          }
+        const tolerance = quantity * 0.05;
+        const isClosed =
+          order.status === "closed" || Math.abs(pendingQuantity) <= tolerance;
+        return { ...order, pendingQuantity, isClosed };
+      });
 
-          const tolerance = quantity * 0.05;
-          const isClosed =
-            order.status === "closed" || Math.abs(pendingQuantity) <= tolerance;
-          return { ...order, pendingQuantity, isClosed };
-        });
+      // If only one sauda is found by number, auto-populate supplier and consignee
+      if (processedOrders.length === 1 && trimmedSauda) {
+        const matchedOrder = processedOrders[0];
 
-        orderData.sort((a, b) => {
-          if (a.isClosed !== b.isClosed) {
-            return a.isClosed ? 1 : -1;
-          }
-          const getTime = (d) => {
-            const t = new Date(d).getTime();
-            return isNaN(t) ? 0 : t;
-          };
-
-          return (
-            getTime(b.poDate || b.createdAt) - getTime(a.poDate || a.createdAt)
+        // Auto-fill Supplier if not already selected
+        if (!selectedSupplier) {
+          const supplierOption = suppliers.find(
+            (s) =>
+              String(s.value) ===
+                String(matchedOrder.supplier?._id || matchedOrder.supplier) &&
+              normalize(s.company) === normalize(matchedOrder.supplierCompany),
           );
-        });
+          if (supplierOption) {
+            setSelectedSupplier(supplierOption);
+          }
+        }
 
-        setOrders(orderData);
-      } catch (err) {
-        console.error("Error fetching orders:", err);
-      } finally {
-        setLoading(false);
+        // Auto-fill Consignee if not already selected
+        if (!selectedConsignee) {
+          const consigneeOption = consignees.find(
+            (c) =>
+              String(c.value) ===
+                String(matchedOrder.consignee?._id || matchedOrder.consignee) ||
+              normalize(c.name) === normalize(matchedOrder.consignee) ||
+              normalize(c.label).includes(normalize(matchedOrder.consignee)),
+          );
+          if (consigneeOption) {
+            setSelectedConsignee(consigneeOption);
+          }
+        }
       }
+
+      processedOrders.sort((a, b) => {
+        if (a.isClosed !== b.isClosed) {
+          return a.isClosed ? 1 : -1;
+        }
+        const getTime = (d) => {
+          const t = new Date(d).getTime();
+          return isNaN(t) ? 0 : t;
+        };
+
+        return (
+          getTime(b.poDate || b.createdAt) - getTime(a.poDate || a.createdAt)
+        );
+      });
+
+      setOrders(processedOrders);
+    } catch (err) {
+      console.error("Error searching orders:", err);
+      toast.error("Error searching for orders.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -323,17 +391,27 @@ const AddLoadingEntry = () => {
     }
     try {
       const newStatus = order.status === "closed" ? "active" : "closed";
-      await axios.put(`/self-order/${order._id}`, { status: newStatus });
+      await api.put(`/self-order/${order._id}`, { status: newStatus });
       handleSearch();
     } catch (error) {
       console.error("Error updating sauda status:", error);
     }
   };
 
-  const handleOpenPopup = (order) => {
+  const handleOpenPopup = async (order) => {
     setSelectedOrder(order);
     setLoadingEntries([{ ...INITIAL_ENTRY }]);
     setIsPopupOpen(true);
+    setExistingEntries([]); // Clear previous data
+
+    // Fetch existing entries for this sauda
+    try {
+      const response = await api.get(`/loading-entries/sauda/${order.saudaNo}`);
+      setExistingEntries(Array.isArray(response.data) ? response.data : []);
+    } catch (error) {
+      console.error("Error fetching existing entries:", error);
+      // toast.error("Could not load previous loading history");
+    }
   };
 
   const handleAddMore = () => {
@@ -410,6 +488,20 @@ const AddLoadingEntry = () => {
       }
     }
 
+    const totalNewWeight = calculateTotalLoadingWeight();
+    const pending = selectedOrder.pendingQuantity || 0;
+
+    if (totalNewWeight > pending + selectedOrder.quantity * 0.05) {
+      // Allow 5% tolerance
+      const confirmSave = window.confirm(
+        `Total loading weight (${totalNewWeight.toFixed(2)} Tons) exceeds pending quantity (${pending.toFixed(2)} Tons). Do you want to proceed?`,
+      );
+      if (!confirmSave) {
+        setIsSaving(false);
+        return;
+      }
+    }
+
     try {
       const payload = {
         saudaNo: selectedOrder.saudaNo,
@@ -425,7 +517,7 @@ const AddLoadingEntry = () => {
         })),
       };
 
-      await axios.post("/loading-entries/bulk", payload);
+      await api.post("/loading-entries/bulk", payload);
       toast.success("All loading entries saved successfully");
       setIsPopupOpen(false);
       handleSearch();
@@ -661,6 +753,74 @@ const AddLoadingEntry = () => {
               </div>
 
               <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-2 custom-scrollbar p-2">
+                {/* Previous Loading History Section */}
+                {existingEntries.length > 0 && (
+                  <div className="space-y-4 mb-8">
+                    <h3 className="text-lg font-bold text-slate-700 flex items-center gap-2 px-2">
+                      <span className="w-2 h-6 bg-amber-500 rounded-full"></span>
+                      Previous Loading History ({existingEntries.length})
+                    </h3>
+                    <div className="grid grid-cols-1 gap-3">
+                      {existingEntries.map((entry, idx) => (
+                        <div
+                          key={`history-${idx}`}
+                          className="p-4 bg-slate-50 border border-slate-200 rounded-2xl flex flex-wrap gap-4 items-center justify-between opacity-80"
+                        >
+                          <div className="flex gap-4 items-center">
+                            <span className="text-xs font-bold text-slate-400">
+                              #{idx + 1}
+                            </span>
+                            <div>
+                              <p className="text-[10px] uppercase font-bold text-slate-400">
+                                Date
+                              </p>
+                              <p className="text-sm font-bold text-slate-600">
+                                {formatDate(entry.loadingDate)}
+                              </p>
+                            </div>
+                            <div>
+                              <p className="text-[10px] uppercase font-bold text-slate-400">
+                                Lorry
+                              </p>
+                              <p className="text-sm font-bold text-slate-600">
+                                {entry.lorryNumber}
+                              </p>
+                            </div>
+                            <div>
+                              <p className="text-[10px] uppercase font-bold text-slate-400">
+                                Weight
+                              </p>
+                              <p className="text-sm font-bold text-emerald-600">
+                                {entry.loadingWeight} Tons
+                              </p>
+                            </div>
+                            <div>
+                              <p className="text-[10px] uppercase font-bold text-slate-400">
+                                Bill No
+                              </p>
+                              <p className="text-sm font-bold text-slate-600">
+                                {entry.billNumber || "N/A"}
+                              </p>
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => handleDownloadPDF(entry)}
+                            className="p-2 text-slate-500 hover:text-emerald-600 transition"
+                            title="Download PDF"
+                          >
+                            <FaDownload />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <h3 className="text-lg font-bold text-slate-700 flex items-center gap-2 px-2">
+                  <span className="w-2 h-6 bg-emerald-500 rounded-full"></span>
+                  New Loading Entry
+                </h3>
+
                 {loadingEntries.map((entry, index) => (
                   <div
                     key={index}

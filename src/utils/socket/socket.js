@@ -1,7 +1,9 @@
 import { io } from "socket.io-client";
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
-const SOCKET_URL = BASE_URL.replace(/\/api$/, "");
+const SOCKET_URL = BASE_URL.startsWith("http")
+  ? new URL(BASE_URL).origin
+  : window.location.origin;
 
 let socket;
 
@@ -12,10 +14,14 @@ export const initiateSocket = (token) => {
   }
 
   socket = io(SOCKET_URL, {
-    transports: ["websocket"],
+    path: "/api/socket.io/", // Ensure path matches server
+    transports: ["polling", "websocket"], // Allow polling first for better compatibility
     auth: {
       token: token,
     },
+    reconnection: true,
+    reconnectionAttempts: 5,
+    reconnectionDelay: 1000,
   });
 
   console.log("Connecting socket...");

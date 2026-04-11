@@ -11,6 +11,7 @@ export const initSocket = (server) => {
       : "*";
 
   io = new Server(server, {
+    path: "/api/socket.io/",
     cors: {
       origin: corsOrigins,
       methods: ["GET", "POST", "PATCH", "DELETE"],

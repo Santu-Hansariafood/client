@@ -1,6 +1,6 @@
 import { lazy, Suspense, useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
-import axios from "axios";
+import api from "../../../utils/apiClient/apiClient";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 const DataInput = lazy(() => import("../../../common/DataInput/DataInput"));
@@ -57,7 +57,7 @@ const LoadingEntry = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.post("/loading-entries", formData);
+      await api.post("/loading-entries", formData);
       toast.success("Loading entry added successfully");
       setFormData({
         loadingDate: "",
@@ -75,7 +75,7 @@ const LoadingEntry = () => {
         documentUrl: "",
       });
     } catch (error) {
-      toast.error("Failed to add loading entry", error);
+      toast.error(error?.response?.data?.message || "Failed to add loading entry");
     }
   };
 
