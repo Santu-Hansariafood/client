@@ -77,6 +77,9 @@ const AddLoadingEntry = () => {
   
   const [filteredBuyers, setFilteredBuyers] = useState([]);
   const [selectedBuyer, setSelectedBuyer] = useState(null);
+
+  const [consignees, setConsignees] = useState([]);
+  const [selectedConsignee, setSelectedConsignee] = useState(null);
   
   const [sellers, setSellers] = useState([]);
   const [selectedSellerName, setSelectedSellerName] = useState(null);
@@ -87,6 +90,8 @@ const AddLoadingEntry = () => {
   const [transporters, setTransporters] = useState([]);
   
   const [saudaSearch, setSaudaSearch] = useState(""); // Optional Sauda search
+  const [saudaSuggestions, setSaudaSuggestions] = useState([]);
+  const [isSaudaSuggestOpen, setIsSaudaSuggestOpen] = useState(false);
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(false);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
@@ -137,13 +142,18 @@ const AddLoadingEntry = () => {
       const payload = response?.data;
       const data = Array.isArray(payload?.data) ? payload.data : [];
 
-      if (data.length === 0) {
+      const consigneeNeedle = normalize(selectedConsignee?.name);
+      const filtered = consigneeNeedle
+        ? data.filter((o) => normalize(o.consignee).includes(consigneeNeedle))
+        : data;
+
+      if (filtered.length === 0) {
         toast.info("No matching Sauda found.");
         setOrders([]);
         return;
       }
 
-      setOrders(data);
+      setOrders(filtered);
     } catch (err) {
       console.error("Error searching orders:", err);
       toast.error("Error searching for orders.");
@@ -156,6 +166,7 @@ const AddLoadingEntry = () => {
     selectedBuyer,
     selectedSellerName,
     selectedSellerCompany,
+    selectedConsignee,
     saudaSearch,
   ]);
 
@@ -163,10 +174,11 @@ const AddLoadingEntry = () => {
     const loadDropdowns = async () => {
       setLoading(true);
       try {
-        const [filtersRes, transportersRes] =
+        const [filtersRes, transportersRes, consigneesRes] =
           await Promise.all([
             api.get("/loading-entries/filters"),
             api.get("/transporters", { params: { limit: 0 } }),
+            api.get("/consignees", { params: { limit: 0 } }),
           ]);
 
         const filters = filtersRes?.data || {};
@@ -204,6 +216,15 @@ const AddLoadingEntry = () => {
         }));
         setTransporters(transportersData);
 
+        const rawConsignees = Array.isArray(consigneesRes.data)
+          ? consigneesRes.data
+          : consigneesRes.data?.data || [];
+        const consigneesFormatted = rawConsignees.map((c) => ({
+          value: c._id,
+          label: capitalizeWords(c.name),
+          name: c.name,
+        }));
+        setConsignees(consigneesFormatted);
       } catch (err) {
         console.error("Error loading dropdowns:", err);
         toast.error("Error loading dropdown data");
@@ -218,6 +239,7 @@ const AddLoadingEntry = () => {
       if (!selectedGroup?.value) {
         setFilteredBuyers([]);
         setSelectedBuyer(null);
+        setSelectedConsignee(null);
         return;
       }
 
@@ -233,11 +255,13 @@ const AddLoadingEntry = () => {
         }));
         setFilteredBuyers(formatted);
         setSelectedBuyer(null);
+        setSelectedConsignee(null);
       } catch (err) {
         console.error("Error loading buyers:", err);
         toast.error("Failed to load buyers");
         setFilteredBuyers([]);
         setSelectedBuyer(null);
+        setSelectedConsignee(null);
       }
     };
 
@@ -266,6 +290,70 @@ const AddLoadingEntry = () => {
       handleSearch();
     }
   }, [selectedBuyer, selectedSellerCompany, handleSearch]);
+
+  useEffect(() => {
+    const trimmed = saudaSearch.trim();
+    if (!trimmed) {
+      setSaudaSuggestions([]);
+      setIsSaudaSuggestOpen(false);
+      return;
+    }
+
+    let ignore = false;
+    const handle = setTimeout(async () => {
+      try {
+        const response = await api.get("/loading-entries/saudas", {
+          params: {
+            groupId: selectedGroup?.value,
+            buyerId: selectedBuyer?.value,
+            sellerId: selectedSellerName?.value,
+            sellerCompany: selectedSellerCompany?.name,
+            saudaNo: trimmed,
+            limit: 8,
+          },
+        });
+
+        const payload = response?.data;
+        const data = Array.isArray(payload?.data) ? payload.data : [];
+
+        const uniq = new Map();
+        for (const row of data) {
+          const key = String(row?.saudaNo ?? "");
+          if (!key) continue;
+          if (!uniq.has(key)) uniq.set(key, row);
+        }
+
+        const consigneeNeedle = normalize(selectedConsignee?.name);
+        const suggestions = Array.from(uniq.values()).filter((o) =>
+          consigneeNeedle
+            ? normalize(o.consignee).includes(consigneeNeedle)
+            : true,
+        );
+
+        if (!ignore) {
+          setSaudaSuggestions(suggestions);
+          setIsSaudaSuggestOpen(suggestions.length > 0);
+        }
+      } catch {
+        if (!ignore) {
+          setSaudaSuggestions([]);
+          setIsSaudaSuggestOpen(false);
+        }
+      }
+    }, 250);
+
+    return () => {
+      ignore = true;
+      clearTimeout(handle);
+    };
+  }, [
+    saudaSearch,
+    selectedGroup,
+    selectedBuyer,
+    selectedSellerName,
+    selectedSellerCompany,
+    selectedConsignee,
+  ]);
 
   const toggleSaudaStatus = async (order) => {
     if (userRole === "Seller") {
@@ -458,7 +546,7 @@ const AddLoadingEntry = () => {
         subtitle={
           userRole === "Seller"
             ? "Create challans for your orders"
-            : "Select group, buyer, seller name and seller company to find sauda entries for loading"
+            : "Select group, buyer, consignee, seller name and seller company to find sauda entries for loading"
         }
         icon={FaTruckLoading}
         noContentCard
@@ -469,78 +557,134 @@ const AddLoadingEntry = () => {
               <Loading />
             ) : (
               <div className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-                  {userRole !== "Seller" && (
-                    <>
-                      <div>
-                        <label className="block mb-1 text-sm font-semibold text-slate-700">
-                          Group
-                        </label>
-                        <DataDropdown
-                          options={groups}
-                          selectedOptions={
-                            selectedGroup ? [selectedGroup] : []
-                          }
-                          onChange={setSelectedGroup}
-                          placeholder="Select Group"
-                          isMulti={false}
-                        />
-                      </div>
-                      <div>
-                        <label className="block mb-1 text-sm font-semibold text-slate-700">
-                          Buyer
-                        </label>
-                        <DataDropdown
-                          options={filteredBuyers}
-                          selectedOptions={
-                            selectedBuyer ? [selectedBuyer] : []
-                          }
-                          onChange={setSelectedBuyer}
-                          placeholder="Select Buyer"
-                          isMulti={false}
-                        />
-                      </div>
-                    </>
-                  )}
-                  <div>
-                    <label className="block mb-1 text-sm font-semibold text-slate-700">
-                      Seller Name
-                    </label>
-                    <DataDropdown
-                      options={sellers}
-                      selectedOptions={
-                        selectedSellerName ? [selectedSellerName] : []
-                      }
-                      onChange={setSelectedSellerName}
-                      placeholder="Select Seller"
-                      isMulti={false}
-                    />
+                <div className="space-y-3">
+                  <div
+                    className={`grid grid-cols-1 gap-4 ${
+                      userRole !== "Seller"
+                        ? "md:grid-cols-4"
+                        : "md:grid-cols-2"
+                    }`}
+                  >
+                    {userRole !== "Seller" && (
+                      <>
+                        <div>
+                          <label className="block mb-1 text-sm font-semibold text-slate-700">
+                            Group
+                          </label>
+                          <DataDropdown
+                            options={groups}
+                            selectedOptions={
+                              selectedGroup ? [selectedGroup] : []
+                            }
+                            onChange={setSelectedGroup}
+                            placeholder="Select Group"
+                            isMulti={false}
+                          />
+                        </div>
+                        <div>
+                          <label className="block mb-1 text-sm font-semibold text-slate-700">
+                            Buyer
+                          </label>
+                          <DataDropdown
+                            options={filteredBuyers}
+                            selectedOptions={
+                              selectedBuyer ? [selectedBuyer] : []
+                            }
+                            onChange={setSelectedBuyer}
+                            placeholder="Select Buyer"
+                            isMulti={false}
+                          />
+                        </div>
+                      </>
+                    )}
+                    <div>
+                      <label className="block mb-1 text-sm font-semibold text-slate-700">
+                        Consignee
+                      </label>
+                      <DataDropdown
+                        options={consignees}
+                        selectedOptions={
+                          selectedConsignee ? [selectedConsignee] : []
+                        }
+                        onChange={setSelectedConsignee}
+                        placeholder="Select Consignee"
+                        isMulti={false}
+                      />
+                    </div>
+                    <div className="relative">
+                      <label className="block mb-1 text-sm font-semibold text-slate-700">
+                        Sauda No
+                      </label>
+                      <input
+                        type="text"
+                        value={saudaSearch}
+                        onChange={(e) => setSaudaSearch(e.target.value)}
+                        onFocus={() => {
+                          if (saudaSuggestions.length > 0)
+                            setIsSaudaSuggestOpen(true);
+                        }}
+                        onBlur={() => {
+                          setTimeout(() => setIsSaudaSuggestOpen(false), 120);
+                        }}
+                        placeholder="Search by Sauda No"
+                        className="w-full rounded-xl border border-slate-200 px-4 py-2.5 focus:ring-2 focus:ring-emerald-400/50 focus:border-emerald-400 outline-none transition"
+                      />
+
+                      {isSaudaSuggestOpen && saudaSuggestions.length > 0 && (
+                        <div className="absolute z-20 mt-1 w-full rounded-xl border border-slate-200 bg-white shadow-lg overflow-hidden">
+                          {saudaSuggestions.map((o) => (
+                            <button
+                              key={String(o._id || o.saudaNo)}
+                              type="button"
+                              onMouseDown={(e) => {
+                                e.preventDefault();
+                                setSaudaSearch(String(o.saudaNo || ""));
+                                setIsSaudaSuggestOpen(false);
+                              }}
+                              className="w-full text-left px-3 py-2 hover:bg-slate-50 transition"
+                            >
+                              <div className="text-sm font-semibold text-slate-800">
+                                Sauda: {o.saudaNo}
+                              </div>
+                              <div className="text-xs text-slate-500">
+                                {capitalizeWords(o.consignee)}
+                              </div>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </div>
-                  <div>
-                    <label className="block mb-1 text-sm font-semibold text-slate-700">
-                      Seller Company
-                    </label>
-                    <DataDropdown
-                      options={sellerCompanies}
-                      selectedOptions={
-                        selectedSellerCompany ? [selectedSellerCompany] : []
-                      }
-                      onChange={setSelectedSellerCompany}
-                      placeholder="Select Company"
-                      isMulti={false}
-                    />
-                  </div>
-                  <div>
-                    <label className="block mb-1 text-sm font-semibold text-slate-700">
-                      Sauda No
-                    </label>
-                    <input
-                      type="text"
-                      value={saudaSearch}
-                      onChange={(e) => setSaudaSearch(e.target.value)}
-                      placeholder="Search by Sauda No"
-                      className="w-full rounded-xl border border-slate-200 px-4 py-2.5 focus:ring-2 focus:ring-emerald-400/50 focus:border-emerald-400 outline-none transition"
-                    />
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block mb-1 text-sm font-semibold text-slate-700">
+                        Seller Name
+                      </label>
+                      <DataDropdown
+                        options={sellers}
+                        selectedOptions={
+                          selectedSellerName ? [selectedSellerName] : []
+                        }
+                        onChange={setSelectedSellerName}
+                        placeholder="Select Seller"
+                        isMulti={false}
+                      />
+                    </div>
+                    <div>
+                      <label className="block mb-1 text-sm font-semibold text-slate-700">
+                        Seller Company
+                      </label>
+                      <DataDropdown
+                        options={sellerCompanies}
+                        selectedOptions={
+                          selectedSellerCompany ? [selectedSellerCompany] : []
+                        }
+                        onChange={setSelectedSellerCompany}
+                        placeholder="Select Company"
+                        isMulti={false}
+                      />
+                    </div>
                   </div>
                 </div>
 
@@ -625,7 +769,7 @@ const AddLoadingEntry = () => {
               />
             ) : (
               <div className="py-10 text-center text-slate-500 font-medium">
-                No results yet. Select group, buyer, seller name and seller company and search.
+                No results yet. Select group, buyer, consignee, seller name and seller company and search.
               </div>
             )}
           </div>
