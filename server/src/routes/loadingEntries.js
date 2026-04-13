@@ -28,8 +28,9 @@ const computePendingForSelfOrder = (order) => {
     pendingQuantity = Number(pendingQuantity || 0);
   }
 
-  const tolerance = quantity * 0.05;
-  const isClosed = order.status === "closed" || Math.abs(pendingQuantity) <= tolerance;
+  // As per requirement: "each and every sauda is needed to all are pending"
+  // Force isClosed to false so that loading entry can be added for any sauda
+  const isClosed = false;
 
   return { pendingQuantity, isClosed };
 };
@@ -86,7 +87,8 @@ router.get("/buyers", async (req, res) => {
     }
 
     const buyers = await Buyer.find({ groupId })
-      .select("_id name")
+      .select("_id name consigneeIds")
+      .populate({ path: "consigneeIds", select: "name location district state" })
       .sort({ name: 1, _id: 1 })
       .lean();
 
@@ -94,6 +96,11 @@ router.get("/buyers", async (req, res) => {
       (buyers || []).map((b) => ({
         _id: b._id,
         name: b.name || "",
+        consignees: (b.consigneeIds || []).map((c) => ({
+          _id: c._id,
+          name: c.name || "",
+          label: `${c.name || "N/A"} - ${c.location || "N/A"}, ${c.district || "N/A"}, ${c.state || "N/A"}`
+        }))
       })),
     );
   } catch (error) {
@@ -112,6 +119,7 @@ router.get("/saudas", async (req, res) => {
 
     const buyerId = toObjectId(req.query.buyerId);
     const groupId = toObjectId(req.query.groupId);
+    const consigneeName = String(req.query.consigneeName || "").trim();
     const sellerIdFromQuery = toObjectId(req.query.sellerId);
     const sellerCompany = String(req.query.sellerCompany || "").trim();
     const saudaNo = String(req.query.saudaNo || "").trim();
@@ -150,6 +158,10 @@ router.get("/saudas", async (req, res) => {
       if (buyerOr.length) andParts.push({ $or: buyerOr });
     } else if (groupId) {
       return res.status(400).json({ message: "buyerId is required when groupId is provided" });
+    }
+
+    if (consigneeName) {
+      andParts.push({ consignee: consigneeName });
     }
 
     if (sellerId) {
