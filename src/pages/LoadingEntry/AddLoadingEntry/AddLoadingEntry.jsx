@@ -169,7 +169,7 @@ const SearchFiltersCard = ({
                 />
 
                 {isSaudaSuggestOpen && saudaSuggestions.length > 0 && (
-                  <div className="absolute z-20 mt-1 w-full rounded-xl border border-slate-200 bg-white shadow-lg overflow-hidden">
+                  <div className="absolute z-20 mt-1 w-full rounded-xl border border-slate-200 bg-white shadow-lg overflow-hidden max-h-64 overflow-y-auto">
                     {saudaSuggestions.map((o) => (
                       <button
                         key={String(o._id || o.saudaNo)}
@@ -436,11 +436,12 @@ const AddLoadingEntry = () => {
     const loadDropdowns = async () => {
       setLoading(true);
       try {
-        const [filtersRes, transportersRes, consigneesRes] =
+        const [filtersRes, transportersRes, consigneesRes, sellersRes] =
           await Promise.all([
             api.get("/loading-entries/filters"),
             api.get("/transporters", { params: { limit: 0 } }),
             api.get("/consignees", { params: { limit: 0 } }),
+            api.get("/sellers", { params: { limit: 0 } }),
           ]);
 
         const filters = filtersRes?.data || {};
@@ -453,7 +454,9 @@ const AddLoadingEntry = () => {
         }));
         setGroups(groupsFormatted);
 
-        const rawSellers = Array.isArray(filters.sellers) ? filters.sellers : [];
+        const rawSellers = Array.isArray(sellersRes.data)
+          ? sellersRes.data
+          : sellersRes.data?.data || [];
         const sellersFormatted = rawSellers.map((s) => ({
           value: s._id,
           label: capitalizeWords(s.sellerName),
@@ -651,21 +654,80 @@ const AddLoadingEntry = () => {
   }, [userRole, selectedGroup, selectedBuyer, allSellers, selectedSellerName]);
 
   useEffect(() => {
-    if (selectedSellerName) {
-      const rawCompanies = Array.isArray(selectedSellerName.companies)
-        ? selectedSellerName.companies
-        : [];
-      const companies = rawCompanies.map((c) => ({
-        value: c,
-        label: capitalizeWords(c),
-        name: c,
-      }));
-      setSellerCompanies(companies);
-    } else {
+    if (!selectedSellerName?.value) {
       setSellerCompanies([]);
+      setSelectedSellerCompany(null);
+      return;
     }
-    setSelectedSellerCompany(null);
-  }, [selectedSellerName]);
+
+    let ignore = false;
+    (async () => {
+      try {
+        const response = await api.get("/loading-entries/saudas", {
+          params: {
+            groupId: selectedGroup?.value,
+            buyerId: selectedBuyer?.value,
+            sellerId: selectedSellerName.value,
+            limit: 2000,
+          },
+        });
+
+        const payload = response?.data;
+        const data = Array.isArray(payload?.data) ? payload.data : [];
+
+        const uniq = new Map();
+        for (const row of data) {
+          const name = (row?.supplierCompany || "").toString().trim();
+          if (!name) continue;
+          const key = normalize(name);
+          if (!uniq.has(key)) {
+            uniq.set(key, {
+              value: name,
+              label: capitalizeWords(name),
+              name,
+            });
+          }
+        }
+
+        let list = Array.from(uniq.values()).sort((a, b) =>
+          String(a.label).localeCompare(String(b.label)),
+        );
+
+        if (list.length === 0) {
+          const rawCompanies = Array.isArray(selectedSellerName.companies)
+            ? selectedSellerName.companies
+            : [];
+          list = rawCompanies.map((c) => ({
+            value: c,
+            label: capitalizeWords(c),
+            name: c,
+          }));
+        }
+
+        if (!ignore) {
+          setSellerCompanies(list);
+          setSelectedSellerCompany(null);
+        }
+      } catch {
+        if (!ignore) {
+          const rawCompanies = Array.isArray(selectedSellerName.companies)
+            ? selectedSellerName.companies
+            : [];
+          const list = rawCompanies.map((c) => ({
+            value: c,
+            label: capitalizeWords(c),
+            name: c,
+          }));
+          setSellerCompanies(list);
+          setSelectedSellerCompany(null);
+        }
+      }
+    })();
+
+    return () => {
+      ignore = true;
+    };
+  }, [selectedSellerName, selectedGroup, selectedBuyer]);
 
   useEffect(() => {
     if (selectedBuyer && selectedSellerCompany) {
@@ -691,7 +753,7 @@ const AddLoadingEntry = () => {
             sellerId: selectedSellerName?.value,
             sellerCompany: selectedSellerCompany?.name,
             saudaNo: trimmed,
-            limit: 8,
+            limit: 50,
           },
         });
 
@@ -713,7 +775,7 @@ const AddLoadingEntry = () => {
         );
 
         if (!ignore) {
-          setSaudaSuggestions(suggestions);
+          setSaudaSuggestions(suggestions.slice(0, 25));
           setIsSaudaSuggestOpen(suggestions.length > 0);
         }
       } catch {
