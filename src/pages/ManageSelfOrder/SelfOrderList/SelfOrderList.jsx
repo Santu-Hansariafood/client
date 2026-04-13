@@ -311,31 +311,6 @@ const SelfOrderList = () => {
           console.error("Download failed:", downloadErr);
         }
 
-        // const isMobile =
-        //   typeof navigator !== "undefined" &&
-        //   /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(
-        //     navigator.userAgent,
-        //   );
-
-        // if (isMobile && navigator.share && typeof File !== "undefined") {
-        //   try {
-        //     const formData = new FormData();
-        //     formData.append("file", blob, fileName);
-
-        //     const uploadRes = await axios.post("/upload-pdf", formData);
-        //     const fileUrl = uploadRes?.data?.url || uploadRes?.data?.fileUrl;
-
-        //     const finalMessage = fileUrl
-        //       ? `${message}\n\nDownload PDF: ${fileUrl}`
-        //       : message;
-
-        //     const whatsappUrl = `https://wa.me/${finalMobile}?text=${encodeURIComponent(finalMessage)}`;
-        //     window.open(whatsappUrl, "_blank");
-        //   } catch (err) {
-        //     return;
-        //   }
-        // }
-
         let finalMessage = message;
 
         try {
@@ -608,7 +583,6 @@ const SelfOrderList = () => {
             </div>
           ) : null,
 
-          // Status
           userRole === "Admin" || userRole === "Employee" ? (
             <div className="flex justify-center" key={`status-${item._id}`}>
               {item.whatsappSent ? (
@@ -623,7 +597,6 @@ const SelfOrderList = () => {
             </div>
           ) : null,
 
-          // ✅ Actions (Download REMOVED from here)
           userRole === "Admin" || userRole === "Employee" ? (
             <div
               className="flex items-center gap-2 min-w-[120px]"
@@ -733,7 +706,7 @@ const SelfOrderList = () => {
       exportOrders = [...exportOrders].sort((a, b) => {
         const aSauda = Number(a.saudaNo) || 0;
         const bSauda = Number(b.saudaNo) || 0;
-        return aSauda - bSauda;
+        return bSauda - aSauda;
       });
 
       const excelRows = exportOrders.map((item) => ({
@@ -752,7 +725,7 @@ const SelfOrderList = () => {
         Commodity: item.commodity || "",
         Quantity: item.quantity || "",
         Rate: item.rate || "",
-        Tax: "",
+        Tax: item.tax || "",
         CD: item.cd || "",
         "Delivery Date": item.deliveryDate
           ? new Date(item.deliveryDate).toLocaleDateString("en-GB")
@@ -762,7 +735,7 @@ const SelfOrderList = () => {
 
       if (excelRows.length === 0) {
         toast.dismiss(toastId);
-        toast.info("No data available to download.");
+        toast.info("No orders found for selected filters.");
         return;
       }
 

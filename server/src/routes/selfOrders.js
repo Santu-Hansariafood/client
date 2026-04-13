@@ -57,16 +57,14 @@ router.get("/", async (req, res) => {
     let query = {};
     if (search) {
       const searchRegex = new RegExp(search, "i");
-      query = {
-        $or: [
-          { saudaNo: { $regex: searchRegex } },
-          { poNumber: { $regex: searchRegex } },
-          { buyer: { $regex: searchRegex } },
-          { buyerCompany: { $regex: searchRegex } },
-          { supplierCompany: { $regex: searchRegex } },
-          { commodity: { $regex: searchRegex } },
-        ],
-      };
+      query.$or = [
+        { saudaNo: { $regex: searchRegex } },
+        { poNumber: { $regex: searchRegex } },
+        { buyer: { $regex: searchRegex } },
+        { buyerCompany: { $regex: searchRegex } },
+        { supplierCompany: { $regex: searchRegex } },
+        { commodity: { $regex: searchRegex } },
+      ];
     }
 
     if (sellerMobile) {
@@ -74,13 +72,21 @@ router.get("/", async (req, res) => {
       const phoneMatch = String(sellerMobile).match(phoneRegex);
       const normalizedMobile = phoneMatch ? phoneMatch[1] : sellerMobile;
 
-      query = {
-        ...query,
+      const mobileQuery = {
         $or: [
           { sellerMobile: normalizedMobile },
           { sellerMobile: { $regex: new RegExp(normalizedMobile + "$") } },
         ],
       };
+
+      if (query.$or) {
+        query.$and = query.$and || [];
+        query.$and.push({ $or: query.$or });
+        query.$and.push(mobileQuery);
+        delete query.$or;
+      } else {
+        Object.assign(query, mobileQuery);
+      }
     }
 
     if (supplier) {
@@ -88,9 +94,33 @@ router.get("/", async (req, res) => {
     }
 
     if (startDate || endDate) {
-      query.poDate = {};
-      if (startDate) query.poDate.$gte = new Date(startDate);
-      if (endDate) query.poDate.$lte = new Date(endDate);
+      const dateFilter = {};
+      if (startDate) {
+        dateFilter.$gte = new Date(startDate);
+      }
+      if (endDate) {
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+        dateFilter.$lte = end;
+      }
+      
+      const dateQuery = {
+        $or: [
+          { poDate: dateFilter },
+          { createdAt: dateFilter }
+        ]
+      };
+
+      if (query.$or || query.$and) {
+        query.$and = query.$and || [];
+        if (query.$or) {
+          query.$and.push({ $or: query.$or });
+          delete query.$or;
+        }
+        query.$and.push(dateQuery);
+      } else {
+        Object.assign(query, dateQuery);
+      }
     }
 
     if (exportAll) {
@@ -155,9 +185,33 @@ router.get("/pending/list", async (req, res) => {
     }
 
     if (startDate || endDate) {
-      query.poDate = {};
-      if (startDate) query.poDate.$gte = new Date(startDate);
-      if (endDate) query.poDate.$lte = new Date(endDate);
+      const dateFilter = {};
+      if (startDate) {
+        dateFilter.$gte = new Date(startDate);
+      }
+      if (endDate) {
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+        dateFilter.$lte = end;
+      }
+      
+      const dateQuery = {
+        $or: [
+          { poDate: dateFilter },
+          { createdAt: dateFilter }
+        ]
+      };
+
+      if (query.$or || query.$and) {
+        query.$and = query.$and || [];
+        if (query.$or) {
+          query.$and.push({ $or: query.$or });
+          delete query.$or;
+        }
+        query.$and.push(dateQuery);
+      } else {
+        Object.assign(query, dateQuery);
+      }
     }
 
     const items = await SelfOrder.find(query)
