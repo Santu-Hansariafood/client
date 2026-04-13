@@ -68,6 +68,266 @@ const formatDate = (date) => {
 
 const normalize = (str) => (str || "").toString().trim().toLowerCase();
 
+const SearchFiltersCard = ({
+  loading,
+  userRole,
+  groups,
+  selectedGroup,
+  setSelectedGroup,
+  filteredBuyers,
+  selectedBuyer,
+  setSelectedBuyer,
+  consignees,
+  selectedConsignee,
+  setSelectedConsignee,
+  sellers,
+  selectedSellerName,
+  setSelectedSellerName,
+  sellerCompanies,
+  selectedSellerCompany,
+  setSelectedSellerCompany,
+  saudaSearch,
+  setSaudaSearch,
+  saudaSuggestions,
+  isSaudaSuggestOpen,
+  setIsSaudaSuggestOpen,
+  handleSearch,
+}) => {
+  return (
+    <div className="rounded-2xl border border-amber-200/60 bg-white shadow-lg p-4 sm:p-6">
+      {loading ? (
+        <Loading />
+      ) : (
+        <div className="space-y-4">
+          <div className="space-y-3">
+            <div
+              className={`grid grid-cols-1 gap-4 ${
+                userRole !== "Seller" ? "md:grid-cols-4" : "md:grid-cols-2"
+              }`}
+            >
+              {userRole !== "Seller" && (
+                <>
+                  <div>
+                    <label className="block mb-1 text-sm font-semibold text-slate-700">
+                      Group
+                    </label>
+                    <DataDropdown
+                      options={groups}
+                      selectedOptions={selectedGroup ? [selectedGroup] : []}
+                      onChange={setSelectedGroup}
+                      placeholder="Select Group"
+                      isMulti={false}
+                    />
+                  </div>
+                  <div>
+                    <label className="block mb-1 text-sm font-semibold text-slate-700">
+                      Buyer
+                    </label>
+                    <DataDropdown
+                      options={filteredBuyers}
+                      selectedOptions={selectedBuyer ? [selectedBuyer] : []}
+                      onChange={setSelectedBuyer}
+                      placeholder="Select Buyer"
+                      isMulti={false}
+                    />
+                  </div>
+                </>
+              )}
+              <div>
+                <label className="block mb-1 text-sm font-semibold text-slate-700">
+                  Consignee
+                </label>
+                <DataDropdown
+                  options={consignees}
+                  selectedOptions={selectedConsignee ? [selectedConsignee] : []}
+                  onChange={setSelectedConsignee}
+                  placeholder={
+                    userRole !== "Seller" && !selectedBuyer
+                      ? "Select Buyer First"
+                      : "Select Consignee"
+                  }
+                  isMulti={false}
+                  disabled={userRole !== "Seller" && !selectedBuyer}
+                />
+              </div>
+              <div className="relative">
+                <label className="block mb-1 text-sm font-semibold text-slate-700">
+                  Sauda No
+                </label>
+                <input
+                  type="text"
+                  value={saudaSearch}
+                  onChange={(e) => setSaudaSearch(e.target.value)}
+                  onFocus={() => {
+                    if (saudaSuggestions.length > 0) setIsSaudaSuggestOpen(true);
+                  }}
+                  onBlur={() => {
+                    setTimeout(() => setIsSaudaSuggestOpen(false), 120);
+                  }}
+                  placeholder="Search by Sauda No"
+                  className="w-full rounded-xl border border-slate-200 px-4 py-2.5 focus:ring-2 focus:ring-emerald-400/50 focus:border-emerald-400 outline-none transition"
+                />
+
+                {isSaudaSuggestOpen && saudaSuggestions.length > 0 && (
+                  <div className="absolute z-20 mt-1 w-full rounded-xl border border-slate-200 bg-white shadow-lg overflow-hidden">
+                    {saudaSuggestions.map((o) => (
+                      <button
+                        key={String(o._id || o.saudaNo)}
+                        type="button"
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          setSaudaSearch(String(o.saudaNo || ""));
+                          setIsSaudaSuggestOpen(false);
+                        }}
+                        className="w-full text-left px-3 py-2 hover:bg-slate-50 transition"
+                      >
+                        <div className="text-sm font-semibold text-slate-800">
+                          Sauda: {o.saudaNo}
+                        </div>
+                        <div className="text-xs text-slate-500">
+                          {capitalizeWords(o.consignee)}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block mb-1 text-sm font-semibold text-slate-700">
+                  Seller Name
+                </label>
+                <DataDropdown
+                  options={sellers}
+                  selectedOptions={selectedSellerName ? [selectedSellerName] : []}
+                  onChange={setSelectedSellerName}
+                  placeholder={
+                    userRole !== "Seller" &&
+                    !selectedBuyer &&
+                    !saudaSearch.trim()
+                      ? "Select Buyer or Sauda"
+                      : "Select Seller"
+                  }
+                  isMulti={false}
+                  disabled={
+                    userRole !== "Seller" &&
+                    !selectedBuyer &&
+                    !saudaSearch.trim()
+                  }
+                />
+              </div>
+              <div>
+                <label className="block mb-1 text-sm font-semibold text-slate-700">
+                  Seller Company
+                </label>
+                <DataDropdown
+                  options={sellerCompanies}
+                  selectedOptions={
+                    selectedSellerCompany ? [selectedSellerCompany] : []
+                  }
+                  onChange={setSelectedSellerCompany}
+                  placeholder="Select Company"
+                  isMulti={false}
+                />
+              </div>
+            </div>
+          </div>
+
+          <button
+            onClick={handleSearch}
+            className="w-full sm:w-auto px-5 py-2.5 bg-emerald-600 text-white rounded-xl shadow-sm hover:bg-emerald-700 transition font-semibold"
+          >
+            Search
+          </button>
+        </div>
+      )}
+    </div>
+  );
+};
+
+const OrdersTableCard = ({ orders, handleOpenPopup, toggleSaudaStatus }) => {
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-white shadow-sm p-3 sm:p-4">
+      {orders.length > 0 ? (
+        <Tables
+          headers={[
+            "Date",
+            "Sauda No",
+            "Seller Name",
+            "Company",
+            "Consignee",
+            "Commodity",
+            "Quantity",
+            "Rate",
+            "Pending Quantity",
+            "Status",
+            "Action",
+          ]}
+          rows={orders.map((order) => [
+            formatDate(order.poDate || order.createdAt),
+            order.saudaNo,
+            capitalizeWords(order.supplierCompany),
+            capitalizeWords(order.buyerCompany),
+            capitalizeWords(order.consignee),
+            capitalizeWords(order.commodity),
+            order.quantity,
+            order.rate,
+            order.pendingQuantity,
+            <span
+              key={`status-${order._id}`}
+              className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                order.isClosed
+                  ? "bg-red-100 text-red-700"
+                  : "bg-emerald-100 text-emerald-700"
+              }`}
+            >
+              {order.isClosed ? "Closed" : "Active"}
+            </span>,
+            <div
+              key={`actions-${order._id}`}
+              className="flex items-center gap-3"
+            >
+              {order.status !== "closed" ? (
+                <>
+                  <button
+                    onClick={() => handleOpenPopup(order)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 text-emerald-700 rounded-lg hover:bg-emerald-100 transition text-xs font-bold whitespace-nowrap"
+                    title="Add Loading Entry"
+                  >
+                    <FaPlus /> Add Loading Entry
+                  </button>
+                  <button
+                    onClick={() => toggleSaudaStatus(order)}
+                    className="px-2.5 py-1.5 bg-amber-50 text-amber-700 rounded-lg hover:bg-amber-100 transition text-xs font-bold"
+                    title="Close Sauda"
+                  >
+                    Close
+                  </button>
+                </>
+              ) : (
+                <button
+                  onClick={() => toggleSaudaStatus(order)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition text-xs font-bold"
+                  title="Reopen Sauda"
+                >
+                  Reopen to Add
+                </button>
+              )}
+            </div>,
+          ])}
+        />
+      ) : (
+        <div className="py-10 text-center text-slate-500 font-medium">
+          No results yet. Select group, buyer, consignee, seller name and seller
+          company and search.
+        </div>
+      )}
+    </div>
+  );
+};
+
 const AddLoadingEntry = () => {
   const { userRole, mobile } = useAuth();
   
@@ -79,9 +339,11 @@ const AddLoadingEntry = () => {
   const [selectedBuyer, setSelectedBuyer] = useState(null);
 
   const [consignees, setConsignees] = useState([]);
+  const [allConsignees, setAllConsignees] = useState([]);
   const [selectedConsignee, setSelectedConsignee] = useState(null);
   
   const [sellers, setSellers] = useState([]);
+  const [allSellers, setAllSellers] = useState([]);
   const [selectedSellerName, setSelectedSellerName] = useState(null);
   
   const [sellerCompanies, setSellerCompanies] = useState([]);
@@ -198,6 +460,7 @@ const AddLoadingEntry = () => {
           name: s.sellerName,
           companies: Array.isArray(s.companies) ? s.companies : [],
         }));
+        setAllSellers(sellersFormatted);
         setSellers(sellersFormatted);
 
         if (userRole === "Seller" && sellersFormatted.length === 1) {
@@ -224,7 +487,8 @@ const AddLoadingEntry = () => {
           label: capitalizeWords(c.name),
           name: c.name,
         }));
-        setConsignees(consigneesFormatted);
+        setAllConsignees(consigneesFormatted);
+        setConsignees(userRole === "Seller" ? consigneesFormatted : []);
       } catch (err) {
         console.error("Error loading dropdowns:", err);
         toast.error("Error loading dropdown data");
@@ -240,6 +504,7 @@ const AddLoadingEntry = () => {
         setFilteredBuyers([]);
         setSelectedBuyer(null);
         setSelectedConsignee(null);
+        setConsignees(userRole === "Seller" ? allConsignees : []);
         return;
       }
 
@@ -256,17 +521,134 @@ const AddLoadingEntry = () => {
         setFilteredBuyers(formatted);
         setSelectedBuyer(null);
         setSelectedConsignee(null);
+        setConsignees([]);
       } catch (err) {
         console.error("Error loading buyers:", err);
         toast.error("Failed to load buyers");
         setFilteredBuyers([]);
         setSelectedBuyer(null);
         setSelectedConsignee(null);
+        setConsignees([]);
       }
     };
 
     loadBuyersForGroup();
-  }, [selectedGroup]);
+  }, [selectedGroup, userRole, allConsignees]);
+
+  useEffect(() => {
+    if (userRole === "Seller") return;
+
+    if (!selectedBuyer?.value) {
+      setConsignees([]);
+      setSelectedConsignee(null);
+      return;
+    }
+
+    let ignore = false;
+    (async () => {
+      try {
+        const response = await api.get("/loading-entries/saudas", {
+          params: {
+            groupId: selectedGroup?.value,
+            buyerId: selectedBuyer.value,
+            limit: 2000,
+          },
+        });
+
+        const payload = response?.data;
+        const data = Array.isArray(payload?.data) ? payload.data : [];
+
+        const uniq = new Map();
+        for (const row of data) {
+          const name = (row?.consignee || "").toString().trim();
+          if (!name) continue;
+          const key = normalize(name);
+          if (!uniq.has(key)) {
+            uniq.set(key, {
+              value: name,
+              label: capitalizeWords(name),
+              name,
+            });
+          }
+        }
+
+        const list = Array.from(uniq.values()).sort((a, b) =>
+          String(a.label).localeCompare(String(b.label)),
+        );
+
+        if (!ignore) {
+          setConsignees(list);
+          setSelectedConsignee(null);
+        }
+      } catch {
+        if (!ignore) {
+          setConsignees([]);
+          setSelectedConsignee(null);
+        }
+      }
+    })();
+
+    return () => {
+      ignore = true;
+    };
+  }, [userRole, selectedGroup, selectedBuyer]);
+
+  useEffect(() => {
+    if (userRole === "Seller") return;
+
+    if (!selectedBuyer?.value) {
+      setSellers(allSellers);
+      setSelectedSellerName(null);
+      setSelectedSellerCompany(null);
+      return;
+    }
+
+    let ignore = false;
+    (async () => {
+      try {
+        const response = await api.get("/loading-entries/saudas", {
+          params: {
+            groupId: selectedGroup?.value,
+            buyerId: selectedBuyer.value,
+            limit: 2000,
+          },
+        });
+
+        const payload = response?.data;
+        const data = Array.isArray(payload?.data) ? payload.data : [];
+
+        const sellerIds = new Set(
+          data
+            .map((o) => o?.supplier?._id || o?.supplier)
+            .filter(Boolean)
+            .map((id) => String(id)),
+        );
+
+        const filtered = (Array.isArray(allSellers) ? allSellers : []).filter(
+          (s) => sellerIds.has(String(s.value)),
+        );
+
+        if (!ignore) {
+          setSellers(filtered);
+          if (
+            selectedSellerName &&
+            !sellerIds.has(String(selectedSellerName.value))
+          ) {
+            setSelectedSellerName(null);
+            setSelectedSellerCompany(null);
+          }
+        }
+      } catch {
+        if (!ignore) {
+          setSellers(allSellers);
+        }
+      }
+    })();
+
+    return () => {
+      ignore = true;
+    };
+  }, [userRole, selectedGroup, selectedBuyer, allSellers, selectedSellerName]);
 
   useEffect(() => {
     if (selectedSellerName) {
@@ -552,227 +934,37 @@ const AddLoadingEntry = () => {
         noContentCard
       >
         <div className="max-w-7xl mx-auto space-y-6">
-          <div className="rounded-2xl border border-amber-200/60 bg-white shadow-lg p-4 sm:p-6">
-            {loading ? (
-              <Loading />
-            ) : (
-              <div className="space-y-4">
-                <div className="space-y-3">
-                  <div
-                    className={`grid grid-cols-1 gap-4 ${
-                      userRole !== "Seller"
-                        ? "md:grid-cols-4"
-                        : "md:grid-cols-2"
-                    }`}
-                  >
-                    {userRole !== "Seller" && (
-                      <>
-                        <div>
-                          <label className="block mb-1 text-sm font-semibold text-slate-700">
-                            Group
-                          </label>
-                          <DataDropdown
-                            options={groups}
-                            selectedOptions={
-                              selectedGroup ? [selectedGroup] : []
-                            }
-                            onChange={setSelectedGroup}
-                            placeholder="Select Group"
-                            isMulti={false}
-                          />
-                        </div>
-                        <div>
-                          <label className="block mb-1 text-sm font-semibold text-slate-700">
-                            Buyer
-                          </label>
-                          <DataDropdown
-                            options={filteredBuyers}
-                            selectedOptions={
-                              selectedBuyer ? [selectedBuyer] : []
-                            }
-                            onChange={setSelectedBuyer}
-                            placeholder="Select Buyer"
-                            isMulti={false}
-                          />
-                        </div>
-                      </>
-                    )}
-                    <div>
-                      <label className="block mb-1 text-sm font-semibold text-slate-700">
-                        Consignee
-                      </label>
-                      <DataDropdown
-                        options={consignees}
-                        selectedOptions={
-                          selectedConsignee ? [selectedConsignee] : []
-                        }
-                        onChange={setSelectedConsignee}
-                        placeholder="Select Consignee"
-                        isMulti={false}
-                      />
-                    </div>
-                    <div className="relative">
-                      <label className="block mb-1 text-sm font-semibold text-slate-700">
-                        Sauda No
-                      </label>
-                      <input
-                        type="text"
-                        value={saudaSearch}
-                        onChange={(e) => setSaudaSearch(e.target.value)}
-                        onFocus={() => {
-                          if (saudaSuggestions.length > 0)
-                            setIsSaudaSuggestOpen(true);
-                        }}
-                        onBlur={() => {
-                          setTimeout(() => setIsSaudaSuggestOpen(false), 120);
-                        }}
-                        placeholder="Search by Sauda No"
-                        className="w-full rounded-xl border border-slate-200 px-4 py-2.5 focus:ring-2 focus:ring-emerald-400/50 focus:border-emerald-400 outline-none transition"
-                      />
+          <SearchFiltersCard
+            loading={loading}
+            userRole={userRole}
+            groups={groups}
+            selectedGroup={selectedGroup}
+            setSelectedGroup={setSelectedGroup}
+            filteredBuyers={filteredBuyers}
+            selectedBuyer={selectedBuyer}
+            setSelectedBuyer={setSelectedBuyer}
+            consignees={consignees}
+            selectedConsignee={selectedConsignee}
+            setSelectedConsignee={setSelectedConsignee}
+            sellers={sellers}
+            selectedSellerName={selectedSellerName}
+            setSelectedSellerName={setSelectedSellerName}
+            sellerCompanies={sellerCompanies}
+            selectedSellerCompany={selectedSellerCompany}
+            setSelectedSellerCompany={setSelectedSellerCompany}
+            saudaSearch={saudaSearch}
+            setSaudaSearch={setSaudaSearch}
+            saudaSuggestions={saudaSuggestions}
+            isSaudaSuggestOpen={isSaudaSuggestOpen}
+            setIsSaudaSuggestOpen={setIsSaudaSuggestOpen}
+            handleSearch={handleSearch}
+          />
 
-                      {isSaudaSuggestOpen && saudaSuggestions.length > 0 && (
-                        <div className="absolute z-20 mt-1 w-full rounded-xl border border-slate-200 bg-white shadow-lg overflow-hidden">
-                          {saudaSuggestions.map((o) => (
-                            <button
-                              key={String(o._id || o.saudaNo)}
-                              type="button"
-                              onMouseDown={(e) => {
-                                e.preventDefault();
-                                setSaudaSearch(String(o.saudaNo || ""));
-                                setIsSaudaSuggestOpen(false);
-                              }}
-                              className="w-full text-left px-3 py-2 hover:bg-slate-50 transition"
-                            >
-                              <div className="text-sm font-semibold text-slate-800">
-                                Sauda: {o.saudaNo}
-                              </div>
-                              <div className="text-xs text-slate-500">
-                                {capitalizeWords(o.consignee)}
-                              </div>
-                            </button>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block mb-1 text-sm font-semibold text-slate-700">
-                        Seller Name
-                      </label>
-                      <DataDropdown
-                        options={sellers}
-                        selectedOptions={
-                          selectedSellerName ? [selectedSellerName] : []
-                        }
-                        onChange={setSelectedSellerName}
-                        placeholder="Select Seller"
-                        isMulti={false}
-                      />
-                    </div>
-                    <div>
-                      <label className="block mb-1 text-sm font-semibold text-slate-700">
-                        Seller Company
-                      </label>
-                      <DataDropdown
-                        options={sellerCompanies}
-                        selectedOptions={
-                          selectedSellerCompany ? [selectedSellerCompany] : []
-                        }
-                        onChange={setSelectedSellerCompany}
-                        placeholder="Select Company"
-                        isMulti={false}
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <button
-                  onClick={handleSearch}
-                  className="w-full sm:w-auto px-5 py-2.5 bg-emerald-600 text-white rounded-xl shadow-sm hover:bg-emerald-700 transition font-semibold"
-                >
-                  Search
-                </button>
-              </div>
-            )}
-          </div>
-
-          <div className="rounded-2xl border border-slate-200 bg-white shadow-sm p-3 sm:p-4">
-            {orders.length > 0 ? (
-              <Tables
-                headers={[
-                  "Date",
-                  "Sauda No",
-                  "Seller Name",
-                  "Company",
-                  "Consignee",
-                  "Commodity",
-                  "Quantity",
-                  "Rate",
-                  "Pending Quantity",
-                  "Status",
-                  "Action",
-                ]}
-                rows={orders.map((order) => [
-                  formatDate(order.poDate || order.createdAt),
-                  order.saudaNo,
-                  capitalizeWords(order.supplierCompany),
-                  capitalizeWords(order.buyerCompany),
-                  capitalizeWords(order.consignee),
-                  capitalizeWords(order.commodity),
-                  order.quantity,
-                  order.rate,
-                  order.pendingQuantity,
-                  <span
-                    key={`status-${order._id}`}
-                    className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                      order.isClosed
-                        ? "bg-red-100 text-red-700"
-                        : "bg-emerald-100 text-emerald-700"
-                    }`}
-                  >
-                    {order.isClosed ? "Closed" : "Active"}
-                  </span>,
-                  <div
-                    key={`actions-${order._id}`}
-                    className="flex items-center gap-3"
-                  >
-                    {order.status !== "closed" ? (
-                      <>
-                        <button
-                          onClick={() => handleOpenPopup(order)}
-                          className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 text-emerald-700 rounded-lg hover:bg-emerald-100 transition text-xs font-bold whitespace-nowrap"
-                          title="Add Loading Entry"
-                        >
-                          <FaPlus /> Add Loading Entry
-                        </button>
-                        <button
-                          onClick={() => toggleSaudaStatus(order)}
-                          className="px-2.5 py-1.5 bg-amber-50 text-amber-700 rounded-lg hover:bg-amber-100 transition text-xs font-bold"
-                          title="Close Sauda"
-                        >
-                          Close
-                        </button>
-                      </>
-                    ) : (
-                      <button
-                        onClick={() => toggleSaudaStatus(order)}
-                        className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition text-xs font-bold"
-                        title="Reopen Sauda"
-                      >
-                        Reopen to Add
-                      </button>
-                    )}
-                  </div>,
-                ])}
-              />
-            ) : (
-              <div className="py-10 text-center text-slate-500 font-medium">
-                No results yet. Select group, buyer, consignee, seller name and seller company and search.
-              </div>
-            )}
-          </div>
+          <OrdersTableCard
+            orders={orders}
+            handleOpenPopup={handleOpenPopup}
+            toggleSaudaStatus={toggleSaudaStatus}
+          />
         </div>
 
         {isPopupOpen && selectedOrder && (
