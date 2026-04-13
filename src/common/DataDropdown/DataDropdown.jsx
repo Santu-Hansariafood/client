@@ -2,7 +2,7 @@ import Select from "react-select";
 import PropTypes from "prop-types";
 
 const DataDropdown = ({
-  options,
+  options = [],
   selectedOptions,
   onChange,
   placeholder,
@@ -15,7 +15,8 @@ const DataDropdown = ({
   disableSorting = false,
   value,
 }) => {
-  const formattedOptions = options
+  const safeOptions = Array.isArray(options) ? options : [];
+  const formattedOptions = safeOptions
     .map((option) => ({
       value: option.value,
       label: option.label,
@@ -147,7 +148,7 @@ DataDropdown.propTypes = {
       value: PropTypes.string.isRequired,
       label: PropTypes.string.isRequired,
     }),
-  ).isRequired,
+  ),
   selectedOptions: PropTypes.oneOfType([PropTypes.array, PropTypes.object]),
   onChange: PropTypes.func.isRequired,
   placeholder: PropTypes.string,

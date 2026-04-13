@@ -171,14 +171,16 @@ const AddLoadingEntry = () => {
 
         const filters = filtersRes?.data || {};
 
-        const groupsFormatted = (filters.groups || []).map((g) => ({
+        const rawGroups = Array.isArray(filters.groups) ? filters.groups : [];
+        const groupsFormatted = rawGroups.map((g) => ({
           value: g._id,
           label: capitalizeWords(g.groupName),
           name: g.groupName,
         }));
         setGroups(groupsFormatted);
 
-        const sellersFormatted = (filters.sellers || []).map((s) => ({
+        const rawSellers = Array.isArray(filters.sellers) ? filters.sellers : [];
+        const sellersFormatted = rawSellers.map((s) => ({
           value: s._id,
           label: capitalizeWords(s.sellerName),
           name: s.sellerName,
@@ -244,7 +246,10 @@ const AddLoadingEntry = () => {
 
   useEffect(() => {
     if (selectedSellerName) {
-      const companies = selectedSellerName.companies.map((c) => ({
+      const rawCompanies = Array.isArray(selectedSellerName.companies)
+        ? selectedSellerName.companies
+        : [];
+      const companies = rawCompanies.map((c) => ({
         value: c,
         label: capitalizeWords(c),
         name: c,
