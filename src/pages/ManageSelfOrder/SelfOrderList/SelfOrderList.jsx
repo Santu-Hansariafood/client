@@ -30,6 +30,9 @@ const OrderDetails = lazy(() => import("./OrderDetails/OrderDetails"));
 const DownloadSauda = lazy(
   () => import("../../../components/DownloadSauda/DownloadSauda"),
 );
+const DateSelector = lazy(
+  () => import("../../../common/DateSelector/DateSelector"),
+);
 
 const API_URL = "/self-order";
 
@@ -639,11 +642,18 @@ const SelfOrderList = () => {
   const handleDownloadExcel = useCallback(async () => {
     try {
       const toastId = toast.loading("Preparing Excel...");
+      const formatDateParam = (value) => {
+        if (!value) return undefined;
+        const date = value instanceof Date ? value : new Date(value);
+        if (Number.isNaN(date.getTime())) return undefined;
+        return date.toISOString().split("T")[0];
+      };
+
       const res = await api.get(API_URL, {
         params: {
           export: true,
-          startDate: startDate || undefined,
-          endDate: endDate || undefined,
+          startDate: formatDateParam(startDate),
+          endDate: formatDateParam(endDate),
         },
       });
 
@@ -772,8 +782,8 @@ const SelfOrderList = () => {
             onDownloadExcel={handleDownloadExcel}
             startDate={startDate}
             endDate={endDate}
-            onStartDateChange={(e) => setStartDate(e.target.value)}
-            onEndDateChange={(e) => setEndDate(e.target.value)}
+            onStartDateChange={setStartDate}
+            onEndDateChange={setEndDate}
           />
 
           <SelfOrderTable headers={headers} rows={rows} />
@@ -829,20 +839,16 @@ const SelfOrderSearchBar = ({
         <div className="flex items-center gap-2">
           <div className="flex flex-col">
             <label className="text-xs text-slate-600">Start Date</label>
-            <input
-              type="date"
-              value={startDate}
+            <DateSelector
+              selectedDate={startDate}
               onChange={onStartDateChange}
-              className="px-3 py-1.5 rounded-lg border border-emerald-100"
             />
           </div>
           <div className="flex flex-col">
             <label className="text-xs text-slate-600">End Date</label>
-            <input
-              type="date"
-              value={endDate}
+            <DateSelector
+              selectedDate={endDate}
               onChange={onEndDateChange}
-              className="px-3 py-1.5 rounded-lg border border-emerald-100"
             />
           </div>
         </div>
