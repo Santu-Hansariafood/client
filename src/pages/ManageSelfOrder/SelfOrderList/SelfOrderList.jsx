@@ -342,12 +342,6 @@ const SelfOrderList = () => {
         try {
           await api.patch(`/self-order/${item._id}/whatsapp-sent`);
 
-          setData((prev) =>
-            prev.map((o) =>
-              o._id === item._id ? { ...o, whatsappSent: true } : o,
-            ),
-          );
-
           setFilteredData((prev) =>
             prev.map((o) =>
               o._id === item._id ? { ...o, whatsappSent: true } : o,
@@ -640,8 +634,9 @@ const SelfOrderList = () => {
   }, []);
 
   const handleDownloadExcel = useCallback(async () => {
+    let toastId;
     try {
-      const toastId = toast.loading("Preparing Excel...");
+      toastId = toast.loading("Preparing Excel...");
       const formatDateParam = (value) => {
         if (!value) return undefined;
         const date = value instanceof Date ? value : new Date(value);
@@ -649,24 +644,59 @@ const SelfOrderList = () => {
         return date.toISOString().split("T")[0];
       };
 
-      const res = await api.get(API_URL, {
-        params: {
-          export: true,
-          startDate: formatDateParam(startDate),
-          endDate: formatDateParam(endDate),
-        },
-      });
+      const normalizedStartDate = startDate || endDate;
+      const normalizedEndDate = endDate || startDate;
+      const formattedStartDate = formatDateParam(normalizedStartDate);
+      const formattedEndDate = formatDateParam(normalizedEndDate);
 
-      const orderData = res.data;
-      let raw = [];
+      const trimmedSearch = searchInput?.trim() || "";
 
-      if (orderData && Array.isArray(orderData.data)) {
-        raw = orderData.data;
-      } else if (Array.isArray(orderData)) {
-        raw = orderData;
-      } else {
-        raw = orderData?.data || [];
-      }
+      const fetchAllForExport = async () => {
+        const limit = 200;
+        let page = 1;
+        const all = [];
+
+        while (page <= 200) {
+          const res = await api.get(API_URL, {
+            timeout: 20000,
+            params: {
+              page,
+              limit,
+              search: trimmedSearch,
+              startDate: formattedStartDate,
+              endDate: formattedEndDate,
+            },
+          });
+
+          const payload = res.data;
+          const pageItems = Array.isArray(payload?.data)
+            ? payload.data
+            : Array.isArray(payload)
+              ? payload
+              : payload?.data || [];
+
+          all.push(...pageItems);
+
+          if (Array.isArray(payload)) break;
+
+          const totalPages = Number(payload?.totalPages);
+          const totalItems = Number(payload?.total || payload?.totalItems);
+
+          if (Number.isFinite(totalPages) && totalPages > 0) {
+            if (page >= totalPages) break;
+          } else if (Number.isFinite(totalItems) && totalItems > 0) {
+            if (all.length >= totalItems) break;
+          } else if (pageItems.length < limit) {
+            break;
+          }
+
+          page += 1;
+        }
+
+        return all;
+      };
+
+      let raw = await fetchAllForExport();
 
       let exportOrders = raw;
 
@@ -697,8 +727,20 @@ const SelfOrderList = () => {
         }
       }
 
-      if (searchInput && searchInput.trim() !== "") {
-        const lowerSearch = searchInput.toLowerCase();
+      if (userRole === "Seller" && sellerProfileData.length > 0) {
+        const seller = sellerProfileData.find((s) =>
+          s.phoneNumbers?.some((p) => String(p.value) === String(mobile)),
+        );
+        exportOrders = exportOrders.filter((item) => {
+          return (
+            String(item.sellerMobile) === String(mobile) ||
+            (seller && String(item.supplier) === String(seller._id))
+          );
+        });
+      }
+
+      if (trimmedSearch !== "") {
+        const lowerSearch = trimmedSearch.toLowerCase();
         exportOrders = exportOrders.filter(
           (order) =>
             (order.buyer && order.buyer.toLowerCase().includes(lowerSearch)) ||
@@ -711,6 +753,35 @@ const SelfOrderList = () => {
             (order.poNumber &&
               order.poNumber.toString().toLowerCase().includes(lowerSearch)),
         );
+      }
+
+      if (formattedStartDate || formattedEndDate) {
+        const ymdToLocalDate = (ymd, { endOfDay } = {}) => {
+          if (!ymd) return null;
+          const [y, m, d] = String(ymd)
+            .split("-")
+            .map((part) => Number(part));
+          if (!y || !m || !d) return null;
+          return endOfDay
+            ? new Date(y, m - 1, d, 23, 59, 59, 999)
+            : new Date(y, m - 1, d, 0, 0, 0, 0);
+        };
+
+        const startBound = formattedStartDate
+          ? ymdToLocalDate(formattedStartDate, { endOfDay: false })
+          : null;
+        const endBound = formattedEndDate
+          ? ymdToLocalDate(formattedEndDate, { endOfDay: true })
+          : null;
+
+        exportOrders = exportOrders.filter((item) => {
+          const rawDate = item.poDate || item.createdAt;
+          const itemDate = rawDate ? new Date(rawDate) : null;
+          if (!itemDate || Number.isNaN(itemDate.getTime())) return false;
+          if (startBound && itemDate < startBound) return false;
+          if (endBound && itemDate > endBound) return false;
+          return true;
+        });
       }
 
       exportOrders = [...exportOrders].sort((a, b) => {
@@ -749,16 +820,29 @@ const SelfOrderList = () => {
         return;
       }
 
-      generateExcel(excelRows, "SelfOrders.xlsx");
+      const fileSuffix =
+        formattedStartDate && formattedEndDate
+          ? formattedStartDate === formattedEndDate
+            ? formattedStartDate
+            : `${formattedStartDate}_to_${formattedEndDate}`
+          : formattedStartDate
+            ? formattedStartDate
+            : formattedEndDate
+              ? formattedEndDate
+              : "All";
+
+      generateExcel(excelRows, `SelfOrders_${fileSuffix}.xlsx`);
 
       toast.dismiss(toastId);
       toast.success("Excel downloaded");
     } catch {
-      toast.error("Failed to generate Excel");
+      if (toastId) toast.dismiss(toastId);
+      toast.error("Failed to download Excel");
     }
   }, [
     userRole,
     buyerData,
+    sellerProfileData,
     mobile,
     searchInput,
     getConsigneeDisplay,
