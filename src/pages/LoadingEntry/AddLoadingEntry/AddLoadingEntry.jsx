@@ -172,7 +172,7 @@ const SearchFiltersCard = ({
                   <div className="absolute z-20 mt-1 w-full rounded-xl border border-slate-200 bg-white shadow-lg overflow-hidden max-h-64 overflow-y-auto">
                     {saudaSuggestions.map((o) => (
                       <button
-                        key={String(o._id || o.saudaNo)}
+                        key={String(o.saudaNo)}
                         type="button"
                         onMouseDown={(e) => {
                           e.preventDefault();
@@ -183,6 +183,7 @@ const SearchFiltersCard = ({
                       >
                         <div className="text-sm font-semibold text-slate-800">
                           Sauda: {o.saudaNo}
+                          {o._count > 1 ? ` (${o._count})` : ""}
                         </div>
                         <div className="text-xs text-slate-500">
                           {capitalizeWords(o.consignee)}
@@ -746,36 +747,40 @@ const AddLoadingEntry = () => {
     let ignore = false;
     const handle = setTimeout(async () => {
       try {
+        const params = {
+          groupId: selectedGroup?.value,
+          buyerId: selectedBuyer?.value,
+          saudaNo: trimmed,
+          limit: 500,
+        };
+        if (selectedSellerName?.value) params.sellerId = selectedSellerName.value;
+        if (selectedSellerCompany?.name)
+          params.sellerCompany = selectedSellerCompany.name;
+
         const response = await api.get("/loading-entries/saudas", {
-          params: {
-            groupId: selectedGroup?.value,
-            buyerId: selectedBuyer?.value,
-            sellerId: selectedSellerName?.value,
-            sellerCompany: selectedSellerCompany?.name,
-            saudaNo: trimmed,
-            limit: 50,
-          },
+          params,
         });
 
         const payload = response?.data;
         const data = Array.isArray(payload?.data) ? payload.data : [];
 
-        const uniq = new Map();
-        for (const row of data) {
-          const key = String(row?.saudaNo ?? "");
+        const consigneeNeedle = normalize(selectedConsignee?.name);
+        const filtered = consigneeNeedle
+          ? data.filter((o) => normalize(o.consignee).includes(consigneeNeedle))
+          : data;
+
+        const bySauda = new Map();
+        for (const row of filtered) {
+          const key = String(row?.saudaNo ?? "").trim();
           if (!key) continue;
-          if (!uniq.has(key)) uniq.set(key, row);
+          if (!bySauda.has(key)) bySauda.set(key, { ...row, _count: 1 });
+          else bySauda.get(key)._count += 1;
         }
 
-        const consigneeNeedle = normalize(selectedConsignee?.name);
-        const suggestions = Array.from(uniq.values()).filter((o) =>
-          consigneeNeedle
-            ? normalize(o.consignee).includes(consigneeNeedle)
-            : true,
-        );
+        const suggestions = Array.from(bySauda.values());
 
         if (!ignore) {
-          setSaudaSuggestions(suggestions.slice(0, 25));
+          setSaudaSuggestions(suggestions.slice(0, 100));
           setIsSaudaSuggestOpen(suggestions.length > 0);
         }
       } catch {
