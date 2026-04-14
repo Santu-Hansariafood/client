@@ -121,13 +121,13 @@ const SearchFiltersCard = ({
                   </div>
                   <div>
                     <label className="block mb-1 text-sm font-semibold text-slate-700">
-                      Buyer
+                      Buyer Company
                     </label>
                     <DataDropdown
                       options={filteredBuyers}
                       selectedOptions={selectedBuyer ? [selectedBuyer] : []}
                       onChange={setSelectedBuyer}
-                      placeholder="Select Buyer"
+                      placeholder="Select Company"
                       isMulti={false}
                     />
                   </div>
@@ -143,7 +143,7 @@ const SearchFiltersCard = ({
                   onChange={setSelectedConsignee}
                   placeholder={
                     userRole !== "Seller" && !selectedBuyer
-                      ? "Select Buyer First"
+                      ? "Select Company First"
                       : "Select Consignee"
                   }
                   isMulti={false}
@@ -394,7 +394,7 @@ const AddLoadingEntry = () => {
       const response = await api.get("/loading-entries/saudas", {
         params: {
           groupId: selectedGroup?.value,
-          buyerId: selectedBuyer?.value,
+          buyerCompany: selectedBuyer?.name,
           sellerId: selectedSellerName?.value,
           sellerCompany: selectedSellerCompany?.name,
           saudaNo: trimmedSauda || undefined,
@@ -513,22 +513,31 @@ const AddLoadingEntry = () => {
       }
 
       try {
-        const res = await api.get("/loading-entries/buyers", {
-          params: { groupId: selectedGroup.value },
+        const res = await api.get("/loading-entries/saudas", {
+          params: { groupId: selectedGroup.value, limit: 1000 },
         });
-        const list = Array.isArray(res.data) ? res.data : [];
-        const formatted = list.map((b) => ({
-          value: b._id,
-          label: capitalizeWords(b.name),
-          name: b.name,
-        }));
+        const data = Array.isArray(res.data?.data) ? res.data.data : [];
+        const uniq = new Map();
+        data.forEach((item) => {
+          const company = item.buyerCompany;
+          if (company && !uniq.has(normalize(company))) {
+            uniq.set(normalize(company), {
+              value: company,
+              label: capitalizeWords(company),
+              name: company,
+            });
+          }
+        });
+        const formatted = Array.from(uniq.values()).sort((a, b) =>
+          a.label.localeCompare(b.label),
+        );
         setFilteredBuyers(formatted);
         setSelectedBuyer(null);
         setSelectedConsignee(null);
         setConsignees([]);
       } catch (err) {
-        console.error("Error loading buyers:", err);
-        toast.error("Failed to load buyers");
+        console.error("Error loading buyer companies:", err);
+        toast.error("Failed to load buyer companies");
         setFilteredBuyers([]);
         setSelectedBuyer(null);
         setSelectedConsignee(null);
@@ -542,7 +551,7 @@ const AddLoadingEntry = () => {
   useEffect(() => {
     if (userRole === "Seller") return;
 
-    if (!selectedBuyer?.value) {
+    if (!selectedBuyer?.name) {
       setConsignees([]);
       setSelectedConsignee(null);
       return;
@@ -554,7 +563,7 @@ const AddLoadingEntry = () => {
         const response = await api.get("/loading-entries/saudas", {
           params: {
             groupId: selectedGroup?.value,
-            buyerId: selectedBuyer.value,
+            buyerCompany: selectedBuyer.name,
             limit: 2000,
           },
         });
@@ -600,7 +609,7 @@ const AddLoadingEntry = () => {
   useEffect(() => {
     if (userRole === "Seller") return;
 
-    if (!selectedBuyer?.value) {
+    if (!selectedBuyer?.name) {
       setSellers(allSellers);
       setSelectedSellerName(null);
       setSelectedSellerCompany(null);
@@ -613,7 +622,7 @@ const AddLoadingEntry = () => {
         const response = await api.get("/loading-entries/saudas", {
           params: {
             groupId: selectedGroup?.value,
-            buyerId: selectedBuyer.value,
+            buyerCompany: selectedBuyer.name,
             limit: 2000,
           },
         });
@@ -667,7 +676,7 @@ const AddLoadingEntry = () => {
         const response = await api.get("/loading-entries/saudas", {
           params: {
             groupId: selectedGroup?.value,
-            buyerId: selectedBuyer?.value,
+            buyerCompany: selectedBuyer?.name,
             sellerId: selectedSellerName.value,
             limit: 2000,
           },
@@ -749,7 +758,7 @@ const AddLoadingEntry = () => {
       try {
         const params = {
           groupId: selectedGroup?.value,
-          buyerId: selectedBuyer?.value,
+          buyerCompany: selectedBuyer?.name,
           saudaNo: trimmed,
           limit: 500,
         };

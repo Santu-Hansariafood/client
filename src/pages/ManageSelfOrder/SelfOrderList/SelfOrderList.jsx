@@ -71,7 +71,7 @@ const SelfOrderList = () => {
           companies,
         ] = await Promise.all([
           api.get(
-            `${API_URL}?page=${page}&limit=${itemsPerPage}&search=${search}`,
+            `${API_URL}?page=${page}&limit=${itemsPerPage}&search=${search}&sortBy=saudaNo&sortOrder=desc`,
           ),
           fetchAllPages("/consignees", { limit: 200 }).catch(() => []),
           fetchAllPages("/buyers", { limit: 200 }).catch(() => []),
@@ -157,9 +157,9 @@ const SelfOrderList = () => {
         }
 
         filteredOrders = [...filteredOrders].sort((a, b) => {
-          const aSauda = Number(a.saudaNo) || 0;
-          const bSauda = Number(b.saudaNo) || 0;
-          return bSauda - aSauda;
+          const aS = String(a.saudaNo || "");
+          const bS = String(b.saudaNo || "");
+          return bS.localeCompare(aS, undefined, { numeric: true });
         });
 
         setFilteredData(filteredOrders);
@@ -466,9 +466,7 @@ const SelfOrderList = () => {
   const rows = useMemo(
     () =>
       currentItems.map((item, index) => {
-        const slNo = serverPaginated
-          ? totalItems - ((currentPage - 1) * itemsPerPage + index)
-          : totalItems - ((currentPage - 1) * itemsPerPage + index);
+        const slNo = totalItems - ((currentPage - 1) * itemsPerPage + index);
 
         const formattedDate = item.poDate
           ? new Date(item.poDate).toLocaleDateString("en-GB")
@@ -782,9 +780,9 @@ const SelfOrderList = () => {
       }
 
       exportOrders = [...exportOrders].sort((a, b) => {
-        const aSauda = Number(a.saudaNo) || 0;
-        const bSauda = Number(b.saudaNo) || 0;
-        return bSauda - aSauda;
+        const aS = String(a.saudaNo || "");
+        const bS = String(b.saudaNo || "");
+        return bS.localeCompare(aS, undefined, { numeric: true });
       });
 
       const excelRows = exportOrders.map((item) => ({
