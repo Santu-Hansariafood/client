@@ -16,12 +16,8 @@ const useSaudaSuggestions = (api, selectedGroup, selectedBuyer, filteredBuyers, 
       }
 
       try {
-        const groupIds = Array.isArray(selectedGroup)
-          ? selectedGroup.map((g) => g.value).join(",")
-          : selectedGroup?.value;
-
         const params = {
-          groupId: groupIds,
+          groupId: selectedGroup?.value,
           buyerId: selectedBuyer?.value,
           saudaNo: trimmed,
           limit: 500,
@@ -62,9 +58,19 @@ const useSaudaSuggestions = (api, selectedGroup, selectedBuyer, filteredBuyers, 
     // Auto-fill logic
     if (o.buyerId || o.buyer) {
       const buyer = filteredBuyers.find(
-        (b) => b.value === o.buyerId || b.name === o.buyer,
+        (b) => b.value === (o.buyerId || o.buyer?._id) || b.name === (o.buyerCompany || o.buyer),
       );
-      if (buyer) setSelectedBuyer(buyer);
+      if (buyer) {
+        setSelectedBuyer(buyer);
+      } else if (o.buyerId || o.buyer) {
+        // Fallback if not found in filtered list
+        setSelectedBuyer({
+          value: o.buyerId || o.buyer?._id,
+          label: capitalizeWords(o.buyerCompany || o.buyer?.name || "N/A"),
+          name: o.buyerCompany || o.buyer?.name,
+          consignees: [], // We don't have the list here, but selection will trigger search
+        });
+      }
     }
 
     if (o.consignee) {

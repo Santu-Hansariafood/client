@@ -77,10 +77,10 @@ const SearchFiltersCard = ({
                     </label>
                     <DataDropdown
                       options={groups}
-                      selectedOptions={selectedGroup || []}
+                      selectedOptions={selectedGroup ? [selectedGroup] : []}
                       onChange={setSelectedGroup}
                       placeholder="Select Group"
-                      isMulti={true}
+                      isMulti={false}
                     />
                   </div>
                   <div>

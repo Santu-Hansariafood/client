@@ -9,7 +9,7 @@ const useLoadingEntrySearch = (api, selectedGroup, selectedBuyer, selectedSeller
   const handleSearch = async () => {
     const trimmedSauda = saudaSearch.trim();
 
-    if (!selectedGroup || (Array.isArray(selectedGroup) && selectedGroup.length === 0)) {
+    if (!selectedGroup?.value) {
       toast.error("Please select a group");
       return;
     }
@@ -19,13 +19,9 @@ const useLoadingEntrySearch = (api, selectedGroup, selectedBuyer, selectedSeller
     setResults([]);
 
     try {
-      const groupIds = Array.isArray(selectedGroup)
-        ? selectedGroup.map((g) => g.value).join(",")
-        : selectedGroup?.value;
-
       const response = await api.get("/loading-entries/saudas", {
         params: {
-          groupId: groupIds,
+          groupId: selectedGroup.value,
           buyerId: selectedBuyer?.value,
           sellerId: selectedSellerName?.value,
           sellerCompany: selectedSellerCompany?.name,

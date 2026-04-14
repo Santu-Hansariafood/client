@@ -4,7 +4,7 @@ import { capitalizeWords } from "../utils/textUtils/textUtils";
 
 const useLoadingEntryData = (api, userRole) => {
   const [groups, setGroups] = useState([]);
-  const [selectedGroup, setSelectedGroup] = useState([]);
+  const [selectedGroup, setSelectedGroup] = useState(null);
   
   const [filteredBuyers, setFilteredBuyers] = useState([]);
   const [selectedBuyer, setSelectedBuyer] = useState(null);
@@ -98,13 +98,7 @@ const useLoadingEntryData = (api, userRole) => {
 
   useEffect(() => {
     const loadBuyersForGroup = async () => {
-      const groupIds = Array.isArray(selectedGroup)
-        ? selectedGroup.map((g) => g.value).filter(Boolean)
-        : selectedGroup?.value
-          ? [selectedGroup.value]
-          : [];
-
-      if (groupIds.length === 0) {
+      if (!selectedGroup?.value) {
         setFilteredBuyers([]);
         setSelectedBuyer(null);
         setSelectedConsignee(null);
@@ -114,7 +108,7 @@ const useLoadingEntryData = (api, userRole) => {
 
       try {
         const res = await api.get("/loading-entries/buyers", {
-          params: { groupId: groupIds.join(",") },
+          params: { groupId: selectedGroup.value },
         });
         const buyers = Array.isArray(res.data?.data)
           ? res.data.data
@@ -155,18 +149,17 @@ const useLoadingEntryData = (api, userRole) => {
       return;
     }
 
-    const fullBuyer = filteredBuyers.find((b) => b.value === selectedBuyer.value);
-    const list = (fullBuyer?.consignees || [])
+    const list = (selectedBuyer.consignees || [])
       .map((c) => ({
         value: c.name,
-        label: capitalizeWords(c.name),
+        label: c.label || capitalizeWords(c.name),
         name: c.name,
       }))
       .sort((a, b) => a.label.localeCompare(b.label));
 
     setConsignees(list);
     setSelectedConsignee(null);
-  }, [userRole, selectedBuyer, filteredBuyers]);
+  }, [userRole, selectedBuyer]);
 
   useEffect(() => {
     if (!selectedBuyer) {
@@ -179,13 +172,9 @@ const useLoadingEntryData = (api, userRole) => {
     let ignore = false;
     (async () => {
       try {
-        const groupIds = Array.isArray(selectedGroup)
-          ? selectedGroup.map((g) => g.value).join(",")
-          : selectedGroup?.value;
-
         const response = await api.get("/loading-entries/saudas", {
           params: {
-            groupId: groupIds,
+            groupId: selectedGroup?.value,
             buyerId: selectedBuyer.value,
             limit: 2000,
           },
@@ -248,13 +237,9 @@ const useLoadingEntryData = (api, userRole) => {
     let ignore = false;
     (async () => {
       try {
-        const groupIds = Array.isArray(selectedGroup)
-          ? selectedGroup.map((g) => g.value).join(",")
-          : selectedGroup?.value;
-
         const response = await api.get("/loading-entries/saudas", {
           params: {
-            groupId: groupIds,
+            groupId: selectedGroup?.value,
             buyerId: selectedBuyer?.value,
             sellerId: selectedSellerName.value,
             limit: 2000,
