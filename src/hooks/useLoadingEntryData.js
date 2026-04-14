@@ -25,8 +25,8 @@ const useLoadingEntryData = (api, userRole) => {
     const loadInitialData = async () => {
       try {
         const [groupsRes, sellersRes, transportersRes] = await Promise.all([
-          api.get("/groups/all"),
-          api.get("/seller-details/all"),
+          api.get("/groups"),
+          api.get("/sellers"),
           api.get("/transporters", { params: { limit: 0 } }),
         ]);
 
@@ -71,7 +71,7 @@ const useLoadingEntryData = (api, userRole) => {
         setTransporters(transportersData);
 
         if (userRole === "Seller") {
-          const consigneesRes = await api.get("/consignees/all");
+          const consigneesRes = await api.get("/consignees");
           const consigneeData = Array.isArray(consigneesRes.data?.data)
             ? consigneesRes.data.data
             : Array.isArray(consigneesRes.data)
