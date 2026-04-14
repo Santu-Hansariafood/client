@@ -10,5 +10,4 @@ const PrivateRoute = () => {
   return <PrivateLayout />;
 };
 
-
 export default PrivateRoute;

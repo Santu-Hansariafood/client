@@ -1,8 +1,8 @@
 import { useState } from "react";
 import api from "../../../utils/apiClient/apiClient";
 import { toast } from "react-toastify";
-import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
 import { FaTruckMoving } from "react-icons/fa";
+import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
 import DataInput from "../../../common/DataInput/DataInput";
 import DataDropdown from "../../../common/DataDropdown/DataDropdown";
 import Buttons from "../../../common/Buttons/Buttons";

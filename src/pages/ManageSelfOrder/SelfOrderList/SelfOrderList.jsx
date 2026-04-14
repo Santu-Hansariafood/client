@@ -157,12 +157,6 @@ const SelfOrderList = () => {
         }
 
         filteredOrders = [...filteredOrders].sort((a, b) => {
-          const aDate = a.createdAt || a.poDate;
-          const bDate = b.createdAt || b.poDate;
-          if (aDate && bDate) {
-            const diff = new Date(bDate) - new Date(aDate);
-            if (diff !== 0) return diff;
-          }
           const aSauda = Number(a.saudaNo) || 0;
           const bSauda = Number(b.saudaNo) || 0;
           return bSauda - aSauda;
@@ -472,7 +466,9 @@ const SelfOrderList = () => {
   const rows = useMemo(
     () =>
       currentItems.map((item, index) => {
-        const slNo = totalItems - ((currentPage - 1) * itemsPerPage + index);
+        const slNo = serverPaginated
+          ? totalItems - ((currentPage - 1) * itemsPerPage + index)
+          : totalItems - ((currentPage - 1) * itemsPerPage + index);
 
         const formattedDate = item.poDate
           ? new Date(item.poDate).toLocaleDateString("en-GB")
@@ -620,6 +616,7 @@ const SelfOrderList = () => {
       itemsPerPage,
       userRole,
       totalItems,
+      serverPaginated,
       consigneeData,
       supplierData,
       buyerData,
@@ -930,10 +927,7 @@ const SelfOrderSearchBar = ({
           </div>
           <div className="flex flex-col">
             <label className="text-xs text-slate-600">End Date</label>
-            <DateSelector
-              selectedDate={endDate}
-              onChange={onEndDateChange}
-            />
+            <DateSelector selectedDate={endDate} onChange={onEndDateChange} />
           </div>
         </div>
       </div>
