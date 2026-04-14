@@ -396,7 +396,7 @@ const AddLoadingEntry = () => {
       const response = await api.get("/loading-entries/saudas", {
         params: {
           groupId: selectedGroup?.value,
-          buyerCompany: selectedBuyer?.name,
+          buyerId: selectedBuyer?.value,
           sellerId: selectedSellerName?.value,
           sellerCompany: selectedSellerCompany?.name,
           saudaNo: trimmedSauda || undefined,
@@ -515,24 +515,16 @@ const AddLoadingEntry = () => {
       }
 
       try {
-        const res = await api.get("/loading-entries/saudas", {
-          params: { groupId: selectedGroup.value, limit: 1000 },
+        const res = await api.get("/loading-entries/buyers", {
+          params: { groupId: selectedGroup.value },
         });
-        const data = Array.isArray(res.data?.data) ? res.data.data : [];
-        const uniq = new Map();
-        data.forEach((item) => {
-          const company = item.buyerCompany;
-          if (company && !uniq.has(normalize(company))) {
-            uniq.set(normalize(company), {
-              value: company,
-              label: capitalizeWords(company),
-              name: company,
-            });
-          }
-        });
-        const formatted = Array.from(uniq.values()).sort((a, b) =>
-          a.label.localeCompare(b.label),
-        );
+        const buyers = Array.isArray(res.data) ? res.data : [];
+        const formatted = buyers.map((b) => ({
+          value: b._id,
+          label: capitalizeWords(b.name),
+          name: b.name,
+          consignees: b.consignees || [],
+        }));
         setFilteredBuyers(formatted);
         setSelectedBuyer(null);
         setSelectedConsignee(null);
@@ -553,65 +545,26 @@ const AddLoadingEntry = () => {
   useEffect(() => {
     if (userRole === "Seller") return;
 
-    if (!selectedBuyer?.name) {
+    if (!selectedBuyer) {
       setConsignees([]);
       setSelectedConsignee(null);
       return;
     }
 
-    let ignore = false;
-    (async () => {
-      try {
-        const response = await api.get("/loading-entries/saudas", {
-          params: {
-            groupId: selectedGroup?.value,
-            buyerCompany: selectedBuyer.name,
-            limit: 2000,
-          },
-        });
+    const list = (selectedBuyer.consignees || []).map((c) => ({
+      value: c.name,
+      label: c.label || capitalizeWords(c.name),
+      name: c.name,
+    }));
 
-        const payload = response?.data;
-        const data = Array.isArray(payload?.data) ? payload.data : [];
-
-        const uniq = new Map();
-        for (const row of data) {
-          const name = (row?.consignee || "").toString().trim();
-          if (!name) continue;
-          const key = normalize(name);
-          if (!uniq.has(key)) {
-            uniq.set(key, {
-              value: name,
-              label: capitalizeWords(name),
-              name,
-            });
-          }
-        }
-
-        const list = Array.from(uniq.values()).sort((a, b) =>
-          String(a.label).localeCompare(String(b.label)),
-        );
-
-        if (!ignore) {
-          setConsignees(list);
-          setSelectedConsignee(null);
-        }
-      } catch {
-        if (!ignore) {
-          setConsignees([]);
-          setSelectedConsignee(null);
-        }
-      }
-    })();
-
-    return () => {
-      ignore = true;
-    };
-  }, [userRole, selectedGroup, selectedBuyer]);
+    setConsignees(list);
+    setSelectedConsignee(null);
+  }, [userRole, selectedBuyer]);
 
   useEffect(() => {
     if (userRole === "Seller") return;
 
-    if (!selectedBuyer?.name) {
+    if (!selectedBuyer) {
       setSellers(allSellers);
       setSelectedSellerName(null);
       setSelectedSellerCompany(null);
@@ -624,7 +577,7 @@ const AddLoadingEntry = () => {
         const response = await api.get("/loading-entries/saudas", {
           params: {
             groupId: selectedGroup?.value,
-            buyerCompany: selectedBuyer.name,
+            buyerId: selectedBuyer.value,
             limit: 2000,
           },
         });
@@ -678,7 +631,7 @@ const AddLoadingEntry = () => {
         const response = await api.get("/loading-entries/saudas", {
           params: {
             groupId: selectedGroup?.value,
-            buyerCompany: selectedBuyer?.name,
+            buyerId: selectedBuyer?.value,
             sellerId: selectedSellerName.value,
             limit: 2000,
           },
@@ -760,7 +713,7 @@ const AddLoadingEntry = () => {
       try {
         const params = {
           groupId: selectedGroup?.value,
-          buyerCompany: selectedBuyer?.name,
+          buyerId: selectedBuyer?.value,
           saudaNo: trimmed,
           limit: 500,
         };
