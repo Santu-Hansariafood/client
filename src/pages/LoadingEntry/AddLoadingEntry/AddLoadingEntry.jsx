@@ -551,7 +551,9 @@ const AddLoadingEntry = () => {
       return;
     }
 
-    const list = (selectedBuyer.consignees || []).map((c) => ({
+    // Find the full buyer object from filteredBuyers as DataDropdown strips extra props
+    const fullBuyer = filteredBuyers.find((b) => b.value === selectedBuyer.value);
+    const list = (fullBuyer?.consignees || []).map((c) => ({
       value: c.name,
       label: c.label || capitalizeWords(c.name),
       name: c.name,
@@ -559,7 +561,7 @@ const AddLoadingEntry = () => {
 
     setConsignees(list);
     setSelectedConsignee(null);
-  }, [userRole, selectedBuyer]);
+  }, [userRole, selectedBuyer, filteredBuyers]);
 
   useEffect(() => {
     if (userRole === "Seller") return;
@@ -659,8 +661,11 @@ const AddLoadingEntry = () => {
         );
 
         if (list.length === 0) {
-          const rawCompanies = Array.isArray(selectedSellerName.companies)
-            ? selectedSellerName.companies
+          const fullSeller = allSellers.find(
+            (s) => s.value === selectedSellerName.value,
+          );
+          const rawCompanies = Array.isArray(fullSeller?.companies)
+            ? fullSeller.companies
             : [];
           list = rawCompanies.map((c) => ({
             value: c,
@@ -675,8 +680,11 @@ const AddLoadingEntry = () => {
         }
       } catch {
         if (!ignore) {
-          const rawCompanies = Array.isArray(selectedSellerName.companies)
-            ? selectedSellerName.companies
+          const fullSeller = allSellers.find(
+            (s) => s.value === selectedSellerName.value,
+          );
+          const rawCompanies = Array.isArray(fullSeller?.companies)
+            ? fullSeller.companies
             : [];
           const list = rawCompanies.map((c) => ({
             value: c,
@@ -692,7 +700,7 @@ const AddLoadingEntry = () => {
     return () => {
       ignore = true;
     };
-  }, [selectedSellerName, selectedGroup, selectedBuyer]);
+  }, [selectedSellerName, selectedGroup, selectedBuyer, allSellers]);
 
   useEffect(() => {
     if (selectedBuyer && selectedSellerCompany) {
