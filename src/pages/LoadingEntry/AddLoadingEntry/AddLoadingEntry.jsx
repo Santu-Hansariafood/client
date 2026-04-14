@@ -159,7 +159,8 @@ const SearchFiltersCard = ({
                   value={saudaSearch}
                   onChange={(e) => setSaudaSearch(e.target.value)}
                   onFocus={() => {
-                    if (saudaSuggestions.length > 0) setIsSaudaSuggestOpen(true);
+                    if (saudaSuggestions.length > 0)
+                      setIsSaudaSuggestOpen(true);
                   }}
                   onBlur={() => {
                     setTimeout(() => setIsSaudaSuggestOpen(false), 120);
@@ -202,7 +203,9 @@ const SearchFiltersCard = ({
                 </label>
                 <DataDropdown
                   options={sellers}
-                  selectedOptions={selectedSellerName ? [selectedSellerName] : []}
+                  selectedOptions={
+                    selectedSellerName ? [selectedSellerName] : []
+                  }
                   onChange={setSelectedSellerName}
                   placeholder={
                     userRole !== "Seller" &&
@@ -331,27 +334,27 @@ const OrdersTableCard = ({ orders, handleOpenPopup, toggleSaudaStatus }) => {
 
 const AddLoadingEntry = () => {
   const { userRole, mobile } = useAuth();
-  
+
   // New Filter States
   const [groups, setGroups] = useState([]);
   const [selectedGroup, setSelectedGroup] = useState(null);
-  
+
   const [filteredBuyers, setFilteredBuyers] = useState([]);
   const [selectedBuyer, setSelectedBuyer] = useState(null);
 
   const [consignees, setConsignees] = useState([]);
   const [allConsignees, setAllConsignees] = useState([]);
   const [selectedConsignee, setSelectedConsignee] = useState(null);
-  
+
   const [sellers, setSellers] = useState([]);
   const [allSellers, setAllSellers] = useState([]);
   const [selectedSellerName, setSelectedSellerName] = useState(null);
-  
+
   const [sellerCompanies, setSellerCompanies] = useState([]);
   const [selectedSellerCompany, setSelectedSellerCompany] = useState(null);
 
   const [transporters, setTransporters] = useState([]);
-  
+
   const [saudaSearch, setSaudaSearch] = useState(""); // Optional Sauda search
   const [saudaSuggestions, setSaudaSuggestions] = useState([]);
   const [isSaudaSuggestOpen, setIsSaudaSuggestOpen] = useState(false);
@@ -362,7 +365,6 @@ const AddLoadingEntry = () => {
   const [loadingEntries, setLoadingEntries] = useState([]);
   const [existingEntries, setExistingEntries] = useState([]);
   const [isSaving, setIsSaving] = useState(false);
-
 
   const INITIAL_ENTRY = {
     loadingDate: new Date().toISOString().split("T")[0],
@@ -762,7 +764,8 @@ const AddLoadingEntry = () => {
           saudaNo: trimmed,
           limit: 500,
         };
-        if (selectedSellerName?.value) params.sellerId = selectedSellerName.value;
+        if (selectedSellerName?.value)
+          params.sellerId = selectedSellerName.value;
         if (selectedSellerCompany?.name)
           params.sellerCompany = selectedSellerCompany.name;
 

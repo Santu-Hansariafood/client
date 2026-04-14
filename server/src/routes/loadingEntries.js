@@ -28,8 +28,6 @@ const computePendingForSelfOrder = (order) => {
     pendingQuantity = Number(pendingQuantity || 0);
   }
 
-  // As per requirement: "each and every sauda is needed to all are pending"
-  // Force isClosed to false so that loading entry can be added for any sauda
   const isClosed = false;
 
   return { pendingQuantity, isClosed };
@@ -61,7 +59,9 @@ router.get("/filters", async (req, res) => {
         groupName: g.groupName || "",
       })),
       sellers: (sellers || [])
-        .filter((s) => String(s.status || "active").toLowerCase() !== "inactive")
+        .filter(
+          (s) => String(s.status || "active").toLowerCase() !== "inactive",
+        )
         .map((s) => ({
           _id: s._id,
           sellerName: s.sellerName || "",
@@ -88,7 +88,10 @@ router.get("/buyers", async (req, res) => {
 
     const buyers = await Buyer.find({ groupId })
       .select("_id name consigneeIds")
-      .populate({ path: "consigneeIds", select: "name location district state" })
+      .populate({
+        path: "consigneeIds",
+        select: "name location district state",
+      })
       .sort({ name: 1, _id: 1 })
       .lean();
 
@@ -99,8 +102,8 @@ router.get("/buyers", async (req, res) => {
         consignees: (b.consigneeIds || []).map((c) => ({
           _id: c._id,
           name: c.name || "",
-          label: `${c.name || "N/A"} - ${c.location || "N/A"}, ${c.district || "N/A"}, ${c.state || "N/A"}`
-        }))
+          label: `${c.name || "N/A"} - ${c.location || "N/A"}, ${c.district || "N/A"}, ${c.state || "N/A"}`,
+        })),
       })),
     );
   } catch (error) {
@@ -119,6 +122,7 @@ router.get("/saudas", async (req, res) => {
 
     const buyerId = toObjectId(req.query.buyerId);
     const groupId = toObjectId(req.query.groupId);
+    const buyerCompany = String(req.query.buyerCompany || "").trim();
     const consigneeName = String(req.query.consigneeName || "").trim();
     const sellerIdFromQuery = toObjectId(req.query.sellerId);
     const sellerCompany = String(req.query.sellerCompany || "").trim();
@@ -140,7 +144,9 @@ router.get("/saudas", async (req, res) => {
       if (!buyer) return res.status(404).json({ message: "Buyer not found" });
 
       if (groupId && String(buyer.groupId || "") !== String(groupId)) {
-        return res.status(400).json({ message: "Buyer does not belong to selected group" });
+        return res
+          .status(400)
+          .json({ message: "Buyer does not belong to selected group" });
       }
 
       const companyIds = (buyer.companyIds || [])
@@ -152,12 +158,49 @@ router.get("/saudas", async (req, res) => {
 
       const buyerOr = [];
       if (companyIds.length) buyerOr.push({ companyId: { $in: companyIds } });
-      if (companyNames.length) buyerOr.push({ buyerCompany: { $in: companyNames } });
+      if (companyNames.length)
+        buyerOr.push({ buyerCompany: { $in: companyNames } });
       if (buyer.name) buyerOr.push({ buyer: buyer.name });
 
       if (buyerOr.length) andParts.push({ $or: buyerOr });
     } else if (groupId) {
-      return res.status(400).json({ message: "buyerId is required when groupId is provided" });
+      const buyers = await Buyer.find({ groupId })
+        .select("_id companyIds name")
+        .populate({ path: "companyIds", select: "companyName" })
+        .lean();
+
+      if (buyers.length) {
+        const allCompanyIds = [];
+        const allCompanyNames = [];
+        const allBuyerNames = [];
+
+        buyers.forEach((b) => {
+          if (b.name) allBuyerNames.push(b.name);
+          (b.companyIds || []).forEach((c) => {
+            if (c?._id) allCompanyIds.push(c._id);
+            if (c?.companyName) allCompanyNames.push(c.companyName);
+          });
+        });
+
+        const groupOr = [];
+        if (allCompanyIds.length)
+          groupOr.push({ companyId: { $in: allCompanyIds } });
+        if (allCompanyNames.length)
+          groupOr.push({ buyerCompany: { $in: allCompanyNames } });
+        if (allBuyerNames.length)
+          groupOr.push({ buyer: { $in: allBuyerNames } });
+
+        if (groupOr.length) andParts.push({ $or: groupOr });
+        else andParts.push({ _id: null });
+      } else {
+        andParts.push({ _id: null });
+      }
+    }
+
+    if (buyerCompany) {
+      andParts.push({
+        buyerCompany: { $regex: new RegExp(`^${buyerCompany}$`, "i") },
+      });
     }
 
     if (consigneeName) {
@@ -193,10 +236,14 @@ router.get("/saudas", async (req, res) => {
     });
 
     processed.sort((a, b) => {
-      if (Boolean(a.isClosed) !== Boolean(b.isClosed)) return a.isClosed ? 1 : -1;
+      if (Boolean(a.isClosed) !== Boolean(b.isClosed))
+        return a.isClosed ? 1 : -1;
       const aTime = new Date(a.poDate || a.createdAt || 0).getTime();
       const bTime = new Date(b.poDate || b.createdAt || 0).getTime();
-      return (Number.isFinite(bTime) ? bTime : 0) - (Number.isFinite(aTime) ? aTime : 0);
+      return (
+        (Number.isFinite(bTime) ? bTime : 0) -
+        (Number.isFinite(aTime) ? aTime : 0)
+      );
     });
 
     res.json({ data: processed, total: processed.length });
@@ -260,12 +307,10 @@ router.post("/bulk", async (req, res) => {
       await selfOrder.save();
     }
 
-    res
-      .status(201)
-      .json({
-        message: "Bulk entries saved successfully",
-        count: savedEntries.length,
-      });
+    res.status(201).json({
+      message: "Bulk entries saved successfully",
+      count: savedEntries.length,
+    });
   } catch (error) {
     console.error("Bulk save error:", error);
     res.status(400).json({ message: error.message });
