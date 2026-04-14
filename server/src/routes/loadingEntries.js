@@ -81,12 +81,14 @@ router.get("/buyers", async (req, res) => {
       return res.status(403).json({ message: "Forbidden" });
     }
 
-    const groupId = toObjectId(req.query.groupId);
-    if (!groupId) {
+    const groupIdRaw = req.query.groupId;
+    if (!groupIdRaw) {
       return res.status(400).json({ message: "groupId is required" });
     }
 
-    const buyers = await Buyer.find({ groupId })
+    const groupIds = groupIdRaw.split(",").map(toObjectId).filter(Boolean);
+
+    const buyers = await Buyer.find({ groupId: { $in: groupIds } })
       .select("_id name consigneeIds")
       .populate({
         path: "consigneeIds",
@@ -121,7 +123,7 @@ router.get("/saudas", async (req, res) => {
     }
 
     const buyerId = toObjectId(req.query.buyerId);
-    const groupId = toObjectId(req.query.groupId);
+    const groupIdRaw = req.query.groupId;
     const buyerCompany = String(req.query.buyerCompany || "").trim();
     const consigneeName = String(req.query.consigneeName || "").trim();
     const sellerIdFromQuery = toObjectId(req.query.sellerId);
@@ -143,12 +145,6 @@ router.get("/saudas", async (req, res) => {
 
       if (!buyer) return res.status(404).json({ message: "Buyer not found" });
 
-      if (groupId && String(buyer.groupId || "") !== String(groupId)) {
-        return res
-          .status(400)
-          .json({ message: "Buyer does not belong to selected group" });
-      }
-
       const companyIds = (buyer.companyIds || [])
         .map((c) => c?._id || c)
         .filter(Boolean);
@@ -163,8 +159,9 @@ router.get("/saudas", async (req, res) => {
       if (buyer.name) buyerOr.push({ buyer: buyer.name });
 
       if (buyerOr.length) andParts.push({ $or: buyerOr });
-    } else if (groupId) {
-      const buyers = await Buyer.find({ groupId })
+    } else if (groupIdRaw) {
+      const groupIds = groupIdRaw.split(",").map(toObjectId).filter(Boolean);
+      const buyers = await Buyer.find({ groupId: { $in: groupIds } })
         .select("_id companyIds name")
         .populate({ path: "companyIds", select: "companyName" })
         .lean();

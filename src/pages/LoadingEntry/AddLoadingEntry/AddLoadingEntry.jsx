@@ -6,6 +6,11 @@ import api from "../../../utils/apiClient/apiClient";
 import Loading from "../../../common/Loading/Loading";
 import PrintLoadingEntry from "../PrintLoadingEntry/PrintLoadingEntry";
 import { useAuth } from "../../../context/AuthContext/AuthContext";
+import { capitalizeWords } from "../../../utils/textUtils/textUtils";
+import useLoadingEntryData from "../../../hooks/useLoadingEntryData";
+import useSaudaSuggestions from "../../../hooks/useSaudaSuggestions";
+import useLoadingEntrySearch from "../../../hooks/useLoadingEntrySearch";
+
 const DataDropdown = lazy(
   () => import("../../../common/DataDropdown/DataDropdown"),
 );
@@ -19,54 +24,11 @@ const DateSelector = lazy(
   () => import("../../../common/DateSelector/DateSelector"),
 );
 
-const capitalizeWords = (str) => {
-  if (!str) return "";
-  return String(str)
-    .toLowerCase()
-    .replace(/\b\w/g, (char) => char.toUpperCase());
-};
-
-const fetchData = async (url, key) => {
-  try {
-    const response = await api.get(url);
-    const data = Array.isArray(response.data)
-      ? response.data
-      : response.data?.data || [];
-
-    if (url === "/sellers") {
-      return data.flatMap((seller) => {
-        const companies =
-          Array.isArray(seller.companies) && seller.companies.length > 0
-            ? seller.companies
-            : [seller.sellerName || "Unknown Seller"];
-
-        return companies.map((company) => ({
-          value: seller._id,
-          label: capitalizeWords(company),
-          company: company,
-          sellerName: seller.sellerName,
-          phoneNumbers: seller.phoneNumbers || [],
-        }));
-      });
-    }
-    return data.map((item) => ({
-      value: item._id,
-      label: capitalizeWords(item[key]),
-      ...item,
-    }));
-  } catch (error) {
-    console.error(`Error fetching ${key}:`, error);
-    return [];
-  }
-};
-
 const formatDate = (date) => {
   if (!date) return "N/A";
   const d = new Date(date);
   return isNaN(d.getTime()) ? "N/A" : d.toLocaleDateString();
 };
-
-const normalize = (str) => (str || "").toString().trim().toLowerCase();
 
 const SearchFiltersCard = ({
   loading,
@@ -86,11 +48,13 @@ const SearchFiltersCard = ({
   sellerCompanies,
   selectedSellerCompany,
   setSelectedSellerCompany,
+  allSellers,
   saudaSearch,
   setSaudaSearch,
   saudaSuggestions,
   isSaudaSuggestOpen,
   setIsSaudaSuggestOpen,
+  handleSaudaSelection,
   handleSearch,
 }) => {
   return (
@@ -113,10 +77,10 @@ const SearchFiltersCard = ({
                     </label>
                     <DataDropdown
                       options={groups}
-                      selectedOptions={selectedGroup ? [selectedGroup] : []}
+                      selectedOptions={selectedGroup || []}
                       onChange={setSelectedGroup}
                       placeholder="Select Group"
-                      isMulti={false}
+                      isMulti={true}
                     />
                   </div>
                   <div>
@@ -177,8 +141,7 @@ const SearchFiltersCard = ({
                         type="button"
                         onMouseDown={(e) => {
                           e.preventDefault();
-                          setSaudaSearch(String(o.saudaNo || ""));
-                          setIsSaudaSuggestOpen(false);
+                          handleSaudaSelection(o);
                         }}
                         className="w-full text-left px-3 py-2 hover:bg-slate-50 transition"
                       >
@@ -333,33 +296,62 @@ const OrdersTableCard = ({ orders, handleOpenPopup, toggleSaudaStatus }) => {
 };
 
 const AddLoadingEntry = () => {
-  const { userRole, mobile } = useAuth();
+  const { userRole } = useAuth();
 
-  // New Filter States
-  const [groups, setGroups] = useState([]);
-  const [selectedGroup, setSelectedGroup] = useState(null);
+  // Custom Hooks for data fetching and state management
+  const {
+    groups,
+    selectedGroup,
+    setSelectedGroup,
+    filteredBuyers,
+    selectedBuyer,
+    setSelectedBuyer,
+    consignees,
+    selectedConsignee,
+    setSelectedConsignee,
+    allSellers,
+    sellers,
+    selectedSellerName,
+    setSelectedSellerName,
+    sellerCompanies,
+    selectedSellerCompany,
+    setSelectedSellerCompany,
+    transporters,
+  } = useLoadingEntryData(api, userRole);
 
-  const [filteredBuyers, setFilteredBuyers] = useState([]);
-  const [selectedBuyer, setSelectedBuyer] = useState(null);
+  const {
+    saudaSearch,
+    setSaudaSearch,
+    saudaSuggestions,
+    isSaudaSuggestOpen,
+    setIsSaudaSuggestOpen,
+    handleSaudaSelection,
+  } = useSaudaSuggestions(
+    api,
+    selectedGroup,
+    selectedBuyer,
+    filteredBuyers,
+    allSellers,
+    setSelectedBuyer,
+    setSelectedConsignee,
+    setSelectedSellerName,
+    setSelectedSellerCompany,
+  );
 
-  const [consignees, setConsignees] = useState([]);
-  const [allConsignees, setAllConsignees] = useState([]);
-  const [selectedConsignee, setSelectedConsignee] = useState(null);
+  const {
+    results: orders,
+    setResults: setOrders,
+    loading,
+    handleSearch,
+  } = useLoadingEntrySearch(
+    api,
+    selectedGroup,
+    selectedBuyer,
+    selectedSellerName,
+    selectedSellerCompany,
+    saudaSearch,
+  );
 
-  const [sellers, setSellers] = useState([]);
-  const [allSellers, setAllSellers] = useState([]);
-  const [selectedSellerName, setSelectedSellerName] = useState(null);
-
-  const [sellerCompanies, setSellerCompanies] = useState([]);
-  const [selectedSellerCompany, setSelectedSellerCompany] = useState(null);
-
-  const [transporters, setTransporters] = useState([]);
-
-  const [saudaSearch, setSaudaSearch] = useState(""); // Optional Sauda search
-  const [saudaSuggestions, setSaudaSuggestions] = useState([]);
-  const [isSaudaSuggestOpen, setIsSaudaSuggestOpen] = useState(false);
-  const [orders, setOrders] = useState([]);
-  const [loading, setLoading] = useState(false);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [loadingEntries, setLoadingEntries] = useState([]);
@@ -384,398 +376,11 @@ const AddLoadingEntry = () => {
     status: "open",
   };
 
-  const handleSearch = useCallback(async () => {
-    const trimmedSauda = saudaSearch.trim();
-    if (userRole !== "Seller" && !selectedBuyer && !trimmedSauda) {
-      toast.info("Please provide at least one search criteria.");
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const response = await api.get("/loading-entries/saudas", {
-        params: {
-          groupId: selectedGroup?.value,
-          buyerId: selectedBuyer?.value,
-          sellerId: selectedSellerName?.value,
-          sellerCompany: selectedSellerCompany?.name,
-          saudaNo: trimmedSauda || undefined,
-          limit: 1000,
-        },
-      });
-
-      const payload = response?.data;
-      const data = Array.isArray(payload?.data) ? payload.data : [];
-
-      const consigneeNeedle = normalize(selectedConsignee?.name);
-      const filtered = consigneeNeedle
-        ? data.filter((o) => normalize(o.consignee).includes(consigneeNeedle))
-        : data;
-
-      if (filtered.length === 0) {
-        toast.info("No matching Sauda found.");
-        setOrders([]);
-        return;
-      }
-
-      setOrders(filtered);
-    } catch (err) {
-      console.error("Error searching orders:", err);
-      toast.error("Error searching for orders.");
-    } finally {
-      setLoading(false);
-    }
-  }, [
-    userRole,
-    selectedGroup,
-    selectedBuyer,
-    selectedSellerName,
-    selectedSellerCompany,
-    selectedConsignee,
-    saudaSearch,
-  ]);
-
-  useEffect(() => {
-    const loadDropdowns = async () => {
-      setLoading(true);
-      try {
-        const [filtersRes, transportersRes, consigneesRes, sellersRes] =
-          await Promise.all([
-            api.get("/loading-entries/filters"),
-            api.get("/transporters", { params: { limit: 0 } }),
-            api.get("/consignees", { params: { limit: 0 } }),
-            api.get("/sellers", { params: { limit: 0 } }),
-          ]);
-
-        const filters = filtersRes?.data || {};
-
-        const rawGroups = Array.isArray(filters.groups) ? filters.groups : [];
-        const groupsFormatted = rawGroups.map((g) => ({
-          value: g._id,
-          label: capitalizeWords(g.groupName),
-          name: g.groupName,
-        }));
-        setGroups(groupsFormatted);
-
-        const rawSellers = Array.isArray(sellersRes.data)
-          ? sellersRes.data
-          : sellersRes.data?.data || [];
-        const sellersFormatted = rawSellers.map((s) => ({
-          value: s._id,
-          label: capitalizeWords(s.sellerName),
-          name: s.sellerName,
-          companies: Array.isArray(s.companies) ? s.companies : [],
-        }));
-        setAllSellers(sellersFormatted);
-        setSellers(sellersFormatted);
-
-        if (userRole === "Seller" && sellersFormatted.length === 1) {
-          setSelectedSellerName(sellersFormatted[0]);
-        }
-
-        const rawTransporters = Array.isArray(transportersRes.data)
-          ? transportersRes.data
-          : transportersRes.data?.data || [];
-
-        const transportersData = rawTransporters.map((t) => ({
-          value: t._id,
-          label: `${capitalizeWords(t.name)} - ${t.mobile}`,
-          name: t.name,
-          mobile: t.mobile,
-        }));
-        setTransporters(transportersData);
-
-        const rawConsignees = Array.isArray(consigneesRes.data)
-          ? consigneesRes.data
-          : consigneesRes.data?.data || [];
-        const consigneesFormatted = rawConsignees.map((c) => ({
-          value: c._id,
-          label: capitalizeWords(c.name),
-          name: c.name,
-        }));
-        setAllConsignees(consigneesFormatted);
-        setConsignees(userRole === "Seller" ? consigneesFormatted : []);
-      } catch (err) {
-        console.error("Error loading dropdowns:", err);
-        toast.error("Error loading dropdown data");
-      }
-      setLoading(false);
-    };
-    loadDropdowns();
-  }, [userRole, mobile]);
-
-  useEffect(() => {
-    const loadBuyersForGroup = async () => {
-      if (!selectedGroup?.value) {
-        setFilteredBuyers([]);
-        setSelectedBuyer(null);
-        setSelectedConsignee(null);
-        setConsignees(userRole === "Seller" ? allConsignees : []);
-        return;
-      }
-
-      try {
-        const res = await api.get("/loading-entries/buyers", {
-          params: { groupId: selectedGroup.value },
-        });
-        const buyers = Array.isArray(res.data) ? res.data : [];
-        const formatted = buyers.map((b) => ({
-          value: b._id,
-          label: capitalizeWords(b.name),
-          name: b.name,
-          consignees: b.consignees || [],
-        }));
-        setFilteredBuyers(formatted);
-        setSelectedBuyer(null);
-        setSelectedConsignee(null);
-        setConsignees([]);
-      } catch (err) {
-        console.error("Error loading buyer companies:", err);
-        toast.error("Failed to load buyer companies");
-        setFilteredBuyers([]);
-        setSelectedBuyer(null);
-        setSelectedConsignee(null);
-        setConsignees([]);
-      }
-    };
-
-    loadBuyersForGroup();
-  }, [selectedGroup, userRole, allConsignees]);
-
-  useEffect(() => {
-    if (userRole === "Seller") return;
-
-    if (!selectedBuyer) {
-      setConsignees([]);
-      setSelectedConsignee(null);
-      return;
-    }
-
-    // Find the full buyer object from filteredBuyers as DataDropdown strips extra props
-    const fullBuyer = filteredBuyers.find((b) => b.value === selectedBuyer.value);
-    const list = (fullBuyer?.consignees || []).map((c) => ({
-      value: c.name,
-      label: capitalizeWords(c.name),
-      name: c.name,
-    }));
-
-    setConsignees(list);
-    setSelectedConsignee(null);
-  }, [userRole, selectedBuyer, filteredBuyers]);
-
-  useEffect(() => {
-    if (userRole === "Seller") return;
-
-    if (!selectedBuyer) {
-      setSellers(allSellers);
-      setSelectedSellerName(null);
-      setSelectedSellerCompany(null);
-      return;
-    }
-
-    let ignore = false;
-    (async () => {
-      try {
-        const response = await api.get("/loading-entries/saudas", {
-          params: {
-            groupId: selectedGroup?.value,
-            buyerId: selectedBuyer.value,
-            limit: 2000,
-          },
-        });
-
-        const payload = response?.data;
-        const data = Array.isArray(payload?.data) ? payload.data : [];
-
-        const sellerIds = new Set(
-          data
-            .map((o) => o?.supplier?._id || o?.supplier)
-            .filter(Boolean)
-            .map((id) => String(id)),
-        );
-
-        const filtered = (Array.isArray(allSellers) ? allSellers : []).filter(
-          (s) => sellerIds.has(String(s.value)),
-        );
-
-        if (!ignore) {
-          setSellers(filtered);
-          if (
-            selectedSellerName &&
-            !sellerIds.has(String(selectedSellerName.value))
-          ) {
-            setSelectedSellerName(null);
-            setSelectedSellerCompany(null);
-          }
-        }
-      } catch {
-        if (!ignore) {
-          setSellers(allSellers);
-        }
-      }
-    })();
-
-    return () => {
-      ignore = true;
-    };
-  }, [userRole, selectedGroup, selectedBuyer, allSellers, selectedSellerName]);
-
-  useEffect(() => {
-    if (!selectedSellerName?.value) {
-      setSellerCompanies([]);
-      setSelectedSellerCompany(null);
-      return;
-    }
-
-    let ignore = false;
-    (async () => {
-      try {
-        const response = await api.get("/loading-entries/saudas", {
-          params: {
-            groupId: selectedGroup?.value,
-            buyerId: selectedBuyer?.value,
-            sellerId: selectedSellerName.value,
-            limit: 2000,
-          },
-        });
-
-        const payload = response?.data;
-        const data = Array.isArray(payload?.data) ? payload.data : [];
-
-        const uniq = new Map();
-        for (const row of data) {
-          const name = (row?.supplierCompany || "").toString().trim();
-          if (!name) continue;
-          const key = normalize(name);
-          if (!uniq.has(key)) {
-            uniq.set(key, {
-              value: name,
-              label: capitalizeWords(name),
-              name,
-            });
-          }
-        }
-
-        let list = Array.from(uniq.values()).sort((a, b) =>
-          String(a.label).localeCompare(String(b.label)),
-        );
-
-        if (list.length === 0) {
-          const fullSeller = allSellers.find(
-            (s) => s.value === selectedSellerName.value,
-          );
-          const rawCompanies = Array.isArray(fullSeller?.companies)
-            ? fullSeller.companies
-            : [];
-          list = rawCompanies.map((c) => ({
-            value: c,
-            label: capitalizeWords(c),
-            name: c,
-          }));
-        }
-
-        if (!ignore) {
-          setSellerCompanies(list);
-          setSelectedSellerCompany(null);
-        }
-      } catch {
-        if (!ignore) {
-          const fullSeller = allSellers.find(
-            (s) => s.value === selectedSellerName.value,
-          );
-          const rawCompanies = Array.isArray(fullSeller?.companies)
-            ? fullSeller.companies
-            : [];
-          const list = rawCompanies.map((c) => ({
-            value: c,
-            label: capitalizeWords(c),
-            name: c,
-          }));
-          setSellerCompanies(list);
-          setSelectedSellerCompany(null);
-        }
-      }
-    })();
-
-    return () => {
-      ignore = true;
-    };
-  }, [selectedSellerName, selectedGroup, selectedBuyer, allSellers]);
-
   useEffect(() => {
     if (selectedBuyer && selectedSellerCompany) {
       handleSearch();
     }
   }, [selectedBuyer, selectedSellerCompany, handleSearch]);
-
-  useEffect(() => {
-    const trimmed = saudaSearch.trim();
-    if (!trimmed) {
-      setSaudaSuggestions([]);
-      setIsSaudaSuggestOpen(false);
-      return;
-    }
-
-    let ignore = false;
-    const handle = setTimeout(async () => {
-      try {
-        const params = {
-          groupId: selectedGroup?.value,
-          buyerId: selectedBuyer?.value,
-          saudaNo: trimmed,
-          limit: 500,
-        };
-        if (selectedSellerName?.value)
-          params.sellerId = selectedSellerName.value;
-        if (selectedSellerCompany?.name)
-          params.sellerCompany = selectedSellerCompany.name;
-
-        const response = await api.get("/loading-entries/saudas", {
-          params,
-        });
-
-        const payload = response?.data;
-        const data = Array.isArray(payload?.data) ? payload.data : [];
-
-        const consigneeNeedle = normalize(selectedConsignee?.name);
-        const filtered = consigneeNeedle
-          ? data.filter((o) => normalize(o.consignee).includes(consigneeNeedle))
-          : data;
-
-        const bySauda = new Map();
-        for (const row of filtered) {
-          const key = String(row?.saudaNo ?? "").trim();
-          if (!key) continue;
-          if (!bySauda.has(key)) bySauda.set(key, { ...row, _count: 1 });
-          else bySauda.get(key)._count += 1;
-        }
-
-        const suggestions = Array.from(bySauda.values());
-
-        if (!ignore) {
-          setSaudaSuggestions(suggestions.slice(0, 100));
-          setIsSaudaSuggestOpen(suggestions.length > 0);
-        }
-      } catch {
-        if (!ignore) {
-          setSaudaSuggestions([]);
-          setIsSaudaSuggestOpen(false);
-        }
-      }
-    }, 250);
-
-    return () => {
-      ignore = true;
-      clearTimeout(handle);
-    };
-  }, [
-    saudaSearch,
-    selectedGroup,
-    selectedBuyer,
-    selectedSellerName,
-    selectedSellerCompany,
-    selectedConsignee,
-  ]);
 
   const toggleSaudaStatus = async (order) => {
     if (userRole === "Seller") {
@@ -992,11 +597,13 @@ const AddLoadingEntry = () => {
             sellerCompanies={sellerCompanies}
             selectedSellerCompany={selectedSellerCompany}
             setSelectedSellerCompany={setSelectedSellerCompany}
+            allSellers={allSellers}
             saudaSearch={saudaSearch}
             setSaudaSearch={setSaudaSearch}
             saudaSuggestions={saudaSuggestions}
             isSaudaSuggestOpen={isSaudaSuggestOpen}
             setIsSaudaSuggestOpen={setIsSaudaSuggestOpen}
+            handleSaudaSelection={handleSaudaSelection}
             handleSearch={handleSearch}
           />
 
