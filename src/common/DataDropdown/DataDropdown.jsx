@@ -18,6 +18,7 @@ const DataDropdown = ({
   const safeOptions = Array.isArray(options) ? options : [];
   const formattedOptions = safeOptions
     .map((option) => ({
+      ...option,
       value: option.value,
       label: option.label,
     }))
@@ -29,6 +30,11 @@ const DataDropdown = ({
   const selectedValue = formattedOptions.find(
     (option) => option.value === value,
   );
+
+  const currentValue = isMulti
+    ? selectedOptions
+    : selectedValue ||
+      (Array.isArray(selectedOptions) ? selectedOptions[0] : selectedOptions);
 
   return (
     <div className="mb-5 w-full">
@@ -45,7 +51,7 @@ const DataDropdown = ({
           isMulti={isMulti}
           isClearable={isClearable}
           isDisabled={isDisabled}
-          value={selectedValue || selectedOptions}
+          value={currentValue}
           onChange={onChange}
           placeholder={placeholder || "Select..."}
           className="react-select-container"
