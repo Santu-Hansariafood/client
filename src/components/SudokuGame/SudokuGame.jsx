@@ -1,4 +1,6 @@
+import PropTypes from "prop-types";
 import { useEffect, useMemo, useState } from "react";
+import { FaClock, FaCheckCircle, FaRedoAlt, FaTh } from "react-icons/fa";
 
 const SIZE = 6;
 const BOX_ROWS = 2;
@@ -48,7 +50,7 @@ const formatTime = (seconds) => {
   return `${m}:${s}`;
 };
 
-const SudokuGame = () => {
+const SudokuGame = ({ title = "Sudoku 6x6" }) => {
   const [solution, setSolution] = useState([]);
   const [puzzle, setPuzzle] = useState([]);
   const [board, setBoard] = useState([]);
@@ -79,6 +81,17 @@ const SudokuGame = () => {
     }, 1000);
     return () => clearInterval(interval);
   }, [running]);
+
+  useEffect(() => {
+    if (!running || !solution.length || !board.length) return;
+    const isSolved = board.every((row, r) =>
+      row.every((cell, c) => cell === solution[r][c]),
+    );
+    if (isSolved) {
+      setStatus(`Solved in ${formatTime(time)}`);
+      setRunning(false);
+    }
+  }, [board, running, solution, time]);
 
   const filledCount = useMemo(
     () => board.flat().filter((v) => v !== 0).length,
@@ -116,24 +129,37 @@ const SudokuGame = () => {
     }
   };
 
+  const isSolved = status.startsWith("Solved");
+
   return (
-    <div className="w-full max-w-md mx-auto backdrop-blur-lg bg-white/70 border border-white/30 shadow-xl rounded-2xl p-5">
+    <div className="w-full max-w-md mx-auto rounded-3xl border border-emerald-100 bg-gradient-to-br from-white via-white to-emerald-50/50 shadow-xl p-5">
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-bold text-slate-800">Sudoku 6x6</h2>
+        <h2 className="text-lg sm:text-xl font-bold text-slate-800 inline-flex items-center gap-2">
+          <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-100 text-emerald-700">
+            <FaTh className="text-sm" />
+          </span>
+          {title}
+        </h2>
         <button
           onClick={newGame}
-          className="px-3 py-1.5 text-sm bg-emerald-600 text-white rounded-lg hover:bg-emerald-700"
+          className="px-3 py-1.5 text-sm bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 inline-flex items-center gap-1.5"
         >
+          <FaRedoAlt className="text-xs" />
           New Game
         </button>
       </div>
 
-      <div className="flex justify-between items-center mb-3 text-sm text-slate-600">
-        <span>⏱ Time: {formatTime(time)}</span>
-        <span>Filled: {filledCount}/36</span>
+      <div className="grid grid-cols-2 gap-2.5 mb-3 text-sm">
+        <div className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-slate-600 inline-flex items-center gap-2">
+          <FaClock className="text-emerald-600" />
+          <span>Time: {formatTime(time)}</span>
+        </div>
+        <div className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-slate-600">
+          Filled: {filledCount}/36
+        </div>
       </div>
 
-      <div className="grid grid-cols-6 gap-1 bg-slate-300 p-1 rounded-lg">
+      <div className="grid grid-cols-6 gap-1 bg-slate-300/80 p-1.5 rounded-xl">
         {board.map((row, r) =>
           row.map((cell, c) => {
             const isFixed = puzzle[r][c] !== 0;
@@ -147,13 +173,13 @@ const SudokuGame = () => {
                 onClick={() => setSelected({ r, c })}
                 onChange={(e) => onChange(r, c, e.target.value)}
                 maxLength={1}
-                className={`aspect-square text-center text-lg font-semibold rounded-md border transition
+                className={`aspect-square text-center text-lg font-semibold rounded-md border transition-all
                 ${
                   isFixed
-                    ? "bg-slate-100 text-slate-700"
+                    ? "bg-slate-100 text-slate-700 border-slate-200"
                     : isWrong
-                      ? "bg-red-100 text-red-700"
-                      : "bg-white"
+                      ? "bg-rose-100 text-rose-700 border-rose-200"
+                      : "bg-white border-slate-200"
                 }
                 ${isSelected ? "ring-2 ring-emerald-400 scale-105" : ""}
               `}
@@ -167,17 +193,29 @@ const SudokuGame = () => {
       <div className="flex justify-end mt-4">
         <button
           onClick={checkAnswer}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed"
+          disabled={isSolved}
         >
-          Check
+          {isSolved ? "Solved" : "Check"}
         </button>
       </div>
 
       {status && (
-        <p className="mt-3 text-center font-medium text-slate-700">{status}</p>
+        <p
+          className={`mt-3 text-center font-semibold inline-flex w-full justify-center items-center gap-1.5 ${
+            isSolved ? "text-emerald-700" : "text-slate-700"
+          }`}
+        >
+          {isSolved && <FaCheckCircle />}
+          {status}
+        </p>
       )}
     </div>
   );
+};
+
+SudokuGame.propTypes = {
+  title: PropTypes.string,
 };
 
 export default SudokuGame;

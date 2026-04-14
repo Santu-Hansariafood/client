@@ -21,11 +21,13 @@ import {
   FaUsers,
   FaChevronRight,
   FaStar,
+  FaBrain,
 } from "react-icons/fa";
 import { toast } from "react-toastify";
 import Loading from "../../../common/Loading/Loading";
 import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
 import { useAuth } from "../../../context/AuthContext/AuthContext";
+import SudokuGame from "../../../components/SudokuGame/SudokuGame";
 
 const PopupBox = lazy(() => import("../../../common/PopupBox/PopupBox"));
 
@@ -57,6 +59,7 @@ const SupplierBidList = () => {
   const [selectedGroupName, setSelectedGroupName] = useState(null);
   const [selectedCompanyName, setSelectedCompanyName] = useState(null);
   const [sellerInfo, setSellerInfo] = useState(null);
+  const [showMindFreshGame, setShowMindFreshGame] = useState(false);
 
   useEffect(() => {
     const id = setInterval(() => setNowTime(new Date()), 1000);
@@ -780,8 +783,21 @@ const SupplierBidList = () => {
               {error}
             </div>
           ) : bidCount === 0 ? (
-            <div className="text-center py-12 bg-white rounded-2xl border border-slate-200 text-slate-500 font-medium">
-              No {activeTab} bids found for your selected commodities.
+            <div className="space-y-4">
+              <div className="text-center py-10 bg-white rounded-2xl border border-slate-200 text-slate-500 font-medium">
+                <p>No {activeTab} bids found for your selected commodities.</p>
+                <button
+                  type="button"
+                  onClick={() => setShowMindFreshGame((prev) => !prev)}
+                  className="mt-4 inline-flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700 hover:bg-emerald-100 transition-colors"
+                >
+                  <FaBrain />
+                  {showMindFreshGame ? "Hide Mind Fresh Sudoku" : "Mind Fresh with Sudoku"}
+                </button>
+              </div>
+              {showMindFreshGame && (
+                <SudokuGame title="Mind Fresh Sudoku (6x6)" />
+              )}
             </div>
           ) : (
             <>
@@ -926,8 +942,21 @@ const SupplierBidList = () => {
                   </div>
                 </div>
               ) : displayedBids.length === 0 ? (
-                <div className="text-center py-12 bg-white rounded-2xl border border-slate-200 text-slate-500 font-medium">
-                  No {activeTab} bids found for {selectedCompanyName}.
+                <div className="space-y-4">
+                  <div className="text-center py-10 bg-white rounded-2xl border border-slate-200 text-slate-500 font-medium">
+                    <p>No {activeTab} bids found for {selectedCompanyName}.</p>
+                    <button
+                      type="button"
+                      onClick={() => setShowMindFreshGame((prev) => !prev)}
+                      className="mt-4 inline-flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700 hover:bg-emerald-100 transition-colors"
+                    >
+                      <FaBrain />
+                      {showMindFreshGame ? "Hide Mind Fresh Sudoku" : "Mind Fresh with Sudoku"}
+                    </button>
+                  </div>
+                  {showMindFreshGame && (
+                    <SudokuGame title="Mind Fresh Sudoku (6x6)" />
+                  )}
                 </div>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
