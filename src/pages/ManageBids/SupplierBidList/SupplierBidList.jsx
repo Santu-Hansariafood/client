@@ -439,7 +439,7 @@ const SupplierBidList = () => {
     return (
       <div
         key={bid._id}
-        className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300 overflow-hidden border border-slate-100/80"
+        className="group bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-slate-100/80 hover:-translate-y-0.5"
       >
         <div className="p-4 sm:p-5">
           <div className="flex justify-between items-start gap-2">
@@ -643,15 +643,15 @@ const SupplierBidList = () => {
           <button
             onClick={() => handleParticipate(bid)}
             disabled={isClosed}
-            className={`w-full flex items-center justify-center gap-2 text-xs sm:text-sm font-bold rounded-xl py-2.5 sm:py-3 transition-all ${
+            className={`w-full flex items-center justify-center gap-2 text-xs sm:text-sm font-bold rounded-xl py-2.5 sm:py-3 transition-all duration-300 ${
               isClosed
                 ? "bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200"
                 : isParticipated
-                  ? "bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 shadow-sm"
-                  : "bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 shadow-sm"
+                  ? "bg-gradient-to-r from-blue-50 to-sky-50 text-blue-700 hover:from-blue-100 hover:to-sky-100 border border-blue-200 shadow-sm hover:shadow-md"
+                  : "bg-gradient-to-r from-emerald-50 to-teal-50 text-emerald-700 hover:from-emerald-100 hover:to-teal-100 border border-emerald-200 shadow-sm hover:shadow-md"
             }`}
           >
-            <FaRegHandPointer className="text-base" />
+            <FaRegHandPointer className="text-base transition-transform group-hover:scale-110" />
             {isClosed
               ? activeTab === "closed" && hasNoParticipants
                 ? "Closed • No participants"
@@ -821,20 +821,24 @@ const SupplierBidList = () => {
                         setSelectedGroupName(g.groupName);
                         setSelectedCompanyName(null);
                       }}
-                      className="text-left bg-white rounded-2xl border border-emerald-100 p-4 sm:p-5 shadow-lg shadow-emerald-900/5 hover:shadow-xl transition-shadow"
+                    className="group text-left bg-gradient-to-br from-white via-white to-emerald-50/40 rounded-2xl border border-emerald-100 p-4 sm:p-5 shadow-lg shadow-emerald-900/5 hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300"
                     >
-                      <p className="text-sm font-bold text-slate-800">
+                      <p className="text-sm font-bold text-slate-800 group-hover:text-emerald-700 transition-colors">
                         {g.groupName}
                       </p>
                       <p className="text-xs font-semibold text-slate-500 mt-2">
                         {g.companyCount} company(s) • {g.bidCount} bid(s)
                       </p>
                       {g.commodities.length > 0 && (
-                        <p className="text-xs font-semibold text-slate-600 mt-2">
+                        <p className="text-xs font-semibold text-slate-600 mt-2 leading-relaxed">
                           {g.commodities.slice(0, 3).join(", ")}
                           {g.commodities.length > 3 ? "…" : ""}
                         </p>
                       )}
+                      <div className="mt-3 inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700">
+                        Explore group
+                        <span className="transition-transform group-hover:translate-x-0.5">→</span>
+                      </div>
                     </button>
                   ))}
                 </div>
@@ -862,20 +866,24 @@ const SupplierBidList = () => {
                           key={c.companyName}
                           type="button"
                           onClick={() => setSelectedCompanyName(c.companyName)}
-                          className="text-left bg-white rounded-2xl border border-slate-200 p-4 sm:p-5 shadow-sm hover:shadow-md transition-shadow"
+                          className="group text-left bg-gradient-to-br from-white via-white to-sky-50/30 rounded-2xl border border-slate-200 p-4 sm:p-5 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300"
                         >
-                          <p className="text-sm font-bold text-slate-800">
+                          <p className="text-sm font-bold text-slate-800 group-hover:text-sky-700 transition-colors">
                             {c.companyName}
                           </p>
                           <p className="text-xs font-semibold text-slate-500 mt-2">
                             {c.bidCount} bid(s)
                           </p>
                           {c.commodities.length > 0 && (
-                            <p className="text-xs font-semibold text-slate-600 mt-2">
+                            <p className="text-xs font-semibold text-slate-600 mt-2 leading-relaxed">
                               {c.commodities.slice(0, 3).join(", ")}
                               {c.commodities.length > 3 ? "…" : ""}
                             </p>
                           )}
+                          <div className="mt-3 inline-flex items-center gap-1 text-[11px] font-semibold text-sky-700">
+                            View bids
+                            <span className="transition-transform group-hover:translate-x-0.5">→</span>
+                          </div>
                         </button>
                       ))}
                     </div>
