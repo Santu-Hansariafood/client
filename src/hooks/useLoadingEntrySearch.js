@@ -1,7 +1,15 @@
 import { useState } from "react";
 import { toast } from "react-toastify";
 
-const useLoadingEntrySearch = (api, selectedGroup, selectedBuyer, selectedSellerName, selectedSellerCompany, saudaSearch) => {
+const useLoadingEntrySearch = (
+  api,
+  selectedGroup,
+  selectedBuyer,
+  selectedConsignee,
+  selectedSellerName,
+  selectedSellerCompany,
+  saudaSearch,
+) => {
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -23,6 +31,7 @@ const useLoadingEntrySearch = (api, selectedGroup, selectedBuyer, selectedSeller
         params: {
           groupId: selectedGroup.value,
           buyerId: selectedBuyer?.value,
+          consigneeName: selectedConsignee?.name,
           sellerId: selectedSellerName?.value,
           sellerCompany: selectedSellerCompany?.name,
           saudaNo: trimmedSauda || undefined,

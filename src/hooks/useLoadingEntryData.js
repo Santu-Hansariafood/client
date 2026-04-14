@@ -152,7 +152,7 @@ const useLoadingEntryData = (api, userRole) => {
     const list = (selectedBuyer.consignees || [])
       .map((c) => ({
         value: c.name,
-        label: c.label || capitalizeWords(c.name),
+        label: capitalizeWords(c.name),
         name: c.name,
       }))
       .sort((a, b) => a.label.localeCompare(b.label));

@@ -287,8 +287,7 @@ const OrdersTableCard = ({ orders, handleOpenPopup, toggleSaudaStatus }) => {
         />
       ) : (
         <div className="py-10 text-center text-slate-500 font-medium">
-          No results yet. Select group, buyer, consignee, seller name and seller
-          company and search.
+          No results found. Please adjust your filters.
         </div>
       )}
     </div>
@@ -347,6 +346,7 @@ const AddLoadingEntry = () => {
     api,
     selectedGroup,
     selectedBuyer,
+    selectedConsignee,
     selectedSellerName,
     selectedSellerCompany,
     saudaSearch,
@@ -377,10 +377,10 @@ const AddLoadingEntry = () => {
   };
 
   useEffect(() => {
-    if (selectedBuyer && selectedSellerCompany) {
+    if (selectedGroup?.value) {
       handleSearch();
     }
-  }, [selectedBuyer, selectedSellerCompany, handleSearch]);
+  }, [selectedGroup, selectedBuyer, selectedConsignee, handleSearch]);
 
   const toggleSaudaStatus = async (order) => {
     if (userRole === "Seller") {
