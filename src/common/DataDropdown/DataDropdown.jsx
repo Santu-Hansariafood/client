@@ -18,17 +18,18 @@ const DataDropdown = ({
   const safeOptions = Array.isArray(options) ? options : [];
   const formattedOptions = safeOptions
     .map((option) => ({
-      value: option.value,
-      label: option.label,
+      ...option,
+      value: option?.value || option?._id || option,
+      label: option?.label || option?.name || option?.groupName || option,
     }))
     .sort((a, b) => {
       if (disableSorting) return 0;
       return String(a.label || "").localeCompare(String(b.label || ""));
     });
 
-  const selectedValue = formattedOptions.find(
-    (option) => option.value === value,
-  );
+  const selectedValue = isMulti
+    ? (Array.isArray(selectedOptions) ? selectedOptions : [selectedOptions].filter(Boolean))
+    : (Array.isArray(selectedOptions) ? selectedOptions[0] : selectedOptions);
 
   return (
     <div className="mb-5 w-full">
@@ -45,7 +46,7 @@ const DataDropdown = ({
           isMulti={isMulti}
           isClearable={isClearable}
           isDisabled={isDisabled}
-          value={selectedValue || selectedOptions}
+          value={selectedValue}
           onChange={onChange}
           placeholder={placeholder || "Select..."}
           className="react-select-container"

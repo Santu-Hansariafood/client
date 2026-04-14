@@ -28,7 +28,11 @@ const useSaudaSuggestions = (api, selectedGroup, selectedBuyer, filteredBuyers, 
         };
 
         const res = await api.get("/loading-entries/saudas", { params });
-        const data = Array.isArray(res.data?.data) ? res.data.data : [];
+        const data = Array.isArray(res.data?.data)
+          ? res.data.data
+          : Array.isArray(res.data)
+            ? res.data
+            : [];
 
         const uniq = new Map();
         data.forEach((o) => {

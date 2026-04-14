@@ -30,7 +30,12 @@ const useLoadingEntryData = (api, userRole) => {
           api.get("/transporters", { params: { limit: 0 } }),
         ]);
 
-        const groupOptions = (groupsRes.data || [])
+        const groupData = Array.isArray(groupsRes.data?.data)
+          ? groupsRes.data.data
+          : Array.isArray(groupsRes.data)
+            ? groupsRes.data
+            : [];
+        const groupOptions = groupData
           .map((g) => ({
             value: g._id,
             label: capitalizeWords(g.groupName),
@@ -38,7 +43,12 @@ const useLoadingEntryData = (api, userRole) => {
           .sort((a, b) => a.label.localeCompare(b.label));
         setGroups(groupOptions);
 
-        const sellerOptions = (sellersRes.data || [])
+        const sellerData = Array.isArray(sellersRes.data?.data)
+          ? sellersRes.data.data
+          : Array.isArray(sellersRes.data)
+            ? sellersRes.data
+            : [];
+        const sellerOptions = sellerData
           .map((s) => ({
             value: s._id,
             label: capitalizeWords(s.sellerName),
@@ -62,7 +72,12 @@ const useLoadingEntryData = (api, userRole) => {
 
         if (userRole === "Seller") {
           const consigneesRes = await api.get("/consignees/all");
-          const consigneeOptions = (consigneesRes.data || [])
+          const consigneeData = Array.isArray(consigneesRes.data?.data)
+            ? consigneesRes.data.data
+            : Array.isArray(consigneesRes.data)
+              ? consigneesRes.data
+              : [];
+          const consigneeOptions = consigneeData
             .map((c) => ({
               value: c.name,
               label: capitalizeWords(c.name),
@@ -101,7 +116,11 @@ const useLoadingEntryData = (api, userRole) => {
         const res = await api.get("/loading-entries/buyers", {
           params: { groupId: groupIds.join(",") },
         });
-        const buyers = Array.isArray(res.data) ? res.data : [];
+        const buyers = Array.isArray(res.data?.data)
+          ? res.data.data
+          : Array.isArray(res.data)
+            ? res.data
+            : [];
         const formatted = buyers
           .map((b) => ({
             value: b._id,
@@ -174,7 +193,11 @@ const useLoadingEntryData = (api, userRole) => {
 
         if (ignore) return;
 
-        const data = Array.isArray(response?.data?.data) ? response.data.data : [];
+        const data = Array.isArray(response?.data?.data)
+          ? response.data.data
+          : Array.isArray(response?.data)
+            ? response.data
+            : [];
         const uniqSellers = new Map();
         data.forEach((row) => {
           if (row.supplierId) {
@@ -240,7 +263,11 @@ const useLoadingEntryData = (api, userRole) => {
 
         if (ignore) return;
 
-        const data = Array.isArray(response?.data?.data) ? response.data.data : [];
+        const data = Array.isArray(response?.data?.data)
+          ? response.data.data
+          : Array.isArray(response?.data)
+            ? response.data
+            : [];
         const uniqCompanies = new Map();
         data.forEach((row) => {
           if (row.supplierCompany) {

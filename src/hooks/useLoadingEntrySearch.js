@@ -34,7 +34,11 @@ const useLoadingEntrySearch = (api, selectedGroup, selectedBuyer, selectedSeller
         },
       });
 
-      const data = Array.isArray(response?.data?.data) ? response.data.data : [];
+      const data = Array.isArray(response?.data?.data)
+        ? response.data.data
+        : Array.isArray(response?.data)
+          ? response.data
+          : [];
       setResults(data);
     } catch (err) {
       console.error("Search error:", err);
