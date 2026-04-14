@@ -555,7 +555,7 @@ const AddLoadingEntry = () => {
     const fullBuyer = filteredBuyers.find((b) => b.value === selectedBuyer.value);
     const list = (fullBuyer?.consignees || []).map((c) => ({
       value: c.name,
-      label: c.label || capitalizeWords(c.name),
+      label: capitalizeWords(c.name),
       name: c.name,
     }));
 
