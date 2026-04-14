@@ -55,19 +55,27 @@ const InteractionsPopup = ({ bidId, onClose }) => {
   return (
     <div className="fixed inset-0 bg-slate-900/70 backdrop-blur-sm flex justify-center items-center z-50">
       <div className="bg-white/95 rounded-3xl shadow-2xl border border-slate-100 p-6 sm:p-8 w-full max-w-5xl max-h-[90vh] overflow-y-auto">
-        <div className="flex justify-between items-center border-b pb-4 mb-5">
+        <div className="flex justify-between items-center border-b border-slate-100 pb-4 mb-5">
           <h2 className="text-xl sm:text-2xl font-bold text-slate-900">
             Bid Interactions
           </h2>
           <button
             onClick={onClose}
-            className="text-slate-400 hover:text-slate-700 text-2xl leading-none"
+            className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-400 hover:text-slate-700 hover:border-slate-300 text-xl leading-none transition"
           >
             &times;
           </button>
         </div>
+        <div className="mb-5 rounded-2xl border border-slate-200 bg-gradient-to-r from-slate-50 to-emerald-50/40 px-4 py-3">
+          <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+            Participant Review
+          </p>
+          <p className="text-sm text-slate-700 mt-1">
+            Compare offers, add notes, then accept or reject confidently.
+          </p>
+        </div>
         {loading ? (
-          <Loading/>
+          <Loading />
         ) : (
           <div className="space-y-4">
             {interactions.map((interaction) => (
@@ -129,12 +137,12 @@ const InteractionCard = ({ interaction, onStatusChange }) => {
 
   return (
     <div
-      className={`p-4 sm:p-5 rounded-2xl border relative shadow-sm ${
+      className={`p-4 sm:p-5 rounded-2xl border relative shadow-sm transition-all ${
         interaction.status === "accepted"
-          ? "border-emerald-200 bg-emerald-50/70"
+          ? "border-emerald-200 bg-gradient-to-br from-emerald-50/90 to-white"
           : interaction.status === "rejected"
-            ? "border-rose-200 bg-rose-50/70"
-            : "border-slate-200 bg-slate-50/60"
+            ? "border-rose-200 bg-gradient-to-br from-rose-50/90 to-white"
+            : "border-slate-200 bg-gradient-to-br from-slate-50/80 to-white"
       }`}
     >
       {isRevised && interaction.status === "pending" && (
@@ -144,12 +152,12 @@ const InteractionCard = ({ interaction, onStatusChange }) => {
           </span>
         </div>
       )}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4">
         <div>
           <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
             Participant
           </p>
-          <p className="text-lg font-semibold text-slate-900 mt-0.5">
+          <p className="text-base sm:text-lg font-semibold text-slate-900 mt-0.5">
             {interaction.sellerName}
           </p>
           <p className="text-xs text-slate-500">{interaction.mobile}</p>
@@ -178,7 +186,7 @@ const InteractionCard = ({ interaction, onStatusChange }) => {
         </div>
       </div>
 
-      <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4 border-t pt-4 border-gray-100">
+      <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 border-t pt-4 border-slate-100">
         <div>
           <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">
             Expected Delivery Date
@@ -206,64 +214,78 @@ const InteractionCard = ({ interaction, onStatusChange }) => {
           </p>
         </div>
         {interaction.remarks && (
-          <div className="md:col-span-3">
+          <div className="sm:col-span-3">
             <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">
               Seller Remarks
             </p>
-            <p className="text-sm italic text-slate-600 mt-0.5 bg-white/50 p-2 rounded border border-gray-100">
+            <p className="text-sm italic text-slate-600 mt-0.5 bg-white/80 p-2.5 rounded-lg border border-slate-200 leading-relaxed">
               "{interaction.remarks}"
             </p>
           </div>
         )}
       </div>
       {interaction.status !== "accepted" && (
-        <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="mt-4 rounded-xl border border-slate-200 bg-white/80 p-3 sm:p-4">
+          <div className="flex items-center justify-between gap-3 mb-3">
+            <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+              Acceptance Proposal
+            </p>
+            <span className="text-[11px] font-medium text-slate-400">
+              Optional for reject
+            </span>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
           <div>
-            <p className="text-sm font-medium text-gray-500">Acceptance Rate</p>
+            <p className="text-sm font-semibold text-slate-600">Acceptance Rate</p>
             <input
               type="number"
-              className="w-full p-2 border rounded-md focus:ring-2 focus:ring-emerald-500 transition"
+              className="mt-1.5 w-full px-3 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-emerald-500 transition bg-white"
               value={acceptedRate}
               onChange={(e) => setAcceptedRate(e.target.value)}
               placeholder="Enter accepted rate"
             />
           </div>
           <div>
-            <p className="text-sm font-medium text-gray-500">
+            <p className="text-sm font-semibold text-slate-600">
               Acceptance Quantity
             </p>
             <input
               type="number"
-              className="w-full p-2 border rounded-md focus:ring-2 focus:ring-emerald-500 transition"
+              className="mt-1.5 w-full px-3 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-emerald-500 transition bg-white"
               value={acceptedQuantity}
               onChange={(e) => setAcceptedQuantity(e.target.value)}
               placeholder="Enter accepted quantity"
             />
           </div>
           <div>
-            <p className="text-sm font-medium text-gray-500">Accepted On</p>
+            <p className="text-sm font-semibold text-slate-600">Accepted On</p>
             <input
               type="datetime-local"
-              className="w-full p-2 border rounded-md focus:ring-2 focus:ring-emerald-500 transition"
+              className="mt-1.5 w-full px-3 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-emerald-500 transition bg-white"
               value={acceptedAt}
               onChange={(e) => setAcceptedAt(e.target.value)}
             />
           </div>
+          </div>
         </div>
       )}
       <div className="mt-4">
+        <p className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">
+          Admin Notes
+        </p>
         <textarea
-          className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 transition bg-white/70"
+          className="w-full p-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 transition bg-white/80"
           placeholder="Add admin notes..."
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
+          rows={3}
         />
       </div>
-      <div className="mt-4 flex justify-end space-x-3">
+      <div className="mt-4 flex flex-wrap justify-end gap-2.5">
         {interaction.status !== "accepted" && (
           <button
             onClick={() => handleSave("accepted")}
-            className="px-4 py-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700 transition shadow-sm"
+            className="px-5 py-2.5 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition shadow-sm font-semibold min-w-[120px]"
           >
             Accept
           </button>
@@ -271,7 +293,7 @@ const InteractionCard = ({ interaction, onStatusChange }) => {
         {interaction.status !== "rejected" && (
           <button
             onClick={() => handleSave("rejected")}
-            className="px-4 py-2 bg-rose-500 text-white rounded-md hover:bg-rose-600 transition shadow-sm"
+            className="px-5 py-2.5 bg-rose-500 text-white rounded-lg hover:bg-rose-600 transition shadow-sm font-semibold min-w-[120px]"
           >
             Reject
           </button>

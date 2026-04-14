@@ -397,6 +397,16 @@ const SupplierBidList = () => {
       .join(", ");
   }, [sellerInfo]);
 
+  const syncTimeText = useMemo(() => {
+    if (!serverNow) return null;
+    const parsed = new Date(serverNow);
+    if (Number.isNaN(parsed.getTime())) return null;
+    return parsed.toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  }, [serverNow]);
+
   const renderBidCard = (bid) => {
     const isParticipated = participations.some((p) => p.bidId === bid._id);
     const participation = isParticipated
@@ -478,7 +488,7 @@ const SupplierBidList = () => {
             )}
           </div>
 
-          <div className="mt-4 sm:mt-5 grid grid-cols-2 gap-3 sm:gap-4">
+          <div className="mt-4 sm:mt-5 grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <div className="bg-slate-50/50 p-2.5 rounded-xl border border-slate-100">
               <p className="text-[10px] sm:text-xs text-slate-500 font-medium">
                 Quantity
@@ -499,7 +509,7 @@ const SupplierBidList = () => {
               </div>
             )}
 
-            <div className="col-span-2 bg-slate-50/50 p-2.5 rounded-xl border border-slate-100">
+            <div className="sm:col-span-2 bg-slate-50/50 p-2.5 rounded-xl border border-slate-100">
               <p className="text-[10px] sm:text-xs text-slate-500 font-medium">
                 Quality Parameters
               </p>
@@ -508,7 +518,7 @@ const SupplierBidList = () => {
               </p>
             </div>
 
-            <div className="col-span-2 grid grid-cols-2 gap-3 sm:gap-4">
+            <div className="sm:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div className="bg-slate-50/50 p-2.5 rounded-xl border border-slate-100">
                 <p className="text-[10px] sm:text-xs text-slate-500 font-medium">
                   Payment Terms
@@ -549,7 +559,7 @@ const SupplierBidList = () => {
                   </p>
                 </div>
                 {(participation.deliveryDate || participation.paymentTerms) && (
-                  <div className="col-span-2 grid grid-cols-2 gap-3 sm:gap-4">
+                  <div className="sm:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                     <div className="bg-blue-50/30 p-2.5 rounded-xl border border-blue-100/50">
                       <p className="text-[10px] sm:text-xs text-blue-600 font-medium">
                         Expected Delivery Date
@@ -573,7 +583,7 @@ const SupplierBidList = () => {
                   </div>
                 )}
                 {participation?.sellerCompany && (
-                  <div className="col-span-2 bg-slate-50/50 p-2.5 rounded-xl border border-slate-100">
+                  <div className="sm:col-span-2 bg-slate-50/50 p-2.5 rounded-xl border border-slate-100">
                     <p className="text-[10px] sm:text-xs text-slate-500 font-medium">
                       Your Company
                     </p>
@@ -583,7 +593,7 @@ const SupplierBidList = () => {
                   </div>
                 )}
                 {participationStatus === "accepted" && (
-                  <div className="col-span-2 bg-green-50/30 p-2.5 rounded-xl border border-green-100/50 grid grid-cols-2 gap-2">
+                  <div className="sm:col-span-2 bg-green-50/30 p-2.5 rounded-xl border border-green-100/50 grid grid-cols-1 sm:grid-cols-2 gap-2">
                     <div>
                       <p className="text-[10px] sm:text-xs text-green-600 font-medium">
                         Accepted Rate
@@ -608,7 +618,7 @@ const SupplierBidList = () => {
                 )}
                 {participationStatus === "rejected" &&
                   String(participation?.adminNotes || "").trim() !== "" && (
-                    <div className="col-span-2 bg-red-50/30 p-2.5 rounded-xl border border-red-100/50">
+                    <div className="sm:col-span-2 bg-red-50/30 p-2.5 rounded-xl border border-red-100/50">
                       <p className="text-[10px] sm:text-xs text-red-600 font-medium">
                         Rejection Notes
                       </p>
@@ -618,7 +628,7 @@ const SupplierBidList = () => {
                     </div>
                   )}
                 {participationStatus === "pending" && isRevised && (
-                  <div className="col-span-2">
+                  <div className="sm:col-span-2">
                     <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] sm:text-xs font-bold bg-amber-100 text-amber-700 ring-1 ring-amber-200">
                       <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
                       Revised Participation
@@ -664,76 +674,93 @@ const SupplierBidList = () => {
         noContentCard
       >
         <div className="max-w-6xl mx-auto space-y-6">
+          <div className="rounded-3xl border border-emerald-100 bg-gradient-to-r from-white via-emerald-50/35 to-sky-50/45 p-4 sm:p-5 shadow-sm">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-emerald-700">
+                  Brand Bid Desk
+                </p>
+                <p className="text-sm sm:text-base font-semibold text-slate-800 mt-0.5">
+                  Smart, classy and responsive bidding experience
+                </p>
+              </div>
+              {syncTimeText && (
+                <span className="inline-flex items-center w-fit px-3 py-1.5 rounded-full border border-slate-200 bg-white text-xs font-semibold text-slate-600">
+                  Synced {syncTimeText}
+                </span>
+              )}
+            </div>
+          </div>
           <div className="flex justify-start mb-2">
             <button
               onClick={() => navigate(-1)}
-              className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-gray-600 bg-white rounded-xl border border-slate-200 hover:bg-slate-50 transition-colors shadow-sm"
+              className="group flex items-center gap-2 px-4 py-2 text-sm font-semibold text-slate-600 bg-white rounded-xl border border-slate-200 hover:bg-slate-50 transition-colors shadow-sm"
             >
-              <FaArrowLeft />
+              <FaArrowLeft className="transition-transform group-hover:-translate-x-0.5" />
               Back
             </button>
           </div>
 
           {mappedCommodityText && (
-            <div className="bg-white rounded-2xl border border-slate-200 px-5 py-4 shadow-sm">
-              <p className="text-xs font-semibold text-slate-500">
+            <div className="rounded-2xl border border-emerald-100/80 bg-gradient-to-br from-white via-white to-emerald-50/40 px-5 py-4 shadow-sm">
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-emerald-700">
                 Mapped Commodities
               </p>
-              <p className="text-sm font-bold text-slate-800 mt-1">
+              <p className="text-sm font-bold text-slate-800 mt-1 leading-relaxed">
                 {mappedCommodityText}
               </p>
             </div>
           )}
-          <div className="flex flex-wrap gap-2 sm:gap-4 p-1.5 bg-slate-100 rounded-xl mb-6">
+          <div className="flex flex-wrap gap-2 sm:gap-3 p-2 bg-white border border-slate-200 rounded-2xl mb-6 shadow-sm">
             <button
               onClick={() => setActiveTab("active")}
-              className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${
+              className={`px-5 py-2 rounded-xl text-sm font-semibold transition-all ${
                 activeTab === "active"
-                  ? "bg-white text-emerald-700 shadow-sm"
-                  : "text-slate-500 hover:text-slate-700"
+                  ? "bg-emerald-50 text-emerald-700 border border-emerald-200 shadow-sm"
+                  : "text-slate-500 border border-transparent hover:text-slate-700 hover:bg-slate-50"
               }`}
             >
-              active bid
+              Active Bids
             </button>
             <button
               onClick={() => setActiveTab("closed")}
-              className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${
+              className={`px-5 py-2 rounded-xl text-sm font-semibold transition-all ${
                 activeTab === "closed"
-                  ? "bg-white text-red-700 shadow-sm"
-                  : "text-slate-500 hover:text-slate-700"
+                  ? "bg-rose-50 text-rose-700 border border-rose-200 shadow-sm"
+                  : "text-slate-500 border border-transparent hover:text-slate-700 hover:bg-slate-50"
               }`}
             >
-              closed
+              Closed
             </button>
             <button
               onClick={() => setActiveTab("participated")}
-              className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${
+              className={`px-5 py-2 rounded-xl text-sm font-semibold transition-all ${
                 activeTab === "participated"
-                  ? "bg-white text-blue-700 shadow-sm"
-                  : "text-slate-500 hover:text-slate-700"
+                  ? "bg-blue-50 text-blue-700 border border-blue-200 shadow-sm"
+                  : "text-slate-500 border border-transparent hover:text-slate-700 hover:bg-slate-50"
               }`}
             >
-              participate
+              Participated
             </button>
             <button
               onClick={() => setActiveTab("accepted")}
-              className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${
+              className={`px-5 py-2 rounded-xl text-sm font-semibold transition-all ${
                 activeTab === "accepted"
-                  ? "bg-white text-green-700 shadow-sm"
-                  : "text-slate-500 hover:text-slate-700"
+                  ? "bg-green-50 text-green-700 border border-green-200 shadow-sm"
+                  : "text-slate-500 border border-transparent hover:text-slate-700 hover:bg-slate-50"
               }`}
             >
-              accepted
+              Accepted
             </button>
             <button
               onClick={() => setActiveTab("rejected")}
-              className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${
+              className={`px-5 py-2 rounded-xl text-sm font-semibold transition-all ${
                 activeTab === "rejected"
-                  ? "bg-white text-red-500 shadow-sm"
-                  : "text-slate-500 hover:text-slate-700"
+                  ? "bg-rose-50 text-rose-600 border border-rose-200 shadow-sm"
+                  : "text-slate-500 border border-transparent hover:text-slate-700 hover:bg-slate-50"
               }`}
             >
-              rejected
+              Rejected
             </button>
           </div>
 
@@ -785,7 +812,7 @@ const SupplierBidList = () => {
               )}
 
               {!selectedGroupName ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
                   {groupIndex.map((g) => (
                     <button
                       key={g.groupName}
@@ -794,7 +821,7 @@ const SupplierBidList = () => {
                         setSelectedGroupName(g.groupName);
                         setSelectedCompanyName(null);
                       }}
-                      className="text-left bg-white rounded-2xl border border-emerald-100 p-5 shadow-lg shadow-emerald-900/5 hover:shadow-xl transition-shadow"
+                      className="text-left bg-white rounded-2xl border border-emerald-100 p-4 sm:p-5 shadow-lg shadow-emerald-900/5 hover:shadow-xl transition-shadow"
                     >
                       <p className="text-sm font-bold text-slate-800">
                         {g.groupName}
@@ -825,7 +852,7 @@ const SupplierBidList = () => {
                         company(s)
                       </p>
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
                       {(
                         groupIndex.find(
                           (g) => g.groupName === selectedGroupName,
@@ -835,7 +862,7 @@ const SupplierBidList = () => {
                           key={c.companyName}
                           type="button"
                           onClick={() => setSelectedCompanyName(c.companyName)}
-                          className="text-left bg-white rounded-2xl border border-slate-200 p-5 shadow-sm hover:shadow-md transition-shadow"
+                          className="text-left bg-white rounded-2xl border border-slate-200 p-4 sm:p-5 shadow-sm hover:shadow-md transition-shadow"
                         >
                           <p className="text-sm font-bold text-slate-800">
                             {c.companyName}
@@ -859,7 +886,7 @@ const SupplierBidList = () => {
                   No {activeTab} bids found for {selectedCompanyName}.
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
                   {displayedBids.map(renderBidCard)}
                 </div>
               )}
@@ -873,15 +900,23 @@ const SupplierBidList = () => {
             onClose={() => setIsPopupOpen(false)}
             title={`Participate in: ${selectedBid.consignee}`}
           >
-            <div className="space-y-4 p-1">
+            <div className="space-y-5 p-1">
+              <div className="rounded-2xl border border-slate-200 bg-gradient-to-r from-slate-50 to-emerald-50/40 px-4 py-3">
+                <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                  Submit Your Offer
+                </p>
+                <p className="text-sm font-semibold text-slate-800 mt-1">
+                  Fill all important details to make your participation stand out.
+                </p>
+              </div>
               {Array.isArray(sellerInfo?.companies) &&
                 sellerInfo.companies.filter(Boolean).length > 0 && (
                   <label className="block">
-                    <span className="text-sm font-medium text-slate-700">
+                    <span className="text-sm font-semibold text-slate-700">
                       Your Company
                     </span>
                     <select
-                      className="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3 focus:ring-2 focus:ring-emerald-400/50 focus:border-emerald-400 outline-none bg-white"
+                      className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-3 focus:ring-2 focus:ring-emerald-400/50 focus:border-emerald-400 outline-none bg-white shadow-sm"
                       value={sellerCompany}
                       onChange={(e) => setSellerCompany(e.target.value)}
                       disabled={
@@ -902,35 +937,35 @@ const SupplierBidList = () => {
                   </label>
                 )}
               <label className="block">
-                <span className="text-sm font-medium text-slate-700">
+                <span className="text-sm font-semibold text-slate-700">
                   Your Rate
                 </span>
                 <input
                   type="number"
-                  className="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3 focus:ring-2 focus:ring-emerald-400/50 focus:border-emerald-400 outline-none"
+                  className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-3 focus:ring-2 focus:ring-emerald-400/50 focus:border-emerald-400 outline-none shadow-sm"
                   value={rate}
                   onChange={(e) => setRate(e.target.value)}
                   placeholder="Enter your rate"
                 />
               </label>
               <label className="block">
-                <span className="text-sm font-medium text-slate-700">
+                <span className="text-sm font-semibold text-slate-700">
                   Your Quantity (Tons)
                 </span>
                 <input
                   type="number"
-                  className="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3 focus:ring-2 focus:ring-emerald-400/50 focus:border-emerald-400 outline-none"
+                  className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-3 focus:ring-2 focus:ring-emerald-400/50 focus:border-emerald-400 outline-none shadow-sm"
                   value={quantity}
                   onChange={(e) => setQuantity(e.target.value)}
                   placeholder="Enter quantity"
                 />
               </label>
               <label className="block">
-                <span className="text-sm font-medium text-slate-700">
+                <span className="text-sm font-semibold text-slate-700">
                   Loading From
                 </span>
                 <select
-                  className="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3 focus:ring-2 focus:ring-emerald-400/50 focus:border-emerald-400 outline-none bg-white"
+                  className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-3 focus:ring-2 focus:ring-emerald-400/50 focus:border-emerald-400 outline-none bg-white shadow-sm"
                   value={loadingFrom}
                   onChange={(e) => setLoadingFrom(e.target.value)}
                 >
@@ -942,25 +977,25 @@ const SupplierBidList = () => {
                   ))}
                 </select>
               </label>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <label className="block">
-                  <span className="text-sm font-medium text-slate-700">
+                  <span className="text-sm font-semibold text-slate-700">
                     Delivery Date
                   </span>
                   <input
                     type="date"
-                    className="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3 focus:ring-2 focus:ring-emerald-400/50 focus:border-emerald-400 outline-none"
+                    className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-3 focus:ring-2 focus:ring-emerald-400/50 focus:border-emerald-400 outline-none shadow-sm"
                     value={deliveryDate}
                     onChange={(e) => setDeliveryDate(e.target.value)}
                   />
                 </label>
                 <label className="block">
-                  <span className="text-sm font-medium text-slate-700">
+                  <span className="text-sm font-semibold text-slate-700">
                     Payment Terms
                   </span>
                   <input
                     type="text"
-                    className="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3 focus:ring-2 focus:ring-emerald-400/50 focus:border-emerald-400 outline-none"
+                    className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-3 focus:ring-2 focus:ring-emerald-400/50 focus:border-emerald-400 outline-none shadow-sm"
                     value={paymentTerms}
                     onChange={(e) => setPaymentTerms(e.target.value)}
                     placeholder="e.g. 15 Days"
@@ -968,27 +1003,27 @@ const SupplierBidList = () => {
                 </label>
               </div>
               <label className="block">
-                <span className="text-sm font-medium text-slate-700">
+                <span className="text-sm font-semibold text-slate-700">
                   Remarks
                 </span>
                 <textarea
-                  className="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3 focus:ring-2 focus:ring-emerald-400/50 focus:border-emerald-400 outline-none"
+                  className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-3 focus:ring-2 focus:ring-emerald-400/50 focus:border-emerald-400 outline-none shadow-sm"
                   value={remarks}
                   onChange={(e) => setRemarks(e.target.value)}
                   placeholder="Any additional remarks?"
                   rows={2}
                 />
               </label>
-              <div className="flex justify-end gap-4 pt-4">
+              <div className="flex justify-end gap-3 pt-2">
                 <button
                   onClick={() => setIsPopupOpen(false)}
-                  className="px-6 py-2 rounded-lg text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors"
+                  className="px-5 py-2.5 rounded-xl text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors font-semibold"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleConfirm}
-                  className="px-6 py-2 rounded-lg text-white bg-emerald-600 hover:bg-emerald-700 transition-colors shadow-md hover:shadow-lg"
+                  className="px-5 py-2.5 rounded-xl text-white bg-emerald-600 hover:bg-emerald-700 transition-colors shadow-md hover:shadow-lg font-semibold"
                 >
                   Confirm Participation
                 </button>

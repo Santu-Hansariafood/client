@@ -438,7 +438,7 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
       >
         <div
           ref={dialogPanelRef}
-          className="relative w-full max-w-4xl mx-auto rounded-2xl bg-white/95 shadow-2xl border border-slate-200 max-h-[90vh] flex flex-col"
+          className="relative w-full max-w-5xl mx-auto rounded-3xl bg-white/95 shadow-2xl border border-slate-200/80 max-h-[92vh] flex flex-col overflow-hidden"
           role="dialog"
           aria-modal="true"
           aria-labelledby="edit-buyer-title"
@@ -453,15 +453,15 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
               <Loading />
             </div>
           )}
-          <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-gradient-to-r from-emerald-500/10 via-sky-500/5 to-transparent rounded-t-2xl shrink-0">
+          <div className="flex items-center justify-between px-5 sm:px-7 py-4 border-b border-slate-100 bg-gradient-to-r from-emerald-500/15 via-sky-500/10 to-transparent rounded-t-3xl shrink-0">
             <div>
               <h2
                 id="edit-buyer-title"
-                className="text-lg sm:text-xl font-semibold text-slate-900 tracking-tight"
+                className="text-lg sm:text-xl font-bold text-slate-900 tracking-tight"
               >
                 Edit Buyer
               </h2>
-              <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
+              <p className="text-xs sm:text-sm text-slate-600 mt-0.5">
                 Update buyer profile, access and contact details.
               </p>
             </div>
@@ -486,11 +486,19 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
             </div>
           )}
 
-          <div className="min-h-0 flex-1 overflow-y-auto px-6 pb-6 pt-4">
+          <div className="min-h-0 flex-1 overflow-y-auto px-5 sm:px-7 pb-6 pt-4 bg-gradient-to-b from-white via-white to-slate-50/40">
             <form
               onSubmit={handleSubmit}
               className={`space-y-6 ${isSubmitting ? "opacity-70 pointer-events-none" : ""}`}
             >
+              <div className="rounded-2xl border border-emerald-100 bg-gradient-to-r from-white via-emerald-50/35 to-sky-50/35 px-4 py-3 shadow-sm">
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-emerald-700">
+                  Buyer Profile Desk
+                </p>
+                <p className="text-sm font-semibold text-slate-800 mt-1">
+                  Keep buyer details accurate for smoother bidding operations.
+                </p>
+              </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div className="space-y-1.5">
                   <label className="block text-xs font-semibold tracking-wide text-slate-600">
@@ -537,9 +545,9 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
                 </div>
               </div>
 
-              <div className="rounded-xl border border-slate-100 bg-slate-50/60 px-4 py-3 space-y-3">
+              <div className="rounded-2xl border border-slate-200 bg-white px-4 py-4 space-y-3 shadow-sm">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-xs font-semibold tracking-wide text-slate-700">
+                  <h3 className="text-xs font-semibold tracking-wide text-slate-700 uppercase">
                     Contact Details
                   </h3>
                   <span className="text-[11px] text-slate-400">
@@ -564,7 +572,7 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
                         <button
                           type="button"
                           onClick={() => removeField("mobile", index)}
-                          className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-red-500 text-white text-xs shadow-sm hover:bg-red-600 transition"
+                          className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-rose-500 text-white text-xs shadow-sm hover:bg-rose-600 transition"
                         >
                           ✖
                         </button>
@@ -596,7 +604,7 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
                         <button
                           type="button"
                           onClick={() => removeField("email", index)}
-                          className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-red-500 text-white text-xs shadow-sm hover:bg-red-600 transition"
+                          className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-rose-500 text-white text-xs shadow-sm hover:bg-rose-600 transition"
                         >
                           ✖
                         </button>
@@ -614,7 +622,7 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <div className="space-y-2">
+                <div className="space-y-2 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
                   <div className="flex items-center justify-between">
                     <label className="text-xs font-semibold tracking-wide text-slate-600">
                       Commodities
@@ -634,7 +642,7 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
                         onChange={(e) =>
                           handleArrayChange("commodity", index, e.target.value)
                         }
-                        className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                        className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white"
                       >
                         <option value="">Select commodity</option>
                         {(commodities || []).map((commodity) => (
@@ -646,7 +654,7 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
                       <button
                         type="button"
                         onClick={() => removeField("commodity", index)}
-                        className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-red-500 text-white text-xs shadow-sm hover:bg-red-600 transition"
+                        className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-rose-500 text-white text-xs shadow-sm hover:bg-rose-600 transition"
                       >
                         ✖
                       </button>
@@ -654,7 +662,7 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
                   ))}
                 </div>
 
-                <div className="space-y-2">
+                <div className="space-y-2 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
                   <label className="text-xs font-semibold tracking-wide text-slate-600">
                     Consignee Access
                   </label>
@@ -662,7 +670,7 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
                     {(formData.consignee || []).map((consignee, index) => (
                       <div
                         key={`${consignee.value}-${index}`}
-                        className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2 border border-slate-100"
+                        className="flex items-center justify-between rounded-xl bg-slate-50 px-3 py-2.5 border border-slate-100"
                       >
                         <span className="text-sm text-slate-700">
                           {consignee.label ||
@@ -674,7 +682,7 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
                         <button
                           type="button"
                           onClick={() => removeConsignee(index)}
-                          className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-red-500 text-white text-[11px] shadow-sm hover:bg-red-600 transition"
+                          className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-rose-500 text-white text-[11px] shadow-sm hover:bg-rose-600 transition"
                         >
                           ✖
                         </button>
@@ -697,7 +705,7 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
                 </div>
               </div>
 
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-2 border-t border-slate-100 mt-2">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-3 border-t border-slate-200 mt-2">
                 <div className="flex items-center gap-2 text-[11px] text-slate-500">
                   <span className="h-2 w-2 rounded-full bg-emerald-500" />
                   <span>Buyer status</span>
@@ -717,7 +725,7 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
                   <button
                     type="submit"
                     disabled={referenceDataLoading || isSubmitting}
-                    className="inline-flex items-center justify-center rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-emerald-700 transition disabled:opacity-60 disabled:pointer-events-none"
+                    className="inline-flex items-center justify-center rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-emerald-700 transition disabled:opacity-60 disabled:pointer-events-none"
                   >
                     {isSubmitting ? "Saving…" : "Save changes"}
                   </button>
