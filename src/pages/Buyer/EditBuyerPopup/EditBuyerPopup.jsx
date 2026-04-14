@@ -416,11 +416,6 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
         brokerage: formData.brokerage || {},
       };
 
-      const passwordTrimmed = (formData.password || "").trim();
-      if (passwordTrimmed) {
-        payload.password = passwordTrimmed;
-      }
-
       const response = await api.put(`/buyers/${formData._id}`, payload);
       onUpdate(response.data);
     } catch (error) {
@@ -522,23 +517,6 @@ const EditBuyerPopup = ({ buyer, isOpen, onClose, onUpdate }) => {
                     placeholder="Select companies"
                     isMulti
                     isDisabled={referenceDataLoading || isSubmitting}
-                  />
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="block text-xs font-semibold tracking-wide text-slate-600">
-                    Password
-                  </label>
-                  <p className="text-[11px] text-slate-400 mb-1">
-                    Leave blank to keep the current password.
-                  </p>
-                  <DataInput
-                    placeholder="New password (optional)"
-                    name="password"
-                    value={formData.password || ""}
-                    onChange={handleChange}
-                    inputType="password"
-                    disabled={referenceDataLoading || isSubmitting}
                   />
                 </div>
 

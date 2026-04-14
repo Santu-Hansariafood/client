@@ -70,9 +70,10 @@ const EditTransporterPopup = ({ transporter, isOpen, onClose, onUpdate }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      const { password, ...payload } = formData;
       const response = await api.put(
         `/transporters/${transporter._id}`,
-        formData,
+        payload,
       );
       toast.success("Transporter updated successfully!");
       onUpdate(response.data);
@@ -130,14 +131,6 @@ const EditTransporterPopup = ({ transporter, isOpen, onClose, onUpdate }) => {
                   label="Mobile"
                   name="mobile"
                   value={formData.mobile}
-                  onChange={handleChange}
-                  required
-                />
-                <DataInput
-                  label="Password"
-                  name="password"
-                  type="password"
-                  value={formData.password}
                   onChange={handleChange}
                   required
                 />

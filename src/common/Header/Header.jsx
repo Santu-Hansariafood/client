@@ -9,6 +9,7 @@ import {
   AiOutlineDelete,
 } from "react-icons/ai";
 import { RiLogoutBoxLine } from "react-icons/ri";
+import { AiOutlineLock } from "react-icons/ai";
 import { HiMenuAlt2 } from "react-icons/hi";
 import { IoClose } from "react-icons/io5";
 import api from "../../utils/apiClient/apiClient";
@@ -16,6 +17,7 @@ import PWAInstall from "../PWAInstall/PWAInstall";
 import Typewriter from "../Typewriter/Typewriter";
 import { useAuth } from "../../context/AuthContext/AuthContext";
 import { useNotifications } from "../../context/NotificationContext/NotificationContext";
+import ChangePasswordModal from "./ChangePasswordModal";
 
 const Header = ({
   onLogoutClick,
@@ -38,6 +40,7 @@ const Header = ({
   const notificationRef = useRef(null);
   const [showNotifications, setShowNotifications] = useState(false);
   const [unreadOnly, setUnreadOnly] = useState(true);
+  const [isChangePasswordOpen, setChangePasswordOpen] = useState(false);
 
   const filteredNotifications = unreadOnly
     ? notifications.filter((n) => !n.isRead)
@@ -265,25 +268,58 @@ const Header = ({
             </span>
           </button>
           {isProfileDropdownOpen && (
-            <div className="absolute right-0 mt-2 w-40 sm:w-48 bg-white border border-slate-200 rounded-xl shadow-xl overflow-hidden">
-              <div className="md:hidden border-b border-slate-100 px-3 py-2">
+            <div className="absolute right-0 mt-2 w-48 sm:w-56 bg-white border border-slate-200 rounded-2xl shadow-xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+              <div className="p-3 border-b border-slate-100 bg-slate-50/50">
+                <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">
+                  Logged in as
+                </p>
+                <p className="text-sm font-bold text-slate-700 truncate">
+                  {mobile}
+                </p>
+                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700 mt-1">
+                  {userRole}
+                </span>
+              </div>
+
+              <div className="py-1">
+                <button
+                  type="button"
+                  className="w-full px-4 py-2.5 text-left text-slate-700 hover:bg-slate-50 flex items-center gap-2.5 text-sm font-medium transition-colors"
+                  onClick={() => {
+                    setProfileDropdownOpen(false);
+                    setChangePasswordOpen(true);
+                  }}
+                >
+                  <AiOutlineLock size={18} className="text-slate-400" />
+                  <span>Change Password</span>
+                </button>
+              </div>
+
+              <div className="border-t border-slate-100 py-1">
+                <button
+                  type="button"
+                  className="w-full px-4 py-2.5 text-left text-red-600 hover:bg-red-50 flex items-center gap-2.5 text-sm font-medium transition-colors"
+                  onClick={() => {
+                    setProfileDropdownOpen(false);
+                    onLogoutClick?.();
+                  }}
+                >
+                  <RiLogoutBoxLine size={18} />
+                  <span>{logout}</span>
+                </button>
+              </div>
+
+              <div className="md:hidden border-t border-slate-100 px-3 py-2 bg-slate-50/30">
                 <PWAInstall />
               </div>
-              <button
-                type="button"
-                className="w-full px-4 py-3 text-left text-red-600 hover:bg-red-50 flex items-center gap-2 text-sm font-medium"
-                onClick={() => {
-                  setProfileDropdownOpen(false);
-                  onLogoutClick?.();
-                }}
-              >
-                <RiLogoutBoxLine size={20} />
-                <span>{logout}</span>
-              </button>
             </div>
           )}
         </div>
       </div>
+      <ChangePasswordModal
+        isOpen={isChangePasswordOpen}
+        onClose={() => setChangePasswordOpen(false)}
+      />
     </header>
   );
 };

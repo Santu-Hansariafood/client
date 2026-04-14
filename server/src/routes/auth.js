@@ -157,6 +157,70 @@ router.post("/verify-otp", async (req, res) => {
   }
 });
 
+router.post("/change-password-otp", async (req, res) => {
+  try {
+    const { mobile, role } = req.body;
+    let normalizedMobile = String(mobile || "").trim();
+    const phoneRegex = /^(?:\+91|0)?([6-9]\d{9})$/;
+    const phoneMatch = normalizedMobile.match(phoneRegex);
+    if (phoneMatch) {
+      normalizedMobile = phoneMatch[1];
+    }
+
+    const Model = getModelByRole(role);
+    if (!Model) return res.status(400).json({ message: "Invalid role" });
+
+    const query =
+      role === "Seller"
+        ? { "phoneNumbers.value": normalizedMobile }
+        : { mobile: normalizedMobile };
+
+    const user = await Model.findOne(query);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    const email = getEmailByRole(user, role);
+    if (!email) {
+      return res.status(400).json({
+        message: "No email address found for your account.",
+      });
+    }
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const otpExpires = new Date(Date.now() + 10 * 60 * 1000);
+
+    user.otp = otp;
+    user.otpExpires = otpExpires;
+    await user.save();
+
+    const templatePath = path.join(__dirname, "../templates/otp-email.html");
+    let emailTemplate;
+    try {
+      emailTemplate = await fs.readFile(templatePath, "utf8");
+    } catch (readError) {
+      console.error("Error reading email template:", readError);
+      return res
+        .status(500)
+        .json({ message: "Failed to load email template." });
+    }
+
+    emailTemplate = emailTemplate.replace("{{otp}}", otp);
+    emailTemplate = emailTemplate.replace("{{year}}", new Date().getFullYear());
+
+    const mailOptions = {
+      from: process.env.EMAIL_USER,
+      to: email,
+      subject: "Change Password OTP - Hansaria Food Private Limited",
+      html: emailTemplate,
+    };
+
+    await transporter.sendMail(mailOptions);
+    res.json({ message: "OTP sent to your registered email address" });
+  } catch (error) {
+    console.error("Change password OTP error:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
 router.post("/reset-password", async (req, res) => {
   try {
     const { mobile, role, otp, newPassword } = req.body;

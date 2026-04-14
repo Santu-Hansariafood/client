@@ -176,8 +176,8 @@ const EditSellerDetails = ({ sellerId, onClose, onSave }) => {
   };
 
   const handleSubmit = async () => {
-    if (!sellerName || !password) {
-      toast.error("Please fill out the Seller Name and Password.");
+    if (!sellerName) {
+      toast.error("Please fill out the Seller Name.");
       return;
     }
 
@@ -204,7 +204,6 @@ const EditSellerDetails = ({ sellerId, onClose, onSave }) => {
     const payload = {
       ...fullSellerData,
       sellerName,
-      password,
       phoneNumbers: phoneNumbers.map((phone) => ({ value: phone.value })),
       emails: emails.map((email) => ({ value: email.value })),
       commodities: selectedCommodity.map((commodity) => ({
@@ -377,21 +376,6 @@ const EditSellerDetails = ({ sellerId, onClose, onSave }) => {
                 onChange={(selected) => setSelectedStatus(selected)}
               />
             </div>
-          </div>
-          <div className="mt-4">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Password
-            </label>
-            <DataInput
-              placeholder="Enter password"
-              name="password"
-              inputType="text"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              minLength="4"
-              maxLength="25"
-            />
           </div>
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700 mb-1">

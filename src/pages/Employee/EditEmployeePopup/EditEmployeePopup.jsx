@@ -58,7 +58,8 @@ const EditEmployeePopup = ({ employee, isOpen, onClose, onUpdate }) => {
       return;
     }
     try {
-      const response = await api.put(`/employees/${employee._id}`, formData);
+      const { password, ...payload } = formData;
+      const response = await api.put(`/employees/${employee._id}`, payload);
       toast.success("Employee updated successfully!");
       onUpdate(response.data);
       onClose();
@@ -120,14 +121,6 @@ const EditEmployeePopup = ({ employee, isOpen, onClose, onUpdate }) => {
                   (o) => o.value === formData.sex,
                 )}
                 onChange={handleDropdownChange}
-                required
-              />
-              <DataInput
-                label="Login Password"
-                name="password"
-                type="password"
-                value={formData.password}
-                onChange={handleChange}
                 required
               />
               <DataDropdown
