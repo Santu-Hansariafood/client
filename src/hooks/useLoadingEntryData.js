@@ -120,7 +120,7 @@ const useLoadingEntryData = (api, userRole) => {
             value: b._id,
             label: capitalizeWords(b.name),
             name: b.name,
-            consignees: b.consignees || [],
+            consignees: b.consignees || b.consigneeIds || [],
           }))
           .sort((a, b) => a.label.localeCompare(b.label));
         setFilteredBuyers(formatted);
@@ -149,12 +149,16 @@ const useLoadingEntryData = (api, userRole) => {
       return;
     }
 
-    const list = (selectedBuyer.consignees || [])
-      .map((c) => ({
-        value: c.name,
-        label: capitalizeWords(c.name),
-        name: c.name,
-      }))
+    const list = (selectedBuyer.consignees || selectedBuyer.consigneeIds || [])
+      .map((c) => {
+        const name = typeof c === "string" ? c : c?.name || c?.label || "";
+        return {
+          value: name,
+          label: capitalizeWords(name),
+          name: name,
+        };
+      })
+      .filter((c) => c.value)
       .sort((a, b) => a.label.localeCompare(b.label));
 
     setConsignees(list);

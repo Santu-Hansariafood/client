@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { toast } from "react-toastify";
 
 const useLoadingEntrySearch = (
@@ -14,11 +14,10 @@ const useLoadingEntrySearch = (
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const handleSearch = async () => {
+  const handleSearch = useCallback(async () => {
     const trimmedSauda = saudaSearch.trim();
 
     if (!selectedGroup?.value) {
-      toast.error("Please select a group");
       return;
     }
 
@@ -52,7 +51,15 @@ const useLoadingEntrySearch = (
     } finally {
       setLoading(false);
     }
-  };
+  }, [
+    api,
+    selectedGroup,
+    selectedBuyer,
+    selectedConsignee,
+    selectedSellerName,
+    selectedSellerCompany,
+    saudaSearch,
+  ]);
 
   return {
     results,
