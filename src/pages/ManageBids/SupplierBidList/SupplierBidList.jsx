@@ -19,6 +19,8 @@ import {
   FaBuilding,
   FaBoxOpen,
   FaUsers,
+  FaChevronRight,
+  FaStar,
 } from "react-icons/fa";
 import { toast } from "react-toastify";
 import Loading from "../../../common/Loading/Loading";
@@ -688,7 +690,7 @@ const SupplierBidList = () => {
                   Brand Bid Desk
                 </p>
                 <p className="text-sm sm:text-base font-semibold text-slate-800 mt-0.5">
-                  Smart, classy and responsive bidding experience
+                  Smart, classy and responsive bidding experience With Hansaria Food Private Limited
                 </p>
               </div>
               {syncTimeText && (
@@ -784,7 +786,7 @@ const SupplierBidList = () => {
           ) : (
             <>
               {(selectedGroupName || selectedCompanyName) && (
-                <div className="flex flex-wrap items-center gap-3">
+                <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-slate-200 bg-white px-3 py-2.5 shadow-sm">
                   <button
                     type="button"
                     onClick={() => {
@@ -806,12 +808,17 @@ const SupplierBidList = () => {
                     </button>
                   )}
                   {selectedGroupName && (
-                    <span className="px-4 py-2 text-sm font-semibold text-slate-700 bg-white rounded-xl border border-slate-200 shadow-sm">
+                    <span className="px-3 py-1.5 text-sm font-semibold text-emerald-700 bg-emerald-50 rounded-xl border border-emerald-200 shadow-sm inline-flex items-center gap-1.5">
+                      <FaLayerGroup className="text-xs" />
                       {selectedGroupName}
                     </span>
                   )}
+                  {selectedGroupName && selectedCompanyName && (
+                    <FaChevronRight className="text-slate-400 text-xs" />
+                  )}
                   {selectedCompanyName && (
-                    <span className="px-4 py-2 text-sm font-semibold text-slate-700 bg-slate-100 rounded-xl border border-slate-200">
+                    <span className="px-3 py-1.5 text-sm font-semibold text-sky-700 bg-sky-50 rounded-xl border border-sky-200 inline-flex items-center gap-1.5">
+                      <FaBuilding className="text-xs" />
                       {selectedCompanyName}
                     </span>
                   )}
@@ -862,12 +869,16 @@ const SupplierBidList = () => {
                 </div>
               ) : !selectedCompanyName ? (
                 <div className="space-y-4">
-                  <div className="rounded-2xl border border-emerald-100 bg-white p-4 shadow-lg shadow-emerald-900/5">
+                  <div className="rounded-2xl border border-emerald-100 bg-gradient-to-br from-white via-white to-emerald-50/40 p-4 shadow-lg shadow-emerald-900/5">
                     <div className="flex items-center justify-between mb-4">
-                      <p className="text-sm font-bold text-slate-800">
+                      <p className="text-sm font-bold text-slate-800 inline-flex items-center gap-2">
+                        <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-100 text-emerald-700">
+                          <FaBuilding className="text-xs" />
+                        </span>
                         {selectedGroupName} Companies
                       </p>
-                      <p className="text-xs font-semibold text-slate-500">
+                      <p className="text-xs font-semibold text-slate-500 inline-flex items-center gap-1 rounded-full bg-white px-2 py-1 border border-slate-200">
+                        <FaStar className="text-[10px] text-amber-500" />
                         {groupIndex.find(
                           (g) => g.groupName === selectedGroupName,
                         )?.companyCount || 0}{" "}
@@ -934,6 +945,20 @@ const SupplierBidList = () => {
             title={`Participate in: ${selectedBid.consignee}`}
           >
             <div className="space-y-5 p-1">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5">
+                  <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">
+                    Bid Rate
+                  </p>
+                  <p className="text-sm font-bold text-slate-800 mt-0.5">₹{selectedBid.rate}</p>
+                </div>
+                <div className="rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5">
+                  <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">
+                    Bid Quantity
+                  </p>
+                  <p className="text-sm font-bold text-slate-800 mt-0.5">{selectedBid.quantity} Tons</p>
+                </div>
+              </div>
               <div className="rounded-2xl border border-slate-200 bg-gradient-to-r from-slate-50 to-emerald-50/40 px-4 py-3">
                 <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
                   Submit Your Offer
@@ -1047,7 +1072,7 @@ const SupplierBidList = () => {
                   rows={2}
                 />
               </label>
-              <div className="flex justify-end gap-3 pt-2">
+              <div className="flex flex-wrap justify-end gap-3 pt-2">
                 <button
                   onClick={() => setIsPopupOpen(false)}
                   className="px-5 py-2.5 rounded-xl text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors font-semibold"
@@ -1056,7 +1081,7 @@ const SupplierBidList = () => {
                 </button>
                 <button
                   onClick={handleConfirm}
-                  className="px-5 py-2.5 rounded-xl text-white bg-emerald-600 hover:bg-emerald-700 transition-colors shadow-md hover:shadow-lg font-semibold"
+                  className="px-5 py-2.5 rounded-xl text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 transition-colors shadow-md hover:shadow-lg font-semibold"
                 >
                   Confirm Participation
                 </button>
