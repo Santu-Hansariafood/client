@@ -15,6 +15,10 @@ import {
   FaTimesCircle,
   FaHourglassHalf,
   FaArrowLeft,
+  FaLayerGroup,
+  FaBuilding,
+  FaBoxOpen,
+  FaUsers,
 } from "react-icons/fa";
 import { toast } from "react-toastify";
 import Loading from "../../../common/Loading/Loading";
@@ -444,13 +448,15 @@ const SupplierBidList = () => {
         <div className="p-4 sm:p-5">
           <div className="flex justify-between items-start gap-2">
             <div className="min-w-0 flex-1">
-              <p className="text-[10px] sm:text-xs text-slate-500 font-medium truncate uppercase tracking-wider">
+              <p className="text-[10px] sm:text-xs text-slate-500 font-medium truncate uppercase tracking-wider flex items-center gap-1.5">
+                <FaLayerGroup className="text-emerald-600" />
                 {bid.group}
               </p>
               <h3 className="text-base sm:text-lg font-bold text-slate-800 mt-0.5 sm:mt-1 truncate">
                 {bid.consignee}
               </h3>
-              <p className="text-xs sm:text-sm text-slate-600 truncate">
+              <p className="text-xs sm:text-sm text-slate-600 truncate flex items-center gap-1.5">
+                <FaBoxOpen className="text-sky-600 shrink-0" />
                 {bid.commodity} - {bid.origin}
               </p>
               <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1.5">
@@ -459,7 +465,8 @@ const SupplierBidList = () => {
                   Ends: {bid.endTime} {!isClosed && `• ${countdownText}`}
                 </p>
                 {!isClosed && (
-                  <p className="text-[10px] sm:text-xs font-semibold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md">
+                  <p className="text-[10px] sm:text-xs font-semibold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md flex items-center gap-1">
+                    <FaUsers className="text-[10px] text-indigo-500" />
                     Interactions: {participantCount}
                   </p>
                 )}
@@ -532,7 +539,7 @@ const SupplierBidList = () => {
                   Expected Delivery
                 </p>
                 <p className="text-[11px] sm:text-sm font-semibold text-slate-700 mt-0.5">
-                  {bid.delivery ? `${bid.delivery} days` : "N/A"}
+                  {bid.delivery ? `${bid.delivery} Days` : "N/A"}
                 </p>
               </div>
             </div>
@@ -823,14 +830,25 @@ const SupplierBidList = () => {
                       }}
                     className="group text-left bg-gradient-to-br from-white via-white to-emerald-50/40 rounded-2xl border border-emerald-100 p-4 sm:p-5 shadow-lg shadow-emerald-900/5 hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300"
                     >
-                      <p className="text-sm font-bold text-slate-800 group-hover:text-emerald-700 transition-colors">
+                      <p className="text-sm font-bold text-slate-800 group-hover:text-emerald-700 transition-colors flex items-center gap-2">
+                        <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-100 text-emerald-700">
+                          <FaLayerGroup className="text-xs" />
+                        </span>
                         {g.groupName}
                       </p>
-                      <p className="text-xs font-semibold text-slate-500 mt-2">
-                        {g.companyCount} company(s) • {g.bidCount} bid(s)
+                      <p className="text-xs font-semibold text-slate-500 mt-2 flex items-center gap-1.5 flex-wrap">
+                        <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5">
+                          <FaBuilding className="text-[10px] text-slate-600" />
+                          {g.companyCount} company(s)
+                        </span>
+                        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100/70 text-emerald-700 px-2 py-0.5">
+                          <FaGavel className="text-[10px]" />
+                          {g.bidCount} bid(s)
+                        </span>
                       </p>
                       {g.commodities.length > 0 && (
-                        <p className="text-xs font-semibold text-slate-600 mt-2 leading-relaxed">
+                        <p className="text-xs font-semibold text-slate-600 mt-2 leading-relaxed flex items-center gap-1.5">
+                          <FaBoxOpen className="text-sky-600 shrink-0" />
                           {g.commodities.slice(0, 3).join(", ")}
                           {g.commodities.length > 3 ? "…" : ""}
                         </p>
@@ -868,14 +886,21 @@ const SupplierBidList = () => {
                           onClick={() => setSelectedCompanyName(c.companyName)}
                           className="group text-left bg-gradient-to-br from-white via-white to-sky-50/30 rounded-2xl border border-slate-200 p-4 sm:p-5 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300"
                         >
-                          <p className="text-sm font-bold text-slate-800 group-hover:text-sky-700 transition-colors">
+                          <p className="text-sm font-bold text-slate-800 group-hover:text-sky-700 transition-colors flex items-center gap-2">
+                            <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-sky-100 text-sky-700">
+                              <FaBuilding className="text-xs" />
+                            </span>
                             {c.companyName}
                           </p>
                           <p className="text-xs font-semibold text-slate-500 mt-2">
-                            {c.bidCount} bid(s)
+                            <span className="inline-flex items-center gap-1 rounded-full bg-sky-100/70 text-sky-700 px-2 py-0.5">
+                              <FaGavel className="text-[10px]" />
+                              {c.bidCount} bid(s)
+                            </span>
                           </p>
                           {c.commodities.length > 0 && (
-                            <p className="text-xs font-semibold text-slate-600 mt-2 leading-relaxed">
+                            <p className="text-xs font-semibold text-slate-600 mt-2 leading-relaxed flex items-center gap-1.5">
+                              <FaBoxOpen className="text-indigo-600 shrink-0" />
                               {c.commodities.slice(0, 3).join(", ")}
                               {c.commodities.length > 3 ? "…" : ""}
                             </p>
