@@ -7,3 +7,5 @@ export const toTitleCase = (str) => {
     .map((word) => (word ? word.charAt(0).toUpperCase() + word.slice(1) : ""))
     .join(" ");
 };
+
+export const capitalizeWords = toTitleCase;

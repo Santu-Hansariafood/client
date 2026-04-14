@@ -21,7 +21,6 @@ const useLoadingEntryData = (api, userRole) => {
   const [selectedSellerCompany, setSelectedSellerCompany] = useState(null);
   const [transporters, setTransporters] = useState([]);
 
-  // Load initial data: Groups, Sellers, All Consignees, Transporters
   useEffect(() => {
     const loadInitialData = async () => {
       try {
@@ -82,7 +81,6 @@ const useLoadingEntryData = (api, userRole) => {
     loadInitialData();
   }, [api, userRole]);
 
-  // Load Buyers when Groups change
   useEffect(() => {
     const loadBuyersForGroup = async () => {
       const groupIds = Array.isArray(selectedGroup)
@@ -129,7 +127,6 @@ const useLoadingEntryData = (api, userRole) => {
     loadBuyersForGroup();
   }, [selectedGroup, userRole, allConsignees, api]);
 
-  // Update Consignees when Buyer changes
   useEffect(() => {
     if (userRole === "Seller") return;
 
@@ -152,7 +149,6 @@ const useLoadingEntryData = (api, userRole) => {
     setSelectedConsignee(null);
   }, [userRole, selectedBuyer, filteredBuyers]);
 
-  // Load Sellers and Seller Companies based on selections
   useEffect(() => {
     if (!selectedBuyer) {
       setSellers(allSellers);
@@ -219,7 +215,6 @@ const useLoadingEntryData = (api, userRole) => {
     };
   }, [selectedBuyer, selectedGroup, allSellers, api]);
 
-  // Load Seller Companies when Seller Name changes
   useEffect(() => {
     if (!selectedSellerName) {
       setSellerCompanies([]);
