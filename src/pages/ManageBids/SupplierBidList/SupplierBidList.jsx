@@ -22,6 +22,8 @@ import {
   FaChevronRight,
   FaStar,
   FaBrain,
+  FaClock,
+  FaWeightHanging,
 } from "react-icons/fa";
 import { toast } from "react-toastify";
 import Loading from "../../../common/Loading/Loading";
@@ -465,7 +467,8 @@ const SupplierBidList = () => {
                 {bid.commodity} - {bid.origin}
               </p>
               <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1.5">
-                <p className="text-[11px] sm:text-sm font-semibold text-red-600 flex items-center gap-1">
+                <p className="text-[11px] sm:text-sm font-semibold text-red-600 flex items-center gap-1.5">
+                  <FaClock className="text-red-500" />
                   <span className="w-1.5 h-1.5 rounded-full bg-red-600 animate-pulse" />
                   Ends: {bid.endTime} {!isClosed && `• ${countdownText}`}
                 </p>
@@ -501,8 +504,9 @@ const SupplierBidList = () => {
           </div>
 
           <div className="mt-4 sm:mt-5 grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-            <div className="bg-slate-50/50 p-2.5 rounded-xl border border-slate-100">
-              <p className="text-[10px] sm:text-xs text-slate-500 font-medium">
+            <div className="bg-slate-50/50 p-2.5 rounded-xl border border-slate-100 transition-all duration-300 hover:shadow-sm hover:bg-slate-50">
+              <p className="text-[10px] sm:text-xs text-slate-500 font-medium inline-flex items-center gap-1.5">
+                <FaWeightHanging className="text-emerald-600" />
                 Quantity
               </p>
               <p className="text-sm sm:text-base font-bold text-slate-700">
@@ -511,8 +515,9 @@ const SupplierBidList = () => {
               </p>
             </div>
             {!isClosed && (
-              <div className="bg-slate-50/50 p-2.5 rounded-xl border border-slate-100">
-                <p className="text-[10px] sm:text-xs text-slate-500 font-medium">
+              <div className="bg-slate-50/50 p-2.5 rounded-xl border border-slate-100 transition-all duration-300 hover:shadow-sm hover:bg-slate-50">
+                <p className="text-[10px] sm:text-xs text-slate-500 font-medium inline-flex items-center gap-1.5">
+                  <FaGavel className="text-sky-600" />
                   Rate
                 </p>
                 <p className="text-sm sm:text-base font-bold text-slate-700">
@@ -521,8 +526,9 @@ const SupplierBidList = () => {
               </div>
             )}
 
-            <div className="sm:col-span-2 bg-slate-50/50 p-2.5 rounded-xl border border-slate-100">
-              <p className="text-[10px] sm:text-xs text-slate-500 font-medium">
+            <div className="sm:col-span-2 bg-slate-50/50 p-2.5 rounded-xl border border-slate-100 transition-all duration-300 hover:shadow-sm hover:bg-slate-50">
+              <p className="text-[10px] sm:text-xs text-slate-500 font-medium inline-flex items-center gap-1.5">
+                <FaStar className="text-amber-500" />
                 Quality Parameters
               </p>
               <p className="text-[11px] sm:text-sm font-semibold text-slate-700 mt-0.5 leading-tight">
@@ -531,16 +537,18 @@ const SupplierBidList = () => {
             </div>
 
             <div className="sm:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-              <div className="bg-slate-50/50 p-2.5 rounded-xl border border-slate-100">
-                <p className="text-[10px] sm:text-xs text-slate-500 font-medium">
+              <div className="bg-slate-50/50 p-2.5 rounded-xl border border-slate-100 transition-all duration-300 hover:shadow-sm hover:bg-slate-50">
+                <p className="text-[10px] sm:text-xs text-slate-500 font-medium inline-flex items-center gap-1.5">
+                  <FaBuilding className="text-indigo-600" />
                   Payment Terms
                 </p>
                 <p className="text-[11px] sm:text-sm font-semibold text-slate-700 mt-0.5">
                   {bid.paymentTerms || "N/A"}
                 </p>
               </div>
-              <div className="bg-slate-50/50 p-2.5 rounded-xl border border-slate-100">
-                <p className="text-[10px] sm:text-xs text-slate-500 font-medium">
+              <div className="bg-slate-50/50 p-2.5 rounded-xl border border-slate-100 transition-all duration-300 hover:shadow-sm hover:bg-slate-50">
+                <p className="text-[10px] sm:text-xs text-slate-500 font-medium inline-flex items-center gap-1.5">
+                  <FaClock className="text-rose-500" />
                   Expected Delivery
                 </p>
                 <p className="text-[11px] sm:text-sm font-semibold text-slate-700 mt-0.5">
