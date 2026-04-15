@@ -16,10 +16,10 @@ const PrintLoadingEntry = async (data) => {
   const pageHeight = doc.internal.pageSize.height;
   const margin = 14;
 
-  const primary = [21, 128, 61];
-  const secondary = [234, 179, 8];
+  const primary = [30, 64, 175];
+  const secondary = [147, 197, 253];
   const dark = [15, 23, 42];
-  const light = [254, 252, 232];
+  const light = [239, 246, 255];
   const gray = [71, 85, 105];
   const lightGray = [226, 232, 240];
 
