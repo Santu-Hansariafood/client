@@ -5,7 +5,7 @@ import api from "../../../utils/apiClient/apiClient";
 import { toast } from "react-toastify";
 import Loading from "../../../common/Loading/Loading";
 import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
-import { FaGavel, FaArrowLeft, FaUsers } from "react-icons/fa";
+import { FaGavel, FaArrowLeft, FaUsers, FaClock, FaSearch, FaLayerGroup, FaChartLine } from "react-icons/fa";
 import { useAuth } from "../../../context/AuthContext/AuthContext";
 
 const Tables = lazy(() => import("../../../common/Tables/Tables"));
@@ -274,6 +274,59 @@ const BidList = () => {
       }));
   }, [filteredBids]);
 
+  const tabCounts = useMemo(() => {
+    const now = new Date();
+    const todayStr = now.toLocaleDateString("en-CA");
+    const yesterday = new Date(now);
+    yesterday.setDate(now.getDate() - 1);
+    const yesterdayStr = yesterday.toLocaleDateString("en-CA");
+
+    const counts = { all: 0, active: 0, closed: 0, previous: 0 };
+
+    bids.forEach((bid) => {
+      const bidDateStr =
+        bid.bidDate && typeof bid.bidDate === "string"
+          ? bid.bidDate.split("T")[0]
+          : "";
+      const isToday = bidDateStr === todayStr;
+      const isYesterday = bidDateStr === yesterdayStr;
+
+      let bidStartTime = null;
+      let bidEndTime = null;
+
+      if (isToday) {
+        if (bid.startTime) {
+          const [sH, sM] = bid.startTime.split(":").map(Number);
+          bidStartTime = new Date(
+            now.getFullYear(),
+            now.getMonth(),
+            now.getDate(),
+            sH,
+            sM,
+          );
+        }
+        if (bid.endTime) {
+          const [eH, eM] = bid.endTime.split(":").map(Number);
+          bidEndTime = new Date(
+            now.getFullYear(),
+            now.getMonth(),
+            now.getDate(),
+            eH,
+            eM,
+          );
+        }
+      }
+
+      if (isToday || isYesterday) counts.all += 1;
+      if (isToday && bidStartTime && bidEndTime && now >= bidStartTime && now <= bidEndTime)
+        counts.active += 1;
+      if (isToday && bidEndTime && now > bidEndTime) counts.closed += 1;
+      if (isYesterday) counts.previous += 1;
+    });
+
+    return counts;
+  }, [bids]);
+
   const handleStatusUpdate = async (id, status) => {
     try {
       await api.patch(`/bids/${id}/status`, { status });
@@ -412,6 +465,49 @@ const BidList = () => {
         noContentCard
       >
         <div className="max-w-6xl mx-auto space-y-6">
+          <div className="rounded-3xl border border-emerald-100 bg-gradient-to-r from-white via-emerald-50/35 to-sky-50/45 p-4 sm:p-5 shadow-sm">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-emerald-700 inline-flex items-center gap-1.5">
+                  <FaChartLine />
+                  Buyer Bid Desk
+                </p>
+                <p className="text-sm sm:text-base font-semibold text-slate-800 mt-0.5">
+                  Modern bid tracking for fast buyer decisions
+                </p>
+              </div>
+              <div className="inline-flex items-center w-fit px-3 py-1.5 rounded-full border border-slate-200 bg-white text-xs font-semibold text-slate-600 gap-1.5">
+                <FaClock className="text-emerald-600" />
+                Live view
+              </div>
+            </div>
+            <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+              <div className="rounded-xl border border-slate-200 bg-white px-3 py-2">
+                <p className="text-[10px] uppercase tracking-wider text-slate-500 font-semibold">
+                  All
+                </p>
+                <p className="text-base font-bold text-slate-800">{tabCounts.all}</p>
+              </div>
+              <div className="rounded-xl border border-emerald-200 bg-emerald-50/70 px-3 py-2">
+                <p className="text-[10px] uppercase tracking-wider text-emerald-700 font-semibold">
+                  Active
+                </p>
+                <p className="text-base font-bold text-emerald-800">{tabCounts.active}</p>
+              </div>
+              <div className="rounded-xl border border-rose-200 bg-rose-50/70 px-3 py-2">
+                <p className="text-[10px] uppercase tracking-wider text-rose-700 font-semibold">
+                  Closed
+                </p>
+                <p className="text-base font-bold text-rose-800">{tabCounts.closed}</p>
+              </div>
+              <div className="rounded-xl border border-amber-200 bg-amber-50/70 px-3 py-2">
+                <p className="text-[10px] uppercase tracking-wider text-amber-700 font-semibold">
+                  Previous
+                </p>
+                <p className="text-base font-bold text-amber-800">{tabCounts.previous}</p>
+              </div>
+            </div>
+          </div>
           {userRole === "Buyer" && (
             <div className="flex justify-start">
               <button
@@ -429,11 +525,12 @@ const BidList = () => {
             </div>
           ) : (
             <>
-              <div className="flex flex-col sm:flex-row gap-4 items-stretch sm:items-center justify-between">
-                <div className="flex bg-slate-100 p-1 rounded-xl w-fit">
+              <div className="rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
+                <div className="flex flex-col lg:flex-row gap-4 items-stretch lg:items-center justify-between">
+                  <div className="flex flex-wrap gap-2 bg-slate-100 p-1 rounded-xl w-full lg:w-fit">
                   <button
                     onClick={() => setActiveTab("all")}
-                    className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${
+                    className={`px-4 sm:px-6 py-2 rounded-lg text-sm font-bold transition-all ${
                       activeTab === "all"
                         ? "bg-white text-slate-800 shadow-sm"
                         : "text-slate-500 hover:text-slate-700"
@@ -443,7 +540,7 @@ const BidList = () => {
                   </button>
                   <button
                     onClick={() => setActiveTab("active")}
-                    className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${
+                    className={`px-4 sm:px-6 py-2 rounded-lg text-sm font-bold transition-all ${
                       activeTab === "active"
                         ? "bg-white text-emerald-700 shadow-sm"
                         : "text-slate-500 hover:text-slate-700"
@@ -453,7 +550,7 @@ const BidList = () => {
                   </button>
                   <button
                     onClick={() => setActiveTab("closed")}
-                    className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${
+                    className={`px-4 sm:px-6 py-2 rounded-lg text-sm font-bold transition-all ${
                       activeTab === "closed"
                         ? "bg-white text-red-700 shadow-sm"
                         : "text-slate-500 hover:text-slate-700"
@@ -463,7 +560,7 @@ const BidList = () => {
                   </button>
                   <button
                     onClick={() => setActiveTab("previous")}
-                    className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${
+                    className={`px-4 sm:px-6 py-2 rounded-lg text-sm font-bold transition-all ${
                       activeTab === "previous"
                         ? "bg-white text-amber-700 shadow-sm"
                         : "text-slate-500 hover:text-slate-700"
@@ -471,18 +568,26 @@ const BidList = () => {
                   >
                     Previous Bids
                   </button>
+                  </div>
+                  <div className="w-full lg:w-auto">
+                    <div className="inline-flex items-center gap-2 text-xs text-slate-500 mb-1.5">
+                      <FaSearch className="text-emerald-600" />
+                      Search Consignee
+                    </div>
+                    <SearchBox
+                      placeholder="Search by consignee..."
+                      items={consigneeItems}
+                      onSearch={handleSearchConsignee}
+                      className="max-w-full sm:max-w-md"
+                    />
+                  </div>
                 </div>
-                <SearchBox
-                  placeholder="Search by consignee..."
-                  items={consigneeItems}
-                  onSearch={handleSearchConsignee}
-                  className="max-w-full sm:max-w-md"
-                />
               </div>
 
               {filteredBids.length === 0 ? (
                 <div className="text-center py-12 bg-white rounded-2xl border border-slate-100 shadow-sm">
-                  <p className="text-slate-500 font-medium">
+                  <p className="text-slate-500 font-medium inline-flex items-center gap-2">
+                    <FaLayerGroup className="text-slate-400" />
                     No {activeTab === "all" ? "" : activeTab} bids found.
                   </p>
                 </div>
