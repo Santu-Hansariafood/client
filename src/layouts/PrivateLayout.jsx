@@ -1,10 +1,9 @@
 import { Suspense, useEffect, useState, useCallback } from "react";
-import { Outlet, useNavigate, useLocation } from "react-router-dom";
+import { Outlet, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { useAuth } from "../context/AuthContext/AuthContext";
 import Sidebar from "../components/Sidebar/Sidebar";
 import Header from "../common/Header/Header";
-import Footer from "../common/Footer/Footer";
 import MobileFooter from "../common/MobileFooter/MobileFooter";
 import LogoutConfirmationModal from "../common/LogoutConfirmationModal/LogoutConfirmationModal";
 import { prefetchRoute } from "../utils/LazyPages/LazyPages";
@@ -18,7 +17,6 @@ const PageLoader = () => (
 const PrivateLayout = () => {
   const { userRole, logout } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
   const [showLogoutConfirmation, setShowLogoutConfirmation] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
@@ -38,11 +36,6 @@ const PrivateLayout = () => {
     prefetchRoute("/dashboard");
   }, []);
 
-  const hideMobileFooter = useCallback(() => {
-    const path = String(location.pathname || "").toLowerCase();
-    return path.includes("/supplier-bid-list");
-  }, [location.pathname]);
-
   return (
     <div className="flex h-screen w-full overflow-hidden bg-slate-100">
       {(userRole === "Admin" || userRole === "Employee") && (
@@ -60,19 +53,14 @@ const PrivateLayout = () => {
           isProfileDropdownOpen={isProfileDropdownOpen}
           setProfileDropdownOpen={setProfileDropdownOpen}
         />
-        <main
-          className={`flex-1 min-w-0 overflow-auto flex flex-col ${
-            hideMobileFooter() ? "pb-0" : "pb-16 md:pb-0"
-          }`}
-        >
+        <main className="flex-1 min-w-0 overflow-auto flex flex-col pb-16 md:pb-0">
           <div className="flex-1">
             <Suspense fallback={<PageLoader />}>
               <Outlet />
             </Suspense>
           </div>
-          <Footer />
         </main>
-        {!hideMobileFooter() && <MobileFooter onProfileClick={handleProfileClick} />}
+        <MobileFooter onProfileClick={handleProfileClick} />
       </div>
       {showLogoutConfirmation && (
         <LogoutConfirmationModal
