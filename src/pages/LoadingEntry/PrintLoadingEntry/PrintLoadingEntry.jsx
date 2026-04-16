@@ -19,10 +19,11 @@ const PrintLoadingEntry = async (data) => {
   const primary = [17, 24, 39];
   const secondary = [14, 116, 144];
   const accent = [245, 158, 11];
+  const tableBlue = [37, 99, 235];
+  const tableBlueLight = [219, 234, 254];
   const dark = [15, 23, 42];
   const light = [248, 250, 252];
   const gray = [71, 85, 105];
-  const lightGray = [226, 232, 240];
 
   const normalize = (str) => (str || "").toString().trim().toLowerCase();
 
@@ -117,12 +118,15 @@ const PrintLoadingEntry = async (data) => {
   const sellerName = pickFirst(seller.sellerName, data.sellerName, "N/A");
   const sellerPhone = pickFirst(
     seller?.phoneNumbers?.[0]?.value,
+    seller?.mobileNo,
     seller.mobile,
     seller.phone,
+    company?.mobileNo,
     company.mobile,
     "N/A",
   );
   const sellerEmail = pickFirst(
+    seller?.emails?.[0]?.value,
     seller.email,
     seller.mailId,
     company.email,
@@ -218,38 +222,48 @@ const PrintLoadingEntry = async (data) => {
   );
   const buyerEmail = pickFirst(
     buyer.buyerEmail,
+    buyer?.buyerEmails?.[0],
     buyer.email,
     buyer.mailId,
     "N/A",
   );
 
-  const addTable = (title, y, head, body, colors = primary) => {
-    doc.setFillColor(...secondary);
-    doc.rect(margin, y - 5, 4, 6, "F");
+  const addTable = (title, y, head, body, colors = tableBlue) => {
+    // Centered ribbon title for a modern, compact look
+    const ribbonH = 6.5;
+    doc.setFillColor(...colors);
+    doc.setDrawColor(...colors);
+    doc.roundedRect(
+      margin,
+      y - ribbonH,
+      pageWidth - margin * 2,
+      ribbonH,
+      2,
+      2,
+      "FD",
+    );
 
-    doc.setTextColor(...dark);
+    doc.setTextColor(255, 255, 255);
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(10);
-    doc.text(title.toUpperCase(), margin + 6, y);
-
-    doc.setDrawColor(...lightGray);
-    doc.setLineWidth(0.1);
-    doc.line(margin, y + 2, pageWidth - margin, y + 2);
+    doc.setFontSize(9.5);
+    doc.text(title.toUpperCase(), pageWidth / 2, y - 1.2, {
+      align: "center",
+    });
 
     autoTable(doc, {
-      startY: y + 4,
+      startY: y + 1.2,
       head: [head],
       body: [body],
       theme: "striped",
       headStyles: {
         fillColor: colors,
         textColor: 255,
-        fontSize: 8.5,
+        fontSize: 8.2,
         fontStyle: "bold",
         halign: "center",
       },
       bodyStyles: {
-        fontSize: 8.5,
+        fontSize: 8.3,
         textColor: [15, 23, 42],
         halign: "center",
         lineColor: [226, 232, 240],
@@ -259,18 +273,18 @@ const PrintLoadingEntry = async (data) => {
       },
       margin: { left: margin, right: margin },
       styles: {
-        cellPadding: 4,
+        cellPadding: 3,
         overflow: "linebreak",
       },
       alternateRowStyles: {
-        fillColor: light,
+        fillColor: tableBlueLight,
       },
     });
 
-    return doc.lastAutoTable.finalY + 12;
+    return doc.lastAutoTable.finalY + 8;
   };
 
-  let currentY = 58;
+  let currentY = 55;
 
   currentY = addTable(
     "Parties Information",
@@ -282,7 +296,6 @@ const PrintLoadingEntry = async (data) => {
       buyerCompanyName || "N/A",
       consignee.name || data.consignee || "N/A",
     ],
-    primary,
   );
 
   currentY = addTable(
@@ -290,7 +303,6 @@ const PrintLoadingEntry = async (data) => {
     currentY,
     ["Seller Contact", "Seller Email", "Buyer Contact", "Buyer Email"],
     [sellerPhone, sellerEmail, buyerMobile, buyerEmail],
-    primary,
   );
 
   doc.setFillColor(...light);
@@ -349,7 +361,6 @@ const PrintLoadingEntry = async (data) => {
       data.driverPhoneNumber || transporter.mobile || "N/A",
       (data.lorryNumber || "N/A").toUpperCase(),
     ],
-    primary,
   );
 
   const total = Number(data.totalFreight || 0);
@@ -366,7 +377,6 @@ const PrintLoadingEntry = async (data) => {
       formatCurrency(advance),
       formatCurrency(balance),
     ],
-    primary,
   );
 
   const signBaseY = pageHeight - 38;

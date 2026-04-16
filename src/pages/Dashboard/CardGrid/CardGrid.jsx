@@ -75,12 +75,32 @@ const cardConfig = [
 const CardGrid = ({ counts }) => {
   return (
     <Suspense fallback={<Loading />}>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6">
-        {cardConfig.map((card, index) => (
-          <div key={index} className="w-full">
-            <CardItem card={card} count={counts[card.countKey]} />
+      <div className="rounded-3xl border border-slate-200 bg-white/60 backdrop-blur-md p-5 sm:p-6 shadow-sm">
+        <div className="flex items-center justify-between gap-4 mb-5">
+          <div className="min-w-0">
+            <h2 className="text-sm sm:text-base font-bold text-slate-800">
+              System Overview
+            </h2>
+            <p className="text-xs sm:text-sm text-slate-500 mt-1">
+              Quick totals across buyers, sellers, consignees and bids.
+            </p>
           </div>
-        ))}
+          <div className="hidden sm:flex items-center gap-2">
+            <span className="inline-flex items-center rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600">
+              Updated Live
+            </span>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6">
+          {cardConfig.map((card, index) => (
+            <div key={index} className="w-full">
+              <div className="transition-transform duration-300 hover:translate-y-[-2px] focus-within:translate-y-[-2px]">
+                <CardItem card={card} count={counts[card.countKey]} />
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </Suspense>
   );

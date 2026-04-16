@@ -60,13 +60,14 @@ const Dashboard = () => {
         noContentCard
       >
         <div className="relative">
-          <div className="absolute inset-0 -z-10 bg-gradient-to-br from-slate-50 via-emerald-50/30 to-slate-100" />
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
+          <div className="absolute inset-0 -z-10 bg-gradient-to-br from-slate-50 via-emerald-50/25 to-slate-100" />
+
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 space-y-6">
             <div className="animate-fade-in-up">
               <CardGrid counts={counts} />
             </div>
 
-            <div className="bg-white/70 backdrop-blur-md rounded-2xl p-5 sm:p-6 border border-slate-200 shadow-sm animate-fade-in-up delay-100">
+            <div className="bg-white/70 backdrop-blur-md rounded-3xl p-5 sm:p-6 border border-slate-200/70 shadow-sm animate-fade-in-up delay-100">
               <ChartSection />
             </div>
           </div>
