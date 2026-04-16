@@ -175,9 +175,9 @@ const useLoadingEntryData = (api, userRole) => {
         );
 
         setFilteredBuyers(finalList);
-        setSelectedBuyer(null);
+        setSelectedBuyer(finalList.length === 1 ? finalList[0] : null);
         setSelectedConsignee(null);
-        setConsignees([]);
+        setConsignees(finalList.length === 1 ? finalList[0].consignees || [] : []);
       } catch (err) {
         console.error("Error loading buyer companies:", err);
         toast.error("Failed to load buyer companies");

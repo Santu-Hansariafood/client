@@ -101,20 +101,38 @@ router.get("/buyers", async (req, res) => {
       .sort({ name: 1, _id: 1 })
       .lean();
 
-    res.json(
-      (buyers || []).map((b) => ({
-        _id: b._id,
-        name: b.name || "",
-        companyNames: (b.companyIds || [])
+    const buyersWithCompanies = await Promise.all(
+      (buyers || []).map(async (b) => {
+        const populatedCompanyNames = (b.companyIds || [])
           .map((c) => c?.companyName || "")
-          .filter(Boolean),
-        consignees: (b.consigneeIds || []).map((c) => ({
-          _id: c._id,
-          name: c.name || "",
-          label: `${c.name || "N/A"} - ${c.location || "N/A"}, ${c.district || "N/A"}, ${c.state || "N/A"}`,
-        })),
-      })),
+          .filter(Boolean);
+
+        let companyNames = populatedCompanyNames;
+
+        // Fallback for older/incomplete buyer records:
+        // derive buyer companies from self orders if companyIds are missing.
+        if (companyNames.length === 0 && b.name) {
+          const fallbackCompanyNames = await SelfOrder.distinct("buyerCompany", {
+            buyer: b.name,
+            buyerCompany: { $exists: true, $ne: "" },
+          });
+          companyNames = (fallbackCompanyNames || []).filter(Boolean);
+        }
+
+        return {
+          _id: b._id,
+          name: b.name || "",
+          companyNames,
+          consignees: (b.consigneeIds || []).map((c) => ({
+            _id: c._id,
+            name: c.name || "",
+            label: `${c.name || "N/A"} - ${c.location || "N/A"}, ${c.district || "N/A"}, ${c.state || "N/A"}`,
+          })),
+        };
+      }),
     );
+
+    res.json(buyersWithCompanies);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
