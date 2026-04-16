@@ -18,7 +18,7 @@ const useSaudaSuggestions = (api, selectedGroup, selectedBuyer, filteredBuyers, 
       try {
         const params = {
           groupId: selectedGroup?.value,
-          buyerId: selectedBuyer?.value,
+          buyerCompany: selectedBuyer?.value,
           saudaNo: trimmed,
           limit: 500,
         };
@@ -55,26 +55,31 @@ const useSaudaSuggestions = (api, selectedGroup, selectedBuyer, filteredBuyers, 
     setSaudaSearch(String(o.saudaNo || ""));
     setIsSaudaSuggestOpen(false);
 
-    // Auto-fill logic
-    if (o.buyerId || o.buyer) {
+    // Auto-fill logic (Buyer Company dropdown is based on buyerCompany value)
+    if (o?.buyerCompany) {
+      const buyerCompany = String(o.buyerCompany || "").trim();
       const buyer = filteredBuyers.find(
-        (b) => b.value === (o.buyerId || o.buyer?._id) || b.name === (o.buyerCompany || o.buyer),
+        (b) =>
+          String(b.value || "")
+            .trim()
+            .toLowerCase() === buyerCompany.toLowerCase(),
       );
+
       if (buyer) {
         setSelectedBuyer(buyer);
-      } else if (o.buyerId || o.buyer) {
-        // Fallback if not found in filtered list
+      } else {
         setSelectedBuyer({
-          value: o.buyerId || o.buyer?._id,
-          label: capitalizeWords(o.buyerCompany || o.buyer?.name || "N/A"),
-          name: o.buyerCompany || o.buyer?.name,
-          consignees: [], // We don't have the list here, but selection will trigger search
+          value: buyerCompany,
+          label: capitalizeWords(buyerCompany),
+          name: buyerCompany,
+          consignees: [],
         });
       }
     }
 
     if (o.consignee) {
       setSelectedConsignee({
+        value: o.consignee,
         name: o.consignee,
         label: capitalizeWords(o.consignee),
       });

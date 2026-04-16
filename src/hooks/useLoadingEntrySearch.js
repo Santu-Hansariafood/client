@@ -29,7 +29,7 @@ const useLoadingEntrySearch = (
       const response = await api.get("/loading-entries/saudas", {
         params: {
           groupId: selectedGroup.value,
-          buyerId: selectedBuyer?.value,
+          buyerCompany: selectedBuyer?.value,
           consigneeName: selectedConsignee?.name,
           sellerId: selectedSellerName?.value,
           sellerCompany: selectedSellerCompany?.name,

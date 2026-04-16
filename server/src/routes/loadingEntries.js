@@ -89,7 +89,11 @@ router.get("/buyers", async (req, res) => {
     const groupIds = groupIdRaw.split(",").map(toObjectId).filter(Boolean);
 
     const buyers = await Buyer.find({ groupId: { $in: groupIds } })
-      .select("_id name consigneeIds")
+      .select("_id name companyIds consigneeIds")
+      .populate({
+        path: "companyIds",
+        select: "companyName",
+      })
       .populate({
         path: "consigneeIds",
         select: "name location district state",
@@ -101,6 +105,9 @@ router.get("/buyers", async (req, res) => {
       (buyers || []).map((b) => ({
         _id: b._id,
         name: b.name || "",
+        companyNames: (b.companyIds || [])
+          .map((c) => c?.companyName || "")
+          .filter(Boolean),
         consignees: (b.consigneeIds || []).map((c) => ({
           _id: c._id,
           name: c.name || "",

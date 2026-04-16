@@ -116,14 +116,65 @@ const useLoadingEntryData = (api, userRole) => {
             ? res.data
             : [];
         const formatted = buyers
-          .map((b) => ({
-            value: b._id,
-            label: capitalizeWords(b.name),
-            name: b.name,
-            consignees: b.consignees || b.consigneeIds || [],
-          }))
-          .sort((a, b) => a.label.localeCompare(b.label));
-        setFilteredBuyers(formatted);
+          .flatMap((b) => {
+            const consigneesForBuyer = b.consignees || [];
+            const companyNames = Array.isArray(b.companyNames)
+              ? b.companyNames
+              : [];
+
+            return companyNames.map((companyName) => ({
+              value: companyName,
+              label: capitalizeWords(companyName),
+              name: companyName,
+              buyerId: b._id,
+              consignees: consigneesForBuyer,
+            }));
+          });
+
+        // Dedupe companies (single selector dropdown)
+        const uniqueByCompany = new Map();
+        formatted.forEach((opt) => {
+          const key = String(opt.value || "").trim().toLowerCase();
+          if (!key) return;
+          if (!uniqueByCompany.has(key)) {
+            uniqueByCompany.set(key, opt);
+            return;
+          }
+
+          // Merge consignee lists if the same company exists under multiple buyers
+          const existing = uniqueByCompany.get(key);
+          const existingConsignees = Array.isArray(existing?.consignees)
+            ? existing.consignes
+            : existing?.consignees || [];
+          const newConsignees = Array.isArray(opt?.consignees)
+            ? opt.consignes
+            : opt?.consignees || [];
+
+          const merged = [...existingConsignees, ...newConsignees].filter(
+            Boolean,
+          );
+
+          const mergedUnique = new Map();
+          merged.forEach((c) => {
+            const cKey =
+              (typeof c === "string" ? c : c?.name || c?.label || c?._id) ||
+              "";
+            const normKey = String(cKey).trim().toLowerCase();
+            if (!normKey) return;
+            mergedUnique.set(normKey, c);
+          });
+
+          uniqueByCompany.set(key, {
+            ...existing,
+            consignees: Array.from(mergedUnique.values()),
+          });
+        });
+
+        const finalList = Array.from(uniqueByCompany.values()).sort((a, b) =>
+          a.label.localeCompare(b.label),
+        );
+
+        setFilteredBuyers(finalList);
         setSelectedBuyer(null);
         setSelectedConsignee(null);
         setConsignees([]);
@@ -179,7 +230,7 @@ const useLoadingEntryData = (api, userRole) => {
         const response = await api.get("/loading-entries/saudas", {
           params: {
             groupId: selectedGroup?.value,
-            buyerId: selectedBuyer.value,
+            buyerCompany: selectedBuyer.value,
             limit: 2000,
           },
         });
@@ -193,11 +244,20 @@ const useLoadingEntryData = (api, userRole) => {
             : [];
         const uniqSellers = new Map();
         data.forEach((row) => {
-          if (row.supplierId) {
-            const name = capitalizeWords(row.supplier || "N/A");
-            if (!uniqSellers.has(row.supplierId)) {
-              uniqSellers.set(row.supplierId, {
-                value: row.supplierId,
+          const supplierId =
+            row.supplierId ||
+            row.supplier?._id ||
+            row.supplier?.id ||
+            null;
+
+          if (supplierId) {
+            const safeName = row.supplier?.sellerName || row.supplier || "N/A";
+            const name = capitalizeWords(String(safeName));
+            const key = String(supplierId);
+
+            if (!uniqSellers.has(key)) {
+              uniqSellers.set(key, {
+                value: key,
                 label: name,
               });
             }
@@ -244,7 +304,7 @@ const useLoadingEntryData = (api, userRole) => {
         const response = await api.get("/loading-entries/saudas", {
           params: {
             groupId: selectedGroup?.value,
-            buyerId: selectedBuyer?.value,
+            buyerCompany: selectedBuyer?.value,
             sellerId: selectedSellerName.value,
             limit: 2000,
           },
