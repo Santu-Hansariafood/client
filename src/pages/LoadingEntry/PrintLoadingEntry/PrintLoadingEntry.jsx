@@ -129,7 +129,13 @@ const PrintLoadingEntry = async (data) => {
     company.mailId,
     "N/A",
   );
-  const sellerGstin = pickFirst(company.gstin, seller.gstin, "N/A");
+  const sellerGstin = pickFirst(
+    company.gstNo,
+    company.gstin,
+    seller.gstNumber,
+    seller.gstin,
+    "N/A",
+  );
   const sellerAddress = pickFirst(
     company.address,
     seller.address,
@@ -203,15 +209,19 @@ const PrintLoadingEntry = async (data) => {
     buyer.buyer,
     "N/A",
   );
-  const buyerName = pickFirst(buyer.buyerName, buyer.contactPerson, buyer.buyer);
   const buyerMobile = pickFirst(
+    buyer.buyerMobile,
     buyer.mobile,
     buyer.phone,
     buyer.phoneNumber,
     "N/A",
   );
-  const buyerEmail = pickFirst(buyer.email, buyer.mailId, "N/A");
-  const buyerGstin = pickFirst(buyer.gstIn, buyer.gstin, "N/A");
+  const buyerEmail = pickFirst(
+    buyer.buyerEmail,
+    buyer.email,
+    buyer.mailId,
+    "N/A",
+  );
 
   const addTable = (title, y, head, body, colors = primary) => {
     doc.setFillColor(...secondary);
@@ -260,50 +270,7 @@ const PrintLoadingEntry = async (data) => {
     return doc.lastAutoTable.finalY + 12;
   };
 
-  const drawInfoPanel = (title, x, y, w, h, lines) => {
-    doc.setFillColor(...light);
-    doc.setDrawColor(...lightGray);
-    doc.roundedRect(x, y, w, h, 2, 2, "FD");
-    doc.setFillColor(...secondary);
-    doc.rect(x, y, w, 6, "F");
-    doc.setTextColor(255, 255, 255);
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(8.5);
-    doc.text(title.toUpperCase(), x + 2.5, y + 4.2);
-    doc.setTextColor(...dark);
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(8.3);
-    lines.forEach((line, idx) => {
-      doc.text(line, x + 2.5, y + 10 + idx * 4.7);
-    });
-  };
-
   let currentY = 58;
-  const gap = 4;
-  const panelWidth = (pageWidth - margin * 2 - gap) / 2;
-  const panelHeight = 34;
-  drawInfoPanel("Seller Company Details", margin, currentY, panelWidth, panelHeight, [
-    `Company: ${sellerCompanyName || "N/A"}`,
-    `Seller: ${sellerName}`,
-    `Phone: ${sellerPhone}`,
-    `Email: ${sellerEmail}`,
-    `GSTIN: ${sellerGstin}`,
-  ]);
-  drawInfoPanel(
-    "Buyer Company Details",
-    margin + panelWidth + gap,
-    currentY,
-    panelWidth,
-    panelHeight,
-    [
-      `Company: ${buyerCompanyName}`,
-      `Contact: ${buyerName || "N/A"}`,
-      `Phone: ${buyerMobile}`,
-      `Email: ${buyerEmail}`,
-      `GSTIN: ${buyerGstin}`,
-    ],
-  );
-  currentY += panelHeight + 8;
 
   currentY = addTable(
     "Parties Information",
@@ -315,6 +282,14 @@ const PrintLoadingEntry = async (data) => {
       buyerCompanyName || "N/A",
       consignee.name || data.consignee || "N/A",
     ],
+    primary,
+  );
+
+  currentY = addTable(
+    "Contact Details",
+    currentY,
+    ["Seller Contact", "Seller Email", "Buyer Contact", "Buyer Email"],
+    [sellerPhone, sellerEmail, buyerMobile, buyerEmail],
     primary,
   );
 
