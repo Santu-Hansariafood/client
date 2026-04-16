@@ -4,7 +4,6 @@ import {
   FaBook,
   FaBoxOpen,
   FaChartLine,
-  FaHistory,
   FaMapMarkerAlt,
 } from "react-icons/fa";
 import Loading from "../../common/Loading/Loading";
@@ -35,6 +34,13 @@ const BuyerDashboard = () => {
     };
     if (mobile) fetchProfile();
   }, [mobile]);
+
+  const colors = [
+    "bg-indigo-50 text-indigo-600",
+    "bg-emerald-50 text-emerald-600",
+    "bg-amber-50 text-amber-600",
+    "bg-rose-50 text-rose-600",
+  ];
 
   const dashboardData = [
     {
@@ -159,47 +165,57 @@ const BuyerDashboard = () => {
         {buyerProfile?.consignee?.length > 0 && (
           <section className="mb-10">
             <div className="rounded-2xl border border-slate-200 bg-gradient-to-br from-white via-indigo-50/30 to-sky-50/40 p-4 sm:p-5 shadow-sm">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <span className="inline-flex h-8 w-8 items-center justify-center rounded-xl border border-indigo-100 bg-indigo-50 text-indigo-600">
-                  <FaMapMarkerAlt className="text-sm" />
-                </span>
-                <div>
-                <h2 className="text-sm font-bold text-slate-700 uppercase tracking-widest">
-                  Consignees
-                </h2>
-                <p className="text-xs text-slate-500 mt-0.5">
-                  Delivery points mapped to your buyer account
-                </p>
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <span className="inline-flex h-8 w-8 items-center justify-center rounded-xl border border-indigo-100 bg-indigo-50 text-indigo-600">
+                    <FaMapMarkerAlt className="text-sm" />
+                  </span>
+                  <div>
+                    <h2 className="text-sm font-bold text-slate-700 uppercase tracking-widest">
+                      Consignees
+                    </h2>
+                    <p className="text-xs text-slate-500 mt-0.5">
+                      Delivery points mapped to your buyer account
+                    </p>
+                  </div>
                 </div>
+
+                {buyerProfile.consignee.length > 3 && (
+                  <button
+                    onClick={() => setShowAllConsignee(!showAllConsignee)}
+                    className="px-3 py-1.5 rounded-lg text-xs text-indigo-700 font-semibold bg-white border border-indigo-100 hover:bg-indigo-50 transition-colors"
+                  >
+                    {showAllConsignee ? "Show Less" : "View All"}
+                  </button>
+                )}
               </div>
 
-              {buyerProfile.consignee.length > 3 && (
-                <button
-                  onClick={() => setShowAllConsignee(!showAllConsignee)}
-                  className="px-3 py-1.5 rounded-lg text-xs text-indigo-700 font-semibold bg-white border border-indigo-100 hover:bg-indigo-50 transition-colors"
-                >
-                  {showAllConsignee ? "Show Less" : "View All"}
-                </button>
-              )}
-            </div>
+              <div
+                className={`flex flex-wrap gap-2.5 sm:gap-3 transition-all duration-300 ${
+                  showAllConsignee
+                    ? "max-h-[500px]"
+                    : "max-h-[76px] overflow-hidden"
+                }`}
+              >
+                {buyerProfile.consignee.map((c, idx) => {
+                  const color = colors[idx % colors.length];
 
-            <div
-              className={`flex flex-wrap gap-2.5 sm:gap-3 transition-all duration-300 ${
-                showAllConsignee
-                  ? "max-h-[500px]"
-                  : "max-h-[76px] overflow-hidden"
-              }`}
-            >
-              {buyerProfile.consignee.map((c, idx) => (
-                <div
-                  key={c.id || idx}
-                  className="px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold text-slate-700 bg-white shadow-sm border border-slate-200 hover:shadow-md hover:-translate-y-0.5 transition-all cursor-pointer"
-                >
-                  {c.label || c}
-                </div>
-              ))}
-            </div>
+                  return (
+                    <div
+                      key={c.id || idx}
+                      className="flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold text-slate-700 bg-white shadow-sm border border-slate-200 hover:shadow-md hover:-translate-y-0.5 transition-all cursor-pointer group"
+                    >
+                      <span
+                        className={`flex items-center justify-center w-6 h-6 rounded-lg ${color} group-hover:scale-110 transition`}
+                      >
+                        <FaMapMarkerAlt className="text-[12px]" />
+                      </span>
+
+                      <span className="truncate">{c.label || c}</span>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           </section>
         )}
