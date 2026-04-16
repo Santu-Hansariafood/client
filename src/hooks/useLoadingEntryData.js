@@ -144,10 +144,10 @@ const useLoadingEntryData = (api, userRole) => {
           // Merge consignee lists if the same company exists under multiple buyers
           const existing = uniqueByCompany.get(key);
           const existingConsignees = Array.isArray(existing?.consignees)
-            ? existing.consignes
+            ? existing.consignees
             : existing?.consignees || [];
           const newConsignees = Array.isArray(opt?.consignees)
-            ? opt.consignes
+            ? opt.consignees
             : opt?.consignees || [];
 
           const merged = [...existingConsignees, ...newConsignees].filter(
