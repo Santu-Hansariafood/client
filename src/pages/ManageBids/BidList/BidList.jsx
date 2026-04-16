@@ -17,7 +17,7 @@ const BidList = () => {
   const navigate = useNavigate();
   const { userRole, mobile } = useAuth();
   const [bids, setBids] = useState([]);
-  const [activeTab, setActiveTab] = useState("all");
+  const [activeTab, setActiveTab] = useState("active");
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedBid, setSelectedBid] = useState(null);
   const [editableRateQuantity, setEditableRateQuantity] = useState(null);
@@ -133,9 +133,7 @@ const BidList = () => {
 
         let matches = false;
 
-        if (activeTab === "all") {
-          matches = true;
-        } else if (activeTab === "active") {
+        if (activeTab === "active") {
           matches =
             isToday &&
             bidStartTime &&
@@ -281,7 +279,7 @@ const BidList = () => {
     yesterday.setDate(now.getDate() - 1);
     const yesterdayStr = yesterday.toLocaleDateString("en-CA");
 
-    const counts = { all: 0, active: 0, closed: 0, previous: 0 };
+    const counts = { active: 0, closed: 0, previous: 0 };
 
     bids.forEach((bid) => {
       const bidDateStr =
@@ -317,7 +315,6 @@ const BidList = () => {
         }
       }
 
-      if (isToday || isYesterday) counts.all += 1;
       if (isToday && bidStartTime && bidEndTime && now >= bidStartTime && now <= bidEndTime)
         counts.active += 1;
       if (isToday && bidEndTime && now > bidEndTime) counts.closed += 1;
@@ -453,13 +450,11 @@ const BidList = () => {
       <AdminPageShell
         title="Bid Management"
         subtitle={
-          activeTab === "all"
-            ? "Today's all bids"
-            : activeTab === "active"
-              ? "Today's active bids"
-              : activeTab === "closed"
-                ? "Today's closed bids"
-                : "Yesterday's historical bids"
+          activeTab === "active"
+            ? "Today's active bids"
+            : activeTab === "closed"
+              ? "Today's closed bids"
+              : "Yesterday's historical bids"
         }
         icon={FaGavel}
         noContentCard
@@ -482,12 +477,6 @@ const BidList = () => {
               </div>
             </div>
             <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-              <div className="rounded-xl border border-slate-200 bg-white px-3 py-2">
-                <p className="text-[10px] uppercase tracking-wider text-slate-500 font-semibold">
-                  All
-                </p>
-                <p className="text-base font-bold text-slate-800">{tabCounts.all}</p>
-              </div>
               <div className="rounded-xl border border-emerald-200 bg-emerald-50/70 px-3 py-2">
                 <p className="text-[10px] uppercase tracking-wider text-emerald-700 font-semibold">
                   Active
@@ -528,16 +517,6 @@ const BidList = () => {
               <div className="rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
                 <div className="flex flex-col lg:flex-row gap-4 items-stretch lg:items-center justify-between">
                   <div className="flex flex-wrap gap-2 bg-slate-100 p-1 rounded-xl w-full lg:w-fit">
-                  <button
-                    onClick={() => setActiveTab("all")}
-                    className={`px-4 sm:px-6 py-2 rounded-lg text-sm font-bold transition-all ${
-                      activeTab === "all"
-                        ? "bg-white text-slate-800 shadow-sm"
-                        : "text-slate-500 hover:text-slate-700"
-                    }`}
-                  >
-                    All Bids
-                  </button>
                   <button
                     onClick={() => setActiveTab("active")}
                     className={`px-4 sm:px-6 py-2 rounded-lg text-sm font-bold transition-all ${
@@ -588,7 +567,7 @@ const BidList = () => {
                 <div className="text-center py-12 bg-white rounded-2xl border border-slate-100 shadow-sm">
                   <p className="text-slate-500 font-medium inline-flex items-center gap-2">
                     <FaLayerGroup className="text-slate-400" />
-                    No {activeTab === "all" ? "" : activeTab} bids found.
+                    No {activeTab} bids found.
                   </p>
                 </div>
               ) : (
