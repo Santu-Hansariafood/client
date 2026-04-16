@@ -43,7 +43,13 @@ const InteractionsPopup = ({ bidId, onClose }) => {
       );
       setInteractions(
         interactions.map((i) =>
-          i._id === id ? { ...response.data, sellerName: i.sellerName } : i,
+          i._id === id
+            ? {
+                ...response.data,
+                sellerName: i.sellerName,
+                sellerCompany: i.sellerCompany,
+              }
+            : i,
         ),
       );
       toast.success(`Interaction ${status}.`);
@@ -135,14 +141,25 @@ const InteractionCard = ({ interaction, onStatusChange }) => {
     new Date(interaction.updatedAt).getTime() >
       new Date(interaction.createdAt).getTime();
 
+  const partyName =
+    String(interaction.sellerCompany || "").trim() ||
+    String(interaction.sellerName || "").trim() ||
+    "Unknown Company";
+  const hasAcceptedValues =
+    interaction.acceptedRate != null || interaction.acceptedQuantity != null;
+  const acceptedRateValue =
+    interaction.acceptedRate ?? interaction.rate ?? "N/A";
+  const acceptedQuantityValue =
+    interaction.acceptedQuantity ?? interaction.quantity ?? "N/A";
+
   return (
     <div
-      className={`p-4 sm:p-5 rounded-2xl border relative shadow-sm transition-all ${
+      className={`p-4 sm:p-5 rounded-2xl border relative shadow-sm transition-all duration-200 ${
         interaction.status === "accepted"
-          ? "border-emerald-200 bg-gradient-to-br from-emerald-50/90 to-white"
+          ? "border-emerald-200 bg-gradient-to-br from-emerald-50 to-white shadow-emerald-100/60"
           : interaction.status === "rejected"
-            ? "border-rose-200 bg-gradient-to-br from-rose-50/90 to-white"
-            : "border-slate-200 bg-gradient-to-br from-slate-50/80 to-white"
+            ? "border-rose-200 bg-gradient-to-br from-rose-50 to-white"
+            : "border-slate-200 bg-gradient-to-br from-slate-50/90 to-white hover:shadow-md"
       }`}
     >
       {isRevised && interaction.status === "pending" && (
@@ -155,12 +172,12 @@ const InteractionCard = ({ interaction, onStatusChange }) => {
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4">
         <div>
           <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-            Participant
+            Seller Company
           </p>
-          <p className="text-base sm:text-lg font-semibold text-slate-900 mt-0.5">
-            {interaction.sellerName}
+          <p className="text-base sm:text-lg font-semibold text-slate-900 mt-0.5 leading-snug break-words">
+            {partyName}
           </p>
-          <p className="text-xs text-slate-500">{interaction.mobile}</p>
+          <p className="text-xs text-slate-500 mt-1">Mobile: {interaction.mobile}</p>
         </div>
         <div>
           <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
@@ -180,11 +197,37 @@ const InteractionCard = ({ interaction, onStatusChange }) => {
         </div>
         <div>
           <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-            Interaction Time
+            Last Interaction
           </p>
           <p className="text-sm text-slate-700 mt-1">{interactionTime}</p>
         </div>
       </div>
+
+      {(interaction.status === "accepted" || hasAcceptedValues) && (
+        <div className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50/70 p-3 sm:p-4">
+          <p className="text-xs font-semibold uppercase tracking-wider text-emerald-700">
+            Accepted Values
+          </p>
+          <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="rounded-lg border border-emerald-100 bg-white px-3 py-2.5">
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-emerald-600">
+                Accepted Rate
+              </p>
+              <p className="text-base font-bold text-emerald-700 mt-0.5">
+                ₹{acceptedRateValue}
+              </p>
+            </div>
+            <div className="rounded-lg border border-emerald-100 bg-white px-3 py-2.5">
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-emerald-600">
+                Accepted Quantity
+              </p>
+              <p className="text-base font-bold text-emerald-700 mt-0.5">
+                {acceptedQuantityValue} Tons
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 border-t pt-4 border-slate-100">
         <div>
@@ -225,7 +268,7 @@ const InteractionCard = ({ interaction, onStatusChange }) => {
         )}
       </div>
       {interaction.status !== "accepted" && (
-        <div className="mt-4 rounded-xl border border-slate-200 bg-white/80 p-3 sm:p-4">
+        <div className="mt-4 rounded-xl border border-slate-200 bg-white/95 p-3 sm:p-4 shadow-sm">
           <div className="flex items-center justify-between gap-3 mb-3">
             <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
               Acceptance Proposal
@@ -239,7 +282,7 @@ const InteractionCard = ({ interaction, onStatusChange }) => {
             <p className="text-sm font-semibold text-slate-600">Acceptance Rate</p>
             <input
               type="number"
-              className="mt-1.5 w-full px-3 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-emerald-500 transition bg-white"
+              className="mt-1.5 w-full px-3 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition bg-white"
               value={acceptedRate}
               onChange={(e) => setAcceptedRate(e.target.value)}
               placeholder="Enter accepted rate"
@@ -251,7 +294,7 @@ const InteractionCard = ({ interaction, onStatusChange }) => {
             </p>
             <input
               type="number"
-              className="mt-1.5 w-full px-3 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-emerald-500 transition bg-white"
+              className="mt-1.5 w-full px-3 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition bg-white"
               value={acceptedQuantity}
               onChange={(e) => setAcceptedQuantity(e.target.value)}
               placeholder="Enter accepted quantity"
@@ -261,7 +304,7 @@ const InteractionCard = ({ interaction, onStatusChange }) => {
             <p className="text-sm font-semibold text-slate-600">Accepted On</p>
             <input
               type="datetime-local"
-              className="mt-1.5 w-full px-3 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-emerald-500 transition bg-white"
+              className="mt-1.5 w-full px-3 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition bg-white"
               value={acceptedAt}
               onChange={(e) => setAcceptedAt(e.target.value)}
             />
@@ -274,7 +317,7 @@ const InteractionCard = ({ interaction, onStatusChange }) => {
           Admin Notes
         </p>
         <textarea
-          className="w-full p-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 transition bg-white/80"
+          className="w-full p-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition bg-white/80"
           placeholder="Add admin notes..."
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
