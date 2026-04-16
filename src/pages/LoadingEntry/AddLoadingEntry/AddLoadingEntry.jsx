@@ -970,6 +970,33 @@ const AddLoadingEntry = () => {
                       </div>
                       <div className="space-y-1.5">
                         <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                          Bill Number
+                        </label>
+                        <DataInput
+                          value={entry.billNumber}
+                          onChange={(e) =>
+                            handleEntryChange(
+                              index,
+                              "billNumber",
+                              e.target.value,
+                            )
+                          }
+                          placeholder="Invoice no."
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                          Bill Issue Date
+                        </label>
+                        <DateSelector
+                          selectedDate={entry.dateOfIssue}
+                          onChange={(date) =>
+                            handleEntryChange(index, "dateOfIssue", date)
+                          }
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider">
                           Transporter
                         </label>
                         <DataDropdown
@@ -1008,7 +1035,7 @@ const AddLoadingEntry = () => {
                               e.target.value,
                             )
                           }
-                          placeholder="Name"
+                          placeholder="Driver name"
                         />
                       </div>
                       <div className="space-y-1.5">
@@ -1042,33 +1069,6 @@ const AddLoadingEntry = () => {
                             )
                           }
                           placeholder="Rs. per ton"
-                        />
-                      </div>
-                      <div className="space-y-1.5">
-                        <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                          Bill Number
-                        </label>
-                        <DataInput
-                          value={entry.billNumber}
-                          onChange={(e) =>
-                            handleEntryChange(
-                              index,
-                              "billNumber",
-                              e.target.value,
-                            )
-                          }
-                          placeholder="Invoice no."
-                        />
-                      </div>
-                      <div className="space-y-1.5">
-                        <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                          Bill Issue Date
-                        </label>
-                        <DateSelector
-                          selectedDate={entry.dateOfIssue}
-                          onChange={(date) =>
-                            handleEntryChange(index, "dateOfIssue", date)
-                          }
                         />
                       </div>
                     </div>
