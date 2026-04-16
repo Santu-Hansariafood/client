@@ -53,8 +53,8 @@ const PrivateLayout = () => {
           isProfileDropdownOpen={isProfileDropdownOpen}
           setProfileDropdownOpen={setProfileDropdownOpen}
         />
-        <main className="flex-1 min-w-0 overflow-auto flex flex-col pb-16 md:pb-0">
-          <div className="flex-1">
+        <main className="flex-1 min-w-0 overflow-auto flex flex-col pb-24 md:pb-0">
+          <div className="flex-1 px-2 sm:px-3 pt-3 md:pt-2">
             <Suspense fallback={<PageLoader />}>
               <Outlet />
             </Suspense>

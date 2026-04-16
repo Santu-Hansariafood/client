@@ -77,6 +77,12 @@ const loaders = {
   BuyerMarketAnalytics: () =>
     import("../../pages/MarketAnalysis/MarketAnalysis"),
   BuyerBidHistory: () => import("../../pages/BidHistory/BidHistory"),
+  AddVendorCode: () =>
+    import("../../pages/VendorCode/AddVendorCode/AddVendorCode"),
+  ListVendorCode: () =>
+    import("../../pages/VendorCode/ListVendorCode/ListVendorCode"),
+  AddExpense: () => import("../../pages/Expense/AddExpense/AddExpense"),
+  ListExpense: () => import("../../pages/Expense/ListExpense/ListExpense"),
 };
 
 const pathToKey = {
@@ -127,6 +133,10 @@ const pathToKey = {
   "/teams": "Teams",
   "/buyer/market-analytics": "BuyerMarketAnalytics",
   "/buyer/bid-history": "BuyerBidHistory",
+  "/vendor-code/add": "AddVendorCode",
+  "/vendor-code/list": "ListVendorCode",
+  "/expense/add": "AddExpense",
+  "/expense/list": "ListExpense",
 };
 
 const prefetched = new Set();
@@ -205,6 +215,10 @@ const LazyPages = {
   Teams: lazy(loaders.Teams),
   BuyerMarketAnalytics: lazy(loaders.BuyerMarketAnalytics),
   BuyerBidHistory: lazy(loaders.BuyerBidHistory),
+  AddVendorCode: lazy(loaders.AddVendorCode),
+  ListVendorCode: lazy(loaders.ListVendorCode),
+  AddExpense: lazy(loaders.AddExpense),
+  ListExpense: lazy(loaders.ListExpense),
 };
 
 export default LazyPages;

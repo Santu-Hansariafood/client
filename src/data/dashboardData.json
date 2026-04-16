@@ -212,6 +212,38 @@
           "icon": "FaList"
         }
       ]
+    },
+    {
+      "section": "Vendor Code",
+      "icon": "FaBarcode",
+      "actions": [
+        {
+          "name": "Create Vendor Code",
+          "link": "/vendor-code/add",
+          "icon": "FaPlus"
+        },
+        {
+          "name": "Vendor Code List",
+          "link": "/vendor-code/list",
+          "icon": "FaList"
+        }
+      ]
+    },
+    {
+      "section": "Expense Management",
+      "icon": "FaMoneyBillWave",
+      "actions": [
+        {
+          "name": "Create Expense",
+          "link": "/expense/add",
+          "icon": "FaPlus"
+        },
+        {
+          "name": "Expense List",
+          "link": "/expense/list",
+          "icon": "FaList"
+        }
+      ]
     }
   ]
 }

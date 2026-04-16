@@ -30,35 +30,48 @@ const MobileFooter = ({ onProfileClick }) => {
   ];
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-30 md:hidden px-3 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
-      <div className="mx-auto max-w-md rounded-2xl border border-white/70 bg-gradient-to-b from-white/95 via-white/90 to-emerald-50/70 backdrop-blur-xl shadow-[0_-12px_32px_-14px_rgba(15,23,42,0.35)]">
-        <div className="flex items-center justify-center pt-2">
-          <span className="h-1 w-10 rounded-full bg-slate-300/80" />
-        </div>
-        <div className="flex items-center justify-around px-2 pb-2.5 pt-1.5">
+    <div className="fixed bottom-0 left-0 right-0 z-40 md:hidden px-3 pb-[env(safe-area-inset-bottom)]">
+      <div className="h-3" />
+
+      <div className="relative mx-auto max-w-md">
+        <div className="absolute inset-0 rounded-2xl bg-white/70 backdrop-blur-2xl border border-white/60 shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.25)]" />
+
+        <div className="absolute -inset-[1px] rounded-2xl bg-gradient-to-r from-blue-400/20 via-indigo-400/20 to-cyan-400/20 blur-xl opacity-70" />
+
+        <div className="relative flex items-center justify-around px-2 py-2.5">
           {navItems.map((item) => {
             const Icon = item.icon;
+
             return (
               <button
                 key={item.id}
                 onClick={item.onClick}
-                className={`group flex flex-col items-center justify-center gap-1 rounded-xl px-4 py-2 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-emerald-400/50 ${
-                  item.isActive
-                    ? "text-emerald-700"
-                    : "text-slate-500 hover:text-emerald-700"
+                className={`group flex flex-col items-center justify-center gap-1 px-3 py-1.5 rounded-xl transition-all duration-300 active:scale-90 ${
+                  item.isActive ? "text-blue-700" : "text-slate-500"
                 }`}
-                aria-label={item.label}
               >
-                <span
-                  className={`inline-flex h-9 w-9 items-center justify-center rounded-xl border transition-all duration-300 ${
+                {/* 🔥 ICON CONTAINER */}
+                <div
+                  className={`relative flex items-center justify-center h-10 w-10 rounded-xl transition-all duration-300 ${
                     item.isActive
-                      ? "bg-emerald-100 border-emerald-200 shadow-sm shadow-emerald-900/10"
-                      : "bg-white/80 border-slate-200 group-hover:bg-emerald-50 group-hover:border-emerald-200"
+                      ? "bg-gradient-to-br from-blue-500 to-indigo-500 text-white shadow-lg scale-110"
+                      : "bg-white/80 border border-slate-200 group-hover:bg-blue-50"
                   }`}
                 >
-                  <Icon size={16} />
-                </span>
-                <span className="text-[11px] font-semibold tracking-wide">
+                  <Icon size={17} />
+
+                  {item.isActive && (
+                    <span className="absolute inset-0 rounded-xl bg-blue-400 blur-md opacity-40" />
+                  )}
+                </div>
+
+                <span
+                  className={`text-[11px] font-semibold transition-all duration-300 ${
+                    item.isActive
+                      ? "text-blue-700"
+                      : "text-slate-500 group-hover:text-blue-600"
+                  }`}
+                >
                   {item.label}
                 </span>
               </button>
