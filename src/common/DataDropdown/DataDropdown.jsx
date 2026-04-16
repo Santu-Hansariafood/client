@@ -14,6 +14,7 @@ const DataDropdown = ({
   name,
   disableSorting = false,
   value,
+  disabled = false,
 }) => {
   const safeOptions = Array.isArray(options) ? options : [];
   const formattedOptions = safeOptions
@@ -45,12 +46,14 @@ const DataDropdown = ({
           options={formattedOptions}
           isMulti={isMulti}
           isClearable={isClearable}
-          isDisabled={isDisabled}
+          isDisabled={isDisabled || disabled}
           value={selectedValue}
           onChange={onChange}
           placeholder={placeholder || "Select..."}
+          isSearchable
           className="react-select-container"
           classNamePrefix="react-select"
+          menuPortalTarget={typeof document !== "undefined" ? document.body : null}
           theme={(theme) => ({
             ...theme,
             colors: {
@@ -107,6 +110,11 @@ const DataDropdown = ({
               overflow: "hidden",
               boxShadow: "0 12px 30px rgba(0,0,0,0.08)",
               border: "1px solid #e2e8f0",
+              zIndex: 9999,
+            }),
+            menuPortal: (provided) => ({
+              ...provided,
+              zIndex: 9999,
             }),
 
             placeholder: (provided) => ({
@@ -161,6 +169,7 @@ DataDropdown.propTypes = {
   name: PropTypes.string,
   disableSorting: PropTypes.bool,
   value: PropTypes.string,
+  disabled: PropTypes.bool,
 };
 
 export default DataDropdown;

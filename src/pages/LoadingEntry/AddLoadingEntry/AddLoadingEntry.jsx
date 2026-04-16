@@ -1,4 +1,4 @@
-import { useState, useEffect, lazy, Suspense, useCallback } from "react";
+import { useState, useEffect, lazy, Suspense, useCallback, useMemo } from "react";
 import { FaPlus, FaTrash, FaDownload } from "react-icons/fa";
 import { toast } from "react-toastify";
 import { FaTruckLoading } from "react-icons/fa";
@@ -56,13 +56,38 @@ const SearchFiltersCard = ({
   setIsSaudaSuggestOpen,
   handleSaudaSelection,
   handleSearch,
+  handleClearFilters,
+  resultCount,
 }) => {
+  const canSearch =
+    userRole === "Seller" ? true : Boolean(selectedGroup?.value || saudaSearch.trim());
+
   return (
-    <div className="rounded-2xl border border-amber-200/60 bg-white shadow-lg p-4 sm:p-6">
+    <div className="rounded-3xl border border-slate-200 bg-gradient-to-br from-white via-white to-emerald-50/30 shadow-lg p-4 sm:p-6">
       {loading ? (
         <Loading />
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-5">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-700">
+                Search Filters
+              </p>
+              <h3 className="text-lg font-bold text-slate-800 mt-1">
+                Find sauda entries quickly and add loading details smoothly
+              </h3>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <span className="inline-flex items-center rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600">
+                Results: {resultCount}
+              </span>
+              {userRole !== "Seller" && (
+                <span className="inline-flex items-center rounded-full border border-emerald-100 bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700">
+                  Group first, then company
+                </span>
+              )}
+            </div>
+          </div>
           <div className="space-y-3">
             <div
               className={`grid grid-cols-1 gap-4 ${
@@ -77,11 +102,15 @@ const SearchFiltersCard = ({
                     </label>
                     <DataDropdown
                       options={groups}
-                      selectedOptions={selectedGroup ? [selectedGroup] : []}
+                      selectedOptions={selectedGroup || null}
                       onChange={setSelectedGroup}
                       placeholder="Select Group"
                       isMulti={false}
+                      isClearable
                     />
+                    <p className="mt-1 text-xs text-slate-500">
+                      Start by selecting the buyer group.
+                    </p>
                   </div>
                   <div>
                     <label className="block mb-1 text-sm font-semibold text-slate-700">
@@ -89,11 +118,16 @@ const SearchFiltersCard = ({
                     </label>
                     <DataDropdown
                       options={filteredBuyers}
-                      selectedOptions={selectedBuyer ? [selectedBuyer] : []}
+                      selectedOptions={selectedBuyer || null}
                       onChange={setSelectedBuyer}
                       placeholder="Select Company"
                       isMulti={false}
+                      isClearable
+                      disabled={!selectedGroup}
                     />
+                    <p className="mt-1 text-xs text-slate-500">
+                      Shows company names only, single select.
+                    </p>
                   </div>
                 </>
               )}
@@ -103,7 +137,7 @@ const SearchFiltersCard = ({
                 </label>
                 <DataDropdown
                   options={consignees}
-                  selectedOptions={selectedConsignee ? [selectedConsignee] : []}
+                  selectedOptions={selectedConsignee || null}
                   onChange={setSelectedConsignee}
                   placeholder={
                     userRole !== "Seller" && !selectedBuyer
@@ -112,6 +146,7 @@ const SearchFiltersCard = ({
                   }
                   isMulti={false}
                   disabled={userRole !== "Seller" && !selectedBuyer}
+                  isClearable
                 />
               </div>
               <div className="relative">
@@ -130,11 +165,11 @@ const SearchFiltersCard = ({
                     setTimeout(() => setIsSaudaSuggestOpen(false), 120);
                   }}
                   placeholder="Search by Sauda No"
-                  className="w-full rounded-xl border border-slate-200 px-4 py-2.5 focus:ring-2 focus:ring-emerald-400/50 focus:border-emerald-400 outline-none transition"
+                  className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 focus:ring-2 focus:ring-emerald-400/50 focus:border-emerald-400 outline-none transition shadow-sm"
                 />
 
                 {isSaudaSuggestOpen && saudaSuggestions.length > 0 && (
-                  <div className="absolute z-20 mt-1 w-full rounded-xl border border-slate-200 bg-white shadow-lg overflow-hidden max-h-64 overflow-y-auto">
+                  <div className="absolute z-20 mt-1 w-full rounded-2xl border border-slate-200 bg-white shadow-xl overflow-hidden max-h-64 overflow-y-auto">
                     {saudaSuggestions.map((o) => (
                       <button
                         key={String(o.saudaNo)}
@@ -143,7 +178,7 @@ const SearchFiltersCard = ({
                           e.preventDefault();
                           handleSaudaSelection(o);
                         }}
-                        className="w-full text-left px-3 py-2 hover:bg-slate-50 transition"
+                        className="w-full text-left px-3 py-3 hover:bg-slate-50 transition border-b border-slate-100 last:border-b-0"
                       >
                         <div className="text-sm font-semibold text-slate-800">
                           Sauda: {o.saudaNo}
@@ -166,9 +201,7 @@ const SearchFiltersCard = ({
                 </label>
                 <DataDropdown
                   options={sellers}
-                  selectedOptions={
-                    selectedSellerName ? [selectedSellerName] : []
-                  }
+                  selectedOptions={selectedSellerName || null}
                   onChange={setSelectedSellerName}
                   placeholder={
                     userRole !== "Seller" &&
@@ -183,6 +216,7 @@ const SearchFiltersCard = ({
                     !selectedBuyer &&
                     !saudaSearch.trim()
                   }
+                  isClearable
                 />
               </div>
               <div>
@@ -191,23 +225,32 @@ const SearchFiltersCard = ({
                 </label>
                 <DataDropdown
                   options={sellerCompanies}
-                  selectedOptions={
-                    selectedSellerCompany ? [selectedSellerCompany] : []
-                  }
+                  selectedOptions={selectedSellerCompany || null}
                   onChange={setSelectedSellerCompany}
                   placeholder="Select Company"
                   isMulti={false}
+                  isClearable
                 />
               </div>
             </div>
           </div>
 
-          <button
-            onClick={handleSearch}
-            className="w-full sm:w-auto px-5 py-2.5 bg-emerald-600 text-white rounded-xl shadow-sm hover:bg-emerald-700 transition font-semibold"
-          >
-            Search
-          </button>
+          <div className="flex flex-col sm:flex-row gap-3 pt-1">
+            <button
+              onClick={handleSearch}
+              disabled={!canSearch}
+              className="w-full sm:w-auto px-5 py-2.5 bg-emerald-600 text-white rounded-xl shadow-sm hover:bg-emerald-700 transition font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Search Loading Entries
+            </button>
+            <button
+              type="button"
+              onClick={handleClearFilters}
+              className="w-full sm:w-auto px-5 py-2.5 bg-white text-slate-700 rounded-xl shadow-sm hover:bg-slate-50 transition font-semibold border border-slate-200"
+            >
+              Clear Filters
+            </button>
+          </div>
         </div>
       )}
     </div>
@@ -215,8 +258,32 @@ const SearchFiltersCard = ({
 };
 
 const OrdersTableCard = ({ orders, handleOpenPopup, toggleSaudaStatus }) => {
+  const activeCount = orders.filter((order) => order.status !== "closed").length;
+  const closedCount = orders.length - activeCount;
+
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white shadow-sm p-3 sm:p-4">
+    <div className="rounded-3xl border border-slate-200 bg-white shadow-sm p-3 sm:p-4">
+      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+            Loading Search Results
+          </p>
+          <h3 className="text-lg font-bold text-slate-800 mt-1">
+            Matched Sauda Entries
+          </h3>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <span className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-700">
+            Total: {orders.length}
+          </span>
+          <span className="inline-flex items-center rounded-full border border-emerald-100 bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700">
+            Active: {activeCount}
+          </span>
+          <span className="inline-flex items-center rounded-full border border-rose-100 bg-rose-50 px-3 py-1.5 text-xs font-semibold text-rose-700">
+            Closed: {closedCount}
+          </span>
+        </div>
+      </div>
       {orders.length > 0 ? (
         <Tables
           headers={[
@@ -357,6 +424,42 @@ const AddLoadingEntry = () => {
   const [loadingEntries, setLoadingEntries] = useState([]);
   const [existingEntries, setExistingEntries] = useState([]);
   const [isSaving, setIsSaving] = useState(false);
+
+  const handleClearFilters = useCallback(() => {
+    setSelectedGroup(null);
+    setSelectedBuyer(null);
+    setSelectedConsignee(null);
+    setSelectedSellerName(null);
+    setSelectedSellerCompany(null);
+    setSaudaSearch("");
+    setOrders([]);
+  }, [
+    setSelectedGroup,
+    setSelectedBuyer,
+    setSelectedConsignee,
+    setSelectedSellerName,
+    setSelectedSellerCompany,
+    setSaudaSearch,
+    setOrders,
+  ]);
+
+  const selectedSummary = useMemo(
+    () =>
+      [
+        selectedGroup?.label,
+        selectedBuyer?.label,
+        selectedConsignee?.label,
+        selectedSellerName?.label,
+        selectedSellerCompany?.label,
+      ].filter(Boolean),
+    [
+      selectedGroup,
+      selectedBuyer,
+      selectedConsignee,
+      selectedSellerName,
+      selectedSellerCompany,
+    ],
+  );
 
   const INITIAL_ENTRY = {
     loadingDate: new Date().toISOString().split("T")[0],
@@ -605,7 +708,22 @@ const AddLoadingEntry = () => {
             setIsSaudaSuggestOpen={setIsSaudaSuggestOpen}
             handleSaudaSelection={handleSaudaSelection}
             handleSearch={handleSearch}
+            handleClearFilters={handleClearFilters}
+            resultCount={orders.length}
           />
+
+          {selectedSummary.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              {selectedSummary.map((item) => (
+                <span
+                  key={item}
+                  className="inline-flex items-center rounded-full border border-emerald-100 bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700"
+                >
+                  {item}
+                </span>
+              ))}
+            </div>
+          )}
 
           <OrdersTableCard
             orders={orders}
