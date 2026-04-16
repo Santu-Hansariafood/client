@@ -844,29 +844,47 @@ const AddLoadingEntry = () => {
                   </div>
                 )}
 
-                <h3 className="text-lg font-bold text-slate-700 flex items-center gap-2 px-2">
-                  <span className="w-2 h-6 bg-emerald-500 rounded-full"></span>
-                  New Loading Entry
-                </h3>
+                <div className="flex flex-col gap-2 rounded-2xl border border-emerald-100 bg-gradient-to-r from-white via-emerald-50/40 to-teal-50/30 px-4 py-4 shadow-sm">
+                  <div className="flex items-center gap-3">
+                    <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-emerald-600 text-white shadow-sm">
+                      <FaTruckLoading className="text-lg" />
+                    </span>
+                    <div>
+                      <h3 className="text-lg font-bold text-slate-800">
+                        New Loading Entry
+                      </h3>
+                      <p className="text-sm text-slate-500">
+                        Add lorry details clearly and keep each loading record easy to review.
+                      </p>
+                    </div>
+                  </div>
+                </div>
 
                 {loadingEntries.map((entry, index) => (
                   <div
                     key={index}
-                    className="p-3 sm:p-4 border border-slate-200 rounded-3xl space-y-6 relative bg-white shadow-sm hover:shadow-md transition-shadow"
+                    className="relative overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm transition-all hover:shadow-lg"
                   >
-                    <div className="flex justify-between items-center border-b border-slate-100 pb-3">
+                    <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-emerald-500 via-teal-500 to-sky-500" />
+                    <div className="p-4 sm:p-5 space-y-6">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center border-b border-slate-100 pb-4">
                       <div className="flex items-center gap-3">
-                        <span className="flex items-center justify-center w-8 h-8 rounded-full bg-emerald-600 text-white font-bold text-sm">
+                        <span className="flex items-center justify-center w-10 h-10 rounded-2xl bg-emerald-600 text-white font-bold text-sm shadow-sm">
                           {index + 1}
                         </span>
-                        <h4 className="font-bold text-slate-700">
-                          Loading Specification
-                        </h4>
+                        <div>
+                          <h4 className="font-bold text-slate-800">
+                            Loading Specification
+                          </h4>
+                          <p className="text-xs text-slate-500 mt-0.5">
+                            Enter transport, quantity and billing details for this lorry.
+                          </p>
+                        </div>
                       </div>
                       <div className="flex gap-2">
                         <button
                           onClick={() => handleDownloadPDF(entry)}
-                          className="flex items-center gap-2 px-3 py-1.5 text-purple-600 bg-purple-50 hover:bg-purple-100 rounded-xl transition text-sm font-bold border border-purple-100"
+                          className="flex items-center gap-2 px-3 py-2 text-purple-600 bg-purple-50 hover:bg-purple-100 rounded-xl transition text-sm font-bold border border-purple-100"
                           title="Download Lorry Challan"
                         >
                           <FaDownload /> Challan
@@ -874,7 +892,7 @@ const AddLoadingEntry = () => {
                         {loadingEntries.length > 1 && (
                           <button
                             onClick={() => handleRemoveEntry(index)}
-                            className="p-2 text-red-500 bg-red-50 hover:bg-red-100 rounded-xl transition border border-red-100"
+                            className="p-2.5 text-red-500 bg-red-50 hover:bg-red-100 rounded-xl transition border border-red-100"
                             title="Remove Entry"
                           >
                             <FaTrash />
@@ -883,7 +901,16 @@ const AddLoadingEntry = () => {
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6 gap-3 w-full">
+                    <div className="rounded-2xl border border-slate-100 bg-slate-50/70 p-4">
+                    <div className="flex items-center justify-between gap-3 mb-4">
+                      <p className="text-xs font-bold uppercase tracking-[0.18em] text-slate-500">
+                        Entry Details
+                      </p>
+                      <span className="inline-flex items-center rounded-full bg-white border border-slate-200 px-3 py-1 text-xs font-semibold text-slate-600">
+                        Lorry #{index + 1}
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6 gap-4 w-full">
                       <div className="space-y-1.5">
                         <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider">
                           Loading Date
@@ -1045,17 +1072,18 @@ const AddLoadingEntry = () => {
                         />
                       </div>
                     </div>
+                    </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                      <div className="flex flex-col items-center justify-center">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 rounded-2xl border border-slate-200 bg-gradient-to-r from-slate-50 to-white p-4">
+                      <div className="rounded-2xl border border-slate-200 bg-white px-4 py-4 flex flex-col items-center justify-center shadow-sm">
                         <p className="text-[10px] text-slate-400 uppercase font-bold tracking-widest mb-1">
                           Total Freight
                         </p>
-                        <p className="font-bold text-slate-800 text-lg">
+                        <p className="font-bold text-slate-800 text-xl">
                           ₹ {Number(entry.totalFreight).toFixed(2)}
                         </p>
                       </div>
-                      <div className="flex flex-col items-center justify-center">
+                      <div className="rounded-2xl border border-emerald-100 bg-emerald-50/40 px-4 py-4 flex flex-col items-center justify-center shadow-sm">
                         <p className="text-[10px] text-slate-400 uppercase font-bold tracking-widest mb-1">
                           Advance Amount
                         </p>
@@ -1074,14 +1102,15 @@ const AddLoadingEntry = () => {
                           />
                         </div>
                       </div>
-                      <div className="flex flex-col items-center justify-center">
+                      <div className="rounded-2xl border border-amber-100 bg-amber-50/40 px-4 py-4 flex flex-col items-center justify-center shadow-sm">
                         <p className="text-[10px] text-slate-400 uppercase font-bold tracking-widest mb-1">
                           Balance Due
                         </p>
-                        <p className="font-bold text-amber-600 text-lg">
+                        <p className="font-bold text-amber-600 text-xl">
                           ₹ {Number(entry.balance).toFixed(2)}
                         </p>
                       </div>
+                    </div>
                     </div>
                   </div>
                 ))}
