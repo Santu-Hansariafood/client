@@ -16,10 +16,11 @@ const PrintLoadingEntry = async (data) => {
   const pageHeight = doc.internal.pageSize.height;
   const margin = 14;
 
-  const primary = [30, 64, 175];
-  const secondary = [147, 197, 253];
+  const primary = [17, 24, 39];
+  const secondary = [14, 116, 144];
+  const accent = [245, 158, 11];
   const dark = [15, 23, 42];
-  const light = [239, 246, 255];
+  const light = [248, 250, 252];
   const gray = [71, 85, 105];
   const lightGray = [226, 232, 240];
 
@@ -38,6 +39,9 @@ const PrintLoadingEntry = async (data) => {
 
   const formatCurrency = (val) =>
     `Rs. ${Number(val || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}`;
+
+  const pickFirst = (...values) =>
+    values.find((v) => String(v || "").trim() !== "") || "";
 
   const safeFetch = async (url) => {
     try {
@@ -72,56 +76,6 @@ const PrintLoadingEntry = async (data) => {
     getBase64(stamp),
   ]);
 
-  doc.setFillColor(255, 255, 255);
-  doc.rect(0, 0, pageWidth, pageHeight, "F");
-
-  doc.setFillColor(...secondary);
-  doc.rect(0, 0, 2.5, pageHeight, "F");
-
-  doc.setFillColor(...primary);
-  doc.rect(0, 0, pageWidth, 42, "F");
-
-  if (logo64) {
-    doc.setFillColor(255, 255, 255);
-    doc.roundedRect(12, 8, 26, 26, 3, 3, "F");
-    doc.addImage(logo64, "PNG", 14, 10, 22, 22);
-  }
-
-  doc.setTextColor(255, 255, 255);
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(20);
-  doc.text("HANSARIA FOOD PVT. LTD.", 44, 18);
-
-  doc.setDrawColor(255, 255, 255);
-  doc.setLineWidth(0.3);
-  doc.line(44, 20, 120, 20);
-
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(9);
-  doc.setTextColor(255, 255, 255);
-  doc.text("Broker & Commission Agent | Premium Quality Food Products", 44, 25);
-
-  doc.setFontSize(8);
-  doc.setTextColor(240, 240, 240);
-  doc.text("Email: info@hansariafood.com | Web: www.hansariafood.com", 44, 30);
-  doc.text("Contact: +91-XXXXXXXXXX | GSTIN: XXXXXXXXXXXXXXXXX", 44, 34);
-
-  doc.setFillColor(...secondary);
-  doc.rect(pageWidth - 65, 12, 65, 12, "F");
-  doc.setTextColor(...dark);
-  doc.setFontSize(14);
-  doc.setFont("helvetica", "bold");
-  doc.text("LORRY CHALLAN", pageWidth - 32.5, 20, { align: "center" });
-
-  doc.setFontSize(8.5);
-  doc.setTextColor(255, 255, 255);
-  doc.text(`DATE: ${formatDate(data.loadingDate)}`, pageWidth - 14, 31, {
-    align: "right",
-  });
-  doc.text(`CHALLAN NO: ${data.billNumber || "N/A"}`, pageWidth - 14, 36, {
-    align: "right",
-  });
-
   const [orders, sellers, companies, consignees, transporters] =
     await Promise.all([
       safeFetch("/self-order?limit=0"),
@@ -154,6 +108,86 @@ const PrintLoadingEntry = async (data) => {
         normalize(c.label)?.includes(normalize(data.consignee)),
     ) || {};
 
+  const sellerCompanyName = pickFirst(
+    data.supplierCompany,
+    company.companyName,
+    seller.companyName,
+    "N/A",
+  );
+  const sellerName = pickFirst(seller.sellerName, data.sellerName, "N/A");
+  const sellerPhone = pickFirst(
+    seller?.phoneNumbers?.[0]?.value,
+    seller.mobile,
+    seller.phone,
+    company.mobile,
+    "N/A",
+  );
+  const sellerEmail = pickFirst(
+    seller.email,
+    seller.mailId,
+    company.email,
+    company.mailId,
+    "N/A",
+  );
+  const sellerGstin = pickFirst(company.gstin, seller.gstin, "N/A");
+  const sellerAddress = pickFirst(
+    company.address,
+    seller.address,
+    [company.city, company.state].filter(Boolean).join(", "),
+    "N/A",
+  );
+
+  doc.setFillColor(255, 255, 255);
+  doc.rect(0, 0, pageWidth, pageHeight, "F");
+
+  doc.setFillColor(203, 213, 225);
+  doc.rect(0, 0, 2.5, pageHeight, "F");
+
+  doc.setFillColor(...primary);
+  doc.rect(0, 0, pageWidth, 48, "F");
+
+  if (logo64) {
+    doc.setFillColor(255, 255, 255);
+    doc.roundedRect(12, 9, 30, 30, 3, 3, "F");
+    doc.addImage(logo64, "PNG", 15, 12, 24, 24);
+  }
+
+  doc.setTextColor(255, 255, 255);
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(16);
+  doc.text(String(sellerCompanyName).toUpperCase(), 47, 18);
+
+  doc.setDrawColor(255, 255, 255);
+  doc.setLineWidth(0.3);
+  doc.line(47, 20, 126, 20);
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(8.8);
+  doc.setTextColor(255, 255, 255);
+  doc.text(`Seller: ${sellerName}`, 47, 25);
+
+  doc.setFontSize(7.9);
+  doc.setTextColor(240, 240, 240);
+  doc.text(`Email: ${sellerEmail}`, 47, 30);
+  doc.text(`Contact: ${sellerPhone} | GSTIN: ${sellerGstin}`, 47, 34);
+  doc.text(`Address: ${sellerAddress}`, 47, 38);
+
+  doc.setFillColor(...accent);
+  doc.roundedRect(pageWidth - 68, 12, 56, 12, 2, 2, "F");
+  doc.setTextColor(...dark);
+  doc.setFontSize(13);
+  doc.setFont("helvetica", "bold");
+  doc.text("LORRY CHALLAN", pageWidth - 40, 20, { align: "center" });
+
+  doc.setFontSize(8.5);
+  doc.setTextColor(255, 255, 255);
+  doc.text(`DATE: ${formatDate(data.loadingDate)}`, pageWidth - 14, 34, {
+    align: "right",
+  });
+  doc.text(`CHALLAN NO: ${data.billNumber || "N/A"}`, pageWidth - 14, 39, {
+    align: "right",
+  });
+
   const addressLines = [
     consignee.location,
     consignee.district,
@@ -162,6 +196,22 @@ const PrintLoadingEntry = async (data) => {
   ].filter(Boolean);
 
   const fullAddress = addressLines.join(", ");
+  const buyerCompanyName = pickFirst(
+    buyer.companyName,
+    buyer.buyerCompany,
+    buyer.company,
+    buyer.buyer,
+    "N/A",
+  );
+  const buyerName = pickFirst(buyer.buyerName, buyer.contactPerson, buyer.buyer);
+  const buyerMobile = pickFirst(
+    buyer.mobile,
+    buyer.phone,
+    buyer.phoneNumber,
+    "N/A",
+  );
+  const buyerEmail = pickFirst(buyer.email, buyer.mailId, "N/A");
+  const buyerGstin = pickFirst(buyer.gstIn, buyer.gstin, "N/A");
 
   const addTable = (title, y, head, body, colors = primary) => {
     doc.setFillColor(...secondary);
@@ -210,16 +260,59 @@ const PrintLoadingEntry = async (data) => {
     return doc.lastAutoTable.finalY + 12;
   };
 
-  let currentY = 55;
+  const drawInfoPanel = (title, x, y, w, h, lines) => {
+    doc.setFillColor(...light);
+    doc.setDrawColor(...lightGray);
+    doc.roundedRect(x, y, w, h, 2, 2, "FD");
+    doc.setFillColor(...secondary);
+    doc.rect(x, y, w, 6, "F");
+    doc.setTextColor(255, 255, 255);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(8.5);
+    doc.text(title.toUpperCase(), x + 2.5, y + 4.2);
+    doc.setTextColor(...dark);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8.3);
+    lines.forEach((line, idx) => {
+      doc.text(line, x + 2.5, y + 10 + idx * 4.7);
+    });
+  };
+
+  let currentY = 58;
+  const gap = 4;
+  const panelWidth = (pageWidth - margin * 2 - gap) / 2;
+  const panelHeight = 34;
+  drawInfoPanel("Seller Company Details", margin, currentY, panelWidth, panelHeight, [
+    `Company: ${sellerCompanyName || "N/A"}`,
+    `Seller: ${sellerName}`,
+    `Phone: ${sellerPhone}`,
+    `Email: ${sellerEmail}`,
+    `GSTIN: ${sellerGstin}`,
+  ]);
+  drawInfoPanel(
+    "Buyer Company Details",
+    margin + panelWidth + gap,
+    currentY,
+    panelWidth,
+    panelHeight,
+    [
+      `Company: ${buyerCompanyName}`,
+      `Contact: ${buyerName || "N/A"}`,
+      `Phone: ${buyerMobile}`,
+      `Email: ${buyerEmail}`,
+      `GSTIN: ${buyerGstin}`,
+    ],
+  );
+  currentY += panelHeight + 8;
 
   currentY = addTable(
     "Parties Information",
     currentY,
-    ["Seller Name", "Seller Company", "Buyer Name", "Consignee Name"],
+    ["Seller Name", "Seller Company", "Buyer Company", "Consignee Name"],
     [
-      seller.sellerName || "N/A",
-      data.supplierCompany || "N/A",
-      buyer.buyer || "N/A",
+      sellerName || "N/A",
+      sellerCompanyName || "N/A",
+      buyerCompanyName || "N/A",
       consignee.name || data.consignee || "N/A",
     ],
     primary,
@@ -313,7 +406,7 @@ const PrintLoadingEntry = async (data) => {
   doc.line(margin, signBaseY + 10, margin + 55, signBaseY + 10);
 
   doc.setTextColor(...primary);
-  doc.text("FOR HANSARIA FOOD PVT. LTD.", pageWidth - margin - 60, signBaseY, {
+  doc.text(`FOR ${String(sellerCompanyName).toUpperCase()}`, pageWidth - margin - 60, signBaseY, {
     align: "center",
   });
 
