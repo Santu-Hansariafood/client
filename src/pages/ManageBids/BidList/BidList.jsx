@@ -282,6 +282,41 @@ const BidList = () => {
     const counts = { active: 0, closed: 0, previous: 0 };
 
     bids.forEach((bid) => {
+      if (
+        filteredConsignees.length > 0 &&
+        !filteredConsignees.includes(bid.consignee)
+      ) {
+        return;
+      }
+
+      if (userRole === "Buyer") {
+        if (!buyerGroups || buyerGroups.length === 0) return;
+
+        const bidGroupNormalized = (bid.group || "")
+          .trim()
+          .split(" ")
+          .map(
+            (word) =>
+              word.charAt(0).toUpperCase() + word.slice(1).toLowerCase(),
+          )
+          .join(" ");
+
+        if (!buyerGroups.includes(bidGroupNormalized)) return;
+
+        if (!isBuyerAdmin) {
+          const role = String(bid.createdByRole || "").toLowerCase();
+          const creatorMobile = String(bid.createdByMobile || "");
+          const currentMobile = String(mobile || "");
+
+          const createdByAdminOrEmployee =
+            role === "admin" || role === "employee";
+          const createdByCurrentBuyer =
+            creatorMobile !== "" && creatorMobile === currentMobile;
+
+          if (!createdByAdminOrEmployee && !createdByCurrentBuyer) return;
+        }
+      }
+
       const bidDateStr =
         bid.bidDate && typeof bid.bidDate === "string"
           ? bid.bidDate.split("T")[0]
@@ -322,7 +357,7 @@ const BidList = () => {
     });
 
     return counts;
-  }, [bids]);
+  }, [bids, filteredConsignees, userRole, buyerGroups, isBuyerAdmin, mobile]);
 
   const handleStatusUpdate = async (id, status) => {
     try {
