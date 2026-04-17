@@ -379,8 +379,22 @@ router.get("/export/excel", async (req, res) => {
     const search = (req.query.search || "").trim();
     const startDate = req.query.startDate;
     const endDate = req.query.endDate;
+    const role = req.query.role;
+    const mobile = req.query.mobile;
 
     let query = {};
+
+    // Role-based filtering
+    if (role === "Seller" && mobile) {
+      const seller = await Seller.findOne({
+        "phoneNumbers.value": String(mobile),
+      }).lean();
+      if (seller) {
+        query.supplier = seller._id;
+      } else {
+        return res.status(403).json({ message: "Access denied" });
+      }
+    }
 
     if (search) {
       const searchRegex = new RegExp(search, "i");

@@ -51,9 +51,10 @@ router.get("/", async (req, res) => {
       });
     }
 
+    const limitVal = limit > 0 ? limit : 0;
     const items = await Seller.find(query)
       .sort({ sellerName: 1 })
-      .limit(100)
+      .limit(limitVal)
       .lean();
 
     res.json(items.map(mapSellerForClient));

@@ -24,7 +24,7 @@ const AddVendorCode = () => {
 
   const fetchGroups = async () => {
     try {
-      const res = await api.get("/groups");
+      const res = await api.get("/groups", { params: { limit: 0 } });
       const data = Array.isArray(res.data) ? res.data : res.data.data || [];
       setGroups(
         data.map((g) => ({
@@ -40,7 +40,9 @@ const AddVendorCode = () => {
   const fetchBuyers = async (groupId) => {
     setFetchingBuyers(true);
     try {
-      const res = await api.get(`/companies?groupId=${groupId}`);
+      const res = await api.get(`/companies`, {
+        params: { groupId, limit: 0 },
+      });
       const data = Array.isArray(res.data) ? res.data : res.data.data || [];
       setBuyers(
         data.map((c) => ({
@@ -57,11 +59,13 @@ const AddVendorCode = () => {
 
   const fetchSellers = async () => {
     try {
-      const res = await api.get("/sellers");
+      const res = await api.get("/sellers", { params: { limit: 0 } });
       const data = Array.isArray(res.data) ? res.data : res.data.data || [];
       const formatted = data.map((s) => ({
         value: s._id,
-        label: s.sellerName,
+        label: (s.companies && s.companies.length > 0) 
+          ? s.companies[0] 
+          : s.sellerName,
       }));
       setSellers(formatted);
     } catch (err) {

@@ -42,6 +42,7 @@ const ListLoadingEntry = () => {
   const [totalItems, setTotalItems] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [loading, setLoading] = useState(false);
   const [suggestions, setSuggestions] = useState({
     sellers: [],
     saudas: [],
@@ -67,6 +68,7 @@ const ListLoadingEntry = () => {
 
   const fetchData = async () => {
     try {
+      setLoading(true);
       const [entriesRes, sellersRes, transportersRes, ordersRes] =
         await Promise.all([
           api.get("/loading-entries", {
@@ -93,7 +95,7 @@ const ListLoadingEntry = () => {
           ? entriesPayload
           : [];
 
-      setTotalItems(entriesPayload.total || entriesData.length);
+      setTotalItems(entriesPayload.total || 0);
       setTotalPages(entriesPayload.totalPages || 1);
       setLoadingEntries(entriesData);
       setFilteredEntries(entriesData);
@@ -153,6 +155,8 @@ const ListLoadingEntry = () => {
     } catch (error) {
       console.error("Error fetching data:", error);
       toast.error("Failed to fetch data");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -246,6 +250,8 @@ const ListLoadingEntry = () => {
       const response = await api.get("/loading-entries/export/excel", {
         params: {
           search: searchQuery,
+          role: userRole,
+          mobile: mobile,
         },
         responseType: "blob",
         timeout: 60000,

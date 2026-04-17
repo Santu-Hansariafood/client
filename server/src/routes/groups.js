@@ -24,9 +24,10 @@ router.get("/", async (req, res) => {
       return res.json({ data: items, total });
     }
 
+    const limitVal = limit > 0 ? limit : 0;
     const groups = await Group.find(query)
       .sort({ groupName: 1 })
-      .limit(100)
+      .limit(limitVal)
       .lean();
     res.json(groups);
   } catch (error) {
