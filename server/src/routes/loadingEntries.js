@@ -280,6 +280,8 @@ router.get("/", async (req, res) => {
     const page = parseInt(req.query.page || "1", 10);
     const limit = parseInt(req.query.limit || "10", 10);
     const search = (req.query.search || "").trim();
+    const saudaNo = (req.query.saudaNo || "").trim();
+    const lorryNumber = (req.query.lorryNumber || "").trim();
     const startDate = req.query.startDate;
     const endDate = req.query.endDate;
     const role = req.query.role;
@@ -299,36 +301,54 @@ router.get("/", async (req, res) => {
       }
     }
 
+    const andParts = [];
+    if (Object.keys(query).length > 0) {
+      andParts.push(query);
+    }
+
     if (search) {
       const searchRegex = new RegExp(search, "i");
-      query.$or = [
-        { saudaNo: { $regex: searchRegex } },
-        { lorryNumber: { $regex: searchRegex } },
-        { billNumber: { $regex: searchRegex } },
-        { supplierCompany: { $regex: searchRegex } },
-        { consignee: { $regex: searchRegex } },
-        { commodity: { $regex: searchRegex } },
-      ];
+      andParts.push({
+        $or: [
+          { supplierCompany: { $regex: searchRegex } },
+          { consignee: { $regex: searchRegex } },
+          { saudaNo: { $regex: searchRegex } },
+          { lorryNumber: { $regex: searchRegex } },
+          { billNumber: { $regex: searchRegex } },
+          { commodity: { $regex: searchRegex } },
+        ],
+      });
+    }
+
+    if (saudaNo) {
+      andParts.push({ saudaNo: { $regex: new RegExp(saudaNo, "i") } });
+    }
+
+    if (lorryNumber) {
+      andParts.push({ lorryNumber: { $regex: new RegExp(lorryNumber, "i") } });
     }
 
     if (startDate || endDate) {
-      query.loadingDate = {};
-      if (startDate) query.loadingDate.$gte = new Date(startDate);
+      const dateFilter = {};
+      if (startDate) dateFilter.$gte = new Date(startDate);
       if (endDate) {
         const end = new Date(endDate);
         end.setHours(23, 59, 59, 999);
-        query.loadingDate.$lte = end;
+        dateFilter.$lte = end;
       }
+      andParts.push({ loadingDate: dateFilter });
     }
 
-    const items = await LoadingEntry.find(query)
+    const finalQuery = andParts.length > 1 ? { $and: andParts } : andParts[0] || {};
+
+    const items = await LoadingEntry.find(finalQuery)
       .sort({ loadingDate: -1, createdAt: -1 })
       .skip((page - 1) * limit)
       .limit(limit)
       .populate("supplier", "sellerName")
       .lean();
 
-    const total = await LoadingEntry.countDocuments(query);
+    const total = await LoadingEntry.countDocuments(finalQuery);
 
     res.json({
       data: items,
@@ -358,14 +378,15 @@ router.get("/suggestions", async (req, res) => {
       }
     }
 
-    const [sellers, saudas, lorries] = await Promise.all([
+    const [sellers, buyers, saudas, lorries] = await Promise.all([
       LoadingEntry.distinct("supplierCompany", query),
+      LoadingEntry.distinct("consignee", query),
       LoadingEntry.distinct("saudaNo", query),
       LoadingEntry.distinct("lorryNumber", query),
     ]);
 
     res.json({
-      sellers: sellers.filter(Boolean),
+      sellers: [...new Set([...sellers, ...buyers])].filter(Boolean),
       saudas: saudas.filter(Boolean),
       lorries: lorries.filter(Boolean),
     });
@@ -377,6 +398,8 @@ router.get("/suggestions", async (req, res) => {
 router.get("/export/excel", async (req, res) => {
   try {
     const search = (req.query.search || "").trim();
+    const saudaNo = (req.query.saudaNo || "").trim();
+    const lorryNumber = (req.query.lorryNumber || "").trim();
     const startDate = req.query.startDate;
     const endDate = req.query.endDate;
     const role = req.query.role;
@@ -396,29 +419,47 @@ router.get("/export/excel", async (req, res) => {
       }
     }
 
+    const andParts = [];
+    if (Object.keys(query).length > 0) {
+      andParts.push(query);
+    }
+
     if (search) {
       const searchRegex = new RegExp(search, "i");
-      query.$or = [
-        { saudaNo: { $regex: searchRegex } },
-        { lorryNumber: { $regex: searchRegex } },
-        { billNumber: { $regex: searchRegex } },
-        { supplierCompany: { $regex: searchRegex } },
-        { consignee: { $regex: searchRegex } },
-        { commodity: { $regex: searchRegex } },
-      ];
+      andParts.push({
+        $or: [
+          { supplierCompany: { $regex: searchRegex } },
+          { consignee: { $regex: searchRegex } },
+          { saudaNo: { $regex: searchRegex } },
+          { lorryNumber: { $regex: searchRegex } },
+          { billNumber: { $regex: searchRegex } },
+          { commodity: { $regex: searchRegex } },
+        ],
+      });
+    }
+
+    if (saudaNo) {
+      andParts.push({ saudaNo: { $regex: new RegExp(saudaNo, "i") } });
+    }
+
+    if (lorryNumber) {
+      andParts.push({ lorryNumber: { $regex: new RegExp(lorryNumber, "i") } });
     }
 
     if (startDate || endDate) {
-      query.loadingDate = {};
-      if (startDate) query.loadingDate.$gte = new Date(startDate);
+      const dateFilter = {};
+      if (startDate) dateFilter.$gte = new Date(startDate);
       if (endDate) {
         const end = new Date(endDate);
         end.setHours(23, 59, 59, 999);
-        query.loadingDate.$lte = end;
+        dateFilter.$lte = end;
       }
+      andParts.push({ loadingDate: dateFilter });
     }
 
-    const items = await LoadingEntry.find(query)
+    const finalQuery = andParts.length > 1 ? { $and: andParts } : andParts[0] || {};
+
+    const items = await LoadingEntry.find(finalQuery)
       .sort({ loadingDate: -1, createdAt: -1 })
       .populate("supplier", "sellerName")
       .lean();

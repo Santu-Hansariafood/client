@@ -40,7 +40,11 @@ const ListLoadingEntry = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [filters, setFilters] = useState({
+    search: "",
+    saudaNo: "",
+    lorryNumber: "",
+  });
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(false);
   const [suggestions, setSuggestions] = useState({
@@ -53,7 +57,7 @@ const ListLoadingEntry = () => {
   useEffect(() => {
     fetchData();
     fetchSuggestions();
-  }, [userRole, mobile, currentPage, searchQuery]);
+  }, [userRole, mobile, currentPage, filters]);
 
   const fetchSuggestions = async () => {
     try {
@@ -75,7 +79,9 @@ const ListLoadingEntry = () => {
             params: {
               page: currentPage,
               limit: itemsPerPage,
-              search: searchQuery,
+              search: filters.search,
+              saudaNo: filters.saudaNo,
+              lorryNumber: filters.lorryNumber,
               role: userRole,
               mobile: mobile,
             },
@@ -249,7 +255,9 @@ const ListLoadingEntry = () => {
       toastId = toast.loading("Preparing Excel...");
       const response = await api.get("/loading-entries/export/excel", {
         params: {
-          search: searchQuery,
+          search: filters.search,
+          saudaNo: filters.saudaNo,
+          lorryNumber: filters.lorryNumber,
           role: userRole,
           mobile: mobile,
         },
@@ -408,7 +416,7 @@ const ListLoadingEntry = () => {
                 items={[...new Set([...suggestions.sellers])].filter(Boolean)}
                 returnQuery={true}
                 onSearch={(q) => {
-                  setSearchQuery(q);
+                  setFilters((prev) => ({ ...prev, search: q }));
                   setCurrentPage(1);
                 }}
               />
@@ -418,7 +426,7 @@ const ListLoadingEntry = () => {
                 items={[...new Set(suggestions.saudas)].filter(Boolean)}
                 returnQuery={true}
                 onSearch={(q) => {
-                  setSearchQuery(q);
+                  setFilters((prev) => ({ ...prev, saudaNo: q }));
                   setCurrentPage(1);
                 }}
               />
@@ -428,7 +436,7 @@ const ListLoadingEntry = () => {
                 items={[...new Set(suggestions.lorries)].filter(Boolean)}
                 returnQuery={true}
                 onSearch={(q) => {
-                  setSearchQuery(q);
+                  setFilters((prev) => ({ ...prev, lorryNumber: q }));
                   setCurrentPage(1);
                 }}
               />

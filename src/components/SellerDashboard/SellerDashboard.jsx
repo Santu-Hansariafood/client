@@ -2,7 +2,6 @@ import { useEffect, useState, lazy, Suspense } from "react";
 import api from "../../utils/apiClient/apiClient";
 import { toast } from "react-toastify";
 import {
-  FaBell,
   FaGavel,
   FaBoxOpen,
   FaChevronRight,
@@ -175,21 +174,7 @@ const SellerDashboard = () => {
                   </p>
                 </div>
               </div>
-              <div
-                className="relative cursor-pointer p-3 bg-white/20 rounded-2xl hover:bg-white/30 transition"
-                onClick={() => setShowPopup(true)}
-              >
-                <FaBell />
-
-                {notificationCount > 0 && (
-                  <>
-                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs px-1 rounded-full">
-                      {notificationCount}
-                    </span>
-                    <span className="absolute inset-0 animate-pulseSlow bg-white/20 rounded-2xl"></span>
-                  </>
-                )}
-              </div>
+              
             </div>
           </div>{" "}
           <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
