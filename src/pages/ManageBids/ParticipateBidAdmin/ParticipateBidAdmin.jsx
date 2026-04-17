@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect, useState, useMemo } from "react";
-import api from "../../../utils/api";
+import api from "../../../utils/apiClient/apiClient";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import Loading from "../../../common/Loading/Loading";
