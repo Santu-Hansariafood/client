@@ -248,64 +248,7 @@ const BuyerDashboard = () => {
             </div>
           ))}
         </div>
-        <div className="mt-12 space-y-10">
-          <section className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
-            <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-              <h3 className="font-bold text-slate-800">Your Live Bids</h3>
-              <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Top 5 Recent</span>
-            </div>
-            <div className="overflow-x-auto">
-              <Suspense fallback={<Loading />}>
-                <Tables
-                  headers={["Group", "Consignee", "Commodity", "Quantity", "Ends At"]}
-                  rows={bids.slice(0, 5).map(bid => [
-                    bid.group,
-                    bid.consignee,
-                    bid.commodity,
-                    `${bid.quantity} ${bid.unit || "Tons"}`,
-                    bid.endTime || "N/A"
-                  ])}
-                />
-                {bids.length === 0 && (
-                  <div className="p-10 text-center text-slate-400 text-sm italic">No active bids for your companies</div>
-                )}
-              </Suspense>
-            </div>
-          </section>
-
-          <section className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
-            <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-              <h3 className="font-bold text-slate-800">Recent Participations</h3>
-              <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Top 5 Recent</span>
-            </div>
-            <div className="overflow-x-auto">
-              <Suspense fallback={<Loading />}>
-                <Tables
-                  headers={["Bid Group", "Consignee", "Seller", "Rate", "Status"]}
-                  rows={participations.slice(0, 5).map(p => {
-                    const bid = bids.find(b => b._id === p.bidId);
-                    return [
-                      bid?.group || "N/A",
-                      bid?.consignee || "N/A",
-                      p.sellerCompany || p.sellerName || p.mobile,
-                      `₹${p.rate}`,
-                      <span key={p._id} className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
-                        p.status === "accepted" ? "bg-emerald-100 text-emerald-700" :
-                        p.status === "rejected" ? "bg-rose-100 text-rose-700" : "bg-amber-100 text-amber-700"
-                      }`}>
-                        {p.status}
-                      </span>
-                    ];
-                  })}
-                />
-                {participations.length === 0 && (
-                  <div className="p-10 text-center text-slate-400 text-sm italic">No recent participations found</div>
-                )}
-              </Suspense>
-            </div>
-          </section>
-        </div>
-
+        
         <div className="mt-16">
           <div className="bg-white/70 backdrop-blur-xl border border-white/40 rounded-3xl shadow-lg p-6">
             <UserProfileCard user={user} />
