@@ -83,6 +83,7 @@ const loaders = {
     import("../../pages/VendorCode/ListVendorCode/ListVendorCode"),
   AddExpense: () => import("../../pages/Expense/AddExpense/AddExpense"),
   ListExpense: () => import("../../pages/Expense/ListExpense/ListExpense"),
+  DataSafety: () => import("../../pages/DataSafety/DataSafety"),
 };
 
 const pathToKey = {
@@ -137,6 +138,7 @@ const pathToKey = {
   "/vendor-code/list": "ListVendorCode",
   "/expense/add": "AddExpense",
   "/expense/list": "ListExpense",
+  "/data-safety": "DataSafety"
 };
 
 const prefetched = new Set();
@@ -210,6 +212,7 @@ const LazyPages = {
   LoadingEntrySauda: lazy(loaders.LoadingEntrySauda),
   PendingLoadingList: lazy(loaders.PendingLoadingList),
   PrivacyPolicy: lazy(loaders.PrivacyPolicy),
+  DataSafety: lazy(loaders.DataSafety),
   TermsConditions: lazy(loaders.TermsConditions),
   BrokerCommissionPolicy: lazy(loaders.BrokerCommissionPolicy),
   Teams: lazy(loaders.Teams),

@@ -233,6 +233,26 @@ const privateRoutes = [
     component: LazyPages.BuyerBidHistory,
     roles: ["Buyer"],
   },
+  {
+    path: "/vendor-code/add",
+    component: LazyPages.AddVendorCode,
+    roles: ["Admin", "Employee"],
+  },
+  {
+    path: "/vendor-code/list",
+    component: LazyPages.ListVendorCode,
+    roles: ["Admin", "Employee"],
+  },
+  {
+    path: "/expense/add",
+    component: LazyPages.AddExpense,
+    roles: ["Admin", "Employee"],
+  },
+  {
+    path: "/expense/list",
+    component: LazyPages.ListExpense,
+    roles: ["Admin", "Employee"],
+  },
 ];
 
 const AppRoutes = ({ hydrated }) => {
@@ -243,6 +263,7 @@ const AppRoutes = ({ hydrated }) => {
       <Route path="/" element={<LazyPages.Login />} />
       <Route path="/privacy-policy" element={<LazyPages.PrivacyPolicy />} />
       <Route path="/terms-conditions" element={<LazyPages.TermsConditions />} />
+      <Route path="/data-safety" element={<LazyPages.DataSafety />} />
       <Route
         path="/broker-commission-policy"
         element={<LazyPages.BrokerCommissionPolicy />}
