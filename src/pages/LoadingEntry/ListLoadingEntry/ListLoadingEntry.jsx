@@ -42,11 +42,28 @@ const ListLoadingEntry = () => {
   const [totalItems, setTotalItems] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
+  const [suggestions, setSuggestions] = useState({
+    sellers: [],
+    saudas: [],
+    lorries: [],
+  });
+  const itemsPerPage = 50;
 
   useEffect(() => {
     fetchData();
+    fetchSuggestions();
   }, [userRole, mobile, currentPage, searchQuery]);
+
+  const fetchSuggestions = async () => {
+    try {
+      const res = await api.get("/loading-entries/suggestions", {
+        params: { role: userRole, mobile },
+      });
+      setSuggestions(res.data);
+    } catch (error) {
+      console.error("Error fetching suggestions:", error);
+    }
+  };
 
   const fetchData = async () => {
     try {
@@ -57,6 +74,8 @@ const ListLoadingEntry = () => {
               page: currentPage,
               limit: itemsPerPage,
               search: searchQuery,
+              role: userRole,
+              mobile: mobile,
             },
           }),
           api.get("/sellers"),
@@ -73,7 +92,7 @@ const ListLoadingEntry = () => {
         : Array.isArray(entriesPayload)
           ? entriesPayload
           : [];
-      
+
       setTotalItems(entriesPayload.total || entriesData.length);
       setTotalPages(entriesPayload.totalPages || 1);
       setLoadingEntries(entriesData);
@@ -131,23 +150,6 @@ const ListLoadingEntry = () => {
           name: t.name,
         })),
       );
-
-      let entries = entriesData;
-      if (userRole === "Seller") {
-        const seller = sellersData.find((s) =>
-          s.phoneNumbers?.some((p) => String(p.value) === String(mobile)),
-        );
-        if (seller) {
-          entries = entries.filter(
-            (e) => String(e.supplier) === String(seller._id),
-          );
-        } else {
-          entries = [];
-        }
-      }
-
-      setLoadingEntries(entries);
-      setFilteredEntries(entries);
     } catch (error) {
       console.error("Error fetching data:", error);
       toast.error("Failed to fetch data");
@@ -397,36 +399,33 @@ const ListLoadingEntry = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               <SearchBox
                 placeholder="Search by Seller/Buyer Name..."
-                items={[
-                  ...new Set([
-                    ...loadingEntries.map((e) => sellerMap[e.supplier] || ""),
-                    ...loadingEntries.map((e) => buyerMap[e.saudaNo] || ""),
-                  ]),
-                ].filter(Boolean)}
+                items={[...new Set([...suggestions.sellers])].filter(Boolean)}
                 onSearch={(filteredNames) => {
-                  setSearchQuery(filteredNames.length > 0 ? filteredNames[0] : "");
+                  setSearchQuery(
+                    filteredNames.length > 0 ? filteredNames[0] : "",
+                  );
                   setCurrentPage(1);
                 }}
               />
 
               <SearchBox
                 placeholder="Search by Sauda No..."
-                items={[
-                  ...new Set(loadingEntries.map((e) => e.saudaNo || "")),
-                ].filter(Boolean)}
+                items={[...new Set(suggestions.saudas)].filter(Boolean)}
                 onSearch={(filteredSaudas) => {
-                  setSearchQuery(filteredSaudas.length > 0 ? filteredSaudas[0] : "");
+                  setSearchQuery(
+                    filteredSaudas.length > 0 ? filteredSaudas[0] : "",
+                  );
                   setCurrentPage(1);
                 }}
               />
 
               <SearchBox
                 placeholder="Search by Lorry Number..."
-                items={[
-                  ...new Set(loadingEntries.map((entry) => entry.lorryNumber)),
-                ].filter(Boolean)}
+                items={[...new Set(suggestions.lorries)].filter(Boolean)}
                 onSearch={(filteredLorryNumbers) => {
-                  setSearchQuery(filteredLorryNumbers.length > 0 ? filteredLorryNumbers[0] : "");
+                  setSearchQuery(
+                    filteredLorryNumbers.length > 0 ? filteredLorryNumbers[0] : "",
+                  );
                   setCurrentPage(1);
                 }}
               />

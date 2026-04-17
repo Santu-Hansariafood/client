@@ -278,12 +278,26 @@ router.get("/saudas", async (req, res) => {
 router.get("/", async (req, res) => {
   try {
     const page = parseInt(req.query.page || "1", 10);
-    const limit = parseInt(req.query.limit || "10", 10);
+    const limit = parseInt(req.query.limit || "50", 10);
     const search = (req.query.search || "").trim();
     const startDate = req.query.startDate;
     const endDate = req.query.endDate;
+    const role = req.query.role;
+    const mobile = req.query.mobile;
 
     let query = {};
+
+    // Role-based filtering
+    if (role === "Seller" && mobile) {
+      const seller = await Seller.findOne({
+        "phoneNumbers.value": String(mobile),
+      }).lean();
+      if (seller) {
+        query.supplier = seller._id;
+      } else {
+        return res.json({ data: [], total: 0, page, totalPages: 0 });
+      }
+    }
 
     if (search) {
       const searchRegex = new RegExp(search, "i");
@@ -321,6 +335,39 @@ router.get("/", async (req, res) => {
       total,
       page,
       totalPages: Math.ceil(total / limit),
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+router.get("/suggestions", async (req, res) => {
+  try {
+    const role = req.query.role;
+    const mobile = req.query.mobile;
+    let query = {};
+
+    if (role === "Seller" && mobile) {
+      const seller = await Seller.findOne({
+        "phoneNumbers.value": String(mobile),
+      }).lean();
+      if (seller) {
+        query.supplier = seller._id;
+      } else {
+        return res.json({ sellers: [], saudas: [], lorries: [] });
+      }
+    }
+
+    const [sellers, saudas, lorries] = await Promise.all([
+      LoadingEntry.distinct("supplierCompany", query),
+      LoadingEntry.distinct("saudaNo", query),
+      LoadingEntry.distinct("lorryNumber", query),
+    ]);
+
+    res.json({
+      sellers: sellers.filter(Boolean),
+      saudas: saudas.filter(Boolean),
+      lorries: lorries.filter(Boolean),
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
