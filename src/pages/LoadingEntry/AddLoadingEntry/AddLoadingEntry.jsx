@@ -463,7 +463,9 @@ const AddLoadingEntry = () => {
 
   const INITIAL_ENTRY = {
     loadingDate: new Date().toISOString().split("T")[0],
+    deliveryDate: "",
     loadingWeight: "",
+    unloadingWeight: "",
     bags: "",
     lorryNumber: "",
     transporterId: "",
@@ -501,7 +503,15 @@ const AddLoadingEntry = () => {
 
   const handleOpenPopup = async (order) => {
     setSelectedOrder(order);
-    setLoadingEntries([{ ...INITIAL_ENTRY }]);
+    const deliveryDate = order.poDate || order.createdAt || "";
+    const formattedDeliveryDate = deliveryDate 
+      ? new Date(deliveryDate).toISOString().split("T")[0] 
+      : "";
+      
+    setLoadingEntries([{ 
+      ...INITIAL_ENTRY, 
+      deliveryDate: formattedDeliveryDate 
+    }]);
     setIsPopupOpen(true);
     setExistingEntries([]); // Clear previous data
 
@@ -516,7 +526,11 @@ const AddLoadingEntry = () => {
   };
 
   const handleAddMore = () => {
-    setLoadingEntries([...loadingEntries, { ...INITIAL_ENTRY }]);
+    const deliveryDate = selectedOrder?.poDate || selectedOrder?.createdAt || "";
+    const formattedDeliveryDate = deliveryDate 
+      ? new Date(deliveryDate).toISOString().split("T")[0] 
+      : "";
+    setLoadingEntries([...loadingEntries, { ...INITIAL_ENTRY, deliveryDate: formattedDeliveryDate }]);
   };
 
   const handleRemoveEntry = (index) => {
@@ -529,7 +543,7 @@ const AddLoadingEntry = () => {
   const handleEntryChange = (index, field, value) => {
     const newEntries = [...loadingEntries];
 
-    if (field === "loadingDate" || field === "dateOfIssue") {
+    if (field === "loadingDate" || field === "dateOfIssue" || field === "deliveryDate") {
       const d = new Date(value);
       newEntries[index][field] = !isNaN(d.getTime())
         ? d.toISOString().split("T")[0]
@@ -924,6 +938,17 @@ const AddLoadingEntry = () => {
                       </div>
                       <div className="space-y-1.5">
                         <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                          Delivery Date
+                        </label>
+                        <DateSelector
+                          selectedDate={entry.deliveryDate}
+                          onChange={(date) =>
+                            handleEntryChange(index, "deliveryDate", date)
+                          }
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider">
                           Weight (Tons)
                         </label>
                         <DataInput
@@ -933,6 +958,23 @@ const AddLoadingEntry = () => {
                             handleEntryChange(
                               index,
                               "loadingWeight",
+                              e.target.value,
+                            )
+                          }
+                          placeholder="0.00"
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                          Unloading Wt
+                        </label>
+                        <DataInput
+                          type="number"
+                          value={entry.unloadingWeight}
+                          onChange={(e) =>
+                            handleEntryChange(
+                              index,
+                              "unloadingWeight",
                               e.target.value,
                             )
                           }

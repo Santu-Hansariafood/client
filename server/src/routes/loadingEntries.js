@@ -489,9 +489,24 @@ router.post("/bulk", async (req, res) => {
       return res.status(400).json({ message: "No entries provided" });
     }
 
-    const savedEntries = await LoadingEntry.insertMany(entries);
-
     const selfOrder = await SelfOrder.findOne({ saudaNo });
+    
+    // Process entries with brokerage calculation if selfOrder exists
+    const processedEntries = entries.map(entry => {
+      const newEntry = { ...entry };
+      if (selfOrder && entry.unloadingWeight) {
+        const uWeight = parseFloat(entry.unloadingWeight) || 0;
+        const buyerRate = selfOrder.buyerBrokerage?.brokerageBuyer || 0;
+        const sellerRate = selfOrder.buyerBrokerage?.brokerageSupplier || 0;
+        
+        newEntry.buyerBrokerage = +(uWeight * buyerRate).toFixed(2);
+        newEntry.sellerBrokerage = +(uWeight * sellerRate).toFixed(2);
+      }
+      return newEntry;
+    });
+
+    const savedEntries = await LoadingEntry.insertMany(processedEntries);
+
     if (selfOrder) {
       const allEntries = await LoadingEntry.find({ saudaNo });
       const totalLoaded = allEntries.reduce(
