@@ -88,10 +88,13 @@ router.get("/", async (req, res) => {
     const page = parseInt(req.query.page || "0", 10);
     const limit = parseInt(req.query.limit || "0", 10);
     const group = req.query.group;
+    const groupId = req.query.groupId;
     const search = (req.query.search || "").trim();
 
     const query = {};
-    if (group) {
+    if (groupId) {
+      query.groupId = groupId;
+    } else if (group) {
       const groupDoc = await Group.findOne({ groupName: group });
       if (groupDoc) {
         query.groupId = groupDoc._id;
