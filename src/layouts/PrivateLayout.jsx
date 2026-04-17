@@ -4,7 +4,6 @@ import { toast } from "react-toastify";
 import { useAuth } from "../context/AuthContext/AuthContext";
 import Sidebar from "../components/Sidebar/Sidebar";
 import Header from "../common/Header/Header";
-import MobileFooter from "../common/MobileFooter/MobileFooter";
 import LogoutConfirmationModal from "../common/LogoutConfirmationModal/LogoutConfirmationModal";
 import { prefetchRoute } from "../utils/LazyPages/LazyPages";
 
@@ -28,10 +27,6 @@ const PrivateLayout = () => {
     navigate("/", { replace: true });
   }, [logout, navigate]);
 
-  const handleProfileClick = () => {
-    setProfileDropdownOpen((prev) => !prev);
-  };
-
   useEffect(() => {
     prefetchRoute("/dashboard");
   }, []);
@@ -53,7 +48,7 @@ const PrivateLayout = () => {
           isProfileDropdownOpen={isProfileDropdownOpen}
           setProfileDropdownOpen={setProfileDropdownOpen}
         />
-        <main className="flex-1 min-w-0 overflow-y-auto flex flex-col pb-[70px] md:pb-0">
+        <main className="flex-1 min-w-0 overflow-y-auto flex flex-col md:pb-0">
           <div className="flex-1 px-2 sm:px-3 pt-3 md:pt-2 w-full">
             {" "}
             <Suspense fallback={<PageLoader />}>
@@ -61,7 +56,6 @@ const PrivateLayout = () => {
             </Suspense>
           </div>
         </main>
-        <MobileFooter onProfileClick={handleProfileClick} />
       </div>
       {showLogoutConfirmation && (
         <LogoutConfirmationModal
