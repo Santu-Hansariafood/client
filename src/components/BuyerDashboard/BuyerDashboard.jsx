@@ -1,10 +1,13 @@
-import { Suspense, lazy, useEffect, useState, useMemo } from "react";
+import { Suspense, lazy, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   FaGavel,
   FaBook,
   FaBoxOpen,
   FaChartLine,
+  FaUserCircle,
   FaMapMarkerAlt,
+  FaBuilding,
 } from "react-icons/fa";
 import Loading from "../../common/Loading/Loading";
 import { useAuth } from "../../context/AuthContext/AuthContext";
@@ -13,9 +16,9 @@ import api from "../../utils/apiClient/apiClient";
 import { toTitleCase } from "../../utils/textUtils/textUtils";
 
 const Cards = lazy(() => import("../../common/Cards/Cards"));
-const Tables = lazy(() => import("../../common/Tables/Tables"));
 
 const BuyerDashboard = () => {
+  const navigate = useNavigate();
   const { user, mobile } = useAuth();
   const [buyerProfile, setBuyerProfile] = useState(null);
   const [showAllConsignee, setShowAllConsignee] = useState(false);
@@ -65,6 +68,7 @@ const BuyerDashboard = () => {
 
   const dashboardData = [
     {
+      id: "live-bids",
       title: "Live Bids",
       count: "View",
       icon: FaGavel,
@@ -72,6 +76,15 @@ const BuyerDashboard = () => {
       color: "from-emerald-400 to-green-600",
     },
     {
+      id: "participate-bids",
+      title: "Participate Bids",
+      count: "Check",
+      icon: FaChartLine,
+      link: "/participate-bid-list",
+      color: "from-blue-400 to-indigo-600",
+    },
+    {
+      id: "create-bid",
       title: "Create New Bid",
       count: "Add",
       icon: FaGavel,
@@ -79,6 +92,7 @@ const BuyerDashboard = () => {
       color: "from-blue-400 to-indigo-600",
     },
     {
+      id: "sodabook",
       title: "Soudabook",
       count: "List",
       icon: FaBook,
@@ -86,6 +100,7 @@ const BuyerDashboard = () => {
       color: "from-violet-400 to-purple-600",
     },
     {
+      id: "orders",
       title: "Your Orders",
       count: "Check",
       icon: FaBoxOpen,
@@ -93,13 +108,23 @@ const BuyerDashboard = () => {
       color: "from-amber-400 to-orange-500",
     },
     {
-      title: "Market Analytics",
-      count: "Analyze",
-      icon: FaChartLine,
-      link: "/buyer/market-analytics",
-      color: "from-rose-400 to-red-600",
+      id: "interactions",
+      title: "Interactions",
+      count: "Manage",
+      icon: FaUserCircle,
+      link: "/manage-bids/interactions",
+      color: "from-blue-400 to-indigo-600",
     },
   ];
+
+  const handleCardClick = (item) => {
+    navigate(item.link);
+  };
+
+  const handleCompanyBidClick = (companyName, type) => {
+    const link = type === "live" ? "/manage-bids/bid-list" : "/participate-bid-list";
+    navigate(`${link}?company=${encodeURIComponent(companyName)}`);
+  };
 
   return (
     <Suspense fallback={<Loading />}>
@@ -151,6 +176,50 @@ const BuyerDashboard = () => {
             </div>
           )}
         </header>
+
+        {buyerProfile?.companyNames?.length > 1 && (
+          <section className="mb-10">
+            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+              <div className="flex items-center gap-2 mb-4">
+                <span className="inline-flex h-8 w-8 items-center justify-center rounded-xl border border-blue-100 bg-blue-50 text-blue-600">
+                  <FaBuilding className="text-sm" />
+                </span>
+                <div>
+                  <h2 className="text-sm font-bold text-slate-700 uppercase tracking-widest">
+                    Your Companies
+                  </h2>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    Quickly filter bids by your mapped companies
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap gap-3">
+                {buyerProfile.companyNames.map((company, idx) => (
+                  <div key={idx} className="flex flex-col gap-2">
+                    <div className="px-4 py-2 rounded-xl bg-slate-50 border border-slate-200">
+                      <p className="text-sm font-bold text-slate-800">{toTitleCase(company)}</p>
+                      <div className="flex gap-2 mt-2">
+                        <button
+                          onClick={() => handleCompanyBidClick(company, "live")}
+                          className="px-2 py-1 text-[10px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-700 rounded-md hover:bg-emerald-200 transition"
+                        >
+                          Live Bids
+                        </button>
+                        <button
+                          onClick={() => handleCompanyBidClick(company, "participate")}
+                          className="px-2 py-1 text-[10px] font-bold uppercase tracking-wider bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200 transition"
+                        >
+                          Participated
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
 
         {buyerProfile?.consignee?.length > 0 && (
           <section className="mb-10">
@@ -214,7 +283,8 @@ const BuyerDashboard = () => {
           {dashboardData.map((item, index) => (
             <div
               key={index}
-              className="group relative rounded-2xl overflow-hidden"
+              className="group relative rounded-2xl overflow-hidden cursor-pointer"
+              onClick={() => handleCardClick(item)}
             >
               <div
                 className="
@@ -248,7 +318,7 @@ const BuyerDashboard = () => {
             </div>
           ))}
         </div>
-        
+
         <div className="mt-16">
           <div className="bg-white/70 backdrop-blur-xl border border-white/40 rounded-3xl shadow-lg p-6">
             <UserProfileCard user={user} />

@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import api from "../../utils/apiClient/apiClient";
 import { useAuth } from "../../context/AuthContext/AuthContext";
 import Loading from "../../common/Loading/Loading";
@@ -9,10 +9,14 @@ const Pagination = lazy(() => import("../../common/Paginations/Paginations"));
 
 const ParticipateBid = () => {
   const navigate = useNavigate();
-  const { mobile } = useAuth();
+  const [searchParams] = useSearchParams();
+  const initialCompany = searchParams.get("company") || "All";
+  const { mobile, userRole } = useAuth();
   const [bids, setBids] = useState([]);
   const [participations, setParticipations] = useState([]);
   const [bidStatuses, setBidStatuses] = useState([]);
+  const [buyerProfile, setBuyerProfile] = useState(null);
+  const [selectedCompany, setSelectedCompany] = useState(initialCompany);
   const [filteredData, setFilteredData] = useState([]);
   const [mobileCardsData, setMobileCardsData] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
@@ -36,7 +40,21 @@ const ParticipateBid = () => {
 
   useEffect(() => {
     fetchBidsAndParticipations();
-  }, []);
+
+    const fetchBuyerProfile = async () => {
+      try {
+        if (userRole === "Buyer" && mobile) {
+          const res = await api.get(`/buyers?mobile=${mobile}`);
+          if (res.data && res.data.length > 0) {
+            setBuyerProfile(res.data[0]);
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching buyer profile", error);
+      }
+    };
+    fetchBuyerProfile();
+  }, [mobile, userRole]);
 
   useEffect(() => {
     if (bids.length === 0 || participations.length === 0) {
@@ -50,6 +68,10 @@ const ParticipateBid = () => {
         const bid = bids.find((b) => b._id === participation.bidId);
         if (!bid) return null;
 
+        if (selectedCompany !== "All" && bid.company !== selectedCompany) {
+          return null;
+        }
+
         const bidStatus =
           bidStatuses.find((c) => c.bidId === bid._id)?.status || "Pending";
 
@@ -60,6 +82,7 @@ const ParticipateBid = () => {
           commodity: bid.commodity || "Unknown Commodity",
           quantity: bid.quantity || "N/A",
           rate: bid.rate || "N/A",
+          company: bid.company || "N/A",
           participationRate: participation.rate || "N/A",
           participationQuantity: participation.quantity || "N/A",
           acceptedRate: participation.acceptedRate,
@@ -80,30 +103,32 @@ const ParticipateBid = () => {
 
     setMobileCardsData(matchedData);
     const tableRows = matchedData.map((item, index) => [
-        index + 1,
-        item.group,
-        item.consignee,
-        item.origin,
-        item.commodity,
-        item.quantity,
-        item.rate,
-        item.participationRate,
-        item.participationQuantity,
-        item.acceptedRate || "N/A",
-        item.acceptedQuantity || "N/A",
-        item.deliveryDate,
-        item.paymentTerms,
-        item.participationDate,
-        item.status,
-      ]);
+      index + 1,
+      item.group,
+      item.company,
+      item.consignee,
+      item.origin,
+      item.commodity,
+      item.quantity,
+      item.rate,
+      item.participationRate,
+      item.participationQuantity,
+      item.acceptedRate || "N/A",
+      item.acceptedQuantity || "N/A",
+      item.deliveryDate,
+      item.paymentTerms,
+      item.participationDate,
+      item.status,
+    ]);
 
     setFilteredData(tableRows);
     setCurrentPage(1);
-  }, [bids, participations, bidStatuses, mobile]);
+  }, [bids, participations, bidStatuses, mobile, selectedCompany]);
 
   const headers = [
     "Count",
     "Group",
+    "Company",
     "Consignee",
     "Origin",
     "Commodity",
@@ -154,12 +179,34 @@ const ParticipateBid = () => {
                   </p>
                 </div>
               </div>
-              <button
-                onClick={fetchBidsAndParticipations}
-                className="flex items-center justify-center gap-2 px-5 py-2.5 bg-emerald-600 text-white font-semibold rounded-xl hover:bg-emerald-700 transition-all shadow-md shadow-emerald-200"
-              >
-                Refresh 🔄
-              </button>
+
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                {userRole === "Buyer" && buyerProfile?.companyNames?.length > 0 && (
+                  <div className="flex flex-col gap-1">
+                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider ml-1">
+                      Filter by Company
+                    </span>
+                    <select
+                      value={selectedCompany}
+                      onChange={(e) => setSelectedCompany(e.target.value)}
+                      className="px-4 py-2 rounded-xl border border-slate-200 bg-white text-sm font-semibold text-slate-700 focus:ring-2 focus:ring-emerald-400/50 outline-none min-w-[180px]"
+                    >
+                      <option value="All">All Companies</option>
+                      {buyerProfile.companyNames.map((company) => (
+                        <option key={company} value={company}>
+                          {company}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+                <button
+                  onClick={fetchBidsAndParticipations}
+                  className="flex items-center justify-center gap-2 px-5 py-2.5 bg-emerald-600 text-white font-semibold rounded-xl hover:bg-emerald-700 transition-all shadow-md shadow-emerald-200"
+                >
+                  Refresh 🔄
+                </button>
+              </div>
             </div>
             <div className="mt-4 grid grid-cols-2 lg:grid-cols-4 gap-2.5">
               <div className="rounded-xl border border-slate-200 bg-white px-3 py-2.5">
