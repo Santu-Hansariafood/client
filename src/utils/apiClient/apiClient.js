@@ -5,7 +5,7 @@ const apiBaseURL = rawBaseURL.endsWith("/") ? rawBaseURL : `${rawBaseURL}/`;
 
 const instance = axios.create({
   baseURL: apiBaseURL,
-  timeout: 5000,
+  timeout: 30000,
 });
 
 instance.interceptors.request.use((config) => {
