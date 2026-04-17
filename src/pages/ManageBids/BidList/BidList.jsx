@@ -31,57 +31,21 @@ const BidList = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [bidsRes, buyersRes, companiesRes] = await Promise.all([
-          api.get("/bids"),
-          userRole === "Buyer"
-            ? api.get("/buyers")
-            : Promise.resolve({ data: [] }),
-          userRole === "Buyer"
-            ? api.get("/companies")
-            : Promise.resolve({ data: [] }),
-        ]);
-
-        const items = bidsRes.data?.data || bidsRes.data || [];
-        const buyers = buyersRes.data?.data || buyersRes.data || [];
-        const companies = companiesRes.data?.data || companiesRes.data || [];
-
         if (userRole === "Buyer") {
-          const buyer = buyers.find((b) =>
-            b.mobile?.some((m) => String(m) === String(mobile)),
-          );
-          if (buyer) {
-            setIsBuyerAdmin(buyer.isAdmin || false);
-            const buyerCompanyIds = (buyer.companyIds || []).map((id) =>
-              String(id),
-            );
-            const buyerCompanies = companies.filter((c) =>
-              buyerCompanyIds.includes(String(c._id)),
-            );
-
-            const groups = buyerCompanies
-              .map((c) => c.group)
-              .filter(Boolean)
-              .map((group) =>
-                group
-                  .split(" ")
-                  .map(
-                    (word) =>
-                      word.charAt(0).toUpperCase() +
-                      word.slice(1).toLowerCase(),
-                  )
-                  .join(" "),
-              );
-
-            setBuyerGroups([...new Set(groups)]);
-          } else {
-            setIsBuyerAdmin(false);
-            setBuyerGroups([]);
-          }
+          const res = await api.get("/bids/buyer-today", {
+            params: { mobile, date: new Date().toISOString().split("T")[0] },
+          });
+          const { bids: items, buyer } = res.data;
+          setIsBuyerAdmin(buyer.isAdmin || false);
+          setBuyerGroups(buyer.groups || []);
+          setBids(items);
         } else {
+          const bidsRes = await api.get("/bids");
+          const items = bidsRes.data?.data || bidsRes.data || [];
           setIsBuyerAdmin(false);
           setBuyerGroups([]);
+          setBids(items);
         }
-        setBids(items);
       } catch {
         setError("Error fetching data. Please try again later.");
       }
@@ -155,34 +119,6 @@ const BidList = () => {
           return false;
         }
 
-        if (userRole === "Buyer") {
-          if (!buyerGroups || buyerGroups.length === 0) return false;
-
-          const bidGroupNormalized = (bid.group || "")
-            .trim()
-            .split(" ")
-            .map(
-              (word) =>
-                word.charAt(0).toUpperCase() + word.slice(1).toLowerCase(),
-            )
-            .join(" ");
-
-          if (!buyerGroups.includes(bidGroupNormalized)) return false;
-
-          if (isBuyerAdmin) return true;
-
-          const role = String(bid.createdByRole || "").toLowerCase();
-          const creatorMobile = String(bid.createdByMobile || "");
-          const currentMobile = String(mobile || "");
-
-          const createdByAdminOrEmployee =
-            role === "admin" || role === "employee";
-          const createdByCurrentBuyer =
-            creatorMobile !== "" && creatorMobile === currentMobile;
-
-          return createdByAdminOrEmployee || createdByCurrentBuyer;
-        }
-
         return true;
       })
       .sort((a, b) => {
@@ -194,10 +130,6 @@ const BidList = () => {
     bids,
     activeTab,
     filteredConsignees,
-    buyerGroups,
-    userRole,
-    isBuyerAdmin,
-    mobile,
   ]);
 
   const consigneeItems = useMemo(

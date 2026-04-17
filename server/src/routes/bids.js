@@ -2,6 +2,9 @@ import { Router } from "express";
 import Bid from "../models/Bid.js";
 import Notification from "../models/Notification.js";
 import Seller from "../models/Seller.js";
+import Buyer from "../models/Buyer.js";
+import Company from "../models/Company.js";
+import Group from "../models/Group.js";
 import ParticipateBid from "../models/ParticipateBid.js";
 import BidLocation from "../models/BidLocation.js";
 import { invalidate } from "../middleware/cache.js";
@@ -45,6 +48,121 @@ const closeExpiredBids = async () => {
     console.error("Error auto-closing bids:", error);
   }
 };
+
+router.get("/buyer-today", async (req, res) => {
+  try {
+    await closeExpiredBids();
+
+    const mobile = String(req.query.mobile || "").trim();
+    const dateStr = String(req.query.date || "").trim();
+
+    if (!mobile) {
+      return res.status(400).json({ message: "mobile is required" });
+    }
+
+    const buyer = await Buyer.findOne({
+      "mobile": mobile,
+    }).lean();
+    if (!buyer) {
+      return res.status(404).json({ message: "Buyer not found" });
+    }
+
+    // Get all company names associated with the buyer
+    const companyIds = Array.isArray(buyer.companyIds) ? buyer.companyIds : [];
+    const companies = await Company.find({ _id: { $in: companyIds } }).lean();
+    const companyNames = companies.map(c => c.companyName);
+
+    // Get group name
+    let groupNames = [];
+    if (buyer.groupId) {
+      const group = await Group.findById(buyer.groupId).lean();
+      if (group) {
+        groupNames.push(group.groupName);
+      }
+    }
+
+    // Also include groups from companies
+    const companyGroupIds = companies.map(c => c.groupId).filter(Boolean);
+    if (companyGroupIds.length > 0) {
+      const companyGroups = await Group.find({ _id: { $in: companyGroupIds } }).lean();
+      companyGroups.forEach(g => {
+        if (!groupNames.includes(g.groupName)) {
+          groupNames.push(g.groupName);
+        }
+      });
+    }
+
+    const baseDate = dateStr ? new Date(dateStr) : new Date();
+    const dayStr = baseDate.toISOString().split("T")[0];
+    const start = new Date(`${dayStr}T00:00:00.000Z`);
+    const end = new Date(`${dayStr}T00:00:00.000Z`);
+    end.setUTCDate(end.getUTCDate() + 1);
+
+    const bids = await Bid.find({
+      $or: [
+        { createdByMobile: mobile },
+        { company: { $in: companyNames } },
+        { group: { $in: groupNames } },
+        {
+          $and: [
+            {
+              $or: [
+                { bidDate: { $gte: start, $lt: end } },
+                { status: "active" },
+              ],
+            },
+          ],
+        },
+      ],
+    })
+      .select(
+        "_id type group consignee origin commodity parameters notes quantity rate bidDate startTime endTime paymentTerms delivery company unit status closedAt createdByMobile createdByRole",
+      )
+      .sort({ createdAt: -1 })
+      .lean();
+
+    const bidIds = bids.map((b) => b._id);
+
+    const participations = bidIds.length 
+      ? await ParticipateBid.find({ bidId: { $in: bidIds } }).lean()
+      : [];
+
+    const participantCountsAgg = bidIds.length
+      ? await ParticipateBid.aggregate([
+          { $match: { bidId: { $in: bidIds } } },
+          { $group: { _id: "$bidId", count: { $sum: 1 } } },
+        ])
+      : [];
+
+    const participantCounts = participantCountsAgg.reduce((acc, row) => {
+      if (!row?._id) return acc;
+      acc[String(row._id)] = row.count || 0;
+      return acc;
+    }, {});
+
+    const bidLocations = await BidLocation.find()
+      .select("_id name")
+      .sort({ name: 1 })
+      .lean();
+
+    res.json({
+      bids,
+      participations,
+      participantCounts,
+      bidLocations,
+      buyer: {
+        _id: buyer._id,
+        name: buyer.name || "",
+        isAdmin: buyer.isAdmin || false,
+        companies: companyNames,
+        groups: groupNames,
+      },
+      serverNow: new Date().toISOString(),
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
 
 router.get("/supplier-today", async (req, res) => {
   try {

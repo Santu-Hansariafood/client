@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect, useState, useMemo } from "react";
-import axios from "axios";
+import api from "../../../utils/api";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import Loading from "../../../common/Loading/Loading";
@@ -36,64 +36,28 @@ const ParticipateBidAdmin = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [bidsRes, participateRes, buyersRes, companiesRes] =
-          await Promise.all([
-            axios.get("/bids"),
-            axios.get("/participatebids"),
-            userRole === "Buyer"
-              ? axios.get("/buyers")
-              : Promise.resolve({ data: [] }),
-            userRole === "Buyer"
-              ? axios.get("/companies")
-              : Promise.resolve({ data: [] }),
-          ]);
-
-        const bidsData = bidsRes.data?.data || bidsRes.data || [];
-        const participations =
-          participateRes.data?.data || participateRes.data || [];
-        const buyers = buyersRes.data?.data || buyersRes.data || [];
-        const companies = companiesRes.data?.data || companiesRes.data || [];
-
         if (userRole === "Buyer") {
-          const buyer = buyers.find((b) =>
-            b.mobile?.some((m) => String(m) === String(mobile)),
-          );
-          if (buyer) {
-            setIsBuyerAdmin(buyer.isAdmin || false);
-            const buyerCompanyIds = (buyer.companyIds || []).map((id) =>
-              String(id),
-            );
-            const buyerCompanies = companies.filter((c) =>
-              buyerCompanyIds.includes(String(c._id)),
-            );
-
-            const groups = buyerCompanies
-              .map((c) => c.group)
-              .filter(Boolean)
-              .map((group) =>
-                group
-                  .split(" ")
-                  .map(
-                    (word) =>
-                      word.charAt(0).toUpperCase() +
-                      word.slice(1).toLowerCase(),
-                  )
-                  .join(" "),
-              );
-
-            setBuyerGroups([...new Set(groups)]);
-          }
+          const res = await api.get("/bids/buyer-today", {
+            params: { mobile, date: selectedDate.toISOString().split("T")[0] },
+          });
+          const { bids: bidsData, participations, buyer } = res.data;
+          setIsBuyerAdmin(buyer.isAdmin || false);
+          setBuyerGroups(buyer.groups || []);
+          setBids(bidsData);
+          setParticipationBids(participations);
+          setFilteredBids(participations);
+        } else {
+          const [bidsRes, participateRes] = await Promise.all([
+            api.get("/bids"),
+            api.get("/participatebids"),
+          ]);
+          const bidsData = bidsRes.data?.data || bidsRes.data || [];
+          const participations =
+            participateRes.data?.data || participateRes.data || [];
+          setBids(bidsData);
+          setParticipationBids(participations);
+          setFilteredBids(participations);
         }
-
-        const allParticipations = participations.sort(
-          (a, b) =>
-            new Date(b.createdAt || b.participationDate) -
-            new Date(a.createdAt || a.participationDate),
-        );
-
-        setBids(bidsData);
-        setParticipationBids(allParticipations);
-        setFilteredBids(allParticipations);
       } catch {
         toast.error("Error fetching data");
       } finally {
@@ -101,9 +65,10 @@ const ParticipateBidAdmin = () => {
       }
     };
     fetchData();
-  }, [userRole, mobile]);
+  }, [userRole, mobile, selectedDate]);
 
   const displayBids = useMemo(() => {
+    if (userRole === "Buyer") return filteredBids;
     if (!selectedDate) return filteredBids;
 
     const targetDate = new Date(selectedDate);
@@ -114,7 +79,7 @@ const ParticipateBidAdmin = () => {
       pDate.setHours(0, 0, 0, 0);
       return pDate.getTime() === targetDate.getTime();
     });
-  }, [filteredBids, selectedDate]);
+  }, [filteredBids, selectedDate, userRole]);
 
   const getBidParticipationDetails = (data) => {
     const groupedBids = {};
@@ -123,22 +88,7 @@ const ParticipateBidAdmin = () => {
       if (!matchingBid) return;
 
       if (userRole === "Buyer") {
-        const normalizedGroup = (matchingBid.group || "")
-          .split(" ")
-          .map(
-            (word) =>
-              word.charAt(0).toUpperCase() + word.slice(1).toLowerCase(),
-          )
-          .join(" ");
-
-        if (buyerGroups.length > 0 && !buyerGroups.includes(normalizedGroup)) {
-          return;
-        }
-        const isCreator =
-          String(matchingBid.createdByMobile) === String(mobile);
-        if (!isBuyerAdmin && !isCreator) {
-          return;
-        }
+        // Server side filtering already handles this, but we can double check or just skip
       }
 
       if (!groupedBids[pBid.bidId]) {

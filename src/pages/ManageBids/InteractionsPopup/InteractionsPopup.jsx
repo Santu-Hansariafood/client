@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+import api from "../../../utils/apiClient/apiClient";
 import { toast } from "react-toastify";
 import { useAuth } from "../../../context/AuthContext/AuthContext";
 import Loading from "../../../common/Loading/Loading";
@@ -12,10 +12,10 @@ const InteractionsPopup = ({ bidId, onClose }) => {
   useEffect(() => {
     const fetchInteractions = async () => {
       try {
-        const response = await axios.get(`/participatebids?bidId=${bidId}`);
+        const response = await api.get(`/participatebids?bidId=${bidId}`);
         setInteractions(response.data.data || response.data);
       } catch (error) {
-        toast.error("Failed to fetch interactions.", error);
+        toast.error("Failed to fetch interactions.");
       }
       setLoading(false);
     };
@@ -37,7 +37,7 @@ const InteractionsPopup = ({ bidId, onClose }) => {
             }
           : { status, adminNotes };
 
-      const response = await axios.patch(
+      const response = await api.patch(
         `/participatebids/${id}/status`,
         payload,
       );
@@ -54,9 +54,11 @@ const InteractionsPopup = ({ bidId, onClose }) => {
       );
       toast.success(`Interaction ${status}.`);
     } catch (error) {
-      toast.error("Failed to update status.", error);
+      toast.error("Failed to update status.");
     }
   };
+
+  const isReviewer = actorRole === "Admin" || actorRole === "Employee" || actorRole === "Buyer";
 
   return (
     <div className="fixed inset-0 bg-slate-900/70 backdrop-blur-sm flex justify-center items-center z-50">
@@ -89,6 +91,7 @@ const InteractionsPopup = ({ bidId, onClose }) => {
                 key={interaction._id}
                 interaction={interaction}
                 onStatusChange={handleStatusChange}
+                isReviewer={isReviewer}
               />
             ))}
           </div>
@@ -98,7 +101,7 @@ const InteractionsPopup = ({ bidId, onClose }) => {
   );
 };
 
-const InteractionCard = ({ interaction, onStatusChange }) => {
+const InteractionCard = ({ interaction, onStatusChange, isReviewer }) => {
   const [notes, setNotes] = useState(interaction.adminNotes || "");
   const [acceptedRate, setAcceptedRate] = useState(
     interaction.acceptedRate ?? interaction.rate ?? "",
@@ -267,7 +270,7 @@ const InteractionCard = ({ interaction, onStatusChange }) => {
           </div>
         )}
       </div>
-      {interaction.status !== "accepted" && (
+      {interaction.status !== "accepted" && isReviewer && (
         <div className="mt-4 rounded-xl border border-slate-200 bg-white/95 p-3 sm:p-4 shadow-sm">
           <div className="flex items-center justify-between gap-3 mb-3">
             <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
@@ -312,20 +315,22 @@ const InteractionCard = ({ interaction, onStatusChange }) => {
           </div>
         </div>
       )}
-      <div className="mt-4">
-        <p className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">
-          Admin Notes
-        </p>
-        <textarea
-          className="w-full p-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition bg-white/80"
-          placeholder="Add admin notes..."
-          value={notes}
-          onChange={(e) => setNotes(e.target.value)}
-          rows={3}
-        />
-      </div>
+      {isReviewer && (
+        <div className="mt-4">
+          <p className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">
+            Review Notes
+          </p>
+          <textarea
+            className="w-full p-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition bg-white/80"
+            placeholder="Add notes for the seller..."
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            rows={3}
+          />
+        </div>
+      )}
       <div className="mt-4 flex flex-wrap justify-end gap-2.5">
-        {interaction.status !== "accepted" && (
+        {interaction.status !== "accepted" && isReviewer && (
           <button
             onClick={() => handleSave("accepted")}
             className="px-5 py-2.5 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition shadow-sm font-semibold min-w-[120px]"
@@ -333,7 +338,7 @@ const InteractionCard = ({ interaction, onStatusChange }) => {
             Accept
           </button>
         )}
-        {interaction.status !== "rejected" && (
+        {interaction.status !== "rejected" && isReviewer && (
           <button
             onClick={() => handleSave("rejected")}
             className="px-5 py-2.5 bg-rose-500 text-white rounded-lg hover:bg-rose-600 transition shadow-sm font-semibold min-w-[120px]"

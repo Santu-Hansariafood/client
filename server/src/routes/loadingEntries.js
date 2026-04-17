@@ -110,8 +110,6 @@ router.get("/buyers", async (req, res) => {
 
         let companyNames = populatedCompanyNames;
 
-        // Fallback for older/incomplete buyer records:
-        // derive buyer companies from self orders if companyIds are missing.
         if (companyNames.length === 0 && b.name) {
           const fallbackCompanyNames = await SelfOrder.distinct("buyerCompany", {
             buyer: b.name,
@@ -289,7 +287,6 @@ router.get("/", async (req, res) => {
 
     let query = {};
 
-    // Role-based filtering
     if (role === "Seller" && mobile) {
       const seller = await Seller.findOne({
         "phoneNumbers.value": String(mobile),
@@ -407,7 +404,6 @@ router.get("/export/excel", async (req, res) => {
 
     let query = {};
 
-    // Role-based filtering
     if (role === "Seller" && mobile) {
       const seller = await Seller.findOne({
         "phoneNumbers.value": String(mobile),
