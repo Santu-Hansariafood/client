@@ -10,13 +10,14 @@ const Pagination = lazy(() => import("../../common/Paginations/Paginations"));
 const ParticipateBid = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const initialCompany = searchParams.get("company") || "All";
+  const initialGroup = searchParams.get("group") || "All";
   const { mobile, userRole } = useAuth();
   const [bids, setBids] = useState([]);
   const [participations, setParticipations] = useState([]);
   const [bidStatuses, setBidStatuses] = useState([]);
   const [buyerProfile, setBuyerProfile] = useState(null);
-  const [selectedCompany, setSelectedCompany] = useState(initialCompany);
+  const [buyerGroups, setBuyerGroups] = useState([]);
+  const [selectedGroup, setSelectedGroup] = useState(initialGroup);
   const [filteredData, setFilteredData] = useState([]);
   const [mobileCardsData, setMobileCardsData] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
@@ -24,15 +25,19 @@ const ParticipateBid = () => {
 
   const fetchBidsAndParticipations = async () => {
     try {
-      const [bidsRes, participateRes, confirmBidsRes] = await Promise.all([
+      const [bidsRes, participateRes, confirmBidsRes, buyerTodayRes] = await Promise.all([
         api.get("/bids"),
         api.get("/participatebids"),
         api.get("/confirm-bid"),
+        userRole === "Buyer" ? api.get("/bids/buyer-today", { params: { mobile, date: new Date().toISOString().split("T")[0] } }) : Promise.resolve({ data: {} }),
       ]);
 
       setBids(bidsRes.data?.data || bidsRes.data || []);
       setParticipations(participateRes.data?.data || participateRes.data || []);
       setBidStatuses(confirmBidsRes.data?.data || confirmBidsRes.data || []);
+      if (userRole === "Buyer") {
+        setBuyerGroups(buyerTodayRes.data.buyer?.groups || []);
+      }
     } catch (error) {
       console.error("Error fetching data", error);
     }
@@ -68,7 +73,7 @@ const ParticipateBid = () => {
         const bid = bids.find((b) => b._id === participation.bidId);
         if (!bid) return null;
 
-        if (selectedCompany !== "All" && bid.company !== selectedCompany) {
+        if (selectedGroup !== "All" && bid.group !== selectedGroup) {
           return null;
         }
 
@@ -123,7 +128,7 @@ const ParticipateBid = () => {
 
     setFilteredData(tableRows);
     setCurrentPage(1);
-  }, [bids, participations, bidStatuses, mobile, selectedCompany]);
+  }, [bids, participations, bidStatuses, mobile, selectedGroup]);
 
   const headers = [
     "Count",
@@ -181,20 +186,20 @@ const ParticipateBid = () => {
               </div>
 
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-                {userRole === "Buyer" && buyerProfile?.companyNames?.length > 0 && (
+                {userRole === "Buyer" && buyerGroups.length > 0 && (
                   <div className="flex flex-col gap-1">
                     <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider ml-1">
-                      Filter by Company
+                      Filter by Group
                     </span>
                     <select
-                      value={selectedCompany}
-                      onChange={(e) => setSelectedCompany(e.target.value)}
+                      value={selectedGroup}
+                      onChange={(e) => setSelectedGroup(e.target.value)}
                       className="px-4 py-2 rounded-xl border border-slate-200 bg-white text-sm font-semibold text-slate-700 focus:ring-2 focus:ring-emerald-400/50 outline-none min-w-[180px]"
                     >
-                      <option value="All">All Companies</option>
-                      {buyerProfile.companyNames.map((company) => (
-                        <option key={company} value={company}>
-                          {company}
+                      <option value="All">All Groups</option>
+                      {buyerGroups.map((group) => (
+                        <option key={group} value={group}>
+                          {group}
                         </option>
                       ))}
                     </select>

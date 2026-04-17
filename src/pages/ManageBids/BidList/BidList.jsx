@@ -16,7 +16,7 @@ const PopupBox = lazy(() => import("../../../common/PopupBox/PopupBox"));
 const BidList = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const initialCompany = searchParams.get("company") || "All";
+  const initialGroup = searchParams.get("group") || "All";
   const { userRole, mobile } = useAuth();
   const [bids, setBids] = useState([]);
   const [activeTab, setActiveTab] = useState("active");
@@ -29,7 +29,7 @@ const BidList = () => {
   const [reactivateBid, setReactivateBid] = useState(null);
   const [buyerGroups, setBuyerGroups] = useState([]);
   const [buyerCompanies, setBuyerCompanies] = useState([]);
-  const [selectedCompany, setSelectedCompany] = useState(initialCompany);
+  const [selectedFilterGroup, setSelectedFilterGroup] = useState(initialGroup);
   const [isBuyerAdmin, setIsBuyerAdmin] = useState(false);
 
   useEffect(() => {
@@ -124,8 +124,8 @@ const BidList = () => {
           return false;
         }
 
-        if (userRole === "Buyer" && selectedCompany !== "All") {
-          if (bid.company !== selectedCompany) return false;
+        if (userRole === "Buyer" && selectedFilterGroup !== "All") {
+          if (bid.group !== selectedFilterGroup) return false;
         }
 
         return true;
@@ -232,14 +232,14 @@ const BidList = () => {
       }
 
       if (userRole === "Buyer") {
-        if (selectedCompany !== "All" && bid.company !== selectedCompany) {
+        if (selectedFilterGroup !== "All" && bid.group !== selectedFilterGroup) {
           return;
         }
 
         if (!buyerGroups || buyerGroups.length === 0) {
-          // If no groups, still allow if company matches (which we checked above)
-          // But we need to check if the bid actually belongs to the buyer's companies if selectedCompany is "All"
-          if (selectedCompany === "All" && !buyerCompanies.includes(bid.company)) {
+          // If no groups, still allow if company matches
+          // But we need to check if the bid actually belongs to the buyer's companies if selectedFilterGroup is "All"
+          if (selectedFilterGroup === "All" && !buyerCompanies.includes(bid.company)) {
             // Check if it's their own bid
             const creatorMobile = String(bid.createdByMobile || "");
             const currentMobile = String(mobile || "");
@@ -547,21 +547,21 @@ const BidList = () => {
                     </button>
                   </div>
 
-                  {userRole === "Buyer" && buyerCompanies.length > 0 && (
+                  {userRole === "Buyer" && buyerGroups.length > 0 && (
                     <div className="flex flex-col gap-1.5">
                       <div className="inline-flex items-center gap-2 text-xs text-slate-500">
                         <FaLayerGroup className="text-emerald-600" />
-                        Filter by Company
+                        Filter by Group
                       </div>
                       <select
-                        value={selectedCompany}
-                        onChange={(e) => setSelectedCompany(e.target.value)}
+                        value={selectedFilterGroup}
+                        onChange={(e) => setSelectedFilterGroup(e.target.value)}
                         className="px-4 py-2 rounded-xl border border-slate-200 bg-white text-sm font-semibold text-slate-700 focus:ring-2 focus:ring-emerald-400/50 outline-none"
                       >
-                        <option value="All">All Companies</option>
-                        {buyerCompanies.map((company) => (
-                          <option key={company} value={company}>
-                            {company}
+                        <option value="All">All Groups</option>
+                        {buyerGroups.map((group) => (
+                          <option key={group} value={group}>
+                            {group}
                           </option>
                         ))}
                       </select>

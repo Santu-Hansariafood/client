@@ -21,6 +21,7 @@ const BuyerDashboard = () => {
   const navigate = useNavigate();
   const { user, mobile } = useAuth();
   const [buyerProfile, setBuyerProfile] = useState(null);
+  const [buyerGroups, setBuyerGroups] = useState([]);
   const [showAllConsignee, setShowAllConsignee] = useState(false);
   const [bids, setBids] = useState([]);
   const [participations, setParticipations] = useState([]);
@@ -34,6 +35,7 @@ const BuyerDashboard = () => {
         });
         setBids(res.data.bids || []);
         setParticipations(res.data.participations || []);
+        setBuyerGroups(res.data.buyer?.groups || []);
       } catch (error) {
         console.error("Error fetching buyer dashboard data:", error);
       } finally {
@@ -121,9 +123,9 @@ const BuyerDashboard = () => {
     navigate(item.link);
   };
 
-  const handleCompanyBidClick = (companyName, type) => {
+  const handleCompanyBidClick = (groupName, type) => {
     const link = type === "live" ? "/manage-bids/bid-list" : "/participate-bid-list";
-    navigate(`${link}?company=${encodeURIComponent(companyName)}`);
+    navigate(`${link}?group=${encodeURIComponent(groupName)}`);
   };
 
   return (
@@ -177,7 +179,7 @@ const BuyerDashboard = () => {
           )}
         </header>
 
-        {buyerProfile?.companyNames?.length > 1 && (
+        {buyerGroups?.length > 0 && (
           <section className="mb-10">
             <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
               <div className="flex items-center gap-2 mb-4">
@@ -186,28 +188,28 @@ const BuyerDashboard = () => {
                 </span>
                 <div>
                   <h2 className="text-sm font-bold text-slate-700 uppercase tracking-widest">
-                    Your Companies
+                    Your Groups
                   </h2>
                   <p className="text-xs text-slate-500 mt-0.5">
-                    Quickly filter bids by your mapped companies
+                    Quickly filter bids by your associated groups
                   </p>
                 </div>
               </div>
 
               <div className="flex flex-wrap gap-3">
-                {buyerProfile.companyNames.map((company, idx) => (
+                {buyerGroups.map((group, idx) => (
                   <div key={idx} className="flex flex-col gap-2">
                     <div className="px-4 py-2 rounded-xl bg-slate-50 border border-slate-200">
-                      <p className="text-sm font-bold text-slate-800">{toTitleCase(company)}</p>
+                      <p className="text-sm font-bold text-slate-800">{toTitleCase(group)}</p>
                       <div className="flex gap-2 mt-2">
                         <button
-                          onClick={() => handleCompanyBidClick(company, "live")}
+                          onClick={() => handleCompanyBidClick(group, "live")}
                           className="px-2 py-1 text-[10px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-700 rounded-md hover:bg-emerald-200 transition"
                         >
                           Live Bids
                         </button>
                         <button
-                          onClick={() => handleCompanyBidClick(company, "participate")}
+                          onClick={() => handleCompanyBidClick(group, "participate")}
                           className="px-2 py-1 text-[10px] font-bold uppercase tracking-wider bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200 transition"
                         >
                           Participated
