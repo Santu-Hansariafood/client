@@ -38,18 +38,27 @@ const ListLoadingEntry = () => {
   const [popupType, setPopupType] = useState("");
   const [editEntry, setEditEntry] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+  const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
   useEffect(() => {
     fetchData();
-  }, [userRole, mobile]);
+  }, [userRole, mobile, currentPage, searchQuery]);
 
   const fetchData = async () => {
     try {
       const [entriesRes, sellersRes, transportersRes, ordersRes] =
         await Promise.all([
-          api.get("/loading-entries"),
+          api.get("/loading-entries", {
+            params: {
+              page: currentPage,
+              limit: itemsPerPage,
+              search: searchQuery,
+            },
+          }),
           api.get("/sellers"),
           api.get("/transporters", { params: { limit: 0 } }),
           api.get("/self-order", { params: { limit: 0 } }),
@@ -58,9 +67,18 @@ const ListLoadingEntry = () => {
       const sellersData = Array.isArray(sellersRes.data)
         ? sellersRes.data
         : sellersRes.data?.data || [];
-      const entriesData = Array.isArray(entriesRes.data)
-        ? entriesRes.data
-        : entriesRes.data?.data || [];
+      const entriesPayload = entriesRes.data || {};
+      const entriesData = Array.isArray(entriesPayload.data)
+        ? entriesPayload.data
+        : Array.isArray(entriesPayload)
+          ? entriesPayload
+          : [];
+      
+      setTotalItems(entriesPayload.total || entriesData.length);
+      setTotalPages(entriesPayload.totalPages || 1);
+      setLoadingEntries(entriesData);
+      setFilteredEntries(entriesData);
+
       const transportersData = Array.isArray(transportersRes.data)
         ? transportersRes.data
         : transportersRes.data?.data || [];
@@ -219,6 +237,42 @@ const ListLoadingEntry = () => {
     }
   };
 
+  const handleDownloadExcel = async () => {
+    let toastId;
+    try {
+      toastId = toast.loading("Preparing Excel...");
+      const response = await api.get("/loading-entries/export/excel", {
+        params: {
+          search: searchQuery,
+        },
+        responseType: "blob",
+        timeout: 60000,
+      });
+
+      const blob = new Blob([response.data], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute(
+        "download",
+        `LoadingEntries_${new Date().toISOString().split("T")[0]}.xlsx`,
+      );
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+
+      toast.dismiss(toastId);
+      toast.success("Excel downloaded");
+    } catch (error) {
+      if (toastId) toast.dismiss(toastId);
+      console.error("Excel Download Error:", error);
+      toast.error("Failed to download Excel");
+    }
+  };
+
   const headers = [
     "Sl No",
     "Loading Date",
@@ -244,10 +298,8 @@ const ListLoadingEntry = () => {
 
   const rows = useMemo(
     () =>
-      filteredEntries
-        .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
-        .map((entry, index) => [
-          (currentPage - 1) * itemsPerPage + index + 1,
+      filteredEntries.map((entry, index) => [
+        (currentPage - 1) * itemsPerPage + index + 1,
           formatDate(entry.loadingDate),
           entry.saudaNo || "N/A",
           sellerMap[entry.supplier] || "Unknown Supplier",
@@ -332,6 +384,16 @@ const ListLoadingEntry = () => {
       >
         <div className="max-w-7xl mx-auto space-y-6">
           <div className="rounded-2xl border border-amber-200/60 bg-white shadow-lg p-4 sm:p-6">
+            <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-4">
+              <h3 className="text-lg font-bold text-slate-800">Filters</h3>
+              <button
+                onClick={handleDownloadExcel}
+                className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700 transition shadow-md"
+              >
+                <MdDownload size={20} />
+                Download Excel
+              </button>
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               <SearchBox
                 placeholder="Search by Seller/Buyer Name..."
@@ -342,17 +404,7 @@ const ListLoadingEntry = () => {
                   ]),
                 ].filter(Boolean)}
                 onSearch={(filteredNames) => {
-                  if (!filteredNames.length) {
-                    setFilteredEntries(loadingEntries);
-                  } else {
-                    setFilteredEntries(
-                      loadingEntries.filter(
-                        (entry) =>
-                          filteredNames.includes(sellerMap[entry.supplier]) ||
-                          filteredNames.includes(buyerMap[entry.saudaNo]),
-                      ),
-                    );
-                  }
+                  setSearchQuery(filteredNames.length > 0 ? filteredNames[0] : "");
                   setCurrentPage(1);
                 }}
               />
@@ -363,15 +415,7 @@ const ListLoadingEntry = () => {
                   ...new Set(loadingEntries.map((e) => e.saudaNo || "")),
                 ].filter(Boolean)}
                 onSearch={(filteredSaudas) => {
-                  if (!filteredSaudas.length) {
-                    setFilteredEntries(loadingEntries);
-                  } else {
-                    setFilteredEntries(
-                      loadingEntries.filter((entry) =>
-                        filteredSaudas.includes(entry.saudaNo),
-                      ),
-                    );
-                  }
+                  setSearchQuery(filteredSaudas.length > 0 ? filteredSaudas[0] : "");
                   setCurrentPage(1);
                 }}
               />
@@ -382,15 +426,7 @@ const ListLoadingEntry = () => {
                   ...new Set(loadingEntries.map((entry) => entry.lorryNumber)),
                 ].filter(Boolean)}
                 onSearch={(filteredLorryNumbers) => {
-                  if (!filteredLorryNumbers.length) {
-                    setFilteredEntries(loadingEntries);
-                  } else {
-                    setFilteredEntries(
-                      loadingEntries.filter((entry) =>
-                        filteredLorryNumbers.includes(entry.lorryNumber),
-                      ),
-                    );
-                  }
+                  setSearchQuery(filteredLorryNumbers.length > 0 ? filteredLorryNumbers[0] : "");
                   setCurrentPage(1);
                 }}
               />
@@ -402,7 +438,7 @@ const ListLoadingEntry = () => {
             <div className="mt-4">
               <Pagination
                 currentPage={currentPage}
-                totalItems={filteredEntries.length}
+                totalItems={totalItems}
                 itemsPerPage={itemsPerPage}
                 onPageChange={setCurrentPage}
               />

@@ -1,5 +1,6 @@
 import { Router } from "express";
 import mongoose from "mongoose";
+import ExcelJS from "exceljs";
 import LoadingEntry from "../models/LoadingEntry.js";
 import Buyer from "../models/Buyer.js";
 import Group from "../models/Group.js";
@@ -276,12 +277,148 @@ router.get("/saudas", async (req, res) => {
 
 router.get("/", async (req, res) => {
   try {
-    const items = await LoadingEntry.find()
+    const page = parseInt(req.query.page || "1", 10);
+    const limit = parseInt(req.query.limit || "10", 10);
+    const search = (req.query.search || "").trim();
+    const startDate = req.query.startDate;
+    const endDate = req.query.endDate;
+
+    let query = {};
+
+    if (search) {
+      const searchRegex = new RegExp(search, "i");
+      query.$or = [
+        { saudaNo: { $regex: searchRegex } },
+        { lorryNumber: { $regex: searchRegex } },
+        { billNumber: { $regex: searchRegex } },
+        { supplierCompany: { $regex: searchRegex } },
+        { consignee: { $regex: searchRegex } },
+        { commodity: { $regex: searchRegex } },
+      ];
+    }
+
+    if (startDate || endDate) {
+      query.loadingDate = {};
+      if (startDate) query.loadingDate.$gte = new Date(startDate);
+      if (endDate) {
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+        query.loadingDate.$lte = end;
+      }
+    }
+
+    const items = await LoadingEntry.find(query)
       .sort({ loadingDate: -1, createdAt: -1 })
-      .limit(100)
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .populate("supplier", "sellerName")
       .lean();
-    res.json(items);
+
+    const total = await LoadingEntry.countDocuments(query);
+
+    res.json({
+      data: items,
+      total,
+      page,
+      totalPages: Math.ceil(total / limit),
+    });
   } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+router.get("/export/excel", async (req, res) => {
+  try {
+    const search = (req.query.search || "").trim();
+    const startDate = req.query.startDate;
+    const endDate = req.query.endDate;
+
+    let query = {};
+
+    if (search) {
+      const searchRegex = new RegExp(search, "i");
+      query.$or = [
+        { saudaNo: { $regex: searchRegex } },
+        { lorryNumber: { $regex: searchRegex } },
+        { billNumber: { $regex: searchRegex } },
+        { supplierCompany: { $regex: searchRegex } },
+        { consignee: { $regex: searchRegex } },
+        { commodity: { $regex: searchRegex } },
+      ];
+    }
+
+    if (startDate || endDate) {
+      query.loadingDate = {};
+      if (startDate) query.loadingDate.$gte = new Date(startDate);
+      if (endDate) {
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+        query.loadingDate.$lte = end;
+      }
+    }
+
+    const items = await LoadingEntry.find(query)
+      .sort({ loadingDate: -1, createdAt: -1 })
+      .populate("supplier", "sellerName")
+      .lean();
+
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet("Loading Entries");
+
+    worksheet.columns = [
+      { header: "Date", key: "loadingDate", width: 15 },
+      { header: "Sauda No", key: "saudaNo", width: 15 },
+      { header: "Supplier", key: "supplierName", width: 30 },
+      { header: "Supplier Company", key: "supplierCompany", width: 30 },
+      { header: "Consignee", key: "consignee", width: 30 },
+      { header: "Commodity", key: "commodity", width: 20 },
+      { header: "Lorry Number", key: "lorryNumber", width: 20 },
+      { header: "Loading Weight", key: "loadingWeight", width: 15 },
+      { header: "Bags", key: "bags", width: 10 },
+      { header: "Driver Name", key: "driverName", width: 20 },
+      { header: "Driver Phone", key: "driverPhoneNumber", width: 15 },
+      { header: "Bill Number", key: "billNumber", width: 20 },
+    ];
+
+    items.forEach((item) => {
+      worksheet.addRow({
+        loadingDate: item.loadingDate
+          ? new Date(item.loadingDate).toLocaleDateString("en-GB")
+          : "N/A",
+        saudaNo: item.saudaNo || "N/A",
+        supplierName: item.supplier?.sellerName || "Unknown Supplier",
+        supplierCompany: item.supplierCompany || "N/A",
+        consignee: item.consignee || "N/A",
+        commodity: item.commodity || "N/A",
+        lorryNumber: item.lorryNumber || "N/A",
+        loadingWeight: item.loadingWeight || 0,
+        bags: item.bags || 0,
+        driverName: item.driverName || "N/A",
+        driverPhoneNumber: item.driverPhoneNumber || "N/A",
+        billNumber: item.billNumber || "N/A",
+      });
+    });
+
+    worksheet.getRow(1).font = { bold: true };
+    worksheet.getRow(1).fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: "FFE0E0E0" },
+    };
+
+    res.setHeader(
+      "Content-Type",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    );
+    res.setHeader(
+      "Content-Disposition",
+      "attachment; filename=LoadingEntries.xlsx",
+    );
+
+    await workbook.xlsx.write(res);
+    res.end();
+  } catch (error) {
+    console.error("Export Excel Error:", error);
     res.status(500).json({ message: error.message });
   }
 });
