@@ -639,211 +639,42 @@ const SelfOrderList = () => {
         return date.toISOString().split("T")[0];
       };
 
-      const normalizedStartDate = startDate || endDate;
-      const normalizedEndDate = endDate || startDate;
-      const formattedStartDate = formatDateParam(normalizedStartDate);
-      const formattedEndDate = formatDateParam(normalizedEndDate);
-
+      const formattedStartDate = formatDateParam(startDate);
+      const formattedEndDate = formatDateParam(endDate);
       const trimmedSearch = searchInput?.trim() || "";
 
-      const fetchAllForExport = async () => {
-        const limit = 200;
-        let page = 1;
-        const all = [];
-
-        while (page <= 200) {
-          const res = await api.get(API_URL, {
-            timeout: 20000,
-            params: {
-              page,
-              limit,
-              search: trimmedSearch,
-              startDate: formattedStartDate,
-              endDate: formattedEndDate,
-            },
-          });
-
-          const payload = res.data;
-          const pageItems = Array.isArray(payload?.data)
-            ? payload.data
-            : Array.isArray(payload)
-              ? payload
-              : payload?.data || [];
-
-          all.push(...pageItems);
-
-          if (Array.isArray(payload)) break;
-
-          const totalPages = Number(payload?.totalPages);
-          const totalItems = Number(payload?.total || payload?.totalItems);
-
-          if (Number.isFinite(totalPages) && totalPages > 0) {
-            if (page >= totalPages) break;
-          } else if (Number.isFinite(totalItems) && totalItems > 0) {
-            if (all.length >= totalItems) break;
-          } else if (pageItems.length < limit) {
-            break;
-          }
-
-          page += 1;
-        }
-
-        return all;
-      };
-
-      let raw = await fetchAllForExport();
-
-      let exportOrders = raw;
-
-      if (userRole === "Buyer" && buyerData.length > 0) {
-        const buyer = buyerData.find((b) =>
-          b.mobile?.some((m) => String(m) === String(mobile)),
-        );
-        if (buyer) {
-          const buyerCompanyIds = (buyer.companyIds || []).map((id) =>
-            String(id),
-          );
-          const buyerCompanyNames = (buyer.companyNames || []).map((name) =>
-            name.trim().toLowerCase(),
-          );
-
-          exportOrders = raw.filter((item) => {
-            const matchId =
-              item.companyId &&
-              buyerCompanyIds.includes(String(item.companyId));
-            const matchName =
-              item.buyerCompany &&
-              buyerCompanyNames.includes(
-                item.buyerCompany.trim().toLowerCase(),
-              );
-
-            return matchId || matchName;
-          });
-        }
-      }
-
-      if (userRole === "Seller" && sellerProfileData.length > 0) {
-        const seller = sellerProfileData.find((s) =>
-          s.phoneNumbers?.some((p) => String(p.value) === String(mobile)),
-        );
-        exportOrders = exportOrders.filter((item) => {
-          return (
-            String(item.sellerMobile) === String(mobile) ||
-            (seller && String(item.supplier) === String(seller._id))
-          );
-        });
-      }
-
-      if (trimmedSearch !== "") {
-        const lowerSearch = trimmedSearch.toLowerCase();
-        exportOrders = exportOrders.filter(
-          (order) =>
-            (order.buyer && order.buyer.toLowerCase().includes(lowerSearch)) ||
-            (order.buyerCompany &&
-              order.buyerCompany.toLowerCase().includes(lowerSearch)) ||
-            (order.commodity &&
-              order.commodity.toLowerCase().includes(lowerSearch)) ||
-            (order.saudaNo &&
-              order.saudaNo.toString().toLowerCase().includes(lowerSearch)) ||
-            (order.poNumber &&
-              order.poNumber.toString().toLowerCase().includes(lowerSearch)),
-        );
-      }
-
-      if (formattedStartDate || formattedEndDate) {
-        const ymdToLocalDate = (ymd, { endOfDay } = {}) => {
-          if (!ymd) return null;
-          const [y, m, d] = String(ymd)
-            .split("-")
-            .map((part) => Number(part));
-          if (!y || !m || !d) return null;
-          return endOfDay
-            ? new Date(y, m - 1, d, 23, 59, 59, 999)
-            : new Date(y, m - 1, d, 0, 0, 0, 0);
-        };
-
-        const startBound = formattedStartDate
-          ? ymdToLocalDate(formattedStartDate, { endOfDay: false })
-          : null;
-        const endBound = formattedEndDate
-          ? ymdToLocalDate(formattedEndDate, { endOfDay: true })
-          : null;
-
-        exportOrders = exportOrders.filter((item) => {
-          const rawDate = item.poDate || item.createdAt;
-          const itemDate = rawDate ? new Date(rawDate) : null;
-          if (!itemDate || Number.isNaN(itemDate.getTime())) return false;
-          if (startBound && itemDate < startBound) return false;
-          if (endBound && itemDate > endBound) return false;
-          return true;
-        });
-      }
-
-      exportOrders = [...exportOrders].sort((a, b) => {
-        const aS = String(a.saudaNo || "");
-        const bS = String(b.saudaNo || "");
-        return bS.localeCompare(aS, undefined, { numeric: true });
+      const response = await api.get(`${API_URL}/export/excel`, {
+        params: {
+          search: trimmedSearch,
+          startDate: formattedStartDate,
+          endDate: formattedEndDate,
+          userRole,
+          mobile,
+        },
+        responseType: "blob",
+        timeout: 60000, // Longer timeout for large exports
       });
 
-      const excelRows = exportOrders.map((item) => ({
-        Date: item.poDate
-          ? new Date(item.poDate).toLocaleDateString("en-GB")
-          : item.createdAt
-            ? new Date(item.createdAt).toLocaleDateString("en-GB")
-            : "",
-        "Sauda No": item.saudaNo || "",
-        "PO Number": item.poNumber || "",
-        Buyer: item.buyer || "",
-        "Buyer Company": item.buyerCompany || "",
-        "Seller Company": item.supplierCompany || "",
-        "Seller Name": item.supplier?.sellerName || "",
-        Consignee: getConsigneeDisplay(item) || "",
-        Commodity: item.commodity || "",
-        Quantity: item.quantity || "",
-        Rate: item.rate || "",
-        Tax: item.tax || "",
-        CD: item.cd || "",
-        "Delivery Date": item.deliveryDate
-          ? new Date(item.deliveryDate).toLocaleDateString("en-GB")
-          : "",
-        "Payment Time": item.paymentTerms || "",
-      }));
-
-      if (excelRows.length === 0) {
-        toast.dismiss(toastId);
-        toast.info("No orders found for selected filters.");
-        return;
-      }
-
-      const fileSuffix =
-        formattedStartDate && formattedEndDate
-          ? formattedStartDate === formattedEndDate
-            ? formattedStartDate
-            : `${formattedStartDate}_to_${formattedEndDate}`
-          : formattedStartDate
-            ? formattedStartDate
-            : formattedEndDate
-              ? formattedEndDate
-              : "All";
-
-      generateExcel(excelRows, `SelfOrders_${fileSuffix}.xlsx`);
+      const blob = new Blob([response.data], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `SelfOrders_${new Date().toISOString().split("T")[0]}.xlsx`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
 
       toast.dismiss(toastId);
       toast.success("Excel downloaded");
-    } catch {
+    } catch (error) {
       if (toastId) toast.dismiss(toastId);
+      console.error("Excel Download Error:", error);
       toast.error("Failed to download Excel");
     }
-  }, [
-    userRole,
-    buyerData,
-    sellerProfileData,
-    mobile,
-    searchInput,
-    getConsigneeDisplay,
-    startDate,
-    endDate,
-  ]);
+  }, [userRole, mobile, searchInput, startDate, endDate]);
 
   return (
     <Suspense fallback={<Loading />}>
