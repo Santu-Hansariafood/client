@@ -278,7 +278,7 @@ router.get("/saudas", async (req, res) => {
 router.get("/", async (req, res) => {
   try {
     const page = parseInt(req.query.page || "1", 10);
-    const limit = parseInt(req.query.limit || "50", 10);
+    const limit = parseInt(req.query.limit || "10", 10);
     const search = (req.query.search || "").trim();
     const startDate = req.query.startDate;
     const endDate = req.query.endDate;

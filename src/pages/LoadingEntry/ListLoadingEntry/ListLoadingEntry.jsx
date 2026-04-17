@@ -47,7 +47,7 @@ const ListLoadingEntry = () => {
     saudas: [],
     lorries: [],
   });
-  const itemsPerPage = 50;
+  const itemsPerPage = 10;
 
   useEffect(() => {
     fetchData();
@@ -279,7 +279,7 @@ const ListLoadingEntry = () => {
     "Sl No",
     "Loading Date",
     "Sauda No",
-    "Seller Name",
+    "Seller Company",
     "Loading Weight",
     "Already Loaded",
     "Status",
@@ -302,11 +302,11 @@ const ListLoadingEntry = () => {
     () =>
       filteredEntries.map((entry, index) => [
         (currentPage - 1) * itemsPerPage + index + 1,
-          formatDate(entry.loadingDate),
-          entry.saudaNo || "N/A",
-          sellerMap[entry.supplier] || "Unknown Supplier",
-          entry.loadingWeight,
-          (alreadyLoadedMap[entry.saudaNo] || 0).toFixed(2),
+        formatDate(entry.loadingDate),
+        entry.saudaNo || "N/A",
+        entry.supplierCompany || "N/A",
+        entry.loadingWeight,
+        (alreadyLoadedMap[entry.saudaNo] || 0).toFixed(2),
           <span
             key={`status-${entry._id}`}
             className={`px-2 py-1 rounded-full text-xs font-semibold ${
