@@ -400,10 +400,9 @@ const ListLoadingEntry = () => {
               <SearchBox
                 placeholder="Search by Seller/Buyer Name..."
                 items={[...new Set([...suggestions.sellers])].filter(Boolean)}
-                onSearch={(filteredNames) => {
-                  setSearchQuery(
-                    filteredNames.length > 0 ? filteredNames[0] : "",
-                  );
+                returnQuery={true}
+                onSearch={(q) => {
+                  setSearchQuery(q);
                   setCurrentPage(1);
                 }}
               />
@@ -411,10 +410,9 @@ const ListLoadingEntry = () => {
               <SearchBox
                 placeholder="Search by Sauda No..."
                 items={[...new Set(suggestions.saudas)].filter(Boolean)}
-                onSearch={(filteredSaudas) => {
-                  setSearchQuery(
-                    filteredSaudas.length > 0 ? filteredSaudas[0] : "",
-                  );
+                returnQuery={true}
+                onSearch={(q) => {
+                  setSearchQuery(q);
                   setCurrentPage(1);
                 }}
               />
@@ -422,10 +420,9 @@ const ListLoadingEntry = () => {
               <SearchBox
                 placeholder="Search by Lorry Number..."
                 items={[...new Set(suggestions.lorries)].filter(Boolean)}
-                onSearch={(filteredLorryNumbers) => {
-                  setSearchQuery(
-                    filteredLorryNumbers.length > 0 ? filteredLorryNumbers[0] : "",
-                  );
+                returnQuery={true}
+                onSearch={(q) => {
+                  setSearchQuery(q);
                   setCurrentPage(1);
                 }}
               />
