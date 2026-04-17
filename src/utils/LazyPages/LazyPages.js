@@ -125,6 +125,8 @@ const pathToKey = {
   "/employee/list": "ListEmployee",
   "/transporter/add": "AddTransporter",
   "/transporter/list": "ListTransporter",
+  "/vendor-code/add": "AddVendorCode",
+  "/vendor-code/list": "ListVendorCode",
   "/Supplier-Bid-List": "SellerBidList",
   "/participate-bid-list": "ParticipateBid",
   "/confirm-bids/:bidId": "ConfirmBids",
@@ -134,8 +136,6 @@ const pathToKey = {
   "/teams": "Teams",
   "/buyer/market-analytics": "BuyerMarketAnalytics",
   "/buyer/bid-history": "BuyerBidHistory",
-  "/vendor-code/add": "AddVendorCode",
-  "/vendor-code/list": "ListVendorCode",
   "/expense/add": "AddExpense",
   "/expense/list": "ListExpense",
   "/data-safety": "DataSafety"
