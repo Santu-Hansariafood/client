@@ -1,15 +1,10 @@
 import { Suspense, lazy, useEffect, useState, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
 import {
   FaGavel,
   FaBook,
   FaBoxOpen,
   FaChartLine,
   FaMapMarkerAlt,
-  FaFileInvoiceDollar,
-  FaClipboardList,
-  FaUserCircle,
-  FaCalendarAlt,
 } from "react-icons/fa";
 import Loading from "../../common/Loading/Loading";
 import { useAuth } from "../../context/AuthContext/AuthContext";
@@ -19,19 +14,14 @@ import { toTitleCase } from "../../utils/textUtils/textUtils";
 
 const Cards = lazy(() => import("../../common/Cards/Cards"));
 const Tables = lazy(() => import("../../common/Tables/Tables"));
-const InteractionsPopup = lazy(() =>
-  import("../../pages/ManageBids/InteractionsPopup/InteractionsPopup")
-);
 
 const BuyerDashboard = () => {
-  const navigate = useNavigate();
-  const { user, mobile, userRole } = useAuth();
+  const { user, mobile } = useAuth();
   const [buyerProfile, setBuyerProfile] = useState(null);
   const [showAllConsignee, setShowAllConsignee] = useState(false);
   const [bids, setBids] = useState([]);
   const [participations, setParticipations] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selectedBidId, setSelectedBidId] = useState(null);
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -47,7 +37,7 @@ const BuyerDashboard = () => {
         setLoading(false);
       }
     };
-    fetchDashboardData();
+    if (mobile) fetchDashboardData();
   }, [mobile]);
 
   useEffect(() => {
@@ -65,85 +55,6 @@ const BuyerDashboard = () => {
     };
     if (mobile) fetchProfile();
   }, [mobile]);
-
-  const liveBids = useMemo(() => {
-    const now = new Date();
-    return bids.filter((bid) => {
-      if (bid.status !== "active") return false;
-      if (!bid.startTime || !bid.endTime) return false;
-
-      const [sH, sM] = bid.startTime.split(":").map(Number);
-      const [eH, eM] = bid.endTime.split(":").map(Number);
-      const bidStart = new Date(
-        now.getFullYear(),
-        now.getMonth(),
-        now.getDate(),
-        sH,
-        sM
-      );
-      const bidEnd = new Date(
-        now.getFullYear(),
-        now.getMonth(),
-        now.getDate(),
-        eH,
-        eM
-      );
-
-      return now >= bidStart && now <= bidEnd;
-    });
-  }, [bids]);
-
-  const liveBidHeaders = [
-    "Group",
-    "Consignee",
-    "Commodity",
-    "Quantity",
-    "Ends At",
-  ];
-  const liveBidRows = useMemo(
-    () =>
-      liveBids.slice(0, 5).map((bid) => [
-        bid.group,
-        bid.consignee,
-        bid.commodity,
-        `${bid.quantity} ${bid.unit || "Tons"}`,
-        bid.endTime,
-      ]),
-    [liveBids]
-  );
-
-  const participationHeaders = [
-    "Bid Group",
-    "Consignee",
-    "Seller",
-    "Proposed Rate",
-    "Status",
-  ];
-  const participationRows = useMemo(
-    () =>
-      participations.slice(0, 5).map((p) => {
-        const matchingBid = bids.find((b) => b._id === p.bidId);
-        return [
-          matchingBid?.group || "N/A",
-          matchingBid?.consignee || "N/A",
-          p.sellerCompany || p.sellerName || p.mobile,
-          `₹${p.rate}`,
-          <span
-            key={p._id}
-            className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase ${
-              p.status === "accepted"
-                ? "bg-emerald-100 text-emerald-700"
-                : p.status === "rejected"
-                ? "bg-rose-100 text-rose-700"
-                : "bg-amber-100 text-amber-700"
-            }`}
-          >
-            {p.status}
-          </span>,
-        ];
-      }),
-    [participations, bids]
-  );
 
   const colors = [
     "bg-indigo-50 text-indigo-600",
@@ -188,13 +99,6 @@ const BuyerDashboard = () => {
       link: "/buyer/market-analytics",
       color: "from-rose-400 to-red-600",
     },
-    {
-      title: "Participate Bid List",
-      count: "View",
-      icon: FaGavel,
-      link: "/manage-bids/bid-list/participate-bid-admin",
-      color: "from-emerald-500 to-teal-600",
-    },
   ];
 
   return (
@@ -214,7 +118,7 @@ const BuyerDashboard = () => {
             <div className="relative z-10 flex flex-col gap-1">
               <div className="flex items-center flex-wrap gap-2">
                 <div className="flex items-center gap-1">
-                  <span className="text-[10px] sm:text-xs font-semibold tracking-widest uppercase text-indigo-500">
+                  <span className="text-[10px] sm:text-xs font-semibold tracking-widest uppercase text-indigo-50">
                     Trustable Buyer
                   </span>
                   <div className="relative flex items-center justify-center">
@@ -237,9 +141,7 @@ const BuyerDashboard = () => {
                 </div>
               </div>
               <h3 className="text-sm sm:text-base font-bold text-slate-800 leading-tight">
-                {(buyerProfile.companyNames || []).length > 0
-                  ? buyerProfile.companyNames.join(", ")
-                  : toTitleCase(buyerProfile.companyName || "")}
+                {toTitleCase(buyerProfile.companyName || "")}
               </h3>
               {buyerProfile.group && (
                 <p className="text-[11px] sm:text-xs font-semibold text-slate-500">
@@ -249,28 +151,6 @@ const BuyerDashboard = () => {
             </div>
           )}
         </header>
-
-        {buyerProfile?.companyNames?.length > 0 && (
-          <section className="mb-6">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <h2 className="text-xs font-bold text-slate-600 uppercase tracking-widest">
-                  Your Companies
-                </h2>
-              </div>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {buyerProfile.companyNames.map((name, idx) => (
-                <div
-                  key={`${name}-${idx}`}
-                  className="px-3 py-1 rounded-full text-xs sm:text-sm font-medium bg-white shadow-sm border border-slate-200"
-                >
-                  {toTitleCase(name)}
-                </div>
-              ))}
-            </div>
-          </section>
-        )}
 
         {buyerProfile?.consignee?.length > 0 && (
           <section className="mb-10">
@@ -330,109 +210,6 @@ const BuyerDashboard = () => {
           </section>
         )}
 
-        <div className="grid lg:grid-cols-2 gap-6 mb-10">
-          <div className="bg-white/80 backdrop-blur-xl border border-slate-200 rounded-3xl shadow-sm overflow-hidden">
-            <div className="p-5 border-b border-slate-100 flex items-center justify-between bg-gradient-to-r from-emerald-50/50 to-transparent">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-emerald-100 flex items-center justify-center text-emerald-600">
-                  <FaGavel className="text-lg" />
-                </div>
-                <div>
-                  <h3 className="text-base font-bold text-slate-800">Live Bids</h3>
-                  <p className="text-xs text-slate-500">Ongoing bids for your companies</p>
-                </div>
-              </div>
-              <button 
-                onClick={() => navigate("/manage-bids/bid-list")}
-                className="text-xs font-bold text-emerald-600 hover:text-emerald-700 underline underline-offset-4"
-              >
-                View All
-              </button>
-            </div>
-            <div className="p-0 overflow-x-auto">
-              <Suspense fallback={<Loading />}>
-                {liveBidRows.length > 0 ? (
-                  <Tables headers={liveBidHeaders} rows={liveBidRows} />
-                ) : (
-                  <div className="py-10 text-center">
-                    <p className="text-slate-400 text-sm">No active bids found</p>
-                  </div>
-                )}
-              </Suspense>
-            </div>
-          </div>
-
-          <div className="bg-white/80 backdrop-blur-xl border border-slate-200 rounded-3xl shadow-sm overflow-hidden">
-            <div className="p-5 border-b border-slate-100 flex items-center justify-between bg-gradient-to-r from-teal-50/50 to-transparent">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-teal-100 flex items-center justify-center text-teal-600">
-                  <FaClipboardList className="text-lg" />
-                </div>
-                <div>
-                  <h3 className="text-base font-bold text-slate-800">Recent Participations</h3>
-                  <p className="text-xs text-slate-500">Latest offers from sellers</p>
-                </div>
-              </div>
-              <button 
-                onClick={() => navigate("/manage-bids/bid-list/participate-bid-admin")}
-                className="text-xs font-bold text-teal-600 hover:text-teal-700 underline underline-offset-4"
-              >
-                Review All
-              </button>
-            </div>
-            <div className="p-0 overflow-x-auto">
-              <Suspense fallback={<Loading />}>
-                {participationRows.length > 0 ? (
-                  <div className="cursor-pointer">
-                    <Tables 
-                      headers={participationHeaders} 
-                      rows={participations.slice(0, 5).map(p => {
-                        const matchingBid = bids.find(b => b._id === p.bidId);
-                        return [
-                          matchingBid?.group || "N/A",
-                          matchingBid?.consignee || "N/A",
-                          p.sellerCompany || p.sellerName || p.mobile,
-                          `₹${p.rate}`,
-                          <div key={p._id} className="flex items-center justify-between gap-2">
-                            <span className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase ${
-                              p.status === "accepted" ? "bg-emerald-100 text-emerald-700" :
-                              p.status === "rejected" ? "bg-rose-100 text-rose-700" : "bg-amber-100 text-amber-700"
-                            }`}>
-                              {p.status}
-                            </span>
-                            <button 
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setSelectedBidId(p.bidId);
-                              }}
-                              className="text-[10px] font-bold text-teal-600 hover:text-teal-700 underline"
-                            >
-                              Review
-                            </button>
-                          </div>
-                        ];
-                      })} 
-                    />
-                  </div>
-                ) : (
-                  <div className="py-10 text-center">
-                    <p className="text-slate-400 text-sm">No recent participations</p>
-                  </div>
-                )}
-              </Suspense>
-            </div>
-          </div>
-        </div>
-
-        {selectedBidId && (
-          <Suspense fallback={<Loading />}>
-            <InteractionsPopup 
-              bidId={selectedBidId} 
-              onClose={() => setSelectedBidId(null)} 
-            />
-          </Suspense>
-        )}
-
         <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3 sm:gap-4 md:gap-5">
           {dashboardData.map((item, index) => (
             <div
@@ -471,6 +248,64 @@ const BuyerDashboard = () => {
             </div>
           ))}
         </div>
+        <div className="mt-12 space-y-10">
+          <section className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
+            <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+              <h3 className="font-bold text-slate-800">Your Live Bids</h3>
+              <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Top 5 Recent</span>
+            </div>
+            <div className="overflow-x-auto">
+              <Suspense fallback={<Loading />}>
+                <Tables
+                  headers={["Group", "Consignee", "Commodity", "Quantity", "Ends At"]}
+                  rows={bids.slice(0, 5).map(bid => [
+                    bid.group,
+                    bid.consignee,
+                    bid.commodity,
+                    `${bid.quantity} ${bid.unit || "Tons"}`,
+                    bid.endTime || "N/A"
+                  ])}
+                />
+                {bids.length === 0 && (
+                  <div className="p-10 text-center text-slate-400 text-sm italic">No active bids for your companies</div>
+                )}
+              </Suspense>
+            </div>
+          </section>
+
+          <section className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
+            <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+              <h3 className="font-bold text-slate-800">Recent Participations</h3>
+              <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Top 5 Recent</span>
+            </div>
+            <div className="overflow-x-auto">
+              <Suspense fallback={<Loading />}>
+                <Tables
+                  headers={["Bid Group", "Consignee", "Seller", "Rate", "Status"]}
+                  rows={participations.slice(0, 5).map(p => {
+                    const bid = bids.find(b => b._id === p.bidId);
+                    return [
+                      bid?.group || "N/A",
+                      bid?.consignee || "N/A",
+                      p.sellerCompany || p.sellerName || p.mobile,
+                      `₹${p.rate}`,
+                      <span key={p._id} className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                        p.status === "accepted" ? "bg-emerald-100 text-emerald-700" :
+                        p.status === "rejected" ? "bg-rose-100 text-rose-700" : "bg-amber-100 text-amber-700"
+                      }`}>
+                        {p.status}
+                      </span>
+                    ];
+                  })}
+                />
+                {participations.length === 0 && (
+                  <div className="p-10 text-center text-slate-400 text-sm italic">No recent participations found</div>
+                )}
+              </Suspense>
+            </div>
+          </section>
+        </div>
+
         <div className="mt-16">
           <div className="bg-white/70 backdrop-blur-xl border border-white/40 rounded-3xl shadow-lg p-6">
             <UserProfileCard user={user} />
