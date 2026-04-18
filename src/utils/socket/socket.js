@@ -1,6 +1,6 @@
 import { io } from "socket.io-client";
 
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || "";
 const SOCKET_URL = BASE_URL.startsWith("http")
   ? new URL(BASE_URL).origin
   : window.location.origin;

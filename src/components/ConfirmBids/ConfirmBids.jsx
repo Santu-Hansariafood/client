@@ -153,57 +153,84 @@ const ConfirmBids = () => {
     }
   };
 
-  const headers = [
-    "Sl No",
-    "Seller Name",
-    "Company",
-    "Phone",
-    "Email",
-    "Rate",
-    "Quantity",
-    "Approved Rate",
-    "Approved Qty",
-    "Amount",
-    "Approved Time",
-    "Status",
-    "Action",
-  ];
+  const headers =
+    userRole === "Buyer"
+      ? [
+          "Sl No",
+          "Company",
+          "Rate",
+          "Quantity",
+          "Approved Rate",
+          "Approved Qty",
+          "Amount",
+          "Approved Time",
+          "Status",
+          "Action",
+        ]
+      : [
+          "Sl No",
+          "Seller Name",
+          "Company",
+          "Phone",
+          "Email",
+          "Rate",
+          "Quantity",
+          "Approved Rate",
+          "Approved Qty",
+          "Amount",
+          "Approved Time",
+          "Status",
+          "Action",
+        ];
 
-  const rows = participants.map((p) => [
-    p.slNo,
-    p.sellerName,
-    p.company,
-    p.phone,
-    p.email,
-    p.rate,
-    p.quantity,
-    typeof p.acceptedRate === "number" ? p.acceptedRate : "-",
-    typeof p.acceptedQty === "number" ? p.acceptedQty : "-",
-    typeof p.amount === "number" ? `₹${p.amount}` : "-",
-    p.acceptedAt ? p.acceptedAt.toLocaleString() : "-",
-    <span
-      className={`px-3 py-1 rounded-full text-white text-sm ${
-        p.status === "Confirmed"
-          ? "bg-green-500"
-          : p.status === "Rejected"
-            ? "bg-red-500"
-            : "bg-yellow-500"
-      }`}
-      key={p.phone}
-    >
-      {p.status}
-    </span>,
-    <button
-      key={p.slNo}
-      className={`text-blue-500 hover:underline ${
-        p.status !== "Review" ? "cursor-not-allowed opacity-50" : ""
-      }`}
-      onClick={() => openPopup(p)}
-      disabled={p.status !== "Review"}
-    >
-      Review
-    </button>,
-  ]);
+  const rows = participants.map((p) => {
+    const baseRow = [
+      p.slNo,
+      p.company,
+      p.rate,
+      p.quantity,
+      typeof p.acceptedRate === "number" ? p.acceptedRate : "-",
+      typeof p.acceptedQty === "number" ? p.acceptedQty : "-",
+      typeof p.amount === "number" ? `₹${p.amount}` : "-",
+      p.acceptedAt ? p.acceptedAt.toLocaleString() : "-",
+      <span
+        className={`px-3 py-1 rounded-full text-white text-sm ${
+          p.status === "Confirmed"
+            ? "bg-green-500"
+            : p.status === "Rejected"
+              ? "bg-red-500"
+              : "bg-yellow-500"
+        }`}
+        key={p.phone}
+      >
+        {p.status}
+      </span>,
+      <button
+        key={p.slNo}
+        className={`text-blue-500 hover:underline ${
+          p.status !== "Review" ? "cursor-not-allowed opacity-50" : ""
+        }`}
+        onClick={() => openPopup(p)}
+        disabled={p.status !== "Review"}
+      >
+        Review
+      </button>,
+    ];
+
+    if (userRole === "Buyer") {
+      return baseRow;
+    }
+
+    // For Admin/Employee, include seller details
+    return [
+      p.slNo,
+      p.sellerName,
+      p.company,
+      p.phone,
+      p.email,
+      ...baseRow.slice(2),
+    ];
+  });
 
   return (
     <Suspense fallback={<Loading />}>
@@ -289,15 +316,23 @@ const ConfirmBids = () => {
           >
             <div className="space-y-6 p-2">
               <div className="bg-slate-50 rounded-2xl p-4 border border-slate-100">
-                <div className="grid grid-cols-2 gap-4">
+                <div className={`grid ${userRole === "Buyer" ? "grid-cols-1" : "grid-cols-2"} gap-4`}>
+                  {userRole !== "Buyer" && (
+                    <div>
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Seller</p>
+                      <p className="text-sm font-bold text-slate-800">{selectedBid?.sellerName}</p>
+                    </div>
+                  )}
                   <div>
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Seller</p>
-                    <p className="text-sm font-bold text-slate-800">{selectedBid?.sellerName}</p>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Company</p>
+                    <p className="text-sm font-bold text-slate-800">{selectedBid?.company}</p>
                   </div>
-                  <div>
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Phone</p>
-                    <p className="text-sm font-bold text-slate-800">{selectedBid?.phone}</p>
-                  </div>
+                  {userRole !== "Buyer" && (
+                    <div>
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Phone</p>
+                      <p className="text-sm font-bold text-slate-800">{selectedBid?.phone}</p>
+                    </div>
+                  )}
                 </div>
               </div>
 

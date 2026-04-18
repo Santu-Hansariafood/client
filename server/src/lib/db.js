@@ -6,8 +6,8 @@ const connect = async () => {
     console.error("MONGODB_URI is not defined in the environment.");
     process.exit(1);
   }
-  const maxPoolSize = parseInt(process.env.MONGODB_MAX_POOL || "200", 10);
-  const minPoolSize = parseInt(process.env.MONGODB_MIN_POOL || "10", 10);
+  const maxPoolSize = parseInt(process.env.MONGODB_MAX_POOL || "20", 10);
+  const minPoolSize = parseInt(process.env.MONGODB_MIN_POOL || "2", 10);
   const maxIdleTimeMS = parseInt(
     process.env.MONGODB_MAX_IDLE_MS || "30000",
     10,

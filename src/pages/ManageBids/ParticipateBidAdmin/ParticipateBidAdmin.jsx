@@ -116,9 +116,11 @@ const ParticipateBidAdmin = () => {
         groupedBids[pBid.bidId].acceptanceRate = pBid.acceptedRate;
 
       const sellerLabel =
-        pBid.sellerName && pBid.sellerName.trim().length > 0
-          ? pBid.sellerName
-          : pBid.mobile;
+        userRole === "Buyer"
+          ? pBid.sellerCompany || "N/A"
+          : pBid.sellerName && pBid.sellerName.trim().length > 0
+            ? pBid.sellerName
+            : pBid.mobile;
       if (sellerLabel) groupedBids[pBid.bidId].sellers.add(sellerLabel);
     });
     return Object.values(groupedBids);
@@ -131,7 +133,7 @@ const ParticipateBidAdmin = () => {
     "Consignee",
     "Origin",
     "Commodity",
-    "Sellers",
+    userRole === "Buyer" ? "Companies" : "Sellers",
     "Bid Qty",
     "Bid Rate",
     "Party Qty",

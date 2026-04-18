@@ -92,6 +92,7 @@ const InteractionsPopup = ({ bidId, onClose }) => {
                 interaction={interaction}
                 onStatusChange={handleStatusChange}
                 isReviewer={isReviewer}
+                actorRole={actorRole}
               />
             ))}
           </div>
@@ -101,7 +102,7 @@ const InteractionsPopup = ({ bidId, onClose }) => {
   );
 };
 
-const InteractionCard = ({ interaction, onStatusChange, isReviewer }) => {
+const InteractionCard = ({ interaction, onStatusChange, isReviewer, actorRole }) => {
   const [notes, setNotes] = useState(interaction.adminNotes || "");
   const [acceptedRate, setAcceptedRate] = useState(
     interaction.acceptedRate ?? interaction.rate ?? "",
@@ -146,7 +147,7 @@ const InteractionCard = ({ interaction, onStatusChange, isReviewer }) => {
 
   const partyName =
     String(interaction.sellerCompany || "").trim() ||
-    String(interaction.sellerName || "").trim() ||
+    (actorRole === "Buyer" ? "N/A" : String(interaction.sellerName || "").trim()) ||
     "Unknown Company";
   const hasAcceptedValues =
     interaction.acceptedRate != null || interaction.acceptedQuantity != null;
@@ -180,7 +181,9 @@ const InteractionCard = ({ interaction, onStatusChange, isReviewer }) => {
           <p className="text-base sm:text-lg font-semibold text-slate-900 mt-0.5 leading-snug break-words">
             {partyName}
           </p>
-          <p className="text-xs text-slate-500 mt-1">Mobile: {interaction.mobile}</p>
+          {actorRole !== "Buyer" && (
+            <p className="text-xs text-slate-500 mt-1">Mobile: {interaction.mobile}</p>
+          )}
         </div>
         <div>
           <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">

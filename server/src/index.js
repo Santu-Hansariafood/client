@@ -76,6 +76,13 @@ app.use(
 app.use(express.json({ limit: "5mb" }));
 app.use(express.urlencoded({ extended: true, limit: "5mb" }));
 
+// Static Files Serving
+// Serve public folder from root
+app.use("/logo", express.static(path.join(__dirname, "../../public/logo")));
+app.use("/icons", express.static(path.join(__dirname, "../../public/icons")));
+app.use("/images", express.static(path.join(__dirname, "../../public/images")));
+app.use("/teams", express.static(path.join(__dirname, "../../public/teams")));
+
 // Performance Monitoring
 app.use((req, res, next) => {
   const start = Date.now();
@@ -116,6 +123,20 @@ app.use("/api/transporters", cache(60), authJwt, transporterRoutes);
 app.use("/api/notifications", cache(5), authJwt, notificationRoutes);
 app.use("/api/loading-entries", cache(5), authJwt, loadingEntryRoutes);
 app.use("/api/vendor-codes", cache(5), authJwt, vendorCodeRoutes);
+
+// Production Serving
+if (process.env.NODE_ENV === "production") {
+  const distPath = path.join(__dirname, "../../dist");
+  app.use(express.static(distPath));
+  app.get("*", (req, res) => {
+    // Only handle non-API requests
+    if (!req.path.startsWith("/api/")) {
+      res.sendFile(path.join(distPath, "index.html"));
+    } else {
+      res.status(404).json({ message: "API route not found" });
+    }
+  });
+}
 
 const PORT = process.env.PORT || 5000;
 const server = http.createServer(app);

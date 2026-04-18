@@ -16,10 +16,12 @@ export const initSocket = (server) => {
   io = new Server(server, {
     path: "/api/socket.io/",
     cors: {
-      origin: corsOrigins,
+      origin: corsOrigins === "*" ? true : corsOrigins,
       methods: ["GET", "POST", "PATCH", "DELETE"],
       credentials: true,
     },
+    pingTimeout: 20000,
+    pingInterval: 25000,
   });
 
   io.use((socket, next) => {
@@ -32,13 +34,13 @@ export const initSocket = (server) => {
 
     const bearerToken = token.startsWith("Bearer ") ? token.slice(7) : token;
 
-    try {
-      const decoded = jwt.verify(bearerToken, process.env.JWT_SECRET);
+    jwt.verify(bearerToken, process.env.JWT_SECRET, (err, decoded) => {
+      if (err) {
+        return next(new Error("Authentication error: Invalid token"));
+      }
       socket.user = decoded;
       next();
-    } catch (err) {
-      return next(new Error("Authentication error: Invalid token"));
-    }
+    });
   });
 
   io.on("connection", (socket) => {
@@ -48,24 +50,20 @@ export const initSocket = (server) => {
       `User connected: ${mobile} (${role}) - Socket ID: ${socket.id}`,
     );
 
-    if (mobile) {
-      socket.join(mobile);
-      console.log(`Socket ${socket.id} joined room: ${mobile}`);
-    }
-
     if (role) {
       socket.join(role);
-      console.log(`Socket ${socket.id} joined role room: ${role}`);
     }
 
-    socket.join("all");
+    if (mobile) {
+      socket.join(`user:${mobile}`);
+    }
 
     socket.on("disconnect", (reason) => {
-      console.log(`User disconnected: ${mobile} - Reason: ${reason}`);
+      console.log(`User disconnected: ${mobile} - ${reason}`);
     });
 
     socket.on("error", (error) => {
-      console.error(`Socket error for user ${mobile}:`, error);
+      console.error(`Socket error for ${mobile}:`, error);
     });
   });
 
@@ -73,9 +71,7 @@ export const initSocket = (server) => {
 };
 
 export const getIO = () => {
-  if (!io) {
-    throw new Error("Socket.io not initialized!");
-  }
+  if (!io) throw new Error("Socket.io not initialized!");
   return io;
 };
 
@@ -87,6 +83,6 @@ export const emitNotification = (notification) => {
   if (recipient === "all") {
     io.to(recipientRole).emit("notification", notification);
   } else {
-    io.to(recipient).emit("notification", notification);
+    io.to(`user:${recipient}`).emit("notification", notification);
   }
 };
