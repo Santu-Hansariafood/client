@@ -12,6 +12,7 @@ import {
   subscribeToNotifications,
 } from "../../utils/socket/socket";
 import api from "../../utils/apiClient/apiClient";
+import { toast } from "react-toastify";
 
 const NotificationContext = createContext();
 
@@ -42,30 +43,129 @@ export const NotificationProvider = ({ children }) => {
   );
 
   useEffect(() => {
+    if ("Notification" in window && Notification.permission === "default") {
+      Notification.requestPermission();
+    }
+  }, []);
+
+  useEffect(() => {
     if (isAuthenticated && mobile && token) {
       fetchNotifications(false);
 
       const socket = initiateSocket(token);
 
+      const playNotificationSound = () => {
+        try {
+          const audio = new Audio(
+            "https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3",
+          );
+          audio.volume = 0.5;
+          audio
+            .play()
+            .catch((e) => console.warn("Audio play blocked by browser:", e));
+        } catch (error) {
+          console.error("Failed to play notification sound:", error);
+        }
+      };
+
+      const flashTabTitle = (title) => {
+        const originalTitle = document.title;
+        let isFlash = false;
+        const interval = setInterval(() => {
+          document.title = isFlash ? `🔔 ${title}` : originalTitle;
+          isFlash = !isFlash;
+        }, 1000);
+
+        const stopFlash = () => {
+          clearInterval(interval);
+          document.title = originalTitle;
+          window.removeEventListener("focus", stopFlash);
+          window.removeEventListener("click", stopFlash);
+        };
+
+        window.addEventListener("focus", stopFlash);
+        window.addEventListener("click", stopFlash);
+        setTimeout(stopFlash, 10000);
+      };
+
       subscribeToNotifications((err, newNotification) => {
         if (err) return;
 
-        setNotifications((prev) => [newNotification, ...prev]);
+        setNotifications((prev) => {
+          const exists = prev.some((n) => n._id === newNotification._id);
+          if (exists) return prev;
+          return [newNotification, ...prev];
+        });
+
         setUnreadCount((prev) => prev + 1);
 
+        playNotificationSound();
+
+        flashTabTitle(newNotification.title);
+
+        if ("vibrate" in navigator) {
+          navigator.vibrate([200, 100, 200]);
+        }
+
         if ("Notification" in window && Notification.permission === "granted") {
-          new window.Notification(newNotification.title, {
+          const notification = new window.Notification(newNotification.title, {
             body: newNotification.message,
             icon: "/logo/logo.png",
+            badge: "/logo/logo.png",
+            vibrate: [200, 100, 200],
+            tag: newNotification._id,
+            renotify: true,
           });
+
+          notification.onclick = () => {
+            window.focus();
+            markAsRead(newNotification._id);
+            notification.close();
+          };
         }
+
+        toast.info(
+          <div className="flex items-center gap-4 py-1">
+            <div className="relative shrink-0">
+              <div className="absolute inset-0 bg-emerald-400/20 blur-lg rounded-full animate-pulse" />
+              <img
+                src="/logo/logo.png"
+                alt="Logo"
+                className="w-12 h-12 rounded-2xl shadow-lg border-2 border-white/50 relative z-10"
+              />
+            </div>
+            <div className="flex flex-col gap-0.5">
+              <h4 className="font-bold text-sm text-slate-800 tracking-tight leading-tight">
+                {newNotification.title}
+              </h4>
+              <p className="text-xs text-slate-600 line-clamp-2 leading-relaxed">
+                {newNotification.message}
+              </p>
+              <div className="mt-1 flex items-center gap-2">
+                <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest bg-emerald-50 px-1.5 py-0.5 rounded">
+                  New Message
+                </span>
+                <span className="w-1 h-1 bg-slate-300 rounded-full" />
+                <span className="text-[10px] text-slate-400">Just now</span>
+              </div>
+            </div>
+          </div>,
+          {
+            toastId: newNotification._id,
+            onClick: () => markAsRead(newNotification._id),
+            className: "premium-toast-container",
+            bodyClassName: "premium-toast-body",
+            progressClassName: "premium-toast-progress",
+            icon: false,
+          },
+        );
       });
 
       return () => {
         disconnectSocket();
       };
     }
-  }, [isAuthenticated, mobile, userRole, fetchNotifications]);
+  }, [isAuthenticated, mobile, userRole, fetchNotifications, token]);
 
   const markAsRead = async (id) => {
     try {

@@ -1,31 +1,14 @@
-import {
-  createContext,
-  useContext,
-  useState,
-  useEffect,
-  useRef,
-  useMemo,
-} from "react";
+import { createContext, useContext, useState, useEffect, useMemo } from "react";
 import PropTypes from "prop-types";
 import "react-toastify/dist/ReactToastify.css";
 
 const AuthContext = createContext();
 
-const getTodayKey = () => {
-  try {
-    return new Date().toLocaleDateString("en-CA");
-  } catch {
-    return "";
-  }
-};
-
 export const AuthProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
     try {
       const stored = JSON.parse(localStorage.getItem("isAuthenticated"));
-      const loginDate = localStorage.getItem("loginDate");
-      const today = getTodayKey();
-      if (stored && loginDate === today) {
+      if (stored) {
         return true;
       }
       return false;
@@ -50,7 +33,6 @@ export const AuthProvider = ({ children }) => {
     }
   });
 
-  const sessionTimeoutRef = useRef(null);
   const [token, setToken] = useState(() => localStorage.getItem("token") || "");
 
   const login = (userData) => {
@@ -71,12 +53,10 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem("mobile", mobileValue);
     localStorage.setItem("userRole", role);
     localStorage.setItem("user", JSON.stringify(userValue));
-    localStorage.setItem("loginDate", getTodayKey());
     if (tokenValue) {
       localStorage.setItem("token", tokenValue);
     }
 
-    startSessionTimer(true);
     return true;
   };
 
@@ -93,41 +73,12 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
     localStorage.removeItem("loginDate");
-
-    clearSessionTimer();
   };
-
-  const startSessionTimer = (force = false) => {
-    clearSessionTimer();
-    if (!isAuthenticated && !force) {
-      return;
-    }
-    const now = new Date();
-    const midnight = new Date(now);
-    midnight.setHours(24, 0, 0, 0);
-    const msUntilMidnight = midnight.getTime() - now.getTime();
-    if (msUntilMidnight <= 0) {
-      return;
-    }
-    sessionTimeoutRef.current = setTimeout(() => {
-      logout();
-    }, msUntilMidnight);
-  };
-
-  const clearSessionTimer = () => {
-    if (sessionTimeoutRef.current) {
-      clearTimeout(sessionTimeoutRef.current);
-      sessionTimeoutRef.current = null;
-    }
-  };
-
-  const handleUserActivity = () => {};
 
   const synchronizeAuthState = (event) => {
     if (event.key === "isAuthenticated") {
       const newState = JSON.parse(event.newValue);
       setIsAuthenticated(newState);
-      newState ? startSessionTimer() : clearSessionTimer();
     }
     if (event.key === "mobile") {
       setMobile(event.newValue || "");
@@ -145,27 +96,12 @@ export const AuthProvider = ({ children }) => {
   };
 
   useEffect(() => {
-    const activityEvents = ["mousemove", "keypress", "click"];
-    activityEvents.forEach((event) =>
-      window.addEventListener(event, handleUserActivity),
-    );
     window.addEventListener("storage", synchronizeAuthState);
 
     return () => {
-      activityEvents.forEach((event) =>
-        window.removeEventListener(event, handleUserActivity),
-      );
       window.removeEventListener("storage", synchronizeAuthState);
     };
   }, []);
-
-  useEffect(() => {
-    if (isAuthenticated) {
-      startSessionTimer();
-    } else {
-      clearSessionTimer();
-    }
-  }, [isAuthenticated]);
 
   const value = useMemo(
     () => ({

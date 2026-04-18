@@ -12,7 +12,6 @@ import { RiLogoutBoxLine } from "react-icons/ri";
 import { AiOutlineLock } from "react-icons/ai";
 import { HiMenuAlt2 } from "react-icons/hi";
 import { IoClose } from "react-icons/io5";
-import api from "../../utils/apiClient/apiClient";
 import PWAInstall from "../PWAInstall/PWAInstall";
 import Typewriter from "../Typewriter/Typewriter";
 import { useAuth } from "../../context/AuthContext/AuthContext";
