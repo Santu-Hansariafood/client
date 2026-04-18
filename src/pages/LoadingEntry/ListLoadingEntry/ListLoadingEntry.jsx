@@ -1,4 +1,4 @@
-import React, { lazy, useEffect, useState, useMemo } from "react";
+import React, { lazy, useEffect, useState, useMemo, useCallback } from "react";
 import api from "../../../utils/apiClient/apiClient";
 import { MdVisibility, MdEdit, MdDelete, MdDownload } from "react-icons/md";
 import { toast } from "react-toastify";
@@ -52,14 +52,9 @@ const ListLoadingEntry = () => {
     saudas: [],
     lorries: [],
   });
-  const itemsPerPage = 10;
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
-  useEffect(() => {
-    fetchData();
-    fetchSuggestions();
-  }, [userRole, mobile, currentPage, filters]);
-
-  const fetchSuggestions = async () => {
+  const fetchSuggestions = useCallback(async () => {
     try {
       const res = await api.get("/loading-entries/suggestions", {
         params: { role: userRole, mobile },
@@ -68,9 +63,9 @@ const ListLoadingEntry = () => {
     } catch (error) {
       console.error("Error fetching suggestions:", error);
     }
-  };
+  }, [userRole, mobile]);
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       setLoading(true);
       const [entriesRes, sellersRes, transportersRes, ordersRes] =
@@ -164,7 +159,29 @@ const ListLoadingEntry = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentPage, itemsPerPage, filters, userRole, mobile]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  useEffect(() => {
+    fetchSuggestions();
+  }, [fetchSuggestions]);
+
+  const handlePageChange = useCallback((page) => {
+    setCurrentPage(page);
+  }, []);
+
+  const handlePageSizeChange = useCallback((size) => {
+    setItemsPerPage(size);
+    setCurrentPage(1);
+  }, []);
+
+  const handleSearch = useCallback((q, field) => {
+    setFilters((prev) => ({ ...prev, [field]: q }));
+    setCurrentPage(1);
+  }, []);
 
   const handleView = (entry) => {
     setSelectedEntry(entry);
@@ -381,7 +398,15 @@ const ListLoadingEntry = () => {
             <MdDownload size={18} />
           </button>,
         ]),
-    [filteredEntries, sellerMap, currentPage, itemsPerPage],
+    [
+      filteredEntries,
+      currentPage,
+      itemsPerPage,
+      alreadyLoadedMap,
+      statusMap,
+      transporterMap,
+      userRole,
+    ],
   );
 
   return (
@@ -415,30 +440,21 @@ const ListLoadingEntry = () => {
                 placeholder="Search by Seller/Buyer Name..."
                 items={[...new Set([...suggestions.sellers])].filter(Boolean)}
                 returnQuery={true}
-                onSearch={(q) => {
-                  setFilters((prev) => ({ ...prev, search: q }));
-                  setCurrentPage(1);
-                }}
+                onSearch={(q) => handleSearch(q, "search")}
               />
 
               <SearchBox
                 placeholder="Search by Sauda No..."
                 items={[...new Set(suggestions.saudas)].filter(Boolean)}
                 returnQuery={true}
-                onSearch={(q) => {
-                  setFilters((prev) => ({ ...prev, saudaNo: q }));
-                  setCurrentPage(1);
-                }}
+                onSearch={(q) => handleSearch(q, "saudaNo")}
               />
 
               <SearchBox
                 placeholder="Search by Lorry Number..."
                 items={[...new Set(suggestions.lorries)].filter(Boolean)}
                 returnQuery={true}
-                onSearch={(q) => {
-                  setFilters((prev) => ({ ...prev, lorryNumber: q }));
-                  setCurrentPage(1);
-                }}
+                onSearch={(q) => handleSearch(q, "lorryNumber")}
               />
             </div>
           </div>
@@ -450,7 +466,8 @@ const ListLoadingEntry = () => {
                 currentPage={currentPage}
                 totalItems={totalItems}
                 itemsPerPage={itemsPerPage}
-                onPageChange={setCurrentPage}
+                onPageChange={handlePageChange}
+                onPageSizeChange={handlePageSizeChange}
               />
             </div>
           </div>
