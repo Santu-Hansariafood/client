@@ -53,6 +53,79 @@ const ListLoadingEntry = () => {
     lorries: [],
   });
   const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [debouncedFilters, setDebouncedFilters] = useState(filters);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedFilters(filters);
+    }, 500);
+
+    return () => clearTimeout(handler);
+  }, [filters]);
+
+  const fetchStaticData = useCallback(async () => {
+    try {
+      const [sellersRes, transportersRes, ordersRes] = await Promise.all([
+        api.get("/sellers"),
+        api.get("/transporters", { params: { limit: 0 } }),
+        api.get("/self-order", { params: { limit: 0 } }),
+      ]);
+
+      const sellersData = Array.isArray(sellersRes.data)
+        ? sellersRes.data
+        : sellersRes.data?.data || [];
+      const transportersData = Array.isArray(transportersRes.data)
+        ? transportersRes.data
+        : transportersRes.data?.data || [];
+      const ordersData = Array.isArray(ordersRes.data)
+        ? ordersRes.data
+        : ordersRes.data?.data || [];
+
+      setSellerMap(
+        Object.fromEntries(sellersData.map((s) => [s._id, s.sellerName])),
+      );
+      setBuyerMap(
+        Object.fromEntries(ordersData.map((o) => [o.saudaNo, o.buyer])),
+      );
+      setStatusMap(
+        Object.fromEntries(
+          ordersData.map((o) => [o.saudaNo, o.status || "active"]),
+        ),
+      );
+      setTransporterMap(
+        Object.fromEntries(transportersData.map((t) => [t._id, t.name])),
+      );
+      setTransporters(
+        transportersData.map((t) => ({
+          value: t._id,
+          label: `${t.name} - ${t.mobile}`,
+          name: t.name,
+        })),
+      );
+
+      setAlreadyLoadedMap(
+        Object.fromEntries(
+          ordersData.map((order) => {
+            const quantity = order.quantity || 0;
+            let pendingQuantity = order.pendingQuantity;
+            if (
+              (pendingQuantity === undefined ||
+                pendingQuantity === null ||
+                (pendingQuantity === 0 && order.status === "active")) &&
+              order.status !== "closed"
+            ) {
+              pendingQuantity = quantity;
+            } else {
+              pendingQuantity = pendingQuantity || 0;
+            }
+            return [order.saudaNo, quantity - pendingQuantity];
+          }),
+        ),
+      );
+    } catch (error) {
+      console.error("Error fetching static data:", error);
+    }
+  }, []);
 
   const fetchSuggestions = useCallback(async () => {
     try {
@@ -68,27 +141,18 @@ const ListLoadingEntry = () => {
   const fetchData = useCallback(async () => {
     try {
       setLoading(true);
-      const [entriesRes, sellersRes, transportersRes, ordersRes] =
-        await Promise.all([
-          api.get("/loading-entries", {
-            params: {
-              page: currentPage,
-              limit: itemsPerPage,
-              search: filters.search,
-              saudaNo: filters.saudaNo,
-              lorryNumber: filters.lorryNumber,
-              role: userRole,
-              mobile: mobile,
-            },
-          }),
-          api.get("/sellers"),
-          api.get("/transporters", { params: { limit: 0 } }),
-          api.get("/self-order", { params: { limit: 0 } }),
-        ]);
+      const entriesRes = await api.get("/loading-entries", {
+        params: {
+          page: currentPage,
+          limit: itemsPerPage,
+          search: debouncedFilters.search,
+          saudaNo: debouncedFilters.saudaNo,
+          lorryNumber: debouncedFilters.lorryNumber,
+          role: userRole,
+          mobile: mobile,
+        },
+      });
 
-      const sellersData = Array.isArray(sellersRes.data)
-        ? sellersRes.data
-        : sellersRes.data?.data || [];
       const entriesPayload = entriesRes.data || {};
       const entriesData = Array.isArray(entriesPayload.data)
         ? entriesPayload.data
@@ -100,74 +164,30 @@ const ListLoadingEntry = () => {
       setTotalPages(entriesPayload.totalPages || 1);
       setLoadingEntries(entriesData);
       setFilteredEntries(entriesData);
-
-      const transportersData = Array.isArray(transportersRes.data)
-        ? transportersRes.data
-        : transportersRes.data?.data || [];
-      const ordersData = Array.isArray(ordersRes.data)
-        ? ordersRes.data
-        : ordersRes.data?.data || [];
-
-      const sellerMapping = Object.fromEntries(
-        sellersData.map((seller) => [seller._id, seller.sellerName]),
-      );
-      setSellerMap(sellerMapping);
-
-      const buyerMapping = Object.fromEntries(
-        ordersData.map((order) => [order.saudaNo, order.buyer]),
-      );
-      setBuyerMap(buyerMapping);
-
-      const statusMapping = Object.fromEntries(
-        ordersData.map((order) => [order.saudaNo, order.status || "active"]),
-      );
-      setStatusMap(statusMapping);
-
-      const alreadyLoadedMapping = Object.fromEntries(
-        ordersData.map((order) => {
-          const quantity = order.quantity || 0;
-          let pendingQuantity = order.pendingQuantity;
-          if (
-            (pendingQuantity === undefined ||
-              pendingQuantity === null ||
-              (pendingQuantity === 0 && order.status === "active")) &&
-            order.status !== "closed"
-          ) {
-            pendingQuantity = quantity;
-          } else {
-            pendingQuantity = pendingQuantity || 0;
-          }
-          return [order.saudaNo, quantity - pendingQuantity];
-        }),
-      );
-      setAlreadyLoadedMap(alreadyLoadedMapping);
-
-      const transporterMapping = Object.fromEntries(
-        transportersData.map((t) => [t._id, t.name]),
-      );
-      setTransporterMap(transporterMapping);
-      setTransporters(
-        transportersData.map((t) => ({
-          value: t._id,
-          label: `${t.name} - ${t.mobile}`,
-          name: t.name,
-        })),
-      );
     } catch (error) {
-      console.error("Error fetching data:", error);
-      toast.error("Failed to fetch data");
+      console.error("Error fetching entries:", error);
+      toast.error("Failed to fetch loading entries");
     } finally {
       setLoading(false);
     }
-  }, [currentPage, itemsPerPage, filters, userRole, mobile]);
+  }, [
+    currentPage,
+    itemsPerPage,
+    debouncedFilters.search,
+    debouncedFilters.saudaNo,
+    debouncedFilters.lorryNumber,
+    userRole,
+    mobile,
+  ]);
+
+  useEffect(() => {
+    fetchStaticData();
+    fetchSuggestions();
+  }, [fetchStaticData, fetchSuggestions]);
 
   useEffect(() => {
     fetchData();
   }, [fetchData]);
-
-  useEffect(() => {
-    fetchSuggestions();
-  }, [fetchSuggestions]);
 
   const handlePageChange = useCallback((page) => {
     setCurrentPage(page);
@@ -338,66 +358,63 @@ const ListLoadingEntry = () => {
         entry.supplierCompany || "N/A",
         entry.loadingWeight,
         (alreadyLoadedMap[entry.saudaNo] || 0).toFixed(2),
-          <span
-            key={`status-${entry._id}`}
-            className={`px-2 py-1 rounded-full text-xs font-semibold ${
-              statusMap[entry.saudaNo] === "closed"
-                ? "bg-red-100 text-red-700"
-                : "bg-emerald-100 text-emerald-700"
-            }`}
-          >
-            {statusMap[entry.saudaNo] === "closed" ? "Closed" : "Active"}
-          </span>,
-          entry.lorryNumber,
-          transporterMap[entry.transporterId] || entry.addedTransport || "N/A",
-          entry.driverName,
-          entry.driverPhoneNumber,
-          entry.freightRate,
-          entry.totalFreight,
-          entry.advance,
-          entry.balance,
-          entry.billNumber,
-          formatDate(entry.dateOfIssue),
-          entry.commodity,
-          <div
-            key={`actions-${entry._id}`}
-            className="flex justify-center gap-2"
-          >
-            <button
-              onClick={() => handleView(entry)}
-              title="View"
-              className="p-1 text-blue-500 hover:bg-blue-100 rounded"
-            >
-              <MdVisibility size={18} />
-            </button>
-            {(userRole === "Admin" || userRole === "Employee") && (
-              <>
-                <button
-                  onClick={() => handleEdit(entry)}
-                  title="Edit"
-                  className="p-1 text-green-500 hover:bg-green-100 rounded"
-                >
-                  <MdEdit size={18} />
-                </button>
-                <button
-                  onClick={() => handleDelete(entry._id)}
-                  title="Delete"
-                  className="p-1 text-red-500 hover:bg-red-100 rounded"
-                >
-                  <MdDelete size={18} />
-                </button>
-              </>
-            )}
-          </div>,
+        <span
+          key={`status-${entry._id}`}
+          className={`px-2 py-1 rounded-full text-xs font-semibold ${
+            statusMap[entry.saudaNo] === "closed"
+              ? "bg-red-100 text-red-700"
+              : "bg-emerald-100 text-emerald-700"
+          }`}
+        >
+          {statusMap[entry.saudaNo] === "closed" ? "Closed" : "Active"}
+        </span>,
+        entry.lorryNumber,
+        transporterMap[entry.transporterId] || entry.addedTransport || "N/A",
+        entry.driverName,
+        entry.driverPhoneNumber,
+        entry.freightRate,
+        entry.totalFreight,
+        entry.advance,
+        entry.balance,
+        entry.billNumber,
+        formatDate(entry.dateOfIssue),
+        entry.commodity,
+        <div key={`actions-${entry._id}`} className="flex justify-center gap-2">
           <button
-            key={`download-${entry._id}`}
-            onClick={() => handleDownload(entry)}
-            title="Download"
-            className="p-1 text-purple-500 hover:bg-purple-100 rounded flex justify-center"
+            onClick={() => handleView(entry)}
+            title="View"
+            className="p-1 text-blue-500 hover:bg-blue-100 rounded"
           >
-            <MdDownload size={18} />
-          </button>,
-        ]),
+            <MdVisibility size={18} />
+          </button>
+          {(userRole === "Admin" || userRole === "Employee") && (
+            <>
+              <button
+                onClick={() => handleEdit(entry)}
+                title="Edit"
+                className="p-1 text-green-500 hover:bg-green-100 rounded"
+              >
+                <MdEdit size={18} />
+              </button>
+              <button
+                onClick={() => handleDelete(entry._id)}
+                title="Delete"
+                className="p-1 text-red-500 hover:bg-red-100 rounded"
+              >
+                <MdDelete size={18} />
+              </button>
+            </>
+          )}
+        </div>,
+        <button
+          key={`download-${entry._id}`}
+          onClick={() => handleDownload(entry)}
+          title="Download"
+          className="p-1 text-purple-500 hover:bg-purple-100 rounded flex justify-center"
+        >
+          <MdDownload size={18} />
+        </button>,
+      ]),
     [
       filteredEntries,
       currentPage,
