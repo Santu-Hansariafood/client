@@ -43,10 +43,10 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
   return (
     <>
       <aside
-        className={`fixed top-0 left-0 z-40 h-full w-64 text-slate-100 shadow-2xl transform transition-all duration-300 ease-out border-r border-slate-800/80
+        className={`fixed lg:sticky top-0 left-0 z-40 h-screen text-slate-100 shadow-2xl transform transition-all duration-300 ease-out border-r border-slate-800/80
           bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950
           ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"}
-          lg:translate-x-0 lg:static ${isCollapsed ? "lg:w-[4.5rem]" : "lg:w-60"} flex flex-col`}
+          lg:translate-x-0 ${isCollapsed ? "w-[4.5rem]" : "w-60"} flex flex-col shrink-0`}
       >
         {/* Header: logo + collapse */}
         <div className="relative flex items-center justify-between h-16 min-h-[4rem] px-4 border-b border-slate-800/80 shrink-0">

@@ -32,14 +32,14 @@ const PrivateLayout = () => {
   }, []);
 
   return (
-    <div className="flex min-h-screen w-full overflow-x-hidden bg-slate-100">
+    <div className="flex h-screen w-full overflow-hidden bg-slate-100">
       {(userRole === "Admin" || userRole === "Employee") && (
         <Sidebar
           isSidebarOpen={isSidebarOpen}
           setIsSidebarOpen={setIsSidebarOpen}
         />
       )}
-      <div className="flex-1 min-w-0 flex flex-col overflow-x-hidden">
+      <div className="flex-1 min-w-0 flex flex-col h-screen overflow-hidden">
         <Header
           onLogoutClick={() => setShowLogoutConfirmation(true)}
           showMenuButton={userRole === "Admin" || userRole === "Employee"}
@@ -48,9 +48,8 @@ const PrivateLayout = () => {
           isProfileDropdownOpen={isProfileDropdownOpen}
           setProfileDropdownOpen={setProfileDropdownOpen}
         />
-        <main className="flex-1 min-w-0 overflow-y-auto flex flex-col md:pb-0">
-          <div className="flex-1 px-2 sm:px-3 pt-3 md:pt-2 w-full">
-            {" "}
+        <main className="flex-1 min-w-0 overflow-y-auto bg-slate-100/50">
+          <div className="p-4 sm:p-6 lg:p-8">
             <Suspense fallback={<PageLoader />}>
               <Outlet />
             </Suspense>
