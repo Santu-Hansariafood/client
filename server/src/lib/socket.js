@@ -14,16 +14,17 @@ export const initSocket = (server) => {
       : "*";
 
   io = new Server(server, {
-    path: "/api/socket.io/",
+    path: "/api/socket.io",
     cors: {
       origin: corsOrigins === "*" ? true : corsOrigins,
       methods: ["GET", "POST", "PATCH", "DELETE"],
       credentials: true,
     },
+    transports: ["websocket", "polling"],
     pingTimeout: 20000,
     pingInterval: 25000,
   });
-
+  
   io.use((socket, next) => {
     const token =
       socket.handshake.auth.token || socket.handshake.headers.authorization;

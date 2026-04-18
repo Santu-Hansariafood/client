@@ -14,20 +14,29 @@ export const initiateSocket = (token) => {
   }
 
   socket = io(SOCKET_URL, {
-    path: "/api/socket.io/",
-    transports: ["polling", "websocket"],
+    path: "/api/socket.io",
+    transports: ["websocket", "polling"],
     auth: {
       token: token,
     },
     reconnection: true,
-    reconnectionAttempts: 5,
+    reconnectionAttempts: 10,
     reconnectionDelay: 1000,
+    timeout: 20000,
   });
 
   console.log("Connecting socket...");
 
+  socket.on("connect", () => {
+    console.log("Socket connected:", socket.id);
+  });
+
   socket.on("connect_error", (err) => {
     console.error("Socket connection error:", err.message);
+  });
+
+  socket.on("disconnect", (reason) => {
+    console.warn("Socket disconnected:", reason);
   });
 
   return socket;
@@ -39,10 +48,13 @@ export const disconnectSocket = () => {
 };
 
 export const subscribeToNotifications = (cb) => {
-  if (!socket) return true;
+  if (!socket) return;
+
+  socket.off("notification");
+
   socket.on("notification", (msg) => {
     console.log("New notification received via socket");
-    return cb(null, msg);
+    cb(null, msg);
   });
 };
 
