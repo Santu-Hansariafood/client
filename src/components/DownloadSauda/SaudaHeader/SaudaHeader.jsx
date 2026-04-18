@@ -83,7 +83,13 @@ const SaudaHeader = () => (
   <View style={styles.header} fixed>
     <View style={styles.row}>
       <View style={styles.logoBox}>
-        <Image src={logo} style={styles.logo} />
+        {logo ? (
+          <Image src={logo} style={styles.logo} />
+        ) : (
+          <Text style={{ fontSize: 10, color: "#1F7A3E", fontWeight: "bold" }}>
+            HANSARIA
+          </Text>
+        )}
       </View>
 
       <View style={styles.companyBox}>

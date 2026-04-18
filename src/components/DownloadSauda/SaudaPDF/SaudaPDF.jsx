@@ -80,7 +80,6 @@ const styles = StyleSheet.create({
     left: "20%",
     fontSize: 60,
     color: "#F3F4F6",
-    transform: [{ rotate: "-25deg" }],
     opacity: 0.3,
   },
 });
@@ -91,9 +90,18 @@ const SaudaPDF = ({ data }) => (
       <View style={styles.pageBorder} fixed />
       <View style={styles.innerBorder} fixed />
 
-      <Text style={styles.watermark} fixed>
-        HANSARIA
-      </Text>
+      <View
+        style={{
+          position: "absolute",
+          top: "40%",
+          left: "20%",
+          transform: "rotate(-25deg)",
+          opacity: 0.1,
+        }}
+        fixed
+      >
+        <Text style={{ fontSize: 60, color: "#000000" }}>HANSARIA</Text>
+      </View>
 
       <SaudaHeader />
 
@@ -125,6 +133,19 @@ const SaudaPDF = ({ data }) => (
     <Page style={styles.page} size="A4">
       <View style={styles.pageBorder} fixed />
       <View style={styles.innerBorder} fixed />
+
+      <View
+        style={{
+          position: "absolute",
+          top: "40%",
+          left: "20%",
+          transform: "rotate(-25deg)",
+          opacity: 0.1,
+        }}
+        fixed
+      >
+        <Text style={{ fontSize: 60, color: "#000000" }}>HANSARIA</Text>
+      </View>
 
       <SaudaHeader />
 
