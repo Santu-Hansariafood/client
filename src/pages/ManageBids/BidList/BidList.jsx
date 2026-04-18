@@ -124,11 +124,58 @@ const BidList = () => {
           return false;
         }
 
-        if (userRole === "Buyer" && selectedFilterGroup !== "All") {
-          if (bid.group !== selectedFilterGroup) return false;
+        if (userRole === "Admin" || userRole === "Employee") {
+          return true;
         }
 
-        return true;
+        if (userRole === "Buyer") {
+          // If a specific group is selected, check it first
+          if (selectedFilterGroup !== "All" && bid.group !== selectedFilterGroup) {
+            return false;
+          }
+
+          // Then check if the bid belongs to ANY of the buyer's groups, companies, or is their own bid
+          if (buyerGroups && buyerGroups.length > 0) {
+            const bidGroupNormalized = (bid.group || "")
+              .trim()
+              .split(" ")
+              .map(
+                (word) =>
+                  word.charAt(0).toUpperCase() + word.slice(1).toLowerCase(),
+              )
+              .join(" ");
+
+            const belongsToGroup = buyerGroups.includes(bidGroupNormalized);
+            const belongsToCompany = (buyerCompanies || []).includes(bid.company);
+            const isOwnBid = String(bid.createdByMobile || "") === String(mobile || "");
+
+            if (!belongsToGroup && !belongsToCompany && !isOwnBid) return false;
+          } else {
+            // If no groups, still check if company matches or is their own bid
+            const belongsToCompany = (buyerCompanies || []).includes(bid.company);
+            const isOwnBid = String(bid.createdByMobile || "") === String(mobile || "");
+
+            if (!belongsToCompany && !isOwnBid) return false;
+          }
+
+          // For non-admins, ensure they only see their own bids or those from admins/employees for their company
+          if (!isBuyerAdmin) {
+            const role = String(bid.createdByRole || "").toLowerCase();
+            const creatorMobile = String(bid.createdByMobile || "");
+            const currentMobile = String(mobile || "");
+
+            const createdByAdminOrEmployee = role === "admin" || role === "employee";
+            const createdByCurrentBuyer = creatorMobile !== "" && creatorMobile === currentMobile;
+
+            if (!createdByAdminOrEmployee && !createdByCurrentBuyer) {
+              if (!(buyerCompanies || []).includes(bid.company)) return false;
+            }
+          }
+          return true;
+        }
+
+        // Only Admin and Employee can display the full list, other roles see nothing here
+        return false;
       })
       .sort((a, b) => {
         const dateA = new Date(a.closedAt || a.updatedAt || a.createdAt);
@@ -231,21 +278,14 @@ const BidList = () => {
         return;
       }
 
-      if (userRole === "Buyer") {
+      if (userRole === "Admin" || userRole === "Employee") {
+        // Full access
+      } else if (userRole === "Buyer") {
         if (selectedFilterGroup !== "All" && bid.group !== selectedFilterGroup) {
           return;
         }
 
-        if (!buyerGroups || buyerGroups.length === 0) {
-          // If no groups, still allow if company matches
-          // But we need to check if the bid actually belongs to the buyer's companies if selectedFilterGroup is "All"
-          if (selectedFilterGroup === "All" && !buyerCompanies.includes(bid.company)) {
-            // Check if it's their own bid
-            const creatorMobile = String(bid.createdByMobile || "");
-            const currentMobile = String(mobile || "");
-            if (creatorMobile !== currentMobile) return;
-          }
-        } else {
+        if (buyerGroups && buyerGroups.length > 0) {
           const bidGroupNormalized = (bid.group || "")
             .trim()
             .split(" ")
@@ -256,10 +296,15 @@ const BidList = () => {
             .join(" ");
 
           const belongsToGroup = buyerGroups.includes(bidGroupNormalized);
-          const belongsToCompany = buyerCompanies.includes(bid.company);
+          const belongsToCompany = (buyerCompanies || []).includes(bid.company);
           const isOwnBid = String(bid.createdByMobile || "") === String(mobile || "");
 
           if (!belongsToGroup && !belongsToCompany && !isOwnBid) return;
+        } else {
+          const belongsToCompany = (buyerCompanies || []).includes(bid.company);
+          const isOwnBid = String(bid.createdByMobile || "") === String(mobile || "");
+
+          if (!belongsToCompany && !isOwnBid) return;
         }
 
         if (!isBuyerAdmin) {
@@ -273,10 +318,12 @@ const BidList = () => {
             creatorMobile !== "" && creatorMobile === currentMobile;
 
           if (!createdByAdminOrEmployee && !createdByCurrentBuyer) {
-             // If not created by admin/employee or self, check if it's for their company
-             if (!buyerCompanies.includes(bid.company)) return;
+             if (!(buyerCompanies || []).includes(bid.company)) return;
           }
         }
+      } else {
+        // Other roles see nothing in counts
+        return;
       }
 
       const bidDateStr =
@@ -547,26 +594,26 @@ const BidList = () => {
                     </button>
                   </div>
 
-                  {userRole === "Buyer" && buyerGroups.length > 0 && (
-                    <div className="flex flex-col gap-1.5">
-                      <div className="inline-flex items-center gap-2 text-xs text-slate-500">
-                        <FaLayerGroup className="text-emerald-600" />
-                        Filter by Group
-                      </div>
-                      <select
-                        value={selectedFilterGroup}
-                        onChange={(e) => setSelectedFilterGroup(e.target.value)}
-                        className="px-4 py-2 rounded-xl border border-slate-200 bg-white text-sm font-semibold text-slate-700 focus:ring-2 focus:ring-emerald-400/50 outline-none"
-                      >
-                        <option value="All">All Groups</option>
-                        {buyerGroups.map((group) => (
-                          <option key={group} value={group}>
-                            {group}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  )}
+          {userRole === "Buyer" && buyerGroups && buyerGroups.length > 1 && (
+            <div className="flex flex-col gap-1.5 w-full sm:w-64">
+              <div className="inline-flex items-center gap-2 text-xs text-slate-500">
+                <FaLayerGroup className="text-emerald-600" />
+                Filter Your Groups
+              </div>
+              <select
+                value={selectedFilterGroup}
+                onChange={(e) => setSelectedFilterGroup(e.target.value)}
+                className="px-4 py-2 rounded-xl border border-slate-200 bg-white text-sm font-semibold text-slate-700 focus:ring-2 focus:ring-emerald-400/50 outline-none"
+              >
+                <option value="All">All My Groups</option>
+                {buyerGroups.map((group) => (
+                  <option key={group} value={group}>
+                    {group}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
 
                   <div className="w-full lg:w-auto">
                     <div className="inline-flex items-center gap-2 text-xs text-slate-500 mb-1.5">
