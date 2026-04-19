@@ -60,17 +60,40 @@ const BidList = () => {
 
   const filteredBids = useMemo(() => {
     const now = new Date();
-    const todayStr = now.toLocaleDateString("en-CA");
+    const getISODate = (date) => {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const day = String(date.getDate()).padStart(2, "0");
+      return `${year}-${month}-${day}`;
+    };
+
+    const todayStr = getISODate(now);
     const yesterday = new Date(now);
     yesterday.setDate(now.getDate() - 1);
-    const yesterdayStr = yesterday.toLocaleDateString("en-CA");
+    const yesterdayStr = getISODate(yesterday);
+
+    // Helper for normalizing group names
+    const normalize = (str) =>
+      (str || "")
+        .trim()
+        .toLowerCase()
+        .split(/\s+/)
+        .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+        .join(" ");
+
+    const normalizedBuyerGroups = (buyerGroups || []).map(normalize);
 
     return bids
       .filter((bid) => {
-        const bidDateStr =
-          bid.bidDate && typeof bid.bidDate === "string"
-            ? bid.bidDate.split("T")[0]
-            : "";
+        // Handle bidDate which can be a string or a Date object
+        let bidDateObj;
+        try {
+          bidDateObj = new Date(bid.bidDate);
+        } catch {
+          return false;
+        }
+
+        const bidDateStr = getISODate(bidDateObj);
         const isToday = bidDateStr === todayStr;
         const isYesterday = bidDateStr === yesterdayStr;
 
@@ -130,33 +153,21 @@ const BidList = () => {
 
         if (userRole === "Buyer") {
           // If a specific group is selected, check it first
-          if (selectedFilterGroup !== "All" && bid.group !== selectedFilterGroup) {
+          if (
+            selectedFilterGroup !== "All" &&
+            normalize(bid.group) !== normalize(selectedFilterGroup)
+          ) {
             return false;
           }
 
           // Then check if the bid belongs to ANY of the buyer's groups, companies, or is their own bid
-          if (buyerGroups && buyerGroups.length > 0) {
-            const bidGroupNormalized = (bid.group || "")
-              .trim()
-              .split(" ")
-              .map(
-                (word) =>
-                  word.charAt(0).toUpperCase() + word.slice(1).toLowerCase(),
-              )
-              .join(" ");
+          const bidGroupNormalized = normalize(bid.group);
+          const belongsToGroup = normalizedBuyerGroups.includes(bidGroupNormalized);
+          const belongsToCompany = (buyerCompanies || []).includes(bid.company);
+          const isOwnBid =
+            String(bid.createdByMobile || "") === String(mobile || "");
 
-            const belongsToGroup = buyerGroups.includes(bidGroupNormalized);
-            const belongsToCompany = (buyerCompanies || []).includes(bid.company);
-            const isOwnBid = String(bid.createdByMobile || "") === String(mobile || "");
-
-            if (!belongsToGroup && !belongsToCompany && !isOwnBid) return false;
-          } else {
-            // If no groups, still check if company matches or is their own bid
-            const belongsToCompany = (buyerCompanies || []).includes(bid.company);
-            const isOwnBid = String(bid.createdByMobile || "") === String(mobile || "");
-
-            if (!belongsToCompany && !isOwnBid) return false;
-          }
+          if (!belongsToGroup && !belongsToCompany && !isOwnBid) return false;
 
           // For non-admins, ensure they only see their own bids or those from admins/employees for their company
           if (!isBuyerAdmin) {
@@ -164,8 +175,10 @@ const BidList = () => {
             const creatorMobile = String(bid.createdByMobile || "");
             const currentMobile = String(mobile || "");
 
-            const createdByAdminOrEmployee = role === "admin" || role === "employee";
-            const createdByCurrentBuyer = creatorMobile !== "" && creatorMobile === currentMobile;
+            const createdByAdminOrEmployee =
+              role === "admin" || role === "employee";
+            const createdByCurrentBuyer =
+              creatorMobile !== "" && creatorMobile === currentMobile;
 
             if (!createdByAdminOrEmployee && !createdByCurrentBuyer) {
               if (!(buyerCompanies || []).includes(bid.company)) return false;
@@ -263,10 +276,27 @@ const BidList = () => {
 
   const tabCounts = useMemo(() => {
     const now = new Date();
-    const todayStr = now.toLocaleDateString("en-CA");
+    const getISODate = (date) => {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const day = String(date.getDate()).padStart(2, "0");
+      return `${year}-${month}-${day}`;
+    };
+
+    const todayStr = getISODate(now);
     const yesterday = new Date(now);
     yesterday.setDate(now.getDate() - 1);
-    const yesterdayStr = yesterday.toLocaleDateString("en-CA");
+    const yesterdayStr = getISODate(yesterday);
+
+    const normalize = (str) =>
+      (str || "")
+        .trim()
+        .toLowerCase()
+        .split(/\s+/)
+        .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+        .join(" ");
+
+    const normalizedBuyerGroups = (buyerGroups || []).map(normalize);
 
     const counts = { active: 0, closed: 0, previous: 0 };
 
@@ -281,31 +311,20 @@ const BidList = () => {
       if (userRole === "Admin" || userRole === "Employee") {
         // Full access
       } else if (userRole === "Buyer") {
-        if (selectedFilterGroup !== "All" && bid.group !== selectedFilterGroup) {
+        if (
+          selectedFilterGroup !== "All" &&
+          normalize(bid.group) !== normalize(selectedFilterGroup)
+        ) {
           return;
         }
 
-        if (buyerGroups && buyerGroups.length > 0) {
-          const bidGroupNormalized = (bid.group || "")
-            .trim()
-            .split(" ")
-            .map(
-              (word) =>
-                word.charAt(0).toUpperCase() + word.slice(1).toLowerCase(),
-            )
-            .join(" ");
+        const bidGroupNormalized = normalize(bid.group);
+        const belongsToGroup = normalizedBuyerGroups.includes(bidGroupNormalized);
+        const belongsToCompany = (buyerCompanies || []).includes(bid.company);
+        const isOwnBid =
+          String(bid.createdByMobile || "") === String(mobile || "");
 
-          const belongsToGroup = buyerGroups.includes(bidGroupNormalized);
-          const belongsToCompany = (buyerCompanies || []).includes(bid.company);
-          const isOwnBid = String(bid.createdByMobile || "") === String(mobile || "");
-
-          if (!belongsToGroup && !belongsToCompany && !isOwnBid) return;
-        } else {
-          const belongsToCompany = (buyerCompanies || []).includes(bid.company);
-          const isOwnBid = String(bid.createdByMobile || "") === String(mobile || "");
-
-          if (!belongsToCompany && !isOwnBid) return;
-        }
+        if (!belongsToGroup && !belongsToCompany && !isOwnBid) return;
 
         if (!isBuyerAdmin) {
           const role = String(bid.createdByRole || "").toLowerCase();
@@ -318,7 +337,7 @@ const BidList = () => {
             creatorMobile !== "" && creatorMobile === currentMobile;
 
           if (!createdByAdminOrEmployee && !createdByCurrentBuyer) {
-             if (!(buyerCompanies || []).includes(bid.company)) return;
+            if (!(buyerCompanies || []).includes(bid.company)) return;
           }
         }
       } else {
@@ -326,10 +345,14 @@ const BidList = () => {
         return;
       }
 
-      const bidDateStr =
-        bid.bidDate && typeof bid.bidDate === "string"
-          ? bid.bidDate.split("T")[0]
-          : "";
+      let bidDateObj;
+      try {
+        bidDateObj = new Date(bid.bidDate);
+      } catch {
+        return;
+      }
+
+      const bidDateStr = getISODate(bidDateObj);
       const isToday = bidDateStr === todayStr;
       const isYesterday = bidDateStr === yesterdayStr;
 
@@ -359,7 +382,13 @@ const BidList = () => {
         }
       }
 
-      if (isToday && bidStartTime && bidEndTime && now >= bidStartTime && now <= bidEndTime)
+      if (
+        isToday &&
+        bidStartTime &&
+        bidEndTime &&
+        now >= bidStartTime &&
+        now <= bidEndTime
+      )
         counts.active += 1;
       if (isToday && bidEndTime && now > bidEndTime) counts.closed += 1;
       if (isYesterday) counts.previous += 1;

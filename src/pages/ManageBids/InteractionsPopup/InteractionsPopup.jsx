@@ -12,15 +12,49 @@ const InteractionsPopup = ({ bidId, onClose }) => {
   useEffect(() => {
     const fetchInteractions = async () => {
       try {
-        const response = await api.get(`/participatebids?bidId=${bidId}`);
-        setInteractions(response.data.data || response.data);
+        const [interactionsRes, bidRes] = await Promise.all([
+          api.get(`/participatebids?bidId=${bidId}`),
+          api.get(`/bids/${bidId}`)
+        ]);
+
+        const bidData = bidRes.data;
+        const interactionsData = interactionsRes.data.data || interactionsRes.data;
+
+        // Authorization check for Buyer
+        if (actorRole === "Buyer" && bidData) {
+          // Fetch buyer info to get their groups
+          const buyerRes = await api.get("/bids/buyer-today", { params: { mobile: actorMobile } });
+          const buyerInfo = buyerRes.data.buyer;
+          
+          const normalize = (str) =>
+            (str || "")
+              .trim()
+              .toLowerCase()
+              .split(/\s+/)
+              .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+              .join(" ");
+
+          const allowedGroups = (buyerInfo.groups || []).map(normalize);
+          const allowedCompanies = (buyerInfo.companies || []).map(c => String(c).trim());
+          const bidGroup = normalize(bidData.group);
+          const bidCompany = String(bidData.company || "").trim();
+          const isOwnBid = String(bidData.createdByMobile || "") === String(actorMobile || "");
+
+          if (!isOwnBid && !allowedGroups.includes(bidGroup) && !allowedCompanies.includes(bidCompany)) {
+            toast.error("You are not authorized to view interactions for this bid.");
+            onClose();
+            return;
+          }
+        }
+
+        setInteractions(interactionsData);
       } catch (error) {
         toast.error("Failed to fetch interactions.");
       }
       setLoading(false);
     };
     fetchInteractions();
-  }, [bidId]);
+  }, [bidId, actorRole, actorMobile, onClose]);
 
   const handleStatusChange = async (id, status, adminNotes, acceptance) => {
     try {

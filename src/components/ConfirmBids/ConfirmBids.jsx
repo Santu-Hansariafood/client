@@ -22,25 +22,50 @@ const ConfirmBids = () => {
 
   const fetchDetails = async () => {
     try {
-      const [participateRes, sellersRes, bidsRes, confirmRes] =
-        await Promise.all([
-          api.get("/participatebids"),
-          api.get("/sellers"),
-          api.get("/bids"),
-          api.get("/confirm-bid"),
-        ]);
+      const endpoints = [
+        api.get("/participatebids", { params: { bidId } }),
+        api.get("/sellers"),
+        api.get(`/bids/${bidId}`),
+        api.get("/confirm-bid", { params: { bidId } }),
+      ];
 
-      const bids = bidsRes.data?.data || bidsRes.data || [];
-      const matchedBid = bids.find((b) => b._id === bidId);
+      // If buyer, we also need their group info to verify
+      if (userRole === "Buyer") {
+        endpoints.push(api.get("/bids/buyer-today", { params: { mobile } }));
+      }
+
+      const responses = await Promise.all(endpoints);
+      
+      const bidParticipants = responses[0].data?.data || responses[0].data || [];
+      const sellers = responses[1].data?.data || responses[1].data || [];
+      const matchedBid = responses[2].data;
+      const confirmedBids = responses[3].data?.data || responses[3].data || [];
+
+      // Authorization check for Buyer
+      if (userRole === "Buyer" && matchedBid) {
+        const buyerInfo = responses[4].data.buyer;
+        const normalize = (str) =>
+          (str || "")
+            .trim()
+            .toLowerCase()
+            .split(/\s+/)
+            .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+            .join(" ");
+
+        const allowedGroups = (buyerInfo.groups || []).map(normalize);
+        const allowedCompanies = (buyerInfo.companies || []).map(c => String(c).trim());
+        const bidGroup = normalize(matchedBid.group);
+        const bidCompany = String(matchedBid.company || "").trim();
+        const isOwnBid = String(matchedBid.createdByMobile || "") === String(mobile || "");
+
+        if (!isOwnBid && !allowedGroups.includes(bidGroup) && !allowedCompanies.includes(bidCompany)) {
+          toast.error("You are not authorized to view this bid.");
+          navigate("/manage-bids/bid-list");
+          return;
+        }
+      }
+
       setBidDetails(matchedBid || null);
-
-      const confirmedBidsRaw = confirmRes.data?.data || confirmRes.data || [];
-      const confirmedBids = confirmedBidsRaw.filter((c) => c.bidId === bidId);
-
-      const participationRaw =
-        participateRes.data?.data || participateRes.data || [];
-      const bidParticipants = participationRaw.filter((p) => p.bidId === bidId);
-      const sellers = sellersRes.data?.data || sellersRes.data || [];
 
       const detailedParticipants = bidParticipants.map((p, index) => {
         const seller = sellers.find((s) =>

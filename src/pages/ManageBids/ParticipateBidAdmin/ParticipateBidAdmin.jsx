@@ -33,6 +33,14 @@ const ParticipateBidAdmin = () => {
   const [isBuyerAdmin, setIsBuyerAdmin] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
 
+  const normalize = (str) =>
+    (str || "")
+      .trim()
+      .toLowerCase()
+      .split(/\s+/)
+      .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+      .join(" ");
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -42,10 +50,26 @@ const ParticipateBidAdmin = () => {
           });
           const { bids: bidsData, participations, buyer } = res.data;
           setIsBuyerAdmin(buyer.isAdmin || false);
-          setBuyerGroups(buyer.groups || []);
-          setBids(bidsData);
-          setParticipationBids(participations);
-          setFilteredBids(participations);
+          
+          const groups = (buyer.groups || []).map(normalize);
+          const companies = (buyer.companies || []).map(c => String(c).trim());
+          setBuyerGroups(groups);
+          
+          // Strictly filter bids and participations by groups/companies
+          const allowedBids = bidsData.filter(bid => {
+            const bidGroup = normalize(bid.group);
+            const isOwnBid = String(bid.createdByMobile || "") === String(mobile || "");
+            const belongsToGroup = groups.includes(bidGroup);
+            const belongsToCompany = companies.includes(String(bid.company || "").trim());
+            return isOwnBid || belongsToGroup || belongsToCompany;
+          });
+          
+          const allowedBidIds = new Set(allowedBids.map(b => b._id));
+          const allowedParticipations = participations.filter(p => allowedBidIds.has(p.bidId));
+
+          setBids(allowedBids);
+          setParticipationBids(allowedParticipations);
+          setFilteredBids(allowedParticipations);
         } else {
           const [bidsRes, participateRes] = await Promise.all([
             api.get("/bids"),
@@ -68,7 +92,6 @@ const ParticipateBidAdmin = () => {
   }, [userRole, mobile, selectedDate]);
 
   const displayBids = useMemo(() => {
-    if (userRole === "Buyer") return filteredBids;
     if (!selectedDate) return filteredBids;
 
     const targetDate = new Date(selectedDate);
@@ -79,7 +102,7 @@ const ParticipateBidAdmin = () => {
       pDate.setHours(0, 0, 0, 0);
       return pDate.getTime() === targetDate.getTime();
     });
-  }, [filteredBids, selectedDate, userRole]);
+  }, [filteredBids, selectedDate]);
 
   const getBidParticipationDetails = (data) => {
     const groupedBids = {};
