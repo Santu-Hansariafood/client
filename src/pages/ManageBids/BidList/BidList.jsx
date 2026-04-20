@@ -638,6 +638,7 @@ const BidList = () => {
                 onChange={(e) => setSelectedFilterGroup(e.target.value)}
                 className="px-4 py-2 rounded-xl border border-slate-200 bg-white text-sm font-semibold text-slate-700 focus:ring-2 focus:ring-emerald-400/50 outline-none h-[42px]"
               >
+                <option value="All">All My Groups</option>
                 {buyerGroups.map((group) => (
                   <option key={group} value={group}>
                     {group}

@@ -92,6 +92,17 @@ const InteractionsPopup = ({ bidId, onClose }) => {
     }
   };
 
+  const handleDelete = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this interaction?")) return;
+    try {
+      await api.delete(`/participatebids/${id}`);
+      setInteractions(interactions.filter((i) => i._id !== id));
+      toast.success("Interaction deleted.");
+    } catch (error) {
+      toast.error("Failed to delete interaction.");
+    }
+  };
+
   const isReviewer = actorRole === "Admin" || actorRole === "Employee" || actorRole === "Buyer";
 
   return (
@@ -125,6 +136,7 @@ const InteractionsPopup = ({ bidId, onClose }) => {
                 key={interaction._id}
                 interaction={interaction}
                 onStatusChange={handleStatusChange}
+                onDelete={handleDelete}
                 isReviewer={isReviewer}
                 actorRole={actorRole}
               />
@@ -136,7 +148,7 @@ const InteractionsPopup = ({ bidId, onClose }) => {
   );
 };
 
-const InteractionCard = ({ interaction, onStatusChange, isReviewer, actorRole }) => {
+const InteractionCard = ({ interaction, onStatusChange, onDelete, isReviewer, actorRole }) => {
   const [notes, setNotes] = useState(interaction.adminNotes || "");
   const [acceptedRate, setAcceptedRate] = useState(
     interaction.acceptedRate ?? interaction.rate ?? "",
@@ -381,6 +393,14 @@ const InteractionCard = ({ interaction, onStatusChange, isReviewer, actorRole })
             className="px-5 py-2.5 bg-rose-500 text-white rounded-lg hover:bg-rose-600 transition shadow-sm font-semibold min-w-[120px]"
           >
             Reject
+          </button>
+        )}
+        {isReviewer && (
+          <button
+            onClick={() => onDelete(interaction._id)}
+            className="px-5 py-2.5 bg-slate-100 text-slate-600 rounded-lg hover:bg-slate-200 transition shadow-sm font-semibold min-w-[120px] border border-slate-200"
+          >
+            Delete
           </button>
         )}
       </div>
