@@ -142,6 +142,11 @@ const privateRoutes = [
     roles: ["Admin", "Employee", "Buyer"],
   },
   {
+    path: "manage-bids/interactions",
+    component: LazyPages.ParticipateBidAdmin,
+    roles: ["Admin", "Employee", "Buyer"],
+  },
+  {
     path: "manage-bids/bid-location",
     component: LazyPages.BidLocation,
     roles: ["Admin", "Employee"],

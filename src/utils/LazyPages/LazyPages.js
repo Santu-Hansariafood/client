@@ -113,6 +113,7 @@ const pathToKey = {
   "/manage-bids/buyer": "BuyerBid",
   "/manage-bids/bid-list": "BidList",
   "/manage-bids/bid-list/participate-bid-admin": "ParticipateBidAdmin",
+  "/manage-bids/interactions": "ParticipateBidAdmin",
   "/manage-bids/bid-location": "BidLocation",
   "/sodabook/add": "AddSoudabook",
   "/sodabook/list": "ListSoudabook",
