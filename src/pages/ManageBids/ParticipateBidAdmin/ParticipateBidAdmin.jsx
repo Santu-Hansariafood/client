@@ -1,7 +1,7 @@
 import { lazy, Suspense, useEffect, useState, useMemo } from "react";
 import api from "../../../utils/apiClient/apiClient";
 import { toast } from "react-toastify";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import Loading from "../../../common/Loading/Loading";
 import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
 import { FaUsers, FaArrowLeft } from "react-icons/fa";
@@ -21,6 +21,8 @@ const InteractionsPopup = lazy(
 
 const ParticipateBidAdmin = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const initialGroup = searchParams.get("group") || "All";
   const { userRole, mobile } = useAuth();
   const [bids, setBids] = useState([]);
   const [participationBids, setParticipationBids] = useState([]);
@@ -30,6 +32,7 @@ const ParticipateBidAdmin = () => {
   const itemsPerPage = 10;
   const [selectedBidId, setSelectedBidId] = useState(null);
   const [buyerGroups, setBuyerGroups] = useState([]);
+  const [selectedGroup, setSelectedGroup] = useState(initialGroup);
   const [isBuyerAdmin, setIsBuyerAdmin] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
 
@@ -54,6 +57,10 @@ const ParticipateBidAdmin = () => {
           const groups = (buyer.groups || []).map(normalize);
           const companies = (buyer.companies || []).map(c => String(c).trim());
           setBuyerGroups(groups);
+          
+          if (groups.length > 0 && selectedGroup === "All") {
+            setSelectedGroup(groups[0]);
+          }
           
           // Strictly filter bids and participations by groups/companies
           const allowedBids = bidsData.filter(bid => {
@@ -111,7 +118,9 @@ const ParticipateBidAdmin = () => {
       if (!matchingBid) return;
 
       if (userRole === "Buyer") {
-        // Server side filtering already handles this, but we can double check or just skip
+        if (selectedGroup !== "All" && normalize(matchingBid.group) !== normalize(selectedGroup)) {
+          return;
+        }
       }
 
       if (!groupedBids[pBid.bidId]) {
@@ -262,6 +271,21 @@ const ParticipateBidAdmin = () => {
               </button>
             )}
             <div className="flex flex-1 items-center gap-4 w-full md:w-auto">
+              {userRole === "Buyer" && buyerGroups.length > 1 && (
+                <div className="w-full md:w-64">
+                  <select
+                    value={selectedGroup}
+                    onChange={(e) => setSelectedGroup(e.target.value)}
+                    className="w-full px-4 py-2 rounded-xl border border-slate-200 bg-white text-sm font-semibold text-slate-700 focus:ring-2 focus:ring-emerald-400/50 outline-none h-[42px]"
+                  >
+                    {buyerGroups.map((group) => (
+                      <option key={group} value={group}>
+                        {group}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
               <div className="w-full md:w-64">
                 <DateSelector
                   selectedDate={selectedDate}

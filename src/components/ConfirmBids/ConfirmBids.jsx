@@ -29,7 +29,6 @@ const ConfirmBids = () => {
         api.get("/confirm-bid", { params: { bidId } }),
       ];
 
-      // If buyer, we also need their group info to verify
       if (userRole === "Buyer") {
         endpoints.push(api.get("/bids/buyer-today", { params: { mobile } }));
       }
@@ -41,7 +40,6 @@ const ConfirmBids = () => {
       const matchedBid = responses[2].data;
       const confirmedBids = responses[3].data?.data || responses[3].data || [];
 
-      // Authorization check for Buyer
       if (userRole === "Buyer" && matchedBid) {
         const buyerInfo = responses[4].data.buyer;
         const normalize = (str) =>
@@ -246,7 +244,6 @@ const ConfirmBids = () => {
       return baseRow;
     }
 
-    // For Admin/Employee, include seller details
     return [
       p.slNo,
       p.sellerName,

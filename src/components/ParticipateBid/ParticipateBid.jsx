@@ -36,7 +36,11 @@ const ParticipateBid = () => {
       setParticipations(participateRes.data?.data || participateRes.data || []);
       setBidStatuses(confirmBidsRes.data?.data || confirmBidsRes.data || []);
       if (userRole === "Buyer") {
-        setBuyerGroups(buyerTodayRes.data.buyer?.groups || []);
+        const groups = buyerTodayRes.data.buyer?.groups || [];
+        setBuyerGroups(groups);
+        if (groups.length > 0 && selectedGroup === "All") {
+          setSelectedGroup(groups[0]);
+        }
       }
     } catch (error) {
       console.error("Error fetching data", error);
@@ -186,7 +190,7 @@ const ParticipateBid = () => {
               </div>
 
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-                {userRole === "Buyer" && buyerGroups.length > 0 && (
+                {userRole === "Buyer" && buyerGroups.length > 1 && (
                   <div className="flex flex-col gap-1">
                     <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider ml-1">
                       Filter by Group
@@ -194,9 +198,8 @@ const ParticipateBid = () => {
                     <select
                       value={selectedGroup}
                       onChange={(e) => setSelectedGroup(e.target.value)}
-                      className="px-4 py-2 rounded-xl border border-slate-200 bg-white text-sm font-semibold text-slate-700 focus:ring-2 focus:ring-emerald-400/50 outline-none min-w-[180px]"
+                      className="px-4 py-2 rounded-xl border border-slate-200 bg-white text-sm font-semibold text-slate-700 focus:ring-2 focus:ring-emerald-400/50 outline-none min-w-[180px] h-[42px]"
                     >
-                      <option value="All">All Groups</option>
                       {buyerGroups.map((group) => (
                         <option key={group} value={group}>
                           {group}

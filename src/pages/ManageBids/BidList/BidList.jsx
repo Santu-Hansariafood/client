@@ -44,6 +44,10 @@ const BidList = () => {
           setBuyerGroups(buyer.groups || []);
           setBuyerCompanies(buyer.companies || []);
           setBids(items);
+
+          if (buyer.groups && buyer.groups.length > 0 && selectedFilterGroup === "All") {
+            setSelectedFilterGroup(buyer.groups[0]);
+          }
         } else {
           const bidsRes = await api.get("/bids");
           const items = bidsRes.data?.data || bidsRes.data || [];
@@ -632,9 +636,8 @@ const BidList = () => {
               <select
                 value={selectedFilterGroup}
                 onChange={(e) => setSelectedFilterGroup(e.target.value)}
-                className="px-4 py-2 rounded-xl border border-slate-200 bg-white text-sm font-semibold text-slate-700 focus:ring-2 focus:ring-emerald-400/50 outline-none"
+                className="px-4 py-2 rounded-xl border border-slate-200 bg-white text-sm font-semibold text-slate-700 focus:ring-2 focus:ring-emerald-400/50 outline-none h-[42px]"
               >
-                <option value="All">All My Groups</option>
                 {buyerGroups.map((group) => (
                   <option key={group} value={group}>
                     {group}
