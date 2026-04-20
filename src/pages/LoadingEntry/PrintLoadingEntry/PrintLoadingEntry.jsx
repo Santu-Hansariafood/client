@@ -16,14 +16,14 @@ const PrintLoadingEntry = async (data) => {
   const pageHeight = doc.internal.pageSize.height;
   const margin = 14;
 
-  const primary = [17, 24, 39];
-  const secondary = [14, 116, 144];
-  const accent = [245, 158, 11];
-  const tableBlue = [37, 99, 235];
-  const tableBlueLight = [219, 234, 254];
-  const dark = [15, 23, 42];
-  const light = [248, 250, 252];
-  const gray = [71, 85, 105];
+  const primary = [0, 0, 0];
+  const secondary = [60, 60, 60];
+  const accent = [100, 100, 100];
+  const tableHead = [40, 40, 40];
+  const tableRowAlt = [245, 245, 245];
+  const dark = [0, 0, 0];
+  const light = [255, 255, 255];
+  const gray = [100, 100, 100];
 
   const normalize = (str) => (str || "").toString().trim().toLowerCase();
 
@@ -134,63 +134,77 @@ const PrintLoadingEntry = async (data) => {
     "N/A",
   );
   const sellerGstin = pickFirst(
-    company.gstNo,
+    company.gstNumber,
     company.gstin,
     seller.gstNumber,
     seller.gstin,
-    "N/A",
+    data.sellerGstin,
+    data.gst,
+    "NOT AVAILABLE",
   );
-  const sellerAddress = pickFirst(
-    company.address,
-    seller.address,
-    [company.city, company.state].filter(Boolean).join(", "),
-    "N/A",
+
+  const consigneeGst = pickFirst(
+    consignee.gst,
+    consignee.gstin,
+    data.consigneeGst,
+    "NOT AVAILABLE",
   );
+
+  const sellerAddress = [
+    company.location || seller.location,
+    company.district || seller.district,
+    company.state || seller.state,
+    company.pinCode || company.pin || seller.pinCode || seller.pin,
+  ]
+    .filter(Boolean)
+    .join(", ") || "N/A";
 
   doc.setFillColor(255, 255, 255);
   doc.rect(0, 0, pageWidth, pageHeight, "F");
 
-  doc.setFillColor(203, 213, 225);
+  doc.setFillColor(220, 220, 220);
   doc.rect(0, 0, 2.5, pageHeight, "F");
 
-  doc.setFillColor(...primary);
+  doc.setFillColor(255, 255, 255);
   doc.rect(0, 0, pageWidth, 48, "F");
+  doc.setDrawColor(0, 0, 0);
+  doc.setLineWidth(0.2);
+  doc.line(margin, 48, pageWidth - margin, 48);
 
   if (logo64) {
-    doc.setFillColor(255, 255, 255);
-    doc.roundedRect(12, 9, 30, 30, 3, 3, "F");
     doc.addImage(logo64, "PNG", 15, 12, 24, 24);
   }
 
-  doc.setTextColor(255, 255, 255);
+  doc.setTextColor(0, 0, 0);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(16);
   doc.text(String(sellerCompanyName).toUpperCase(), 47, 18);
 
-  doc.setDrawColor(255, 255, 255);
-  doc.setLineWidth(0.3);
-  doc.line(47, 20, 126, 20);
+  doc.setDrawColor(0, 0, 0);
+  doc.setLineWidth(0.5);
+  doc.line(47, 20, 140, 20);
 
   doc.setFont("helvetica", "normal");
-  doc.setFontSize(8.8);
-  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(9);
+  doc.setTextColor(0, 0, 0);
   doc.text(`Seller: ${sellerName}`, 47, 25);
 
-  doc.setFontSize(7.9);
-  doc.setTextColor(240, 240, 240);
+  doc.setFontSize(8);
+  doc.setTextColor(60, 60, 60);
   doc.text(`Email: ${sellerEmail}`, 47, 30);
   doc.text(`Contact: ${sellerPhone} | GSTIN: ${sellerGstin}`, 47, 34);
   doc.text(`Address: ${sellerAddress}`, 47, 38);
 
-  doc.setFillColor(...accent);
-  doc.roundedRect(pageWidth - 68, 12, 56, 12, 2, 2, "F");
-  doc.setTextColor(...dark);
+  doc.setFillColor(240, 240, 240);
+  doc.setDrawColor(0, 0, 0);
+  doc.roundedRect(pageWidth - 68, 12, 56, 12, 2, 2, "FD");
+  doc.setTextColor(0, 0, 0);
   doc.setFontSize(13);
   doc.setFont("helvetica", "bold");
   doc.text("LORRY CHALLAN", pageWidth - 40, 20, { align: "center" });
 
   doc.setFontSize(8.5);
-  doc.setTextColor(255, 255, 255);
+  doc.setTextColor(0, 0, 0);
   doc.text(`DATE: ${formatDate(data.loadingDate)}`, pageWidth - 14, 34, {
     align: "right",
   });
@@ -228,7 +242,7 @@ const PrintLoadingEntry = async (data) => {
     "N/A",
   );
 
-  const addTable = (title, y, head, body, colors = tableBlue) => {
+  const addTable = (title, y, head, body, colors = tableHead) => {
     // Centered ribbon title for a modern, compact look
     const ribbonH = 6.5;
     doc.setFillColor(...colors);
@@ -264,9 +278,9 @@ const PrintLoadingEntry = async (data) => {
       },
       bodyStyles: {
         fontSize: 8.3,
-        textColor: [15, 23, 42],
+        textColor: [0, 0, 0],
         halign: "center",
-        lineColor: [226, 232, 240],
+        lineColor: [200, 200, 200],
       },
       columnStyles: {
         0: { halign: "left" },
@@ -277,7 +291,7 @@ const PrintLoadingEntry = async (data) => {
         overflow: "linebreak",
       },
       alternateRowStyles: {
-        fillColor: tableBlueLight,
+        fillColor: tableRowAlt,
       },
     });
 
@@ -286,63 +300,79 @@ const PrintLoadingEntry = async (data) => {
 
   let currentY = 55;
 
+  // 1. Seller Information
   currentY = addTable(
-    "Parties Information",
+    "Seller Information",
     currentY,
-    ["Seller Name", "Seller Company", "Buyer Company", "Consignee Name"],
-    [
-      sellerName || "N/A",
-      sellerCompanyName || "N/A",
-      buyerCompanyName || "N/A",
-      consignee.name || data.consignee || "N/A",
-    ],
+    ["Seller Name", "Seller Address", "Seller Contact", "Seller GSTIN"],
+    [sellerName, sellerAddress, sellerPhone, sellerGstin],
   );
 
-  currentY = addTable(
-    "Contact Details",
-    currentY,
-    ["Seller Contact", "Seller Email", "Buyer Contact", "Buyer Email"],
-    [sellerPhone, sellerEmail, buyerMobile, buyerEmail],
-  );
-
+  // 2. Delivery Address (On top as requested)
   doc.setFillColor(...light);
-  doc.setDrawColor(...secondary);
-  doc.setLineWidth(0.5);
+  doc.setDrawColor(...dark);
+  doc.setLineWidth(0.3);
 
-  const addressText =
-    fullAddress ||
-    "Address details not found in database. Please verify Consignee record.";
-  const splitAddress = doc.splitTextToSize(
-    addressText,
+  const deliveryAddressText = [
+    consignee.location || data.location,
+    consignee.district || data.district,
+    consignee.state || data.state,
+    consignee.pin || data.pin,
+  ]
+    .filter(Boolean)
+    .join(", ") || "Address details not found.";
+
+  const splitDeliveryAddress = doc.splitTextToSize(
+    deliveryAddressText,
     pageWidth - margin * 2 - 10,
   );
-  const addressBlockHeight = Math.max(22, splitAddress.length * 5 + 12);
+  const deliveryBlockHeight = Math.max(18, splitDeliveryAddress.length * 5 + 10);
 
   doc.roundedRect(
     margin,
     currentY - 5,
     pageWidth - margin * 2,
-    addressBlockHeight,
+    deliveryBlockHeight,
     2,
     2,
     "FD",
   );
 
-  doc.setTextColor(...primary);
+  doc.setTextColor(...dark);
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(10);
-  doc.text("DELIVERY ADDRESS", margin + 5, currentY + 2);
+  doc.setFontSize(9);
+  doc.text("DELIVERY ADDRESS", margin + 5, currentY + 1);
 
   doc.setFont("helvetica", "normal");
-  doc.setFontSize(9.5);
-  doc.setTextColor(...dark);
-  doc.text(splitAddress, margin + 5, currentY + 8);
-  currentY += addressBlockHeight + 5;
+  doc.setFontSize(8.5);
+  doc.text(splitDeliveryAddress, margin + 5, currentY + 6);
+  currentY += deliveryBlockHeight + 5;
+
+  // 3. Buyer Details (Consignee)
+  const consigneeAddress = [
+    consignee.location,
+    consignee.district,
+    consignee.state,
+    consignee.pin,
+  ].filter(Boolean).join(", ") || "N/A";
 
   currentY = addTable(
-    "Transport & Goods Details",
+    "Buyer Details (Consignee)",
     currentY,
-    ["Commodity", "Bags", "Weight", "Vehicle Number"],
+    ["Consignee Name", "Consignee Address", "Consignee GST", "Buyer Contact"],
+    [
+      consignee.name || data.consignee || "N/A",
+      consigneeAddress,
+      consigneeGst,
+      buyerMobile || "N/A",
+    ],
+  );
+
+  // 4. Description of Goods
+  currentY = addTable(
+    "Description of Goods",
+    currentY,
+    ["Commodity", "Bags", "Weight (Tons)", "Vehicle Number"],
     [
       data.commodity || "N/A",
       data.bags || "N/A",
@@ -351,8 +381,9 @@ const PrintLoadingEntry = async (data) => {
     ],
   );
 
+  // 5. Transporter Information
   currentY = addTable(
-    "Transporter Information",
+    "Full Transporter Details",
     currentY,
     ["Transporter Name", "Driver Name", "Driver Contact", "Vehicle Number"],
     [
@@ -363,6 +394,7 @@ const PrintLoadingEntry = async (data) => {
     ],
   );
 
+  // 6. Freight & Payment Summary (Keeping this for completeness)
   const total = Number(data.totalFreight || 0);
   const advance = Number(data.advance || 0);
   const balance = total - advance;
@@ -386,11 +418,11 @@ const PrintLoadingEntry = async (data) => {
   doc.setTextColor(...dark);
 
   doc.text("DRIVER'S SIGNATURE", margin + 5, signBaseY);
-  doc.setDrawColor(...primary);
+  doc.setDrawColor(0, 0, 0);
   doc.setLineWidth(0.5);
   doc.line(margin, signBaseY + 10, margin + 55, signBaseY + 10);
 
-  doc.setTextColor(...primary);
+  doc.setTextColor(0, 0, 0);
   doc.text(`FOR ${String(sellerCompanyName).toUpperCase()}`, pageWidth - margin - 60, signBaseY, {
     align: "center",
   });
@@ -411,7 +443,7 @@ const PrintLoadingEntry = async (data) => {
     doc.setGState(new doc.GState({ opacity: 1.0 }));
   }
 
-  doc.setDrawColor(...primary);
+  doc.setDrawColor(0, 0, 0);
   doc.line(
     pageWidth - margin - 65,
     signBaseY + 15,
@@ -420,18 +452,18 @@ const PrintLoadingEntry = async (data) => {
   );
   doc.setFont("helvetica", "normal");
   doc.setFontSize(8);
-  doc.setTextColor(...gray);
+  doc.setTextColor(gray);
   doc.text("Authorized Signatory", pageWidth - margin - 32.5, signBaseY + 20, {
     align: "center",
   });
 
-  doc.setFillColor(...primary);
+  doc.setFillColor(230, 230, 230);
   doc.rect(0, pageHeight - 8, pageWidth, 8, "F");
 
-  doc.setFillColor(...secondary);
+  doc.setFillColor(0, 0, 0);
   doc.rect(0, pageHeight - 8.5, pageWidth, 0.5, "F");
 
-  doc.setTextColor(255, 255, 255);
+  doc.setTextColor(0, 0, 0);
   doc.setFontSize(8);
   doc.text(
     "Terms & Conditions: This is an electronic challan. Goods received in good condition.",
