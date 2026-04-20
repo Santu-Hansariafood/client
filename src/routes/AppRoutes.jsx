@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import LazyPages from "../utils/LazyPages/LazyPages";
 import PrivateRoute from "./PrivateRoute/PrivateRoute";
+import PublicRoute from "./PublicRoute/PublicRoute";
 import { useAuth } from "../context/AuthContext/AuthContext";
 
 const RoleBasedRoute = ({ children, allowedRoles }) => {
@@ -265,7 +266,14 @@ const AppRoutes = ({ hydrated }) => {
 
   return (
     <Routes>
-      <Route path="/" element={<LazyPages.Login />} />
+      <Route
+        path="/"
+        element={
+          <PublicRoute>
+            <LazyPages.Login />
+          </PublicRoute>
+        }
+      />
       <Route path="/privacy-policy" element={<LazyPages.PrivacyPolicy />} />
       <Route path="/terms-conditions" element={<LazyPages.TermsConditions />} />
       <Route path="/data-safety" element={<LazyPages.DataSafety />} />
@@ -273,7 +281,14 @@ const AppRoutes = ({ hydrated }) => {
         path="/broker-commission-policy"
         element={<LazyPages.BrokerCommissionPolicy />}
       />
-      <Route path="/login" element={<LazyPages.Login />} />
+      <Route
+        path="/login"
+        element={
+          <PublicRoute>
+            <LazyPages.Login />
+          </PublicRoute>
+        }
+      />
       <Route path="/teams" element={<LazyPages.Teams />} />
       <Route element={<PrivateRoute />}>
         {privateRoutes.map(({ path, component: Component, roles }) => (
