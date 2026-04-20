@@ -446,6 +446,18 @@ router.put("/:id", async (req, res) => {
   }
 });
 
+router.get("/:id", async (req, res) => {
+  try {
+    const bid = await Bid.findById(req.params.id).lean();
+    if (!bid) {
+      return res.status(404).json({ message: "Bid not found" });
+    }
+    res.json(bid);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 router.delete("/:id", async (req, res) => {
   try {
     const deleted = await Bid.findByIdAndDelete(req.params.id);
