@@ -162,17 +162,13 @@ const PrintLoadingEntry = async (data) => {
   doc.setFillColor(255, 255, 255);
   doc.rect(0, 0, pageWidth, pageHeight, "F");
 
-  doc.setFillColor(220, 220, 220);
-  doc.rect(0, 0, 2.5, pageHeight, "F");
-
-  doc.setFillColor(255, 255, 255);
-  doc.rect(0, 0, pageWidth, 48, "F");
+  // No sidebar/header bars for simple challan
   doc.setDrawColor(0, 0, 0);
-  doc.setLineWidth(0.2);
-  doc.line(margin, 48, pageWidth - margin, 48);
+  doc.setLineWidth(0.5);
+  doc.rect(margin, 10, pageWidth - margin * 2, 38);
 
   if (logo64) {
-    doc.addImage(logo64, "PNG", 15, 12, 24, 24);
+    doc.addImage(logo64, "PNG", 16, 12, 24, 24);
   }
 
   doc.setTextColor(0, 0, 0);
@@ -180,35 +176,25 @@ const PrintLoadingEntry = async (data) => {
   doc.setFontSize(16);
   doc.text(String(sellerCompanyName).toUpperCase(), 47, 18);
 
-  doc.setDrawColor(0, 0, 0);
-  doc.setLineWidth(0.5);
-  doc.line(47, 20, 140, 20);
-
   doc.setFont("helvetica", "normal");
   doc.setFontSize(9);
-  doc.setTextColor(0, 0, 0);
-  doc.text(`Seller: ${sellerName}`, 47, 25);
+  doc.text(`Seller: ${sellerName}`, 47, 24);
 
   doc.setFontSize(8);
-  doc.setTextColor(60, 60, 60);
-  doc.text(`Email: ${sellerEmail}`, 47, 30);
-  doc.text(`Contact: ${sellerPhone} | GSTIN: ${sellerGstin}`, 47, 34);
-  doc.text(`Address: ${sellerAddress}`, 47, 38);
+  doc.text(`Email: ${sellerEmail}`, 47, 29);
+  doc.text(`Contact: ${sellerPhone} | GSTIN: ${sellerGstin}`, 47, 33);
+  doc.text(`Address: ${sellerAddress}`, 47, 37);
 
-  doc.setFillColor(240, 240, 240);
-  doc.setDrawColor(0, 0, 0);
-  doc.roundedRect(pageWidth - 68, 12, 56, 12, 2, 2, "FD");
-  doc.setTextColor(0, 0, 0);
-  doc.setFontSize(13);
+  doc.setFontSize(14);
   doc.setFont("helvetica", "bold");
-  doc.text("LORRY CHALLAN", pageWidth - 40, 20, { align: "center" });
+  doc.text("LORRY CHALLAN", pageWidth - margin - 5, 20, { align: "right" });
 
-  doc.setFontSize(8.5);
-  doc.setTextColor(0, 0, 0);
-  doc.text(`DATE: ${formatDate(data.loadingDate)}`, pageWidth - 14, 34, {
+  doc.setFontSize(9);
+  doc.setFont("helvetica", "normal");
+  doc.text(`DATE: ${formatDate(data.loadingDate)}`, pageWidth - margin - 5, 34, {
     align: "right",
   });
-  doc.text(`CHALLAN NO: ${data.billNumber || "N/A"}`, pageWidth - 14, 39, {
+  doc.text(`CHALLAN NO: ${data.billNumber || "N/A"}`, pageWidth - margin - 5, 39, {
     align: "right",
   });
 
@@ -242,45 +228,30 @@ const PrintLoadingEntry = async (data) => {
     "N/A",
   );
 
-  const addTable = (title, y, head, body, colors = tableHead) => {
-    // Centered ribbon title for a modern, compact look
-    const ribbonH = 6.5;
-    doc.setFillColor(...colors);
-    doc.setDrawColor(...colors);
-    doc.roundedRect(
-      margin,
-      y - ribbonH,
-      pageWidth - margin * 2,
-      ribbonH,
-      2,
-      2,
-      "FD",
-    );
-
-    doc.setTextColor(255, 255, 255);
+  const addTable = (title, y, head, body) => {
+    doc.setTextColor(0, 0, 0);
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(9.5);
-    doc.text(title.toUpperCase(), pageWidth / 2, y - 1.2, {
-      align: "center",
-    });
+    doc.setFontSize(10);
+    doc.text(title.toUpperCase(), margin, y - 2);
 
     autoTable(doc, {
-      startY: y + 1.2,
+      startY: y,
       head: [head],
       body: [body],
-      theme: "striped",
+      theme: "grid",
       headStyles: {
-        fillColor: colors,
-        textColor: 255,
-        fontSize: 8.2,
+        fillColor: [255, 255, 255],
+        textColor: [0, 0, 0],
+        fontSize: 8.5,
         fontStyle: "bold",
         halign: "center",
+        lineWidth: 0.1,
       },
       bodyStyles: {
-        fontSize: 8.3,
+        fontSize: 8.5,
         textColor: [0, 0, 0],
         halign: "center",
-        lineColor: [200, 200, 200],
+        lineWidth: 0.1,
       },
       columnStyles: {
         0: { halign: "left" },
@@ -290,15 +261,12 @@ const PrintLoadingEntry = async (data) => {
         cellPadding: 3,
         overflow: "linebreak",
       },
-      alternateRowStyles: {
-        fillColor: tableRowAlt,
-      },
     });
 
-    return doc.lastAutoTable.finalY + 8;
+    return doc.lastAutoTable.finalY + 12;
   };
 
-  let currentY = 55;
+  let currentY = 58;
 
   // 1. Seller Information
   currentY = addTable(
@@ -309,9 +277,8 @@ const PrintLoadingEntry = async (data) => {
   );
 
   // 2. Delivery Address (On top as requested)
-  doc.setFillColor(...light);
-  doc.setDrawColor(...dark);
-  doc.setLineWidth(0.3);
+  doc.setDrawColor(0, 0, 0);
+  doc.setLineWidth(0.1);
 
   const deliveryAddressText = [
     consignee.location || data.location,
@@ -335,7 +302,7 @@ const PrintLoadingEntry = async (data) => {
     deliveryBlockHeight,
     2,
     2,
-    "FD",
+    "S",
   );
 
   doc.setTextColor(...dark);
@@ -457,18 +424,12 @@ const PrintLoadingEntry = async (data) => {
     align: "center",
   });
 
-  doc.setFillColor(230, 230, 230);
-  doc.rect(0, pageHeight - 8, pageWidth, 8, "F");
-
-  doc.setFillColor(0, 0, 0);
-  doc.rect(0, pageHeight - 8.5, pageWidth, 0.5, "F");
-
   doc.setTextColor(0, 0, 0);
   doc.setFontSize(8);
   doc.text(
     "Terms & Conditions: This is an electronic challan. Goods received in good condition.",
     pageWidth / 2,
-    pageHeight - 3,
+    pageHeight - 10,
     { align: "center" },
   );
 
