@@ -332,6 +332,7 @@ const ListLoadingEntry = () => {
     "Sauda No",
     "Seller Company",
     "Loading Weight",
+    "Unloading Weight",
     "Already Loaded",
     "Status",
     "Lorry Number",
@@ -357,6 +358,7 @@ const ListLoadingEntry = () => {
         entry.saudaNo || "N/A",
         entry.supplierCompany || "N/A",
         entry.loadingWeight,
+        entry.unloadingWeight || 0,
         (alreadyLoadedMap[entry.saudaNo] || 0).toFixed(2),
         <span
           key={`status-${entry._id}`}
@@ -564,6 +566,10 @@ const ListLoadingEntry = () => {
                         <span className="font-semibold text-slate-800">
                           {selectedEntry.loadingWeight} Tons
                         </span>
+                        <span className="text-slate-500">Unloading Wt:</span>
+                        <span className="font-semibold text-slate-800">
+                          {selectedEntry.unloadingWeight || 0} Tons
+                        </span>
                         <span className="text-slate-500">Bill No:</span>
                         <span className="font-semibold text-slate-800">
                           {selectedEntry.billNumber || "N/A"}
@@ -734,6 +740,18 @@ const ListLoadingEntry = () => {
                           type="number"
                           name="loadingWeight"
                           value={editEntry.loadingWeight || ""}
+                          onChange={handleEditFieldChange}
+                          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-slate-700 mb-1">
+                          Unloading Weight
+                        </label>
+                        <input
+                          type="number"
+                          name="unloadingWeight"
+                          value={editEntry.unloadingWeight || ""}
                           onChange={handleEditFieldChange}
                           className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
                         />

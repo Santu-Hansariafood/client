@@ -874,6 +874,14 @@ const AddLoadingEntry = () => {
                   />
                 </div>
                 <div className="space-y-2">
+                  <label className="text-xs font-bold text-slate-500 uppercase">Unloading Weight (Tons)</label>
+                  <DataInput
+                    type="number"
+                    value={editingEntry.unloadingWeight}
+                    onChange={(e) => setEditingEntry({...editingEntry, unloadingWeight: e.target.value})}
+                  />
+                </div>
+                <div className="space-y-2">
                   <label className="text-xs font-bold text-slate-500 uppercase">Freight Rate</label>
                   <DataInput
                     type="number"
@@ -1017,7 +1025,7 @@ const AddLoadingEntry = () => {
                                 Weight
                               </p>
                               <p className="text-sm font-bold text-emerald-600">
-                                {entry.loadingWeight} Tons
+                                {entry.loadingWeight} / {entry.unloadingWeight || 0} T
                               </p>
                             </div>
                             <div>
