@@ -3,7 +3,7 @@ import { toast } from "react-toastify";
 import api from "../../utils/apiClient/apiClient";
 import Loading from "../../common/Loading/Loading";
 import AdminPageShell from "../../common/AdminPageShell/AdminPageShell";
-import { FaTachometerAlt } from "react-icons/fa";
+import { FaTachometerAlt, FaUserTie, FaWeightHanging } from "react-icons/fa";
 const CardGrid = lazy(() => import("./CardGrid/CardGrid"));
 const ChartSection = lazy(() => import("./ChartSection/ChartSection"));
 
@@ -15,6 +15,7 @@ const Dashboard = () => {
     orders: 0,
     bids: 0,
   });
+  const [agentSaudas, setAgentSaudas] = useState([]);
 
   const fetchCounts = useCallback(async () => {
     try {
@@ -22,7 +23,7 @@ const Dashboard = () => {
         api.get("/buyers"),
         api.get("/sellers"),
         api.get("/consignees"),
-        api.get("/self-order"),
+        api.get("/self-order?limit=0"),
         api.get("/bids"),
       ]);
 
@@ -33,12 +34,32 @@ const Dashboard = () => {
         return 0;
       };
 
+      const selfOrders = responses[3]?.data || [];
+      const saudaByAgent = selfOrders.reduce((acc, order) => {
+        const agent = order.agentName || "Direct / Unknown";
+        const tons = Number(order.quantity) || 0;
+        if (!acc[agent]) {
+          acc[agent] = 0;
+        }
+        acc[agent] += tons;
+        return acc;
+      }, {});
+
+      const agentSaudaList = Object.entries(saudaByAgent)
+        .map(([name, tons]) => ({ name, tons }))
+        .sort((a, b) => b.tons - a.tons);
+
+      const totalSaudaTons = agentSaudaList.reduce((sum, item) => sum + item.tons, 0);
+
+      setAgentSaudas(agentSaudaList);
+
       setCounts({
         buyers: getCount(responses[0]),
         sellers: getCount(responses[1]),
         consignees: getCount(responses[2]),
         orders: getCount(responses[3]),
         bids: getCount(responses[4]),
+        totalSaudaTons,
       });
     } catch (error) {
       toast.error(
@@ -67,8 +88,8 @@ const Dashboard = () => {
               <CardGrid counts={counts} />
             </div>
 
-            <div className="bg-white/70 backdrop-blur-md rounded-3xl p-5 sm:p-6 border border-slate-200/70 shadow-sm animate-fade-in-up delay-100">
-              <ChartSection />
+            <div className="bg-white/70 backdrop-blur-md rounded-3xl p-5 sm:p-6 border border-slate-200/70 shadow-sm animate-fade-in-up delay-150">
+              <ChartSection agentSaudas={agentSaudas} />
             </div>
           </div>
         </div>

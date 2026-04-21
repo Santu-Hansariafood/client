@@ -6,9 +6,12 @@ const SaudaChart = lazy(
   () => import("../../../common/Charts/SaudaChart/SaudaChart"),
 );
 const BidChart = lazy(() => import("../../../common/Charts/BidChart/BidChart"));
+const AgentSaudaChart = lazy(
+  () => import("../../../common/Charts/AgentSaudaChart/AgentSaudaChart"),
+);
 import Loading from "../../../common/Loading/Loading";
 
-const ChartSection = () => {
+const ChartSection = ({ agentSaudas }) => {
   const [chartType, setChartType] = useState("line");
 
   return (
@@ -58,12 +61,15 @@ const ChartSection = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           <div className="rounded-2xl border border-slate-200 bg-white shadow-sm p-5 sm:p-6">
-          <SaudaChart apiUrl="/self-order" chartType={chartType} />
+            <SaudaChart apiUrl="/self-order" chartType={chartType} />
           </div>
           <div className="rounded-2xl border border-slate-200 bg-white shadow-sm p-5 sm:p-6">
-          <BidChart apiUrl="/bids" chartType={chartType} />
+            <AgentSaudaChart data={agentSaudas || []} chartType={chartType} />
+          </div>
+          <div className="rounded-2xl border border-slate-200 bg-white shadow-sm p-5 sm:p-6 lg:col-span-2">
+            <BidChart apiUrl="/bids" chartType={chartType} />
           </div>
         </div>
       </div>
