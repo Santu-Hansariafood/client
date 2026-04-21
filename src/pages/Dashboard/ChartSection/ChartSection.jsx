@@ -61,14 +61,14 @@ const ChartSection = ({ agentSaudas }) => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 gap-8">
           <div className="rounded-2xl border border-slate-200 bg-white shadow-sm p-5 sm:p-6">
             <SaudaChart apiUrl="/self-order" chartType={chartType} />
           </div>
           <div className="rounded-2xl border border-slate-200 bg-white shadow-sm p-5 sm:p-6">
             <AgentSaudaChart data={agentSaudas || []} chartType={chartType} />
           </div>
-          <div className="rounded-2xl border border-slate-200 bg-white shadow-sm p-5 sm:p-6 lg:col-span-2">
+          <div className="rounded-2xl border border-slate-200 bg-white shadow-sm p-5 sm:p-6">
             <BidChart apiUrl="/bids" chartType={chartType} />
           </div>
         </div>
