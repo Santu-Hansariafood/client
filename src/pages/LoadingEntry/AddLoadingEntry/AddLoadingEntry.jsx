@@ -1,5 +1,5 @@
 import { useState, useEffect, lazy, Suspense, useCallback, useMemo } from "react";
-import { FaPlus, FaTrash, FaDownload } from "react-icons/fa";
+import { FaPlus, FaTrash, FaDownload, FaEdit } from "react-icons/fa";
 import { toast } from "react-toastify";
 import { FaTruckLoading } from "react-icons/fa";
 import api from "../../../utils/apiClient/apiClient";
@@ -424,6 +424,8 @@ const AddLoadingEntry = () => {
   const [loadingEntries, setLoadingEntries] = useState([]);
   const [existingEntries, setExistingEntries] = useState([]);
   const [isSaving, setIsSaving] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editingEntry, setEditingEntry] = useState(null);
 
   const handleClearFilters = useCallback(() => {
     setSelectedGroup(null);
@@ -681,6 +683,77 @@ const AddLoadingEntry = () => {
     }
   };
 
+  const handleEditHistoryEntry = (entry) => {
+    setEditingEntry({
+      ...entry,
+      loadingDate: entry.loadingDate ? new Date(entry.loadingDate).toISOString().split('T')[0] : '',
+      dateOfIssue: entry.dateOfIssue ? new Date(entry.dateOfIssue).toISOString().split('T')[0] : '',
+    });
+    setIsEditModalOpen(true);
+  };
+
+  const handleDeleteHistoryEntry = async (id) => {
+    if (window.confirm("Are you sure you want to delete this loading entry?")) {
+      try {
+        await api.delete(`/loading-entries/${id}`);
+        toast.success("Entry deleted successfully");
+        // Refresh existing entries
+        const response = await api.get(`/loading-entries/sauda/${selectedOrder.saudaNo}`);
+        setExistingEntries(Array.isArray(response.data) ? response.data : []);
+        
+        // Refresh the selected order to update pending quantity
+        const orderRes = await api.get(`/self-order/${selectedOrder._id}`);
+        if (orderRes.data) {
+          setSelectedOrder(orderRes.data);
+        }
+        handleSearch(); // Refresh main table
+      } catch (error) {
+        console.error("Error deleting entry:", error);
+        toast.error("Failed to delete entry");
+      }
+    }
+  };
+
+  const handleUpdateEditingEntry = async () => {
+    if (!editingEntry || !editingEntry._id) return;
+    
+    setIsSaving(true);
+    try {
+      const weight = parseFloat(editingEntry.loadingWeight) || 0;
+      const rate = parseFloat(editingEntry.freightRate) || 0;
+      const advance = parseFloat(editingEntry.advance) || 0;
+      const total = +(weight * rate).toFixed(2);
+      const balance = +(total - advance).toFixed(2);
+
+      const payload = {
+        ...editingEntry,
+        totalFreight: total,
+        balance: balance
+      };
+
+      await api.put(`/loading-entries/${editingEntry._id}`, payload);
+      toast.success("Entry updated successfully");
+      setIsEditModalOpen(false);
+      setEditingEntry(null);
+      
+      // Refresh existing entries
+      const response = await api.get(`/loading-entries/sauda/${selectedOrder.saudaNo}`);
+      setExistingEntries(Array.isArray(response.data) ? response.data : []);
+
+      // Refresh the selected order to update pending quantity
+      const orderRes = await api.get(`/self-order/${selectedOrder._id}`);
+      if (orderRes.data) {
+        setSelectedOrder(orderRes.data);
+      }
+      handleSearch(); // Refresh main table
+    } catch (error) {
+      console.error("Error updating entry:", error);
+      toast.error(error.response?.data?.message || "Failed to update entry");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   if (
     userRole !== "Admin" &&
     userRole !== "Employee" &&
@@ -757,6 +830,105 @@ const AddLoadingEntry = () => {
             toggleSaudaStatus={toggleSaudaStatus}
           />
         </div>
+
+        {isEditModalOpen && editingEntry && (
+          <PopupBox
+            isOpen={isEditModalOpen}
+            onClose={() => {
+              setIsEditModalOpen(false);
+              setEditingEntry(null);
+            }}
+            title="Edit Loading Entry"
+          >
+            <div className="space-y-6 p-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-slate-500 uppercase">Loading Date</label>
+                  <DataInput
+                    type="date"
+                    value={editingEntry.loadingDate}
+                    onChange={(e) => setEditingEntry({...editingEntry, loadingDate: e.target.value})}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-slate-500 uppercase">Lorry Number</label>
+                  <DataInput
+                    value={editingEntry.lorryNumber}
+                    onChange={(e) => setEditingEntry({...editingEntry, lorryNumber: e.target.value.toUpperCase()})}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-slate-500 uppercase">Bags</label>
+                  <DataInput
+                    type="number"
+                    value={editingEntry.bags}
+                    onChange={(e) => setEditingEntry({...editingEntry, bags: e.target.value})}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-slate-500 uppercase">Loading Weight (Tons)</label>
+                  <DataInput
+                    type="number"
+                    value={editingEntry.loadingWeight}
+                    onChange={(e) => setEditingEntry({...editingEntry, loadingWeight: e.target.value})}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-slate-500 uppercase">Freight Rate</label>
+                  <DataInput
+                    type="number"
+                    value={editingEntry.freightRate}
+                    onChange={(e) => setEditingEntry({...editingEntry, freightRate: e.target.value})}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-slate-500 uppercase">Advance</label>
+                  <DataInput
+                    type="number"
+                    value={editingEntry.advance}
+                    onChange={(e) => setEditingEntry({...editingEntry, advance: e.target.value})}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-slate-500 uppercase">Bill Number</label>
+                  <DataInput
+                    value={editingEntry.billNumber}
+                    onChange={(e) => setEditingEntry({...editingEntry, billNumber: e.target.value})}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-slate-500 uppercase">Driver Name</label>
+                  <DataInput
+                    value={editingEntry.driverName}
+                    onChange={(e) => setEditingEntry({...editingEntry, driverName: e.target.value})}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-slate-500 uppercase">Driver Phone</label>
+                  <DataInput
+                    value={editingEntry.driverPhoneNumber}
+                    onChange={(e) => setEditingEntry({...editingEntry, driverPhoneNumber: e.target.value})}
+                  />
+                </div>
+              </div>
+              <div className="flex justify-end gap-3 pt-4 border-t">
+                <button
+                  onClick={() => setIsEditModalOpen(false)}
+                  className="px-6 py-2 bg-slate-100 text-slate-600 rounded-xl font-bold"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleUpdateEditingEntry}
+                  disabled={isSaving}
+                  className="px-6 py-2 bg-emerald-600 text-white rounded-xl font-bold shadow-md shadow-emerald-100"
+                >
+                  {isSaving ? "Saving..." : "Update Entry"}
+                </button>
+              </div>
+            </div>
+          </PopupBox>
+        )}
 
         {isPopupOpen && selectedOrder && (
           <PopupBox
@@ -857,13 +1029,33 @@ const AddLoadingEntry = () => {
                               </p>
                             </div>
                           </div>
-                          <button
-                            onClick={() => handleDownloadPDF(entry)}
-                            className="p-2 text-slate-500 hover:text-emerald-600 transition"
-                            title="Download PDF"
-                          >
-                            <FaDownload />
-                          </button>
+                          <div className="flex gap-2">
+                            {(userRole === "Admin" || userRole === "Employee") && (
+                              <>
+                                <button
+                                  onClick={() => handleEditHistoryEntry(entry)}
+                                  className="p-2 text-emerald-600 hover:bg-emerald-50 rounded-lg transition"
+                                  title="Edit Entry"
+                                >
+                                  <FaEdit />
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteHistoryEntry(entry._id)}
+                                  className="p-2 text-rose-600 hover:bg-rose-50 rounded-lg transition"
+                                  title="Delete Entry"
+                                >
+                                  <FaTrash />
+                                </button>
+                              </>
+                            )}
+                            <button
+                              onClick={() => handleDownloadPDF(entry)}
+                              className="p-2 text-slate-500 hover:text-emerald-600 transition"
+                              title="Download PDF"
+                            >
+                              <FaDownload />
+                            </button>
+                          </div>
                         </div>
                       ))}
                     </div>
