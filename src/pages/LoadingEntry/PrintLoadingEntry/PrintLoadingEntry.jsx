@@ -1,5 +1,6 @@
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
+import QRCode from "qrcode";
 import api from "../../../utils/apiClient/apiClient";
 import logo from "../../../assets/Hans.png";
 import signature from "../../../assets/signature.png";
@@ -96,6 +97,15 @@ const PrintLoadingEntry = async (data) => {
     getBase64(stamp),
   ]);
 
+  // Generate QR Code with basic details
+  let qr64 = null;
+  try {
+    const qrData = `Sauda: ${data.saudaNo || "N/A"}\nLorry: ${data.lorryNumber || "N/A"}\nWeight: ${data.loadingWeight || 0} Tons\nDate: ${formatDate(data.loadingDate)}`;
+    qr64 = await QRCode.toDataURL(qrData, { margin: 1, width: 100 });
+  } catch (err) {
+    console.error("QR Code Error:", err);
+  }
+
   // Fallback logic for all fields
   const sellerCompanyName = (
     data.supplierCompany ||
@@ -107,11 +117,6 @@ const PrintLoadingEntry = async (data) => {
     data.sellerPhone ||
     seller.mobileNo ||
     (seller.phoneNumbers && seller.phoneNumbers[0]?.value) ||
-    "N/A";
-  const sellerEmail =
-    data.sellerEmail ||
-    seller.email ||
-    (seller.emails && seller.emails[0]?.value) ||
     "N/A";
   const sellerGstin =
     data.sellerGstin || seller.gstNumber || seller.gstin || "NOT AVAILABLE";
@@ -127,14 +132,15 @@ const PrintLoadingEntry = async (data) => {
     "N/A"
   ).toUpperCase();
   const consigneeName = data.consignee || order.consignee || "N/A";
-  const consigneeGst = data.consigneeGst || "NOT AVAILABLE";
-  const buyerMobile = data.buyerMobile || order.buyerMobile || "N/A";
 
-  const deliveryAddress =
-    data.deliveryAddress ||
-    (order.location && order.state
-      ? `${order.location}, ${order.state}`
-      : "Address details not found.");
+  const deliveryDetails = [
+    order.location || data.location,
+    order.district || data.district,
+    order.state || data.state,
+    order.pin || data.pin || order.pinCode,
+  ]
+    .filter(Boolean)
+    .join(", ") || "Address details not found.";
 
   // Page setup
   doc.setFillColor(255, 255, 255);
@@ -160,9 +166,8 @@ const PrintLoadingEntry = async (data) => {
   doc.setTextColor(80, 80, 80);
   doc.text(`Seller: ${sellerName}`, 47, 28);
   doc.setFontSize(8);
-  doc.text(`Email: ${sellerEmail}`, 47, 33);
-  doc.text(`Contact: ${sellerPhone} | GSTIN: ${sellerGstin}`, 47, 37);
-  doc.text(`Address: ${sellerAddress}`, 47, 41);
+  doc.text(`Contact: ${sellerPhone} | GSTIN: ${sellerGstin}`, 47, 34);
+  doc.text(`Address: ${sellerAddress}`, 47, 40);
 
   // Title Section - Right Aligned
   doc.setTextColor(0, 0, 0);
@@ -231,32 +236,15 @@ const PrintLoadingEntry = async (data) => {
 
   let currentY = 58;
 
+  // 1. Parties Info - Integrated with Delivery Address
   currentY = addTable(
     "Parties Information",
     currentY,
-    ["Seller Company", "Buyer Company", "Consignee Name", "Sauda No"],
-    [sellerCompanyName, buyerCompanyName, consigneeName, data.saudaNo || "N/A"],
+    ["Buyer Company", "Consignee Name", "Sauda No", "Delivery Address"],
+    [buyerCompanyName, consigneeName, data.saudaNo || "N/A", deliveryDetails],
   );
 
-  doc.setDrawColor(230, 230, 230);
-  doc.setLineWidth(0.1);
-  const splitDeliveryAddress = doc.splitTextToSize(
-    deliveryAddress,
-    pageWidth - margin * 2 - 10,
-  );
-  const deliveryHeight = Math.max(16, splitDeliveryAddress.length * 5 + 8);
-
-  doc.rect(margin, currentY - 5, pageWidth - margin * 2, deliveryHeight, "S");
-  doc.setTextColor(60, 60, 60);
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(8);
-  doc.text("DELIVERY ADDRESS", margin + 4, currentY);
-  doc.setTextColor(0, 0, 0);
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(8.5);
-  doc.text(splitDeliveryAddress, margin + 4, currentY + 5);
-  currentY += deliveryHeight + 6;
-
+  // 3. Goods Details
   currentY = addTable(
     "Goods & Weight Details",
     currentY,
@@ -318,6 +306,10 @@ const PrintLoadingEntry = async (data) => {
   doc.text(`FOR ${sellerCompanyName}`, pageWidth - margin - 25, signY + 5, {
     align: "center",
   });
+
+  if (qr64) {
+    doc.addImage(qr64, "PNG", pageWidth - margin - 35, signY - 32, 20, 20);
+  }
 
   if (sign64) {
     doc.addImage(sign64, "PNG", pageWidth - margin - 40, signY - 8, 30, 10);
