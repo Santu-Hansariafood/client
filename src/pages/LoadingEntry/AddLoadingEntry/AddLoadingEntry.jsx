@@ -639,6 +639,7 @@ const AddLoadingEntry = () => {
           saudaNo: selectedOrder.saudaNo,
           supplier: selectedOrder.supplier?._id || selectedOrder.supplier,
           supplierCompany: selectedOrder.supplierCompany,
+          buyerCompany: selectedOrder.buyerCompany,
           consignee: selectedOrder.consignee,
           commodity: selectedOrder.commodity,
           bags: entry.bags,

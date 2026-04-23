@@ -24,6 +24,7 @@ const loadingEntrySchema = new mongoose.Schema(
     },
     supplierCompany: { type: String, default: "" },
     consignee: { type: String, required: true },
+    buyerCompany: { type: String, default: "" },
     commodity: { type: String, default: "" },
     bags: { type: Number, default: 0 },
     deliveryDate: { type: Date },

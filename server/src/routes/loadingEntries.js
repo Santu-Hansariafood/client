@@ -460,6 +460,14 @@ router.get("/export/excel", async (req, res) => {
       .populate("supplier", "sellerName")
       .lean();
 
+    // Fetch buyerCompany from SelfOrder for items that don't have it (backwards compatibility)
+    const saudaNos = [...new Set(items.map(i => i.saudaNo).filter(Boolean))];
+    const selfOrders = await SelfOrder.find({ saudaNo: { $in: saudaNos } }).select("saudaNo buyerCompany").lean();
+    const saudaToBuyerCompany = selfOrders.reduce((acc, so) => {
+      acc[so.saudaNo] = so.buyerCompany;
+      return acc;
+    }, {});
+
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet("Loading Entries");
 
@@ -468,6 +476,7 @@ router.get("/export/excel", async (req, res) => {
       { header: "Sauda No", key: "saudaNo", width: 15 },
       { header: "Supplier", key: "supplierName", width: 30 },
       { header: "Supplier Company", key: "supplierCompany", width: 30 },
+      { header: "Buyer Company", key: "buyerCompany", width: 30 },
       { header: "Consignee", key: "consignee", width: 30 },
       { header: "Commodity", key: "commodity", width: 20 },
       { header: "Lorry Number", key: "lorryNumber", width: 20 },
@@ -487,6 +496,7 @@ router.get("/export/excel", async (req, res) => {
         saudaNo: item.saudaNo || "N/A",
         supplierName: item.supplier?.sellerName || "Unknown Supplier",
         supplierCompany: item.supplierCompany || "N/A",
+        buyerCompany: item.buyerCompany || saudaToBuyerCompany[item.saudaNo] || "N/A",
         consignee: item.consignee || "N/A",
         commodity: item.commodity || "N/A",
         lorryNumber: item.lorryNumber || "N/A",
