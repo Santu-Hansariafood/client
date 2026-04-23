@@ -49,7 +49,6 @@ const PrintLoadingEntry = async (data) => {
       image.onerror = () => resolve(null);
     });
 
-  // Fetch related data if IDs are present but full info is missing
   let seller = {};
   let order = {};
   let transporter = {};
@@ -58,17 +57,32 @@ const PrintLoadingEntry = async (data) => {
   try {
     const promises = [];
     if (data.supplier && typeof data.supplier === "string") {
-      promises.push(api.get(`/sellers/${data.supplier}`).then(res => seller = res.data).catch(() => {}));
+      promises.push(
+        api
+          .get(`/sellers/${data.supplier}`)
+          .then((res) => (seller = res.data))
+          .catch(() => {}),
+      );
     } else if (data.supplier && typeof data.supplier === "object") {
       seller = data.supplier;
     }
 
     if (data.saudaNo) {
-      promises.push(api.get(`/self-order/sauda/${data.saudaNo}`).then(res => order = res.data).catch(() => {}));
+      promises.push(
+        api
+          .get(`/self-order/sauda/${data.saudaNo}`)
+          .then((res) => (order = res.data))
+          .catch(() => {}),
+      );
     }
 
     if (data.transporterId) {
-      promises.push(api.get(`/transporters/${data.transporterId}`).then(res => transporter = res.data).catch(() => {}));
+      promises.push(
+        api
+          .get(`/transporters/${data.transporterId}`)
+          .then((res) => (transporter = res.data))
+          .catch(() => {}),
+      );
     }
 
     await Promise.all(promises);
@@ -83,19 +97,44 @@ const PrintLoadingEntry = async (data) => {
   ]);
 
   // Fallback logic for all fields
-  const sellerCompanyName = (data.supplierCompany || seller.companyName || "N/A").toUpperCase();
+  const sellerCompanyName = (
+    data.supplierCompany ||
+    seller.companyName ||
+    "N/A"
+  ).toUpperCase();
   const sellerName = data.sellerName || seller.sellerName || "N/A";
-  const sellerPhone = data.sellerPhone || seller.mobileNo || (seller.phoneNumbers && seller.phoneNumbers[0]?.value) || "N/A";
-  const sellerEmail = data.sellerEmail || seller.email || (seller.emails && seller.emails[0]?.value) || "N/A";
-  const sellerGstin = data.sellerGstin || seller.gstNumber || seller.gstin || "NOT AVAILABLE";
-  const sellerAddress = data.sellerAddress || seller.address || (seller.city && seller.state ? `${seller.city}, ${seller.state}` : "N/A");
+  const sellerPhone =
+    data.sellerPhone ||
+    seller.mobileNo ||
+    (seller.phoneNumbers && seller.phoneNumbers[0]?.value) ||
+    "N/A";
+  const sellerEmail =
+    data.sellerEmail ||
+    seller.email ||
+    (seller.emails && seller.emails[0]?.value) ||
+    "N/A";
+  const sellerGstin =
+    data.sellerGstin || seller.gstNumber || seller.gstin || "NOT AVAILABLE";
+  const sellerAddress =
+    data.sellerAddress ||
+    seller.address ||
+    (seller.city && seller.state ? `${seller.city}, ${seller.state}` : "N/A");
 
-  const buyerCompanyName = (data.buyerCompany || order.buyerCompany || order.buyer || "N/A").toUpperCase();
+  const buyerCompanyName = (
+    data.buyerCompany ||
+    order.buyerCompany ||
+    order.buyer ||
+    "N/A"
+  ).toUpperCase();
   const consigneeName = data.consignee || order.consignee || "N/A";
   const consigneeGst = data.consigneeGst || "NOT AVAILABLE";
   const buyerMobile = data.buyerMobile || order.buyerMobile || "N/A";
 
-  const deliveryAddress = data.deliveryAddress || (order.location && order.state ? `${order.location}, ${order.state}` : "Address details not found.");
+  const deliveryAddress =
+    data.deliveryAddress ||
+    (order.location && order.state
+      ? `${order.location}, ${order.state}`
+      : "Address details not found.");
 
   // Page setup
   doc.setFillColor(255, 255, 255);
@@ -133,12 +172,22 @@ const PrintLoadingEntry = async (data) => {
 
   doc.setFontSize(9);
   doc.setFont("helvetica", "normal");
-  doc.text(`DATE: ${formatDate(data.loadingDate)}`, pageWidth - margin - 5, 34, {
-    align: "right",
-  });
-  doc.text(`CHALLAN NO: ${data.billNumber || "N/A"}`, pageWidth - margin - 5, 39, {
-    align: "right",
-  });
+  doc.text(
+    `DATE: ${formatDate(data.loadingDate)}`,
+    pageWidth - margin - 5,
+    34,
+    {
+      align: "right",
+    },
+  );
+  doc.text(
+    `CHALLAN NO: ${data.billNumber || "N/A"}`,
+    pageWidth - margin - 5,
+    39,
+    {
+      align: "right",
+    },
+  );
 
   const addTable = (title, y, head, body) => {
     doc.setTextColor(60, 60, 60);
@@ -182,7 +231,6 @@ const PrintLoadingEntry = async (data) => {
 
   let currentY = 58;
 
-  // 1. Parties Info
   currentY = addTable(
     "Parties Information",
     currentY,
@@ -190,10 +238,12 @@ const PrintLoadingEntry = async (data) => {
     [sellerCompanyName, buyerCompanyName, consigneeName, data.saudaNo || "N/A"],
   );
 
-  // 2. Delivery Address - Simple Bordered Box
   doc.setDrawColor(230, 230, 230);
   doc.setLineWidth(0.1);
-  const splitDeliveryAddress = doc.splitTextToSize(deliveryAddress, pageWidth - margin * 2 - 10);
+  const splitDeliveryAddress = doc.splitTextToSize(
+    deliveryAddress,
+    pageWidth - margin * 2 - 10,
+  );
   const deliveryHeight = Math.max(16, splitDeliveryAddress.length * 5 + 8);
 
   doc.rect(margin, currentY - 5, pageWidth - margin * 2, deliveryHeight, "S");
@@ -207,7 +257,6 @@ const PrintLoadingEntry = async (data) => {
   doc.text(splitDeliveryAddress, margin + 4, currentY + 5);
   currentY += deliveryHeight + 6;
 
-  // 3. Goods Details
   currentY = addTable(
     "Goods & Weight Details",
     currentY,
@@ -221,7 +270,6 @@ const PrintLoadingEntry = async (data) => {
     ],
   );
 
-  // 4. Transporter Details
   currentY = addTable(
     "Transporter Information",
     currentY,
@@ -234,7 +282,6 @@ const PrintLoadingEntry = async (data) => {
     ],
   );
 
-  // 5. Freight Summary
   const totalF = Number(data.totalFreight || 0);
   const adv = Number(data.advance || 0);
   const bal = totalF - adv;
@@ -262,11 +309,15 @@ const PrintLoadingEntry = async (data) => {
   doc.setFontSize(8);
   doc.setTextColor(100, 100, 100);
   doc.text("DRIVER'S SIGNATURE", margin + 25, signY + 14, { align: "center" });
-  doc.text("AUTHORIZED SIGNATORY", pageWidth - margin - 25, signY + 14, { align: "center" });
+  doc.text("AUTHORIZED SIGNATORY", pageWidth - margin - 25, signY + 14, {
+    align: "center",
+  });
 
   doc.setTextColor(0, 0, 0);
   doc.setFontSize(8);
-  doc.text(`FOR ${sellerCompanyName}`, pageWidth - margin - 25, signY + 5, { align: "center" });
+  doc.text(`FOR ${sellerCompanyName}`, pageWidth - margin - 25, signY + 5, {
+    align: "center",
+  });
 
   if (sign64) {
     doc.addImage(sign64, "PNG", pageWidth - margin - 40, signY - 8, 30, 10);
@@ -277,14 +328,13 @@ const PrintLoadingEntry = async (data) => {
     doc.setGState(new doc.GState({ opacity: 1.0 }));
   }
 
-  // Final Footer
   doc.setFontSize(7.5);
   doc.setTextColor(150, 150, 150);
   doc.text(
-    "This is a computer generated Lorry Challan. No physical signature is required.",
+    "This is a system-generated Lorry Challan issued via the Hansaria Food platform. No physical signature is required. Hansaria Food Private Limited shall not be held liable for any discrepancies or inaccuracies in the loading data provided by users.",
     pageWidth / 2,
     pageHeight - 10,
-    { align: "center" }
+    { align: "center" },
   );
 
   return URL.createObjectURL(doc.output("blob"));
