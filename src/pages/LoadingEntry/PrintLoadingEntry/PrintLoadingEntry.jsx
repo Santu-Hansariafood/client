@@ -127,17 +127,18 @@ const PrintLoadingEntry = async (data) => {
 
   const buyerCompanyName = (
     data.buyerCompany ||
-    order.buyerCompany ||
-    order.buyer ||
+    (Array.isArray(order) ? order[0]?.buyerCompany : order?.buyerCompany) ||
+    (Array.isArray(order) ? order[0]?.buyer : order?.buyer) ||
     "N/A"
   ).toUpperCase();
-  const consigneeName = data.consignee || order.consignee || "N/A";
+  const consigneeName = data.consignee || (Array.isArray(order) ? order[0]?.consignee : order?.consignee) || "N/A";
 
+  const orderData = Array.isArray(order) ? order[0] : order;
   const deliveryDetails = [
-    order.location || data.location,
-    order.district || data.district,
-    order.state || data.state,
-    order.pin || data.pin || order.pinCode,
+    data.location || orderData?.location,
+    data.district || orderData?.district,
+    data.state || orderData?.state,
+    data.pin || data.pinCode || orderData?.pin || orderData?.pinCode,
   ]
     .filter(Boolean)
     .join(", ") || "Address details not found.";
@@ -236,13 +237,33 @@ const PrintLoadingEntry = async (data) => {
 
   let currentY = 58;
 
-  // 1. Parties Info - Integrated with Delivery Address
+  // 1. Parties Info - Simple
   currentY = addTable(
     "Parties Information",
     currentY,
-    ["Buyer Company", "Consignee Name", "Sauda No", "Delivery Address"],
-    [buyerCompanyName, consigneeName, data.saudaNo || "N/A", deliveryDetails],
+    ["Buyer Company", "Consignee Name", "Sauda No"],
+    [buyerCompanyName, consigneeName, data.saudaNo || "N/A"],
   );
+
+  // 2. Delivery Address - Reverted to standalone box
+  doc.setDrawColor(230, 230, 230);
+  doc.setLineWidth(0.1);
+  const splitDeliveryAddress = doc.splitTextToSize(
+    deliveryDetails,
+    pageWidth - margin * 2 - 10,
+  );
+  const deliveryHeight = Math.max(16, splitDeliveryAddress.length * 5 + 8);
+
+  doc.rect(margin, currentY - 5, pageWidth - margin * 2, deliveryHeight, "S");
+  doc.setTextColor(60, 60, 60);
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(8);
+  doc.text("DELIVERY ADDRESS", margin + 4, currentY);
+  doc.setTextColor(0, 0, 0);
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(8.5);
+  doc.text(splitDeliveryAddress, margin + 4, currentY + 5);
+  currentY += deliveryHeight + 6;
 
   // 3. Goods Details
   currentY = addTable(
@@ -320,14 +341,13 @@ const PrintLoadingEntry = async (data) => {
     doc.setGState(new doc.GState({ opacity: 1.0 }));
   }
 
+  // Final Footer - Multi-line fitting
   doc.setFontSize(7.5);
   doc.setTextColor(150, 150, 150);
-  doc.text(
-    "This is a system-generated Lorry Challan issued via the Hansaria Food platform. No physical signature is required. Hansaria Food Private Limited shall not be held liable for any discrepancies or inaccuracies in the loading data provided by users.",
-    pageWidth / 2,
-    pageHeight - 10,
-    { align: "center" },
-  );
+  const footerText =
+    "This is a system-generated Lorry Challan issued via the Hansaria Food platform. No physical signature is required. Hansaria Food Private Limited shall not be held liable for any discrepancies or inaccuracies in the loading data provided by users.";
+  const splitFooter = doc.splitTextToSize(footerText, pageWidth - margin * 2);
+  doc.text(splitFooter, pageWidth / 2, pageHeight - 12, { align: "center" });
 
   return URL.createObjectURL(doc.output("blob"));
 };
