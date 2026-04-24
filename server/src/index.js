@@ -33,6 +33,8 @@ import transporterRoutes from "./routes/transporters.js";
 import notificationRoutes from "./routes/notifications.js";
 import loadingEntryRoutes from "./routes/loadingEntries.js";
 import vendorCodeRoutes from "./routes/vendorCodes.js";
+import expenseCategoryRoutes from "./routes/expenseCategories.js";
+import expenseRequestRoutes from "./routes/expenseRequests.js";
 import { startNotificationCleanup } from "./lib/scheduler.js";
 import http from "http";
 import { initSocket } from "./lib/socket.js";
@@ -123,6 +125,8 @@ app.use("/api/transporters", cache(60), authJwt, transporterRoutes);
 app.use("/api/notifications", cache(5), authJwt, notificationRoutes);
 app.use("/api/loading-entries", cache(5), authJwt, loadingEntryRoutes);
 app.use("/api/vendor-codes", cache(5), authJwt, vendorCodeRoutes);
+app.use("/api/expense-categories", authJwt, expenseCategoryRoutes);
+app.use("/api/expense-requests", authJwt, expenseRequestRoutes);
 
 // Production Serving
 if (process.env.NODE_ENV === "production") {

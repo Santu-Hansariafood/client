@@ -234,14 +234,9 @@
       "icon": "FaMoneyBillWave",
       "actions": [
         {
-          "name": "Create Expense",
+          "name": "Add Expense",
           "link": "/expense/add",
           "icon": "FaPlus"
-        },
-        {
-          "name": "Expense List",
-          "link": "/expense/list",
-          "icon": "FaList"
         }
       ]
     }
