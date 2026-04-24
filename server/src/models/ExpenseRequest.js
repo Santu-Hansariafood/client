@@ -5,7 +5,17 @@ const expenseRequestSchema = new mongoose.Schema(
     category: { type: mongoose.Schema.Types.ObjectId, ref: "ExpenseCategory", required: true },
     amount: { type: Number, required: true },
     description: { type: String, trim: true },
-    employee: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+    employee: {
+      type: mongoose.Schema.Types.ObjectId,
+      refPath: "employeeModel",
+      required: true
+    },
+    employeeModel: {
+      type: String,
+      required: true,
+      enum: ["User", "Employee"],
+      default: "User"
+    },
     status: {
       type: String,
       enum: ["pending", "approved", "rejected"],
