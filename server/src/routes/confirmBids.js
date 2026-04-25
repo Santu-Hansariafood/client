@@ -6,22 +6,33 @@ import Bid from "../models/Bid.js";
 const router = Router();
 
 router.get("/", async (req, res) => {
+  const { mobile, bidId, status } = req.query;
   const page = parseInt(req.query.page || "0", 10);
   const limit = parseInt(req.query.limit || "0", 10);
-  if (page > 0 && limit > 0) {
-    const items = await ConfirmBid.find()
+
+  const query = {};
+  if (mobile) query.phone = mobile;
+  if (bidId) query.bidId = bidId;
+  if (status) query.status = status;
+
+  try {
+    if (page > 0 && limit > 0) {
+      const items = await ConfirmBid.find(query)
+        .sort({ createdAt: -1 })
+        .skip((page - 1) * limit)
+        .limit(limit)
+        .lean();
+      const total = await ConfirmBid.countDocuments(query);
+      return res.json({ data: items, total });
+    }
+    const items = await ConfirmBid.find(query)
       .sort({ createdAt: -1 })
-      .skip((page - 1) * limit)
-      .limit(limit)
+      .limit(100)
       .lean();
-    const total = await ConfirmBid.countDocuments();
-    return res.json({ data: items, total });
+    res.json(items);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
   }
-  const items = await ConfirmBid.find()
-    .sort({ createdAt: -1 })
-    .limit(100)
-    .lean();
-  res.json(items);
 });
 
 router.post("/", async (req, res) => {

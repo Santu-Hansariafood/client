@@ -27,8 +27,8 @@ const ParticipateBid = () => {
     try {
       const [bidsRes, participateRes, confirmBidsRes, buyerTodayRes] = await Promise.all([
         api.get("/bids"),
-        api.get("/participatebids"),
-        api.get("/confirm-bid"),
+        api.get("/participatebids", { params: { mobile } }),
+        api.get("/confirm-bid", { params: { mobile } }),
         userRole === "Buyer" ? api.get("/bids/buyer-today", { params: { mobile, date: new Date().toISOString().split("T")[0] } }) : Promise.resolve({ data: {} }),
       ]);
 
@@ -171,7 +171,7 @@ const ParticipateBid = () => {
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
               <div className="flex items-start sm:items-center gap-3 sm:gap-4">
                 <button
-                  onClick={() => navigate(-2)}
+                  onClick={() => navigate(-1)}
                   className="group shrink-0 p-2.5 bg-white border border-slate-200 text-slate-600 rounded-xl hover:bg-slate-50 transition-all shadow-sm"
                 >
                   <span className="group-hover:-translate-x-1 inline-block transition-transform">

@@ -7,12 +7,8 @@ import { adminOnly, employeeOrAdmin } from "../middleware/roleMiddleware.js";
 
 const router = express.Router();
 
-// @desc    Get all unique employees who have submitted expense requests
-// @route   GET /api/expense-requests/employees
-// @access  Private/Admin
 router.get("/employees", authJwt, adminOnly, async (req, res) => {
   try {
-    // Get unique employees from both User and Employee collections who have submitted requests
     const employeeIds = await ExpenseRequest.distinct("employee", { employeeModel: "Employee" });
     const adminIds = await ExpenseRequest.distinct("employee", { employeeModel: "User" });
 
@@ -28,9 +24,6 @@ router.get("/employees", authJwt, adminOnly, async (req, res) => {
   }
 });
 
-// @desc    Get all expense requests (Admin sees all with filters, Employee sees own)
-// @route   GET /api/expense-requests
-// @access  Private
 router.get("/", authJwt, employeeOrAdmin, async (req, res) => {
   try {
     const { page = 1, limit = 10, employeeId, startDate, endDate, status } = req.query;
@@ -73,9 +66,6 @@ router.get("/", authJwt, employeeOrAdmin, async (req, res) => {
   }
 });
 
-// @desc    Create new expense request(s)
-// @route   POST /api/expense-requests
-// @access  Private/Employee
 router.post("/", authJwt, employeeOrAdmin, async (req, res) => {
   try {
     const { items } = req.body;
