@@ -131,17 +131,21 @@ const PrintLoadingEntry = async (data) => {
     (Array.isArray(order) ? order[0]?.buyer : order?.buyer) ||
     "N/A"
   ).toUpperCase();
-  const consigneeName = data.consignee || (Array.isArray(order) ? order[0]?.consignee : order?.consignee) || "N/A";
+  const consigneeName =
+    data.consignee ||
+    (Array.isArray(order) ? order[0]?.consignee : order?.consignee) ||
+    "N/A";
 
   const orderData = Array.isArray(order) ? order[0] : order;
-  const deliveryDetails = [
-    data.location || orderData?.location,
-    data.district || orderData?.district,
-    data.state || orderData?.state,
-    data.pin || data.pinCode || orderData?.pin || orderData?.pinCode,
-  ]
-    .filter(Boolean)
-    .join(", ") || "Address details not found.";
+  const deliveryDetails =
+    [
+      data.location || orderData?.location,
+      data.district || orderData?.district,
+      data.state || orderData?.state,
+      data.pin || data.pinCode || orderData?.pin || orderData?.pinCode,
+    ]
+      .filter(Boolean)
+      .join(", ") || "Address details not found.";
 
   // Page setup
   doc.setFillColor(255, 255, 255);
@@ -341,15 +345,31 @@ const PrintLoadingEntry = async (data) => {
     doc.setGState(new doc.GState({ opacity: 1.0 }));
   }
 
-  // Final Footer - Multi-line fitting
-  doc.setFontSize(7.5);
+  // Final Footer - Smart Fit (Multi-line with auto positioning)
+  doc.setFontSize(7);
   doc.setTextColor(150, 150, 150);
-  const footerText =
-    "This is a system-generated Lorry Challan issued via the Hansaria Food platform. No physical signature is required. Hansaria Food Private Limited shall not be held liable for any discrepancies or inaccuracies in the loading data provided by users.";
-  const splitFooter = doc.splitTextToSize(footerText, pageWidth - margin * 2);
-  doc.text(splitFooter, pageWidth / 2, pageHeight - 12, { align: "center" });
 
-  return URL.createObjectURL(doc.output("blob"));
+  const footerText =
+    "This is a system-generated Lorry Challan issued via the Hansaria Food platform.\n" +
+    "No physical signature is required.\n" +
+    "Hansaria Food Private Limited shall not be held liable for any discrepancies\n" +
+    "or inaccuracies in the loading data provided by users.";
+
+  // Split properly
+  const splitFooter = doc.splitTextToSize(footerText, pageWidth - margin * 2);
+
+  // Calculate height dynamically
+  const lineHeight = 3.5;
+  const footerHeight = splitFooter.length * lineHeight;
+
+  // Ensure it stays inside page
+  const footerY = pageHeight - 8 - footerHeight;
+
+  doc.text(splitFooter, pageWidth / 2, footerY, {
+    align: "center",
+    lineHeightFactor: 1.2,
+  });
+  return doc.output("blob");
 };
 
 export default PrintLoadingEntry;
