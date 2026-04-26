@@ -679,6 +679,9 @@ const AddLoadingEntry = () => {
         link.click();
         document.body.removeChild(link);
         window.URL.revokeObjectURL(url);
+        toast.success("Download started successfully!");
+      } else {
+        toast.error("Failed to generate PDF. Please try again.");
       }
     } catch (error) {
       console.error("Error generating PDF:", error);
