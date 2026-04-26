@@ -269,14 +269,16 @@ const ListLoadingEntry = () => {
 
   const handleDownload = async (entry) => {
     try {
-      const fileUrl = await PrintLoadingEntry(entry);
-      if (fileUrl) {
+      const blob = await PrintLoadingEntry(entry);
+      if (blob) {
+        const url = window.URL.createObjectURL(blob);
         const link = document.createElement("a");
-        link.href = fileUrl;
+        link.href = url;
         link.download = `LoadingEntry-${entry.billNumber || "document"}.pdf`;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
         toast.success("Download started successfully!");
       } else {
         toast.error("Failed to generate download.");

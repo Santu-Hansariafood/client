@@ -669,14 +669,16 @@ const AddLoadingEntry = () => {
         commodity: selectedOrder.commodity,
         bags: entry.bags,
       };
-      const fileUrl = await PrintLoadingEntry(fullEntry);
-      if (fileUrl) {
+      const blob = await PrintLoadingEntry(fullEntry);
+      if (blob) {
+        const url = window.URL.createObjectURL(blob);
         const link = document.createElement("a");
-        link.href = fileUrl;
+        link.href = url;
         link.download = `LoadingEntry-${entry.billNumber || "document"}.pdf`;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
       }
     } catch (error) {
       console.error("Error generating PDF:", error);
