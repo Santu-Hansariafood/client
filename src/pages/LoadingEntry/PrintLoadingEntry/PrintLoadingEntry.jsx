@@ -6,6 +6,7 @@ import logo from "../../../assets/Hans.png";
 import signature from "../../../assets/signature.png";
 import stamp from "../../../assets/stamp.png";
 
+
 const PrintLoadingEntry = async (data) => {
   try {
     const doc = new jsPDF({
@@ -341,9 +342,8 @@ const PrintLoadingEntry = async (data) => {
     }
     if (stamp64) {
       try {
-        // More robust GState handling
         const GState = doc.GState || (jsPDF && jsPDF.GState);
-        if (typeof GState === 'function') {
+        if (typeof GState === 'function' && typeof doc.setGState === 'function') {
           doc.setGState(new GState({ opacity: 0.4 }));
           doc.addImage(stamp64, "PNG", pageWidth - margin - 45, signY - 20, 25, 25);
           doc.setGState(new GState({ opacity: 1.0 }));
@@ -352,7 +352,6 @@ const PrintLoadingEntry = async (data) => {
         }
       } catch (err) {
         console.error("GState error:", err);
-        // Fallback: add image without opacity
         try {
           doc.addImage(stamp64, "PNG", pageWidth - margin - 45, signY - 20, 25, 25);
         } catch (imgErr) {
@@ -378,10 +377,9 @@ const PrintLoadingEntry = async (data) => {
 
     doc.text(splitFooter, pageWidth / 2, footerY, {
       align: "center",
-      lineHeightFactor: 1.2,
     });
 
-    return doc.output("blob");
+    return new Blob([doc.output("arraybuffer")], { type: "application/pdf" });
   } catch (error) {
     console.error("Critical error during PDF generation:", error);
     return null;
