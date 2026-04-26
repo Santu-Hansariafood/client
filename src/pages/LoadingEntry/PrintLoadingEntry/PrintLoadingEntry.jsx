@@ -1,389 +1,486 @@
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
-import QRCode from "qrcode";
 import api from "../../../utils/apiClient/apiClient";
 import logo from "../../../assets/Hans.png";
 import signature from "../../../assets/signature.png";
 import stamp from "../../../assets/stamp.png";
 
-
 const PrintLoadingEntry = async (data) => {
-  try {
-    const doc = new jsPDF({
-      orientation: "portrait",
-      unit: "mm",
-      format: "a4",
+  const doc = new jsPDF({
+    orientation: "portrait",
+    unit: "mm",
+    format: "a4",
+  });
+
+  const pageWidth = doc.internal.pageSize.width;
+  const pageHeight = doc.internal.pageSize.height;
+  const margin = 14;
+
+  const primary = [0, 0, 0];
+  const secondary = [60, 60, 60];
+  const accent = [100, 100, 100];
+  const tableHead = [40, 40, 40];
+  const tableRowAlt = [245, 245, 245];
+  const dark = [0, 0, 0];
+  const light = [255, 255, 255];
+  const gray = [100, 100, 100];
+
+  const normalize = (str) => (str || "").toString().trim().toLowerCase();
+
+  const formatDate = (date) => {
+    const d = new Date(date);
+    return isNaN(d)
+      ? "N/A"
+      : d.toLocaleDateString("en-IN", {
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+        });
+  };
+
+  const formatCurrency = (val) =>
+    `Rs. ${Number(val || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}`;
+
+  const pickFirst = (...values) =>
+    values.find((v) => String(v || "").trim() !== "") || "";
+
+  const safeFetch = async (url) => {
+    try {
+      const res = await api.get(url);
+      return Array.isArray(res.data) ? res.data : res.data?.data || [];
+    } catch {
+      return [];
+    }
+  };
+
+  const getBase64 = (img) =>
+    new Promise((resolve) => {
+      const image = new Image();
+      image.src = img;
+      image.crossOrigin = "Anonymous";
+
+      image.onload = () => {
+        const canvas = document.createElement("canvas");
+        canvas.width = image.width;
+        canvas.height = image.height;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(image, 0, 0);
+        resolve(canvas.toDataURL("image/png"));
+      };
+
+      image.onerror = () => resolve(null);
     });
 
-    const pageWidth = doc.internal.pageSize.width;
-    const pageHeight = doc.internal.pageSize.height;
-    const margin = 14;
+  const [logo64, sign64, stamp64] = await Promise.all([
+    getBase64(logo),
+    getBase64(signature),
+    getBase64(stamp),
+  ]);
 
-    const formatDate = (date) => {
-      if (!date) return "N/A";
-      const d = new Date(date);
-      return isNaN(d)
-        ? "N/A"
-        : d.toLocaleDateString("en-IN", {
-            day: "2-digit",
-            month: "short",
-            year: "numeric",
-          });
-    };
-
-    const formatCurrency = (val) =>
-      `Rs. ${Number(val || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}`;
-
-    const getBase64 = (img) =>
-      new Promise((resolve) => {
-        const image = new Image();
-        image.src = img;
-        image.crossOrigin = "Anonymous";
-
-        image.onload = () => {
-          const canvas = document.createElement("canvas");
-          canvas.width = image.width;
-          canvas.height = image.height;
-          const ctx = canvas.getContext("2d");
-          ctx.drawImage(image, 0, 0);
-          resolve(canvas.toDataURL("image/png"));
-        };
-
-        image.onerror = () => resolve(null);
-      });
-
-    let seller = {};
-    let order = {};
-    let transporter = {};
-
-    try {
-      const promises = [];
-      if (data.supplier && typeof data.supplier === "string") {
-        promises.push(
-          api
-            .get(`/sellers/${data.supplier}`)
-            .then((res) => (seller = res.data))
-            .catch(() => {}),
-        );
-      } else if (data.supplier && typeof data.supplier === "object") {
-        seller = data.supplier;
-      }
-
-      if (data.saudaNo) {
-        promises.push(
-          api
-            .get(`/self-order/sauda/${data.saudaNo}`)
-            .then((res) => (order = res.data))
-            .catch(() => {}),
-        );
-      }
-
-      if (data.transporterId) {
-        promises.push(
-          api
-            .get(`/transporters/${data.transporterId}`)
-            .then((res) => (transporter = res.data))
-            .catch(() => {}),
-        );
-      }
-
-      await Promise.all(promises);
-    } catch (error) {
-      console.error("Error fetching related data for PDF:", error);
-    }
-
-    const [logo64, sign64, stamp64] = await Promise.all([
-      getBase64(logo),
-      getBase64(signature),
-      getBase64(stamp),
+  const [orders, sellers, companies, consignees, transporters] =
+    await Promise.all([
+      safeFetch("/self-order?limit=0"),
+      safeFetch("/sellers?limit=0"),
+      safeFetch("/seller-company?limit=0"),
+      safeFetch("/consignees?limit=0"),
+      safeFetch("/transporters?limit=0"),
     ]);
 
-    // Generate QR Code with basic details
-    let qr64 = null;
-    try {
-      const qrData = `Sauda: ${data.saudaNo || "N/A"}\nLorry: ${data.lorryNumber || "N/A"}\nWeight: ${data.loadingWeight || 0} Tons\nDate: ${formatDate(data.loadingDate)}`;
-      qr64 = await QRCode.toDataURL(qrData, { margin: 1, width: 100 });
-    } catch (err) {
-      console.error("QR Code Error:", err);
-    }
+  const supplierId =
+    typeof data.supplier === "object" ? data.supplier?._id : data.supplier;
+  const buyer =
+    orders.find((o) => String(o.saudaNo) === String(data.saudaNo)) || {};
+  const seller =
+    sellers.find((s) => String(s._id) === String(supplierId)) || {};
+  const company =
+    companies.find(
+      (c) => normalize(c.companyName) === normalize(data.supplierCompany),
+    ) || {};
 
-    // Fallback logic for all fields
-    const sellerCompanyName = (
-      data.supplierCompany ||
-      seller.companyName ||
-      "N/A"
-    ).toUpperCase();
-    const sellerName = data.sellerName || seller.sellerName || "N/A";
-    const sellerPhone =
-      data.sellerPhone ||
-      seller.mobileNo ||
-      (seller.phoneNumbers && seller.phoneNumbers[0]?.value) ||
-      "N/A";
-    const sellerGstin =
-      data.sellerGstin || seller.gstNumber || seller.gstin || "NOT AVAILABLE";
-    const sellerAddress =
-      data.sellerAddress ||
-      seller.address ||
-      (seller.city && seller.state ? `${seller.city}, ${seller.state}` : "N/A");
+  const transporter =
+    transporters.find((t) => String(t._id) === String(data.transporterId)) ||
+    {};
 
-    const buyerCompanyName = (
-      data.buyerCompany ||
-      (Array.isArray(order) ? order[0]?.buyerCompany : order?.buyerCompany) ||
-      (Array.isArray(order) ? order[0]?.buyer : order?.buyer) ||
-      "N/A"
-    ).toUpperCase();
-    const consigneeName =
-      data.consignee ||
-      (Array.isArray(order) ? order[0]?.consignee : order?.consignee) ||
-      "N/A";
+  const consignee =
+    consignees.find(
+      (c) =>
+        (c._id && String(c._id) === String(data.consignee)) ||
+        normalize(c.name) === normalize(data.consignee) ||
+        normalize(c.label)?.includes(normalize(data.consignee)),
+    ) || {};
 
-    const orderData = Array.isArray(order) ? order[0] : order;
-    const deliveryDetails =
-      [
-        data.location || orderData?.location,
-        data.district || orderData?.district,
-        data.state || orderData?.state,
-        data.pin || data.pinCode || orderData?.pin || orderData?.pinCode,
-      ]
-        .filter(Boolean)
-        .join(", ") || "Address details not found.";
+  const sellerCompanyName = pickFirst(
+    data.supplierCompany,
+    company.companyName,
+    seller.companyName,
+    "N/A",
+  );
+  const sellerName = pickFirst(seller.sellerName, data.sellerName, "N/A");
+  const sellerPhone = pickFirst(
+    seller?.phoneNumbers?.[0]?.value,
+    seller?.mobileNo,
+    seller.mobile,
+    seller.phone,
+    company?.mobileNo,
+    company.mobile,
+    "N/A",
+  );
+  const sellerEmail = pickFirst(
+    seller?.emails?.[0]?.value,
+    seller.email,
+    seller.mailId,
+    company.email,
+    company.mailId,
+    "N/A",
+  );
+  const sellerGstin = pickFirst(
+    company.gstNumber,
+    company.gstin,
+    seller.gstNumber,
+    seller.gstin,
+    data.sellerGstin,
+    data.gst,
+    "NOT AVAILABLE",
+  );
 
-    // Page setup
-    doc.setFillColor(255, 255, 255);
-    doc.rect(0, 0, pageWidth, pageHeight, "F");
+  const consigneeGst = pickFirst(
+    consignee.gst,
+    consignee.gstin,
+    data.consigneeGst,
+    "NOT AVAILABLE",
+  );
 
-    // Simple Header - Elegant thin lines
-    doc.setDrawColor(200, 200, 200);
-    doc.setLineWidth(0.1);
-    doc.line(margin, 10, pageWidth - margin, 10);
-    doc.line(margin, 48, pageWidth - margin, 48);
+  const sellerAddress =
+    [
+      company.location || seller.location,
+      company.district || seller.district,
+      company.state || seller.state,
+      company.pinCode || company.pin || seller.pinCode || seller.pin,
+    ]
+      .filter(Boolean)
+      .join(", ") || "N/A";
 
-    if (logo64) {
-      doc.addImage(logo64, "PNG", margin + 2, 14, 24, 24);
-    }
+  doc.setFillColor(255, 255, 255);
+  doc.rect(0, 0, pageWidth, pageHeight, "F");
 
-    doc.setTextColor(0, 0, 0);
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(16);
-    doc.text(sellerCompanyName, 47, 22);
+  doc.setFillColor(220, 220, 220);
+  doc.rect(0, 0, 2.5, pageHeight, "F");
 
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(9);
-    doc.setTextColor(80, 80, 80);
-    doc.text(`Seller: ${sellerName}`, 47, 28);
-    doc.setFontSize(8);
-    doc.text(`Contact: ${sellerPhone} | GSTIN: ${sellerGstin}`, 47, 34);
-    doc.text(`Address: ${sellerAddress}`, 47, 40);
+  doc.setFillColor(255, 255, 255);
+  doc.rect(0, 0, pageWidth, 48, "F");
+  doc.setDrawColor(0, 0, 0);
+  doc.setLineWidth(0.2);
+  doc.line(margin, 48, pageWidth - margin, 48);
 
-    // Title Section - Right Aligned
-    doc.setTextColor(0, 0, 0);
-    doc.setFontSize(14);
-    doc.setFont("helvetica", "bold");
-    doc.text("LORRY CHALLAN", pageWidth - margin - 5, 22, { align: "right" });
-
-    doc.setFontSize(9);
-    doc.setFont("helvetica", "normal");
-    doc.text(
-      `DATE: ${formatDate(data.loadingDate)}`,
-      pageWidth - margin - 5,
-      34,
-      {
-        align: "right",
-      },
-    );
-    doc.text(
-      `CHALLAN NO: ${data.billNumber || "N/A"}`,
-      pageWidth - margin - 5,
-      39,
-      {
-        align: "right",
-      },
-    );
-
-    const addTable = (title, y, head, body) => {
-      doc.setTextColor(60, 60, 60);
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(8);
-      doc.text(title.toUpperCase(), margin, y - 2);
-
-      autoTable(doc, {
-        startY: y,
-        head: [head],
-        body: [body],
-        theme: "grid",
-        headStyles: {
-          fillColor: [250, 250, 250],
-          textColor: [0, 0, 0],
-          fontSize: 7.5,
-          fontStyle: "bold",
-          halign: "center",
-          lineWidth: 0.1,
-          lineColor: [200, 200, 200],
-        },
-        bodyStyles: {
-          fontSize: 8,
-          textColor: [0, 0, 0],
-          halign: "center",
-          lineWidth: 0.1,
-          lineColor: [230, 230, 230],
-        },
-        columnStyles: {
-          0: { halign: "left" },
-        },
-        margin: { left: margin, right: margin },
-        styles: {
-          cellPadding: 3,
-          overflow: "linebreak",
-        },
-      });
-
-      return doc.lastAutoTable.finalY + 12;
-    };
-
-    let currentY = 58;
-
-    // 1. Parties Info - Simple
-    currentY = addTable(
-      "Parties Information",
-      currentY,
-      ["Buyer Company", "Consignee Name", "Sauda No"],
-      [buyerCompanyName, consigneeName, data.saudaNo || "N/A"],
-    );
-
-    // 2. Delivery Address - Reverted to standalone box
-    doc.setDrawColor(230, 230, 230);
-    doc.setLineWidth(0.1);
-    const splitDeliveryAddress = doc.splitTextToSize(
-      deliveryDetails,
-      pageWidth - margin * 2 - 10,
-    );
-    const deliveryHeight = Math.max(16, splitDeliveryAddress.length * 5 + 8);
-
-    doc.rect(margin, currentY - 5, pageWidth - margin * 2, deliveryHeight, "S");
-    doc.setTextColor(60, 60, 60);
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(8);
-    doc.text("DELIVERY ADDRESS", margin + 4, currentY);
-    doc.setTextColor(0, 0, 0);
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(8.5);
-    doc.text(splitDeliveryAddress, margin + 4, currentY + 5);
-    currentY += deliveryHeight + 6;
-
-    // 3. Goods Details
-    currentY = addTable(
-      "Goods & Weight Details",
-      currentY,
-      ["Commodity", "Bags", "Loading Weight", "Unloading Weight", "Vehicle No"],
-      [
-        data.commodity || "N/A",
-        data.bags || "0",
-        `${data.loadingWeight || 0} Tons`,
-        `${data.unloadingWeight || 0} Tons`,
-        (data.lorryNumber || "N/A").toUpperCase(),
-      ],
-    );
-
-    currentY = addTable(
-      "Transporter Information",
-      currentY,
-      ["Transporter Name", "Driver Name", "Driver Contact", "Lorry No"],
-      [
-        data.addedTransport || transporter.name || "N/A",
-        data.driverName || "N/A",
-        data.driverPhoneNumber || "N/A",
-        (data.lorryNumber || "N/A").toUpperCase(),
-      ],
-    );
-
-    const totalF = Number(data.totalFreight || 0);
-    const adv = Number(data.advance || 0);
-    const bal = totalF - adv;
-
-    currentY = addTable(
-      "Freight & Payment Summary",
-      currentY,
-      ["Freight Rate", "Total Freight", "Advance Paid", "Balance Payable"],
-      [
-        formatCurrency(data.freightRate),
-        formatCurrency(totalF),
-        formatCurrency(adv),
-        formatCurrency(bal),
-      ],
-    );
-
-    // Signatures Section
-    const signY = pageHeight - 40;
-    doc.setDrawColor(200, 200, 200);
-    doc.setLineWidth(0.1);
-    doc.line(margin, signY + 10, margin + 50, signY + 10);
-    doc.line(pageWidth - margin - 50, signY + 10, pageWidth - margin, signY + 10);
-
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(8);
-    doc.setTextColor(100, 100, 100);
-    doc.text("DRIVER'S SIGNATURE", margin + 25, signY + 14, { align: "center" });
-    doc.text("AUTHORIZED SIGNATORY", pageWidth - margin - 25, signY + 14, {
-      align: "center",
-    });
-
-    doc.setTextColor(0, 0, 0);
-    doc.setFontSize(8);
-    doc.text(`FOR ${sellerCompanyName}`, pageWidth - margin - 25, signY + 5, {
-      align: "center",
-    });
-
-    if (qr64) {
-      doc.addImage(qr64, "PNG", pageWidth - margin - 35, signY - 32, 20, 20);
-    }
-
-    if (sign64) {
-      doc.addImage(sign64, "PNG", pageWidth - margin - 40, signY - 8, 30, 10);
-    }
-    if (stamp64) {
-      try {
-        const GState = doc.GState || (jsPDF && jsPDF.GState);
-        if (typeof GState === 'function' && typeof doc.setGState === 'function') {
-          doc.setGState(new GState({ opacity: 0.4 }));
-          doc.addImage(stamp64, "PNG", pageWidth - margin - 45, signY - 20, 25, 25);
-          doc.setGState(new GState({ opacity: 1.0 }));
-        } else {
-          doc.addImage(stamp64, "PNG", pageWidth - margin - 45, signY - 20, 25, 25);
-        }
-      } catch (err) {
-        console.error("GState error:", err);
-        try {
-          doc.addImage(stamp64, "PNG", pageWidth - margin - 45, signY - 20, 25, 25);
-        } catch (imgErr) {
-          console.error("Error adding stamp image:", imgErr);
-        }
-      }
-    }
-
-    // Final Footer
-    doc.setFontSize(7);
-    doc.setTextColor(150, 150, 150);
-
-    const footerText =
-      "This is a system-generated Lorry Challan issued via the Hansaria Food platform.\n" +
-      "No physical signature is required.\n" +
-      "Hansaria Food Private Limited shall not be held liable for any discrepancies\n" +
-      "or inaccuracies in the loading data provided by users.";
-
-    const splitFooter = doc.splitTextToSize(footerText, pageWidth - margin * 2);
-    const lineHeight = 3.5;
-    const footerHeight = splitFooter.length * lineHeight;
-    const footerY = pageHeight - 8 - footerHeight;
-
-    doc.text(splitFooter, pageWidth / 2, footerY, {
-      align: "center",
-    });
-
-    return new Blob([doc.output("arraybuffer")], { type: "application/pdf" });
-  } catch (error) {
-    console.error("Critical error during PDF generation:", error);
-    return null;
+  if (logo64) {
+    doc.addImage(logo64, "PNG", 15, 12, 24, 24);
   }
+
+  doc.setTextColor(0, 0, 0);
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(16);
+  doc.text(String(sellerCompanyName).toUpperCase(), 47, 18);
+
+  doc.setDrawColor(0, 0, 0);
+  doc.setLineWidth(0.5);
+  doc.line(47, 20, 140, 20);
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(9);
+  doc.setTextColor(0, 0, 0);
+  doc.text(`Seller: ${sellerName}`, 47, 25);
+
+  doc.setFontSize(8);
+  doc.setTextColor(60, 60, 60);
+  doc.text(`Email: ${sellerEmail}`, 47, 30);
+  doc.text(`Contact: ${sellerPhone} | GSTIN: ${sellerGstin}`, 47, 34);
+  doc.text(`Address: ${sellerAddress}`, 47, 38);
+
+  doc.setFillColor(240, 240, 240);
+  doc.setDrawColor(0, 0, 0);
+  doc.roundedRect(pageWidth - 68, 12, 56, 12, 2, 2, "FD");
+  doc.setTextColor(0, 0, 0);
+  doc.setFontSize(13);
+  doc.setFont("helvetica", "bold");
+  doc.text("LORRY CHALLAN", pageWidth - 40, 20, { align: "center" });
+
+  doc.setFontSize(8.5);
+  doc.setTextColor(0, 0, 0);
+  doc.text(`DATE: ${formatDate(data.loadingDate)}`, pageWidth - 14, 34, {
+    align: "right",
+  });
+  doc.text(`CHALLAN NO: ${data.billNumber || "N/A"}`, pageWidth - 14, 39, {
+    align: "right",
+  });
+
+  const addressLines = [
+    consignee.location,
+    consignee.district,
+    consignee.state,
+    consignee.pin ? `PIN: ${consignee.pin}` : null,
+  ].filter(Boolean);
+
+  const fullAddress = addressLines.join(", ");
+  const buyerCompanyName = pickFirst(
+    buyer.companyName,
+    buyer.buyerCompany,
+    buyer.company,
+    buyer.buyer,
+    "N/A",
+  );
+  const buyerMobile = pickFirst(
+    buyer.buyerMobile,
+    buyer.mobile,
+    buyer.phone,
+    buyer.phoneNumber,
+    "N/A",
+  );
+  const buyerEmail = pickFirst(
+    buyer.buyerEmail,
+    buyer?.buyerEmails?.[0],
+    buyer.email,
+    buyer.mailId,
+    "N/A",
+  );
+
+  const addTable = (title, y, head, body, colors = tableHead) => {
+    // Centered ribbon title for a modern, compact look
+    const ribbonH = 6.5;
+    doc.setFillColor(...colors);
+    doc.setDrawColor(...colors);
+    doc.roundedRect(
+      margin,
+      y - ribbonH,
+      pageWidth - margin * 2,
+      ribbonH,
+      2,
+      2,
+      "FD",
+    );
+
+    doc.setTextColor(255, 255, 255);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(9.5);
+    doc.text(title.toUpperCase(), pageWidth / 2, y - 1.2, {
+      align: "center",
+    });
+
+    autoTable(doc, {
+      startY: y + 1.2,
+      head: [head],
+      body: [body],
+      theme: "striped",
+      headStyles: {
+        fillColor: colors,
+        textColor: 255,
+        fontSize: 8.2,
+        fontStyle: "bold",
+        halign: "center",
+      },
+      bodyStyles: {
+        fontSize: 8.3,
+        textColor: [0, 0, 0],
+        halign: "center",
+        lineColor: [200, 200, 200],
+      },
+      columnStyles: {
+        0: { halign: "left" },
+      },
+      margin: { left: margin, right: margin },
+      styles: {
+        cellPadding: 3,
+        overflow: "linebreak",
+      },
+      alternateRowStyles: {
+        fillColor: tableRowAlt,
+      },
+    });
+
+    return doc.lastAutoTable.finalY + 8;
+  };
+
+  let currentY = 55;
+
+  // 1. Seller Information
+  currentY = addTable(
+    "Seller Information",
+    currentY,
+    ["Seller Name", "Seller Address", "Seller Contact", "Seller GSTIN"],
+    [sellerName, sellerAddress, sellerPhone, sellerGstin],
+  );
+
+  // 2. Delivery Address (On top as requested)
+  doc.setFillColor(...light);
+  doc.setDrawColor(...dark);
+  doc.setLineWidth(0.3);
+
+  const deliveryAddressText =
+    [
+      consignee.location || data.location,
+      consignee.district || data.district,
+      consignee.state || data.state,
+      consignee.pin || data.pin,
+    ]
+      .filter(Boolean)
+      .join(", ") || "Address details not found.";
+
+  const splitDeliveryAddress = doc.splitTextToSize(
+    deliveryAddressText,
+    pageWidth - margin * 2 - 10,
+  );
+  const deliveryBlockHeight = Math.max(
+    18,
+    splitDeliveryAddress.length * 5 + 10,
+  );
+
+  doc.roundedRect(
+    margin,
+    currentY - 5,
+    pageWidth - margin * 2,
+    deliveryBlockHeight,
+    2,
+    2,
+    "FD",
+  );
+
+  doc.setTextColor(...dark);
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(9);
+  doc.text("DELIVERY ADDRESS", margin + 5, currentY + 1);
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(8.5);
+  doc.text(splitDeliveryAddress, margin + 5, currentY + 6);
+  currentY += deliveryBlockHeight + 5;
+
+  // 3. Buyer Details (Consignee)
+  const consigneeAddress =
+    [consignee.location, consignee.district, consignee.state, consignee.pin]
+      .filter(Boolean)
+      .join(", ") || "N/A";
+
+  currentY = addTable(
+    "Buyer Details (Consignee)",
+    currentY,
+    ["Consignee Name", "Consignee Address", "Consignee GST", "Buyer Contact"],
+    [
+      consignee.name || data.consignee || "N/A",
+      consigneeAddress,
+      consigneeGst,
+      buyerMobile || "N/A",
+    ],
+  );
+
+  // 4. Description of Goods
+  currentY = addTable(
+    "Description of Goods",
+    currentY,
+    ["Commodity", "Bags", "Weight (Tons)", "Vehicle Number"],
+    [
+      data.commodity || "N/A",
+      data.bags || "N/A",
+      `${data.loadingWeight || 0} Tons`,
+      (data.lorryNumber || "N/A").toUpperCase(),
+    ],
+  );
+
+  // 5. Transporter Information
+  currentY = addTable(
+    "Full Transporter Details",
+    currentY,
+    ["Transporter Name", "Driver Name", "Driver Contact", "Vehicle Number"],
+    [
+      transporter.name || data.addedTransport || "N/A",
+      data.driverName || "N/A",
+      data.driverPhoneNumber || transporter.mobile || "N/A",
+      (data.lorryNumber || "N/A").toUpperCase(),
+    ],
+  );
+
+  // 6. Freight & Payment Summary (Keeping this for completeness)
+  const total = Number(data.totalFreight || 0);
+  const advance = Number(data.advance || 0);
+  const balance = total - advance;
+
+  currentY = addTable(
+    "Freight & Payment Summary",
+    currentY,
+    ["Freight Rate", "Total Freight", "Advance Paid", "Balance Payable"],
+    [
+      formatCurrency(data.freightRate),
+      formatCurrency(total),
+      formatCurrency(advance),
+      formatCurrency(balance),
+    ],
+  );
+
+  const signBaseY = pageHeight - 38;
+
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(9);
+  doc.setTextColor(...dark);
+
+  doc.text("DRIVER'S SIGNATURE", margin + 5, signBaseY);
+  doc.setDrawColor(0, 0, 0);
+  doc.setLineWidth(0.5);
+  doc.line(margin, signBaseY + 10, margin + 55, signBaseY + 10);
+
+  doc.setTextColor(0, 0, 0);
+  doc.text(
+    `FOR ${String(sellerCompanyName).toUpperCase()}`,
+    pageWidth - margin - 60,
+    signBaseY,
+    {
+      align: "center",
+    },
+  );
+
+  if (sign64) {
+    doc.addImage(sign64, "PNG", pageWidth - margin - 50, signBaseY + 2, 35, 12);
+  }
+  if (stamp64) {
+    doc.setGState(new doc.GState({ opacity: 0.6 }));
+    doc.addImage(
+      stamp64,
+      "PNG",
+      pageWidth - margin - 65,
+      signBaseY - 15,
+      30,
+      30,
+    );
+    doc.setGState(new doc.GState({ opacity: 1.0 }));
+  }
+
+  doc.setDrawColor(0, 0, 0);
+  doc.line(
+    pageWidth - margin - 65,
+    signBaseY + 15,
+    pageWidth - margin,
+    signBaseY + 15,
+  );
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(8);
+  doc.setTextColor(gray);
+  doc.text("Authorized Signatory", pageWidth - margin - 32.5, signBaseY + 20, {
+    align: "center",
+  });
+
+  doc.setFillColor(230, 230, 230);
+  doc.rect(0, pageHeight - 8, pageWidth, 8, "F");
+
+  doc.setFillColor(0, 0, 0);
+  doc.rect(0, pageHeight - 8.5, pageWidth, 0.5, "F");
+
+  doc.setTextColor(0, 0, 0);
+  doc.setFontSize(8);
+  doc.text(
+    "Terms & Conditions: This is an electronic challan. Goods received in good condition.",
+    pageWidth / 2,
+    pageHeight - 3,
+    { align: "center" },
+  );
+
+  return URL.createObjectURL(doc.output("blob"));
 };
 
 export default PrintLoadingEntry;
