@@ -659,31 +659,31 @@ const AddLoadingEntry = () => {
     }
   };
   const handleDownloadPDF = async (entry) => {
+    let toastId;
     try {
-      const fullEntry = {
-        ...entry,
-        saudaNo: selectedOrder.saudaNo,
-        supplier: selectedOrder.supplier?._id || selectedOrder.supplier,
-        supplierCompany: selectedOrder.supplierCompany,
-        consignee: selectedOrder.consignee,
-        commodity: selectedOrder.commodity,
-        bags: entry.bags,
-      };
-      const blob = await PrintLoadingEntry(fullEntry);
-      if (blob) {
-        const url = window.URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.href = url;
-        link.download = `LoadingEntry-${entry.billNumber || "document"}.pdf`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        window.URL.revokeObjectURL(url);
-        toast.success("Download started successfully!");
-      } else {
-        toast.error("Failed to generate PDF. Please try again.");
+      if (!entry._id) {
+        toast.error("Please save the entry first before downloading.");
+        return;
       }
+      toastId = toast.loading("Preparing PDF...");
+      const response = await api.get(`/loading-entries/${entry._id}/pdf`, {
+        responseType: "blob",
+      });
+
+      const blob = new Blob([response.data], { type: "application/pdf" });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `LoadingEntry-${entry.billNumber || "document"}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      toast.dismiss(toastId);
+      toast.success("Download started successfully!");
     } catch (error) {
+      if (toastId) toast.dismiss(toastId);
       console.error("Error generating PDF:", error);
       toast.error("Failed to generate PDF");
     }

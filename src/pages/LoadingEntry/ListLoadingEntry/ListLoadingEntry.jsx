@@ -268,23 +268,29 @@ const ListLoadingEntry = () => {
   };
 
   const handleDownload = async (entry) => {
+    let toastId;
     try {
-      const blob = await PrintLoadingEntry(entry);
-      if (blob) {
-        const url = window.URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.href = url;
-        link.download = `LoadingEntry-${entry.billNumber || "document"}.pdf`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        window.URL.revokeObjectURL(url);
-        toast.success("Download started successfully!");
-      } else {
-        toast.error("Failed to generate download.");
-      }
+      toastId = toast.loading("Preparing PDF...");
+      const response = await api.get(`/loading-entries/${entry._id}/pdf`, {
+        responseType: "blob",
+      });
+
+      const blob = new Blob([response.data], { type: "application/pdf" });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `LoadingEntry-${entry.billNumber || "document"}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      toast.dismiss(toastId);
+      toast.success("Download started successfully!");
     } catch (error) {
-      toast.error("Error generating download.", error);
+      if (toastId) toast.dismiss(toastId);
+      console.error("PDF Download Error:", error);
+      toast.error("Error generating download.");
     }
   };
 
