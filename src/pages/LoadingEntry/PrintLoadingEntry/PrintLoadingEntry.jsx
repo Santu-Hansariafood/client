@@ -1,16 +1,22 @@
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
+import { toast } from "react-toastify";
 import api from "../../../utils/apiClient/apiClient";
 import logo from "../../../assets/Hans.png";
-import signature from "../../../assets/signature.png";
-import stamp from "../../../assets/stamp.png";
 
 const PrintLoadingEntry = async (data) => {
-  const doc = new jsPDF({
-    orientation: "portrait",
-    unit: "mm",
-    format: "a4",
-  });
+  if (!data) {
+    console.error("No data provided to PrintLoadingEntry");
+    toast.error("No data available for PDF generation");
+    return null;
+  }
+  console.log("Starting PDF generation for:", data?.billNumber || "N/A");
+  try {
+    const doc = new jsPDF({
+      orientation: "portrait",
+      unit: "mm",
+      format: "a4",
+    });
 
   const pageWidth = doc.internal.pageSize.width;
   const pageHeight = doc.internal.pageSize.height;
@@ -46,22 +52,30 @@ const PrintLoadingEntry = async (data) => {
 
   const safeFetch = async (url) => {
     try {
-      const res = await api.get(url);
+      console.log(`Fetching: ${url}`);
+      const res = await api.get(url, { timeout: 15000 });
+      console.log(`Fetched: ${url} (count: ${res.data?.length || res.data?.data?.length || 0})`);
       return Array.isArray(res.data) ? res.data : res.data?.data || [];
-    } catch {
+    } catch (err) {
+      console.warn(`Could not fetch data from ${url}, using defaults.`, err);
       return [];
     }
   };
 
   const getBase64 = (img) =>
     new Promise((resolve) => {
-      if (!img) return resolve(null);
+      if (!img) {
+        console.warn("No image path provided to getBase64");
+        return resolve(null);
+      }
+      console.log("Loading image:", img);
       const image = new Image();
       image.src = img;
       image.crossOrigin = "Anonymous";
 
       image.onload = () => {
         try {
+          console.log("Image loaded successfully:", img);
           const canvas = document.createElement("canvas");
           canvas.width = image.width;
           canvas.height = image.height;
@@ -69,21 +83,23 @@ const PrintLoadingEntry = async (data) => {
           ctx.drawImage(image, 0, 0);
           resolve(canvas.toDataURL("image/png"));
         } catch (e) {
-          console.error("Canvas error:", e);
+          console.error("Canvas error for image:", img, e);
           resolve(null);
         }
       };
 
       image.onerror = () => {
-        console.error("Image load error:", img);
+        console.error("Image load error for path:", img);
         resolve(null);
       };
     });
 
+  console.log("Processing assets...");
   const [logo64] = await Promise.all([
     getBase64(logo),
   ]);
 
+  console.log("Fetching additional data...");
   const [orders, sellers, companies, consignees, transporters] =
     await Promise.all([
       safeFetch("/self-order?limit=0"),
@@ -92,6 +108,7 @@ const PrintLoadingEntry = async (data) => {
       safeFetch("/consignees?limit=0"),
       safeFetch("/transporters?limit=0"),
     ]);
+  console.log("Data fetch complete.");
 
   const supplierId =
     typeof data.supplier === "object" ? data.supplier?._id : data.supplier;
@@ -167,6 +184,7 @@ const PrintLoadingEntry = async (data) => {
       .filter(Boolean)
       .join(", ") || "N/A";
 
+  console.log("Drawing header...");
   doc.setFillColor(255, 255, 255);
   doc.rect(0, 0, pageWidth, pageHeight, "F");
 
@@ -251,63 +269,70 @@ const PrintLoadingEntry = async (data) => {
   );
 
   const addTable = (title, y, head, body, colors = tableHead) => {
-    // Centered ribbon title for a modern, compact look
-    const ribbonH = 6.5;
-    doc.setFillColor(colors[0], colors[1], colors[2]);
-    doc.setDrawColor(colors[0], colors[1], colors[2]);
-    doc.roundedRect(
-      margin,
-      y - ribbonH,
-      pageWidth - margin * 2,
-      ribbonH,
-      2,
-      2,
-      "FD",
-    );
+    try {
+      if (!colors || colors.length < 3) colors = [40, 40, 40];
+      // Centered ribbon title for a modern, compact look
+      const ribbonH = 6.5;
+      doc.setFillColor(Number(colors[0]), Number(colors[1]), Number(colors[2]));
+      doc.setDrawColor(Number(colors[0]), Number(colors[1]), Number(colors[2]));
+      doc.roundedRect(
+        margin,
+        y - ribbonH,
+        pageWidth - margin * 2,
+        ribbonH,
+        2,
+        2,
+        "FD",
+      );
 
-    doc.setTextColor(255, 255, 255);
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(9.5);
-    doc.text(title.toUpperCase(), pageWidth / 2, y - 1.2, {
-      align: "center",
-    });
+      doc.setTextColor(255, 255, 255);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(9.5);
+      doc.text(title.toUpperCase(), pageWidth / 2, y - 1.2, {
+        align: "center",
+      });
 
-    autoTable(doc, {
-      startY: y + 1.2,
-      head: [head],
-      body: [body],
-      theme: "striped",
-      headStyles: {
-        fillColor: colors,
-        textColor: 255,
-        fontSize: 8.2,
-        fontStyle: "bold",
-        halign: "center",
-      },
-      bodyStyles: {
-        fontSize: 8.3,
-        textColor: 0,
-        halign: "center",
-        lineColor: 200,
-      },
-      columnStyles: {
-        0: { halign: "left" },
-      },
-      margin: { left: margin, right: margin },
-      styles: {
-        cellPadding: 3,
-        overflow: "linebreak",
-      },
-      alternateRowStyles: {
-        fillColor: tableRowAlt,
-      },
-    });
+      autoTable(doc, {
+        startY: y + 1.2,
+        head: [head],
+        body: [body],
+        theme: "striped",
+        headStyles: {
+          fillColor: colors,
+          textColor: 255,
+          fontSize: 8.2,
+          fontStyle: "bold",
+          halign: "center",
+        },
+        bodyStyles: {
+          fontSize: 8.3,
+          textColor: 0,
+          halign: "center",
+          lineColor: 200,
+        },
+        columnStyles: {
+          0: { halign: "left" },
+        },
+        margin: { left: margin, right: margin },
+        styles: {
+          cellPadding: 3,
+          overflow: "linebreak",
+        },
+        alternateRowStyles: {
+          fillColor: tableRowAlt,
+        },
+      });
 
-    return doc.lastAutoTable.finalY + 8;
+      return (doc.lastAutoTable?.finalY || y + 20) + 8;
+    } catch (tableErr) {
+      console.error(`Error adding table ${title}:`, tableErr);
+      return y + 25;
+    }
   };
 
   let currentY = 55;
 
+  console.log("Drawing tables...");
   // 1. Seller Information
   currentY = addTable(
     "Seller Information",
@@ -471,7 +496,13 @@ const PrintLoadingEntry = async (data) => {
     { align: "center" },
   );
 
-  return URL.createObjectURL(doc.output("blob"));
+  console.log("PDF generation successful.");
+  const blob = doc.output("blob");
+  return URL.createObjectURL(blob);
+  } catch (err) {
+    console.error("Critical error in PrintLoadingEntry:", err);
+    throw err;
+  }
 };
 
 export default PrintLoadingEntry;

@@ -273,14 +273,20 @@ const ListLoadingEntry = () => {
       toastId = toast.loading("Preparing PDF...");
       
       const url = await PrintLoadingEntry(entry);
+      if (!url) return;
       
       const link = document.createElement("a");
       link.href = url;
       link.download = `LoadingEntry-${entry.billNumber || "document"}.pdf`;
       document.body.appendChild(link);
       link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
+      
+      setTimeout(() => {
+        if (document.body.contains(link)) {
+          document.body.removeChild(link);
+        }
+        window.URL.revokeObjectURL(url);
+      }, 1000);
 
       toast.dismiss(toastId);
       toast.success("Download started successfully!");
