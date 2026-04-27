@@ -171,12 +171,36 @@ const PrintLoadingEntry = async (data) => {
     "NOT AVAILABLE",
   );
 
+  const sellerPan = pickFirst(
+    company.panNumber,
+    company.pan,
+    seller.panNumber,
+    seller.pan,
+    data.sellerPan,
+    "NOT AVAILABLE",
+  );
+
+  const sellerTaxId = sellerGstin !== "NOT AVAILABLE" 
+    ? `GSTIN: ${sellerGstin}` 
+    : (sellerPan !== "NOT AVAILABLE" ? `PAN: ${sellerPan}` : "GSTIN/PAN: NOT AVAILABLE");
+
   const consigneeGst = pickFirst(
     consignee.gst,
     consignee.gstin,
     data.consigneeGst,
     "NOT AVAILABLE",
   );
+  
+  const consigneePan = pickFirst(
+    consignee.pan,
+    consignee.panNumber,
+    data.consigneePan,
+    "NOT AVAILABLE",
+  );
+
+  const consigneeTaxId = consigneeGst !== "NOT AVAILABLE" 
+    ? consigneeGst 
+    : (consigneePan !== "NOT AVAILABLE" ? consigneePan : "NOT AVAILABLE");
 
   const sellerAddress =
     [
@@ -208,22 +232,17 @@ const PrintLoadingEntry = async (data) => {
   doc.setTextColor(0, 0, 0);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(16);
-  doc.text(String(sellerCompanyName).toUpperCase(), 47, 18);
+  doc.text(String(sellerCompanyName).toUpperCase(), 47, 22);
 
   doc.setDrawColor(200, 200, 200); // Lighter line
   doc.setLineWidth(0.5);
-  doc.line(47, 20, 140, 20);
+  doc.line(47, 24, 140, 24);
 
   doc.setFont("helvetica", "normal");
   doc.setFontSize(9);
-  doc.setTextColor(0, 0, 0);
-  doc.text(`Seller: ${sellerName}`, 47, 25);
-
-  doc.setFontSize(8);
   doc.setTextColor(60, 60, 60);
-  doc.text(`Email: ${sellerEmail}`, 47, 30);
-  doc.text(`Contact: ${sellerPhone} | GSTIN: ${sellerGstin}`, 47, 34);
-  doc.text(`Address: ${sellerAddress}`, 47, 38);
+  doc.text(sellerTaxId, 47, 29);
+  doc.text(`Address: ${sellerAddress}`, 47, 34);
 
   doc.setFillColor(240, 240, 240);
   doc.setDrawColor(240, 240, 240); // Match fill color to hide border
@@ -312,7 +331,8 @@ const PrintLoadingEntry = async (data) => {
           fontSize: 8.3,
           textColor: 0,
           halign: "center",
-          lineColor: 200,
+          lineColor: 230,
+          lineWidth: 0.1,
         },
         columnStyles: {
           0: { halign: "left" },
@@ -341,30 +361,30 @@ const PrintLoadingEntry = async (data) => {
   currentY = addTable(
     "Seller Information",
     currentY,
-    ["Seller Name", "Seller Address", "Seller Contact", "Seller GSTIN"],
-    [sellerName, sellerAddress, sellerPhone, sellerGstin],
+    ["Seller Company", "Seller Address", "GSTIN/PAN"],
+    [sellerCompanyName, sellerAddress, sellerTaxId.replace("GSTIN: ", "").replace("PAN: ", "")],
   );
 
   // 2. Delivery Address (On top as requested)
   doc.setFillColor(255, 255, 255);
-  doc.setDrawColor(0, 0, 0);
-  doc.setLineWidth(0.3);
+  doc.setDrawColor(200, 200, 200); // Lighter line
+  doc.setLineWidth(0.2);
 
   const deliveryAddressText =
-     pickFirst(
-       data.deliveryAddress,
-       data.unloadingPoint,
-       data.destination,
-       data.address,
-       [
-         consignee.location || data.location,
-         consignee.district || data.district,
-         consignee.state || data.state,
-         consignee.pin || data.pin,
-       ]
-         .filter(Boolean)
-         .join(", ")
-     ) || "Address details not found.";
+      pickFirst(
+        data.deliveryAddress,
+        data.unloadingPoint,
+        data.destination,
+        data.address,
+        [
+          consignee.location || data.location,
+          consignee.district || data.district,
+          consignee.state || data.state,
+          consignee.pin || data.pin,
+        ]
+          .filter(Boolean)
+          .join(", ")
+      ) || "Address details not found.";
 
   const splitDeliveryAddress = doc.splitTextToSize(
     deliveryAddressText,
@@ -406,12 +426,11 @@ const PrintLoadingEntry = async (data) => {
   currentY = addTable(
     "Buyer Details (Consignee)",
     currentY,
-    ["Consignee Name", "Consignee Address", "Consignee GST", "Buyer Contact"],
+    ["Consignee Name", "Consignee Address", "GSTIN/PAN"],
     [
       consignee.name || data.consignee || "N/A",
       consigneeAddress,
-      consigneeGst,
-      buyerMobile || "N/A",
+      consigneeTaxId,
     ],
   );
 
@@ -465,7 +484,7 @@ const PrintLoadingEntry = async (data) => {
   doc.setTextColor(0, 0, 0);
   
   doc.text("DRIVER'S SIGNATURE", margin + 5, signBaseY);
-  doc.setDrawColor(0, 0, 0);
+  doc.setDrawColor(200, 200, 200); // Lighter line
   doc.setLineWidth(0.5);
   doc.line(margin, signBaseY + 10, margin + 55, signBaseY + 10);
 
@@ -479,7 +498,7 @@ const PrintLoadingEntry = async (data) => {
     },
   );
 
-  doc.setDrawColor(0, 0, 0);
+  doc.setDrawColor(200, 200, 200); // Lighter line
   doc.line(
     pageWidth - margin - 65,
     signBaseY + 15,
