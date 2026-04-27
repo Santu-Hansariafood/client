@@ -104,7 +104,7 @@ const PendingLoadingList = () => {
         return;
       }
 
-      generateExcel(excelRows, "PendingLoadingEntries.xlsx");
+      await generateExcel(excelRows, "PendingLoadingEntries.xlsx");
       toast.dismiss(toastId);
       toast.success("Excel downloaded successfully");
     } catch (error) {

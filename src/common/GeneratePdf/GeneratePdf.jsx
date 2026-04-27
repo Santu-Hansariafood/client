@@ -1,4 +1,5 @@
 import { jsPDF } from "jspdf";
+import { downloadFile } from "../../utils/fileDownloader";
 
 const generatePDF = async (company) => {
   const doc = new jsPDF();
@@ -51,8 +52,7 @@ const generatePDF = async (company) => {
       doc.text(`Failed to load image: ${images[i]}`, 10, 10);
     }
   }
-
-  doc.save(`${company.companyName}_Hansaria_Seller.pdf`);
+  await downloadFile(doc, `${company.companyName}_Hansaria_Seller.pdf`);
 };
 
 export default generatePDF;

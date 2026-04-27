@@ -516,8 +516,7 @@ const PrintLoadingEntry = async (data) => {
       { align: "center" },
     );
 
-    const blob = doc.output("blob");
-    return URL.createObjectURL(blob);
+    return doc;
   } catch (err) {
     console.error(err);
     throw err;

@@ -8,6 +8,7 @@ import Loading from "../../../common/Loading/Loading";
 import { FaClipboardList } from "react-icons/fa";
 
 import PrintLoadingEntry from "../PrintLoadingEntry/PrintLoadingEntry";
+import { downloadFile } from "../../../utils/fileDownloader";
 const PopupBox = lazy(() => import("../../../common/PopupBox/PopupBox"));
 const Tables = lazy(() => import("../../../common/Tables/Tables"));
 const SearchBox = lazy(() => import("../../../common/SearchBox/SearchBox"));
@@ -272,21 +273,10 @@ const ListLoadingEntry = () => {
     try {
       toastId = toast.loading("Preparing PDF...");
       
-      const url = await PrintLoadingEntry(entry);
-      if (!url) return;
+      const doc = await PrintLoadingEntry(entry);
+      if (!doc) return;
       
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `LoadingEntry-${entry.billNumber || "document"}.pdf`;
-      document.body.appendChild(link);
-      link.click();
-      
-      setTimeout(() => {
-        if (document.body.contains(link)) {
-          document.body.removeChild(link);
-        }
-        window.URL.revokeObjectURL(url);
-      }, 1000);
+      downloadFile(doc, `LoadingEntry-${entry.billNumber || "document"}.pdf`);
 
       toast.dismiss(toastId);
       toast.success("Download started successfully!");
@@ -316,17 +306,7 @@ const ListLoadingEntry = () => {
       const blob = new Blob([response.data], {
         type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       });
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.setAttribute(
-        "download",
-        `LoadingEntries_${new Date().toISOString().split("T")[0]}.xlsx`,
-      );
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      window.URL.revokeObjectURL(url);
+      await downloadFile(blob, `LoadingEntries_${new Date().toISOString().split("T")[0]}.xlsx`);
 
       toast.dismiss(toastId);
       toast.success("Excel downloaded");

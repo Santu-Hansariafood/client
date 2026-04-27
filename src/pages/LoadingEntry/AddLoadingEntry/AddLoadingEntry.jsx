@@ -5,6 +5,7 @@ import { FaTruckLoading } from "react-icons/fa";
 import api from "../../../utils/apiClient/apiClient";
 import Loading from "../../../common/Loading/Loading";
 import PrintLoadingEntry from "../PrintLoadingEntry/PrintLoadingEntry";
+import { downloadFile } from "../../../utils/fileDownloader";
 import { useAuth } from "../../../context/AuthContext/AuthContext";
 import { capitalizeWords } from "../../../utils/textUtils/textUtils";
 import useLoadingEntryData from "../../../hooks/useLoadingEntryData";
@@ -667,21 +668,10 @@ const AddLoadingEntry = () => {
       }
       toastId = toast.loading("Preparing PDF...");
       
-      const url = await PrintLoadingEntry(entry);
-      if (!url) return;
+      const doc = await PrintLoadingEntry(entry);
+      if (!doc) return;
 
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `LoadingEntry-${entry.billNumber || "document"}.pdf`;
-      document.body.appendChild(link);
-      link.click();
-      
-      setTimeout(() => {
-        if (document.body.contains(link)) {
-          document.body.removeChild(link);
-        }
-        window.URL.revokeObjectURL(url);
-      }, 1000);
+      downloadFile(doc, `LoadingEntry-${entry.billNumber || "document"}.pdf`);
 
       toast.dismiss(toastId);
       toast.success("Download started successfully!");

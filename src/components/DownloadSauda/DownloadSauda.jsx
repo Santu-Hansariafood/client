@@ -1,6 +1,7 @@
 import { useState, useEffect, cloneElement } from "react";
 import PropTypes from "prop-types";
-import { PDFDownloadLink, pdf } from "@react-pdf/renderer";
+import { pdf } from "@react-pdf/renderer";
+import { downloadFile } from "../../utils/fileDownloader";
 import SaudaPDF from "./SaudaPDF/SaudaPDF";
 import { FaDownload, FaEnvelope } from "react-icons/fa";
 import axios from "axios";
@@ -226,6 +227,24 @@ const DownloadSauda = ({
     const defaultEmails = computeDefaultEmails();
     await sendEmail(defaultEmails);
   };
+  const [isGenerating, setIsGenerating] = useState(false);
+
+  const handleManualDownload = async () => {
+    setIsGenerating(true);
+    try {
+       const blob = await pdf(<SaudaPDF data={transformedData} />).toBlob();
+       await downloadFile(blob, `HANS-2026-2027-${data.saudaNo}.pdf`);
+       if (autoEmail) {
+        await handleAutoEmail();
+      }
+    } catch (error) {
+      console.error("PDF Download error:", error);
+      toast.error("Failed to generate PDF.");
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
   return (
     <div className="flex items-center justify-center bg-white rounded-lg shadow-md p-2 gap-2">
       {loading ? (
@@ -237,44 +256,37 @@ const DownloadSauda = ({
         </button>
       ) : (
         <>
-          <PDFDownloadLink
-            document={<SaudaPDF data={transformedData} />}
-            fileName={`HANS-2026-2027-${data.saudaNo}.pdf`}
-          >
-            {({ loading: pdfLoading }) =>
-              button ? (
-                cloneElement(button, {
-                  onClick: async (e) => {
-                    if (button.props.onClick) {
-                      button.props.onClick(e);
-                    }
-                    if (!pdfLoading && autoEmail) {
-                      await handleAutoEmail();
-                    }
-                  },
-                })
+          {button ? (
+            cloneElement(button, {
+              onClick: async (e) => {
+                if (button.props.onClick) {
+                  button.props.onClick(e);
+                }
+                await handleManualDownload();
+              },
+              disabled: isGenerating,
+            })
+          ) : (
+            <button
+              onClick={handleManualDownload}
+              className={`flex items-center justify-center py-2 px-4 rounded-lg focus:outline-none transition duration-300 ${
+                isGenerating
+                  ? "bg-gray-300 cursor-not-allowed text-gray-600"
+                  : "bg-gradient-to-r from-blue-500 to-blue-700 text-white hover:scale-105"
+              }`}
+              title={isGenerating ? "Generating document..." : "Download PDF"}
+              disabled={isGenerating}
+            >
+              {isGenerating ? (
+                <span className="text-sm">Generating...</span>
               ) : (
-                <button
-                  className={`flex items-center justify-center py-2 px-4 rounded-lg focus:outline-none transition duration-300 ${
-                    pdfLoading
-                      ? "bg-gray-300 cursor-not-allowed text-gray-600"
-                      : "bg-gradient-to-r from-blue-500 to-blue-700 text-white hover:scale-105"
-                  }`}
-                  title={pdfLoading ? "Generating document..." : "Download PDF"}
-                  disabled={pdfLoading}
-                >
-                  {pdfLoading ? (
-                    <span className="text-sm">Generating...</span>
-                  ) : (
-                    <>
-                      <FaDownload size={15} className="mr-2 animate-bounce" />
-                      <span className="text-sm font-medium">Download</span>
-                    </>
-                  )}
-                </button>
-              )
-            }
-          </PDFDownloadLink>
+                <>
+                  <FaDownload size={15} className="mr-2 animate-bounce" />
+                  <span className="text-sm font-medium">Download</span>
+                </>
+              )}
+            </button>
+          )}
 
           {!button && (
             <button

@@ -9,6 +9,7 @@ import Buttons from "../../../common/Buttons/Buttons";
 import { useAuth } from "../../../context/AuthContext/AuthContext";
 import Paginations from "../../../common/Paginations/Paginations";
 import generateExcel from "../../../common/GenerateExcel/GenerateExcel";
+import { downloadFile } from "../../../utils/fileDownloader";
 import { jsPDF } from "jspdf";
 import "jspdf-autotable";
 
@@ -217,7 +218,7 @@ const AddExpense = () => {
       const totalAmount = allRequests.reduce((sum, req) => sum + req.amount, 0);
       doc.text(`Total Amount: Rs. ${totalAmount}`, 14, doc.lastAutoTable.finalY + 10);
 
-      doc.save(`Expense_Report_${new Date().getTime()}.pdf`);
+      await downloadFile(doc, `Expense_Report_${new Date().getTime()}.pdf`);
     } catch (error) {
       toast.error("Failed to generate PDF");
     }

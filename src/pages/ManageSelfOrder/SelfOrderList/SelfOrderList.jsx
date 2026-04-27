@@ -19,6 +19,7 @@ import SaudaPDF from "../../../components/DownloadSauda/SaudaPDF/SaudaPDF";
 import generateExcel from "../../../common/GenerateExcel/GenerateExcel";
 import { fetchAllPages } from "../../../utils/apiClient/fetchAllPages";
 import { buildSaudaPdfData } from "../../../utils/saudaPdf/buildSaudaPdfData";
+import { downloadFile } from "../../../utils/fileDownloader";
 
 const Tables = lazy(() => import("../../../common/Tables/Tables"));
 const Pagination = lazy(
@@ -282,31 +283,7 @@ const SelfOrderList = () => {
         }
 
         const fileName = `Sauda-${item.saudaNo}.pdf`;
-
-        try {
-          const url = window.URL.createObjectURL(blob);
-          const link = document.createElement("a");
-
-          link.href = url;
-          link.download = fileName;
-          document.body.appendChild(link);
-
-          link.dispatchEvent(
-            new MouseEvent("click", {
-              bubbles: true,
-              cancelable: true,
-              view: window,
-            }),
-          );
-
-          document.body.removeChild(link);
-
-          setTimeout(() => {
-            window.URL.revokeObjectURL(url);
-          }, 2000);
-        } catch (downloadErr) {
-          console.error("Download failed:", downloadErr);
-        }
+        await downloadFile(blob, fileName);
 
         let finalMessage = message;
 
@@ -346,12 +323,10 @@ const SelfOrderList = () => {
         }
 
         toast.dismiss(toastId);
-      } catch (error) {
+      } catch (err) {
+        console.error("Download failed:", err);
         toast.dismiss(toastId);
-        console.error(error);
-        toast.error(
-          error?.message || "Something went wrong while preparing WhatsApp",
-        );
+        toast.error("Download failed");
       }
     },
     [
@@ -658,14 +633,7 @@ const SelfOrderList = () => {
       const blob = new Blob([response.data], {
         type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       });
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.setAttribute("download", `SelfOrders_${new Date().toISOString().split("T")[0]}.xlsx`);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      window.URL.revokeObjectURL(url);
+      await downloadFile(blob, `SelfOrders_${new Date().toISOString().split("T")[0]}.xlsx`);
 
       toast.dismiss(toastId);
       toast.success("Excel downloaded");
