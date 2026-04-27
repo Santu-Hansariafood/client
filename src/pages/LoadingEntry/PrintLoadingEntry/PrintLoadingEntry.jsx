@@ -99,6 +99,8 @@ const PrintLoadingEntry = async (data) => {
           String(c._id) === String(data.consignee) || c.name === data.consignee,
       ) || {};
 
+    const consigneeMobile = consignee.mobile || consignee.mobileNo || data.consigneeMobile || "N/A";
+
     const transporter =
       transporters.find((t) => String(t._id) === String(data.transporterId)) ||
       {};
@@ -171,6 +173,8 @@ const PrintLoadingEntry = async (data) => {
         data.from ||
         "N/A";
 
+    const sellerState = matchingSellerCompany?.state || sauda.state || "N/A";
+
     const sellerLocation = matchingSellerCompany
       ? [matchingSellerCompany.district, matchingSellerCompany.state]
           .filter(Boolean)
@@ -180,6 +184,7 @@ const PrintLoadingEntry = async (data) => {
         "N/A";
 
     const wrapText = (text, maxLength) => {
+      if (!text) return [""];
       const words = text.split(" ");
       const lines = [];
       let currentLine = "";
@@ -229,11 +234,15 @@ const PrintLoadingEntry = async (data) => {
       }) ||
       null;
 
+    const buyerState = matchingBuyerCompany?.state || data.placeOfDeliveryState || "N/A";
+
     const buyerLocation = matchingBuyerCompany
       ? [matchingBuyerCompany.district, matchingBuyerCompany.state]
           .filter(Boolean)
           .join(", ")
       : data.placeOfDelivery || "N/A";
+
+    const buyerCompanyName = matchingBuyerCompany?.companyName || data.buyerCompany || data.buyer || "N/A";
 
     const consigneeAddress =
       [consignee.location, consignee.district, consignee.state, consignee.pin]
@@ -243,120 +252,178 @@ const PrintLoadingEntry = async (data) => {
       "N/A";
 
     if (logo64) {
-      doc.addImage(logo64, "PNG", margin + 5, 12, 20, 20);
+      doc.setDrawColor(0);
+      doc.setLineWidth(0.3);
+      doc.rect(margin + 2, 12, 30, 22);
+      doc.addImage(logo64, "PNG", margin + 4, 14, 26, 18);
     }
 
     const sellerCompanyName = data?.supplierCompany || "N/A";
+    const vendorCode = matchingSeller?.vendorCode || data?.vendorCode || "";
 
     setBold();
     doc.setFontSize(15);
-    doc.text(`${sellerCompanyName.toUpperCase()}`, 45, 17);
+    doc.text(`${sellerCompanyName.toUpperCase()}`, 48, 17);
+    if (vendorCode) {
+      setNormal();
+      doc.setFontSize(9);
+      doc.text(`(Vendor Code: ${vendorCode})`, 48, 21);
+    }
 
     setNormal();
     doc.setFontSize(8.5);
-    doc.text("General Merchant & Commission Agent", 45, 22);
+    const merchantTextY = vendorCode ? 25 : 22;
+    doc.text("General Merchant & Commission Agent", 48, merchantTextY);
 
     const headerAddressLines = wrapText(sellerFullAddress, 85);
     headerAddressLines.slice(0, 2).forEach((line, index) => {
-      doc.text(line, 45, 26 + index * 4);
+      doc.text(line, 48, (merchantTextY + 4) + index * 4);
     });
 
-    const taxY = headerAddressLines.length > 1 ? 34 : 30;
+    const taxY = headerAddressLines.length > 1 ? (merchantTextY + 12) : (merchantTextY + 8);
     if (sellerTaxNumber !== "N/A") {
-      doc.text(`${sellerTaxLabel}: ${sellerTaxNumber}`, 45, taxY);
+      doc.text(`${sellerTaxLabel}: ${sellerTaxNumber}`, 48, taxY);
     }
 
     setBold();
     doc.setFontSize(13);
-    doc.text("LORRY CHALLAN", pageWidth / 2, 42, { align: "center" });
+    doc.text("LORRY CHALLAN", pageWidth / 2, 45, { align: "center" });
+    doc.line(pageWidth / 2 - 20, 47, pageWidth / 2 + 20, 47);
 
     doc.setLineWidth(0.5);
     doc.rect(margin, 10, pageWidth - margin * 2, pageHeight - 18);
 
-    let y = 52;
+    let y = 55;
+
+    // Block 1: Challan Details
+    doc.setLineWidth(0.2);
+    doc.rect(margin + 2, y - 5, pageWidth - margin * 2 - 4, 32);
 
     doc.setFontSize(9);
-    setNormal();
-
     setBold();
     doc.text(`Challan No:`, margin + 5, y);
-    setItalic();
-    doc.text(`${pick(data.billNumber)}`, margin + 33, y);
-    setBold();
-    doc.text(`Date:`, pageWidth - margin - 25, y);
-    setItalic();
-    doc.text(`${formatDate(data.loadingDate)}`, pageWidth - margin - 15, y, {
-      align: "right",
-    });
+    setNormal();
+    doc.text(`${pick(data.billNumber)}`, margin + 30, y);
 
-    y += 8;
     setBold();
-    doc.text(`P.O No:`, margin + 5, y);
-    setItalic();
-    doc.text(`${pick(finalPoNumber)}`, margin + 27, y);
+    doc.text(`Date:`, pageWidth - margin - 50, y);
+    setNormal();
+    doc.text(`${formatDate(data.loadingDate)}`, pageWidth - margin - 35, y);
 
-    y += 8;
+    y += 7;
+    setBold();
+    doc.text(`Buyer PO No:`, margin + 5, y);
+    setNormal();
+    doc.text(`${pick(finalPoNumber)}`, margin + 30, y);
+
+    y += 7;
     setBold();
     doc.text(`A/c Broker:`, margin + 5, y);
-    setItalic();
-    doc.text(`Hansaria Food Private Limited`, margin + 37, y);
+    setNormal();
+    doc.text(`Hansaria Food Private Limited`, margin + 30, y);
 
-    y += 8;
+    y += 7;
+    setBold();
+    doc.text(`Sauda No:`, margin + 5, y);
+    setNormal();
+    doc.text(`${pick(data.saudaNo)}`, margin + 30, y);
+
+    y += 12;
+    // Block 2: Delivery Address
+    doc.rect(margin + 2, y - 5, pageWidth - margin * 2 - 4, 35);
+
+    setBold();
+    doc.text(`DELIVERY ADDRESS`, margin + 5, y);
+    y += 6;
     setBold();
     doc.text(`Consignee:`, margin + 5, y);
-    setItalic();
-    doc.text(`${consignee.name || pick(data.consignee)}`, margin + 33, y);
+    setNormal();
+    doc.text(`${consignee.name || pick(data.consignee)}`, margin + 30, y);
 
-    y += 8;
+    y += 6;
+    setBold();
+    doc.text(`Buyer Co:`, margin + 5, y);
+    setNormal();
+    doc.text(`${buyerCompanyName}`, margin + 30, y);
+
+    y += 6;
     setBold();
     doc.text(`Address:`, margin + 5, y);
-    setItalic();
-    doc.text(`${consigneeAddress}`, margin + 27, y);
-
-    y += 12;
-
-    setBold();
-    doc.text(`Description of Goods:`, margin + 5, y);
-    setItalic();
-    doc.text(`${pick(data.commodity)}`, margin + 55, y);
-    setBold();
-    doc.text(`Bags:`, margin + 105, y);
-    setItalic();
-    doc.text(`${pick(data.bags)}`, margin + 120, y);
-
-    y += 8;
-    setBold();
-    doc.text(`Weight:`, margin + 105, y);
-    setItalic();
-    doc.text(`${pick(data.loadingWeight)} Tons`, margin + 125, y);
-
-    y += 12;
-
-    setBold();
-    doc.text(`From:`, margin + 5, y);
-    setItalic();
-    const fromAddressLines = wrapText(pick(sellerFullAddress), 75);
-    fromAddressLines.slice(0, 2).forEach((line, index) => {
-      doc.text(line, margin + 23, y + index * 4);
+    setNormal();
+    const cAddrLines = wrapText(consigneeAddress, 85);
+    cAddrLines.slice(0, 2).forEach((line, index) => {
+      doc.text(line, margin + 30, y + index * 4);
     });
 
-    y += fromAddressLines.length > 1 ? 12 : 8;
+    y += 10;
     setBold();
-    doc.text(`To:`, margin + 5, y);
-    setItalic();
-    doc.text(`${pick(buyerLocation)}`, margin + 23, y);
+    doc.text(`Mobile:`, margin + 5, y);
+    setNormal();
+    doc.text(`${consigneeMobile}`, margin + 30, y);
+
+    y += 12;
+    // Block 3: Description of Goods
+    doc.rect(margin + 2, y - 5, pageWidth - margin * 2 - 4, 15);
+    setBold();
+    doc.text(`DESCRIPTION OF GOODS`, margin + 5, y);
+    y += 6;
+    setBold();
+    doc.text(`Item:`, margin + 5, y);
+    setNormal();
+    doc.text(`${pick(data.commodity)}`, margin + 20, y);
+    setBold();
+    doc.text(`Bags:`, margin + 70, y);
+    setNormal();
+    doc.text(`${pick(data.bags)}`, margin + 85, y);
+    setBold();
+    doc.text(`Weight:`, margin + 110, y);
+    setNormal();
+    doc.text(`${pick(data.loadingWeight)} Tons`, margin + 125, y);
+
+    y += 15;
+    // Block 4: Route & Transporter
+    doc.rect(margin + 2, y - 5, pageWidth - margin * 2 - 4, 45);
+
+    setBold();
+    doc.text(`ROUTE DETAILS`, margin + 5, y);
+    y += 6;
+    setBold();
+    doc.text(`From:`, margin + 5, y);
+    setNormal();
+    doc.text(`${sellerState}`, margin + 20, y);
+    setBold();
+    doc.text(`To:`, margin + 70, y);
+    setNormal();
+    doc.text(`${buyerState}`, margin + 80, y);
 
     y += 8;
     setBold();
-    doc.text(`Delivery At:`, margin + 5, y);
-    setItalic();
-    doc.text(`${pick(data.deliveryAddress)}`, margin + 37, y);
+    doc.text(`Transporter:`, margin + 5, y);
+    setNormal();
+    const transporterName = transporter.name || pick(data.addedTransport);
+    doc.text(`${transporterName}`, margin + 30, y);
 
-    y += 8;
+    y += 6;
     setBold();
     doc.text(`Lorry No:`, margin + 5, y);
-    setItalic();
+    setNormal();
     doc.text(`${(data.lorryNumber || "N/A").toUpperCase()}`, margin + 30, y);
+
+    y += 6;
+    setBold();
+    doc.text(`Driver:`, margin + 5, y);
+    setNormal();
+    doc.text(`${data.driverName || "N/A"}`, margin + 30, y);
+    setBold();
+    doc.text(`Mob:`, margin + 80, y);
+    setNormal();
+    doc.text(`${data.driverPhoneNumber || "N/A"}`, margin + 90, y);
+
+    y += 6;
+    setBold();
+    doc.text(`Driver Lic:`, margin + 5, y);
+    setNormal();
+    doc.text(`${data.driverLicense || "N/A"}`, margin + 30, y);
 
     y += 15;
 
