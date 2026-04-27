@@ -68,16 +68,18 @@ const PrintLoadingEntry = async (data) => {
       }
     };
 
-    const [consignees, transporters, sellers, sellerCompanies, buyers, companies, saudaData] = await Promise.all([
+    const [consignees, transporters, sellers, sellerCompanies, buyers, companies, saudaDataResponse] = await Promise.all([
       safeFetch("/consignees?limit=0"),
       safeFetch("/transporters?limit=0"),
       safeFetch("/sellers?limit=0"),
       safeFetch("/seller-company?limit=0"),
       safeFetch("/buyers?limit=0"),
       safeFetch("/companies?limit=0"),
-      safeFetch(`/self-orders?search=${data.saudaNo}`),
+      safeFetch(`/self-order?search=${data.saudaNo}`),
     ]);
 
+    // Handle paginated or direct array response for saudaData
+    const saudaData = Array.isArray(saudaDataResponse) ? saudaDataResponse : (saudaDataResponse?.data || []);
     const sauda = (saudaData || []).find(s => String(s.saudaNo) === String(data.saudaNo)) || {};
     const finalPoNumber = sauda.poNumber || data.poNumber || "N/A";
 
@@ -98,15 +100,27 @@ const PrintLoadingEntry = async (data) => {
 
     const supplierCompanyNameNormalized = normalizeText(data.supplierCompany);
 
-    const matchingSellerCompany =
+    // 1. Try to find seller by ID first
+    const matchingSeller =
+      (sellers || []).find(
+        (s) => String(s._id) === String(data.supplier)
+      ) || 
+      (sellers || []).find(
+        (s) => normalizeText(s.sellerName) === supplierCompanyNameNormalized
+      ) || null;
+
+    // 2. Try to find seller company
+    let matchingSellerCompany =
       (sellerCompanies || []).find(
         (sc) => normalizeText(sc.companyName) === supplierCompanyNameNormalized
       ) || null;
 
-    const matchingSeller =
-      (sellers || []).find(
-        (s) => normalizeText(s.companyName) === supplierCompanyNameNormalized
+    // 3. If not found, try matching by seller's companies list
+    if (!matchingSellerCompany && matchingSeller?.companies?.length) {
+      matchingSellerCompany = (sellerCompanies || []).find(sc => 
+        matchingSeller.companies.some(cName => normalizeText(cName) === normalizeText(sc.companyName))
       ) || null;
+    }
 
     const sellerGstNo = matchingSellerCompany?.gstNo || matchingSeller?.gstNumber || "";
     const sellerPanNo = matchingSellerCompany?.panNo || matchingSeller?.panNumber || "";
@@ -122,13 +136,13 @@ const PrintLoadingEntry = async (data) => {
         ]
           .filter(Boolean)
           .join(", ")
-      : (data.supplierAddress || "N/A");
+      : (data.supplierAddress || sauda.location || sauda.state || data.from || "N/A");
 
     const sellerLocation = matchingSellerCompany
       ? [matchingSellerCompany.district, matchingSellerCompany.state]
           .filter(Boolean)
           .join(", ")
-      : (matchingSeller?.location || data.from || "N/A");
+      : (sauda.location || data.from || "N/A");
 
     const rawBuyerKey = data?.buyerCompany ?? data?.buyer ?? "";
     const normalizedBuyerKey = normalizeText(rawBuyerKey);
