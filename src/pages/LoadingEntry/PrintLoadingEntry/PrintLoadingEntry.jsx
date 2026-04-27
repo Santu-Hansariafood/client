@@ -22,14 +22,10 @@ const PrintLoadingEntry = async (data) => {
   const pageHeight = doc.internal.pageSize.height;
   const margin = 14;
 
-  const primary = [0, 0, 0];
-  const secondary = [60, 60, 60];
-  const accent = [100, 100, 100];
-  const tableHead = [40, 40, 40];
-  const tableRowAlt = [245, 245, 245];
-  const dark = [0, 0, 0];
-  const light = [255, 255, 255];
-  const gray = [100, 100, 100];
+  const tableHead = [52, 52, 52];
+  const tableRowAlt = [248, 248, 248];
+  const tableBorder = [220, 220, 220];
+  const deliveryBg = [245, 245, 245];
 
   const normalize = (str) => (str || "").toString().trim().toLowerCase();
 
@@ -100,9 +96,8 @@ const PrintLoadingEntry = async (data) => {
   ]);
 
   console.log("Fetching additional data...");
-  const [orders, sellers, companies, consignees, transporters] =
+  const [sellers, companies, consignees, transporters] =
     await Promise.all([
-      safeFetch("/self-order?limit=0"),
       safeFetch("/sellers?limit=0"),
       safeFetch("/seller-company?limit=0"),
       safeFetch("/consignees?limit=0"),
@@ -112,8 +107,6 @@ const PrintLoadingEntry = async (data) => {
 
   const supplierId =
     typeof data.supplier === "object" ? data.supplier?._id : data.supplier;
-  const buyer =
-    orders.find((o) => String(o.saudaNo) === String(data.saudaNo)) || {};
   const seller =
     sellers.find((s) => String(s._id) === String(supplierId)) || {};
   const company =
@@ -137,28 +130,6 @@ const PrintLoadingEntry = async (data) => {
     data.supplierCompany,
     company.companyName,
     seller.companyName,
-    "N/A",
-  );
-  const sellerName = pickFirst(seller.sellerName, data.sellerName, "N/A");
-  const sellerPhone = pickFirst(
-    data.sellerPhone,
-    data.sellerContact,
-    seller?.phoneNumbers?.[0]?.value,
-    seller?.mobileNo,
-    seller.mobile,
-    seller.phone,
-    company?.mobileNo,
-    company.mobile,
-    "N/A",
-  );
-  const sellerEmail = pickFirst(
-    data.sellerEmail,
-    data.sellerMail,
-    seller?.emails?.[0]?.value,
-    seller.email,
-    seller.mailId,
-    company.email,
-    company.mailId,
     "N/A",
   );
   const sellerGstin = pickFirst(
@@ -216,126 +187,91 @@ const PrintLoadingEntry = async (data) => {
   doc.setFillColor(255, 255, 255);
   doc.rect(0, 0, pageWidth, pageHeight, "F");
 
-  doc.setFillColor(220, 220, 220);
-  doc.rect(0, 0, 2.5, pageHeight, "F");
+  doc.setFillColor(250, 250, 250);
+  doc.rect(0, 0, 3, pageHeight, "F");
 
-  doc.setFillColor(255, 255, 255);
-  doc.rect(0, 0, pageWidth, 48, "F");
-  doc.setDrawColor(200, 200, 200); // Lighter line
-  doc.setLineWidth(0.2);
-  doc.line(margin, 48, pageWidth - margin, 48);
+  doc.setFillColor(250, 250, 250);
+  doc.rect(0, 0, pageWidth, 42, "F");
+  doc.setDrawColor(220, 220, 220);
+  doc.setLineWidth(0.3);
+  doc.line(margin, 42, pageWidth - margin, 42);
 
   if (logo64) {
-    doc.addImage(logo64, "PNG", 15, 12, 24, 24);
+    doc.addImage(logo64, "PNG", margin, 10, 22, 22);
   }
 
   doc.setTextColor(0, 0, 0);
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(16);
-  doc.text(String(sellerCompanyName).toUpperCase(), 47, 22);
-
-  doc.setDrawColor(200, 200, 200); // Lighter line
-  doc.setLineWidth(0.5);
-  doc.line(47, 24, 140, 24);
+  doc.setFontSize(15);
+  doc.text(String(sellerCompanyName).toUpperCase(), 48, 18);
 
   doc.setFont("helvetica", "normal");
-  doc.setFontSize(9);
-  doc.setTextColor(60, 60, 60);
-  doc.text(sellerTaxId, 47, 29);
-  doc.text(`Address: ${sellerAddress}`, 47, 34);
-
-  doc.setFillColor(240, 240, 240);
-  doc.setDrawColor(240, 240, 240); // Match fill color to hide border
-  doc.roundedRect(pageWidth - 68, 12, 56, 12, 2, 2, "FD");
-  doc.setTextColor(0, 0, 0);
-  doc.setFontSize(13);
-  doc.setFont("helvetica", "bold");
-  doc.text("LORRY CHALLAN", pageWidth - 40, 20, { align: "center" });
-
   doc.setFontSize(8.5);
+  doc.setTextColor(80, 80, 80);
+  doc.text(sellerTaxId, 48, 24);
+  doc.text(`Address: ${sellerAddress}`, 48, 29);
+
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(12);
   doc.setTextColor(0, 0, 0);
-  doc.text(`DATE: ${formatDate(data.loadingDate)}`, pageWidth - 14, 34, {
+  doc.text("LORRY CHALLAN", pageWidth - 40, 16, { align: "center" });
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(8.5);
+  doc.setTextColor(60, 60, 60);
+  doc.text(`Date: ${formatDate(data.loadingDate)}`, pageWidth - margin, 23, {
     align: "right",
   });
-  doc.text(`CHALLAN NO: ${data.billNumber || "N/A"}`, pageWidth - 14, 39, {
+  doc.text(`Challan No: ${data.billNumber || "N/A"}`, pageWidth - margin, 29, {
     align: "right",
   });
-
-  const addressLines = [
-    consignee.location,
-    consignee.district,
-    consignee.state,
-    consignee.pin ? `PIN: ${consignee.pin}` : null,
-  ].filter(Boolean);
-
-  const fullAddress = addressLines.join(", ");
-  const buyerCompanyName = pickFirst(
-    buyer.companyName,
-    buyer.buyerCompany,
-    buyer.company,
-    buyer.buyer,
-    "N/A",
-  );
-  const buyerMobile = pickFirst(
-    buyer.buyerMobile,
-    buyer.mobile,
-    buyer.phone,
-    buyer.phoneNumber,
-    "N/A",
-  );
-  const buyerEmail = pickFirst(
-    buyer.buyerEmail,
-    buyer?.buyerEmails?.[0],
-    buyer.email,
-    buyer.mailId,
-    "N/A",
-  );
+  doc.text(`Vehicle: ${(data.lorryNumber || "N/A").toUpperCase()}`, pageWidth - margin, 35, {
+    align: "right",
+  });
 
   const addTable = (title, y, head, body, colors = tableHead) => {
     try {
-      if (!colors || colors.length < 3) colors = [40, 40, 40];
-      // Centered ribbon title for a modern, compact look
-      const ribbonH = 6.5;
+      if (!colors || colors.length < 3) colors = [52, 52, 52];
+      const ribbonH = 7;
       doc.setFillColor(Number(colors[0]), Number(colors[1]), Number(colors[2]));
-      doc.setDrawColor(Number(colors[0]), Number(colors[1]), Number(colors[2])); // Match fill color to hide border
       doc.roundedRect(
         margin,
         y - ribbonH,
         pageWidth - margin * 2,
         ribbonH,
-        2,
-        2,
-        "FD",
+        1.5,
+        1.5,
+        "F",
       );
 
       doc.setTextColor(255, 255, 255);
       doc.setFont("helvetica", "bold");
-      doc.setFontSize(9.5);
-      doc.text(title.toUpperCase(), pageWidth / 2, y - 1.2, {
+      doc.setFontSize(9);
+      doc.text(title.toUpperCase(), pageWidth / 2, y - 1.5, {
         align: "center",
       });
 
       autoTable(doc, {
-        startY: y + 1.2,
+        startY: y + 1.5,
         head: [head],
         body: [body],
-        theme: "striped",
+        theme: "plain",
         headStyles: {
           fillColor: colors,
           textColor: 255,
-          fontSize: 8.2,
+          fontSize: 8,
           fontStyle: "bold",
           halign: "center",
         },
         bodyStyles: {
-          fontSize: 8.3,
-          textColor: 0,
+          fontSize: 8.5,
+          textColor: 50,
           halign: "center",
-          lineColor: 230,
-          lineWidth: 0.1,
+          lineColor: tableBorder,
+          lineWidth: 0.15,
         },
         columnStyles: {
-          0: { halign: "left" },
+          0: { halign: "left", cellPadding: 3 },
         },
         margin: { left: margin, right: margin },
         styles: {
@@ -347,14 +283,14 @@ const PrintLoadingEntry = async (data) => {
         },
       });
 
-      return (doc.lastAutoTable?.finalY || y + 20) + 8;
+      return (doc.lastAutoTable?.finalY || y + 20) + 10;
     } catch (tableErr) {
       console.error(`Error adding table ${title}:`, tableErr);
       return y + 25;
     }
   };
 
-  let currentY = 55;
+  let currentY = 52;
 
   console.log("Drawing tables...");
   // 1. Seller Information
@@ -365,11 +301,7 @@ const PrintLoadingEntry = async (data) => {
     [sellerCompanyName, sellerAddress, sellerTaxId.replace("GSTIN: ", "").replace("PAN: ", "")],
   );
 
-  // 2. Delivery Address (On top as requested)
-  doc.setFillColor(255, 255, 255);
-  doc.setDrawColor(200, 200, 200); // Lighter line
-  doc.setLineWidth(0.2);
-
+  // 2. Delivery Address
   const deliveryAddressText =
       pickFirst(
         data.deliveryAddress,
@@ -391,31 +323,31 @@ const PrintLoadingEntry = async (data) => {
     pageWidth - margin * 2 - 10,
   );
   const deliveryBlockHeight = Math.max(
-    18,
-    splitDeliveryAddress.length * 5 + 10,
+    20,
+    splitDeliveryAddress.length * 5 + 12,
   );
 
-  doc.setFillColor(245, 245, 245);
-  doc.setDrawColor(245, 245, 245); // No black border
+  doc.setFillColor(deliveryBg);
   doc.roundedRect(
     margin,
-    currentY - 5,
+    currentY,
     pageWidth - margin * 2,
     deliveryBlockHeight,
     2,
     2,
-    "FD",
+    "F",
   );
 
-  doc.setTextColor(0, 0, 0);
+  doc.setTextColor(52, 52, 52);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(9);
-  doc.text("DELIVERY ADDRESS", margin + 5, currentY + 1);
+  doc.text("DELIVERY ADDRESS", margin + 4, currentY + 6);
 
   doc.setFont("helvetica", "normal");
   doc.setFontSize(8.5);
-  doc.text(splitDeliveryAddress, margin + 5, currentY + 6);
-  currentY += deliveryBlockHeight + 5;
+  doc.setTextColor(60, 60, 60);
+  doc.text(splitDeliveryAddress, margin + 4, currentY + 13);
+  currentY += deliveryBlockHeight + 10;
 
   // 3. Buyer Details (Consignee)
   const consigneeAddress =
@@ -477,50 +409,44 @@ const PrintLoadingEntry = async (data) => {
     ],
   );
 
-  const signBaseY = pageHeight - 38;
+  const signBaseY = pageHeight - 35;
 
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(9);
-  doc.setTextColor(0, 0, 0);
-  
-  doc.text("DRIVER'S SIGNATURE", margin + 5, signBaseY);
-  doc.setDrawColor(200, 200, 200); // Lighter line
-  doc.setLineWidth(0.5);
-  doc.line(margin, signBaseY + 10, margin + 55, signBaseY + 10);
+  doc.setFontSize(8.5);
+  doc.setTextColor(60, 60, 60);
+  doc.text("DRIVER SIGNATURE", margin + 5, signBaseY);
+  doc.setDrawColor(200, 200, 200);
+  doc.setLineWidth(0.3);
+  doc.line(margin, signBaseY + 5, margin + 50, signBaseY + 5);
 
-  doc.setTextColor(0, 0, 0);
-  doc.text(
-    `FOR ${String(sellerCompanyName).toUpperCase()}`,
-    pageWidth - margin - 60,
-    signBaseY,
-    {
-      align: "center",
-    },
-  );
-
-  doc.setDrawColor(200, 200, 200); // Lighter line
-  doc.line(
-    pageWidth - margin - 65,
-    signBaseY + 15,
-    pageWidth - margin,
-    signBaseY + 15,
-  );
+  doc.setTextColor(60, 60, 60);
   doc.setFont("helvetica", "normal");
   doc.setFontSize(8);
-  doc.setTextColor(100, 100, 100);
-  doc.text("Authorized Signatory", pageWidth - margin - 32.5, signBaseY + 20, {
+  doc.text(
+    `For ${String(sellerCompanyName).toUpperCase()}`,
+    pageWidth - margin - 55,
+    signBaseY,
+    { align: "center" },
+  );
+  doc.setDrawColor(200, 200, 200);
+  doc.setLineWidth(0.3);
+  doc.line(pageWidth - margin - 60, signBaseY + 5, pageWidth - margin, signBaseY + 5);
+  doc.setFontSize(7.5);
+  doc.setTextColor(120, 120, 120);
+  doc.text("Authorized Signatory", pageWidth - margin - 30, signBaseY + 10, {
     align: "center",
   });
 
-  doc.setFillColor(230, 230, 230);
-  doc.rect(0, pageHeight - 12, pageWidth, 12, "F");
+  doc.setFillColor(248, 248, 248);
+  doc.rect(0, pageHeight - 15, pageWidth, 15, "F");
 
-  doc.setTextColor(0, 0, 0);
+  doc.setTextColor(80, 80, 80);
   doc.setFontSize(7.5);
+  doc.setFont("helvetica", "normal");
   doc.text(
     "Terms & Conditions: This is an electronic challan by using Hansaria Food Private Limited platform. Seller Must Be Reliable for this; Hansaria Food is Not liable.",
     pageWidth / 2,
-    pageHeight - 5,
+    pageHeight - 6,
     { align: "center", maxWidth: pageWidth - margin * 2 },
   );
 
