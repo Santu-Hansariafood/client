@@ -37,7 +37,6 @@ const PrintLoadingEntry = async (data) => {
     const setNormal = () => doc.setFont("helvetica", "normal");
     const setItalic = () => doc.setFont("helvetica", "italic");
 
-    // ✅ Load logo
     const getBase64 = (img) =>
       new Promise((resolve) => {
         const image = new Image();
@@ -58,7 +57,6 @@ const PrintLoadingEntry = async (data) => {
 
     const logo64 = await getBase64(logo);
 
-    // ✅ Fetch data (optional safety)
     const safeFetch = async (url) => {
       try {
         const res = await api.get(url);
@@ -68,7 +66,15 @@ const PrintLoadingEntry = async (data) => {
       }
     };
 
-    const [consignees, transporters, sellers, sellerCompanies, buyers, companies, saudaDataResponse] = await Promise.all([
+    const [
+      consignees,
+      transporters,
+      sellers,
+      sellerCompanies,
+      buyers,
+      companies,
+      saudaDataResponse,
+    ] = await Promise.all([
       safeFetch("/consignees?limit=0"),
       safeFetch("/transporters?limit=0"),
       safeFetch("/sellers?limit=0"),
@@ -78,52 +84,76 @@ const PrintLoadingEntry = async (data) => {
       safeFetch(`/self-order?search=${data.saudaNo}`),
     ]);
 
-    // Handle paginated or direct array response for saudaData
-    const saudaData = Array.isArray(saudaDataResponse) ? saudaDataResponse : (saudaDataResponse?.data || []);
-    const sauda = (saudaData || []).find(s => String(s.saudaNo) === String(data.saudaNo)) || {};
+    const saudaData = Array.isArray(saudaDataResponse)
+      ? saudaDataResponse
+      : saudaDataResponse?.data || [];
+    const sauda =
+      (saudaData || []).find(
+        (s) => String(s.saudaNo) === String(data.saudaNo),
+      ) || {};
     const finalPoNumber = sauda.poNumber || data.poNumber || "N/A";
 
     const consignee =
       consignees.find(
         (c) =>
-          String(c._id) === String(data.consignee) ||
-          c.name === data.consignee
+          String(c._id) === String(data.consignee) || c.name === data.consignee,
       ) || {};
 
     const transporter =
-      transporters.find(
-        (t) => String(t._id) === String(data.transporterId)
-      ) || {};
+      transporters.find((t) => String(t._id) === String(data.transporterId)) ||
+      {};
 
     const normalizeText = (value) =>
-      String(value || "").trim().toLowerCase();
+      String(value || "")
+        .trim()
+        .toLowerCase();
 
     const supplierCompanyNameNormalized = normalizeText(data.supplierCompany);
 
-    // 1. Try to find seller by ID first
     const matchingSeller =
+      (sellers || []).find((s) => String(s._id) === String(data.supplier)) ||
       (sellers || []).find(
-        (s) => String(s._id) === String(data.supplier)
-      ) || 
-      (sellers || []).find(
-        (s) => normalizeText(s.sellerName) === supplierCompanyNameNormalized
-      ) || null;
+        (s) => normalizeText(s.sellerName) === supplierCompanyNameNormalized,
+      ) ||
+      null;
 
-    // 2. Try to find seller company
     let matchingSellerCompany =
       (sellerCompanies || []).find(
-        (sc) => normalizeText(sc.companyName) === supplierCompanyNameNormalized
-      ) || null;
+        (sc) => normalizeText(sc.companyName) === supplierCompanyNameNormalized,
+      ) ||
+      (sellerCompanies || []).find((sc) => {
+        const scName = normalizeText(sc.companyName);
+        return (
+          scName.includes(supplierCompanyNameNormalized) ||
+          supplierCompanyNameNormalized.includes(scName)
+        );
+      }) ||
+      null;
 
-    // 3. If not found, try matching by seller's companies list
     if (!matchingSellerCompany && matchingSeller?.companies?.length) {
-      matchingSellerCompany = (sellerCompanies || []).find(sc => 
-        matchingSeller.companies.some(cName => normalizeText(cName) === normalizeText(sc.companyName))
-      ) || null;
+      matchingSellerCompany =
+        (sellerCompanies || []).find((sc) =>
+          matchingSeller.companies.some(
+            (cName) => normalizeText(cName) === normalizeText(sc.companyName),
+          ),
+        ) ||
+        (sellerCompanies || []).find((sc) =>
+          matchingSeller.companies.some((cName) => {
+            const normalizedCName = normalizeText(cName);
+            const normalizedSCName = normalizeText(sc.companyName);
+            return (
+              normalizedCName.includes(normalizedSCName) ||
+              normalizedSCName.includes(normalizedCName)
+            );
+          }),
+        ) ||
+        null;
     }
 
-    const sellerGstNo = matchingSellerCompany?.gstNo || matchingSeller?.gstNumber || "";
-    const sellerPanNo = matchingSellerCompany?.panNo || matchingSeller?.panNumber || "";
+    const sellerGstNo =
+      matchingSellerCompany?.gstNo || matchingSeller?.gstNumber || "";
+    const sellerPanNo =
+      matchingSellerCompany?.panNo || matchingSeller?.panNumber || "";
     const sellerTaxNumber = sellerGstNo || sellerPanNo || "N/A";
     const sellerTaxLabel = sellerGstNo ? "GST" : "PAN";
 
@@ -136,13 +166,18 @@ const PrintLoadingEntry = async (data) => {
         ]
           .filter(Boolean)
           .join(", ")
-      : (data.supplierAddress || sauda.location || sauda.state || data.from || "N/A");
+      : data.supplierAddress ||
+        [sauda.location, sauda.state].filter(Boolean).join(", ") ||
+        data.from ||
+        "N/A";
 
     const sellerLocation = matchingSellerCompany
       ? [matchingSellerCompany.district, matchingSellerCompany.state]
           .filter(Boolean)
           .join(", ")
-      : (sauda.location || data.from || "N/A");
+      : [sauda.location, sauda.state].filter(Boolean).join(", ") ||
+        data.from ||
+        "N/A";
 
     const rawBuyerKey = data?.buyerCompany ?? data?.buyer ?? "";
     const normalizedBuyerKey = normalizeText(rawBuyerKey);
@@ -181,19 +216,14 @@ const PrintLoadingEntry = async (data) => {
       ? [matchingBuyerCompany.district, matchingBuyerCompany.state]
           .filter(Boolean)
           .join(", ")
-      : (data.placeOfDelivery || "N/A");
+      : data.placeOfDelivery || "N/A";
 
     const consigneeAddress =
-      [
-        consignee.location,
-        consignee.district,
-        consignee.state,
-        consignee.pin,
-      ]
+      [consignee.location, consignee.district, consignee.state, consignee.pin]
         .filter(Boolean)
-        .join(", ") || data.deliveryAddress || "N/A";
-
-    // ================= HEADER =================
+        .join(", ") ||
+      data.deliveryAddress ||
+      "N/A";
 
     if (logo64) {
       doc.addImage(logo64, "PNG", margin + 5, 12, 20, 20);
@@ -220,7 +250,6 @@ const PrintLoadingEntry = async (data) => {
     doc.setLineWidth(0.5);
     doc.rect(margin, 10, pageWidth - margin * 2, pageHeight - 18);
 
-    // ================= BODY =================
     let y = 52;
 
     doc.setFontSize(9);
@@ -233,7 +262,7 @@ const PrintLoadingEntry = async (data) => {
     setBold();
     doc.text(`Date:`, pageWidth - margin - 25, y);
     setItalic();
-    doc.text(`${formatDate(data.loadingDate)}`, pageWidth - margin - 5, y, {
+    doc.text(`${formatDate(data.loadingDate)}`, pageWidth - margin - 15, y, {
       align: "right",
     });
 
@@ -253,11 +282,7 @@ const PrintLoadingEntry = async (data) => {
     setBold();
     doc.text(`Consignee:`, margin + 5, y);
     setItalic();
-    doc.text(
-      `${consignee.name || pick(data.consignee)}`,
-      margin + 33,
-      y
-    );
+    doc.text(`${consignee.name || pick(data.consignee)}`, margin + 33, y);
 
     y += 8;
     setBold();
@@ -305,20 +330,20 @@ const PrintLoadingEntry = async (data) => {
     setBold();
     doc.text(`Lorry No:`, margin + 5, y);
     setItalic();
-    doc.text(
-      `${(data.lorryNumber || "N/A").toUpperCase()}`,
-      margin + 30,
-      y
-    );
+    doc.text(`${(data.lorryNumber || "N/A").toUpperCase()}`, margin + 30, y);
 
     y += 15;
 
-    // ================= FREIGHT =================
-    const totalFreight = data.totalFreight ? `Rs. ${Number(data.totalFreight).toLocaleString("en-IN")}` : "N/A";
-    const advance = data.advance ? `Rs. ${Number(data.advance).toLocaleString("en-IN")}` : "N/A";
-    const toPayValue = data.totalFreight && data.advance
-      ? `Rs. ${Number(data.totalFreight - data.advance).toLocaleString("en-IN")}`
+    const totalFreight = data.totalFreight
+      ? `Rs. ${Number(data.totalFreight).toLocaleString("en-IN")}`
       : "N/A";
+    const advance = data.advance
+      ? `Rs. ${Number(data.advance).toLocaleString("en-IN")}`
+      : "N/A";
+    const toPayValue =
+      data.totalFreight && data.advance
+        ? `Rs. ${Number(data.totalFreight - data.advance).toLocaleString("en-IN")}`
+        : "N/A";
 
     setBold();
     doc.text("Total Lorry Freight:", margin + 5, y);
@@ -342,7 +367,6 @@ const PrintLoadingEntry = async (data) => {
 
     y += 15;
 
-    // ================= DRIVER =================
     const ownerName = data.ownerName || "N/A";
     const driverName = data.driverName || "N/A";
     const driverLicense = data.driverLicense || "N/A";
@@ -403,7 +427,6 @@ const PrintLoadingEntry = async (data) => {
 
     y += 15;
 
-    // ================= SIGNATURE =================
     const signY = pageHeight - 40;
 
     setBold();
@@ -416,23 +439,22 @@ const PrintLoadingEntry = async (data) => {
       pageWidth - margin - 70,
       signY + 2,
       pageWidth - margin - 10,
-      signY + 2
+      signY + 2,
     );
 
-    // ================= FOOTER =================
     doc.setFontSize(7);
     setBold();
     doc.text(
       "Shortage/damage will be deducted from freight.",
       margin + 10,
-      pageHeight - 25
+      pageHeight - 25,
     );
 
     doc.text(
       "This is a computer-generated challan created using Hansaria Food Private Limited platform.\nThe platform is not responsible for loading details.",
       pageWidth / 2,
       pageHeight - 15,
-      { align: "center" }
+      { align: "center" },
     );
 
     const blob = doc.output("blob");
