@@ -119,6 +119,9 @@ const PrintLoadingEntry = async (data) => {
     doc.setFontSize(13);
     doc.text("LORRY CHALLAN", pageWidth / 2, 38, { align: "center" });
 
+    doc.setLineWidth(0.5);
+    doc.rect(margin, 8, pageWidth - margin * 2, pageHeight - margin * 2 + 4);
+
     // ================= BODY =================
     let y = 48;
 
@@ -140,13 +143,13 @@ const PrintLoadingEntry = async (data) => {
     setBold();
     doc.text(`P.O No:`, margin, y);
     setItalic();
-    doc.text(`${pick(data.poNumber)}`, margin + 22, y);
+    doc.text(`${consigneeAddress}`, margin + 22, y);
 
     y += 8;
     setBold();
     doc.text(`A/c Broker:`, margin, y);
     setItalic();
-    doc.text(`${pick(data.broker)}`, margin + 32, y);
+    doc.text(`Hansaria Food Private Limited`, margin + 32, y);
 
     y += 8;
     setBold();
