@@ -99,13 +99,20 @@ const PrintLoadingEntry = async (data) => {
           String(c._id) === String(data.consignee) || c.name === data.consignee,
       ) || {};
 
-    const consigneeMobile = consignee.phone || consignee.mobile || consignee.mobileNo || data.consigneeMobile || "N/A";
+    const consigneeMobile =
+      consignee.phone ||
+      consignee.mobile ||
+      consignee.mobileNo ||
+      data.consigneeMobile ||
+      "N/A";
 
     const transporter =
       transporters.find((t) => String(t._id) === String(data.transporterId)) ||
       {};
 
-    const displayTransporterName = String(transporter.name || data.addedTransport || "N/A");
+    const displayTransporterName = String(
+      transporter.name || data.addedTransport || "N/A",
+    );
     const displayTransporterAddress = String(transporter.address || "N/A");
 
     const normalizeText = (value) =>
@@ -237,7 +244,8 @@ const PrintLoadingEntry = async (data) => {
       }) ||
       null;
 
-    const buyerState = matchingBuyerCompany?.state || data.placeOfDeliveryState || "N/A";
+    const buyerState =
+      matchingBuyerCompany?.state || data.placeOfDeliveryState || "N/A";
 
     const buyerLocation = matchingBuyerCompany
       ? [matchingBuyerCompany.district, matchingBuyerCompany.state]
@@ -245,7 +253,11 @@ const PrintLoadingEntry = async (data) => {
           .join(", ")
       : data.placeOfDelivery || "N/A";
 
-    const buyerCompanyName = matchingBuyerCompany?.companyName || data.buyerCompany || data.buyer || "N/A";
+    const buyerCompanyName =
+      matchingBuyerCompany?.companyName ||
+      data.buyerCompany ||
+      data.buyer ||
+      "N/A";
 
     const consigneeAddress =
       [consignee.location, consignee.district, consignee.state, consignee.pin]
@@ -257,12 +269,18 @@ const PrintLoadingEntry = async (data) => {
     if (logo64) {
       doc.setDrawColor(0);
       doc.setLineWidth(0.3);
-      // Logo on the right, bigger box
       const logoBoxWidth = 40;
       const logoBoxHeight = 28;
       const logoBoxX = pageWidth - margin - logoBoxWidth - 2;
       doc.rect(logoBoxX, 12, logoBoxWidth, logoBoxHeight);
-      doc.addImage(logo64, "PNG", logoBoxX + 2, 14, logoBoxWidth - 4, logoBoxHeight - 4);
+      doc.addImage(
+        logo64,
+        "PNG",
+        logoBoxX + 2,
+        14,
+        logoBoxWidth - 4,
+        logoBoxHeight - 4,
+      );
     }
 
     const sellerCompanyName = data?.supplierCompany || "N/A";
@@ -285,10 +303,11 @@ const PrintLoadingEntry = async (data) => {
 
     const headerAddressLines = wrapText(sellerFullAddress, 85);
     headerAddressLines.slice(0, 2).forEach((line, index) => {
-      doc.text(line, textStartX, (merchantTextY + 4) + index * 4);
+      doc.text(line, textStartX, merchantTextY + 4 + index * 4);
     });
 
-    const taxY = headerAddressLines.length > 1 ? (merchantTextY + 12) : (merchantTextY + 8);
+    const taxY =
+      headerAddressLines.length > 1 ? merchantTextY + 12 : merchantTextY + 8;
     if (sellerTaxNumber !== "N/A") {
       doc.text(`${sellerTaxLabel}: ${sellerTaxNumber}`, textStartX, taxY);
     }
@@ -303,7 +322,6 @@ const PrintLoadingEntry = async (data) => {
 
     let y = 55;
 
-    // Block 1: Challan Details
     doc.setLineWidth(0.2);
     doc.rect(margin + 2, y - 5, pageWidth - margin * 2 - 4, 32);
 
@@ -504,13 +522,13 @@ const PrintLoadingEntry = async (data) => {
     doc.setFontSize(7);
     setBold();
     doc.text(
-      "Shortage/damage will be deducted from freight.",
+      "*Shortage/damage will be Deducted from Freight.",
       margin + 10,
       pageHeight - 25,
     );
 
     doc.text(
-      "This is computer generated challan, from Hansaria Food Pvt. Ltd., this challan only for information and not for legal evidence.",
+      "*This is Computer Generated challan, from Hansaria Food Pvt. Ltd., This challan only for information and not for legal evidence.",
       pageWidth / 2,
       pageHeight - 15,
       { align: "center" },
