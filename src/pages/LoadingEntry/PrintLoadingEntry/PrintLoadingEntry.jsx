@@ -93,22 +93,19 @@ const PrintLoadingEntry = async (data) => {
         (t) => String(t._id) === String(data.transporterId)
       ) || {};
 
+    const normalizeText = (value) =>
+      String(value || "").trim().toLowerCase();
+
+    const supplierCompanyNameNormalized = normalizeText(data.supplierCompany);
+
     const matchingSellerCompany =
       (sellerCompanies || []).find(
-        (sc) =>
-          sc.companyName &&
-          data.supplierCompany &&
-          sc.companyName.toLowerCase().trim() ===
-            data.supplierCompany.toLowerCase().trim()
+        (sc) => normalizeText(sc.companyName) === supplierCompanyNameNormalized
       ) || null;
 
     const matchingSeller =
       (sellers || []).find(
-        (s) =>
-          s.companyName &&
-          data.supplierCompany &&
-          s.companyName.toLowerCase().trim() ===
-            data.supplierCompany.toLowerCase().trim()
+        (s) => normalizeText(s.companyName) === supplierCompanyNameNormalized
       ) || null;
 
     const sellerGstNo = matchingSellerCompany?.gstNo || matchingSeller?.gstNumber || "";
@@ -132,9 +129,6 @@ const PrintLoadingEntry = async (data) => {
           .filter(Boolean)
           .join(", ")
       : (matchingSeller?.location || data.from || "N/A");
-
-    const normalizeText = (value) =>
-      String(value || "").trim().toLowerCase();
 
     const rawBuyerKey = data?.buyerCompany ?? data?.buyer ?? "";
     const normalizedBuyerKey = normalizeText(rawBuyerKey);
@@ -279,7 +273,7 @@ const PrintLoadingEntry = async (data) => {
     setBold();
     doc.text(`From:`, margin + 5, y);
     setItalic();
-    doc.text(`${pick(sellerLocation)}`, margin + 23, y);
+    doc.text(`${pick(sellerFullAddress)}`, margin + 23, y);
 
     y += 8;
     setBold();
