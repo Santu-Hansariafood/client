@@ -99,7 +99,7 @@ const PrintLoadingEntry = async (data) => {
           String(c._id) === String(data.consignee) || c.name === data.consignee,
       ) || {};
 
-    const consigneeMobile = consignee.mobile || consignee.mobileNo || data.consigneeMobile || "N/A";
+    const consigneeMobile = consignee.phone || consignee.mobile || consignee.mobileNo || data.consigneeMobile || "N/A";
 
     const transporter =
       transporters.find((t) => String(t._id) === String(data.transporterId)) ||
@@ -257,35 +257,40 @@ const PrintLoadingEntry = async (data) => {
     if (logo64) {
       doc.setDrawColor(0);
       doc.setLineWidth(0.3);
-      doc.rect(margin + 2, 12, 30, 22);
-      doc.addImage(logo64, "PNG", margin + 4, 14, 26, 18);
+      // Logo on the right, bigger box
+      const logoBoxWidth = 40;
+      const logoBoxHeight = 28;
+      const logoBoxX = pageWidth - margin - logoBoxWidth - 2;
+      doc.rect(logoBoxX, 12, logoBoxWidth, logoBoxHeight);
+      doc.addImage(logo64, "PNG", logoBoxX + 2, 14, logoBoxWidth - 4, logoBoxHeight - 4);
     }
 
     const sellerCompanyName = data?.supplierCompany || "N/A";
     const vendorCode = matchingSeller?.vendorCode || data?.vendorCode || "";
 
+    const textStartX = margin + 5;
     setBold();
     doc.setFontSize(15);
-    doc.text(`${sellerCompanyName.toUpperCase()}`, 48, 17);
+    doc.text(`${sellerCompanyName.toUpperCase()}`, textStartX, 17);
     if (vendorCode) {
       setNormal();
       doc.setFontSize(9);
-      doc.text(`(Vendor Code: ${vendorCode})`, 48, 21);
+      doc.text(`(Vendor Code: ${vendorCode})`, textStartX, 21);
     }
 
     setNormal();
     doc.setFontSize(8.5);
     const merchantTextY = vendorCode ? 25 : 22;
-    doc.text("General Merchant & Commission Agent", 48, merchantTextY);
+    doc.text("General Merchant & Commission Agent", textStartX, merchantTextY);
 
     const headerAddressLines = wrapText(sellerFullAddress, 85);
     headerAddressLines.slice(0, 2).forEach((line, index) => {
-      doc.text(line, 48, (merchantTextY + 4) + index * 4);
+      doc.text(line, textStartX, (merchantTextY + 4) + index * 4);
     });
 
     const taxY = headerAddressLines.length > 1 ? (merchantTextY + 12) : (merchantTextY + 8);
     if (sellerTaxNumber !== "N/A") {
-      doc.text(`${sellerTaxLabel}: ${sellerTaxNumber}`, 48, taxY);
+      doc.text(`${sellerTaxLabel}: ${sellerTaxNumber}`, textStartX, taxY);
     }
 
     setBold();
@@ -327,12 +332,11 @@ const PrintLoadingEntry = async (data) => {
 
     y += 7;
     setBold();
-    doc.text(`Sauda No:`, margin + 5, y);
+    doc.text(`HFPL Sauda No:`, margin + 5, y);
     setNormal();
     doc.text(`${pick(data.saudaNo)}`, margin + 30, y);
 
     y += 12;
-    // Block 2: Delivery Address
     doc.rect(margin + 2, y - 5, pageWidth - margin * 2 - 4, 35);
 
     setBold();
@@ -365,7 +369,6 @@ const PrintLoadingEntry = async (data) => {
     doc.text(`${consigneeMobile}`, margin + 30, y);
 
     y += 12;
-    // Block 3: Description of Goods
     doc.rect(margin + 2, y - 5, pageWidth - margin * 2 - 4, 15);
     setBold();
     doc.text(`DESCRIPTION OF GOODS`, margin + 5, y);
@@ -384,7 +387,6 @@ const PrintLoadingEntry = async (data) => {
     doc.text(`${pick(data.loadingWeight)} Tons`, margin + 125, y);
 
     y += 15;
-    // Block 4: Route & Transporter Details
     doc.rect(margin + 2, y - 5, pageWidth - margin * 2 - 4, 100);
 
     setBold();
@@ -508,7 +510,7 @@ const PrintLoadingEntry = async (data) => {
     );
 
     doc.text(
-      "This is a computer-generated challan created using Hansaria Food Private Limited platform.\nThe platform is not responsible for loading details.",
+      "This is computer generated challan, from Hansaria Food Pvt. Ltd., this challan only for information and not for legal evidence.",
       pageWidth / 2,
       pageHeight - 15,
       { align: "center" },
