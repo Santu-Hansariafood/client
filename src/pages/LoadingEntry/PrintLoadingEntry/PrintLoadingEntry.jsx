@@ -55,20 +55,29 @@ const PrintLoadingEntry = async (data) => {
 
   const getBase64 = (img) =>
     new Promise((resolve) => {
+      if (!img) return resolve(null);
       const image = new Image();
       image.src = img;
       image.crossOrigin = "Anonymous";
 
       image.onload = () => {
-        const canvas = document.createElement("canvas");
-        canvas.width = image.width;
-        canvas.height = image.height;
-        const ctx = canvas.getContext("2d");
-        ctx.drawImage(image, 0, 0);
-        resolve(canvas.toDataURL("image/png"));
+        try {
+          const canvas = document.createElement("canvas");
+          canvas.width = image.width;
+          canvas.height = image.height;
+          const ctx = canvas.getContext("2d");
+          ctx.drawImage(image, 0, 0);
+          resolve(canvas.toDataURL("image/png"));
+        } catch (e) {
+          console.error("Canvas error:", e);
+          resolve(null);
+        }
       };
 
-      image.onerror = () => resolve(null);
+      image.onerror = () => {
+        console.error("Image load error:", img);
+        resolve(null);
+      };
     });
 
   const [logo64, sign64, stamp64] = await Promise.all([
@@ -439,16 +448,28 @@ const PrintLoadingEntry = async (data) => {
     doc.addImage(sign64, "PNG", pageWidth - margin - 50, signBaseY + 2, 35, 12);
   }
   if (stamp64) {
-    doc.setGState(new doc.GState({ opacity: 0.6 }));
-    doc.addImage(
-      stamp64,
-      "PNG",
-      pageWidth - margin - 65,
-      signBaseY - 15,
-      30,
-      30,
-    );
-    doc.setGState(new doc.GState({ opacity: 1.0 }));
+    const GState = doc.GState || (jsPDF && jsPDF.GState);
+    if (typeof GState === "function" && typeof doc.setGState === "function") {
+      doc.setGState(new GState({ opacity: 0.6 }));
+      doc.addImage(
+        stamp64,
+        "PNG",
+        pageWidth - margin - 65,
+        signBaseY - 15,
+        30,
+        30,
+      );
+      doc.setGState(new GState({ opacity: 1.0 }));
+    } else {
+      doc.addImage(
+        stamp64,
+        "PNG",
+        pageWidth - margin - 65,
+        signBaseY - 15,
+        30,
+        30,
+      );
+    }
   }
 
   doc.setDrawColor(0, 0, 0);

@@ -666,12 +666,9 @@ const AddLoadingEntry = () => {
         return;
       }
       toastId = toast.loading("Preparing PDF...");
-      const response = await api.get(`/loading-entries/${entry._id}/pdf`, {
-        responseType: "blob",
-      });
+      
+      const url = await PrintLoadingEntry(entry);
 
-      const blob = new Blob([response.data], { type: "application/pdf" });
-      const url = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
       link.download = `LoadingEntry-${entry.billNumber || "document"}.pdf`;
