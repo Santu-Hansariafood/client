@@ -141,6 +141,8 @@ const PrintLoadingEntry = async (data) => {
   );
   const sellerName = pickFirst(seller.sellerName, data.sellerName, "N/A");
   const sellerPhone = pickFirst(
+    data.sellerPhone,
+    data.sellerContact,
     seller?.phoneNumbers?.[0]?.value,
     seller?.mobileNo,
     seller.mobile,
@@ -150,6 +152,8 @@ const PrintLoadingEntry = async (data) => {
     "N/A",
   );
   const sellerEmail = pickFirst(
+    data.sellerEmail,
+    data.sellerMail,
     seller?.emails?.[0]?.value,
     seller.email,
     seller.mailId,
@@ -193,7 +197,7 @@ const PrintLoadingEntry = async (data) => {
 
   doc.setFillColor(255, 255, 255);
   doc.rect(0, 0, pageWidth, 48, "F");
-  doc.setDrawColor(0, 0, 0);
+  doc.setDrawColor(200, 200, 200); // Lighter line
   doc.setLineWidth(0.2);
   doc.line(margin, 48, pageWidth - margin, 48);
 
@@ -206,7 +210,7 @@ const PrintLoadingEntry = async (data) => {
   doc.setFontSize(16);
   doc.text(String(sellerCompanyName).toUpperCase(), 47, 18);
 
-  doc.setDrawColor(0, 0, 0);
+  doc.setDrawColor(200, 200, 200); // Lighter line
   doc.setLineWidth(0.5);
   doc.line(47, 20, 140, 20);
 
@@ -222,7 +226,7 @@ const PrintLoadingEntry = async (data) => {
   doc.text(`Address: ${sellerAddress}`, 47, 38);
 
   doc.setFillColor(240, 240, 240);
-  doc.setDrawColor(0, 0, 0);
+  doc.setDrawColor(240, 240, 240); // Match fill color to hide border
   doc.roundedRect(pageWidth - 68, 12, 56, 12, 2, 2, "FD");
   doc.setTextColor(0, 0, 0);
   doc.setFontSize(13);
@@ -274,7 +278,7 @@ const PrintLoadingEntry = async (data) => {
       // Centered ribbon title for a modern, compact look
       const ribbonH = 6.5;
       doc.setFillColor(Number(colors[0]), Number(colors[1]), Number(colors[2]));
-      doc.setDrawColor(Number(colors[0]), Number(colors[1]), Number(colors[2]));
+      doc.setDrawColor(Number(colors[0]), Number(colors[1]), Number(colors[2])); // Match fill color to hide border
       doc.roundedRect(
         margin,
         y - ribbonH,
@@ -347,14 +351,20 @@ const PrintLoadingEntry = async (data) => {
   doc.setLineWidth(0.3);
 
   const deliveryAddressText =
-    [
-      consignee.location || data.location,
-      consignee.district || data.district,
-      consignee.state || data.state,
-      consignee.pin || data.pin,
-    ]
-      .filter(Boolean)
-      .join(", ") || "Address details not found.";
+     pickFirst(
+       data.deliveryAddress,
+       data.unloadingPoint,
+       data.destination,
+       data.address,
+       [
+         consignee.location || data.location,
+         consignee.district || data.district,
+         consignee.state || data.state,
+         consignee.pin || data.pin,
+       ]
+         .filter(Boolean)
+         .join(", ")
+     ) || "Address details not found.";
 
   const splitDeliveryAddress = doc.splitTextToSize(
     deliveryAddressText,
@@ -365,6 +375,8 @@ const PrintLoadingEntry = async (data) => {
     splitDeliveryAddress.length * 5 + 10,
   );
 
+  doc.setFillColor(245, 245, 245);
+  doc.setDrawColor(245, 245, 245); // No black border
   doc.roundedRect(
     margin,
     currentY - 5,
@@ -482,18 +494,15 @@ const PrintLoadingEntry = async (data) => {
   });
 
   doc.setFillColor(230, 230, 230);
-  doc.rect(0, pageHeight - 8, pageWidth, 8, "F");
-
-  doc.setFillColor(0, 0, 0);
-  doc.rect(0, pageHeight - 8.5, pageWidth, 0.5, "F");
+  doc.rect(0, pageHeight - 12, pageWidth, 12, "F");
 
   doc.setTextColor(0, 0, 0);
-  doc.setFontSize(8);
+  doc.setFontSize(7.5);
   doc.text(
-    "Terms & Conditions: This is an electronic challan. Goods received in good condition.",
+    "Terms & Conditions: This is an electronic challan by using Hansaria Food Private Limited platform. Seller Must Be Reliable for this; Hansaria Food is Not liable.",
     pageWidth / 2,
-    pageHeight - 3,
-    { align: "center" },
+    pageHeight - 5,
+    { align: "center", maxWidth: pageWidth - margin * 2 },
   );
 
   console.log("PDF generation successful.");
