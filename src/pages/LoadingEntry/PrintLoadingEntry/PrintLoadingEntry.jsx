@@ -33,6 +33,10 @@ const PrintLoadingEntry = async (data) => {
 
     const pick = (v) => v || "N/A";
 
+    const setBold = () => doc.setFont("helvetica", "bold");
+    const setNormal = () => doc.setFont("helvetica", "normal");
+    const setItalic = () => doc.setFont("helvetica", "italic");
+
     // ✅ Load logo
     const getBase64 = (img) =>
       new Promise((resolve) => {
@@ -89,7 +93,7 @@ const PrintLoadingEntry = async (data) => {
         consignee.pin,
       ]
         .filter(Boolean)
-        .join(", ") || "N/A";
+        .join(", ") || data.deliveryAddress || "N/A";
 
     // ================= HEADER =================
     if (logo64) {
@@ -98,12 +102,12 @@ const PrintLoadingEntry = async (data) => {
 
     const sellerCompanyName = data?.supplierCompany || "N/A";
 
-doc.setFont("helvetica", "bold");
-doc.setFontSize(16);
-doc.text(`M/S ${sellerCompanyName.toUpperCase()}`, 40, 18);
+    setBold();
+    doc.setFontSize(16);
+    doc.text(`M/S ${sellerCompanyName.toUpperCase()}`, 40, 18);
 
+    setNormal();
     doc.setFontSize(10);
-    doc.setFont("helvetica", "normal");
     doc.text("General Merchant & Commission Agent", 40, 24);
     doc.text(
       "Marketing Yard, Shop No. K/10, Gulabbagh, Purnea - 854326 (Bihar)",
@@ -111,7 +115,7 @@ doc.text(`M/S ${sellerCompanyName.toUpperCase()}`, 40, 18);
       29
     );
 
-    doc.setFont("helvetica", "bold");
+    setBold();
     doc.setFontSize(13);
     doc.text("LORRY CHALLAN", pageWidth / 2, 38, { align: "center" });
 
@@ -119,49 +123,88 @@ doc.text(`M/S ${sellerCompanyName.toUpperCase()}`, 40, 18);
     let y = 48;
 
     doc.setFontSize(9);
-    doc.setFont("helvetica", "normal");
+    setNormal();
 
-    doc.text(`Challan No: ${pick(data.billNumber)}`, margin, y);
-    doc.text(`Date: ${formatDate(data.loadingDate)}`, pageWidth - margin, y, {
+    setBold();
+    doc.text(`Challan No:`, margin, y);
+    setItalic();
+    doc.text(`${pick(data.billNumber)}`, margin + 28, y);
+    setBold();
+    doc.text(`Date:`, pageWidth - margin - 20, y);
+    setItalic();
+    doc.text(`${formatDate(data.loadingDate)}`, pageWidth - margin, y, {
       align: "right",
     });
 
     y += 8;
-    doc.text(`P.O No: ${pick(data.poNumber)}`, margin, y);
+    setBold();
+    doc.text(`P.O No:`, margin, y);
+    setItalic();
+    doc.text(`${pick(data.poNumber)}`, margin + 22, y);
 
     y += 8;
-    doc.text(`A/c Broker: ${pick(data.broker)}`, margin, y);
+    setBold();
+    doc.text(`A/c Broker:`, margin, y);
+    setItalic();
+    doc.text(`${pick(data.broker)}`, margin + 32, y);
 
     y += 8;
+    setBold();
+    doc.text(`Consignee:`, margin, y);
+    setItalic();
     doc.text(
-      `Consignee: ${consignee.name || pick(data.consignee)}`,
-      margin,
+      `${consignee.name || pick(data.consignee)}`,
+      margin + 28,
       y
     );
 
     y += 8;
-    doc.text(`Address: ${consigneeAddress}`, margin, y);
+    setBold();
+    doc.text(`Address:`, margin, y);
+    setItalic();
+    doc.text(`${consigneeAddress}`, margin + 22, y);
 
     y += 10;
 
-    doc.text(`Description of Goods: ${pick(data.commodity)}`, margin, y);
-    doc.text(`Bags: ${pick(data.bags)}`, margin + 100, y);
+    setBold();
+    doc.text(`Description of Goods:`, margin, y);
+    setItalic();
+    doc.text(`${pick(data.commodity)}`, margin + 50, y);
+    setBold();
+    doc.text(`Bags:`, margin + 100, y);
+    setItalic();
+    doc.text(`${pick(data.bags)}`, margin + 115, y);
 
     y += 8;
-    doc.text(`Weight: ${pick(data.loadingWeight)} KG`, margin + 100, y);
+    setBold();
+    doc.text(`Weight:`, margin + 100, y);
+    setItalic();
+    doc.text(`${pick(data.loadingWeight)} KG`, margin + 120, y);
 
     y += 10;
 
-    doc.text(`From: ${pick(data.from)}`, margin, y);
-    doc.text(`To: ${pick(data.placeOfDelivery)}`, margin + 90, y);
+    setBold();
+    doc.text(`From:`, margin, y);
+    setItalic();
+    doc.text(`${pick(data.from)}`, margin + 18, y);
+    setBold();
+    doc.text(`To:`, margin + 90, y);
+    setItalic();
+    doc.text(`${pick(data.placeOfDelivery)}`, margin + 100, y);
 
     y += 8;
-    doc.text(`Delivery At: ${pick(data.deliveryAddress)}`, margin, y);
+    setBold();
+    doc.text(`Delivery At:`, margin, y);
+    setItalic();
+    doc.text(`${pick(data.deliveryAddress)}`, margin + 32, y);
 
     y += 8;
+    setBold();
+    doc.text(`Lorry No:`, margin, y);
+    setItalic();
     doc.text(
-      `Lorry No: ${(data.lorryNumber || "N/A").toUpperCase()}`,
-      margin,
+      `${(data.lorryNumber || "N/A").toUpperCase()}`,
+      margin + 25,
       y
     );
 
@@ -174,17 +217,23 @@ doc.text(`M/S ${sellerCompanyName.toUpperCase()}`, 40, 18);
       ? `Rs. ${Number(data.totalFreight - data.advance).toLocaleString("en-IN")}`
       : "N/A";
 
+    setBold();
     doc.text("Total Lorry Freight:", margin, y);
+    setItalic();
     doc.text(totalFreight, margin + 52, y);
     doc.line(margin + 50, y, pageWidth - margin, y);
 
     y += 8;
+    setBold();
     doc.text("Advance:", margin, y);
+    setItalic();
     doc.text(advance, margin + 32, y);
     doc.line(margin + 30, y, pageWidth - margin, y);
 
     y += 8;
+    setBold();
     doc.text("To Pay:", margin, y);
+    setItalic();
     doc.text(toPayValue, margin + 32, y);
     doc.line(margin + 30, y, pageWidth - margin, y);
 
@@ -198,24 +247,38 @@ doc.text(`M/S ${sellerCompanyName.toUpperCase()}`, 40, 18);
     const ownerMobile = data.ownerMobile || "N/A";
     const driverPhone = data.driverPhoneNumber || "N/A";
 
+    setBold();
     doc.text("Owner's Name:", margin, y);
+    setItalic();
     doc.text(ownerName, margin + 42, y);
-    doc.text(`Mob: ${ownerMobile}`, pageWidth / 2 + 20, y);
+    setBold();
+    doc.text(`Mob:`, pageWidth / 2 + 10, y);
+    setItalic();
+    doc.text(`${ownerMobile}`, pageWidth / 2 + 25, y);
     doc.line(margin + 40, y, pageWidth - margin / 2, y);
 
     y += 8;
+    setBold();
     doc.text("Driver's Name:", margin, y);
+    setItalic();
     doc.text(driverName, margin + 42, y);
-    doc.text(`Mob: ${driverPhone}`, pageWidth / 2 + 20, y);
+    setBold();
+    doc.text(`Mob:`, pageWidth / 2 + 10, y);
+    setItalic();
+    doc.text(`${driverPhone}`, pageWidth / 2 + 25, y);
     doc.line(margin + 40, y, pageWidth - margin / 2, y);
 
     y += 8;
+    setBold();
     doc.text("Driver Lic No:", margin, y);
+    setItalic();
     doc.text(driverLicense, margin + 42, y);
     doc.line(margin + 40, y, pageWidth - margin / 2, y);
 
     y += 8;
+    setBold();
     doc.text("Insurance No:", margin, y);
+    setItalic();
     doc.text(insuranceNo, margin + 42, y);
     doc.line(margin + 40, y, pageWidth - margin / 2, y);
 
@@ -224,19 +287,27 @@ doc.text(`M/S ${sellerCompanyName.toUpperCase()}`, 40, 18);
     const transporterName = transporter.name || pick(data.addedTransport);
     const transporterAddress = transporter.address || "N/A";
 
-    doc.text(`Transporter: ${transporterName}`, margin, y);
+    setBold();
+    doc.text(`Transporter:`, margin, y);
+    setItalic();
+    doc.text(`${transporterName}`, margin + 32, y);
 
     y += 8;
-    doc.text(`Address: ${transporterAddress}`, margin, y);
+    setBold();
+    doc.text(`Address:`, margin, y);
+    setItalic();
+    doc.text(`${transporterAddress}`, margin + 22, y);
 
     y += 12;
 
     // ================= SIGNATURE =================
     const signY = pageHeight - 35;
 
+    setBold();
     doc.text("Driver Signature", margin, signY);
     doc.line(margin, signY + 5, margin + 60, signY + 5);
 
+    setBold();
     doc.text("Authorized Signature", pageWidth - margin - 60, signY);
     doc.line(
       pageWidth - margin - 60,
@@ -247,7 +318,7 @@ doc.text(`M/S ${sellerCompanyName.toUpperCase()}`, 40, 18);
 
     // ================= FOOTER =================
     doc.setFontSize(7);
-
+    setBold();
     doc.text(
       "1. Shortage/damage will be deducted from freight.\n" +
         "2. Free delivery within 25 km.\n" +
