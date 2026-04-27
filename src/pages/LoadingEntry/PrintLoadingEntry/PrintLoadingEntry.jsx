@@ -253,8 +253,8 @@ const PrintLoadingEntry = async (data) => {
   const addTable = (title, y, head, body, colors = tableHead) => {
     // Centered ribbon title for a modern, compact look
     const ribbonH = 6.5;
-    doc.setFillColor(...colors);
-    doc.setDrawColor(...colors);
+    doc.setFillColor(colors[0], colors[1], colors[2]);
+    doc.setDrawColor(colors[0], colors[1], colors[2]);
     doc.roundedRect(
       margin,
       y - ribbonH,
@@ -286,9 +286,9 @@ const PrintLoadingEntry = async (data) => {
       },
       bodyStyles: {
         fontSize: 8.3,
-        textColor: [0, 0, 0],
+        textColor: 0,
         halign: "center",
-        lineColor: [200, 200, 200],
+        lineColor: 200,
       },
       columnStyles: {
         0: { halign: "left" },
@@ -317,8 +317,8 @@ const PrintLoadingEntry = async (data) => {
   );
 
   // 2. Delivery Address (On top as requested)
-  doc.setFillColor(...light);
-  doc.setDrawColor(...dark);
+  doc.setFillColor(255, 255, 255);
+  doc.setDrawColor(0, 0, 0);
   doc.setLineWidth(0.3);
 
   const deliveryAddressText =
@@ -350,7 +350,7 @@ const PrintLoadingEntry = async (data) => {
     "FD",
   );
 
-  doc.setTextColor(...dark);
+  doc.setTextColor(0, 0, 0);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(9);
   doc.text("DELIVERY ADDRESS", margin + 5, currentY + 1);
@@ -425,8 +425,8 @@ const PrintLoadingEntry = async (data) => {
 
   doc.setFont("helvetica", "bold");
   doc.setFontSize(9);
-  doc.setTextColor(...dark);
-
+  doc.setTextColor(0, 0, 0);
+  
   doc.text("DRIVER'S SIGNATURE", margin + 5, signBaseY);
   doc.setDrawColor(0, 0, 0);
   doc.setLineWidth(0.5);
@@ -451,7 +451,7 @@ const PrintLoadingEntry = async (data) => {
   );
   doc.setFont("helvetica", "normal");
   doc.setFontSize(8);
-  doc.setTextColor(...gray);
+  doc.setTextColor(100, 100, 100);
   doc.text("Authorized Signatory", pageWidth - margin - 32.5, signBaseY + 20, {
     align: "center",
   });
