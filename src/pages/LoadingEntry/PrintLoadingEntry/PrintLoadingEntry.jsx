@@ -105,6 +105,9 @@ const PrintLoadingEntry = async (data) => {
       transporters.find((t) => String(t._id) === String(data.transporterId)) ||
       {};
 
+    const displayTransporterName = String(transporter.name || data.addedTransport || "N/A");
+    const displayTransporterAddress = String(transporter.address || "N/A");
+
     const normalizeText = (value) =>
       String(value || "")
         .trim()
@@ -381,11 +384,11 @@ const PrintLoadingEntry = async (data) => {
     doc.text(`${pick(data.loadingWeight)} Tons`, margin + 125, y);
 
     y += 15;
-    // Block 4: Route & Transporter
-    doc.rect(margin + 2, y - 5, pageWidth - margin * 2 - 4, 45);
+    // Block 4: Route & Transporter Details
+    doc.rect(margin + 2, y - 5, pageWidth - margin * 2 - 4, 100);
 
     setBold();
-    doc.text(`ROUTE DETAILS`, margin + 5, y);
+    doc.text(`ROUTE & VEHICLE DETAILS`, margin + 5, y);
     y += 6;
     setBold();
     doc.text(`From:`, margin + 5, y);
@@ -400,8 +403,7 @@ const PrintLoadingEntry = async (data) => {
     setBold();
     doc.text(`Transporter:`, margin + 5, y);
     setNormal();
-    const transporterName = transporter.name || pick(data.addedTransport);
-    doc.text(`${transporterName}`, margin + 30, y);
+    doc.text(`${displayTransporterName}`, margin + 30, y);
 
     y += 6;
     setBold();
@@ -421,12 +423,28 @@ const PrintLoadingEntry = async (data) => {
 
     y += 6;
     setBold();
+    doc.text(`Owner:`, margin + 5, y);
+    setNormal();
+    doc.text(`${data.ownerName || "N/A"}`, margin + 30, y);
+    setBold();
+    doc.text(`Mob:`, margin + 80, y);
+    setNormal();
+    doc.text(`${data.ownerMobile || "N/A"}`, margin + 90, y);
+
+    y += 6;
+    setBold();
     doc.text(`Driver Lic:`, margin + 5, y);
     setNormal();
     doc.text(`${data.driverLicense || "N/A"}`, margin + 30, y);
+    setBold();
+    doc.text(`Insurance:`, margin + 80, y);
+    setNormal();
+    doc.text(`${data.insuranceNo || "N/A"}`, margin + 100, y);
 
-    y += 15;
-
+    y += 10;
+    setBold();
+    doc.text(`FREIGHT DETAILS`, margin + 5, y);
+    y += 6;
     const totalFreight = data.totalFreight
       ? `Rs. ${Number(data.totalFreight).toLocaleString("en-IN")}`
       : "N/A";
@@ -439,84 +457,30 @@ const PrintLoadingEntry = async (data) => {
         : "N/A";
 
     setBold();
-    doc.text("Total Lorry Freight:", margin + 5, y);
-    setItalic();
-    doc.text(totalFreight, margin + 57, y);
-    doc.line(margin + 55, y + 1, pageWidth - margin - 5, y + 1);
+    doc.text("Total Freight:", margin + 5, y);
+    setNormal();
+    doc.text(totalFreight, margin + 35, y);
 
-    y += 10;
+    y += 6;
     setBold();
     doc.text("Advance:", margin + 5, y);
-    setItalic();
-    doc.text(advance, margin + 37, y);
-    doc.line(margin + 35, y + 1, pageWidth - margin - 5, y + 1);
+    setNormal();
+    doc.text(advance, margin + 35, y);
 
-    y += 10;
+    y += 6;
     setBold();
     doc.text("To Pay:", margin + 5, y);
-    setItalic();
-    doc.text(toPayValue, margin + 37, y);
-    doc.line(margin + 35, y + 1, pageWidth - margin - 5, y + 1);
-
-    y += 15;
-
-    const ownerName = data.ownerName || "N/A";
-    const driverName = data.driverName || "N/A";
-    const driverLicense = data.driverLicense || "N/A";
-    const insuranceNo = data.insuranceNo || "N/A";
-    const ownerMobile = data.ownerMobile || "N/A";
-    const driverPhone = data.driverPhoneNumber || "N/A";
-
-    setBold();
-    doc.text("Owner's Name:", margin + 5, y);
-    setItalic();
-    doc.text(ownerName, margin + 47, y);
-    setBold();
-    doc.text(`Mob:`, pageWidth / 2 + 15, y);
-    setItalic();
-    doc.text(`${ownerMobile}`, pageWidth / 2 + 30, y);
-    doc.line(margin + 45, y + 1, pageWidth - margin - 5, y + 1);
+    setNormal();
+    doc.text(toPayValue, margin + 35, y);
 
     y += 10;
     setBold();
-    doc.text("Driver's Name:", margin + 5, y);
-    setItalic();
-    doc.text(driverName, margin + 47, y);
-    setBold();
-    doc.text(`Mob:`, pageWidth / 2 + 15, y);
-    setItalic();
-    doc.text(`${driverPhone}`, pageWidth / 2 + 30, y);
-    doc.line(margin + 45, y + 1, pageWidth - margin - 5, y + 1);
-
-    y += 10;
-    setBold();
-    doc.text("Driver Lic No:", margin + 5, y);
-    setItalic();
-    doc.text(driverLicense, margin + 47, y);
-    doc.line(margin + 45, y + 1, pageWidth - margin - 5, y + 1);
-
-    y += 10;
-    setBold();
-    doc.text("Insurance No:", margin + 5, y);
-    setItalic();
-    doc.text(insuranceNo, margin + 47, y);
-    doc.line(margin + 45, y + 1, pageWidth - margin - 5, y + 1);
-
-    y += 12;
-
-    const transporterName = transporter.name || pick(data.addedTransport);
-    const transporterAddress = transporter.address || "N/A";
-
-    setBold();
-    doc.text(`Transporter:`, margin + 5, y);
-    setItalic();
-    doc.text(`${transporterName}`, margin + 37, y);
-
-    y += 8;
-    setBold();
-    doc.text(`Address:`, margin + 5, y);
-    setItalic();
-    doc.text(`${transporterAddress}`, margin + 27, y);
+    doc.text(`Transporter Address:`, margin + 5, y);
+    setNormal();
+    const tAddrLines = wrapText(displayTransporterAddress, 85);
+    tAddrLines.slice(0, 2).forEach((line, index) => {
+      doc.text(line, margin + 45, y + index * 4);
+    });
 
     y += 15;
 
