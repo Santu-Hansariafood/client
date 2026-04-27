@@ -1,9 +1,8 @@
 import { useState, useEffect, lazy, Suspense } from "react";
 import api from "../../../utils/apiClient/apiClient";
 import { fetchAllPages } from "../../../utils/apiClient/fetchAllPages";
-import { ToastContainer, toast } from "react-toastify";
+import { toast } from "react-toastify";
 import { FaPlusCircle, FaMinusCircle } from "react-icons/fa";
-import "react-toastify/dist/ReactToastify.css";
 import Loading from "../../../common/Loading/Loading";
 import regexPatterns from "../../../utils/regexPatterns/regexPatterns";
 
@@ -400,7 +399,6 @@ const EditSellerDetails = ({ sellerId, onClose, onSave }) => {
             />
           </div>
         </div>
-        <ToastContainer />
       </div>
     </Suspense>
   );

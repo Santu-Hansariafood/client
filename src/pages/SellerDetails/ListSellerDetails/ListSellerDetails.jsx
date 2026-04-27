@@ -290,12 +290,7 @@ const ListSellerDetails = () => {
                   sellerId={selectedSeller._id}
                   onClose={handlePopupClose}
                   onSave={(updatedSeller) => {
-                    const updatedData = data.map((seller) =>
-                      seller._id === updatedSeller._id ? updatedSeller : seller,
-                    );
-                    setData(updatedData);
-                    setFilteredData(updatedData);
-                    setSelectedSeller(updatedSeller);
+                    fetchSellers(currentPage, searchTerm);
                   }}
                 />
               )}
