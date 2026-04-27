@@ -478,7 +478,7 @@ const PrintLoadingEntry = async (data) => {
   doc.setFontSize(7.5);
   doc.setFont("helvetica", "normal");
   doc.text(
-    "Terms & Conditions: This is an electronic challan by using Hansaria Food Private Limited platform. Seller Must Be Reliable for this; Hansaria Food is Not liable.",
+    "Terms & Conditions: This is a system-generated challan. The seller is responsible for all details. Hansaria Food Private Limited holds no liability.",
     pageWidth / 2,
     pageHeight - 6,
     { align: "center", maxWidth: pageWidth - margin * 2 },
