@@ -227,7 +227,7 @@ const PrintLoadingEntry = async (data) => {
   doc.setFont("helvetica", "bold");
   doc.setFontSize(12);
   doc.setTextColor(0, 0, 0);
-  doc.text("LORRY CHALLAN", pageWidth - 40, 16, { align: "center" });
+  doc.text("LORRY CHALLAN", pageWidth / 2, 16, { align: "center" });
 
   doc.setFont("helvetica", "normal");
   doc.setFontSize(8.5);
@@ -267,28 +267,41 @@ const PrintLoadingEntry = async (data) => {
         head: [head],
         body: [body],
         theme: "striped",
+        tableWidth: "auto",
         headStyles: {
           fillColor: colors,
           textColor: 255,
           fontSize: 8,
           fontStyle: "bold",
           halign: "center",
+          valign: "middle",
+          cellPadding: 3,
         },
         bodyStyles: {
           fontSize: 8.5,
           textColor: 50,
           halign: "center",
+          valign: "middle",
+          cellPadding: 3,
         },
         columnStyles: {
-          0: { halign: "left", cellPadding: 3 },
+          0: { halign: "left", cellPadding: [3, 3, 3, 6] },
+          1: { cellPadding: 3 },
         },
-        margin: { left: margin, right: margin },
+        margin: { left: margin, right: margin, top: 0, bottom: 0 },
         styles: {
           cellPadding: 3,
           overflow: "linebreak",
+          lineColor: [220, 220, 220],
+          lineWidth: 0.15,
         },
         alternateRowStyles: {
           fillColor: tableRowAlt,
+        },
+        didParseCell: function(data) {
+          if (data.section === 'head') {
+            data.cell.styles.cellPadding = 3;
+          }
         },
       };
 
@@ -319,50 +332,50 @@ const PrintLoadingEntry = async (data) => {
 
   // 2. Delivery Address
   console.log("Processing Delivery Address...");
-  const deliveryAddressText =
-      pickFirst(
-        data.deliveryAddress,
-        data.unloadingPoint,
-        data.destination,
-        data.address,
-        [
-          consignee.location || data.location,
-          consignee.district || data.district,
-          consignee.state || data.state,
-          consignee.pin || data.pin,
-        ]
-          .filter(Boolean)
-          .join(", ")
-      ) || "Address details not found.";
-
-  const splitDeliveryAddress = doc.splitTextToSize(
-    deliveryAddressText,
-    pageWidth - margin * 2 - 10,
+  const deliveryPlace = pickFirst(
+    data.placeOfDelivery,
+    data.deliveryPlace,
+    data.deliveryLocation,
+    data.deliveryCity,
+    data.unloadingPoint,
+    data.destination,
+    "N/A"
   );
-  const deliveryBlockHeight = Math.max(
-    20,
-    splitDeliveryAddress.length * 5 + 12,
+  const deliveryAddressFull = pickFirst(
+    data.deliveryAddress,
+    data.address,
+    "N/A"
+  );
+  const deliveryDistrict = pickFirst(
+    data.deliveryDistrict,
+    data.district,
+    "N/A"
+  );
+  const deliveryState = pickFirst(
+    data.deliveryState,
+    data.state,
+    consignee.state,
+    "N/A"
+  );
+  const deliveryPin = pickFirst(
+    data.deliveryPin,
+    data.deliveryPinCode,
+    data.pin,
+    data.pinCode,
+    consignee.pin,
+    "N/A"
   );
 
-  doc.setFillColor(245, 245, 245);
-  doc.rect(
-    margin,
+  currentY = addTable(
+    "Delivery Address",
     currentY,
-    pageWidth - margin * 2,
-    deliveryBlockHeight,
-    "F",
+    ["Place/City", "Full Address", "District, State, PIN"],
+    [
+      deliveryPlace,
+      deliveryAddressFull,
+      `${deliveryDistrict}, ${deliveryState}, ${deliveryPin}`.replace(/, N\/A/g, "").replace(/^, /, "") || "N/A",
+    ],
   );
-
-  doc.setTextColor(52, 52, 52);
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(9);
-  doc.text("DELIVERY ADDRESS", margin + 4, currentY + 6);
-
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(8.5);
-  doc.setTextColor(60, 60, 60);
-  doc.text(splitDeliveryAddress, margin + 4, currentY + 13);
-  currentY += deliveryBlockHeight + 10;
 
   // 3. Buyer Details (Consignee)
   console.log("Adding Buyer Details table...");
