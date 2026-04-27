@@ -80,10 +80,8 @@ const PrintLoadingEntry = async (data) => {
       };
     });
 
-  const [logo64, sign64, stamp64] = await Promise.all([
+  const [logo64] = await Promise.all([
     getBase64(logo),
-    getBase64(signature),
-    getBase64(stamp),
   ]);
 
   const [orders, sellers, companies, consignees, transporters] =
@@ -444,34 +442,6 @@ const PrintLoadingEntry = async (data) => {
     },
   );
 
-  if (sign64) {
-    doc.addImage(sign64, "PNG", pageWidth - margin - 50, signBaseY + 2, 35, 12);
-  }
-  if (stamp64) {
-    const GState = doc.GState || (jsPDF && jsPDF.GState);
-    if (typeof GState === "function" && typeof doc.setGState === "function") {
-      doc.setGState(new GState({ opacity: 0.6 }));
-      doc.addImage(
-        stamp64,
-        "PNG",
-        pageWidth - margin - 65,
-        signBaseY - 15,
-        30,
-        30,
-      );
-      doc.setGState(new GState({ opacity: 1.0 }));
-    } else {
-      doc.addImage(
-        stamp64,
-        "PNG",
-        pageWidth - margin - 65,
-        signBaseY - 15,
-        30,
-        30,
-      );
-    }
-  }
-
   doc.setDrawColor(0, 0, 0);
   doc.line(
     pageWidth - margin - 65,
@@ -481,7 +451,7 @@ const PrintLoadingEntry = async (data) => {
   );
   doc.setFont("helvetica", "normal");
   doc.setFontSize(8);
-  doc.setTextColor(gray);
+  doc.setTextColor(...gray);
   doc.text("Authorized Signatory", pageWidth - margin - 32.5, signBaseY + 20, {
     align: "center",
   });
