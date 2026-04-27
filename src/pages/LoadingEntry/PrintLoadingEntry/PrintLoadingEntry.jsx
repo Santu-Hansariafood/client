@@ -12,13 +12,14 @@ const PrintLoadingEntry = async (data) => {
   }
   console.log("Starting PDF generation for:", data?.billNumber || "N/A");
   try {
-    const doc = new jsPDF({
+  const doc = new jsPDF({
       orientation: "portrait",
       unit: "mm",
       format: "a4",
     });
+    console.log("jsPDF initialized. Available methods:", Object.keys(doc).filter(k => typeof doc[k] === 'function').slice(0, 20));
 
-  const pageWidth = doc.internal.pageSize.width;
+    const pageWidth = doc.internal.pageSize.width;
   const pageHeight = doc.internal.pageSize.height;
   const margin = 14;
 
@@ -66,10 +67,18 @@ const PrintLoadingEntry = async (data) => {
       }
       console.log("Loading image:", img);
       const image = new Image();
+      
+      // Add timeout to image loading
+      const timeout = setTimeout(() => {
+        console.warn("Image load timeout:", img);
+        resolve(null);
+      }, 5000);
+
       image.src = img;
       image.crossOrigin = "Anonymous";
 
       image.onload = () => {
+        clearTimeout(timeout);
         try {
           console.log("Image loaded successfully:", img);
           const canvas = document.createElement("canvas");
@@ -85,6 +94,7 @@ const PrintLoadingEntry = async (data) => {
       };
 
       image.onerror = () => {
+        clearTimeout(timeout);
         console.error("Image load error for path:", img);
         resolve(null);
       };
@@ -237,13 +247,11 @@ const PrintLoadingEntry = async (data) => {
       if (!colors || colors.length < 3) colors = [52, 52, 52];
       const ribbonH = 7;
       doc.setFillColor(Number(colors[0]), Number(colors[1]), Number(colors[2]));
-      doc.roundedRect(
+      doc.rect(
         margin,
         y - ribbonH,
         pageWidth - margin * 2,
         ribbonH,
-        1.5,
-        1.5,
         "F",
       );
 
@@ -254,7 +262,7 @@ const PrintLoadingEntry = async (data) => {
         align: "center",
       });
 
-      autoTable(doc, {
+      const autoTableOptions = {
         startY: y + 1.5,
         head: [head],
         body: [body],
@@ -282,7 +290,13 @@ const PrintLoadingEntry = async (data) => {
         alternateRowStyles: {
           fillColor: tableRowAlt,
         },
-      });
+      };
+
+      if (typeof doc.autoTable === 'function') {
+        doc.autoTable(autoTableOptions);
+      } else {
+        autoTable(doc, autoTableOptions);
+      }
 
       return (doc.lastAutoTable?.finalY || y + 20) + 10;
     } catch (tableErr) {
@@ -295,6 +309,7 @@ const PrintLoadingEntry = async (data) => {
 
   console.log("Drawing tables...");
   // 1. Seller Information
+  console.log("Adding Seller Information table...");
   currentY = addTable(
     "Seller Information",
     currentY,
@@ -303,6 +318,7 @@ const PrintLoadingEntry = async (data) => {
   );
 
   // 2. Delivery Address
+  console.log("Processing Delivery Address...");
   const deliveryAddressText =
       pickFirst(
         data.deliveryAddress,
@@ -328,14 +344,12 @@ const PrintLoadingEntry = async (data) => {
     splitDeliveryAddress.length * 5 + 12,
   );
 
-  doc.setFillColor(deliveryBg);
-  doc.roundedRect(
+  doc.setFillColor(245, 245, 245);
+  doc.rect(
     margin,
     currentY,
     pageWidth - margin * 2,
     deliveryBlockHeight,
-    2,
-    2,
     "F",
   );
 
@@ -351,6 +365,7 @@ const PrintLoadingEntry = async (data) => {
   currentY += deliveryBlockHeight + 10;
 
   // 3. Buyer Details (Consignee)
+  console.log("Adding Buyer Details table...");
   const consigneeAddress =
     [consignee.location, consignee.district, consignee.state, consignee.pin]
       .filter(Boolean)
@@ -368,6 +383,7 @@ const PrintLoadingEntry = async (data) => {
   );
 
   // 4. Description of Goods
+  console.log("Adding Description of Goods table...");
   currentY = addTable(
     "Description of Goods",
     currentY,
@@ -381,6 +397,7 @@ const PrintLoadingEntry = async (data) => {
   );
 
   // 5. Transporter Information
+  console.log("Adding Transporter Information table...");
   currentY = addTable(
     "Full Transporter Details",
     currentY,
@@ -394,6 +411,7 @@ const PrintLoadingEntry = async (data) => {
   );
 
   // 6. Freight & Payment Summary (Keeping this for completeness)
+  console.log("Adding Freight Summary table...");
   const total = Number(data.totalFreight || 0);
   const advance = Number(data.advance || 0);
   const balance = total - advance;
@@ -409,6 +427,8 @@ const PrintLoadingEntry = async (data) => {
       formatCurrency(balance),
     ],
   );
+
+  console.log("Adding signatures and footer...");
 
   const signBaseY = pageHeight - 35;
 
