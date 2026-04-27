@@ -179,6 +179,23 @@ const PrintLoadingEntry = async (data) => {
         data.from ||
         "N/A";
 
+    const wrapText = (text, maxLength) => {
+      const words = text.split(" ");
+      const lines = [];
+      let currentLine = "";
+
+      words.forEach((word) => {
+        if ((currentLine + word).length > maxLength) {
+          lines.push(currentLine.trim());
+          currentLine = word + " ";
+        } else {
+          currentLine += word + " ";
+        }
+      });
+      lines.push(currentLine.trim());
+      return lines;
+    };
+
     const rawBuyerKey = data?.buyerCompany ?? data?.buyer ?? "";
     const normalizedBuyerKey = normalizeText(rawBuyerKey);
 
@@ -238,9 +255,15 @@ const PrintLoadingEntry = async (data) => {
     setNormal();
     doc.setFontSize(8.5);
     doc.text("General Merchant & Commission Agent", 45, 22);
-    doc.text(`${sellerFullAddress}`, 45, 26);
+
+    const headerAddressLines = wrapText(sellerFullAddress, 85);
+    headerAddressLines.slice(0, 2).forEach((line, index) => {
+      doc.text(line, 45, 26 + index * 4);
+    });
+
+    const taxY = headerAddressLines.length > 1 ? 34 : 30;
     if (sellerTaxNumber !== "N/A") {
-      doc.text(`${sellerTaxLabel}: ${sellerTaxNumber}`, 45, 30);
+      doc.text(`${sellerTaxLabel}: ${sellerTaxNumber}`, 45, taxY);
     }
 
     setBold();
@@ -312,9 +335,12 @@ const PrintLoadingEntry = async (data) => {
     setBold();
     doc.text(`From:`, margin + 5, y);
     setItalic();
-    doc.text(`${pick(sellerFullAddress)}`, margin + 23, y);
+    const fromAddressLines = wrapText(pick(sellerFullAddress), 75);
+    fromAddressLines.slice(0, 2).forEach((line, index) => {
+      doc.text(line, margin + 23, y + index * 4);
+    });
 
-    y += 8;
+    y += fromAddressLines.length > 1 ? 12 : 8;
     setBold();
     doc.text(`To:`, margin + 5, y);
     setItalic();
