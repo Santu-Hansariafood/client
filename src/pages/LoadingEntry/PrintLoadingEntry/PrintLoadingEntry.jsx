@@ -68,14 +68,18 @@ const PrintLoadingEntry = async (data) => {
       }
     };
 
-    const [consignees, transporters, sellers, sellerCompanies, buyers, companies] = await Promise.all([
+    const [consignees, transporters, sellers, sellerCompanies, buyers, companies, saudaData] = await Promise.all([
       safeFetch("/consignees?limit=0"),
       safeFetch("/transporters?limit=0"),
       safeFetch("/sellers?limit=0"),
       safeFetch("/seller-company?limit=0"),
       safeFetch("/buyers?limit=0"),
       safeFetch("/companies?limit=0"),
+      safeFetch(`/self-orders?search=${data.saudaNo}`),
     ]);
+
+    const sauda = (saudaData || []).find(s => String(s.saudaNo) === String(data.saudaNo)) || {};
+    const finalPoNumber = sauda.poNumber || data.poNumber || "N/A";
 
     const consignee =
       consignees.find(
@@ -190,13 +194,16 @@ const PrintLoadingEntry = async (data) => {
     const sellerCompanyName = data?.supplierCompany || "N/A";
 
     setBold();
-    doc.setFontSize(16);
-    doc.text(`${sellerCompanyName.toUpperCase()}`, 45, 18);
+    doc.setFontSize(15);
+    doc.text(`${sellerCompanyName.toUpperCase()}`, 45, 17);
 
     setNormal();
-    doc.setFontSize(9);
-    doc.text("General Merchant & Commission Agent", 45, 24);
-    doc.text(`${sellerFullAddress}${sellerTaxNumber !== "N/A" ? ` | ${sellerTaxLabel}: ${sellerTaxNumber}` : ""}`, 45, 29);
+    doc.setFontSize(8.5);
+    doc.text("General Merchant & Commission Agent", 45, 22);
+    doc.text(`${sellerFullAddress}`, 45, 26);
+    if (sellerTaxNumber !== "N/A") {
+      doc.text(`${sellerTaxLabel}: ${sellerTaxNumber}`, 45, 30);
+    }
 
     setBold();
     doc.setFontSize(13);
@@ -212,13 +219,13 @@ const PrintLoadingEntry = async (data) => {
     setNormal();
 
     setBold();
-    doc.text(`Challan No:`, margin, y);
+    doc.text(`Challan No:`, margin + 5, y);
     setItalic();
-    doc.text(`${pick(data.billNumber)}`, margin + 28, y);
+    doc.text(`${pick(data.billNumber)}`, margin + 33, y);
     setBold();
-    doc.text(`Date:`, pageWidth - margin - 20, y);
+    doc.text(`Date:`, pageWidth - margin - 25, y);
     setItalic();
-    doc.text(`${formatDate(data.loadingDate)}`, pageWidth - margin, y, {
+    doc.text(`${formatDate(data.loadingDate)}`, pageWidth - margin - 5, y, {
       align: "right",
     });
 
@@ -226,7 +233,7 @@ const PrintLoadingEntry = async (data) => {
     setBold();
     doc.text(`P.O No:`, margin + 5, y);
     setItalic();
-    doc.text(`${pick(data.poNumber)}`, margin + 27, y);
+    doc.text(`${pick(finalPoNumber)}`, margin + 27, y);
 
     y += 8;
     setBold();
@@ -273,10 +280,12 @@ const PrintLoadingEntry = async (data) => {
     doc.text(`From:`, margin + 5, y);
     setItalic();
     doc.text(`${pick(sellerLocation)}`, margin + 23, y);
+
+    y += 8;
     setBold();
-    doc.text(`To:`, margin + 95, y);
+    doc.text(`To:`, margin + 5, y);
     setItalic();
-    doc.text(`${pick(buyerLocation)}`, margin + 105, y);
+    doc.text(`${pick(buyerLocation)}`, margin + 23, y);
 
     y += 8;
     setBold();
