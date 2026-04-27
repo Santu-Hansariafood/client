@@ -102,8 +102,11 @@ const PrintLoadingEntry = async (data) => {
       safeFetch("/seller-company?limit=0"),
       safeFetch("/consignees?limit=0"),
       safeFetch("/transporters?limit=0"),
-    ]);
-  console.log("Data fetch complete.");
+    ]).catch((fetchErr) => {
+      console.error("Failed to fetch additional data:", fetchErr);
+      return [[], [], [], []];
+    });
+  console.log("Data fetch complete.", { sellers: sellers.length, companies: companies.length, consignees: consignees.length, transporters: transporters.length });
 
   const supplierId =
     typeof data.supplier === "object" ? data.supplier?._id : data.supplier;
@@ -255,7 +258,7 @@ const PrintLoadingEntry = async (data) => {
         startY: y + 1.5,
         head: [head],
         body: [body],
-        theme: "plain",
+        theme: "striped",
         headStyles: {
           fillColor: colors,
           textColor: 255,
@@ -267,8 +270,6 @@ const PrintLoadingEntry = async (data) => {
           fontSize: 8.5,
           textColor: 50,
           halign: "center",
-          lineColor: tableBorder,
-          lineWidth: 0.15,
         },
         columnStyles: {
           0: { halign: "left", cellPadding: 3 },
