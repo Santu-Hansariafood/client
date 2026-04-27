@@ -68,9 +68,13 @@ const PrintLoadingEntry = async (data) => {
       }
     };
 
-    const [consignees, transporters] = await Promise.all([
+    const [consignees, transporters, sellers, sellerCompanies, buyers, companies] = await Promise.all([
       safeFetch("/consignees?limit=0"),
       safeFetch("/transporters?limit=0"),
+      safeFetch("/sellers?limit=0"),
+      safeFetch("/seller-company?limit=0"),
+      safeFetch("/buyers?limit=0"),
+      safeFetch("/companies?limit=0"),
     ]);
 
     const consignee =
@@ -84,6 +88,88 @@ const PrintLoadingEntry = async (data) => {
       transporters.find(
         (t) => String(t._id) === String(data.transporterId)
       ) || {};
+
+    const matchingSellerCompany =
+      (sellerCompanies || []).find(
+        (sc) =>
+          sc.companyName &&
+          data.supplierCompany &&
+          sc.companyName.toLowerCase().trim() ===
+            data.supplierCompany.toLowerCase().trim()
+      ) || null;
+
+    const matchingSeller =
+      (sellers || []).find(
+        (s) =>
+          s.companyName &&
+          data.supplierCompany &&
+          s.companyName.toLowerCase().trim() ===
+            data.supplierCompany.toLowerCase().trim()
+      ) || null;
+
+    const sellerGstNo = matchingSellerCompany?.gstNo || matchingSeller?.gstNumber || "";
+    const sellerPanNo = matchingSellerCompany?.panNo || matchingSeller?.panNumber || "";
+    const sellerTaxNumber = sellerGstNo || sellerPanNo || "N/A";
+    const sellerTaxLabel = sellerGstNo ? "GST" : "PAN";
+
+    const sellerFullAddress = matchingSellerCompany
+      ? [
+          matchingSellerCompany.address,
+          matchingSellerCompany.district,
+          matchingSellerCompany.state,
+          matchingSellerCompany.pinNo,
+        ]
+          .filter(Boolean)
+          .join(", ")
+      : (data.supplierAddress || "N/A");
+
+    const sellerLocation = matchingSellerCompany
+      ? [matchingSellerCompany.district, matchingSellerCompany.state]
+          .filter(Boolean)
+          .join(", ")
+      : (matchingSeller?.location || data.from || "N/A");
+
+    const normalizeText = (value) =>
+      String(value || "").trim().toLowerCase();
+
+    const rawBuyerKey = data?.buyerCompany ?? data?.buyer ?? "";
+    const normalizedBuyerKey = normalizeText(rawBuyerKey);
+
+    const matchingBuyerCompany =
+      (companies || []).find((company) => {
+        const idMatch =
+          company?._id &&
+          rawBuyerKey &&
+          String(company._id) === String(rawBuyerKey);
+        const nameMatch =
+          normalizeText(company?.companyName) === normalizedBuyerKey;
+        return idMatch || nameMatch;
+      }) ||
+      (buyers || []).find((buyer) => {
+        const idMatch =
+          buyer?._id &&
+          rawBuyerKey &&
+          String(buyer._id) === String(rawBuyerKey);
+        const nameMatch =
+          normalizeText(buyer?.companyName) === normalizedBuyerKey;
+        return idMatch || nameMatch;
+      }) ||
+      (sellers || []).find((seller) => {
+        const idMatch =
+          seller?._id &&
+          rawBuyerKey &&
+          String(seller._id) === String(rawBuyerKey);
+        const nameMatch =
+          normalizeText(seller?.companyName) === normalizedBuyerKey;
+        return idMatch || nameMatch;
+      }) ||
+      null;
+
+    const buyerLocation = matchingBuyerCompany
+      ? [matchingBuyerCompany.district, matchingBuyerCompany.state]
+          .filter(Boolean)
+          .join(", ")
+      : (data.placeOfDelivery || "N/A");
 
     const consigneeAddress =
       [
@@ -102,16 +188,15 @@ const PrintLoadingEntry = async (data) => {
     }
 
     const sellerCompanyName = data?.supplierCompany || "N/A";
-    const sellerAddress = data?.supplierAddress || "N/A";
 
     setBold();
     doc.setFontSize(16);
-    doc.text(`${sellerCompanyName.toUpperCase()}`, 45, 20);
+    doc.text(`${sellerCompanyName.toUpperCase()}`, 45, 18);
 
     setNormal();
-    doc.setFontSize(10);
-    doc.text("General Merchant & Commission Agent", 45, 26);
-    doc.text(sellerAddress, 45, 31);
+    doc.setFontSize(9);
+    doc.text("General Merchant & Commission Agent", 45, 24);
+    doc.text(`${sellerFullAddress}${sellerTaxNumber !== "N/A" ? ` | ${sellerTaxLabel}: ${sellerTaxNumber}` : ""}`, 45, 29);
 
     setBold();
     doc.setFontSize(13);
@@ -187,11 +272,11 @@ const PrintLoadingEntry = async (data) => {
     setBold();
     doc.text(`From:`, margin + 5, y);
     setItalic();
-    doc.text(`${pick(data.from)}`, margin + 23, y);
+    doc.text(`${pick(sellerLocation)}`, margin + 23, y);
     setBold();
     doc.text(`To:`, margin + 95, y);
     setItalic();
-    doc.text(`${pick(data.placeOfDelivery)}`, margin + 105, y);
+    doc.text(`${pick(buyerLocation)}`, margin + 105, y);
 
     y += 8;
     setBold();
