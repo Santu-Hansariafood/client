@@ -168,42 +168,68 @@ doc.text(`M/S ${sellerCompanyName.toUpperCase()}`, 40, 18);
     y += 12;
 
     // ================= FREIGHT =================
+    const totalFreight = data.totalFreight ? `Rs. ${Number(data.totalFreight).toLocaleString("en-IN")}` : "N/A";
+    const advance = data.advance ? `Rs. ${Number(data.advance).toLocaleString("en-IN")}` : "N/A";
+    const toPayValue = data.totalFreight && data.advance
+      ? `Rs. ${Number(data.totalFreight - data.advance).toLocaleString("en-IN")}`
+      : "N/A";
+
     doc.text("Total Lorry Freight:", margin, y);
+    doc.text(totalFreight, margin + 52, y);
     doc.line(margin + 50, y, pageWidth - margin, y);
 
     y += 8;
     doc.text("Advance:", margin, y);
+    doc.text(advance, margin + 32, y);
     doc.line(margin + 30, y, pageWidth - margin, y);
 
     y += 8;
     doc.text("To Pay:", margin, y);
+    doc.text(toPayValue, margin + 32, y);
     doc.line(margin + 30, y, pageWidth - margin, y);
 
     y += 12;
 
     // ================= DRIVER =================
+    const ownerName = data.ownerName || "N/A";
+    const driverName = data.driverName || "N/A";
+    const driverLicense = data.driverLicense || "N/A";
+    const insuranceNo = data.insuranceNo || "N/A";
+    const ownerMobile = data.ownerMobile || "N/A";
+    const driverPhone = data.driverPhoneNumber || "N/A";
+
     doc.text("Owner's Name:", margin, y);
+    doc.text(ownerName, margin + 42, y);
+    doc.text(`Mob: ${ownerMobile}`, pageWidth / 2 + 20, y);
     doc.line(margin + 40, y, pageWidth - margin / 2, y);
 
     y += 8;
     doc.text("Driver's Name:", margin, y);
+    doc.text(driverName, margin + 42, y);
+    doc.text(`Mob: ${driverPhone}`, pageWidth / 2 + 20, y);
     doc.line(margin + 40, y, pageWidth - margin / 2, y);
 
     y += 8;
     doc.text("Driver Lic No:", margin, y);
+    doc.text(driverLicense, margin + 42, y);
     doc.line(margin + 40, y, pageWidth - margin / 2, y);
 
     y += 8;
     doc.text("Insurance No:", margin, y);
+    doc.text(insuranceNo, margin + 42, y);
     doc.line(margin + 40, y, pageWidth - margin / 2, y);
 
     y += 10;
 
-    doc.text(
-      `Transporter: ${transporter.name || pick(data.addedTransport)}`,
-      margin,
-      y
-    );
+    const transporterName = transporter.name || pick(data.addedTransport);
+    const transporterAddress = transporter.address || "N/A";
+
+    doc.text(`Transporter: ${transporterName}`, margin, y);
+
+    y += 8;
+    doc.text(`Address: ${transporterAddress}`, margin, y);
+
+    y += 12;
 
     // ================= SIGNATURE =================
     const signY = pageHeight - 35;
