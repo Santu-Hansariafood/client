@@ -149,42 +149,67 @@ const ListLoadingEntry = () => {
       setLoading(true);
       const entriesRes = await api.get("/loading-entries", {
         params: {
-          page: currentPage,
-          limit: itemsPerPage,
-          search: debouncedFilters.search,
-          saudaNo: debouncedFilters.saudaNo,
-          lorryNumber: debouncedFilters.lorryNumber,
+          page: 0,
+          limit: 0,
           role: userRole,
           mobile: mobile,
         },
       });
 
-      const entriesPayload = entriesRes.data || {};
-      const entriesData = Array.isArray(entriesPayload.data)
-        ? entriesPayload.data
-        : Array.isArray(entriesPayload)
-          ? entriesPayload
-          : [];
+      let entriesData = [];
+      if (Array.isArray(entriesRes.data)) {
+        entriesData = entriesRes.data;
+      } else if (entriesRes.data?.data && Array.isArray(entriesRes.data.data)) {
+        entriesData = entriesRes.data.data;
+      }
 
-      setTotalItems(entriesPayload.total || 0);
-      setTotalPages(entriesPayload.totalPages || 1);
       setLoadingEntries(entriesData);
-      setFilteredEntries(entriesData);
     } catch (error) {
       console.error("Error fetching entries:", error);
       toast.error("Failed to fetch loading entries");
     } finally {
       setLoading(false);
     }
-  }, [
-    currentPage,
-    itemsPerPage,
-    debouncedFilters.search,
-    debouncedFilters.saudaNo,
-    debouncedFilters.lorryNumber,
-    userRole,
-    mobile,
-  ]);
+  }, [userRole, mobile]);
+
+  useEffect(() => {
+    let filtered = [...loadingEntries];
+
+    if (debouncedFilters.search) {
+      const searchLower = debouncedFilters.search.toLowerCase();
+      filtered = filtered.filter((entry) =>
+        (entry.supplierCompany && entry.supplierCompany.toLowerCase().includes(searchLower)) ||
+        (entry.consignee && entry.consignee.toLowerCase().includes(searchLower)) ||
+        (entry.saudaNo && entry.saudaNo.toLowerCase().includes(searchLower)) ||
+        (entry.lorryNumber && entry.lorryNumber.toLowerCase().includes(searchLower)) ||
+        (entry.billNumber && entry.billNumber.toLowerCase().includes(searchLower)) ||
+        (entry.commodity && entry.commodity.toLowerCase().includes(searchLower))
+      );
+    }
+
+    if (debouncedFilters.saudaNo) {
+      const saudaLower = debouncedFilters.saudaNo.toLowerCase();
+      filtered = filtered.filter((entry) =>
+        entry.saudaNo && entry.saudaNo.toLowerCase().includes(saudaLower)
+      );
+    }
+
+    if (debouncedFilters.lorryNumber) {
+      const lorryLower = debouncedFilters.lorryNumber.toLowerCase();
+      filtered = filtered.filter((entry) =>
+        entry.lorryNumber && entry.lorryNumber.toLowerCase().includes(lorryLower)
+      );
+    }
+
+    filtered.sort((a, b) => {
+      const aS = String(a.saudaNo || "");
+      const bS = String(b.saudaNo || "");
+      return bS.localeCompare(aS, undefined, { numeric: true });
+    });
+
+    setFilteredEntries(filtered);
+    setTotalItems(filtered.length);
+  }, [loadingEntries, debouncedFilters]);
 
   useEffect(() => {
     fetchStaticData();
@@ -359,10 +384,13 @@ const ListLoadingEntry = () => {
     "Download",
   ];
 
-  const rows = useMemo(
-    () =>
-      filteredEntries.map((entry, index) => [
-        (currentPage - 1) * itemsPerPage + index + 1,
+  const rows = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    const end = start + itemsPerPage;
+    const paginatedEntries = filteredEntries.slice(start, end);
+
+    return paginatedEntries.map((entry, index) => [
+      start + index + 1,
         formatDate(entry.loadingDate),
         entry.saudaNo || "N/A",
         entry.supplierCompany || "N/A",
@@ -427,17 +455,17 @@ const ListLoadingEntry = () => {
         >
           <MdDownload size={18} />
         </button>,
-      ]),
-    [
-      filteredEntries,
-      currentPage,
-      itemsPerPage,
-      alreadyLoadedMap,
-      statusMap,
-      transporterMap,
-      userRole,
-      paymentTermsMap,
-      buyerMap,
+      ]);
+  }, [
+    filteredEntries,
+    currentPage,
+    itemsPerPage,
+    alreadyLoadedMap,
+    statusMap,
+    transporterMap,
+    userRole,
+    paymentTermsMap,
+    buyerMap,
     ],
   );
 
