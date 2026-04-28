@@ -18,6 +18,7 @@ const Pagination = lazy(
 const DataDropdown = lazy(
   () => import("../../../common/DataDropdown/DataDropdown"),
 );
+const FileUpload = lazy(() => import("../../../common/FileUpload/FileUpload"));
 
 const formatDate = (date) => {
   if (!date) return "N/A";
@@ -31,6 +32,7 @@ const ListLoadingEntry = () => {
   const [filteredEntries, setFilteredEntries] = useState([]);
   const [sellerMap, setSellerMap] = useState({});
   const [buyerMap, setBuyerMap] = useState({});
+  const [paymentTermsMap, setPaymentTermsMap] = useState({});
   const [statusMap, setStatusMap] = useState({});
   const [alreadyLoadedMap, setAlreadyLoadedMap] = useState({});
   const [transporters, setTransporters] = useState([]);
@@ -86,7 +88,10 @@ const ListLoadingEntry = () => {
         Object.fromEntries(sellersData.map((s) => [s._id, s.sellerName])),
       );
       setBuyerMap(
-        Object.fromEntries(ordersData.map((o) => [o.saudaNo, o.buyer])),
+        Object.fromEntries(ordersData.map((o) => [o.saudaNo, o.buyerCompany])),
+      );
+      setPaymentTermsMap(
+        Object.fromEntries(ordersData.map((o) => [o.saudaNo, o.paymentTerms || ""])),
       );
       setStatusMap(
         Object.fromEntries(
@@ -219,6 +224,14 @@ const ListLoadingEntry = () => {
       dateOfIssue: entry.dateOfIssue
         ? new Date(entry.dateOfIssue).toISOString().slice(0, 10)
         : "",
+      unloadingDate: entry.unloadingDate
+        ? new Date(entry.unloadingDate).toISOString().slice(0, 10)
+        : "",
+      documents: entry.documents || {
+        kantaSlip: null,
+        unloadingChallan: null,
+        partyBillCopy: null,
+      },
     });
     setPopupType("edit");
   };
@@ -240,6 +253,9 @@ const ListLoadingEntry = () => {
           : null,
         dateOfIssue: editEntry.dateOfIssue
           ? new Date(editEntry.dateOfIssue).toISOString()
+          : null,
+        unloadingDate: editEntry.unloadingDate
+          ? new Date(editEntry.unloadingDate).toISOString()
           : null,
       };
 
@@ -322,6 +338,8 @@ const ListLoadingEntry = () => {
     "Loading Date",
     "Sauda No",
     "Seller Company",
+    "Buyer Company",
+    "Payment Terms",
     "Loading Weight",
     "Unloading Weight",
     "Already Loaded",
@@ -348,6 +366,8 @@ const ListLoadingEntry = () => {
         formatDate(entry.loadingDate),
         entry.saudaNo || "N/A",
         entry.supplierCompany || "N/A",
+        buyerMap[entry.saudaNo] || entry.buyerCompany || "N/A",
+        paymentTermsMap[entry.saudaNo] || "N/A",
         entry.loadingWeight,
         entry.unloadingWeight || 0,
         (alreadyLoadedMap[entry.saudaNo] || 0).toFixed(2),
@@ -416,6 +436,8 @@ const ListLoadingEntry = () => {
       statusMap,
       transporterMap,
       userRole,
+      paymentTermsMap,
+      buyerMap,
     ],
   );
 
@@ -514,6 +536,10 @@ const ListLoadingEntry = () => {
                         <span className="text-slate-500">Seller:</span>
                         <span className="font-semibold text-slate-800">
                           {sellerMap[selectedEntry.supplier] || "N/A"}
+                        </span>
+                        <span className="text-slate-500">Payment Terms:</span>
+                        <span className="font-semibold text-slate-800">
+                          {paymentTermsMap[selectedEntry.saudaNo] || "N/A"}
                         </span>
                         <span className="text-slate-500">Commodity:</span>
                         <span className="font-semibold text-slate-800">
@@ -639,6 +665,17 @@ const ListLoadingEntry = () => {
                       </div>
                       <div>
                         <label className="block text-sm font-semibold text-slate-700 mb-1">
+                          Payment Terms
+                        </label>
+                        <input
+                          type="text"
+                          value={paymentTermsMap[editEntry.saudaNo] || "N/A"}
+                          disabled
+                          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm bg-slate-50 text-slate-700 cursor-not-allowed"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-slate-700 mb-1">
                           Bill No
                         </label>
                         <input
@@ -749,6 +786,18 @@ const ListLoadingEntry = () => {
                       </div>
                       <div>
                         <label className="block text-sm font-semibold text-slate-700 mb-1">
+                          Unloading Date
+                        </label>
+                        <input
+                          type="date"
+                          name="unloadingDate"
+                          value={editEntry.unloadingDate || ""}
+                          onChange={handleEditFieldChange}
+                          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-slate-700 mb-1">
                           Freight Rate
                         </label>
                         <input
@@ -808,6 +857,96 @@ const ListLoadingEntry = () => {
                         />
                       </div>
                     </div>
+
+                    {(editEntry.unloadingWeight && editEntry.unloadingDate) || 
+                      (editEntry.documents?.kantaSlip || editEntry.documents?.unloadingChallan || editEntry.documents?.partyBillCopy) ? (
+                      <div className="border-t border-slate-200 pt-6">
+                        <h4 className="text-base font-bold text-slate-800 mb-4">Document Upload</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          <FileUpload
+                            label="1. Kanta Slip"
+                            accept="image/*,.pdf"
+                            minWidth={800}
+                            minHeight={600}
+                            currentUrl={editEntry.documents?.kantaSlip}
+                            onFileChange={(url) => {
+                              setEditEntry((prev) => ({
+                                ...prev,
+                                documents: {
+                                  ...prev.documents,
+                                  kantaSlip: url,
+                                },
+                              }));
+                            }}
+                            onFileRemove={() => {
+                              setEditEntry((prev) => ({
+                                ...prev,
+                                documents: {
+                                  ...prev.documents,
+                                  kantaSlip: "",
+                                },
+                              }));
+                            }}
+                          />
+                          <FileUpload
+                            label="2. Unloading Challan"
+                            accept="image/*,.pdf"
+                            minWidth={800}
+                            minHeight={600}
+                            currentUrl={editEntry.documents?.unloadingChallan}
+                            onFileChange={(url) => {
+                              setEditEntry((prev) => ({
+                                ...prev,
+                                documents: {
+                                  ...prev.documents,
+                                  unloadingChallan: url,
+                                },
+                              }));
+                            }}
+                            onFileRemove={() => {
+                              setEditEntry((prev) => ({
+                                ...prev,
+                                documents: {
+                                  ...prev.documents,
+                                  unloadingChallan: "",
+                                },
+                              }));
+                            }}
+                          />
+                          <FileUpload
+                            label="3. Party Bill Copy"
+                            accept="image/*,.pdf"
+                            minWidth={800}
+                            minHeight={600}
+                            currentUrl={editEntry.documents?.partyBillCopy}
+                            onFileChange={(url) => {
+                              setEditEntry((prev) => ({
+                                ...prev,
+                                documents: {
+                                  ...prev.documents,
+                                  partyBillCopy: url,
+                                },
+                              }));
+                            }}
+                            onFileRemove={() => {
+                              setEditEntry((prev) => ({
+                                ...prev,
+                                documents: {
+                                  ...prev.documents,
+                                  partyBillCopy: "",
+                                },
+                              }));
+                            }}
+                          />
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="border-t border-slate-200 pt-6">
+                        <p className="text-sm text-slate-500 text-center py-4">
+                          Please fill in both Unloading Weight and Unloading Date to enable document upload.
+                        </p>
+                      </div>
+                    )}
 
                     <div className="flex justify-end gap-3 pt-4">
                       <button

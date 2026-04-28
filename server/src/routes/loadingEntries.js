@@ -348,7 +348,7 @@ router.get("/", async (req, res) => {
     const finalQuery = andParts.length > 1 ? { $and: andParts } : andParts[0] || {};
 
     const items = await LoadingEntry.find(finalQuery)
-      .sort({ loadingDate: -1, createdAt: -1 })
+      .sort({ saudaNo: -1 })
       .skip((page - 1) * limit)
       .limit(limit)
       .populate("supplier", "sellerName")
@@ -465,7 +465,7 @@ router.get("/export/excel", async (req, res) => {
     const finalQuery = andParts.length > 1 ? { $and: andParts } : andParts[0] || {};
 
     const items = await LoadingEntry.find(finalQuery)
-      .sort({ loadingDate: -1, createdAt: -1 })
+      .sort({ saudaNo: -1 })
       .populate("supplier", "sellerName")
       .lean();
 

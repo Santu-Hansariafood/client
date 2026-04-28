@@ -124,7 +124,7 @@ router.get("/", async (req, res) => {
 
     if (exportAll) {
       const items = await SelfOrder.find(query)
-        .sort({ poDate: -1, createdAt: -1 })
+        .sort({ saudaNo: -1 })
         .populate("supplier", "sellerName")
         .lean();
       return res.json(items);
@@ -132,7 +132,7 @@ router.get("/", async (req, res) => {
 
     if (page > 0 && limit > 0) {
       const items = await SelfOrder.find(query)
-        .sort({ poDate: -1, createdAt: -1 })
+        .sort({ saudaNo: -1 })
         .skip((page - 1) * limit)
         .limit(limit)
         .populate("supplier", "sellerName")
@@ -142,7 +142,7 @@ router.get("/", async (req, res) => {
     }
 
     const items = await SelfOrder.find(query)
-      .sort({ poDate: -1, createdAt: -1 })
+      .sort({ saudaNo: -1 })
       .limit(100)
       .populate("supplier", "sellerName")
       .lean();
@@ -355,11 +355,10 @@ router.get("/export/excel", async (req, res) => {
     }
 
     let items = await SelfOrder.find(query)
-      .sort({ poDate: -1, createdAt: -1 })
+      .sort({ saudaNo: -1 })
       .populate("supplier", "sellerName")
       .lean();
 
-    // Additional filtering for Buyer/Seller roles if needed (mirroring frontend logic)
     if (userRole === "Buyer" && mobile) {
       // Note: In a real scenario, you'd fetch the buyer's company IDs here
       // For now, we assume the query might need more server-side role logic if not handled by client

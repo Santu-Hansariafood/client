@@ -29,8 +29,14 @@ const loadingEntrySchema = new mongoose.Schema(
     bags: { type: Number, default: 0 },
     deliveryDate: { type: Date },
     unloadingWeight: { type: Number, default: 0 },
+    unloadingDate: { type: Date },
     buyerBrokerage: { type: Number, default: 0 },
     sellerBrokerage: { type: Number, default: 0 },
+    documents: {
+      kantaSlip: { type: String, default: "" },
+      unloadingChallan: { type: String, default: "" },
+      partyBillCopy: { type: String, default: "" },
+    },
   },
   { timestamps: true },
 );

@@ -35,6 +35,7 @@ import loadingEntryRoutes from "./routes/loadingEntries.js";
 import vendorCodeRoutes from "./routes/vendorCodes.js";
 import expenseCategoryRoutes from "./routes/expenseCategories.js";
 import expenseRequestRoutes from "./routes/expenseRequests.js";
+import uploadRoutes from "./routes/uploads.js";
 import { startNotificationCleanup } from "./lib/scheduler.js";
 import http from "http";
 import { initSocket } from "./lib/socket.js";
@@ -78,14 +79,11 @@ app.use(
 app.use(express.json({ limit: "5mb" }));
 app.use(express.urlencoded({ extended: true, limit: "5mb" }));
 
-// Static Files Serving
-// Serve public folder from root
 app.use("/logo", express.static(path.join(__dirname, "../../public/logo")));
 app.use("/icons", express.static(path.join(__dirname, "../../public/icons")));
 app.use("/images", express.static(path.join(__dirname, "../../public/images")));
 app.use("/teams", express.static(path.join(__dirname, "../../public/teams")));
 
-// Performance Monitoring
 app.use((req, res, next) => {
   const start = Date.now();
   res.on("finish", () => {
@@ -127,13 +125,12 @@ app.use("/api/loading-entries", cache(5), authJwt, loadingEntryRoutes);
 app.use("/api/vendor-codes", cache(5), authJwt, vendorCodeRoutes);
 app.use("/api/expense-categories", authJwt, expenseCategoryRoutes);
 app.use("/api/expense-requests", authJwt, expenseRequestRoutes);
+app.use("/api/uploads", authJwt, uploadRoutes);
 
-// Production Serving
 if (process.env.NODE_ENV === "production") {
   const distPath = path.join(__dirname, "../../dist");
   app.use(express.static(distPath));
   app.get("*", (req, res) => {
-    // Only handle non-API requests
     if (!req.path.startsWith("/api/")) {
       res.sendFile(path.join(distPath, "index.html"));
     } else {
@@ -148,7 +145,7 @@ const io = initSocket(server);
 
 const start = async () => {
   await connect();
-  startNotificationCleanup(12); // Daily cleanup at 12:00 PM
+  startNotificationCleanup(12);
   server.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
     console.log(`CORS allowed origins: ${process.env.CORS_ORIGIN || "*"}`);
