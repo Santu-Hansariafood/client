@@ -469,11 +469,11 @@ router.get("/export/excel", async (req, res) => {
       .populate("supplier", "sellerName")
       .lean();
 
-    // Fetch buyerCompany from SelfOrder for items that don't have it (backwards compatibility)
+    // Fetch buyerCompany and paymentTerms from SelfOrder
     const saudaNos = [...new Set(items.map(i => i.saudaNo).filter(Boolean))];
-    const selfOrders = await SelfOrder.find({ saudaNo: { $in: saudaNos } }).select("saudaNo buyerCompany").lean();
-    const saudaToBuyerCompany = selfOrders.reduce((acc, so) => {
-      acc[so.saudaNo] = so.buyerCompany;
+    const selfOrders = await SelfOrder.find({ saudaNo: { $in: saudaNos } }).select("saudaNo buyerCompany paymentTerms").lean();
+    const saudaData = selfOrders.reduce((acc, so) => {
+      acc[so.saudaNo] = { buyerCompany: so.buyerCompany, paymentTerms: so.paymentTerms };
       return acc;
     }, {});
 
@@ -492,8 +492,7 @@ router.get("/export/excel", async (req, res) => {
       { header: "Loading Weight", key: "loadingWeight", width: 15 },
       { header: "Unloading Weight", key: "unloadingWeight", width: 15 },
       { header: "Bags", key: "bags", width: 10 },
-      { header: "Driver Name", key: "driverName", width: 20 },
-      { header: "Driver Phone", key: "driverPhoneNumber", width: 15 },
+      { header: "Payment Terms", key: "paymentTerms", width: 20 },
       { header: "Bill Number", key: "billNumber", width: 20 },
     ];
 
@@ -505,15 +504,14 @@ router.get("/export/excel", async (req, res) => {
         saudaNo: item.saudaNo || "N/A",
         supplierName: item.supplier?.sellerName || "Unknown Supplier",
         supplierCompany: item.supplierCompany || "N/A",
-        buyerCompany: item.buyerCompany || saudaToBuyerCompany[item.saudaNo] || "N/A",
+        buyerCompany: item.buyerCompany || saudaData[item.saudaNo]?.buyerCompany || "N/A",
         consignee: item.consignee || "N/A",
         commodity: item.commodity || "N/A",
         lorryNumber: item.lorryNumber || "N/A",
         loadingWeight: item.loadingWeight || 0,
         unloadingWeight: item.unloadingWeight || 0,
         bags: item.bags || 0,
-        driverName: item.driverName || "N/A",
-        driverPhoneNumber: item.driverPhoneNumber || "N/A",
+        paymentTerms: saudaData[item.saudaNo]?.paymentTerms || "N/A",
         billNumber: item.billNumber || "N/A",
       });
     });

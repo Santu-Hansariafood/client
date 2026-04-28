@@ -136,8 +136,7 @@ const ViewBidPopup = ({ bidId, onClose }) => {
       );
       doc.line(15, finalY + 18, 195, finalY + 18);
 
-      const pdfBlob = doc.output("blob");
-      await downloadFile(pdfBlob, `Bid_${bidDetails.group || "Details"}.pdf`);
+      await downloadFile(doc, `Bid_${bidDetails.group || "Details"}.pdf`);
       toast.success("PDF downloaded successfully", { id: toastId });
     } catch (err) {
       console.error("PDF Generation Error:", err);

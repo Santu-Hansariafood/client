@@ -95,6 +95,7 @@ const PendingLoadingList = () => {
           "Pending Quantity": pendingQuantity,
           "Loaded Quantity": loadedQuantity.toFixed(2),
           "Rate": item.rate || 0,
+          "Payment Terms": item.paymentTerms || "N/A",
         };
       });
 
@@ -104,7 +105,7 @@ const PendingLoadingList = () => {
         return;
       }
 
-      await generateExcel(excelRows, "PendingLoadingEntries.xlsx");
+      await generateExcel(excelRows, "PendingSauda.xlsx");
       toast.dismiss(toastId);
       toast.success("Excel downloaded successfully");
     } catch (error) {
@@ -125,6 +126,7 @@ const PendingLoadingList = () => {
     "Pending Qty",
     "Loaded Qty",
     "Rate",
+    "Payment Terms",
     "Status"
   ];
 
@@ -150,6 +152,7 @@ const PendingLoadingList = () => {
       <span key={`pending-${item._id}`} className="text-amber-600 font-bold">{pendingQuantity}</span>,
       loadedQuantity.toFixed(2),
       item.rate || 0,
+      item.paymentTerms || "N/A",
       <span
         key={`status-${item._id}`}
         className="px-2 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700"
@@ -162,8 +165,8 @@ const PendingLoadingList = () => {
   return (
     <Suspense fallback={<Loading />}>
       <AdminPageShell
-        title="Pending Loading List"
-        subtitle="Manage pending loading entries by seller and date"
+        title="Pending Sauda"
+        subtitle="Manage pending saudas by seller and date"
         icon={FaTruckLoading}
         noContentCard
       >
