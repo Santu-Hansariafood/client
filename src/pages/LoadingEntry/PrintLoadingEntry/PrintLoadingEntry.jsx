@@ -384,12 +384,6 @@ const PrintLoadingEntry = async (data) => {
       doc.text(line, margin + 35, y + index * 4);
     });
     
-    y += 6;
-    setBold();
-    doc.text(`Mobile:`, margin + 5, y);
-    setNormal();
-    doc.text(`${consigneeMobile}`, margin + 35, y);
-
     y += 20;
     
     // Description of Goods section
