@@ -315,7 +315,51 @@ const PrintLoadingEntry = async (data) => {
 
     let y = 58;
     
-    // Buyer Account box
+    // Challan details box (first)
+    doc.setLineWidth(0.2);
+    doc.rect(margin + 2, y - 5, pageWidth - margin * 2 - 4, 10);
+    doc.setFontSize(9);
+    setBold();
+    doc.text(`Challan No:`, margin + 5, y);
+    setNormal();
+    doc.text(`${pick(data.billNumber)}`, margin + 30, y);
+    setBold();
+    doc.text(`Date:`, pageWidth - margin - 50, y);
+    setNormal();
+    doc.text(`${formatDate(data.loadingDate)}`, pageWidth - margin - 35, y);
+
+    y += 12;
+    
+    // Delivery Address section (second)
+    doc.setLineWidth(0.2);
+    doc.rect(margin + 2, y - 5, pageWidth - margin * 2 - 4, 28);
+    setBold();
+    doc.setFontSize(9);
+    doc.text(`DELIVERY ADDRESS`, margin + 5, y);
+    y += 5;
+    setBold();
+    doc.text(`Consignee:`, margin + 5, y);
+    setNormal();
+    doc.text(`${consignee.name || pick(data.consignee)}`, margin + 30, y);
+
+    y += 4;
+    setBold();
+    doc.text(`Address:`, margin + 5, y);
+    setNormal();
+    const cAddrLines = wrapText(consigneeAddress, 100);
+    cAddrLines.slice(0, 2).forEach((line, index) => {
+      doc.text(line, margin + 30, y + index * 4);
+    });
+
+    y += 4;
+    setBold();
+    doc.text(`Mobile:`, margin + 5, y);
+    setNormal();
+    doc.text(`${consigneeMobile}`, margin + 30, y);
+
+    y += 12;
+    
+    // Buyer Account box (third)
     doc.setLineWidth(0.2);
     doc.rect(margin + 2, y - 5, pageWidth - margin * 2 - 4, 35);
     setBold();
@@ -345,70 +389,6 @@ const PrintLoadingEntry = async (data) => {
     doc.text(`Mobile:`, margin + 5, y);
     setNormal();
     doc.text(`${consigneeMobile}`, margin + 35, y);
-
-    y += 11;
-    
-    // Challan details box
-    doc.setLineWidth(0.2);
-    doc.rect(margin + 2, y - 5, pageWidth - margin * 2 - 4, 26);
-
-    doc.setFontSize(9);
-    setBold();
-    doc.text(`Challan No:`, margin + 5, y);
-    setNormal();
-    doc.text(`${pick(data.billNumber)}`, margin + 30, y);
-
-    setBold();
-    doc.text(`Date:`, pageWidth - margin - 50, y);
-    setNormal();
-    doc.text(`${formatDate(data.loadingDate)}`, pageWidth - margin - 35, y);
-
-    y += 5;
-    setBold();
-    doc.text(`Buyer PO No:`, margin + 5, y);
-    setNormal();
-    doc.text(`${pick(finalPoNumber)}`, margin + 30, y);
-
-    y += 5;
-    setBold();
-    doc.text(`A/c Broker:`, margin + 5, y);
-    setNormal();
-    doc.text(`Hansaria Food Private Limited`, margin + 30, y);
-
-    y += 5;
-    setBold();
-    doc.text(`HFPL Sauda No:`, margin + 5, y);
-    setNormal();
-    doc.text(`${pick(data.saudaNo)}`, margin + 30, y);
-
-    y += 14;
-    
-    // Delivery Address section
-    doc.setLineWidth(0.2);
-    doc.rect(margin + 2, y - 5, pageWidth - margin * 2 - 4, 28);
-    setBold();
-    doc.setFontSize(9);
-    doc.text(`DELIVERY ADDRESS`, margin + 5, y);
-    y += 5;
-    setBold();
-    doc.text(`Consignee:`, margin + 5, y);
-    setNormal();
-    doc.text(`${consignee.name || pick(data.consignee)}`, margin + 30, y);
-
-    y += 4;
-    setBold();
-    doc.text(`Address:`, margin + 5, y);
-    setNormal();
-    const cAddrLines = wrapText(consigneeAddress, 100);
-    cAddrLines.slice(0, 2).forEach((line, index) => {
-      doc.text(line, margin + 30, y + index * 4);
-    });
-
-    y += 4;
-    setBold();
-    doc.text(`Mobile:`, margin + 5, y);
-    setNormal();
-    doc.text(`${consigneeMobile}`, margin + 30, y);
 
     y += 12;
     
