@@ -159,6 +159,8 @@ router.get("/pending/list", async (req, res) => {
     const search = (req.query.search || "").trim();
     const startDate = req.query.startDate;
     const endDate = req.query.endDate;
+    const buyerCompany = req.query.buyerCompany;
+    const sellerCompany = req.query.sellerCompany;
 
     let query = {
       status: "active",
@@ -181,6 +183,20 @@ router.get("/pending/list", async (req, res) => {
           ],
         },
       ];
+    }
+
+    if (buyerCompany) {
+      if (!query.$and) {
+        query.$and = [];
+      }
+      query.$and.push({ buyerCompany: buyerCompany });
+    }
+
+    if (sellerCompany) {
+      if (!query.$and) {
+        query.$and = [];
+      }
+      query.$and.push({ supplierCompany: sellerCompany });
     }
 
     if (startDate || endDate) {

@@ -26,6 +26,36 @@ const PendingLoadingList = () => {
   const [searchInput, setSearchInput] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+  const [buyerCompany, setBuyerCompany] = useState("");
+  const [sellerCompany, setSellerCompany] = useState("");
+  const [buyerCompanies, setBuyerCompanies] = useState([]);
+  const [sellerCompanies, setSellerCompanies] = useState([]);
+  const [loadingCompanies, setLoadingCompanies] = useState(false);
+
+  const fetchBuyerAndSellerCompanies = useCallback(async () => {
+    setLoadingCompanies(true);
+    try {
+      const [buyersRes, sellersRes] = await Promise.all([
+        axios.get("/companies?limit=0"),
+        axios.get("/seller-company?limit=0"),
+      ]);
+      
+      const buyerCompanyNames = (buyersRes.data?.data || buyersRes.data || [])
+        .map(c => c.companyName)
+        .filter(Boolean);
+      
+      const sellerCompanyNames = (sellersRes.data?.data || sellersRes.data || [])
+        .map(c => c.companyName)
+        .filter(Boolean);
+      
+      setBuyerCompanies([...new Set(buyerCompanyNames)]);
+      setSellerCompanies([...new Set(sellerCompanyNames)]);
+    } catch (error) {
+      console.error("Error fetching companies:", error);
+    } finally {
+      setLoadingCompanies(false);
+    }
+  }, []);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -37,6 +67,8 @@ const PendingLoadingList = () => {
           search: searchInput,
           startDate,
           endDate,
+          buyerCompany,
+          sellerCompany,
         },
       });
       setData(response.data.data || []);
@@ -47,7 +79,11 @@ const PendingLoadingList = () => {
     } finally {
       setLoading(false);
     }
-  }, [currentPage, itemsPerPage, searchInput, startDate, endDate]);
+  }, [currentPage, itemsPerPage, searchInput, startDate, endDate, buyerCompany, sellerCompany]);
+
+  useEffect(() => {
+    fetchBuyerAndSellerCompanies();
+  }, [fetchBuyerAndSellerCompanies]);
 
   useEffect(() => {
     fetchData();
@@ -68,6 +104,8 @@ const PendingLoadingList = () => {
           search: searchInput,
           startDate,
           endDate,
+          buyerCompany,
+          sellerCompany,
         },
       });
       
@@ -173,7 +211,7 @@ const PendingLoadingList = () => {
         <div className="max-w-7xl mx-auto space-y-6">
           <div className="rounded-2xl border border-emerald-100 bg-white shadow-lg p-4 sm:p-6">
             <form onSubmit={handleSearch} className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
                 <div className="md:col-span-1">
                   <label className="block text-sm font-semibold text-slate-700 mb-1">Search Seller/Buyer/Sauda</label>
                   <div className="relative">
@@ -186,6 +224,32 @@ const PendingLoadingList = () => {
                       className="w-full pl-10 pr-4 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-emerald-400/50 outline-none transition"
                     />
                   </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-1">Seller Company</label>
+                  <select
+                    value={sellerCompany}
+                    onChange={(e) => setSellerCompany(e.target.value)}
+                    className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-emerald-400/50 outline-none transition"
+                  >
+                    <option value="">All</option>
+                    {sellerCompanies.map((company) => (
+                      <option key={company} value={company}>{company}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-1">Buyer Company</label>
+                  <select
+                    value={buyerCompany}
+                    onChange={(e) => setBuyerCompany(e.target.value)}
+                    className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-emerald-400/50 outline-none transition"
+                  >
+                    <option value="">All</option>
+                    {buyerCompanies.map((company) => (
+                      <option key={company} value={company}>{company}</option>
+                    ))}
+                  </select>
                 </div>
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-1">Start Date</label>

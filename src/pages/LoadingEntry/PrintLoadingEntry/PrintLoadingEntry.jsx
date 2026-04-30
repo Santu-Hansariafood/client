@@ -267,14 +267,7 @@ const PrintLoadingEntry = async (data) => {
       "N/A";
 
     if (logo64) {
-      doc.addImage(
-        logo64,
-        "PNG",
-        pageWidth - margin - 35,
-        12,
-        30,
-        22,
-      );
+      doc.addImage(logo64, "PNG", pageWidth - margin - 35, 12, 30, 22);
     }
 
     const sellerCompanyName = data?.supplierCompany || "N/A";
@@ -314,8 +307,7 @@ const PrintLoadingEntry = async (data) => {
     doc.rect(margin, 10, pageWidth - margin * 2, pageHeight - 18);
 
     let y = 58;
-    
-    // Challan details box (first)
+
     doc.setLineWidth(0.2);
     doc.rect(margin + 2, y - 5, pageWidth - margin * 2 - 4, 10);
     doc.setFontSize(9);
@@ -329,8 +321,7 @@ const PrintLoadingEntry = async (data) => {
     doc.text(`${formatDate(data.loadingDate)}`, pageWidth - margin - 35, y);
 
     y += 15;
-    
-    // Delivery Address section (second)
+
     doc.setLineWidth(0.2);
     doc.rect(margin + 2, y - 5, pageWidth - margin * 2 - 4, 28);
     setBold();
@@ -358,8 +349,7 @@ const PrintLoadingEntry = async (data) => {
     doc.text(`${consigneeMobile}`, margin + 30, y);
 
     y += 20;
-    
-    // Buyer Account box (third)
+
     doc.setLineWidth(0.2);
     doc.rect(margin + 2, y - 5, pageWidth - margin * 2 - 4, 35);
     setBold();
@@ -374,7 +364,7 @@ const PrintLoadingEntry = async (data) => {
     buyerNameLines.slice(0, 1).forEach((line, index) => {
       doc.text(line, margin + 35, y + index * 4);
     });
-    
+
     y += 6;
     setBold();
     doc.text(`Address:`, margin + 5, y);
@@ -383,10 +373,9 @@ const PrintLoadingEntry = async (data) => {
     buyerAddrLines.slice(0, 1).forEach((line, index) => {
       doc.text(line, margin + 35, y + index * 4);
     });
-    
+
     y += 25;
-    
-    // Description of Goods section
+
     doc.rect(margin + 2, y - 5, pageWidth - margin * 2 - 4, 13);
     setBold();
     doc.setFontSize(9);
@@ -407,8 +396,7 @@ const PrintLoadingEntry = async (data) => {
     doc.text(`${pick(data.loadingWeight)} Tons`, margin + 125, y);
 
     y += 15;
-    
-    // Route & Vehicle Details section
+
     doc.rect(margin + 2, y - 5, pageWidth - margin * 2 - 4, 78);
     setBold();
     doc.setFontSize(9);
@@ -456,7 +444,7 @@ const PrintLoadingEntry = async (data) => {
     });
 
     y += 20;
-    
+
     doc.rect(margin + 2, y - 5, pageWidth - margin * 2 - 4, 25);
     setBold();
     doc.setFontSize(9);
