@@ -299,37 +299,39 @@ const PrintLoadingEntry = async (data) => {
     let y = 58;
 
     doc.setLineWidth(0.2);
-    doc.rect(margin + 2, y - 5, pageWidth - margin * 2 - 4, 25);
+    doc.rect(margin + 2, y - 5, pageWidth - margin * 2 - 4, 35);
     doc.setFontSize(9);
     
     setBold();
-    doc.text(`Broker:`, margin + 5, y);
+    doc.text(`HFPL Sauda No:`, margin + 5, y);
     setNormal();
-    doc.text(`Hansaria Food Private Limited`, margin + 25, y);
+    doc.text(`${pick(data.saudaNo)}`, margin + 40, y);
     
     setBold();
-    doc.text(`HFPL Sauda No:`, margin + 100, y);
+    doc.text(`Buyer Po No:`, margin + 100, y);
     setNormal();
-    doc.text(`${pick(data.saudaNo)}`, margin + 135, y);
+    doc.text(`${pick(sauda.poNumber || data.poNumber)}`, margin + 135, y);
     
-    setBold();
-    doc.text(`Buyer Po No:`, pageWidth - margin - 70, y);
-    setNormal();
-    doc.text(`${pick(sauda.poNumber || data.poNumber)}`, pageWidth - margin - 25, y);
-    
-    y += 6;
+    y += 7;
     
     setBold();
     doc.text(`Challan No:`, margin + 5, y);
     setNormal();
-    doc.text(`${pick(data.billNumber)}`, margin + 30, y);
+    doc.text(`${pick(data.billNumber)}`, margin + 35, y);
     
     setBold();
-    doc.text(`Date:`, pageWidth - margin - 50, y);
+    doc.text(`Date:`, margin + 100, y);
     setNormal();
-    doc.text(`${formatDate(data.loadingDate)}`, pageWidth - margin - 35, y);
+    doc.text(`${formatDate(data.loadingDate)}`, margin + 120, y);
+    
+    y += 7;
+    
+    setBold();
+    doc.text(`Broker:`, pageWidth / 2, y, { align: "center" });
+    setNormal();
+    doc.text(`Hansaria Food Private Limited`, pageWidth / 2, y + 4, { align: "center" });
 
-    y += 17;
+    y += 22;
 
     doc.setLineWidth(0.2);
     doc.rect(margin + 2, y - 5, pageWidth - margin * 2 - 4, 28);
