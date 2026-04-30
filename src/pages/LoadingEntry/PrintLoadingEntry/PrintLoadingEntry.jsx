@@ -384,7 +384,7 @@ const PrintLoadingEntry = async (data) => {
       doc.text(line, margin + 35, y + index * 4);
     });
     
-    y += 15;
+    y += 25;
     
     // Description of Goods section
     doc.rect(margin + 2, y - 5, pageWidth - margin * 2 - 4, 13);
