@@ -19,6 +19,7 @@ const formatDate = (date) => {
 const PendingLoadingList = () => {
   const { userRole, mobile } = useAuth();
   const [data, setData] = useState([]);
+  const [allData, setAllData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [totalItems, setTotalItems] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
@@ -48,8 +49,8 @@ const PendingLoadingList = () => {
         .map(c => c.companyName)
         .filter(Boolean);
       
-      setBuyerCompanies([...new Set(buyerCompanyNames)]);
-      setSellerCompanies([...new Set(sellerCompanyNames)]);
+      setBuyerCompanies([...new Set(buyerCompanyNames)].sort());
+      setSellerCompanies([...new Set(sellerCompanyNames)].sort());
     } catch (error) {
       console.error("Error fetching companies:", error);
     } finally {
@@ -62,37 +63,85 @@ const PendingLoadingList = () => {
     try {
       const response = await axios.get("/self-order/pending/list", {
         params: {
-          page: currentPage,
-          limit: itemsPerPage,
-          search: searchInput,
-          startDate,
-          endDate,
-          buyerCompany,
-          sellerCompany,
+          page: 1,
+          limit: 1000,
         },
       });
-      setData(response.data.data || []);
-      setTotalItems(response.data.total || 0);
+      const fetchedData = response.data.data || [];
+      setAllData(fetchedData);
+      
+      const uniqueSellerCompanies = [...new Set(fetchedData.map(item => item.supplierCompany).filter(Boolean))].sort();
+      const uniqueBuyerCompanies = [...new Set(fetchedData.map(item => item.buyerCompany).filter(Boolean))].sort();
+      
+      setSellerCompanies(prev => [...new Set([...prev, ...uniqueSellerCompanies])].sort());
+      setBuyerCompanies(prev => [...new Set([...prev, ...uniqueBuyerCompanies])].sort());
     } catch (error) {
       console.error("Error fetching pending loading entries:", error);
       toast.error("Failed to fetch pending entries");
     } finally {
       setLoading(false);
     }
-  }, [currentPage, itemsPerPage, searchInput, startDate, endDate, buyerCompany, sellerCompany]);
+  }, []);
+
+  const filteredData = useCallback(() => {
+    let result = [...allData];
+    
+    if (searchInput) {
+      const searchLower = searchInput.toLowerCase();
+      result = result.filter(item => 
+        (item.supplierCompany && item.supplierCompany.toLowerCase().includes(searchLower)) ||
+        (item.buyerCompany && item.buyerCompany.toLowerCase().includes(searchLower)) ||
+        (item.saudaNo && item.saudaNo.toLowerCase().includes(searchLower)) ||
+        (item.commodity && item.commodity.toLowerCase().includes(searchLower))
+      );
+    }
+    
+    if (sellerCompany) {
+      result = result.filter(item => item.supplierCompany === sellerCompany);
+    }
+    
+    if (buyerCompany) {
+      result = result.filter(item => item.buyerCompany === buyerCompany);
+    }
+    
+    if (startDate) {
+      const filterDate = new Date(startDate);
+      filterDate.setHours(0, 0, 0, 0);
+      result = result.filter(item => {
+        const itemDate = new Date(item.poDate || item.createdAt);
+        return itemDate >= filterDate;
+      });
+    }
+    
+    if (endDate) {
+      const filterDate = new Date(endDate);
+      filterDate.setHours(23, 59, 59, 999);
+      result = result.filter(item => {
+        const itemDate = new Date(item.poDate || item.createdAt);
+        return itemDate <= filterDate;
+      });
+    }
+    
+    return result;
+  }, [allData, searchInput, sellerCompany, buyerCompany, startDate, endDate]);
+
+  useEffect(() => {
+    const filtered = filteredData();
+    setTotalItems(filtered.length);
+    
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    setData(filtered.slice(startIndex, endIndex));
+  }, [filteredData, currentPage, itemsPerPage]);
 
   useEffect(() => {
     fetchBuyerAndSellerCompanies();
-  }, [fetchBuyerAndSellerCompanies]);
-
-  useEffect(() => {
     fetchData();
-  }, [fetchData]);
+  }, [fetchBuyerAndSellerCompanies, fetchData]);
 
   const handleSearch = (e) => {
     e.preventDefault();
     setCurrentPage(1);
-    fetchData();
   };
 
   const handleClearFilters = () => {
@@ -104,21 +153,14 @@ const PendingLoadingList = () => {
     setCurrentPage(1);
   };
 
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchInput, sellerCompany, buyerCompany, startDate, endDate]);
+
   const handleDownloadExcel = async () => {
     try {
       const toastId = toast.loading("Preparing Excel...");
-      const response = await axios.get("/self-order/pending/list", {
-        params: {
-          limit: 1000,
-          search: searchInput,
-          startDate,
-          endDate,
-          buyerCompany,
-          sellerCompany,
-        },
-      });
-      
-      const exportData = response.data.data || [];
+      const exportData = filteredData();
       
       const excelRows = exportData.map((item, index) => {
         const quantity = item.quantity || 0;
