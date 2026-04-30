@@ -415,8 +415,24 @@ router.get("/receiving", async (req, res) => {
 
     const total = await LoadingEntry.countDocuments(finalQuery);
 
+    // Fetch rates from SelfOrder
+    const saudaNos = [...new Set(items.map(i => i.saudaNo).filter(Boolean))];
+    const selfOrders = await SelfOrder.find({ saudaNo: { $in: saudaNos } })
+      .select("saudaNo rate")
+      .lean();
+    const saudaRateMap = selfOrders.reduce((acc, so) => {
+      acc[so.saudaNo] = so.rate;
+      return acc;
+    }, {});
+
+    // Add rate to each loading entry
+    const itemsWithRate = items.map(item => ({
+      ...item,
+      actualRate: saudaRateMap[item.saudaNo] || 0
+    }));
+
     res.json({
-      data: items,
+      data: itemsWithRate,
       total,
       page,
       totalPages: Math.ceil(total / limit),

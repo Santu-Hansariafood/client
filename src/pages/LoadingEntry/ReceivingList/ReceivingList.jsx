@@ -80,7 +80,6 @@ const ReceivingList = () => {
   };
 
   const headers = [
-    "Sl No",
     "Sauda No",
     "Loading No",
     "Lorry No",
@@ -97,17 +96,16 @@ const ReceivingList = () => {
 
   const rows = useMemo(
     () =>
-      filteredEntries.map((entry, index) => [
-        (currentPage - 1) * itemsPerPage + index + 1,
+      filteredEntries.map((entry) => [
         entry.saudaNo || "N/A",
-        entry._id ? entry._id.toString().slice(-8) : "N/A",
+        entry.billNumber || "N/A",
         entry.lorryNumber || "N/A",
         entry.loadingWeight || 0,
         entry.unloadingWeight || 0,
         formatDate(entry.loadingDate),
         formatDate(entry.unloadingDate),
-        entry.freightRate || 0,
-        ((entry.unloadingWeight || 0) * (entry.freightRate || 0)).toFixed(2),
+        entry.actualRate || 0,
+        ((entry.unloadingWeight || 0) * (entry.actualRate || 0)).toFixed(2),
         entry.supplierCompany || "N/A",
         entry.buyerCompany || "N/A",
         <button
@@ -118,7 +116,7 @@ const ReceivingList = () => {
           <FaEye size={16} className="inline mr-1" /> View
         </button>,
       ]),
-    [filteredEntries, currentPage, itemsPerPage]
+    [filteredEntries]
   );
 
   return (
