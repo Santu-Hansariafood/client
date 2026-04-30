@@ -95,6 +95,15 @@ const PendingLoadingList = () => {
     fetchData();
   };
 
+  const handleClearFilters = () => {
+    setSearchInput("");
+    setStartDate("");
+    setEndDate("");
+    setBuyerCompany("");
+    setSellerCompany("");
+    setCurrentPage(1);
+  };
+
   const handleDownloadExcel = async () => {
     try {
       const toastId = toast.loading("Preparing Excel...");
@@ -209,82 +218,114 @@ const PendingLoadingList = () => {
         noContentCard
       >
         <div className="max-w-7xl mx-auto space-y-6">
-          <div className="rounded-2xl border border-emerald-100 bg-white shadow-lg p-4 sm:p-6">
-            <form onSubmit={handleSearch} className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
-                <div className="md:col-span-1">
-                  <label className="block text-sm font-semibold text-slate-700 mb-1">Search Seller/Buyer/Sauda</label>
+          <div className="rounded-2xl border border-slate-200 bg-gradient-to-br from-white to-slate-50 shadow-xl p-4 sm:p-6">
+            <div className="flex items-center gap-3 mb-6 pb-4 border-b border-slate-200">
+              <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center">
+                <FaSearch className="text-emerald-600" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-slate-800">Filter & Search</h3>
+                <p className="text-sm text-slate-500">Customize your view with advanced filters</p>
+              </div>
+            </div>
+            <form onSubmit={handleSearch} className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+                <div className="xl:col-span-2">
+                  <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                    Search Seller/Buyer/Sauda
+                  </label>
                   <div className="relative">
-                    <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                    <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
                     <input
                       type="text"
                       value={searchInput}
                       onChange={(e) => setSearchInput(e.target.value)}
-                      placeholder="Search..."
-                      className="w-full pl-10 pr-4 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-emerald-400/50 outline-none transition"
+                      placeholder="Enter search term..."
+                      className="w-full pl-11 pr-4 py-3 rounded-xl border-2 border-slate-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 outline-none transition-all duration-200 bg-white"
                     />
                   </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-1">Seller Company</label>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-blue-500"></span>
+                    Seller Company
+                  </label>
                   <select
                     value={sellerCompany}
                     onChange={(e) => setSellerCompany(e.target.value)}
-                    className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-emerald-400/50 outline-none transition"
+                    className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 outline-none transition-all duration-200 bg-white cursor-pointer"
                   >
-                    <option value="">All</option>
+                    <option value="">All Sellers</option>
                     {sellerCompanies.map((company) => (
                       <option key={company} value={company}>{company}</option>
                     ))}
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-1">Buyer Company</label>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-purple-500"></span>
+                    Buyer Company
+                  </label>
                   <select
                     value={buyerCompany}
                     onChange={(e) => setBuyerCompany(e.target.value)}
-                    className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-emerald-400/50 outline-none transition"
+                    className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 outline-none transition-all duration-200 bg-white cursor-pointer"
                   >
-                    <option value="">All</option>
+                    <option value="">All Buyers</option>
                     {buyerCompanies.map((company) => (
                       <option key={company} value={company}>{company}</option>
                     ))}
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-1">Start Date</label>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-orange-500"></span>
+                    Start Date
+                  </label>
                   <input
                     type="date"
                     value={startDate}
                     onChange={(e) => setStartDate(e.target.value)}
-                    className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-emerald-400/50 outline-none transition"
+                    className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 outline-none transition-all duration-200 bg-white cursor-pointer"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-1">End Date</label>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-red-500"></span>
+                    End Date
+                  </label>
                   <input
                     type="date"
                     value={endDate}
                     onChange={(e) => setEndDate(e.target.value)}
-                    className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-emerald-400/50 outline-none transition"
+                    className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 outline-none transition-all duration-200 bg-white cursor-pointer"
                   />
                 </div>
-                <div className="flex items-end gap-2">
-                  <button
-                    type="submit"
-                    className="flex-1 px-6 py-2 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700 transition shadow-sm"
-                  >
-                    Search
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleDownloadExcel}
-                    className="px-4 py-2 bg-slate-800 text-white rounded-xl font-bold hover:bg-slate-900 transition shadow-sm flex items-center gap-2"
-                    title="Download Excel"
-                  >
-                    <FaDownload />
-                  </button>
-                </div>
+              </div>
+              <div className="flex flex-wrap items-center gap-3 pt-4 border-t border-slate-200">
+                <button
+                  type="submit"
+                  className="flex-1 min-w-[140px] px-6 py-3 bg-gradient-to-r from-emerald-600 to-emerald-700 text-white rounded-xl font-bold hover:from-emerald-700 hover:to-emerald-800 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center justify-center gap-2"
+                >
+                  <FaSearch />
+                  Apply Filters
+                </button>
+                <button
+                  type="button"
+                  onClick={handleClearFilters}
+                  className="min-w-[140px] px-6 py-3 bg-slate-100 text-slate-700 rounded-xl font-bold hover:bg-slate-200 transition-all duration-200 border-2 border-slate-200 flex items-center justify-center gap-2"
+                >
+                  Clear All
+                </button>
+                <button
+                  type="button"
+                  onClick={handleDownloadExcel}
+                  className="min-w-[140px] px-6 py-3 bg-gradient-to-r from-slate-700 to-slate-800 text-white rounded-xl font-bold hover:from-slate-800 hover:to-slate-900 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center justify-center gap-2"
+                >
+                  <FaDownload />
+                  Export Excel
+                </button>
               </div>
             </form>
           </div>
