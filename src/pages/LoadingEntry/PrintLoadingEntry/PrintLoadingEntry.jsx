@@ -299,35 +299,65 @@ const PrintLoadingEntry = async (data) => {
     let y = 58;
 
     doc.setLineWidth(0.2);
-    doc.rect(margin + 2, y - 5, pageWidth - margin * 2 - 4, 10);
+    doc.rect(margin + 2, y - 5, pageWidth - margin * 2 - 4, 25);
     doc.setFontSize(9);
+    
+    setBold();
+    doc.text(`Broker:`, margin + 5, y);
+    setNormal();
+    doc.text(`Hansaria Food Private Limited`, margin + 25, y);
+    
+    setBold();
+    doc.text(`HFPL Sauda No:`, margin + 100, y);
+    setNormal();
+    doc.text(`${pick(data.saudaNo)}`, margin + 135, y);
+    
+    setBold();
+    doc.text(`Buyer Po No:`, pageWidth - margin - 70, y);
+    setNormal();
+    doc.text(`${pick(sauda.poNumber || data.poNumber)}`, pageWidth - margin - 25, y);
+    
+    y += 6;
+    
     setBold();
     doc.text(`Challan No:`, margin + 5, y);
     setNormal();
     doc.text(`${pick(data.billNumber)}`, margin + 30, y);
+    
     setBold();
     doc.text(`Date:`, pageWidth - margin - 50, y);
     setNormal();
     doc.text(`${formatDate(data.loadingDate)}`, pageWidth - margin - 35, y);
 
-    y += 15;
+    y += 17;
 
     doc.setLineWidth(0.2);
     doc.rect(margin + 2, y - 5, pageWidth - margin * 2 - 4, 28);
     setBold();
     doc.setFontSize(9);
-    doc.text(`DELIVERY ADDRESS`, margin + 5, y);
+    doc.text(`SHIP TO (CONSIGNEE)`, margin + 5, y);
     y += 5;
     setBold();
     doc.text(`Consignee:`, margin + 5, y);
     setNormal();
-    doc.text(`${consignee.name || pick(data.consignee)}`, margin + 30, y);
+    const shipToConsignee = sauda.shipTo || sauda.consignee || data.consignee;
+    const consigneeName = 
+      (shipToConsignee && typeof shipToConsignee === 'object' 
+        ? (shipToConsignee.name || shipToConsignee.consigneeName) 
+        : shipToConsignee) || consignee.name || pick(data.consignee);
+    doc.text(`${consigneeName}`, margin + 30, y);
 
     y += 4;
     setBold();
     doc.text(`Address:`, margin + 5, y);
     setNormal();
-    const cAddrLines = wrapText(consigneeAddress, 100);
+    const shipToAddress = 
+      (sauda.shipTo && typeof sauda.shipTo === 'object' 
+        ? [sauda.shipTo.address, sauda.shipTo.city, sauda.shipTo.district, sauda.shipTo.state, sauda.shipTo.pin].filter(Boolean).join(', ')
+        : sauda.shipToAddress) || 
+      sauda.deliveryAddress || 
+      consigneeAddress;
+    const cAddrLines = wrapText(shipToAddress, 100);
     cAddrLines.slice(0, 2).forEach((line, index) => {
       doc.text(line, margin + 30, y + index * 4);
     });
@@ -336,7 +366,12 @@ const PrintLoadingEntry = async (data) => {
     setBold();
     doc.text(`Mobile:`, margin + 5, y);
     setNormal();
-    doc.text(`${consigneeMobile}`, margin + 30, y);
+    const shipToMobile = 
+      (sauda.shipTo && typeof sauda.shipTo === 'object' 
+        ? (sauda.shipTo.mobile || sauda.shipTo.phone) 
+        : sauda.shipToMobile) || 
+      consigneeMobile;
+    doc.text(`${shipToMobile}`, margin + 30, y);
 
     y += 20;
 
