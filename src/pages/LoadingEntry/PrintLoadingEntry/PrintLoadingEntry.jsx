@@ -353,12 +353,42 @@ const PrintLoadingEntry = async (data) => {
     setBold();
     doc.text(`Address:`, margin + 5, y);
     setNormal();
-    const shipToAddress = 
-      (sauda.shipTo && typeof sauda.shipTo === 'object' 
-        ? [sauda.shipTo.address, sauda.shipTo.city, sauda.shipTo.district, sauda.shipTo.state, sauda.shipTo.pin].filter(Boolean).join(', ')
-        : sauda.shipToAddress) || 
-      sauda.deliveryAddress || 
-      consigneeAddress;
+    
+    let shipToAddress = '';
+    
+    const addressParts = [];
+    
+    if (sauda.shipTo) {
+      if (typeof sauda.shipTo === 'object') {
+        addressParts.push(
+          sauda.shipTo.address,
+          sauda.shipTo.city,
+          sauda.shipTo.district,
+          sauda.shipTo.state,
+          sauda.shipTo.pin,
+          sauda.shipTo.pincode,
+          sauda.shipTo.location
+        );
+      } else if (typeof sauda.shipTo === 'string') {
+        addressParts.push(sauda.shipTo);
+      }
+    }
+    
+    addressParts.push(
+      sauda.shipToAddress,
+      sauda.deliveryAddress,
+      sauda.address,
+      sauda.placeOfDelivery,
+      sauda.consigneeAddress,
+      sauda.location,
+      data.shipToAddress,
+      data.deliveryAddress,
+      data.address,
+      data.consigneeAddress
+    );
+    
+    shipToAddress = addressParts.filter(Boolean)[0] || consigneeAddress;
+    
     const cAddrLines = wrapText(shipToAddress, 100);
     cAddrLines.slice(0, 2).forEach((line, index) => {
       doc.text(line, margin + 30, y + index * 4);
