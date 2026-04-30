@@ -346,7 +346,7 @@ const PrintLoadingEntry = async (data) => {
     setNormal();
     doc.text(`${consigneeMobile}`, margin + 35, y);
 
-    y += 9;
+    y += 11;
     
     // Challan details box
     doc.setLineWidth(0.2);
@@ -381,7 +381,7 @@ const PrintLoadingEntry = async (data) => {
     setNormal();
     doc.text(`${pick(data.saudaNo)}`, margin + 30, y);
 
-    y += 12;
+    y += 14;
     
     // Delivery Address section
     doc.setLineWidth(0.2);
@@ -410,7 +410,7 @@ const PrintLoadingEntry = async (data) => {
     setNormal();
     doc.text(`${consigneeMobile}`, margin + 30, y);
 
-    y += 10;
+    y += 12;
     
     // Description of Goods section
     doc.rect(margin + 2, y - 5, pageWidth - margin * 2 - 4, 13);
@@ -432,7 +432,7 @@ const PrintLoadingEntry = async (data) => {
     setNormal();
     doc.text(`${pick(data.loadingWeight)} Tons`, margin + 125, y);
 
-    y += 12;
+    y += 14;
     
     // Route & Vehicle Details section
     doc.rect(margin + 2, y - 5, pageWidth - margin * 2 - 4, 78);
@@ -481,7 +481,7 @@ const PrintLoadingEntry = async (data) => {
       doc.text(line, margin + 45, y + index * 4);
     });
 
-    y += 10;
+    y += 12;
     
     // Freight Details section
     setBold();
