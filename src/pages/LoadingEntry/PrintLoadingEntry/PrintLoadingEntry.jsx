@@ -35,7 +35,6 @@ const PrintLoadingEntry = async (data) => {
 
     const setBold = () => doc.setFont("helvetica", "bold");
     const setNormal = () => doc.setFont("helvetica", "normal");
-    const setItalic = () => doc.setFont("helvetica", "italic");
 
     const getBase64 = (img) =>
       new Promise((resolve) => {
@@ -91,7 +90,6 @@ const PrintLoadingEntry = async (data) => {
       (saudaData || []).find(
         (s) => String(s.saudaNo) === String(data.saudaNo),
       ) || {};
-    const finalPoNumber = sauda.poNumber || data.poNumber || "N/A";
 
     const consignee =
       consignees.find(
@@ -184,14 +182,6 @@ const PrintLoadingEntry = async (data) => {
         "N/A";
 
     const sellerState = matchingSellerCompany?.state || sauda.state || "N/A";
-
-    const sellerLocation = matchingSellerCompany
-      ? [matchingSellerCompany.district, matchingSellerCompany.state]
-          .filter(Boolean)
-          .join(", ")
-      : [sauda.location, sauda.state].filter(Boolean).join(", ") ||
-        data.from ||
-        "N/A";
 
     const wrapText = (text, maxLength) => {
       if (!text) return [""];
@@ -397,11 +387,12 @@ const PrintLoadingEntry = async (data) => {
 
     y += 15;
 
-    doc.rect(margin + 2, y - 5, pageWidth - margin * 2 - 4, 78);
+    doc.setLineWidth(0.2);
+    doc.rect(margin + 2, y - 5, pageWidth - margin * 2 - 4, 65);
     setBold();
     doc.setFontSize(9);
     doc.text(`ROUTE & VEHICLE DETAILS`, margin + 5, y);
-    y += 5;
+    y += 6;
     doc.setFontSize(9);
     setBold();
     doc.text(`From:`, margin + 5, y);
@@ -418,13 +409,13 @@ const PrintLoadingEntry = async (data) => {
     setNormal();
     doc.text(`${displayTransporterName}`, margin + 30, y);
 
-    y += 4;
+    y += 5;
     setBold();
     doc.text(`Lorry No:`, margin + 5, y);
     setNormal();
     doc.text(`${(data.lorryNumber || "N/A").toUpperCase()}`, margin + 30, y);
 
-    y += 4;
+    y += 5;
     setBold();
     doc.text(`Driver:`, margin + 5, y);
     setNormal();
@@ -434,7 +425,7 @@ const PrintLoadingEntry = async (data) => {
     setNormal();
     doc.text(`${data.driverPhoneNumber || "N/A"}`, margin + 90, y);
 
-    y += 4;
+    y += 5;
     setBold();
     doc.text(`Transporter Address:`, margin + 5, y);
     setNormal();
@@ -443,9 +434,10 @@ const PrintLoadingEntry = async (data) => {
       doc.text(line, margin + 45, y + index * 4);
     });
 
-    y += 20;
+    y += 17;
 
-    doc.rect(margin + 2, y - 5, pageWidth - margin * 2 - 4, 25);
+    doc.setLineWidth(0.2);
+    doc.rect(margin + 2, y - 5, pageWidth - margin * 2 - 4, 28);
     setBold();
     doc.setFontSize(9);
     doc.text(`FREIGHT DETAILS`, margin + 5, y);
@@ -465,18 +457,14 @@ const PrintLoadingEntry = async (data) => {
     doc.text("Total Freight:", margin + 5, y);
     setNormal();
     doc.text(totalFreight, margin + 35, y);
-
-    y += 5;
     setBold();
-    doc.text("Advance:", margin + 5, y);
+    doc.text("Advance:", margin + 90, y);
     setNormal();
-    doc.text(advance, margin + 35, y);
-
-    y += 5;
+    doc.text(advance, margin + 110, y);
     setBold();
-    doc.text("To Pay:", margin + 5, y);
+    doc.text("To Pay:", pageWidth - margin - 50, y);
     setNormal();
-    doc.text(toPayValue, margin + 35, y);
+    doc.text(toPayValue, pageWidth - margin - 25, y);
 
     y += 15;
 
@@ -499,8 +487,9 @@ const PrintLoadingEntry = async (data) => {
     setBold();
     doc.text(
       "*Shortage/damage will be Deducted from Freight.",
-      margin + 10,
+      pageWidth / 2,
       pageHeight - 21,
+      { align: "center" },
     );
 
     doc.text(
