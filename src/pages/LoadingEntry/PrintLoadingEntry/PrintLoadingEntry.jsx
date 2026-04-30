@@ -390,7 +390,7 @@ const PrintLoadingEntry = async (data) => {
     setNormal();
     doc.text(`${consigneeMobile}`, margin + 35, y);
 
-    y += 15;
+    y += 20;
     
     // Description of Goods section
     doc.rect(margin + 2, y - 5, pageWidth - margin * 2 - 4, 13);
