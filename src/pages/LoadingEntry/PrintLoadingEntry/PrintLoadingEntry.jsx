@@ -328,7 +328,7 @@ const PrintLoadingEntry = async (data) => {
     setNormal();
     doc.text(`${formatDate(data.loadingDate)}`, pageWidth - margin - 35, y);
 
-    y += 12;
+    y += 15;
     
     // Delivery Address section (second)
     doc.setLineWidth(0.2);
@@ -357,7 +357,7 @@ const PrintLoadingEntry = async (data) => {
     setNormal();
     doc.text(`${consigneeMobile}`, margin + 30, y);
 
-    y += 12;
+    y += 15;
     
     // Buyer Account box (third)
     doc.setLineWidth(0.2);
@@ -390,7 +390,7 @@ const PrintLoadingEntry = async (data) => {
     setNormal();
     doc.text(`${consigneeMobile}`, margin + 35, y);
 
-    y += 12;
+    y += 15;
     
     // Description of Goods section
     doc.rect(margin + 2, y - 5, pageWidth - margin * 2 - 4, 13);
@@ -412,7 +412,7 @@ const PrintLoadingEntry = async (data) => {
     setNormal();
     doc.text(`${pick(data.loadingWeight)} Tons`, margin + 125, y);
 
-    y += 14;
+    y += 15;
     
     // Route & Vehicle Details section
     doc.rect(margin + 2, y - 5, pageWidth - margin * 2 - 4, 78);
@@ -461,9 +461,10 @@ const PrintLoadingEntry = async (data) => {
       doc.text(line, margin + 45, y + index * 4);
     });
 
-    y += 12;
+    y += 15;
     
     // Freight Details section
+    doc.rect(margin + 2, y - 5, pageWidth - margin * 2 - 4, 25);
     setBold();
     doc.setFontSize(9);
     doc.text(`FREIGHT DETAILS`, margin + 5, y);
@@ -496,7 +497,7 @@ const PrintLoadingEntry = async (data) => {
     setNormal();
     doc.text(toPayValue, margin + 35, y);
 
-    y += 12;
+    y += 15;
 
     const signY = pageHeight - 35;
 
