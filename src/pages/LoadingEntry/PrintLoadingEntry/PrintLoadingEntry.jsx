@@ -309,11 +309,6 @@ const PrintLoadingEntry = async (data) => {
     setBold();
     doc.setFontSize(13);
     doc.text("LORRY CHALLAN", pageWidth / 2, 45, { align: "center" });
-    doc.line(pageWidth / 2 - 20, 47, pageWidth / 2 + 20, 47);
-    
-    // Full-width line below lorry challan
-    doc.setLineWidth(0.2);
-    doc.line(margin, 50, pageWidth - margin, 50);
 
     doc.setLineWidth(0.5);
     doc.rect(margin, 10, pageWidth - margin * 2, pageHeight - 18);
@@ -324,8 +319,10 @@ const PrintLoadingEntry = async (data) => {
     doc.setLineWidth(0.2);
     doc.rect(margin + 2, y - 5, pageWidth - margin * 2 - 4, 35);
     setBold();
+    doc.setFontSize(9);
     doc.text(`BUYER ACCOUNT`, margin + 5, y);
     y += 6;
+    doc.setFontSize(9);
     setBold();
     doc.text(`Buyer Company:`, margin + 5, y);
     setNormal();
@@ -349,7 +346,7 @@ const PrintLoadingEntry = async (data) => {
     setNormal();
     doc.text(`${consigneeMobile}`, margin + 35, y);
 
-    y += 7;
+    y += 9;
     
     // Challan details box
     doc.setLineWidth(0.2);
@@ -384,12 +381,13 @@ const PrintLoadingEntry = async (data) => {
     setNormal();
     doc.text(`${pick(data.saudaNo)}`, margin + 30, y);
 
-    y += 10;
+    y += 12;
     
     // Delivery Address section
     doc.setLineWidth(0.2);
     doc.rect(margin + 2, y - 5, pageWidth - margin * 2 - 4, 28);
     setBold();
+    doc.setFontSize(9);
     doc.text(`DELIVERY ADDRESS`, margin + 5, y);
     y += 5;
     setBold();
@@ -412,13 +410,15 @@ const PrintLoadingEntry = async (data) => {
     setNormal();
     doc.text(`${consigneeMobile}`, margin + 30, y);
 
-    y += 8;
+    y += 10;
     
     // Description of Goods section
     doc.rect(margin + 2, y - 5, pageWidth - margin * 2 - 4, 13);
     setBold();
+    doc.setFontSize(9);
     doc.text(`DESCRIPTION OF GOODS`, margin + 5, y);
     y += 4;
+    doc.setFontSize(9);
     setBold();
     doc.text(`Item:`, margin + 5, y);
     setNormal();
@@ -432,13 +432,15 @@ const PrintLoadingEntry = async (data) => {
     setNormal();
     doc.text(`${pick(data.loadingWeight)} Tons`, margin + 125, y);
 
-    y += 10;
+    y += 12;
     
     // Route & Vehicle Details section
     doc.rect(margin + 2, y - 5, pageWidth - margin * 2 - 4, 78);
     setBold();
+    doc.setFontSize(9);
     doc.text(`ROUTE & VEHICLE DETAILS`, margin + 5, y);
     y += 5;
+    doc.setFontSize(9);
     setBold();
     doc.text(`From:`, margin + 5, y);
     setNormal();
@@ -479,10 +481,11 @@ const PrintLoadingEntry = async (data) => {
       doc.text(line, margin + 45, y + index * 4);
     });
 
-    y += 8;
+    y += 10;
     
     // Freight Details section
     setBold();
+    doc.setFontSize(9);
     doc.text(`FREIGHT DETAILS`, margin + 5, y);
     y += 6;
     const totalFreight = data.totalFreight
