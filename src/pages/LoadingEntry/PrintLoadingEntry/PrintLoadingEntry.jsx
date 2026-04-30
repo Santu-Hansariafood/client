@@ -270,7 +270,7 @@ const PrintLoadingEntry = async (data) => {
       doc.addImage(
         logo64,
         "PNG",
-        margin + 2,
+        pageWidth - margin - 35,
         12,
         30,
         22,
@@ -280,7 +280,7 @@ const PrintLoadingEntry = async (data) => {
     const sellerCompanyName = data?.supplierCompany || "N/A";
     const vendorCode = matchingSeller?.vendorCode || data?.vendorCode || "";
 
-    const textStartX = margin + 35;
+    const textStartX = margin + 5;
     setBold();
     doc.setFontSize(15);
     doc.text(`${sellerCompanyName.toUpperCase()}`, textStartX, 17);
@@ -388,18 +388,16 @@ const PrintLoadingEntry = async (data) => {
     
     // Delivery Address section
     doc.setLineWidth(0.2);
-    doc.rect(margin + 2, y - 5, pageWidth - margin * 2 - 4, 30);
+    doc.rect(margin + 2, y - 5, pageWidth - margin * 2 - 4, 28);
     setBold();
-    const deliveryTitle = `DELIVERY ADDRESS :-`;
-    doc.text(deliveryTitle, margin + 5, y);
-    doc.line(margin + 5, y + 1, margin + 5 + doc.getTextWidth(deliveryTitle), y + 1);
-    y += 6;
+    doc.text(`DELIVERY ADDRESS`, margin + 5, y);
+    y += 5;
     setBold();
     doc.text(`Consignee:`, margin + 5, y);
     setNormal();
     doc.text(`${consignee.name || pick(data.consignee)}`, margin + 30, y);
 
-    y += 5;
+    y += 4;
     setBold();
     doc.text(`Address:`, margin + 5, y);
     setNormal();
@@ -408,21 +406,19 @@ const PrintLoadingEntry = async (data) => {
       doc.text(line, margin + 30, y + index * 4);
     });
 
-    y += 5;
+    y += 4;
     setBold();
     doc.text(`Mobile:`, margin + 5, y);
     setNormal();
     doc.text(`${consigneeMobile}`, margin + 30, y);
 
-    y += 9;
+    y += 8;
     
     // Description of Goods section
-    doc.rect(margin + 2, y - 5, pageWidth - margin * 2 - 4, 14);
+    doc.rect(margin + 2, y - 5, pageWidth - margin * 2 - 4, 13);
     setBold();
-    const goodsTitle = `DESCRIPTION OF GOODS :-`;
-    doc.text(goodsTitle, margin + 5, y);
-    doc.line(margin + 5, y + 1, margin + 5 + doc.getTextWidth(goodsTitle), y + 1);
-    y += 5;
+    doc.text(`DESCRIPTION OF GOODS`, margin + 5, y);
+    y += 4;
     setBold();
     doc.text(`Item:`, margin + 5, y);
     setNormal();
@@ -436,15 +432,13 @@ const PrintLoadingEntry = async (data) => {
     setNormal();
     doc.text(`${pick(data.loadingWeight)} Tons`, margin + 125, y);
 
-    y += 12;
+    y += 10;
     
     // Route & Vehicle Details section
-    doc.rect(margin + 2, y - 5, pageWidth - margin * 2 - 4, 85);
+    doc.rect(margin + 2, y - 5, pageWidth - margin * 2 - 4, 78);
     setBold();
-    const routeTitle = `ROUTE & VEHICLE DETAILS :-`;
-    doc.text(routeTitle, margin + 5, y);
-    doc.line(margin + 5, y + 1, margin + 5 + doc.getTextWidth(routeTitle), y + 1);
-    y += 6;
+    doc.text(`ROUTE & VEHICLE DETAILS`, margin + 5, y);
+    y += 5;
     setBold();
     doc.text(`From:`, margin + 5, y);
     setNormal();
@@ -454,19 +448,19 @@ const PrintLoadingEntry = async (data) => {
     setNormal();
     doc.text(`${buyerState}`, margin + 80, y);
 
-    y += 7;
+    y += 6;
     setBold();
     doc.text(`Transporter:`, margin + 5, y);
     setNormal();
     doc.text(`${displayTransporterName}`, margin + 30, y);
 
-    y += 5;
+    y += 4;
     setBold();
     doc.text(`Lorry No:`, margin + 5, y);
     setNormal();
     doc.text(`${(data.lorryNumber || "N/A").toUpperCase()}`, margin + 30, y);
 
-    y += 5;
+    y += 4;
     setBold();
     doc.text(`Driver:`, margin + 5, y);
     setNormal();
@@ -476,7 +470,7 @@ const PrintLoadingEntry = async (data) => {
     setNormal();
     doc.text(`${data.driverPhoneNumber || "N/A"}`, margin + 90, y);
 
-    y += 5;
+    y += 4;
     setBold();
     doc.text(`Transporter Address:`, margin + 5, y);
     setNormal();
@@ -485,13 +479,11 @@ const PrintLoadingEntry = async (data) => {
       doc.text(line, margin + 45, y + index * 4);
     });
 
-    y += 9;
+    y += 8;
     
     // Freight Details section
     setBold();
-    const freightTitle = `FREIGHT DETAILS :-`;
-    doc.text(freightTitle, margin + 5, y);
-    doc.line(margin + 5, y + 1, margin + 5 + doc.getTextWidth(freightTitle), y + 1);
+    doc.text(`FREIGHT DETAILS`, margin + 5, y);
     y += 6;
     const totalFreight = data.totalFreight
       ? `Rs. ${Number(data.totalFreight).toLocaleString("en-IN")}`
@@ -521,9 +513,9 @@ const PrintLoadingEntry = async (data) => {
     setNormal();
     doc.text(toPayValue, margin + 35, y);
 
-    y += 15;
+    y += 12;
 
-    const signY = pageHeight - 40;
+    const signY = pageHeight - 35;
 
     setBold();
     doc.text("Driver Signature", margin + 10, signY);
@@ -543,13 +535,13 @@ const PrintLoadingEntry = async (data) => {
     doc.text(
       "*Shortage/damage will be Deducted from Freight.",
       margin + 10,
-      pageHeight - 25,
+      pageHeight - 21,
     );
 
     doc.text(
       "*This is Computer Generated challan, from Hansaria Food Pvt. Ltd., This challan only for information and not for legal evidence.",
       pageWidth / 2,
-      pageHeight - 15,
+      pageHeight - 12,
       { align: "center" },
     );
 
