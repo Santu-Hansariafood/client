@@ -367,6 +367,65 @@ router.get("/", async (req, res) => {
   }
 });
 
+router.get("/receiving", async (req, res) => {
+  try {
+    const page = parseInt(req.query.page || "1", 10);
+    const limit = parseInt(req.query.limit || "10", 10);
+    const search = (req.query.search || "").trim();
+    const role = req.query.role;
+    const mobile = req.query.mobile;
+
+    let query = {};
+
+    if (role === "Seller" && mobile) {
+      const seller = await Seller.findOne({
+        "phoneNumbers.value": String(mobile),
+      }).lean();
+      if (seller) {
+        query.supplier = seller._id;
+      } else {
+        return res.json({ data: [], total: 0, page, totalPages: 0 });
+      }
+    }
+
+    const andParts = [];
+    if (Object.keys(query).length > 0) {
+      andParts.push(query);
+    }
+
+    if (search) {
+      const searchRegex = new RegExp(search, "i");
+      andParts.push({
+        $or: [
+          { supplierCompany: { $regex: searchRegex } },
+          { saudaNo: { $regex: searchRegex } },
+          { lorryNumber: { $regex: searchRegex } },
+        ],
+      });
+    }
+
+    const finalQuery = andParts.length > 1 ? { $and: andParts } : andParts[0] || {};
+
+    const items = await LoadingEntry.find(finalQuery)
+      .sort({ saudaNo: -1 })
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .populate("supplier", "sellerName")
+      .lean();
+
+    const total = await LoadingEntry.countDocuments(finalQuery);
+
+    res.json({
+      data: items,
+      total,
+      page,
+      totalPages: Math.ceil(total / limit),
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 router.get("/suggestions", async (req, res) => {
   try {
     const role = req.query.role;
