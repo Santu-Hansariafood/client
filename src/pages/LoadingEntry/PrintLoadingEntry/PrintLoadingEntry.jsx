@@ -357,7 +357,7 @@ const PrintLoadingEntry = async (data) => {
     setNormal();
     doc.text(`${consigneeMobile}`, margin + 30, y);
 
-    y += 15;
+    y += 20;
     
     // Buyer Account box (third)
     doc.setLineWidth(0.2);
