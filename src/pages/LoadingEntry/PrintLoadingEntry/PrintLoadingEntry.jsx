@@ -267,26 +267,20 @@ const PrintLoadingEntry = async (data) => {
       "N/A";
 
     if (logo64) {
-      doc.setDrawColor(0);
-      doc.setLineWidth(0.3);
-      const logoBoxWidth = 40;
-      const logoBoxHeight = 28;
-      const logoBoxX = pageWidth - margin - logoBoxWidth - 2;
-      doc.rect(logoBoxX, 12, logoBoxWidth, logoBoxHeight);
       doc.addImage(
         logo64,
         "PNG",
-        logoBoxX + 2,
-        14,
-        logoBoxWidth - 4,
-        logoBoxHeight - 4,
+        margin + 2,
+        12,
+        30,
+        22,
       );
     }
 
     const sellerCompanyName = data?.supplierCompany || "N/A";
     const vendorCode = matchingSeller?.vendorCode || data?.vendorCode || "";
 
-    const textStartX = margin + 5;
+    const textStartX = margin + 35;
     setBold();
     doc.setFontSize(15);
     doc.text(`${sellerCompanyName.toUpperCase()}`, textStartX, 17);
@@ -316,14 +310,50 @@ const PrintLoadingEntry = async (data) => {
     doc.setFontSize(13);
     doc.text("LORRY CHALLAN", pageWidth / 2, 45, { align: "center" });
     doc.line(pageWidth / 2 - 20, 47, pageWidth / 2 + 20, 47);
+    
+    // Full-width line below lorry challan
+    doc.setLineWidth(0.2);
+    doc.line(margin, 50, pageWidth - margin, 50);
 
     doc.setLineWidth(0.5);
     doc.rect(margin, 10, pageWidth - margin * 2, pageHeight - 18);
 
-    let y = 55;
-
+    let y = 58;
+    
+    // Buyer Account box
     doc.setLineWidth(0.2);
-    doc.rect(margin + 2, y - 5, pageWidth - margin * 2 - 4, 32);
+    doc.rect(margin + 2, y - 5, pageWidth - margin * 2 - 4, 35);
+    setBold();
+    doc.text(`BUYER ACCOUNT`, margin + 5, y);
+    y += 6;
+    setBold();
+    doc.text(`Buyer Company:`, margin + 5, y);
+    setNormal();
+    const buyerNameLines = wrapText(buyerCompanyName, 70);
+    buyerNameLines.slice(0, 1).forEach((line, index) => {
+      doc.text(line, margin + 35, y + index * 4);
+    });
+    
+    y += 6;
+    setBold();
+    doc.text(`Address:`, margin + 5, y);
+    setNormal();
+    const buyerAddrLines = wrapText(buyerLocation || consigneeAddress, 70);
+    buyerAddrLines.slice(0, 1).forEach((line, index) => {
+      doc.text(line, margin + 35, y + index * 4);
+    });
+    
+    y += 6;
+    setBold();
+    doc.text(`Mobile:`, margin + 5, y);
+    setNormal();
+    doc.text(`${consigneeMobile}`, margin + 35, y);
+
+    y += 7;
+    
+    // Challan details box
+    doc.setLineWidth(0.2);
+    doc.rect(margin + 2, y - 5, pageWidth - margin * 2 - 4, 26);
 
     doc.setFontSize(9);
     setBold();
@@ -336,61 +366,63 @@ const PrintLoadingEntry = async (data) => {
     setNormal();
     doc.text(`${formatDate(data.loadingDate)}`, pageWidth - margin - 35, y);
 
-    y += 7;
+    y += 5;
     setBold();
     doc.text(`Buyer PO No:`, margin + 5, y);
     setNormal();
     doc.text(`${pick(finalPoNumber)}`, margin + 30, y);
 
-    y += 7;
+    y += 5;
     setBold();
     doc.text(`A/c Broker:`, margin + 5, y);
     setNormal();
     doc.text(`Hansaria Food Private Limited`, margin + 30, y);
 
-    y += 7;
+    y += 5;
     setBold();
     doc.text(`HFPL Sauda No:`, margin + 5, y);
     setNormal();
     doc.text(`${pick(data.saudaNo)}`, margin + 30, y);
 
-    y += 12;
-    doc.rect(margin + 2, y - 5, pageWidth - margin * 2 - 4, 35);
-
+    y += 10;
+    
+    // Delivery Address section
+    doc.setLineWidth(0.2);
+    doc.rect(margin + 2, y - 5, pageWidth - margin * 2 - 4, 30);
     setBold();
-    doc.text(`DELIVERY ADDRESS`, margin + 5, y);
+    const deliveryTitle = `DELIVERY ADDRESS :-`;
+    doc.text(deliveryTitle, margin + 5, y);
+    doc.line(margin + 5, y + 1, margin + 5 + doc.getTextWidth(deliveryTitle), y + 1);
     y += 6;
     setBold();
     doc.text(`Consignee:`, margin + 5, y);
     setNormal();
     doc.text(`${consignee.name || pick(data.consignee)}`, margin + 30, y);
 
-    y += 6;
-    setBold();
-    doc.text(`Buyer Co:`, margin + 5, y);
-    setNormal();
-    doc.text(`${buyerCompanyName}`, margin + 30, y);
-
-    y += 6;
+    y += 5;
     setBold();
     doc.text(`Address:`, margin + 5, y);
     setNormal();
-    const cAddrLines = wrapText(consigneeAddress, 85);
+    const cAddrLines = wrapText(consigneeAddress, 100);
     cAddrLines.slice(0, 2).forEach((line, index) => {
       doc.text(line, margin + 30, y + index * 4);
     });
 
-    y += 10;
+    y += 5;
     setBold();
     doc.text(`Mobile:`, margin + 5, y);
     setNormal();
     doc.text(`${consigneeMobile}`, margin + 30, y);
 
-    y += 12;
-    doc.rect(margin + 2, y - 5, pageWidth - margin * 2 - 4, 15);
+    y += 9;
+    
+    // Description of Goods section
+    doc.rect(margin + 2, y - 5, pageWidth - margin * 2 - 4, 14);
     setBold();
-    doc.text(`DESCRIPTION OF GOODS`, margin + 5, y);
-    y += 6;
+    const goodsTitle = `DESCRIPTION OF GOODS :-`;
+    doc.text(goodsTitle, margin + 5, y);
+    doc.line(margin + 5, y + 1, margin + 5 + doc.getTextWidth(goodsTitle), y + 1);
+    y += 5;
     setBold();
     doc.text(`Item:`, margin + 5, y);
     setNormal();
@@ -404,11 +436,14 @@ const PrintLoadingEntry = async (data) => {
     setNormal();
     doc.text(`${pick(data.loadingWeight)} Tons`, margin + 125, y);
 
-    y += 15;
-    doc.rect(margin + 2, y - 5, pageWidth - margin * 2 - 4, 100);
-
+    y += 12;
+    
+    // Route & Vehicle Details section
+    doc.rect(margin + 2, y - 5, pageWidth - margin * 2 - 4, 85);
     setBold();
-    doc.text(`ROUTE & VEHICLE DETAILS`, margin + 5, y);
+    const routeTitle = `ROUTE & VEHICLE DETAILS :-`;
+    doc.text(routeTitle, margin + 5, y);
+    doc.line(margin + 5, y + 1, margin + 5 + doc.getTextWidth(routeTitle), y + 1);
     y += 6;
     setBold();
     doc.text(`From:`, margin + 5, y);
@@ -419,19 +454,19 @@ const PrintLoadingEntry = async (data) => {
     setNormal();
     doc.text(`${buyerState}`, margin + 80, y);
 
-    y += 8;
+    y += 7;
     setBold();
     doc.text(`Transporter:`, margin + 5, y);
     setNormal();
     doc.text(`${displayTransporterName}`, margin + 30, y);
 
-    y += 6;
+    y += 5;
     setBold();
     doc.text(`Lorry No:`, margin + 5, y);
     setNormal();
     doc.text(`${(data.lorryNumber || "N/A").toUpperCase()}`, margin + 30, y);
 
-    y += 6;
+    y += 5;
     setBold();
     doc.text(`Driver:`, margin + 5, y);
     setNormal();
@@ -441,29 +476,22 @@ const PrintLoadingEntry = async (data) => {
     setNormal();
     doc.text(`${data.driverPhoneNumber || "N/A"}`, margin + 90, y);
 
-    y += 6;
+    y += 5;
     setBold();
-    doc.text(`Owner:`, margin + 5, y);
+    doc.text(`Transporter Address:`, margin + 5, y);
     setNormal();
-    doc.text(`${data.ownerName || "N/A"}`, margin + 30, y);
-    setBold();
-    doc.text(`Mob:`, margin + 80, y);
-    setNormal();
-    doc.text(`${data.ownerMobile || "N/A"}`, margin + 90, y);
+    const tAddrLines = wrapText(displayTransporterAddress, 80);
+    tAddrLines.slice(0, 1).forEach((line, index) => {
+      doc.text(line, margin + 45, y + index * 4);
+    });
 
-    y += 6;
+    y += 9;
+    
+    // Freight Details section
     setBold();
-    doc.text(`Driver Lic:`, margin + 5, y);
-    setNormal();
-    doc.text(`${data.driverLicense || "N/A"}`, margin + 30, y);
-    setBold();
-    doc.text(`Insurance:`, margin + 80, y);
-    setNormal();
-    doc.text(`${data.insuranceNo || "N/A"}`, margin + 100, y);
-
-    y += 10;
-    setBold();
-    doc.text(`FREIGHT DETAILS`, margin + 5, y);
+    const freightTitle = `FREIGHT DETAILS :-`;
+    doc.text(freightTitle, margin + 5, y);
+    doc.line(margin + 5, y + 1, margin + 5 + doc.getTextWidth(freightTitle), y + 1);
     y += 6;
     const totalFreight = data.totalFreight
       ? `Rs. ${Number(data.totalFreight).toLocaleString("en-IN")}`
@@ -481,26 +509,17 @@ const PrintLoadingEntry = async (data) => {
     setNormal();
     doc.text(totalFreight, margin + 35, y);
 
-    y += 6;
+    y += 5;
     setBold();
     doc.text("Advance:", margin + 5, y);
     setNormal();
     doc.text(advance, margin + 35, y);
 
-    y += 6;
+    y += 5;
     setBold();
     doc.text("To Pay:", margin + 5, y);
     setNormal();
     doc.text(toPayValue, margin + 35, y);
-
-    y += 10;
-    setBold();
-    doc.text(`Transporter Address:`, margin + 5, y);
-    setNormal();
-    const tAddrLines = wrapText(displayTransporterAddress, 85);
-    tAddrLines.slice(0, 2).forEach((line, index) => {
-      doc.text(line, margin + 45, y + index * 4);
-    });
 
     y += 15;
 
