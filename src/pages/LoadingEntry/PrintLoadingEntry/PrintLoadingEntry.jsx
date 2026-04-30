@@ -455,9 +455,8 @@ const PrintLoadingEntry = async (data) => {
       doc.text(line, margin + 45, y + index * 4);
     });
 
-    y += 15;
+    y += 20;
     
-    // Freight Details section
     doc.rect(margin + 2, y - 5, pageWidth - margin * 2 - 4, 25);
     setBold();
     doc.setFontSize(9);
