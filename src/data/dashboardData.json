@@ -182,6 +182,11 @@
           "name": "Pending Sauda",
           "link": "/Loading-Entry/pending-loading-list",
           "icon": "FaClock"
+        },
+        {
+          "name": "Receiving",
+          "link": "/Loading-Entry/receiving-list",
+          "icon": "FaClipboardList"
         }
       ]
     },

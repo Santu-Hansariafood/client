@@ -192,6 +192,11 @@ const privateRoutes = [
     component: LazyPages.PendingLoadingList,
     roles: ["Admin", "Employee"],
   },
+  {
+    path: "Loading-Entry/receiving-list",
+    component: LazyPages.ReceivingList,
+    roles: ["Admin", "Employee"],
+  },
   { path: "employee/add", component: LazyPages.AddEmployee, roles: ["Admin"] },
   {
     path: "employee/list",

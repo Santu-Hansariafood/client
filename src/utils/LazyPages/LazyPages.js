@@ -24,7 +24,7 @@ const loaders = {
   AddSellerDetails: () =>
     import("../../pages/SellerDetails/AddSellerDetails/AddSellerDetails"),
   ListSellerDetails: () =>
-    import("../../pages/SellerDetails/ListSellerDetails/ListSellerDetails"),
+    import("../../pages/SellerDetails/ListSellerDetails/ListSellerDetails"),  
   AddSellerCompany: () =>
     import("../../pages/SellerCompany/AddSellerCompany/AddSellerCompany"),
   ListSellerCompany: () =>
@@ -69,6 +69,8 @@ const loaders = {
     import("../../pages/LoadingEntry/LoadingEntrySauda/LoadingEntrySauda"),
   PendingLoadingList: () =>
     import("../../pages/LoadingEntry/PendingLoadingList/PendingLoadingList"),
+  ReceivingList: () =>
+    import("../../pages/LoadingEntry/ReceivingList/ReceivingList"),
   PrivacyPolicy: () => import("../../common/PrivacyPolicy/PrivacyPolicy"),
   TermsConditions: () => import("../../common/TermsConditions/TermsConditions"),
   BrokerCommissionPolicy: () =>
@@ -122,6 +124,7 @@ const pathToKey = {
   "/Loading-Entry/add-loading-entry": "AddLoadingEntry",
   "/Loading-Entry/list-loading-entry": "ListLoadingEntry",
   "/Loading-Entry/pending-loading-list": "PendingLoadingList",
+  "/Loading-Entry/receiving-list": "ReceivingList",
   "/employee/add": "AddEmployee",
   "/employee/list": "ListEmployee",
   "/transporter/add": "AddTransporter",
@@ -212,6 +215,7 @@ const LazyPages = {
   ConfirmBids: lazy(loaders.ConfirmBids),
   LoadingEntrySauda: lazy(loaders.LoadingEntrySauda),
   PendingLoadingList: lazy(loaders.PendingLoadingList),
+  ReceivingList: lazy(loaders.ReceivingList),
   PrivacyPolicy: lazy(loaders.PrivacyPolicy),
   DataSafety: lazy(loaders.DataSafety),
   TermsConditions: lazy(loaders.TermsConditions),
