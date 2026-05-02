@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, lazy, Suspense } from "react";
-import axios from "axios";
+import api from "../../../utils/apiClient/apiClient";
 import { toast } from "react-toastify";
 import { FaTruckLoading, FaSearch, FaDownload } from "react-icons/fa";
 import { useAuth } from "../../../context/AuthContext/AuthContext";
@@ -37,8 +37,8 @@ const PendingLoadingList = () => {
     setLoadingCompanies(true);
     try {
       const [buyersRes, sellersRes] = await Promise.all([
-        axios.get("/companies?limit=0"),
-        axios.get("/seller-company?limit=0"),
+        api.get("/companies?limit=0"),
+        api.get("/seller-company?limit=0"),
       ]);
       
       const buyerCompanyNames = (buyersRes.data?.data || buyersRes.data || [])
@@ -61,7 +61,7 @@ const PendingLoadingList = () => {
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await axios.get("/self-order/pending/list", {
+      const response = await api.get("/self-order/pending/list", {
         params: {
           page: 1,
           limit: 1000,
@@ -88,12 +88,31 @@ const PendingLoadingList = () => {
     
     if (searchInput) {
       const searchLower = searchInput.toLowerCase();
-      result = result.filter(item => 
-        (item.supplierCompany && item.supplierCompany.toLowerCase().includes(searchLower)) ||
-        (item.buyerCompany && item.buyerCompany.toLowerCase().includes(searchLower)) ||
-        (item.saudaNo && item.saudaNo.toLowerCase().includes(searchLower)) ||
-        (item.commodity && item.commodity.toLowerCase().includes(searchLower))
-      );
+      result = result.filter(item => {
+        const consigneeName = (() => {
+          if (item.consignee) {
+            if (typeof item.consignee === 'object') {
+              return (item.consignee.name || item.consignee.consigneeName || '').toLowerCase();
+            }
+            return (item.consignee || '').toLowerCase();
+          }
+          if (item.shipTo) {
+            if (typeof item.shipTo === 'object') {
+              return (item.shipTo.name || item.shipTo.consigneeName || '').toLowerCase();
+            }
+            return (item.shipTo || '').toLowerCase();
+          }
+          return (item.consigneeName || '').toLowerCase();
+        })();
+        
+        return (
+          (item.supplierCompany && item.supplierCompany.toLowerCase().includes(searchLower)) ||
+          (item.buyerCompany && item.buyerCompany.toLowerCase().includes(searchLower)) ||
+          (item.saudaNo && item.saudaNo.toLowerCase().includes(searchLower)) ||
+          (item.commodity && item.commodity.toLowerCase().includes(searchLower)) ||
+          consigneeName.includes(searchLower)
+        );
+      });
     }
     
     if (sellerCompany) {
@@ -157,6 +176,22 @@ const PendingLoadingList = () => {
     setCurrentPage(1);
   }, [searchInput, sellerCompany, buyerCompany, startDate, endDate]);
 
+  const getConsigneeNameForExcel = (item) => {
+    if (item.consignee) {
+      if (typeof item.consignee === 'object') {
+        return item.consignee.name || item.consignee.consigneeName || "N/A";
+      }
+      return item.consignee;
+    }
+    if (item.shipTo) {
+      if (typeof item.shipTo === 'object') {
+        return item.shipTo.name || item.shipTo.consigneeName || "N/A";
+      }
+      return item.shipTo;
+    }
+    return item.consigneeName || "N/A";
+  };
+
   const handleDownloadExcel = async () => {
     try {
       const toastId = toast.loading("Preparing Excel...");
@@ -179,6 +214,7 @@ const PendingLoadingList = () => {
           "Seller Company": item.supplierCompany || "N/A",
           "Seller Name": item.supplier?.sellerName || "N/A",
           "Buyer Company": item.buyerCompany || "N/A",
+          "Consignee": getConsigneeNameForExcel(item),
           "Commodity": item.commodity || "N/A",
           "Total Quantity": quantity,
           "Pending Quantity": pendingQuantity,
@@ -210,6 +246,7 @@ const PendingLoadingList = () => {
     "Seller Company",
     "Seller Name",
     "Buyer Company",
+    "Consignee",
     "Commodity",
     "Total Qty",
     "Pending Qty",
@@ -218,6 +255,22 @@ const PendingLoadingList = () => {
     "Payment Terms",
     "Status"
   ];
+
+  const getConsigneeName = (item) => {
+    if (item.consignee) {
+      if (typeof item.consignee === 'object') {
+        return item.consignee.name || item.consignee.consigneeName || "N/A";
+      }
+      return item.consignee;
+    }
+    if (item.shipTo) {
+      if (typeof item.shipTo === 'object') {
+        return item.shipTo.name || item.shipTo.consigneeName || "N/A";
+      }
+      return item.shipTo;
+    }
+    return item.consigneeName || "N/A";
+  };
 
   const rows = data.map((item, index) => {
     const quantity = item.quantity || 0;
@@ -236,6 +289,7 @@ const PendingLoadingList = () => {
       <span key={`seller-co-${item._id}`} className="font-semibold text-slate-700">{item.supplierCompany || "N/A"}</span>,
       item.supplier?.sellerName || "N/A",
       item.buyerCompany || "N/A",
+      getConsigneeName(item),
       item.commodity || "N/A",
       quantity,
       <span key={`pending-${item._id}`} className="text-amber-600 font-bold">{pendingQuantity}</span>,
