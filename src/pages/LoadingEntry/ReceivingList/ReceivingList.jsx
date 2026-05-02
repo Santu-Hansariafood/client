@@ -5,6 +5,7 @@ import { toast } from "react-toastify";
 import { useAuth } from "../../../context/AuthContext/AuthContext";
 import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
 import Loading from "../../../common/Loading/Loading";
+import { jsPDF } from "jspdf";
 
 const Tables = lazy(() => import("../../../common/Tables/Tables"));
 const Pagination = lazy(() => import("../../../common/Paginations/Paginations"));
@@ -79,303 +80,177 @@ const ReceivingList = () => {
     setShowPopup(true);
   };
 
-  const handlePrint = () => {
+  const getBase64 = (img) =>
+    new Promise((resolve) => {
+      const image = new Image();
+      image.src = img;
+      image.crossOrigin = "Anonymous";
+
+      image.onload = () => {
+        const canvas = document.createElement("canvas");
+        canvas.width = image.width;
+        canvas.height = image.height;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(image, 0, 0);
+        resolve(canvas.toDataURL("image/png"));
+      };
+
+      image.onerror = () => resolve(null);
+    });
+
+  const formatDate = (dateStr) => {
+    if (!dateStr) return "N/A";
+    const d = new Date(dateStr);
+    return isNaN(d.getTime()) ? "N/A" : d.toLocaleDateString("en-GB");
+  };
+
+  const handlePrint = async () => {
     if (!selectedEntry) return;
 
-    const formatDate = (dateStr) => {
-      if (!dateStr) return "N/A";
-      const d = new Date(dateStr);
-      return isNaN(d.getTime()) ? "N/A" : d.toLocaleDateString("en-GB");
-    };
-
-    const documents = [];
-    if (selectedEntry.documents?.kantaSlip) {
-      documents.push({ name: "Kanta Slip", url: selectedEntry.documents.kantaSlip });
-    }
-    if (selectedEntry.documents?.unloadingChallan) {
-      documents.push({ name: "Unloading Challan", url: selectedEntry.documents.unloadingChallan });
-    }
-    if (selectedEntry.documents?.partyBillCopy) {
-      documents.push({ name: "Party Bill Copy", url: selectedEntry.documents.partyBillCopy });
-    }
-
-    const printContent = `
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <title>Receiving Entry - ${selectedEntry.saudaNo || "N/A"}</title>
-          <meta charset="UTF-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <style>
-            @page {
-              size: A4;
-              margin: 15mm;
-            }
-            * {
-              box-sizing: border-box;
-            }
-            body {
-              font-family: Arial, sans-serif;
-              margin: 0;
-              padding: 20px;
-              background: #fff;
-            }
-            .print-header {
-              text-align: center;
-              margin-bottom: 20px;
-              padding-bottom: 20px;
-              border-bottom: 2px solid #065f46;
-            }
-            .print-header h1 {
-              margin: 0;
-              color: #065f46;
-              font-size: 24px;
-            }
-            .print-info {
-              margin-top: 20px;
-              margin-bottom: 30px;
-              padding: 15px;
-              background: #f0fdf4;
-              border-radius: 8px;
-            }
-            .print-info h3 {
-              margin: 0 0 10px 0;
-              color: #065f46;
-            }
-            .info-grid {
-              display: grid;
-              grid-template-columns: repeat(2, 1fr);
-              gap: 10px;
-            }
-            .info-item {
-              display: flex;
-              flex-wrap: wrap;
-            }
-            .info-label {
-              font-weight: bold;
-              min-width: 140px;
-            }
-            .document-section {
-              margin-top: 30px;
-              page-break-before: always;
-            }
-            .document-section:first-of-type {
-              page-break-before: avoid;
-            }
-            .document-title {
-              font-size: 18px;
-              font-weight: bold;
-              color: #065f46;
-              margin-bottom: 15px;
-              padding-bottom: 10px;
-              border-bottom: 1px solid #ccc;
-            }
-            .document-image {
-              max-width: 100%;
-              height: auto;
-              display: block;
-              margin: 0 auto;
-            }
-            .pdf-link {
-              padding: 20px;
-              background: #dbeafe;
-              border-radius: 8px;
-              text-align: center;
-              margin: 10px 0;
-            }
-            .pdf-link a {
-              color: #1e40af;
-              text-decoration: none;
-              font-weight: bold;
-              padding: 10px 20px;
-              background: #fff;
-              border-radius: 4px;
-              display: inline-block;
-              margin-top: 10px;
-            }
-            .download-links {
-              margin: 20px 0;
-              padding: 15px;
-              background: #fef3c7;
-              border-radius: 8px;
-              text-align: center;
-            }
-            .download-links h4 {
-              margin: 0 0 10px 0;
-              color: #92400e;
-            }
-            .download-btn {
-              display: inline-block;
-              padding: 10px 20px;
-              background: #065f46;
-              color: white;
-              text-decoration: none;
-              border-radius: 6px;
-              margin: 5px;
-              font-weight: bold;
-            }
-            .print-btn-container {
-              text-align: center;
-              margin: 20px 0;
-            }
-            .print-btn {
-              padding: 12px 30px;
-              background: #065f46;
-              color: white;
-              border: none;
-              border-radius: 6px;
-              font-size: 16px;
-              font-weight: bold;
-              cursor: pointer;
-            }
-            @media print {
-              body {
-                -webkit-print-color-adjust: exact;
-                print-color-adjust: exact;
-              }
-              .print-btn-container,
-              .download-links {
-                display: none;
-              }
-            }
-          </style>
-        </head>
-        <body>
-          <div class="print-header">
-            <h1>Receiving Entry</h1>
-          </div>
-          
-          <div class="print-info">
-            <h3>Entry Details</h3>
-            <div class="info-grid">
-              <div class="info-item">
-                <span class="info-label">Sauda No:</span>
-                <span>${selectedEntry.saudaNo || "N/A"}</span>
-              </div>
-              <div class="info-item">
-                <span class="info-label">Loading No:</span>
-                <span>${selectedEntry.billNumber || "N/A"}</span>
-              </div>
-              <div class="info-item">
-                <span class="info-label">Lorry No:</span>
-                <span>${selectedEntry.lorryNumber || "N/A"}</span>
-              </div>
-              <div class="info-item">
-                <span class="info-label">Loading Weight:</span>
-                <span>${selectedEntry.loadingWeight || 0} Tons</span>
-              </div>
-              <div class="info-item">
-                <span class="info-label">Unloading Weight:</span>
-                <span>${selectedEntry.unloadingWeight || 0} Tons</span>
-              </div>
-              <div class="info-item">
-                <span class="info-label">Loading Date:</span>
-                <span>${formatDate(selectedEntry.loadingDate)}</span>
-              </div>
-              <div class="info-item">
-                <span class="info-label">Unloading Date:</span>
-                <span>${formatDate(selectedEntry.unloadingDate)}</span>
-              </div>
-              <div class="info-item">
-                <span class="info-label">Rate:</span>
-                <span>Rs. ${selectedEntry.actualRate || 0}</span>
-              </div>
-              <div class="info-item">
-                <span class="info-label">Amount:</span>
-                <span>Rs. ${((selectedEntry.unloadingWeight || 0) * (selectedEntry.actualRate || 0)).toFixed(2)}</span>
-              </div>
-              <div class="info-item">
-                <span class="info-label">Seller Company:</span>
-                <span>${selectedEntry.supplierCompany || "N/A"}</span>
-              </div>
-              <div class="info-item">
-                <span class="info-label">Buyer Company:</span>
-                <span>${selectedEntry.buyerCompany || "N/A"}</span>
-              </div>
-            </div>
-          </div>
-          
-          <div class="print-btn-container">
-            <button class="print-btn" onclick="window.print()">🖨️ Print Document</button>
-          </div>
-          
-          ${documents.length > 0 ? `
-            <div class="download-links">
-              <h4>📥 Download Documents</h4>
-              ${documents.map(doc => `
-                <a href="${doc.url}" class="download-btn" download="${doc.name.replace(/\s+/g, '_')}">
-                  Download ${doc.name}
-                </a>
-              `).join('')}
-            </div>
-          ` : ''}
-          
-          ${documents.map(doc => {
-            if (doc.url.endsWith(".pdf")) {
-              return `
-                <div class="document-section">
-                  <div class="document-title">${doc.name}</div>
-                  <div class="pdf-link">
-                    <p><strong>PDF Document: ${doc.name}</strong></p>
-                    <a href="${doc.url}" target="_blank" rel="noopener noreferrer">
-                      Open ${doc.name} in New Tab
-                    </a>
-                  </div>
-                </div>
-              `;
-            } else {
-              return `
-                <div class="document-section">
-                  <div class="document-title">${doc.name}</div>
-                  <img src="${doc.url}" class="document-image" alt="${doc.name}" />
-                </div>
-              `;
-            }
-          }).join("")}
-          
-          ${documents.length === 0 ? `
-            <div style="text-align: center; padding: 40px; color: #666;">
-              No documents attached
-            </div>
-          ` : ""}
-          
-          <script>
-            document.addEventListener('DOMContentLoaded', function() {
-              console.log('Page loaded successfully');
-            });
-          </script>
-        </body>
-      </html>
-    `;
+    const toastId = toast.loading("Generating PDF...");
 
     try {
-      const blob = new Blob([printContent], { type: 'text/html;charset=utf-8' });
-      const url = URL.createObjectURL(blob);
+      const doc = new jsPDF({
+        orientation: "portrait",
+        unit: "mm",
+        format: "a4",
+      });
+
+      const pageWidth = doc.internal.pageSize.width;
+      const pageHeight = doc.internal.pageSize.height;
+      const margin = 14;
+
+      const setBold = () => doc.setFont("helvetica", "bold");
+      const setNormal = () => doc.setFont("helvetica", "normal");
+
+      let y = 20;
+
+      doc.setLineWidth(0.5);
+      doc.rect(margin, 10, pageWidth - margin * 2, pageHeight - 18);
+
+      setBold();
+      doc.setFontSize(18);
+      doc.text("RECEIVING ENTRY", pageWidth / 2, y, { align: "center" });
+
+      y += 15;
+
+      doc.setLineWidth(0.2);
+      doc.rect(margin + 2, y - 5, pageWidth - margin * 2 - 4, 60);
       
-      const printWindow = window.open(url, '_blank', 'width=800,height=1000,location=yes,menubar=yes,scrollbars=yes,status=yes,toolbar=yes');
+      y += 5;
+      setBold();
+      doc.setFontSize(11);
+      doc.text("ENTRY DETAILS", margin + 5, y);
       
-      if (!printWindow) {
-        toast.error("Please allow pop-ups to view/print documents");
+      y += 8;
+      doc.setFontSize(10);
+
+      const infoItems = [
+        { label: "Sauda No:", value: selectedEntry.saudaNo || "N/A" },
+        { label: "Loading No:", value: selectedEntry.billNumber || "N/A" },
+        { label: "Lorry No:", value: (selectedEntry.lorryNumber || "N/A").toUpperCase() },
+        { label: "Loading Weight:", value: `${selectedEntry.loadingWeight || 0} Tons` },
+        { label: "Unloading Weight:", value: `${selectedEntry.unloadingWeight || 0} Tons` },
+        { label: "Loading Date:", value: formatDate(selectedEntry.loadingDate) },
+        { label: "Unloading Date:", value: formatDate(selectedEntry.unloadingDate) },
+        { label: "Rate:", value: `Rs. ${selectedEntry.actualRate || 0}` },
+        { label: "Amount:", value: `Rs. ${((selectedEntry.unloadingWeight || 0) * (selectedEntry.actualRate || 0)).toFixed(2)}` },
+        { label: "Seller Company:", value: selectedEntry.supplierCompany || "N/A" },
+        { label: "Buyer Company:", value: selectedEntry.buyerCompany || "N/A" },
+      ];
+
+      let col1X = margin + 5;
+      let col2X = pageWidth / 2;
+
+      infoItems.forEach((item, index) => {
+        const x = index % 2 === 0 ? col1X : col2X;
+        const yOffset = Math.floor(index / 2) * 6;
         
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `Receiving_Entry_${selectedEntry.saudaNo || 'Document'}.html`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        
-        setTimeout(() => URL.revokeObjectURL(url), 100);
-        return;
+        setBold();
+        doc.text(item.label, x, y + yOffset);
+        setNormal();
+        doc.text(String(item.value), x + 40, y + yOffset);
+      });
+
+      y += 40;
+
+      const documents = [];
+      if (selectedEntry.documents?.kantaSlip) {
+        documents.push({ name: "Kanta Slip", url: selectedEntry.documents.kantaSlip });
       }
-      
-      const hasPDF = documents.some(d => d.url.endsWith(".pdf"));
-      if (hasPDF) {
-        toast.info("PDF documents have direct download links - click them to download");
+      if (selectedEntry.documents?.unloadingChallan) {
+        documents.push({ name: "Unloading Challan", url: selectedEntry.documents.unloadingChallan });
       }
-      
+      if (selectedEntry.documents?.partyBillCopy) {
+        documents.push({ name: "Party Bill Copy", url: selectedEntry.documents.partyBillCopy });
+      }
+
+      if (documents.length > 0) {
+        for (let i = 0; i < documents.length; i++) {
+          const docInfo = documents[i];
+          
+          if (i > 0) {
+            doc.addPage();
+            y = 20;
+          }
+
+          setBold();
+          doc.setFontSize(14);
+          doc.text(docInfo.name.toUpperCase(), pageWidth / 2, y, { align: "center" });
+          
+          y += 10;
+
+          if (!docInfo.url.endsWith(".pdf")) {
+            try {
+              const imgData = await getBase64(docInfo.url);
+              if (imgData) {
+                const imgWidth = pageWidth - margin * 4;
+                const imgHeight = (imgWidth * 3) / 4;
+                const maxHeight = pageHeight - y - 20;
+                const finalHeight = Math.min(imgHeight, maxHeight);
+                
+                doc.addImage(
+                  imgData,
+                  "PNG",
+                  margin + 2,
+                  y,
+                  imgWidth,
+                  finalHeight
+                );
+              }
+            } catch (imgErr) {
+              console.error("Error loading image:", imgErr);
+              setNormal();
+              doc.setFontSize(10);
+              doc.text("Image could not be loaded", pageWidth / 2, y, { align: "center" });
+            }
+          } else {
+            setNormal();
+            doc.setFontSize(10);
+            doc.text("PDF Document - Please open separately", pageWidth / 2, y, { align: "center" });
+            y += 10;
+            doc.setTextColor(0, 0, 255);
+            doc.textWithLink(docInfo.url, pageWidth / 2, y, { 
+              align: "center",
+              url: docInfo.url 
+            });
+            doc.setTextColor(0, 0, 0);
+          }
+        }
+      } else {
+        setNormal();
+        doc.setFontSize(10);
+        doc.text("No documents attached", pageWidth / 2, y, { align: "center" });
+      }
+
+      doc.save(`Receiving_Entry_${selectedEntry.saudaNo || 'Document'}.pdf`);
+      toast.dismiss(toastId);
+      toast.success("PDF downloaded successfully!");
+
     } catch (error) {
-      console.error("Error opening print window:", error);
-      toast.error("Unable to open print window. Please try again.");
+      console.error("Error generating PDF:", error);
+      toast.dismiss(toastId);
+      toast.error("Failed to generate PDF. Please try again.");
     }
   };
 
