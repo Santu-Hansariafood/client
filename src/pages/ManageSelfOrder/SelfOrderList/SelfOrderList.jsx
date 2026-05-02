@@ -283,7 +283,6 @@ const SelfOrderList = () => {
         }
 
         const fileName = `Sauda-${item.saudaNo}.pdf`;
-        await downloadFile(blob, fileName);
 
         let finalMessage = message;
 
