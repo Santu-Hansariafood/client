@@ -91,6 +91,9 @@ const EditSelfOrder = () => {
   const [formData, setFormData] = useState(
     state?.orderData || INITIAL_FORM_DATA,
   );
+  const [originalFormData, setOriginalFormData] = useState(
+    state?.orderData ? JSON.parse(JSON.stringify(state?.orderData)) : null,
+  );
   const [isLoading, setIsLoading] = useState(false);
   const [isFetching, setIsFetching] = useState(false);
   const [_buyerBrokerageMap, setBuyerBrokerageMap] = useState({});
@@ -98,6 +101,10 @@ const EditSelfOrder = () => {
   const [buyers, setBuyers] = useState(state?.buyerData || []);
   const [suppliers, setSuppliers] = useState(state?.supplierData || []);
   const [sellerCompanies, setSellerCompanies] = useState([]);
+  const [selectedEmails, setSelectedEmails] = useState({
+    buyer: true,
+    supplier: true,
+  });
 
   const abortControllerRef = useRef(null);
 
@@ -171,7 +178,7 @@ const EditSelfOrder = () => {
 
         const data = orderRes.data;
         if (data) {
-          setFormData({
+          const processedData = {
             ...INITIAL_FORM_DATA,
             ...data,
             consignee: data.consignee || "",
@@ -182,7 +189,9 @@ const EditSelfOrder = () => {
             loadingDate: data.loadingDate
               ? new Date(data.loadingDate)
               : new Date(),
-          });
+          };
+          setFormData(processedData);
+          setOriginalFormData(JSON.parse(JSON.stringify(processedData)));
         }
 
         setConsignees(consigneesRows);
@@ -227,6 +236,39 @@ const EditSelfOrder = () => {
       return { ...prev, [field]: value };
     });
   }, []);
+
+  const getChangedFields = useCallback(() => {
+    if (!originalFormData) return formData;
+
+    const isEqual = (a, b) => {
+      if (a === b) return true;
+      if (typeof a !== typeof b) return false;
+      if (a === null || b === null) return false;
+      if (a instanceof Date && b instanceof Date) {
+        return a.getTime() === b.getTime();
+      }
+      if (Array.isArray(a) && Array.isArray(b)) {
+        if (a.length !== b.length) return false;
+        return a.every((item, index) => isEqual(item, b[index]));
+      }
+      if (typeof a === 'object' && typeof b === 'object') {
+        const keysA = Object.keys(a);
+        const keysB = Object.keys(b);
+        if (keysA.length !== keysB.length) return false;
+        return keysA.every(key => isEqual(a[key], b[key]));
+      }
+      return false;
+    };
+
+    const changes = {};
+    Object.keys(formData).forEach(key => {
+      if (!isEqual(formData[key], originalFormData[key])) {
+        changes[key] = formData[key];
+      }
+    });
+
+    return changes;
+  }, [formData, originalFormData]);
 
   const validateFormData = useCallback(() => {
     const errors = [];
@@ -292,8 +334,10 @@ const EditSelfOrder = () => {
           ? Number(formData.pendingQuantity)
           : quantity;
 
+      const changedFields = getChangedFields();
+      
       const payload = {
-        ...formData,
+        ...changedFields,
         quantity: quantity,
         pendingQuantity: pendingQuantity,
         status: formData.status || "active",
@@ -301,6 +345,8 @@ const EditSelfOrder = () => {
         gst: Number(formData.gst) || 0,
         cd: Number(formData.cd) || 0,
         weight: formData.weight || "",
+        sendPOToBuyer: selectedEmails.buyer ? "yes" : "no",
+        sendPOToSupplier: selectedEmails.supplier ? "yes" : "no",
         buyerBrokerage: {
           brokerageBuyer:
             Number(formData.buyerBrokerage?.brokerageBuyer ?? 0) || 0,
@@ -329,7 +375,7 @@ const EditSelfOrder = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [formData, id, navigate, validateFormData]);
+  }, [formData, id, navigate, validateFormData, getChangedFields, selectedEmails]);
 
   if (isFetching) return <Loading />;
 
@@ -412,6 +458,46 @@ const EditSelfOrder = () => {
               formData={formData}
               handleChange={handleChange}
             />
+          </div>
+
+          <div className={sectionClass}>
+            <h3 className="text-base font-semibold text-slate-800 mb-4">
+              Send Email Notifications
+            </h3>
+            <div className="flex flex-col gap-4">
+              <label className="flex items-center gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={selectedEmails.buyer}
+                  onChange={(e) =>
+                    setSelectedEmails((prev) => ({
+                      ...prev,
+                      buyer: e.target.checked,
+                    }))
+                  }
+                  className="w-5 h-5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+                />
+                <span className="text-slate-700 font-medium">
+                  Send Email to Buyer
+                </span>
+              </label>
+              <label className="flex items-center gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={selectedEmails.supplier}
+                  onChange={(e) =>
+                    setSelectedEmails((prev) => ({
+                      ...prev,
+                      supplier: e.target.checked,
+                    }))
+                  }
+                  className="w-5 h-5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+                />
+                <span className="text-slate-700 font-medium">
+                  Send Email to Supplier
+                </span>
+              </label>
+            </div>
           </div>
 
           <div className={sectionClass}>

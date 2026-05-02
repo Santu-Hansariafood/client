@@ -24,7 +24,6 @@ const BuyerInformation = ({
   const [loading, setLoading] = useState(
     !propBuyers || propBuyers.length === 0,
   );
-  const [initialized, setInitialized] = useState(false);
 
   useEffect(() => {
     if (propBuyers?.length > 0) {
@@ -126,7 +125,7 @@ const BuyerInformation = ({
 
   // Handle initial data for editing
   useEffect(() => {
-    if (loading || initialized) return;
+    if (loading) return;
 
     const hasEditHints =
       formData?.buyer ||
@@ -172,7 +171,6 @@ const BuyerInformation = ({
     if (matchCompany) {
       setSelectedCompanyId(matchCompany._id);
 
-      // Auto-trigger onCompanyChange logic to populate parent state
       const buyerData = matchBuyer;
       const companyData = matchCompany;
 
@@ -223,17 +221,7 @@ const BuyerInformation = ({
         handleChange("consignee", found.name || found.label || "");
       }
     }
-
-    setInitialized(true);
-  }, [
-    buyers,
-    companies,
-    consignees,
-    loading,
-    formData,
-    initialized,
-    handleChange,
-  ]);
+  }, [buyers, companies, consignees, loading, formData, handleChange]);
 
   const onBuyerChange = (option) => {
     const buyerId = option?.value || null;

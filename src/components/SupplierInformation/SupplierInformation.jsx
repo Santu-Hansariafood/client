@@ -37,46 +37,44 @@ const SupplierInformation = ({
         setSelectedSupplier(supplierId);
 
         const selected = sellerOptions.find(
-          (seller) => seller.value === supplierId,
+          (seller) => String(seller.value) === String(supplierId),
         );
         if (selected) {
-          if (!formData.sellerMobile || !formData.supplierBrokerage) {
-            handleChange("supplierBrokerage", selected.commodities || []);
-            handleChange("supplierName", selected.label || "");
+          handleChange("supplierBrokerage", selected.commodities || []);
+          handleChange("supplierName", selected.label || "");
 
-            const rawEmails = selected.emails || [];
-            const sellerEmails = Array.isArray(rawEmails)
-              ? rawEmails
-                  .map((e) =>
-                    typeof e === "string" ? e : (e?.value ?? e?.email ?? ""),
-                  )
-                  .filter(Boolean)
-              : [];
+          const rawEmails = selected.emails || [];
+          const sellerEmails = Array.isArray(rawEmails)
+            ? rawEmails
+                .map((e) =>
+                  typeof e === "string" ? e : (e?.value ?? e?.email ?? ""),
+                )
+                .filter(Boolean)
+            : [];
+          handleChange(
+            "sellerEmails",
+            sellerEmails.length ? sellerEmails : [""],
+          );
+
+          const rawPhones = selected.phoneNumbers || [];
+          const sellerPhones = Array.isArray(rawPhones)
+            ? rawPhones
+                .map((p) =>
+                  typeof p === "string" ? p : (p?.value ?? p?.phone ?? ""),
+                )
+                .filter(Boolean)
+            : [];
+          const firstMobile = sellerPhones[0] || "";
+          handleChange("sellerMobile", firstMobile);
+
+          if (selected.commodities?.length) {
             handleChange(
-              "sellerEmails",
-              sellerEmails.length ? sellerEmails : [""],
+              "supplierBrokerageDetails",
+              selected.commodities.map((c) => ({
+                name: c.name,
+                brokerage: c.brokerage,
+              })),
             );
-
-            const rawPhones = selected.phoneNumbers || [];
-            const sellerPhones = Array.isArray(rawPhones)
-              ? rawPhones
-                  .map((p) =>
-                    typeof p === "string" ? p : (p?.value ?? p?.phone ?? ""),
-                  )
-                  .filter(Boolean)
-              : [];
-            const firstMobile = sellerPhones[0] || "";
-            handleChange("sellerMobile", firstMobile);
-
-            if (selected.commodities?.length) {
-              handleChange(
-                "supplierBrokerageDetails",
-                selected.commodities.map((c) => ({
-                  name: c.name,
-                  brokerage: c.brokerage,
-                })),
-              );
-            }
           }
         }
       }
