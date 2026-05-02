@@ -369,7 +369,21 @@ const PrintLoadingEntry = async (data) => {
     
     let shipToAddress = 'N/A';
     
-    if (sauda.shipTo && typeof sauda.shipTo === 'object') {
+    if (shipToConsignee && typeof shipToConsignee === 'object') {
+      const shipToConsigneeAddrParts = [
+        shipToConsignee.address,
+        shipToConsignee.location,
+        shipToConsignee.city,
+        shipToConsignee.district,
+        shipToConsignee.state,
+        shipToConsignee.pin || shipToConsignee.pincode
+      ].filter(Boolean);
+      if (shipToConsigneeAddrParts.length > 0) {
+        shipToAddress = shipToConsigneeAddrParts.join(', ');
+      }
+    }
+    
+    if (shipToAddress === 'N/A' && sauda.shipTo && typeof sauda.shipTo === 'object') {
       const saudaAddrParts = [
         sauda.shipTo.address,
         sauda.shipTo.location,
@@ -434,7 +448,11 @@ const PrintLoadingEntry = async (data) => {
     setNormal();
     let shipToMobile = 'N/A';
     
-    if (sauda.shipTo && typeof sauda.shipTo === 'object') {
+    if (shipToConsignee && typeof shipToConsignee === 'object') {
+      shipToMobile = shipToConsignee.mobile || shipToConsignee.phone || shipToConsignee.mobileNo || 'N/A';
+    }
+    
+    if (shipToMobile === 'N/A' && sauda.shipTo && typeof sauda.shipTo === 'object') {
       shipToMobile = sauda.shipTo.mobile || sauda.shipTo.phone || sauda.shipTo.mobileNo || 'N/A';
     }
     
