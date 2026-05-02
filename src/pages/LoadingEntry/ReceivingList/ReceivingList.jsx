@@ -82,12 +82,6 @@ const ReceivingList = () => {
   const handlePrint = () => {
     if (!selectedEntry) return;
 
-    const printWindow = window.open("", "_blank");
-    if (!printWindow) {
-      toast.error("Please allow pop-ups to print");
-      return;
-    }
-
     const formatDate = (dateStr) => {
       if (!dateStr) return "N/A";
       const d = new Date(dateStr);
@@ -105,22 +99,26 @@ const ReceivingList = () => {
       documents.push({ name: "Party Bill Copy", url: selectedEntry.documents.partyBillCopy });
     }
 
-    const hasPDF = documents.some(d => d.url.endsWith(".pdf"));
-
-    printWindow.document.write(`
+    const printContent = `
       <!DOCTYPE html>
       <html>
         <head>
           <title>Receiving Entry - ${selectedEntry.saudaNo || "N/A"}</title>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
           <style>
             @page {
               size: A4;
               margin: 15mm;
             }
+            * {
+              box-sizing: border-box;
+            }
             body {
               font-family: Arial, sans-serif;
               margin: 0;
-              padding: 0;
+              padding: 20px;
+              background: #fff;
             }
             .print-header {
               text-align: center;
@@ -151,6 +149,7 @@ const ReceivingList = () => {
             }
             .info-item {
               display: flex;
+              flex-wrap: wrap;
             }
             .info-label {
               font-weight: bold;
@@ -182,11 +181,61 @@ const ReceivingList = () => {
               background: #dbeafe;
               border-radius: 8px;
               text-align: center;
+              margin: 10px 0;
+            }
+            .pdf-link a {
+              color: #1e40af;
+              text-decoration: none;
+              font-weight: bold;
+              padding: 10px 20px;
+              background: #fff;
+              border-radius: 4px;
+              display: inline-block;
+              margin-top: 10px;
+            }
+            .download-links {
+              margin: 20px 0;
+              padding: 15px;
+              background: #fef3c7;
+              border-radius: 8px;
+              text-align: center;
+            }
+            .download-links h4 {
+              margin: 0 0 10px 0;
+              color: #92400e;
+            }
+            .download-btn {
+              display: inline-block;
+              padding: 10px 20px;
+              background: #065f46;
+              color: white;
+              text-decoration: none;
+              border-radius: 6px;
+              margin: 5px;
+              font-weight: bold;
+            }
+            .print-btn-container {
+              text-align: center;
+              margin: 20px 0;
+            }
+            .print-btn {
+              padding: 12px 30px;
+              background: #065f46;
+              color: white;
+              border: none;
+              border-radius: 6px;
+              font-size: 16px;
+              font-weight: bold;
+              cursor: pointer;
             }
             @media print {
               body {
                 -webkit-print-color-adjust: exact;
                 print-color-adjust: exact;
+              }
+              .print-btn-container,
+              .download-links {
+                display: none;
               }
             }
           </style>
@@ -246,13 +295,31 @@ const ReceivingList = () => {
             </div>
           </div>
           
+          <div class="print-btn-container">
+            <button class="print-btn" onclick="window.print()">🖨️ Print Document</button>
+          </div>
+          
+          ${documents.length > 0 ? `
+            <div class="download-links">
+              <h4>📥 Download Documents</h4>
+              ${documents.map(doc => `
+                <a href="${doc.url}" class="download-btn" download="${doc.name.replace(/\s+/g, '_')}">
+                  Download ${doc.name}
+                </a>
+              `).join('')}
+            </div>
+          ` : ''}
+          
           ${documents.map(doc => {
             if (doc.url.endsWith(".pdf")) {
               return `
                 <div class="document-section">
                   <div class="document-title">${doc.name}</div>
                   <div class="pdf-link">
-                    <p>PDF Document: <a href="${doc.url}" target="_blank">${doc.name}</a></p>
+                    <p><strong>PDF Document: ${doc.name}</strong></p>
+                    <a href="${doc.url}" target="_blank" rel="noopener noreferrer">
+                      Open ${doc.name} in New Tab
+                    </a>
                   </div>
                 </div>
               `;
@@ -271,20 +338,45 @@ const ReceivingList = () => {
               No documents attached
             </div>
           ` : ""}
+          
+          <script>
+            document.addEventListener('DOMContentLoaded', function() {
+              console.log('Page loaded successfully');
+            });
+          </script>
         </body>
       </html>
-    `);
+    `;
 
-    printWindow.document.close();
-    printWindow.focus();
-
-    if (hasPDF) {
-      toast.info("PDF documents are linked - please open and print them separately");
+    try {
+      const blob = new Blob([printContent], { type: 'text/html;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      
+      const printWindow = window.open(url, '_blank', 'width=800,height=1000,location=yes,menubar=yes,scrollbars=yes,status=yes,toolbar=yes');
+      
+      if (!printWindow) {
+        toast.error("Please allow pop-ups to view/print documents");
+        
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `Receiving_Entry_${selectedEntry.saudaNo || 'Document'}.html`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        setTimeout(() => URL.revokeObjectURL(url), 100);
+        return;
+      }
+      
+      const hasPDF = documents.some(d => d.url.endsWith(".pdf"));
+      if (hasPDF) {
+        toast.info("PDF documents have direct download links - click them to download");
+      }
+      
+    } catch (error) {
+      console.error("Error opening print window:", error);
+      toast.error("Unable to open print window. Please try again.");
     }
-
-    setTimeout(() => {
-      printWindow.print();
-    }, 500);
   };
 
   const headers = [
