@@ -250,9 +250,15 @@ const PrintLoadingEntry = async (data) => {
       "N/A";
 
     const consigneeAddress =
-      [consignee.location, consignee.district, consignee.state, consignee.pin]
-        .filter(Boolean)
-        .join(", ") ||
+      [
+        consignee.address,
+        consignee.location,
+        consignee.city,
+        consignee.district,
+        consignee.state,
+        consignee.pin,
+        consignee.pincode
+      ].filter(Boolean).join(", ") ||
       data.deliveryAddress ||
       "N/A";
 
@@ -356,7 +362,9 @@ const PrintLoadingEntry = async (data) => {
     
     let shipToAddress = '';
     
-    if (sauda.shipTo && typeof sauda.shipTo === 'object') {
+    if (consigneeAddress && consigneeAddress !== 'N/A') {
+      shipToAddress = consigneeAddress;
+    } else if (sauda.shipTo && typeof sauda.shipTo === 'object') {
       const shipToParts = [
         sauda.shipTo.location,
         sauda.shipTo.district,
@@ -366,10 +374,6 @@ const PrintLoadingEntry = async (data) => {
       if (shipToParts.length > 0) {
         shipToAddress = shipToParts.join(', ');
       }
-    }
-    
-    if (!shipToAddress) {
-      shipToAddress = consigneeAddress;
     }
     
     if (!shipToAddress) {
