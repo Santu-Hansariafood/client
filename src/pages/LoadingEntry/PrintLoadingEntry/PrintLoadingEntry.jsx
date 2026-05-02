@@ -354,18 +354,15 @@ const PrintLoadingEntry = async (data) => {
     doc.text(`Address:`, margin + 5, y);
     setNormal();
     
-    let shipToAddress = '';
-    
-    // First, build full address from the consignee object we found
+    // Build full address from the consignee object
     const consigneeAddressParts = [
-      consignee.address,
       consignee.location,
       consignee.district,
       consignee.state,
       consignee.pin
     ].filter(Boolean).join(", ");
     
-    shipToAddress = consigneeAddressParts || consigneeAddress;
+    const shipToAddress = consigneeAddressParts || consigneeAddress;
     
     const cAddrLines = wrapText(shipToAddress, 100);
     cAddrLines.slice(0, 4).forEach((line, index) => {
