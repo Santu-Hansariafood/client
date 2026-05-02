@@ -361,24 +361,24 @@ const PrintLoadingEntry = async (data) => {
     doc.text(`Address:`, margin + 5, y);
     setNormal();
     
-    let shipToAddress = '';
+    let shipToAddress = 'N/A';
     
-    if (Object.keys(consignee).length > 0 && consignee.name) {
+    const matchedConsignee = consignees.find(
+      (c) =>
+        String(c._id) === String(data.consignee) || 
+        normalizeText(c.name) === normalizeText(data.consignee)
+    );
+    
+    if (matchedConsignee) {
       const consigneeAddrParts = [
-        consignee.address,
-        consignee.location,
-        consignee.district,
-        consignee.state,
-        consignee.pin,
-        consignee.pincode
+        matchedConsignee.location,
+        matchedConsignee.district,
+        matchedConsignee.state,
+        matchedConsignee.pin
       ].filter(Boolean);
       if (consigneeAddrParts.length > 0) {
         shipToAddress = consigneeAddrParts.join(', ');
       }
-    }
-    
-    if (!shipToAddress) {
-      shipToAddress = consigneeAddress || 'N/A';
     }
     
     const cAddrLines = wrapText(shipToAddress, 100);
