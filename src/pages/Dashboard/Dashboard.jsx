@@ -19,16 +19,20 @@ const Dashboard = () => {
 
   const fetchCounts = useCallback(async () => {
     try {
+      const today = new Date();
+      const todayStr = today.toISOString().split("T")[0];
+      
       const responses = await Promise.all([
         api.get("/buyers"),
         api.get("/sellers"),
         api.get("/consignees"),
         api.get("/self-order?limit=0"),
-        api.get("/bids"),
+        api.get(`/bids?date=${todayStr}`),
       ]);
 
       const getCount = (res) => {
         const data = res?.data;
+        if (data && typeof data.total === "number") return data.total;
         if (Array.isArray(data)) return data.length;
         if (data && Array.isArray(data.data)) return data.data.length;
         return 0;

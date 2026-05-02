@@ -5,6 +5,8 @@ import { adminOnly } from "../middleware/roleMiddleware.js";
 
 const router = express.Router();
 
+const escapeRegex = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
 // @desc    Get all expense categories
 // @route   GET /api/expense-categories
 // @access  Private
@@ -28,7 +30,7 @@ router.post("/", authJwt, adminOnly, async (req, res) => {
   }
 
   try {
-    const categoryExists = await ExpenseCategory.findOne({ name: { $regex: new RegExp(`^${name}$`, 'i') } });
+    const categoryExists = await ExpenseCategory.findOne({ name: { $regex: new RegExp(`^${escapeRegex(name)}$`, 'i') } });
     if (categoryExists) {
       return res.status(400).json({ message: "Category already exists" });
     }

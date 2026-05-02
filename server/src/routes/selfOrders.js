@@ -7,6 +7,8 @@ import Consignee from "../models/Consignee.js";
 
 const router = Router();
 
+const escapeRegex = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
 const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
@@ -58,7 +60,7 @@ router.get("/", async (req, res) => {
 
     let query = {};
     if (search) {
-      const searchRegex = new RegExp(search, "i");
+      const searchRegex = new RegExp(escapeRegex(search), "i");
       query.$or = [
         { saudaNo: { $regex: searchRegex } },
         { poNumber: { $regex: searchRegex } },
@@ -172,7 +174,7 @@ router.get("/pending/list", async (req, res) => {
     };
 
     if (search) {
-      const searchRegex = new RegExp(search, "i");
+      const searchRegex = new RegExp(escapeRegex(search), "i");
       query.$and = [
         {
           $or: [
@@ -314,7 +316,7 @@ router.get("/export/excel", async (req, res) => {
 
     let query = {};
     if (search) {
-      const searchRegex = new RegExp(search, "i");
+      const searchRegex = new RegExp(escapeRegex(search), "i");
       query.$or = [
         { saudaNo: { $regex: searchRegex } },
         { poNumber: { $regex: searchRegex } },

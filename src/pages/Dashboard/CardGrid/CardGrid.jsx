@@ -64,7 +64,7 @@ const cardConfig = [
     color: "from-amber-500 to-orange-500",
   },
   {
-    title: "Total Bids",
+    title: "Today's Bids",
     countKey: "bids",
     icon: FaGavel,
     link: "/manage-bids/bid-list",

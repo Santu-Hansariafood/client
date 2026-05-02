@@ -6,6 +6,8 @@ import Group from "../models/Group.js";
 
 const router = Router();
 
+const escapeRegex = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
 const toObjectId = (value) =>
   mongoose.Types.ObjectId.isValid(value)
     ? new mongoose.Types.ObjectId(value)
@@ -101,7 +103,7 @@ router.get("/", async (req, res) => {
       }
     }
     if (search) {
-      query.companyName = { $regex: new RegExp(search, "i") };
+      query.companyName = { $regex: new RegExp(escapeRegex(search), "i") };
     }
 
     if (page > 0 && limit > 0) {

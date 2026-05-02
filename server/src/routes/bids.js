@@ -283,7 +283,11 @@ router.get("/", async (req, res) => {
       query.status = status;
     }
     if (date) {
-      query.bidDate = date;
+      const startOfDay = new Date(date);
+      startOfDay.setHours(0, 0, 0, 0);
+      const endOfDay = new Date(date);
+      endOfDay.setHours(23, 59, 59, 999);
+      query.bidDate = { $gte: startOfDay, $lte: endOfDay };
     }
 
     if (page > 0 && limit > 0) {

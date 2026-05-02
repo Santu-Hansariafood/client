@@ -8,6 +8,8 @@ import Consignee from "../models/Consignee.js";
 
 const router = Router();
 
+const escapeRegex = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
 const toObjectId = (value) =>
   mongoose.Types.ObjectId.isValid(value)
     ? new mongoose.Types.ObjectId(value)
@@ -112,7 +114,7 @@ router.get("/", async (req, res) => {
       query.mobile = mobile;
     }
     if (search) {
-      const regex = new RegExp(search, "i");
+      const regex = new RegExp(escapeRegex(search), "i");
       const [companies, groups] = await Promise.all([
         Company.find({ companyName: regex }).select("_id").lean(),
         Group.find({ groupName: regex }).select("_id").lean(),

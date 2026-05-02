@@ -18,6 +18,8 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const router = Router();
 
+const escapeRegex = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
 const toObjectId = (value) =>
   mongoose.Types.ObjectId.isValid(value)
     ? new mongoose.Types.ObjectId(value)
@@ -229,7 +231,7 @@ router.get("/saudas", async (req, res) => {
 
     if (buyerCompany) {
       andParts.push({
-        buyerCompany: { $regex: new RegExp(`^${buyerCompany}$`, "i") },
+        buyerCompany: { $regex: new RegExp(`^${escapeRegex(buyerCompany)}$`, "i") },
       });
     }
 
@@ -248,7 +250,7 @@ router.get("/saudas", async (req, res) => {
     }
 
     if (saudaNo) {
-      andParts.push({ saudaNo: { $regex: new RegExp(saudaNo, "i") } });
+      andParts.push({ saudaNo: { $regex: new RegExp(escapeRegex(saudaNo), "i") } });
     }
 
     const query = andParts.length ? { $and: andParts } : {};
@@ -313,7 +315,7 @@ router.get("/", async (req, res) => {
     }
 
     if (search) {
-      const searchRegex = new RegExp(search, "i");
+      const searchRegex = new RegExp(escapeRegex(search), "i");
       andParts.push({
         $or: [
           { supplierCompany: { $regex: searchRegex } },
@@ -327,11 +329,11 @@ router.get("/", async (req, res) => {
     }
 
     if (saudaNo) {
-      andParts.push({ saudaNo: { $regex: new RegExp(saudaNo, "i") } });
+      andParts.push({ saudaNo: { $regex: new RegExp(escapeRegex(saudaNo), "i") } });
     }
 
     if (lorryNumber) {
-      andParts.push({ lorryNumber: { $regex: new RegExp(lorryNumber, "i") } });
+      andParts.push({ lorryNumber: { $regex: new RegExp(escapeRegex(lorryNumber), "i") } });
     }
 
     if (startDate || endDate) {
@@ -394,7 +396,7 @@ router.get("/receiving", async (req, res) => {
     }
 
     if (search) {
-      const searchRegex = new RegExp(search, "i");
+      const searchRegex = new RegExp(escapeRegex(search), "i");
       andParts.push({
         $or: [
           { supplierCompany: { $regex: searchRegex } },
@@ -505,7 +507,7 @@ router.get("/export/excel", async (req, res) => {
     }
 
     if (search) {
-      const searchRegex = new RegExp(search, "i");
+      const searchRegex = new RegExp(escapeRegex(search), "i");
       andParts.push({
         $or: [
           { supplierCompany: { $regex: searchRegex } },
@@ -519,11 +521,11 @@ router.get("/export/excel", async (req, res) => {
     }
 
     if (saudaNo) {
-      andParts.push({ saudaNo: { $regex: new RegExp(saudaNo, "i") } });
+      andParts.push({ saudaNo: { $regex: new RegExp(escapeRegex(saudaNo), "i") } });
     }
 
     if (lorryNumber) {
-      andParts.push({ lorryNumber: { $regex: new RegExp(lorryNumber, "i") } });
+      andParts.push({ lorryNumber: { $regex: new RegExp(escapeRegex(lorryNumber), "i") } });
     }
 
     if (startDate || endDate) {

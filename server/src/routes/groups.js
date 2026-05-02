@@ -3,6 +3,8 @@ import Group from "../models/Group.js";
 
 const router = Router();
 
+const escapeRegex = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
 router.get("/", async (req, res) => {
   try {
     const page = parseInt(req.query.page || "0", 10);
@@ -11,7 +13,7 @@ router.get("/", async (req, res) => {
 
     const query = {};
     if (search) {
-      query.groupName = { $regex: new RegExp(search, "i") };
+      query.groupName = { $regex: new RegExp(escapeRegex(search), "i") };
     }
 
     if (page > 0 && limit > 0) {
