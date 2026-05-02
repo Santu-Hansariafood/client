@@ -334,7 +334,7 @@ const PrintLoadingEntry = async (data) => {
     y += 22;
 
     doc.setLineWidth(0.2);
-    doc.rect(margin + 2, y - 5, pageWidth - margin * 2 - 4, 28);
+    doc.rect(margin + 2, y - 5, pageWidth - margin * 2 - 4, 45);
     setBold();
     doc.setFontSize(9);
     doc.text(`SHIP TO (CONSIGNEE)`, margin + 5, y);
@@ -356,45 +356,23 @@ const PrintLoadingEntry = async (data) => {
     
     let shipToAddress = '';
     
-    const addressParts = [];
+    // First, build full address from the consignee object we found
+    const consigneeAddressParts = [
+      consignee.address,
+      consignee.location,
+      consignee.district,
+      consignee.state,
+      consignee.pin
+    ].filter(Boolean).join(", ");
     
-    if (sauda.shipTo) {
-      if (typeof sauda.shipTo === 'object') {
-        addressParts.push(
-          sauda.shipTo.address,
-          sauda.shipTo.city,
-          sauda.shipTo.district,
-          sauda.shipTo.state,
-          sauda.shipTo.pin,
-          sauda.shipTo.pincode,
-          sauda.shipTo.location
-        );
-      } else if (typeof sauda.shipTo === 'string') {
-        addressParts.push(sauda.shipTo);
-      }
-    }
-    
-    addressParts.push(
-      sauda.shipToAddress,
-      sauda.deliveryAddress,
-      sauda.address,
-      sauda.placeOfDelivery,
-      sauda.consigneeAddress,
-      sauda.location,
-      data.shipToAddress,
-      data.deliveryAddress,
-      data.address,
-      data.consigneeAddress
-    );
-    
-    shipToAddress = addressParts.filter(Boolean)[0] || consigneeAddress;
+    shipToAddress = consigneeAddressParts || consigneeAddress;
     
     const cAddrLines = wrapText(shipToAddress, 100);
-    cAddrLines.slice(0, 2).forEach((line, index) => {
+    cAddrLines.slice(0, 4).forEach((line, index) => {
       doc.text(line, margin + 30, y + index * 4);
     });
 
-    y += 4;
+    y += (cAddrLines.length * 4);
     setBold();
     doc.text(`Mobile:`, margin + 5, y);
     setNormal();
