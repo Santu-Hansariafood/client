@@ -356,38 +356,37 @@ const PrintLoadingEntry = async (data) => {
     
     let shipToAddress = '';
     
-    const addressParts = [];
-    
-    if (sauda.shipTo) {
-      if (typeof sauda.shipTo === 'object') {
-        addressParts.push(
-          sauda.shipTo.address,
-          sauda.shipTo.city,
-          sauda.shipTo.district,
-          sauda.shipTo.state,
-          sauda.shipTo.pin,
-          sauda.shipTo.pincode,
-          sauda.shipTo.location
-        );
-      } else if (typeof sauda.shipTo === 'string') {
-        addressParts.push(sauda.shipTo);
+    if (sauda.shipTo && typeof sauda.shipTo === 'object') {
+      const shipToParts = [
+        sauda.shipTo.location,
+        sauda.shipTo.district,
+        sauda.shipTo.state,
+        sauda.shipTo.pin || sauda.shipTo.pincode
+      ].filter(Boolean);
+      if (shipToParts.length > 0) {
+        shipToAddress = shipToParts.join(', ');
       }
     }
     
-    addressParts.push(
-      sauda.shipToAddress,
-      sauda.deliveryAddress,
-      sauda.address,
-      sauda.placeOfDelivery,
-      sauda.consigneeAddress,
-      sauda.location,
-      data.shipToAddress,
-      data.deliveryAddress,
-      data.address,
-      data.consigneeAddress
-    );
+    if (!shipToAddress) {
+      shipToAddress = consigneeAddress;
+    }
     
-    shipToAddress = addressParts.filter(Boolean)[0] || consigneeAddress;
+    if (!shipToAddress) {
+      const backupAddressParts = [
+        sauda.shipToAddress,
+        sauda.deliveryAddress,
+        sauda.address,
+        sauda.placeOfDelivery,
+        sauda.consigneeAddress,
+        sauda.location,
+        data.shipToAddress,
+        data.deliveryAddress,
+        data.address,
+        data.consigneeAddress
+      ].filter(Boolean);
+      shipToAddress = backupAddressParts[0] || 'N/A';
+    }
     
     const cAddrLines = wrapText(shipToAddress, 100);
     cAddrLines.slice(0, 2).forEach((line, index) => {
