@@ -1,6 +1,6 @@
 import React, { lazy, useEffect, useState, useMemo, useCallback } from "react";
 import api from "../../../utils/apiClient/apiClient";
-import { FaClipboardList, FaEye } from "react-icons/fa";
+import { FaClipboardList, FaEye, FaPrint } from "react-icons/fa";
 import { toast } from "react-toastify";
 import { useAuth } from "../../../context/AuthContext/AuthContext";
 import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
@@ -77,6 +77,214 @@ const ReceivingList = () => {
   const handleViewDocuments = (entry) => {
     setSelectedEntry(entry);
     setShowPopup(true);
+  };
+
+  const handlePrint = () => {
+    if (!selectedEntry) return;
+
+    const printWindow = window.open("", "_blank");
+    if (!printWindow) {
+      toast.error("Please allow pop-ups to print");
+      return;
+    }
+
+    const formatDate = (dateStr) => {
+      if (!dateStr) return "N/A";
+      const d = new Date(dateStr);
+      return isNaN(d.getTime()) ? "N/A" : d.toLocaleDateString("en-GB");
+    };
+
+    const documents = [];
+    if (selectedEntry.documents?.kantaSlip) {
+      documents.push({ name: "Kanta Slip", url: selectedEntry.documents.kantaSlip });
+    }
+    if (selectedEntry.documents?.unloadingChallan) {
+      documents.push({ name: "Unloading Challan", url: selectedEntry.documents.unloadingChallan });
+    }
+    if (selectedEntry.documents?.partyBillCopy) {
+      documents.push({ name: "Party Bill Copy", url: selectedEntry.documents.partyBillCopy });
+    }
+
+    const hasPDF = documents.some(d => d.url.endsWith(".pdf"));
+
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Receiving Entry - ${selectedEntry.saudaNo || "N/A"}</title>
+          <style>
+            @page {
+              size: A4;
+              margin: 15mm;
+            }
+            body {
+              font-family: Arial, sans-serif;
+              margin: 0;
+              padding: 0;
+            }
+            .print-header {
+              text-align: center;
+              margin-bottom: 20px;
+              padding-bottom: 20px;
+              border-bottom: 2px solid #065f46;
+            }
+            .print-header h1 {
+              margin: 0;
+              color: #065f46;
+              font-size: 24px;
+            }
+            .print-info {
+              margin-top: 20px;
+              margin-bottom: 30px;
+              padding: 15px;
+              background: #f0fdf4;
+              border-radius: 8px;
+            }
+            .print-info h3 {
+              margin: 0 0 10px 0;
+              color: #065f46;
+            }
+            .info-grid {
+              display: grid;
+              grid-template-columns: repeat(2, 1fr);
+              gap: 10px;
+            }
+            .info-item {
+              display: flex;
+            }
+            .info-label {
+              font-weight: bold;
+              min-width: 140px;
+            }
+            .document-section {
+              margin-top: 30px;
+              page-break-before: always;
+            }
+            .document-section:first-of-type {
+              page-break-before: avoid;
+            }
+            .document-title {
+              font-size: 18px;
+              font-weight: bold;
+              color: #065f46;
+              margin-bottom: 15px;
+              padding-bottom: 10px;
+              border-bottom: 1px solid #ccc;
+            }
+            .document-image {
+              max-width: 100%;
+              height: auto;
+              display: block;
+              margin: 0 auto;
+            }
+            .pdf-link {
+              padding: 20px;
+              background: #dbeafe;
+              border-radius: 8px;
+              text-align: center;
+            }
+            @media print {
+              body {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+              }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="print-header">
+            <h1>Receiving Entry</h1>
+          </div>
+          
+          <div class="print-info">
+            <h3>Entry Details</h3>
+            <div class="info-grid">
+              <div class="info-item">
+                <span class="info-label">Sauda No:</span>
+                <span>${selectedEntry.saudaNo || "N/A"}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Loading No:</span>
+                <span>${selectedEntry.billNumber || "N/A"}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Lorry No:</span>
+                <span>${selectedEntry.lorryNumber || "N/A"}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Loading Weight:</span>
+                <span>${selectedEntry.loadingWeight || 0} Tons</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Unloading Weight:</span>
+                <span>${selectedEntry.unloadingWeight || 0} Tons</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Loading Date:</span>
+                <span>${formatDate(selectedEntry.loadingDate)}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Unloading Date:</span>
+                <span>${formatDate(selectedEntry.unloadingDate)}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Rate:</span>
+                <span>Rs. ${selectedEntry.actualRate || 0}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Amount:</span>
+                <span>Rs. ${((selectedEntry.unloadingWeight || 0) * (selectedEntry.actualRate || 0)).toFixed(2)}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Seller Company:</span>
+                <span>${selectedEntry.supplierCompany || "N/A"}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Buyer Company:</span>
+                <span>${selectedEntry.buyerCompany || "N/A"}</span>
+              </div>
+            </div>
+          </div>
+          
+          ${documents.map(doc => {
+            if (doc.url.endsWith(".pdf")) {
+              return `
+                <div class="document-section">
+                  <div class="document-title">${doc.name}</div>
+                  <div class="pdf-link">
+                    <p>PDF Document: <a href="${doc.url}" target="_blank">${doc.name}</a></p>
+                  </div>
+                </div>
+              `;
+            } else {
+              return `
+                <div class="document-section">
+                  <div class="document-title">${doc.name}</div>
+                  <img src="${doc.url}" class="document-image" alt="${doc.name}" />
+                </div>
+              `;
+            }
+          }).join("")}
+          
+          ${documents.length === 0 ? `
+            <div style="text-align: center; padding: 40px; color: #666;">
+              No documents attached
+            </div>
+          ` : ""}
+        </body>
+      </html>
+    `);
+
+    printWindow.document.close();
+    printWindow.focus();
+
+    if (hasPDF) {
+      toast.info("PDF documents are linked - please open and print them separately");
+    }
+
+    setTimeout(() => {
+      printWindow.print();
+    }, 500);
   };
 
   const headers = [
@@ -171,6 +379,15 @@ const ReceivingList = () => {
             }}
             title="Document Attachments"
             maxWidth="max-w-5xl"
+            headerActions={
+              <button
+                onClick={handlePrint}
+                title="Print"
+                className="flex items-center justify-center w-10 h-10 rounded-xl text-amber-100/90 hover:text-white hover:bg-white/15 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-amber-300/50 active:scale-95"
+              >
+                <FaPrint className="w-5 h-5" />
+              </button>
+            }
           >
             <div className="space-y-6 p-2">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

@@ -176,6 +176,12 @@ const PendingLoadingList = () => {
     setCurrentPage(1);
   }, [searchInput, sellerCompany, buyerCompany, startDate, endDate]);
 
+  const getLast3Digits = (num) => {
+    if (num === undefined || num === null) return "N/A";
+    const str = String(num);
+    return str.slice(-3);
+  };
+
   const getConsigneeNameForExcel = (item) => {
     if (item.consignee) {
       if (typeof item.consignee === 'object') {
@@ -217,7 +223,7 @@ const PendingLoadingList = () => {
           "Consignee": getConsigneeNameForExcel(item),
           "Commodity": item.commodity || "N/A",
           "Total Quantity": quantity,
-          "Pending Quantity": pendingQuantity,
+          "Pending Quantity": getLast3Digits(pendingQuantity),
           "Loaded Quantity": loadedQuantity.toFixed(2),
           "Rate": item.rate || 0,
           "Payment Terms": item.paymentTerms || "N/A",
@@ -292,7 +298,7 @@ const PendingLoadingList = () => {
       getConsigneeName(item),
       item.commodity || "N/A",
       quantity,
-      <span key={`pending-${item._id}`} className="text-amber-600 font-bold">{pendingQuantity}</span>,
+      <span key={`pending-${item._id}`} className="text-amber-600 font-bold">{getLast3Digits(pendingQuantity)}</span>,
       loadedQuantity.toFixed(2),
       item.rate || 0,
       item.paymentTerms || "N/A",

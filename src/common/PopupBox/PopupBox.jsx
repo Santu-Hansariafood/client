@@ -8,6 +8,7 @@ const PopupBox = ({
   children,
   width = "w-[98vw]",
   height = "h-[95vh]",
+  headerActions = null,
 }) => {
   if (!isOpen) return null;
 
@@ -25,13 +26,16 @@ const PopupBox = ({
             {title}
           </h3>
 
-          <button
-            onClick={onClose}
-            title="Close"
-            className="flex items-center justify-center w-10 h-10 rounded-xl text-amber-100/90 hover:text-white hover:bg-white/15 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-amber-300/50 active:scale-95"
-          >
-            <FaTimes className="w-5 h-5" />
-          </button>
+          <div className="flex items-center gap-2">
+            {headerActions}
+            <button
+              onClick={onClose}
+              title="Close"
+              className="flex items-center justify-center w-10 h-10 rounded-xl text-amber-100/90 hover:text-white hover:bg-white/15 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-amber-300/50 active:scale-95"
+            >
+              <FaTimes className="w-5 h-5" />
+            </button>
+          </div>
         </div>
 
         <div className="flex-1 overflow-y-auto px-3 sm:px-5 py-4 text-slate-600 dark:text-slate-300">
@@ -49,6 +53,7 @@ PopupBox.propTypes = {
   children: PropTypes.node.isRequired,
   width: PropTypes.string,
   height: PropTypes.string,
+  headerActions: PropTypes.node,
 };
 
 export default PopupBox;
