@@ -96,11 +96,17 @@ const PrintLoadingEntry = async (data) => {
         .trim()
         .toLowerCase();
 
+    const shipToConsigneeForMatch = sauda.shipTo || sauda.consignee || data.consignee;
+    const consigneeNameForMatch = 
+      (shipToConsigneeForMatch && typeof shipToConsigneeForMatch === 'object' 
+        ? (shipToConsigneeForMatch.name || shipToConsigneeForMatch.consigneeName) 
+        : shipToConsigneeForMatch) || pick(data.consignee);
+
     const consignee =
       consignees.find(
         (c) =>
           String(c._id) === String(data.consignee) || 
-          normalizeText(c.name) === normalizeText(data.consignee),
+          normalizeText(c.name) === normalizeText(consigneeNameForMatch),
       ) || {};
 
     const consigneeMobile =
@@ -363,18 +369,12 @@ const PrintLoadingEntry = async (data) => {
     
     let shipToAddress = 'N/A';
     
-    const matchedConsignee = consignees.find(
-      (c) =>
-        String(c._id) === String(data.consignee) || 
-        normalizeText(c.name) === normalizeText(data.consignee)
-    );
-    
-    if (matchedConsignee) {
+    if (Object.keys(consignee).length > 0) {
       const consigneeAddrParts = [
-        matchedConsignee.location,
-        matchedConsignee.district,
-        matchedConsignee.state,
-        matchedConsignee.pin
+        consignee.location,
+        consignee.district,
+        consignee.state,
+        consignee.pin
       ].filter(Boolean);
       if (consigneeAddrParts.length > 0) {
         shipToAddress = consigneeAddrParts.join(', ');
@@ -391,10 +391,10 @@ const PrintLoadingEntry = async (data) => {
     doc.text(`Mobile:`, margin + 5, y);
     setNormal();
     const shipToMobile = 
+      consigneeMobile || 
       (sauda.shipTo && typeof sauda.shipTo === 'object' 
         ? (sauda.shipTo.mobile || sauda.shipTo.phone) 
-        : sauda.shipToMobile) || 
-      consigneeMobile;
+        : sauda.shipToMobile);
     doc.text(`${shipToMobile}`, margin + 30, y);
 
     y += 20;
