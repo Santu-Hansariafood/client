@@ -91,10 +91,16 @@ const PrintLoadingEntry = async (data) => {
         (s) => String(s.saudaNo) === String(data.saudaNo),
       ) || {};
 
+    const normalizeText = (value) =>
+      String(value || "")
+        .trim()
+        .toLowerCase();
+
     const consignee =
       consignees.find(
         (c) =>
-          String(c._id) === String(data.consignee) || c.name === data.consignee,
+          String(c._id) === String(data.consignee) || 
+          normalizeText(c.name) === normalizeText(data.consignee),
       ) || {};
 
     const consigneeMobile =
@@ -112,11 +118,6 @@ const PrintLoadingEntry = async (data) => {
       transporter.name || data.addedTransport || "N/A",
     );
     const displayTransporterAddress = String(transporter.address || "N/A");
-
-    const normalizeText = (value) =>
-      String(value || "")
-        .trim()
-        .toLowerCase();
 
     const supplierCompanyNameNormalized = normalizeText(data.supplierCompany);
 
@@ -362,34 +363,22 @@ const PrintLoadingEntry = async (data) => {
     
     let shipToAddress = '';
     
-    if (consigneeAddress && consigneeAddress !== 'N/A') {
-      shipToAddress = consigneeAddress;
-    } else if (sauda.shipTo && typeof sauda.shipTo === 'object') {
-      const shipToParts = [
-        sauda.shipTo.location,
-        sauda.shipTo.district,
-        sauda.shipTo.state,
-        sauda.shipTo.pin || sauda.shipTo.pincode
+    if (Object.keys(consignee).length > 0 && consignee.name) {
+      const consigneeAddrParts = [
+        consignee.address,
+        consignee.location,
+        consignee.district,
+        consignee.state,
+        consignee.pin,
+        consignee.pincode
       ].filter(Boolean);
-      if (shipToParts.length > 0) {
-        shipToAddress = shipToParts.join(', ');
+      if (consigneeAddrParts.length > 0) {
+        shipToAddress = consigneeAddrParts.join(', ');
       }
     }
     
     if (!shipToAddress) {
-      const backupAddressParts = [
-        sauda.shipToAddress,
-        sauda.deliveryAddress,
-        sauda.address,
-        sauda.placeOfDelivery,
-        sauda.consigneeAddress,
-        sauda.location,
-        data.shipToAddress,
-        data.deliveryAddress,
-        data.address,
-        data.consigneeAddress
-      ].filter(Boolean);
-      shipToAddress = backupAddressParts[0] || 'N/A';
+      shipToAddress = consigneeAddress || 'N/A';
     }
     
     const cAddrLines = wrapText(shipToAddress, 100);
