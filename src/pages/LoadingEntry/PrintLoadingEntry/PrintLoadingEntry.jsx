@@ -20,7 +20,6 @@ const PrintLoadingEntry = async (data) => {
     const pageHeight = doc.internal.pageSize.height;
     const margin = 14;
 
-    // ---------- Helper functions ----------
     const formatDate = (date) => {
       const d = new Date(date);
       return isNaN(d)
@@ -106,15 +105,15 @@ const PrintLoadingEntry = async (data) => {
     const isConsigneeAddressLike = (details) =>
       Boolean(
         details &&
-        typeof details === "object" &&
-        (details.address ||
-          details.location ||
-          details.district ||
-          details.state ||
-          details.pin ||
-          details.pinNo ||
-          details.pincode ||
-          details.pinCode),
+          typeof details === "object" &&
+          (details.address ||
+            details.location ||
+            details.district ||
+            details.state ||
+            details.pin ||
+            details.pinNo ||
+            details.pincode ||
+            details.pinCode)
       );
 
     const firstNonEmpty = (...values) => {
@@ -175,7 +174,7 @@ const PrintLoadingEntry = async (data) => {
           const hayTokens = hay.split(" ").filter(Boolean);
           const common = hayTokens.reduce(
             (acc, t) => acc + (needleTokens.has(t) ? 1 : 0),
-            0,
+            0
           );
           score = (common / Math.max(1, needleTokens.size)) * 70;
         }
@@ -214,7 +213,7 @@ const PrintLoadingEntry = async (data) => {
       if (!key) return null;
       try {
         const res = await api.get(
-          `/consignees?page=1&limit=50&search=${encodeURIComponent(key)}`,
+          `/consignees?page=1&limit=50&search=${encodeURIComponent(key)}`
         );
         const payload = res.data || {};
         const rows = Array.isArray(payload?.data) ? payload.data : [];
@@ -255,7 +254,6 @@ const PrintLoadingEntry = async (data) => {
         .join(", ");
     };
 
-    // Added missing formatConsigneeAddress (defined early)
     const formatConsigneeAddress = (details) => {
       if (!details || typeof details !== "object") return "";
       const base = details.address || details.location || "";
@@ -275,7 +273,6 @@ const PrintLoadingEntry = async (data) => {
       return out;
     };
 
-    // ---------- Data fetching ----------
     const [
       sellers,
       sellerCompanies,
@@ -299,10 +296,9 @@ const PrintLoadingEntry = async (data) => {
       : saudaDataResponse?.data || [];
     const sauda =
       (saudaData || []).find(
-        (s) => String(s.saudaNo) === String(data.saudaNo),
+        (s) => String(s.saudaNo) === String(data.saudaNo)
       ) || {};
 
-    // ---------- Resolve consignee ----------
     const shipToRaw = pickBestShipToCandidate([
       sauda.consignee,
       sauda.shipTo,
@@ -330,28 +326,28 @@ const PrintLoadingEntry = async (data) => {
       data.consigneeMobile ||
       "N/A";
 
-    // ---------- Transporter ----------
+    const consigneeState = shipToDetails.state || "N/A";
+
     const transporter =
       transporterDetails && typeof transporterDetails === "object"
         ? transporterDetails
         : {};
     const displayTransporterName = String(
-      transporter.name || data.addedTransport || "N/A",
+      transporter.name || data.addedTransport || "N/A"
     );
     const displayTransporterAddress = String(transporter.address || "N/A");
 
-    // ---------- Seller info ----------
     const supplierCompanyNameNormalized = normalizeText(data.supplierCompany);
     const matchingSeller =
       (sellers || []).find((s) => String(s._id) === String(data.supplier)) ||
       (sellers || []).find(
-        (s) => normalizeText(s.sellerName) === supplierCompanyNameNormalized,
+        (s) => normalizeText(s.sellerName) === supplierCompanyNameNormalized
       ) ||
       null;
 
     let matchingSellerCompany =
       (sellerCompanies || []).find(
-        (sc) => normalizeText(sc.companyName) === supplierCompanyNameNormalized,
+        (sc) => normalizeText(sc.companyName) === supplierCompanyNameNormalized
       ) ||
       (sellerCompanies || []).find((sc) => {
         const scName = normalizeText(sc.companyName);
@@ -366,8 +362,8 @@ const PrintLoadingEntry = async (data) => {
       matchingSellerCompany =
         (sellerCompanies || []).find((sc) =>
           matchingSeller.companies.some(
-            (cName) => normalizeText(cName) === normalizeText(sc.companyName),
-          ),
+            (cName) => normalizeText(cName) === normalizeText(sc.companyName)
+          )
         ) ||
         (sellerCompanies || []).find((sc) =>
           matchingSeller.companies.some((cName) => {
@@ -377,7 +373,7 @@ const PrintLoadingEntry = async (data) => {
               normalizedCName.includes(normalizedSCName) ||
               normalizedSCName.includes(normalizedCName)
             );
-          }),
+          })
         ) ||
         null;
     }
@@ -405,7 +401,6 @@ const PrintLoadingEntry = async (data) => {
 
     const sellerState = matchingSellerCompany?.state || sauda.state || "N/A";
 
-    // ---------- Buyer info ----------
     const rawBuyerKey = data?.buyerCompany ?? data?.buyer ?? "";
     const normalizedBuyerKey = normalizeText(rawBuyerKey);
 
@@ -439,8 +434,7 @@ const PrintLoadingEntry = async (data) => {
       }) ||
       null;
 
-    const buyerState =
-      matchingBuyerCompany?.state || data.placeOfDeliveryState || "N/A";
+    const buyerState = matchingBuyerCompany?.state || data.placeOfDeliveryState || "N/A";
     const buyerCompanyName =
       matchingBuyerCompany?.companyName ||
       data.buyerCompany ||
@@ -465,7 +459,6 @@ const PrintLoadingEntry = async (data) => {
       matchingBuyerCompany?.pan ||
       "";
 
-    // ---------- PDF generation ----------
     const logo64 = await getBase64(logo);
     if (logo64) {
       doc.addImage(logo64, "PNG", pageWidth - margin - 35, 12, 30, 22);
@@ -509,7 +502,6 @@ const PrintLoadingEntry = async (data) => {
 
     let y = 58;
 
-    // ---- HFPL Sauda No, Buyer Po No, Challan No, Date ----
     doc.setLineWidth(0.2);
     doc.rect(margin + 2, y - 5, pageWidth - margin * 2 - 4, 35);
     doc.setFontSize(9);
@@ -547,10 +539,9 @@ const PrintLoadingEntry = async (data) => {
 
     y += 22;
 
-    // ---- SHIP TO (CONSIGNEE) section ----
+    // ========== SHIP TO (CONSIGNEE) SECTION ==========
     doc.setLineWidth(0.2);
 
-    // Build address string for consignee
     let shipToAddress =
       formatConsigneeAddress(shipToDetails) ||
       buildAddressFromObject(shipToDetails) ||
@@ -563,20 +554,34 @@ const PrintLoadingEntry = async (data) => {
       ].filter(Boolean)[0] ||
       "N/A";
 
-    // Wrap and limit to 2 lines
     let cAddrLines = wrapText(shipToAddress, 100);
     if (cAddrLines.length > 2) {
       cAddrLines = cAddrLines.slice(0, 2);
       cAddrLines[1] += "...";
     }
-    const consigneeBoxHeight = 12 + cAddrLines.length * 4;
 
-    // Draw box once
-    doc.rect(margin + 2, y - 5, pageWidth - margin * 2 - 4, consigneeBoxHeight);
+    const lineH = 4;
+    const titleH = 5;
+    const consigneeH = 5;
+    const addressLabelH = 4;
+    const addressLinesH = cAddrLines.length * lineH;
+    const mobileH = 5;
+    const bottomPadding = 2;
+
+    const totalInnerH =
+      titleH + consigneeH + addressLabelH + addressLinesH + mobileH + bottomPadding;
+    const boxHeight = totalInnerH + 5; // because box starts 5mm above current y
+
+    // Draw the box
+    doc.rect(margin + 2, y - 5, pageWidth - margin * 2 - 4, boxHeight);
+
+    // Title
     setBold();
     doc.setFontSize(9);
     doc.text(`SHIP TO (CONSIGNEE)`, margin + 5, y);
     y += 5;
+
+    // Consignee name
     setBold();
     doc.text(`Consignee:`, margin + 5, y);
     setNormal();
@@ -587,16 +592,18 @@ const PrintLoadingEntry = async (data) => {
       (typeof shipToRaw === "string" ? shipToRaw : "") ||
       pick(data.consignee);
     doc.text(`${consigneeName}`, margin + 30, y);
-
     y += 4;
+
+    // Address label
     setBold();
     doc.text(`Address:`, margin + 5, y);
     setNormal();
     cAddrLines.forEach((line, idx) => {
-      doc.text(line, margin + 30, y + idx * 4);
+      doc.text(line, margin + 30, y + idx * lineH);
     });
+    y += cAddrLines.length * lineH + 2;
 
-    y += cAddrLines.length * 4 + 2;
+    // Mobile number
     setBold();
     doc.text(`Mobile:`, margin + 5, y);
     setNormal();
@@ -627,9 +634,10 @@ const PrintLoadingEntry = async (data) => {
     }
     doc.text(`${shipToMobile}`, margin + 30, y);
 
-    y += 10; // adjust spacing after consignee box
+    // Move y below the box
+    y = (y - 5) + boxHeight + 5; // +5 for gap before next section
 
-    // ---- BUYER ACCOUNT section ----
+    // ========== BUYER ACCOUNT SECTION ==========
     const buyerBoxTopY = y;
     doc.rect(margin + 2, buyerBoxTopY - 5, pageWidth - margin * 2 - 4, 44);
     setBold();
@@ -670,7 +678,7 @@ const PrintLoadingEntry = async (data) => {
 
     y = buyerBoxTopY + 52;
 
-    // ---- DESCRIPTION OF GOODS ----
+    // ========== DESCRIPTION OF GOODS ==========
     doc.rect(margin + 2, y - 5, pageWidth - margin * 2 - 4, 13);
     setBold();
     doc.setFontSize(9);
@@ -691,7 +699,7 @@ const PrintLoadingEntry = async (data) => {
 
     y += 15;
 
-    // ---- ROUTE & VEHICLE DETAILS ----
+    // ========== ROUTE & VEHICLE DETAILS ==========
     doc.rect(margin + 2, y - 5, pageWidth - margin * 2 - 4, 65);
     setBold();
     doc.setFontSize(9);
@@ -704,7 +712,8 @@ const PrintLoadingEntry = async (data) => {
     setBold();
     doc.text(`To:`, margin + 70, y);
     setNormal();
-    doc.text(`${buyerState}`, margin + 80, y);
+    // Use consigneeState (state of SHIP TO) instead of buyerState
+    doc.text(`${consigneeState}`, margin + 80, y);
 
     y += 6;
     setBold();
@@ -739,7 +748,7 @@ const PrintLoadingEntry = async (data) => {
 
     y += 17;
 
-    // ---- FREIGHT DETAILS ----
+    // ========== FREIGHT DETAILS ==========
     doc.rect(margin + 2, y - 5, pageWidth - margin * 2 - 4, 28);
     setBold();
     doc.setFontSize(9);
@@ -769,10 +778,9 @@ const PrintLoadingEntry = async (data) => {
     setNormal();
     doc.text(toPayValue, pageWidth - margin - 25, y);
 
-    y += 15;
-
-    // ---- Signatures & footers ----
-    const signY = pageHeight - 35;
+    // ========== SIGNATURES ==========
+    // Place signatures near the bottom, above footnotes
+    const signY = pageHeight - 38;
     setBold();
     doc.text("Driver Signature", margin + 10, signY);
     doc.line(margin + 10, signY + 2, margin + 70, signY + 2);
@@ -782,22 +790,23 @@ const PrintLoadingEntry = async (data) => {
       pageWidth - margin - 70,
       signY + 2,
       pageWidth - margin - 10,
-      signY + 2,
+      signY + 2
     );
 
+    // ========== FOOTNOTES ==========
     doc.setFontSize(7);
     setBold();
     doc.text(
       "*Any shortage or damage shall be deducted from the freight amount.",
       pageWidth / 2,
       pageHeight - 21,
-      { align: "center" },
+      { align: "center" }
     );
     doc.text(
       "*This is a computer-generated challan issued by Hansaria Food Private Limited. It is for informational purposes only and shall not be considered as a legal document or proof of delivery.",
       pageWidth / 2,
       pageHeight - 12,
-      { align: "center", maxWidth: 180 },
+      { align: "center", maxWidth: 180 }
     );
 
     return doc;
