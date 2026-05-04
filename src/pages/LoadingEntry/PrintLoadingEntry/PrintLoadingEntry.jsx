@@ -20,6 +20,7 @@ const PrintLoadingEntry = async (data) => {
     const pageHeight = doc.internal.pageSize.height;
     const margin = 14;
 
+    // ---------- Helper functions ----------
     const formatDate = (date) => {
       const d = new Date(date);
       return isNaN(d)
@@ -41,7 +42,6 @@ const PrintLoadingEntry = async (data) => {
         const image = new Image();
         image.src = img;
         image.crossOrigin = "Anonymous";
-
         image.onload = () => {
           const canvas = document.createElement("canvas");
           canvas.width = image.width;
@@ -50,11 +50,8 @@ const PrintLoadingEntry = async (data) => {
           ctx.drawImage(image, 0, 0);
           resolve(canvas.toDataURL("image/png"));
         };
-
         image.onerror = () => resolve(null);
       });
-
-    const logo64 = await getBase64(logo);
 
     const safeFetch = async (url) => {
       try {
@@ -73,32 +70,6 @@ const PrintLoadingEntry = async (data) => {
         return null;
       }
     };
-
-    const [
-      sellers,
-      sellerCompanies,
-      buyers,
-      companies,
-      saudaDataResponse,
-      transporterDetails,
-    ] = await Promise.all([
-      safeFetch("/sellers?limit=0"),
-      safeFetch("/seller-company?limit=0"),
-      safeFetch("/buyers?limit=0"),
-      safeFetch("/companies?limit=0"),
-      safeFetch(`/self-order?search=${encodeURIComponent(data.saudaNo)}`),
-      data?.transporterId
-        ? safeGet(`/transporters/${data.transporterId}`)
-        : Promise.resolve(null),
-    ]);
-
-    const saudaData = Array.isArray(saudaDataResponse)
-      ? saudaDataResponse
-      : saudaDataResponse?.data || [];
-    const sauda =
-      (saudaData || []).find(
-        (s) => String(s.saudaNo) === String(data.saudaNo),
-      ) || {};
 
     const normalizeText = (value) =>
       String(value || "")
@@ -120,9 +91,7 @@ const PrintLoadingEntry = async (data) => {
       if (typeof candidate === "string") {
         return isObjectId(candidate) ? candidate.trim() : "";
       }
-
       if (typeof candidate !== "object") return "";
-
       const nestedValue = candidate.value;
       const direct =
         candidate._id ||
@@ -131,23 +100,7 @@ const PrintLoadingEntry = async (data) => {
         (nestedValue && typeof nestedValue === "object"
           ? nestedValue._id || nestedValue.id || ""
           : "");
-
       return isObjectId(direct) ? String(direct) : "";
-    };
-
-    const getConsigneeCandidateName = (candidate) => {
-      if (!candidate) return "";
-      if (typeof candidate === "string") return candidate.trim();
-      if (typeof candidate !== "object") return "";
-
-      const nestedValue = candidate.value;
-      return String(
-        candidate.name ||
-          candidate.label ||
-          candidate.consigneeName ||
-          (typeof nestedValue === "string" ? nestedValue : "") ||
-          "",
-      ).trim();
     };
 
     const isConsigneeAddressLike = (details) =>
@@ -186,11 +139,6 @@ const PrintLoadingEntry = async (data) => {
       return firstNonEmpty(...list);
     };
 
-    const shipToRaw = pickBestShipToCandidate([
-      sauda.consignee,
-      sauda.shipTo,
-      data.consignee,
-    ]);
     const deriveShipToSearchKey = (raw) => {
       if (!raw) return "";
       let text = "";
@@ -211,21 +159,15 @@ const PrintLoadingEntry = async (data) => {
       return beforeDash || text;
     };
 
-    const hasUsefulShipToAddress = isConsigneeAddressLike;
-
     const pickBestConsigneeMatch = (rows, key) => {
       const needle = normalizeLoose(key);
       if (!needle) return null;
-
       const needleTokens = new Set(needle.split(" ").filter(Boolean));
-
       let best = null;
       let bestScore = -1;
-
       for (const row of rows || []) {
         const hay = normalizeLoose(row?.name);
         if (!hay) continue;
-
         let score = 0;
         if (hay === needle) score = 100;
         else if (hay.includes(needle) || needle.includes(hay)) score = 85;
@@ -237,13 +179,11 @@ const PrintLoadingEntry = async (data) => {
           );
           score = (common / Math.max(1, needleTokens.size)) * 70;
         }
-
         if (score > bestScore) {
           bestScore = score;
           best = row;
         }
       }
-
       return bestScore >= 40 ? best : null;
     };
 
@@ -251,10 +191,8 @@ const PrintLoadingEntry = async (data) => {
       if (!isObjectId(id)) return null;
       const direct = await safeGet(`/consignees/${id}`);
       if (direct && typeof direct === "object") return direct;
-
       const limit = 200;
       const maxPages = 25;
-
       for (let page = 1; page <= maxPages; page += 1) {
         try {
           const res = await api.get(`/consignees?page=${page}&limit=${limit}`);
@@ -262,7 +200,6 @@ const PrintLoadingEntry = async (data) => {
           const rows = Array.isArray(payload?.data) ? payload.data : [];
           const found = rows.find((c) => String(c?._id) === String(id));
           if (found) return found;
-
           const pages = Number(payload?.pages || 0);
           if (pages && page >= pages) break;
           if (rows.length === 0) break;
@@ -270,7 +207,6 @@ const PrintLoadingEntry = async (data) => {
           break;
         }
       }
-
       return null;
     };
 
@@ -288,13 +224,98 @@ const PrintLoadingEntry = async (data) => {
       }
     };
 
+    const wrapText = (text, maxLength) => {
+      if (!text) return [""];
+      const words = text.split(" ");
+      const lines = [];
+      let currentLine = "";
+      words.forEach((word) => {
+        if ((currentLine + word).length > maxLength) {
+          lines.push(currentLine.trim());
+          currentLine = word + " ";
+        } else {
+          currentLine += word + " ";
+        }
+      });
+      lines.push(currentLine.trim());
+      return lines;
+    };
+
+    const buildAddressFromObject = (obj) => {
+      if (!obj || typeof obj !== "object") return "";
+      return [
+        obj.address,
+        obj.location,
+        obj.city,
+        obj.district,
+        obj.state,
+        obj.pin || obj.pincode || obj.pinNo || obj.pinCode,
+      ]
+        .filter(Boolean)
+        .join(", ");
+    };
+
+    // Added missing formatConsigneeAddress (defined early)
+    const formatConsigneeAddress = (details) => {
+      if (!details || typeof details !== "object") return "";
+      const base = details.address || details.location || "";
+      const district = details.district || "";
+      const state = details.state || "";
+      const pin =
+        details.pin ||
+        details.pinNo ||
+        details.pincode ||
+        details.pinCode ||
+        "";
+      const place = [district, state].filter(Boolean).join(", ");
+      let out = "";
+      if (base) out = base;
+      if (place) out = out ? `${out}, ${place}` : place;
+      if (pin) out = out ? `${out} - ${pin}` : pin;
+      return out;
+    };
+
+    // ---------- Data fetching ----------
+    const [
+      sellers,
+      sellerCompanies,
+      buyers,
+      companies,
+      saudaDataResponse,
+      transporterDetails,
+    ] = await Promise.all([
+      safeFetch("/sellers?limit=0"),
+      safeFetch("/seller-company?limit=0"),
+      safeFetch("/buyers?limit=0"),
+      safeFetch("/companies?limit=0"),
+      safeFetch(`/self-order?search=${encodeURIComponent(data.saudaNo)}`),
+      data?.transporterId
+        ? safeGet(`/transporters/${data.transporterId}`)
+        : Promise.resolve(null),
+    ]);
+
+    const saudaData = Array.isArray(saudaDataResponse)
+      ? saudaDataResponse
+      : saudaDataResponse?.data || [];
+    const sauda =
+      (saudaData || []).find(
+        (s) => String(s.saudaNo) === String(data.saudaNo),
+      ) || {};
+
+    // ---------- Resolve consignee ----------
+    const shipToRaw = pickBestShipToCandidate([
+      sauda.consignee,
+      sauda.shipTo,
+      data.consignee,
+    ]);
+
     let shipToDetails = {};
     const shipToId = extractConsigneeId(shipToRaw);
     if (shipToId) {
       shipToDetails = (await fetchConsigneeById(shipToId)) || {};
     }
 
-    if (!hasUsefulShipToAddress(shipToDetails)) {
+    if (!isConsigneeAddressLike(shipToDetails)) {
       const key = deriveShipToSearchKey(shipToRaw);
       const best = key ? await fetchConsigneeBySearch(key) : null;
       if (best) shipToDetails = best;
@@ -309,18 +330,18 @@ const PrintLoadingEntry = async (data) => {
       data.consigneeMobile ||
       "N/A";
 
+    // ---------- Transporter ----------
     const transporter =
       transporterDetails && typeof transporterDetails === "object"
         ? transporterDetails
         : {};
-
     const displayTransporterName = String(
       transporter.name || data.addedTransport || "N/A",
     );
     const displayTransporterAddress = String(transporter.address || "N/A");
 
+    // ---------- Seller info ----------
     const supplierCompanyNameNormalized = normalizeText(data.supplierCompany);
-
     const matchingSeller =
       (sellers || []).find((s) => String(s._id) === String(data.supplier)) ||
       (sellers || []).find(
@@ -384,38 +405,7 @@ const PrintLoadingEntry = async (data) => {
 
     const sellerState = matchingSellerCompany?.state || sauda.state || "N/A";
 
-    const wrapText = (text, maxLength) => {
-      if (!text) return [""];
-      const words = text.split(" ");
-      const lines = [];
-      let currentLine = "";
-
-      words.forEach((word) => {
-        if ((currentLine + word).length > maxLength) {
-          lines.push(currentLine.trim());
-          currentLine = word + " ";
-        } else {
-          currentLine += word + " ";
-        }
-      });
-      lines.push(currentLine.trim());
-      return lines;
-    };
-
-    const buildAddressFromObject = (obj) => {
-      if (!obj || typeof obj !== "object") return "";
-      return [
-        obj.address,
-        obj.location,
-        obj.city,
-        obj.district,
-        obj.state,
-        obj.pin || obj.pincode || obj.pinNo || obj.pinCode,
-      ]
-        .filter(Boolean)
-        .join(", ");
-    };
-
+    // ---------- Buyer info ----------
     const rawBuyerKey = data?.buyerCompany ?? data?.buyer ?? "";
     const normalizedBuyerKey = normalizeText(rawBuyerKey);
 
@@ -451,13 +441,6 @@ const PrintLoadingEntry = async (data) => {
 
     const buyerState =
       matchingBuyerCompany?.state || data.placeOfDeliveryState || "N/A";
-
-    const buyerLocation = matchingBuyerCompany
-      ? [matchingBuyerCompany.district, matchingBuyerCompany.state]
-          .filter(Boolean)
-          .join(", ")
-      : data.placeOfDelivery || "N/A";
-
     const buyerCompanyName =
       matchingBuyerCompany?.companyName ||
       data.buyerCompany ||
@@ -482,17 +465,16 @@ const PrintLoadingEntry = async (data) => {
       matchingBuyerCompany?.pan ||
       "";
 
-    const consigneeAddress =
-      buildAddressFromObject(shipToDetails) || data.deliveryAddress || "N/A";
-
+    // ---------- PDF generation ----------
+    const logo64 = await getBase64(logo);
     if (logo64) {
       doc.addImage(logo64, "PNG", pageWidth - margin - 35, 12, 30, 22);
     }
 
     const sellerCompanyName = data?.supplierCompany || "N/A";
     const vendorCode = matchingSeller?.vendorCode || data?.vendorCode || "";
-
     const textStartX = margin + 5;
+
     setBold();
     doc.setFontSize(15);
     doc.text(`${sellerCompanyName.toUpperCase()}`, textStartX, 17);
@@ -527,6 +509,7 @@ const PrintLoadingEntry = async (data) => {
 
     let y = 58;
 
+    // ---- HFPL Sauda No, Buyer Po No, Challan No, Date ----
     doc.setLineWidth(0.2);
     doc.rect(margin + 2, y - 5, pageWidth - margin * 2 - 4, 35);
     doc.setFontSize(9);
@@ -564,14 +547,32 @@ const PrintLoadingEntry = async (data) => {
 
     y += 22;
 
+    // ---- SHIP TO (CONSIGNEE) section ----
     doc.setLineWidth(0.2);
-    //const cAddrLines = wrapText(shipToAddress, 100);
 
-    const lineHeight = 4;
-    const baseHeight = 12;
-    const dynamicHeight = baseHeight + cAddrLines.length * lineHeight;
+    // Build address string for consignee
+    let shipToAddress =
+      formatConsigneeAddress(shipToDetails) ||
+      buildAddressFromObject(shipToDetails) ||
+      [
+        sauda.shipToAddress,
+        sauda.consigneeAddress,
+        sauda.deliveryAddress,
+        data.shipToAddress,
+        data.consigneeAddress,
+      ].filter(Boolean)[0] ||
+      "N/A";
 
-    doc.rect(margin + 2, y - 5, pageWidth - margin * 2 - 4, dynamicHeight);
+    // Wrap and limit to 2 lines
+    let cAddrLines = wrapText(shipToAddress, 100);
+    if (cAddrLines.length > 2) {
+      cAddrLines = cAddrLines.slice(0, 2);
+      cAddrLines[1] += "...";
+    }
+    const consigneeBoxHeight = 12 + cAddrLines.length * 4;
+
+    // Draw box once
+    doc.rect(margin + 2, y - 5, pageWidth - margin * 2 - 4, consigneeBoxHeight);
     setBold();
     doc.setFontSize(9);
     doc.text(`SHIP TO (CONSIGNEE)`, margin + 5, y);
@@ -591,71 +592,16 @@ const PrintLoadingEntry = async (data) => {
     setBold();
     doc.text(`Address:`, margin + 5, y);
     setNormal();
-
-    let shipToAddress = "N/A";
-
-    const formatConsigneeAddress = (details) => {
-      if (!details || typeof details !== "object") return "";
-      const base = details.address || details.location || "";
-      const district = details.district || "";
-      const state = details.state || "";
-      const pin =
-        details.pin ||
-        details.pinNo ||
-        details.pincode ||
-        details.pinCode ||
-        "";
-
-      const place = [district, state].filter(Boolean).join(", ");
-
-      let out = "";
-      if (base) out = base;
-      if (place) out = out ? `${out}, ${place}` : place;
-      if (pin) out = out ? `${out} - ${pin}` : pin;
-      return out;
-    };
-
-    shipToAddress =
-      formatConsigneeAddress(shipToDetails) ||
-      buildAddressFromObject(shipToDetails) ||
-      [
-        [shipToDetails.district, shipToDetails.state]
-          .filter(Boolean)
-          .join(", ") +
-          (shipToDetails.pin ||
-          shipToDetails.pinNo ||
-          shipToDetails.pincode ||
-          shipToDetails.pinCode
-            ? ` - ${
-                shipToDetails.pin ||
-                shipToDetails.pinNo ||
-                shipToDetails.pincode ||
-                shipToDetails.pinCode
-              }`
-            : ""),
-        sauda.shipToAddress,
-        sauda.consigneeAddress,
-        sauda.deliveryAddress,
-        sauda.address,
-        data.shipToAddress,
-        data.consigneeAddress,
-        data.address,
-      ].filter(Boolean)[0] ||
-      "N/A";
-
-    const cAddrLines = wrapText(shipToAddress, 100).slice(0, 2);
-
-    cAddrLines.forEach((line, index) => {
-      doc.text(line, margin + 30, y + index * 4);
+    cAddrLines.forEach((line, idx) => {
+      doc.text(line, margin + 30, y + idx * 4);
     });
 
-    y += 4;
+    y += cAddrLines.length * 4 + 2;
     setBold();
     doc.text(`Mobile:`, margin + 5, y);
     setNormal();
-    let shipToMobile = "N/A";
 
-    shipToMobile =
+    let shipToMobile =
       shipToDetails.mobile ||
       shipToDetails.phone ||
       shipToDetails.mobileNo ||
@@ -668,44 +614,34 @@ const PrintLoadingEntry = async (data) => {
         sauda.mobile,
         sauda.phone,
       ].filter(Boolean);
-      if (saudaMobileParts.length > 0) {
-        shipToMobile = saudaMobileParts[0];
-      }
+      if (saudaMobileParts.length) shipToMobile = saudaMobileParts[0];
     }
-
-    if (shipToMobile === "N/A") {
-      shipToMobile = consigneeMobile;
-    }
-
+    if (shipToMobile === "N/A") shipToMobile = consigneeMobile;
     if (shipToMobile === "N/A") {
       const dataMobileParts = [
         data.consigneeMobile,
         data.mobile,
         data.phone,
       ].filter(Boolean);
-      if (dataMobileParts.length > 0) {
-        shipToMobile = dataMobileParts[0];
-      }
+      if (dataMobileParts.length) shipToMobile = dataMobileParts[0];
     }
-
     doc.text(`${shipToMobile}`, margin + 30, y);
 
-    y += cAddrLines.length * 4 + 10;
+    y += 10; // adjust spacing after consignee box
 
-    doc.setLineWidth(0.2);
+    // ---- BUYER ACCOUNT section ----
     const buyerBoxTopY = y;
     doc.rect(margin + 2, buyerBoxTopY - 5, pageWidth - margin * 2 - 4, 44);
     setBold();
     doc.setFontSize(9);
     doc.text(`BUYER ACCOUNT`, margin + 5, buyerBoxTopY);
     y = buyerBoxTopY + 6;
-    doc.setFontSize(9);
     setBold();
     doc.text(`Buyer Company:`, margin + 5, y);
     setNormal();
     const buyerNameLines = wrapText(buyerCompanyName, 70);
-    buyerNameLines.slice(0, 1).forEach((line, index) => {
-      doc.text(line, margin + 35, y + index * 4);
+    buyerNameLines.slice(0, 1).forEach((line, idx) => {
+      doc.text(line, margin + 35, y + idx * 4);
     });
 
     y += 6;
@@ -713,8 +649,8 @@ const PrintLoadingEntry = async (data) => {
     doc.text(`Address:`, margin + 5, y);
     setNormal();
     const buyerAddrLines = wrapText(buyerFullAddress, 70);
-    buyerAddrLines.slice(0, 2).forEach((line, index) => {
-      doc.text(line, margin + 35, y + index * 4);
+    buyerAddrLines.slice(0, 2).forEach((line, idx) => {
+      doc.text(line, margin + 35, y + idx * 4);
     });
 
     y += 10;
@@ -725,7 +661,6 @@ const PrintLoadingEntry = async (data) => {
       doc.text(`${buyerPanNo}`, margin + 35, y);
       y += 5;
     }
-
     if (buyerGstNo) {
       setBold();
       doc.text(`GST:`, margin + 5, y);
@@ -735,12 +670,12 @@ const PrintLoadingEntry = async (data) => {
 
     y = buyerBoxTopY + 52;
 
+    // ---- DESCRIPTION OF GOODS ----
     doc.rect(margin + 2, y - 5, pageWidth - margin * 2 - 4, 13);
     setBold();
     doc.setFontSize(9);
     doc.text(`DESCRIPTION OF GOODS`, margin + 5, y);
     y += 4;
-    doc.setFontSize(9);
     setBold();
     doc.text(`Item:`, margin + 5, y);
     setNormal();
@@ -756,13 +691,12 @@ const PrintLoadingEntry = async (data) => {
 
     y += 15;
 
-    doc.setLineWidth(0.2);
+    // ---- ROUTE & VEHICLE DETAILS ----
     doc.rect(margin + 2, y - 5, pageWidth - margin * 2 - 4, 65);
     setBold();
     doc.setFontSize(9);
     doc.text(`ROUTE & VEHICLE DETAILS`, margin + 5, y);
     y += 6;
-    doc.setFontSize(9);
     setBold();
     doc.text(`From:`, margin + 5, y);
     setNormal();
@@ -799,13 +733,13 @@ const PrintLoadingEntry = async (data) => {
     doc.text(`Transporter Address:`, margin + 5, y);
     setNormal();
     const tAddrLines = wrapText(displayTransporterAddress, 80);
-    tAddrLines.slice(0, 1).forEach((line, index) => {
-      doc.text(line, margin + 45, y + index * 4);
+    tAddrLines.slice(0, 1).forEach((line, idx) => {
+      doc.text(line, margin + 45, y + idx * 4);
     });
 
     y += 17;
 
-    doc.setLineWidth(0.2);
+    // ---- FREIGHT DETAILS ----
     doc.rect(margin + 2, y - 5, pageWidth - margin * 2 - 4, 28);
     setBold();
     doc.setFontSize(9);
@@ -837,12 +771,11 @@ const PrintLoadingEntry = async (data) => {
 
     y += 15;
 
+    // ---- Signatures & footers ----
     const signY = pageHeight - 35;
-
     setBold();
     doc.text("Driver Signature", margin + 10, signY);
     doc.line(margin + 10, signY + 2, margin + 70, signY + 2);
-
     setBold();
     doc.text("Authorized Signature", pageWidth - margin - 70, signY);
     doc.line(
@@ -860,13 +793,13 @@ const PrintLoadingEntry = async (data) => {
       pageHeight - 21,
       { align: "center" },
     );
-
     doc.text(
       "*This is a computer-generated challan issued by Hansaria Food Private Limited. It is for informational purposes only and shall not be considered as a legal document or proof of delivery.",
       pageWidth / 2,
       pageHeight - 12,
       { align: "center", maxWidth: 180 },
     );
+
     return doc;
   } catch (err) {
     console.error(err);
