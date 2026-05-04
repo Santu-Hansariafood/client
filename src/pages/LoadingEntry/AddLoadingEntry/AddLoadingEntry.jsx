@@ -466,6 +466,7 @@ const AddLoadingEntry = () => {
 
   const INITIAL_ENTRY = {
     loadingDate: new Date().toISOString().split("T")[0],
+    unloadingDate: "",
     deliveryDate: "",
     loadingWeight: "",
     unloadingWeight: "",
@@ -548,7 +549,7 @@ const AddLoadingEntry = () => {
   const handleEntryChange = (index, field, value) => {
     const newEntries = [...loadingEntries];
 
-    if (field === "loadingDate" || field === "dateOfIssue" || field === "deliveryDate") {
+    if (field === "loadingDate" || field === "unloadingDate" || field === "dateOfIssue" || field === "deliveryDate") {
       const d = new Date(value);
       newEntries[index][field] = !isNaN(d.getTime())
         ? d.toISOString().split("T")[0]
@@ -686,6 +687,7 @@ const AddLoadingEntry = () => {
     setEditingEntry({
       ...entry,
       loadingDate: entry.loadingDate ? new Date(entry.loadingDate).toISOString().split('T')[0] : '',
+      unloadingDate: entry.unloadingDate ? new Date(entry.unloadingDate).toISOString().split('T')[0] : '',
       dateOfIssue: entry.dateOfIssue ? new Date(entry.dateOfIssue).toISOString().split('T')[0] : '',
     });
     setIsEditModalOpen(true);
@@ -847,6 +849,14 @@ const AddLoadingEntry = () => {
                     type="date"
                     value={editingEntry.loadingDate}
                     onChange={(e) => setEditingEntry({...editingEntry, loadingDate: e.target.value})}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-slate-500 uppercase">Unloading Date</label>
+                  <DataInput
+                    type="date"
+                    value={editingEntry.unloadingDate}
+                    onChange={(e) => setEditingEntry({...editingEntry, unloadingDate: e.target.value})}
                   />
                 </div>
                 <div className="space-y-2">
@@ -1135,7 +1145,7 @@ const AddLoadingEntry = () => {
                           LORRY #{index + 1}
                         </span>
                       </div>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-5">
                         <div className="space-y-2">
                           <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                             Loading Date
@@ -1144,6 +1154,17 @@ const AddLoadingEntry = () => {
                             selectedDate={entry.loadingDate}
                             onChange={(date) =>
                               handleEntryChange(index, "loadingDate", date)
+                            }
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                            Unloading Date
+                          </label>
+                          <DateSelector
+                            selectedDate={entry.unloadingDate}
+                            onChange={(date) =>
+                              handleEntryChange(index, "unloadingDate", date)
                             }
                           />
                         </div>
