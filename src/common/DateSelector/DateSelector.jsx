@@ -1,8 +1,18 @@
 import PropTypes from "prop-types";
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { FaCalendarAlt } from "react-icons/fa";
+
+const PopperContainer = ({ children }) => {
+  if (typeof document === "undefined") return children;
+  return createPortal(children, document.body);
+};
+
+PopperContainer.propTypes = {
+  children: PropTypes.node.isRequired,
+};
 
 const DateSelector = ({ selectedDate, onChange }) => {
   const [currentDate, setCurrentDate] = useState(
@@ -35,6 +45,8 @@ const DateSelector = ({ selectedDate, onChange }) => {
         placeholderText="Select a date"
         wrapperClassName="w-full flex-1"
         isClearable
+        popperContainer={PopperContainer}
+        popperClassName="z-[10050]"
         className="w-full px-3 py-2.5 bg-transparent text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none"
       />
 
