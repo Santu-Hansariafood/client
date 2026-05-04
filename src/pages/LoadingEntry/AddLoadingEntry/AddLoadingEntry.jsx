@@ -1,7 +1,6 @@
 import { useState, useEffect, lazy, Suspense, useCallback, useMemo } from "react";
-import { FaPlus, FaTrash, FaDownload, FaEdit } from "react-icons/fa";
+import { FaPlus, FaTrash, FaDownload, FaEdit, FaArrowLeft, FaTruckLoading } from "react-icons/fa";
 import { toast } from "react-toastify";
-import { FaTruckLoading } from "react-icons/fa";
 import api from "../../../utils/apiClient/apiClient";
 import Loading from "../../../common/Loading/Loading";
 import PrintLoadingEntry from "../PrintLoadingEntry/PrintLoadingEntry";
@@ -19,7 +18,6 @@ const Tables = lazy(() => import("../../../common/Tables/Tables"));
 const AdminPageShell = lazy(
   () => import("../../../common/AdminPageShell/AdminPageShell"),
 );
-const PopupBox = lazy(() => import("../../../common/PopupBox/PopupBox"));
 const DataInput = lazy(() => import("../../../common/DataInput/DataInput"));
 const DateSelector = lazy(
   () => import("../../../common/DateSelector/DateSelector"),
@@ -49,7 +47,6 @@ const SearchFiltersCard = ({
   sellerCompanies,
   selectedSellerCompany,
   setSelectedSellerCompany,
-  allSellers,
   saudaSearch,
   setSaudaSearch,
   saudaSuggestions,
@@ -420,12 +417,11 @@ const AddLoadingEntry = () => {
     saudaSearch,
   );
 
-  const [isPopupOpen, setIsPopupOpen] = useState(false);
+  const [activeView, setActiveView] = useState("list");
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [loadingEntries, setLoadingEntries] = useState([]);
   const [existingEntries, setExistingEntries] = useState([]);
   const [isSaving, setIsSaving] = useState(false);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingEntry, setEditingEntry] = useState(null);
 
   const handleClearFilters = useCallback(() => {
@@ -518,7 +514,7 @@ const AddLoadingEntry = () => {
       ...INITIAL_ENTRY, 
       deliveryDate: formattedDeliveryDate 
     }]);
-    setIsPopupOpen(true);
+    setActiveView("add");
     setExistingEntries([]); // Clear previous data
 
     // Fetch existing entries for this sauda
@@ -651,7 +647,10 @@ const AddLoadingEntry = () => {
 
       await api.post("/loading-entries/bulk", payload);
       toast.success("All loading entries saved successfully");
-      setIsPopupOpen(false);
+      setActiveView("list");
+      setSelectedOrder(null);
+      setLoadingEntries([]);
+      setExistingEntries([]);
       handleSearch();
     } catch (error) {
       console.error("Error saving entries:", error);
@@ -690,7 +689,7 @@ const AddLoadingEntry = () => {
       unloadingDate: entry.unloadingDate ? new Date(entry.unloadingDate).toISOString().split('T')[0] : '',
       dateOfIssue: entry.dateOfIssue ? new Date(entry.dateOfIssue).toISOString().split('T')[0] : '',
     });
-    setIsEditModalOpen(true);
+    setActiveView("edit");
   };
 
   const handleDeleteHistoryEntry = async (id) => {
@@ -734,7 +733,7 @@ const AddLoadingEntry = () => {
 
       await api.put(`/loading-entries/${editingEntry._id}`, payload);
       toast.success("Entry updated successfully");
-      setIsEditModalOpen(false);
+      setActiveView("add");
       setEditingEntry(null);
       
       // Refresh existing entries
@@ -753,6 +752,19 @@ const AddLoadingEntry = () => {
     } finally {
       setIsSaving(false);
     }
+  };
+
+  const handleBackToList = () => {
+    setActiveView("list");
+    setSelectedOrder(null);
+    setLoadingEntries([]);
+    setExistingEntries([]);
+    setEditingEntry(null);
+  };
+
+  const handleBackToAdd = () => {
+    setActiveView("add");
+    setEditingEntry(null);
   };
 
   if (
@@ -781,67 +793,74 @@ const AddLoadingEntry = () => {
         icon={FaTruckLoading}
         noContentCard
       >
-        <div className="max-w-7xl mx-auto space-y-6">
-          <SearchFiltersCard
-            loading={loading}
-            userRole={userRole}
-            groups={groups}
-            selectedGroup={selectedGroup}
-            setSelectedGroup={setSelectedGroup}
-            filteredBuyers={filteredBuyers}
-            selectedBuyer={selectedBuyer}
-            setSelectedBuyer={setSelectedBuyer}
-            consignees={consignees}
-            selectedConsignee={selectedConsignee}
-            setSelectedConsignee={setSelectedConsignee}
-            sellers={sellers}
-            selectedSellerName={selectedSellerName}
-            setSelectedSellerName={setSelectedSellerName}
-            sellerCompanies={sellerCompanies}
-            selectedSellerCompany={selectedSellerCompany}
-            setSelectedSellerCompany={setSelectedSellerCompany}
-            allSellers={allSellers}
-            saudaSearch={saudaSearch}
-            setSaudaSearch={setSaudaSearch}
-            saudaSuggestions={saudaSuggestions}
-            isSaudaSuggestOpen={isSaudaSuggestOpen}
-            setIsSaudaSuggestOpen={setIsSaudaSuggestOpen}
-            handleSaudaSelection={handleSaudaSelection}
-            handleSearch={handleSearch}
-            handleClearFilters={handleClearFilters}
-            resultCount={orders.length}
-          />
+        {activeView === "list" && (
+          <div className="max-w-7xl mx-auto space-y-6">
+            <SearchFiltersCard
+              loading={loading}
+              userRole={userRole}
+              groups={groups}
+              selectedGroup={selectedGroup}
+              setSelectedGroup={setSelectedGroup}
+              filteredBuyers={filteredBuyers}
+              selectedBuyer={selectedBuyer}
+              setSelectedBuyer={setSelectedBuyer}
+              consignees={consignees}
+              selectedConsignee={selectedConsignee}
+              setSelectedConsignee={setSelectedConsignee}
+              sellers={sellers}
+              selectedSellerName={selectedSellerName}
+              setSelectedSellerName={setSelectedSellerName}
+              sellerCompanies={sellerCompanies}
+              selectedSellerCompany={selectedSellerCompany}
+              setSelectedSellerCompany={setSelectedSellerCompany}
+              saudaSearch={saudaSearch}
+              setSaudaSearch={setSaudaSearch}
+              saudaSuggestions={saudaSuggestions}
+              isSaudaSuggestOpen={isSaudaSuggestOpen}
+              setIsSaudaSuggestOpen={setIsSaudaSuggestOpen}
+              handleSaudaSelection={handleSaudaSelection}
+              handleSearch={handleSearch}
+              handleClearFilters={handleClearFilters}
+              resultCount={orders.length}
+            />
 
-          {selectedSummary.length > 0 && (
-            <div className="flex flex-wrap gap-2">
-              {selectedSummary.map((item) => (
-                <span
-                  key={item}
-                  className="inline-flex items-center rounded-full border border-emerald-100 bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700"
-                >
-                  {item}
-                </span>
-              ))}
+            {selectedSummary.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {selectedSummary.map((item) => (
+                  <span
+                    key={item}
+                    className="inline-flex items-center rounded-full border border-emerald-100 bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700"
+                  >
+                    {item}
+                  </span>
+                ))}
+              </div>
+            )}
+
+            <OrdersTableCard
+              orders={orders}
+              handleOpenPopup={handleOpenPopup}
+              toggleSaudaStatus={toggleSaudaStatus}
+            />
+          </div>
+        )}
+
+        {activeView === "edit" && editingEntry && (
+          <div className="max-w-7xl mx-auto space-y-6">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <button
+                type="button"
+                onClick={handleBackToAdd}
+                className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-2xl bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 font-bold"
+              >
+                <FaArrowLeft /> Back
+              </button>
+              <h2 className="text-xl font-extrabold text-slate-800">
+                Edit Loading Entry
+              </h2>
             </div>
-          )}
 
-          <OrdersTableCard
-            orders={orders}
-            handleOpenPopup={handleOpenPopup}
-            toggleSaudaStatus={toggleSaudaStatus}
-          />
-        </div>
-
-        {isEditModalOpen && editingEntry && (
-          <PopupBox
-            isOpen={isEditModalOpen}
-            onClose={() => {
-              setIsEditModalOpen(false);
-              setEditingEntry(null);
-            }}
-            title="Edit Loading Entry"
-          >
-            <div className="space-y-6 p-4">
+            <div className="space-y-6 p-4 rounded-3xl border border-slate-200 bg-white shadow-sm">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <div className="space-y-2">
                   <label className="text-xs font-bold text-slate-500 uppercase">Loading Date</label>
@@ -942,7 +961,7 @@ const AddLoadingEntry = () => {
               </div>
               <div className="flex justify-end gap-3 pt-4 border-t">
                 <button
-                  onClick={() => setIsEditModalOpen(false)}
+                  onClick={handleBackToAdd}
                   className="px-6 py-2 bg-slate-100 text-slate-600 rounded-xl font-bold"
                 >
                   Cancel
@@ -956,17 +975,25 @@ const AddLoadingEntry = () => {
                 </button>
               </div>
             </div>
-          </PopupBox>
+          </div>
         )}
 
-        {isPopupOpen && selectedOrder && (
-          <PopupBox
-            isOpen={isPopupOpen}
-            onClose={() => setIsPopupOpen(false)}
-            title={`Add Loading Entry - Sauda: ${selectedOrder.saudaNo}`}
-            maxWidth="max-w-[98vw] max-w-none"
-          >
-            <div className="space-y-6">
+        {activeView === "add" && selectedOrder && (
+          <div className="max-w-7xl mx-auto space-y-6">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <button
+                type="button"
+                onClick={handleBackToList}
+                className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-2xl bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 font-bold"
+              >
+                <FaArrowLeft /> Back
+              </button>
+              <h2 className="text-xl font-extrabold text-slate-800">
+                Add Loading Entry - Sauda: {selectedOrder.saudaNo}
+              </h2>
+            </div>
+
+            <div className="space-y-6 rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 bg-slate-50 rounded-2xl text-sm border border-slate-100 shadow-inner">
                 <div className="bg-white p-3 rounded-xl border border-slate-200">
                   <p className="text-slate-500 font-medium">Total Quantity</p>
@@ -1007,7 +1034,7 @@ const AddLoadingEntry = () => {
                 </div>
               </div>
 
-              <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-2 custom-scrollbar p-2">
+              <div className="space-y-4">
                 {/* Previous Loading History Section */}
                 {existingEntries.length > 0 && (
                   <div className="space-y-4 mb-8">
@@ -1453,7 +1480,7 @@ const AddLoadingEntry = () => {
                 </button>
                 <div className="flex gap-3 w-full sm:w-auto">
                   <button
-                    onClick={() => setIsPopupOpen(false)}
+                    onClick={handleBackToList}
                     className="flex-1 sm:flex-none px-8 py-3 bg-white text-slate-600 rounded-2xl hover:bg-slate-50 transition font-bold border border-slate-200"
                   >
                     Cancel
@@ -1468,7 +1495,7 @@ const AddLoadingEntry = () => {
                 </div>
               </div>
             </div>
-          </PopupBox>
+          </div>
         )}
       </AdminPageShell>
     </Suspense>
