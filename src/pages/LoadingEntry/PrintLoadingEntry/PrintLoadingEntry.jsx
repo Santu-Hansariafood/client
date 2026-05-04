@@ -223,20 +223,27 @@ const PrintLoadingEntry = async (data) => {
       }
     };
 
-    const wrapText = (text, maxLength) => {
+    const wrapText = (text, maxLength, maxLines = 3) => {
       if (!text) return [""];
       const words = text.split(" ");
       const lines = [];
       let currentLine = "";
       words.forEach((word) => {
-        if ((currentLine + word).length > maxLength) {
-          lines.push(currentLine.trim());
-          currentLine = word + " ";
+        const testLine = currentLine ? `${currentLine} ${word}` : word;
+        if (testLine.length > maxLength) {
+          if (currentLine) lines.push(currentLine);
+          currentLine = word;
+          if (lines.length >= maxLines - 1 && maxLines > 1) {
+            currentLine = currentLine.substring(0, maxLength - 3) + "...";
+            lines.push(currentLine);
+            currentLine = "";
+          }
         } else {
-          currentLine += word + " ";
+          currentLine = testLine;
         }
       });
-      lines.push(currentLine.trim());
+      if (currentLine && lines.length < maxLines) lines.push(currentLine);
+      if (lines.length === 0) lines.push("");
       return lines;
     };
 
@@ -482,7 +489,7 @@ const PrintLoadingEntry = async (data) => {
     const merchantTextY = vendorCode ? 25 : 22;
     doc.text("General Merchant & Commission Agent", textStartX, merchantTextY);
 
-    const headerAddressLines = wrapText(sellerFullAddress, 85);
+    const headerAddressLines = wrapText(sellerFullAddress, 85, 2);
     headerAddressLines.slice(0, 2).forEach((line, index) => {
       doc.text(line, textStartX, merchantTextY + 4 + index * 4);
     });
@@ -502,6 +509,7 @@ const PrintLoadingEntry = async (data) => {
 
     let y = 58;
 
+    // Header Info Box
     doc.setLineWidth(0.2);
     doc.rect(margin + 2, y - 5, pageWidth - margin * 2 - 4, 35);
     doc.setFontSize(9);
@@ -531,11 +539,9 @@ const PrintLoadingEntry = async (data) => {
     y += 7;
 
     setBold();
-    doc.text(`Broker:`, pageWidth / 2, y, { align: "center" });
+    doc.text(`Broker:`, margin + 5, y);
     setNormal();
-    doc.text(`Hansaria Food Private Limited`, pageWidth / 2, y + 4, {
-      align: "center",
-    });
+    doc.text(`Hansaria Food Private Limited`, margin + 25, y);
 
     y += 22;
 
@@ -554,62 +560,18 @@ const PrintLoadingEntry = async (data) => {
       ].filter(Boolean)[0] ||
       "N/A";
 
-    let cAddrLines = wrapText(shipToAddress, 100);
-    if (cAddrLines.length > 2) {
-      cAddrLines = cAddrLines.slice(0, 2);
-      cAddrLines[1] += "...";
-    }
+    let cAddrLines = wrapText(shipToAddress, 100, 2);
 
-    const lineH = 4;
-    const titleH = 5;
-    const consigneeH = 5;
-    const addressLabelH = 4;
-    const addressLinesH = cAddrLines.length * lineH;
-    const mobileH = 5;
-    const bottomPadding = 2;
-
-    const totalInnerH =
-      titleH + consigneeH + addressLabelH + addressLinesH + mobileH + bottomPadding;
-    const boxHeight = totalInnerH + 5; // because box starts 5mm above current y
-
-    // Draw the box
-    doc.rect(margin + 2, y - 5, pageWidth - margin * 2 - 4, boxHeight);
-
-    // Title
-    setBold();
-    doc.setFontSize(9);
-    doc.text(`SHIP TO (CONSIGNEE)`, margin + 5, y);
-    y += 5;
-
-    // Consignee name
-    setBold();
-    doc.text(`Consignee:`, margin + 5, y);
-    setNormal();
-    const consigneeName =
-      shipToDetails.name ||
+    // Calculate box height dynamically
+    const consigneeName = shipToDetails.name ||
       shipToDetails.label ||
       shipToDetails.consigneeName ||
       (typeof shipToRaw === "string" ? shipToRaw : "") ||
       pick(data.consignee);
-    doc.text(`${consigneeName}`, margin + 30, y);
-    y += 4;
-
-    // Address label
-    setBold();
-    doc.text(`Address:`, margin + 5, y);
-    setNormal();
-    cAddrLines.forEach((line, idx) => {
-      doc.text(line, margin + 30, y + idx * lineH);
-    });
-    y += cAddrLines.length * lineH + 2;
-
-    // Mobile number
-    setBold();
-    doc.text(`Mobile:`, margin + 5, y);
-    setNormal();
-
-    let shipToMobile =
-      shipToDetails.mobile ||
+    
+    const consigneeNameLines = wrapText(consigneeName, 100, 1);
+    
+    let shipToMobile = shipToDetails.mobile ||
       shipToDetails.phone ||
       shipToDetails.mobileNo ||
       "N/A";
@@ -632,36 +594,79 @@ const PrintLoadingEntry = async (data) => {
       ].filter(Boolean);
       if (dataMobileParts.length) shipToMobile = dataMobileParts[0];
     }
-    doc.text(`${shipToMobile}`, margin + 30, y);
 
-    // Move y below the box
-    y = (y - 5) + boxHeight + 5; // +5 for gap before next section
+    // Calculate exact box height
+    let consigneeBoxHeight = 5; // padding top
+    consigneeBoxHeight += 5; // title
+    consigneeBoxHeight += 4; // consignee label + value
+    consigneeBoxHeight += 4; // address label
+    consigneeBoxHeight += (cAddrLines.length * 4); // address lines
+    consigneeBoxHeight += 4; // mobile label + value
+    consigneeBoxHeight += 3; // bottom padding
+    
+    const consigneeBoxStartY = y - 5;
+    doc.rect(margin + 2, consigneeBoxStartY, pageWidth - margin * 2 - 4, consigneeBoxHeight);
+    
+    setBold();
+    doc.setFontSize(9);
+    doc.text(`SHIP TO (CONSIGNEE)`, margin + 5, y);
+    y += 5;
+    
+    setBold();
+    doc.text(`Consignee:`, margin + 5, y);
+    setNormal();
+    doc.text(`${consigneeNameLines[0]}`, margin + 30, y);
+    y += 4;
+    
+    setBold();
+    doc.text(`Address:`, margin + 5, y);
+    setNormal();
+    cAddrLines.forEach((line, idx) => {
+      doc.text(line, margin + 30, y + idx * 4);
+    });
+    y += cAddrLines.length * 4 + 2;
+    
+    setBold();
+    doc.text(`Mobile:`, margin + 5, y);
+    setNormal();
+    doc.text(`${shipToMobile}`, margin + 30, y);
+    
+    y = consigneeBoxStartY + consigneeBoxHeight + 5;
 
     // ========== BUYER ACCOUNT SECTION ==========
     const buyerBoxTopY = y;
-    doc.rect(margin + 2, buyerBoxTopY - 5, pageWidth - margin * 2 - 4, 44);
+    const buyerNameLines = wrapText(buyerCompanyName, 70, 1);
+    const buyerAddrLines = wrapText(buyerFullAddress, 70, 2);
+    
+    let buyerBoxHeight = 5; // padding top
+    buyerBoxHeight += 5; // title
+    buyerBoxHeight += 6; // buyer company label + value
+    buyerBoxHeight += 4; // address label
+    buyerBoxHeight += (buyerAddrLines.length * 4); // address lines
+    if (buyerPanNo) buyerBoxHeight += 5;
+    if (buyerGstNo) buyerBoxHeight += 5;
+    buyerBoxHeight += 3; // bottom padding
+    
+    doc.rect(margin + 2, buyerBoxTopY - 5, pageWidth - margin * 2 - 4, buyerBoxHeight);
     setBold();
     doc.setFontSize(9);
     doc.text(`BUYER ACCOUNT`, margin + 5, buyerBoxTopY);
     y = buyerBoxTopY + 6;
+    
     setBold();
     doc.text(`Buyer Company:`, margin + 5, y);
     setNormal();
-    const buyerNameLines = wrapText(buyerCompanyName, 70);
-    buyerNameLines.slice(0, 1).forEach((line, idx) => {
-      doc.text(line, margin + 35, y + idx * 4);
-    });
-
+    doc.text(buyerNameLines[0], margin + 35, y);
     y += 6;
+    
     setBold();
     doc.text(`Address:`, margin + 5, y);
     setNormal();
-    const buyerAddrLines = wrapText(buyerFullAddress, 70);
-    buyerAddrLines.slice(0, 2).forEach((line, idx) => {
+    buyerAddrLines.forEach((line, idx) => {
       doc.text(line, margin + 35, y + idx * 4);
     });
-
-    y += 10;
+    y += buyerAddrLines.length * 4 + 2;
+    
     if (buyerPanNo) {
       setBold();
       doc.text(`PAN No:`, margin + 5, y);
@@ -675,8 +680,8 @@ const PrintLoadingEntry = async (data) => {
       setNormal();
       doc.text(`${buyerGstNo}`, margin + 35, y);
     }
-
-    y = buyerBoxTopY + 52;
+    
+    y = buyerBoxTopY + buyerBoxHeight + 2;
 
     // ========== DESCRIPTION OF GOODS ==========
     doc.rect(margin + 2, y - 5, pageWidth - margin * 2 - 4, 13);
@@ -687,7 +692,8 @@ const PrintLoadingEntry = async (data) => {
     setBold();
     doc.text(`Item:`, margin + 5, y);
     setNormal();
-    doc.text(`${pick(data.commodity)}`, margin + 20, y);
+    const commodityLines = wrapText(pick(data.commodity), 50, 1);
+    doc.text(commodityLines[0], margin + 20, y);
     setBold();
     doc.text(`Bags:`, margin + 70, y);
     setNormal();
@@ -700,11 +706,23 @@ const PrintLoadingEntry = async (data) => {
     y += 15;
 
     // ========== ROUTE & VEHICLE DETAILS ==========
-    doc.rect(margin + 2, y - 5, pageWidth - margin * 2 - 4, 65);
+    const tAddrLines = wrapText(displayTransporterAddress, 80, 2);
+    let routeBoxHeight = 5; // padding top
+    routeBoxHeight += 5; // title
+    routeBoxHeight += 6; // from & to
+    routeBoxHeight += 5; // transporter
+    routeBoxHeight += 5; // lorry no
+    routeBoxHeight += 5; // driver & mob
+    routeBoxHeight += 5; // transporter address label
+    routeBoxHeight += (tAddrLines.length * 4); // transporter address lines
+    routeBoxHeight += 5; // bottom padding
+    
+    doc.rect(margin + 2, y - 5, pageWidth - margin * 2 - 4, routeBoxHeight);
     setBold();
     doc.setFontSize(9);
     doc.text(`ROUTE & VEHICLE DETAILS`, margin + 5, y);
     y += 6;
+    
     setBold();
     doc.text(`From:`, margin + 5, y);
     setNormal();
@@ -712,22 +730,22 @@ const PrintLoadingEntry = async (data) => {
     setBold();
     doc.text(`To:`, margin + 70, y);
     setNormal();
-    // Use consigneeState (state of SHIP TO) instead of buyerState
     doc.text(`${consigneeState}`, margin + 80, y);
-
     y += 6;
+    
     setBold();
     doc.text(`Transporter:`, margin + 5, y);
     setNormal();
-    doc.text(`${displayTransporterName}`, margin + 30, y);
-
+    const transporterLines = wrapText(displayTransporterName, 70, 1);
+    doc.text(transporterLines[0], margin + 30, y);
     y += 5;
+    
     setBold();
     doc.text(`Lorry No:`, margin + 5, y);
     setNormal();
     doc.text(`${(data.lorryNumber || "N/A").toUpperCase()}`, margin + 30, y);
-
     y += 5;
+    
     setBold();
     doc.text(`Driver:`, margin + 5, y);
     setNormal();
@@ -736,17 +754,16 @@ const PrintLoadingEntry = async (data) => {
     doc.text(`Mob:`, margin + 80, y);
     setNormal();
     doc.text(`${data.driverPhoneNumber || "N/A"}`, margin + 90, y);
-
     y += 5;
+    
     setBold();
     doc.text(`Transporter Address:`, margin + 5, y);
     setNormal();
-    const tAddrLines = wrapText(displayTransporterAddress, 80);
-    tAddrLines.slice(0, 1).forEach((line, idx) => {
+    tAddrLines.forEach((line, idx) => {
       doc.text(line, margin + 45, y + idx * 4);
     });
-
-    y += 17;
+    
+    y = y + (tAddrLines.length * 4) + 12;
 
     // ========== FREIGHT DETAILS ==========
     doc.rect(margin + 2, y - 5, pageWidth - margin * 2 - 4, 28);
@@ -754,6 +771,7 @@ const PrintLoadingEntry = async (data) => {
     doc.setFontSize(9);
     doc.text(`FREIGHT DETAILS`, margin + 5, y);
     y += 6;
+    
     const totalFreight = data.totalFreight
       ? `Rs. ${Number(data.totalFreight).toLocaleString("en-IN")}`
       : "N/A";
@@ -779,7 +797,6 @@ const PrintLoadingEntry = async (data) => {
     doc.text(toPayValue, pageWidth - margin - 25, y);
 
     // ========== SIGNATURES ==========
-    // Place signatures near the bottom, above footnotes
     const signY = pageHeight - 38;
     setBold();
     doc.text("Driver Signature", margin + 10, signY);
