@@ -845,18 +845,30 @@ const AddLoadingEntry = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <div className="space-y-2">
                   <label className="text-xs font-bold text-slate-500 uppercase">Loading Date</label>
-                  <DataInput
-                    type="date"
-                    value={editingEntry.loadingDate}
-                    onChange={(e) => setEditingEntry({...editingEntry, loadingDate: e.target.value})}
+                  <DateSelector
+                    selectedDate={editingEntry.loadingDate}
+                    onChange={(date) =>
+                      setEditingEntry({
+                        ...editingEntry,
+                        loadingDate: date
+                          ? new Date(date).toISOString().split("T")[0]
+                          : "",
+                      })
+                    }
                   />
                 </div>
                 <div className="space-y-2">
                   <label className="text-xs font-bold text-slate-500 uppercase">Unloading Date</label>
-                  <DataInput
-                    type="date"
-                    value={editingEntry.unloadingDate}
-                    onChange={(e) => setEditingEntry({...editingEntry, unloadingDate: e.target.value})}
+                  <DateSelector
+                    selectedDate={editingEntry.unloadingDate}
+                    onChange={(date) =>
+                      setEditingEntry({
+                        ...editingEntry,
+                        unloadingDate: date
+                          ? new Date(date).toISOString().split("T")[0]
+                          : "",
+                      })
+                    }
                   />
                 </div>
                 <div className="space-y-2">
