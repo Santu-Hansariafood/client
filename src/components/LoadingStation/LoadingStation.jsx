@@ -8,7 +8,7 @@ const DataDropdown = lazy(
 const DataInput = lazy(() => import("../../common/DataInput/DataInput"));
 
 const LoadingStation = ({ formData, handleChange }) => {
-  const { state, location } = formData;
+  const { state } = formData;
 
   const stateOptions = useMemo(
     () => statesData.map((item) => ({ value: item.state, label: item.state })),
