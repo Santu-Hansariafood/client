@@ -565,7 +565,13 @@ const PrintLoadingEntry = async (data) => {
     y += 22;
 
     doc.setLineWidth(0.2);
-    doc.rect(margin + 2, y - 5, pageWidth - margin * 2 - 4, 28);
+    //const cAddrLines = wrapText(shipToAddress, 100);
+
+    const lineHeight = 4;
+    const baseHeight = 12;
+    const dynamicHeight = baseHeight + cAddrLines.length * lineHeight;
+
+    doc.rect(margin + 2, y - 5, pageWidth - margin * 2 - 4, dynamicHeight);
     setBold();
     doc.setFontSize(9);
     doc.text(`SHIP TO (CONSIGNEE)`, margin + 5, y);
@@ -637,8 +643,9 @@ const PrintLoadingEntry = async (data) => {
       ].filter(Boolean)[0] ||
       "N/A";
 
-    const cAddrLines = wrapText(shipToAddress, 100);
-    cAddrLines.slice(0, 2).forEach((line, index) => {
+    const cAddrLines = wrapText(shipToAddress, 100).slice(0, 2);
+
+    cAddrLines.forEach((line, index) => {
       doc.text(line, margin + 30, y + index * 4);
     });
 
@@ -683,7 +690,7 @@ const PrintLoadingEntry = async (data) => {
 
     doc.text(`${shipToMobile}`, margin + 30, y);
 
-    y += 20;
+    y += cAddrLines.length * 4 + 10;
 
     doc.setLineWidth(0.2);
     const buyerBoxTopY = y;
