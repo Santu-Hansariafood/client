@@ -74,7 +74,7 @@ const PrintLoadingEntry = async (data) => {
       companies,
       saudaDataResponse,
     ] = await Promise.all([
-      safeFetch("/consignees?limit=0"),
+      safeFetch("/consignees?page=1&limit=5000"),
       safeFetch("/transporters?limit=0"),
       safeFetch("/sellers?limit=0"),
       safeFetch("/seller-company?limit=0"),
@@ -96,23 +96,97 @@ const PrintLoadingEntry = async (data) => {
         .trim()
         .toLowerCase();
 
-    const shipToConsigneeForMatch = sauda.shipTo || sauda.consignee || data.consignee;
-    const consigneeNameForMatch = 
-      (shipToConsigneeForMatch && typeof shipToConsigneeForMatch === 'object' 
-        ? (shipToConsigneeForMatch.name || shipToConsigneeForMatch.consigneeName) 
-        : shipToConsigneeForMatch) || pick(data.consignee);
+    const resolveConsignee = (candidate) => {
+      if (!candidate) return null;
 
-    const consignee =
-      consignees.find(
-        (c) =>
-          String(c._id) === String(data.consignee) || 
-          normalizeText(c.name) === normalizeText(consigneeNameForMatch),
-      ) || {};
+      if (typeof candidate === "object") {
+        const nestedValue = candidate.value;
+        const id =
+          candidate._id ||
+          candidate.id ||
+          (typeof nestedValue === "string"
+            ? nestedValue
+            : nestedValue && typeof nestedValue === "object"
+              ? nestedValue._id || nestedValue.id || ""
+              : "");
+
+        const objectIdLike = (() => {
+          const asString = String(candidate || "");
+          if (!asString || asString === "[object Object]") return "";
+          return /^[a-f\d]{24}$/i.test(asString) ? asString : "";
+        })();
+
+        if (id || objectIdLike) {
+          const found = (consignees || []).find(
+            (c) => String(c._id) === String(id || objectIdLike),
+          );
+          if (found) return found;
+        }
+
+        const name =
+          candidate.name ||
+          candidate.label ||
+          candidate.consigneeName ||
+          (typeof nestedValue === "string" ? nestedValue : "") ||
+          "";
+        if (name) {
+          const foundByName = (consignees || []).find(
+            (c) => normalizeText(c.name) === normalizeText(name),
+          );
+          if (foundByName) return foundByName;
+
+          const needle = normalizeText(name);
+          const foundByIncludes = (consignees || []).find((c) => {
+            const hay = normalizeText(c.name);
+            return hay.includes(needle) || needle.includes(hay);
+          });
+          if (foundByIncludes) return foundByIncludes;
+        }
+
+        return candidate;
+      }
+
+      const asString = String(candidate || "");
+      const foundById = (consignees || []).find(
+        (c) => String(c._id) === String(asString),
+      );
+      if (foundById) return foundById;
+
+      const foundByName = (consignees || []).find(
+        (c) => normalizeText(c.name) === normalizeText(asString),
+      );
+      if (foundByName) return foundByName;
+
+      const needle = normalizeText(asString);
+      const foundByIncludes = (consignees || []).find((c) => {
+        const hay = normalizeText(c.name);
+        return hay.includes(needle) || needle.includes(hay);
+      });
+      if (foundByIncludes) return foundByIncludes;
+
+      return null;
+    };
+
+    const firstNonEmpty = (...values) => {
+      for (const v of values) {
+        if (!v) continue;
+        if (typeof v === "string") {
+          const trimmed = v.trim();
+          if (trimmed) return trimmed;
+          continue;
+        }
+        return v;
+      }
+      return null;
+    };
+
+    const shipToRaw = firstNonEmpty(sauda.shipTo, sauda.consignee, data.consignee);
+    const shipToDetails = resolveConsignee(shipToRaw) || {};
 
     const consigneeMobile =
-      consignee.phone ||
-      consignee.mobile ||
-      consignee.mobileNo ||
+      shipToDetails.phone ||
+      shipToDetails.mobile ||
+      shipToDetails.mobileNo ||
       data.consigneeMobile ||
       "N/A";
 
@@ -387,11 +461,12 @@ const PrintLoadingEntry = async (data) => {
     setBold();
     doc.text(`Consignee:`, margin + 5, y);
     setNormal();
-    const shipToConsignee = sauda.shipTo || sauda.consignee || data.consignee;
-    const consigneeName = 
-      (shipToConsignee && typeof shipToConsignee === 'object' 
-        ? (shipToConsignee.name || shipToConsignee.consigneeName) 
-        : shipToConsignee) || consignee.name || pick(data.consignee);
+    const consigneeName =
+      shipToDetails.name ||
+      shipToDetails.label ||
+      shipToDetails.consigneeName ||
+      (typeof shipToRaw === "string" ? shipToRaw : "") ||
+      pick(data.consignee);
     doc.text(`${consigneeName}`, margin + 30, y);
 
     y += 4;
@@ -401,11 +476,48 @@ const PrintLoadingEntry = async (data) => {
     
     let shipToAddress = 'N/A';
     
+    const formatConsigneeAddress = (details) => {
+      if (!details || typeof details !== "object") return "";
+      const base = details.address || details.location || "";
+      const district = details.district || "";
+      const state = details.state || "";
+      const pin =
+        details.pin ||
+        details.pinNo ||
+        details.pincode ||
+        details.pinCode ||
+        "";
+
+      const place = [district, state].filter(Boolean).join(", ");
+
+      let out = "";
+      if (base) out = base;
+      if (place) out = out ? `${out}, ${place}` : place;
+      if (pin) out = out ? `${out} - ${pin}` : pin;
+      return out;
+    };
+
     shipToAddress =
-      buildAddressFromObject(sauda.shipTo) ||
-      buildAddressFromObject(shipToConsignee) ||
-      buildAddressFromObject(consignee) ||
+      formatConsigneeAddress(shipToDetails) ||
+      buildAddressFromObject(shipToDetails) ||
       [
+        [
+          shipToDetails.district,
+          shipToDetails.state,
+        ]
+          .filter(Boolean)
+          .join(", ") +
+          (shipToDetails.pin ||
+          shipToDetails.pinNo ||
+          shipToDetails.pincode ||
+          shipToDetails.pinCode
+            ? ` - ${
+                shipToDetails.pin ||
+                shipToDetails.pinNo ||
+                shipToDetails.pincode ||
+                shipToDetails.pinCode
+              }`
+            : ""),
         sauda.shipToAddress,
         sauda.consigneeAddress,
         sauda.deliveryAddress,
@@ -427,13 +539,11 @@ const PrintLoadingEntry = async (data) => {
     setNormal();
     let shipToMobile = 'N/A';
     
-    if (shipToConsignee && typeof shipToConsignee === 'object') {
-      shipToMobile = shipToConsignee.mobile || shipToConsignee.phone || shipToConsignee.mobileNo || 'N/A';
-    }
-    
-    if (shipToMobile === 'N/A' && sauda.shipTo && typeof sauda.shipTo === 'object') {
-      shipToMobile = sauda.shipTo.mobile || sauda.shipTo.phone || sauda.shipTo.mobileNo || 'N/A';
-    }
+    shipToMobile =
+      shipToDetails.mobile ||
+      shipToDetails.phone ||
+      shipToDetails.mobileNo ||
+      'N/A';
     
     if (shipToMobile === 'N/A') {
       const saudaMobileParts = [
