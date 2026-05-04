@@ -543,7 +543,7 @@ const PrintLoadingEntry = async (data) => {
     setNormal();
     doc.text(`Hansaria Food Private Limited`, margin + 25, y);
 
-    y += 22;
+    y += 18; // Reduced from 22 to minimize gap
 
     // ========== SHIP TO (CONSIGNEE) SECTION ==========
     doc.setLineWidth(0.2);
@@ -561,8 +561,7 @@ const PrintLoadingEntry = async (data) => {
       "N/A";
 
     let cAddrLines = wrapText(shipToAddress, 100, 2);
-
-    // Calculate box height dynamically
+    
     const consigneeName = shipToDetails.name ||
       shipToDetails.label ||
       shipToDetails.consigneeName ||
@@ -595,14 +594,14 @@ const PrintLoadingEntry = async (data) => {
       if (dataMobileParts.length) shipToMobile = dataMobileParts[0];
     }
 
-    // Calculate exact box height
-    let consigneeBoxHeight = 5; // padding top
+    // Compact box height for SHIP TO
+    let consigneeBoxHeight = 4; // top padding
     consigneeBoxHeight += 5; // title
     consigneeBoxHeight += 4; // consignee label + value
     consigneeBoxHeight += 4; // address label
     consigneeBoxHeight += (cAddrLines.length * 4); // address lines
     consigneeBoxHeight += 4; // mobile label + value
-    consigneeBoxHeight += 3; // bottom padding
+    consigneeBoxHeight += 2; // bottom padding
     
     const consigneeBoxStartY = y - 5;
     doc.rect(margin + 2, consigneeBoxStartY, pageWidth - margin * 2 - 4, consigneeBoxHeight);
@@ -624,40 +623,41 @@ const PrintLoadingEntry = async (data) => {
     cAddrLines.forEach((line, idx) => {
       doc.text(line, margin + 30, y + idx * 4);
     });
-    y += cAddrLines.length * 4 + 2;
+    y += cAddrLines.length * 4;
     
     setBold();
     doc.text(`Mobile:`, margin + 5, y);
     setNormal();
     doc.text(`${shipToMobile}`, margin + 30, y);
     
-    y = consigneeBoxStartY + consigneeBoxHeight + 5;
+    y = consigneeBoxStartY + consigneeBoxHeight + 3; // Reduced gap from 5 to 3
 
     // ========== BUYER ACCOUNT SECTION ==========
     const buyerBoxTopY = y;
     const buyerNameLines = wrapText(buyerCompanyName, 70, 1);
     const buyerAddrLines = wrapText(buyerFullAddress, 70, 2);
     
-    let buyerBoxHeight = 5; // padding top
+    // Compact box height for BUYER ACCOUNT
+    let buyerBoxHeight = 4; // top padding
     buyerBoxHeight += 5; // title
-    buyerBoxHeight += 6; // buyer company label + value
+    buyerBoxHeight += 5; // buyer company label + value
     buyerBoxHeight += 4; // address label
     buyerBoxHeight += (buyerAddrLines.length * 4); // address lines
     if (buyerPanNo) buyerBoxHeight += 5;
     if (buyerGstNo) buyerBoxHeight += 5;
-    buyerBoxHeight += 3; // bottom padding
+    buyerBoxHeight += 2; // bottom padding
     
     doc.rect(margin + 2, buyerBoxTopY - 5, pageWidth - margin * 2 - 4, buyerBoxHeight);
     setBold();
     doc.setFontSize(9);
     doc.text(`BUYER ACCOUNT`, margin + 5, buyerBoxTopY);
-    y = buyerBoxTopY + 6;
+    y = buyerBoxTopY + 5;
     
     setBold();
     doc.text(`Buyer Company:`, margin + 5, y);
     setNormal();
     doc.text(buyerNameLines[0], margin + 35, y);
-    y += 6;
+    y += 5;
     
     setBold();
     doc.text(`Address:`, margin + 5, y);
@@ -665,7 +665,7 @@ const PrintLoadingEntry = async (data) => {
     buyerAddrLines.forEach((line, idx) => {
       doc.text(line, margin + 35, y + idx * 4);
     });
-    y += buyerAddrLines.length * 4 + 2;
+    y += buyerAddrLines.length * 4;
     
     if (buyerPanNo) {
       setBold();
@@ -681,7 +681,7 @@ const PrintLoadingEntry = async (data) => {
       doc.text(`${buyerGstNo}`, margin + 35, y);
     }
     
-    y = buyerBoxTopY + buyerBoxHeight + 2;
+    y = buyerBoxTopY + buyerBoxHeight + 3; // Reduced gap
 
     // ========== DESCRIPTION OF GOODS ==========
     doc.rect(margin + 2, y - 5, pageWidth - margin * 2 - 4, 13);
@@ -703,25 +703,25 @@ const PrintLoadingEntry = async (data) => {
     setNormal();
     doc.text(`${pick(data.loadingWeight)} Tons`, margin + 125, y);
 
-    y += 15;
+    y += 12; // Reduced from 15
 
     // ========== ROUTE & VEHICLE DETAILS ==========
     const tAddrLines = wrapText(displayTransporterAddress, 80, 2);
-    let routeBoxHeight = 5; // padding top
+    let routeBoxHeight = 4; // top padding
     routeBoxHeight += 5; // title
-    routeBoxHeight += 6; // from & to
+    routeBoxHeight += 5; // from & to
     routeBoxHeight += 5; // transporter
     routeBoxHeight += 5; // lorry no
     routeBoxHeight += 5; // driver & mob
     routeBoxHeight += 5; // transporter address label
     routeBoxHeight += (tAddrLines.length * 4); // transporter address lines
-    routeBoxHeight += 5; // bottom padding
+    routeBoxHeight += 3; // bottom padding
     
     doc.rect(margin + 2, y - 5, pageWidth - margin * 2 - 4, routeBoxHeight);
     setBold();
     doc.setFontSize(9);
     doc.text(`ROUTE & VEHICLE DETAILS`, margin + 5, y);
-    y += 6;
+    y += 5;
     
     setBold();
     doc.text(`From:`, margin + 5, y);
@@ -731,7 +731,7 @@ const PrintLoadingEntry = async (data) => {
     doc.text(`To:`, margin + 70, y);
     setNormal();
     doc.text(`${consigneeState}`, margin + 80, y);
-    y += 6;
+    y += 5;
     
     setBold();
     doc.text(`Transporter:`, margin + 5, y);
@@ -763,14 +763,14 @@ const PrintLoadingEntry = async (data) => {
       doc.text(line, margin + 45, y + idx * 4);
     });
     
-    y = y + (tAddrLines.length * 4) + 12;
+    y = y + (tAddrLines.length * 4) + 8; // Reduced from 12
 
     // ========== FREIGHT DETAILS ==========
-    doc.rect(margin + 2, y - 5, pageWidth - margin * 2 - 4, 28);
+    doc.rect(margin + 2, y - 5, pageWidth - margin * 2 - 4, 24); // Reduced height from 28 to 24
     setBold();
     doc.setFontSize(9);
     doc.text(`FREIGHT DETAILS`, margin + 5, y);
-    y += 6;
+    y += 5;
     
     const totalFreight = data.totalFreight
       ? `Rs. ${Number(data.totalFreight).toLocaleString("en-IN")}`
