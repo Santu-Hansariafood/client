@@ -273,6 +273,7 @@ const PrintLoadingEntry = async (data) => {
       return out;
     };
 
+    // ---------- Data fetching ----------
     const [
       sellers,
       sellerCompanies,
@@ -299,6 +300,7 @@ const PrintLoadingEntry = async (data) => {
         (s) => String(s.saudaNo) === String(data.saudaNo)
       ) || {};
 
+    // ---------- Resolve consignee ----------
     const shipToRaw = pickBestShipToCandidate([
       sauda.consignee,
       sauda.shipTo,
@@ -459,6 +461,7 @@ const PrintLoadingEntry = async (data) => {
       matchingBuyerCompany?.pan ||
       "";
 
+    // ---------- PDF generation ----------
     const logo64 = await getBase64(logo);
     if (logo64) {
       doc.addImage(logo64, "PNG", pageWidth - margin - 35, 12, 30, 22);
@@ -502,6 +505,7 @@ const PrintLoadingEntry = async (data) => {
 
     let y = 58;
 
+    // ---- HFPL Sauda No, Buyer Po No, Challan No, Date ----
     doc.setLineWidth(0.2);
     doc.rect(margin + 2, y - 5, pageWidth - margin * 2 - 4, 35);
     doc.setFontSize(9);
@@ -637,48 +641,64 @@ const PrintLoadingEntry = async (data) => {
     // Move y below the box
     y = (y - 5) + boxHeight + 5; // +5 for gap before next section
 
-    // ========== BUYER ACCOUNT SECTION ==========
-    const buyerBoxTopY = y;
-    doc.rect(margin + 2, buyerBoxTopY - 5, pageWidth - margin * 2 - 4, 44);
+    // ========== BUYER ACCOUNT SECTION (DYNAMIC HEIGHT) ==========
+    // Prepare buyer content lines
+    const buyerNameLinesDisplay = wrapText(buyerCompanyName, 70).slice(0, 1);
+    const buyerAddrLinesDisplay = wrapText(buyerFullAddress, 70).slice(0, 2);
+    let buyerLinesCount = 2; // title "BUYER ACCOUNT" + label "Buyer Company:"
+    buyerLinesCount += buyerNameLinesDisplay.length; // company name lines
+    buyerLinesCount += 1; // "Address:" label
+    buyerLinesCount += buyerAddrLinesDisplay.length; // address lines
+    if (buyerPanNo) buyerLinesCount += 1;
+    if (buyerGstNo) buyerLinesCount += 1;
+    // Add some padding lines
+    const buyerBoxPadding = 2;
+    const buyerBoxInnerHeight = buyerLinesCount * 4 + buyerBoxPadding * 2;
+    const buyerBoxHeight = buyerBoxInnerHeight + 5; // +5 for box offset
+
+    // Draw buyer box
+    doc.rect(margin + 2, y - 5, pageWidth - margin * 2 - 4, buyerBoxHeight);
+
     setBold();
     doc.setFontSize(9);
-    doc.text(`BUYER ACCOUNT`, margin + 5, buyerBoxTopY);
-    y = buyerBoxTopY + 6;
+    doc.text(`BUYER ACCOUNT`, margin + 5, y);
+    y += 5;
+
     setBold();
     doc.text(`Buyer Company:`, margin + 5, y);
     setNormal();
-    const buyerNameLines = wrapText(buyerCompanyName, 70);
-    buyerNameLines.slice(0, 1).forEach((line, idx) => {
+    buyerNameLinesDisplay.forEach((line, idx) => {
       doc.text(line, margin + 35, y + idx * 4);
     });
+    y += 4 + (buyerNameLinesDisplay.length - 1) * 4;
 
-    y += 6;
     setBold();
     doc.text(`Address:`, margin + 5, y);
     setNormal();
-    const buyerAddrLines = wrapText(buyerFullAddress, 70);
-    buyerAddrLines.slice(0, 2).forEach((line, idx) => {
+    buyerAddrLinesDisplay.forEach((line, idx) => {
       doc.text(line, margin + 35, y + idx * 4);
     });
+    y += 4 + (buyerAddrLinesDisplay.length - 1) * 4;
 
-    y += 10;
     if (buyerPanNo) {
       setBold();
       doc.text(`PAN No:`, margin + 5, y);
       setNormal();
       doc.text(`${buyerPanNo}`, margin + 35, y);
-      y += 5;
+      y += 4;
     }
     if (buyerGstNo) {
       setBold();
       doc.text(`GST:`, margin + 5, y);
       setNormal();
       doc.text(`${buyerGstNo}`, margin + 35, y);
+      y += 4;
     }
 
-    y = buyerBoxTopY + 52;
+    // Move y below buyer box
+    y = (y - 5) + buyerBoxHeight + 5; // +5 gap
 
-    // ========== DESCRIPTION OF GOODS ==========
+    // ========== DESCRIPTION OF GOODS (fixed height) ==========
     doc.rect(margin + 2, y - 5, pageWidth - margin * 2 - 4, 13);
     setBold();
     doc.setFontSize(9);
@@ -699,12 +719,21 @@ const PrintLoadingEntry = async (data) => {
 
     y += 15;
 
-    // ========== ROUTE & VEHICLE DETAILS ==========
-    doc.rect(margin + 2, y - 5, pageWidth - margin * 2 - 4, 65);
+    // ========== ROUTE & VEHICLE DETAILS (DYNAMIC HEIGHT) ==========
+    // Transporter address lines
+    const tAddrLinesFull = wrapText(displayTransporterAddress, 80);
+    const tAddrLinesDisplay = tAddrLinesFull.slice(0, 2); // max 2 lines
+    let routeLinesCount = 5; // title + From/To + Transporter + Lorry No + Driver + Mob + "Transporter Address:" label
+    routeLinesCount += tAddrLinesDisplay.length;
+    const routeBoxInnerHeight = routeLinesCount * 4 + 4; // extra padding
+    const routeBoxHeight = routeBoxInnerHeight + 5;
+
+    doc.rect(margin + 2, y - 5, pageWidth - margin * 2 - 4, routeBoxHeight);
     setBold();
     doc.setFontSize(9);
     doc.text(`ROUTE & VEHICLE DETAILS`, margin + 5, y);
     y += 6;
+
     setBold();
     doc.text(`From:`, margin + 5, y);
     setNormal();
@@ -712,22 +741,21 @@ const PrintLoadingEntry = async (data) => {
     setBold();
     doc.text(`To:`, margin + 70, y);
     setNormal();
-    // Use consigneeState (state of SHIP TO) instead of buyerState
     doc.text(`${consigneeState}`, margin + 80, y);
+    y += 5;
 
-    y += 6;
     setBold();
     doc.text(`Transporter:`, margin + 5, y);
     setNormal();
     doc.text(`${displayTransporterName}`, margin + 30, y);
-
     y += 5;
+
     setBold();
     doc.text(`Lorry No:`, margin + 5, y);
     setNormal();
     doc.text(`${(data.lorryNumber || "N/A").toUpperCase()}`, margin + 30, y);
-
     y += 5;
+
     setBold();
     doc.text(`Driver:`, margin + 5, y);
     setNormal();
@@ -736,19 +764,20 @@ const PrintLoadingEntry = async (data) => {
     doc.text(`Mob:`, margin + 80, y);
     setNormal();
     doc.text(`${data.driverPhoneNumber || "N/A"}`, margin + 90, y);
-
     y += 5;
+
     setBold();
     doc.text(`Transporter Address:`, margin + 5, y);
     setNormal();
-    const tAddrLines = wrapText(displayTransporterAddress, 80);
-    tAddrLines.slice(0, 1).forEach((line, idx) => {
+    tAddrLinesDisplay.forEach((line, idx) => {
       doc.text(line, margin + 45, y + idx * 4);
     });
+    y += tAddrLinesDisplay.length * 4;
 
-    y += 17;
+    // Move y below route box
+    y = (y - 5) + routeBoxHeight + 5;
 
-    // ========== FREIGHT DETAILS ==========
+    // ========== FREIGHT DETAILS (fixed height) ==========
     doc.rect(margin + 2, y - 5, pageWidth - margin * 2 - 4, 28);
     setBold();
     doc.setFontSize(9);
@@ -778,8 +807,9 @@ const PrintLoadingEntry = async (data) => {
     setNormal();
     doc.text(toPayValue, pageWidth - margin - 25, y);
 
-    // ========== SIGNATURES ==========
-    // Place signatures near the bottom, above footnotes
+    y += 15;
+
+    // ========== SIGNATURES & FOOTERS ==========
     const signY = pageHeight - 38;
     setBold();
     doc.text("Driver Signature", margin + 10, signY);
@@ -793,7 +823,6 @@ const PrintLoadingEntry = async (data) => {
       signY + 2
     );
 
-    // ========== FOOTNOTES ==========
     doc.setFontSize(7);
     setBold();
     doc.text(
