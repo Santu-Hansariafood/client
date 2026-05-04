@@ -48,6 +48,18 @@ router.get("/", async (req, res) => {
   }
 });
 
+router.get("/:id", async (req, res) => {
+  try {
+    const consignee = await Consignee.findById(req.params.id).lean();
+    if (!consignee) {
+      return res.status(404).json({ message: "Consignee not found" });
+    }
+    res.json(consignee);
+  } catch (error) {
+    res.status(400).json({ message: "Invalid ID" });
+  }
+});
+
 router.post("/", async (req, res) => {
   try {
     const {

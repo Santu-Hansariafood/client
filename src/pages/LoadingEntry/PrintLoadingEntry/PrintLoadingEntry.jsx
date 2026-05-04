@@ -65,22 +65,31 @@ const PrintLoadingEntry = async (data) => {
       }
     };
 
+    const safeGet = async (url) => {
+      try {
+        const res = await api.get(url);
+        return res.data?.data || res.data || null;
+      } catch {
+        return null;
+      }
+    };
+
     const [
-      consignees,
-      transporters,
       sellers,
       sellerCompanies,
       buyers,
       companies,
       saudaDataResponse,
+      transporterDetails,
     ] = await Promise.all([
-      safeFetch("/consignees?page=1&limit=5000"),
-      safeFetch("/transporters?limit=0"),
       safeFetch("/sellers?limit=0"),
       safeFetch("/seller-company?limit=0"),
       safeFetch("/buyers?limit=0"),
       safeFetch("/companies?limit=0"),
-      safeFetch(`/self-order?search=${data.saudaNo}`),
+      safeFetch(`/self-order?search=${encodeURIComponent(data.saudaNo)}`),
+      data?.transporterId
+        ? safeGet(`/transporters/${data.transporterId}`)
+        : Promise.resolve(null),
     ]);
 
     const saudaData = Array.isArray(saudaDataResponse)
@@ -96,76 +105,63 @@ const PrintLoadingEntry = async (data) => {
         .trim()
         .toLowerCase();
 
-    const resolveConsignee = (candidate) => {
-      if (!candidate) return null;
+    const normalizeLoose = (value) =>
+      String(value || "")
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, " ")
+        .trim()
+        .replace(/\s+/g, " ");
 
-      if (typeof candidate === "object") {
-        const nestedValue = candidate.value;
-        const id =
-          candidate._id ||
-          candidate.id ||
-          (typeof nestedValue === "string"
-            ? nestedValue
-            : nestedValue && typeof nestedValue === "object"
-              ? nestedValue._id || nestedValue.id || ""
-              : "");
+    const isObjectId = (value) => /^[a-f\d]{24}$/i.test(String(value || "").trim());
 
-        const objectIdLike = (() => {
-          const asString = String(candidate || "");
-          if (!asString || asString === "[object Object]") return "";
-          return /^[a-f\d]{24}$/i.test(asString) ? asString : "";
-        })();
+    const extractConsigneeId = (candidate) => {
+      if (!candidate) return "";
+      if (typeof candidate === "string") {
+        return isObjectId(candidate) ? candidate.trim() : "";
+      }
 
-        if (id || objectIdLike) {
-          const found = (consignees || []).find(
-            (c) => String(c._id) === String(id || objectIdLike),
-          );
-          if (found) return found;
-        }
+      if (typeof candidate !== "object") return "";
 
-        const name =
-          candidate.name ||
+      const nestedValue = candidate.value;
+      const direct =
+        candidate._id ||
+        candidate.id ||
+        (typeof nestedValue === "string" ? nestedValue : "") ||
+        (nestedValue && typeof nestedValue === "object"
+          ? nestedValue._id || nestedValue.id || ""
+          : "");
+
+      return isObjectId(direct) ? String(direct) : "";
+    };
+
+    const getConsigneeCandidateName = (candidate) => {
+      if (!candidate) return "";
+      if (typeof candidate === "string") return candidate.trim();
+      if (typeof candidate !== "object") return "";
+
+      const nestedValue = candidate.value;
+      return String(
+        candidate.name ||
           candidate.label ||
           candidate.consigneeName ||
           (typeof nestedValue === "string" ? nestedValue : "") ||
-          "";
-        if (name) {
-          const foundByName = (consignees || []).find(
-            (c) => normalizeText(c.name) === normalizeText(name),
-          );
-          if (foundByName) return foundByName;
-
-          const needle = normalizeText(name);
-          const foundByIncludes = (consignees || []).find((c) => {
-            const hay = normalizeText(c.name);
-            return hay.includes(needle) || needle.includes(hay);
-          });
-          if (foundByIncludes) return foundByIncludes;
-        }
-
-        return candidate;
-      }
-
-      const asString = String(candidate || "");
-      const foundById = (consignees || []).find(
-        (c) => String(c._id) === String(asString),
-      );
-      if (foundById) return foundById;
-
-      const foundByName = (consignees || []).find(
-        (c) => normalizeText(c.name) === normalizeText(asString),
-      );
-      if (foundByName) return foundByName;
-
-      const needle = normalizeText(asString);
-      const foundByIncludes = (consignees || []).find((c) => {
-        const hay = normalizeText(c.name);
-        return hay.includes(needle) || needle.includes(hay);
-      });
-      if (foundByIncludes) return foundByIncludes;
-
-      return null;
+          "",
+      ).trim();
     };
+
+    const isConsigneeAddressLike = (details) =>
+      Boolean(
+        details &&
+          typeof details === "object" &&
+          (details.address ||
+            details.location ||
+            details.district ||
+            details.state ||
+            details.pin ||
+            details.pinNo ||
+            details.pincode ||
+            details.pinCode),
+      );
 
     const firstNonEmpty = (...values) => {
       for (const v of values) {
@@ -180,8 +176,129 @@ const PrintLoadingEntry = async (data) => {
       return null;
     };
 
-    const shipToRaw = firstNonEmpty(sauda.shipTo, sauda.consignee, data.consignee);
-    const shipToDetails = resolveConsignee(shipToRaw) || {};
+    const pickBestShipToCandidate = (candidates) => {
+      const list = (candidates || []).filter(Boolean);
+      const withId = list.find((c) => Boolean(extractConsigneeId(c)));
+      if (withId) return withId;
+      const withAddress = list.find((c) => isConsigneeAddressLike(c));
+      if (withAddress) return withAddress;
+      return firstNonEmpty(...list);
+    };
+
+    const shipToRaw = pickBestShipToCandidate([
+      sauda.consignee,
+      sauda.shipTo,
+      data.consignee,
+    ]);
+    const deriveShipToSearchKey = (raw) => {
+      if (!raw) return "";
+      let text = "";
+      if (typeof raw === "string") {
+        text = raw;
+      } else if (typeof raw === "object") {
+        const nested = raw.value;
+        text =
+          raw.name ||
+          raw.label ||
+          raw.consigneeName ||
+          (typeof nested === "string" ? nested : "") ||
+          "";
+      }
+      text = String(text || "").trim();
+      if (!text) return "";
+      const beforeDash = text.split("-")[0]?.trim();
+      return beforeDash || text;
+    };
+
+    const hasUsefulShipToAddress = isConsigneeAddressLike;
+
+    const pickBestConsigneeMatch = (rows, key) => {
+      const needle = normalizeLoose(key);
+      if (!needle) return null;
+
+      const needleTokens = new Set(needle.split(" ").filter(Boolean));
+
+      let best = null;
+      let bestScore = -1;
+
+      for (const row of rows || []) {
+        const hay = normalizeLoose(row?.name);
+        if (!hay) continue;
+
+        let score = 0;
+        if (hay === needle) score = 100;
+        else if (hay.includes(needle) || needle.includes(hay)) score = 85;
+        else {
+          const hayTokens = hay.split(" ").filter(Boolean);
+          const common = hayTokens.reduce(
+            (acc, t) => acc + (needleTokens.has(t) ? 1 : 0),
+            0,
+          );
+          score = (common / Math.max(1, needleTokens.size)) * 70;
+        }
+
+        if (score > bestScore) {
+          bestScore = score;
+          best = row;
+        }
+      }
+
+      return bestScore >= 40 ? best : null;
+    };
+
+    const fetchConsigneeById = async (id) => {
+      if (!isObjectId(id)) return null;
+      const direct = await safeGet(`/consignees/${id}`);
+      if (direct && typeof direct === "object") return direct;
+
+      const limit = 200;
+      const maxPages = 25;
+
+      for (let page = 1; page <= maxPages; page += 1) {
+        try {
+          const res = await api.get(`/consignees?page=${page}&limit=${limit}`);
+          const payload = res.data || {};
+          const rows = Array.isArray(payload?.data) ? payload.data : [];
+          const found = rows.find((c) => String(c?._id) === String(id));
+          if (found) return found;
+
+          const pages = Number(payload?.pages || 0);
+          if (pages && page >= pages) break;
+          if (rows.length === 0) break;
+        } catch {
+          break;
+        }
+      }
+
+      return null;
+    };
+
+    const fetchConsigneeBySearch = async (key) => {
+      if (!key) return null;
+      try {
+        const res = await api.get(
+          `/consignees?page=1&limit=50&search=${encodeURIComponent(key)}`,
+        );
+        const payload = res.data || {};
+        const rows = Array.isArray(payload?.data) ? payload.data : [];
+        return pickBestConsigneeMatch(rows, key);
+      } catch {
+        return null;
+      }
+    };
+
+    let shipToDetails = {};
+    const shipToId = extractConsigneeId(shipToRaw);
+    if (shipToId) {
+      shipToDetails = (await fetchConsigneeById(shipToId)) || {};
+    }
+
+    if (!hasUsefulShipToAddress(shipToDetails)) {
+      const key = deriveShipToSearchKey(shipToRaw);
+      const best = key ? await fetchConsigneeBySearch(key) : null;
+      if (best) shipToDetails = best;
+      else if (typeof shipToRaw === "object" && shipToRaw) shipToDetails = shipToRaw;
+    }
 
     const consigneeMobile =
       shipToDetails.phone ||
@@ -191,8 +308,9 @@ const PrintLoadingEntry = async (data) => {
       "N/A";
 
     const transporter =
-      transporters.find((t) => String(t._id) === String(data.transporterId)) ||
-      {};
+      transporterDetails && typeof transporterDetails === "object"
+        ? transporterDetails
+        : {};
 
     const displayTransporterName = String(
       transporter.name || data.addedTransport || "N/A",
