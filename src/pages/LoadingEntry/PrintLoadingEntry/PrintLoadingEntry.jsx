@@ -112,7 +112,8 @@ const PrintLoadingEntry = async (data) => {
         .trim()
         .replace(/\s+/g, " ");
 
-    const isObjectId = (value) => /^[a-f\d]{24}$/i.test(String(value || "").trim());
+    const isObjectId = (value) =>
+      /^[a-f\d]{24}$/i.test(String(value || "").trim());
 
     const extractConsigneeId = (candidate) => {
       if (!candidate) return "";
@@ -152,15 +153,15 @@ const PrintLoadingEntry = async (data) => {
     const isConsigneeAddressLike = (details) =>
       Boolean(
         details &&
-          typeof details === "object" &&
-          (details.address ||
-            details.location ||
-            details.district ||
-            details.state ||
-            details.pin ||
-            details.pinNo ||
-            details.pincode ||
-            details.pinCode),
+        typeof details === "object" &&
+        (details.address ||
+          details.location ||
+          details.district ||
+          details.state ||
+          details.pin ||
+          details.pinNo ||
+          details.pincode ||
+          details.pinCode),
       );
 
     const firstNonEmpty = (...values) => {
@@ -297,7 +298,8 @@ const PrintLoadingEntry = async (data) => {
       const key = deriveShipToSearchKey(shipToRaw);
       const best = key ? await fetchConsigneeBySearch(key) : null;
       if (best) shipToDetails = best;
-      else if (typeof shipToRaw === "object" && shipToRaw) shipToDetails = shipToRaw;
+      else if (typeof shipToRaw === "object" && shipToRaw)
+        shipToDetails = shipToRaw;
     }
 
     const consigneeMobile =
@@ -481,17 +483,7 @@ const PrintLoadingEntry = async (data) => {
       "";
 
     const consigneeAddress =
-      [
-        consignee.address,
-        consignee.location,
-        consignee.city,
-        consignee.district,
-        consignee.state,
-        consignee.pin,
-        consignee.pincode
-      ].filter(Boolean).join(", ") ||
-      data.deliveryAddress ||
-      "N/A";
+      buildAddressFromObject(shipToDetails) || data.deliveryAddress || "N/A";
 
     if (logo64) {
       doc.addImage(logo64, "PNG", pageWidth - margin - 35, 12, 30, 22);
@@ -538,35 +530,37 @@ const PrintLoadingEntry = async (data) => {
     doc.setLineWidth(0.2);
     doc.rect(margin + 2, y - 5, pageWidth - margin * 2 - 4, 35);
     doc.setFontSize(9);
-    
+
     setBold();
     doc.text(`HFPL Sauda No:`, margin + 5, y);
     setNormal();
     doc.text(`${pick(data.saudaNo)}`, margin + 40, y);
-    
+
     setBold();
     doc.text(`Buyer Po No:`, margin + 100, y);
     setNormal();
     doc.text(`${pick(sauda.poNumber || data.poNumber)}`, margin + 135, y);
-    
+
     y += 7;
-    
+
     setBold();
     doc.text(`Challan No:`, margin + 5, y);
     setNormal();
     doc.text(`${pick(data.billNumber)}`, margin + 35, y);
-    
+
     setBold();
     doc.text(`Date:`, margin + 100, y);
     setNormal();
     doc.text(`${formatDate(data.loadingDate)}`, margin + 120, y);
-    
+
     y += 7;
-    
+
     setBold();
     doc.text(`Broker:`, pageWidth / 2, y, { align: "center" });
     setNormal();
-    doc.text(`Hansaria Food Private Limited`, pageWidth / 2, y + 4, { align: "center" });
+    doc.text(`Hansaria Food Private Limited`, pageWidth / 2, y + 4, {
+      align: "center",
+    });
 
     y += 22;
 
@@ -591,9 +585,9 @@ const PrintLoadingEntry = async (data) => {
     setBold();
     doc.text(`Address:`, margin + 5, y);
     setNormal();
-    
-    let shipToAddress = 'N/A';
-    
+
+    let shipToAddress = "N/A";
+
     const formatConsigneeAddress = (details) => {
       if (!details || typeof details !== "object") return "";
       const base = details.address || details.location || "";
@@ -619,10 +613,7 @@ const PrintLoadingEntry = async (data) => {
       formatConsigneeAddress(shipToDetails) ||
       buildAddressFromObject(shipToDetails) ||
       [
-        [
-          shipToDetails.district,
-          shipToDetails.state,
-        ]
+        [shipToDetails.district, shipToDetails.state]
           .filter(Boolean)
           .join(", ") +
           (shipToDetails.pin ||
@@ -645,7 +636,7 @@ const PrintLoadingEntry = async (data) => {
         data.address,
       ].filter(Boolean)[0] ||
       "N/A";
-    
+
     const cAddrLines = wrapText(shipToAddress, 100);
     cAddrLines.slice(0, 2).forEach((line, index) => {
       doc.text(line, margin + 30, y + index * 4);
@@ -655,41 +646,41 @@ const PrintLoadingEntry = async (data) => {
     setBold();
     doc.text(`Mobile:`, margin + 5, y);
     setNormal();
-    let shipToMobile = 'N/A';
-    
+    let shipToMobile = "N/A";
+
     shipToMobile =
       shipToDetails.mobile ||
       shipToDetails.phone ||
       shipToDetails.mobileNo ||
-      'N/A';
-    
-    if (shipToMobile === 'N/A') {
+      "N/A";
+
+    if (shipToMobile === "N/A") {
       const saudaMobileParts = [
         sauda.shipToMobile,
         sauda.consigneeMobile,
         sauda.mobile,
-        sauda.phone
+        sauda.phone,
       ].filter(Boolean);
       if (saudaMobileParts.length > 0) {
         shipToMobile = saudaMobileParts[0];
       }
     }
-    
-    if (shipToMobile === 'N/A') {
+
+    if (shipToMobile === "N/A") {
       shipToMobile = consigneeMobile;
     }
-    
-    if (shipToMobile === 'N/A') {
+
+    if (shipToMobile === "N/A") {
       const dataMobileParts = [
         data.consigneeMobile,
         data.mobile,
-        data.phone
+        data.phone,
       ].filter(Boolean);
       if (dataMobileParts.length > 0) {
         shipToMobile = dataMobileParts[0];
       }
     }
-    
+
     doc.text(`${shipToMobile}`, margin + 30, y);
 
     y += 20;
@@ -857,19 +848,18 @@ const PrintLoadingEntry = async (data) => {
     doc.setFontSize(7);
     setBold();
     doc.text(
-      "*Shortage/damage will be Deducted from Freight.",
+      "*Any shortage or damage shall be deducted from the freight amount.",
       pageWidth / 2,
       pageHeight - 21,
       { align: "center" },
     );
 
     doc.text(
-      "*This is Computer Generated challan, from Hansaria Food Pvt. Ltd., This challan only for information and not for legal evidence.",
+      "*This is a computer-generated challan issued by Hansaria Food Private Limited. It is for informational purposes only and shall not be considered as a legal document or proof of delivery.",
       pageWidth / 2,
       pageHeight - 12,
-      { align: "center" },
+      { align: "center", maxWidth: 180 },
     );
-
     return doc;
   } catch (err) {
     console.error(err);
