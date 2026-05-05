@@ -592,26 +592,51 @@ const PrintLoadingEntry = async (data) => {
       null;
 
     const buyerState =
-      matchingBuyerCompany?.state || data.placeOfDeliveryState || "N/A";
+      // First priority: state from sauda data
+      sauda.buyerState ||
+      sauda.deliveryState ||
+      // Second priority: state from matching buyer company
+      matchingBuyerCompany?.state ||
+      data.placeOfDeliveryState ||
+      "N/A";
+    
+    // Prioritize buyer name from self order (sauda data) as requested
     const buyerCompanyName =
-      matchingBuyerCompany?.companyName ||
+      sauda.buyerCompany || // First priority: self order buyer name
+      sauda.buyerName || // Alternative field from sauda
+      matchingBuyerCompany?.companyName || // Then fallback to company data
       data.buyerCompany ||
       data.buyer ||
       "N/A";
 
-    const buyerFullAddress = matchingBuyerCompany
-      ? buildAddressFromObject(matchingBuyerCompany) ||
-        [matchingBuyerCompany.district, matchingBuyerCompany.state]
-          .filter(Boolean)
-          .join(", ")
-      : data.placeOfDelivery || "N/A";
+    const buyerFullAddress = 
+      // First priority: address from sauda data
+      sauda.buyerAddress || 
+      sauda.deliveryAddress ||
+      // Second priority: address from matching buyer company
+      (matchingBuyerCompany
+        ? buildAddressFromObject(matchingBuyerCompany) ||
+          [matchingBuyerCompany.district, matchingBuyerCompany.state]
+            .filter(Boolean)
+            .join(", ")
+        : data.placeOfDelivery || "N/A");
 
     const buyerGstNo =
+      // First priority: GST from sauda data
+      sauda.buyerGstNo ||
+      sauda.buyerGstNumber ||
+      sauda.buyerGst ||
+      // Second priority: GST from matching buyer company
       matchingBuyerCompany?.gstNo ||
       matchingBuyerCompany?.gstNumber ||
       matchingBuyerCompany?.gst ||
       "";
     const buyerPanNo =
+      // First priority: PAN from sauda data
+      sauda.buyerPanNo ||
+      sauda.buyerPanNumber ||
+      sauda.buyerPan ||
+      // Second priority: PAN from matching buyer company
       matchingBuyerCompany?.panNo ||
       matchingBuyerCompany?.panNumber ||
       matchingBuyerCompany?.pan ||
