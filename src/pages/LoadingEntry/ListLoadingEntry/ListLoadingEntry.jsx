@@ -26,6 +26,34 @@ const formatDate = (date) => {
   return isNaN(d.getTime()) ? "N/A" : d.toLocaleDateString();
 };
 
+const normalizeSearchValue = (value) =>
+  String(value ?? "")
+    .trim()
+    .toLowerCase();
+
+const getConsigneeSearchText = (entry) => {
+  const raw = entry?.consignee;
+  if (!raw) return "";
+  if (typeof raw === "string") return raw;
+  if (typeof raw !== "object") return "";
+
+  const nestedValue = raw.value;
+  return (
+    raw.name ||
+    raw.label ||
+    raw.consigneeName ||
+    raw.displayName ||
+    (typeof nestedValue === "string" ? nestedValue : "") ||
+    (nestedValue && typeof nestedValue === "object"
+      ? nestedValue.name ||
+        nestedValue.label ||
+        nestedValue.consigneeName ||
+        nestedValue.displayName ||
+        ""
+      : "")
+  );
+};
+
 const ListLoadingEntry = () => {
   const { userRole, mobile } = useAuth();
   const [loadingEntries, setLoadingEntries] = useState([]);
@@ -176,28 +204,52 @@ const ListLoadingEntry = () => {
     let filtered = [...loadingEntries];
 
     if (debouncedFilters.search) {
-      const searchLower = debouncedFilters.search.toLowerCase();
-      filtered = filtered.filter((entry) =>
-        (entry.supplierCompany && entry.supplierCompany.toLowerCase().includes(searchLower)) ||
-        (entry.consignee && entry.consignee.toLowerCase().includes(searchLower)) ||
-        (entry.saudaNo && entry.saudaNo.toLowerCase().includes(searchLower)) ||
-        (entry.lorryNumber && entry.lorryNumber.toLowerCase().includes(searchLower)) ||
-        (entry.billNumber && entry.billNumber.toLowerCase().includes(searchLower)) ||
-        (entry.commodity && entry.commodity.toLowerCase().includes(searchLower))
-      );
+      const searchLower = normalizeSearchValue(debouncedFilters.search);
+      filtered = filtered.filter((entry) => {
+        const buyerCompany = buyerMap[entry.saudaNo] || entry.buyerCompany || "";
+        const transporterName =
+          transporterMap[entry.transporterId] || entry.addedTransport || "";
+        const sellerName = sellerMap[entry.supplier] || "";
+        const consigneeText = getConsigneeSearchText(entry);
+        const searchFields = [
+          entry.saudaNo,
+          entry.supplierCompany,
+          sellerName,
+          buyerCompany,
+          consigneeText,
+          entry.lorryNumber,
+          entry.billNumber,
+          entry.commodity,
+          transporterName,
+          entry.driverName,
+          entry.driverPhoneNumber,
+          entry.loadingWeight,
+          entry.unloadingWeight,
+          entry.freightRate,
+          entry.totalFreight,
+          entry.advance,
+          entry.balance,
+          paymentTermsMap[entry.saudaNo] || "",
+          statusMap[entry.saudaNo] || "",
+        ];
+
+        return searchFields.some((value) =>
+          normalizeSearchValue(value).includes(searchLower),
+        );
+      });
     }
 
     if (debouncedFilters.saudaNo) {
-      const saudaLower = debouncedFilters.saudaNo.toLowerCase();
+      const saudaLower = normalizeSearchValue(debouncedFilters.saudaNo);
       filtered = filtered.filter((entry) =>
-        entry.saudaNo && entry.saudaNo.toLowerCase().includes(saudaLower)
+        normalizeSearchValue(entry.saudaNo).includes(saudaLower),
       );
     }
 
     if (debouncedFilters.lorryNumber) {
-      const lorryLower = debouncedFilters.lorryNumber.toLowerCase();
+      const lorryLower = normalizeSearchValue(debouncedFilters.lorryNumber);
       filtered = filtered.filter((entry) =>
-        entry.lorryNumber && entry.lorryNumber.toLowerCase().includes(lorryLower)
+        normalizeSearchValue(entry.lorryNumber).includes(lorryLower),
       );
     }
 
@@ -209,7 +261,15 @@ const ListLoadingEntry = () => {
 
     setFilteredEntries(filtered);
     setTotalItems(filtered.length);
-  }, [loadingEntries, debouncedFilters]);
+  }, [
+    loadingEntries,
+    debouncedFilters,
+    buyerMap,
+    paymentTermsMap,
+    sellerMap,
+    statusMap,
+    transporterMap,
+  ]);
 
   useEffect(() => {
     fetchStaticData();

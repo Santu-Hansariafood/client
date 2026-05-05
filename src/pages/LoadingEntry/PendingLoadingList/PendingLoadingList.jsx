@@ -9,12 +9,80 @@ import generateExcel from "../../../common/GenerateExcel/GenerateExcel";
 
 const Tables = lazy(() => import("../../../common/Tables/Tables"));
 const Pagination = lazy(() => import("../../../common/Paginations/Paginations"));
+const DataDropdown = lazy(
+  () => import("../../../common/DataDropdown/DataDropdown"),
+);
+const DateSelector = lazy(
+  () => import("../../../common/DateSelector/DateSelector"),
+);
 
 const formatDate = (date) => {
   if (!date) return "N/A";
   const d = new Date(date);
   return isNaN(d.getTime()) ? "N/A" : d.toLocaleDateString("en-GB");
 };
+
+const normalizeText = (value) =>
+  String(value ?? "")
+    .trim()
+    .toLowerCase();
+
+const getSellerName = (item) =>
+  item?.supplier?.sellerName ||
+  item?.sellerName ||
+  item?.supplierName ||
+  item?.supplier ||
+  "";
+
+const getConsigneeDisplay = (item) => {
+  if (item?.consignee) {
+    if (typeof item.consignee === "object") {
+      return (
+        item.consignee.name ||
+        item.consignee.label ||
+        item.consignee.consigneeName ||
+        "N/A"
+      );
+    }
+    return item.consignee;
+  }
+  if (item?.shipTo) {
+    if (typeof item.shipTo === "object") {
+      return (
+        item.shipTo.name ||
+        item.shipTo.label ||
+        item.shipTo.consigneeName ||
+        "N/A"
+      );
+    }
+    return item.shipTo;
+  }
+  return item?.consigneeName || "N/A";
+};
+
+const getGroupName = (item, groupMap = {}) => {
+  const direct =
+    item?.group?.groupName ||
+    item?.group?.name ||
+    item?.groupName ||
+    item?.group ||
+    item?.buyerGroup ||
+    "";
+  if (direct) return direct;
+
+  const groupId =
+    item?.groupId || item?.group?._id || item?.group?.id || item?.buyerGroupId;
+  return groupId ? groupMap[String(groupId)] || "" : "";
+};
+
+const buildDropdownOptions = (values) =>
+  [...new Set((values || []).map((value) => String(value || "").trim()).filter(Boolean))]
+    .sort((a, b) => a.localeCompare(b))
+    .map((value) => ({
+      value,
+      label: value,
+      name: value,
+    }));
 
 const PendingLoadingList = () => {
   const { userRole, mobile } = useAuth();
@@ -25,36 +93,34 @@ const PendingLoadingList = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
   const [searchInput, setSearchInput] = useState("");
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
-  const [buyerCompany, setBuyerCompany] = useState("");
-  const [sellerCompany, setSellerCompany] = useState("");
-  const [buyerCompanies, setBuyerCompanies] = useState([]);
-  const [sellerCompanies, setSellerCompanies] = useState([]);
-  const [loadingCompanies, setLoadingCompanies] = useState(false);
+  const [startDate, setStartDate] = useState(null);
+  const [endDate, setEndDate] = useState(null);
+  const [selectedBuyerCompany, setSelectedBuyerCompany] = useState(null);
+  const [selectedSellerCompany, setSelectedSellerCompany] = useState(null);
+  const [selectedSellerName, setSelectedSellerName] = useState(null);
+  const [selectedConsignee, setSelectedConsignee] = useState(null);
+  const [selectedGroup, setSelectedGroup] = useState(null);
+  const [groupMap, setGroupMap] = useState({});
 
-  const fetchBuyerAndSellerCompanies = useCallback(async () => {
-    setLoadingCompanies(true);
+  const fetchGroupData = useCallback(async () => {
     try {
-      const [buyersRes, sellersRes] = await Promise.all([
-        api.get("/companies?limit=0"),
-        api.get("/seller-company?limit=0"),
-      ]);
-      
-      const buyerCompanyNames = (buyersRes.data?.data || buyersRes.data || [])
-        .map(c => c.companyName)
-        .filter(Boolean);
-      
-      const sellerCompanyNames = (sellersRes.data?.data || sellersRes.data || [])
-        .map(c => c.companyName)
-        .filter(Boolean);
-      
-      setBuyerCompanies([...new Set(buyerCompanyNames)].sort());
-      setSellerCompanies([...new Set(sellerCompanyNames)].sort());
+      const groupsRes = await api.get("/groups");
+      const groupsData = Array.isArray(groupsRes.data?.data)
+        ? groupsRes.data.data
+        : Array.isArray(groupsRes.data)
+          ? groupsRes.data
+          : [];
+
+      setGroupMap(
+        Object.fromEntries(
+          groupsData.map((group) => [
+            String(group?._id || group?.id || ""),
+            group?.groupName || group?.name || "",
+          ]),
+        ),
+      );
     } catch (error) {
-      console.error("Error fetching companies:", error);
-    } finally {
-      setLoadingCompanies(false);
+      console.error("Error fetching groups:", error);
     }
   }, []);
 
@@ -69,12 +135,6 @@ const PendingLoadingList = () => {
       });
       const fetchedData = response.data.data || [];
       setAllData(fetchedData);
-      
-      const uniqueSellerCompanies = [...new Set(fetchedData.map(item => item.supplierCompany).filter(Boolean))].sort();
-      const uniqueBuyerCompanies = [...new Set(fetchedData.map(item => item.buyerCompany).filter(Boolean))].sort();
-      
-      setSellerCompanies(prev => [...new Set([...prev, ...uniqueSellerCompanies])].sort());
-      setBuyerCompanies(prev => [...new Set([...prev, ...uniqueBuyerCompanies])].sort());
     } catch (error) {
       console.error("Error fetching pending loading entries:", error);
       toast.error("Failed to fetch pending entries");
@@ -83,50 +143,101 @@ const PendingLoadingList = () => {
     }
   }, []);
 
+  const buyerCompanyOptions = useCallback(
+    () => buildDropdownOptions(allData.map((item) => item.buyerCompany)),
+    [allData],
+  );
+
+  const sellerCompanyOptions = useCallback(
+    () => buildDropdownOptions(allData.map((item) => item.supplierCompany)),
+    [allData],
+  );
+
+  const sellerNameOptions = useCallback(
+    () => buildDropdownOptions(allData.map((item) => getSellerName(item))),
+    [allData],
+  );
+
+  const consigneeOptions = useCallback(
+    () => buildDropdownOptions(allData.map((item) => getConsigneeDisplay(item))),
+    [allData],
+  );
+
+  const groupOptions = useCallback(
+    () =>
+      buildDropdownOptions(
+        allData.map((item) => getGroupName(item, groupMap)).concat(
+          Object.values(groupMap || {}),
+        ),
+      ),
+    [allData, groupMap],
+  );
+
   const filteredData = useCallback(() => {
     let result = [...allData];
     
     if (searchInput) {
-      const searchLower = searchInput.toLowerCase();
-      result = result.filter(item => {
-        const consigneeName = (() => {
-          if (item.consignee) {
-            if (typeof item.consignee === 'object') {
-              return (item.consignee.name || item.consignee.consigneeName || '').toLowerCase();
-            }
-            return (item.consignee || '').toLowerCase();
-          }
-          if (item.shipTo) {
-            if (typeof item.shipTo === 'object') {
-              return (item.shipTo.name || item.shipTo.consigneeName || '').toLowerCase();
-            }
-            return (item.shipTo || '').toLowerCase();
-          }
-          return (item.consigneeName || '').toLowerCase();
-        })();
-        
-        return (
-          (item.supplierCompany && item.supplierCompany.toLowerCase().includes(searchLower)) ||
-          (item.buyerCompany && item.buyerCompany.toLowerCase().includes(searchLower)) ||
-          (item.saudaNo && item.saudaNo.toLowerCase().includes(searchLower)) ||
-          (item.commodity && item.commodity.toLowerCase().includes(searchLower)) ||
-          consigneeName.includes(searchLower)
-        );
+      const searchLower = normalizeText(searchInput);
+      result = result.filter((item) => {
+        const fields = [
+          item.supplierCompany,
+          item.buyerCompany,
+          item.saudaNo,
+          item.commodity,
+          item.paymentTerms,
+          getSellerName(item),
+          getConsigneeDisplay(item),
+          getGroupName(item, groupMap),
+        ];
+
+        return fields.some((field) => normalizeText(field).includes(searchLower));
       });
     }
     
-    if (sellerCompany) {
-      result = result.filter(item => item.supplierCompany === sellerCompany);
+    if (selectedSellerCompany?.value) {
+      result = result.filter(
+        (item) =>
+          normalizeText(item.supplierCompany) ===
+          normalizeText(selectedSellerCompany.value),
+      );
     }
     
-    if (buyerCompany) {
-      result = result.filter(item => item.buyerCompany === buyerCompany);
+    if (selectedBuyerCompany?.value) {
+      result = result.filter(
+        (item) =>
+          normalizeText(item.buyerCompany) ===
+          normalizeText(selectedBuyerCompany.value),
+      );
+    }
+
+    if (selectedSellerName?.value) {
+      result = result.filter(
+        (item) =>
+          normalizeText(getSellerName(item)) ===
+          normalizeText(selectedSellerName.value),
+      );
+    }
+
+    if (selectedConsignee?.value) {
+      result = result.filter(
+        (item) =>
+          normalizeText(getConsigneeDisplay(item)) ===
+          normalizeText(selectedConsignee.value),
+      );
+    }
+
+    if (selectedGroup?.value) {
+      result = result.filter(
+        (item) =>
+          normalizeText(getGroupName(item, groupMap)) ===
+          normalizeText(selectedGroup.value),
+      );
     }
     
     if (startDate) {
       const filterDate = new Date(startDate);
       filterDate.setHours(0, 0, 0, 0);
-      result = result.filter(item => {
+      result = result.filter((item) => {
         const itemDate = new Date(item.poDate || item.createdAt);
         return itemDate >= filterDate;
       });
@@ -135,14 +246,25 @@ const PendingLoadingList = () => {
     if (endDate) {
       const filterDate = new Date(endDate);
       filterDate.setHours(23, 59, 59, 999);
-      result = result.filter(item => {
+      result = result.filter((item) => {
         const itemDate = new Date(item.poDate || item.createdAt);
         return itemDate <= filterDate;
       });
     }
     
     return result;
-  }, [allData, searchInput, sellerCompany, buyerCompany, startDate, endDate]);
+  }, [
+    allData,
+    searchInput,
+    selectedSellerCompany,
+    selectedBuyerCompany,
+    selectedSellerName,
+    selectedConsignee,
+    selectedGroup,
+    startDate,
+    endDate,
+    groupMap,
+  ]);
 
   useEffect(() => {
     const filtered = filteredData();
@@ -154,48 +276,39 @@ const PendingLoadingList = () => {
   }, [filteredData, currentPage, itemsPerPage]);
 
   useEffect(() => {
-    fetchBuyerAndSellerCompanies();
+    fetchGroupData();
     fetchData();
-  }, [fetchBuyerAndSellerCompanies, fetchData]);
-
-  const handleSearch = (e) => {
-    e.preventDefault();
-    setCurrentPage(1);
-  };
+  }, [fetchGroupData, fetchData]);
 
   const handleClearFilters = () => {
     setSearchInput("");
-    setStartDate("");
-    setEndDate("");
-    setBuyerCompany("");
-    setSellerCompany("");
+    setStartDate(null);
+    setEndDate(null);
+    setSelectedBuyerCompany(null);
+    setSelectedSellerCompany(null);
+    setSelectedSellerName(null);
+    setSelectedConsignee(null);
+    setSelectedGroup(null);
     setCurrentPage(1);
   };
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchInput, sellerCompany, buyerCompany, startDate, endDate]);
+  }, [
+    searchInput,
+    selectedSellerCompany,
+    selectedBuyerCompany,
+    selectedSellerName,
+    selectedConsignee,
+    selectedGroup,
+    startDate,
+    endDate,
+  ]);
 
   const getLast3Digits = (num) => {
     if (num === undefined || num === null) return "N/A";
     const str = String(num);
     return str.slice(-3);
-  };
-
-  const getConsigneeNameForExcel = (item) => {
-    if (item.consignee) {
-      if (typeof item.consignee === 'object') {
-        return item.consignee.name || item.consignee.consigneeName || "N/A";
-      }
-      return item.consignee;
-    }
-    if (item.shipTo) {
-      if (typeof item.shipTo === 'object') {
-        return item.shipTo.name || item.shipTo.consigneeName || "N/A";
-      }
-      return item.shipTo;
-    }
-    return item.consigneeName || "N/A";
   };
 
   const handleDownloadExcel = async () => {
@@ -218,9 +331,10 @@ const PendingLoadingList = () => {
           "Date": formatDate(item.poDate || item.createdAt),
           "Sauda No": item.saudaNo || "N/A",
           "Seller Company": item.supplierCompany || "N/A",
-          "Seller Name": item.supplier?.sellerName || "N/A",
+          "Seller Name": getSellerName(item) || "N/A",
           "Buyer Company": item.buyerCompany || "N/A",
-          "Consignee": getConsigneeNameForExcel(item),
+          "Consignee": getConsigneeDisplay(item),
+          "Group": getGroupName(item, groupMap) || "N/A",
           "Commodity": item.commodity || "N/A",
           "Total Quantity": quantity,
           "Pending Quantity": getLast3Digits(pendingQuantity),
@@ -262,22 +376,6 @@ const PendingLoadingList = () => {
     "Status"
   ];
 
-  const getConsigneeName = (item) => {
-    if (item.consignee) {
-      if (typeof item.consignee === 'object') {
-        return item.consignee.name || item.consignee.consigneeName || "N/A";
-      }
-      return item.consignee;
-    }
-    if (item.shipTo) {
-      if (typeof item.shipTo === 'object') {
-        return item.shipTo.name || item.shipTo.consigneeName || "N/A";
-      }
-      return item.shipTo;
-    }
-    return item.consigneeName || "N/A";
-  };
-
   const rows = data.map((item, index) => {
     const quantity = item.quantity || 0;
     let pendingQuantity = item.pendingQuantity;
@@ -293,9 +391,9 @@ const PendingLoadingList = () => {
       formatDate(item.poDate || item.createdAt),
       item.saudaNo || "N/A",
       <span key={`seller-co-${item._id}`} className="font-semibold text-slate-700">{item.supplierCompany || "N/A"}</span>,
-      item.supplier?.sellerName || "N/A",
+      getSellerName(item) || "N/A",
       item.buyerCompany || "N/A",
-      getConsigneeName(item),
+      getConsigneeDisplay(item),
       item.commodity || "N/A",
       quantity,
       <span key={`pending-${item._id}`} className="text-amber-600 font-bold">{getLast3Digits(pendingQuantity)}</span>,
@@ -327,15 +425,15 @@ const PendingLoadingList = () => {
               </div>
               <div>
                 <h3 className="text-lg font-bold text-slate-800">Filter & Search</h3>
-                <p className="text-sm text-slate-500">Customize your view with advanced filters</p>
+                <p className="text-sm text-slate-500">Filter pending sauda with independent responsive fields</p>
               </div>
             </div>
-            <form onSubmit={handleSearch} className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-                <div className="xl:col-span-2">
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+                <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-                    Search Seller/Buyer/Sauda
+                    Search
                   </label>
                   <div className="relative">
                     <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
@@ -351,85 +449,115 @@ const PendingLoadingList = () => {
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full bg-blue-500"></span>
-                    Seller Company
+                    Group
                   </label>
-                  <select
-                    value={sellerCompany}
-                    onChange={(e) => setSellerCompany(e.target.value)}
-                    className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 outline-none transition-all duration-200 bg-white cursor-pointer"
-                  >
-                    <option value="">All Sellers</option>
-                    {sellerCompanies.map((company) => (
-                      <option key={company} value={company}>{company}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-purple-500"></span>
-                    Buyer Company
-                  </label>
-                  <select
-                    value={buyerCompany}
-                    onChange={(e) => setBuyerCompany(e.target.value)}
-                    className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 outline-none transition-all duration-200 bg-white cursor-pointer"
-                  >
-                    <option value="">All Buyers</option>
-                    {buyerCompanies.map((company) => (
-                      <option key={company} value={company}>{company}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-orange-500"></span>
-                    Start Date
-                  </label>
-                  <input
-                    type="date"
-                    value={startDate}
-                    onChange={(e) => setStartDate(e.target.value)}
-                    className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 outline-none transition-all duration-200 bg-white cursor-pointer"
+                  <DataDropdown
+                    options={groupOptions()}
+                    selectedOptions={selectedGroup}
+                    onChange={setSelectedGroup}
+                    placeholder="Select Group"
+                    isMulti={false}
+                    isClearable
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-red-500"></span>
+                    <span className="w-2 h-2 rounded-full bg-purple-500"></span>
+                    Seller Name
+                  </label>
+                  <DataDropdown
+                    options={sellerNameOptions()}
+                    selectedOptions={selectedSellerName}
+                    onChange={setSelectedSellerName}
+                    placeholder="Select Seller Name"
+                    isMulti={false}
+                    isClearable
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-orange-500"></span>
+                    Consignee
+                  </label>
+                  <DataDropdown
+                    options={consigneeOptions()}
+                    selectedOptions={selectedConsignee}
+                    onChange={setSelectedConsignee}
+                    placeholder="Select Consignee"
+                    isMulti={false}
+                    isClearable
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-sky-500"></span>
+                    Seller Company
+                  </label>
+                  <DataDropdown
+                    options={sellerCompanyOptions()}
+                    selectedOptions={selectedSellerCompany}
+                    onChange={setSelectedSellerCompany}
+                    placeholder="Select Seller Company"
+                    isMulti={false}
+                    isClearable
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-fuchsia-500"></span>
+                    Buyer Company
+                  </label>
+                  <DataDropdown
+                    options={buyerCompanyOptions()}
+                    selectedOptions={selectedBuyerCompany}
+                    onChange={setSelectedBuyerCompany}
+                    placeholder="Select Buyer Company"
+                    isMulti={false}
+                    isClearable
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-amber-500"></span>
+                    Start Date
+                  </label>
+                  <DateSelector
+                    selectedDate={startDate}
+                    onChange={setStartDate}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-rose-500"></span>
                     End Date
                   </label>
-                  <input
-                    type="date"
-                    value={endDate}
-                    onChange={(e) => setEndDate(e.target.value)}
-                    className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 outline-none transition-all duration-200 bg-white cursor-pointer"
+                  <DateSelector
+                    selectedDate={endDate}
+                    onChange={setEndDate}
                   />
                 </div>
               </div>
               <div className="flex flex-wrap items-center gap-3 pt-4 border-t border-slate-200">
                 <button
-                  type="submit"
-                  className="flex-1 min-w-[140px] px-6 py-3 bg-gradient-to-r from-emerald-600 to-emerald-700 text-white rounded-xl font-bold hover:from-emerald-700 hover:to-emerald-800 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center justify-center gap-2"
-                >
-                  <FaSearch />
-                  Apply Filters
-                </button>
-                <button
                   type="button"
                   onClick={handleClearFilters}
-                  className="min-w-[140px] px-6 py-3 bg-slate-100 text-slate-700 rounded-xl font-bold hover:bg-slate-200 transition-all duration-200 border-2 border-slate-200 flex items-center justify-center gap-2"
+                  className="flex-1 min-w-[160px] px-6 py-3 bg-slate-100 text-slate-700 rounded-xl font-bold hover:bg-slate-200 transition-all duration-200 border-2 border-slate-200 flex items-center justify-center gap-2"
                 >
                   Clear All
                 </button>
                 <button
                   type="button"
                   onClick={handleDownloadExcel}
-                  className="min-w-[140px] px-6 py-3 bg-gradient-to-r from-slate-700 to-slate-800 text-white rounded-xl font-bold hover:from-slate-800 hover:to-slate-900 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center justify-center gap-2"
+                  className="flex-1 min-w-[160px] px-6 py-3 bg-gradient-to-r from-slate-700 to-slate-800 text-white rounded-xl font-bold hover:from-slate-800 hover:to-slate-900 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center justify-center gap-2"
                 >
                   <FaDownload />
                   Export Excel
                 </button>
               </div>
-            </form>
+            </div>
           </div>
 
           <div className="rounded-2xl border border-slate-200 bg-white shadow-sm p-3 sm:p-4 overflow-hidden">
