@@ -143,6 +143,86 @@ const PrintLoadingEntry = async (data) => {
       };
     };
 
+    // Function to determine if we should show consignee details in buyer account
+    const shouldShowConsigneeInBuyerAccount = (saudaData) => {
+      // Check if consignee is explicitly selected or if buyer is same as consignee
+      if (!saudaData) return false;
+      
+      // If there's an explicit selection indicator in the data
+      if (saudaData.selectedPartyType === 'consignee') return true;
+      if (saudaData.selectedPartyType === 'buyer') return false;
+      
+      // Check if consignee details are more complete than buyer details
+      const saudaBuyerInfo = extractBuyerInfoFromSauda(saudaData);
+      const hasCompleteConsignee = saudaData.consignee && 
+        (typeof saudaData.consignee === 'object' ? 
+          (saudaData.consignee.name || saudaData.consignee.companyName) :
+          true);
+      
+      const hasCompleteBuyer = saudaBuyerInfo.buyerName;
+      
+      // If consignee is more complete, show consignee in buyer account
+      if (hasCompleteConsignee && !hasCompleteBuyer) return true;
+      
+      // Check if consignee and buyer are the same
+      if (hasCompleteConsignee && hasCompleteBuyer) {
+        const consigneeName = typeof saudaData.consignee === 'object' ? 
+          (saudaData.consignee.name || saudaData.consignee.companyName) :
+          saudaData.consignee;
+        
+        if (consigneeName && saudaBuyerInfo.buyerName && 
+            normalizeText(consigneeName) === normalizeText(saudaBuyerInfo.buyerName)) {
+          return true; // Same entity, can show consignee details
+        }
+      }
+      
+      return false;
+    };
+
+    // Function to get the appropriate details for buyer account section
+    const getBuyerAccountDetails = (saudaData, loadingEntryData, shipToDetails) => {
+      const shouldShowConsignee = shouldShowConsigneeInBuyerAccount(saudaData, loadingEntryData);
+      
+      if (shouldShowConsignee && shipToDetails) {
+        // Show consignee details in buyer account
+        return {
+          name: shipToDetails.name || shipToDetails.label || shipToDetails.consigneeName || 'N/A',
+          address: formatConsigneeAddress(shipToDetails) || buildAddressFromObject(shipToDetails) || 'N/A',
+          gstNo: shipToDetails.gstNo || shipToDetails.gstNumber || shipToDetails.gst || '',
+          panNo: shipToDetails.panNo || shipToDetails.panNumber || shipToDetails.pan || '',
+          state: shipToDetails.state || 'N/A',
+          isConsignee: true
+        };
+      } else {
+        // Show buyer details in buyer account
+        const saudaBuyerInfo = extractBuyerInfoFromSauda(saudaData);
+        return {
+          name: saudaBuyerInfo.buyerName || 
+                (matchingBuyerCompany?.companyName) || 
+                data.buyerCompany || 
+                data.buyer || 
+                'N/A',
+          address: saudaBuyerInfo.buyerAddress || 
+                  (matchingBuyerCompany ? 
+                    buildAddressFromObject(matchingBuyerCompany) || 
+                    [matchingBuyerCompany.district, matchingBuyerCompany.state].filter(Boolean).join(", ") :
+                    data.placeOfDelivery) || 
+                  'N/A',
+          gstNo: saudaBuyerInfo.buyerGst || 
+                (matchingBuyerCompany?.gstNo || matchingBuyerCompany?.gstNumber || matchingBuyerCompany?.gst) || 
+                '',
+          panNo: saudaBuyerInfo.buyerPan || 
+                (matchingBuyerCompany?.panNo || matchingBuyerCompany?.panNumber || matchingBuyerCompany?.pan) || 
+                '',
+          state: saudaBuyerInfo.buyerState || 
+                (matchingBuyerCompany?.state) || 
+                data.placeOfDeliveryState || 
+                'N/A',
+          isConsignee: false
+        };
+      }
+    };
+
     const normalizeLoose = (value) =>
       String(value || "")
         .toLowerCase()
@@ -626,6 +706,9 @@ const PrintLoadingEntry = async (data) => {
 
     const sellerState = matchingSellerCompany?.state || sauda.state || "N/A";
 
+    // Extract buyer information from sauda data using enhanced function
+    // const saudaBuyerInfo = extractBuyerInfoFromSauda(sauda); // Not needed here anymore
+
     const rawBuyerKey = data?.buyerCompany ?? data?.buyer ?? "";
     const normalizedBuyerKey = normalizeText(rawBuyerKey);
 
@@ -658,53 +741,6 @@ const PrintLoadingEntry = async (data) => {
         return idMatch || nameMatch;
       }) ||
       null;
-
-    // Extract buyer information from sauda data using enhanced function
-    const saudaBuyerInfo = extractBuyerInfoFromSauda(sauda);
-
-    const buyerState =
-      // First priority: state from sauda data
-      saudaBuyerInfo.buyerState ||
-      // Second priority: state from matching buyer company
-      matchingBuyerCompany?.state ||
-      data.placeOfDeliveryState ||
-      "N/A";
-    
-    // Prioritize buyer name from self order (sauda data) as requested
-    const buyerCompanyName =
-      saudaBuyerInfo.buyerName || // First priority: self order buyer name from enhanced function
-      matchingBuyerCompany?.companyName || // Then fallback to company data
-      data.buyerCompany ||
-      data.buyer ||
-      "N/A";
-
-    const buyerFullAddress = 
-      // First priority: address from sauda data
-      saudaBuyerInfo.buyerAddress || 
-      // Second priority: address from matching buyer company
-      (matchingBuyerCompany
-        ? buildAddressFromObject(matchingBuyerCompany) ||
-          [matchingBuyerCompany.district, matchingBuyerCompany.state]
-            .filter(Boolean)
-            .join(", ")
-        : data.placeOfDelivery || "N/A");
-
-    const buyerGstNo =
-      // First priority: GST from sauda data
-      saudaBuyerInfo.buyerGst ||
-      // Second priority: GST from matching buyer company
-      matchingBuyerCompany?.gstNo ||
-      matchingBuyerCompany?.gstNumber ||
-      matchingBuyerCompany?.gst ||
-      "";
-    const buyerPanNo =
-      // First priority: PAN from sauda data
-      saudaBuyerInfo.buyerPan ||
-      // Second priority: PAN from matching buyer company
-      matchingBuyerCompany?.panNo ||
-      matchingBuyerCompany?.panNumber ||
-      matchingBuyerCompany?.pan ||
-      "";
 
     const logo64 = await getBase64(logo);
     if (logo64) {
@@ -944,15 +980,18 @@ const PrintLoadingEntry = async (data) => {
 
     y = consigneeBoxStartY + consigneeBoxHeight + 5;
 
+    // Get the appropriate buyer account details based on selection
+    const buyerAccountDetails = getBuyerAccountDetails(sauda, data, shipToDetails);
+    
     const buyerBoxStartY = y - 5;
-    const buyerNameLines = wrapText(buyerCompanyName, 70, 2);
-    const buyerAddrLines = wrapText(buyerFullAddress, 72, 3);
+    const buyerNameLines = wrapText(buyerAccountDetails.name, 70, 2);
+    const buyerAddrLines = wrapText(buyerAccountDetails.address, 72, 3);
 
     let buyerBoxHeight = 8;
     buyerBoxHeight += Math.max(buyerNameLines.length, 1) * 4;
     buyerBoxHeight += Math.max(buyerAddrLines.length, 1) * 4;
-    if (buyerPanNo) buyerBoxHeight += 4;
-    if (buyerGstNo) buyerBoxHeight += 4;
+    if (buyerAccountDetails.panNo) buyerBoxHeight += 4;
+    if (buyerAccountDetails.gstNo) buyerBoxHeight += 4;
     buyerBoxHeight += 7;
 
     doc.rect(
@@ -965,7 +1004,11 @@ const PrintLoadingEntry = async (data) => {
     let buyerCurrentY = buyerBoxStartY + 5;
     setBold();
     doc.setFontSize(9);
-    doc.text(`BUYER ACCOUNT`, boxTitleX, buyerCurrentY);
+    
+    // Update title based on what's being shown
+    const buyerAccountTitle = buyerAccountDetails.isConsignee ? "BUYER ACCOUNT (CONSIGNEE)" : "BUYER ACCOUNT";
+    doc.text(buyerAccountTitle, boxTitleX, buyerCurrentY);
+    
     buyerCurrentY += 5;
 
     buyerCurrentY += drawLabelValue({
@@ -988,10 +1031,10 @@ const PrintLoadingEntry = async (data) => {
       maxLines: 3,
     });
 
-    if (buyerPanNo) {
+    if (buyerAccountDetails.panNo) {
       buyerCurrentY += drawLabelValue({
         label: "PAN No:",
-        value: buyerPanNo,
+        value: buyerAccountDetails.panNo,
         x: sectionLabelX,
         y: buyerCurrentY,
         valueX: buyerValueX,
@@ -999,10 +1042,10 @@ const PrintLoadingEntry = async (data) => {
         maxLines: 1,
       });
     }
-    if (buyerGstNo) {
+    if (buyerAccountDetails.gstNo) {
       drawLabelValue({
         label: "GST:",
-        value: buyerGstNo,
+        value: buyerAccountDetails.gstNo,
         x: sectionLabelX,
         y: buyerCurrentY,
         valueX: buyerValueX,
