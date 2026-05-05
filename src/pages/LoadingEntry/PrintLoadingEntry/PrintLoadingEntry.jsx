@@ -543,6 +543,27 @@ const PrintLoadingEntry = async (data) => {
     doc.rect(margin, 10, pageWidth - margin * 2, pageHeight - 18);
 
     let y = 58;
+    const sectionLabelX = margin + 5;
+    const boxTitleX = margin + 5;
+    const headerLeftLabelX = margin + 5;
+    const headerLeftValueX = margin + 40;
+    const headerRightLabelX = margin + 100;
+    const headerRightValueX = margin + 135;
+    const consigneeValueX = margin + 30;
+    const buyerValueX = margin + 35;
+    const goodsItemValueX = margin + 20;
+    const goodsMetaLabelX = margin + 70;
+    const goodsMetaValueX = margin + 85;
+    const goodsWeightLabelX = margin + 110;
+    const goodsWeightValueX = margin + 125;
+    const routeValueX = margin + 30;
+    const routeRightLabelX = margin + 80;
+    const routeRightValueX = margin + 90;
+    const routeAddressValueX = margin + 45;
+    const freightLeftLabelX = margin + 5;
+    const freightLeftValueX = margin + 35;
+    const freightRightLabelX = margin + 90;
+    const freightRightValueX = margin + 110;
 
     const headerBoxStartY = y - 5;
     const headerBoxHeight = 35;
@@ -640,27 +661,6 @@ const PrintLoadingEntry = async (data) => {
       shipToDetails.gstNo || shipToDetails.gstNumber || shipToDetails.gst || "";
     const consigneePanNo =
       shipToDetails.panNo || shipToDetails.panNumber || shipToDetails.pan || "";
-    const sectionLabelX = margin + 5;
-    const boxTitleX = margin + 5;
-    const headerLeftLabelX = margin + 5;
-    const headerLeftValueX = margin + 40;
-    const headerRightLabelX = margin + 100;
-    const headerRightValueX = margin + 135;
-    const consigneeValueX = margin + 30;
-    const buyerValueX = margin + 35;
-    const goodsItemValueX = margin + 20;
-    const goodsMetaLabelX = margin + 70;
-    const goodsMetaValueX = margin + 85;
-    const goodsWeightLabelX = margin + 110;
-    const goodsWeightValueX = margin + 125;
-    const routeValueX = margin + 30;
-    const routeRightLabelX = margin + 80;
-    const routeRightValueX = margin + 90;
-    const routeAddressValueX = margin + 45;
-    const freightLeftLabelX = margin + 5;
-    const freightLeftValueX = margin + 35;
-    const freightRightLabelX = margin + 90;
-    const freightRightValueX = margin + 110;
 
     const consigneeBoxStartY = y - 5;
     let consigneeBoxHeight = 8;
