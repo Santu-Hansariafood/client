@@ -543,8 +543,15 @@ const PrintLoadingEntry = async (data) => {
     let y = 58;
 
     // Header Info Box
+    const headerBoxStartY = y - 5;
+    const headerBoxHeight = 35;
     doc.setLineWidth(0.2);
-    doc.rect(margin + 2, y - 5, pageWidth - margin * 2 - 4, 35);
+    doc.rect(
+      margin + 2,
+      headerBoxStartY,
+      pageWidth - margin * 2 - 4,
+      headerBoxHeight,
+    );
     doc.setFontSize(9);
 
     setBold();
@@ -576,8 +583,8 @@ const PrintLoadingEntry = async (data) => {
     setNormal();
     doc.text(`Hansaria Food Private Limited`, margin + 25, y);
 
-    // Move y after header box
-    y += 12;
+    // Move y after header box to avoid overlap with the next section
+    y = headerBoxStartY + headerBoxHeight + 5;
 
     // ========== SHIP TO (CONSIGNEE) SECTION ==========
     doc.setLineWidth(0.2);
@@ -630,12 +637,19 @@ const PrintLoadingEntry = async (data) => {
       if (dataMobileParts.length) shipToMobile = dataMobileParts[0];
     }
 
+    const consigneeGstNo =
+      shipToDetails.gstNo || shipToDetails.gstNumber || shipToDetails.gst || "";
+    const consigneePanNo =
+      shipToDetails.panNo || shipToDetails.panNumber || shipToDetails.pan || "";
+
     const consigneeBoxStartY = y - 5;
-    const consigneeBoxHeight =
-      8 +
-      Math.max(consigneeNameLines.length, 1) * 4 +
-      Math.max(cAddrLines.length, 1) * 4 +
-      7;
+    let consigneeBoxHeight = 8;
+    consigneeBoxHeight += Math.max(consigneeNameLines.length, 1) * 4;
+    consigneeBoxHeight += Math.max(cAddrLines.length, 1) * 4;
+    consigneeBoxHeight += 4;
+    if (consigneeGstNo) consigneeBoxHeight += 4;
+    if (consigneePanNo) consigneeBoxHeight += 4;
+    consigneeBoxHeight += 7;
 
     doc.rect(margin + 2, consigneeBoxStartY, pageWidth - margin * 2 - 4, consigneeBoxHeight);
 
@@ -665,7 +679,7 @@ const PrintLoadingEntry = async (data) => {
       maxLines: 3,
     });
 
-    drawLabelValue({
+    consigneeCurrentY += drawLabelValue({
       label: "Mobile:",
       value: shipToMobile,
       x: margin + 5,
@@ -674,6 +688,30 @@ const PrintLoadingEntry = async (data) => {
       wrapLength: 40,
       maxLines: 1,
     });
+
+    if (consigneeGstNo) {
+      consigneeCurrentY += drawLabelValue({
+        label: "GST:",
+        value: consigneeGstNo,
+        x: margin + 5,
+        y: consigneeCurrentY,
+        valueX: margin + 22,
+        wrapLength: 45,
+        maxLines: 1,
+      });
+    }
+
+    if (consigneePanNo) {
+      drawLabelValue({
+        label: "PAN No:",
+        value: consigneePanNo,
+        x: margin + 5,
+        y: consigneeCurrentY,
+        valueX: margin + 22,
+        wrapLength: 45,
+        maxLines: 1,
+      });
+    }
 
     y = consigneeBoxStartY + consigneeBoxHeight + 5;
 
