@@ -186,41 +186,64 @@ const PrintLoadingEntry = async (data) => {
       return bestScore >= 40 ? best : null;
     };
 
-    const fetchConsigneeById = async (id) => {
-      if (!isObjectId(id)) return null;
-      const direct = await safeGet(`/consignees/${id}`);
-      if (direct && typeof direct === "object") return direct;
+    const fetchConsigneePages = async ({ search = "" } = {}) => {
       const limit = 200;
-      const maxPages = 25;
+      const maxPages = 100;
+      const rows = [];
+      const seenIds = new Set();
+
       for (let page = 1; page <= maxPages; page += 1) {
         try {
-          const res = await api.get(`/consignees?page=${page}&limit=${limit}`);
+          const query = new URLSearchParams({
+            page: String(page),
+            limit: String(limit),
+          });
+          if (search) query.set("search", search);
+
+          const res = await api.get(`/consignees?${query.toString()}`);
           const payload = res.data || {};
-          const rows = Array.isArray(payload?.data) ? payload.data : [];
-          const found = rows.find((c) => String(c?._id) === String(id));
-          if (found) return found;
+          const pageRows = Array.isArray(payload?.data) ? payload.data : [];
+
+          pageRows.forEach((row) => {
+            const rowId = String(row?._id || "");
+            const dedupeKey = rowId || JSON.stringify(row);
+            if (seenIds.has(dedupeKey)) return;
+            seenIds.add(dedupeKey);
+            rows.push(row);
+          });
+
           const pages = Number(payload?.pages || 0);
           if (pages && page >= pages) break;
-          if (rows.length === 0) break;
+          if (pageRows.length === 0 || pageRows.length < limit) break;
         } catch {
           break;
         }
       }
-      return null;
+
+      return rows;
+    };
+
+    const fetchConsigneeById = async (id) => {
+      if (!isObjectId(id)) return null;
+      const direct = await safeGet(`/consignees/${id}`);
+      if (direct && typeof direct === "object") return direct;
+
+      const allRows = await fetchConsigneePages();
+      return (
+        allRows.find((consignee) => String(consignee?._id) === String(id)) ||
+        null
+      );
     };
 
     const fetchConsigneeBySearch = async (key) => {
       if (!key) return null;
-      try {
-        const res = await api.get(
-          `/consignees?page=1&limit=50&search=${encodeURIComponent(key)}`,
-        );
-        const payload = res.data || {};
-        const rows = Array.isArray(payload?.data) ? payload.data : [];
-        return pickBestConsigneeMatch(rows, key);
-      } catch {
-        return null;
-      }
+
+      const searchedRows = await fetchConsigneePages({ search: key });
+      const searchedMatch = pickBestConsigneeMatch(searchedRows, key);
+      if (searchedMatch) return searchedMatch;
+
+      const allRows = await fetchConsigneePages();
+      return pickBestConsigneeMatch(allRows, key);
     };
 
     const wrapText = (text, maxLength, maxLines = 3) => {
@@ -521,8 +544,7 @@ const PrintLoadingEntry = async (data) => {
 
     setNormal();
     doc.setFontSize(8.5);
-    const merchantTextY = vendorCode ? 25 : 22;
-    doc.text("General Merchant & Commission Agent", textStartX, merchantTextY);
+    const merchantTextY = vendorCode ? 23 : 20;
 
     const headerAddressLines = wrapText(sellerFullAddress, 85, 2);
     headerAddressLines.slice(0, 2).forEach((line, index) => {
