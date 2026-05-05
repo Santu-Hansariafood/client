@@ -102,6 +102,35 @@ const PrintLoadingEntry = async (data) => {
       return isObjectId(direct) ? String(direct) : "";
     };
 
+    const extractConsigneeTextValues = (candidate) => {
+      if (!candidate) return [];
+
+      if (typeof candidate === "string") {
+        const text = candidate.trim();
+        return text ? [text] : [];
+      }
+
+      if (typeof candidate !== "object") return [];
+
+      const nestedValue = candidate.value;
+      const values = [
+        candidate.name,
+        candidate.label,
+        candidate.consigneeName,
+        candidate.displayName,
+        typeof nestedValue === "string" ? nestedValue : "",
+        nestedValue && typeof nestedValue === "object" ? nestedValue.name : "",
+        nestedValue && typeof nestedValue === "object" ? nestedValue.label : "",
+        nestedValue && typeof nestedValue === "object"
+          ? nestedValue.consigneeName
+          : "",
+      ]
+        .map((value) => String(value || "").trim())
+        .filter(Boolean);
+
+      return Array.from(new Set(values));
+    };
+
     const isConsigneeAddressLike = (details) =>
       Boolean(
         details &&
@@ -186,6 +215,35 @@ const PrintLoadingEntry = async (data) => {
       return bestScore >= 40 ? best : null;
     };
 
+    const findExactConsigneeMatch = (rows, candidate) => {
+      const exactId = extractConsigneeId(candidate);
+      if (exactId) {
+        const byId = (rows || []).find(
+          (row) => String(row?._id || row?.id || "") === String(exactId),
+        );
+        if (byId) return byId;
+      }
+
+      const exactTexts = new Set(
+        extractConsigneeTextValues(candidate).map((value) => normalizeLoose(value)),
+      );
+      if (!exactTexts.size) return null;
+
+      return (
+        (rows || []).find((row) =>
+          [
+            row?.name,
+            row?.label,
+            row?.consigneeName,
+            row?.displayName,
+            row?.address,
+          ]
+            .map((value) => normalizeLoose(value))
+            .some((value) => value && exactTexts.has(value)),
+        ) || null
+      );
+    };
+
     const fetchConsigneePages = async ({ search = "" } = {}) => {
       const limit = 200;
       const maxPages = 100;
@@ -223,12 +281,20 @@ const PrintLoadingEntry = async (data) => {
       return rows;
     };
 
+    let allConsigneeRowsPromise = null;
+    const getAllConsigneeRows = async () => {
+      if (!allConsigneeRowsPromise) {
+        allConsigneeRowsPromise = fetchConsigneePages();
+      }
+      return allConsigneeRowsPromise;
+    };
+
     const fetchConsigneeById = async (id) => {
       if (!isObjectId(id)) return null;
       const direct = await safeGet(`/consignees/${id}`);
       if (direct && typeof direct === "object") return direct;
 
-      const allRows = await fetchConsigneePages();
+      const allRows = await getAllConsigneeRows();
       return (
         allRows.find((consignee) => String(consignee?._id) === String(id)) ||
         null
@@ -242,8 +308,37 @@ const PrintLoadingEntry = async (data) => {
       const searchedMatch = pickBestConsigneeMatch(searchedRows, key);
       if (searchedMatch) return searchedMatch;
 
-      const allRows = await fetchConsigneePages();
+      const allRows = await getAllConsigneeRows();
       return pickBestConsigneeMatch(allRows, key);
+    };
+
+    const resolveConsigneeDetails = async (candidates) => {
+      const list = (Array.isArray(candidates) ? candidates : [candidates]).filter(
+        Boolean,
+      );
+
+      for (const candidate of list) {
+        const id = extractConsigneeId(candidate);
+        if (!id) continue;
+        const byId = await fetchConsigneeById(id);
+        if (byId) return byId;
+      }
+
+      const allRows = await getAllConsigneeRows();
+      for (const candidate of list) {
+        const exactMatch = findExactConsigneeMatch(allRows, candidate);
+        if (exactMatch) return exactMatch;
+      }
+
+      for (const candidate of list) {
+        const searchKeys = extractConsigneeTextValues(candidate);
+        for (const key of searchKeys) {
+          const bySearch = await fetchConsigneeBySearch(key);
+          if (bySearch) return bySearch;
+        }
+      }
+
+      return null;
     };
 
     const wrapText = (text, maxLength, maxLines = 3) => {
@@ -363,17 +458,15 @@ const PrintLoadingEntry = async (data) => {
         (s) => String(s.saudaNo) === String(data.saudaNo),
       ) || {};
 
-    const shipToRaw = pickBestShipToCandidate([
+    const shipToCandidates = [
       sauda.consignee,
       sauda.shipTo,
       data.consignee,
-    ]);
+    ].filter(Boolean);
 
-    let shipToDetails = {};
-    const shipToId = extractConsigneeId(shipToRaw);
-    if (shipToId) {
-      shipToDetails = (await fetchConsigneeById(shipToId)) || {};
-    }
+    const shipToRaw = pickBestShipToCandidate(shipToCandidates);
+
+    let shipToDetails = (await resolveConsigneeDetails(shipToCandidates)) || {};
 
     if (!isConsigneeAddressLike(shipToDetails)) {
       const key = deriveShipToSearchKey(shipToRaw);
