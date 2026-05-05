@@ -75,6 +75,74 @@ const PrintLoadingEntry = async (data) => {
         .trim()
         .toLowerCase();
 
+    // Enhanced function to extract buyer info from sauda data
+    const extractBuyerInfoFromSauda = (saudaData) => {
+      if (!saudaData || typeof saudaData !== 'object') return {};
+      
+      // Try multiple possible buyer name fields
+      const buyerName = 
+        saudaData.buyerCompany ||
+        saudaData.buyerName ||
+        saudaData.partyName ||
+        saudaData.customerName ||
+        (saudaData.buyer && typeof saudaData.buyer === 'object' ? 
+          (saudaData.buyer.companyName || saudaData.buyer.name) : null) ||
+        null;
+
+      // Try multiple possible buyer address fields
+      const buyerAddress = 
+        saudaData.buyerAddress ||
+        saudaData.deliveryAddress ||
+        (saudaData.buyer && typeof saudaData.buyer === 'object' ? 
+          saudaData.buyer.address : null) ||
+        saudaData.partyAddress ||
+        saudaData.customerAddress ||
+        null;
+
+      // Try multiple possible buyer GST fields
+      const buyerGst = 
+        saudaData.buyerGstNo ||
+        saudaData.buyerGstNumber ||
+        saudaData.buyerGst ||
+        (saudaData.buyer && typeof saudaData.buyer === 'object' ? 
+          (saudaData.buyer.gstNo || saudaData.buyer.gstNumber) : null) ||
+        saudaData.partyGstNo ||
+        saudaData.customerGstNo ||
+        saudaData.gstNo ||
+        null;
+
+      // Try multiple possible buyer PAN fields
+      const buyerPan = 
+        saudaData.buyerPanNo ||
+        saudaData.buyerPanNumber ||
+        saudaData.buyerPan ||
+        (saudaData.buyer && typeof saudaData.buyer === 'object' ? 
+          (saudaData.buyer.panNo || saudaData.buyer.panNumber) : null) ||
+        saudaData.partyPanNo ||
+        saudaData.customerPanNo ||
+        saudaData.panNo ||
+        null;
+
+      // Try multiple possible buyer state fields
+      const buyerState = 
+        saudaData.buyerState ||
+        saudaData.deliveryState ||
+        (saudaData.buyer && typeof saudaData.buyer === 'object' ? 
+          saudaData.buyer.state : null) ||
+        saudaData.partyState ||
+        saudaData.customerState ||
+        saudaData.state ||
+        null;
+
+      return {
+        buyerName,
+        buyerAddress,
+        buyerGst,
+        buyerPan,
+        buyerState
+      };
+    };
+
     const normalizeLoose = (value) =>
       String(value || "")
         .toLowerCase()
@@ -444,7 +512,7 @@ const PrintLoadingEntry = async (data) => {
       safeFetch("/seller-company?limit=0"),
       safeFetch("/buyers?limit=0"),
       safeFetch("/companies?limit=0"),
-      safeFetch(`/self-order?search=${encodeURIComponent(data.saudaNo)}`),
+      safeFetch(`/self-order?saudaNo=${encodeURIComponent(data.saudaNo)}`),
       data?.transporterId
         ? safeGet(`/transporters/${data.transporterId}`)
         : Promise.resolve(null),
@@ -591,10 +659,12 @@ const PrintLoadingEntry = async (data) => {
       }) ||
       null;
 
+    // Extract buyer information from sauda data using enhanced function
+    const saudaBuyerInfo = extractBuyerInfoFromSauda(sauda);
+
     const buyerState =
       // First priority: state from sauda data
-      sauda.buyerState ||
-      sauda.deliveryState ||
+      saudaBuyerInfo.buyerState ||
       // Second priority: state from matching buyer company
       matchingBuyerCompany?.state ||
       data.placeOfDeliveryState ||
@@ -602,8 +672,7 @@ const PrintLoadingEntry = async (data) => {
     
     // Prioritize buyer name from self order (sauda data) as requested
     const buyerCompanyName =
-      sauda.buyerCompany || // First priority: self order buyer name
-      sauda.buyerName || // Alternative field from sauda
+      saudaBuyerInfo.buyerName || // First priority: self order buyer name from enhanced function
       matchingBuyerCompany?.companyName || // Then fallback to company data
       data.buyerCompany ||
       data.buyer ||
@@ -611,8 +680,7 @@ const PrintLoadingEntry = async (data) => {
 
     const buyerFullAddress = 
       // First priority: address from sauda data
-      sauda.buyerAddress || 
-      sauda.deliveryAddress ||
+      saudaBuyerInfo.buyerAddress || 
       // Second priority: address from matching buyer company
       (matchingBuyerCompany
         ? buildAddressFromObject(matchingBuyerCompany) ||
@@ -623,9 +691,7 @@ const PrintLoadingEntry = async (data) => {
 
     const buyerGstNo =
       // First priority: GST from sauda data
-      sauda.buyerGstNo ||
-      sauda.buyerGstNumber ||
-      sauda.buyerGst ||
+      saudaBuyerInfo.buyerGst ||
       // Second priority: GST from matching buyer company
       matchingBuyerCompany?.gstNo ||
       matchingBuyerCompany?.gstNumber ||
@@ -633,9 +699,7 @@ const PrintLoadingEntry = async (data) => {
       "";
     const buyerPanNo =
       // First priority: PAN from sauda data
-      sauda.buyerPanNo ||
-      sauda.buyerPanNumber ||
-      sauda.buyerPan ||
+      saudaBuyerInfo.buyerPan ||
       // Second priority: PAN from matching buyer company
       matchingBuyerCompany?.panNo ||
       matchingBuyerCompany?.panNumber ||
