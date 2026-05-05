@@ -265,16 +265,18 @@ const PrintLoadingEntry = async (data) => {
       x,
       y,
       valueX,
+      labelWidth,
       wrapLength = 60,
       maxLines = 2,
       lineHeight = 4,
     }) => {
       const lines = wrapText(pickDisplay(value), wrapLength, maxLines);
+      const resolvedValueX = valueX ?? x + (labelWidth || 18);
       setBold();
       doc.text(label, x, y);
       setNormal();
       lines.forEach((line, index) => {
-        doc.text(line, valueX, y + index * lineHeight);
+        doc.text(line, resolvedValueX, y + index * lineHeight);
       });
       return Math.max(lines.length, 1) * lineHeight;
     };
@@ -542,7 +544,6 @@ const PrintLoadingEntry = async (data) => {
 
     let y = 58;
 
-    // Header Info Box
     const headerBoxStartY = y - 5;
     const headerBoxHeight = 35;
     doc.setLineWidth(0.2);
@@ -555,38 +556,36 @@ const PrintLoadingEntry = async (data) => {
     doc.setFontSize(9);
 
     setBold();
-    doc.text(`HFPL Sauda No:`, margin + 5, y);
+    doc.text(`HFPL Sauda No:`, headerLeftLabelX, y);
     setNormal();
-    doc.text(`${pick(data.saudaNo)}`, margin + 40, y);
+    doc.text(`${pick(data.saudaNo)}`, headerLeftValueX, y);
 
     setBold();
-    doc.text(`Buyer Po No:`, margin + 100, y);
+    doc.text(`Buyer Po No:`, headerRightLabelX, y);
     setNormal();
-    doc.text(`${pick(sauda.poNumber || data.poNumber)}`, margin + 135, y);
+    doc.text(`${pick(sauda.poNumber || data.poNumber)}`, headerRightValueX, y);
 
     y += 7;
 
     setBold();
-    doc.text(`Challan No:`, margin + 5, y);
+    doc.text(`Challan No:`, headerLeftLabelX, y);
     setNormal();
-    doc.text(`${pick(data.billNumber)}`, margin + 35, y);
+    doc.text(`${pick(data.billNumber)}`, headerLeftValueX, y);
 
     setBold();
-    doc.text(`Date:`, margin + 100, y);
+    doc.text(`Date:`, headerRightLabelX, y);
     setNormal();
-    doc.text(`${formatDate(data.loadingDate)}`, margin + 120, y);
+    doc.text(`${formatDate(data.loadingDate)}`, headerRightValueX, y);
 
     y += 7;
 
     setBold();
-    doc.text(`Broker:`, margin + 5, y);
+    doc.text(`Broker:`, headerLeftLabelX, y);
     setNormal();
-    doc.text(`Hansaria Food Private Limited`, margin + 25, y);
+    doc.text(`Hansaria Food Private Limited`, headerLeftValueX, y);
 
-    // Move y after header box to avoid overlap with the next section
     y = headerBoxStartY + headerBoxHeight + 5;
 
-    // ========== SHIP TO (CONSIGNEE) SECTION ==========
     doc.setLineWidth(0.2);
 
     let shipToAddress =
@@ -641,6 +640,27 @@ const PrintLoadingEntry = async (data) => {
       shipToDetails.gstNo || shipToDetails.gstNumber || shipToDetails.gst || "";
     const consigneePanNo =
       shipToDetails.panNo || shipToDetails.panNumber || shipToDetails.pan || "";
+    const sectionLabelX = margin + 5;
+    const boxTitleX = margin + 5;
+    const headerLeftLabelX = margin + 5;
+    const headerLeftValueX = margin + 40;
+    const headerRightLabelX = margin + 100;
+    const headerRightValueX = margin + 135;
+    const consigneeValueX = margin + 30;
+    const buyerValueX = margin + 35;
+    const goodsItemValueX = margin + 20;
+    const goodsMetaLabelX = margin + 70;
+    const goodsMetaValueX = margin + 85;
+    const goodsWeightLabelX = margin + 110;
+    const goodsWeightValueX = margin + 125;
+    const routeValueX = margin + 30;
+    const routeRightLabelX = margin + 80;
+    const routeRightValueX = margin + 90;
+    const routeAddressValueX = margin + 45;
+    const freightLeftLabelX = margin + 5;
+    const freightLeftValueX = margin + 35;
+    const freightRightLabelX = margin + 90;
+    const freightRightValueX = margin + 110;
 
     const consigneeBoxStartY = y - 5;
     let consigneeBoxHeight = 8;
@@ -651,20 +671,25 @@ const PrintLoadingEntry = async (data) => {
     if (consigneePanNo) consigneeBoxHeight += 4;
     consigneeBoxHeight += 7;
 
-    doc.rect(margin + 2, consigneeBoxStartY, pageWidth - margin * 2 - 4, consigneeBoxHeight);
+    doc.rect(
+      margin + 2,
+      consigneeBoxStartY,
+      pageWidth - margin * 2 - 4,
+      consigneeBoxHeight,
+    );
 
     let consigneeCurrentY = consigneeBoxStartY + 5;
     setBold();
     doc.setFontSize(9);
-    doc.text("SHIP TO (CONSIGNEE)", margin + 5, consigneeCurrentY);
+    doc.text("SHIP TO (CONSIGNEE)", boxTitleX, consigneeCurrentY);
     consigneeCurrentY += 5;
 
     consigneeCurrentY += drawLabelValue({
       label: "Consignee:",
       value: consigneeNameLines.join(" "),
-      x: margin + 5,
+      x: sectionLabelX,
       y: consigneeCurrentY,
-      valueX: margin + 28,
+      valueX: consigneeValueX,
       wrapLength: 74,
       maxLines: 2,
     });
@@ -672,9 +697,9 @@ const PrintLoadingEntry = async (data) => {
     consigneeCurrentY += drawLabelValue({
       label: "Address:",
       value: cAddrLines.join(", "),
-      x: margin + 5,
+      x: sectionLabelX,
       y: consigneeCurrentY,
-      valueX: margin + 24,
+      valueX: consigneeValueX,
       wrapLength: 78,
       maxLines: 3,
     });
@@ -682,9 +707,9 @@ const PrintLoadingEntry = async (data) => {
     consigneeCurrentY += drawLabelValue({
       label: "Mobile:",
       value: shipToMobile,
-      x: margin + 5,
+      x: sectionLabelX,
       y: consigneeCurrentY,
-      valueX: margin + 22,
+      valueX: consigneeValueX,
       wrapLength: 40,
       maxLines: 1,
     });
@@ -693,9 +718,9 @@ const PrintLoadingEntry = async (data) => {
       consigneeCurrentY += drawLabelValue({
         label: "GST:",
         value: consigneeGstNo,
-        x: margin + 5,
+        x: sectionLabelX,
         y: consigneeCurrentY,
-        valueX: margin + 22,
+        valueX: consigneeValueX,
         wrapLength: 45,
         maxLines: 1,
       });
@@ -705,9 +730,9 @@ const PrintLoadingEntry = async (data) => {
       drawLabelValue({
         label: "PAN No:",
         value: consigneePanNo,
-        x: margin + 5,
+        x: sectionLabelX,
         y: consigneeCurrentY,
-        valueX: margin + 22,
+        valueX: consigneeValueX,
         wrapLength: 45,
         maxLines: 1,
       });
@@ -726,20 +751,25 @@ const PrintLoadingEntry = async (data) => {
     if (buyerGstNo) buyerBoxHeight += 4;
     buyerBoxHeight += 7;
 
-    doc.rect(margin + 2, buyerBoxStartY, pageWidth - margin * 2 - 4, buyerBoxHeight);
+    doc.rect(
+      margin + 2,
+      buyerBoxStartY,
+      pageWidth - margin * 2 - 4,
+      buyerBoxHeight,
+    );
 
     let buyerCurrentY = buyerBoxStartY + 5;
     setBold();
     doc.setFontSize(9);
-    doc.text(`BUYER ACCOUNT`, margin + 5, buyerCurrentY);
+    doc.text(`BUYER ACCOUNT`, boxTitleX, buyerCurrentY);
     buyerCurrentY += 5;
-    
+
     buyerCurrentY += drawLabelValue({
       label: "Buyer Company:",
       value: buyerNameLines.join(" "),
-      x: margin + 5,
+      x: sectionLabelX,
       y: buyerCurrentY,
-      valueX: margin + 35,
+      valueX: buyerValueX,
       wrapLength: 62,
       maxLines: 2,
     });
@@ -747,9 +777,9 @@ const PrintLoadingEntry = async (data) => {
     buyerCurrentY += drawLabelValue({
       label: "Address:",
       value: buyerAddrLines.join(", "),
-      x: margin + 5,
+      x: sectionLabelX,
       y: buyerCurrentY,
-      valueX: margin + 35,
+      valueX: buyerValueX,
       wrapLength: 62,
       maxLines: 3,
     });
@@ -758,9 +788,9 @@ const PrintLoadingEntry = async (data) => {
       buyerCurrentY += drawLabelValue({
         label: "PAN No:",
         value: buyerPanNo,
-        x: margin + 5,
+        x: sectionLabelX,
         y: buyerCurrentY,
-        valueX: margin + 35,
+        valueX: buyerValueX,
         wrapLength: 36,
         maxLines: 1,
       });
@@ -769,9 +799,9 @@ const PrintLoadingEntry = async (data) => {
       drawLabelValue({
         label: "GST:",
         value: buyerGstNo,
-        x: margin + 5,
+        x: sectionLabelX,
         y: buyerCurrentY,
-        valueX: margin + 35,
+        valueX: buyerValueX,
         wrapLength: 36,
         maxLines: 1,
       });
@@ -782,30 +812,36 @@ const PrintLoadingEntry = async (data) => {
     const goodsBoxStartY = y - 5;
     const commodityLines = wrapText(pick(data.commodity), 55, 2);
     const goodsBoxHeight = 14 + Math.max(commodityLines.length - 1, 0) * 4;
-    doc.rect(margin + 2, goodsBoxStartY, pageWidth - margin * 2 - 4, goodsBoxHeight);
+    doc.rect(
+      margin + 2,
+      goodsBoxStartY,
+      pageWidth - margin * 2 - 4,
+      goodsBoxHeight,
+    );
     setBold();
     doc.setFontSize(9);
-    doc.text(`DESCRIPTION OF GOODS`, margin + 5, y);
+    doc.text(`DESCRIPTION OF GOODS`, boxTitleX, y);
 
     const goodsContentY = y + 4;
     setBold();
-    doc.text(`Item:`, margin + 5, goodsContentY);
+    doc.text(`Item:`, sectionLabelX, goodsContentY);
     setNormal();
     commodityLines.forEach((line, idx) => {
-      doc.text(line, margin + 20, goodsContentY + idx * 4);
+      doc.text(line, goodsItemValueX, goodsContentY + idx * 4);
     });
 
-    const goodsMetaY = goodsContentY + Math.max(commodityLines.length - 1, 0) * 4;
+    const goodsMetaY =
+      goodsContentY + Math.max(commodityLines.length - 1, 0) * 4;
     setBold();
-    doc.text(`Bags:`, margin + 70, goodsMetaY);
+    doc.text(`Bags:`, goodsMetaLabelX, goodsMetaY);
     setNormal();
-    doc.text(`${pick(data.bags)}`, margin + 85, goodsMetaY);
+    doc.text(`${pick(data.bags)}`, goodsMetaValueX, goodsMetaY);
     setBold();
-    doc.text(`Weight:`, margin + 110, goodsMetaY);
+    doc.text(`Weight:`, goodsWeightLabelX, goodsMetaY);
     setNormal();
     doc.text(
       hasValue(data.loadingWeight) ? `${data.loadingWeight} Tons` : "N/A",
-      margin + 125,
+      goodsWeightValueX,
       goodsMetaY,
     );
 
@@ -826,58 +862,62 @@ const PrintLoadingEntry = async (data) => {
     routeBoxHeight += Math.max(tAddrLines.length, 1) * 4;
     routeBoxHeight += 7;
 
-    doc.rect(margin + 2, routeBoxStartY, pageWidth - margin * 2 - 4, routeBoxHeight);
+    doc.rect(
+      margin + 2,
+      routeBoxStartY,
+      pageWidth - margin * 2 - 4,
+      routeBoxHeight,
+    );
 
     let routeCurrentY = routeBoxStartY + 5;
     setBold();
     doc.setFontSize(9);
-    doc.text(`ROUTE & VEHICLE DETAILS`, margin + 5, routeCurrentY);
-    routeCurrentY += 5;
-    
-    setBold();
-    doc.text(`From:`, margin + 5, routeCurrentY);
-    setNormal();
-    doc.text(`${sellerState}`, margin + 20, routeCurrentY);
-    setBold();
-    doc.text(`To:`, margin + 70, routeCurrentY);
-    setNormal();
-    doc.text(`${consigneeState}`, margin + 80, routeCurrentY);
+    doc.text(`ROUTE & VEHICLE DETAILS`, boxTitleX, routeCurrentY);
     routeCurrentY += 5;
 
     setBold();
-    doc.text(`Transporter:`, margin + 5, routeCurrentY);
+    doc.text(`From:`, sectionLabelX, routeCurrentY);
+    setNormal();
+    doc.text(`${sellerState}`, routeValueX, routeCurrentY);
+    setBold();
+    doc.text(`To:`, goodsMetaLabelX, routeCurrentY);
+    setNormal();
+    doc.text(`${consigneeState}`, goodsMetaValueX, routeCurrentY);
+    routeCurrentY += 5;
+
+    setBold();
+    doc.text(`Transporter:`, sectionLabelX, routeCurrentY);
     setNormal();
     transporterLines.forEach((line, idx) => {
-      doc.text(line, margin + 30, routeCurrentY + idx * 4);
+      doc.text(line, routeValueX, routeCurrentY + idx * 4);
     });
     routeCurrentY += Math.max(transporterLines.length, 1) * 4;
 
     setBold();
-    doc.text(`Lorry No:`, margin + 5, routeCurrentY);
+    doc.text(`Lorry No:`, sectionLabelX, routeCurrentY);
     setNormal();
-    doc.text(lorryNo, margin + 30, routeCurrentY);
+    doc.text(lorryNo, routeValueX, routeCurrentY);
     routeCurrentY += 4;
 
     setBold();
-    doc.text(`Driver:`, margin + 5, routeCurrentY);
+    doc.text(`Driver:`, sectionLabelX, routeCurrentY);
     setNormal();
-    doc.text(driverLine, margin + 30, routeCurrentY);
+    doc.text(driverLine, routeValueX, routeCurrentY);
     setBold();
-    doc.text(`Mob:`, margin + 80, routeCurrentY);
+    doc.text(`Mob:`, routeRightLabelX, routeCurrentY);
     setNormal();
-    doc.text(driverMobileLine, margin + 90, routeCurrentY);
+    doc.text(driverMobileLine, routeRightValueX, routeCurrentY);
     routeCurrentY += 4;
 
     setBold();
-    doc.text(`Transporter Address:`, margin + 5, routeCurrentY);
+    doc.text(`Transporter Address:`, sectionLabelX, routeCurrentY);
     setNormal();
     tAddrLines.forEach((line, idx) => {
-      doc.text(line, margin + 45, routeCurrentY + idx * 4);
+      doc.text(line, routeAddressValueX, routeCurrentY + idx * 4);
     });
 
     y = routeBoxStartY + routeBoxHeight + 5;
 
-    // ========== FREIGHT DETAILS ==========
     const freightBoxStartY = y - 5;
     const totalFreight = formatMoney(data.totalFreight);
     const advance = formatMoney(data.advance);
@@ -889,28 +929,32 @@ const PrintLoadingEntry = async (data) => {
           : null;
     const toPayValue = toPayAmount !== null ? formatMoney(toPayAmount) : "N/A";
     const freightBoxHeight = 18;
-    doc.rect(margin + 2, freightBoxStartY, pageWidth - margin * 2 - 4, freightBoxHeight);
+    doc.rect(
+      margin + 2,
+      freightBoxStartY,
+      pageWidth - margin * 2 - 4,
+      freightBoxHeight,
+    );
     setBold();
     doc.setFontSize(9);
-    doc.text(`FREIGHT DETAILS`, margin + 5, y);
+    doc.text(`FREIGHT DETAILS`, boxTitleX, y);
 
     const freightContentY = y + 5;
     setBold();
-    doc.text("Total Freight:", margin + 5, freightContentY);
+    doc.text("Total Freight:", freightLeftLabelX, freightContentY);
     setNormal();
-    doc.text(totalFreight, margin + 35, freightContentY);
+    doc.text(totalFreight, freightLeftValueX, freightContentY);
     setBold();
-    doc.text("Advance:", margin + 90, freightContentY);
+    doc.text("Advance:", freightRightLabelX, freightContentY);
     setNormal();
-    doc.text(advance, margin + 110, freightContentY);
+    doc.text(advance, freightRightValueX, freightContentY);
     setBold();
-    doc.text("To Pay:", margin + 5, freightContentY + 5);
+    doc.text("To Pay:", freightLeftLabelX, freightContentY + 5);
     setNormal();
-    doc.text(toPayValue, margin + 25, freightContentY + 5);
+    doc.text(toPayValue, freightLeftValueX, freightContentY + 5);
 
     y = freightBoxStartY + freightBoxHeight + 10;
 
-    // ========== SIGNATURES ==========
     const signY = pageHeight - 38;
     setBold();
     doc.setFontSize(9);
@@ -925,7 +969,6 @@ const PrintLoadingEntry = async (data) => {
       signY + 2,
     );
 
-    // ========== FOOTNOTES ==========
     doc.setFontSize(7);
     setBold();
     doc.text(
