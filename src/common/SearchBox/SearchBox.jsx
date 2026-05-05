@@ -8,11 +8,12 @@ const SearchBox = ({
   items,
   onSearch,
   className = "",
-  debounceMs = 250,
+  debounceMs = 200, // Reduced from 250ms for faster response
   returnQuery = false,
 }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedTerm, setDebouncedTerm] = useState("");
+  const [isFocused, setIsFocused] = useState(false);
 
   const handleInputChange = (e) => {
     setSearchTerm(e.target.value);
@@ -59,12 +60,18 @@ const SearchBox = ({
 
   return (
     <div
-      className={`flex items-center w-full max-w-md bg-white border border-emerald-100 rounded-xl px-4 py-2.5 shadow-md shadow-emerald-900/5 transition-all duration-200 focus-within:ring-2 focus-within:ring-emerald-400/50 focus-within:border-emerald-400 ${className}`}
+      className={`flex items-center w-full max-w-md bg-white border ${
+        isFocused 
+          ? 'border-emerald-400 ring-2 ring-emerald-400/50' 
+          : 'border-emerald-100'
+      } rounded-xl px-4 py-2.5 shadow-md shadow-emerald-900/5 transition-all duration-200 hover:shadow-lg hover:shadow-emerald-900/10 ${className}`}
       role="search"
       aria-label="Search items"
     >
       <FiSearch
-        className="text-emerald-600/70 shrink-0"
+        className={`shrink-0 ${
+          isFocused ? 'text-emerald-600' : 'text-emerald-600/70'
+        }`}
         size={20}
         aria-hidden="true"
       />
@@ -72,6 +79,8 @@ const SearchBox = ({
         type="text"
         value={searchTerm}
         onChange={handleInputChange}
+        onFocus={() => setIsFocused(true)}
+        onBlur={() => setIsFocused(false)}
         placeholder={placeholder || "Search..."}
         autoComplete="off"
         className="w-full min-w-0 px-3 py-2 bg-transparent text-slate-800 placeholder-slate-400 focus:outline-none"

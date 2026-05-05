@@ -96,7 +96,6 @@ const ListLoadingEntry = () => {
   const [popupType, setPopupType] = useState("");
   const [editEntry, setEditEntry] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
-  const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
   const [filters, setFilters] = useState({
     search: "",
@@ -116,7 +115,7 @@ const ListLoadingEntry = () => {
   useEffect(() => {
     const handler = setTimeout(() => {
       setDebouncedFilters(filters);
-    }, 500);
+    }, 300); // Reduced from 500ms to 300ms for more responsive search
 
     return () => clearTimeout(handler);
   }, [filters]);
@@ -202,13 +201,28 @@ const ListLoadingEntry = () => {
   const fetchData = useCallback(async () => {
     try {
       setLoading(true);
+      
+      // Build search query parameters
+      const searchParams = {
+        page: 1,
+        limit: 1000, // Load reasonable amount for frontend filtering
+        role: userRole,
+        mobile: mobile,
+      };
+
+      // Add search filters if they exist
+      if (debouncedFilters.search) {
+        searchParams.search = debouncedFilters.search;
+      }
+      if (debouncedFilters.saudaNo) {
+        searchParams.saudaNo = debouncedFilters.saudaNo;
+      }
+      if (debouncedFilters.lorryNumber) {
+        searchParams.lorryNumber = debouncedFilters.lorryNumber;
+      }
+
       const entriesRes = await api.get("/loading-entries", {
-        params: {
-          page: 0,
-          limit: 0,
-          role: userRole,
-          mobile: mobile,
-        },
+        params: searchParams,
       });
 
       let entriesData = [];
@@ -216,6 +230,8 @@ const ListLoadingEntry = () => {
         entriesData = entriesRes.data;
       } else if (entriesRes.data?.data && Array.isArray(entriesRes.data.data)) {
         entriesData = entriesRes.data.data;
+      } else if (entriesRes.data?.items && Array.isArray(entriesRes.data.items)) {
+        entriesData = entriesRes.data.items;
       }
 
       setLoadingEntries(entriesData);
@@ -225,7 +241,7 @@ const ListLoadingEntry = () => {
     } finally {
       setLoading(false);
     }
-  }, [userRole, mobile]);
+  }, [userRole, mobile, debouncedFilters]);
 
   useEffect(() => {
     let filtered = [...loadingEntries];
@@ -238,6 +254,8 @@ const ListLoadingEntry = () => {
           transporterMap[entry.transporterId] || entry.addedTransport || "";
         const sellerName = getSellerSearchText(entry, sellerMap);
         const consigneeText = getConsigneeSearchText(entry);
+        
+        // Comprehensive search across all relevant fields
         const searchFields = [
           entry.saudaNo,
           entry.supplierCompany,
@@ -258,10 +276,19 @@ const ListLoadingEntry = () => {
           entry.balance,
           paymentTermsMap[entry.saudaNo] || "",
           statusMap[entry.saudaNo] || "",
+          entry.vehicleType || "",
+          entry.vehicleCapacity || "",
+          entry.loadingPlace || "",
+          entry.unloadingPlace || "",
         ];
 
-        return searchFields.some((value) =>
-          normalizeSearchValue(value).includes(searchLower),
+        // Enhanced search with partial matching and multiple word support
+        const searchWords = searchLower.split(/\s+/).filter(word => word.length > 0);
+        
+        return searchWords.every(word => 
+          searchFields.some((value) =>
+            normalizeSearchValue(value).includes(word)
+          )
         );
       });
     }
@@ -280,7 +307,16 @@ const ListLoadingEntry = () => {
       );
     }
 
+    // Enhanced sorting - prioritize recent entries and better saudaNo sorting
     filtered.sort((a, b) => {
+      // First by date (most recent first)
+      const dateA = new Date(a.loadingDate || 0);
+      const dateB = new Date(b.loadingDate || 0);
+      if (dateB.getTime() !== dateA.getTime()) {
+        return dateB.getTime() - dateA.getTime();
+      }
+      
+      // Then by saudaNo (numeric comparison)
       const aS = String(a.saudaNo || "");
       const bS = String(b.saudaNo || "");
       return bS.localeCompare(aS, undefined, { numeric: true });
@@ -573,7 +609,19 @@ const ListLoadingEntry = () => {
         <div className="max-w-7xl mx-auto space-y-6">
           <div className="rounded-2xl border border-amber-200/60 bg-white shadow-lg p-4 sm:p-6">
             <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-4">
-              <h3 className="text-lg font-bold text-slate-800">Filters</h3>
+              <div>
+                <h3 className="text-lg font-bold text-slate-800">Filters</h3>
+                {totalItems > 0 && (
+                  <p className="text-sm text-slate-600 mt-1">
+                    Showing {Math.min((currentPage - 1) * itemsPerPage + 1, totalItems)}-{Math.min(currentPage * itemsPerPage, totalItems)} of {totalItems} entries
+                    {debouncedFilters.search && (
+                      <span className="ml-2 text-emerald-600 font-medium">
+                        (filtered from {loadingEntries.length} total)
+                      </span>
+                    )}
+                  </p>
+                )}
+              </div>
               <button
                 onClick={handleDownloadExcel}
                 className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700 transition shadow-md"
@@ -584,26 +632,40 @@ const ListLoadingEntry = () => {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               <SearchBox
-                placeholder="Search by Seller/Buyer Name..."
+                placeholder="Search by seller, buyer, consignee, commodity..."
                 items={[...new Set([...suggestions.sellers])].filter(Boolean)}
                 returnQuery={true}
                 onSearch={(q) => handleSearch(q, "search")}
               />
 
               <SearchBox
-                placeholder="Search by Sauda No..."
+                placeholder="Search by sauda number..."
                 items={[...new Set(suggestions.saudas)].filter(Boolean)}
                 returnQuery={true}
                 onSearch={(q) => handleSearch(q, "saudaNo")}
               />
 
               <SearchBox
-                placeholder="Search by Lorry Number..."
+                placeholder="Search by lorry number..."
                 items={[...new Set(suggestions.lorries)].filter(Boolean)}
                 returnQuery={true}
                 onSearch={(q) => handleSearch(q, "lorryNumber")}
               />
             </div>
+            
+            {(debouncedFilters.search || debouncedFilters.saudaNo || debouncedFilters.lorryNumber) && (
+              <div className="mt-4 flex justify-end">
+                <button
+                  onClick={() => {
+                    setFilters({ search: "", saudaNo: "", lorryNumber: "" });
+                    setCurrentPage(1);
+                  }}
+                  className="px-4 py-2 text-sm text-slate-600 hover:text-slate-800 hover:bg-slate-50 rounded-lg transition-colors"
+                >
+                  Clear All Filters
+                </button>
+              </div>
+            )}
           </div>
 
           <div className="rounded-2xl border border-slate-200 bg-white shadow-sm p-3 sm:p-4">
