@@ -54,6 +54,33 @@ const getConsigneeSearchText = (entry) => {
   );
 };
 
+const getSellerSearchText = (entry, sellerMap = {}) => {
+  const supplier = entry?.supplier;
+
+  if (supplier && typeof supplier === "object") {
+    return (
+      supplier.sellerName ||
+      supplier.name ||
+      supplier.label ||
+      supplier.companyName ||
+      ""
+    );
+  }
+
+  return (
+    sellerMap[String(supplier || "")] ||
+    entry?.sellerName ||
+    entry?.supplierName ||
+    ""
+  );
+};
+
+const getBuyerSearchText = (entry, buyerMap = {}) =>
+  buyerMap[String(entry?.saudaNo || "")] ||
+  entry?.buyerCompany ||
+  entry?.buyer ||
+  "";
+
 const ListLoadingEntry = () => {
   const { userRole, mobile } = useAuth();
   const [loadingEntries, setLoadingEntries] = useState([]);
@@ -206,10 +233,10 @@ const ListLoadingEntry = () => {
     if (debouncedFilters.search) {
       const searchLower = normalizeSearchValue(debouncedFilters.search);
       filtered = filtered.filter((entry) => {
-        const buyerCompany = buyerMap[entry.saudaNo] || entry.buyerCompany || "";
+        const buyerCompany = getBuyerSearchText(entry, buyerMap);
         const transporterName =
           transporterMap[entry.transporterId] || entry.addedTransport || "";
-        const sellerName = sellerMap[entry.supplier] || "";
+        const sellerName = getSellerSearchText(entry, sellerMap);
         const consigneeText = getConsigneeSearchText(entry);
         const searchFields = [
           entry.saudaNo,

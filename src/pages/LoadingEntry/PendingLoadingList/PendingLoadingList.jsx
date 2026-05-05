@@ -60,21 +60,6 @@ const getConsigneeDisplay = (item) => {
   return item?.consigneeName || "N/A";
 };
 
-const getGroupName = (item, groupMap = {}) => {
-  const direct =
-    item?.group?.groupName ||
-    item?.group?.name ||
-    item?.groupName ||
-    item?.group ||
-    item?.buyerGroup ||
-    "";
-  if (direct) return direct;
-
-  const groupId =
-    item?.groupId || item?.group?._id || item?.group?.id || item?.buyerGroupId;
-  return groupId ? groupMap[String(groupId)] || "" : "";
-};
-
 const buildDropdownOptions = (values) =>
   [...new Set((values || []).map((value) => String(value || "").trim()).filter(Boolean))]
     .sort((a, b) => a.localeCompare(b))
@@ -99,30 +84,6 @@ const PendingLoadingList = () => {
   const [selectedSellerCompany, setSelectedSellerCompany] = useState(null);
   const [selectedSellerName, setSelectedSellerName] = useState(null);
   const [selectedConsignee, setSelectedConsignee] = useState(null);
-  const [selectedGroup, setSelectedGroup] = useState(null);
-  const [groupMap, setGroupMap] = useState({});
-
-  const fetchGroupData = useCallback(async () => {
-    try {
-      const groupsRes = await api.get("/groups");
-      const groupsData = Array.isArray(groupsRes.data?.data)
-        ? groupsRes.data.data
-        : Array.isArray(groupsRes.data)
-          ? groupsRes.data
-          : [];
-
-      setGroupMap(
-        Object.fromEntries(
-          groupsData.map((group) => [
-            String(group?._id || group?.id || ""),
-            group?.groupName || group?.name || "",
-          ]),
-        ),
-      );
-    } catch (error) {
-      console.error("Error fetching groups:", error);
-    }
-  }, []);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -163,16 +124,6 @@ const PendingLoadingList = () => {
     [allData],
   );
 
-  const groupOptions = useCallback(
-    () =>
-      buildDropdownOptions(
-        allData.map((item) => getGroupName(item, groupMap)).concat(
-          Object.values(groupMap || {}),
-        ),
-      ),
-    [allData, groupMap],
-  );
-
   const filteredData = useCallback(() => {
     let result = [...allData];
     
@@ -187,7 +138,6 @@ const PendingLoadingList = () => {
           item.paymentTerms,
           getSellerName(item),
           getConsigneeDisplay(item),
-          getGroupName(item, groupMap),
         ];
 
         return fields.some((field) => normalizeText(field).includes(searchLower));
@@ -225,14 +175,6 @@ const PendingLoadingList = () => {
           normalizeText(selectedConsignee.value),
       );
     }
-
-    if (selectedGroup?.value) {
-      result = result.filter(
-        (item) =>
-          normalizeText(getGroupName(item, groupMap)) ===
-          normalizeText(selectedGroup.value),
-      );
-    }
     
     if (startDate) {
       const filterDate = new Date(startDate);
@@ -260,10 +202,8 @@ const PendingLoadingList = () => {
     selectedBuyerCompany,
     selectedSellerName,
     selectedConsignee,
-    selectedGroup,
     startDate,
     endDate,
-    groupMap,
   ]);
 
   useEffect(() => {
@@ -276,9 +216,8 @@ const PendingLoadingList = () => {
   }, [filteredData, currentPage, itemsPerPage]);
 
   useEffect(() => {
-    fetchGroupData();
     fetchData();
-  }, [fetchGroupData, fetchData]);
+  }, [fetchData]);
 
   const handleClearFilters = () => {
     setSearchInput("");
@@ -288,7 +227,6 @@ const PendingLoadingList = () => {
     setSelectedSellerCompany(null);
     setSelectedSellerName(null);
     setSelectedConsignee(null);
-    setSelectedGroup(null);
     setCurrentPage(1);
   };
 
@@ -300,7 +238,6 @@ const PendingLoadingList = () => {
     selectedBuyerCompany,
     selectedSellerName,
     selectedConsignee,
-    selectedGroup,
     startDate,
     endDate,
   ]);
@@ -334,7 +271,6 @@ const PendingLoadingList = () => {
           "Seller Name": getSellerName(item) || "N/A",
           "Buyer Company": item.buyerCompany || "N/A",
           "Consignee": getConsigneeDisplay(item),
-          "Group": getGroupName(item, groupMap) || "N/A",
           "Commodity": item.commodity || "N/A",
           "Total Quantity": quantity,
           "Pending Quantity": getLast3Digits(pendingQuantity),
@@ -449,20 +385,6 @@ const PendingLoadingList = () => {
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full bg-blue-500"></span>
-                    Group
-                  </label>
-                  <DataDropdown
-                    options={groupOptions()}
-                    selectedOptions={selectedGroup}
-                    onChange={setSelectedGroup}
-                    placeholder="Select Group"
-                    isMulti={false}
-                    isClearable
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-purple-500"></span>
                     Seller Name
                   </label>
                   <DataDropdown
@@ -476,24 +398,7 @@ const PendingLoadingList = () => {
                 </div>
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-orange-500"></span>
-                    Consignee
-                  </label>
-                  <DataDropdown
-                    options={consigneeOptions()}
-                    selectedOptions={selectedConsignee}
-                    onChange={setSelectedConsignee}
-                    placeholder="Select Consignee"
-                    isMulti={false}
-                    isClearable
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-sky-500"></span>
+                    <span className="w-2 h-2 rounded-full bg-purple-500"></span>
                     Seller Company
                   </label>
                   <DataDropdown
@@ -507,7 +412,7 @@ const PendingLoadingList = () => {
                 </div>
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-fuchsia-500"></span>
+                    <span className="w-2 h-2 rounded-full bg-orange-500"></span>
                     Buyer Company
                   </label>
                   <DataDropdown
@@ -519,9 +424,26 @@ const PendingLoadingList = () => {
                     isClearable
                   />
                 </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-amber-500"></span>
+                    <span className="w-2 h-2 rounded-full bg-sky-500"></span>
+                    Consignee
+                  </label>
+                  <DataDropdown
+                    options={consigneeOptions()}
+                    selectedOptions={selectedConsignee}
+                    onChange={setSelectedConsignee}
+                    placeholder="Select Consignee"
+                    isMulti={false}
+                    isClearable
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-fuchsia-500"></span>
                     Start Date
                   </label>
                   <DateSelector
@@ -531,7 +453,7 @@ const PendingLoadingList = () => {
                 </div>
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-rose-500"></span>
+                    <span className="w-2 h-2 rounded-full bg-amber-500"></span>
                     End Date
                   </label>
                   <DateSelector
