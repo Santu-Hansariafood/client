@@ -606,16 +606,6 @@ const PrintLoadingEntry = async (data) => {
         (s) => String(s.saudaNo) === String(data.saudaNo),
       ) || (saudaData[0] || {});
 
-    console.log('Debug - PrintLoadingEntry:');
-    console.log('data.saudaNo:', data.saudaNo);
-    console.log('saudaDataResponse:', saudaDataResponse);
-    console.log('saudaData:', saudaData);
-    console.log('sauda:', sauda);
-    console.log('All sauda keys:', Object.keys(sauda));
-    console.log('data object:', data);
-    console.log('All data keys:', Object.keys(data));
-    console.log('matchingBuyerCompany:', matchingBuyerCompany);
-
     const shipToCandidates = [
       sauda.consignee,
       sauda.shipTo,
@@ -748,6 +738,16 @@ const PrintLoadingEntry = async (data) => {
         return idMatch || nameMatch;
       }) ||
       null;
+
+    console.log('Debug - PrintLoadingEntry:');
+    console.log('data.saudaNo:', data.saudaNo);
+    console.log('saudaDataResponse:', saudaDataResponse);
+    console.log('saudaData:', saudaData);
+    console.log('sauda:', sauda);
+    console.log('All sauda keys:', Object.keys(sauda));
+    console.log('data object:', data);
+    console.log('All data keys:', Object.keys(data));
+    console.log('matchingBuyerCompany:', matchingBuyerCompany);
 
     const logo64 = await getBase64(logo);
     if (logo64) {
