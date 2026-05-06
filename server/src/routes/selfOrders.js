@@ -128,6 +128,7 @@ router.get("/", async (req, res) => {
       const items = await SelfOrder.find(query)
         .sort({ saudaNo: -1 })
         .populate("supplier", "sellerName")
+        .populate("companyId")
         .lean();
       return res.json(items);
     }
@@ -138,6 +139,7 @@ router.get("/", async (req, res) => {
         .skip((page - 1) * limit)
         .limit(limit)
         .populate("supplier", "sellerName")
+        .populate("companyId")
         .lean();
       const total = await SelfOrder.countDocuments(query);
       return res.json({ data: items, total });
@@ -147,6 +149,7 @@ router.get("/", async (req, res) => {
       .sort({ saudaNo: -1 })
       .limit(100)
       .populate("supplier", "sellerName")
+      .populate("companyId")
       .lean();
     res.json(items);
   } catch (error) {
@@ -250,7 +253,9 @@ router.get("/pending/list", async (req, res) => {
 
 router.get("/:id", async (req, res) => {
   try {
-    const item = await SelfOrder.findById(req.params.id).lean();
+    const item = await SelfOrder.findById(req.params.id)
+      .populate("companyId")
+      .lean();
     if (!item) return res.status(404).json({ message: "Order not found" });
     res.json(item);
   } catch (error) {
