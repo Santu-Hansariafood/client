@@ -977,33 +977,31 @@ const PrintLoadingEntry = async (data) => {
 
     y = consigneeBoxStartY + consigneeBoxHeight + 5;
 
-    // Get buyer information from self order API with complete details
+    // Get buyer information from self order API (use direct fields first)
     const buyerCompany = 
       sauda.buyerCompany ||
-      sauda.companyId?.companyName ||
       sauda.buyerName ||
       sauda.partyName ||
       sauda.customerName ||
+      sauda.companyId?.companyName ||
       (sauda.buyer && typeof sauda.buyer === 'object' ? 
         (sauda.buyer.companyName || sauda.buyer.name) : null) ||
+      data.buyerCompany ||
+      data.buyer ||
       'N/A';
       
-    const buyerAddress = [
-      sauda.companyId?.location,
-      sauda.companyId?.district,
-      sauda.companyId?.state,
-      sauda.companyId?.pinCode
-    ].filter(Boolean).join(', ') || 
+    const buyerAddress = 
       sauda.buyerAddress ||
       sauda.deliveryAddress ||
       (sauda.buyer && typeof sauda.buyer === 'object' ? 
         sauda.buyer.address : null) ||
       sauda.partyAddress ||
       sauda.customerAddress ||
+      [sauda.companyId?.location, sauda.companyId?.district, sauda.companyId?.state, sauda.companyId?.pinCode].filter(Boolean).join(', ') ||
+      data.placeOfDelivery ||
       'N/A';
       
     const buyerGst = 
-      sauda.companyId?.gstNumber ||
       sauda.buyerGstNo ||
       sauda.buyerGstNumber ||
       sauda.buyerGst ||
@@ -1012,10 +1010,10 @@ const PrintLoadingEntry = async (data) => {
       sauda.partyGstNo ||
       sauda.customerGstNo ||
       sauda.gstNo ||
+      sauda.companyId?.gstNumber ||
       '';
       
     const buyerPan = 
-      sauda.companyId?.panNumber ||
       sauda.buyerPanNo ||
       sauda.buyerPanNumber ||
       sauda.buyerPan ||
@@ -1024,6 +1022,7 @@ const PrintLoadingEntry = async (data) => {
       sauda.partyPanNo ||
       sauda.customerPanNo ||
       sauda.panNo ||
+      sauda.companyId?.panNumber ||
       '';
     
     const buyerNameLines = wrapText(buyerCompany, 70, 2);
