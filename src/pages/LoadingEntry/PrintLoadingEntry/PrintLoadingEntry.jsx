@@ -849,17 +849,66 @@ const PrintLoadingEntry = async (data) => {
 
     doc.setLineWidth(0.2);
 
-    // SHIP TO (CONSIGNEE) section now shows Supplier Company details
-    const supplierNameLines = wrapText(sellerCompanyName, 78, 2);
-    const supplierAddrLines = wrapText(sellerFullAddress, 78, 3);
+    let shipToAddress =
+      formatConsigneeAddress(shipToDetails) ||
+      buildAddressFromObject(shipToDetails) ||
+      [
+        sauda.shipToAddress,
+        sauda.consigneeAddress,
+        sauda.deliveryAddress,
+        data.shipToAddress,
+        data.consigneeAddress,
+      ].filter(Boolean)[0] ||
+      "N/A";
+
+    const cAddrLines = wrapText(shipToAddress, 78, 3);
+
+    const consigneeName =
+      shipToDetails.name ||
+      shipToDetails.label ||
+      shipToDetails.consigneeName ||
+      (typeof shipToRaw === "string" ? shipToRaw : "") ||
+      pick(data.consignee);
+
+    const consigneeNameLines = wrapText(consigneeName, 78, 2);
+
+    let shipToMobile =
+      shipToDetails.mobile ||
+      shipToDetails.phone ||
+      shipToDetails.mobileNo ||
+      "N/A";
+
+    if (shipToMobile === "N/A") {
+      const saudaMobileParts = [
+        sauda.shipToMobile,
+        sauda.consigneeMobile,
+        sauda.mobile,
+        sauda.phone,
+      ].filter(Boolean);
+      if (saudaMobileParts.length) shipToMobile = saudaMobileParts[0];
+    }
+    if (shipToMobile === "N/A") shipToMobile = consigneeMobile;
+    if (shipToMobile === "N/A") {
+      const dataMobileParts = [
+        data.consigneeMobile,
+        data.mobile,
+        data.phone,
+      ].filter(Boolean);
+      if (dataMobileParts.length) shipToMobile = dataMobileParts[0];
+    }
+
+    const consigneeGstNo =
+      shipToDetails.gstNo || shipToDetails.gstNumber || shipToDetails.gst || "";
+    const consigneePanNo =
+      shipToDetails.panNo || shipToDetails.panNumber || shipToDetails.pan || "";
 
     const consigneeBoxStartY = y - 5;
     let consigneeBoxHeight = 8;
-    consigneeBoxHeight += Math.max(supplierNameLines.length, 1) * 4;
-    consigneeBoxHeight += Math.max(supplierAddrLines.length, 1) * 4;
+    consigneeBoxHeight += Math.max(consigneeNameLines.length, 1) * 4;
+    consigneeBoxHeight += Math.max(cAddrLines.length, 1) * 4;
     consigneeBoxHeight += 4;
-    if (sellerGstNo) consigneeBoxHeight += 4;
-    if (sellerPanNo) consigneeBoxHeight += 4;
+    if (consigneeGstNo) consigneeBoxHeight += 4;
+    if (consigneePanNo) consigneeBoxHeight += 4;
     consigneeBoxHeight += 7;
 
     doc.rect(
@@ -876,8 +925,8 @@ const PrintLoadingEntry = async (data) => {
     consigneeCurrentY += 5;
 
     consigneeCurrentY += drawLabelValue({
-      label: "Supplier Company:",
-      value: supplierNameLines.join(" "),
+      label: "Consignee:",
+      value: consigneeNameLines.join(" "),
       x: sectionLabelX,
       y: consigneeCurrentY,
       valueX: consigneeValueX,
@@ -887,7 +936,7 @@ const PrintLoadingEntry = async (data) => {
 
     consigneeCurrentY += drawLabelValue({
       label: "Address:",
-      value: supplierAddrLines.join(", "),
+      value: cAddrLines.join(", "),
       x: sectionLabelX,
       y: consigneeCurrentY,
       valueX: consigneeValueX,
@@ -895,10 +944,20 @@ const PrintLoadingEntry = async (data) => {
       maxLines: 3,
     });
 
-    if (sellerGstNo) {
+    consigneeCurrentY += drawLabelValue({
+      label: "Mobile:",
+      value: shipToMobile,
+      x: sectionLabelX,
+      y: consigneeCurrentY,
+      valueX: consigneeValueX,
+      wrapLength: 40,
+      maxLines: 1,
+    });
+
+    if (consigneeGstNo) {
       consigneeCurrentY += drawLabelValue({
         label: "GST:",
-        value: sellerGstNo,
+        value: consigneeGstNo,
         x: sectionLabelX,
         y: consigneeCurrentY,
         valueX: consigneeValueX,
@@ -907,10 +966,10 @@ const PrintLoadingEntry = async (data) => {
       });
     }
 
-    if (sellerPanNo) {
+    if (consigneePanNo) {
       drawLabelValue({
         label: "PAN No:",
-        value: sellerPanNo,
+        value: consigneePanNo,
         x: sectionLabelX,
         y: consigneeCurrentY,
         valueX: consigneeValueX,
@@ -921,70 +980,18 @@ const PrintLoadingEntry = async (data) => {
 
     y = consigneeBoxStartY + consigneeBoxHeight + 5;
 
-    // BUYER ACCOUNT section - show buyer details from self-order API (sauda)
-    const buyerNameFromSauda = 
-      sauda.buyerCompany ||
-      sauda.buyerName ||
-      sauda.partyName ||
-      sauda.customerName ||
-      (sauda.buyer && typeof sauda.buyer === 'object' ? 
-        (sauda.buyer.companyName || sauda.buyer.name) : null) ||
-      data.buyerCompany || 
-      data.buyer || 
-      'N/A';
-
-    const buyerAddressFromSauda = 
-      sauda.buyerAddress ||
-      sauda.deliveryAddress ||
-      (sauda.buyer && typeof sauda.buyer === 'object' ? 
-        sauda.buyer.address : null) ||
-      sauda.partyAddress ||
-      sauda.customerAddress ||
-      data.placeOfDelivery ||
-      'N/A';
-
-    const buyerGstFromSauda = 
-      sauda.buyerGstNo ||
-      sauda.buyerGstNumber ||
-      sauda.buyerGst ||
-      (sauda.buyer && typeof sauda.buyer === 'object' ? 
-        (sauda.buyer.gstNo || sauda.buyer.gstNumber) : null) ||
-      sauda.partyGstNo ||
-      sauda.customerGstNo ||
-      sauda.gstNo ||
-      '';
-
-    const buyerPanFromSauda = 
-      sauda.buyerPanNo ||
-      sauda.buyerPanNumber ||
-      sauda.buyerPan ||
-      (sauda.buyer && typeof sauda.buyer === 'object' ? 
-        (sauda.buyer.panNo || sauda.buyer.panNumber) : null) ||
-      sauda.partyPanNo ||
-      sauda.customerPanNo ||
-      sauda.panNo ||
-      '';
-
-    const buyerStateFromSauda = 
-      sauda.buyerState ||
-      sauda.deliveryState ||
-      (sauda.buyer && typeof sauda.buyer === 'object' ? 
-        sauda.buyer.state : null) ||
-      sauda.partyState ||
-      sauda.customerState ||
-      sauda.state ||
-      data.placeOfDeliveryState ||
-      'N/A';
-
+    // Get the appropriate buyer account details based on selection
+    const buyerAccountDetails = getBuyerAccountDetails(sauda, data, shipToDetails);
+    
     const buyerBoxStartY = y - 5;
-    const buyerNameLines = wrapText(buyerNameFromSauda, 70, 2);
-    const buyerAddrLines = wrapText(buyerAddressFromSauda, 72, 3);
+    const buyerNameLines = wrapText(buyerAccountDetails.name, 70, 2);
+    const buyerAddrLines = wrapText(buyerAccountDetails.address, 72, 3);
 
     let buyerBoxHeight = 8;
     buyerBoxHeight += Math.max(buyerNameLines.length, 1) * 4;
     buyerBoxHeight += Math.max(buyerAddrLines.length, 1) * 4;
-    if (buyerPanFromSauda) buyerBoxHeight += 4;
-    if (buyerGstFromSauda) buyerBoxHeight += 4;
+    if (buyerAccountDetails.panNo) buyerBoxHeight += 4;
+    if (buyerAccountDetails.gstNo) buyerBoxHeight += 4;
     buyerBoxHeight += 7;
 
     doc.rect(
@@ -998,7 +1005,9 @@ const PrintLoadingEntry = async (data) => {
     setBold();
     doc.setFontSize(9);
     
-    doc.text("BUYER ACCOUNT", boxTitleX, buyerCurrentY);
+    // Update title based on what's being shown
+    const buyerAccountTitle = buyerAccountDetails.isConsignee ? "BUYER ACCOUNT (CONSIGNEE)" : "BUYER ACCOUNT";
+    doc.text(buyerAccountTitle, boxTitleX, buyerCurrentY);
     
     buyerCurrentY += 5;
 
@@ -1022,10 +1031,10 @@ const PrintLoadingEntry = async (data) => {
       maxLines: 3,
     });
 
-    if (buyerPanFromSauda) {
+    if (buyerAccountDetails.panNo) {
       buyerCurrentY += drawLabelValue({
         label: "PAN No:",
-        value: buyerPanFromSauda,
+        value: buyerAccountDetails.panNo,
         x: sectionLabelX,
         y: buyerCurrentY,
         valueX: buyerValueX,
@@ -1033,10 +1042,10 @@ const PrintLoadingEntry = async (data) => {
         maxLines: 1,
       });
     }
-    if (buyerGstFromSauda) {
+    if (buyerAccountDetails.gstNo) {
       drawLabelValue({
         label: "GST:",
-        value: buyerGstFromSauda,
+        value: buyerAccountDetails.gstNo,
         x: sectionLabelX,
         y: buyerCurrentY,
         valueX: buyerValueX,
