@@ -980,10 +980,9 @@ const PrintLoadingEntry = async (data) => {
 
     y = consigneeBoxStartY + consigneeBoxHeight + 5;
 
-    // Get buyer information from self order API with company details
-    const buyerCompany = 
+    // Get buyer information directly from self order API (sauda data)
+    const buyerNameFromSauda = 
       sauda.buyerCompany ||
-      sauda.companyId?.companyName ||
       sauda.buyerName ||
       sauda.partyName ||
       sauda.customerName ||
@@ -991,22 +990,7 @@ const PrintLoadingEntry = async (data) => {
         (sauda.buyer.companyName || sauda.buyer.name) : null) ||
       'N/A';
       
-    const buyerAddress = [
-      sauda.companyId?.location,
-      sauda.companyId?.district,
-      sauda.companyId?.state,
-      sauda.companyId?.pinCode
-    ].filter(Boolean).join(', ') || 
-      sauda.buyerAddress ||
-      sauda.deliveryAddress ||
-      (sauda.buyer && typeof sauda.buyer === 'object' ? 
-        sauda.buyer.address : null) ||
-      sauda.partyAddress ||
-      sauda.customerAddress ||
-      'N/A';
-      
-    const buyerGst = 
-      sauda.companyId?.gstNumber ||
+    const buyerGstFromSauda = 
       sauda.buyerGstNo ||
       sauda.buyerGstNumber ||
       sauda.buyerGst ||
@@ -1016,41 +1000,15 @@ const PrintLoadingEntry = async (data) => {
       sauda.customerGstNo ||
       sauda.gstNo ||
       '';
-      
-    const buyerPan = 
-      sauda.companyId?.panNumber ||
-      sauda.buyerPanNo ||
-      sauda.buyerPanNumber ||
-      sauda.buyerPan ||
-      (sauda.buyer && typeof sauda.buyer === 'object' ? 
-        (sauda.buyer.panNo || sauda.buyer.panNumber) : null) ||
-      sauda.partyPanNo ||
-      sauda.customerPanNo ||
-      sauda.panNo ||
-      '';
-      
-    const buyerState = 
-      sauda.companyId?.state ||
-      sauda.buyerState ||
-      sauda.deliveryState ||
-      (sauda.buyer && typeof sauda.buyer === 'object' ? 
-        sauda.buyer.state : null) ||
-      sauda.partyState ||
-      sauda.customerState ||
-      sauda.state ||
-      'N/A';
     
-    const buyerNameLines = wrapText(buyerCompany, 70, 2);
-    const buyerAddrLines = wrapText(buyerAddress, 72, 3);
+    const buyerBoxStartY = y - 5;
+    const buyerNameLines = wrapText(buyerNameFromSauda, 70, 2);
 
     let buyerBoxHeight = 8;
     buyerBoxHeight += Math.max(buyerNameLines.length, 1) * 4;
-    buyerBoxHeight += Math.max(buyerAddrLines.length, 1) * 4;
-    if (buyerGst) buyerBoxHeight += 4;
-    if (buyerPan) buyerBoxHeight += 4;
+    if (buyerGstFromSauda) buyerBoxHeight += 4;
     buyerBoxHeight += 7;
 
-    const buyerBoxStartY = y - 5;
     doc.rect(
       margin + 2,
       buyerBoxStartY,
@@ -1076,32 +1034,10 @@ const PrintLoadingEntry = async (data) => {
       maxLines: 2,
     });
 
-    buyerCurrentY += drawLabelValue({
-      label: "Address:",
-      value: buyerAddrLines.join(", "),
-      x: sectionLabelX,
-      y: buyerCurrentY,
-      valueX: buyerValueX,
-      wrapLength: 62,
-      maxLines: 3,
-    });
-
-    if (buyerPan) {
-      buyerCurrentY += drawLabelValue({
-        label: "PAN No:",
-        value: buyerPan,
-        x: sectionLabelX,
-        y: buyerCurrentY,
-        valueX: buyerValueX,
-        wrapLength: 36,
-        maxLines: 1,
-      });
-    }
-    
-    if (buyerGst) {
+    if (buyerGstFromSauda) {
       drawLabelValue({
         label: "GST:",
-        value: buyerGst,
+        value: buyerGstFromSauda,
         x: sectionLabelX,
         y: buyerCurrentY,
         valueX: buyerValueX,
