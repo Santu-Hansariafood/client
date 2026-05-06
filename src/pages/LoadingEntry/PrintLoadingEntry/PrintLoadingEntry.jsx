@@ -2,14 +2,67 @@ import { jsPDF } from "jspdf";
 import { toast } from "react-toastify";
 import api from "../../../utils/apiClient/apiClient";
 import logo from "../../../assets/Hans.png";
+import {
+  formatDate,
+  pick,
+  setBold,
+  setNormal,
+  getBase64,
+  normalizeText,
+  wrapText,
+  hasValue,
+  pickDisplay,
+  formatMoney,
+  drawLabelValue,
+  buildAddressFromObject,
+  formatConsigneeAddress,
+  firstNonEmpty,
+} from "./utils/pdfUtils";
+import {
+  safeFetch,
+  safeGet,
+} from "./utils/dataFetchers";
+import {
+  extractBuyerInfoFromSauda,
+  extractConsigneeId,
+  extractConsigneeTextValues,
+  isConsigneeAddressLike,
+  pickBestShipToCandidate,
+  deriveShipToSearchKey,
+  findExactConsigneeMatch,
+  resolveConsigneeDetails,
+} from "./utils/dataExtractors";
+import {
+  normalizeLoose,
+  isObjectId,
+  pickBestConsigneeMatch,
+  getAllConsigneeRows,
+  fetchConsigneeBySearch,
+} from "./utils/dataFetchers";
 
-const PrintLoadingEntry = async (data) => {
-  if (!data) {
+const PrintLoadingEntry = async (inputData) => {
+  if (!inputData) {
     toast.error("No data available for PDF generation");
     return null;
   }
 
   try {
+    let entries = Array.isArray(inputData) ? inputData : [inputData];
+    const firstEntry = entries[0];
+    const saudaNo = firstEntry.saudaNo;
+
+    if (!Array.isArray(inputData) && saudaNo) {
+      try {
+        const res = await api.get(`/loading-entries/sauda/${saudaNo}`);
+        const fetchedEntries = Array.isArray(res.data) ? res.data : [];
+        if (fetchedEntries.length > 0) {
+          entries = fetchedEntries;
+        }
+      } catch (err) {
+        console.error("Error fetching entries by sauda number:", err);
+      }
+    }
+
     const doc = new jsPDF({
       orientation: "portrait",
       unit: "mm",
@@ -20,582 +73,18 @@ const PrintLoadingEntry = async (data) => {
     const pageHeight = doc.internal.pageSize.height;
     const margin = 14;
 
-    const formatDate = (date) => {
-      const d = new Date(date);
-      return isNaN(d)
-        ? "N/A"
-        : d.toLocaleDateString("en-IN", {
-            day: "2-digit",
-            month: "2-digit",
-            year: "numeric",
-          });
-    };
-
-    const pick = (v) => v || "N/A";
-
-    const setBold = () => doc.setFont("helvetica", "bold");
-    const setNormal = () => doc.setFont("helvetica", "normal");
-
-    const getBase64 = (img) =>
-      new Promise((resolve) => {
-        const image = new Image();
-        image.src = img;
-        image.crossOrigin = "Anonymous";
-        image.onload = () => {
-          const canvas = document.createElement("canvas");
-          canvas.width = image.width;
-          canvas.height = image.height;
-          const ctx = canvas.getContext("2d");
-          ctx.drawImage(image, 0, 0);
-          resolve(canvas.toDataURL("image/png"));
-        };
-        image.onerror = () => resolve(null);
-      });
-
-    const safeFetch = async (url) => {
-      try {
-        const res = await api.get(url);
-        return res.data?.data || res.data || [];
-      } catch {
-        return [];
-      }
-    };
-
-    const safeGet = async (url) => {
-      try {
-        const res = await api.get(url);
-        return res.data?.data || res.data || null;
-      } catch {
-        return null;
-      }
-    };
-
-    const normalizeText = (value) =>
-      String(value || "")
-        .trim()
-        .toLowerCase();
-
-    // Enhanced function to extract buyer info from sauda data
-    const extractBuyerInfoFromSauda = (saudaData) => {
-      if (!saudaData || typeof saudaData !== 'object') return {};
-      
-      // Try multiple possible buyer name fields
-      const buyerName = 
-        saudaData.buyerCompany ||
-        saudaData.buyerName ||
-        saudaData.partyName ||
-        saudaData.customerName ||
-        (saudaData.buyer && typeof saudaData.buyer === 'object' ? 
-          (saudaData.buyer.companyName || saudaData.buyer.name) : null) ||
-        null;
-
-      // Try multiple possible buyer address fields
-      const buyerAddress = 
-        saudaData.buyerAddress ||
-        saudaData.deliveryAddress ||
-        (saudaData.buyer && typeof saudaData.buyer === 'object' ? 
-          saudaData.buyer.address : null) ||
-        saudaData.partyAddress ||
-        saudaData.customerAddress ||
-        null;
-
-      // Try multiple possible buyer GST fields
-      const buyerGst = 
-        saudaData.buyerGstNo ||
-        saudaData.buyerGstNumber ||
-        saudaData.buyerGst ||
-        (saudaData.buyer && typeof saudaData.buyer === 'object' ? 
-          (saudaData.buyer.gstNo || saudaData.buyer.gstNumber) : null) ||
-        saudaData.partyGstNo ||
-        saudaData.customerGstNo ||
-        saudaData.gstNo ||
-        null;
-
-      // Try multiple possible buyer PAN fields
-      const buyerPan = 
-        saudaData.buyerPanNo ||
-        saudaData.buyerPanNumber ||
-        saudaData.buyerPan ||
-        (saudaData.buyer && typeof saudaData.buyer === 'object' ? 
-          (saudaData.buyer.panNo || saudaData.buyer.panNumber) : null) ||
-        saudaData.partyPanNo ||
-        saudaData.customerPanNo ||
-        saudaData.panNo ||
-        null;
-
-      // Try multiple possible buyer state fields
-      const buyerState = 
-        saudaData.buyerState ||
-        saudaData.deliveryState ||
-        (saudaData.buyer && typeof saudaData.buyer === 'object' ? 
-          saudaData.buyer.state : null) ||
-        saudaData.partyState ||
-        saudaData.customerState ||
-        saudaData.state ||
-        null;
-
-      return {
-        buyerName,
-        buyerAddress,
-        buyerGst,
-        buyerPan,
-        buyerState
-      };
-    };
-
-    // Function to determine if we should show consignee details in buyer account
-    const shouldShowConsigneeInBuyerAccount = (saudaData) => {
-      // Check if consignee is explicitly selected or if buyer is same as consignee
-      if (!saudaData) return false;
-      
-      // If there's an explicit selection indicator in the data
-      if (saudaData.selectedPartyType === 'consignee') return true;
-      if (saudaData.selectedPartyType === 'buyer') return false;
-      
-      // Check if consignee details are more complete than buyer details
-      const saudaBuyerInfo = extractBuyerInfoFromSauda(saudaData);
-      const hasCompleteConsignee = saudaData.consignee && 
-        (typeof saudaData.consignee === 'object' ? 
-          (saudaData.consignee.name || saudaData.consignee.companyName) :
-          true);
-      
-      const hasCompleteBuyer = saudaBuyerInfo.buyerName;
-      
-      // If consignee is more complete, show consignee in buyer account
-      if (hasCompleteConsignee && !hasCompleteBuyer) return true;
-      
-      // Check if consignee and buyer are the same
-      if (hasCompleteConsignee && hasCompleteBuyer) {
-        const consigneeName = typeof saudaData.consignee === 'object' ? 
-          (saudaData.consignee.name || saudaData.consignee.companyName) :
-          saudaData.consignee;
-        
-        if (consigneeName && saudaBuyerInfo.buyerName && 
-            normalizeText(consigneeName) === normalizeText(saudaBuyerInfo.buyerName)) {
-          return true; // Same entity, can show consignee details
-        }
-      }
-      
-      return false;
-    };
-
-    // Function to get the appropriate details for buyer account section
-    const getBuyerAccountDetails = (saudaData, loadingEntryData, shipToDetails) => {
-      const shouldShowConsignee = shouldShowConsigneeInBuyerAccount(saudaData, loadingEntryData);
-      
-      if (shouldShowConsignee && shipToDetails) {
-        // Show consignee details in buyer account
-        return {
-          name: shipToDetails.name || shipToDetails.label || shipToDetails.consigneeName || 'N/A',
-          address: formatConsigneeAddress(shipToDetails) || buildAddressFromObject(shipToDetails) || 'N/A',
-          gstNo: shipToDetails.gstNo || shipToDetails.gstNumber || shipToDetails.gst || '',
-          panNo: shipToDetails.panNo || shipToDetails.panNumber || shipToDetails.pan || '',
-          state: shipToDetails.state || 'N/A',
-          isConsignee: true
-        };
-      } else {
-        // Show buyer details in buyer account
-        const saudaBuyerInfo = extractBuyerInfoFromSauda(saudaData);
-        return {
-          name: saudaBuyerInfo.buyerName || 
-                (matchingBuyerCompany?.companyName) || 
-                data.buyerCompany || 
-                data.buyer || 
-                'N/A',
-          address: saudaBuyerInfo.buyerAddress || 
-                  (matchingBuyerCompany ? 
-                    buildAddressFromObject(matchingBuyerCompany) || 
-                    [matchingBuyerCompany.district, matchingBuyerCompany.state].filter(Boolean).join(", ") :
-                    data.placeOfDelivery) || 
-                  'N/A',
-          gstNo: saudaBuyerInfo.buyerGst || 
-                (matchingBuyerCompany?.gstNo || matchingBuyerCompany?.gstNumber || matchingBuyerCompany?.gst) || 
-                '',
-          panNo: saudaBuyerInfo.buyerPan || 
-                (matchingBuyerCompany?.panNo || matchingBuyerCompany?.panNumber || matchingBuyerCompany?.pan) || 
-                '',
-          state: saudaBuyerInfo.buyerState || 
-                (matchingBuyerCompany?.state) || 
-                data.placeOfDeliveryState || 
-                'N/A',
-          isConsignee: false
-        };
-      }
-    };
-
-    const normalizeLoose = (value) =>
-      String(value || "")
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, " ")
-        .trim()
-        .replace(/\s+/g, " ");
-
-    const isObjectId = (value) =>
-      /^[a-f\d]{24}$/i.test(String(value || "").trim());
-
-    const extractConsigneeId = (candidate) => {
-      if (!candidate) return "";
-      if (typeof candidate === "string") {
-        return isObjectId(candidate) ? candidate.trim() : "";
-      }
-      if (typeof candidate !== "object") return "";
-      const nestedValue = candidate.value;
-      const direct =
-        candidate._id ||
-        candidate.id ||
-        (typeof nestedValue === "string" ? nestedValue : "") ||
-        (nestedValue && typeof nestedValue === "object"
-          ? nestedValue._id || nestedValue.id || ""
-          : "");
-      return isObjectId(direct) ? String(direct) : "";
-    };
-
-    const extractConsigneeTextValues = (candidate) => {
-      if (!candidate) return [];
-
-      if (typeof candidate === "string") {
-        const text = candidate.trim();
-        return text ? [text] : [];
-      }
-
-      if (typeof candidate !== "object") return [];
-
-      const nestedValue = candidate.value;
-      const values = [
-        candidate.name,
-        candidate.label,
-        candidate.consigneeName,
-        candidate.displayName,
-        typeof nestedValue === "string" ? nestedValue : "",
-        nestedValue && typeof nestedValue === "object" ? nestedValue.name : "",
-        nestedValue && typeof nestedValue === "object" ? nestedValue.label : "",
-        nestedValue && typeof nestedValue === "object"
-          ? nestedValue.consigneeName
-          : "",
-      ]
-        .map((value) => String(value || "").trim())
-        .filter(Boolean);
-
-      return Array.from(new Set(values));
-    };
-
-    const isConsigneeAddressLike = (details) =>
-      Boolean(
-        details &&
-        typeof details === "object" &&
-        (details.address ||
-          details.location ||
-          details.district ||
-          details.state ||
-          details.pin ||
-          details.pinNo ||
-          details.pincode ||
-          details.pinCode),
-      );
-
-    const firstNonEmpty = (...values) => {
-      for (const v of values) {
-        if (!v) continue;
-        if (typeof v === "string") {
-          const trimmed = v.trim();
-          if (trimmed) return trimmed;
-          continue;
-        }
-        return v;
-      }
-      return null;
-    };
-
-    const pickBestShipToCandidate = (candidates) => {
-      const list = (candidates || []).filter(Boolean);
-      const withId = list.find((c) => Boolean(extractConsigneeId(c)));
-      if (withId) return withId;
-      const withAddress = list.find((c) => isConsigneeAddressLike(c));
-      if (withAddress) return withAddress;
-      return firstNonEmpty(...list);
-    };
-
-    const deriveShipToSearchKey = (raw) => {
-      if (!raw) return "";
-      let text = "";
-      if (typeof raw === "string") {
-        text = raw;
-      } else if (typeof raw === "object") {
-        const nested = raw.value;
-        text =
-          raw.name ||
-          raw.label ||
-          raw.consigneeName ||
-          (typeof nested === "string" ? nested : "") ||
-          "";
-      }
-      text = String(text || "").trim();
-      if (!text) return "";
-      const beforeDash = text.split("-")[0]?.trim();
-      return beforeDash || text;
-    };
-
-    const pickBestConsigneeMatch = (rows, key) => {
-      const needle = normalizeLoose(key);
-      if (!needle) return null;
-      const needleTokens = new Set(needle.split(" ").filter(Boolean));
-      let best = null;
-      let bestScore = -1;
-      for (const row of rows || []) {
-        const hay = normalizeLoose(row?.name);
-        if (!hay) continue;
-        let score = 0;
-        if (hay === needle) score = 100;
-        else if (hay.includes(needle) || needle.includes(hay)) score = 85;
-        else {
-          const hayTokens = hay.split(" ").filter(Boolean);
-          const common = hayTokens.reduce(
-            (acc, t) => acc + (needleTokens.has(t) ? 1 : 0),
-            0,
-          );
-          score = (common / Math.max(1, needleTokens.size)) * 70;
-        }
-        if (score > bestScore) {
-          bestScore = score;
-          best = row;
-        }
-      }
-      return bestScore >= 40 ? best : null;
-    };
-
-    const findExactConsigneeMatch = (rows, candidate) => {
-      const exactId = extractConsigneeId(candidate);
-      if (exactId) {
-        const byId = (rows || []).find(
-          (row) => String(row?._id || row?.id || "") === String(exactId),
-        );
-        if (byId) return byId;
-      }
-
-      const exactTexts = new Set(
-        extractConsigneeTextValues(candidate).map((value) => normalizeLoose(value)),
-      );
-      if (!exactTexts.size) return null;
-
-      return (
-        (rows || []).find((row) =>
-          [
-            row?.name,
-            row?.label,
-            row?.consigneeName,
-            row?.displayName,
-            row?.address,
-          ]
-            .map((value) => normalizeLoose(value))
-            .some((value) => value && exactTexts.has(value)),
-        ) || null
-      );
-    };
-
-    const fetchConsigneePages = async ({ search = "" } = {}) => {
-      const limit = 200;
-      const maxPages = 100;
-      const rows = [];
-      const seenIds = new Set();
-
-      for (let page = 1; page <= maxPages; page += 1) {
-        try {
-          const query = new URLSearchParams({
-            page: String(page),
-            limit: String(limit),
-          });
-          if (search) query.set("search", search);
-
-          const res = await api.get(`/consignees?${query.toString()}`);
-          const payload = res.data || {};
-          const pageRows = Array.isArray(payload?.data) ? payload.data : [];
-
-          pageRows.forEach((row) => {
-            const rowId = String(row?._id || "");
-            const dedupeKey = rowId || JSON.stringify(row);
-            if (seenIds.has(dedupeKey)) return;
-            seenIds.add(dedupeKey);
-            rows.push(row);
-          });
-
-          const pages = Number(payload?.pages || 0);
-          if (pages && page >= pages) break;
-          if (pageRows.length === 0 || pageRows.length < limit) break;
-        } catch {
-          break;
-        }
-      }
-
-      return rows;
-    };
-
-    let allConsigneeRowsPromise = null;
-    const getAllConsigneeRows = async () => {
-      if (!allConsigneeRowsPromise) {
-        allConsigneeRowsPromise = fetchConsigneePages();
-      }
-      return allConsigneeRowsPromise;
-    };
-
-    const fetchConsigneeById = async (id) => {
-      if (!isObjectId(id)) return null;
-      const direct = await safeGet(`/consignees/${id}`);
-      if (direct && typeof direct === "object") return direct;
-
-      const allRows = await getAllConsigneeRows();
-      return (
-        allRows.find((consignee) => String(consignee?._id) === String(id)) ||
-        null
-      );
-    };
-
-    const fetchConsigneeBySearch = async (key) => {
-      if (!key) return null;
-
-      const searchedRows = await fetchConsigneePages({ search: key });
-      const searchedMatch = pickBestConsigneeMatch(searchedRows, key);
-      if (searchedMatch) return searchedMatch;
-
-      const allRows = await getAllConsigneeRows();
-      return pickBestConsigneeMatch(allRows, key);
-    };
-
-    const resolveConsigneeDetails = async (candidates) => {
-      const list = (Array.isArray(candidates) ? candidates : [candidates]).filter(
-        Boolean,
-      );
-
-      for (const candidate of list) {
-        const id = extractConsigneeId(candidate);
-        if (!id) continue;
-        const byId = await fetchConsigneeById(id);
-        if (byId) return byId;
-      }
-
-      const allRows = await getAllConsigneeRows();
-      for (const candidate of list) {
-        const exactMatch = findExactConsigneeMatch(allRows, candidate);
-        if (exactMatch) return exactMatch;
-      }
-
-      for (const candidate of list) {
-        const searchKeys = extractConsigneeTextValues(candidate);
-        for (const key of searchKeys) {
-          const bySearch = await fetchConsigneeBySearch(key);
-          if (bySearch) return bySearch;
-        }
-      }
-
-      return null;
-    };
-
-    const wrapText = (text, maxLength, maxLines = 3) => {
-      if (!text) return [""];
-      const words = text.split(" ");
-      const lines = [];
-      let currentLine = "";
-      words.forEach((word) => {
-        const testLine = currentLine ? `${currentLine} ${word}` : word;
-        if (testLine.length > maxLength) {
-          if (currentLine) lines.push(currentLine);
-          currentLine = word;
-          if (lines.length >= maxLines - 1 && maxLines > 1) {
-            currentLine = currentLine.substring(0, maxLength - 3) + "...";
-            lines.push(currentLine);
-            currentLine = "";
-          }
-        } else {
-          currentLine = testLine;
-        }
-      });
-      if (currentLine && lines.length < maxLines) lines.push(currentLine);
-      if (lines.length === 0) lines.push("");
-      return lines;
-    };
-
-    const hasValue = (value) =>
-      value !== undefined &&
-      value !== null &&
-      String(value).trim() !== "" &&
-      String(value).trim().toLowerCase() !== "n/a";
-
-    const pickDisplay = (value, fallback = "N/A") =>
-      hasValue(value) ? String(value).trim() : fallback;
-
-    const formatMoney = (value) =>
-      hasValue(value) ? `Rs. ${Number(value).toLocaleString("en-IN")}` : "N/A";
-
-    const drawLabelValue = ({
-      label,
-      value,
-      x,
-      y,
-      valueX,
-      labelWidth,
-      wrapLength = 60,
-      maxLines = 2,
-      lineHeight = 4,
-    }) => {
-      const lines = wrapText(pickDisplay(value), wrapLength, maxLines);
-      const resolvedValueX = valueX ?? x + (labelWidth || 18);
-      setBold();
-      doc.text(label, x, y);
-      setNormal();
-      lines.forEach((line, index) => {
-        doc.text(line, resolvedValueX, y + index * lineHeight);
-      });
-      return Math.max(lines.length, 1) * lineHeight;
-    };
-
-    const buildAddressFromObject = (obj) => {
-      if (!obj || typeof obj !== "object") return "";
-      return [
-        obj.address,
-        obj.location,
-        obj.city,
-        obj.district,
-        obj.state,
-        obj.pin || obj.pincode || obj.pinNo || obj.pinCode,
-      ]
-        .filter(Boolean)
-        .join(", ");
-    };
-
-    const formatConsigneeAddress = (details) => {
-      if (!details || typeof details !== "object") return "";
-      const base = details.address || details.location || "";
-      const district = details.district || "";
-      const state = details.state || "";
-      const pin =
-        details.pin ||
-        details.pinNo ||
-        details.pincode ||
-        details.pinCode ||
-        "";
-      const place = [district, state].filter(Boolean).join(", ");
-      let out = "";
-      if (base) out = base;
-      if (place) out = out ? `${out}, ${place}` : place;
-      if (pin) out = out ? `${out} - ${pin}` : pin;
-      return out;
-    };
-
     const [
       sellers,
       sellerCompanies,
       buyers,
       companies,
       saudaDataResponse,
-      transporterDetails,
     ] = await Promise.all([
       safeFetch("/sellers?limit=0"),
       safeFetch("/seller-company?limit=0"),
       safeFetch("/buyers?limit=0"),
       safeFetch("/companies?limit=0"),
-      safeFetch(`/self-order?saudaNo=${encodeURIComponent(data.saudaNo)}`),
-      data?.transporterId
-        ? safeGet(`/transporters/${data.transporterId}`)
-        : Promise.resolve(null),
+      safeFetch(`/self-order?saudaNo=${encodeURIComponent(firstEntry.saudaNo)}`),
     ]);
 
     const saudaData = Array.isArray(saudaDataResponse)
@@ -603,13 +92,13 @@ const PrintLoadingEntry = async (data) => {
       : saudaDataResponse?.data || [];
     const sauda =
       (saudaData || []).find(
-        (s) => String(s.saudaNo) === String(data.saudaNo),
+        (s) => String(s.saudaNo) === String(firstEntry.saudaNo),
       ) || (saudaData[0] || {});
 
     const shipToCandidates = [
       sauda.consignee,
       sauda.shipTo,
-      data.consignee,
+      firstEntry.consignee,
     ].filter(Boolean);
 
     const shipToRaw = pickBestShipToCandidate(shipToCandidates);
@@ -628,23 +117,14 @@ const PrintLoadingEntry = async (data) => {
       shipToDetails.phone ||
       shipToDetails.mobile ||
       shipToDetails.mobileNo ||
-      data.consigneeMobile ||
+      firstEntry.consigneeMobile ||
       "N/A";
 
     const consigneeState = shipToDetails.state || "N/A";
 
-    const transporter =
-      transporterDetails && typeof transporterDetails === "object"
-        ? transporterDetails
-        : {};
-    const displayTransporterName = String(
-      transporter.name || data.addedTransport || "N/A",
-    );
-    const displayTransporterAddress = String(transporter.address || "N/A");
-
-    const supplierCompanyNameNormalized = normalizeText(data.supplierCompany);
+    const supplierCompanyNameNormalized = normalizeText(firstEntry.supplierCompany);
     const matchingSeller =
-      (sellers || []).find((s) => String(s._id) === String(data.supplier)) ||
+      (sellers || []).find((s) => String(s._id) === String(firstEntry.supplier)) ||
       (sellers || []).find(
         (s) => normalizeText(s.sellerName) === supplierCompanyNameNormalized,
       ) ||
@@ -699,14 +179,14 @@ const PrintLoadingEntry = async (data) => {
         ]
           .filter(Boolean)
           .join(", ")
-      : data.supplierAddress ||
+      : firstEntry.supplierAddress ||
         [sauda.location, sauda.state].filter(Boolean).join(", ") ||
-        data.from ||
+        firstEntry.from ||
         "N/A";
 
     const sellerState = matchingSellerCompany?.state || sauda.state || "N/A";
 
-    const rawBuyerKey = data?.buyerCompany ?? data?.buyer ?? "";
+    const rawBuyerKey = firstEntry?.buyerCompany ?? firstEntry?.buyer ?? "";
     const normalizedBuyerKey = normalizeText(rawBuyerKey);
 
     const matchingBuyerCompany =
@@ -744,20 +224,20 @@ const PrintLoadingEntry = async (data) => {
       doc.addImage(logo64, "PNG", pageWidth - margin - 35, 12, 30, 22);
     }
 
-    const sellerCompanyName = data?.supplierCompany || "N/A";
-    const vendorCode = matchingSeller?.vendorCode || data?.vendorCode || "";
+    const sellerCompanyName = firstEntry?.supplierCompany || "N/A";
+    const vendorCode = matchingSeller?.vendorCode || firstEntry?.vendorCode || "";
     const textStartX = margin + 5;
 
-    setBold();
+    setBold(doc);
     doc.setFontSize(15);
     doc.text(`${sellerCompanyName.toUpperCase()}`, textStartX, 17);
     if (vendorCode) {
-      setNormal();
+      setNormal(doc);
       doc.setFontSize(9);
       doc.text(`(Vendor Code: ${vendorCode})`, textStartX, 21);
     }
 
-    setNormal();
+    setNormal(doc);
     doc.setFontSize(8.5);
     const merchantTextY = vendorCode ? 23 : 20;
 
@@ -772,7 +252,7 @@ const PrintLoadingEntry = async (data) => {
       doc.text(`${sellerTaxLabel}: ${sellerTaxNumber}`, textStartX, taxY);
     }
 
-    setBold();
+    setBold(doc);
     doc.setFontSize(13);
     doc.text("LORRY CHALLAN", pageWidth / 2, 45, { align: "center" });
 
@@ -813,33 +293,33 @@ const PrintLoadingEntry = async (data) => {
     );
     doc.setFontSize(9);
 
-    setBold();
+    setBold(doc);
     doc.text(`HFPL Sauda No:`, headerLeftLabelX, y);
-    setNormal();
-    doc.text(`${pick(data.saudaNo)}`, headerLeftValueX, y);
+    setNormal(doc);
+    doc.text(`${pick(firstEntry.saudaNo)}`, headerLeftValueX, y);
 
-    setBold();
+    setBold(doc);
     doc.text(`Buyer Po No:`, headerRightLabelX, y);
-    setNormal();
-    doc.text(`${pick(sauda.poNumber || data.poNumber)}`, headerRightValueX, y);
+    setNormal(doc);
+    doc.text(`${pick(sauda.poNumber || firstEntry.poNumber)}`, headerRightValueX, y);
 
     y += 7;
 
-    setBold();
+    setBold(doc);
     doc.text(`Challan No:`, headerLeftLabelX, y);
-    setNormal();
-    doc.text(`${pick(data.billNumber)}`, headerLeftValueX, y);
+    setNormal(doc);
+    doc.text(`${pick(firstEntry.billNumber)}`, headerLeftValueX, y);
 
-    setBold();
+    setBold(doc);
     doc.text(`Date:`, headerRightLabelX, y);
-    setNormal();
-    doc.text(`${formatDate(data.loadingDate)}`, headerRightValueX, y);
+    setNormal(doc);
+    doc.text(`${formatDate(firstEntry.loadingDate)}`, headerRightValueX, y);
 
     y += 7;
 
-    setBold();
+    setBold(doc);
     doc.text(`Broker:`, headerLeftLabelX, y);
-    setNormal();
+    setNormal(doc);
     doc.text(`Hansaria Food Private Limited`, headerLeftValueX, y);
 
     y = headerBoxStartY + headerBoxHeight + 5;
@@ -916,12 +396,13 @@ const PrintLoadingEntry = async (data) => {
     );
 
     let consigneeCurrentY = consigneeBoxStartY + 5;
-    setBold();
+    setBold(doc);
     doc.setFontSize(9);
     doc.text("SHIP TO (CONSIGNEE)", boxTitleX, consigneeCurrentY);
     consigneeCurrentY += 5;
 
     consigneeCurrentY += drawLabelValue({
+      doc,
       label: "Consignee:",
       value: consigneeNameLines.join(" "),
       x: sectionLabelX,
@@ -932,6 +413,7 @@ const PrintLoadingEntry = async (data) => {
     });
 
     consigneeCurrentY += drawLabelValue({
+      doc,
       label: "Address:",
       value: cAddrLines.join(", "),
       x: sectionLabelX,
@@ -942,6 +424,7 @@ const PrintLoadingEntry = async (data) => {
     });
 
     consigneeCurrentY += drawLabelValue({
+      doc,
       label: "Mobile:",
       value: shipToMobile,
       x: sectionLabelX,
@@ -953,6 +436,7 @@ const PrintLoadingEntry = async (data) => {
 
     if (consigneeGstNo) {
       consigneeCurrentY += drawLabelValue({
+        doc,
         label: "GST:",
         value: consigneeGstNo,
         x: sectionLabelX,
@@ -965,6 +449,7 @@ const PrintLoadingEntry = async (data) => {
 
     if (consigneePanNo) {
       drawLabelValue({
+        doc,
         label: "PAN No:",
         value: consigneePanNo,
         x: sectionLabelX,
@@ -1028,14 +513,15 @@ const PrintLoadingEntry = async (data) => {
     );
 
     let buyerCurrentY = buyerBoxStartY + 5;
-    setBold();
+    setBold(doc);
     doc.setFontSize(9);
-    
+
     doc.text("BUYER ACCOUNT", boxTitleX, buyerCurrentY);
-    
+
     buyerCurrentY += 5;
 
     buyerCurrentY += drawLabelValue({
+      doc,
       label: "Buyer Company:",
       value: buyerNameLines.join(" "),
       x: sectionLabelX,
@@ -1046,6 +532,7 @@ const PrintLoadingEntry = async (data) => {
     });
 
     buyerCurrentY += drawLabelValue({
+      doc,
       label: "Address:",
       value: buyerAddrLines.join(", "),
       x: sectionLabelX,
@@ -1057,6 +544,7 @@ const PrintLoadingEntry = async (data) => {
 
     if (buyerPan) {
       buyerCurrentY += drawLabelValue({
+        doc,
         label: "PAN No:",
         value: buyerPan,
         x: sectionLabelX,
@@ -1066,9 +554,10 @@ const PrintLoadingEntry = async (data) => {
         maxLines: 1,
       });
     }
-    
+
     if (buyerGst) {
       drawLabelValue({
+        doc,
         label: "GST:",
         value: buyerGst,
         x: sectionLabelX,
@@ -1081,158 +570,186 @@ const PrintLoadingEntry = async (data) => {
 
     y = buyerBoxStartY + buyerBoxHeight + 5;
 
-    const goodsBoxStartY = y - 5;
-    const commodityLines = wrapText(pick(data.commodity), 55, 2);
-    const goodsBoxHeight = 14 + Math.max(commodityLines.length - 1, 0) * 4;
-    doc.rect(
-      margin + 2,
-      goodsBoxStartY,
-      pageWidth - margin * 2 - 4,
-      goodsBoxHeight,
-    );
-    setBold();
-    doc.setFontSize(9);
-    doc.text(`DESCRIPTION OF GOODS`, boxTitleX, y);
+    const checkAddPage = (requiredHeight) => {
+      if (y + requiredHeight > pageHeight - margin - 50) {
+        doc.addPage();
+        y = margin + 20;
+      }
+    };
 
-    const goodsContentY = y + 4;
-    setBold();
-    doc.text(`Item:`, sectionLabelX, goodsContentY);
-    setNormal();
-    commodityLines.forEach((line, idx) => {
-      doc.text(line, goodsItemValueX, goodsContentY + idx * 4);
-    });
+    for (let i = 0; i < entries.length; i++) {
+      const entry = entries[i];
 
-    const goodsMetaY =
-      goodsContentY + Math.max(commodityLines.length - 1, 0) * 4;
-    setBold();
-    doc.text(`Bags:`, goodsMetaLabelX, goodsMetaY);
-    setNormal();
-    doc.text(`${pick(data.bags)}`, goodsMetaValueX, goodsMetaY);
-    setBold();
-    doc.text(`Weight:`, goodsWeightLabelX, goodsMetaY);
-    setNormal();
-    doc.text(
-      hasValue(data.loadingWeight) ? `${data.loadingWeight} Tons` : "N/A",
-      goodsWeightValueX,
-      goodsMetaY,
-    );
+      let transporterDetails = null;
+      if (entry.transporterId) {
+        try {
+          transporterDetails = await safeGet(`/transporters/${entry.transporterId}`);
+        } catch (err) {
+          console.error("Error fetching transporter details:", err);
+        }
+      }
+      const transporter =
+        transporterDetails && typeof transporterDetails === "object"
+          ? transporterDetails
+          : {};
+      const displayTransporterName = String(
+        transporter.name || entry.addedTransport || "N/A",
+      );
+      const displayTransporterAddress = String(transporter.address || "N/A");
 
-    y = goodsBoxStartY + goodsBoxHeight + 5;
+      setBold(doc);
+      doc.setFontSize(10);
+      doc.text(`Entry #${i + 1}`, boxTitleX, y);
+      y += 5;
 
-    const transporterLines = wrapText(displayTransporterName, 68, 2);
-    const lorryNo = pickDisplay(data.lorryNumber).toUpperCase();
-    const driverLine = pickDisplay(data.driverName);
-    const driverMobileLine = pickDisplay(data.driverPhoneNumber);
-    const tAddrLines = wrapText(displayTransporterAddress, 66, 3);
-    const routeBoxStartY = y - 5;
+      const entryBoxStartY = y - 5;
+      let entryBoxHeight = 10;
 
-    let routeBoxHeight = 8;
-    routeBoxHeight += 4;
-    routeBoxHeight += Math.max(transporterLines.length, 1) * 4;
-    routeBoxHeight += 4;
-    routeBoxHeight += 4;
-    routeBoxHeight += Math.max(tAddrLines.length, 1) * 4;
-    routeBoxHeight += 7;
+      const commodityLines = wrapText(pick(entry.commodity), 55, 2);
+      entryBoxHeight += 14 + Math.max(commodityLines.length - 1, 0) * 4 + 5;
 
-    doc.rect(
-      margin + 2,
-      routeBoxStartY,
-      pageWidth - margin * 2 - 4,
-      routeBoxHeight,
-    );
+      const transporterLines = wrapText(displayTransporterName, 68, 2);
+      const lorryNo = pickDisplay(entry.lorryNumber).toUpperCase();
+      const driverLine = pickDisplay(entry.driverName);
+      const driverMobileLine = pickDisplay(entry.driverPhoneNumber);
+      const tAddrLines = wrapText(displayTransporterAddress, 66, 3);
+      entryBoxHeight += 8 + 4 + Math.max(transporterLines.length, 1) * 4 + 4 + 4 + Math.max(tAddrLines.length, 1) * 4 + 7 + 5;
 
-    let routeCurrentY = routeBoxStartY + 5;
-    setBold();
-    doc.setFontSize(9);
-    doc.text(`ROUTE & VEHICLE DETAILS`, boxTitleX, routeCurrentY);
-    routeCurrentY += 5;
+      entryBoxHeight += 18 + 5;
 
-    setBold();
-    doc.text(`From:`, sectionLabelX, routeCurrentY);
-    setNormal();
-    doc.text(`${sellerState}`, routeValueX, routeCurrentY);
-    setBold();
-    doc.text(`To:`, goodsMetaLabelX, routeCurrentY);
-    setNormal();
-    doc.text(`${consigneeState}`, goodsMetaValueX, routeCurrentY);
-    routeCurrentY += 5;
+      checkAddPage(entryBoxHeight);
 
-    setBold();
-    doc.text(`Transporter:`, sectionLabelX, routeCurrentY);
-    setNormal();
-    transporterLines.forEach((line, idx) => {
-      doc.text(line, routeValueX, routeCurrentY + idx * 4);
-    });
-    routeCurrentY += Math.max(transporterLines.length, 1) * 4;
+      const currentEntryBoxStartY = y - 5;
+      doc.rect(
+        margin + 2,
+        currentEntryBoxStartY,
+        pageWidth - margin * 2 - 4,
+        entryBoxHeight,
+      );
 
-    setBold();
-    doc.text(`Lorry No:`, sectionLabelX, routeCurrentY);
-    setNormal();
-    doc.text(lorryNo, routeValueX, routeCurrentY);
-    routeCurrentY += 4;
+      const goodsBoxTitleY = y;
+      const goodsBoxStartYForEntry = goodsBoxTitleY - 5;
+      setBold(doc);
+      doc.setFontSize(9);
+      doc.text(`DESCRIPTION OF GOODS`, boxTitleX, goodsBoxTitleY);
 
-    setBold();
-    doc.text(`Driver:`, sectionLabelX, routeCurrentY);
-    setNormal();
-    doc.text(driverLine, routeValueX, routeCurrentY);
-    setBold();
-    doc.text(`Mob:`, routeRightLabelX, routeCurrentY);
-    setNormal();
-    doc.text(driverMobileLine, routeRightValueX, routeCurrentY);
-    routeCurrentY += 4;
+      const goodsContentY = goodsBoxTitleY + 4;
+      setBold(doc);
+      doc.text(`Item:`, sectionLabelX, goodsContentY);
+      setNormal(doc);
+      commodityLines.forEach((line, idx) => {
+        doc.text(line, goodsItemValueX, goodsContentY + idx * 4);
+      });
 
-    setBold();
-    doc.text(`Transporter Address:`, sectionLabelX, routeCurrentY);
-    setNormal();
-    tAddrLines.forEach((line, idx) => {
-      doc.text(line, routeAddressValueX, routeCurrentY + idx * 4);
-    });
+      const goodsMetaY =
+        goodsContentY + Math.max(commodityLines.length - 1, 0) * 4;
+      setBold(doc);
+      doc.text(`Bags:`, goodsMetaLabelX, goodsMetaY);
+      setNormal(doc);
+      doc.text(`${pick(entry.bags)}`, goodsMetaValueX, goodsMetaY);
+      setBold(doc);
+      doc.text(`Weight:`, goodsWeightLabelX, goodsMetaY);
+      setNormal(doc);
+      doc.text(
+        hasValue(entry.loadingWeight) ? `${entry.loadingWeight} Tons` : "N/A",
+        goodsWeightValueX,
+        goodsMetaY,
+      );
 
-    y = routeBoxStartY + routeBoxHeight + 5;
+      y = goodsBoxTitleY + 14 + Math.max(commodityLines.length - 1, 0) * 4 + 5;
 
-    const freightBoxStartY = y - 5;
-    const totalFreight = formatMoney(data.totalFreight);
-    const advance = formatMoney(data.advance);
-    const toPayAmount =
-      hasValue(data.totalFreight) && hasValue(data.advance)
-        ? Number(data.totalFreight) - Number(data.advance)
-        : hasValue(data.totalFreight)
-          ? Number(data.totalFreight)
-          : null;
-    const toPayValue = toPayAmount !== null ? formatMoney(toPayAmount) : "N/A";
-    const freightBoxHeight = 18;
-    doc.rect(
-      margin + 2,
-      freightBoxStartY,
-      pageWidth - margin * 2 - 4,
-      freightBoxHeight,
-    );
-    setBold();
-    doc.setFontSize(9);
-    doc.text(`FREIGHT DETAILS`, boxTitleX, y);
+      const routeBoxTitleY = y;
+      let routeCurrentY = routeBoxTitleY;
+      setBold(doc);
+      doc.setFontSize(9);
+      doc.text(`ROUTE & VEHICLE DETAILS`, boxTitleX, routeCurrentY);
+      routeCurrentY += 5;
 
-    const freightContentY = y + 5;
-    setBold();
-    doc.text("Total Freight:", freightLeftLabelX, freightContentY);
-    setNormal();
-    doc.text(totalFreight, freightLeftValueX, freightContentY);
-    setBold();
-    doc.text("Advance:", freightRightLabelX, freightContentY);
-    setNormal();
-    doc.text(advance, freightRightValueX, freightContentY);
-    setBold();
-    doc.text("To Pay:", freightLeftLabelX, freightContentY + 5);
-    setNormal();
-    doc.text(toPayValue, freightLeftValueX, freightContentY + 5);
+      setBold(doc);
+      doc.text(`From:`, sectionLabelX, routeCurrentY);
+      setNormal(doc);
+      doc.text(`${sellerState}`, routeValueX, routeCurrentY);
+      setBold(doc);
+      doc.text(`To:`, goodsMetaLabelX, routeCurrentY);
+      setNormal(doc);
+      doc.text(`${consigneeState}`, goodsMetaValueX, routeCurrentY);
+      routeCurrentY += 5;
 
-    y = freightBoxStartY + freightBoxHeight + 10;
+      setBold(doc);
+      doc.text(`Transporter:`, sectionLabelX, routeCurrentY);
+      setNormal(doc);
+      transporterLines.forEach((line, idx) => {
+        doc.text(line, routeValueX, routeCurrentY + idx * 4);
+      });
+      routeCurrentY += Math.max(transporterLines.length, 1) * 4;
+
+      setBold(doc);
+      doc.text(`Lorry No:`, sectionLabelX, routeCurrentY);
+      setNormal(doc);
+      doc.text(lorryNo, routeValueX, routeCurrentY);
+      routeCurrentY += 4;
+
+      setBold(doc);
+      doc.text(`Driver:`, sectionLabelX, routeCurrentY);
+      setNormal(doc);
+      doc.text(driverLine, routeValueX, routeCurrentY);
+      setBold(doc);
+      doc.text(`Mob:`, routeRightLabelX, routeCurrentY);
+      setNormal(doc);
+      doc.text(driverMobileLine, routeRightValueX, routeCurrentY);
+      routeCurrentY += 4;
+
+      setBold(doc);
+      doc.text(`Transporter Address:`, sectionLabelX, routeCurrentY);
+      setNormal(doc);
+      tAddrLines.forEach((line, idx) => {
+        doc.text(line, routeAddressValueX, routeCurrentY + idx * 4);
+      });
+
+      y = routeCurrentY + Math.max(tAddrLines.length, 1) * 4 + 7 + 5;
+
+      const freightBoxTitleY = y;
+      const totalFreight = formatMoney(entry.totalFreight);
+      const advance = formatMoney(entry.advance);
+      const toPayAmount =
+        hasValue(entry.totalFreight) && hasValue(entry.advance)
+          ? Number(entry.totalFreight) - Number(entry.advance)
+          : hasValue(entry.totalFreight)
+            ? Number(entry.totalFreight)
+            : null;
+      const toPayValue = toPayAmount !== null ? formatMoney(toPayAmount) : "N/A";
+      setBold(doc);
+      doc.setFontSize(9);
+      doc.text(`FREIGHT DETAILS`, boxTitleX, freightBoxTitleY);
+
+      const freightContentY = freightBoxTitleY + 5;
+      setBold(doc);
+      doc.text("Total Freight:", freightLeftLabelX, freightContentY);
+      setNormal(doc);
+      doc.text(totalFreight, freightLeftValueX, freightContentY);
+      setBold(doc);
+      doc.text("Advance:", freightRightLabelX, freightContentY);
+      setNormal(doc);
+      doc.text(advance, freightRightValueX, freightContentY);
+      setBold(doc);
+      doc.text("To Pay:", freightLeftLabelX, freightContentY + 5);
+      setNormal(doc);
+      doc.text(toPayValue, freightLeftValueX, freightContentY + 5);
+
+      y = freightBoxTitleY + 18 + 10;
+    }
+
+    if (y + 50 > pageHeight - margin) {
+      doc.addPage();
+      y = margin + 20;
+    }
 
     const signY = pageHeight - 38;
-    setBold();
+    setBold(doc);
     doc.setFontSize(9);
     doc.text("Driver Signature", margin + 10, signY);
     doc.line(margin + 10, signY + 2, margin + 70, signY + 2);
-    setBold();
+    setBold(doc);
     doc.text("Authorized Signature", pageWidth - margin - 70, signY);
     doc.line(
       pageWidth - margin - 70,
@@ -1242,7 +759,7 @@ const PrintLoadingEntry = async (data) => {
     );
 
     doc.setFontSize(7);
-    setBold();
+    setBold(doc);
     doc.text(
       "*Any shortage or damage shall be deducted from the freight amount.",
       pageWidth / 2,
