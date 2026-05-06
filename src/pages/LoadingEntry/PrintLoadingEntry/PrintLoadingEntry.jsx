@@ -856,43 +856,53 @@ const PrintLoadingEntry = async (data) => {
 
     doc.setLineWidth(0.2);
 
-    // Ship To (Consignee) uses Buyer data FROM SAUDA API (single source)
+    // Ship To (Consignee) uses Consignee data FROM SAUDA API (single source)
     let shipToAddress = 
-      sauda.buyerAddress ||
-      sauda.deliveryAddress ||
-      buildSaudaAddress("buyer") ||
-      buildSaudaAddress("delivery") ||
-      buildSaudaAddress("supplier") ||
-      data.placeOfDelivery ||
+      sauda.consigneeAddress ||
+      sauda.shipToAddress ||
+      buildSaudaAddress("consignee") ||
+      buildSaudaAddress("shipTo") ||
+      data.consigneeAddress ||
+      data.shipToAddress ||
       'N/A';
 
     const cAddrLines = wrapText(shipToAddress, 78, 3);
 
     const consigneeName =
-      sauda.buyerCompany ||
-      sauda.buyerName ||
-      data.buyerCompany ||
-      data.buyer ||
+      sauda.consigneeName ||
+      sauda.shipToName ||
+      sauda.consignee?.name ||
+      sauda.shipTo?.name ||
+      data.consignee ||
       'N/A';
 
     const consigneeNameLines = wrapText(consigneeName, 78, 2);
 
     let shipToMobile =
-      sauda.buyerMobile ||
-      sauda.buyerPhone ||
-      sauda.deliveryMobile ||
-      data.buyerMobile ||
+      sauda.consigneeMobile ||
+      sauda.shipToMobile ||
+      sauda.consignee?.phone ||
+      sauda.consignee?.mobile ||
+      sauda.shipTo?.phone ||
+      sauda.shipTo?.mobile ||
+      data.consigneeMobile ||
       "N/A";
 
     const consigneeGstNo =
-      sauda.buyerGstNo ||
-      sauda.buyerGstNumber ||
-      sauda.gstNo ||
+      sauda.consigneeGstNo ||
+      sauda.shipToGstNo ||
+      sauda.consignee?.gstNo ||
+      sauda.consignee?.gstNumber ||
+      sauda.shipTo?.gstNo ||
+      sauda.shipTo?.gstNumber ||
       '';
     const consigneePanNo =
-      sauda.buyerPanNo ||
-      sauda.buyerPanNumber ||
-      sauda.panNo ||
+      sauda.consigneePanNo ||
+      sauda.shipToPanNo ||
+      sauda.consignee?.panNo ||
+      sauda.consignee?.panNumber ||
+      sauda.shipTo?.panNo ||
+      sauda.shipTo?.panNumber ||
       '';
 
     const consigneeBoxStartY = y - 5;
@@ -960,7 +970,7 @@ const PrintLoadingEntry = async (data) => {
     }
 
     if (consigneePanNo) {
-      drawLabelValue({
+      consigneeCurrentY += drawLabelValue({
         label: "PAN No:",
         value: consigneePanNo,
         x: sectionLabelX,
@@ -973,36 +983,32 @@ const PrintLoadingEntry = async (data) => {
 
     y = consigneeBoxStartY + consigneeBoxHeight + 5;
 
-    // Buyer Account uses Consignee data FROM SAUDA API (single source)
+    // Buyer Account uses Buyer data FROM SAUDA API (single source)
     const buyerCompany = 
-      sauda.consigneeName ||
-      sauda.shipToName ||
-      sauda.consignee?.name ||
-      sauda.shipTo?.name ||
-      data.consignee ||
+      sauda.buyerCompany ||
+      sauda.buyerName ||
+      data.buyerCompany ||
+      data.buyer ||
       'N/A';
       
     const buyerAddress = 
-      sauda.consigneeAddress ||
-      sauda.shipToAddress ||
-      buildSaudaAddress("consignee") ||
-      buildSaudaAddress("shipTo") ||
-      data.consigneeAddress ||
-      data.shipToAddress ||
+      sauda.buyerAddress ||
+      sauda.deliveryAddress ||
+      buildSaudaAddress("buyer") ||
+      buildSaudaAddress("delivery") ||
+      data.placeOfDelivery ||
       'N/A';
       
     const buyerGst = 
-      sauda.consigneeGstNo ||
-      sauda.shipToGstNo ||
-      sauda.consignee?.gstNo ||
-      sauda.consignee?.gstNumber ||
+      sauda.buyerGstNo ||
+      sauda.buyerGstNumber ||
+      sauda.gstNo ||
       '';
       
     const buyerPan = 
-      sauda.consigneePanNo ||
-      sauda.shipToPanNo ||
-      sauda.consignee?.panNo ||
-      sauda.consignee?.panNumber ||
+      sauda.buyerPanNo ||
+      sauda.buyerPanNumber ||
+      sauda.panNo ||
       '';
     
     const buyerNameLines = wrapText(buyerCompany, 70, 2);
