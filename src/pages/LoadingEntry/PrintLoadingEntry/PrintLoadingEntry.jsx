@@ -980,18 +980,33 @@ const PrintLoadingEntry = async (data) => {
 
     y = consigneeBoxStartY + consigneeBoxHeight + 5;
 
-    // Get the appropriate buyer account details based on selection
-    const buyerAccountDetails = getBuyerAccountDetails(sauda, data, shipToDetails);
+    // Get buyer information directly from self order API (sauda data)
+    const buyerNameFromSauda = 
+      sauda.buyerCompany ||
+      sauda.buyerName ||
+      sauda.partyName ||
+      sauda.customerName ||
+      (sauda.buyer && typeof sauda.buyer === 'object' ? 
+        (sauda.buyer.companyName || sauda.buyer.name) : null) ||
+      'N/A';
+      
+    const buyerGstFromSauda = 
+      sauda.buyerGstNo ||
+      sauda.buyerGstNumber ||
+      sauda.buyerGst ||
+      (sauda.buyer && typeof sauda.buyer === 'object' ? 
+        (sauda.buyer.gstNo || sauda.buyer.gstNumber) : null) ||
+      sauda.partyGstNo ||
+      sauda.customerGstNo ||
+      sauda.gstNo ||
+      '';
     
     const buyerBoxStartY = y - 5;
-    const buyerNameLines = wrapText(buyerAccountDetails.name, 70, 2);
-    const buyerAddrLines = wrapText(buyerAccountDetails.address, 72, 3);
+    const buyerNameLines = wrapText(buyerNameFromSauda, 70, 2);
 
     let buyerBoxHeight = 8;
     buyerBoxHeight += Math.max(buyerNameLines.length, 1) * 4;
-    buyerBoxHeight += Math.max(buyerAddrLines.length, 1) * 4;
-    if (buyerAccountDetails.panNo) buyerBoxHeight += 4;
-    if (buyerAccountDetails.gstNo) buyerBoxHeight += 4;
+    if (buyerGstFromSauda) buyerBoxHeight += 4;
     buyerBoxHeight += 7;
 
     doc.rect(
@@ -1005,9 +1020,7 @@ const PrintLoadingEntry = async (data) => {
     setBold();
     doc.setFontSize(9);
     
-    // Update title based on what's being shown
-    const buyerAccountTitle = buyerAccountDetails.isConsignee ? "BUYER ACCOUNT (CONSIGNEE)" : "BUYER ACCOUNT";
-    doc.text(buyerAccountTitle, boxTitleX, buyerCurrentY);
+    doc.text("BUYER ACCOUNT", boxTitleX, buyerCurrentY);
     
     buyerCurrentY += 5;
 
@@ -1021,31 +1034,10 @@ const PrintLoadingEntry = async (data) => {
       maxLines: 2,
     });
 
-    buyerCurrentY += drawLabelValue({
-      label: "Address:",
-      value: buyerAddrLines.join(", "),
-      x: sectionLabelX,
-      y: buyerCurrentY,
-      valueX: buyerValueX,
-      wrapLength: 62,
-      maxLines: 3,
-    });
-
-    if (buyerAccountDetails.panNo) {
-      buyerCurrentY += drawLabelValue({
-        label: "PAN No:",
-        value: buyerAccountDetails.panNo,
-        x: sectionLabelX,
-        y: buyerCurrentY,
-        valueX: buyerValueX,
-        wrapLength: 36,
-        maxLines: 1,
-      });
-    }
-    if (buyerAccountDetails.gstNo) {
+    if (buyerGstFromSauda) {
       drawLabelValue({
         label: "GST:",
-        value: buyerAccountDetails.gstNo,
+        value: buyerGstFromSauda,
         x: sectionLabelX,
         y: buyerCurrentY,
         valueX: buyerValueX,
