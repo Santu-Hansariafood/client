@@ -70,6 +70,425 @@ const PrintLoadingEntry = async (data) => {
       }
     };
 
+    const normalizeText = (value) =>
+      String(value || "")
+        .trim()
+        .toLowerCase();
+
+    // Enhanced function to extract buyer info from sauda data
+    const extractBuyerInfoFromSauda = (saudaData) => {
+      if (!saudaData || typeof saudaData !== 'object') return {};
+      
+      // Try multiple possible buyer name fields
+      const buyerName = 
+        saudaData.buyerCompany ||
+        saudaData.buyerName ||
+        saudaData.partyName ||
+        saudaData.customerName ||
+        (saudaData.buyer && typeof saudaData.buyer === 'object' ? 
+          (saudaData.buyer.companyName || saudaData.buyer.name) : null) ||
+        null;
+
+      // Try multiple possible buyer address fields
+      const buyerAddress = 
+        saudaData.buyerAddress ||
+        saudaData.deliveryAddress ||
+        (saudaData.buyer && typeof saudaData.buyer === 'object' ? 
+          saudaData.buyer.address : null) ||
+        saudaData.partyAddress ||
+        saudaData.customerAddress ||
+        null;
+
+      // Try multiple possible buyer GST fields
+      const buyerGst = 
+        saudaData.buyerGstNo ||
+        saudaData.buyerGstNumber ||
+        saudaData.buyerGst ||
+        (saudaData.buyer && typeof saudaData.buyer === 'object' ? 
+          (saudaData.buyer.gstNo || saudaData.buyer.gstNumber) : null) ||
+        saudaData.partyGstNo ||
+        saudaData.customerGstNo ||
+        saudaData.gstNo ||
+        null;
+
+      // Try multiple possible buyer PAN fields
+      const buyerPan = 
+        saudaData.buyerPanNo ||
+        saudaData.buyerPanNumber ||
+        saudaData.buyerPan ||
+        (saudaData.buyer && typeof saudaData.buyer === 'object' ? 
+          (saudaData.buyer.panNo || saudaData.buyer.panNumber) : null) ||
+        saudaData.partyPanNo ||
+        saudaData.customerPanNo ||
+        saudaData.panNo ||
+        null;
+
+      // Try multiple possible buyer state fields
+      const buyerState = 
+        saudaData.buyerState ||
+        saudaData.deliveryState ||
+        (saudaData.buyer && typeof saudaData.buyer === 'object' ? 
+          saudaData.buyer.state : null) ||
+        saudaData.partyState ||
+        saudaData.customerState ||
+        saudaData.state ||
+        null;
+
+      return {
+        buyerName,
+        buyerAddress,
+        buyerGst,
+        buyerPan,
+        buyerState
+      };
+    };
+
+    // Function to determine if we should show consignee details in buyer account
+    const shouldShowConsigneeInBuyerAccount = (saudaData) => {
+      // Check if consignee is explicitly selected or if buyer is same as consignee
+      if (!saudaData) return false;
+      
+      // If there's an explicit selection indicator in the data
+      if (saudaData.selectedPartyType === 'consignee') return true;
+      if (saudaData.selectedPartyType === 'buyer') return false;
+      
+      // Check if consignee details are more complete than buyer details
+      const saudaBuyerInfo = extractBuyerInfoFromSauda(saudaData);
+      const hasCompleteConsignee = saudaData.consignee && 
+        (typeof saudaData.consignee === 'object' ? 
+          (saudaData.consignee.name || saudaData.consignee.companyName) :
+          true);
+      
+      const hasCompleteBuyer = saudaBuyerInfo.buyerName;
+      
+      // If consignee is more complete, show consignee in buyer account
+      if (hasCompleteConsignee && !hasCompleteBuyer) return true;
+      
+      // Check if consignee and buyer are the same
+      if (hasCompleteConsignee && hasCompleteBuyer) {
+        const consigneeName = typeof saudaData.consignee === 'object' ? 
+          (saudaData.consignee.name || saudaData.consignee.companyName) :
+          saudaData.consignee;
+        
+        if (consigneeName && saudaBuyerInfo.buyerName && 
+            normalizeText(consigneeName) === normalizeText(saudaBuyerInfo.buyerName)) {
+          return true; // Same entity, can show consignee details
+        }
+      }
+      
+      return false;
+    };
+
+    // Function to get the appropriate details for buyer account section
+    const getBuyerAccountDetails = (saudaData, loadingEntryData, shipToDetails) => {
+      const shouldShowConsignee = shouldShowConsigneeInBuyerAccount(saudaData, loadingEntryData);
+      
+      if (shouldShowConsignee && shipToDetails) {
+        // Show consignee details in buyer account
+        return {
+          name: shipToDetails.name || shipToDetails.label || shipToDetails.consigneeName || 'N/A',
+          address: formatConsigneeAddress(shipToDetails) || buildAddressFromObject(shipToDetails) || 'N/A',
+          gstNo: shipToDetails.gstNo || shipToDetails.gstNumber || shipToDetails.gst || '',
+          panNo: shipToDetails.panNo || shipToDetails.panNumber || shipToDetails.pan || '',
+          state: shipToDetails.state || 'N/A',
+          isConsignee: true
+        };
+      } else {
+        // Show buyer details in buyer account
+        const saudaBuyerInfo = extractBuyerInfoFromSauda(saudaData);
+        return {
+          name: saudaBuyerInfo.buyerName || 
+                (matchingBuyerCompany?.companyName) || 
+                data.buyerCompany || 
+                data.buyer || 
+                'N/A',
+          address: saudaBuyerInfo.buyerAddress || 
+                  (matchingBuyerCompany ? 
+                    buildAddressFromObject(matchingBuyerCompany) || 
+                    [matchingBuyerCompany.district, matchingBuyerCompany.state].filter(Boolean).join(", ") :
+                    data.placeOfDelivery) || 
+                  'N/A',
+          gstNo: saudaBuyerInfo.buyerGst || 
+                (matchingBuyerCompany?.gstNo || matchingBuyerCompany?.gstNumber || matchingBuyerCompany?.gst) || 
+                '',
+          panNo: saudaBuyerInfo.buyerPan || 
+                (matchingBuyerCompany?.panNo || matchingBuyerCompany?.panNumber || matchingBuyerCompany?.pan) || 
+                '',
+          state: saudaBuyerInfo.buyerState || 
+                (matchingBuyerCompany?.state) || 
+                data.placeOfDeliveryState || 
+                'N/A',
+          isConsignee: false
+        };
+      }
+    };
+
+    const normalizeLoose = (value) =>
+      String(value || "")
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, " ")
+        .trim()
+        .replace(/\s+/g, " ");
+
+    const isObjectId = (value) =>
+      /^[a-f\d]{24}$/i.test(String(value || "").trim());
+
+    const extractConsigneeId = (candidate) => {
+      if (!candidate) return "";
+      if (typeof candidate === "string") {
+        return isObjectId(candidate) ? candidate.trim() : "";
+      }
+      if (typeof candidate !== "object") return "";
+      const nestedValue = candidate.value;
+      const direct =
+        candidate._id ||
+        candidate.id ||
+        (typeof nestedValue === "string" ? nestedValue : "") ||
+        (nestedValue && typeof nestedValue === "object"
+          ? nestedValue._id || nestedValue.id || ""
+          : "");
+      return isObjectId(direct) ? String(direct) : "";
+    };
+
+    const extractConsigneeTextValues = (candidate) => {
+      if (!candidate) return [];
+
+      if (typeof candidate === "string") {
+        const text = candidate.trim();
+        return text ? [text] : [];
+      }
+
+      if (typeof candidate !== "object") return [];
+
+      const nestedValue = candidate.value;
+      const values = [
+        candidate.name,
+        candidate.label,
+        candidate.consigneeName,
+        candidate.displayName,
+        typeof nestedValue === "string" ? nestedValue : "",
+        nestedValue && typeof nestedValue === "object" ? nestedValue.name : "",
+        nestedValue && typeof nestedValue === "object" ? nestedValue.label : "",
+        nestedValue && typeof nestedValue === "object"
+          ? nestedValue.consigneeName
+          : "",
+      ]
+        .map((value) => String(value || "").trim())
+        .filter(Boolean);
+
+      return Array.from(new Set(values));
+    };
+
+    const isConsigneeAddressLike = (details) =>
+      Boolean(
+        details &&
+        typeof details === "object" &&
+        (details.address ||
+          details.location ||
+          details.district ||
+          details.state ||
+          details.pin ||
+          details.pinNo ||
+          details.pincode ||
+          details.pinCode),
+      );
+
+    const firstNonEmpty = (...values) => {
+      for (const v of values) {
+        if (!v) continue;
+        if (typeof v === "string") {
+          const trimmed = v.trim();
+          if (trimmed) return trimmed;
+          continue;
+        }
+        return v;
+      }
+      return null;
+    };
+
+    const pickBestShipToCandidate = (candidates) => {
+      const list = (candidates || []).filter(Boolean);
+      const withId = list.find((c) => Boolean(extractConsigneeId(c)));
+      if (withId) return withId;
+      const withAddress = list.find((c) => isConsigneeAddressLike(c));
+      if (withAddress) return withAddress;
+      return firstNonEmpty(...list);
+    };
+
+    const deriveShipToSearchKey = (raw) => {
+      if (!raw) return "";
+      let text = "";
+      if (typeof raw === "string") {
+        text = raw;
+      } else if (typeof raw === "object") {
+        const nested = raw.value;
+        text =
+          raw.name ||
+          raw.label ||
+          raw.consigneeName ||
+          (typeof nested === "string" ? nested : "") ||
+          "";
+      }
+      text = String(text || "").trim();
+      if (!text) return "";
+      const beforeDash = text.split("-")[0]?.trim();
+      return beforeDash || text;
+    };
+
+    const pickBestConsigneeMatch = (rows, key) => {
+      const needle = normalizeLoose(key);
+      if (!needle) return null;
+      const needleTokens = new Set(needle.split(" ").filter(Boolean));
+      let best = null;
+      let bestScore = -1;
+      for (const row of rows || []) {
+        const hay = normalizeLoose(row?.name);
+        if (!hay) continue;
+        let score = 0;
+        if (hay === needle) score = 100;
+        else if (hay.includes(needle) || needle.includes(hay)) score = 85;
+        else {
+          const hayTokens = hay.split(" ").filter(Boolean);
+          const common = hayTokens.reduce(
+            (acc, t) => acc + (needleTokens.has(t) ? 1 : 0),
+            0,
+          );
+          score = (common / Math.max(1, needleTokens.size)) * 70;
+        }
+        if (score > bestScore) {
+          bestScore = score;
+          best = row;
+        }
+      }
+      return bestScore >= 40 ? best : null;
+    };
+
+    const findExactConsigneeMatch = (rows, candidate) => {
+      const exactId = extractConsigneeId(candidate);
+      if (exactId) {
+        const byId = (rows || []).find(
+          (row) => String(row?._id || row?.id || "") === String(exactId),
+        );
+        if (byId) return byId;
+      }
+
+      const exactTexts = new Set(
+        extractConsigneeTextValues(candidate).map((value) => normalizeLoose(value)),
+      );
+      if (!exactTexts.size) return null;
+
+      return (
+        (rows || []).find((row) =>
+          [
+            row?.name,
+            row?.label,
+            row?.consigneeName,
+            row?.displayName,
+            row?.address,
+          ]
+            .map((value) => normalizeLoose(value))
+            .some((value) => value && exactTexts.has(value)),
+        ) || null
+      );
+    };
+
+    const fetchConsigneePages = async ({ search = "" } = {}) => {
+      const limit = 200;
+      const maxPages = 100;
+      const rows = [];
+      const seenIds = new Set();
+
+      for (let page = 1; page <= maxPages; page += 1) {
+        try {
+          const query = new URLSearchParams({
+            page: String(page),
+            limit: String(limit),
+          });
+          if (search) query.set("search", search);
+
+          const res = await api.get(`/consignees?${query.toString()}`);
+          const payload = res.data || {};
+          const pageRows = Array.isArray(payload?.data) ? payload.data : [];
+
+          pageRows.forEach((row) => {
+            const rowId = String(row?._id || "");
+            const dedupeKey = rowId || JSON.stringify(row);
+            if (seenIds.has(dedupeKey)) return;
+            seenIds.add(dedupeKey);
+            rows.push(row);
+          });
+
+          const pages = Number(payload?.pages || 0);
+          if (pages && page >= pages) break;
+          if (pageRows.length === 0 || pageRows.length < limit) break;
+        } catch {
+          break;
+        }
+      }
+
+      return rows;
+    };
+
+    let allConsigneeRowsPromise = null;
+    const getAllConsigneeRows = async () => {
+      if (!allConsigneeRowsPromise) {
+        allConsigneeRowsPromise = fetchConsigneePages();
+      }
+      return allConsigneeRowsPromise;
+    };
+
+    const fetchConsigneeById = async (id) => {
+      if (!isObjectId(id)) return null;
+      const direct = await safeGet(`/consignees/${id}`);
+      if (direct && typeof direct === "object") return direct;
+
+      const allRows = await getAllConsigneeRows();
+      return (
+        allRows.find((consignee) => String(consignee?._id) === String(id)) ||
+        null
+      );
+    };
+
+    const fetchConsigneeBySearch = async (key) => {
+      if (!key) return null;
+
+      const searchedRows = await fetchConsigneePages({ search: key });
+      const searchedMatch = pickBestConsigneeMatch(searchedRows, key);
+      if (searchedMatch) return searchedMatch;
+
+      const allRows = await getAllConsigneeRows();
+      return pickBestConsigneeMatch(allRows, key);
+    };
+
+    const resolveConsigneeDetails = async (candidates) => {
+      const list = (Array.isArray(candidates) ? candidates : [candidates]).filter(
+        Boolean,
+      );
+
+      for (const candidate of list) {
+        const id = extractConsigneeId(candidate);
+        if (!id) continue;
+        const byId = await fetchConsigneeById(id);
+        if (byId) return byId;
+      }
+
+      const allRows = await getAllConsigneeRows();
+      for (const candidate of list) {
+        const exactMatch = findExactConsigneeMatch(allRows, candidate);
+        if (exactMatch) return exactMatch;
+      }
+
+      for (const candidate of list) {
+        const searchKeys = extractConsigneeTextValues(candidate);
+        for (const key of searchKeys) {
+          const bySearch = await fetchConsigneeBySearch(key);
+          if (bySearch) return bySearch;
+        }
+      }
+
+      return null;
+    };
+
     const wrapText = (text, maxLength, maxLines = 3) => {
       if (!text) return [""];
       const words = text.split(" ");
@@ -187,6 +606,33 @@ const PrintLoadingEntry = async (data) => {
         (s) => String(s.saudaNo) === String(data.saudaNo),
       ) || (saudaData[0] || {});
 
+    const shipToCandidates = [
+      sauda.consignee,
+      sauda.shipTo,
+      data.consignee,
+    ].filter(Boolean);
+
+    const shipToRaw = pickBestShipToCandidate(shipToCandidates);
+
+    let shipToDetails = (await resolveConsigneeDetails(shipToCandidates)) || {};
+
+    if (!isConsigneeAddressLike(shipToDetails)) {
+      const key = deriveShipToSearchKey(shipToRaw);
+      const best = key ? await fetchConsigneeBySearch(key) : null;
+      if (best) shipToDetails = best;
+      else if (typeof shipToRaw === "object" && shipToRaw)
+        shipToDetails = shipToRaw;
+    }
+
+    const consigneeMobile =
+      shipToDetails.phone ||
+      shipToDetails.mobile ||
+      shipToDetails.mobileNo ||
+      data.consigneeMobile ||
+      "N/A";
+
+    const consigneeState = shipToDetails.state || "N/A";
+
     const transporter =
       transporterDetails && typeof transporterDetails === "object"
         ? transporterDetails
@@ -196,28 +642,45 @@ const PrintLoadingEntry = async (data) => {
     );
     const displayTransporterAddress = String(transporter.address || "N/A");
 
-    const supplierCompanyNameNormalized = (value) =>
-      String(value || "").trim().toLowerCase();
+    const supplierCompanyNameNormalized = normalizeText(data.supplierCompany);
     const matchingSeller =
       (sellers || []).find((s) => String(s._id) === String(data.supplier)) ||
       (sellers || []).find(
-        (s) => supplierCompanyNameNormalized(s.sellerName) === supplierCompanyNameNormalized(data.supplierCompany),
+        (s) => normalizeText(s.sellerName) === supplierCompanyNameNormalized,
       ) ||
       null;
 
     let matchingSellerCompany =
       (sellerCompanies || []).find(
-        (sc) => supplierCompanyNameNormalized(sc.companyName) === supplierCompanyNameNormalized(data.supplierCompany),
+        (sc) => normalizeText(sc.companyName) === supplierCompanyNameNormalized,
       ) ||
+      (sellerCompanies || []).find((sc) => {
+        const scName = normalizeText(sc.companyName);
+        return (
+          scName.includes(supplierCompanyNameNormalized) ||
+          supplierCompanyNameNormalized.includes(scName)
+        );
+      }) ||
       null;
 
     if (!matchingSellerCompany && matchingSeller?.companies?.length) {
       matchingSellerCompany =
         (sellerCompanies || []).find((sc) =>
           matchingSeller.companies.some(
-            (cName) => supplierCompanyNameNormalized(cName) === supplierCompanyNameNormalized(sc.companyName),
+            (cName) => normalizeText(cName) === normalizeText(sc.companyName),
           ),
-        ) || null;
+        ) ||
+        (sellerCompanies || []).find((sc) =>
+          matchingSeller.companies.some((cName) => {
+            const normalizedCName = normalizeText(cName);
+            const normalizedSCName = normalizeText(sc.companyName);
+            return (
+              normalizedCName.includes(normalizedSCName) ||
+              normalizedSCName.includes(normalizedCName)
+            );
+          }),
+        ) ||
+        null;
     }
 
     const sellerGstNo =
@@ -244,8 +707,7 @@ const PrintLoadingEntry = async (data) => {
     const sellerState = matchingSellerCompany?.state || sauda.state || "N/A";
 
     const rawBuyerKey = data?.buyerCompany ?? data?.buyer ?? "";
-    const normalizedBuyerKey = (value) =>
-      String(value || "").trim().toLowerCase();
+    const normalizedBuyerKey = normalizeText(rawBuyerKey);
 
     const matchingBuyerCompany =
       (companies || []).find((company) => {
@@ -254,7 +716,7 @@ const PrintLoadingEntry = async (data) => {
           rawBuyerKey &&
           String(company._id) === String(rawBuyerKey);
         const nameMatch =
-          normalizedBuyerKey(company?.companyName) === normalizedBuyerKey(rawBuyerKey);
+          normalizeText(company?.companyName) === normalizedBuyerKey;
         return idMatch || nameMatch;
       }) ||
       (buyers || []).find((buyer) => {
@@ -263,7 +725,16 @@ const PrintLoadingEntry = async (data) => {
           rawBuyerKey &&
           String(buyer._id) === String(rawBuyerKey);
         const nameMatch =
-          normalizedBuyerKey(buyer?.companyName) === normalizedBuyerKey(rawBuyerKey);
+          normalizeText(buyer?.companyName) === normalizedBuyerKey;
+        return idMatch || nameMatch;
+      }) ||
+      (sellers || []).find((seller) => {
+        const idMatch =
+          seller?._id &&
+          rawBuyerKey &&
+          String(seller._id) === String(rawBuyerKey);
+        const nameMatch =
+          normalizeText(seller?.companyName) === normalizedBuyerKey;
         return idMatch || nameMatch;
       }) ||
       null;
@@ -375,31 +846,65 @@ const PrintLoadingEntry = async (data) => {
 
     doc.setLineWidth(0.2);
 
-    let shipToAddress =
-      formatConsigneeAddress(sauda.consignee) ||
-      buildAddressFromObject(sauda.consignee) ||
-      [
-        sauda.shipToAddress,
-        sauda.consigneeAddress,
-        sauda.deliveryAddress,
-        data.shipToAddress,
-        data.consigneeAddress,
-      ].filter(Boolean)[0] ||
-      "N/A";
+    // Swap: Ship To (Consignee) now uses Buyer data
+    let shipToAddress = 
+      sauda.buyerAddress ||
+      sauda.deliveryAddress ||
+      [sauda.companyId?.location, sauda.companyId?.district, sauda.companyId?.state, sauda.companyId?.pinCode].filter(Boolean).join(', ') ||
+      data.placeOfDelivery ||
+      'N/A';
 
     const cAddrLines = wrapText(shipToAddress, 78, 3);
 
     const consigneeName =
-      (typeof sauda.consignee === "object" ? sauda.consignee.name : sauda.consignee) ||
-      pick(data.consignee) ||
-      "N/A";
+      sauda.buyerCompany ||
+      sauda.companyId?.companyName ||
+      sauda.buyerName ||
+      data.buyerCompany ||
+      data.buyer ||
+      'N/A';
 
     const consigneeNameLines = wrapText(consigneeName, 78, 2);
 
+    let shipToMobile =
+      shipToDetails.mobile ||
+      shipToDetails.phone ||
+      shipToDetails.mobileNo ||
+      "N/A";
+
+    if (shipToMobile === "N/A") {
+      const saudaMobileParts = [
+        sauda.shipToMobile,
+        sauda.consigneeMobile,
+        sauda.mobile,
+        sauda.phone,
+      ].filter(Boolean);
+      if (saudaMobileParts.length) shipToMobile = saudaMobileParts[0];
+    }
+    if (shipToMobile === "N/A") shipToMobile = consigneeMobile;
+    if (shipToMobile === "N/A") {
+      const dataMobileParts = [
+        data.consigneeMobile,
+        data.mobile,
+        data.phone,
+      ].filter(Boolean);
+      if (dataMobileParts.length) shipToMobile = dataMobileParts[0];
+    }
+
     const consigneeGstNo =
-      (typeof sauda.consignee === "object" ? sauda.consignee.gstNo : "") || "";
+      sauda.buyerGstNo ||
+      sauda.buyerGstNumber ||
+      sauda.buyerGst ||
+      sauda.gstNo ||
+      sauda.companyId?.gstNumber ||
+      '';
     const consigneePanNo =
-      (typeof sauda.consignee === "object" ? sauda.consignee.panNo : "") || "";
+      sauda.buyerPanNo ||
+      sauda.buyerPanNumber ||
+      sauda.buyerPan ||
+      sauda.panNo ||
+      sauda.companyId?.panNumber ||
+      '';
 
     const consigneeBoxStartY = y - 5;
     let consigneeBoxHeight = 8;
@@ -443,6 +948,16 @@ const PrintLoadingEntry = async (data) => {
       maxLines: 3,
     });
 
+    consigneeCurrentY += drawLabelValue({
+      label: "Mobile:",
+      value: shipToMobile,
+      x: sectionLabelX,
+      y: consigneeCurrentY,
+      valueX: consigneeValueX,
+      wrapLength: 40,
+      maxLines: 1,
+    });
+
     if (consigneeGstNo) {
       consigneeCurrentY += drawLabelValue({
         label: "GST:",
@@ -469,36 +984,37 @@ const PrintLoadingEntry = async (data) => {
 
     y = consigneeBoxStartY + consigneeBoxHeight + 5;
 
-    // Get buyer information directly from self order API (sauda data)
+    // Swap: Buyer Account now uses Ship To (Consignee) data
     const buyerCompany = 
-      sauda.buyerCompany ||
-      sauda.companyId?.companyName ||
-      sauda.buyerName ||
-      data.buyerCompany ||
-      data.buyer ||
+      shipToDetails.name ||
+      shipToDetails.label ||
+      shipToDetails.consigneeName ||
+      (typeof shipToRaw === "string" ? shipToRaw : "") ||
+      pick(data.consignee) ||
       'N/A';
       
     const buyerAddress = 
-      sauda.buyerAddress ||
-      sauda.deliveryAddress ||
-      [sauda.companyId?.location, sauda.companyId?.district, sauda.companyId?.state, sauda.companyId?.pinCode].filter(Boolean).join(', ') ||
-      data.placeOfDelivery ||
+      formatConsigneeAddress(shipToDetails) ||
+      buildAddressFromObject(shipToDetails) ||
+      [
+        sauda.shipToAddress,
+        sauda.consigneeAddress,
+        sauda.deliveryAddress,
+        data.shipToAddress,
+        data.consigneeAddress,
+      ].filter(Boolean)[0] ||
       'N/A';
       
     const buyerGst = 
-      sauda.buyerGstNo ||
-      sauda.buyerGstNumber ||
-      sauda.buyerGst ||
-      sauda.gstNo ||
-      sauda.companyId?.gstNumber ||
+      shipToDetails.gstNo ||
+      shipToDetails.gstNumber ||
+      shipToDetails.gst ||
       '';
       
     const buyerPan = 
-      sauda.buyerPanNo ||
-      sauda.buyerPanNumber ||
-      sauda.buyerPan ||
-      sauda.panNo ||
-      sauda.companyId?.panNumber ||
+      shipToDetails.panNo ||
+      shipToDetails.panNumber ||
+      shipToDetails.pan ||
       '';
     
     const buyerNameLines = wrapText(buyerCompany, 70, 2);
@@ -646,7 +1162,6 @@ const PrintLoadingEntry = async (data) => {
     setBold();
     doc.text(`To:`, goodsMetaLabelX, routeCurrentY);
     setNormal();
-    const consigneeState = (typeof sauda.consignee === "object" ? sauda.consignee.state : "") || "N/A";
     doc.text(`${consigneeState}`, goodsMetaValueX, routeCurrentY);
     routeCurrentY += 5;
 
