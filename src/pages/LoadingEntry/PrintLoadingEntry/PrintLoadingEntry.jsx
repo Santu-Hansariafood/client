@@ -739,16 +739,6 @@ const PrintLoadingEntry = async (data) => {
       }) ||
       null;
 
-    console.log('Debug - PrintLoadingEntry:');
-    console.log('data.saudaNo:', data.saudaNo);
-    console.log('saudaDataResponse:', saudaDataResponse);
-    console.log('saudaData:', saudaData);
-    console.log('sauda:', sauda);
-    console.log('All sauda keys:', Object.keys(sauda));
-    console.log('data object:', data);
-    console.log('All data keys:', Object.keys(data));
-    console.log('matchingBuyerCompany:', matchingBuyerCompany);
-
     const logo64 = await getBase64(logo);
     if (logo64) {
       doc.addImage(logo64, "PNG", pageWidth - margin - 35, 12, 30, 22);
@@ -987,15 +977,37 @@ const PrintLoadingEntry = async (data) => {
 
     y = consigneeBoxStartY + consigneeBoxHeight + 5;
 
-    // Get buyer information from self order API using existing helper functions
-    const buyerAccountDetails = getBuyerAccountDetails(sauda, data, shipToDetails);
-    
-    console.log('buyerAccountDetails:', buyerAccountDetails);
-    
-    const buyerCompany = buyerAccountDetails.name;
-    const buyerAddress = buyerAccountDetails.address;
-    const buyerGst = buyerAccountDetails.gstNo;
-    const buyerPan = buyerAccountDetails.panNo;
+    // Get buyer information directly from self order API (sauda data)
+    const buyerCompany = 
+      sauda.buyerCompany ||
+      sauda.companyId?.companyName ||
+      sauda.buyerName ||
+      data.buyerCompany ||
+      data.buyer ||
+      'N/A';
+      
+    const buyerAddress = 
+      sauda.buyerAddress ||
+      sauda.deliveryAddress ||
+      [sauda.companyId?.location, sauda.companyId?.district, sauda.companyId?.state, sauda.companyId?.pinCode].filter(Boolean).join(', ') ||
+      data.placeOfDelivery ||
+      'N/A';
+      
+    const buyerGst = 
+      sauda.buyerGstNo ||
+      sauda.buyerGstNumber ||
+      sauda.buyerGst ||
+      sauda.gstNo ||
+      sauda.companyId?.gstNumber ||
+      '';
+      
+    const buyerPan = 
+      sauda.buyerPanNo ||
+      sauda.buyerPanNumber ||
+      sauda.buyerPan ||
+      sauda.panNo ||
+      sauda.companyId?.panNumber ||
+      '';
     
     const buyerNameLines = wrapText(buyerCompany, 70, 2);
     const buyerAddrLines = wrapText(buyerAddress, 72, 3);
@@ -1019,9 +1031,7 @@ const PrintLoadingEntry = async (data) => {
     setBold();
     doc.setFontSize(9);
     
-    // Update title based on what's being shown
-    const buyerAccountTitle = buyerAccountDetails.isConsignee ? "BUYER ACCOUNT (CONSIGNEE)" : "BUYER ACCOUNT";
-    doc.text(buyerAccountTitle, boxTitleX, buyerCurrentY);
+    doc.text("BUYER ACCOUNT", boxTitleX, buyerCurrentY);
     
     buyerCurrentY += 5;
 

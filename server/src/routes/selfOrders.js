@@ -57,9 +57,12 @@ router.get("/", async (req, res) => {
     const startDate = req.query.startDate;
     const endDate = req.query.endDate;
     const exportAll = String(req.query.export || "").toLowerCase() === "true";
+    const saudaNo = req.query.saudaNo;
 
     let query = {};
-    if (search) {
+    if (saudaNo) {
+      query.saudaNo = saudaNo;
+    } else if (search) {
       const searchRegex = new RegExp(escapeRegex(search), "i");
       query.$or = [
         { saudaNo: { $regex: searchRegex } },
