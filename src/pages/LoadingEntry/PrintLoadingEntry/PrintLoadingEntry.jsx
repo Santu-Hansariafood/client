@@ -333,8 +333,8 @@ const PrintLoadingEntry = async (inputData) => {
         sauda.shipToAddress,
         sauda.consigneeAddress,
         sauda.deliveryAddress,
-        data.shipToAddress,
-        data.consigneeAddress,
+        firstEntry.shipToAddress,
+        firstEntry.consigneeAddress,
       ].filter(Boolean)[0] ||
       "N/A";
 
@@ -345,7 +345,7 @@ const PrintLoadingEntry = async (inputData) => {
       shipToDetails.label ||
       shipToDetails.consigneeName ||
       (typeof shipToRaw === "string" ? shipToRaw : "") ||
-      pick(data.consignee);
+      pick(firstEntry.consignee);
 
     const consigneeNameLines = wrapText(consigneeName, 78, 2);
 
@@ -367,9 +367,9 @@ const PrintLoadingEntry = async (inputData) => {
     if (shipToMobile === "N/A") shipToMobile = consigneeMobile;
     if (shipToMobile === "N/A") {
       const dataMobileParts = [
-        data.consigneeMobile,
-        data.mobile,
-        data.phone,
+        firstEntry.consigneeMobile,
+        firstEntry.mobile,
+        firstEntry.phone,
       ].filter(Boolean);
       if (dataMobileParts.length) shipToMobile = dataMobileParts[0];
     }
@@ -467,15 +467,15 @@ const PrintLoadingEntry = async (inputData) => {
       sauda.buyerCompany ||
       sauda.companyId?.companyName ||
       sauda.buyerName ||
-      data.buyerCompany ||
-      data.buyer ||
+      firstEntry.buyerCompany ||
+      firstEntry.buyer ||
       'N/A';
       
     const buyerAddress = 
       sauda.buyerAddress ||
       sauda.deliveryAddress ||
       [sauda.companyId?.location, sauda.companyId?.district, sauda.companyId?.state, sauda.companyId?.pinCode].filter(Boolean).join(', ') ||
-      data.placeOfDelivery ||
+      firstEntry.placeOfDelivery ||
       'N/A';
       
     const buyerGst = 
