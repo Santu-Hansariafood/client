@@ -604,7 +604,16 @@ const PrintLoadingEntry = async (data) => {
     const sauda =
       (saudaData || []).find(
         (s) => String(s.saudaNo) === String(data.saudaNo),
-      ) || {};
+      ) || (saudaData[0] || {});
+
+    console.log('Debug - PrintLoadingEntry:');
+    console.log('data.saudaNo:', data.saudaNo);
+    console.log('saudaDataResponse:', saudaDataResponse);
+    console.log('saudaData:', saudaData);
+    console.log('sauda:', sauda);
+    console.log('All sauda keys:', Object.keys(sauda));
+    console.log('data object:', data);
+    console.log('All data keys:', Object.keys(data));
 
     const shipToCandidates = [
       sauda.consignee,
@@ -977,8 +986,10 @@ const PrintLoadingEntry = async (data) => {
 
     y = consigneeBoxStartY + consigneeBoxHeight + 5;
 
-    // Get buyer information from self order API (use direct fields first)
+    // Get buyer information from self order API (use all available sources)
     const buyerCompany = 
+      data.buyerCompany ||
+      data.buyer ||
       sauda.buyerCompany ||
       sauda.buyerName ||
       sauda.partyName ||
@@ -986,11 +997,10 @@ const PrintLoadingEntry = async (data) => {
       sauda.companyId?.companyName ||
       (sauda.buyer && typeof sauda.buyer === 'object' ? 
         (sauda.buyer.companyName || sauda.buyer.name) : null) ||
-      data.buyerCompany ||
-      data.buyer ||
       'N/A';
       
     const buyerAddress = 
+      data.placeOfDelivery ||
       sauda.buyerAddress ||
       sauda.deliveryAddress ||
       (sauda.buyer && typeof sauda.buyer === 'object' ? 
@@ -998,7 +1008,6 @@ const PrintLoadingEntry = async (data) => {
       sauda.partyAddress ||
       sauda.customerAddress ||
       [sauda.companyId?.location, sauda.companyId?.district, sauda.companyId?.state, sauda.companyId?.pinCode].filter(Boolean).join(', ') ||
-      data.placeOfDelivery ||
       'N/A';
       
     const buyerGst = 
