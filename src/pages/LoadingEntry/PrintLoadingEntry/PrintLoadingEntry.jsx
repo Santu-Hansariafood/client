@@ -614,6 +614,7 @@ const PrintLoadingEntry = async (data) => {
     console.log('All sauda keys:', Object.keys(sauda));
     console.log('data object:', data);
     console.log('All data keys:', Object.keys(data));
+    console.log('matchingBuyerCompany:', matchingBuyerCompany);
 
     const shipToCandidates = [
       sauda.consignee,
@@ -986,53 +987,15 @@ const PrintLoadingEntry = async (data) => {
 
     y = consigneeBoxStartY + consigneeBoxHeight + 5;
 
-    // Get buyer information from self order API (use all available sources)
-    const buyerCompany = 
-      data.buyerCompany ||
-      data.buyer ||
-      sauda.buyerCompany ||
-      sauda.buyerName ||
-      sauda.partyName ||
-      sauda.customerName ||
-      sauda.companyId?.companyName ||
-      (sauda.buyer && typeof sauda.buyer === 'object' ? 
-        (sauda.buyer.companyName || sauda.buyer.name) : null) ||
-      'N/A';
-      
-    const buyerAddress = 
-      data.placeOfDelivery ||
-      sauda.buyerAddress ||
-      sauda.deliveryAddress ||
-      (sauda.buyer && typeof sauda.buyer === 'object' ? 
-        sauda.buyer.address : null) ||
-      sauda.partyAddress ||
-      sauda.customerAddress ||
-      [sauda.companyId?.location, sauda.companyId?.district, sauda.companyId?.state, sauda.companyId?.pinCode].filter(Boolean).join(', ') ||
-      'N/A';
-      
-    const buyerGst = 
-      sauda.buyerGstNo ||
-      sauda.buyerGstNumber ||
-      sauda.buyerGst ||
-      (sauda.buyer && typeof sauda.buyer === 'object' ? 
-        (sauda.buyer.gstNo || sauda.buyer.gstNumber) : null) ||
-      sauda.partyGstNo ||
-      sauda.customerGstNo ||
-      sauda.gstNo ||
-      sauda.companyId?.gstNumber ||
-      '';
-      
-    const buyerPan = 
-      sauda.buyerPanNo ||
-      sauda.buyerPanNumber ||
-      sauda.buyerPan ||
-      (sauda.buyer && typeof sauda.buyer === 'object' ? 
-        (sauda.buyer.panNo || sauda.buyer.panNumber) : null) ||
-      sauda.partyPanNo ||
-      sauda.customerPanNo ||
-      sauda.panNo ||
-      sauda.companyId?.panNumber ||
-      '';
+    // Get buyer information from self order API using existing helper functions
+    const buyerAccountDetails = getBuyerAccountDetails(sauda, data, shipToDetails);
+    
+    console.log('buyerAccountDetails:', buyerAccountDetails);
+    
+    const buyerCompany = buyerAccountDetails.name;
+    const buyerAddress = buyerAccountDetails.address;
+    const buyerGst = buyerAccountDetails.gstNo;
+    const buyerPan = buyerAccountDetails.panNo;
     
     const buyerNameLines = wrapText(buyerCompany, 70, 2);
     const buyerAddrLines = wrapText(buyerAddress, 72, 3);
@@ -1056,7 +1019,9 @@ const PrintLoadingEntry = async (data) => {
     setBold();
     doc.setFontSize(9);
     
-    doc.text("BUYER ACCOUNT", boxTitleX, buyerCurrentY);
+    // Update title based on what's being shown
+    const buyerAccountTitle = buyerAccountDetails.isConsignee ? "BUYER ACCOUNT (CONSIGNEE)" : "BUYER ACCOUNT";
+    doc.text(buyerAccountTitle, boxTitleX, buyerCurrentY);
     
     buyerCurrentY += 5;
 
