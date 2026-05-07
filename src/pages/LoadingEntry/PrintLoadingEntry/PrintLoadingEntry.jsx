@@ -3,6 +3,7 @@ import api from "../../../utils/apiClient/apiClient";
 import LorryChallanPDF from "./LorryChallanPDF";
 import { fetchAllPages } from "../../../utils/apiClient/fetchAllPages";
 import { buildSaudaPdfData } from "../../../utils/saudaPdf/buildSaudaPdfData";
+import logoUrl from "../../../assets/Hans.png";
 
 const PrintLoadingEntry = async (entry) => {
   try {
@@ -28,7 +29,7 @@ const PrintLoadingEntry = async (entry) => {
       },
     });
 
-    const doc = await pdf(<LorryChallanPDF data={pdfData} />);
+    const doc = await pdf(<LorryChallanPDF data={pdfData} logoUrl={logoUrl} />);
     return doc;
   } catch (error) {
     console.error("Error generating PDF:", error);

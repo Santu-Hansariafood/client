@@ -205,6 +205,10 @@ const renderAddressDetails = (details) => {
 };
 
 const LorryChallanPDF = ({ data, logoUrl }) => {
+  const isConsigneeAsBuyer = data.billTo === "consignee";
+  const buyerName = isConsigneeAsBuyer ? data.consignee : (data.buyerCompany || data.buyer);
+  const buyerDetails = isConsigneeAsBuyer ? data.consigneeDetails : data.buyerDetails;
+
   return (
     <Document>
       <Page style={styles.page} size="A4">
@@ -262,12 +266,26 @@ const LorryChallanPDF = ({ data, logoUrl }) => {
           </View>
         </View>
 
+        {/* FROM and TO Section */}
+        <View style={styles.grid}>
+          <View style={styles.gridItem}>
+            <Text style={styles.label}>FROM</Text>
+            <Text style={styles.nameValue}>{data.loadingPlace || "N/A"}</Text>
+          </View>
+          <View style={[styles.gridItem, { borderRight: "none" }]}>
+            <Text style={styles.label}>TO</Text>
+            <Text style={styles.nameValue}>{data.unloadingPlace || "N/A"}</Text>
+          </View>
+        </View>
+
+        <View style={styles.divider} />
+
         {/* SHIP TO (CONSIGNEE) Section */}
         <View style={styles.grid}>
           <View style={styles.gridItem}>
             <Text style={styles.label}>SHIP TO (CONSIGNEE)</Text>
             <Text style={styles.nameValue}>
-              {data.consignee || "Premium Chick Feeds Pvt Ltd - Shanti 1"}
+              {data.consignee || "N/A"}
             </Text>
             {renderAddressDetails(data.consigneeDetails)}
           </View>
@@ -280,9 +298,9 @@ const LorryChallanPDF = ({ data, logoUrl }) => {
           <View style={styles.gridItem}>
             <Text style={styles.label}>BUYER ACCOUNT</Text>
             <Text style={styles.nameValue}>
-              {data.buyerCompany || data.buyer || "Agri Rise Private Limited"}
+              {buyerName || "N/A"}
             </Text>
-            {renderAddressDetails(data.buyerDetails)}
+            {renderAddressDetails(buyerDetails)}
           </View>
         </View>
 
@@ -300,7 +318,7 @@ const LorryChallanPDF = ({ data, logoUrl }) => {
             </View>
             <View style={styles.headerItem}>
               <Text style={styles.label}>COMMODITY</Text>
-              <Text style={styles.value}>{data.commodity || "Maize"}</Text>
+              <Text style={styles.value}>{data.commodity || "N/A"}</Text>
             </View>
           </View>
         </View>
@@ -308,14 +326,14 @@ const LorryChallanPDF = ({ data, logoUrl }) => {
         <View style={styles.grid}>
           <View style={styles.gridItem}>
             <Text style={styles.label}>Lorry Number</Text>
-            <Text style={styles.value}>{data.lorryNumber || "UP51AT 4370"}</Text>
+            <Text style={styles.value}>{data.lorryNumber || "N/A"}</Text>
             <Text style={styles.addressDetails}>
-              {"\n"}Transporter: {data.addedTransport || "NA"}
+              {"\n"}Transporter: {data.addedTransport || "N/A"}
             </Text>
           </View>
           <View style={styles.gridItem}>
             <Text style={styles.label}>Driver Name</Text>
-            <Text style={styles.value}>{data.driverName || "NA"}</Text>
+            <Text style={styles.value}>{data.driverName || "N/A"}</Text>
             <Text style={styles.addressDetails}>
               {"\n"}Phone: {data.driverPhoneNumber || "N/A"}
             </Text>
@@ -339,23 +357,10 @@ const LorryChallanPDF = ({ data, logoUrl }) => {
             <Text style={[styles.tableCell, { width: "25%", borderRightWidth: 0 }]}>Total Freight</Text>
           </View>
           <View style={styles.tableRow}>
-            <Text style={[styles.tableCell, { width: "25%" }]}>{data.loadingWeight || "33.97"} Tons</Text>
+            <Text style={[styles.tableCell, { width: "25%" }]}>{data.loadingWeight || "0"} Tons</Text>
             <Text style={[styles.tableCell, { width: "25%" }]}>{data.unloadingWeight || "0"} Tons</Text>
-            <Text style={[styles.tableCell, { width: "25%" }]}>₹ {data.freightRate || "0"}</Text>
-            <Text style={[styles.tableCell, { width: "25%", borderRightWidth: 0 }]}>₹ {data.totalFreight || "33.97"}</Text>
-          </View>
-        </View>
-
-        <View style={styles.section}>
-          <View style={styles.grid}>
-            <View style={styles.gridItem}>
-              <Text style={styles.label}>Loading Place</Text>
-              <Text style={styles.value}>{data.loadingPlace || "West Bengal"}</Text>
-            </View>
-            <View style={[styles.gridItem, { borderRight: "none" }]}>
-              <Text style={styles.label}>Unloading Place</Text>
-              <Text style={styles.value}>{data.unloadingPlace || "N/A"}</Text>
-            </View>
+            <Text style={[styles.tableCell, { width: "25%" }]}>Rs.  {data.freightRate || "0"}</Text>
+            <Text style={[styles.tableCell, { width: "25%", borderRightWidth: 0 }]}>Rs.  {data.totalFreight || "0"}</Text>
           </View>
         </View>
 
@@ -363,11 +368,11 @@ const LorryChallanPDF = ({ data, logoUrl }) => {
           <View style={styles.grid}>
             <View style={styles.gridItem}>
               <Text style={styles.label}>Advance</Text>
-              <Text style={styles.value}>₹ {data.advance || "0"}</Text>
+              <Text style={styles.value}>Rs.  {data.advance || "0"}</Text>
             </View>
             <View style={[styles.gridItem, { borderRight: "none" }]}>
               <Text style={styles.label}>Balance</Text>
-              <Text style={styles.value}>₹ {data.balance || "0"}</Text>
+              <Text style={styles.value}>Rs.  {data.balance || "0"}</Text>
             </View>
           </View>
         </View>
