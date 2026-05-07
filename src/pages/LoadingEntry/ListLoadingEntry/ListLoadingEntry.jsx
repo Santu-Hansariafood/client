@@ -204,8 +204,8 @@ const ListLoadingEntry = () => {
       
       // Build search query parameters
       const searchParams = {
-        page: 1,
-        limit: 1000, // Load reasonable amount for frontend filtering
+        page: currentPage,
+        limit: itemsPerPage,
         role: userRole,
         mobile: mobile,
       };
@@ -235,104 +235,15 @@ const ListLoadingEntry = () => {
       }
 
       setLoadingEntries(entriesData);
+      setFilteredEntries(entriesData);
+      setTotalItems(entriesRes.data?.total || entriesData.length);
     } catch (error) {
       console.error("Error fetching entries:", error);
       toast.error("Failed to fetch loading entries");
     } finally {
       setLoading(false);
     }
-  }, [userRole, mobile, debouncedFilters]);
-
-  useEffect(() => {
-    let filtered = [...loadingEntries];
-
-    if (debouncedFilters.search) {
-      const searchLower = normalizeSearchValue(debouncedFilters.search);
-      filtered = filtered.filter((entry) => {
-        const buyerCompany = getBuyerSearchText(entry, buyerMap);
-        const transporterName =
-          transporterMap[entry.transporterId] || entry.addedTransport || "";
-        const sellerName = getSellerSearchText(entry, sellerMap);
-        const consigneeText = getConsigneeSearchText(entry);
-        
-        // Comprehensive search across all relevant fields
-        const searchFields = [
-          entry.saudaNo,
-          entry.supplierCompany,
-          sellerName,
-          buyerCompany,
-          consigneeText,
-          entry.lorryNumber,
-          entry.billNumber,
-          entry.commodity,
-          transporterName,
-          entry.driverName,
-          entry.driverPhoneNumber,
-          entry.loadingWeight,
-          entry.unloadingWeight,
-          entry.freightRate,
-          entry.totalFreight,
-          entry.advance,
-          entry.balance,
-          paymentTermsMap[entry.saudaNo] || "",
-          statusMap[entry.saudaNo] || "",
-          entry.vehicleType || "",
-          entry.vehicleCapacity || "",
-          entry.loadingPlace || "",
-          entry.unloadingPlace || "",
-        ];
-
-        // Enhanced search with partial matching and multiple word support
-        const searchWords = searchLower.split(/\s+/).filter(word => word.length > 0);
-        
-        return searchWords.every(word => 
-          searchFields.some((value) =>
-            normalizeSearchValue(value).includes(word)
-          )
-        );
-      });
-    }
-
-    if (debouncedFilters.saudaNo) {
-      const saudaLower = normalizeSearchValue(debouncedFilters.saudaNo);
-      filtered = filtered.filter((entry) =>
-        normalizeSearchValue(entry.saudaNo).includes(saudaLower),
-      );
-    }
-
-    if (debouncedFilters.lorryNumber) {
-      const lorryLower = normalizeSearchValue(debouncedFilters.lorryNumber);
-      filtered = filtered.filter((entry) =>
-        normalizeSearchValue(entry.lorryNumber).includes(lorryLower),
-      );
-    }
-
-    // Enhanced sorting - prioritize recent entries and better saudaNo sorting
-    filtered.sort((a, b) => {
-      // First by date (most recent first)
-      const dateA = new Date(a.loadingDate || 0);
-      const dateB = new Date(b.loadingDate || 0);
-      if (dateB.getTime() !== dateA.getTime()) {
-        return dateB.getTime() - dateA.getTime();
-      }
-      
-      // Then by saudaNo (numeric comparison)
-      const aS = String(a.saudaNo || "");
-      const bS = String(b.saudaNo || "");
-      return bS.localeCompare(aS, undefined, { numeric: true });
-    });
-
-    setFilteredEntries(filtered);
-    setTotalItems(filtered.length);
-  }, [
-    loadingEntries,
-    debouncedFilters,
-    buyerMap,
-    paymentTermsMap,
-    sellerMap,
-    statusMap,
-    transporterMap,
-  ]);
+  }, [userRole, mobile, debouncedFilters, currentPage, itemsPerPage]);
 
   useEffect(() => {
     fetchStaticData();

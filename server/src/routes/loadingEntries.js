@@ -546,11 +546,11 @@ router.get("/export/excel", async (req, res) => {
       .populate("supplier", "sellerName")
       .lean();
 
-    // Fetch buyerCompany and paymentTerms from SelfOrder
+    // Fetch buyerCompany, paymentTerms, and rate from SelfOrder
     const saudaNos = [...new Set(items.map(i => i.saudaNo).filter(Boolean))];
-    const selfOrders = await SelfOrder.find({ saudaNo: { $in: saudaNos } }).select("saudaNo buyerCompany paymentTerms").lean();
+    const selfOrders = await SelfOrder.find({ saudaNo: { $in: saudaNos } }).select("saudaNo buyerCompany paymentTerms rate").lean();
     const saudaData = selfOrders.reduce((acc, so) => {
-      acc[so.saudaNo] = { buyerCompany: so.buyerCompany, paymentTerms: so.paymentTerms };
+      acc[so.saudaNo] = { buyerCompany: so.buyerCompany, paymentTerms: so.paymentTerms, rate: so.rate || 0 };
       return acc;
     }, {});
 
@@ -558,7 +558,8 @@ router.get("/export/excel", async (req, res) => {
     const worksheet = workbook.addWorksheet("Loading Entries");
 
     worksheet.columns = [
-      { header: "Date", key: "loadingDate", width: 15 },
+      { header: "Loading Date", key: "loadingDate", width: 15 },
+      { header: "Unloading Date", key: "unloadingDate", width: 15 },
       { header: "Sauda No", key: "saudaNo", width: 15 },
       { header: "Supplier", key: "supplierName", width: 30 },
       { header: "Supplier Company", key: "supplierCompany", width: 30 },
@@ -568,15 +569,24 @@ router.get("/export/excel", async (req, res) => {
       { header: "Lorry Number", key: "lorryNumber", width: 20 },
       { header: "Loading Weight", key: "loadingWeight", width: 15 },
       { header: "Unloading Weight", key: "unloadingWeight", width: 15 },
+      { header: "Rate", key: "rate", width: 15 },
+      { header: "Amount", key: "amount", width: 15 },
       { header: "Bags", key: "bags", width: 10 },
       { header: "Payment Terms", key: "paymentTerms", width: 20 },
       { header: "Bill Number", key: "billNumber", width: 20 },
     ];
 
     items.forEach((item) => {
+      const rate = saudaData[item.saudaNo]?.rate || 0;
+      const unloadingWeight = item.unloadingWeight || 0;
+      const amount = unloadingWeight * rate;
+      
       worksheet.addRow({
         loadingDate: item.loadingDate
           ? new Date(item.loadingDate).toLocaleDateString("en-GB")
+          : "N/A",
+        unloadingDate: item.unloadingDate
+          ? new Date(item.unloadingDate).toLocaleDateString("en-GB")
           : "N/A",
         saudaNo: item.saudaNo || "N/A",
         supplierName: item.supplier?.sellerName || "Unknown Supplier",
@@ -586,7 +596,9 @@ router.get("/export/excel", async (req, res) => {
         commodity: item.commodity || "N/A",
         lorryNumber: item.lorryNumber || "N/A",
         loadingWeight: item.loadingWeight || 0,
-        unloadingWeight: item.unloadingWeight || 0,
+        unloadingWeight: unloadingWeight,
+        rate: rate,
+        amount: amount,
         bags: item.bags || 0,
         paymentTerms: saudaData[item.saudaNo]?.paymentTerms || "N/A",
         billNumber: item.billNumber || "N/A",
