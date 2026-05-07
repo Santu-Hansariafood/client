@@ -32,6 +32,7 @@ const loadingEntrySchema = new mongoose.Schema(
     unloadingDate: { type: Date },
     buyerBrokerage: { type: Number, default: 0 },
     sellerBrokerage: { type: Number, default: 0 },
+    loadingFrom: { type: String, default: "" },
     documents: {
       kantaSlip: { type: String, default: "" },
       unloadingChallan: { type: String, default: "" },

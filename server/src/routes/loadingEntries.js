@@ -122,10 +122,13 @@ router.get("/buyers", async (req, res) => {
         let companyNames = populatedCompanyNames;
 
         if (companyNames.length === 0 && b.name) {
-          const fallbackCompanyNames = await SelfOrder.distinct("buyerCompany", {
-            buyer: b.name,
-            buyerCompany: { $exists: true, $ne: "" },
-          });
+          const fallbackCompanyNames = await SelfOrder.distinct(
+            "buyerCompany",
+            {
+              buyer: b.name,
+              buyerCompany: { $exists: true, $ne: "" },
+            },
+          );
           companyNames = (fallbackCompanyNames || []).filter(Boolean);
         }
 
@@ -231,7 +234,9 @@ router.get("/saudas", async (req, res) => {
 
     if (buyerCompany) {
       andParts.push({
-        buyerCompany: { $regex: new RegExp(`^${escapeRegex(buyerCompany)}$`, "i") },
+        buyerCompany: {
+          $regex: new RegExp(`^${escapeRegex(buyerCompany)}$`, "i"),
+        },
       });
     }
 
@@ -250,7 +255,9 @@ router.get("/saudas", async (req, res) => {
     }
 
     if (saudaNo) {
-      andParts.push({ saudaNo: { $regex: new RegExp(escapeRegex(saudaNo), "i") } });
+      andParts.push({
+        saudaNo: { $regex: new RegExp(escapeRegex(saudaNo), "i") },
+      });
     }
 
     const query = andParts.length ? { $and: andParts } : {};
@@ -329,11 +336,15 @@ router.get("/", async (req, res) => {
     }
 
     if (saudaNo) {
-      andParts.push({ saudaNo: { $regex: new RegExp(escapeRegex(saudaNo), "i") } });
+      andParts.push({
+        saudaNo: { $regex: new RegExp(escapeRegex(saudaNo), "i") },
+      });
     }
 
     if (lorryNumber) {
-      andParts.push({ lorryNumber: { $regex: new RegExp(escapeRegex(lorryNumber), "i") } });
+      andParts.push({
+        lorryNumber: { $regex: new RegExp(escapeRegex(lorryNumber), "i") },
+      });
     }
 
     if (startDate || endDate) {
@@ -347,7 +358,8 @@ router.get("/", async (req, res) => {
       andParts.push({ loadingDate: dateFilter });
     }
 
-    const finalQuery = andParts.length > 1 ? { $and: andParts } : andParts[0] || {};
+    const finalQuery =
+      andParts.length > 1 ? { $and: andParts } : andParts[0] || {};
 
     const items = await LoadingEntry.find(finalQuery)
       .sort({ saudaNo: -1 })
@@ -406,7 +418,8 @@ router.get("/receiving", async (req, res) => {
       });
     }
 
-    const finalQuery = andParts.length > 1 ? { $and: andParts } : andParts[0] || {};
+    const finalQuery =
+      andParts.length > 1 ? { $and: andParts } : andParts[0] || {};
 
     const items = await LoadingEntry.find(finalQuery)
       .sort({ saudaNo: -1 })
@@ -418,7 +431,7 @@ router.get("/receiving", async (req, res) => {
     const total = await LoadingEntry.countDocuments(finalQuery);
 
     // Fetch rates from SelfOrder
-    const saudaNos = [...new Set(items.map(i => i.saudaNo).filter(Boolean))];
+    const saudaNos = [...new Set(items.map((i) => i.saudaNo).filter(Boolean))];
     const selfOrders = await SelfOrder.find({ saudaNo: { $in: saudaNos } })
       .select("saudaNo rate")
       .lean();
@@ -428,9 +441,9 @@ router.get("/receiving", async (req, res) => {
     }, {});
 
     // Add rate to each loading entry
-    const itemsWithRate = items.map(item => ({
+    const itemsWithRate = items.map((item) => ({
       ...item,
-      actualRate: saudaRateMap[item.saudaNo] || 0
+      actualRate: saudaRateMap[item.saudaNo] || 0,
     }));
 
     res.json({
@@ -521,11 +534,15 @@ router.get("/export/excel", async (req, res) => {
     }
 
     if (saudaNo) {
-      andParts.push({ saudaNo: { $regex: new RegExp(escapeRegex(saudaNo), "i") } });
+      andParts.push({
+        saudaNo: { $regex: new RegExp(escapeRegex(saudaNo), "i") },
+      });
     }
 
     if (lorryNumber) {
-      andParts.push({ lorryNumber: { $regex: new RegExp(escapeRegex(lorryNumber), "i") } });
+      andParts.push({
+        lorryNumber: { $regex: new RegExp(escapeRegex(lorryNumber), "i") },
+      });
     }
 
     if (startDate || endDate) {
@@ -539,7 +556,8 @@ router.get("/export/excel", async (req, res) => {
       andParts.push({ loadingDate: dateFilter });
     }
 
-    const finalQuery = andParts.length > 1 ? { $and: andParts } : andParts[0] || {};
+    const finalQuery =
+      andParts.length > 1 ? { $and: andParts } : andParts[0] || {};
 
     const items = await LoadingEntry.find(finalQuery)
       .sort({ saudaNo: -1 })
@@ -547,10 +565,16 @@ router.get("/export/excel", async (req, res) => {
       .lean();
 
     // Fetch buyerCompany, paymentTerms, and rate from SelfOrder
-    const saudaNos = [...new Set(items.map(i => i.saudaNo).filter(Boolean))];
-    const selfOrders = await SelfOrder.find({ saudaNo: { $in: saudaNos } }).select("saudaNo buyerCompany paymentTerms rate").lean();
+    const saudaNos = [...new Set(items.map((i) => i.saudaNo).filter(Boolean))];
+    const selfOrders = await SelfOrder.find({ saudaNo: { $in: saudaNos } })
+      .select("saudaNo buyerCompany paymentTerms rate")
+      .lean();
     const saudaData = selfOrders.reduce((acc, so) => {
-      acc[so.saudaNo] = { buyerCompany: so.buyerCompany, paymentTerms: so.paymentTerms, rate: so.rate || 0 };
+      acc[so.saudaNo] = {
+        buyerCompany: so.buyerCompany,
+        paymentTerms: so.paymentTerms,
+        rate: so.rate || 0,
+      };
       return acc;
     }, {});
 
@@ -580,7 +604,7 @@ router.get("/export/excel", async (req, res) => {
       const rate = saudaData[item.saudaNo]?.rate || 0;
       const unloadingWeight = item.unloadingWeight || 0;
       const amount = unloadingWeight * rate;
-      
+
       worksheet.addRow({
         loadingDate: item.loadingDate
           ? new Date(item.loadingDate).toLocaleDateString("en-GB")
@@ -591,7 +615,8 @@ router.get("/export/excel", async (req, res) => {
         saudaNo: item.saudaNo || "N/A",
         supplierName: item.supplier?.sellerName || "Unknown Supplier",
         supplierCompany: item.supplierCompany || "N/A",
-        buyerCompany: item.buyerCompany || saudaData[item.saudaNo]?.buyerCompany || "N/A",
+        buyerCompany:
+          item.buyerCompany || saudaData[item.saudaNo]?.buyerCompany || "N/A",
         consignee: item.consignee || "N/A",
         commodity: item.commodity || "N/A",
         lorryNumber: item.lorryNumber || "N/A",
@@ -775,8 +800,18 @@ router.get("/:id/pdf", async (req, res) => {
 
     doc.setFontSize(9);
     doc.setFont("helvetica", "normal");
-    doc.text(`DATE: ${formatDate(data.loadingDate)}`, pageWidth - margin - 5, 34, { align: "right" });
-    doc.text(`CHALLAN NO: ${data.billNumber || "N/A"}`, pageWidth - margin - 5, 39, { align: "right" });
+    doc.text(
+      `DATE: ${formatDate(data.loadingDate)}`,
+      pageWidth - margin - 5,
+      34,
+      { align: "right" },
+    );
+    doc.text(
+      `CHALLAN NO: ${data.billNumber || "N/A"}`,
+      pageWidth - margin - 5,
+      39,
+      { align: "right" },
+    );
 
     const addTable = (title, y, head, body) => {
       doc.setTextColor(60, 60, 60);
@@ -829,7 +864,10 @@ router.get("/:id/pdf", async (req, res) => {
 
     doc.setDrawColor(230, 230, 230);
     doc.setLineWidth(0.1);
-    const splitDeliveryAddress = doc.splitTextToSize(deliveryDetails, pageWidth - margin * 2 - 10);
+    const splitDeliveryAddress = doc.splitTextToSize(
+      deliveryDetails,
+      pageWidth - margin * 2 - 10,
+    );
     const deliveryHeight = Math.max(16, splitDeliveryAddress.length * 5 + 8);
 
     doc.rect(margin, currentY - 5, pageWidth - margin * 2, deliveryHeight, "S");
@@ -888,17 +926,28 @@ router.get("/:id/pdf", async (req, res) => {
     doc.setDrawColor(200, 200, 200);
     doc.setLineWidth(0.1);
     doc.line(margin, signY + 10, margin + 50, signY + 10);
-    doc.line(pageWidth - margin - 50, signY + 10, pageWidth - margin, signY + 10);
+    doc.line(
+      pageWidth - margin - 50,
+      signY + 10,
+      pageWidth - margin,
+      signY + 10,
+    );
 
     doc.setFont("helvetica", "bold");
     doc.setFontSize(8);
     doc.setTextColor(100, 100, 100);
-    doc.text("DRIVER'S SIGNATURE", margin + 25, signY + 14, { align: "center" });
-    doc.text("AUTHORIZED SIGNATORY", pageWidth - margin - 25, signY + 14, { align: "center" });
+    doc.text("DRIVER'S SIGNATURE", margin + 25, signY + 14, {
+      align: "center",
+    });
+    doc.text("AUTHORIZED SIGNATORY", pageWidth - margin - 25, signY + 14, {
+      align: "center",
+    });
 
     doc.setTextColor(0, 0, 0);
     doc.setFontSize(8);
-    doc.text(`FOR ${sellerCompanyName}`, pageWidth - margin - 25, signY + 5, { align: "center" });
+    doc.text(`FOR ${sellerCompanyName}`, pageWidth - margin - 25, signY + 5, {
+      align: "center",
+    });
 
     if (qr64) {
       doc.addImage(qr64, "PNG", pageWidth - margin - 35, signY - 32, 20, 20);
@@ -910,16 +959,40 @@ router.get("/:id/pdf", async (req, res) => {
     if (stamp64) {
       try {
         const GState = doc.GState || (jsPDF && jsPDF.GState);
-        if (typeof GState === 'function' && typeof doc.setGState === 'function') {
+        if (
+          typeof GState === "function" &&
+          typeof doc.setGState === "function"
+        ) {
           doc.setGState(new GState({ opacity: 0.4 }));
-          doc.addImage(stamp64, "PNG", pageWidth - margin - 45, signY - 20, 25, 25);
+          doc.addImage(
+            stamp64,
+            "PNG",
+            pageWidth - margin - 45,
+            signY - 20,
+            25,
+            25,
+          );
           doc.setGState(new GState({ opacity: 1.0 }));
         } else {
-          doc.addImage(stamp64, "PNG", pageWidth - margin - 45, signY - 20, 25, 25);
+          doc.addImage(
+            stamp64,
+            "PNG",
+            pageWidth - margin - 45,
+            signY - 20,
+            25,
+            25,
+          );
         }
       } catch (err) {
         console.error("GState error:", err);
-        doc.addImage(stamp64, "PNG", pageWidth - margin - 45, signY - 20, 25, 25);
+        doc.addImage(
+          stamp64,
+          "PNG",
+          pageWidth - margin - 45,
+          signY - 20,
+          25,
+          25,
+        );
       }
     }
 
@@ -940,7 +1013,10 @@ router.get("/:id/pdf", async (req, res) => {
 
     const pdfBuffer = Buffer.from(doc.output("arraybuffer"));
     res.setHeader("Content-Type", "application/pdf");
-    res.setHeader("Content-Disposition", `attachment; filename=LoadingEntry-${data.billNumber || "document"}.pdf`);
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename=LoadingEntry-${data.billNumber || "document"}.pdf`,
+    );
     res.send(pdfBuffer);
   } catch (error) {
     console.error("PDF Generation Error:", error);
@@ -957,15 +1033,15 @@ router.post("/bulk", async (req, res) => {
     }
 
     const selfOrder = await SelfOrder.findOne({ saudaNo });
-    
+
     // Process entries with brokerage calculation if selfOrder exists
-    const processedEntries = entries.map(entry => {
+    const processedEntries = entries.map((entry) => {
       const newEntry = { ...entry };
       if (selfOrder && entry.unloadingWeight) {
         const uWeight = parseFloat(entry.unloadingWeight) || 0;
         const buyerRate = selfOrder.buyerBrokerage?.brokerageBuyer || 0;
         const sellerRate = selfOrder.buyerBrokerage?.brokerageSupplier || 0;
-        
+
         newEntry.buyerBrokerage = +(uWeight * buyerRate).toFixed(2);
         newEntry.sellerBrokerage = +(uWeight * sellerRate).toFixed(2);
       }

@@ -230,8 +230,18 @@ const formatDate = (date) => {
 
 const renderAddressDetails = (details) => {
   if (!details) return null;
-  const { address, district, state, pinNo, panNo, gstNo, phone, mobile, phoneNumber } = details;
-  
+  const {
+    address,
+    district,
+    state,
+    pinNo,
+    panNo,
+    gstNo,
+    phone,
+    mobile,
+    phoneNumber,
+  } = details;
+
   let parts = [];
   if (address || district || state || pinNo) {
     parts.push(
@@ -261,7 +271,7 @@ const LorryChallanPDF = ({ data, logoUrl }) => {
     ? data.consigneeDetails
     : data.buyerDetails;
 
-  const fromState = data.supplierDetails?.state || "West Bengal";
+  const fromState = data.loadingFrom || data.supplierDetails?.state || "West Bengal";
   const toState = data.consigneeDetails?.state || "N/A";
 
   return (
@@ -427,12 +437,7 @@ const LorryChallanPDF = ({ data, logoUrl }) => {
               <Text style={[styles.tableCell, { width: "25%" }]}>
                 Freight Rate
               </Text>
-              <Text
-                style={[
-                  styles.tableCellNoBorder,
-                  { width: "25%" },
-                ]}
-              >
+              <Text style={[styles.tableCellNoBorder, { width: "25%" }]}>
                 Total Freight
               </Text>
             </View>
@@ -446,12 +451,7 @@ const LorryChallanPDF = ({ data, logoUrl }) => {
               <Text style={[styles.tableCell, { width: "25%" }]}>
                 Rs. {data.freightRate || "0"}
               </Text>
-              <Text
-                style={[
-                  styles.tableCellNoBorder,
-                  { width: "25%" },
-                ]}
-              >
+              <Text style={[styles.tableCellNoBorder, { width: "25%" }]}>
                 Rs. {data.totalFreight || "0"}
               </Text>
             </View>

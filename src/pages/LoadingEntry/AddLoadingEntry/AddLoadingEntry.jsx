@@ -10,6 +10,7 @@ import { capitalizeWords } from "../../../utils/textUtils/textUtils";
 import useLoadingEntryData from "../../../hooks/useLoadingEntryData";
 import useSaudaSuggestions from "../../../hooks/useSaudaSuggestions";
 import useLoadingEntrySearch from "../../../hooks/useLoadingEntrySearch";
+import stateCityData from "../../../data/state-city.json";
 
 const DataDropdown = lazy(
   () => import("../../../common/DataDropdown/DataDropdown"),
@@ -480,8 +481,16 @@ const AddLoadingEntry = () => {
     dateOfIssue: new Date().toISOString().split("T")[0],
     buyerBrokerage: 0,
     sellerBrokerage: 0,
+    loadingFrom: "",
     status: "open",
   };
+
+  const stateOptions = useMemo(() => {
+    return stateCityData.map((item) => ({
+      value: item.state,
+      label: item.state,
+    }));
+  }, []);
 
   useEffect(() => {
     if (selectedGroup?.value) {
@@ -861,7 +870,7 @@ const AddLoadingEntry = () => {
             </div>
 
             <div className="space-y-6 p-4 rounded-3xl border border-slate-200 bg-white shadow-sm">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                 <div className="space-y-2">
                   <label className="text-xs font-bold text-slate-500 uppercase">Loading Date</label>
                   <DateSelector
@@ -888,6 +897,29 @@ const AddLoadingEntry = () => {
                           : "",
                       })
                     }
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-slate-500 uppercase">Loading From</label>
+                  <DataDropdown
+                    options={stateOptions}
+                    selectedOptions={
+                      editingEntry.loadingFrom
+                        ? [
+                            stateOptions.find(
+                              (s) => s.value === editingEntry.loadingFrom,
+                            ),
+                          ].filter(Boolean)
+                        : []
+                    }
+                    onChange={(option) => {
+                      setEditingEntry({
+                        ...editingEntry,
+                        loadingFrom: option?.value || "",
+                      });
+                    }}
+                    placeholder="Select State"
+                    isMulti={false}
                   />
                 </div>
                 <div className="space-y-2">
@@ -1184,7 +1216,7 @@ const AddLoadingEntry = () => {
                           LORRY #{index + 1}
                         </span>
                       </div>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-5">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-5">
                         <div className="space-y-2">
                           <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                             Loading Date
@@ -1205,6 +1237,31 @@ const AddLoadingEntry = () => {
                             onChange={(date) =>
                               handleEntryChange(index, "unloadingDate", date)
                             }
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                            Loading From
+                          </label>
+                          <DataDropdown
+                            options={stateOptions}
+                            selectedOptions={
+                              entry.loadingFrom
+                                ? [
+                                    stateOptions.find(
+                                      (s) => s.value === entry.loadingFrom,
+                                    ),
+                                  ].filter(Boolean)
+                                : []
+                            }
+                            onChange={(option) => {
+                              const newEntries = [...loadingEntries];
+                              newEntries[index].loadingFrom =
+                                option?.value || "";
+                              setLoadingEntries(newEntries);
+                            }}
+                            placeholder="Select State"
+                            isMulti={false}
                           />
                         </div>
                         <div className="space-y-2">
