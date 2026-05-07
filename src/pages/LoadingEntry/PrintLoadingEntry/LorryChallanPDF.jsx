@@ -482,11 +482,11 @@ const LorryChallanPDF = ({ data, logoUrl }) => {
         <View style={styles.signatureSection}>
           <View style={styles.signatureBox}>
             <Text>____________________</Text>
-            <Text style={styles.label}>Seller's Signature</Text>
+            <Text style={styles.label}>Seller&apos;s Signature</Text>
           </View>
           <View style={styles.signatureBox}>
             <Text>____________________</Text>
-            <Text style={styles.label}>Driver's Signature</Text>
+            <Text style={styles.label}>Driver&apos;s Signature</Text>
           </View>
         </View>
 
