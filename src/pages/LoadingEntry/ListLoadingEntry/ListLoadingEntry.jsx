@@ -440,7 +440,8 @@ const ListLoadingEntry = () => {
       const doc = await PrintLoadingEntry(entry);
       if (!doc) return;
       
-      downloadFile(doc, `LoadingEntry-${entry.billNumber || "document"}.pdf`);
+      const blob = await doc.toBlob();
+      downloadFile(blob, `LorryChallan-${entry.billNumber || entry.saudaNo || "document"}.pdf`);
 
       toast.dismiss(toastId);
       toast.success("Download started successfully!");
