@@ -208,6 +208,11 @@ const LorryChallanPDF = ({ data, logoUrl }) => {
   const isConsigneeAsBuyer = data.billTo === "consignee";
   const buyerName = isConsigneeAsBuyer ? data.consignee : (data.buyerCompany || data.buyer);
   const buyerDetails = isConsigneeAsBuyer ? data.consigneeDetails : data.buyerDetails;
+  
+  const fromState = data.supplierDetails?.state || "West Bengal";
+  const toState = isConsigneeAsBuyer 
+    ? (data.consigneeDetails?.state || "N/A") 
+    : (data.buyerDetails?.state || "N/A");
 
   return (
     <Document>
@@ -266,15 +271,32 @@ const LorryChallanPDF = ({ data, logoUrl }) => {
           </View>
         </View>
 
+        <View style={styles.section}>
+          <View style={styles.headerRow}>
+            <View style={styles.headerItem}>
+              <Text style={styles.label}>LOADING DATE</Text>
+              <Text style={styles.value}>
+                {data.loadingDate 
+                  ? new Date(data.loadingDate).toLocaleDateString("en-GB").replace(/\//g, "-") 
+                  : "N/A"}
+              </Text>
+            </View>
+            <View style={styles.headerItem}>
+              <Text style={styles.label}>COMMODITY</Text>
+              <Text style={styles.value}>{data.commodity || "N/A"}</Text>
+            </View>
+          </View>
+        </View>
+
         {/* FROM and TO Section */}
         <View style={styles.grid}>
           <View style={styles.gridItem}>
             <Text style={styles.label}>FROM</Text>
-            <Text style={styles.nameValue}>{data.loadingPlace || "N/A"}</Text>
+            <Text style={styles.nameValue}>{fromState}</Text>
           </View>
           <View style={[styles.gridItem, { borderRight: "none" }]}>
             <Text style={styles.label}>TO</Text>
-            <Text style={styles.nameValue}>{data.unloadingPlace || "N/A"}</Text>
+            <Text style={styles.nameValue}>{toState}</Text>
           </View>
         </View>
 
@@ -305,23 +327,6 @@ const LorryChallanPDF = ({ data, logoUrl }) => {
         </View>
 
         <View style={styles.divider} />
-
-        <View style={styles.section}>
-          <View style={styles.headerRow}>
-            <View style={styles.headerItem}>
-              <Text style={styles.label}>LOADING DATE</Text>
-              <Text style={styles.value}>
-                {data.loadingDate 
-                  ? new Date(data.loadingDate).toLocaleDateString("en-GB").replace(/\//g, "-") 
-                  : "N/A"}
-              </Text>
-            </View>
-            <View style={styles.headerItem}>
-              <Text style={styles.label}>COMMODITY</Text>
-              <Text style={styles.value}>{data.commodity || "N/A"}</Text>
-            </View>
-          </View>
-        </View>
 
         <View style={styles.grid}>
           <View style={styles.gridItem}>
