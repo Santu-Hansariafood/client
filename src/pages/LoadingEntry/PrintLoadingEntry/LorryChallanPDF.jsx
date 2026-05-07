@@ -91,6 +91,21 @@ const styles = StyleSheet.create({
     paddingBottom: 6,
     marginBottom: 8,
   },
+  headerRowNoBorder: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingBottom: 0,
+    marginBottom: 0,
+    borderBottom: "none",
+  },
+  headerRowNoBorderMarginTop: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingBottom: 0,
+    marginBottom: 0,
+    borderBottom: "none",
+    marginTop: 8,
+  },
   headerItem: {
     flexDirection: "row",
     alignItems: "center",
@@ -130,6 +145,11 @@ const styles = StyleSheet.create({
     padding: 6,
     borderRight: "0.5pt solid #000000",
   },
+  gridItemNoBorder: {
+    flex: 1,
+    padding: 6,
+    borderRight: "none",
+  },
   addressDetails: {
     fontSize: 8,
     color: "#000000",
@@ -153,6 +173,11 @@ const styles = StyleSheet.create({
     padding: 6,
     borderRightWidth: 0.5,
     borderRightColor: "#000000",
+    textAlign: "center",
+  },
+  tableCellNoBorder: {
+    padding: 6,
+    borderRightWidth: 0,
     textAlign: "center",
   },
   signatureSection: {
@@ -195,6 +220,13 @@ const styles = StyleSheet.create({
     marginVertical: 6,
   },
 });
+
+const formatDate = (date) => {
+  if (!date) return "N/A";
+  const d = new Date(date);
+  if (isNaN(d.getTime())) return "N/A";
+  return d.toLocaleDateString("en-GB").replace(/\//g, "-");
+};
 
 const renderAddressDetails = (details) => {
   if (!details) return null;
@@ -242,7 +274,6 @@ const LorryChallanPDF = ({ data, logoUrl }) => {
           <Text style={{ fontSize: 60, color: "#000000" }}>HANSARIA</Text>
         </View>
 
-        {/* Header with Seller Info and Logo */}
         <View style={styles.header}>
           <View style={styles.sellerInfo}>
             <Text style={styles.sellerName}>
@@ -281,10 +312,9 @@ const LorryChallanPDF = ({ data, logoUrl }) => {
           <Text style={styles.title}>LORRY CHALLAN</Text>
         </View>
 
-        {/* All fields inside a single box */}
         <View style={styles.grid}>
           <View style={styles.gridItem}>
-            <View style={styles.headerRow} style={{ borderBottom: "none", marginBottom: 0, paddingBottom: 0 }}>
+            <View style={styles.headerRowNoBorder}>
               <View style={styles.headerItem}>
                 <Text style={styles.label}>SAUDA NO</Text>
                 <Text style={styles.saudaValue}>{data.saudaNo || "N/A"}</Text>
@@ -297,26 +327,14 @@ const LorryChallanPDF = ({ data, logoUrl }) => {
 
               <View style={styles.headerItem}>
                 <Text style={styles.label}>DATE</Text>
-                <Text style={styles.value}>
-                  {data.dateOfIssue
-                    ? new Date(data.dateOfIssue)
-                        .toLocaleDateString("en-GB")
-                        .replace(/\//g, "-")
-                    : "N/A"}
-                </Text>
+                <Text style={styles.value}>{formatDate(data.dateOfIssue)}</Text>
               </View>
             </View>
 
-            <View style={styles.headerRow} style={{ borderBottom: "none", marginBottom: 0, paddingBottom: 0, marginTop: 8 }}>
+            <View style={styles.headerRowNoBorderMarginTop}>
               <View style={styles.headerItem}>
                 <Text style={styles.label}>LOADING DATE</Text>
-                <Text style={styles.value}>
-                  {data.loadingDate
-                    ? new Date(data.loadingDate)
-                        .toLocaleDateString("en-GB")
-                        .replace(/\//g, "-")
-                    : "N/A"}
-                </Text>
+                <Text style={styles.value}>{formatDate(data.loadingDate)}</Text>
               </View>
               <View style={styles.headerItem}>
                 <Text style={styles.label}>COMMODITY</Text>
@@ -332,7 +350,6 @@ const LorryChallanPDF = ({ data, logoUrl }) => {
 
         <View style={styles.divider} />
 
-        {/* SHIP TO (CONSIGNEE) Section */}
         <View style={styles.grid}>
           <View style={styles.gridItem}>
             <Text style={styles.label}>SHIP TO (CONSIGNEE)</Text>
@@ -343,7 +360,6 @@ const LorryChallanPDF = ({ data, logoUrl }) => {
 
         <View style={styles.divider} />
 
-        {/* BUYER ACCOUNT Section */}
         <View style={styles.grid}>
           <View style={styles.gridItem}>
             <Text style={styles.label}>BUYER ACCOUNT</Text>
@@ -354,17 +370,15 @@ const LorryChallanPDF = ({ data, logoUrl }) => {
 
         <View style={styles.divider} />
 
-        {/* ROUTE & VEHICLE DETAILS Section */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>ROUTE & VEHICLE DETAILS</Text>
 
-          {/* FROM and TO Section */}
           <View style={styles.grid}>
             <View style={styles.gridItem}>
               <Text style={styles.label}>FROM</Text>
               <Text style={styles.nameValue}>{fromState}</Text>
             </View>
-            <View style={[styles.gridItem, { borderRight: "none" }]}>
+            <View style={styles.gridItemNoBorder}>
               <Text style={styles.label}>TO</Text>
               <Text style={styles.nameValue}>{toState}</Text>
             </View>
@@ -386,7 +400,7 @@ const LorryChallanPDF = ({ data, logoUrl }) => {
                   {"\n"}Phone: {data.driverPhoneNumber || "N/A"}
                 </Text>
               </View>
-              <View style={[styles.gridItem, { borderRight: "none" }]}>
+              <View style={styles.gridItemNoBorder}>
                 <Text style={styles.label}>Vehicle Type</Text>
                 <Text style={styles.value}>{data.vehicleType || "N/A"}</Text>
                 <Text style={styles.addressDetails}>
@@ -399,7 +413,6 @@ const LorryChallanPDF = ({ data, logoUrl }) => {
 
         <View style={styles.divider} />
 
-        {/* FREIGHT DETAILS Section */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>FREIGHT DETAILS</Text>
 
@@ -416,8 +429,8 @@ const LorryChallanPDF = ({ data, logoUrl }) => {
               </Text>
               <Text
                 style={[
-                  styles.tableCell,
-                  { width: "25%", borderRightWidth: 0 },
+                  styles.tableCellNoBorder,
+                  { width: "25%" },
                 ]}
               >
                 Total Freight
@@ -435,8 +448,8 @@ const LorryChallanPDF = ({ data, logoUrl }) => {
               </Text>
               <Text
                 style={[
-                  styles.tableCell,
-                  { width: "25%", borderRightWidth: 0 },
+                  styles.tableCellNoBorder,
+                  { width: "25%" },
                 ]}
               >
                 Rs. {data.totalFreight || "0"}
@@ -450,7 +463,7 @@ const LorryChallanPDF = ({ data, logoUrl }) => {
                 <Text style={styles.label}>Advance</Text>
                 <Text style={styles.value}>Rs. {data.advance || "0"}</Text>
               </View>
-              <View style={[styles.gridItem, { borderRight: "none" }]}>
+              <View style={styles.gridItemNoBorder}>
                 <Text style={styles.label}>Balance</Text>
                 <Text style={styles.value}>Rs. {data.balance || "0"}</Text>
               </View>
