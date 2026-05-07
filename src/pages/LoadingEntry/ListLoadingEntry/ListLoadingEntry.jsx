@@ -110,15 +110,6 @@ const ListLoadingEntry = () => {
     lorries: [],
   });
   const [itemsPerPage, setItemsPerPage] = useState(10);
-  const [debouncedFilters, setDebouncedFilters] = useState(filters);
-
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      setDebouncedFilters(filters);
-    }, 300); // Reduced from 500ms to 300ms for more responsive search
-
-    return () => clearTimeout(handler);
-  }, [filters]);
 
   const fetchStaticData = useCallback(async () => {
     try {
@@ -211,14 +202,14 @@ const ListLoadingEntry = () => {
       };
 
       // Add search filters if they exist
-      if (debouncedFilters.search) {
-        searchParams.search = debouncedFilters.search;
+      if (filters.search) {
+        searchParams.search = filters.search;
       }
-      if (debouncedFilters.saudaNo) {
-        searchParams.saudaNo = debouncedFilters.saudaNo;
+      if (filters.saudaNo) {
+        searchParams.saudaNo = filters.saudaNo;
       }
-      if (debouncedFilters.lorryNumber) {
-        searchParams.lorryNumber = debouncedFilters.lorryNumber;
+      if (filters.lorryNumber) {
+        searchParams.lorryNumber = filters.lorryNumber;
       }
 
       const entriesRes = await api.get("/loading-entries", {
@@ -243,7 +234,7 @@ const ListLoadingEntry = () => {
     } finally {
       setLoading(false);
     }
-  }, [userRole, mobile, debouncedFilters, currentPage, itemsPerPage]);
+  }, [userRole, mobile, filters, currentPage, itemsPerPage]);
 
   useEffect(() => {
     fetchStaticData();
