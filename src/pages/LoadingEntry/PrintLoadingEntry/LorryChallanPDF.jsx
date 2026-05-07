@@ -8,7 +8,7 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
     paddingHorizontal: 25,
     lineHeight: 1.2,
-    color: "#1F2937",
+    color: "#000000",
     backgroundColor: "#ffffff",
   },
   pageBorder: {
@@ -18,7 +18,7 @@ const styles = StyleSheet.create({
     right: 8,
     bottom: 8,
     borderWidth: 1,
-    borderColor: "#1F7A3E",
+    borderColor: "#000000",
     borderStyle: "solid",
   },
   innerBorder: {
@@ -28,7 +28,7 @@ const styles = StyleSheet.create({
     right: 12,
     bottom: 12,
     borderWidth: 0.5,
-    borderColor: "#E5E7EB",
+    borderColor: "#000000",
     borderStyle: "solid",
   },
   header: {
@@ -52,20 +52,27 @@ const styles = StyleSheet.create({
   sellerName: {
     fontSize: 14,
     fontWeight: "bold",
-    color: "#1F7A3E",
+    color: "#000000",
     marginBottom: 4,
   },
   sellerAddress: {
     fontSize: 8,
-    color: "#4B5563",
+    color: "#000000",
     lineHeight: 1.4,
   },
   title: {
     fontSize: 18,
     fontWeight: "bold",
     marginBottom: 8,
-    color: "#1F7A3E",
+    color: "#000000",
     textAlign: "center",
+  },
+  sectionTitle: {
+    fontSize: 12,
+    fontWeight: "bold",
+    color: "#000000",
+    marginBottom: 6,
+    textDecoration: "underline",
   },
   section: {
     marginBottom: 8,
@@ -73,7 +80,7 @@ const styles = StyleSheet.create({
   headerRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    borderBottom: "0.5pt solid #e5e7eb",
+    borderBottom: "0.5pt solid #000000",
     paddingBottom: 6,
     marginBottom: 8,
   },
@@ -85,60 +92,60 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 9,
     fontWeight: "bold",
-    color: "#374151",
+    color: "#000000",
     marginRight: 4,
   },
   value: {
     fontSize: 10,
     fontWeight: "bold",
-    color: "#111827",
+    color: "#000000",
   },
   nameValue: {
     fontSize: 9,
     fontWeight: "bold",
-    color: "#111827",
+    color: "#000000",
     lineHeight: 1.1,
   },
   saudaValue: {
     fontSize: 11,
     fontWeight: "bold",
-    color: "#dc2626",
+    color: "#000000",
   },
   grid: {
     flexDirection: "row",
     flexWrap: "nowrap",
-    border: "0.5pt solid #E5E7EB",
+    border: "0.5pt solid #000000",
     borderRadius: 4,
-    backgroundColor: "#F9FAFB",
+    backgroundColor: "#ffffff",
   },
   gridItem: {
     flex: 1,
     padding: 6,
-    borderRight: "0.5pt solid #E5E7EB",
+    borderRight: "0.5pt solid #000000",
   },
   addressDetails: {
     fontSize: 8,
-    color: "#4B5563",
+    color: "#000000",
     lineHeight: 1.4,
   },
   table: {
     width: "100%",
     marginTop: 10,
     borderWidth: 0.5,
-    borderColor: "#E5E7EB",
+    borderColor: "#000000",
   },
   tableRow: {
     flexDirection: "row",
     borderBottomWidth: 0.5,
-    borderBottomColor: "#E5E7EB",
+    borderBottomColor: "#000000",
   },
   tableHeader: {
-    backgroundColor: "#F3F4F6",
+    backgroundColor: "#ffffff",
   },
   tableCell: {
     padding: 6,
     borderRightWidth: 0.5,
-    borderRightColor: "#E5E7EB",
+    borderRightColor: "#000000",
     textAlign: "center",
   },
   signatureSection: {
@@ -164,20 +171,20 @@ const styles = StyleSheet.create({
     right: 30,
     textAlign: "center",
     fontSize: 6,
-    color: "#6B7280",
+    color: "#000000",
   },
   footerLine: {
     height: 0.5,
-    backgroundColor: "#E5E7EB",
+    backgroundColor: "#000000",
     marginBottom: 4,
   },
   footerText: {
     fontSize: 6,
-    color: "#6B7280",
+    color: "#000000",
   },
   divider: {
     height: 1,
-    backgroundColor: "#E5E7EB",
+    backgroundColor: "#000000",
     marginVertical: 6,
   },
 });
@@ -210,9 +217,7 @@ const LorryChallanPDF = ({ data, logoUrl }) => {
   const buyerDetails = isConsigneeAsBuyer ? data.consigneeDetails : data.buyerDetails;
   
   const fromState = data.supplierDetails?.state || "West Bengal";
-  const toState = isConsigneeAsBuyer 
-    ? (data.consigneeDetails?.state || "N/A") 
-    : (data.buyerDetails?.state || "N/A");
+  const toState = data.consigneeDetails?.state || "N/A";
 
   return (
     <Document>
@@ -288,18 +293,6 @@ const LorryChallanPDF = ({ data, logoUrl }) => {
           </View>
         </View>
 
-        {/* FROM and TO Section */}
-        <View style={styles.grid}>
-          <View style={styles.gridItem}>
-            <Text style={styles.label}>FROM</Text>
-            <Text style={styles.nameValue}>{fromState}</Text>
-          </View>
-          <View style={[styles.gridItem, { borderRight: "none" }]}>
-            <Text style={styles.label}>TO</Text>
-            <Text style={styles.nameValue}>{toState}</Text>
-          </View>
-        </View>
-
         <View style={styles.divider} />
 
         {/* SHIP TO (CONSIGNEE) Section */}
@@ -328,56 +321,80 @@ const LorryChallanPDF = ({ data, logoUrl }) => {
 
         <View style={styles.divider} />
 
-        <View style={styles.grid}>
-          <View style={styles.gridItem}>
-            <Text style={styles.label}>Lorry Number</Text>
-            <Text style={styles.value}>{data.lorryNumber || "N/A"}</Text>
-            <Text style={styles.addressDetails}>
-              {"\n"}Transporter: {data.addedTransport || "N/A"}
-            </Text>
+        {/* ROUTE & VEHICLE DETAILS Section */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>ROUTE & VEHICLE DETAILS</Text>
+          
+          {/* FROM and TO Section */}
+          <View style={styles.grid}>
+            <View style={styles.gridItem}>
+              <Text style={styles.label}>FROM</Text>
+              <Text style={styles.nameValue}>{fromState}</Text>
+            </View>
+            <View style={[styles.gridItem, { borderRight: "none" }]}>
+              <Text style={styles.label}>TO</Text>
+              <Text style={styles.nameValue}>{toState}</Text>
+            </View>
           </View>
-          <View style={styles.gridItem}>
-            <Text style={styles.label}>Driver Name</Text>
-            <Text style={styles.value}>{data.driverName || "N/A"}</Text>
-            <Text style={styles.addressDetails}>
-              {"\n"}Phone: {data.driverPhoneNumber || "N/A"}
-            </Text>
-          </View>
-          <View style={[styles.gridItem, { borderRight: "none" }]}>
-            <Text style={styles.label}>Vehicle Type</Text>
-            <Text style={styles.value}>{data.vehicleType || "N/A"}</Text>
-            <Text style={styles.addressDetails}>
-              {"\n"}Capacity: {data.vehicleCapacity || "N/A"}
-            </Text>
+
+          <View style={{ marginTop: 8 }}>
+            <View style={styles.grid}>
+              <View style={styles.gridItem}>
+                <Text style={styles.label}>Lorry Number</Text>
+                <Text style={styles.value}>{data.lorryNumber || "N/A"}</Text>
+                <Text style={styles.addressDetails}>
+                  {"\n"}Transporter: {data.addedTransport || "N/A"}
+                </Text>
+              </View>
+              <View style={styles.gridItem}>
+                <Text style={styles.label}>Driver Name</Text>
+                <Text style={styles.value}>{data.driverName || "N/A"}</Text>
+                <Text style={styles.addressDetails}>
+                  {"\n"}Phone: {data.driverPhoneNumber || "N/A"}
+                </Text>
+              </View>
+              <View style={[styles.gridItem, { borderRight: "none" }]}>
+                <Text style={styles.label}>Vehicle Type</Text>
+                <Text style={styles.value}>{data.vehicleType || "N/A"}</Text>
+                <Text style={styles.addressDetails}>
+                  {"\n"}Capacity: {data.vehicleCapacity || "N/A"}
+                </Text>
+              </View>
+            </View>
           </View>
         </View>
 
         <View style={styles.divider} />
 
-        <View style={styles.table}>
-          <View style={[styles.tableRow, styles.tableHeader]}>
-            <Text style={[styles.tableCell, { width: "25%" }]}>Loading Weight</Text>
-            <Text style={[styles.tableCell, { width: "25%" }]}>Unloading Weight</Text>
-            <Text style={[styles.tableCell, { width: "25%" }]}>Freight Rate</Text>
-            <Text style={[styles.tableCell, { width: "25%", borderRightWidth: 0 }]}>Total Freight</Text>
-          </View>
-          <View style={styles.tableRow}>
-            <Text style={[styles.tableCell, { width: "25%" }]}>{data.loadingWeight || "0"} Tons</Text>
-            <Text style={[styles.tableCell, { width: "25%" }]}>{data.unloadingWeight || "0"} Tons</Text>
-            <Text style={[styles.tableCell, { width: "25%" }]}>Rs.  {data.freightRate || "0"}</Text>
-            <Text style={[styles.tableCell, { width: "25%", borderRightWidth: 0 }]}>Rs.  {data.totalFreight || "0"}</Text>
-          </View>
-        </View>
-
+        {/* FREIGHT DETAILS Section */}
         <View style={styles.section}>
-          <View style={styles.grid}>
-            <View style={styles.gridItem}>
-              <Text style={styles.label}>Advance</Text>
-              <Text style={styles.value}>Rs.  {data.advance || "0"}</Text>
+          <Text style={styles.sectionTitle}>FREIGHT DETAILS</Text>
+          
+          <View style={styles.table}>
+            <View style={[styles.tableRow, styles.tableHeader]}>
+              <Text style={[styles.tableCell, { width: "25%" }]}>Loading Weight</Text>
+              <Text style={[styles.tableCell, { width: "25%" }]}>Unloading Weight</Text>
+              <Text style={[styles.tableCell, { width: "25%" }]}>Freight Rate</Text>
+              <Text style={[styles.tableCell, { width: "25%", borderRightWidth: 0 }]}>Total Freight</Text>
             </View>
-            <View style={[styles.gridItem, { borderRight: "none" }]}>
-              <Text style={styles.label}>Balance</Text>
-              <Text style={styles.value}>Rs.  {data.balance || "0"}</Text>
+            <View style={styles.tableRow}>
+              <Text style={[styles.tableCell, { width: "25%" }]}>{data.loadingWeight || "0"} Tons</Text>
+              <Text style={[styles.tableCell, { width: "25%" }]}>{data.unloadingWeight || "0"} Tons</Text>
+              <Text style={[styles.tableCell, { width: "25%" }]}>Rs.  {data.freightRate || "0"}</Text>
+              <Text style={[styles.tableCell, { width: "25%", borderRightWidth: 0 }]}>Rs.  {data.totalFreight || "0"}</Text>
+            </View>
+          </View>
+
+          <View style={{ marginTop: 8 }}>
+            <View style={styles.grid}>
+              <View style={styles.gridItem}>
+                <Text style={styles.label}>Advance</Text>
+                <Text style={styles.value}>Rs.  {data.advance || "0"}</Text>
+              </View>
+              <View style={[styles.gridItem, { borderRight: "none" }]}>
+                <Text style={styles.label}>Balance</Text>
+                <Text style={styles.value}>Rs.  {data.balance || "0"}</Text>
+              </View>
             </View>
           </View>
         </View>
@@ -391,10 +408,6 @@ const LorryChallanPDF = ({ data, logoUrl }) => {
             <Text>____________________</Text>
             <Text style={styles.label}>Driver's Signature</Text>
           </View>
-          <View style={styles.signatureBox}>
-            <Text>____________________</Text>
-            <Text style={styles.label}>Receiver's Signature</Text>
-          </View>
         </View>
 
         <View style={styles.footer} fixed>
@@ -407,6 +420,12 @@ const LorryChallanPDF = ({ data, logoUrl }) => {
             <Text style={{ fontWeight: "bold" }}>Contact: </Text>
             +91 98304 33535 / 93304 33535 | Email: info@hansariafood.com |
             Website: www.hansariafood.com
+          </Text>
+          <Text style={styles.footerText}>
+            {"\n"}*Any shortage or damage shall be deducted from the freight amount.
+          </Text>
+          <Text style={styles.footerText}>
+            *This is a computer-generated challan issued by Hansaria Food Private Limited. It is for informational purposes only and shall not be considered as a legal document or proof of delivery.
           </Text>
         </View>
       </Page>
