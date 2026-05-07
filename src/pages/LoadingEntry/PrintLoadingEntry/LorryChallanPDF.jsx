@@ -1,4 +1,4 @@
-import { Page, Document, StyleSheet, View, Text } from "@react-pdf/renderer";
+import { Page, Document, StyleSheet, View, Text, Image } from "@react-pdf/renderer";
 
 const styles = StyleSheet.create({
   page: {
@@ -32,14 +32,40 @@ const styles = StyleSheet.create({
     borderStyle: "solid",
   },
   header: {
-    textAlign: "center",
-    marginBottom: 10,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    marginBottom: 15,
+  },
+  sellerInfo: {
+    flex: 2,
+  },
+  logoContainer: {
+    flex: 1,
+    alignItems: "flex-end",
+  },
+  logo: {
+    width: 80,
+    height: 80,
+    objectFit: "contain",
+  },
+  sellerName: {
+    fontSize: 14,
+    fontWeight: "bold",
+    color: "#1F7A3E",
+    marginBottom: 4,
+  },
+  sellerAddress: {
+    fontSize: 8,
+    color: "#4B5563",
+    lineHeight: 1.4,
   },
   title: {
     fontSize: 18,
     fontWeight: "bold",
     marginBottom: 8,
     color: "#1F7A3E",
+    textAlign: "center",
   },
   section: {
     marginBottom: 8,
@@ -178,7 +204,7 @@ const renderAddressDetails = (details) => {
   return <Text style={styles.addressDetails}>{"\n" + parts.join("\n")}</Text>;
 };
 
-const LorryChallanPDF = ({ data }) => {
+const LorryChallanPDF = ({ data, logoUrl }) => {
   return (
     <Document>
       <Page style={styles.page} size="A4">
@@ -187,6 +213,28 @@ const LorryChallanPDF = ({ data }) => {
         
         <View style={styles.watermark} fixed>
           <Text style={{ fontSize: 60, color: "#000000" }}>HANSARIA</Text>
+        </View>
+
+        {/* Header with Seller Info and Logo */}
+        <View style={styles.header}>
+          <View style={styles.sellerInfo}>
+            <Text style={styles.sellerName}>{data.supplierCompany || "Hansaria Food Private Limited"}</Text>
+            <Text style={styles.sellerAddress}>
+              {data.supplierDetails?.address || "207 MAHARSHI DEBENDRA ROAD"}
+              {data.supplierDetails?.address && (data.supplierDetails?.district || data.supplierDetails?.state) ? ", " : ""}
+              {data.supplierDetails?.district || ""}
+              {data.supplierDetails?.district && data.supplierDetails?.state ? ", " : ""}
+              {data.supplierDetails?.state || "West Bengal"}
+              {data.supplierDetails?.pinNo ? ` - ${data.supplierDetails.pinNo}` : ""}
+            </Text>
+            <Text style={styles.sellerAddress}>
+              {data.supplierDetails?.gstNo ? `GST: ${data.supplierDetails.gstNo}` : "GST: 10BOSPK6679G1ZJ"}
+              {data.supplierDetails?.panNo ? `  |  PAN: ${data.supplierDetails.panNo}` : ""}
+            </Text>
+          </View>
+          <View style={styles.logoContainer}>
+            {logoUrl && <Image src={logoUrl} style={styles.logo} />}
+          </View>
         </View>
 
         <View style={styles.header}>
@@ -214,23 +262,27 @@ const LorryChallanPDF = ({ data }) => {
           </View>
         </View>
 
+        {/* SHIP TO (CONSIGNEE) Section */}
         <View style={styles.grid}>
           <View style={styles.gridItem}>
-            <Text style={styles.label}>Buyer Name</Text>
+            <Text style={styles.label}>SHIP TO (CONSIGNEE)</Text>
             <Text style={styles.nameValue}>
-              {data.buyerCompany || data.buyer || "N/A"}
+              {data.consignee || "Premium Chick Feeds Pvt Ltd - Shanti 1"}
+            </Text>
+            {renderAddressDetails(data.consigneeDetails)}
+          </View>
+        </View>
+
+        <View style={styles.divider} />
+
+        {/* BUYER ACCOUNT Section */}
+        <View style={styles.grid}>
+          <View style={styles.gridItem}>
+            <Text style={styles.label}>BUYER ACCOUNT</Text>
+            <Text style={styles.nameValue}>
+              {data.buyerCompany || data.buyer || "Agri Rise Private Limited"}
             </Text>
             {renderAddressDetails(data.buyerDetails)}
-          </View>
-          <View style={styles.gridItem}>
-            <Text style={styles.label}>Supplier Company</Text>
-            <Text style={styles.value}>{data.supplierCompany || "N/A"}</Text>
-            {renderAddressDetails(data.supplierDetails)}
-          </View>
-          <View style={[styles.gridItem, { borderRight: "none" }]}>
-            <Text style={styles.label}>Ship To (Consignee)</Text>
-            <Text style={styles.nameValue}>{data.consignee || "N/A"}</Text>
-            {renderAddressDetails(data.consigneeDetails)}
           </View>
         </View>
 
@@ -248,7 +300,7 @@ const LorryChallanPDF = ({ data }) => {
             </View>
             <View style={styles.headerItem}>
               <Text style={styles.label}>COMMODITY</Text>
-              <Text style={styles.value}>{data.commodity || "N/A"}</Text>
+              <Text style={styles.value}>{data.commodity || "Maize"}</Text>
             </View>
           </View>
         </View>
@@ -256,14 +308,14 @@ const LorryChallanPDF = ({ data }) => {
         <View style={styles.grid}>
           <View style={styles.gridItem}>
             <Text style={styles.label}>Lorry Number</Text>
-            <Text style={styles.value}>{data.lorryNumber || "N/A"}</Text>
+            <Text style={styles.value}>{data.lorryNumber || "UP51AT 4370"}</Text>
             <Text style={styles.addressDetails}>
-              {"\n"}Transporter: {data.addedTransport || "N/A"}
+              {"\n"}Transporter: {data.addedTransport || "NA"}
             </Text>
           </View>
           <View style={styles.gridItem}>
             <Text style={styles.label}>Driver Name</Text>
-            <Text style={styles.value}>{data.driverName || "N/A"}</Text>
+            <Text style={styles.value}>{data.driverName || "NA"}</Text>
             <Text style={styles.addressDetails}>
               {"\n"}Phone: {data.driverPhoneNumber || "N/A"}
             </Text>
@@ -287,10 +339,10 @@ const LorryChallanPDF = ({ data }) => {
             <Text style={[styles.tableCell, { width: "25%", borderRightWidth: 0 }]}>Total Freight</Text>
           </View>
           <View style={styles.tableRow}>
-            <Text style={[styles.tableCell, { width: "25%" }]}>{data.loadingWeight || "0"} Tons</Text>
+            <Text style={[styles.tableCell, { width: "25%" }]}>{data.loadingWeight || "33.97"} Tons</Text>
             <Text style={[styles.tableCell, { width: "25%" }]}>{data.unloadingWeight || "0"} Tons</Text>
             <Text style={[styles.tableCell, { width: "25%" }]}>₹ {data.freightRate || "0"}</Text>
-            <Text style={[styles.tableCell, { width: "25%", borderRightWidth: 0 }]}>₹ {data.totalFreight || "0"}</Text>
+            <Text style={[styles.tableCell, { width: "25%", borderRightWidth: 0 }]}>₹ {data.totalFreight || "33.97"}</Text>
           </View>
         </View>
 
@@ -298,7 +350,7 @@ const LorryChallanPDF = ({ data }) => {
           <View style={styles.grid}>
             <View style={styles.gridItem}>
               <Text style={styles.label}>Loading Place</Text>
-              <Text style={styles.value}>{data.loadingPlace || "N/A"}</Text>
+              <Text style={styles.value}>{data.loadingPlace || "West Bengal"}</Text>
             </View>
             <View style={[styles.gridItem, { borderRight: "none" }]}>
               <Text style={styles.label}>Unloading Place</Text>
