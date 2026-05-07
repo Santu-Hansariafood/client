@@ -1,4 +1,11 @@
-import { Page, Document, StyleSheet, View, Text, Image } from "@react-pdf/renderer";
+import {
+  Page,
+  Document,
+  StyleSheet,
+  View,
+  Text,
+  Image,
+} from "@react-pdf/renderer";
 
 const styles = StyleSheet.create({
   page: {
@@ -191,7 +198,7 @@ const styles = StyleSheet.create({
 
 const renderAddressDetails = (details) => {
   if (!details) return null;
-  const { address, district, state, pinNo, panNo, gstNo } = details;
+  const { address, district, state, pinNo, panNo, gstNo, phone, mobile, phoneNumber } = details;
   
   let parts = [];
   if (address || district || state || pinNo) {
@@ -205,6 +212,8 @@ const renderAddressDetails = (details) => {
   }
   if (panNo) parts.push(`PAN No: ${panNo}`);
   if (gstNo) parts.push(`GST: ${gstNo}`);
+  const contactNumber = phone || mobile || phoneNumber;
+  if (contactNumber) parts.push(`Phone: ${contactNumber}`);
 
   if (parts.length === 0) return null;
 
@@ -213,9 +222,13 @@ const renderAddressDetails = (details) => {
 
 const LorryChallanPDF = ({ data, logoUrl }) => {
   const isConsigneeAsBuyer = data.billTo === "consignee";
-  const buyerName = isConsigneeAsBuyer ? data.consignee : (data.buyerCompany || data.buyer);
-  const buyerDetails = isConsigneeAsBuyer ? data.consigneeDetails : data.buyerDetails;
-  
+  const buyerName = isConsigneeAsBuyer
+    ? data.consignee
+    : data.buyerCompany || data.buyer;
+  const buyerDetails = isConsigneeAsBuyer
+    ? data.consigneeDetails
+    : data.buyerDetails;
+
   const fromState = data.supplierDetails?.state || "West Bengal";
   const toState = data.consigneeDetails?.state || "N/A";
 
@@ -224,7 +237,7 @@ const LorryChallanPDF = ({ data, logoUrl }) => {
       <Page style={styles.page} size="A4">
         <View style={styles.pageBorder} fixed />
         <View style={styles.innerBorder} fixed />
-        
+
         <View style={styles.watermark} fixed>
           <Text style={{ fontSize: 60, color: "#000000" }}>HANSARIA</Text>
         </View>
@@ -232,18 +245,31 @@ const LorryChallanPDF = ({ data, logoUrl }) => {
         {/* Header with Seller Info and Logo */}
         <View style={styles.header}>
           <View style={styles.sellerInfo}>
-            <Text style={styles.sellerName}>{data.supplierCompany || "Hansaria Food Private Limited"}</Text>
-            <Text style={styles.sellerAddress}>
-              {data.supplierDetails?.address || "207 MAHARSHI DEBENDRA ROAD"}
-              {data.supplierDetails?.address && (data.supplierDetails?.district || data.supplierDetails?.state) ? ", " : ""}
-              {data.supplierDetails?.district || ""}
-              {data.supplierDetails?.district && data.supplierDetails?.state ? ", " : ""}
-              {data.supplierDetails?.state || "West Bengal"}
-              {data.supplierDetails?.pinNo ? ` - ${data.supplierDetails.pinNo}` : ""}
+            <Text style={styles.sellerName}>
+              {data.supplierCompany || "Hansaria Food Private Limited"}
             </Text>
             <Text style={styles.sellerAddress}>
-              {data.supplierDetails?.gstNo ? `GST: ${data.supplierDetails.gstNo}` : "GST: 10BOSPK6679G1ZJ"}
-              {data.supplierDetails?.panNo ? `  |  PAN: ${data.supplierDetails.panNo}` : ""}
+              {data.supplierDetails?.address || "207 MAHARSHI DEBENDRA ROAD"}
+              {data.supplierDetails?.address &&
+              (data.supplierDetails?.district || data.supplierDetails?.state)
+                ? ", "
+                : ""}
+              {data.supplierDetails?.district || ""}
+              {data.supplierDetails?.district && data.supplierDetails?.state
+                ? ", "
+                : ""}
+              {data.supplierDetails?.state || "West Bengal"}
+              {data.supplierDetails?.pinNo
+                ? ` - ${data.supplierDetails.pinNo}`
+                : ""}
+            </Text>
+            <Text style={styles.sellerAddress}>
+              {data.supplierDetails?.gstNo
+                ? `GST: ${data.supplierDetails.gstNo}`
+                : "GST: 10BOSPK6679G1ZJ"}
+              {data.supplierDetails?.panNo
+                ? `  |  PAN: ${data.supplierDetails.panNo}`
+                : ""}
             </Text>
           </View>
           <View style={styles.logoContainer}>
@@ -269,8 +295,10 @@ const LorryChallanPDF = ({ data, logoUrl }) => {
           <View style={styles.headerItem}>
             <Text style={styles.label}>DATE</Text>
             <Text style={styles.value}>
-              {data.dateOfIssue 
-                ? new Date(data.dateOfIssue).toLocaleDateString("en-GB").replace(/\//g, "-") 
+              {data.dateOfIssue
+                ? new Date(data.dateOfIssue)
+                    .toLocaleDateString("en-GB")
+                    .replace(/\//g, "-")
                 : "N/A"}
             </Text>
           </View>
@@ -281,8 +309,10 @@ const LorryChallanPDF = ({ data, logoUrl }) => {
             <View style={styles.headerItem}>
               <Text style={styles.label}>LOADING DATE</Text>
               <Text style={styles.value}>
-                {data.loadingDate 
-                  ? new Date(data.loadingDate).toLocaleDateString("en-GB").replace(/\//g, "-") 
+                {data.loadingDate
+                  ? new Date(data.loadingDate)
+                      .toLocaleDateString("en-GB")
+                      .replace(/\//g, "-")
                   : "N/A"}
               </Text>
             </View>
@@ -299,9 +329,7 @@ const LorryChallanPDF = ({ data, logoUrl }) => {
         <View style={styles.grid}>
           <View style={styles.gridItem}>
             <Text style={styles.label}>SHIP TO (CONSIGNEE)</Text>
-            <Text style={styles.nameValue}>
-              {data.consignee || "N/A"}
-            </Text>
+            <Text style={styles.nameValue}>{data.consignee || "N/A"}</Text>
             {renderAddressDetails(data.consigneeDetails)}
           </View>
         </View>
@@ -312,9 +340,7 @@ const LorryChallanPDF = ({ data, logoUrl }) => {
         <View style={styles.grid}>
           <View style={styles.gridItem}>
             <Text style={styles.label}>BUYER ACCOUNT</Text>
-            <Text style={styles.nameValue}>
-              {buyerName || "N/A"}
-            </Text>
+            <Text style={styles.nameValue}>{buyerName || "N/A"}</Text>
             {renderAddressDetails(buyerDetails)}
           </View>
         </View>
@@ -324,7 +350,7 @@ const LorryChallanPDF = ({ data, logoUrl }) => {
         {/* ROUTE & VEHICLE DETAILS Section */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>ROUTE & VEHICLE DETAILS</Text>
-          
+
           {/* FROM and TO Section */}
           <View style={styles.grid}>
             <View style={styles.gridItem}>
@@ -369,19 +395,45 @@ const LorryChallanPDF = ({ data, logoUrl }) => {
         {/* FREIGHT DETAILS Section */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>FREIGHT DETAILS</Text>
-          
+
           <View style={styles.table}>
             <View style={[styles.tableRow, styles.tableHeader]}>
-              <Text style={[styles.tableCell, { width: "25%" }]}>Loading Weight</Text>
-              <Text style={[styles.tableCell, { width: "25%" }]}>Unloading Weight</Text>
-              <Text style={[styles.tableCell, { width: "25%" }]}>Freight Rate</Text>
-              <Text style={[styles.tableCell, { width: "25%", borderRightWidth: 0 }]}>Total Freight</Text>
+              <Text style={[styles.tableCell, { width: "25%" }]}>
+                Loading Weight
+              </Text>
+              <Text style={[styles.tableCell, { width: "25%" }]}>
+                Unloading Weight
+              </Text>
+              <Text style={[styles.tableCell, { width: "25%" }]}>
+                Freight Rate
+              </Text>
+              <Text
+                style={[
+                  styles.tableCell,
+                  { width: "25%", borderRightWidth: 0 },
+                ]}
+              >
+                Total Freight
+              </Text>
             </View>
             <View style={styles.tableRow}>
-              <Text style={[styles.tableCell, { width: "25%" }]}>{data.loadingWeight || "0"} Tons</Text>
-              <Text style={[styles.tableCell, { width: "25%" }]}>{data.unloadingWeight || "0"} Tons</Text>
-              <Text style={[styles.tableCell, { width: "25%" }]}>Rs.  {data.freightRate || "0"}</Text>
-              <Text style={[styles.tableCell, { width: "25%", borderRightWidth: 0 }]}>Rs.  {data.totalFreight || "0"}</Text>
+              <Text style={[styles.tableCell, { width: "25%" }]}>
+                {data.loadingWeight || "0"} Tons
+              </Text>
+              <Text style={[styles.tableCell, { width: "25%" }]}>
+                {data.unloadingWeight || "0"} Tons
+              </Text>
+              <Text style={[styles.tableCell, { width: "25%" }]}>
+                Rs. {data.freightRate || "0"}
+              </Text>
+              <Text
+                style={[
+                  styles.tableCell,
+                  { width: "25%", borderRightWidth: 0 },
+                ]}
+              >
+                Rs. {data.totalFreight || "0"}
+              </Text>
             </View>
           </View>
 
@@ -389,11 +441,11 @@ const LorryChallanPDF = ({ data, logoUrl }) => {
             <View style={styles.grid}>
               <View style={styles.gridItem}>
                 <Text style={styles.label}>Advance</Text>
-                <Text style={styles.value}>Rs.  {data.advance || "0"}</Text>
+                <Text style={styles.value}>Rs. {data.advance || "0"}</Text>
               </View>
               <View style={[styles.gridItem, { borderRight: "none" }]}>
                 <Text style={styles.label}>Balance</Text>
-                <Text style={styles.value}>Rs.  {data.balance || "0"}</Text>
+                <Text style={styles.value}>Rs. {data.balance || "0"}</Text>
               </View>
             </View>
           </View>
@@ -413,19 +465,13 @@ const LorryChallanPDF = ({ data, logoUrl }) => {
         <View style={styles.footer} fixed>
           <View style={styles.footerLine} />
           <Text style={styles.footerText}>
-            <Text style={{ fontWeight: "bold" }}>Register Office: </Text>
-            207, Maharshi Debendra Road, 6th Floor, Room No. 111, Kolkata - 700007
+            {"\n"}*Any shortage or damage shall be deducted from the freight
+            amount.
           </Text>
           <Text style={styles.footerText}>
-            <Text style={{ fontWeight: "bold" }}>Contact: </Text>
-            +91 98304 33535 / 93304 33535 | Email: info@hansariafood.com |
-            Website: www.hansariafood.com
-          </Text>
-          <Text style={styles.footerText}>
-            {"\n"}*Any shortage or damage shall be deducted from the freight amount.
-          </Text>
-          <Text style={styles.footerText}>
-            *This is a computer-generated challan issued by Hansaria Food Private Limited. It is for informational purposes only and shall not be considered as a legal document or proof of delivery.
+            *This is a computer-generated challan issued by Hansaria Food
+            Private Limited. It is for informational purposes only and shall not
+            be considered as a legal document or proof of delivery.
           </Text>
         </View>
       </Page>

@@ -24,6 +24,7 @@ const BuyerInformation = ({
   const [loading, setLoading] = useState(
     !propBuyers || propBuyers.length === 0,
   );
+  const [hasManuallySelected, setHasManuallySelected] = useState(false);
 
   useEffect(() => {
     if (propBuyers?.length > 0) {
@@ -125,7 +126,7 @@ const BuyerInformation = ({
 
   // Handle initial data for editing
   useEffect(() => {
-    if (loading) return;
+    if (loading || hasManuallySelected) return;
 
     const hasEditHints =
       formData?.buyer ||
@@ -221,9 +222,10 @@ const BuyerInformation = ({
         handleChange("consignee", found.name || found.label || "");
       }
     }
-  }, [buyers, companies, consignees, loading, formData, handleChange]);
+  }, [buyers, companies, consignees, loading, formData, handleChange, hasManuallySelected]);
 
   const onBuyerChange = (option) => {
+    setHasManuallySelected(true);
     const buyerId = option?.value || null;
     setSelectedBuyerId(buyerId);
     setSelectedCompanyId(null);
@@ -233,6 +235,7 @@ const BuyerInformation = ({
   };
 
   const onCompanyChange = (option) => {
+    setHasManuallySelected(true);
     const companyId = option?.value || null;
     setSelectedCompanyId(companyId);
 
@@ -286,6 +289,7 @@ const BuyerInformation = ({
   }, [selectedCompany, consignees]);
 
   const onConsigneeChange = (option) => {
+    setHasManuallySelected(true);
     const consigneeValue = option?.label || "";
     setSelectedConsignee(option?.value || "");
     handleChange("consignee", consigneeValue);

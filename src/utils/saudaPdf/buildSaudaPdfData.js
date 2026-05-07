@@ -13,6 +13,7 @@ const toUnifiedDetails = (entity) => {
     pinNo: entity.pinNo || entity.pin || entity.pinCode || "",
     district: entity.district || "",
     state: entity.state || "",
+    phone: entity.phone || entity.mobile || entity.phoneNumber || "",
   };
 };
 
@@ -26,6 +27,7 @@ const toConsigneeDetails = (entity) => {
     pin: entity.pin || entity.pinNo || entity.pinCode || "",
     district: entity.district || "",
     state: entity.state || "",
+    phone: entity.phone || entity.mobile || entity.phoneNumber || "",
   };
 };
 
