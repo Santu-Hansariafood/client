@@ -1,350 +1,376 @@
-import { Page, Document, StyleSheet, View, Text } from "@react-pdf/renderer";
+import React from "react";
+import {
+  Page,
+  Text,
+  View,
+  Document,
+  StyleSheet,
+} from "@react-pdf/renderer";
 
 const styles = StyleSheet.create({
   page: {
-    fontFamily: "Helvetica",
-    fontSize: 9,
     paddingTop: 20,
-    paddingBottom: 20,
+    paddingBottom: 25,
     paddingHorizontal: 25,
-    lineHeight: 1.2,
-    color: "#1F2937",
-    backgroundColor: "#ffffff",
-  },
-  pageBorder: {
-    position: "absolute",
-    top: 8,
-    left: 8,
-    right: 8,
-    bottom: 8,
-    borderWidth: 1,
-    borderColor: "#1F7A3E",
-    borderStyle: "solid",
-  },
-  innerBorder: {
-    position: "absolute",
-    top: 12,
-    left: 12,
-    right: 12,
-    bottom: 12,
-    borderWidth: 0.5,
-    borderColor: "#E5E7EB",
-    borderStyle: "solid",
-  },
-  header: {
-    textAlign: "center",
-    marginBottom: 10,
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: "bold",
-    marginBottom: 8,
-    color: "#1F7A3E",
-  },
-  section: {
-    marginBottom: 8,
-  },
-  headerRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    borderBottom: "0.5pt solid #e5e7eb",
-    paddingBottom: 6,
-    marginBottom: 8,
-  },
-  headerItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    flex: 1,
-  },
-  label: {
-    fontSize: 9,
-    fontWeight: "bold",
-    color: "#374151",
-    marginRight: 4,
-  },
-  value: {
-    fontSize: 10,
-    fontWeight: "bold",
-    color: "#111827",
-  },
-  nameValue: {
-    fontSize: 9,
-    fontWeight: "bold",
-    color: "#111827",
-    lineHeight: 1.1,
-  },
-  saudaValue: {
-    fontSize: 11,
-    fontWeight: "bold",
-    color: "#dc2626",
-  },
-  grid: {
-    flexDirection: "row",
-    flexWrap: "nowrap",
-    border: "0.5pt solid #E5E7EB",
-    borderRadius: 4,
-    backgroundColor: "#F9FAFB",
-  },
-  gridItem: {
-    flex: 1,
-    padding: 6,
-    borderRight: "0.5pt solid #E5E7EB",
-  },
-  addressDetails: {
+    fontFamily: "Helvetica",
     fontSize: 8,
-    color: "#4B5563",
-    lineHeight: 1.4,
+    color: "#000",
+    lineHeight: 1.2,
   },
-  table: {
-    width: "100%",
-    marginTop: 10,
-    borderWidth: 0.5,
-    borderColor: "#E5E7EB",
-  },
-  tableRow: {
-    flexDirection: "row",
-    borderBottomWidth: 0.5,
-    borderBottomColor: "#E5E7EB",
-  },
-  tableHeader: {
-    backgroundColor: "#F3F4F6",
-  },
-  tableCell: {
-    padding: 6,
-    borderRightWidth: 0.5,
-    borderRightColor: "#E5E7EB",
+
+  title: {
     textAlign: "center",
+    fontSize: 16,
+    fontWeight: "bold",
+    marginBottom: 6,
   },
-  signatureSection: {
-    marginTop: 40,
-    flexDirection: "row",
-    justifyContent: "space-between",
+
+  line: {
+    borderBottomWidth: 1,
+    borderBottomColor: "#000",
+    marginVertical: 4,
   },
-  signatureBox: {
-    width: "30%",
-    textAlign: "center",
-  },
-  watermark: {
-    position: "absolute",
-    top: "40%",
-    left: "20%",
-    transform: "rotate(-25deg)",
-    opacity: 0.1,
-  },
-  footer: {
-    position: "absolute",
-    bottom: 15,
-    left: 30,
-    right: 30,
-    textAlign: "center",
-    fontSize: 6,
-    color: "#6B7280",
-  },
-  footerLine: {
-    height: 0.5,
-    backgroundColor: "#E5E7EB",
+
+  sectionLine: {
+    borderBottomWidth: 0.6,
+    borderBottomColor: "#000",
+    marginTop: 6,
     marginBottom: 4,
   },
-  footerText: {
-    fontSize: 6,
-    color: "#6B7280",
+
+  rowBetween: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 3,
   },
-  divider: {
-    height: 1,
-    backgroundColor: "#E5E7EB",
-    marginVertical: 6,
+
+  row: {
+    flexDirection: "row",
+    marginBottom: 2,
+    flexWrap: "wrap",
+  },
+
+  label: {
+    width: "28%",
+    fontWeight: "bold",
+  },
+
+  value: {
+    width: "72%",
+  },
+
+  sectionTitle: {
+    fontSize: 9,
+    fontWeight: "bold",
+    marginBottom: 4,
+    marginTop: 2,
+  },
+
+  twoColumn: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+
+  column: {
+    width: "48%",
+  },
+
+  signatureSection: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 40,
+    paddingHorizontal: 20,
+  },
+
+  signatureBox: {
+    alignItems: "center",
+    width: "40%",
+  },
+
+  signatureLine: {
+    width: "100%",
+    borderBottomWidth: 0.8,
+    borderBottomColor: "#000",
+    marginBottom: 4,
+  },
+
+  footer: {
+    marginTop: 20,
+    fontSize: 7,
+    textAlign: "left",
+  },
+
+  smallText: {
+    fontSize: 7,
+    marginBottom: 2,
+  },
+
+  bold: {
+    fontWeight: "bold",
   },
 });
 
-const renderAddressDetails = (details) => {
-  if (!details) return null;
-  const { address, district, state, pinNo, panNo, gstNo } = details;
-  
-  let parts = [];
-  if (address || district || state || pinNo) {
-    parts.push(
-      `${address || ""}${address && (district || state || pinNo) ? ", " : ""}${
-        district || ""
-      }${district && (state || pinNo) ? ", " : ""}${state || ""}${
-        state && pinNo ? " - " : ""
-      }${pinNo || ""}`,
-    );
-  }
-  if (panNo) parts.push(`PAN No: ${panNo}`);
-  if (gstNo) parts.push(`GST: ${gstNo}`);
+const formatDate = (date) => {
+  if (!date) return "N/A";
 
-  if (parts.length === 0) return null;
-
-  return <Text style={styles.addressDetails}>{"\n" + parts.join("\n")}</Text>;
+  return new Date(date)
+    .toLocaleDateString("en-GB")
+    .replace(/\//g, "/");
 };
 
 const LorryChallanPDF = ({ data }) => {
   return (
     <Document>
-      <Page style={styles.page} size="A4">
-        <View style={styles.pageBorder} fixed />
-        <View style={styles.innerBorder} fixed />
-        
-        <View style={styles.watermark} fixed>
-          <Text style={{ fontSize: 60, color: "#000000" }}>HANSARIA</Text>
+      <Page size="A4" style={styles.page}>
+        {/* Header */}
+        <Text style={styles.title}>LORRY CHALLAN</Text>
+
+        <View style={styles.line} />
+
+        {/* Top Details */}
+        <View style={styles.rowBetween}>
+          <Text>
+            <Text style={styles.bold}>HFPL Sauda No: </Text>
+            {data.saudaNo || "N/A"}
+          </Text>
+
+          <Text>
+            <Text style={styles.bold}>Buyer PO No: </Text>
+            {data.buyerPoNo || "N/A"}
+          </Text>
         </View>
 
-        <View style={styles.header}>
-          <Text style={styles.title}>LORRY CHALLAN</Text>
+        <View style={styles.rowBetween}>
+          <Text>
+            <Text style={styles.bold}>Challan No: </Text>
+            {data.billNumber || "N/A"}
+          </Text>
+
+          <Text>
+            <Text style={styles.bold}>Date: </Text>
+            {formatDate(data.dateOfIssue)}
+          </Text>
         </View>
 
-        <View style={styles.headerRow}>
-          <View style={styles.headerItem}>
-            <Text style={styles.label}>SAUDA NO</Text>
-            <Text style={styles.saudaValue}>{data.saudaNo || "N/A"}</Text>
+        <View style={{ marginTop: 4 }}>
+          <Text>
+            <Text style={styles.bold}>Broker: </Text>
+            Hansaria Food Private Limited
+          </Text>
+        </View>
+
+        {/* Consignee */}
+        <View style={styles.sectionLine} />
+
+        <Text style={styles.sectionTitle}>SHIP TO (CONSIGNEE)</Text>
+
+        <View style={styles.row}>
+          <Text style={styles.label}>Consignee:</Text>
+          <Text style={styles.value}>
+            {data.consignee || "N/A"}
+          </Text>
+        </View>
+
+        <View style={styles.row}>
+          <Text style={styles.label}>Address:</Text>
+          <Text style={styles.value}>
+            {data.consigneeDetails?.address || "N/A"}
+            {data.consigneeDetails?.district
+              ? `, ${data.consigneeDetails.district}`
+              : ""}
+            {data.consigneeDetails?.state
+              ? `, ${data.consigneeDetails.state}`
+              : ""}
+            {data.consigneeDetails?.pinNo
+              ? ` - ${data.consigneeDetails.pinNo}`
+              : ""}
+          </Text>
+        </View>
+
+        <View style={styles.row}>
+          <Text style={styles.label}>Mobile:</Text>
+          <Text style={styles.value}>
+            {data.consigneeDetails?.mobile || "N/A"}
+          </Text>
+        </View>
+
+        <View style={styles.row}>
+          <Text style={styles.label}>GST:</Text>
+          <Text style={styles.value}>
+            {data.consigneeDetails?.gstNo || "N/A"}
+          </Text>
+        </View>
+
+        <View style={styles.row}>
+          <Text style={styles.label}>PAN No:</Text>
+          <Text style={styles.value}>
+            {data.consigneeDetails?.panNo || "N/A"}
+          </Text>
+        </View>
+
+        {/* Buyer */}
+        <View style={styles.sectionLine} />
+
+        <Text style={styles.sectionTitle}>BUYER ACCOUNT</Text>
+
+        <View style={styles.row}>
+          <Text style={styles.label}>Buyer Company:</Text>
+          <Text style={styles.value}>
+            {data.buyerCompany || data.buyer || "N/A"}
+          </Text>
+        </View>
+
+        <View style={styles.row}>
+          <Text style={styles.label}>Address:</Text>
+          <Text style={styles.value}>
+            {data.buyerDetails?.address || "N/A"}
+          </Text>
+        </View>
+
+        {/* Goods */}
+        <View style={styles.sectionLine} />
+
+        <Text style={styles.sectionTitle}>
+          DESCRIPTION OF GOODS
+        </Text>
+
+        <View style={styles.row}>
+          <Text style={styles.label}>Item:</Text>
+          <Text style={styles.value}>
+            {data.commodity || "N/A"}
+          </Text>
+        </View>
+
+        <View style={styles.row}>
+          <Text style={styles.label}>Bags:</Text>
+          <Text style={styles.value}>
+            {data.bags || "1"}
+          </Text>
+        </View>
+
+        <View style={styles.row}>
+          <Text style={styles.label}>Weight:</Text>
+          <Text style={styles.value}>
+            {data.loadingWeight || "0"} Tons
+          </Text>
+        </View>
+
+        {/* Route */}
+        <View style={styles.sectionLine} />
+
+        <Text style={styles.sectionTitle}>
+          ROUTE & VEHICLE DETAILS
+        </Text>
+
+        <View style={styles.twoColumn}>
+          <View style={styles.column}>
+            <Text>
+              <Text style={styles.bold}>From: </Text>
+              {data.loadingPlace || "N/A"}
+            </Text>
           </View>
 
-          <View style={styles.headerItem}>
-            <Text style={styles.label}>BILL NO</Text>
-            <Text style={styles.value}>{data.billNumber || "N/A"}</Text>
+          <View style={styles.column}>
+            <Text>
+              <Text style={styles.bold}>To: </Text>
+              {data.unloadingPlace || "N/A"}
+            </Text>
           </View>
+        </View>
 
-          <View style={styles.headerItem}>
-            <Text style={styles.label}>DATE</Text>
+        <View style={{ marginTop: 5 }}>
+          <View style={styles.row}>
+            <Text style={styles.label}>Transporter:</Text>
             <Text style={styles.value}>
-              {data.dateOfIssue 
-                ? new Date(data.dateOfIssue).toLocaleDateString("en-GB").replace(/\//g, "-") 
-                : "N/A"}
+              {data.addedTransport || "N/A"}
+            </Text>
+          </View>
+
+          <View style={styles.row}>
+            <Text style={styles.label}>Lorry No:</Text>
+            <Text style={styles.value}>
+              {data.lorryNumber || "N/A"}
+            </Text>
+          </View>
+
+          <View style={styles.row}>
+            <Text style={styles.label}>Driver:</Text>
+            <Text style={styles.value}>
+              {data.driverName || "N/A"}
+            </Text>
+          </View>
+
+          <View style={styles.row}>
+            <Text style={styles.label}>Mob:</Text>
+            <Text style={styles.value}>
+              {data.driverPhoneNumber || "N/A"}
+            </Text>
+          </View>
+
+          <View style={styles.row}>
+            <Text style={styles.label}>
+              Transporter Address:
+            </Text>
+            <Text style={styles.value}>
+              {data.transporterAddress || "N/A"}
             </Text>
           </View>
         </View>
 
-        <View style={styles.grid}>
-          <View style={styles.gridItem}>
-            <Text style={styles.label}>Buyer Name</Text>
-            <Text style={styles.nameValue}>
-              {data.buyerCompany || data.buyer || "N/A"}
-            </Text>
-            {renderAddressDetails(data.buyerDetails)}
-          </View>
-          <View style={styles.gridItem}>
-            <Text style={styles.label}>Supplier Company</Text>
-            <Text style={styles.value}>{data.supplierCompany || "N/A"}</Text>
-            {renderAddressDetails(data.supplierDetails)}
-          </View>
-          <View style={[styles.gridItem, { borderRight: "none" }]}>
-            <Text style={styles.label}>Ship To (Consignee)</Text>
-            <Text style={styles.nameValue}>{data.consignee || "N/A"}</Text>
-            {renderAddressDetails(data.consigneeDetails)}
-          </View>
+        {/* Freight */}
+        <View style={styles.sectionLine} />
+
+        <Text style={styles.sectionTitle}>
+          FREIGHT DETAILS
+        </Text>
+
+        <View style={styles.row}>
+          <Text style={styles.label}>Total Freight:</Text>
+          <Text style={styles.value}>
+            Rs. {data.totalFreight || "0"}
+          </Text>
         </View>
 
-        <View style={styles.divider} />
-
-        <View style={styles.section}>
-          <View style={styles.headerRow}>
-            <View style={styles.headerItem}>
-              <Text style={styles.label}>LOADING DATE</Text>
-              <Text style={styles.value}>
-                {data.loadingDate 
-                  ? new Date(data.loadingDate).toLocaleDateString("en-GB").replace(/\//g, "-") 
-                  : "N/A"}
-              </Text>
-            </View>
-            <View style={styles.headerItem}>
-              <Text style={styles.label}>COMMODITY</Text>
-              <Text style={styles.value}>{data.commodity || "N/A"}</Text>
-            </View>
-          </View>
+        <View style={styles.row}>
+          <Text style={styles.label}>Advance:</Text>
+          <Text style={styles.value}>
+            Rs. {data.advance || "0"}
+          </Text>
         </View>
 
-        <View style={styles.grid}>
-          <View style={styles.gridItem}>
-            <Text style={styles.label}>Lorry Number</Text>
-            <Text style={styles.value}>{data.lorryNumber || "N/A"}</Text>
-            <Text style={styles.addressDetails}>
-              {"\n"}Transporter: {data.addedTransport || "N/A"}
-            </Text>
-          </View>
-          <View style={styles.gridItem}>
-            <Text style={styles.label}>Driver Name</Text>
-            <Text style={styles.value}>{data.driverName || "N/A"}</Text>
-            <Text style={styles.addressDetails}>
-              {"\n"}Phone: {data.driverPhoneNumber || "N/A"}
-            </Text>
-          </View>
-          <View style={[styles.gridItem, { borderRight: "none" }]}>
-            <Text style={styles.label}>Vehicle Type</Text>
-            <Text style={styles.value}>{data.vehicleType || "N/A"}</Text>
-            <Text style={styles.addressDetails}>
-              {"\n"}Capacity: {data.vehicleCapacity || "N/A"}
-            </Text>
-          </View>
+        <View style={styles.row}>
+          <Text style={styles.label}>To Pay:</Text>
+          <Text style={styles.value}>
+            Rs. {data.balance || "0"}
+          </Text>
         </View>
 
-        <View style={styles.divider} />
-
-        <View style={styles.table}>
-          <View style={[styles.tableRow, styles.tableHeader]}>
-            <Text style={[styles.tableCell, { width: "25%" }]}>Loading Weight</Text>
-            <Text style={[styles.tableCell, { width: "25%" }]}>Unloading Weight</Text>
-            <Text style={[styles.tableCell, { width: "25%" }]}>Freight Rate</Text>
-            <Text style={[styles.tableCell, { width: "25%", borderRightWidth: 0 }]}>Total Freight</Text>
-          </View>
-          <View style={styles.tableRow}>
-            <Text style={[styles.tableCell, { width: "25%" }]}>{data.loadingWeight || "0"} Tons</Text>
-            <Text style={[styles.tableCell, { width: "25%" }]}>{data.unloadingWeight || "0"} Tons</Text>
-            <Text style={[styles.tableCell, { width: "25%" }]}>₹ {data.freightRate || "0"}</Text>
-            <Text style={[styles.tableCell, { width: "25%", borderRightWidth: 0 }]}>₹ {data.totalFreight || "0"}</Text>
-          </View>
-        </View>
-
-        <View style={styles.section}>
-          <View style={styles.grid}>
-            <View style={styles.gridItem}>
-              <Text style={styles.label}>Loading Place</Text>
-              <Text style={styles.value}>{data.loadingPlace || "N/A"}</Text>
-            </View>
-            <View style={[styles.gridItem, { borderRight: "none" }]}>
-              <Text style={styles.label}>Unloading Place</Text>
-              <Text style={styles.value}>{data.unloadingPlace || "N/A"}</Text>
-            </View>
-          </View>
-        </View>
-
-        <View style={styles.section}>
-          <View style={styles.grid}>
-            <View style={styles.gridItem}>
-              <Text style={styles.label}>Advance</Text>
-              <Text style={styles.value}>₹ {data.advance || "0"}</Text>
-            </View>
-            <View style={[styles.gridItem, { borderRight: "none" }]}>
-              <Text style={styles.label}>Balance</Text>
-              <Text style={styles.value}>₹ {data.balance || "0"}</Text>
-            </View>
-          </View>
-        </View>
-
+        {/* Signature */}
         <View style={styles.signatureSection}>
           <View style={styles.signatureBox}>
-            <Text>____________________</Text>
-            <Text style={styles.label}>Seller's Signature</Text>
+            <View style={styles.signatureLine} />
+            <Text>Driver Signature</Text>
           </View>
+
           <View style={styles.signatureBox}>
-            <Text>____________________</Text>
-            <Text style={styles.label}>Driver's Signature</Text>
-          </View>
-          <View style={styles.signatureBox}>
-            <Text>____________________</Text>
-            <Text style={styles.label}>Receiver's Signature</Text>
+            <View style={styles.signatureLine} />
+            <Text>Authorized Signature</Text>
           </View>
         </View>
 
-        <View style={styles.footer} fixed>
-          <View style={styles.footerLine} />
-          <Text style={styles.footerText}>
-            <Text style={{ fontWeight: "bold" }}>Register Office: </Text>
-            207, Maharshi Debendra Road, 6th Floor, Room No. 111, Kolkata - 700007
+        {/* Footer */}
+        <View style={styles.footer}>
+          <Text style={styles.smallText}>
+            *Any shortage or damage shall be deducted
+            from the freight amount.
           </Text>
-          <Text style={styles.footerText}>
-            <Text style={{ fontWeight: "bold" }}>Contact: </Text>
-            +91 98304 33535 / 93304 33535 | Email: info@hansariafood.com |
-            Website: www.hansariafood.com
+
+          <Text style={styles.smallText}>
+            *This is a computer-generated challan
+            issued by Hansaria Food Private Limited.
+            It is for informational purposes only and
+            shall not be considered as a legal document
+            or proof of delivery.
           </Text>
         </View>
       </Page>
