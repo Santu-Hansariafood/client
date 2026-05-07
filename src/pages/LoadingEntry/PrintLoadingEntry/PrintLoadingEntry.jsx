@@ -643,68 +643,100 @@ const PrintLoadingEntry = async (data) => {
     const displayTransporterAddress = String(transporter.address || "N/A");
 
     const supplierCompanyNameNormalized = normalizeText(data.supplierCompany);
-    const matchingSeller =
-      (sellers || []).find((s) => String(s._id) === String(data.supplier)) ||
-      (sellers || []).find(
-        (s) => normalizeText(s.sellerName) === supplierCompanyNameNormalized,
-      ) ||
-      null;
+    
+    let sellerName = 
+      sauda.sellerName || 
+      sauda.sellerCompany || 
+      data.supplierCompany || 
+      "N/A";
+    
+    let sellerGstNo = 
+      sauda.sellerGstNo || 
+      sauda.sellerGstNumber || 
+      sauda.sellerGst || 
+      "";
+    
+    let sellerPanNo = 
+      sauda.sellerPanNo || 
+      sauda.sellerPanNumber || 
+      sauda.sellerPan || 
+      "";
+    
+    let sellerFullAddress = 
+      sauda.sellerAddress || 
+      sauda.supplierAddress || 
+      [sauda.location, sauda.state].filter(Boolean).join(", ") || 
+      data.supplierAddress || 
+      data.from || 
+      "N/A";
+    
+    let sellerState = 
+      sauda.sellerState || 
+      sauda.state || 
+      "N/A";
 
-    let matchingSellerCompany =
-      (sellerCompanies || []).find(
-        (sc) => normalizeText(sc.companyName) === supplierCompanyNameNormalized,
-      ) ||
-      (sellerCompanies || []).find((sc) => {
-        const scName = normalizeText(sc.companyName);
-        return (
-          scName.includes(supplierCompanyNameNormalized) ||
-          supplierCompanyNameNormalized.includes(scName)
-        );
-      }) ||
-      null;
-
-    if (!matchingSellerCompany && matchingSeller?.companies?.length) {
-      matchingSellerCompany =
-        (sellerCompanies || []).find((sc) =>
-          matchingSeller.companies.some(
-            (cName) => normalizeText(cName) === normalizeText(sc.companyName),
-          ),
-        ) ||
-        (sellerCompanies || []).find((sc) =>
-          matchingSeller.companies.some((cName) => {
-            const normalizedCName = normalizeText(cName);
-            const normalizedSCName = normalizeText(sc.companyName);
-            return (
-              normalizedCName.includes(normalizedSCName) ||
-              normalizedSCName.includes(normalizedCName)
-            );
-          }),
+    if (!sellerGstNo || !sellerPanNo) {
+      const matchingSeller =
+        (sellers || []).find((s) => String(s._id) === String(data.supplier)) ||
+        (sellers || []).find(
+          (s) => normalizeText(s.sellerName) === supplierCompanyNameNormalized,
         ) ||
         null;
-    }
 
-    const sellerGstNo =
-      matchingSellerCompany?.gstNo || matchingSeller?.gstNumber || "";
-    const sellerPanNo =
-      matchingSellerCompany?.panNo || matchingSeller?.panNumber || "";
-    const sellerTaxNumber = sellerGstNo || sellerPanNo || "N/A";
-    const sellerTaxLabel = sellerGstNo ? "GST" : "PAN";
+      let matchingSellerCompany =
+        (sellerCompanies || []).find(
+          (sc) => normalizeText(sc.companyName) === supplierCompanyNameNormalized,
+        ) ||
+        (sellerCompanies || []).find((sc) => {
+          const scName = normalizeText(sc.companyName);
+          return (
+            scName.includes(supplierCompanyNameNormalized) ||
+            supplierCompanyNameNormalized.includes(scName)
+          );
+        }) ||
+        null;
 
-    const sellerFullAddress = matchingSellerCompany
-      ? [
+      if (!matchingSellerCompany && matchingSeller?.companies?.length) {
+        matchingSellerCompany =
+          (sellerCompanies || []).find((sc) =>
+            matchingSeller.companies.some(
+              (cName) => normalizeText(cName) === normalizeText(sc.companyName),
+            ),
+          ) ||
+          (sellerCompanies || []).find((sc) =>
+            matchingSeller.companies.some((cName) => {
+              const normalizedCName = normalizeText(cName);
+              const normalizedSCName = normalizeText(sc.companyName);
+              return (
+                normalizedCName.includes(normalizedSCName) ||
+                normalizedSCName.includes(normalizedCName)
+              );
+            }),
+          ) ||
+          null;
+      }
+
+      if (!sellerGstNo) {
+        sellerGstNo = matchingSellerCompany?.gstNo || matchingSeller?.gstNumber || "";
+      }
+      if (!sellerPanNo) {
+        sellerPanNo = matchingSellerCompany?.panNo || matchingSeller?.panNumber || "";
+      }
+      if (sellerFullAddress === "N/A" && matchingSellerCompany) {
+        sellerFullAddress = [
           matchingSellerCompany.address,
           matchingSellerCompany.district,
           matchingSellerCompany.state,
           matchingSellerCompany.pinNo,
-        ]
-          .filter(Boolean)
-          .join(", ")
-      : data.supplierAddress ||
-        [sauda.location, sauda.state].filter(Boolean).join(", ") ||
-        data.from ||
-        "N/A";
+        ].filter(Boolean).join(", ");
+      }
+      if (sellerState === "N/A" && matchingSellerCompany?.state) {
+        sellerState = matchingSellerCompany.state;
+      }
+    }
 
-    const sellerState = matchingSellerCompany?.state || sauda.state || "N/A";
+    const sellerTaxNumber = sellerGstNo || sellerPanNo || "N/A";
+    const sellerTaxLabel = sellerGstNo ? "GST" : "PAN";
 
     const rawBuyerKey = data?.buyerCompany ?? data?.buyer ?? "";
     const normalizedBuyerKey = normalizeText(rawBuyerKey);
@@ -744,13 +776,12 @@ const PrintLoadingEntry = async (data) => {
       doc.addImage(logo64, "PNG", pageWidth - margin - 35, 12, 30, 22);
     }
 
-    const sellerCompanyName = data?.supplierCompany || "N/A";
-    const vendorCode = matchingSeller?.vendorCode || data?.vendorCode || "";
+    const vendorCode = sauda.vendorCode || data?.vendorCode || "";
     const textStartX = margin + 5;
 
     setBold();
     doc.setFontSize(15);
-    doc.text(`${sellerCompanyName.toUpperCase()}`, textStartX, 17);
+    doc.text(`${sellerName.toUpperCase()}`, textStartX, 17);
     if (vendorCode) {
       setNormal();
       doc.setFontSize(9);
