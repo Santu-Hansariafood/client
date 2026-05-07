@@ -1,4 +1,4 @@
-import React, { lazy, useEffect, useState, useMemo, useCallback } from "react";
+import React, { lazy, useEffect, useState, useMemo, useCallback, useRef } from "react";
 import api from "../../../utils/apiClient/apiClient";
 import { MdVisibility, MdEdit, MdDelete, MdDownload } from "react-icons/md";
 import { toast } from "react-toastify";
@@ -9,77 +9,75 @@ import { FaClipboardList } from "react-icons/fa";
 
 import PrintLoadingEntry from "../PrintLoadingEntry/PrintLoadingEntry";
 import { downloadFile } from "../../../utils/fileDownloader";
+
 const PopupBox = lazy(() => import("../../../common/PopupBox/PopupBox"));
 const Tables = lazy(() => import("../../../common/Tables/Tables"));
 const SearchBox = lazy(() => import("../../../common/SearchBox/SearchBox"));
-const Pagination = lazy(
-  () => import("../../../common/Paginations/Paginations"),
-);
-const DataDropdown = lazy(
-  () => import("../../../common/DataDropdown/DataDropdown"),
-);
+const Pagination = lazy(() => import("../../../common/Paginations/Paginations"));
+const DataDropdown = lazy(() => import("../../../common/DataDropdown/DataDropdown"));
 const FileUpload = lazy(() => import("../../../common/FileUpload/FileUpload"));
 
+// Constants
+const DEBOUNCE_DELAY = 300;
+const DEFAULT_ITEMS_PER_PAGE = 10;
+const ITEMS_PER_PAGE_OPTIONS = [5, 10, 25, 50, 100];
+const DATE_FORMAT_OPTIONS = { year: 'numeric', month: '2-digit', day: '2-digit' };
+
+// Utility functions
 const formatDate = (date) => {
   if (!date) return "N/A";
-  const d = new Date(date);
-  return isNaN(d.getTime()) ? "N/A" : d.toLocaleDateString();
-};
-
-const normalizeSearchValue = (value) =>
-  String(value ?? "")
-    .trim()
-    .toLowerCase();
-
-const getConsigneeSearchText = (entry) => {
-  const raw = entry?.consignee;
-  if (!raw) return "";
-  if (typeof raw === "string") return raw;
-  if (typeof raw !== "object") return "";
-
-  const nestedValue = raw.value;
-  return (
-    raw.name ||
-    raw.label ||
-    raw.consigneeName ||
-    raw.displayName ||
-    (typeof nestedValue === "string" ? nestedValue : "") ||
-    (nestedValue && typeof nestedValue === "object"
-      ? nestedValue.name ||
-        nestedValue.label ||
-        nestedValue.consigneeName ||
-        nestedValue.displayName ||
-        ""
-      : "")
-  );
-};
-
-const getSellerSearchText = (entry, sellerMap = {}) => {
-  const supplier = entry?.supplier;
-
-  if (supplier && typeof supplier === "object") {
-    return (
-      supplier.sellerName ||
-      supplier.name ||
-      supplier.label ||
-      supplier.companyName ||
-      ""
-    );
+  try {
+    const d = new Date(date);
+    if (isNaN(d.getTime())) return "N/A";
+    return d.toLocaleDateString(undefined, DATE_FORMAT_OPTIONS);
+  } catch {
+    return "N/A";
   }
-
-  return (
-    sellerMap[String(supplier || "")] ||
-    entry?.sellerName ||
-    entry?.supplierName ||
-    ""
-  );
 };
 
-const getBuyerSearchText = (entry, buyerMap = {}) =>
-  buyerMap[String(entry?.saudaNo || "")] ||
-  entry?.buyerCompany ||
-  entry?.buyer ||
-  "";
+const validateEntryData = (entry) => {
+  const errors = [];
+  if (!entry.saudaNo?.trim()) errors.push("Sauda number is required");
+  if (!entry.lorryNumber?.trim()) errors.push("Lorry number is required");
+  if (entry.loadingWeight && isNaN(parseFloat(entry.loadingWeight))) errors.push("Invalid loading weight");
+  if (entry.freightRate && isNaN(parseFloat(entry.freightRate))) errors.push("Invalid freight rate");
+  return errors;
+};
+
+// Custom hooks
+const useDebounce = (value, delay) => {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+  
+  useEffect(() => {
+    const handler = setTimeout(() => setDebouncedValue(value), delay);
+    return () => clearTimeout(handler);
+  }, [value, delay]);
+  
+  return debouncedValue;
+};
+
+const useLocalStorage = (key, initialValue) => {
+  const [storedValue, setStoredValue] = useState(() => {
+    try {
+      const item = localStorage.getItem(key);
+      return item ? JSON.parse(item) : initialValue;
+    } catch {
+      return initialValue;
+    }
+  });
+  
+  const setValue = (value) => {
+    try {
+      const valueToStore = value instanceof Function ? value(storedValue) : value;
+      setStoredValue(valueToStore);
+      localStorage.setItem(key, JSON.stringify(valueToStore));
+    } catch (error) {
+      console.error(`Error saving to localStorage key "${key}":`, error);
+    }
+  };
+  
+  return [storedValue, setValue];
+};
 
 const ListLoadingEntry = () => {
   const { userRole, mobile } = useAuth();
@@ -109,7 +107,32 @@ const ListLoadingEntry = () => {
     saudas: [],
     lorries: [],
   });
-  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [itemsPerPage, setItemsPerPage] = useLocalStorage("loadingEntriesPerPage", DEFAULT_ITEMS_PER_PAGE);
+  const [exporting, setExporting] = useState(false);
+  const abortControllerRef = useRef(null);
+  
+  const debouncedFilters = useDebounce(filters, DEBOUNCE_DELAY);
+
+  // API calls with abort controller
+  const fetchWithAbort = useCallback(async (url, options = {}) => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    abortControllerRef.current = new AbortController();
+    
+    try {
+      const response = await api.get(url, {
+        ...options,
+        signal: abortControllerRef.current.signal,
+      });
+      return response;
+    } catch (error) {
+      if (error.name === "AbortError") {
+        return null;
+      }
+      throw error;
+    }
+  }, []);
 
   const fetchStaticData = useCallback(async () => {
     try {
@@ -130,28 +153,26 @@ const ListLoadingEntry = () => {
         : ordersRes.data?.data || [];
 
       setSellerMap(
-        Object.fromEntries(sellersData.map((s) => [s._id, s.sellerName])),
+        Object.fromEntries(sellersData.map((s) => [s._id, s.sellerName]))
       );
       setBuyerMap(
-        Object.fromEntries(ordersData.map((o) => [o.saudaNo, o.buyerCompany])),
+        Object.fromEntries(ordersData.map((o) => [o.saudaNo, o.buyerCompany]))
       );
       setPaymentTermsMap(
-        Object.fromEntries(ordersData.map((o) => [o.saudaNo, o.paymentTerms || ""])),
+        Object.fromEntries(ordersData.map((o) => [o.saudaNo, o.paymentTerms || ""]))
       );
       setStatusMap(
-        Object.fromEntries(
-          ordersData.map((o) => [o.saudaNo, o.status || "active"]),
-        ),
+        Object.fromEntries(ordersData.map((o) => [o.saudaNo, o.status || "active"]))
       );
       setTransporterMap(
-        Object.fromEntries(transportersData.map((t) => [t._id, t.name])),
+        Object.fromEntries(transportersData.map((t) => [t._id, t.name]))
       );
       setTransporters(
         transportersData.map((t) => ({
           value: t._id,
           label: `${t.name} - ${t.mobile}`,
           name: t.name,
-        })),
+        }))
       );
 
       setAlreadyLoadedMap(
@@ -170,11 +191,12 @@ const ListLoadingEntry = () => {
               pendingQuantity = pendingQuantity || 0;
             }
             return [order.saudaNo, quantity - pendingQuantity];
-          }),
-        ),
+          })
+        )
       );
     } catch (error) {
       console.error("Error fetching static data:", error);
+      toast.error("Failed to load reference data");
     }
   }, []);
 
@@ -190,52 +212,44 @@ const ListLoadingEntry = () => {
   }, [userRole, mobile]);
 
   const fetchData = useCallback(async () => {
+    if (!userRole) return;
+    
+    setLoading(true);
     try {
-      setLoading(true);
-      
-      // Build search query parameters
       const searchParams = {
         page: currentPage,
         limit: itemsPerPage,
         role: userRole,
         mobile: mobile,
+        ...(debouncedFilters.search && { search: debouncedFilters.search }),
+        ...(debouncedFilters.saudaNo && { saudaNo: debouncedFilters.saudaNo }),
+        ...(debouncedFilters.lorryNumber && { lorryNumber: debouncedFilters.lorryNumber }),
       };
 
-      // Add search filters if they exist
-      if (filters.search) {
-        searchParams.search = filters.search;
-      }
-      if (filters.saudaNo) {
-        searchParams.saudaNo = filters.saudaNo;
-      }
-      if (filters.lorryNumber) {
-        searchParams.lorryNumber = filters.lorryNumber;
-      }
-
-      const entriesRes = await api.get("/loading-entries", {
-        params: searchParams,
-      });
+      const response = await fetchWithAbort("/loading-entries", { params: searchParams });
+      if (!response) return;
 
       let entriesData = [];
-      if (Array.isArray(entriesRes.data)) {
-        entriesData = entriesRes.data;
-      } else if (entriesRes.data?.data && Array.isArray(entriesRes.data.data)) {
-        entriesData = entriesRes.data.data;
-      } else if (entriesRes.data?.items && Array.isArray(entriesRes.data.items)) {
-        entriesData = entriesRes.data.items;
+      if (Array.isArray(response.data)) {
+        entriesData = response.data;
+      } else if (response.data?.data && Array.isArray(response.data.data)) {
+        entriesData = response.data.data;
+      } else if (response.data?.items && Array.isArray(response.data.items)) {
+        entriesData = response.data.items;
       }
 
       setLoadingEntries(entriesData);
       setFilteredEntries(entriesData);
-      setTotalItems(entriesRes.data?.total || entriesData.length);
+      setTotalItems(response.data?.total || entriesData.length);
     } catch (error) {
       console.error("Error fetching entries:", error);
       toast.error("Failed to fetch loading entries");
     } finally {
       setLoading(false);
     }
-  }, [userRole, mobile, filters, currentPage, itemsPerPage]);
+  }, [userRole, mobile, debouncedFilters, currentPage, itemsPerPage, fetchWithAbort]);
 
+  // Initial data loading
   useEffect(() => {
     fetchStaticData();
     fetchSuggestions();
@@ -245,26 +259,41 @@ const ListLoadingEntry = () => {
     fetchData();
   }, [fetchData]);
 
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
+  }, []);
+
   const handlePageChange = useCallback((page) => {
     setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   }, []);
 
   const handlePageSizeChange = useCallback((size) => {
     setItemsPerPage(size);
     setCurrentPage(1);
-  }, []);
+  }, [setItemsPerPage]);
 
   const handleSearch = useCallback((q, field) => {
     setFilters((prev) => ({ ...prev, [field]: q }));
     setCurrentPage(1);
   }, []);
 
-  const handleView = (entry) => {
+  const clearFilters = useCallback(() => {
+    setFilters({ search: "", saudaNo: "", lorryNumber: "" });
+    setCurrentPage(1);
+  }, []);
+
+  const handleView = useCallback((entry) => {
     setSelectedEntry(entry);
     setPopupType("view");
-  };
+  }, []);
 
-  const handleEdit = (entry) => {
+  const handleEdit = useCallback((entry) => {
     setSelectedEntry(entry);
     setEditEntry({
       ...entry,
@@ -284,15 +313,24 @@ const ListLoadingEntry = () => {
       },
     });
     setPopupType("edit");
-  };
+  }, []);
 
-  const handleEditFieldChange = (e) => {
+  const handleEditFieldChange = useCallback((e) => {
     const { name, value } = e.target;
     setEditEntry((prev) => ({ ...prev, [name]: value }));
-  };
+  }, []);
 
-  const handleUpdateEntry = async () => {
-    if (!editEntry || !editEntry._id) return;
+  const handleUpdateEntry = useCallback(async () => {
+    if (!editEntry?._id) {
+      toast.error("Invalid entry data");
+      return;
+    }
+
+    const validationErrors = validateEntryData(editEntry);
+    if (validationErrors.length > 0) {
+      validationErrors.forEach(error => toast.error(error));
+      return;
+    }
 
     setIsSaving(true);
     try {
@@ -314,50 +352,60 @@ const ListLoadingEntry = () => {
       setPopupType("");
       setSelectedEntry(null);
       setEditEntry(null);
-      fetchData();
+      await fetchData();
     } catch (error) {
-      toast.error(error.response?.data?.message || "Failed to update entry");
+      const message = error.response?.data?.message || "Failed to update entry";
+      toast.error(message);
+      console.error("Update error:", error);
     } finally {
       setIsSaving(false);
     }
-  };
+  }, [editEntry, fetchData]);
 
-  const handleDelete = async (id) => {
-    if (window.confirm("Are you sure you want to delete this entry?")) {
-      try {
-        await api.delete(`/loading-entries/${id}`);
-        toast.success("Entry deleted successfully");
-        fetchData();
-      } catch (error) {
-        toast.error("Failed to delete entry", error);
-      }
+  const handleDelete = useCallback(async (id) => {
+    if (!window.confirm("Are you sure you want to delete this entry? This action cannot be undone.")) {
+      return;
     }
-  };
+    
+    try {
+      await api.delete(`/loading-entries/${id}`);
+      toast.success("Entry deleted successfully");
+      await fetchData();
+    } catch (error) {
+      toast.error("Failed to delete entry");
+      console.error("Delete error:", error);
+    }
+  }, [fetchData]);
 
-  const handleDownload = async (entry) => {
+  const handleDownload = useCallback(async (entry) => {
     let toastId;
     try {
       toastId = toast.loading("Preparing PDF...");
       
       const doc = await PrintLoadingEntry(entry);
-      if (!doc) return;
+      if (!doc) throw new Error("Failed to generate PDF");
       
       const blob = await doc.toBlob();
-      downloadFile(blob, `LorryChallan-${entry.billNumber || entry.saudaNo || "document"}.pdf`);
+      const fileName = `LorryChallan-${entry.billNumber || entry.saudaNo || "document"}.pdf`;
+      downloadFile(blob, fileName);
 
       toast.dismiss(toastId);
       toast.success("Download started successfully!");
     } catch (error) {
       if (toastId) toast.dismiss(toastId);
       console.error("PDF Download Error:", error);
-      toast.error("Error generating download.");
+      toast.error("Error generating download. Please try again.");
     }
-  };
+  }, []);
 
-  const handleDownloadExcel = async () => {
+  const handleDownloadExcel = useCallback(async () => {
+    if (exporting) return;
+    
     let toastId;
     try {
-      toastId = toast.loading("Preparing Excel...");
+      setExporting(true);
+      toastId = toast.loading("Preparing Excel file...");
+      
       const response = await api.get("/loading-entries/export/excel", {
         params: {
           search: filters.search,
@@ -373,18 +421,21 @@ const ListLoadingEntry = () => {
       const blob = new Blob([response.data], {
         type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       });
-      await downloadFile(blob, `LoadingEntries_${new Date().toISOString().split("T")[0]}.xlsx`);
+      const fileName = `LoadingEntries_${new Date().toISOString().split("T")[0]}.xlsx`;
+      await downloadFile(blob, fileName);
 
       toast.dismiss(toastId);
-      toast.success("Excel downloaded");
+      toast.success("Excel file downloaded successfully");
     } catch (error) {
       if (toastId) toast.dismiss(toastId);
       console.error("Excel Download Error:", error);
-      toast.error("Failed to download Excel");
+      toast.error("Failed to download Excel file. Please try again.");
+    } finally {
+      setExporting(false);
     }
-  };
+  }, [filters, userRole, mobile, exporting]);
 
-  const headers = [
+  const headers = useMemo(() => [
     "Sl No",
     "Loading Date",
     "Sauda No",
@@ -408,77 +459,81 @@ const ListLoadingEntry = () => {
     "Commodity",
     "Actions",
     "Download",
-  ];
+  ], []);
 
   const rows = useMemo(() => {
     const start = (currentPage - 1) * itemsPerPage;
     return filteredEntries.map((entry, index) => [
       start + index + 1,
-        formatDate(entry.loadingDate),
-        entry.saudaNo || "N/A",
-        entry.supplierCompany || "N/A",
-        buyerMap[entry.saudaNo] || entry.buyerCompany || "N/A",
-        paymentTermsMap[entry.saudaNo] || "N/A",
-        entry.loadingWeight,
-        entry.unloadingWeight || 0,
-        (alreadyLoadedMap[entry.saudaNo] || 0).toFixed(2),
-        <span
-          key={`status-${entry._id}`}
-          className={`px-2 py-1 rounded-full text-xs font-semibold ${
-            statusMap[entry.saudaNo] === "closed"
-              ? "bg-red-100 text-red-700"
-              : "bg-emerald-100 text-emerald-700"
-          }`}
-        >
-          {statusMap[entry.saudaNo] === "closed" ? "Closed" : "Active"}
-        </span>,
-        entry.lorryNumber,
-        transporterMap[entry.transporterId] || entry.addedTransport || "N/A",
-        entry.driverName,
-        entry.driverPhoneNumber,
-        entry.freightRate,
-        entry.totalFreight,
-        entry.advance,
-        entry.balance,
-        entry.billNumber,
-        formatDate(entry.dateOfIssue),
-        entry.commodity,
-        <div key={`actions-${entry._id}`} className="flex justify-center gap-2">
-          <button
-            onClick={() => handleView(entry)}
-            title="View"
-            className="p-1 text-blue-500 hover:bg-blue-100 rounded"
-          >
-            <MdVisibility size={18} />
-          </button>
-          {(userRole === "Admin" || userRole === "Employee") && (
-            <>
-              <button
-                onClick={() => handleEdit(entry)}
-                title="Edit"
-                className="p-1 text-green-500 hover:bg-green-100 rounded"
-              >
-                <MdEdit size={18} />
-              </button>
-              <button
-                onClick={() => handleDelete(entry._id)}
-                title="Delete"
-                className="p-1 text-red-500 hover:bg-red-100 rounded"
-              >
-                <MdDelete size={18} />
-              </button>
-            </>
-          )}
-        </div>,
+      formatDate(entry.loadingDate),
+      entry.saudaNo || "N/A",
+      entry.supplierCompany || "N/A",
+      buyerMap[entry.saudaNo] || entry.buyerCompany || "N/A",
+      paymentTermsMap[entry.saudaNo] || "N/A",
+      entry.loadingWeight?.toFixed(2) || "0.00",
+      entry.unloadingWeight?.toFixed(2) || "0.00",
+      (alreadyLoadedMap[entry.saudaNo] || 0).toFixed(2),
+      <span
+        key={`status-${entry._id}`}
+        className={`px-2 py-1 rounded-full text-xs font-semibold ${
+          statusMap[entry.saudaNo] === "closed"
+            ? "bg-red-100 text-red-700"
+            : "bg-emerald-100 text-emerald-700"
+        }`}
+      >
+        {statusMap[entry.saudaNo] === "closed" ? "Closed" : "Active"}
+      </span>,
+      entry.lorryNumber,
+      transporterMap[entry.transporterId] || entry.addedTransport || "N/A",
+      entry.driverName || "N/A",
+      entry.driverPhoneNumber || "N/A",
+      entry.freightRate ? `₹ ${entry.freightRate}` : "N/A",
+      entry.totalFreight ? `₹ ${entry.totalFreight}` : "N/A",
+      entry.advance ? `₹ ${entry.advance}` : "N/A",
+      entry.balance ? `₹ ${entry.balance}` : "N/A",
+      entry.billNumber || "N/A",
+      formatDate(entry.dateOfIssue),
+      entry.commodity || "N/A",
+      <div key={`actions-${entry._id}`} className="flex justify-center gap-2">
         <button
-          key={`download-${entry._id}`}
-          onClick={() => handleDownload(entry)}
-          title="Download"
-          className="p-1 text-purple-500 hover:bg-purple-100 rounded flex justify-center"
+          onClick={() => handleView(entry)}
+          title="View"
+          className="p-1 text-blue-500 hover:bg-blue-100 rounded transition-colors"
+          aria-label="View entry"
         >
-          <MdDownload size={18} />
-        </button>,
-      ]);
+          <MdVisibility size={18} />
+        </button>
+        {(userRole === "Admin" || userRole === "Employee") && (
+          <>
+            <button
+              onClick={() => handleEdit(entry)}
+              title="Edit"
+              className="p-1 text-green-500 hover:bg-green-100 rounded transition-colors"
+              aria-label="Edit entry"
+            >
+              <MdEdit size={18} />
+            </button>
+            <button
+              onClick={() => handleDelete(entry._id)}
+              title="Delete"
+              className="p-1 text-red-500 hover:bg-red-100 rounded transition-colors"
+              aria-label="Delete entry"
+            >
+              <MdDelete size={18} />
+            </button>
+          </>
+        )}
+      </div>,
+      <button
+        key={`download-${entry._id}`}
+        onClick={() => handleDownload(entry)}
+        title="Download PDF"
+        className="p-1 text-purple-500 hover:bg-purple-100 rounded transition-colors flex justify-center"
+        aria-label="Download PDF"
+      >
+        <MdDownload size={18} />
+      </button>,
+    ]);
   }, [
     filteredEntries,
     currentPage,
@@ -489,15 +544,18 @@ const ListLoadingEntry = () => {
     userRole,
     paymentTermsMap,
     buyerMap,
-    ],
-  );
+    handleView,
+    handleEdit,
+    handleDelete,
+    handleDownload,
+  ]);
+
+  const hasActiveFilters = filters.search || filters.saudaNo || filters.lorryNumber;
 
   return (
     <React.Suspense fallback={<Loading />}>
       <AdminPageShell
-        title={
-          userRole === "Seller" ? "Your Loading Entries" : "Loading Entries"
-        }
+        title={userRole === "Seller" ? "Your Loading Entries" : "Loading Entries"}
         subtitle={
           userRole === "Seller"
             ? "View and download your loading documents"
@@ -507,16 +565,18 @@ const ListLoadingEntry = () => {
         noContentCard
       >
         <div className="max-w-7xl mx-auto space-y-6">
+          {/* Filters Section */}
           <div className="rounded-2xl border border-amber-200/60 bg-white shadow-lg p-4 sm:p-6">
             <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-4">
               <div>
                 <h3 className="text-lg font-bold text-slate-800">Filters</h3>
                 {totalItems > 0 && (
                   <p className="text-sm text-slate-600 mt-1">
-                    Showing {Math.min((currentPage - 1) * itemsPerPage + 1, totalItems)}-{Math.min(currentPage * itemsPerPage, totalItems)} of {totalItems} entries
-                    {filters.search && (
+                    Showing {Math.min((currentPage - 1) * itemsPerPage + 1, totalItems)}-
+                    {Math.min(currentPage * itemsPerPage, totalItems)} of {totalItems} entries
+                    {hasActiveFilters && (
                       <span className="ml-2 text-emerald-600 font-medium">
-                        (filtered from {loadingEntries.length} total)
+                        (filtered)
                       </span>
                     )}
                   </p>
@@ -524,27 +584,28 @@ const ListLoadingEntry = () => {
               </div>
               <button
                 onClick={handleDownloadExcel}
-                className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700 transition shadow-md"
+                disabled={exporting || loadingEntries.length === 0}
+                className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700 transition shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+                aria-label="Download Excel"
               >
                 <MdDownload size={20} />
-                Download Excel
+                {exporting ? "Preparing..." : "Download Excel"}
               </button>
             </div>
+            
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               <SearchBox
                 placeholder="Search by seller, buyer, consignee, commodity..."
-                items={[...new Set([...suggestions.sellers])].filter(Boolean)}
+                items={[...new Set(suggestions.sellers)].filter(Boolean)}
                 returnQuery={true}
                 onSearch={(q) => handleSearch(q, "search")}
               />
-
               <SearchBox
                 placeholder="Search by sauda number..."
                 items={[...new Set(suggestions.saudas)].filter(Boolean)}
                 returnQuery={true}
                 onSearch={(q) => handleSearch(q, "saudaNo")}
               />
-
               <SearchBox
                 placeholder="Search by lorry number..."
                 items={[...new Set(suggestions.lorries)].filter(Boolean)}
@@ -553,14 +614,12 @@ const ListLoadingEntry = () => {
               />
             </div>
             
-            {(filters.search || filters.saudaNo || filters.lorryNumber) && (
+            {hasActiveFilters && (
               <div className="mt-4 flex justify-end">
                 <button
-                  onClick={() => {
-                    setFilters({ search: "", saudaNo: "", lorryNumber: "" });
-                    setCurrentPage(1);
-                  }}
+                  onClick={clearFilters}
                   className="px-4 py-2 text-sm text-slate-600 hover:text-slate-800 hover:bg-slate-50 rounded-lg transition-colors"
+                  aria-label="Clear all filters"
                 >
                   Clear All Filters
                 </button>
@@ -568,19 +627,30 @@ const ListLoadingEntry = () => {
             )}
           </div>
 
+          {/* Table Section */}
           <div className="rounded-2xl border border-slate-200 bg-white shadow-sm p-3 sm:p-4">
-            <Tables headers={headers} rows={rows} />
-            <div className="mt-4">
-              <Pagination
-                currentPage={currentPage}
-                totalItems={totalItems}
-                itemsPerPage={itemsPerPage}
-                onPageChange={handlePageChange}
-                onPageSizeChange={handlePageSizeChange}
-              />
-            </div>
+            {loading ? (
+              <div className="py-12">
+                <Loading />
+              </div>
+            ) : (
+              <>
+                <Tables headers={headers} rows={rows} />
+                <div className="mt-4">
+                  <Pagination
+                    currentPage={currentPage}
+                    totalItems={totalItems}
+                    itemsPerPage={itemsPerPage}
+                    onPageChange={handlePageChange}
+                    onPageSizeChange={handlePageSizeChange}
+                    itemsPerPageOptions={ITEMS_PER_PAGE_OPTIONS}
+                  />
+                </div>
+              </>
+            )}
           </div>
 
+          {/* View/Edit Popup */}
           {selectedEntry && (
             <PopupBox
               isOpen={!!popupType}
@@ -589,9 +659,7 @@ const ListLoadingEntry = () => {
                 setSelectedEntry(null);
                 setEditEntry(null);
               }}
-              title={
-                popupType === "view" ? "Loading Entry Details" : "Edit Entry"
-              }
+              title={popupType === "view" ? "Loading Entry Details" : "Edit Entry"}
               maxWidth="max-w-7xl"
             >
               {popupType === "view" ? (
@@ -718,7 +786,7 @@ const ListLoadingEntry = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                       <div>
                         <label className="block text-sm font-semibold text-slate-700 mb-1">
-                          Loading Date
+                          Loading Date *
                         </label>
                         <input
                           type="date"
@@ -726,11 +794,12 @@ const ListLoadingEntry = () => {
                           value={editEntry.loadingDate || ""}
                           onChange={handleEditFieldChange}
                           className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                          aria-label="Loading Date"
                         />
                       </div>
                       <div>
                         <label className="block text-sm font-semibold text-slate-700 mb-1">
-                          Sauda No
+                          Sauda No *
                         </label>
                         <input
                           type="text"
@@ -738,6 +807,8 @@ const ListLoadingEntry = () => {
                           value={editEntry.saudaNo || ""}
                           onChange={handleEditFieldChange}
                           className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                          aria-label="Sauda Number"
+                          required
                         />
                       </div>
                       <div>
@@ -749,6 +820,7 @@ const ListLoadingEntry = () => {
                           value={paymentTermsMap[editEntry.saudaNo] || "N/A"}
                           disabled
                           className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm bg-slate-50 text-slate-700 cursor-not-allowed"
+                          aria-label="Payment Terms (read-only)"
                         />
                       </div>
                       <div>
@@ -761,11 +833,12 @@ const ListLoadingEntry = () => {
                           value={editEntry.billNumber || ""}
                           onChange={handleEditFieldChange}
                           className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                          aria-label="Bill Number"
                         />
                       </div>
                       <div>
                         <label className="block text-sm font-semibold text-slate-700 mb-1">
-                          Lorry Number
+                          Lorry Number *
                         </label>
                         <input
                           type="text"
@@ -773,6 +846,8 @@ const ListLoadingEntry = () => {
                           value={editEntry.lorryNumber || ""}
                           onChange={handleEditFieldChange}
                           className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                          aria-label="Lorry Number"
+                          required
                         />
                       </div>
                       <div>
@@ -811,6 +886,7 @@ const ListLoadingEntry = () => {
                           value={editEntry.driverName || ""}
                           onChange={handleEditFieldChange}
                           className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                          aria-label="Driver Name"
                         />
                       </div>
                       <div>
@@ -818,11 +894,13 @@ const ListLoadingEntry = () => {
                           Driver Phone
                         </label>
                         <input
-                          type="text"
+                          type="tel"
                           name="driverPhoneNumber"
                           value={editEntry.driverPhoneNumber || ""}
                           onChange={handleEditFieldChange}
                           className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                          aria-label="Driver Phone"
+                          pattern="[0-9]{10}"
                         />
                       </div>
                       <div>
@@ -835,6 +913,7 @@ const ListLoadingEntry = () => {
                           value={editEntry.commodity || ""}
                           onChange={handleEditFieldChange}
                           className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                          aria-label="Commodity"
                         />
                       </div>
                       <div>
@@ -847,6 +926,8 @@ const ListLoadingEntry = () => {
                           value={editEntry.loadingWeight || ""}
                           onChange={handleEditFieldChange}
                           className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                          aria-label="Loading Weight"
+                          step="0.01"
                         />
                       </div>
                       <div>
@@ -859,6 +940,8 @@ const ListLoadingEntry = () => {
                           value={editEntry.unloadingWeight || ""}
                           onChange={handleEditFieldChange}
                           className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                          aria-label="Unloading Weight"
+                          step="0.01"
                         />
                       </div>
                       <div>
@@ -871,6 +954,7 @@ const ListLoadingEntry = () => {
                           value={editEntry.unloadingDate || ""}
                           onChange={handleEditFieldChange}
                           className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                          aria-label="Unloading Date"
                         />
                       </div>
                       <div>
@@ -883,6 +967,8 @@ const ListLoadingEntry = () => {
                           value={editEntry.freightRate || ""}
                           onChange={handleEditFieldChange}
                           className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                          aria-label="Freight Rate"
+                          step="0.01"
                         />
                       </div>
                       <div>
@@ -895,6 +981,8 @@ const ListLoadingEntry = () => {
                           value={editEntry.totalFreight || ""}
                           onChange={handleEditFieldChange}
                           className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                          aria-label="Total Freight"
+                          step="0.01"
                         />
                       </div>
                       <div>
@@ -907,6 +995,8 @@ const ListLoadingEntry = () => {
                           value={editEntry.advance || ""}
                           onChange={handleEditFieldChange}
                           className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                          aria-label="Advance"
+                          step="0.01"
                         />
                       </div>
                       <div>
@@ -919,6 +1009,8 @@ const ListLoadingEntry = () => {
                           value={editEntry.balance || ""}
                           onChange={handleEditFieldChange}
                           className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                          aria-label="Balance"
+                          step="0.01"
                         />
                       </div>
                       <div>
@@ -931,6 +1023,7 @@ const ListLoadingEntry = () => {
                           value={editEntry.dateOfIssue || ""}
                           onChange={handleEditFieldChange}
                           className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                          aria-label="Date of Issue"
                         />
                       </div>
                     </div>
@@ -1033,7 +1126,7 @@ const ListLoadingEntry = () => {
                           setSelectedEntry(null);
                           setEditEntry(null);
                         }}
-                        className="px-4 py-2 rounded-lg border border-slate-300 text-slate-700 text-sm font-medium hover:bg-slate-50"
+                        className="px-4 py-2 rounded-lg border border-slate-300 text-slate-700 text-sm font-medium hover:bg-slate-50 transition-colors"
                       >
                         Cancel
                       </button>
@@ -1041,7 +1134,7 @@ const ListLoadingEntry = () => {
                         type="button"
                         onClick={handleUpdateEntry}
                         disabled={isSaving}
-                        className="px-5 py-2 rounded-lg bg-emerald-600 text-white text-sm font-semibold shadow-sm hover:bg-emerald-700 disabled:opacity-60 disabled:cursor-not-allowed"
+                        className="px-5 py-2 rounded-lg bg-emerald-600 text-white text-sm font-semibold shadow-sm hover:bg-emerald-700 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
                       >
                         {isSaving ? "Saving..." : "Update Entry"}
                       </button>
