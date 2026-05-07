@@ -514,7 +514,7 @@ const ListLoadingEntry = () => {
                 {totalItems > 0 && (
                   <p className="text-sm text-slate-600 mt-1">
                     Showing {Math.min((currentPage - 1) * itemsPerPage + 1, totalItems)}-{Math.min(currentPage * itemsPerPage, totalItems)} of {totalItems} entries
-                    {debouncedFilters.search && (
+                    {filters.search && (
                       <span className="ml-2 text-emerald-600 font-medium">
                         (filtered from {loadingEntries.length} total)
                       </span>
@@ -553,7 +553,7 @@ const ListLoadingEntry = () => {
               />
             </div>
             
-            {(debouncedFilters.search || debouncedFilters.saudaNo || debouncedFilters.lorryNumber) && (
+            {(filters.search || filters.saudaNo || filters.lorryNumber) && (
               <div className="mt-4 flex justify-end">
                 <button
                   onClick={() => {
