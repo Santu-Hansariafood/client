@@ -1,28 +1,32 @@
 import { pdf } from "@react-pdf/renderer";
 import api from "../../../utils/apiClient/apiClient";
 import LorryChallanPDF from "./LorryChallanPDF";
-import { resolveConsigneeDetails } from "./utils/dataExtractors";
+import { fetchAllPages } from "../../../utils/apiClient/fetchAllPages";
+import { buildSaudaPdfData } from "../../../utils/saudaPdf/buildSaudaPdfData";
 
 const PrintLoadingEntry = async (entry) => {
   try {
-    const saudaRes = await api.get("/self-order", { params: { saudaNo: entry.saudaNo } });
-    const ordersData = Array.isArray(saudaRes.data) ? saudaRes.data : saudaRes.data?.data || [];
-    const saudaData = ordersData.find(order => order.saudaNo === entry.saudaNo) || {};
+    const [consigneeData, supplierData, buyerData, companyData, sellerData] = await Promise.all([
+      fetchAllPages("/consignees", { limit: 200 }),
+      fetchAllPages("/seller-company", { limit: 200 }),
+      fetchAllPages("/buyers", { limit: 200 }),
+      fetchAllPages("/companies", { limit: 200 }),
+      fetchAllPages("/sellers", { limit: 200 }),
+    ]);
 
-    const consigneeDetails = await resolveConsigneeDetails(entry.consignee);
-
-    const pdfData = {
-      ...entry,
-      buyer: {
-        buyerCompany: saudaData.buyerCompany || entry.buyerCompany,
-        address: saudaData.buyerAddress,
-        gstNo: saudaData.buyerGstNo,
+    const pdfData = buildSaudaPdfData({
+      item: entry,
+      consigneeData,
+      supplierData,
+      buyerData,
+      companyData,
+      getConsigneeDisplay: (row) => {
+        const c = row?.consignee;
+        if (typeof c === "object" && c?.name) return c.name;
+        if (typeof c === "object" && c?.label) return c.label;
+        return String(c || "N/A");
       },
-      seller: {
-        sellerName: entry.supplierCompany,
-      },
-      consignee: consigneeDetails || entry.consignee,
-    };
+    });
 
     const doc = await pdf(<LorryChallanPDF data={pdfData} />);
     return doc;
