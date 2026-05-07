@@ -348,10 +348,9 @@ const ListLoadingEntry = () => {
     try {
       toastId = toast.loading("Preparing PDF...");
       
-      const doc = await PrintLoadingEntry(entry);
-      if (!doc) return;
+      const blob = await PrintLoadingEntry(entry);
+      if (!blob) return;
       
-      const blob = await doc.toBlob();
       downloadFile(blob, `LorryChallan-${entry.billNumber || entry.saudaNo || "document"}.pdf`);
 
       toast.dismiss(toastId);

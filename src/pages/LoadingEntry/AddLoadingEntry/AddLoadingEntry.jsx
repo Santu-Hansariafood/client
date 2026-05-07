@@ -668,10 +668,10 @@ const AddLoadingEntry = () => {
       }
       toastId = toast.loading("Preparing PDF...");
       
-      const doc = await PrintLoadingEntry(entry);
-      if (!doc) return;
+      const blob = await PrintLoadingEntry(entry);
+      if (!blob) return;
 
-      downloadFile(doc, `LoadingEntry-${entry.billNumber || "document"}.pdf`);
+      downloadFile(blob, `LoadingEntry-${entry.billNumber || "document"}.pdf`);
 
       toast.dismiss(toastId);
       toast.success("Download started successfully!");
