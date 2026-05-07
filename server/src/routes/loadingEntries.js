@@ -430,7 +430,6 @@ router.get("/receiving", async (req, res) => {
 
     const total = await LoadingEntry.countDocuments(finalQuery);
 
-    // Fetch rates from SelfOrder
     const saudaNos = [...new Set(items.map((i) => i.saudaNo).filter(Boolean))];
     const selfOrders = await SelfOrder.find({ saudaNo: { $in: saudaNos } })
       .select("saudaNo rate")
@@ -440,7 +439,6 @@ router.get("/receiving", async (req, res) => {
       return acc;
     }, {});
 
-    // Add rate to each loading entry
     const itemsWithRate = items.map((item) => ({
       ...item,
       actualRate: saudaRateMap[item.saudaNo] || 0,
@@ -564,7 +562,6 @@ router.get("/export/excel", async (req, res) => {
       .populate("supplier", "sellerName")
       .lean();
 
-    // Fetch buyerCompany, paymentTerms, and rate from SelfOrder
     const saudaNos = [...new Set(items.map((i) => i.saudaNo).filter(Boolean))];
     const selfOrders = await SelfOrder.find({ saudaNo: { $in: saudaNos } })
       .select("saudaNo buyerCompany paymentTerms rate")
@@ -720,7 +717,6 @@ router.get("/:id/pdf", async (req, res) => {
     const sign64 = getAssetBase64("signature.png");
     const stamp64 = getAssetBase64("stamp.png");
 
-    // Generate QR Code
     let qr64 = null;
     try {
       const qrData = `Sauda: ${data.saudaNo || "N/A"}\nLorry: ${data.lorryNumber || "N/A"}\nWeight: ${data.loadingWeight || 0} Tons\nDate: ${formatDate(data.loadingDate)}`;
@@ -765,11 +761,9 @@ router.get("/:id/pdf", async (req, res) => {
         .filter(Boolean)
         .join(", ") || "Address details not found.";
 
-    // Page setup
     doc.setFillColor(255, 255, 255);
     doc.rect(0, 0, pageWidth, pageHeight, "F");
 
-    // Simple Header
     doc.setDrawColor(200, 200, 200);
     doc.setLineWidth(0.1);
     doc.line(margin, 10, pageWidth - margin, 10);
@@ -792,7 +786,6 @@ router.get("/:id/pdf", async (req, res) => {
     doc.text(`Contact: ${sellerPhone} | GSTIN: ${sellerGstin}`, 47, 34);
     doc.text(`Address: ${sellerAddress}`, 47, 40);
 
-    // Title Section
     doc.setTextColor(0, 0, 0);
     doc.setFontSize(14);
     doc.setFont("helvetica", "bold");
@@ -1034,7 +1027,6 @@ router.post("/bulk", async (req, res) => {
 
     const selfOrder = await SelfOrder.findOne({ saudaNo });
 
-    // Process entries with brokerage calculation if selfOrder exists
     const processedEntries = entries.map((entry) => {
       const newEntry = { ...entry };
       if (selfOrder && entry.unloadingWeight) {

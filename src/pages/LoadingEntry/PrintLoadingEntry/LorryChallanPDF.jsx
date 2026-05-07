@@ -70,9 +70,9 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 18,
     fontWeight: "bold",
-    marginBottom: 8,
     color: "#000000",
     textAlign: "center",
+    width: "100%",
   },
   sectionTitle: {
     fontSize: 12,
@@ -271,7 +271,8 @@ const LorryChallanPDF = ({ data, logoUrl }) => {
     ? data.consigneeDetails
     : data.buyerDetails;
 
-  const fromState = data.loadingFrom || data.supplierDetails?.state || "West Bengal";
+  const fromState =
+    data.loadingFrom || data.supplierDetails?.state || "West Bengal";
   const toState = data.consigneeDetails?.state || "N/A";
 
   return (
@@ -318,7 +319,14 @@ const LorryChallanPDF = ({ data, logoUrl }) => {
           </View>
         </View>
 
-        <View style={styles.header}>
+        <View
+          style={{
+            width: "100%",
+            alignItems: "center",
+            justifyContent: "center",
+            marginBottom: 10,
+          }}
+        >
           <Text style={styles.title}>LORRY CHALLAN</Text>
         </View>
 
@@ -331,27 +339,27 @@ const LorryChallanPDF = ({ data, logoUrl }) => {
               </View>
 
               <View style={styles.headerItem}>
-                <Text style={styles.label}>BILL NO</Text>
+                <Text style={styles.label}>BILL NO :</Text>
                 <Text style={styles.value}>{data.billNumber || "N/A"}</Text>
               </View>
 
               <View style={styles.headerItem}>
-                <Text style={styles.label}>DATE</Text>
+                <Text style={styles.label}>DATE :</Text>
                 <Text style={styles.value}>{formatDate(data.dateOfIssue)}</Text>
               </View>
             </View>
 
             <View style={styles.headerRowNoBorderMarginTop}>
               <View style={styles.headerItem}>
-                <Text style={styles.label}>LOADING DATE</Text>
+                <Text style={styles.label}>LOADING DATE :</Text>
                 <Text style={styles.value}>{formatDate(data.loadingDate)}</Text>
               </View>
               <View style={styles.headerItem}>
-                <Text style={styles.label}>COMMODITY</Text>
+                <Text style={styles.label}>COMMODITY :</Text>
                 <Text style={styles.value}>{data.commodity || "N/A"}</Text>
               </View>
               <View style={styles.headerItem}>
-                <Text style={styles.label}>BUYER PO NO</Text>
+                <Text style={styles.label}>BUYER PO NO :</Text>
                 <Text style={styles.value}>{data.poNumber || "N/A"}</Text>
               </View>
             </View>
