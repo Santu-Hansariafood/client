@@ -281,44 +281,51 @@ const LorryChallanPDF = ({ data, logoUrl }) => {
           <Text style={styles.title}>LORRY CHALLAN</Text>
         </View>
 
-        <View style={styles.headerRow}>
-          <View style={styles.headerItem}>
-            <Text style={styles.label}>SAUDA NO</Text>
-            <Text style={styles.saudaValue}>{data.saudaNo || "N/A"}</Text>
-          </View>
+        {/* All fields inside a single box */}
+        <View style={styles.grid}>
+          <View style={styles.gridItem}>
+            <View style={styles.headerRow} style={{ borderBottom: "none", marginBottom: 0, paddingBottom: 0 }}>
+              <View style={styles.headerItem}>
+                <Text style={styles.label}>SAUDA NO</Text>
+                <Text style={styles.saudaValue}>{data.saudaNo || "N/A"}</Text>
+              </View>
 
-          <View style={styles.headerItem}>
-            <Text style={styles.label}>BILL NO</Text>
-            <Text style={styles.value}>{data.billNumber || "N/A"}</Text>
-          </View>
+              <View style={styles.headerItem}>
+                <Text style={styles.label}>BILL NO</Text>
+                <Text style={styles.value}>{data.billNumber || "N/A"}</Text>
+              </View>
 
-          <View style={styles.headerItem}>
-            <Text style={styles.label}>DATE</Text>
-            <Text style={styles.value}>
-              {data.dateOfIssue
-                ? new Date(data.dateOfIssue)
-                    .toLocaleDateString("en-GB")
-                    .replace(/\//g, "-")
-                : "N/A"}
-            </Text>
-          </View>
-        </View>
-
-        <View style={styles.section}>
-          <View style={styles.headerRow}>
-            <View style={styles.headerItem}>
-              <Text style={styles.label}>LOADING DATE</Text>
-              <Text style={styles.value}>
-                {data.loadingDate
-                  ? new Date(data.loadingDate)
-                      .toLocaleDateString("en-GB")
-                      .replace(/\//g, "-")
-                  : "N/A"}
-              </Text>
+              <View style={styles.headerItem}>
+                <Text style={styles.label}>DATE</Text>
+                <Text style={styles.value}>
+                  {data.dateOfIssue
+                    ? new Date(data.dateOfIssue)
+                        .toLocaleDateString("en-GB")
+                        .replace(/\//g, "-")
+                    : "N/A"}
+                </Text>
+              </View>
             </View>
-            <View style={styles.headerItem}>
-              <Text style={styles.label}>COMMODITY</Text>
-              <Text style={styles.value}>{data.commodity || "N/A"}</Text>
+
+            <View style={styles.headerRow} style={{ borderBottom: "none", marginBottom: 0, paddingBottom: 0, marginTop: 8 }}>
+              <View style={styles.headerItem}>
+                <Text style={styles.label}>LOADING DATE</Text>
+                <Text style={styles.value}>
+                  {data.loadingDate
+                    ? new Date(data.loadingDate)
+                        .toLocaleDateString("en-GB")
+                        .replace(/\//g, "-")
+                    : "N/A"}
+                </Text>
+              </View>
+              <View style={styles.headerItem}>
+                <Text style={styles.label}>COMMODITY</Text>
+                <Text style={styles.value}>{data.commodity || "N/A"}</Text>
+              </View>
+              <View style={styles.headerItem}>
+                <Text style={styles.label}>BUYER PO NO</Text>
+                <Text style={styles.value}>{data.poNumber || "N/A"}</Text>
+              </View>
             </View>
           </View>
         </View>

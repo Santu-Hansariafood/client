@@ -104,9 +104,7 @@ async function triggerDownloadWithFallback(url, filename, isMobile, isAndroid) {
     }
     document.body.appendChild(link);
     
-    // Try multiple click events for better compatibility
     link.click();
-    setTimeout(() => link.click(), 100);
     
     setTimeout(() => {
       if (link.parentNode) {

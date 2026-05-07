@@ -7,16 +7,20 @@ import logoUrl from "../../../assets/Hans.png";
 
 const PrintLoadingEntry = async (entry) => {
   try {
-    const [consigneeData, supplierData, buyerData, companyData, sellerData] = await Promise.all([
+    const [consigneeData, supplierData, buyerData, companyData, sellerData, selfOrderRes] = await Promise.all([
       fetchAllPages("/consignees", { limit: 200 }),
       fetchAllPages("/seller-company", { limit: 200 }),
       fetchAllPages("/buyers", { limit: 200 }),
       fetchAllPages("/companies", { limit: 200 }),
       fetchAllPages("/sellers", { limit: 200 }),
+      entry.saudaNo ? api.get("/self-order", { params: { saudaNo: entry.saudaNo, limit: 0 } }) : Promise.resolve({ data: [] }),
     ]);
 
+    const selfOrders = selfOrderRes?.data?.data || selfOrderRes?.data || [];
+    const selfOrder = selfOrders.find((o) => o.saudaNo === entry.saudaNo) || selfOrders[0] || null;
+
     const pdfData = buildSaudaPdfData({
-      item: entry,
+      item: { ...entry, ...selfOrder },
       consigneeData,
       supplierData,
       buyerData,
