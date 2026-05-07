@@ -421,10 +421,7 @@ const ListLoadingEntry = () => {
 
   const rows = useMemo(() => {
     const start = (currentPage - 1) * itemsPerPage;
-    const end = start + itemsPerPage;
-    const paginatedEntries = filteredEntries.slice(start, end);
-
-    return paginatedEntries.map((entry, index) => [
+    return filteredEntries.map((entry, index) => [
       start + index + 1,
         formatDate(entry.loadingDate),
         entry.saudaNo || "N/A",
