@@ -89,7 +89,6 @@ const ListLoadingEntry = () => {
   
   // State declarations
   const [loadingEntries, setLoadingEntries] = useState([]);
-  const [filteredEntries, setFilteredEntries] = useState([]);
   const [sellerMap, setSellerMap] = useState({});
   const [buyerMap, setBuyerMap] = useState({});
   const [paymentTermsMap, setPaymentTermsMap] = useState({});
@@ -121,8 +120,8 @@ const ListLoadingEntry = () => {
   // Refs to prevent infinite loops
   const abortControllerRef = useRef(null);
   const isMountedRef = useRef(true);
-  const staticDataFetchedRef = useRef(false);
-  const initialDataFetchedRef = useRef(false);
+  const staticDataLoadedRef = useRef(false);
+  const isLoadingRef = useRef(false);
   
   const debouncedFilters = useDebounce(filters, DEBOUNCE_DELAY);
   
@@ -163,7 +162,7 @@ const ListLoadingEntry = () => {
   
   // Fetch static data (sellers, transporters, orders) - ONLY ONCE
   const fetchStaticData = useCallback(async () => {
-    if (staticDataFetchedRef.current) return;
+    if (staticDataLoadedRef.current) return;
     
     try {
       const [sellersRes, transportersRes, ordersRes] = await Promise.all([
@@ -227,9 +226,11 @@ const ListLoadingEntry = () => {
         )
       );
       
-      staticDataFetchedRef.current = true;
+      staticDataLoadedRef.current = true;
     } catch (error) {
       console.error("Error fetching static data:", error);
+      // Mark as loaded even on error to prevent infinite retries
+      staticDataLoadedRef.current = true;
       if (isMountedRef.current) {
         toast.error("Failed to load reference data");
       }
@@ -253,11 +254,15 @@ const ListLoadingEntry = () => {
     }
   }, [userRole, mobile]);
   
-  // Fetch loading entries data
+  // Fetch loading entries data - FIXED: No longer depends on static data
   const fetchData = useCallback(async () => {
+    // Prevent concurrent fetches
+    if (isLoadingRef.current) return;
     if (!userRole || !isMountedRef.current) return;
     
+    isLoadingRef.current = true;
     setLoading(true);
+    
     try {
       const searchParams = {
         page: currentPage,
@@ -282,18 +287,21 @@ const ListLoadingEntry = () => {
       if (!response || !isMountedRef.current) return;
       
       let entriesData = [];
+      let total = 0;
+      
       if (Array.isArray(response.data)) {
         entriesData = response.data;
+        total = entriesData.length;
       } else if (response.data?.data && Array.isArray(response.data.data)) {
         entriesData = response.data.data;
+        total = response.data.total || entriesData.length;
       } else if (response.data?.items && Array.isArray(response.data.items)) {
         entriesData = response.data.items;
+        total = response.data.total || entriesData.length;
       }
       
       setLoadingEntries(entriesData);
-      setFilteredEntries(entriesData);
-      setTotalItems(response.data?.total || entriesData.length);
-      initialDataFetchedRef.current = true;
+      setTotalItems(total);
     } catch (error) {
       console.error("Error fetching entries:", error);
       if (isMountedRef.current && error.name !== "AbortError") {
@@ -303,27 +311,22 @@ const ListLoadingEntry = () => {
       if (isMountedRef.current) {
         setLoading(false);
         setInitialLoading(false);
+        isLoadingRef.current = false;
       }
     }
   }, [userRole, mobile, debouncedFilters, currentPage, itemsPerPage, fetchWithAbort]);
   
-  // Initial data loading - ONLY ONCE
+  // Load static data and suggestions on mount or role change
   useEffect(() => {
     if (!userRole) return;
     
-    const loadInitialData = async () => {
-      await fetchStaticData();
-      await fetchSuggestions();
-    };
-    
-    loadInitialData();
+    fetchStaticData();
+    fetchSuggestions();
   }, [userRole, fetchStaticData, fetchSuggestions]);
   
-  // Fetch data when dependencies change
+  // Fetch data when dependencies change - FIXED: No longer waiting for static data
   useEffect(() => {
-    if (staticDataFetchedRef.current) {
-      fetchData();
-    }
+    fetchData();
   }, [fetchData]);
   
   // Handle page change
@@ -531,10 +534,10 @@ const ListLoadingEntry = () => {
     "Download",
   ], []);
   
-  // Table rows
+  // Table rows - using loadingEntries directly
   const rows = useMemo(() => {
     const start = (currentPage - 1) * itemsPerPage;
-    return filteredEntries.map((entry, index) => [
+    return loadingEntries.map((entry, index) => [
       start + index + 1,
       formatDate(entry.loadingDate),
       entry.saudaNo || "N/A",
@@ -606,7 +609,7 @@ const ListLoadingEntry = () => {
       </button>,
     ]);
   }, [
-    filteredEntries,
+    loadingEntries,
     currentPage,
     itemsPerPage,
     alreadyLoadedMap,
@@ -624,7 +627,7 @@ const ListLoadingEntry = () => {
   const hasActiveFilters = filters.search || filters.saudaNo || filters.lorryNumber;
   
   // Show loading spinner while initial data is being fetched
-  if (initialLoading) {
+  if (initialLoading && loading) {
     return (
       <div className="flex justify-center items-center h-96">
         <Loading />
@@ -715,7 +718,7 @@ const ListLoadingEntry = () => {
               </div>
             ) : (
               <>
-                {filteredEntries.length === 0 ? (
+                {loadingEntries.length === 0 ? (
                   <div className="text-center py-12">
                     <p className="text-slate-500 text-lg">No loading entries found</p>
                     {hasActiveFilters && (
