@@ -262,7 +262,7 @@ const renderAddressDetails = (details) => {
   return <Text style={styles.addressDetails}>{"\n" + parts.join("\n")}</Text>;
 };
 
-const LorryChallanPDF = ({ data, logoUrl }) => {
+const LorryChallanPDF = ({ data = {}, logoUrl }) => {
   const isConsigneeAsBuyer = data.billTo === "consignee";
   const buyerName = isConsigneeAsBuyer
     ? data.consignee
@@ -273,7 +273,17 @@ const LorryChallanPDF = ({ data, logoUrl }) => {
 
   const fromState =
     data.loadingFrom || data.supplierDetails?.state || "West Bengal";
-  const toState = data.consigneeDetails?.state || "N/A";
+
+  const normalizedConsignee = String(data.consignee || "").toLowerCase();
+  const isPOConsignee = 
+    normalizedConsignee.includes("purchase order") || 
+    normalizedConsignee.includes("send purchase order") ||
+    normalizedConsignee.includes("send purchase") || 
+    (normalizedConsignee.includes("po") && normalizedConsignee.length <= 10);
+
+  const consigneeNameForShipTo = isPOConsignee ? buyerName : (data.consignee || "N/A");
+  const consigneeDetailsForShipTo = isPOConsignee ? buyerDetails : data.consigneeDetails;
+  const toState = isPOConsignee ? (buyerDetails?.state || "N/A") : (data.consigneeDetails?.state || "N/A");
 
   return (
     <Document>
@@ -371,8 +381,8 @@ const LorryChallanPDF = ({ data, logoUrl }) => {
         <View style={styles.grid}>
           <View style={styles.gridItem}>
             <Text style={styles.label}>SHIP TO (CONSIGNEE)</Text>
-            <Text style={styles.nameValue}>{data.consignee || "N/A"}</Text>
-            {renderAddressDetails(data.consigneeDetails)}
+            <Text style={styles.nameValue}>{consigneeNameForShipTo}</Text>
+            {renderAddressDetails(consigneeDetailsForShipTo)}
           </View>
         </View>
 

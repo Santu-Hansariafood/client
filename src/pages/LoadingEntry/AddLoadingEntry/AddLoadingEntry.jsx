@@ -363,7 +363,6 @@ const OrdersTableCard = ({ orders, handleOpenPopup, toggleSaudaStatus }) => {
 const AddLoadingEntry = () => {
   const { userRole } = useAuth();
 
-  // Custom Hooks for data fetching and state management
   const {
     groups,
     selectedGroup,
@@ -524,15 +523,13 @@ const AddLoadingEntry = () => {
       deliveryDate: formattedDeliveryDate 
     }]);
     setActiveView("add");
-    setExistingEntries([]); // Clear previous data
+    setExistingEntries([]);
 
-    // Fetch existing entries for this sauda
     try {
       const response = await api.get(`/loading-entries/sauda/${order.saudaNo}`);
       setExistingEntries(Array.isArray(response.data) ? response.data : []);
     } catch (error) {
       console.error("Error fetching existing entries:", error);
-      // toast.error("Could not load previous loading history");
     }
   };
 
@@ -632,7 +629,6 @@ const AddLoadingEntry = () => {
     const pending = selectedOrder.pendingQuantity || 0;
 
     if (totalNewWeight > pending + selectedOrder.quantity * 0.05) {
-      // Allow 5% tolerance
       const confirmSave = window.confirm(
         `Total loading weight (${totalNewWeight.toFixed(2)} Tons) exceeds pending quantity (${pending.toFixed(2)} Tons). Do you want to proceed?`,
       );
@@ -710,16 +706,14 @@ const AddLoadingEntry = () => {
       try {
         await api.delete(`/loading-entries/${id}`);
         toast.success("Entry deleted successfully");
-        // Refresh existing entries
         const response = await api.get(`/loading-entries/sauda/${selectedOrder.saudaNo}`);
         setExistingEntries(Array.isArray(response.data) ? response.data : []);
         
-        // Refresh the selected order to update pending quantity
         const orderRes = await api.get(`/self-order/${selectedOrder._id}`);
         if (orderRes.data) {
           setSelectedOrder(orderRes.data);
         }
-        handleSearch(); // Refresh main table
+        handleSearch();
       } catch (error) {
         console.error("Error deleting entry:", error);
         toast.error("Failed to delete entry");
@@ -749,16 +743,14 @@ const AddLoadingEntry = () => {
       setActiveView("add");
       setEditingEntry(null);
       
-      // Refresh existing entries
       const response = await api.get(`/loading-entries/sauda/${selectedOrder.saudaNo}`);
       setExistingEntries(Array.isArray(response.data) ? response.data : []);
 
-      // Refresh the selected order to update pending quantity
       const orderRes = await api.get(`/self-order/${selectedOrder._id}`);
       if (orderRes.data) {
         setSelectedOrder(orderRes.data);
       }
-      handleSearch(); // Refresh main table
+      handleSearch();
     } catch (error) {
       console.error("Error updating entry:", error);
       toast.error(error.response?.data?.message || "Failed to update entry");
