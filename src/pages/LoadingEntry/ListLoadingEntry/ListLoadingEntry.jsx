@@ -300,7 +300,28 @@ const ListLoadingEntry = () => {
         total = response.data.total || entriesData.length;
       }
       
-      setLoadingEntries(entriesData);
+      const sortedEntries = [...entriesData].sort((a, b) => {
+        const dateA = a.loadingDate || a.createdAt || a._id;
+        const dateB = b.loadingDate || b.createdAt || b._id;
+        
+        if (dateA && dateB) {
+          try {
+            const timeA = new Date(dateA).getTime();
+            const timeB = new Date(dateB).getTime();
+            if (!isNaN(timeA) && !isNaN(timeB)) {
+              return timeB - timeA;
+            }
+          } catch (e) { /* empty */ }
+        }
+        
+        if (a._id && b._id) {
+          return b._id.localeCompare(a._id);
+        }
+        
+        return 0;
+      });
+      
+      setLoadingEntries(sortedEntries);
       setTotalItems(total);
     } catch (error) {
       console.error("Error fetching entries:", error);
