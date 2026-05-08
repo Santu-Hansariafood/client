@@ -29,7 +29,11 @@ const PrintLoadingEntry = async (entry) => {
 
     const selfOrders = selfOrderRes?.data?.data || selfOrderRes?.data || [];
     const selfOrder =
-      selfOrders.find((o) => o.saudaNo === entry.saudaNo) || null;
+      selfOrders.find(
+        (o) =>
+          String(o.saudaNo || "").trim().toLowerCase() ===
+          String(entry.saudaNo || "").trim().toLowerCase(),
+      ) || null;
 
     const pdfData = buildSaudaPdfData({
       item: { ...entry, ...selfOrder },

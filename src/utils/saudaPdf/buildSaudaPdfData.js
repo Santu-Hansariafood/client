@@ -121,10 +121,18 @@ export const buildSaudaPdfData = ({
       buyerCompany: resolvedConsigneeName,
     };
   } else {
+    const isId = (val) => /^[0-9a-fA-F]{24}$/.test(String(val));
+    const itemBuyerName = typeof item?.buyerCompany === "string" && !isId(item.buyerCompany) 
+      ? item.buyerCompany 
+      : typeof item?.buyer === "string" && !isId(item.buyer)
+        ? item.buyer
+        : "";
+
     const buyerName =
+      itemBuyerName ||
       matchingBuyer?.companyName ||
-      (typeof item?.buyerCompany === "string" ? item.buyerCompany : "") ||
-      (typeof item?.buyer === "string" ? item.buyer : "");
+      "N/A";
+
     transformed = {
       ...transformed,
       buyer: buyerName,
