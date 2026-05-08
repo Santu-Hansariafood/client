@@ -34,7 +34,9 @@ const DataDropdown = ({
         : [selectedOptions].filter(Boolean).map(so => formattedOptions.find(fo => fo.value === (so?.value ?? so))).filter(Boolean))
     : (Array.isArray(selectedOptions) 
         ? formattedOptions.find(fo => fo.value === (selectedOptions[0]?.value ?? selectedOptions[0]))
-        : formattedOptions.find(fo => fo.value === (selectedOptions?.value ?? selectedOptions)));
+        : (typeof selectedOptions === 'string' || typeof selectedOptions === 'number'
+            ? formattedOptions.find(fo => fo.value === selectedOptions)
+            : formattedOptions.find(fo => fo.value === (selectedOptions?.value ?? selectedOptions))));
 
   return (
     <div className="mb-5 w-full">

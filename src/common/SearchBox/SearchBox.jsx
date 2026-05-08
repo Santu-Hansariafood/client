@@ -21,6 +21,11 @@ const SearchBox = ({
 
   const clearSearch = () => {
     setSearchTerm("");
+    if (returnQuery) {
+      onSearch("");
+    } else {
+      onSearch(normalizedItems);
+    }
   };
 
   useEffect(() => {
