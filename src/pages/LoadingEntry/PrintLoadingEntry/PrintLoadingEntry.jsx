@@ -29,9 +29,7 @@ const PrintLoadingEntry = async (entry) => {
 
     const selfOrders = selfOrderRes?.data?.data || selfOrderRes?.data || [];
     const selfOrder =
-      selfOrders.find((o) => o.saudaNo === entry.saudaNo) ||
-      selfOrders[0] ||
-      null;
+      selfOrders.find((o) => o.saudaNo === entry.saudaNo) || null;
 
     const pdfData = buildSaudaPdfData({
       item: { ...entry, ...selfOrder },
@@ -48,7 +46,8 @@ const PrintLoadingEntry = async (entry) => {
     });
 
     const doc = await pdf(<LorryChallanPDF data={pdfData} logoUrl={logoUrl} />);
-    return doc;
+    const blob = await doc.toBlob();
+    return blob;
   } catch (error) {
     console.error("Error generating PDF:", error);
     return null;

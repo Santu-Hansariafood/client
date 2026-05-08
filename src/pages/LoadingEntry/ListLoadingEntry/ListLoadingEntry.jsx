@@ -453,10 +453,9 @@ const ListLoadingEntry = () => {
     try {
       toastId = toast.loading("Preparing PDF...");
       
-      const doc = await PrintLoadingEntry(entry);
-      if (!doc) throw new Error("Failed to generate PDF");
+      const blob = await PrintLoadingEntry(entry);
+      if (!blob) throw new Error("Failed to generate PDF");
       
-      const blob = await doc.toBlob();
       const fileName = `LorryChallan-${entry.billNumber || entry.saudaNo || "document"}.pdf`;
       downloadFile(blob, fileName);
       
