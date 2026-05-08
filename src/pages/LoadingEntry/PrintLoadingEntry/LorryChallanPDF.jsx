@@ -358,24 +358,19 @@ const LorryChallanPDF = ({ data = {}, logoUrl }) => {
   const actualBuyerName = data.originalBuyerCompany || data.buyerCompany || data.buyer || "N/A";
   const actualBuyerDetails = data.originalBuyerDetails || data.buyerDetails;
 
+  // Buyer Account should ALWAYS be the main Buyer from the Sauda Agreement
+  buyerAccountName = actualBuyerName;
+  buyerAccountDetails = actualBuyerDetails;
+
   if (isConsigneeAsBuyer) {
     if (isPOConsignee || isSelfOrder) {
-      buyerAccountName = actualBuyerName;
-      buyerAccountDetails = actualBuyerDetails;
-
       consigneeNameForShipTo = isSelfOrder ? actualBuyerName : (data.consignee || "N/A");
       consigneeDetailsForShipTo = actualBuyerDetails;
     } else {
-      buyerAccountName = data.consignee || "N/A";
-      buyerAccountDetails = data.consigneeDetails;
-
       consigneeNameForShipTo = data.consignee || "N/A";
       consigneeDetailsForShipTo = data.consigneeDetails;
     }
   } else {
-    buyerAccountName = actualBuyerName;
-    buyerAccountDetails = actualBuyerDetails;
-
     if (isPOConsignee || isSelfOrder) {
       consigneeNameForShipTo = isSelfOrder ? actualBuyerName : (data.consignee || "N/A");
       consigneeDetailsForShipTo = actualBuyerDetails;
