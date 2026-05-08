@@ -263,13 +263,8 @@ const renderAddressDetails = (details) => {
 };
 
 const LorryChallanPDF = ({ data, logoUrl }) => {
-  const isConsigneeAsBuyer = data.billTo === "consignee";
-  const buyerName = isConsigneeAsBuyer
-    ? data.consignee
-    : data.buyerCompany || data.buyer;
-  const buyerDetails = isConsigneeAsBuyer
-    ? data.consigneeDetails
-    : data.buyerDetails;
+  const buyerName = data.buyerCompany || data.buyer || data.consignee;
+  const buyerDetails = data.buyerDetails;
 
   const fromState =
     data.loadingFrom || data.supplierDetails?.state || "West Bengal";
