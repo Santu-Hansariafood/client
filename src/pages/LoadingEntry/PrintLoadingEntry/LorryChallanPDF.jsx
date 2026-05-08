@@ -264,16 +264,6 @@ const renderAddressDetails = (details) => {
 
 const LorryChallanPDF = ({ data = {}, logoUrl }) => {
   const isConsigneeAsBuyer = data.billTo === "consignee";
-  const buyerName = isConsigneeAsBuyer
-    ? data.consignee
-    : data.buyerCompany || data.buyer;
-  const buyerDetails = isConsigneeAsBuyer
-    ? data.consigneeDetails
-    : data.buyerDetails;
-
-  const fromState =
-    data.loadingFrom || data.supplierDetails?.state || "West Bengal";
-
   const normalizedConsignee = String(data.consignee || "").toLowerCase();
   const isPOConsignee = 
     normalizedConsignee.includes("purchase order") || 
@@ -281,9 +271,40 @@ const LorryChallanPDF = ({ data = {}, logoUrl }) => {
     normalizedConsignee.includes("send purchase") || 
     (normalizedConsignee.includes("po") && normalizedConsignee.length <= 10);
 
-  const consigneeNameForShipTo = isPOConsignee ? buyerName : (data.consignee || "N/A");
-  const consigneeDetailsForShipTo = isPOConsignee ? buyerDetails : data.consigneeDetails;
-  const toState = isPOConsignee ? (buyerDetails?.state || "N/A") : (data.consigneeDetails?.state || "N/A");
+  const fromState =
+    data.loadingFrom || data.supplierDetails?.state || "West Bengal";
+
+  let buyerAccountName;
+  let buyerAccountDetails;
+  let consigneeNameForShipTo;
+  let consigneeDetailsForShipTo;
+  let toState;
+
+  if (isConsigneeAsBuyer) {
+    buyerAccountName = data.consignee || "N/A";
+    buyerAccountDetails = data.consigneeDetails;
+    if (isPOConsignee) {
+      consigneeNameForShipTo = data.buyerCompany || data.buyer || "N/A";
+      consigneeDetailsForShipTo = data.buyerDetails;
+      toState = data.buyerDetails?.state || "N/A";
+    } else {
+      consigneeNameForShipTo = data.consignee || "N/A";
+      consigneeDetailsForShipTo = data.consigneeDetails;
+      toState = data.consigneeDetails?.state || "N/A";
+    }
+  } else {
+    buyerAccountName = data.buyerCompany || data.buyer || "N/A";
+    buyerAccountDetails = data.buyerDetails;
+    if (isPOConsignee) {
+      consigneeNameForShipTo = data.buyerCompany || data.buyer || "N/A";
+      consigneeDetailsForShipTo = data.buyerDetails;
+      toState = data.buyerDetails?.state || "N/A";
+    } else {
+      consigneeNameForShipTo = data.consignee || "N/A";
+      consigneeDetailsForShipTo = data.consigneeDetails;
+      toState = data.consigneeDetails?.state || "N/A";
+    }
+  }
 
   return (
     <Document>
@@ -391,8 +412,8 @@ const LorryChallanPDF = ({ data = {}, logoUrl }) => {
         <View style={styles.grid}>
           <View style={styles.gridItem}>
             <Text style={styles.label}>BUYER ACCOUNT</Text>
-            <Text style={styles.nameValue}>{buyerName || "N/A"}</Text>
-            {renderAddressDetails(buyerDetails)}
+            <Text style={styles.nameValue}>{buyerAccountName}</Text>
+            {renderAddressDetails(buyerAccountDetails)}
           </View>
         </View>
 
