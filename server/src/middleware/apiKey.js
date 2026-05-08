@@ -1,4 +1,8 @@
 export default function apiKey(req, res, next) {
+  if (req.method === "OPTIONS") {
+    return next();
+  }
+
   const headerKey = req.header("x-api-key");
   const queryKey = req.query.api_key;
   const apiKey = headerKey || queryKey;
