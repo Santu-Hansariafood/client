@@ -284,9 +284,9 @@ const LorryChallanPDF = ({ data = {}, logoUrl }) => {
     buyerAccountName = data.consignee || "N/A";
     buyerAccountDetails = data.consigneeDetails;
     if (isPOConsignee) {
-      consigneeNameForShipTo = data.buyerCompany || data.buyer || "N/A";
-      consigneeDetailsForShipTo = data.buyerDetails;
-      toState = data.buyerDetails?.state || "N/A";
+      consigneeNameForShipTo = data.originalBuyerCompany || data.buyerCompany || data.buyer || "N/A";
+      consigneeDetailsForShipTo = data.originalBuyerDetails;
+      toState = data.originalBuyerDetails?.state || "N/A";
     } else {
       consigneeNameForShipTo = data.consignee || "N/A";
       consigneeDetailsForShipTo = data.consigneeDetails;
@@ -296,9 +296,9 @@ const LorryChallanPDF = ({ data = {}, logoUrl }) => {
     buyerAccountName = data.buyerCompany || data.buyer || "N/A";
     buyerAccountDetails = data.buyerDetails;
     if (isPOConsignee) {
-      consigneeNameForShipTo = data.buyerCompany || data.buyer || "N/A";
-      consigneeDetailsForShipTo = data.buyerDetails;
-      toState = data.buyerDetails?.state || "N/A";
+      consigneeNameForShipTo = data.originalBuyerCompany || data.buyerCompany || data.buyer || "N/A";
+      consigneeDetailsForShipTo = data.originalBuyerDetails;
+      toState = data.originalBuyerDetails?.state || "N/A";
     } else {
       consigneeNameForShipTo = data.consignee || "N/A";
       consigneeDetailsForShipTo = data.consigneeDetails;
