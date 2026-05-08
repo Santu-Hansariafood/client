@@ -212,7 +212,13 @@ const useLoadingEntryData = (api, userRole) => {
       .filter((c) => c.value)
       .sort((a, b) => a.label.localeCompare(b.label));
 
-    setConsignees(list);
+    // Add special options at the beginning
+    const specialOptions = [
+      { value: "Add self order", label: "Add self order", name: "Add self order" },
+      { value: "Send Purchase Order (PO)", label: "Send Purchase Order (PO)", name: "Send Purchase Order (PO)" }
+    ];
+
+    setConsignees([...specialOptions, ...list]);
     setSelectedConsignee(null);
   }, [userRole, selectedBuyer]);
 

@@ -265,6 +265,8 @@ const renderAddressDetails = (details) => {
 const LorryChallanPDF = ({ data = {}, logoUrl }) => {
   const isConsigneeAsBuyer = data.billTo === "consignee";
   const normalizedConsignee = String(data.consignee || "").toLowerCase();
+  
+  const isSelfOrder = normalizedConsignee.includes("self order");
   const isPOConsignee = 
     normalizedConsignee.includes("purchase order") || 
     normalizedConsignee.includes("send purchase order") ||
@@ -283,10 +285,12 @@ const LorryChallanPDF = ({ data = {}, logoUrl }) => {
   if (isConsigneeAsBuyer) {
     buyerAccountName = data.consignee || "N/A";
     buyerAccountDetails = data.consigneeDetails;
-    if (isPOConsignee) {
-      consigneeNameForShipTo = data.originalBuyerCompany || data.buyerCompany || data.buyer || "N/A";
-      consigneeDetailsForShipTo = data.originalBuyerDetails;
-      toState = data.originalBuyerDetails?.state || "N/A";
+    if (isPOConsignee || isSelfOrder) {
+      consigneeNameForShipTo = isSelfOrder 
+        ? (data.originalBuyerCompany || data.buyerCompany || data.buyer || "N/A")
+        : (data.consignee || "N/A");
+      consigneeDetailsForShipTo = data.originalBuyerDetails || data.buyerDetails || data.consigneeDetails;
+      toState = consigneeDetailsForShipTo?.state || "N/A";
     } else {
       consigneeNameForShipTo = data.consignee || "N/A";
       consigneeDetailsForShipTo = data.consigneeDetails;
@@ -295,10 +299,12 @@ const LorryChallanPDF = ({ data = {}, logoUrl }) => {
   } else {
     buyerAccountName = data.buyerCompany || data.buyer || "N/A";
     buyerAccountDetails = data.buyerDetails;
-    if (isPOConsignee) {
-      consigneeNameForShipTo = data.originalBuyerCompany || data.buyerCompany || data.buyer || "N/A";
-      consigneeDetailsForShipTo = data.originalBuyerDetails;
-      toState = data.originalBuyerDetails?.state || "N/A";
+    if (isPOConsignee || isSelfOrder) {
+      consigneeNameForShipTo = isSelfOrder 
+        ? (data.originalBuyerCompany || data.buyerCompany || data.buyer || "N/A")
+        : (data.consignee || "N/A");
+      consigneeDetailsForShipTo = data.originalBuyerDetails || data.buyerDetails;
+      toState = consigneeDetailsForShipTo?.state || "N/A";
     } else {
       consigneeNameForShipTo = data.consignee || "N/A";
       consigneeDetailsForShipTo = data.consigneeDetails;
