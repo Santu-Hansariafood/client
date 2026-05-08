@@ -58,37 +58,32 @@ const corsOrigins =
         .filter(Boolean)
     : "*";
 
-app.use((req, res, next) => {
-  const origin = req.headers.origin;
-  console.log("CORS Check:", {
-    method: req.method,
-    origin,
-    url: req.url,
-    corsOrigins,
-  });
+const corsOptions = {
+  origin: (origin, callback) => {
+    console.log("CORS Check:", {
+      origin,
+      corsOrigins,
+    });
+    if (corsOrigins === "*") {
+      return callback(null, true);
+    }
+    if (!origin) {
+      return callback(null, true);
+    }
+    if (corsOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    const msg = "The CORS policy for this site does not allow access from the specified Origin.";
+    return callback(new Error(msg), false);
+  },
+  credentials: true,
+  methods: ["GET", "HEAD", "PUT", "PATCH", "POST", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization", "x-api-key", "Origin", "Accept", "X-Requested-With"],
+  exposedHeaders: ["X-Cache"],
+  maxAge: 86400,
+};
 
-  if (corsOrigins === "*") {
-    res.header("Access-Control-Allow-Origin", "*");
-  } else if (origin && corsOrigins.includes(origin)) {
-    res.header("Access-Control-Allow-Origin", origin);
-  }
-
-  res.header("Access-Control-Allow-Credentials", "true");
-  res.header("Access-Control-Allow-Methods", "GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS");
-  res.header(
-    "Access-Control-Allow-Headers",
-    "Content-Type, Authorization, x-api-key, Origin, Accept, X-Requested-With"
-  );
-  res.header("Access-Control-Expose-Headers", "X-Cache");
-  res.header("Access-Control-Max-Age", "86400");
-
-  if (req.method === "OPTIONS") {
-    console.log("Handling OPTIONS request");
-    return res.sendStatus(204);
-  }
-
-  next();
-});
+app.use(cors(corsOptions));
 
 app.use(express.json({ limit: "5mb" }));
 app.use(express.urlencoded({ extended: true, limit: "5mb" }));

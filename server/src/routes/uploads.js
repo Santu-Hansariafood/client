@@ -1,6 +1,6 @@
 import { Router } from "express";
 import multer from "multer";
-import imagekit from "../lib/imagekit.js";
+import spacebyte from "../lib/spacebyte.js";
 
 const router = Router();
 
@@ -14,7 +14,7 @@ router.post("/", upload.single("file"), async (req, res) => {
     }
 
     const fileName = req.file.originalname;
-    const fileUrl = await imagekit.uploadFile(req.file, fileName);
+    const fileUrl = await spacebyte.uploadFile(req.file, fileName);
 
     res.json({ url: fileUrl, fileName });
   } catch (error) {
@@ -30,7 +30,7 @@ router.delete("/", async (req, res) => {
       return res.status(400).json({ message: "File URL is required" });
     }
 
-    await imagekit.deleteFile(url);
+    await spacebyte.deleteFile(url);
     res.json({ message: "File deleted successfully" });
   } catch (error) {
     console.error("Delete error:", error);
