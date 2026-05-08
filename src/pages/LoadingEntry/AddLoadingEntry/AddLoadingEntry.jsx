@@ -1221,7 +1221,7 @@ const AddLoadingEntry = () => {
                           LORRY #{index + 1}
                         </span>
                       </div>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-5">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
                         <div className="space-y-2">
                           <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                             Loading Date
@@ -1405,7 +1405,7 @@ const AddLoadingEntry = () => {
                         <p className="text-xs font-bold uppercase tracking-widest text-purple-600 mb-5">
                           Transport & Freight
                         </p>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div className="space-y-2">
                             <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                               Transporter
@@ -1487,7 +1487,7 @@ const AddLoadingEntry = () => {
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 rounded-3xl border border-slate-100 bg-slate-50/30 p-5">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 rounded-3xl border border-slate-100 bg-slate-50/30 p-5">
                       <div className="rounded-2xl border border-slate-200 bg-white px-4 py-4 flex flex-col items-center justify-center shadow-sm">
                         <p className="text-[10px] text-slate-400 uppercase font-bold tracking-widest mb-1">
                           Total Freight
