@@ -119,6 +119,15 @@ export const buildSaudaPdfData = ({
     }
   }
 
+  const isId = (val) => /^[0-9a-fA-F]{24}$/.test(String(val));
+  const itemBuyerName = typeof item?.buyerCompany === "string" && !isId(item.buyerCompany) 
+    ? item.buyerCompany 
+    : typeof item?.buyer === "string" && !isId(item.buyer)
+      ? item.buyer
+      : "";
+
+  const finalBuyerName = itemBuyerName || matchingBuyer?.companyName || "N/A";
+
   let transformed = {
     ...item,
     consignee: resolvedConsigneeName,
@@ -126,7 +135,7 @@ export const buildSaudaPdfData = ({
     supplierDetails: toUnifiedDetails(matchingSupplier),
     buyerDetails,
     originalBuyerDetails: toUnifiedDetails(matchingBuyer),
-    originalBuyerCompany: matchingBuyer?.companyName || item?.buyerCompany || item?.buyer
+    originalBuyerCompany: finalBuyerName
   };
 
   if (item?.billTo === "consignee") {
@@ -136,22 +145,10 @@ export const buildSaudaPdfData = ({
       buyerCompany: resolvedConsigneeName,
     };
   } else {
-    const isId = (val) => /^[0-9a-fA-F]{24}$/.test(String(val));
-    const itemBuyerName = typeof item?.buyerCompany === "string" && !isId(item.buyerCompany) 
-      ? item.buyerCompany 
-      : typeof item?.buyer === "string" && !isId(item.buyer)
-        ? item.buyer
-        : "";
-
-    const buyerName =
-      itemBuyerName ||
-      matchingBuyer?.companyName ||
-      "N/A";
-
     transformed = {
       ...transformed,
-      buyer: buyerName,
-      buyerCompany: buyerName,
+      buyer: finalBuyerName,
+      buyerCompany: finalBuyerName,
     };
   }
 
