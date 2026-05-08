@@ -355,26 +355,90 @@ const LorryChallanPDF = ({ data = {}, logoUrl }) => {
   let consigneeDetailsForShipTo;
   let toState;
 
-  if (isConsigneeAsBuyer) {
-    buyerAccountName = data.consignee || "N/A";
-    buyerAccountDetails = data.consigneeDetails;
+  // if (isConsigneeAsBuyer) {
+  //   buyerAccountName = data.consignee || "N/A";
+  //   buyerAccountDetails = data.consigneeDetails;
 
-    if (isPOConsignee || isSelfOrder) {
-      consigneeNameForShipTo = isSelfOrder
-        ? data.originalBuyerCompany || data.buyerCompany || data.buyer || "N/A"
-        : data.consignee || "N/A";
+  //   if (isPOConsignee || isSelfOrder) {
+  //     consigneeNameForShipTo = isSelfOrder
+  //       ? data.originalBuyerCompany || data.buyerCompany || data.buyer || "N/A"
+  //       : data.consignee || "N/A";
 
-      consigneeDetailsForShipTo =
-        data.originalBuyerDetails || data.buyerDetails || data.consigneeDetails;
+  //     consigneeDetailsForShipTo =
+  //       data.originalBuyerDetails || data.buyerDetails || data.consigneeDetails;
 
-      toState = consigneeDetailsForShipTo?.state || "N/A";
-    } else {
-      consigneeNameForShipTo = data.consignee || "N/A";
+  //     toState = consigneeDetailsForShipTo?.state || "N/A";
+  //   } else {
+  //     consigneeNameForShipTo = data.consignee || "N/A";
 
-      consigneeDetailsForShipTo = data.consigneeDetails;
+  //     consigneeDetailsForShipTo = data.consigneeDetails;
 
-      toState = data.consigneeDetails?.state || "N/A";
-    }
+  //     toState = data.consigneeDetails?.state || "N/A";
+  //   }
+
+  if (isSelfOrder) {
+  // SELF ORDER CASE
+  // SHIP TO => buyer details
+  // BUYER ACCOUNT => consignee details
+
+  consigneeNameForShipTo =
+    data.originalBuyerCompany ||
+    data.buyerCompany ||
+    data.buyer ||
+    "N/A";
+
+  consigneeDetailsForShipTo =
+    data.originalBuyerDetails ||
+    data.buyerDetails ||
+    {};
+
+  buyerAccountName = data.consignee || "N/A";
+
+  buyerAccountDetails = data.consigneeDetails || {};
+
+  toState =
+    consigneeDetailsForShipTo?.state ||
+    buyerAccountDetails?.state ||
+    "N/A";
+} else if (isConsigneeAsBuyer) {
+  // BILL TO CONSIGNEE
+
+  buyerAccountName = data.consignee || "N/A";
+
+  buyerAccountDetails = data.consigneeDetails || {};
+
+  consigneeNameForShipTo = data.consignee || "N/A";
+
+  consigneeDetailsForShipTo = data.consigneeDetails || {};
+
+  toState = data.consigneeDetails?.state || "N/A";
+} else {
+  // NORMAL CASE
+
+  buyerAccountName =
+    data.buyerCompany ||
+    data.buyer ||
+    "N/A";
+
+  // IMPORTANT FIX:
+  // if send PO to consignee then print consignee details in BUYER ACCOUNT
+
+  buyerAccountDetails =
+    isPOConsignee
+      ? data.consigneeDetails || {}
+      : data.buyerDetails || {};
+
+  consigneeNameForShipTo =
+    data.consignee || "N/A";
+
+  consigneeDetailsForShipTo =
+    data.consigneeDetails || {};
+
+  toState =
+    data.consigneeDetails?.state ||
+    "N/A";
+}
+
   } else {
     buyerAccountName = data.buyerCompany || data.buyer || "N/A";
 
