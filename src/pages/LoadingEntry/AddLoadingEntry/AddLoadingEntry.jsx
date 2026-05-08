@@ -559,6 +559,10 @@ const AddLoadingEntry = () => {
       newEntries[index][field] = !isNaN(d.getTime())
         ? d.toISOString().split("T")[0]
         : "";
+    } else if (field === "driverPhoneNumber") {
+      const digitsOnly = value.replace(/\D/g, "");
+      const maxLength = 11;
+      newEntries[index][field] = digitsOnly.slice(0, maxLength);
     } else {
       newEntries[index][field] = value;
     }
@@ -616,9 +620,9 @@ const AddLoadingEntry = () => {
 
       if (
         entry.driverPhoneNumber &&
-        !/^\d{10}$/.test(entry.driverPhoneNumber)
+        !/^0?\d{10}$/.test(entry.driverPhoneNumber)
       ) {
-        toast.error("Invalid phone number");
+        toast.error("Invalid phone number - should be 10 digits (can start with 0)");
         setIsSaving(false);
         return;
       }
@@ -905,12 +909,10 @@ const AddLoadingEntry = () => {
                     options={stateOptions}
                     selectedOptions={
                       editingEntry.loadingFrom
-                        ? [
-                            stateOptions.find(
-                              (s) => s.value === editingEntry.loadingFrom,
-                            ),
-                          ].filter(Boolean)
-                        : []
+                        ? stateOptions.find(
+                            (s) => s.value === editingEntry.loadingFrom,
+                          ) || null
+                        : null
                     }
                     onChange={(option) => {
                       setEditingEntry({
@@ -987,7 +989,10 @@ const AddLoadingEntry = () => {
                   <label className="text-xs font-bold text-slate-500 uppercase">Driver Phone</label>
                   <DataInput
                     value={editingEntry.driverPhoneNumber}
-                    onChange={(e) => setEditingEntry({...editingEntry, driverPhoneNumber: e.target.value})}
+                    onChange={(e) => {
+                      const digitsOnly = e.target.value.replace(/\D/g, "");
+                      setEditingEntry({...editingEntry, driverPhoneNumber: digitsOnly.slice(0, 11)});
+                    }}
                   />
                 </div>
               </div>
@@ -1247,12 +1252,10 @@ const AddLoadingEntry = () => {
                             options={stateOptions}
                             selectedOptions={
                               entry.loadingFrom
-                                ? [
-                                    stateOptions.find(
-                                      (s) => s.value === entry.loadingFrom,
-                                    ),
-                                  ].filter(Boolean)
-                                : []
+                                ? stateOptions.find(
+                                    (s) => s.value === entry.loadingFrom,
+                                  ) || null
+                                : null
                             }
                             onChange={(option) => {
                               const newEntries = [...loadingEntries];
@@ -1411,12 +1414,10 @@ const AddLoadingEntry = () => {
                               options={transporters}
                               selectedOptions={
                                 entry.transporterId
-                                  ? [
-                                      transporters.find(
-                                        (t) => t.value === entry.transporterId,
-                                      ),
-                                    ].filter(Boolean)
-                                  : []
+                                  ? transporters.find(
+                                      (t) => t.value === entry.transporterId,
+                                    ) || null
+                                  : null
                               }
                               onChange={(option) => {
                                 const newEntries = [...loadingEntries];
