@@ -1,4 +1,11 @@
-import React, { lazy, useEffect, useState, useMemo, useCallback, useRef } from "react";
+import React, {
+  lazy,
+  useEffect,
+  useState,
+  useMemo,
+  useCallback,
+  useRef,
+} from "react";
 import api from "../../../utils/apiClient/apiClient";
 import { MdVisibility, MdEdit, MdDelete, MdDownload } from "react-icons/md";
 import { toast } from "react-toastify";
@@ -13,17 +20,23 @@ import { downloadFile } from "../../../utils/fileDownloader";
 const PopupBox = lazy(() => import("../../../common/PopupBox/PopupBox"));
 const Tables = lazy(() => import("../../../common/Tables/Tables"));
 const SearchBox = lazy(() => import("../../../common/SearchBox/SearchBox"));
-const Pagination = lazy(() => import("../../../common/Paginations/Paginations"));
-const DataDropdown = lazy(() => import("../../../common/DataDropdown/DataDropdown"));
+const Pagination = lazy(
+  () => import("../../../common/Paginations/Paginations"),
+);
+const DataDropdown = lazy(
+  () => import("../../../common/DataDropdown/DataDropdown"),
+);
 const FileUpload = lazy(() => import("../../../common/FileUpload/FileUpload"));
 
-// Constants
 const DEBOUNCE_DELAY = 500;
 const DEFAULT_ITEMS_PER_PAGE = 10;
 const ITEMS_PER_PAGE_OPTIONS = [5, 10, 25, 50, 100];
-const DATE_FORMAT_OPTIONS = { year: 'numeric', month: '2-digit', day: '2-digit' };
+const DATE_FORMAT_OPTIONS = {
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+};
 
-// Utility functions
 const formatDate = (date) => {
   if (!date) return "N/A";
   try {
@@ -39,25 +52,27 @@ const validateEntryData = (entry) => {
   const errors = [];
   if (!entry.saudaNo?.trim()) errors.push("Sauda number is required");
   if (!entry.lorryNumber?.trim()) errors.push("Lorry number is required");
-  if (entry.loadingWeight && isNaN(parseFloat(entry.loadingWeight))) errors.push("Invalid loading weight");
-  if (entry.freightRate && isNaN(parseFloat(entry.freightRate))) errors.push("Invalid freight rate");
+  if (entry.loadingWeight && isNaN(parseFloat(entry.loadingWeight)))
+    errors.push("Invalid loading weight");
+  if (entry.freightRate && isNaN(parseFloat(entry.freightRate)))
+    errors.push("Invalid freight rate");
   return errors;
 };
 
 // Custom hooks
 const useDebounce = (value, delay) => {
   const [debouncedValue, setDebouncedValue] = useState(value);
-  
+
   useEffect(() => {
     const handler = setTimeout(() => {
       setDebouncedValue(value);
     }, delay);
-    
+
     return () => {
       clearTimeout(handler);
     };
   }, [value, delay]);
-  
+
   return debouncedValue;
 };
 
@@ -70,24 +85,27 @@ const useLocalStorage = (key, initialValue) => {
       return initialValue;
     }
   });
-  
-  const setValue = useCallback((value) => {
-    try {
-      const valueToStore = value instanceof Function ? value(storedValue) : value;
-      setStoredValue(valueToStore);
-      localStorage.setItem(key, JSON.stringify(valueToStore));
-    } catch (error) {
-      console.error(`Error saving to localStorage key "${key}":`, error);
-    }
-  }, [key, storedValue]);
-  
+
+  const setValue = useCallback(
+    (value) => {
+      try {
+        const valueToStore =
+          value instanceof Function ? value(storedValue) : value;
+        setStoredValue(valueToStore);
+        localStorage.setItem(key, JSON.stringify(valueToStore));
+      } catch (error) {
+        console.error(`Error saving to localStorage key "${key}":`, error);
+      }
+    },
+    [key, storedValue],
+  );
+
   return [storedValue, setValue];
 };
 
 const ListLoadingEntry = () => {
   const { userRole, mobile } = useAuth();
-  
-  // State declarations
+
   const [loadingEntries, setLoadingEntries] = useState([]);
   const [sellerMap, setSellerMap] = useState({});
   const [buyerMap, setBuyerMap] = useState({});
@@ -114,18 +132,19 @@ const ListLoadingEntry = () => {
     saudas: [],
     lorries: [],
   });
-  const [itemsPerPage, setItemsPerPage] = useLocalStorage("loadingEntriesPerPage", DEFAULT_ITEMS_PER_PAGE);
+  const [itemsPerPage, setItemsPerPage] = useLocalStorage(
+    "loadingEntriesPerPage",
+    DEFAULT_ITEMS_PER_PAGE,
+  );
   const [exporting, setExporting] = useState(false);
-  
-  // Refs to prevent infinite loops
+
   const abortControllerRef = useRef(null);
   const isMountedRef = useRef(true);
   const staticDataLoadedRef = useRef(false);
   const isLoadingRef = useRef(false);
-  
+
   const debouncedFilters = useDebounce(filters, DEBOUNCE_DELAY);
-  
-  // Cleanup on unmount
+
   useEffect(() => {
     isMountedRef.current = true;
     return () => {
@@ -135,17 +154,14 @@ const ListLoadingEntry = () => {
       }
     };
   }, []);
-  
-  // API call with abort controller
+
   const fetchWithAbort = useCallback(async (url, options = {}) => {
-    // Abort previous request
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
     }
-    
-    // Create new abort controller
+
     abortControllerRef.current = new AbortController();
-    
+
     try {
       const response = await api.get(url, {
         ...options,
@@ -159,20 +175,19 @@ const ListLoadingEntry = () => {
       throw error;
     }
   }, []);
-  
-  // Fetch static data (sellers, transporters, orders) - ONLY ONCE
+
   const fetchStaticData = useCallback(async () => {
     if (staticDataLoadedRef.current) return;
-    
+
     try {
       const [sellersRes, transportersRes, ordersRes] = await Promise.all([
         api.get("/sellers"),
         api.get("/transporters", { params: { limit: 0 } }),
         api.get("/self-order", { params: { limit: 0 } }),
       ]);
-      
+
       if (!isMountedRef.current) return;
-      
+
       const sellersData = Array.isArray(sellersRes.data)
         ? sellersRes.data
         : sellersRes.data?.data || [];
@@ -182,30 +197,34 @@ const ListLoadingEntry = () => {
       const ordersData = Array.isArray(ordersRes.data)
         ? ordersRes.data
         : ordersRes.data?.data || [];
-      
+
       setSellerMap(
-        Object.fromEntries(sellersData.map((s) => [s._id, s.sellerName]))
+        Object.fromEntries(sellersData.map((s) => [s._id, s.sellerName])),
       );
       setBuyerMap(
-        Object.fromEntries(ordersData.map((o) => [o.saudaNo, o.buyerCompany]))
+        Object.fromEntries(ordersData.map((o) => [o.saudaNo, o.buyerCompany])),
       );
       setPaymentTermsMap(
-        Object.fromEntries(ordersData.map((o) => [o.saudaNo, o.paymentTerms || ""]))
+        Object.fromEntries(
+          ordersData.map((o) => [o.saudaNo, o.paymentTerms || ""]),
+        ),
       );
       setStatusMap(
-        Object.fromEntries(ordersData.map((o) => [o.saudaNo, o.status || "active"]))
+        Object.fromEntries(
+          ordersData.map((o) => [o.saudaNo, o.status || "active"]),
+        ),
       );
       setTransporterMap(
-        Object.fromEntries(transportersData.map((t) => [t._id, t.name]))
+        Object.fromEntries(transportersData.map((t) => [t._id, t.name])),
       );
       setTransporters(
         transportersData.map((t) => ({
           value: t._id,
           label: `${t.name} - ${t.mobile}`,
           name: t.name,
-        }))
+        })),
       );
-      
+
       setAlreadyLoadedMap(
         Object.fromEntries(
           ordersData.map((order) => {
@@ -222,30 +241,28 @@ const ListLoadingEntry = () => {
               pendingQuantity = pendingQuantity || 0;
             }
             return [order.saudaNo, quantity - pendingQuantity];
-          })
-        )
+          }),
+        ),
       );
-      
+
       staticDataLoadedRef.current = true;
     } catch (error) {
       console.error("Error fetching static data:", error);
-      // Mark as loaded even on error to prevent infinite retries
       staticDataLoadedRef.current = true;
       if (isMountedRef.current) {
         toast.error("Failed to load reference data");
       }
     }
   }, []);
-  
-  // Fetch suggestions - ONLY ONCE
+
   const fetchSuggestions = useCallback(async () => {
     if (!userRole) return;
-    
+
     try {
       const res = await api.get("/loading-entries/suggestions", {
         params: { role: userRole, mobile },
       });
-      
+
       if (isMountedRef.current && res.data) {
         setSuggestions(res.data);
       }
@@ -253,16 +270,14 @@ const ListLoadingEntry = () => {
       console.error("Error fetching suggestions:", error);
     }
   }, [userRole, mobile]);
-  
-  // Fetch loading entries data - FIXED: No longer depends on static data
+
   const fetchData = useCallback(async () => {
-    // Prevent concurrent fetches
     if (isLoadingRef.current) return;
     if (!userRole || !isMountedRef.current) return;
-    
+
     isLoadingRef.current = true;
     setLoading(true);
-    
+
     try {
       const searchParams = {
         page: currentPage,
@@ -270,8 +285,7 @@ const ListLoadingEntry = () => {
         role: userRole,
         mobile: mobile,
       };
-      
-      // Only add filters if they have values
+
       if (debouncedFilters.search) {
         searchParams.search = debouncedFilters.search;
       }
@@ -281,14 +295,16 @@ const ListLoadingEntry = () => {
       if (debouncedFilters.lorryNumber) {
         searchParams.lorryNumber = debouncedFilters.lorryNumber;
       }
-      
-      const response = await fetchWithAbort("/loading-entries", { params: searchParams });
-      
+
+      const response = await fetchWithAbort("/loading-entries", {
+        params: searchParams,
+      });
+
       if (!response || !isMountedRef.current) return;
-      
+
       let entriesData = [];
       let total = 0;
-      
+
       if (Array.isArray(response.data)) {
         entriesData = response.data;
         total = entriesData.length;
@@ -299,11 +315,11 @@ const ListLoadingEntry = () => {
         entriesData = response.data.items;
         total = response.data.total || entriesData.length;
       }
-      
+
       const sortedEntries = [...entriesData].sort((a, b) => {
         const dateA = a.loadingDate || a.createdAt || a._id;
         const dateB = b.loadingDate || b.createdAt || b._id;
-        
+
         if (dateA && dateB) {
           try {
             const timeA = new Date(dateA).getTime();
@@ -311,16 +327,18 @@ const ListLoadingEntry = () => {
             if (!isNaN(timeA) && !isNaN(timeB)) {
               return timeB - timeA;
             }
-          } catch (e) { /* empty */ }
+          } catch (e) {
+            /* empty */
+          }
         }
-        
+
         if (a._id && b._id) {
           return b._id.localeCompare(a._id);
         }
-        
+
         return 0;
       });
-      
+
       setLoadingEntries(sortedEntries);
       setTotalItems(total);
     } catch (error) {
@@ -335,52 +353,55 @@ const ListLoadingEntry = () => {
         isLoadingRef.current = false;
       }
     }
-  }, [userRole, mobile, debouncedFilters, currentPage, itemsPerPage, fetchWithAbort]);
-  
-  // Load static data and suggestions on mount or role change
+  }, [
+    userRole,
+    mobile,
+    debouncedFilters,
+    currentPage,
+    itemsPerPage,
+    fetchWithAbort,
+  ]);
+
   useEffect(() => {
     if (!userRole) return;
-    
+
     fetchStaticData();
     fetchSuggestions();
   }, [userRole, fetchStaticData, fetchSuggestions]);
-  
-  // Fetch data when dependencies change - FIXED: No longer waiting for static data
+
   useEffect(() => {
     fetchData();
   }, [fetchData]);
-  
-  // Handle page change
+
   const handlePageChange = useCallback((page) => {
     setCurrentPage(page);
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, []);
-  
-  // Handle page size change
-  const handlePageSizeChange = useCallback((size) => {
-    setItemsPerPage(size);
-    setCurrentPage(1);
-  }, [setItemsPerPage]);
-  
+
+  const handlePageSizeChange = useCallback(
+    (size) => {
+      setItemsPerPage(size);
+      setCurrentPage(1);
+    },
+    [setItemsPerPage],
+  );
+
   // Handle search with debounce
   const handleSearch = useCallback((q, field) => {
     setFilters((prev) => ({ ...prev, [field]: q || "" }));
     setCurrentPage(1);
   }, []);
-  
-  // Clear all filters
+
   const clearFilters = useCallback(() => {
     setFilters({ search: "", saudaNo: "", lorryNumber: "" });
     setCurrentPage(1);
   }, []);
-  
-  // Handle view entry
+
   const handleView = useCallback((entry) => {
     setSelectedEntry(entry);
     setPopupType("view");
   }, []);
-  
-  // Handle edit entry
+
   const handleEdit = useCallback((entry) => {
     setSelectedEntry(entry);
     setEditEntry({
@@ -402,26 +423,24 @@ const ListLoadingEntry = () => {
     });
     setPopupType("edit");
   }, []);
-  
-  // Handle edit field change
+
   const handleEditFieldChange = useCallback((e) => {
     const { name, value } = e.target;
     setEditEntry((prev) => ({ ...prev, [name]: value }));
   }, []);
-  
-  // Handle update entry
+
   const handleUpdateEntry = useCallback(async () => {
     if (!editEntry?._id) {
       toast.error("Invalid entry data");
       return;
     }
-    
+
     const validationErrors = validateEntryData(editEntry);
     if (validationErrors.length > 0) {
-      validationErrors.forEach(error => toast.error(error));
+      validationErrors.forEach((error) => toast.error(error));
       return;
     }
-    
+
     setIsSaving(true);
     try {
       const payload = {
@@ -436,7 +455,7 @@ const ListLoadingEntry = () => {
           ? new Date(editEntry.unloadingDate).toISOString()
           : null,
       };
-      
+
       await api.put(`/loading-entries/${editEntry._id}`, payload);
       toast.success("Entry updated successfully");
       setPopupType("");
@@ -451,35 +470,41 @@ const ListLoadingEntry = () => {
       setIsSaving(false);
     }
   }, [editEntry, fetchData]);
-  
+
   // Handle delete entry
-  const handleDelete = useCallback(async (id) => {
-    if (!window.confirm("Are you sure you want to delete this entry? This action cannot be undone.")) {
-      return;
-    }
-    
-    try {
-      await api.delete(`/loading-entries/${id}`);
-      toast.success("Entry deleted successfully");
-      await fetchData();
-    } catch (error) {
-      toast.error("Failed to delete entry");
-      console.error("Delete error:", error);
-    }
-  }, [fetchData]);
-  
-  // Handle download PDF
+  const handleDelete = useCallback(
+    async (id) => {
+      if (
+        !window.confirm(
+          "Are you sure you want to delete this entry? This action cannot be undone.",
+        )
+      ) {
+        return;
+      }
+
+      try {
+        await api.delete(`/loading-entries/${id}`);
+        toast.success("Entry deleted successfully");
+        await fetchData();
+      } catch (error) {
+        toast.error("Failed to delete entry");
+        console.error("Delete error:", error);
+      }
+    },
+    [fetchData],
+  );
+
   const handleDownload = useCallback(async (entry) => {
     let toastId;
     try {
       toastId = toast.loading("Preparing PDF...");
-      
+
       const blob = await PrintLoadingEntry(entry);
       if (!blob) throw new Error("Failed to generate PDF");
-      
+
       const fileName = `LorryChallan-${entry.billNumber || entry.saudaNo || "document"}.pdf`;
       downloadFile(blob, fileName);
-      
+
       toast.dismiss(toastId);
       toast.success("Download started successfully!");
     } catch (error) {
@@ -488,16 +513,15 @@ const ListLoadingEntry = () => {
       toast.error("Error generating download. Please try again.");
     }
   }, []);
-  
-  // Handle download Excel
+
   const handleDownloadExcel = useCallback(async () => {
     if (exporting || loadingEntries.length === 0) return;
-    
+
     let toastId;
     try {
       setExporting(true);
       toastId = toast.loading("Preparing Excel file...");
-      
+
       const response = await api.get("/loading-entries/export/excel", {
         params: {
           search: filters.search,
@@ -509,13 +533,13 @@ const ListLoadingEntry = () => {
         responseType: "blob",
         timeout: 60000,
       });
-      
+
       const blob = new Blob([response.data], {
         type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       });
       const fileName = `LoadingEntries_${new Date().toISOString().split("T")[0]}.xlsx`;
       await downloadFile(blob, fileName);
-      
+
       toast.dismiss(toastId);
       toast.success("Excel file downloaded successfully");
     } catch (error) {
@@ -526,34 +550,38 @@ const ListLoadingEntry = () => {
       setExporting(false);
     }
   }, [filters, userRole, mobile, exporting, loadingEntries.length]);
-  
+
   // Table headers
-  const headers = useMemo(() => [
-    "Sl No",
-    "Loading Date",
-    "Sauda No",
-    "Seller Company",
-    "Buyer Company",
-    "Payment Terms",
-    "Loading Weight",
-    "Unloading Weight",
-    "Already Loaded",
-    "Status",
-    "Lorry Number",
-    "Transport",
-    "Driver",
-    "Phone",
-    "Freight Rate",
-    "Total Freight",
-    "Advance",
-    "Balance",
-    "Bill No",
-    "Date of Issue",
-    "Commodity",
-    "Actions",
-    "Download",
-  ], []);
-  
+  const headers = useMemo(
+    () => [
+      "Sl No",
+      "Loading Date",
+      "Sauda No",
+      "Seller Company",
+      "Buyer Company",
+      "Consignee",
+      "Payment Terms",
+      "Loading Weight",
+      "Unloading Weight",
+      "Already Loaded",
+      "Status",
+      "Lorry Number",
+      "Transport",
+      "Driver",
+      "Phone",
+      "Freight Rate",
+      "Total Freight",
+      "Advance",
+      "Balance",
+      "Bill No",
+      "Date of Issue",
+      "Commodity",
+      "Actions",
+      "Download",
+    ],
+    [],
+  );
+
   // Table rows - using loadingEntries directly
   const rows = useMemo(() => {
     const start = (currentPage - 1) * itemsPerPage;
@@ -563,6 +591,7 @@ const ListLoadingEntry = () => {
       entry.saudaNo || "N/A",
       entry.supplierCompany || "N/A",
       buyerMap[entry.saudaNo] || entry.buyerCompany || "N/A",
+      entry.consignee || "N/A",
       paymentTermsMap[entry.saudaNo] || "N/A",
       entry.loadingWeight ? entry.loadingWeight.toFixed(2) : "0.00",
       entry.unloadingWeight ? entry.unloadingWeight.toFixed(2) : "0.00",
@@ -643,10 +672,10 @@ const ListLoadingEntry = () => {
     handleDelete,
     handleDownload,
   ]);
-  
-  const hasActiveFilters = filters.search || filters.saudaNo || filters.lorryNumber;
-  
-  // Show loading spinner while initial data is being fetched
+
+  const hasActiveFilters =
+    filters.search || filters.saudaNo || filters.lorryNumber;
+
   if (initialLoading && loading) {
     return (
       <div className="flex justify-center items-center h-96">
@@ -654,11 +683,13 @@ const ListLoadingEntry = () => {
       </div>
     );
   }
-  
+
   return (
     <React.Suspense fallback={<Loading />}>
       <AdminPageShell
-        title={userRole === "Seller" ? "Your Loading Entries" : "Loading Entries"}
+        title={
+          userRole === "Seller" ? "Your Loading Entries" : "Loading Entries"
+        }
         subtitle={
           userRole === "Seller"
             ? "View and download your loading documents"
@@ -675,8 +706,10 @@ const ListLoadingEntry = () => {
                 <h3 className="text-lg font-bold text-slate-800">Filters</h3>
                 {totalItems > 0 && (
                   <p className="text-sm text-slate-600 mt-1">
-                    Showing {Math.min((currentPage - 1) * itemsPerPage + 1, totalItems)}-
-                    {Math.min(currentPage * itemsPerPage, totalItems)} of {totalItems} entries
+                    Showing{" "}
+                    {Math.min((currentPage - 1) * itemsPerPage + 1, totalItems)}
+                    -{Math.min(currentPage * itemsPerPage, totalItems)} of{" "}
+                    {totalItems} entries
                     {hasActiveFilters && (
                       <span className="ml-2 text-emerald-600 font-medium">
                         (filtered)
@@ -695,7 +728,7 @@ const ListLoadingEntry = () => {
                 {exporting ? "Preparing..." : "Download Excel"}
               </button>
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               <SearchBox
                 placeholder="Search by seller, buyer, consignee, commodity..."
@@ -716,7 +749,7 @@ const ListLoadingEntry = () => {
                 onSearch={(q) => handleSearch(q, "lorryNumber")}
               />
             </div>
-            
+
             {hasActiveFilters && (
               <div className="mt-4 flex justify-end">
                 <button
@@ -729,8 +762,7 @@ const ListLoadingEntry = () => {
               </div>
             )}
           </div>
-          
-          {/* Table Section */}
+
           <div className="rounded-2xl border border-slate-200 bg-white shadow-sm p-3 sm:p-4">
             {loading ? (
               <div className="py-12">
@@ -740,7 +772,9 @@ const ListLoadingEntry = () => {
               <>
                 {loadingEntries.length === 0 ? (
                   <div className="text-center py-12">
-                    <p className="text-slate-500 text-lg">No loading entries found</p>
+                    <p className="text-slate-500 text-lg">
+                      No loading entries found
+                    </p>
                     {hasActiveFilters && (
                       <button
                         onClick={clearFilters}
@@ -768,7 +802,7 @@ const ListLoadingEntry = () => {
               </>
             )}
           </div>
-          
+
           {/* View/Edit Popup */}
           {selectedEntry && popupType && (
             <PopupBox
@@ -778,7 +812,9 @@ const ListLoadingEntry = () => {
                 setSelectedEntry(null);
                 setEditEntry(null);
               }}
-              title={popupType === "view" ? "Loading Entry Details" : "Edit Entry"}
+              title={
+                popupType === "view" ? "Loading Entry Details" : "Edit Entry"
+              }
               maxWidth="max-w-7xl"
             >
               {popupType === "view" ? (
@@ -811,7 +847,7 @@ const ListLoadingEntry = () => {
                         </span>
                       </div>
                     </div>
-                    
+
                     <div className="space-y-4">
                       <h4 className="text-sm font-bold text-slate-400 uppercase tracking-wider border-b pb-1">
                         Transport Details
@@ -837,7 +873,7 @@ const ListLoadingEntry = () => {
                         </span>
                       </div>
                     </div>
-                    
+
                     <div className="space-y-4">
                       <h4 className="text-sm font-bold text-slate-400 uppercase tracking-wider border-b pb-1">
                         Weight & Billing
@@ -861,7 +897,7 @@ const ListLoadingEntry = () => {
                         </span>
                       </div>
                     </div>
-                    
+
                     <div className="space-y-4">
                       <h4 className="text-sm font-bold text-slate-400 uppercase tracking-wider border-b pb-1">
                         Financial Summary
@@ -886,7 +922,7 @@ const ListLoadingEntry = () => {
                       </div>
                     </div>
                   </div>
-                  
+
                   <div className="flex justify-end pt-4 border-t">
                     <button
                       onClick={() => {
@@ -1146,11 +1182,15 @@ const ListLoadingEntry = () => {
                         />
                       </div>
                     </div>
-                    
-                    {(editEntry.unloadingWeight && editEntry.unloadingDate) || 
-                      (editEntry.documents?.kantaSlip || editEntry.documents?.unloadingChallan || editEntry.documents?.partyBillCopy) ? (
+
+                    {(editEntry.unloadingWeight && editEntry.unloadingDate) ||
+                    editEntry.documents?.kantaSlip ||
+                    editEntry.documents?.unloadingChallan ||
+                    editEntry.documents?.partyBillCopy ? (
                       <div className="border-t border-slate-200 pt-6">
-                        <h4 className="text-base font-bold text-slate-800 mb-4">Document Upload</h4>
+                        <h4 className="text-base font-bold text-slate-800 mb-4">
+                          Document Upload
+                        </h4>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                           <FileUpload
                             label="1. Kanta Slip"
@@ -1232,11 +1272,12 @@ const ListLoadingEntry = () => {
                     ) : (
                       <div className="border-t border-slate-200 pt-6">
                         <p className="text-sm text-slate-500 text-center py-4">
-                          Please fill in both Unloading Weight and Unloading Date to enable document upload.
+                          Please fill in both Unloading Weight and Unloading
+                          Date to enable document upload.
                         </p>
                       </div>
                     )}
-                    
+
                     <div className="flex justify-end gap-3 pt-4">
                       <button
                         type="button"
