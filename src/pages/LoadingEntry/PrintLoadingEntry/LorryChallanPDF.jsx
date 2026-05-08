@@ -439,28 +439,28 @@ const LorryChallanPDF = ({ data = {}, logoUrl }) => {
     "N/A";
 }
 
-  } else {
-    buyerAccountName = data.buyerCompany || data.buyer || "N/A";
+  // } else {
+  //   buyerAccountName = data.buyerCompany || data.buyer || "N/A";
 
-    buyerAccountDetails = data.buyerDetails;
+  //   buyerAccountDetails = data.buyerDetails;
 
-    if (isPOConsignee || isSelfOrder) {
-      consigneeNameForShipTo = isSelfOrder
-        ? data.originalBuyerCompany || data.buyerCompany || data.buyer || "N/A"
-        : data.consignee || "N/A";
+  //   if (isPOConsignee || isSelfOrder) {
+  //     consigneeNameForShipTo = isSelfOrder
+  //       ? data.originalBuyerCompany || data.buyerCompany || data.buyer || "N/A"
+  //       : data.consignee || "N/A";
 
-      consigneeDetailsForShipTo =
-        data.originalBuyerDetails || data.buyerDetails;
+  //     consigneeDetailsForShipTo =
+  //       data.originalBuyerDetails || data.buyerDetails;
 
-      toState = consigneeDetailsForShipTo?.state || "N/A";
-    } else {
-      consigneeNameForShipTo = data.consignee || "N/A";
+  //     toState = consigneeDetailsForShipTo?.state || "N/A";
+  //   } else {
+  //     consigneeNameForShipTo = data.consignee || "N/A";
 
-      consigneeDetailsForShipTo = data.consigneeDetails;
+  //     consigneeDetailsForShipTo = data.consigneeDetails;
 
-      toState = data.consigneeDetails?.state || "N/A";
-    }
-  }
+  //     toState = data.consigneeDetails?.state || "N/A";
+  //   }
+  // }
 
   return (
     <Document>
