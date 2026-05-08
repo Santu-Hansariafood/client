@@ -355,112 +355,36 @@ const LorryChallanPDF = ({ data = {}, logoUrl }) => {
   let consigneeDetailsForShipTo;
   let toState;
 
-  // if (isConsigneeAsBuyer) {
-  //   buyerAccountName = data.consignee || "N/A";
-  //   buyerAccountDetails = data.consigneeDetails;
+  const actualBuyerName = data.originalBuyerCompany || data.buyerCompany || data.buyer || "N/A";
+  const actualBuyerDetails = data.originalBuyerDetails || data.buyerDetails;
 
-  //   if (isPOConsignee || isSelfOrder) {
-  //     consigneeNameForShipTo = isSelfOrder
-  //       ? data.originalBuyerCompany || data.buyerCompany || data.buyer || "N/A"
-  //       : data.consignee || "N/A";
+  if (isConsigneeAsBuyer) {
+    if (isPOConsignee || isSelfOrder) {
+      buyerAccountName = actualBuyerName;
+      buyerAccountDetails = actualBuyerDetails;
 
-  //     consigneeDetailsForShipTo =
-  //       data.originalBuyerDetails || data.buyerDetails || data.consigneeDetails;
+      consigneeNameForShipTo = isSelfOrder ? actualBuyerName : (data.consignee || "N/A");
+      consigneeDetailsForShipTo = actualBuyerDetails;
+    } else {
+      buyerAccountName = data.consignee || "N/A";
+      buyerAccountDetails = data.consigneeDetails;
 
-  //     toState = consigneeDetailsForShipTo?.state || "N/A";
-  //   } else {
-  //     consigneeNameForShipTo = data.consignee || "N/A";
+      consigneeNameForShipTo = data.consignee || "N/A";
+      consigneeDetailsForShipTo = data.consigneeDetails;
+    }
+  } else {
+    buyerAccountName = actualBuyerName;
+    buyerAccountDetails = actualBuyerDetails;
 
-  //     consigneeDetailsForShipTo = data.consigneeDetails;
-
-  //     toState = data.consigneeDetails?.state || "N/A";
-  //   }
-
-  if (isSelfOrder) {
-  // SELF ORDER CASE
-  // SHIP TO => buyer details
-  // BUYER ACCOUNT => consignee details
-
-  consigneeNameForShipTo =
-    data.originalBuyerCompany ||
-    data.buyerCompany ||
-    data.buyer ||
-    "N/A";
-
-  consigneeDetailsForShipTo =
-    data.originalBuyerDetails ||
-    data.buyerDetails ||
-    {};
-
-  buyerAccountName = data.consignee || "N/A";
-
-  buyerAccountDetails = data.consigneeDetails || {};
-
-  toState =
-    consigneeDetailsForShipTo?.state ||
-    buyerAccountDetails?.state ||
-    "N/A";
-} else if (isConsigneeAsBuyer) {
-  // BILL TO CONSIGNEE
-
-  buyerAccountName = data.consignee || "N/A";
-
-  buyerAccountDetails = data.consigneeDetails || {};
-
-  consigneeNameForShipTo = data.consignee || "N/A";
-
-  consigneeDetailsForShipTo = data.consigneeDetails || {};
-
-  toState = data.consigneeDetails?.state || "N/A";
-} else {
-  // NORMAL CASE
-
-  buyerAccountName =
-    data.buyerCompany ||
-    data.buyer ||
-    "N/A";
-
-  // IMPORTANT FIX:
-  // if send PO to consignee then print consignee details in BUYER ACCOUNT
-
-  buyerAccountDetails =
-    isPOConsignee
-      ? data.consigneeDetails || {}
-      : data.buyerDetails || {};
-
-  consigneeNameForShipTo =
-    data.consignee || "N/A";
-
-  consigneeDetailsForShipTo =
-    data.consigneeDetails || {};
-
-  toState =
-    data.consigneeDetails?.state ||
-    "N/A";
-}
-
-  // } else {
-  //   buyerAccountName = data.buyerCompany || data.buyer || "N/A";
-
-  //   buyerAccountDetails = data.buyerDetails;
-
-  //   if (isPOConsignee || isSelfOrder) {
-  //     consigneeNameForShipTo = isSelfOrder
-  //       ? data.originalBuyerCompany || data.buyerCompany || data.buyer || "N/A"
-  //       : data.consignee || "N/A";
-
-  //     consigneeDetailsForShipTo =
-  //       data.originalBuyerDetails || data.buyerDetails;
-
-  //     toState = consigneeDetailsForShipTo?.state || "N/A";
-  //   } else {
-  //     consigneeNameForShipTo = data.consignee || "N/A";
-
-  //     consigneeDetailsForShipTo = data.consigneeDetails;
-
-  //     toState = data.consigneeDetails?.state || "N/A";
-  //   }
-  // }
+    if (isPOConsignee || isSelfOrder) {
+      consigneeNameForShipTo = isSelfOrder ? actualBuyerName : (data.consignee || "N/A");
+      consigneeDetailsForShipTo = actualBuyerDetails;
+    } else {
+      consigneeNameForShipTo = data.consignee || "N/A";
+      consigneeDetailsForShipTo = data.consigneeDetails;
+    }
+  }
+  toState = consigneeDetailsForShipTo?.state || "N/A";
 
   return (
     <Document>

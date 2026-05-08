@@ -103,15 +103,30 @@ export const buildSaudaPdfData = ({
       ? getConsigneeDisplay(item)
       : normalizedConsigneeKey || item?.consignee || "N/A";
 
+  const isSpecialConsignee = 
+    normalizeText(resolvedConsigneeName).includes("self order") || 
+    normalizeText(resolvedConsigneeName).includes("purchase order");
+
+  let consigneeDetails = toConsigneeDetails(matchingConsignee);
+  let buyerDetails = item?.billTo === "consignee"
+    ? toUnifiedDetails(matchingConsignee)
+    : toUnifiedDetails(matchingBuyer);
+
+  if (isSpecialConsignee) {
+    consigneeDetails = toConsigneeDetails(matchingBuyer);
+    if (item?.billTo === "consignee") {
+      buyerDetails = toUnifiedDetails(matchingBuyer);
+    }
+  }
+
   let transformed = {
     ...item,
     consignee: resolvedConsigneeName,
-    consigneeDetails: toConsigneeDetails(matchingConsignee),
+    consigneeDetails,
     supplierDetails: toUnifiedDetails(matchingSupplier),
-    buyerDetails:
-      item?.billTo === "consignee"
-        ? toUnifiedDetails(matchingConsignee)
-        : toUnifiedDetails(matchingBuyer),
+    buyerDetails,
+    originalBuyerDetails: toUnifiedDetails(matchingBuyer),
+    originalBuyerCompany: matchingBuyer?.companyName || item?.buyerCompany || item?.buyer
   };
 
   if (item?.billTo === "consignee") {
