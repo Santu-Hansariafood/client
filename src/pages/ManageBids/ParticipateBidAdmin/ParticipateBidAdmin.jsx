@@ -335,130 +335,107 @@ const ParticipateBidAdmin = () => {
         noContentCard
       >
         <div className="max-w-[1600px] mx-auto space-y-8 p-2">
-          {/* Top Section: Stats & Quick Actions */}
-          <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
-            {/* Real-time Stats Cards */}
-            <div className="xl:col-span-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="relative overflow-hidden bg-white p-6 rounded-[2rem] border border-emerald-100 shadow-xl shadow-emerald-900/5 group hover:scale-[1.02] transition-all duration-300">
-                <div className="absolute -right-4 -top-4 w-24 h-24 bg-emerald-50 rounded-full opacity-50 group-hover:scale-150 transition-transform duration-500" />
-                <div className="relative flex items-center gap-4">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-600 text-white shadow-lg shadow-emerald-200">
-                    <FaGavel className="text-xl" />
-                  </div>
-                  <div>
-                    <p className="text-[11px] font-bold text-emerald-600 uppercase tracking-widest">
-                      Today&apos;s Bids
-                    </p>
-                    <p className="text-3xl font-black text-slate-800 leading-none mt-1">
-                      {stats.totalBidsToday}
-                    </p>
-                  </div>
+          {/* Top Section: Real-time Stats Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="relative overflow-hidden bg-white p-6 rounded-[2rem] border border-emerald-100 shadow-xl shadow-emerald-900/5 group hover:scale-[1.02] transition-all duration-300">
+              <div className="absolute -right-4 -top-4 w-24 h-24 bg-emerald-50 rounded-full opacity-50 group-hover:scale-150 transition-transform duration-500" />
+              <div className="relative flex items-center gap-4">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-600 text-white shadow-lg shadow-emerald-200">
+                  <FaGavel className="text-xl" />
                 </div>
-              </div>
-
-              <div className="relative overflow-hidden bg-white p-6 rounded-[2rem] border border-blue-100 shadow-xl shadow-blue-900/5 group hover:scale-[1.02] transition-all duration-300">
-                <div className="absolute -right-4 -top-4 w-24 h-24 bg-blue-50 rounded-full opacity-50 group-hover:scale-150 transition-transform duration-500" />
-                <div className="relative flex items-center gap-4">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-600 text-white shadow-lg shadow-blue-200">
-                    <FaHandshake className="text-xl" />
-                  </div>
-                  <div>
-                    <p className="text-[11px] font-bold text-blue-600 uppercase tracking-widest">
-                      Participations
-                    </p>
-                    <p className="text-3xl font-black text-slate-800 leading-none mt-1">
-                      {stats.totalParticipationsToday}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="relative overflow-hidden bg-white p-6 rounded-[2rem] border border-amber-100 shadow-xl shadow-amber-900/5 group hover:scale-[1.02] transition-all duration-300">
-                <div className="absolute -right-4 -top-4 w-24 h-24 bg-amber-50 rounded-full opacity-50 group-hover:scale-150 transition-transform duration-500" />
-                <div className="relative flex items-center gap-4">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-500 text-white shadow-lg shadow-amber-200">
-                    <FaCheckCircle className="text-xl" />
-                  </div>
-                  <div>
-                    <p className="text-[11px] font-bold text-amber-600 uppercase tracking-widest">
-                      Accepted Qty
-                    </p>
-                    <p className="text-2xl font-black text-slate-800 leading-none mt-1">
-                      {stats.totalAcceptedQty.toFixed(2)} T
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="relative overflow-hidden bg-white p-6 rounded-[2rem] border border-slate-100 shadow-xl shadow-slate-900/5 group hover:scale-[1.02] transition-all duration-300">
-                <div className="absolute -right-4 -top-4 w-24 h-24 bg-slate-50 rounded-full opacity-50 group-hover:scale-150 transition-transform duration-500" />
-                <div className="relative flex items-center gap-4">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-700 text-white shadow-lg shadow-slate-200">
-                    <FaFilter className="text-xl" />
-                  </div>
-                  <div>
-                    <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">
-                      Filtered
-                    </p>
-                    <p className="text-3xl font-black text-slate-800 leading-none mt-1">
-                      {stats.filteredResults}
-                    </p>
-                  </div>
+                <div>
+                  <p className="text-[11px] font-bold text-emerald-600 uppercase tracking-widest">Today's Bids</p>
+                  <p className="text-3xl font-black text-slate-800 leading-none mt-1">{stats.totalBidsToday}</p>
                 </div>
               </div>
             </div>
 
-            {/* Date & Search Actions */}
-            <div className="bg-slate-50/50 p-4 rounded-[2rem] border border-slate-200 flex flex-col justify-center gap-3">
-              <div className="flex items-center justify-between px-2">
-                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                  Select View Date
-                </span>
-                <span
-                  className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"
-                  title="Live Updates"
-                />
+            <div className="relative overflow-hidden bg-white p-6 rounded-[2rem] border border-blue-100 shadow-xl shadow-blue-900/5 group hover:scale-[1.02] transition-all duration-300">
+              <div className="absolute -right-4 -top-4 w-24 h-24 bg-blue-50 rounded-full opacity-50 group-hover:scale-150 transition-transform duration-500" />
+              <div className="relative flex items-center gap-4">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-600 text-white shadow-lg shadow-blue-200">
+                  <FaHandshake className="text-xl" />
+                </div>
+                <div>
+                  <p className="text-[11px] font-bold text-blue-600 uppercase tracking-widest">Participations</p>
+                  <p className="text-3xl font-black text-slate-800 leading-none mt-1">{stats.totalParticipationsToday}</p>
+                </div>
               </div>
-              <DateSelector
-                selectedDate={selectedDate}
-                onChange={setSelectedDate}
-              />
+            </div>
+
+            <div className="relative overflow-hidden bg-white p-6 rounded-[2rem] border border-amber-100 shadow-xl shadow-amber-900/5 group hover:scale-[1.02] transition-all duration-300">
+              <div className="absolute -right-4 -top-4 w-24 h-24 bg-amber-50 rounded-full opacity-50 group-hover:scale-150 transition-transform duration-500" />
+              <div className="relative flex items-center gap-4">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-500 text-white shadow-lg shadow-amber-200">
+                  <FaCheckCircle className="text-xl" />
+                </div>
+                <div>
+                  <p className="text-[11px] font-bold text-amber-600 uppercase tracking-widest">Accepted Qty</p>
+                  <p className="text-2xl font-black text-slate-800 leading-none mt-1">{stats.totalAcceptedQty.toFixed(2)} T</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="relative overflow-hidden bg-white p-6 rounded-[2rem] border border-slate-100 shadow-xl shadow-slate-900/5 group hover:scale-[1.02] transition-all duration-300">
+              <div className="absolute -right-4 -top-4 w-24 h-24 bg-slate-50 rounded-full opacity-50 group-hover:scale-150 transition-transform duration-500" />
+              <div className="relative flex items-center gap-4">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-700 text-white shadow-lg shadow-slate-200">
+                  <FaFilter className="text-xl" />
+                </div>
+                <div>
+                  <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Filtered</p>
+                  <p className="text-3xl font-black text-slate-800 leading-none mt-1">{stats.filteredResults}</p>
+                </div>
+              </div>
             </div>
           </div>
 
-          {/* Filters Bar */}
-          <div className="flex flex-col lg:flex-row items-center gap-4 bg-white p-4 rounded-[2rem] border border-slate-100 shadow-sm">
-            <div className="w-full lg:w-96">
-              <SearchBox
-                placeholder="Search by consignee, commodity..."
-                items={consigneeItems}
-                onSearch={handleSearch}
-                returnQuery={true}
-              />
-            </div>
+          {/* Search & Actions Bar */}
+          <div className="flex flex-col xl:flex-row items-stretch xl:items-center gap-4 bg-white p-4 rounded-[2rem] border border-slate-100 shadow-sm">
+            <div className="flex-1 flex flex-col sm:flex-row items-center gap-4">
+              <div className="w-full sm:flex-1">
+                <SearchBox
+                  placeholder="Search by consignee, commodity..."
+                  items={consigneeItems}
+                  onSearch={handleSearch}
+                  returnQuery={true}
+                />
+              </div>
 
-            <div className="h-8 w-px bg-slate-200 hidden lg:block" />
+              <div className="w-full sm:w-auto flex items-center gap-3 bg-slate-50 p-2 px-4 rounded-2xl border border-slate-200 shadow-inner">
+                <div className="flex flex-col">
+                  <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">View Date</span>
+                  <div className="flex items-center gap-2">
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                    <DateSelector
+                      selectedDate={selectedDate}
+                      onChange={setSelectedDate}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="h-8 w-px bg-slate-200 hidden xl:block" />
 
             {userRole === "Buyer" && (
-              <div className="flex items-center gap-3 w-full lg:w-auto">
+              <div className="flex items-center gap-3 w-full xl:w-auto">
                 <button
                   onClick={() => navigate(-1)}
                   className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-bold text-slate-600 bg-slate-50 rounded-2xl hover:bg-slate-100 transition shadow-sm border border-slate-200"
                 >
                   <FaArrowLeft /> Back
                 </button>
-
+                
                 {buyerGroups.length > 1 && (
                   <select
                     value={selectedGroup}
                     onChange={(e) => setSelectedGroup(e.target.value)}
-                    className="flex-1 lg:w-48 px-4 py-2.5 rounded-2xl border border-slate-200 bg-white text-sm font-bold text-slate-700 focus:ring-4 focus:ring-emerald-400/10 outline-none shadow-sm transition-all"
+                    className="flex-1 xl:w-48 px-4 py-2.5 rounded-2xl border border-slate-200 bg-white text-sm font-bold text-slate-700 focus:ring-4 focus:ring-emerald-400/10 outline-none shadow-sm transition-all"
                   >
                     <option value="All">All Groups</option>
                     {buyerGroups.map((group) => (
-                      <option key={group} value={group}>
-                        {group}
-                      </option>
+                      <option key={group} value={group}>{group}</option>
                     ))}
                   </select>
                 )}
