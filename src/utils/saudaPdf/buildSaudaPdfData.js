@@ -121,9 +121,13 @@ export const buildSaudaPdfData = ({
   if (billToConsignee) {
     transformed.buyer = resolvedConsigneeName;
     transformed.buyerCompany = resolvedConsigneeName;
+    // CRITICAL FIX: Ensure buyerDetails uses the consignee's specific details 
+    // instead of falling back to the main company details
+    transformed.buyerDetails = finalConsigneeDetails;
   } else {
     transformed.buyer = finalBuyerName;
     transformed.buyerCompany = finalBuyerName;
+    transformed.buyerDetails = finalBuyerDetails;
   }
 
   // Final fallback: If buyerDetails is still empty but we have originalBuyerDetails, use it
