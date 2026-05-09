@@ -4,7 +4,14 @@ import { toast } from "react-toastify";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import Loading from "../../../common/Loading/Loading";
 import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
-import { FaUsers, FaArrowLeft } from "react-icons/fa";
+import {
+  FaUsers,
+  FaArrowLeft,
+  FaGavel,
+  FaHandshake,
+  FaCheckCircle,
+  FaFilter,
+} from "react-icons/fa";
 import { useAuth } from "../../../context/AuthContext/AuthContext";
 
 const Tables = lazy(() => import("../../../common/Tables/Tables"));
@@ -53,26 +60,32 @@ const ParticipateBidAdmin = () => {
           });
           const { bids: bidsData, participations, buyer } = res.data;
           setIsBuyerAdmin(buyer.isAdmin || false);
-          
+
           const groups = (buyer.groups || []).map(normalize);
-          const companies = (buyer.companies || []).map(c => String(c).trim());
+          const companies = (buyer.companies || []).map((c) =>
+            String(c).trim(),
+          );
           setBuyerGroups(groups);
-          
+
           if (groups.length > 0 && selectedGroup === "All") {
             setSelectedGroup(groups[0]);
           }
-          
-          // Strictly filter bids and participations by groups/companies
-          const allowedBids = bidsData.filter(bid => {
+
+          const allowedBids = bidsData.filter((bid) => {
             const bidGroup = normalize(bid.group);
-            const isOwnBid = String(bid.createdByMobile || "") === String(mobile || "");
+            const isOwnBid =
+              String(bid.createdByMobile || "") === String(mobile || "");
             const belongsToGroup = groups.includes(bidGroup);
-            const belongsToCompany = companies.includes(String(bid.company || "").trim());
+            const belongsToCompany = companies.includes(
+              String(bid.company || "").trim(),
+            );
             return isOwnBid || belongsToGroup || belongsToCompany;
           });
-          
-          const allowedBidIds = new Set(allowedBids.map(b => b._id));
-          const allowedParticipations = participations.filter(p => allowedBidIds.has(p.bidId));
+
+          const allowedBidIds = new Set(allowedBids.map((b) => b._id));
+          const allowedParticipations = participations.filter((p) =>
+            allowedBidIds.has(p.bidId),
+          );
 
           setBids(allowedBids);
           setParticipationBids(allowedParticipations);
@@ -90,12 +103,17 @@ const ParticipateBidAdmin = () => {
           setFilteredBids(participations);
         }
       } catch {
-        toast.error("Error fetching data");
+        // Silent error for polling
       } finally {
         setLoading(false);
       }
     };
+
     fetchData();
+
+    // Real-time update: poll every 30 seconds
+    const interval = setInterval(fetchData, 30000);
+    return () => clearInterval(interval);
   }, [userRole, mobile, selectedDate]);
 
   const displayBids = useMemo(() => {
@@ -118,7 +136,10 @@ const ParticipateBidAdmin = () => {
       if (!matchingBid) return;
 
       if (userRole === "Buyer") {
-        if (selectedGroup !== "All" && normalize(matchingBid.group) !== normalize(selectedGroup)) {
+        if (
+          selectedGroup !== "All" &&
+          normalize(matchingBid.group) !== normalize(selectedGroup)
+        ) {
           return;
         }
       }
@@ -201,7 +222,7 @@ const ParticipateBidAdmin = () => {
       key={bid.bidId}
       type="button"
       onClick={() => setSelectedBidId(bid.bidId)}
-      className="font-medium text-emerald-700 hover:text-emerald-800"
+      className="font-medium text-emerald-700 hover:text-emerald-800 underline decoration-emerald-200 underline-offset-4"
     >
       {bid.mobiles.size} interaction{bid.mobiles.size !== 1 ? "s" : ""}
     </button>,
@@ -266,31 +287,36 @@ const ParticipateBidAdmin = () => {
   };
 
   const stats = useMemo(() => {
-    if (!selectedDate) {
-      return {
-        totalBids: bids.length,
-        totalParticipations: participationBids.length,
-        filteredResults: filteredData.length
-      };
-    }
-
-    const targetDate = new Date(selectedDate);
+    const targetDate = new Date(selectedDate || new Date());
     targetDate.setHours(0, 0, 0, 0);
 
+    // Total Bids Created Today
+    const bidsCreatedToday = bids.filter((bid) => {
+      const bDate = new Date(bid.createdAt || bid.date);
+      bDate.setHours(0, 0, 0, 0);
+      return bDate.getTime() === targetDate.getTime();
+    }).length;
+
+    // Today's Participations
     const todayParticipations = participationBids.filter((pBid) => {
       const pDate = new Date(pBid.createdAt || pBid.participationDate);
       pDate.setHours(0, 0, 0, 0);
       return pDate.getTime() === targetDate.getTime();
     });
 
-    const uniqueBidIdsToday = new Set(todayParticipations.map(p => p.bidId));
+    // Total Accepted Quantity Today
+    const totalAcceptedQty = todayParticipations.reduce(
+      (sum, p) => sum + (p.acceptedQuantity || 0),
+      0,
+    );
 
     return {
-      totalBids: uniqueBidIdsToday.size,
-      totalParticipations: todayParticipations.length,
-      filteredResults: filteredData.length
+      totalBidsToday: bidsCreatedToday,
+      totalParticipationsToday: todayParticipations.length,
+      totalAcceptedQty: totalAcceptedQty,
+      filteredResults: filteredData.length,
     };
-  }, [selectedDate, bids.length, participationBids, filteredData.length]);
+  }, [selectedDate, bids, participationBids, filteredData.length]);
 
   return (
     <Suspense fallback={<Loading />}>
@@ -303,73 +329,141 @@ const ParticipateBidAdmin = () => {
         subtitle={
           userRole === "Buyer"
             ? "View your company's bid activity"
-            : "Full history of participation activity"
+            : "Monitor participation activity and acceptance in real-time"
         }
         icon={FaUsers}
         noContentCard
       >
-        <div className="space-y-6">
-          {/* Header Stats & Filters */}
-          <div className="flex flex-col lg:flex-row gap-6">
-            {/* Stats Cards */}
-            <div className="flex-1 grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div className="bg-white p-5 rounded-2xl border border-emerald-100 shadow-sm hover:shadow-md transition-shadow">
-                <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider mb-1">Today's Bids</p>
-                <p className="text-2xl font-black text-slate-800">{stats.totalBids}</p>
+        <div className="max-w-[1600px] mx-auto space-y-8 p-2">
+          {/* Top Section: Stats & Quick Actions */}
+          <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
+            {/* Real-time Stats Cards */}
+            <div className="xl:col-span-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="relative overflow-hidden bg-white p-6 rounded-[2rem] border border-emerald-100 shadow-xl shadow-emerald-900/5 group hover:scale-[1.02] transition-all duration-300">
+                <div className="absolute -right-4 -top-4 w-24 h-24 bg-emerald-50 rounded-full opacity-50 group-hover:scale-150 transition-transform duration-500" />
+                <div className="relative flex items-center gap-4">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-600 text-white shadow-lg shadow-emerald-200">
+                    <FaGavel className="text-xl" />
+                  </div>
+                  <div>
+                    <p className="text-[11px] font-bold text-emerald-600 uppercase tracking-widest">
+                      Today&apos;s Bids
+                    </p>
+                    <p className="text-3xl font-black text-slate-800 leading-none mt-1">
+                      {stats.totalBidsToday}
+                    </p>
+                  </div>
+                </div>
               </div>
-              <div className="bg-white p-5 rounded-2xl border border-emerald-100 shadow-sm hover:shadow-md transition-shadow">
-                <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider mb-1">Today's Participations</p>
-                <p className="text-2xl font-black text-slate-800">{stats.totalParticipations}</p>
+
+              <div className="relative overflow-hidden bg-white p-6 rounded-[2rem] border border-blue-100 shadow-xl shadow-blue-900/5 group hover:scale-[1.02] transition-all duration-300">
+                <div className="absolute -right-4 -top-4 w-24 h-24 bg-blue-50 rounded-full opacity-50 group-hover:scale-150 transition-transform duration-500" />
+                <div className="relative flex items-center gap-4">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-600 text-white shadow-lg shadow-blue-200">
+                    <FaHandshake className="text-xl" />
+                  </div>
+                  <div>
+                    <p className="text-[11px] font-bold text-blue-600 uppercase tracking-widest">
+                      Participations
+                    </p>
+                    <p className="text-3xl font-black text-slate-800 leading-none mt-1">
+                      {stats.totalParticipationsToday}
+                    </p>
+                  </div>
+                </div>
               </div>
-              <div className="bg-white p-5 rounded-2xl border border-emerald-100 shadow-sm hover:shadow-md transition-shadow">
-                <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider mb-1">Filtered Results</p>
-                <p className="text-2xl font-black text-slate-800">{stats.filteredResults}</p>
+
+              <div className="relative overflow-hidden bg-white p-6 rounded-[2rem] border border-amber-100 shadow-xl shadow-amber-900/5 group hover:scale-[1.02] transition-all duration-300">
+                <div className="absolute -right-4 -top-4 w-24 h-24 bg-amber-50 rounded-full opacity-50 group-hover:scale-150 transition-transform duration-500" />
+                <div className="relative flex items-center gap-4">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-500 text-white shadow-lg shadow-amber-200">
+                    <FaCheckCircle className="text-xl" />
+                  </div>
+                  <div>
+                    <p className="text-[11px] font-bold text-amber-600 uppercase tracking-widest">
+                      Accepted Qty
+                    </p>
+                    <p className="text-2xl font-black text-slate-800 leading-none mt-1">
+                      {stats.totalAcceptedQty.toFixed(2)} T
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="relative overflow-hidden bg-white p-6 rounded-[2rem] border border-slate-100 shadow-xl shadow-slate-900/5 group hover:scale-[1.02] transition-all duration-300">
+                <div className="absolute -right-4 -top-4 w-24 h-24 bg-slate-50 rounded-full opacity-50 group-hover:scale-150 transition-transform duration-500" />
+                <div className="relative flex items-center gap-4">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-700 text-white shadow-lg shadow-slate-200">
+                    <FaFilter className="text-xl" />
+                  </div>
+                  <div>
+                    <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">
+                      Filtered
+                    </p>
+                    <p className="text-3xl font-black text-slate-800 leading-none mt-1">
+                      {stats.filteredResults}
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
 
-            {/* Main Search & Date Filter */}
-            <div className="lg:w-1/2 space-y-4">
-              <div className="flex flex-col sm:flex-row gap-4">
-                <div className="flex-1">
-                  <SearchBox
-                    placeholder="Search by consignee, commodity..."
-                    items={consigneeItems}
-                    onSearch={handleSearch}
-                    returnQuery={true}
-                  />
-                </div>
-                <div className="w-full sm:w-48">
-                  <DateSelector
-                    selectedDate={selectedDate}
-                    onChange={setSelectedDate}
-                  />
-                </div>
+            {/* Date & Search Actions */}
+            <div className="bg-slate-50/50 p-4 rounded-[2rem] border border-slate-200 flex flex-col justify-center gap-3">
+              <div className="flex items-center justify-between px-2">
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                  Select View Date
+                </span>
+                <span
+                  className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"
+                  title="Live Updates"
+                />
               </div>
-              
-              <div className="flex items-center gap-3">
-                {userRole === "Buyer" && (
-                  <button
-                    onClick={() => navigate(-1)}
-                    className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-bold text-slate-600 bg-white rounded-xl border border-slate-200 hover:bg-slate-50 transition shadow-sm"
-                  >
-                    <FaArrowLeft /> Back
-                  </button>
-                )}
-                
-                {userRole === "Buyer" && buyerGroups.length > 1 && (
+              <DateSelector
+                selectedDate={selectedDate}
+                onChange={setSelectedDate}
+              />
+            </div>
+          </div>
+
+          {/* Filters Bar */}
+          <div className="flex flex-col lg:flex-row items-center gap-4 bg-white p-4 rounded-[2rem] border border-slate-100 shadow-sm">
+            <div className="w-full lg:w-96">
+              <SearchBox
+                placeholder="Search by consignee, commodity..."
+                items={consigneeItems}
+                onSearch={handleSearch}
+                returnQuery={true}
+              />
+            </div>
+
+            <div className="h-8 w-px bg-slate-200 hidden lg:block" />
+
+            {userRole === "Buyer" && (
+              <div className="flex items-center gap-3 w-full lg:w-auto">
+                <button
+                  onClick={() => navigate(-1)}
+                  className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-bold text-slate-600 bg-slate-50 rounded-2xl hover:bg-slate-100 transition shadow-sm border border-slate-200"
+                >
+                  <FaArrowLeft /> Back
+                </button>
+
+                {buyerGroups.length > 1 && (
                   <select
                     value={selectedGroup}
                     onChange={(e) => setSelectedGroup(e.target.value)}
-                    className="flex-1 max-w-[200px] px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm font-bold text-slate-700 focus:ring-2 focus:ring-emerald-400/50 outline-none shadow-sm"
+                    className="flex-1 lg:w-48 px-4 py-2.5 rounded-2xl border border-slate-200 bg-white text-sm font-bold text-slate-700 focus:ring-4 focus:ring-emerald-400/10 outline-none shadow-sm transition-all"
                   >
                     <option value="All">All Groups</option>
                     {buyerGroups.map((group) => (
-                      <option key={group} value={group}>{group}</option>
+                      <option key={group} value={group}>
+                        {group}
+                      </option>
                     ))}
                   </select>
                 )}
               </div>
-            </div>
+            )}
           </div>
 
           {selectedBidId && (
@@ -379,17 +473,23 @@ const ParticipateBidAdmin = () => {
             />
           )}
 
+          {/* Main Content Area */}
           {loading ? (
-            <div className="py-20 flex justify-center"><Loading /></div>
+            <div className="py-32 flex flex-col items-center justify-center gap-4">
+              <Loading />
+              <p className="text-sm font-bold text-emerald-600 animate-pulse tracking-widest uppercase">
+                Fetching Real-time Data...
+              </p>
+            </div>
           ) : (
-            <div className="space-y-4">
-              <div className="rounded-3xl border border-emerald-100 bg-white shadow-xl shadow-emerald-900/5 overflow-hidden">
-                <div className="p-1">
+            <div className="space-y-6">
+              <div className="rounded-[2.5rem] border border-slate-200 bg-white shadow-2xl shadow-slate-900/5 overflow-hidden">
+                <div className="p-2">
                   <Tables headers={headers} rows={rows} />
                 </div>
               </div>
-              
-              <div className="bg-white/50 p-4 rounded-3xl border border-slate-100">
+
+              <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm flex items-center justify-center">
                 <Pagination
                   currentPage={safeCurrentPage}
                   totalItems={totalItems}
