@@ -51,16 +51,12 @@ export const buildSaudaPdfData = ({
     if (!key) return null;
     const normalizedKey = normalizeText(key);
     
-    // 1. Try exact ID match
     const byId = dataList.find(d => d._id && String(d._id) === String(key));
     if (byId) return byId;
 
-    // 2. Try exact Name match
     const exactName = dataList.find(d => normalizeText(d[nameField]) === normalizedKey);
     if (exactName) return exactName;
 
-    // 3. Try fuzzy match (if key contains the name or vice versa)
-    // This handles "Company Name - Branch" matching with "Company Name"
     const fuzzyMatch = dataList.find(d => {
       const dName = normalizeText(d[nameField]);
       return dName && (normalizedKey.startsWith(dName) || dName.startsWith(normalizedKey));
@@ -99,7 +95,6 @@ export const buildSaudaPdfData = ({
   const finalBuyerName = itemBuyerName || matchingBuyer?.companyName || "N/A";
   const finalBuyerDetails = toUnifiedDetails(matchingBuyer);
   
-  // Try to find consignee details from matching data, or fallback to item's own details if available
   const itemConsigneeDetails = item?.consigneeDetails ? toConsigneeDetails(item.consigneeDetails) : null;
   const finalConsigneeDetails = 
     toConsigneeDetails(matchingConsignee) || 
@@ -121,8 +116,6 @@ export const buildSaudaPdfData = ({
   if (billToConsignee) {
     transformed.buyer = resolvedConsigneeName;
     transformed.buyerCompany = resolvedConsigneeName;
-    // CRITICAL FIX: Ensure buyerDetails uses the consignee's specific details 
-    // instead of falling back to the main company details
     transformed.buyerDetails = finalConsigneeDetails;
   } else {
     transformed.buyer = finalBuyerName;
@@ -130,14 +123,10 @@ export const buildSaudaPdfData = ({
     transformed.buyerDetails = finalBuyerDetails;
   }
 
-  // Final fallback: If buyerDetails is still empty but we have originalBuyerDetails, use it
-  // ONLY if billTo is not consignee. If billTo is consignee, we should respect that even if details are sparse.
   if (!transformed.buyerDetails && !billToConsignee && transformed.originalBuyerDetails) {
     transformed.buyerDetails = transformed.originalBuyerDetails;
   }
 
-  // If billTo is consignee and we still don't have details, try matching buyer details as a last resort 
-  // ONLY if the names are similar (e.g. branch of same company)
   if (billToConsignee && !transformed.buyerDetails && transformed.originalBuyerDetails) {
     const bName = normalizeText(transformed.originalBuyerCompany);
     const cName = normalizeText(transformed.consignee);

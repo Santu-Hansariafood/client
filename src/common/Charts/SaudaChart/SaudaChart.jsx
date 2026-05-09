@@ -19,7 +19,7 @@ const CustomTooltip = ({ active, payload, label }) => {
     return (
       <div className="bg-white p-3 shadow-xl border border-slate-100 rounded-lg">
         <p className="text-sm font-medium text-slate-500 mb-1">{label}</p>
-        <p className="text-lg font-bold text-[#8CC63F]">
+        <p className="text-lg font-bold text-emerald-600">
           {payload[0].value} Saudas
         </p>
       </div>
@@ -145,7 +145,7 @@ const SaudaChart = ({ apiUrl, chartType = "line", data: externalData }) => {
             tick={{ fill: "#64748b", fontSize: 12 }}
           />
           <Tooltip content={<CustomTooltip />} />
-          <Bar dataKey="count" fill="#8CC63F" radius={[4, 4, 0, 0]} />
+          <Bar dataKey="count" fill="#059669" radius={[4, 4, 0, 0]} />
         </BarChart>
       );
     }
@@ -174,9 +174,9 @@ const SaudaChart = ({ apiUrl, chartType = "line", data: externalData }) => {
           <Line
             type="monotone"
             dataKey="count"
-            stroke="#8CC63F"
+            stroke="#059669"
             strokeWidth={3}
-            dot={{ r: 4, fill: "#8CC63F" }}
+            dot={{ r: 4, fill: "#059669" }}
             activeDot={{ r: 6 }}
           />
         </LineChart>
@@ -187,8 +187,8 @@ const SaudaChart = ({ apiUrl, chartType = "line", data: externalData }) => {
       <AreaChart {...commonProps}>
         <defs>
           <linearGradient id="colorSauda" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="5%" stopColor="#8CC63F" stopOpacity={0.3} />
-            <stop offset="95%" stopColor="#8CC63F" stopOpacity={0} />
+            <stop offset="5%" stopColor="#059669" stopOpacity={0.3} />
+            <stop offset="95%" stopColor="#059669" stopOpacity={0} />
           </linearGradient>
         </defs>
         <CartesianGrid
@@ -212,7 +212,7 @@ const SaudaChart = ({ apiUrl, chartType = "line", data: externalData }) => {
         <Area
           type="monotone"
           dataKey="count"
-          stroke="#8CC63F"
+          stroke="#059669"
           strokeWidth={3}
           fillOpacity={1}
           fill="url(#colorSauda)"

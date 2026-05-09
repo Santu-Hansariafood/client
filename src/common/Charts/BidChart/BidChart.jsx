@@ -19,7 +19,7 @@ const CustomTooltip = ({ active, payload, label }) => {
     return (
       <div className="bg-white p-3 shadow-xl border border-slate-100 rounded-lg">
         <p className="text-sm font-medium text-slate-500 mb-1">{label}</p>
-        <p className="text-lg font-bold text-[#FFB800]">
+        <p className="text-lg font-bold text-amber-500">
           {payload[0].value} Bids
         </p>
       </div>
@@ -146,7 +146,7 @@ const BidChart = ({ apiUrl, chartType = "line", data: externalData }) => {
             tick={{ fill: "#64748b", fontSize: 12 }}
           />
           <Tooltip content={<CustomTooltip />} />
-          <Bar dataKey="count" fill="#FFB800" radius={[4, 4, 0, 0]} />
+          <Bar dataKey="count" fill="#f59e0b" radius={[4, 4, 0, 0]} />
         </BarChart>
       );
     }
@@ -175,9 +175,9 @@ const BidChart = ({ apiUrl, chartType = "line", data: externalData }) => {
           <Line
             type="monotone"
             dataKey="count"
-            stroke="#FFB800"
+            stroke="#f59e0b"
             strokeWidth={3}
-            dot={{ r: 4, fill: "#FFB800" }}
+            dot={{ r: 4, fill: "#f59e0b" }}
             activeDot={{ r: 6 }}
           />
         </LineChart>
@@ -189,8 +189,8 @@ const BidChart = ({ apiUrl, chartType = "line", data: externalData }) => {
       <AreaChart {...commonProps}>
         <defs>
           <linearGradient id="colorBids" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="5%" stopColor="#FFB800" stopOpacity={0.3} />
-            <stop offset="95%" stopColor="#FFB800" stopOpacity={0} />
+            <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.3} />
+            <stop offset="95%" stopColor="#f59e0b" stopOpacity={0} />
           </linearGradient>
         </defs>
         <CartesianGrid
@@ -214,7 +214,7 @@ const BidChart = ({ apiUrl, chartType = "line", data: externalData }) => {
         <Area
           type="monotone"
           dataKey="count"
-          stroke="#FFB800"
+          stroke="#f59e0b"
           strokeWidth={3}
           fillOpacity={1}
           fill="url(#colorBids)"

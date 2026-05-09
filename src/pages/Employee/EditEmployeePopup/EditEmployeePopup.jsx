@@ -85,7 +85,7 @@ const EditEmployeePopup = ({ employee, isOpen, onClose, onUpdate }) => {
 
         {loading || !formData ? (
           <div className="p-12 text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#8CC63F] mx-auto mb-4"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mx-auto mb-4"></div>
             <p className="text-slate-500 font-medium">Loading details...</p>
           </div>
         ) : (
