@@ -265,6 +265,7 @@ const PendingLoadingList = () => {
 
         return {
           "Sl No": index + 1,
+          "Serial No": index + 1,
           "Date": formatDate(item.poDate || item.createdAt),
           "Sauda No": item.saudaNo || "N/A",
           "Seller Company": item.supplierCompany || "N/A",
@@ -297,6 +298,7 @@ const PendingLoadingList = () => {
 
   const headers = [
     "Sl No",
+    "Serial No",
     "Date",
     "Sauda No",
     "Seller Company",
@@ -323,6 +325,7 @@ const PendingLoadingList = () => {
     const loadedQuantity = quantity - pendingQuantity;
 
     return [
+      (currentPage - 1) * itemsPerPage + index + 1,
       (currentPage - 1) * itemsPerPage + index + 1,
       formatDate(item.poDate || item.createdAt),
       item.saudaNo || "N/A",
