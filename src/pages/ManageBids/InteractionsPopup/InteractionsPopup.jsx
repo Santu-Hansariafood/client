@@ -478,7 +478,7 @@ const InteractionCard = ({
               <FaStickyNote className="text-emerald-500" /> Seller Remarks
             </p>
             <p className="text-sm font-medium text-slate-600 leading-relaxed italic">
-              "{interaction.remarks}"
+              &quot;{interaction.remarks}&quot;
             </p>
           </div>
         )}
@@ -525,14 +525,15 @@ const InteractionCard = ({
                   Internal Notes
                 </p>
                 <p className="text-sm font-medium text-slate-700 italic">
-                  "{interaction.adminNotes}"
+                  &quot;{interaction.adminNotes}&quot;
                 </p>
               </div>
             )}
           </div>
         )}
 
-        {interaction.status !== "accepted" && isReviewer && (
+        {/* Review Controls */}
+        {interaction.status === "pending" && isReviewer && (
           <div className="space-y-6 pt-4">
             <div className="rounded-3xl border border-slate-200 bg-slate-50/50 p-6 space-y-5">
               <div className="flex items-center gap-3">
@@ -623,7 +624,28 @@ const InteractionCard = ({
             </div>
           </div>
         )}
-        {interaction.status !== "pending" && isReviewer && (
+
+        {/* Reopen button for rejected interactions */}
+        {interaction.status === "rejected" && isReviewer && (
+          <div className="flex justify-end gap-3 pt-4">
+            <button
+              onClick={() => onStatusChange(interaction._id, "pending", notes)}
+              className="px-8 py-3.5 bg-emerald-50 text-emerald-600 border-2 border-emerald-100 rounded-2xl hover:bg-emerald-100 active:scale-95 transition-all font-black text-sm uppercase tracking-widest flex items-center gap-2 shadow-sm"
+            >
+              <FaHistory className="text-xs" /> Reopen Interaction
+            </button>
+            <button
+              onClick={() => onDelete(interaction._id)}
+              className="p-3.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-2xl transition-all border border-slate-100 hover:border-rose-100 shadow-sm"
+              title="Delete Interaction"
+            >
+              <FaTrashAlt />
+            </button>
+          </div>
+        )}
+
+        {/* Action buttons for already accepted items */}
+        {interaction.status === "accepted" && isReviewer && (
           <div className="flex justify-end pt-2">
             <button
               onClick={() => onDelete(interaction._id)}

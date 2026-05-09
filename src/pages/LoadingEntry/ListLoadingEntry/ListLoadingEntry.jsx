@@ -555,7 +555,6 @@ const ListLoadingEntry = () => {
   const headers = useMemo(
     () => [
       "Sl No",
-      "Serial No",
       "Loading Date",
       "Sauda No",
       "Seller Company",
@@ -587,7 +586,6 @@ const ListLoadingEntry = () => {
   const rows = useMemo(() => {
     const start = (currentPage - 1) * itemsPerPage;
     return loadingEntries.map((entry, index) => [
-      start + index + 1,
       start + index + 1,
       formatDate(entry.loadingDate),
       entry.saudaNo || "N/A",
