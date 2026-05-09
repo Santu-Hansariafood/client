@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback } from "react";
 import { Link, useLocation } from "react-router-dom";
 import * as Icons from "react-icons/fa";
 import dashboardData from "../../data/dashboardData.json";
-import { prefetchRoute } from "../../utils/LazyPages/LazyPages";
 
 const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
   const location = useLocation();
@@ -48,7 +47,6 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
           ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"}
           lg:translate-x-0 ${isCollapsed ? "w-[4.5rem]" : "w-60"} flex flex-col shrink-0`}
       >
-        {/* Header: logo + collapse */}
         <div className="relative flex items-center justify-between h-16 min-h-[4rem] px-4 border-b border-slate-800/80 shrink-0">
           <div className="absolute inset-x-0 -bottom-px h-px bg-gradient-to-r from-emerald-500/40 via-amber-400/20 to-transparent" />
           <div className="flex items-center gap-3 min-w-0">

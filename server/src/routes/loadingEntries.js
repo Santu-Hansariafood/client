@@ -104,7 +104,11 @@ router.get("/buyers", async (req, res) => {
       .select("_id name companyIds consigneeIds")
       .populate({
         path: "companyIds",
-        select: "companyName",
+        select: "companyName consigneeIds",
+        populate: {
+          path: "consigneeIds",
+          select: "name location district state",
+        },
       })
       .populate({
         path: "consigneeIds",
@@ -121,6 +125,37 @@ router.get("/buyers", async (req, res) => {
 
         let companyNames = populatedCompanyNames;
 
+        const consigneeMap = new Map();
+
+        // 1. From Buyer.consigneeIds
+        (b.consigneeIds || []).forEach((c) => {
+          if (c && c.name) {
+            const label = `${c.name || "N/A"} - ${c.location || "N/A"}, ${c.district || "N/A"}, ${c.state || "N/A"}`;
+            consigneeMap.set(c.name.trim().toLowerCase(), {
+              _id: c._id,
+              name: c.name,
+              label: label,
+            });
+          }
+        });
+
+        // 2. From Company.consigneeIds
+        (b.companyIds || []).forEach((comp) => {
+          (comp.consigneeIds || []).forEach((c) => {
+            if (c && c.name) {
+              const key = c.name.trim().toLowerCase();
+              if (!consigneeMap.has(key)) {
+                const label = `${c.name || "N/A"} - ${c.location || "N/A"}, ${c.district || "N/A"}, ${c.state || "N/A"}`;
+                consigneeMap.set(key, {
+                  _id: c._id,
+                  name: c.name,
+                  label: label,
+                });
+              }
+            }
+          });
+        });
+
         if (companyNames.length === 0 && b.name) {
           const fallbackCompanyNames = await SelfOrder.distinct(
             "buyerCompany",
@@ -132,15 +167,30 @@ router.get("/buyers", async (req, res) => {
           companyNames = (fallbackCompanyNames || []).filter(Boolean);
         }
 
+        // 3. From SelfOrder consignees
+        if (b.name) {
+          const selfOrderConsignees = await SelfOrder.distinct("consignee", {
+            buyer: b.name,
+          });
+          selfOrderConsignees.forEach((name) => {
+            if (name) {
+              const key = name.trim().toLowerCase();
+              if (!consigneeMap.has(key)) {
+                consigneeMap.set(key, {
+                  _id: name,
+                  name: name,
+                  label: name,
+                });
+              }
+            }
+          });
+        }
+
         return {
           _id: b._id,
           name: b.name || "",
           companyNames,
-          consignees: (b.consigneeIds || []).map((c) => ({
-            _id: c._id,
-            name: c.name || "",
-            label: `${c.name || "N/A"} - ${c.location || "N/A"}, ${c.district || "N/A"}, ${c.state || "N/A"}`,
-          })),
+          consignees: Array.from(consigneeMap.values()),
         };
       }),
     );
