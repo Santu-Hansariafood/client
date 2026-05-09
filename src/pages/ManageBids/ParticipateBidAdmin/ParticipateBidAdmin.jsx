@@ -237,7 +237,6 @@ const ParticipateBidAdmin = () => {
   );
 
   const handleSearch = (filteredNames) => {
-    // If filteredNames is a string (because returnQuery might be true or handled differently)
     if (typeof filteredNames === "string") {
       const q = filteredNames.trim().toLowerCase();
       if (!q) {
@@ -257,7 +256,6 @@ const ParticipateBidAdmin = () => {
         );
       }
     } else {
-      // Original logic for SearchBox returning filtered list
       if (
         !filteredNames ||
         filteredNames.length === 0 ||
@@ -290,21 +288,18 @@ const ParticipateBidAdmin = () => {
     const targetDate = new Date(selectedDate || new Date());
     targetDate.setHours(0, 0, 0, 0);
 
-    // Total Bids Created Today
     const bidsCreatedToday = bids.filter((bid) => {
       const bDate = new Date(bid.createdAt || bid.date);
       bDate.setHours(0, 0, 0, 0);
       return bDate.getTime() === targetDate.getTime();
     }).length;
 
-    // Today's Participations
     const todayParticipations = participationBids.filter((pBid) => {
       const pDate = new Date(pBid.createdAt || pBid.participationDate);
       pDate.setHours(0, 0, 0, 0);
       return pDate.getTime() === targetDate.getTime();
     });
 
-    // Total Accepted Quantity Today
     const totalAcceptedQty = todayParticipations.reduce(
       (sum, p) => sum + (p.acceptedQuantity || 0),
       0,
@@ -335,7 +330,6 @@ const ParticipateBidAdmin = () => {
         noContentCard
       >
         <div className="max-w-[1600px] mx-auto space-y-8 p-2">
-          {/* Top Section: Real-time Stats Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="relative overflow-hidden bg-white p-6 rounded-[2rem] border border-emerald-100 shadow-xl shadow-emerald-900/5 group hover:scale-[1.02] transition-all duration-300">
               <div className="absolute -right-4 -top-4 w-24 h-24 bg-emerald-50 rounded-full opacity-50 group-hover:scale-150 transition-transform duration-500" />
@@ -344,8 +338,12 @@ const ParticipateBidAdmin = () => {
                   <FaGavel className="text-xl" />
                 </div>
                 <div>
-                  <p className="text-[11px] font-bold text-emerald-600 uppercase tracking-widest">Today's Bids</p>
-                  <p className="text-3xl font-black text-slate-800 leading-none mt-1">{stats.totalBidsToday}</p>
+                  <p className="text-[11px] font-bold text-emerald-600 uppercase tracking-widest">
+                    Today&apos;s Bids
+                  </p>
+                  <p className="text-3xl font-black text-slate-800 leading-none mt-1">
+                    {stats.totalBidsToday}
+                  </p>
                 </div>
               </div>
             </div>
@@ -357,8 +355,12 @@ const ParticipateBidAdmin = () => {
                   <FaHandshake className="text-xl" />
                 </div>
                 <div>
-                  <p className="text-[11px] font-bold text-blue-600 uppercase tracking-widest">Participations</p>
-                  <p className="text-3xl font-black text-slate-800 leading-none mt-1">{stats.totalParticipationsToday}</p>
+                  <p className="text-[11px] font-bold text-blue-600 uppercase tracking-widest">
+                    Participations
+                  </p>
+                  <p className="text-3xl font-black text-slate-800 leading-none mt-1">
+                    {stats.totalParticipationsToday}
+                  </p>
                 </div>
               </div>
             </div>
@@ -370,8 +372,12 @@ const ParticipateBidAdmin = () => {
                   <FaCheckCircle className="text-xl" />
                 </div>
                 <div>
-                  <p className="text-[11px] font-bold text-amber-600 uppercase tracking-widest">Accepted Qty</p>
-                  <p className="text-2xl font-black text-slate-800 leading-none mt-1">{stats.totalAcceptedQty.toFixed(2)} T</p>
+                  <p className="text-[11px] font-bold text-amber-600 uppercase tracking-widest">
+                    Accepted Qty
+                  </p>
+                  <p className="text-2xl font-black text-slate-800 leading-none mt-1">
+                    {stats.totalAcceptedQty.toFixed(2)} T
+                  </p>
                 </div>
               </div>
             </div>
@@ -383,8 +389,12 @@ const ParticipateBidAdmin = () => {
                   <FaFilter className="text-xl" />
                 </div>
                 <div>
-                  <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Filtered</p>
-                  <p className="text-3xl font-black text-slate-800 leading-none mt-1">{stats.filteredResults}</p>
+                  <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">
+                    Filtered
+                  </p>
+                  <p className="text-3xl font-black text-slate-800 leading-none mt-1">
+                    {stats.filteredResults}
+                  </p>
                 </div>
               </div>
             </div>
@@ -404,9 +414,7 @@ const ParticipateBidAdmin = () => {
 
               <div className="w-full sm:w-auto flex items-center gap-3 bg-slate-50 p-2 px-4 rounded-2xl border border-slate-200 shadow-inner">
                 <div className="flex flex-col">
-                  <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">View Date</span>
                   <div className="flex items-center gap-2">
-                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
                     <DateSelector
                       selectedDate={selectedDate}
                       onChange={setSelectedDate}
@@ -415,7 +423,7 @@ const ParticipateBidAdmin = () => {
                 </div>
               </div>
             </div>
-            
+
             <div className="h-8 w-px bg-slate-200 hidden xl:block" />
 
             {userRole === "Buyer" && (
@@ -426,7 +434,7 @@ const ParticipateBidAdmin = () => {
                 >
                   <FaArrowLeft /> Back
                 </button>
-                
+
                 {buyerGroups.length > 1 && (
                   <select
                     value={selectedGroup}
@@ -435,7 +443,9 @@ const ParticipateBidAdmin = () => {
                   >
                     <option value="All">All Groups</option>
                     {buyerGroups.map((group) => (
-                      <option key={group} value={group}>{group}</option>
+                      <option key={group} value={group}>
+                        {group}
+                      </option>
                     ))}
                   </select>
                 )}
