@@ -28,7 +28,7 @@ const DataInput = ({
   return (
     <div className="mb-5 w-full">
       {label && (
-        <label className="block mb-2 text-sm font-medium text-gray-700 tracking-wide">
+        <label className="block mb-2 text-xs font-bold text-slate-500 uppercase tracking-widest font-display">
           {label} {required && <span className="text-red-500">*</span>}
         </label>
       )}
@@ -56,8 +56,8 @@ const DataInput = ({
           className={`w-full ${Icon ? "pl-12" : "px-5"} py-3 bg-white border ${
             error
               ? "border-red-500 focus:ring-red-200"
-              : "border-gray-300 focus:ring-green-200 focus:border-green-500"
-          } rounded-xl outline-none focus:ring-4 transition-all duration-200 text-gray-700 placeholder:text-gray-400 font-medium ${sizeStyles} ${
+              : "border-gray-300 focus:ring-emerald-200 focus:border-emerald-500"
+          } rounded-xl outline-none focus:ring-4 transition-all duration-200 text-slate-700 placeholder:text-slate-400 font-semibold tracking-tight ${sizeStyles} ${
             disabled ? "bg-gray-100 cursor-not-allowed opacity-60" : ""
           }`}
         />

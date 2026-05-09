@@ -56,7 +56,7 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
               <Icons.FaLeaf className="text-base" />
             </div>
             <span
-              className={`font-semibold text-slate-100 truncate transition-opacity duration-200 tracking-tight ${
+              className={`font-black text-slate-100 truncate transition-opacity duration-200 tracking-tighter font-display uppercase italic ${
                 isCollapsed ? "opacity-0 w-0 overflow-hidden" : "opacity-100"
               }`}
             >

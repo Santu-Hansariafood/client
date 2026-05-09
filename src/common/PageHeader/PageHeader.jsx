@@ -12,7 +12,7 @@ const PageHeader = ({ title, subtitle, icon: Icon, className = "" }) => {
               </span>
             )}
             <div className="min-w-0">
-              <h1 className="animate-page-title text-2xl sm:text-3xl font-bold text-slate-800 tracking-tight truncate">
+              <h1 className="animate-page-title text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight truncate font-display">
                 {title}
               </h1>
               {subtitle && (

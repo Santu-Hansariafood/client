@@ -43,7 +43,7 @@ const Tables = ({ headers, rows }) => {
               {headers.map((header, index) => (
                 <th
                   key={index}
-                  className="px-5 py-4 text-left text-xs font-semibold text-white uppercase tracking-wider border-b border-emerald-600/20 whitespace-nowrap first:rounded-tl-2xl last:rounded-tr-2xl"
+                  className="px-5 py-4 text-left text-xs font-bold text-white uppercase tracking-[0.1em] border-b border-emerald-600/20 whitespace-nowrap first:rounded-tl-2xl last:rounded-tr-2xl font-display"
                 >
                   {header}
                 </th>

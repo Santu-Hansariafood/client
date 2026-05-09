@@ -3,6 +3,10 @@ export default {
   content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
   theme: {
     extend: {
+      fontFamily: {
+        sans: ["'Plus Jakarta Sans'", "Inter", "system-ui", "sans-serif"],
+        display: ["'Outfit'", "sans-serif"],
+      },
       keyframes: {
         softPulse: {
           "0%, 100%": { transform: "scale(1)", opacity: "0.5" },

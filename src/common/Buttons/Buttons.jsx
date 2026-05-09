@@ -9,7 +9,7 @@ const Buttons = ({
   disabled = false,
   icon,
 }) => {
-  const baseStyles = `rounded-xl font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all duration-200
+  const baseStyles = `rounded-xl font-bold tracking-tight focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all duration-200 font-display
     ${disabled ? "opacity-50 cursor-not-allowed" : "hover:shadow-lg active:scale-[0.98]"}`;
 
   const variants = {

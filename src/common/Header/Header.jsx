@@ -120,7 +120,7 @@ const Header = ({
             {isSidebarOpen ? <IoClose size={24} /> : <HiMenuAlt2 size={24} />}
           </button>
         )}
-        <h2 className="text-sm xs:text-base sm:text-lg md:text-xl font-bold tracking-wide truncate pr-1">
+        <h2 className="text-sm xs:text-base sm:text-lg md:text-xl font-black tracking-tighter truncate pr-1 font-display uppercase italic">
           <Typewriter text={title} speed={80} />
         </h2>
       </div>

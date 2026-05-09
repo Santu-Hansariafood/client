@@ -52,9 +52,10 @@ const Cards = ({ title, count, icon: Icon, link, state, color }) => {
           className="
           mt-3 sm:mt-4
           text-[10px] sm:text-xs
-          font-semibold
-          text-slate-500 uppercase tracking-wider
+          font-bold
+          text-slate-500 uppercase tracking-widest
           group-hover:text-slate-700
+          font-display
         "
         >
           {title}
@@ -64,9 +65,10 @@ const Cards = ({ title, count, icon: Icon, link, state, color }) => {
           className="
   hidden sm:block
   text-lg sm:text-2xl lg:text-3xl
-  font-bold
-  text-slate-800
-  tracking-tight
+  font-black
+  text-slate-900
+  tracking-tighter
+  font-display
 "
         >
           {count}

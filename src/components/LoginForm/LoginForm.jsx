@@ -96,10 +96,10 @@ const LoginForm = () => {
             <>
               {/* Header */}
               <div className="text-center mb-8">
-                <h2 className="text-3xl font-bold text-gray-800 tracking-tight">
+                <h2 className="text-4xl font-black text-slate-900 tracking-tighter font-display uppercase italic">
                   {loginLable.title1}
                 </h2>
-                <p className="text-emerald-600 mt-2 font-medium">
+                <p className="text-emerald-600 mt-2 font-bold tracking-tight">
                   <Typewriter text={loginLable.title2} speed={80} delay={1000} />
                 </p>
               </div>

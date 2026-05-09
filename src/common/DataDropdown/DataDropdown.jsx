@@ -41,7 +41,7 @@ const DataDropdown = ({
   return (
     <div className="mb-5 w-full">
       {label && (
-        <label className="block mb-2 text-sm font-medium text-gray-700 tracking-wide">
+        <label className="block mb-2 text-xs font-bold text-slate-500 uppercase tracking-widest font-display">
           {label} {required && <span className="text-red-500">*</span>}
         </label>
       )}
@@ -64,20 +64,20 @@ const DataDropdown = ({
             ...theme,
             colors: {
               ...theme.colors,
-              primary: "#16a34a",
-              primary25: "#dcfce7",
-              primary50: "#bbf7d0",
+              primary: "#059669",
+              primary25: "#ecfdf5",
+              primary50: "#d1fae5",
               danger: "#dc2626",
               dangerLight: "#fee2e2",
               neutral0: "#ffffff",
-              neutral10: "#f1f5f9",
-              neutral20: "#e2e8f0",
+              neutral10: "#f8fafc",
+              neutral20: "#f1f5f9",
               neutral30: "#94a3b8",
             },
-            borderRadius: 16,
+            borderRadius: 14,
             spacing: {
               ...theme.spacing,
-              controlHeight: 46,
+              controlHeight: 48,
               baseUnit: 6,
             },
           })}
@@ -85,14 +85,17 @@ const DataDropdown = ({
             control: (provided, state) => ({
               ...provided,
               background: "#ffffff",
-              borderColor: state.isFocused ? "#16a34a" : "#e2e8f0",
+              borderColor: state.isFocused ? "#059669" : "#e2e8f0",
               boxShadow: state.isFocused
-                ? "0 0 0 3px rgba(22,163,74,0.15)"
-                : "0 3px 12px rgba(0,0,0,0.05)",
+                ? "0 0 0 3px rgba(5,150,105,0.15)"
+                : "none",
               borderRadius: "14px",
-              transition: "all 0.25s ease",
-              padding: "2px 4px",
+              transition: "all 0.2s ease",
+              padding: "2px 8px",
               cursor: "pointer",
+              fontWeight: "600",
+              fontSize: "15px",
+              letterSpacing: "-0.01em",
             }),
 
             option: (provided, state) => ({
