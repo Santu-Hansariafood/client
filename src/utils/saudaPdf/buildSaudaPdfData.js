@@ -47,56 +47,38 @@ export const buildSaudaPdfData = ({
     return String(c);
   })();
 
-  const matchingConsignee =
-    (consigneeData || []).find((consignee) => {
-      const idMatch =
-        consignee?._id &&
-        normalizedConsigneeKey &&
-        String(consignee._id) === String(normalizedConsigneeKey);
-      if (idMatch) return true;
-      return (
-        normalizeText(consignee?.name || consignee?.label) ===
-        normalizeText(normalizedConsigneeKey)
-      );
-    }) || null;
+  const findBestMatch = (dataList, key, nameField) => {
+    if (!key) return null;
+    const normalizedKey = normalizeText(key);
+    
+    // 1. Try exact ID match
+    const byId = dataList.find(d => d._id && String(d._id) === String(key));
+    if (byId) return byId;
 
-  const matchingSupplier =
-    (supplierData || []).find(
-      (supplier) =>
-        normalizeText(supplier?.companyName) ===
-        normalizeText(item?.supplierCompany),
-    ) || null;
+    // 2. Try exact Name match
+    const exactName = dataList.find(d => normalizeText(d[nameField]) === normalizedKey);
+    if (exactName) return exactName;
+
+    // 3. Try fuzzy match (if key contains the name or vice versa)
+    // This handles "Company Name - Branch" matching with "Company Name"
+    const fuzzyMatch = dataList.find(d => {
+      const dName = normalizeText(d[nameField]);
+      return dName && (normalizedKey.startsWith(dName) || dName.startsWith(normalizedKey));
+    });
+    return fuzzyMatch || null;
+  };
+
+  const matchingConsignee = findBestMatch(consigneeData, normalizedConsigneeKey, 'name') || 
+                           findBestMatch(consigneeData, normalizedConsigneeKey, 'label');
+
+  const matchingSupplier = findBestMatch(supplierData, item?.supplierCompany, 'companyName');
 
   const rawBuyerKey = item?.buyerCompany ?? item?.buyer ?? "";
-  const normalizedBuyerKey = normalizeText(rawBuyerKey);
-
-  const matchingBuyer =
-    (companyData || []).find((company) => {
-      const idMatch =
-        company?._id &&
-        rawBuyerKey &&
-        String(company._id) === String(rawBuyerKey);
-      const nameMatch =
-        normalizeText(company?.companyName) === normalizedBuyerKey;
-      return idMatch || nameMatch;
-    }) ||
-    (buyerData || []).find((buyer) => {
-      const idMatch =
-        buyer?._id && rawBuyerKey && String(buyer._id) === String(rawBuyerKey);
-      const nameMatch =
-        normalizeText(buyer?.companyName) === normalizedBuyerKey;
-      return idMatch || nameMatch;
-    }) ||
-    (supplierData || []).find((supplier) => {
-      const idMatch =
-        supplier?._id &&
-        rawBuyerKey &&
-        String(supplier._id) === String(rawBuyerKey);
-      const nameMatch =
-        normalizeText(supplier?.companyName) === normalizedBuyerKey;
-      return idMatch || nameMatch;
-    }) ||
-    null;
+  
+  const matchingBuyer = 
+    findBestMatch(companyData, rawBuyerKey, 'companyName') ||
+    findBestMatch(buyerData, rawBuyerKey, 'companyName') ||
+    findBestMatch(supplierData, rawBuyerKey, 'companyName');
 
   const resolvedConsigneeName =
     typeof getConsigneeDisplay === "function"
@@ -107,18 +89,6 @@ export const buildSaudaPdfData = ({
     normalizeText(resolvedConsigneeName).includes("self order") || 
     normalizeText(resolvedConsigneeName).includes("purchase order");
 
-  let consigneeDetails = toConsigneeDetails(matchingConsignee);
-  let buyerDetails = item?.billTo === "consignee"
-    ? toUnifiedDetails(matchingConsignee)
-    : toUnifiedDetails(matchingBuyer);
-
-  if (isSpecialConsignee) {
-    consigneeDetails = toConsigneeDetails(matchingBuyer);
-    if (item?.billTo === "consignee") {
-      buyerDetails = toUnifiedDetails(matchingBuyer);
-    }
-  }
-
   const isId = (val) => /^[0-9a-fA-F]{24}$/.test(String(val));
   const itemBuyerName = typeof item?.buyerCompany === "string" && !isId(item.buyerCompany) 
     ? item.buyerCompany 
@@ -128,23 +98,32 @@ export const buildSaudaPdfData = ({
 
   const finalBuyerName = itemBuyerName || matchingBuyer?.companyName || "N/A";
   const finalBuyerDetails = toUnifiedDetails(matchingBuyer);
+  const finalConsigneeDetails = toConsigneeDetails(matchingConsignee) || (isSpecialConsignee ? toConsigneeDetails(matchingBuyer) : null);
+
+  const billToConsignee = String(item?.billTo || "").toLowerCase() === "consignee";
 
   let transformed = {
     ...item,
     consignee: resolvedConsigneeName,
-    consigneeDetails,
+    consigneeDetails: finalConsigneeDetails,
     supplierDetails: toUnifiedDetails(matchingSupplier),
-    buyerDetails: item?.billTo === "consignee" ? consigneeDetails : finalBuyerDetails,
+    buyerDetails: billToConsignee ? finalConsigneeDetails : finalBuyerDetails,
     originalBuyerDetails: finalBuyerDetails,
-    originalBuyerCompany: finalBuyerName
+    originalBuyerCompany: finalBuyerName,
+    billTo: item?.billTo || ""
   };
 
-  if (item?.billTo === "consignee") {
+  if (billToConsignee) {
     transformed.buyer = resolvedConsigneeName;
     transformed.buyerCompany = resolvedConsigneeName;
   } else {
     transformed.buyer = finalBuyerName;
     transformed.buyerCompany = finalBuyerName;
+  }
+
+  // Final fallback: If buyerDetails is still empty but we have originalBuyerDetails, use it
+  if (!transformed.buyerDetails && transformed.originalBuyerDetails) {
+    transformed.buyerDetails = transformed.originalBuyerDetails;
   }
 
   return transformed;
