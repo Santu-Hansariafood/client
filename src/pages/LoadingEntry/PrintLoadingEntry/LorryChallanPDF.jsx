@@ -484,7 +484,7 @@ const LorryChallanPDF = ({ data = {}, logoUrl }) => {
 
         <View style={styles.grid}>
           <View style={styles.gridItemNoBorder}>
-            <Text style={styles.label}>BUYER NAME</Text>
+            <Text style={styles.label}>BUYER ACCOUNT</Text>
 
             <Text style={styles.nameValue}>{buyerAccountName}</Text>
 
