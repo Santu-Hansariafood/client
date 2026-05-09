@@ -265,6 +265,33 @@ const ParticipateBidAdmin = () => {
     setCurrentPage(nextPage);
   };
 
+  const stats = useMemo(() => {
+    if (!selectedDate) {
+      return {
+        totalBids: bids.length,
+        totalParticipations: participationBids.length,
+        filteredResults: filteredData.length
+      };
+    }
+
+    const targetDate = new Date(selectedDate);
+    targetDate.setHours(0, 0, 0, 0);
+
+    const todayParticipations = participationBids.filter((pBid) => {
+      const pDate = new Date(pBid.createdAt || pBid.participationDate);
+      pDate.setHours(0, 0, 0, 0);
+      return pDate.getTime() === targetDate.getTime();
+    });
+
+    const uniqueBidIdsToday = new Set(todayParticipations.map(p => p.bidId));
+
+    return {
+      totalBids: uniqueBidIdsToday.size,
+      totalParticipations: todayParticipations.length,
+      filteredResults: filteredData.length
+    };
+  }, [selectedDate, bids.length, participationBids, filteredData.length]);
+
   return (
     <Suspense fallback={<Loading />}>
       <AdminPageShell
@@ -287,16 +314,16 @@ const ParticipateBidAdmin = () => {
             {/* Stats Cards */}
             <div className="flex-1 grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="bg-white p-5 rounded-2xl border border-emerald-100 shadow-sm hover:shadow-md transition-shadow">
-                <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider mb-1">Total Bids</p>
-                <p className="text-2xl font-black text-slate-800">{bids.length}</p>
+                <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider mb-1">Today's Bids</p>
+                <p className="text-2xl font-black text-slate-800">{stats.totalBids}</p>
               </div>
               <div className="bg-white p-5 rounded-2xl border border-emerald-100 shadow-sm hover:shadow-md transition-shadow">
-                <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider mb-1">Total Participations</p>
-                <p className="text-2xl font-black text-slate-800">{participationBids.length}</p>
+                <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider mb-1">Today's Participations</p>
+                <p className="text-2xl font-black text-slate-800">{stats.totalParticipations}</p>
               </div>
               <div className="bg-white p-5 rounded-2xl border border-emerald-100 shadow-sm hover:shadow-md transition-shadow">
                 <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider mb-1">Filtered Results</p>
-                <p className="text-2xl font-black text-slate-800">{totalItems}</p>
+                <p className="text-2xl font-black text-slate-800">{stats.filteredResults}</p>
               </div>
             </div>
 
