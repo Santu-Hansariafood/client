@@ -349,37 +349,13 @@ const LorryChallanPDF = ({ data = {}, logoUrl }) => {
   const fromState =
     data.loadingFrom || data.supplierDetails?.state || "West Bengal";
 
-  let buyerAccountName;
-  let buyerAccountDetails;
-  let consigneeNameForShipTo;
-  let consigneeDetailsForShipTo;
-  let toState;
+  const buyerAccountName = data.buyerCompany || data.buyer || "N/A";
+  const buyerAccountDetails = data.buyerDetails;
 
-  const actualBuyerName = data.originalBuyerCompany || data.buyerCompany || data.buyer || "N/A";
-  const actualBuyerDetails = data.originalBuyerDetails || data.buyerDetails;
+  const consigneeNameForShipTo = data.consignee || "N/A";
+  const consigneeDetailsForShipTo = data.consigneeDetails;
 
-  // Buyer Account should ALWAYS be the main Buyer from the Sauda Agreement
-  buyerAccountName = actualBuyerName;
-  buyerAccountDetails = actualBuyerDetails;
-
-  if (isConsigneeAsBuyer) {
-    if (isPOConsignee || isSelfOrder) {
-      consigneeNameForShipTo = isSelfOrder ? actualBuyerName : (data.consignee || "N/A");
-      consigneeDetailsForShipTo = actualBuyerDetails;
-    } else {
-      consigneeNameForShipTo = data.consignee || "N/A";
-      consigneeDetailsForShipTo = data.consigneeDetails;
-    }
-  } else {
-    if (isPOConsignee || isSelfOrder) {
-      consigneeNameForShipTo = isSelfOrder ? actualBuyerName : (data.consignee || "N/A");
-      consigneeDetailsForShipTo = actualBuyerDetails;
-    } else {
-      consigneeNameForShipTo = data.consignee || "N/A";
-      consigneeDetailsForShipTo = data.consigneeDetails;
-    }
-  }
-  toState = consigneeDetailsForShipTo?.state || "N/A";
+  const toState = consigneeDetailsForShipTo?.state || "N/A";
 
   return (
     <Document>
