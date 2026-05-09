@@ -96,6 +96,7 @@ export const buildSaudaPdfData = ({
       ? item.buyer
       : "";
 
+  const finalBuyerName = itemBuyerName || matchingBuyer?.companyName || "N/A";
   const finalBuyerDetails = toUnifiedDetails(matchingBuyer);
   
   // Try to find consignee details from matching data, or fallback to item's own details if available
