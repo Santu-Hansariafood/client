@@ -216,20 +216,42 @@ const ParticipateBidAdmin = () => {
   );
 
   const handleSearch = (filteredNames) => {
-    if (
-      !filteredNames ||
-      filteredNames.length === 0 ||
-      filteredNames.length === consigneeItems.length
-    ) {
-      setFilteredBids(participationBids);
+    // If filteredNames is a string (because returnQuery might be true or handled differently)
+    if (typeof filteredNames === "string") {
+      const q = filteredNames.trim().toLowerCase();
+      if (!q) {
+        setFilteredBids(participationBids);
+      } else {
+        setFilteredBids(
+          participationBids.filter((pBid) => {
+            const bid = bids.find((b) => b._id === pBid.bidId);
+            return (
+              bid &&
+              (bid.consignee?.toLowerCase().includes(q) ||
+                bid.commodity?.toLowerCase().includes(q) ||
+                bid.origin?.toLowerCase().includes(q) ||
+                bid.group?.toLowerCase().includes(q))
+            );
+          }),
+        );
+      }
     } else {
-      const nameSet = new Set(filteredNames);
-      setFilteredBids(
-        participationBids.filter((pBid) => {
-          const bid = bids.find((b) => b._id === pBid.bidId);
-          return bid && nameSet.has(bid.consignee);
-        }),
-      );
+      // Original logic for SearchBox returning filtered list
+      if (
+        !filteredNames ||
+        filteredNames.length === 0 ||
+        filteredNames.length === consigneeItems.length
+      ) {
+        setFilteredBids(participationBids);
+      } else {
+        const nameSet = new Set(filteredNames);
+        setFilteredBids(
+          participationBids.filter((pBid) => {
+            const bid = bids.find((b) => b._id === pBid.bidId);
+            return bid && nameSet.has(bid.consignee);
+          }),
+        );
+      }
     }
     setCurrentPage(1);
   };
@@ -260,45 +282,65 @@ const ParticipateBidAdmin = () => {
         noContentCard
       >
         <div className="space-y-6">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-            {userRole === "Buyer" && (
-              <button
-                onClick={() => navigate(-1)}
-                className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-gray-600 bg-white rounded-xl border border-slate-200 hover:bg-slate-50 transition-colors shadow-sm"
-              >
-                <FaArrowLeft />
-                Back
-              </button>
-            )}
-            <div className="flex flex-1 items-center gap-4 w-full md:w-auto">
-              {userRole === "Buyer" && buyerGroups.length > 1 && (
-                <div className="w-full md:w-64">
+          {/* Header Stats & Filters */}
+          <div className="flex flex-col lg:flex-row gap-6">
+            {/* Stats Cards */}
+            <div className="flex-1 grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="bg-white p-5 rounded-2xl border border-emerald-100 shadow-sm hover:shadow-md transition-shadow">
+                <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider mb-1">Total Bids</p>
+                <p className="text-2xl font-black text-slate-800">{bids.length}</p>
+              </div>
+              <div className="bg-white p-5 rounded-2xl border border-emerald-100 shadow-sm hover:shadow-md transition-shadow">
+                <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider mb-1">Total Participations</p>
+                <p className="text-2xl font-black text-slate-800">{participationBids.length}</p>
+              </div>
+              <div className="bg-white p-5 rounded-2xl border border-emerald-100 shadow-sm hover:shadow-md transition-shadow">
+                <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider mb-1">Filtered Results</p>
+                <p className="text-2xl font-black text-slate-800">{totalItems}</p>
+              </div>
+            </div>
+
+            {/* Main Search & Date Filter */}
+            <div className="lg:w-1/2 space-y-4">
+              <div className="flex flex-col sm:flex-row gap-4">
+                <div className="flex-1">
+                  <SearchBox
+                    placeholder="Search by consignee, commodity..."
+                    items={consigneeItems}
+                    onSearch={handleSearch}
+                    returnQuery={true}
+                  />
+                </div>
+                <div className="w-full sm:w-48">
+                  <DateSelector
+                    selectedDate={selectedDate}
+                    onChange={setSelectedDate}
+                  />
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-3">
+                {userRole === "Buyer" && (
+                  <button
+                    onClick={() => navigate(-1)}
+                    className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-bold text-slate-600 bg-white rounded-xl border border-slate-200 hover:bg-slate-50 transition shadow-sm"
+                  >
+                    <FaArrowLeft /> Back
+                  </button>
+                )}
+                
+                {userRole === "Buyer" && buyerGroups.length > 1 && (
                   <select
                     value={selectedGroup}
                     onChange={(e) => setSelectedGroup(e.target.value)}
-                    className="w-full px-4 py-2 rounded-xl border border-slate-200 bg-white text-sm font-semibold text-slate-700 focus:ring-2 focus:ring-emerald-400/50 outline-none h-[42px]"
+                    className="flex-1 max-w-[200px] px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm font-bold text-slate-700 focus:ring-2 focus:ring-emerald-400/50 outline-none shadow-sm"
                   >
-                    <option value="All">All My Groups</option>
+                    <option value="All">All Groups</option>
                     {buyerGroups.map((group) => (
-                      <option key={group} value={group}>
-                        {group}
-                      </option>
+                      <option key={group} value={group}>{group}</option>
                     ))}
                   </select>
-                </div>
-              )}
-              <div className="w-full md:w-64">
-                <DateSelector
-                  selectedDate={selectedDate}
-                  onChange={setSelectedDate}
-                />
-              </div>
-              <div className="flex-1">
-                <SearchBox
-                  placeholder="Search by consignee..."
-                  items={consigneeItems}
-                  onSearch={handleSearch}
-                />
+                )}
               </div>
             </div>
           </div>
@@ -311,19 +353,24 @@ const ParticipateBidAdmin = () => {
           )}
 
           {loading ? (
-            <Loading />
+            <div className="py-20 flex justify-center"><Loading /></div>
           ) : (
-            <>
-              <div className="rounded-2xl border border-emerald-100 bg-white p-4 shadow-lg shadow-emerald-900/5 overflow-hidden">
-                <Tables headers={headers} rows={rows} />
+            <div className="space-y-4">
+              <div className="rounded-3xl border border-emerald-100 bg-white shadow-xl shadow-emerald-900/5 overflow-hidden">
+                <div className="p-1">
+                  <Tables headers={headers} rows={rows} />
+                </div>
               </div>
-              <Pagination
-                currentPage={safeCurrentPage}
-                totalItems={totalItems}
-                itemsPerPage={itemsPerPage}
-                onPageChange={handlePageChange}
-              />
-            </>
+              
+              <div className="bg-white/50 p-4 rounded-3xl border border-slate-100">
+                <Pagination
+                  currentPage={safeCurrentPage}
+                  totalItems={totalItems}
+                  itemsPerPage={itemsPerPage}
+                  onPageChange={handlePageChange}
+                />
+              </div>
+            </div>
           )}
         </div>
       </AdminPageShell>

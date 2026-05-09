@@ -127,29 +127,24 @@ export const buildSaudaPdfData = ({
       : "";
 
   const finalBuyerName = itemBuyerName || matchingBuyer?.companyName || "N/A";
+  const finalBuyerDetails = toUnifiedDetails(matchingBuyer);
 
   let transformed = {
     ...item,
     consignee: resolvedConsigneeName,
     consigneeDetails,
     supplierDetails: toUnifiedDetails(matchingSupplier),
-    buyerDetails,
-    originalBuyerDetails: toUnifiedDetails(matchingBuyer),
+    buyerDetails: item?.billTo === "consignee" ? consigneeDetails : finalBuyerDetails,
+    originalBuyerDetails: finalBuyerDetails,
     originalBuyerCompany: finalBuyerName
   };
 
   if (item?.billTo === "consignee") {
-    transformed = {
-      ...transformed,
-      buyer: resolvedConsigneeName,
-      buyerCompany: resolvedConsigneeName,
-    };
+    transformed.buyer = resolvedConsigneeName;
+    transformed.buyerCompany = resolvedConsigneeName;
   } else {
-    transformed = {
-      ...transformed,
-      buyer: finalBuyerName,
-      buyerCompany: finalBuyerName,
-    };
+    transformed.buyer = finalBuyerName;
+    transformed.buyerCompany = finalBuyerName;
   }
 
   return transformed;
