@@ -1064,7 +1064,6 @@ const AddLoadingEntry = () => {
               </div>
 
               <div className="space-y-4">
-                {/* Previous Loading History Section */}
                 {existingEntries.length > 0 && (
                   <div className="space-y-4 mb-8">
                     <h3 className="text-lg font-bold text-slate-700 flex items-center gap-2 px-2">
