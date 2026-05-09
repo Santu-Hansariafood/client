@@ -295,8 +295,11 @@ const renderAddressDetails = (details) => {
     district,
     state,
     pinNo,
+    pin,
     panNo,
+    pan,
     gstNo,
+    gst,
     phone,
     mobile,
     phoneNumber,
@@ -304,22 +307,26 @@ const renderAddressDetails = (details) => {
 
   const parts = [];
 
-  if (address || district || state || pinNo) {
+  const finalPin = pinNo || pin;
+
+  if (address || district || state || finalPin) {
     parts.push(
       `${address || ""}${
-        address && (district || state || pinNo) ? ", " : ""
+        address && (district || state || finalPin) ? ", " : ""
       }${district || ""}${
-        district && (state || pinNo) ? ", " : ""
-      }${state || ""}${state && pinNo ? " - " : ""}${pinNo || ""}`,
+        district && (state || finalPin) ? ", " : ""
+      }${state || ""}${state && finalPin ? " - " : ""}${finalPin || ""}`,
     );
   }
 
-  if (panNo) {
-    parts.push(`PAN No: ${panNo}`);
+  const finalPan = panNo || pan;
+  if (finalPan) {
+    parts.push(`PAN No: ${finalPan}`);
   }
 
-  if (gstNo) {
-    parts.push(`GST: ${gstNo}`);
+  const finalGst = gstNo || gst;
+  if (finalGst) {
+    parts.push(`GST: ${finalGst}`);
   }
 
   const contactNumber = phone || mobile || phoneNumber;
@@ -477,11 +484,11 @@ const LorryChallanPDF = ({ data = {}, logoUrl }) => {
 
         <View style={styles.grid}>
           <View style={styles.gridItemNoBorder}>
-            <Text style={styles.label}>SHIP TO (CONSIGNEE)</Text>
+            <Text style={styles.label}>BUYER NAME</Text>
 
-            <Text style={styles.nameValue}>{consigneeNameForShipTo}</Text>
+            <Text style={styles.nameValue}>{buyerAccountName}</Text>
 
-            {renderAddressDetails(consigneeDetailsForShipTo)}
+            {renderAddressDetails(buyerAccountDetails)}
           </View>
         </View>
 
@@ -489,11 +496,11 @@ const LorryChallanPDF = ({ data = {}, logoUrl }) => {
 
         <View style={styles.grid}>
           <View style={styles.gridItemNoBorder}>
-            <Text style={styles.label}>BUYER ACCOUNT</Text>
+            <Text style={styles.label}>SHIP TO (CONSIGNEE)</Text>
 
-            <Text style={styles.nameValue}>{buyerAccountName}</Text>
+            <Text style={styles.nameValue}>{consigneeNameForShipTo}</Text>
 
-            {renderAddressDetails(buyerAccountDetails)}
+            {renderAddressDetails(consigneeDetailsForShipTo)}
           </View>
         </View>
 

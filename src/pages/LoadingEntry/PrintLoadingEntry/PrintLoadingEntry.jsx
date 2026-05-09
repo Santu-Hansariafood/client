@@ -29,7 +29,7 @@ const PrintLoadingEntry = async (entry) => {
       entry.saudaNo
         ? api.get("/self-order", {
             params: {
-              saudaNo: entry.saudaNo,
+              search: entry.saudaNo,
               limit: 0,
             },
           })
