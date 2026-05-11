@@ -298,58 +298,72 @@ const OrdersTableCard = ({ orders, handleOpenPopup, toggleSaudaStatus }) => {
             "Status",
             "Action",
           ]}
-          rows={orders.map((order) => [
-            formatDate(order.poDate || order.createdAt),
-            order.saudaNo,
-            capitalizeWords(order.supplierCompany),
-            capitalizeWords(order.buyerCompany),
-            capitalizeWords(order.consignee),
-            capitalizeWords(order.commodity),
-            order.quantity,
-            order.rate,
-            order.pendingQuantity,
-            <span
-              key={`status-${order._id}`}
-              className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                order.isClosed
-                  ? "bg-red-100 text-red-700"
-                  : "bg-emerald-100 text-emerald-700"
-              }`}
-            >
-              {order.isClosed ? "Closed" : "Active"}
-            </span>,
-            <div
-              key={`actions-${order._id}`}
-              className="flex items-center gap-3"
-            >
-              {order.status !== "closed" ? (
-                <>
+          rows={orders.map((order) => {
+            const isWithinTolerance =
+              order.pendingQuantity !== undefined &&
+              Math.abs(order.pendingQuantity) <= order.quantity * 0.05;
+            const isEffectivelyClosed =
+              order.status === "closed" || isWithinTolerance;
+
+            return [
+              formatDate(order.poDate || order.createdAt),
+              order.saudaNo,
+              capitalizeWords(order.supplierCompany),
+              capitalizeWords(order.buyerCompany),
+              capitalizeWords(order.consignee),
+              capitalizeWords(order.commodity),
+              order.quantity,
+              order.rate,
+              order.pendingQuantity,
+              <span
+                key={`status-${order._id}`}
+                className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                  isEffectivelyClosed
+                    ? "bg-red-100 text-red-700"
+                    : "bg-emerald-100 text-emerald-700"
+                }`}
+              >
+                {isEffectivelyClosed ? "Closed" : "Active"}
+              </span>,
+              <div
+                key={`actions-${order._id}`}
+                className="flex items-center gap-3"
+              >
+                {!isEffectivelyClosed ? (
+                  <>
+                    <button
+                      onClick={() => handleOpenPopup(order)}
+                      className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 text-emerald-700 rounded-lg hover:bg-emerald-100 transition text-xs font-bold whitespace-nowrap"
+                      title="Add Loading Entry"
+                    >
+                      <FaPlus /> Add Loading Entry
+                    </button>
+                    <button
+                      onClick={() => toggleSaudaStatus(order)}
+                      className="px-2.5 py-1.5 bg-amber-50 text-amber-700 rounded-lg hover:bg-amber-100 transition text-xs font-bold"
+                      title="Close Sauda"
+                    >
+                      Close
+                    </button>
+                  </>
+                ) : (
                   <button
-                    onClick={() => handleOpenPopup(order)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 text-emerald-700 rounded-lg hover:bg-emerald-100 transition text-xs font-bold whitespace-nowrap"
-                    title="Add Loading Entry"
+                    onClick={() => {
+                      if (order.status === "closed") {
+                        toggleSaudaStatus(order);
+                      } else {
+                        handleOpenPopup(order);
+                      }
+                    }}
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition text-xs font-bold"
+                    title="Reopen Sauda"
                   >
-                    <FaPlus /> Add Loading Entry
+                    Reopen to Add
                   </button>
-                  <button
-                    onClick={() => toggleSaudaStatus(order)}
-                    className="px-2.5 py-1.5 bg-amber-50 text-amber-700 rounded-lg hover:bg-amber-100 transition text-xs font-bold"
-                    title="Close Sauda"
-                  >
-                    Close
-                  </button>
-                </>
-              ) : (
-                <button
-                  onClick={() => toggleSaudaStatus(order)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition text-xs font-bold"
-                  title="Reopen Sauda"
-                >
-                  Reopen to Add
-                </button>
-              )}
-            </div>,
-          ])}
+                )}
+              </div>,
+            ];
+          })}
         />
       ) : (
         <div className="py-10 text-center text-slate-500 font-medium">

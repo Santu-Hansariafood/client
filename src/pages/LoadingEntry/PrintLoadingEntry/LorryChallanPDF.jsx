@@ -1085,7 +1085,7 @@ const LorryChallanPDF = ({ data = {}, logoUrl, qrCodeUrl }) => {
 
           <View style={styles.partiesContainer}>
             <View style={styles.partyBox}>
-              <Text style={styles.partyLabel}>Billed To</Text>
+              <Text style={styles.partyLabel}>Bill To</Text>
               <Text style={styles.partyName}>{buyerAccountName}</Text>
               {renderAddressDetails(buyerAccountDetails)}
             </View>
