@@ -270,101 +270,147 @@ const styles = StyleSheet.create({
 
   // Bill specific styles
   billHeader: {
-    textAlign: "center",
+    flexDirection: "row",
+    justifyContent: "space-between",
     marginBottom: 20,
-    borderBottomWidth: 1,
+    borderBottomWidth: 2,
     borderBottomColor: "#000000",
     paddingBottom: 10,
   },
+  billTitleContainer: {
+    flex: 1,
+  },
   billTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
+    fontSize: 24,
+    fontWeight: "heavy",
+    color: "#000000",
     marginBottom: 5,
   },
   billSubTitle: {
     fontSize: 10,
+    fontWeight: "bold",
     marginBottom: 2,
   },
   billingGrid: {
     flexDirection: "row",
+    marginBottom: 15,
+    gap: 10,
+  },
+  billingBox: {
+    flex: 1,
+    padding: 10,
+    borderWidth: 1,
+    borderColor: "#e0e0e0",
+    borderRadius: 4,
+    backgroundColor: "#fafafa",
+  },
+  invoiceDetailsBox: {
+    flex: 1,
+    padding: 10,
     borderWidth: 1,
     borderColor: "#000000",
-    marginBottom: 10,
-  },
-  billingColumn: {
-    flex: 1,
-    padding: 8,
-    borderRightWidth: 1,
-    borderRightColor: "#000000",
-  },
-  billingColumnLast: {
-    flex: 1,
-    padding: 8,
+    borderRadius: 4,
   },
   billTable: {
     width: "100%",
-    borderWidth: 1,
-    borderColor: "#000000",
-    marginTop: 10,
+    marginTop: 15,
   },
   billTableHeader: {
     flexDirection: "row",
-    backgroundColor: "#f0f0f0",
-    borderBottomWidth: 1,
-    borderBottomColor: "#000000",
+    backgroundColor: "#000000",
+    color: "#ffffff",
+    borderRadius: 2,
     fontWeight: "bold",
   },
   billTableRow: {
     flexDirection: "row",
     borderBottomWidth: 1,
-    borderBottomColor: "#000000",
-    minHeight: 25,
+    borderBottomColor: "#e0e0e0",
+    minHeight: 30,
     alignItems: "center",
   },
   billTableCell: {
-    padding: 5,
+    padding: 8,
     fontSize: 9,
-    borderRightWidth: 1,
-    borderRightColor: "#000000",
     textAlign: "center",
   },
-  billTableCellLast: {
-    padding: 5,
+  billTableCellLeft: {
+    padding: 8,
+    fontSize: 9,
+    textAlign: "left",
+  },
+  billTableCellRight: {
+    padding: 8,
     fontSize: 9,
     textAlign: "right",
-    flex: 1,
   },
-  billSummary: {
+  billSummaryContainer: {
     flexDirection: "row",
     justifyContent: "flex-end",
-    marginTop: 10,
+    marginTop: 20,
+  },
+  billSummaryBox: {
+    width: "200pt",
+  },
+  billSummaryRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingVertical: 4,
+    borderBottomWidth: 1,
+    borderBottomColor: "#f0f0f0",
+  },
+  billTotalRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingVertical: 8,
+    backgroundColor: "#f8f8f8",
+    marginTop: 5,
+    paddingHorizontal: 5,
+    borderTopWidth: 2,
+    borderTopColor: "#000000",
   },
   billSummaryLabel: {
-    width: "150pt",
-    textAlign: "right",
-    paddingRight: 10,
+    fontSize: 10,
     fontWeight: "bold",
+    color: "#444",
   },
   billSummaryValue: {
-    width: "80pt",
-    textAlign: "right",
+    fontSize: 10,
     fontWeight: "bold",
+    textAlign: "right",
   },
-  amountInWords: {
+  amountInWordsBox: {
     marginTop: 20,
+    padding: 12,
+    backgroundColor: "#f9f9f9",
+    borderLeftWidth: 4,
+    borderLeftColor: "#000000",
+  },
+  qrAndBankContainer: {
+    flexDirection: "row",
+    marginTop: 20,
+    gap: 20,
+  },
+  bankDetailsBox: {
+    flex: 2,
+    padding: 10,
+    backgroundColor: "#ffffff",
+    borderWidth: 1,
+    borderColor: "#e0e0e0",
+    borderRadius: 4,
+  },
+  qrBox: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
     padding: 10,
     borderWidth: 1,
-    borderColor: "#000000",
-    fontSize: 10,
-    fontStyle: "italic",
+    borderColor: "#e0e0e0",
+    borderRadius: 4,
   },
-  bankDetails: {
-    marginTop: 20,
-    fontSize: 8,
-  },
-  authSignatory: {
-    marginTop: 40,
-    textAlign: "right",
+  authSignatoryBox: {
+    marginTop: 30,
+    alignItems: "flex-end",
     paddingRight: 20,
   },
 });
@@ -552,6 +598,14 @@ const LorryChallanPDF = ({ data = {}, logoUrl, qrCodeUrl }) => {
 
   const isMaize = String(data.commodity || "").toLowerCase().includes("maize");
   const billTitle = isMaize ? "TAX INVOICE" : "BILL OF SUPPLY";
+
+  // GST logic based on state
+  const supplierState = String(data.supplierDetails?.state || "").toLowerCase().trim();
+  const buyerState = String(data.buyerDetails?.state || "").toLowerCase().trim();
+  const consigneeState = String(data.consigneeDetails?.state || "").toLowerCase().trim();
+  
+  // Usually, GST is based on the place of supply (Consignee state)
+  const isInterState = supplierState !== consigneeState && consigneeState !== "n/a" && consigneeState !== "";
 
   // Seller bank details from supplierDetails (SellerCompany)
   const bankDetails = data.supplierDetails?.bankDetails?.[0] || {};
@@ -873,45 +927,53 @@ const LorryChallanPDF = ({ data = {}, logoUrl, qrCodeUrl }) => {
           <View style={styles.innerBorder} fixed />
 
           <View style={styles.billHeader}>
-            <Text style={styles.billTitle}>{billTitle}</Text>
-            <Text style={styles.billSubTitle}>
-              {data.supplierCompany || "Hansaria Food Private Limited"}
-            </Text>
-            <Text style={styles.sellerAddress}>
-              {data.supplierDetails?.address || "207 MAHARSHI DEBENDRA ROAD"}
-              {data.supplierDetails?.district ? `, ${data.supplierDetails.district}` : ""}, 
-              {data.supplierDetails?.state || "West Bengal"}
-              {data.supplierDetails?.pinNo ? ` - ${data.supplierDetails.pinNo}` : ""}
-            </Text>
-            <Text style={styles.sellerAddress}>
-              GST: {data.supplierDetails?.gstNo || "10BOSPK6679G1ZJ"} | PAN: {data.supplierDetails?.panNo || "N/A"}
-            </Text>
+            <View style={styles.billTitleContainer}>
+              <Text style={styles.billTitle}>{billTitle}</Text>
+              <Text style={styles.billSubTitle}>
+                {data.supplierCompany || "Hansaria Food Private Limited"}
+              </Text>
+              <Text style={styles.sellerAddress}>
+                {data.supplierDetails?.address || "207 MAHARSHI DEBENDRA ROAD"}
+                {data.supplierDetails?.district ? `, ${data.supplierDetails.district}` : ""}, 
+                {data.supplierDetails?.state || "West Bengal"}
+                {data.supplierDetails?.pinNo ? ` - ${data.supplierDetails.pinNo}` : ""}
+              </Text>
+              <Text style={styles.sellerAddress}>
+                GSTIN: {data.supplierDetails?.gstNo || "10BOSPK6679G1ZJ"} | PAN: {data.supplierDetails?.panNo || "N/A"}
+              </Text>
+            </View>
+            {logoUrl && <Image src={logoUrl} style={{ width: 60, height: 60 }} />}
           </View>
 
           <View style={styles.billingGrid}>
-            <View style={styles.billingColumn}>
-              <Text style={styles.label}>BUYER ACCOUNT</Text>
+            <View style={styles.billingBox}>
+              <Text style={[styles.label, { marginBottom: 4, textDecoration: "underline" }]}>BUYER ACCOUNT</Text>
               <Text style={styles.nameValue}>{buyerAccountName}</Text>
               {renderAddressDetails(buyerAccountDetails)}
             </View>
-            <View style={styles.billingColumnLast}>
-              <View style={{ marginBottom: 5 }}>
+            <View style={styles.billingBox}>
+              <Text style={[styles.label, { marginBottom: 4, textDecoration: "underline" }]}>SHIP TO (CONSIGNEE)</Text>
+              <Text style={styles.nameValue}>{consigneeNameForShipTo}</Text>
+              {renderAddressDetails(consigneeDetailsForShipTo)}
+            </View>
+            <View style={styles.invoiceDetailsBox}>
+              <View style={styles.billSummaryRow}>
                 <Text style={styles.label}>Invoice No:</Text>
                 <Text style={styles.value}>{data.billNumber}</Text>
               </View>
-              <View style={{ marginBottom: 5 }}>
-                <Text style={styles.label}>Invoice Date:</Text>
+              <View style={styles.billSummaryRow}>
+                <Text style={styles.label}>Date:</Text>
                 <Text style={styles.value}>{formatDate(data.dateOfIssue)}</Text>
               </View>
-              <View style={{ marginBottom: 5 }}>
-                <Text style={styles.label}>HFPL Sauda No:</Text>
+              <View style={styles.billSummaryRow}>
+                <Text style={styles.label}>HFPL Sauda:</Text>
                 <Text style={styles.value}>{data.saudaNo}</Text>
               </View>
-              <View style={{ marginBottom: 5 }}>
-                <Text style={styles.label}>Buyer Sauda No:</Text>
+              <View style={styles.billSummaryRow}>
+                <Text style={styles.label}>Buyer Sauda:</Text>
                 <Text style={styles.value}>{data.buyerSaudaNo || data.poNumber || "N/A"}</Text>
               </View>
-              <View>
+              <View style={[styles.billSummaryRow, { borderBottomWidth: 0 }]}>
                 <Text style={styles.label}>Lorry No:</Text>
                 <Text style={styles.value}>{data.lorryNumber}</Text>
               </View>
@@ -920,74 +982,91 @@ const LorryChallanPDF = ({ data = {}, logoUrl, qrCodeUrl }) => {
 
           <View style={styles.billTable}>
             <View style={styles.billTableHeader}>
-              <Text style={[styles.billTableCell, { width: "10%" }]}>S.No</Text>
-              <Text style={[styles.billTableCell, { width: "40%" }]}>Description of Goods</Text>
-              <Text style={[styles.billTableCell, { width: "15%" }]}>Weight (Tons)</Text>
-              <Text style={[styles.billTableCell, { width: "15%" }]}>Rate (Rs)</Text>
-              <Text style={[styles.billTableCellLast, { width: "20%" }]}>Amount (Rs)</Text>
+              <Text style={[styles.billTableCell, { width: "5%" }]}>#</Text>
+              <Text style={[styles.billTableCellLeft, { width: "35%" }]}>Description of Goods</Text>
+              <Text style={[styles.billTableCell, { width: "10%" }]}>HSN</Text>
+              <Text style={[styles.billTableCell, { width: "12%" }]}>Qty (Tons)</Text>
+              <Text style={[styles.billTableCell, { width: "13%" }]}>Rate (Rs)</Text>
+              <Text style={[styles.billTableCellRight, { width: "25%" }]}>Taxable Value</Text>
             </View>
             <View style={styles.billTableRow}>
-              <Text style={[styles.billTableCell, { width: "10%" }]}>1</Text>
-              <Text style={[styles.billTableCell, { width: "40%" }]}>
-                {data.commodity || "N/A"} {data.hsnCode ? `(HSN: ${data.hsnCode})` : ""}
-              </Text>
-              <Text style={[styles.billTableCell, { width: "15%" }]}>{weight.toFixed(3)}</Text>
-              <Text style={[styles.billTableCell, { width: "15%" }]}>{formatAmount(rate)}</Text>
-              <Text style={[styles.billTableCellLast, { width: "20%" }]}>{formatAmount(subtotal)}</Text>
+              <Text style={[styles.billTableCell, { width: "5%" }]}>1</Text>
+              <Text style={[styles.billTableCellLeft, { width: "35%" }]}>{data.commodity || "N/A"}</Text>
+              <Text style={[styles.billTableCell, { width: "10%" }]}>{data.hsnCode || "N/A"}</Text>
+              <Text style={[styles.billTableCell, { width: "12%" }]}>{weight.toFixed(3)}</Text>
+              <Text style={[styles.billTableCell, { width: "13%" }]}>{formatAmount(rate)}</Text>
+              <Text style={[styles.billTableCellRight, { width: "25%" }]}>{formatAmount(subtotal)}</Text>
             </View>
           </View>
 
-          <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 10 }}>
-            <View style={{ width: "100pt" }}>
-              {qrCodeUrl && <Image src={qrCodeUrl} style={{ width: 80, height: 80 }} />}
-            </View>
-            <View style={styles.billSummary}>
-              <View>
-                <View style={{ flexDirection: "row", marginBottom: 2 }}>
-                  <Text style={styles.billSummaryLabel}>Sub Total:</Text>
-                  <Text style={styles.billSummaryValue}>{formatAmount(subtotal)}</Text>
-                </View>
-                {gstPercent > 0 && (
-                  <View style={{ flexDirection: "row", marginBottom: 2 }}>
-                    <Text style={styles.billSummaryLabel}>GST ({gstPercent}%):</Text>
-                    <Text style={styles.billSummaryValue}>{formatAmount(gstAmount)}</Text>
-                  </View>
-                )}
-                <View style={{ flexDirection: "row", borderTopWidth: 1, paddingTop: 2 }}>
-                  <Text style={styles.billSummaryLabel}>Total Amount:</Text>
-                  <Text style={styles.billSummaryValue}>{formatAmount(totalBillAmount)}</Text>
-                </View>
+          <View style={styles.billSummaryContainer}>
+            <View style={styles.billSummaryBox}>
+              <View style={styles.billSummaryRow}>
+                <Text style={styles.billSummaryLabel}>Taxable Value:</Text>
+                <Text style={styles.billSummaryValue}>{formatAmount(subtotal)}</Text>
+              </View>
+              
+              {gstPercent > 0 && (
+                <>
+                  {isInterState ? (
+                    <View style={styles.billSummaryRow}>
+                      <Text style={styles.billSummaryLabel}>IGST ({gstPercent}%):</Text>
+                      <Text style={styles.billSummaryValue}>{formatAmount(gstAmount)}</Text>
+                    </View>
+                  ) : (
+                    <>
+                      <View style={styles.billSummaryRow}>
+                        <Text style={styles.billSummaryLabel}>CGST ({gstPercent/2}%):</Text>
+                        <Text style={styles.billSummaryValue}>{formatAmount(gstAmount/2)}</Text>
+                      </View>
+                      <View style={styles.billSummaryRow}>
+                        <Text style={styles.billSummaryLabel}>SGST ({gstPercent/2}%):</Text>
+                        <Text style={styles.billSummaryValue}>{formatAmount(gstAmount/2)}</Text>
+                      </View>
+                    </>
+                  )}
+                </>
+              )}
+              
+              <View style={styles.billTotalRow}>
+                <Text style={[styles.billSummaryLabel, { fontSize: 12 }]}>Grand Total:</Text>
+                <Text style={[styles.billSummaryValue, { fontSize: 12 }]}>Rs. {formatAmount(totalBillAmount)}</Text>
               </View>
             </View>
           </View>
 
-          <View style={styles.amountInWords}>
-            <Text style={{ fontWeight: "bold", marginBottom: 2 }}>Amount in Words:</Text>
-            <Text>{numberToWords(totalBillAmount)}</Text>
+          <View style={styles.amountInWordsBox}>
+            <Text style={{ fontSize: 9, fontWeight: "bold", marginBottom: 4, color: "#666" }}>AMOUNT IN WORDS</Text>
+            <Text style={{ fontSize: 11, fontWeight: "bold" }}>{numberToWords(totalBillAmount)}</Text>
           </View>
 
-          <View style={styles.bankDetails}>
-            <Text style={{ fontWeight: "bold", marginBottom: 2 }}>Bank Details:</Text>
-            <Text>A/C Name: {bankDetails.accountHolderName || data.supplierCompany || "Hansaria Food Private Limited"}</Text>
-            <Text>Bank: {bankDetails.bankName || "HDFC Bank Ltd"}</Text>
-            <Text>A/C No: {bankDetails.accountNumber || "50200056473829"}</Text>
-            <Text>IFSC: {bankDetails.ifscCode || "HDFC0000008"}</Text>
-            <Text>Branch: {bankDetails.branchName || "Kolkata"}</Text>
+          <View style={styles.qrAndBankContainer}>
+            <View style={styles.bankDetailsBox}>
+              <Text style={[styles.label, { marginBottom: 6, textDecoration: "underline" }]}>BANK DETAILS</Text>
+              <Text style={{ fontSize: 9, marginBottom: 2 }}><Text style={{ fontWeight: "bold" }}>Account Name:</Text> {bankDetails.accountHolderName || data.supplierCompany || "Hansaria Food Private Limited"}</Text>
+              <Text style={{ fontSize: 9, marginBottom: 2 }}><Text style={{ fontWeight: "bold" }}>Bank Name:</Text> {bankDetails.bankName || "HDFC Bank Ltd"}</Text>
+              <Text style={{ fontSize: 9, marginBottom: 2 }}><Text style={{ fontWeight: "bold" }}>Account No:</Text> {bankDetails.accountNumber || "50200056473829"}</Text>
+              <Text style={{ fontSize: 9, marginBottom: 2 }}><Text style={{ fontWeight: "bold" }}>IFSC Code:</Text> {bankDetails.ifscCode || "HDFC0000008"}</Text>
+              <Text style={{ fontSize: 9 }}><Text style={{ fontWeight: "bold" }}>Branch:</Text> {bankDetails.branchName || "Kolkata"}</Text>
+            </View>
+            <View style={styles.qrBox}>
+              <Text style={{ fontSize: 8, fontWeight: "bold", marginBottom: 5 }}>SCAN FOR DETAILS</Text>
+              {qrCodeUrl && <Image src={qrCodeUrl} style={{ width: 70, height: 70 }} />}
+            </View>
           </View>
 
-          <View style={styles.authSignatory}>
-            <Text style={{ fontSize: 10, fontWeight: "bold" }}>For {data.supplierCompany || "Hansaria Food Private Limited"}</Text>
-            <View style={{ height: 40 }} />
-            <Text style={styles.label}>Authorized Signatory</Text>
+          <View style={styles.authSignatoryBox}>
+            <Text style={{ fontSize: 10, fontWeight: "bold", marginBottom: 40 }}>For {data.supplierCompany || "Hansaria Food Private Limited"}</Text>
+            <Text style={[styles.label, { borderTopWidth: 1, borderTopColor: "#000", paddingTop: 5, width: 150, textAlign: "center" }]}>Authorized Signatory</Text>
           </View>
 
           <View style={styles.footer} fixed>
             <View style={styles.footerLine} />
             <Text style={styles.footerText}>
-              * Goods once sold will not be taken back.
+              * Certified that the particulars given above are true and correct.
             </Text>
             <Text style={styles.footerText}>
-              * Subject to Kolkata Jurisdiction.
+              * This is a computer generated invoice and does not require physical signature.
             </Text>
           </View>
         </Page>
