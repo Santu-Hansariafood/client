@@ -9,6 +9,9 @@ const BidChart = lazy(() => import("../../../common/Charts/BidChart/BidChart"));
 const AgentSaudaChart = lazy(
   () => import("../../../common/Charts/AgentSaudaChart/AgentSaudaChart"),
 );
+const LoadingChart = lazy(
+  () => import("../../../common/Charts/LoadingChart/LoadingChart"),
+);
 import Loading from "../../../common/Loading/Loading";
 
 const ChartSection = ({ agentSaudas }) => {
@@ -23,7 +26,7 @@ const ChartSection = ({ agentSaudas }) => {
               Trend View
             </h2>
             <p className="text-xs sm:text-sm text-slate-500 mt-1">
-              Toggle between line and bar for clearer comparisons.
+              Monitor sauda trends and loading performance.
             </p>
           </div>
 
@@ -61,9 +64,12 @@ const ChartSection = ({ agentSaudas }) => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           <div className="rounded-2xl border border-slate-200 bg-white shadow-sm p-5 sm:p-6">
             <SaudaChart apiUrl="/self-order" chartType={chartType} />
+          </div>
+          <div className="rounded-2xl border border-slate-200 bg-white shadow-sm p-5 sm:p-6">
+            <LoadingChart apiUrl="/loading-entries" chartType={chartType} />
           </div>
           <div className="rounded-2xl border border-slate-200 bg-white shadow-sm p-5 sm:p-6">
             <AgentSaudaChart data={agentSaudas || []} chartType={chartType} />
