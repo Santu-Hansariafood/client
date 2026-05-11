@@ -98,17 +98,20 @@ const LoadingReport = () => {
     };
   }, [loadingEntries]);
 
-  const headers = useMemo(() => [
-    "Sl No",
-    "Time",
-    "Sauda No",
-    "Lorry No",
-    "Commodity",
-    "Weight (Tons)",
-    "Bags",
-    "Consignee",
-    "Supplier",
-  ], []);
+  const headers = useMemo(
+    () => [
+      "Sl No",
+      "Time",
+      "Sauda No",
+      "Lorry No",
+      "Commodity",
+      "Weight (Tons)",
+      "Bags",
+      "Consignee",
+      "Supplier",
+    ],
+    [],
+  );
 
   const rows = loadingEntries.map((entry, index) => [
     (currentPage - 1) * itemsPerPage + index + 1,
@@ -291,24 +294,20 @@ const LoadingReport = () => {
           6: { halign: "center" },
         },
         didDrawPage: (data) => {
-          // Watermark
           doc.saveGraphicsState();
           doc.setTextColor(200, 200, 200);
           doc.setFontSize(60);
           doc.setFont("helvetica", "bold");
-          // doc.setGState(new doc.GState({ opacity: 0.1 })); // Some versions of jspdf need GState
-          doc.text("HANSARIA FOOD", pageWidth / 2, pageHeight / 2, {
+          doc.text("Confidential Information", pageWidth / 2, pageHeight / 2, {
             align: "center",
             angle: 45,
           });
           doc.restoreGraphicsState();
 
-          // Footer line
           doc.setDrawColor(180);
           doc.setLineWidth(0.5);
           doc.line(14, pageHeight - 12, 282, pageHeight - 12);
 
-          // Footer Text
           doc.setFont("helvetica", "normal");
           doc.setFontSize(8);
           doc.setTextColor(120);
@@ -319,7 +318,6 @@ const LoadingReport = () => {
             pageHeight - 6,
           );
 
-          // Page Numbering
           let str = "Page " + doc.internal.getNumberOfPages();
           if (typeof doc.putTotalPages === "function") {
             str = str + " of " + totalPagesExp;
