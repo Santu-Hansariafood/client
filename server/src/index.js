@@ -1,12 +1,17 @@
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import dotenv from "dotenv";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+dotenv.config({ path: path.resolve(__dirname, "../../.env") });
+
 import express from "express";
 import cors from "cors";
-import dotenv from "dotenv";
 import compression from "compression";
 import connect from "./lib/db.js";
 import cluster from "node:cluster";
 import os from "node:os";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
 import authRoutes from "./routes/auth.js";
 import apiKey from "./middleware/apiKey.js";
 import authJwt from "./middleware/authJwt.js";
@@ -39,10 +44,6 @@ import uploadRoutes from "./routes/uploads.js";
 import { startNotificationCleanup } from "./lib/scheduler.js";
 import http from "http";
 import { initSocket } from "./lib/socket.js";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-dotenv.config({ path: path.resolve(__dirname, "../../.env") });
 
 const app = express();
 app.set("trust proxy", 1);
@@ -92,6 +93,7 @@ app.use("/logo", express.static(path.join(__dirname, "../../public/logo")));
 app.use("/icons", express.static(path.join(__dirname, "../../public/icons")));
 app.use("/images", express.static(path.join(__dirname, "../../public/images")));
 app.use("/teams", express.static(path.join(__dirname, "../../public/teams")));
+app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 
 app.use((req, res, next) => {
   const start = Date.now();

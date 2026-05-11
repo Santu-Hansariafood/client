@@ -1,14 +1,19 @@
 import ImageKit from "imagekit";
 
-const IMAGEKIT_PUBLIC_KEY = process.env.IMAGEKIT_PUBLIC_KEY || "";
-const IMAGEKIT_PRIVATE_KEY = process.env.IMAGEKIT_PRIVATE_KEY || "";
-const IMAGEKIT_URL_ENDPOINT = process.env.IMAGEKIT_URL_ENDPOINT || "";
-
 class ImageKitStorage {
   constructor() {
-    this.publicKey = IMAGEKIT_PUBLIC_KEY;
-    this.privateKey = IMAGEKIT_PRIVATE_KEY;
-    this.urlEndpoint = IMAGEKIT_URL_ENDPOINT;
+    this.refreshConfig();
+  }
+
+  refreshConfig() {
+    this.publicKey = process.env.IMAGEKIT_PUBLIC_KEY || "";
+    this.privateKey = process.env.IMAGEKIT_PRIVATE_KEY || "";
+    this.urlEndpoint = process.env.IMAGEKIT_URL_ENDPOINT || "";
+
+    // Remove trailing slash from urlEndpoint if present
+    if (this.urlEndpoint.endsWith("/")) {
+      this.urlEndpoint = this.urlEndpoint.slice(0, -1);
+    }
 
     if (this.publicKey && this.privateKey && this.urlEndpoint) {
       this.imagekit = new ImageKit({
@@ -16,17 +21,27 @@ class ImageKitStorage {
         privateKey: this.privateKey,
         urlEndpoint: this.urlEndpoint,
       });
+      console.log("ImageKit configured successfully with endpoint:", this.urlEndpoint);
     } else {
       this.imagekit = null;
-      console.warn("ImageKit credentials not configured");
+      console.warn("ImageKit credentials missing:", {
+        hasPublic: !!this.publicKey,
+        hasPrivate: !!this.privateKey,
+        hasEndpoint: !!this.urlEndpoint,
+      });
     }
   }
 
   async uploadFile(file, fileName) {
     try {
+      // Re-check config in case env vars were loaded late
       if (!this.imagekit) {
-        console.warn("ImageKit not configured, returning mock URL");
-        return `https://mock.imagekit.io/uploads/${fileName}-${Date.now()}`;
+        this.refreshConfig();
+      }
+
+      if (!this.imagekit) {
+        console.error("ImageKit not configured for upload");
+        throw new Error("ImageKit configuration missing");
       }
 
       const response = await this.imagekit.upload({
@@ -35,10 +50,11 @@ class ImageKitStorage {
         useUniqueFileName: true,
       });
 
+      console.log("ImageKit upload success:", response.url);
       return response.url;
     } catch (error) {
-      console.error("ImageKit upload error:", error.message || error);
-      throw new Error("Failed to upload file to ImageKit");
+      console.error("ImageKit upload error details:", error);
+      throw new Error(`Failed to upload file to ImageKit: ${error.message || "Unknown error"}`);
     }
   }
 

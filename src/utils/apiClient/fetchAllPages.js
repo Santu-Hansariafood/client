@@ -1,4 +1,4 @@
-import axios from "axios";
+import axiosInstance from "./apiClient";
 
 const toItemsArray = (responseData) => {
   if (Array.isArray(responseData)) return responseData;
@@ -19,7 +19,7 @@ export const fetchAllPages = async (
   let page = 1;
 
   while (page <= maxPages) {
-    const response = await axios.get(url, {
+    const response = await axiosInstance.get(url, {
       params: { ...params, page, limit },
       signal,
     });

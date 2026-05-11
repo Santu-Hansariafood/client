@@ -1,11 +1,28 @@
 import { Router } from "express";
 import multer from "multer";
+import path from "node:path";
+import fs from "node:fs/promises";
+import { fileURLToPath } from "node:url";
 import imagekit from "../lib/imagekit.js";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const UPLOAD_DIR = path.join(__dirname, "../../uploads");
+
+// Ensure upload directory exists
+try {
+  await fs.access(UPLOAD_DIR);
+} catch {
+  await fs.mkdir(UPLOAD_DIR, { recursive: true });
+}
 
 const router = Router();
 
 const storage = multer.memoryStorage();
-const upload = multer({ storage });
+const upload = multer({
+  storage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+});
 
 router.post("/", upload.single("file"), async (req, res) => {
   try {
@@ -13,10 +30,31 @@ router.post("/", upload.single("file"), async (req, res) => {
       return res.status(400).json({ message: "No file provided" });
     }
 
-    const fileName = req.file.originalname;
-    const fileUrl = await imagekit.uploadFile(req.file, fileName);
+    const fileName = `${Date.now()}-${req.file.originalname}`;
 
-    res.json({ url: fileUrl, fileName });
+    // 1. Save to local server storage
+    const localPath = path.join(UPLOAD_DIR, fileName);
+    await fs.writeFile(localPath, req.file.buffer);
+    console.log("File saved locally to:", localPath);
+
+    // 2. Upload to ImageKit
+    let cloudUrl = null;
+    try {
+      cloudUrl = await imagekit.uploadFile(req.file, fileName);
+    } catch (ikError) {
+      console.error("Cloud upload failed, using local only:", ikError.message);
+    }
+
+    // Return cloud URL if available, otherwise local URL
+    const baseUrl = `${req.protocol}://${req.get("host")}`;
+    const localUrl = `${baseUrl}/uploads/${fileName}`;
+
+    res.json({
+      url: cloudUrl || localUrl,
+      cloudUrl,
+      localUrl,
+      fileName,
+    });
   } catch (error) {
     console.error("Upload error:", error);
     res.status(500).json({ message: error.message || "Failed to upload file" });
