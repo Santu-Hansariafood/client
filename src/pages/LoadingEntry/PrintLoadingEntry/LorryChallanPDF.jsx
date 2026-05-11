@@ -300,22 +300,22 @@ const styles = StyleSheet.create({
     width: "100%",
     alignItems: "center",
     marginBottom: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: "#1a1a1a",
-    paddingBottom: 5,
+    paddingVertical: 8,
+    backgroundColor: "#1a1a1a",
+    borderRadius: 4,
   },
   billTypeTitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: "bold",
-    color: "#1a1a1a",
+    color: "#ffffff",
     textTransform: "uppercase",
-    letterSpacing: 2,
+    letterSpacing: 3,
   },
   billHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-start",
-    marginBottom: 20,
+    marginBottom: 15,
   },
   companyBrand: {
     flex: 1,
@@ -334,8 +334,8 @@ const styles = StyleSheet.create({
   },
   partiesContainer: {
     flexDirection: "row",
-    marginBottom: 15,
-    gap: 15,
+    marginBottom: 12,
+    gap: 12,
   },
   partyBox: {
     flex: 1,
@@ -360,7 +360,7 @@ const styles = StyleSheet.create({
   },
   metaContainer: {
     flexDirection: "row",
-    marginBottom: 15,
+    marginBottom: 12,
     borderWidth: 0.5,
     borderColor: "#000000",
   },
@@ -390,7 +390,7 @@ const styles = StyleSheet.create({
   },
   modernTable: {
     width: "100%",
-    marginBottom: 15,
+    marginBottom: 12,
     borderWidth: 0.5,
     borderColor: "#000000",
   },
@@ -405,7 +405,7 @@ const styles = StyleSheet.create({
   modernTableRow: {
     flexDirection: "row",
     padding: 6,
-    minHeight: 30,
+    minHeight: 28,
     alignItems: "center",
     backgroundColor: "#ffffff",
   },
@@ -419,15 +419,21 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     marginTop: 5,
-    gap: 15,
+    gap: 12,
   },
   qrSection: {
-    width: "80pt",
+    width: "90pt",
     padding: 6,
     borderWidth: 0.5,
     borderColor: "#000000",
     alignItems: "center",
     justifyContent: "center",
+  },
+  qrLabel: {
+    fontSize: 7,
+    fontWeight: "bold",
+    marginTop: 4,
+    textAlign: "center",
   },
   totalSection: {
     flex: 1,
@@ -448,6 +454,8 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     backgroundColor: "#f5f5f5",
     paddingHorizontal: 8,
+    borderBottomWidth: 0.5,
+    borderBottomColor: "#000000",
   },
   grandTotalLabel: {
     fontSize: 10,
@@ -457,14 +465,25 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: "bold",
   },
-  amountInWordsBox: {
-    marginTop: 10,
+  amountInWordsRow: {
     padding: 6,
-    borderWidth: 0.5,
-    borderColor: "#000000",
+    paddingHorizontal: 8,
+    backgroundColor: "#ffffff",
+  },
+  amountInWordsLabel: {
+    fontSize: 6.5,
+    fontWeight: "bold",
+    color: "#333333",
+    textTransform: "uppercase",
+    marginBottom: 2,
+  },
+  amountInWordsValue: {
+    fontSize: 8,
+    fontWeight: "bold",
+    color: "#000000",
   },
   bankSection: {
-    marginTop: 15,
+    marginTop: 12,
     padding: 8,
     borderWidth: 0.5,
     borderColor: "#000000",
@@ -498,18 +517,18 @@ const styles = StyleSheet.create({
     color: "#000000",
   },
   signatorySection: {
-    marginTop: 25,
+    marginTop: 20,
     flexDirection: "row",
     justifyContent: "flex-end",
   },
   signatoryBox: {
-    width: "160pt",
+    width: "150pt",
     textAlign: "center",
   },
   signLine: {
     borderTopWidth: 0.5,
     borderTopColor: "#000000",
-    marginTop: 35,
+    marginTop: 30,
     paddingTop: 4,
   },
 });
@@ -1081,14 +1100,14 @@ const LorryChallanPDF = ({ data = {}, logoUrl, qrCodeUrl }) => {
 
           <View style={styles.metaContainer}>
             <View style={styles.metaItem}>
-              <Text style={styles.metaLabel}>Invoice No</Text>
-              <Text style={styles.metaValue}>{data.billNumber || ""}</Text>
-            </View>
-            <View style={styles.metaItem}>
               <Text style={styles.metaLabel}>Date</Text>
               <Text style={styles.metaValue}>
                 {formatDate(data.dateOfIssue)}
               </Text>
+            </View>
+            <View style={styles.metaItem}>
+              <Text style={styles.metaLabel}>Invoice No</Text>
+              <Text style={styles.metaValue}>{data.billNumber || ""}</Text>
             </View>
             <View style={styles.metaItem}>
               <Text style={styles.metaLabel}>Sauda No</Text>
@@ -1139,8 +1158,9 @@ const LorryChallanPDF = ({ data = {}, logoUrl, qrCodeUrl }) => {
                 SCAN DETAILS
               </Text>
               {qrCodeUrl && (
-                <Image src={qrCodeUrl} style={{ width: 60, height: 60 }} />
+                <Image src={qrCodeUrl} style={{ width: 55, height: 55 }} />
               )}
+              <Text style={styles.qrLabel}>Invoice No: {data.billNumber}</Text>
             </View>
             <View style={styles.totalSection}>
               <View style={styles.summaryRow}>
@@ -1184,24 +1204,13 @@ const LorryChallanPDF = ({ data = {}, logoUrl, qrCodeUrl }) => {
                   Rs. {formatAmount(totalBillAmount)}
                 </Text>
               </View>
+              <View style={styles.amountInWordsRow}>
+                <Text style={styles.amountInWordsLabel}>Amount in Words</Text>
+                <Text style={styles.amountInWordsValue}>
+                  {numberToWords(totalBillAmount)}
+                </Text>
+              </View>
             </View>
-          </View>
-
-          <View style={styles.amountInWordsBox}>
-            <Text
-              style={{
-                fontSize: 7,
-                fontWeight: "bold",
-                color: "#333",
-                marginBottom: 4,
-                textTransform: "uppercase",
-              }}
-            >
-              Amount in Words
-            </Text>
-            <Text style={{ fontSize: 9, fontWeight: "bold", color: "#000" }}>
-              {numberToWords(totalBillAmount)}
-            </Text>
           </View>
 
           <View style={styles.bankSection}>
