@@ -7,12 +7,14 @@ import React, {
   useRef,
 } from "react";
 import api from "../../../utils/apiClient/apiClient";
-import { MdVisibility, MdEdit, MdDelete, MdDownload } from "react-icons/md";
+import { MdVisibility, MdEdit, MdDelete, MdDownload, MdPictureAsPdf } from "react-icons/md";
 import { toast } from "react-toastify";
 import { useAuth } from "../../../context/AuthContext/AuthContext";
 import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
 import Loading from "../../../common/Loading/Loading";
 import { FaClipboardList } from "react-icons/fa";
+import { jsPDF } from "jspdf";
+import "jspdf-autotable";
 
 import PrintLoadingEntry from "../PrintLoadingEntry/PrintLoadingEntry";
 import { downloadFile } from "../../../utils/fileDownloader";
@@ -542,6 +544,56 @@ const ListLoadingEntry = () => {
     }
   }, [filters, userRole, mobile, exporting, loadingEntries.length]);
 
+  const handleDownloadPDFReport = useCallback(() => {
+    if (loadingEntries.length === 0) return;
+
+    const doc = new jsPDF("landscape");
+    const tableColumn = [
+      "Sl No",
+      "Date",
+      "Sauda No",
+      "Lorry No",
+      "Seller",
+      "Buyer",
+      "Consignee",
+      "Commodity",
+      "Weight",
+      "Bill No",
+    ];
+    
+    const tableRows = loadingEntries.map((entry, index) => [
+      totalItems - ((currentPage - 1) * itemsPerPage + index),
+      formatDate(entry.loadingDate),
+      entry.saudaNo,
+      entry.lorryNumber,
+      entry.supplierCompany,
+      buyerMap[entry.saudaNo] || entry.buyerCompany || "N/A",
+      entry.consignee,
+      entry.commodity,
+      `${entry.loadingWeight.toFixed(2)} T`,
+      entry.billNumber || "N/A",
+    ]);
+
+    doc.setFontSize(20);
+    doc.setTextColor(5, 150, 105);
+    doc.text("LOADING ENTRIES REPORT", 14, 22);
+    
+    doc.setFontSize(10);
+    doc.setTextColor(100);
+    doc.text(`Generated on: ${new Date().toLocaleString("en-IN")}`, 14, 30);
+
+    doc.autoTable({
+      head: [tableColumn],
+      body: tableRows,
+      startY: 35,
+      theme: "grid",
+      headStyles: { fillColor: [5, 150, 105], fontSize: 8 },
+      styles: { fontSize: 7, cellPadding: 2 },
+    });
+
+    doc.save(`LoadingEntries_${new Date().toISOString().split("T")[0]}.pdf`);
+  }, [loadingEntries, totalItems, currentPage, itemsPerPage, buyerMap]);
+
   // Table headers
   const headers = useMemo(
     () => [
@@ -709,15 +761,26 @@ const ListLoadingEntry = () => {
                   </p>
                 )}
               </div>
-              <button
-                onClick={handleDownloadExcel}
-                disabled={exporting || loadingEntries.length === 0}
-                className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700 transition shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
-                aria-label="Download Excel"
-              >
-                <MdDownload size={20} />
-                {exporting ? "Preparing..." : "Download Excel"}
-              </button>
+              <div className="flex gap-2 w-full md:w-auto">
+                <button
+                  onClick={handleDownloadPDFReport}
+                  disabled={loadingEntries.length === 0}
+                  className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-slate-800 text-white rounded-xl font-bold hover:bg-slate-900 transition shadow-md disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                  aria-label="Download PDF Report"
+                >
+                  <MdPictureAsPdf size={20} />
+                  Download PDF
+                </button>
+                <button
+                  onClick={handleDownloadExcel}
+                  disabled={exporting || loadingEntries.length === 0}
+                  className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700 transition shadow-md disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                  aria-label="Download Excel"
+                >
+                  <MdDownload size={20} />
+                  {exporting ? "Preparing..." : "Download Excel"}
+                </button>
+              </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
