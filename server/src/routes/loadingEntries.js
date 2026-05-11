@@ -412,7 +412,7 @@ router.get("/", async (req, res) => {
       andParts.length > 1 ? { $and: andParts } : andParts[0] || {};
 
     const items = await LoadingEntry.find(finalQuery)
-      .sort({ saudaNo: -1 })
+      .sort({ loadingDate: -1, createdAt: -1 })
       .skip((page - 1) * limit)
       .limit(limit)
       .populate("supplier", "sellerName")
@@ -472,7 +472,7 @@ router.get("/receiving", async (req, res) => {
       andParts.length > 1 ? { $and: andParts } : andParts[0] || {};
 
     const items = await LoadingEntry.find(finalQuery)
-      .sort({ saudaNo: -1 })
+      .sort({ loadingDate: -1, createdAt: -1 })
       .skip((page - 1) * limit)
       .limit(limit)
       .populate("supplier", "sellerName")
@@ -608,7 +608,7 @@ router.get("/export/excel", async (req, res) => {
       andParts.length > 1 ? { $and: andParts } : andParts[0] || {};
 
     const items = await LoadingEntry.find(finalQuery)
-      .sort({ saudaNo: -1 })
+      .sort({ loadingDate: 1, createdAt: 1 })
       .populate("supplier", "sellerName")
       .lean();
 
