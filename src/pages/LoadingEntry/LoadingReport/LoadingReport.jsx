@@ -12,6 +12,7 @@ import {
   FaCalendarAlt,
   FaTruckLoading,
   FaHistory,
+  FaBoxOpen,
 } from "react-icons/fa";
 import api from "../../../utils/apiClient/apiClient";
 import Loading from "../../../common/Loading/Loading";
@@ -447,39 +448,61 @@ const LoadingReport = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-3xl p-5 text-white shadow-lg shadow-emerald-500/20">
-              <p className="text-emerald-100 text-[10px] font-bold uppercase tracking-widest mb-1">
-                Total Weight
-              </p>
-              <div className="flex items-end gap-2">
-                <h3 className="text-2xl font-black">
-                  {summaryData.totalWeight.toFixed(2)}
-                </h3>
-                <span className="text-xs font-bold mb-1 opacity-80">TONS</span>
+          {/* Summary Dashboard at Top */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="group relative bg-white rounded-[2rem] p-6 border border-slate-200 shadow-xl shadow-slate-200/40 transition-all duration-500 hover:-translate-y-2">
+              <div className="absolute top-0 right-0 -mr-4 -mt-4 w-24 h-24 bg-emerald-500/10 rounded-full transition-transform duration-700 group-hover:scale-150"></div>
+              <div className="relative z-10 flex items-start justify-between">
+                <div>
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Weight</p>
+                  <div className="flex items-end gap-2">
+                    <h3 className="text-3xl font-black text-slate-900">{summaryData.totalWeight.toFixed(2)}</h3>
+                    <span className="text-[10px] font-bold text-emerald-600 mb-1">TONS</span>
+                  </div>
+                </div>
+                <div className="p-4 bg-emerald-500 text-white rounded-2xl shadow-lg shadow-emerald-500/20 transform transition-transform group-hover:rotate-12">
+                  <FaTruckLoading size={20} />
+                </div>
               </div>
             </div>
-            <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-3xl p-5 text-white shadow-lg shadow-blue-500/20">
-              <p className="text-blue-100 text-[10px] font-bold uppercase tracking-widest mb-1">
-                Total Bags
-              </p>
-              <h3 className="text-2xl font-black">{summaryData.totalBags}</h3>
+
+            <div className="group relative bg-white rounded-[2rem] p-6 border border-slate-200 shadow-xl shadow-slate-200/40 transition-all duration-500 hover:-translate-y-2">
+              <div className="absolute top-0 right-0 -mr-4 -mt-4 w-24 h-24 bg-blue-500/10 rounded-full transition-transform duration-700 group-hover:scale-150"></div>
+              <div className="relative z-10 flex items-start justify-between">
+                <div>
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Bags</p>
+                  <h3 className="text-3xl font-black text-slate-900">{summaryData.totalBags}</h3>
+                </div>
+                <div className="p-4 bg-blue-500 text-white rounded-2xl shadow-lg shadow-blue-500/20 transform transition-transform group-hover:rotate-12">
+                  <FaBoxOpen size={20} />
+                </div>
+              </div>
             </div>
-            <div className="bg-gradient-to-br from-amber-500 to-amber-600 rounded-3xl p-5 text-white shadow-lg shadow-amber-500/20">
-              <p className="text-amber-100 text-[10px] font-bold uppercase tracking-widest mb-1">
-                Vehicles Loaded
-              </p>
-              <h3 className="text-2xl font-black">
-                {summaryData.distinctLorry}
-              </h3>
+
+            <div className="group relative bg-white rounded-[2rem] p-6 border border-slate-200 shadow-xl shadow-slate-200/40 transition-all duration-500 hover:-translate-y-2">
+              <div className="absolute top-0 right-0 -mr-4 -mt-4 w-24 h-24 bg-amber-500/10 rounded-full transition-transform duration-700 group-hover:scale-150"></div>
+              <div className="relative z-10 flex items-start justify-between">
+                <div>
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Vehicles Loaded</p>
+                  <h3 className="text-3xl font-black text-slate-900">{summaryData.distinctLorry}</h3>
+                </div>
+                <div className="p-4 bg-amber-500 text-white rounded-2xl shadow-lg shadow-amber-500/20 transform transition-transform group-hover:rotate-12">
+                  <FaTruckLoading size={20} />
+                </div>
+              </div>
             </div>
-            <div className="bg-gradient-to-br from-slate-600 to-slate-700 rounded-3xl p-5 text-white shadow-lg shadow-slate-500/20">
-              <p className="text-slate-200 text-[10px] font-bold uppercase tracking-widest mb-1">
-                Total Entries
-              </p>
-              <h3 className="text-2xl font-black">
-                {summaryData.totalEntries}
-              </h3>
+
+            <div className="group relative bg-white rounded-[2rem] p-6 border border-slate-200 shadow-xl shadow-slate-200/40 transition-all duration-500 hover:-translate-y-2">
+              <div className="absolute top-0 right-0 -mr-4 -mt-4 w-24 h-24 bg-slate-500/10 rounded-full transition-transform duration-700 group-hover:scale-150"></div>
+              <div className="relative z-10 flex items-start justify-between">
+                <div>
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Entries</p>
+                  <h3 className="text-3xl font-black text-slate-900">{summaryData.totalEntries}</h3>
+                </div>
+                <div className="p-4 bg-slate-700 text-white rounded-2xl shadow-lg shadow-slate-700/20 transform transition-transform group-hover:rotate-12">
+                  <FaHistory size={20} />
+                </div>
+              </div>
             </div>
           </div>
 

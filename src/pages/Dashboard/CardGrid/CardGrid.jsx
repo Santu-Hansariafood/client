@@ -1,8 +1,6 @@
-import { useEffect, useState, lazy, Suspense } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { FaUsers, FaStore, FaTruck, FaGavel } from "react-icons/fa";
 import Loading from "../../../common/Loading/Loading";
-
-const Cards = lazy(() => import("../../../common/Cards/Cards"));
 
 const useCountUp = (end, duration = 800) => {
   const [value, setValue] = useState(0);
@@ -27,16 +25,50 @@ const useCountUp = (end, duration = 800) => {
   return value;
 };
 
+const DashboardCard = ({ title, value, icon: Icon, colorClass, subtitle }) => {
+  return (
+    <div className={`relative overflow-hidden group rounded-[2rem] p-6 transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl border border-white/20 bg-white shadow-xl shadow-slate-200/50`}>
+      <div className={`absolute top-0 right-0 -mr-8 -mt-8 w-32 h-32 rounded-full opacity-10 transition-transform duration-700 group-hover:scale-150 ${colorClass.split(' ')[0]}`}></div>
+      
+      <div className="relative z-10 flex items-start justify-between">
+        <div className="space-y-4">
+          <div className="space-y-1">
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">{title}</p>
+            <h3 className="text-3xl font-black text-slate-900 tracking-tighter">
+              {value}
+            </h3>
+          </div>
+          {subtitle && (
+            <div className="inline-flex items-center px-2 py-1 rounded-lg bg-slate-50 border border-slate-100">
+              <span className="text-[10px] font-bold text-slate-500 uppercase">{subtitle}</span>
+            </div>
+          )}
+        </div>
+
+        <div className={`p-4 rounded-2xl shadow-lg shadow-current/10 transform transition-transform duration-500 group-hover:rotate-12 group-hover:scale-110 ${colorClass}`}>
+          <Icon className="text-2xl" />
+        </div>
+      </div>
+      
+      <div className="mt-6 flex items-center gap-2">
+        <div className="h-1 flex-1 bg-slate-100 rounded-full overflow-hidden">
+          <div className={`h-full w-2/3 rounded-full ${colorClass.split(' ')[0]}`}></div>
+        </div>
+        <span className="text-[10px] font-black text-slate-400">70%</span>
+      </div>
+    </div>
+  );
+};
+
 const CardItem = ({ card, count }) => {
   const animatedCount = useCountUp(count);
 
   return (
-    <Cards
+    <DashboardCard
       title={card.title}
-      count={animatedCount}
+      value={animatedCount}
       icon={card.icon}
-      link={card.link}
-      color={card.color}
+      colorClass={card.color}
     />
   );
 };
