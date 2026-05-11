@@ -37,6 +37,7 @@ export const buildSaudaPdfData = ({
   supplierData = [],
   buyerData = [],
   companyData = [],
+  commodityData = [],
   getConsigneeDisplay,
 }) => {
   const normalizedConsigneeKey = (() => {
@@ -68,6 +69,8 @@ export const buildSaudaPdfData = ({
                            findBestMatch(consigneeData, normalizedConsigneeKey, 'label');
 
   const matchingSupplier = findBestMatch(supplierData, item?.supplierCompany, 'companyName');
+
+  const matchingCommodity = findBestMatch(commodityData, item?.commodity, 'name');
 
   const rawBuyerKey = item?.buyerCompany ?? item?.buyer ?? "";
   
@@ -110,7 +113,8 @@ export const buildSaudaPdfData = ({
     buyerDetails: billToConsignee ? finalConsigneeDetails : finalBuyerDetails,
     originalBuyerDetails: finalBuyerDetails,
     originalBuyerCompany: finalBuyerName,
-    billTo: item?.billTo || ""
+    billTo: item?.billTo || "",
+    hsnCode: matchingCommodity?.hsnCode || "",
   };
 
   if (billToConsignee) {

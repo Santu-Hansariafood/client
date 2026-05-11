@@ -4,6 +4,7 @@ import LorryChallanPDF from "./LorryChallanPDF";
 import { fetchAllPages } from "../../../utils/apiClient/fetchAllPages";
 import { buildSaudaPdfData } from "../../../utils/saudaPdf/buildSaudaPdfData";
 import logoUrl from "../../../assets/Hans.png";
+import QRCode from "qrcode";
 
 const normalize = (value) =>
   String(value || "")
@@ -26,6 +27,8 @@ const PrintLoadingEntry = async (entry) => {
 
       fetchAllPages("/companies", { limit: 200 }),
 
+      fetchAllPages("/commodities", { limit: 200 }),
+
       entry.saudaNo
         ? api.get("/self-order", {
             params: {
@@ -36,10 +39,16 @@ const PrintLoadingEntry = async (entry) => {
         : Promise.resolve({ data: [] }),
     ]);
 
-    const [consigneeData, supplierData, buyerData, companyData, selfOrderRes] =
-      results.map((result) =>
-        result.status === "fulfilled" ? result.value : [],
-      );
+    const [
+      consigneeData,
+      supplierData,
+      buyerData,
+      companyData,
+      commodityData,
+      selfOrderRes,
+    ] = results.map((result) =>
+      result.status === "fulfilled" ? result.value : [],
+    );
 
     const selfOrders = Array.isArray(selfOrderRes?.data?.data)
       ? selfOrderRes.data.data
@@ -61,6 +70,7 @@ const PrintLoadingEntry = async (entry) => {
       supplierData,
       buyerData,
       companyData,
+      commodityData,
 
       getConsigneeDisplay: (row) => {
         const consignee = row?.consignee;
@@ -77,8 +87,21 @@ const PrintLoadingEntry = async (entry) => {
       },
     });
 
+    // Generate QR Code
+    const qrData = JSON.stringify({
+      saudaNo: entry.saudaNo,
+      billNo: entry.billNumber,
+      lorry: entry.lorryNumber,
+      weight: entry.loadingWeight,
+    });
+    const qrCodeUrl = await QRCode.toDataURL(qrData);
+
     const document = (
-      <LorryChallanPDF data={pdfData} logoUrl={logoUrl?.default || logoUrl} />
+      <LorryChallanPDF
+        data={pdfData}
+        logoUrl={logoUrl?.default || logoUrl}
+        qrCodeUrl={qrCodeUrl}
+      />
     );
 
     const pdfInstance = pdf(document);

@@ -515,7 +515,7 @@ const renderAddressDetails = (details) => {
   return <Text style={styles.addressDetails}>{parts.join("\n")}</Text>;
 };
 
-const LorryChallanPDF = ({ data = {}, logoUrl }) => {
+const LorryChallanPDF = ({ data = {}, logoUrl, qrCodeUrl }) => {
   const isConsigneeAsBuyer = data.billTo === "consignee";
 
   const normalizedConsignee = String(data.consignee || "").toLowerCase();
@@ -549,6 +549,12 @@ const LorryChallanPDF = ({ data = {}, logoUrl }) => {
   const gstPercent = Number(data.gst || 0);
   const gstAmount = subtotal * (gstPercent / 100);
   const totalBillAmount = subtotal + gstAmount;
+
+  const isMaize = String(data.commodity || "").toLowerCase().includes("maize");
+  const billTitle = isMaize ? "TAX INVOICE" : "BILL OF SUPPLY";
+
+  // Seller bank details from supplierDetails (SellerCompany)
+  const bankDetails = data.supplierDetails?.bankDetails?.[0] || {};
 
   return (
     <Document>
@@ -867,7 +873,7 @@ const LorryChallanPDF = ({ data = {}, logoUrl }) => {
           <View style={styles.innerBorder} fixed />
 
           <View style={styles.billHeader}>
-            <Text style={styles.billTitle}>TAX INVOICE</Text>
+            <Text style={styles.billTitle}>{billTitle}</Text>
             <Text style={styles.billSubTitle}>
               {data.supplierCompany || "Hansaria Food Private Limited"}
             </Text>
@@ -884,7 +890,7 @@ const LorryChallanPDF = ({ data = {}, logoUrl }) => {
 
           <View style={styles.billingGrid}>
             <View style={styles.billingColumn}>
-              <Text style={styles.label}>Billed To:</Text>
+              <Text style={styles.label}>BUYER ACCOUNT</Text>
               <Text style={styles.nameValue}>{buyerAccountName}</Text>
               {renderAddressDetails(buyerAccountDetails)}
             </View>
@@ -898,8 +904,12 @@ const LorryChallanPDF = ({ data = {}, logoUrl }) => {
                 <Text style={styles.value}>{formatDate(data.dateOfIssue)}</Text>
               </View>
               <View style={{ marginBottom: 5 }}>
-                <Text style={styles.label}>Sauda No:</Text>
+                <Text style={styles.label}>HFPL Sauda No:</Text>
                 <Text style={styles.value}>{data.saudaNo}</Text>
+              </View>
+              <View style={{ marginBottom: 5 }}>
+                <Text style={styles.label}>Buyer Sauda No:</Text>
+                <Text style={styles.value}>{data.buyerSaudaNo || data.poNumber || "N/A"}</Text>
               </View>
               <View>
                 <Text style={styles.label}>Lorry No:</Text>
@@ -918,28 +928,35 @@ const LorryChallanPDF = ({ data = {}, logoUrl }) => {
             </View>
             <View style={styles.billTableRow}>
               <Text style={[styles.billTableCell, { width: "10%" }]}>1</Text>
-              <Text style={[styles.billTableCell, { width: "40%" }]}>{data.commodity || "N/A"}</Text>
+              <Text style={[styles.billTableCell, { width: "40%" }]}>
+                {data.commodity || "N/A"} {data.hsnCode ? `(HSN: ${data.hsnCode})` : ""}
+              </Text>
               <Text style={[styles.billTableCell, { width: "15%" }]}>{weight.toFixed(3)}</Text>
               <Text style={[styles.billTableCell, { width: "15%" }]}>{formatAmount(rate)}</Text>
               <Text style={[styles.billTableCellLast, { width: "20%" }]}>{formatAmount(subtotal)}</Text>
             </View>
           </View>
 
-          <View style={styles.billSummary}>
-            <View>
-              <View style={{ flexDirection: "row", marginBottom: 2 }}>
-                <Text style={styles.billSummaryLabel}>Sub Total:</Text>
-                <Text style={styles.billSummaryValue}>{formatAmount(subtotal)}</Text>
-              </View>
-              {gstPercent > 0 && (
+          <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 10 }}>
+            <View style={{ width: "100pt" }}>
+              {qrCodeUrl && <Image src={qrCodeUrl} style={{ width: 80, height: 80 }} />}
+            </View>
+            <View style={styles.billSummary}>
+              <View>
                 <View style={{ flexDirection: "row", marginBottom: 2 }}>
-                  <Text style={styles.billSummaryLabel}>GST ({gstPercent}%):</Text>
-                  <Text style={styles.billSummaryValue}>{formatAmount(gstAmount)}</Text>
+                  <Text style={styles.billSummaryLabel}>Sub Total:</Text>
+                  <Text style={styles.billSummaryValue}>{formatAmount(subtotal)}</Text>
                 </View>
-              )}
-              <View style={{ flexDirection: "row", borderTopWidth: 1, paddingTop: 2 }}>
-                <Text style={styles.billSummaryLabel}>Total Amount:</Text>
-                <Text style={styles.billSummaryValue}>{formatAmount(totalBillAmount)}</Text>
+                {gstPercent > 0 && (
+                  <View style={{ flexDirection: "row", marginBottom: 2 }}>
+                    <Text style={styles.billSummaryLabel}>GST ({gstPercent}%):</Text>
+                    <Text style={styles.billSummaryValue}>{formatAmount(gstAmount)}</Text>
+                  </View>
+                )}
+                <View style={{ flexDirection: "row", borderTopWidth: 1, paddingTop: 2 }}>
+                  <Text style={styles.billSummaryLabel}>Total Amount:</Text>
+                  <Text style={styles.billSummaryValue}>{formatAmount(totalBillAmount)}</Text>
+                </View>
               </View>
             </View>
           </View>
@@ -951,10 +968,11 @@ const LorryChallanPDF = ({ data = {}, logoUrl }) => {
 
           <View style={styles.bankDetails}>
             <Text style={{ fontWeight: "bold", marginBottom: 2 }}>Bank Details:</Text>
-            <Text>A/C Name: Hansaria Food Private Limited</Text>
-            <Text>Bank: HDFC Bank Ltd</Text>
-            <Text>A/C No: 50200056473829</Text>
-            <Text>IFSC: HDFC0000008</Text>
+            <Text>A/C Name: {bankDetails.accountHolderName || data.supplierCompany || "Hansaria Food Private Limited"}</Text>
+            <Text>Bank: {bankDetails.bankName || "HDFC Bank Ltd"}</Text>
+            <Text>A/C No: {bankDetails.accountNumber || "50200056473829"}</Text>
+            <Text>IFSC: {bankDetails.ifscCode || "HDFC0000008"}</Text>
+            <Text>Branch: {bankDetails.branchName || "Kolkata"}</Text>
           </View>
 
           <View style={styles.authSignatory}>
