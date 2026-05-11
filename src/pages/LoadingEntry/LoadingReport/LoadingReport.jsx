@@ -6,7 +6,7 @@ import api from "../../../utils/apiClient/apiClient";
 import Loading from "../../../common/Loading/Loading";
 import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
 import { jsPDF } from "jspdf";
-import "jspdf-autotable";
+import autoTable from "jspdf-autotable";
 
 const DateSelector = lazy(() => import("../../../common/DateSelector/DateSelector"));
 const Tables = lazy(() => import("../../../common/Tables/Tables"));
@@ -167,7 +167,7 @@ const LoadingReport = () => {
         entry.supplierCompany
       ]);
 
-      doc.autoTable({
+      autoTable(doc, {
         head: [tableColumn],
         body: tableRows,
         startY: 65,
