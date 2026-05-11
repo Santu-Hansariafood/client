@@ -268,150 +268,188 @@ const styles = StyleSheet.create({
     marginVertical: 6,
   },
 
-  // Bill specific styles
+  // Modern Bill styles
+  billPage: {
+    fontFamily: "Helvetica",
+    fontSize: 9,
+    padding: 30,
+    color: "#1a1a1a",
+    backgroundColor: "#ffffff",
+  },
   billHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 20,
     borderBottomWidth: 2,
     borderBottomColor: "#000000",
-    paddingBottom: 10,
+    paddingBottom: 15,
+    marginBottom: 20,
   },
-  billTitleContainer: {
-    flex: 1,
+  companyBrand: {
+    flex: 2,
   },
-  billTitle: {
-    fontSize: 24,
+  companyName: {
+    fontSize: 18,
     fontWeight: "heavy",
     color: "#000000",
-    marginBottom: 5,
+    textTransform: "uppercase",
+    marginBottom: 4,
   },
-  billSubTitle: {
-    fontSize: 10,
-    fontWeight: "bold",
-    marginBottom: 2,
+  companyDetails: {
+    fontSize: 8,
+    color: "#444444",
+    lineHeight: 1.4,
   },
-  billingGrid: {
+  billTypeBox: {
+    flex: 1,
+    alignItems: "flex-end",
+  },
+  billTypeTitle: {
+    fontSize: 16,
+    fontWeight: "heavy",
+    color: "#000000",
+    marginBottom: 8,
+  },
+  partiesContainer: {
     flexDirection: "row",
-    marginBottom: 15,
-    gap: 10,
+    marginBottom: 20,
+    gap: 15,
   },
-  billingBox: {
+  partyBox: {
     flex: 1,
     padding: 10,
     borderWidth: 1,
     borderColor: "#e0e0e0",
-    borderRadius: 4,
-    backgroundColor: "#fafafa",
-  },
-  invoiceDetailsBox: {
-    flex: 1,
-    padding: 10,
-    borderWidth: 1,
-    borderColor: "#000000",
-    borderRadius: 4,
-  },
-  billTable: {
-    width: "100%",
-    marginTop: 15,
-  },
-  billTableHeader: {
-    flexDirection: "row",
-    backgroundColor: "#000000",
-    color: "#ffffff",
     borderRadius: 2,
+    backgroundColor: "#fcfcfc",
+  },
+  partyLabel: {
+    fontSize: 8,
+    fontWeight: "bold",
+    color: "#666666",
+    textTransform: "uppercase",
+    marginBottom: 6,
+    borderBottomWidth: 0.5,
+    borderBottomColor: "#e0e0e0",
+    paddingBottom: 2,
+  },
+  partyName: {
+    fontSize: 10,
+    fontWeight: "bold",
+    marginBottom: 4,
+  },
+  metaContainer: {
+    flexDirection: "row",
+    backgroundColor: "#f8f8f8",
+    padding: 10,
+    borderRadius: 2,
+    marginBottom: 20,
+    borderWidth: 0.5,
+    borderColor: "#e0e0e0",
+  },
+  metaItem: {
+    flex: 1,
+  },
+  metaLabel: {
+    fontSize: 7,
+    color: "#666666",
+    textTransform: "uppercase",
+    marginBottom: 2,
+  },
+  metaValue: {
+    fontSize: 9,
     fontWeight: "bold",
   },
-  billTableRow: {
+  modernTable: {
+    width: "100%",
+    marginBottom: 20,
+  },
+  modernTableHeader: {
     flexDirection: "row",
-    borderBottomWidth: 1,
+    backgroundColor: "#1a1a1a",
+    color: "#ffffff",
+    padding: 8,
+    borderRadius: 2,
+  },
+  modernTableRow: {
+    flexDirection: "row",
+    borderBottomWidth: 0.5,
     borderBottomColor: "#e0e0e0",
-    minHeight: 30,
+    padding: 8,
+    minHeight: 35,
     alignItems: "center",
   },
-  billTableCell: {
-    padding: 8,
-    fontSize: 9,
-    textAlign: "center",
-  },
-  billTableCellLeft: {
-    padding: 8,
-    fontSize: 9,
-    textAlign: "left",
-  },
-  billTableCellRight: {
-    padding: 8,
-    fontSize: 9,
-    textAlign: "right",
-  },
-  billSummaryContainer: {
+  col1: { width: "5%", textAlign: "center" },
+  col2: { width: "40%" },
+  col3: { width: "10%", textAlign: "center" },
+  col4: { width: "15%", textAlign: "center" },
+  col5: { width: "15%", textAlign: "center" },
+  col6: { width: "15%", textAlign: "right" },
+  summarySection: {
     flexDirection: "row",
-    justifyContent: "flex-end",
-    marginTop: 20,
+    justifyContent: "space-between",
+    marginTop: 10,
   },
-  billSummaryBox: {
-    width: "200pt",
+  qrSection: {
+    width: "100pt",
+    alignItems: "center",
   },
-  billSummaryRow: {
+  totalSection: {
+    width: "220pt",
+  },
+  summaryRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     paddingVertical: 4,
-    borderBottomWidth: 1,
+    borderBottomWidth: 0.5,
     borderBottomColor: "#f0f0f0",
   },
-  billTotalRow: {
+  grandTotalRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     paddingVertical: 8,
-    backgroundColor: "#f8f8f8",
     marginTop: 5,
-    paddingHorizontal: 5,
     borderTopWidth: 2,
-    borderTopColor: "#000000",
+    borderTopColor: "#1a1a1a",
+    backgroundColor: "#fcfcfc",
+    paddingHorizontal: 5,
   },
-  billSummaryLabel: {
-    fontSize: 10,
-    fontWeight: "bold",
-    color: "#444",
-  },
-  billSummaryValue: {
-    fontSize: 10,
-    fontWeight: "bold",
-    textAlign: "right",
-  },
-  amountInWordsBox: {
-    marginTop: 20,
+  bankSection: {
+    marginTop: 25,
     padding: 12,
-    backgroundColor: "#f9f9f9",
-    borderLeftWidth: 4,
-    borderLeftColor: "#000000",
+    borderWidth: 1,
+    borderColor: "#e0e0e0",
+    borderRadius: 2,
   },
-  qrAndBankContainer: {
+  bankTitle: {
+    fontSize: 8,
+    fontWeight: "bold",
+    textTransform: "uppercase",
+    marginBottom: 8,
+    color: "#666666",
+  },
+  bankGrid: {
     flexDirection: "row",
-    marginTop: 20,
-    gap: 20,
+    flexWrap: "wrap",
+    gap: 15,
   },
-  bankDetailsBox: {
-    flex: 2,
-    padding: 10,
-    backgroundColor: "#ffffff",
-    borderWidth: 1,
-    borderColor: "#e0e0e0",
-    borderRadius: 4,
+  bankItem: {
+    width: "45%",
+    marginBottom: 4,
   },
-  qrBox: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 10,
-    borderWidth: 1,
-    borderColor: "#e0e0e0",
-    borderRadius: 4,
+  signatorySection: {
+    marginTop: 40,
+    flexDirection: "row",
+    justifyContent: "flex-end",
   },
-  authSignatoryBox: {
-    marginTop: 30,
-    alignItems: "flex-end",
-    paddingRight: 20,
+  signatoryBox: {
+    width: "180pt",
+    textAlign: "center",
+  },
+  signLine: {
+    borderTopWidth: 1,
+    borderTopColor: "#000000",
+    marginTop: 40,
+    paddingTop: 5,
   },
 });
 
@@ -922,142 +960,159 @@ const LorryChallanPDF = ({ data = {}, logoUrl, qrCodeUrl }) => {
       </Page>
 
       {shouldPrintBill && (
-        <Page style={styles.page} size="A4">
-          <View style={styles.pageBorder} fixed />
-          <View style={styles.innerBorder} fixed />
-
+        <Page style={styles.billPage} size="A4">
           <View style={styles.billHeader}>
-            <View style={styles.billTitleContainer}>
-              <Text style={styles.billTitle}>{billTitle}</Text>
-              <Text style={styles.billSubTitle}>
+            <View style={styles.companyBrand}>
+              <Text style={styles.companyName}>
                 {data.supplierCompany || "Hansaria Food Private Limited"}
               </Text>
-              <Text style={styles.sellerAddress}>
+              <Text style={styles.companyDetails}>
                 {data.supplierDetails?.address || "207 MAHARSHI DEBENDRA ROAD"}
                 {data.supplierDetails?.district ? `, ${data.supplierDetails.district}` : ""}, 
                 {data.supplierDetails?.state || "West Bengal"}
                 {data.supplierDetails?.pinNo ? ` - ${data.supplierDetails.pinNo}` : ""}
               </Text>
-              <Text style={styles.sellerAddress}>
+              <Text style={styles.companyDetails}>
                 GSTIN: {data.supplierDetails?.gstNo || "10BOSPK6679G1ZJ"} | PAN: {data.supplierDetails?.panNo || "N/A"}
               </Text>
             </View>
-            {logoUrl && <Image src={logoUrl} style={{ width: 60, height: 60 }} />}
+            <View style={styles.billTypeBox}>
+              <Text style={styles.billTypeTitle}>{billTitle}</Text>
+              {logoUrl && <Image src={logoUrl} style={{ width: 60, height: 60 }} />}
+            </View>
           </View>
 
-          <View style={styles.billingGrid}>
-            <View style={styles.billingBox}>
-              <Text style={[styles.label, { marginBottom: 4, textDecoration: "underline" }]}>BUYER ACCOUNT</Text>
-              <Text style={styles.nameValue}>{buyerAccountName}</Text>
+          <View style={styles.partiesContainer}>
+            <View style={styles.partyBox}>
+              <Text style={styles.partyLabel}>Bill To</Text>
+              <Text style={styles.partyName}>{buyerAccountName}</Text>
               {renderAddressDetails(buyerAccountDetails)}
             </View>
-            <View style={styles.billingBox}>
-              <Text style={[styles.label, { marginBottom: 4, textDecoration: "underline" }]}>SHIP TO (CONSIGNEE)</Text>
-              <Text style={styles.nameValue}>{consigneeNameForShipTo}</Text>
+            <View style={styles.partyBox}>
+              <Text style={styles.partyLabel}>Ship To</Text>
+              <Text style={styles.partyName}>{consigneeNameForShipTo}</Text>
               {renderAddressDetails(consigneeDetailsForShipTo)}
             </View>
-            <View style={styles.invoiceDetailsBox}>
-              <View style={styles.billSummaryRow}>
-                <Text style={styles.label}>Invoice No:</Text>
-                <Text style={styles.value}>{data.billNumber}</Text>
-              </View>
-              <View style={styles.billSummaryRow}>
-                <Text style={styles.label}>Date:</Text>
-                <Text style={styles.value}>{formatDate(data.dateOfIssue)}</Text>
-              </View>
-              <View style={styles.billSummaryRow}>
-                <Text style={styles.label}>HFPL Sauda:</Text>
-                <Text style={styles.value}>{data.saudaNo}</Text>
-              </View>
-              <View style={styles.billSummaryRow}>
-                <Text style={styles.label}>Buyer Sauda:</Text>
-                <Text style={styles.value}>{data.buyerSaudaNo || data.poNumber || "N/A"}</Text>
-              </View>
-              <View style={[styles.billSummaryRow, { borderBottomWidth: 0 }]}>
-                <Text style={styles.label}>Lorry No:</Text>
-                <Text style={styles.value}>{data.lorryNumber}</Text>
-              </View>
+          </View>
+
+          <View style={styles.metaContainer}>
+            <View style={styles.metaItem}>
+              <Text style={styles.metaLabel}>Invoice No</Text>
+              <Text style={styles.metaValue}>{data.billNumber}</Text>
+            </View>
+            <View style={styles.metaItem}>
+              <Text style={styles.metaLabel}>Date</Text>
+              <Text style={styles.metaValue}>{formatDate(data.dateOfIssue)}</Text>
+            </View>
+            <View style={styles.metaItem}>
+              <Text style={styles.metaLabel}>HFPL Sauda</Text>
+              <Text style={styles.metaValue}>{data.saudaNo}</Text>
+            </View>
+            <View style={styles.metaItem}>
+              <Text style={styles.metaLabel}>Buyer Sauda</Text>
+              <Text style={styles.metaValue}>{data.buyerSaudaNo || data.poNumber || "N/A"}</Text>
+            </View>
+            <View style={styles.metaItem}>
+              <Text style={styles.metaLabel}>Lorry No</Text>
+              <Text style={styles.metaValue}>{data.lorryNumber}</Text>
             </View>
           </View>
 
-          <View style={styles.billTable}>
-            <View style={styles.billTableHeader}>
-              <Text style={[styles.billTableCell, { width: "5%" }]}>#</Text>
-              <Text style={[styles.billTableCellLeft, { width: "35%" }]}>Description of Goods</Text>
-              <Text style={[styles.billTableCell, { width: "10%" }]}>HSN</Text>
-              <Text style={[styles.billTableCell, { width: "12%" }]}>Qty (Tons)</Text>
-              <Text style={[styles.billTableCell, { width: "13%" }]}>Rate (Rs)</Text>
-              <Text style={[styles.billTableCellRight, { width: "25%" }]}>Taxable Value</Text>
+          <View style={styles.modernTable}>
+            <View style={styles.modernTableHeader}>
+              <Text style={[styles.col1, { fontWeight: "bold" }]}>#</Text>
+              <Text style={[styles.col2, { fontWeight: "bold" }]}>Description of Goods</Text>
+              <Text style={[styles.col3, { fontWeight: "bold" }]}>HSN</Text>
+              <Text style={[styles.col4, { fontWeight: "bold" }]}>Qty (Tons)</Text>
+              <Text style={[styles.col5, { fontWeight: "bold" }]}>Rate (Rs)</Text>
+              <Text style={[styles.col6, { fontWeight: "bold" }]}>Amount</Text>
             </View>
-            <View style={styles.billTableRow}>
-              <Text style={[styles.billTableCell, { width: "5%" }]}>1</Text>
-              <Text style={[styles.billTableCellLeft, { width: "35%" }]}>{data.commodity || "N/A"}</Text>
-              <Text style={[styles.billTableCell, { width: "10%" }]}>{data.hsnCode || "N/A"}</Text>
-              <Text style={[styles.billTableCell, { width: "12%" }]}>{weight.toFixed(3)}</Text>
-              <Text style={[styles.billTableCell, { width: "13%" }]}>{formatAmount(rate)}</Text>
-              <Text style={[styles.billTableCellRight, { width: "25%" }]}>{formatAmount(subtotal)}</Text>
+            <View style={styles.modernTableRow}>
+              <Text style={styles.col1}>1</Text>
+              <Text style={styles.col2}>{data.commodity || "N/A"}</Text>
+              <Text style={styles.col3}>{data.hsnCode || "N/A"}</Text>
+              <Text style={styles.col4}>{weight.toFixed(3)}</Text>
+              <Text style={styles.col5}>{formatAmount(rate)}</Text>
+              <Text style={styles.col6}>{formatAmount(subtotal)}</Text>
             </View>
           </View>
 
-          <View style={styles.billSummaryContainer}>
-            <View style={styles.billSummaryBox}>
-              <View style={styles.billSummaryRow}>
-                <Text style={styles.billSummaryLabel}>Taxable Value:</Text>
-                <Text style={styles.billSummaryValue}>{formatAmount(subtotal)}</Text>
+          <View style={styles.summarySection}>
+            <View style={styles.qrSection}>
+              <Text style={{ fontSize: 7, fontWeight: "bold", marginBottom: 5 }}>SCAN FOR DETAILS</Text>
+              {qrCodeUrl && <Image src={qrCodeUrl} style={{ width: 70, height: 70 }} />}
+            </View>
+            <View style={styles.totalSection}>
+              <View style={styles.summaryRow}>
+                <Text style={styles.label}>Taxable Value:</Text>
+                <Text style={styles.value}>{formatAmount(subtotal)}</Text>
               </View>
-              
               {gstPercent > 0 && (
                 <>
                   {isInterState ? (
-                    <View style={styles.billSummaryRow}>
-                      <Text style={styles.billSummaryLabel}>IGST ({gstPercent}%):</Text>
-                      <Text style={styles.billSummaryValue}>{formatAmount(gstAmount)}</Text>
+                    <View style={styles.summaryRow}>
+                      <Text style={styles.label}>IGST ({gstPercent}%):</Text>
+                      <Text style={styles.value}>{formatAmount(gstAmount)}</Text>
                     </View>
                   ) : (
                     <>
-                      <View style={styles.billSummaryRow}>
-                        <Text style={styles.billSummaryLabel}>CGST ({gstPercent/2}%):</Text>
-                        <Text style={styles.billSummaryValue}>{formatAmount(gstAmount/2)}</Text>
+                      <View style={styles.summaryRow}>
+                        <Text style={styles.label}>CGST ({gstPercent/2}%):</Text>
+                        <Text style={styles.value}>{formatAmount(gstAmount/2)}</Text>
                       </View>
-                      <View style={styles.billSummaryRow}>
-                        <Text style={styles.billSummaryLabel}>SGST ({gstPercent/2}%):</Text>
-                        <Text style={styles.billSummaryValue}>{formatAmount(gstAmount/2)}</Text>
+                      <View style={styles.summaryRow}>
+                        <Text style={styles.label}>SGST ({gstPercent/2}%):</Text>
+                        <Text style={styles.value}>{formatAmount(gstAmount/2)}</Text>
                       </View>
                     </>
                   )}
                 </>
               )}
-              
-              <View style={styles.billTotalRow}>
-                <Text style={[styles.billSummaryLabel, { fontSize: 12 }]}>Grand Total:</Text>
-                <Text style={[styles.billSummaryValue, { fontSize: 12 }]}>Rs. {formatAmount(totalBillAmount)}</Text>
+              <View style={styles.grandTotalRow}>
+                <Text style={[styles.label, { fontSize: 12 }]}>Grand Total:</Text>
+                <Text style={[styles.value, { fontSize: 12 }]}>Rs. {formatAmount(totalBillAmount)}</Text>
               </View>
             </View>
           </View>
 
           <View style={styles.amountInWordsBox}>
-            <Text style={{ fontSize: 9, fontWeight: "bold", marginBottom: 4, color: "#666" }}>AMOUNT IN WORDS</Text>
-            <Text style={{ fontSize: 11, fontWeight: "bold" }}>{numberToWords(totalBillAmount)}</Text>
+            <Text style={{ fontSize: 7, fontWeight: "bold", color: "#666", marginBottom: 2 }}>TOTAL IN WORDS</Text>
+            <Text style={{ fontSize: 10, fontWeight: "bold" }}>{numberToWords(totalBillAmount)}</Text>
           </View>
 
-          <View style={styles.qrAndBankContainer}>
-            <View style={styles.bankDetailsBox}>
-              <Text style={[styles.label, { marginBottom: 6, textDecoration: "underline" }]}>BANK DETAILS</Text>
-              <Text style={{ fontSize: 9, marginBottom: 2 }}><Text style={{ fontWeight: "bold" }}>Account Name:</Text> {bankDetails.accountHolderName || data.supplierCompany || "Hansaria Food Private Limited"}</Text>
-              <Text style={{ fontSize: 9, marginBottom: 2 }}><Text style={{ fontWeight: "bold" }}>Bank Name:</Text> {bankDetails.bankName || "HDFC Bank Ltd"}</Text>
-              <Text style={{ fontSize: 9, marginBottom: 2 }}><Text style={{ fontWeight: "bold" }}>Account No:</Text> {bankDetails.accountNumber || "50200056473829"}</Text>
-              <Text style={{ fontSize: 9, marginBottom: 2 }}><Text style={{ fontWeight: "bold" }}>IFSC Code:</Text> {bankDetails.ifscCode || "HDFC0000008"}</Text>
-              <Text style={{ fontSize: 9 }}><Text style={{ fontWeight: "bold" }}>Branch:</Text> {bankDetails.branchName || "Kolkata"}</Text>
-            </View>
-            <View style={styles.qrBox}>
-              <Text style={{ fontSize: 8, fontWeight: "bold", marginBottom: 5 }}>SCAN FOR DETAILS</Text>
-              {qrCodeUrl && <Image src={qrCodeUrl} style={{ width: 70, height: 70 }} />}
+          <View style={styles.bankSection}>
+            <Text style={styles.bankTitle}>Bank Details</Text>
+            <View style={styles.bankGrid}>
+              <View style={styles.bankItem}>
+                <Text style={styles.metaLabel}>Beneficiary Name</Text>
+                <Text style={styles.metaValue}>{bankDetails.accountHolderName || data.supplierCompany || "Hansaria Food Private Limited"}</Text>
+              </View>
+              <View style={styles.bankItem}>
+                <Text style={styles.metaLabel}>Bank Name</Text>
+                <Text style={styles.metaValue}>{bankDetails.bankName || "HDFC Bank Ltd"}</Text>
+              </View>
+              <View style={styles.bankItem}>
+                <Text style={styles.metaLabel}>Account Number</Text>
+                <Text style={styles.metaValue}>{bankDetails.accountNumber || "50200056473829"}</Text>
+              </View>
+              <View style={styles.bankItem}>
+                <Text style={styles.metaLabel}>IFSC Code</Text>
+                <Text style={styles.metaValue}>{bankDetails.ifscCode || "HDFC0000008"}</Text>
+              </View>
+              <View style={styles.bankItem}>
+                <Text style={styles.metaLabel}>Branch</Text>
+                <Text style={styles.metaValue}>{bankDetails.branchName || "Kolkata"}</Text>
+              </View>
             </View>
           </View>
 
-          <View style={styles.authSignatoryBox}>
-            <Text style={{ fontSize: 10, fontWeight: "bold", marginBottom: 40 }}>For {data.supplierCompany || "Hansaria Food Private Limited"}</Text>
-            <Text style={[styles.label, { borderTopWidth: 1, borderTopColor: "#000", paddingTop: 5, width: 150, textAlign: "center" }]}>Authorized Signatory</Text>
+          <View style={styles.signatorySection}>
+            <View style={styles.signatoryBox}>
+              <Text style={{ fontSize: 9, fontWeight: "bold" }}>For {data.supplierCompany || "Hansaria Food Private Limited"}</Text>
+              <View style={styles.signLine}>
+                <Text style={styles.label}>Authorized Signatory</Text>
+              </View>
+            </View>
           </View>
 
           <View style={styles.footer} fixed>
