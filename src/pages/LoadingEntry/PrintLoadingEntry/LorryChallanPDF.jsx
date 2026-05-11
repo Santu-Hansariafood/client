@@ -296,102 +296,101 @@ const styles = StyleSheet.create({
     borderColor: "#1a1a1a",
     borderStyle: "solid",
   },
-  billHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-end",
-    borderBottomWidth: 2,
+  billTitleContainer: {
+    width: "100%",
+    alignItems: "center",
+    marginBottom: 15,
+    borderBottomWidth: 1,
     borderBottomColor: "#1a1a1a",
-    paddingBottom: 15,
-    marginBottom: 20,
-  },
-  companyBrand: {
-    flex: 3,
-  },
-  companyName: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: "#1a1a1a",
-    letterSpacing: 0.5,
-    textTransform: "uppercase",
-    marginBottom: 4,
-  },
-  companyDetails: {
-    fontSize: 8.5,
-    color: "#333333",
-    lineHeight: 1.3,
-  },
-  billTypeBox: {
-    flex: 1,
-    alignItems: "flex-end",
+    paddingBottom: 5,
   },
   billTypeTitle: {
     fontSize: 18,
     fontWeight: "bold",
     color: "#1a1a1a",
     textTransform: "uppercase",
+    letterSpacing: 2,
+  },
+  billHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    marginBottom: 20,
+  },
+  companyBrand: {
+    flex: 1,
+  },
+  companyName: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#1a1a1a",
+    textTransform: "uppercase",
+    marginBottom: 4,
+  },
+  companyDetails: {
+    fontSize: 8,
+    color: "#333333",
+    lineHeight: 1.3,
   },
   partiesContainer: {
     flexDirection: "row",
-    marginBottom: 20,
+    marginBottom: 15,
     gap: 15,
   },
   partyBox: {
     flex: 1,
-    padding: 10,
+    padding: 8,
     borderWidth: 0.5,
     borderColor: "#000000",
-    backgroundColor: "#ffffff",
   },
   partyLabel: {
-    fontSize: 8,
+    fontSize: 7.5,
     fontWeight: "bold",
     color: "#000000",
     textTransform: "uppercase",
-    marginBottom: 6,
+    marginBottom: 4,
     borderBottomWidth: 0.5,
     borderBottomColor: "#000000",
     paddingBottom: 2,
   },
   partyName: {
-    fontSize: 10,
+    fontSize: 9.5,
     fontWeight: "bold",
-    marginBottom: 4,
-    color: "#000000",
+    marginBottom: 3,
   },
   metaContainer: {
     flexDirection: "row",
-    marginBottom: 20,
+    marginBottom: 15,
     borderWidth: 0.5,
     borderColor: "#000000",
   },
   metaItem: {
     flex: 1,
-    padding: 8,
+    padding: 6,
     borderRightWidth: 0.5,
     borderRightColor: "#000000",
     alignItems: "center",
   },
   metaItemLast: {
     flex: 1,
-    padding: 8,
+    padding: 6,
     alignItems: "center",
   },
   metaLabel: {
-    fontSize: 7,
+    fontSize: 6.5,
     color: "#333333",
     textTransform: "uppercase",
-    marginBottom: 3,
+    marginBottom: 2,
     fontWeight: "bold",
   },
   metaValue: {
-    fontSize: 9,
+    fontSize: 8.5,
     fontWeight: "bold",
     color: "#000000",
   },
   modernTable: {
     width: "100%",
-    marginBottom: 20,
+    marginBottom: 15,
     borderWidth: 0.5,
     borderColor: "#000000",
   },
@@ -401,12 +400,12 @@ const styles = StyleSheet.create({
     color: "#000000",
     borderBottomWidth: 0.5,
     borderBottomColor: "#000000",
-    padding: 8,
+    padding: 6,
   },
   modernTableRow: {
     flexDirection: "row",
-    padding: 8,
-    minHeight: 35,
+    padding: 6,
+    minHeight: 30,
     alignItems: "center",
     backgroundColor: "#ffffff",
   },
@@ -423,22 +422,22 @@ const styles = StyleSheet.create({
     gap: 15,
   },
   qrSection: {
-    width: "100pt",
-    padding: 8,
+    width: "80pt",
+    padding: 6,
     borderWidth: 0.5,
     borderColor: "#000000",
     alignItems: "center",
+    justifyContent: "center",
   },
   totalSection: {
     flex: 1,
-    padding: 0,
     borderWidth: 0.5,
     borderColor: "#000000",
   },
   summaryRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    paddingVertical: 4,
+    paddingVertical: 3,
     paddingHorizontal: 8,
     borderBottomWidth: 0.5,
     borderBottomColor: "#000000",
@@ -446,77 +445,72 @@ const styles = StyleSheet.create({
   grandTotalRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    paddingVertical: 8,
+    paddingVertical: 6,
     backgroundColor: "#f5f5f5",
     paddingHorizontal: 8,
   },
   grandTotalLabel: {
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: "bold",
-    color: "#000000",
   },
   grandTotalValue: {
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: "bold",
-    color: "#000000",
   },
   amountInWordsBox: {
+    marginTop: 10,
+    padding: 6,
+    borderWidth: 0.5,
+    borderColor: "#000000",
+  },
+  bankSection: {
     marginTop: 15,
     padding: 8,
     borderWidth: 0.5,
     borderColor: "#000000",
   },
-  bankSection: {
-    marginTop: 20,
-    padding: 10,
-    borderWidth: 0.5,
-    borderColor: "#000000",
-  },
   bankTitle: {
-    fontSize: 9,
+    fontSize: 8.5,
     fontWeight: "bold",
     textTransform: "uppercase",
-    marginBottom: 8,
-    color: "#000000",
+    marginBottom: 6,
     borderBottomWidth: 0.5,
     borderBottomColor: "#000000",
-    paddingBottom: 4,
+    paddingBottom: 3,
   },
   bankGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 15,
   },
   bankItem: {
-    width: "30%",
-    marginBottom: 5,
+    width: "33.33%",
+    marginBottom: 4,
   },
   bankLabel: {
-    fontSize: 7,
+    fontSize: 6.5,
     color: "#333333",
     textTransform: "uppercase",
-    marginBottom: 2,
     fontWeight: "bold",
   },
   bankValue: {
-    fontSize: 8.5,
+    fontSize: 8,
     fontWeight: "bold",
     color: "#000000",
   },
   signatorySection: {
-    marginTop: 30,
+    marginTop: 25,
     flexDirection: "row",
     justifyContent: "flex-end",
   },
   signatoryBox: {
-    width: "180pt",
+    width: "160pt",
     textAlign: "center",
   },
   signLine: {
     borderTopWidth: 0.5,
     borderTopColor: "#000000",
-    marginTop: 40,
-    paddingTop: 5,
+    marginTop: 35,
+    paddingTop: 4,
   },
 });
 
@@ -1031,6 +1025,10 @@ const LorryChallanPDF = ({ data = {}, logoUrl, qrCodeUrl }) => {
           <View style={styles.billPageBorder} fixed />
           <View style={styles.billInnerBorder} fixed />
 
+          <View style={styles.billTitleContainer}>
+            <Text style={styles.billTypeTitle}>{billTitle}</Text>
+          </View>
+
           <View style={styles.billHeader}>
             <View style={styles.companyBrand}>
               <Text style={styles.companyName}>
@@ -1045,9 +1043,6 @@ const LorryChallanPDF = ({ data = {}, logoUrl, qrCodeUrl }) => {
               <Text style={styles.companyDetails}>
                 GSTIN: {data.supplierDetails?.gstNo || ""} | PAN: {data.supplierDetails?.panNo || ""}
               </Text>
-            </View>
-            <View style={styles.billTypeBox}>
-              <Text style={styles.billTypeTitle}>{billTitle}</Text>
             </View>
           </View>
 
