@@ -1105,7 +1105,7 @@ const LorryChallanPDF = ({ data = {}, logoUrl, qrCodeUrl }) => {
               <Text style={styles.metaValue}>{data.saudaNo || ""}</Text>
             </View>
             <View style={styles.metaItem}>
-              <Text style={styles.metaLabel}>Buyer Sauda</Text>
+              <Text style={styles.metaLabel}>Buyer PO No</Text>
               <Text style={styles.metaValue}>
                 {data.buyerSaudaNo || data.poNumber || ""}
               </Text>
