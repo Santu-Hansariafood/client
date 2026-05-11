@@ -7,6 +7,7 @@ import Loading from "../../../common/Loading/Loading";
 import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
+import logoUrl from "../../../assets/Hans.png";
 
 const DateSelector = lazy(() => import("../../../common/DateSelector/DateSelector"));
 const Tables = lazy(() => import("../../../common/Tables/Tables"));
@@ -127,6 +128,13 @@ const LoadingReport = () => {
       const doc = new jsPDF("landscape");
       const displayDate = selectedDate ? selectedDate.toLocaleDateString("en-IN") : "All Dates";
       
+      // Add Logo to Right Side
+      try {
+        doc.addImage(logoUrl, "PNG", 250, 5, 30, 30);
+      } catch (err) {
+        console.warn("Could not add logo to PDF:", err);
+      }
+
       doc.setFontSize(22);
       doc.setTextColor(5, 150, 105);
       doc.text("LOADING PERFORMANCE REPORT", 14, 20);
@@ -173,13 +181,31 @@ const LoadingReport = () => {
         startY: 65,
         theme: "grid",
         headStyles: { fillColor: [5, 150, 105], textColor: 255, fontSize: 9, halign: 'center' },
-        styles: { fontSize: 8, cellPadding: 3 },
+        styles: { fontSize: 8, cellPadding: 3, overflow: 'linebreak' },
         columnStyles: {
           0: { halign: 'center', cellWidth: 15 },
           5: { halign: 'right', fontStyle: 'bold' },
           6: { halign: 'center' }
         }
       });
+
+      const finalY = doc.lastAutoTable.finalY || 180;
+      
+      // Footer and Authorization
+      doc.setFontSize(8);
+      doc.setTextColor(150);
+      doc.setFont(undefined, 'italic');
+      doc.text("this is internal use purpose only", 14, finalY + 10);
+      doc.text("system generated file", 14, finalY + 15);
+
+      // Authorization Section
+      doc.setFontSize(10);
+      doc.setTextColor(0);
+      doc.setFont(undefined, 'bold');
+      doc.text("Authorized By:", 220, finalY + 25);
+      doc.text("Hansaria Food Private Limited", 220, finalY + 32);
+      doc.setFont(undefined, 'normal');
+      doc.text("Purchase Team", 220, finalY + 37);
 
       doc.save(`Loading_Report_${displayDate.replace(/\//g, '-')}.pdf`);
       toast.dismiss(toastId);
