@@ -4,21 +4,21 @@ import { toast } from "react-toastify";
 import { useAuth } from "../context/AuthContext/AuthContext";
 import Sidebar from "../components/Sidebar/Sidebar";
 import Header from "../common/Header/Header";
+import Footer from "../common/Footer/Footer";
 import LogoutConfirmationModal from "../common/LogoutConfirmationModal/LogoutConfirmationModal";
 import { prefetchRoute } from "../utils/LazyPages/LazyPages";
+import Loading from "../common/Loading/Loading";
 
 const PageLoader = () => (
-  <div className="flex items-center justify-center min-h-[200px]">
-    <div className="w-10 h-10 rounded-full border-2 border-slate-200 dark:border-slate-700 border-t-emerald-500 animate-spin" />
-  </div>
+  <Loading/>
 );
 
 const PrivateLayout = () => {
   const { userRole, logout } = useAuth();
   const navigate = useNavigate();
+
   const [showLogoutConfirmation, setShowLogoutConfirmation] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-
   const [isProfileDropdownOpen, setProfileDropdownOpen] = useState(false);
 
   const handleLogout = useCallback(() => {
@@ -32,30 +32,39 @@ const PrivateLayout = () => {
   }, []);
 
   return (
-    <div className="flex h-screen w-full overflow-hidden bg-slate-100">
+    <div className="flex h-screen overflow-hidden bg-slate-100">
       {(userRole === "Admin" || userRole === "Employee") && (
         <Sidebar
           isSidebarOpen={isSidebarOpen}
           setIsSidebarOpen={setIsSidebarOpen}
         />
       )}
-      <div className="flex-1 min-w-0 flex flex-col h-screen overflow-hidden">
+
+      <div className="flex flex-col flex-1 min-w-0 h-screen overflow-hidden">
         <Header
           onLogoutClick={() => setShowLogoutConfirmation(true)}
-          showMenuButton={userRole === "Admin" || userRole === "Employee"}
+          showMenuButton={
+            userRole === "Admin" || userRole === "Employee"
+          }
           onMenuClick={() => setIsSidebarOpen(!isSidebarOpen)}
           isSidebarOpen={isSidebarOpen}
           isProfileDropdownOpen={isProfileDropdownOpen}
           setProfileDropdownOpen={setProfileDropdownOpen}
         />
-        <main className="flex-1 min-w-0 overflow-y-auto bg-slate-100/50">
-          <div className="p-4 sm:p-6 lg:p-8">
-            <Suspense fallback={<PageLoader />}>
-              <Outlet />
-            </Suspense>
+
+        <main className="flex-1 overflow-y-auto bg-gradient-to-br from-slate-100 via-slate-50 to-slate-100">
+          <div className="min-h-full flex flex-col">
+            <div className="flex-1 p-4 sm:p-6 lg:p-8">
+              <Suspense fallback={<PageLoader />}>
+                <Outlet />
+              </Suspense>
+            </div>
+
+            <Footer />
           </div>
         </main>
       </div>
+
       {showLogoutConfirmation && (
         <LogoutConfirmationModal
           onConfirm={handleLogout}
