@@ -298,7 +298,7 @@ const LoadingReport = () => {
           doc.setTextColor(200, 200, 200);
           doc.setFontSize(60);
           doc.setFont("helvetica", "bold");
-          doc.text("Confidential Information", pageWidth / 2, pageHeight / 2, {
+          doc.text("HANSARIA FOOD", pageWidth / 2, pageHeight / 2, {
             align: "center",
             angle: 45,
           });

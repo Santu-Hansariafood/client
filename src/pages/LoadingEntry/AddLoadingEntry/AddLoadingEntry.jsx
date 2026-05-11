@@ -694,7 +694,13 @@ const AddLoadingEntry = () => {
       const blob = await PrintLoadingEntry(entry);
       if (!blob) return;
 
-      downloadFile(blob, `LoadingEntry-${entry.billNumber || "document"}.pdf`);
+      let fileName = `lorry challan - ${entry.lorryNumber || "document"}`;
+      if (entry.billNumber) {
+        fileName += ` and bill - ${entry.billNumber}`;
+      }
+      fileName += ".pdf";
+
+      downloadFile(blob, fileName);
 
       toast.dismiss(toastId);
       toast.success("Download started successfully!");

@@ -268,7 +268,6 @@ const styles = StyleSheet.create({
     marginVertical: 6,
   },
 
-  // Modern Bill styles
   billPage: {
     fontFamily: "Helvetica",
     fontSize: 9,
@@ -303,11 +302,10 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
   },
   billTypeTitle: {
-    fontSize: 22,
-    fontWeight: "bold",
-    color: "#1a1a1a",
+    fontSize: 20,
+    fontWeight: "heavy",
+    color: "#000000",
     textTransform: "uppercase",
-    letterSpacing: 4,
   },
   billHeader: {
     flexDirection: "row",
@@ -706,7 +704,6 @@ const LorryChallanPDF = ({ data = {}, logoUrl, qrCodeUrl }) => {
   const billNo = String(data.billNumber || "").trim();
   const shouldPrintBill = billNo !== "0" && billNo !== "";
 
-  // Calculations for Bill
   const weight = Number(data.loadingWeight || 0);
   const rate = Number(data.rate || 0);
   const subtotal = weight * rate;
@@ -714,12 +711,10 @@ const LorryChallanPDF = ({ data = {}, logoUrl, qrCodeUrl }) => {
   const gstAmount = subtotal * (gstPercent / 100);
   const totalBillAmount = subtotal + gstAmount;
 
-  const isMaize = String(data.commodity || "")
-    .toLowerCase()
-    .includes("maize");
-  const billTitle = "BILL OF SUPPLY";
+  const commodityStr = String(data.commodity || "").toLowerCase();
+  const isExempted = commodityStr.includes("maize") || commodityStr.includes("rice");
+  const billTitle = isExempted ? "BILL OF SUPPLY" : "TAX INVOICE";
 
-  // GST logic based on state
   const supplierState = String(data.supplierDetails?.state || "")
     .toLowerCase()
     .trim();
@@ -730,13 +725,11 @@ const LorryChallanPDF = ({ data = {}, logoUrl, qrCodeUrl }) => {
     .toLowerCase()
     .trim();
 
-  // Usually, GST is based on the place of supply (Consignee state)
   const isInterState =
     supplierState !== consigneeState &&
     consigneeState !== "n/a" &&
     consigneeState !== "";
 
-  // Seller bank details from supplierDetails (SellerCompany)
   const bankDetails = data.supplierDetails?.bankDetails?.[0] || {};
 
   return (
