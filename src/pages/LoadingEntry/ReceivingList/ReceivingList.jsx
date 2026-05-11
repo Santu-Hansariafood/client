@@ -27,14 +27,8 @@ const ReceivingList = () => {
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [totalItems, setTotalItems] = useState(0);
   const [searchInput, setSearchInput] = useState("");
-  const [debouncedSearch, setDebouncedSearch] = useState(searchInput);
   const [selectedEntry, setSelectedEntry] = useState(null);
   const [showPopup, setShowPopup] = useState(false);
-
-  useEffect(() => {
-    const handler = setTimeout(() => setDebouncedSearch(searchInput), 500);
-    return () => clearTimeout(handler);
-  }, [searchInput]);
 
   const fetchData = useCallback(async () => {
     try {
@@ -43,7 +37,7 @@ const ReceivingList = () => {
         params: {
           page: currentPage,
           limit: itemsPerPage,
-          search: debouncedSearch,
+          search: searchInput,
           role: userRole,
           mobile: mobile,
         },
@@ -60,7 +54,7 @@ const ReceivingList = () => {
     } finally {
       setLoading(false);
     }
-  }, [currentPage, itemsPerPage, debouncedSearch, userRole, mobile]);
+  }, [currentPage, itemsPerPage, searchInput, userRole, mobile]);
 
   useEffect(() => {
     fetchData();
@@ -315,6 +309,7 @@ const ReceivingList = () => {
                 setSearchInput(q);
                 setCurrentPage(1);
               }}
+              value={searchInput}
             />
           </div>
         </div>

@@ -8,12 +8,21 @@ const SearchBox = ({
   items,
   onSearch,
   className = "",
-  debounceMs = 200, // Reduced from 250ms for faster response
+  debounceMs = 200,
   returnQuery = false,
+  value: externalValue = undefined,
 }) => {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [debouncedTerm, setDebouncedTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState(externalValue || "");
+  const [debouncedTerm, setDebouncedTerm] = useState(externalValue || "");
   const [isFocused, setIsFocused] = useState(false);
+
+  // Sync internal state with external value if provided
+  useEffect(() => {
+    if (externalValue !== undefined && externalValue !== searchTerm) {
+      setSearchTerm(externalValue);
+      setDebouncedTerm(externalValue);
+    }
+  }, [externalValue]);
 
   const handleInputChange = (e) => {
     setSearchTerm(e.target.value);

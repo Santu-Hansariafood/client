@@ -143,8 +143,6 @@ const ListLoadingEntry = () => {
   const staticDataLoadedRef = useRef(false);
   const isLoadingRef = useRef(false);
 
-  const debouncedFilters = useDebounce(filters, DEBOUNCE_DELAY);
-
   useEffect(() => {
     isMountedRef.current = true;
     return () => {
@@ -286,14 +284,14 @@ const ListLoadingEntry = () => {
         mobile: mobile,
       };
 
-      if (debouncedFilters.search) {
-        searchParams.search = debouncedFilters.search;
+      if (filters.search) {
+        searchParams.search = filters.search;
       }
-      if (debouncedFilters.saudaNo) {
-        searchParams.saudaNo = debouncedFilters.saudaNo;
+      if (filters.saudaNo) {
+        searchParams.saudaNo = filters.saudaNo;
       }
-      if (debouncedFilters.lorryNumber) {
-        searchParams.lorryNumber = debouncedFilters.lorryNumber;
+      if (filters.lorryNumber) {
+        searchParams.lorryNumber = filters.lorryNumber;
       }
 
       const response = await fetchWithAbort("/loading-entries", {
@@ -316,30 +314,7 @@ const ListLoadingEntry = () => {
         total = response.data.total || entriesData.length;
       }
 
-      const sortedEntries = [...entriesData].sort((a, b) => {
-        const dateA = a.loadingDate || a.createdAt || a._id;
-        const dateB = b.loadingDate || b.createdAt || b._id;
-
-        if (dateA && dateB) {
-          try {
-            const timeA = new Date(dateA).getTime();
-            const timeB = new Date(dateB).getTime();
-            if (!isNaN(timeA) && !isNaN(timeB)) {
-              return timeB - timeA;
-            }
-          } catch (e) {
-            /* empty */
-          }
-        }
-
-        if (a._id && b._id) {
-          return b._id.localeCompare(a._id);
-        }
-
-        return 0;
-      });
-
-      setLoadingEntries(sortedEntries);
+      setLoadingEntries(entriesData);
       setTotalItems(total);
     } catch (error) {
       console.error("Error fetching entries:", error);
@@ -356,7 +331,7 @@ const ListLoadingEntry = () => {
   }, [
     userRole,
     mobile,
-    debouncedFilters,
+    filters,
     currentPage,
     itemsPerPage,
     fetchWithAbort,
@@ -387,10 +362,26 @@ const ListLoadingEntry = () => {
   );
 
   // Handle search with debounce
-  const handleSearch = useCallback((q, field) => {
-    setFilters((prev) => ({ ...prev, [field]: q || "" }));
+  const handleSearchChange = useCallback((q, field) => {
+    setFilters((prev) => {
+      if (prev[field] === q) return prev;
+      return { ...prev, [field]: q || "" };
+    });
     setCurrentPage(1);
   }, []);
+
+  const handleGeneralSearch = useCallback(
+    (q) => handleSearchChange(q, "search"),
+    [handleSearchChange],
+  );
+  const handleSaudaSearch = useCallback(
+    (q) => handleSearchChange(q, "saudaNo"),
+    [handleSearchChange],
+  );
+  const handleLorrySearch = useCallback(
+    (q) => handleSearchChange(q, "lorryNumber"),
+    [handleSearchChange],
+  );
 
   const clearFilters = useCallback(() => {
     setFilters({ search: "", saudaNo: "", lorryNumber: "" });
@@ -734,19 +725,22 @@ const ListLoadingEntry = () => {
                 placeholder="Search by seller, buyer, consignee, commodity..."
                 items={[...new Set(suggestions.sellers)].filter(Boolean)}
                 returnQuery={true}
-                onSearch={(q) => handleSearch(q, "search")}
+                onSearch={handleGeneralSearch}
+                value={filters.search}
               />
               <SearchBox
                 placeholder="Search by sauda number..."
                 items={[...new Set(suggestions.saudas)].filter(Boolean)}
                 returnQuery={true}
-                onSearch={(q) => handleSearch(q, "saudaNo")}
+                onSearch={handleSaudaSearch}
+                value={filters.saudaNo}
               />
               <SearchBox
                 placeholder="Search by lorry number..."
                 items={[...new Set(suggestions.lorries)].filter(Boolean)}
                 returnQuery={true}
-                onSearch={(q) => handleSearch(q, "lorryNumber")}
+                onSearch={handleLorrySearch}
+                value={filters.lorryNumber}
               />
             </div>
 
