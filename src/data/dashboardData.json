@@ -187,6 +187,11 @@
           "name": "Receiving",
           "link": "/Loading-Entry/receiving-list",
           "icon": "FaClipboardList"
+        },
+        {
+          "name": "Loading Report",
+          "link": "/Loading-Entry/loading-report",
+          "icon": "FaHistory"
         }
       ]
     },

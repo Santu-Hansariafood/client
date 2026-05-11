@@ -350,6 +350,8 @@ router.get("/", async (req, res) => {
     const lorryNumber = (req.query.lorryNumber || "").trim();
     const startDate = req.query.startDate;
     const endDate = req.query.endDate;
+    const date = req.query.date;
+    const commodity = (req.query.commodity || "").trim();
     const role = req.query.role;
     const mobile = req.query.mobile;
 
@@ -397,7 +399,19 @@ router.get("/", async (req, res) => {
       });
     }
 
-    if (startDate || endDate) {
+    if (commodity) {
+      andParts.push({
+        commodity: { $regex: new RegExp(`^${escapeRegex(commodity)}$`, "i") },
+      });
+    }
+
+    if (date) {
+      const start = new Date(date);
+      start.setHours(0, 0, 0, 0);
+      const end = new Date(date);
+      end.setHours(23, 59, 59, 999);
+      andParts.push({ loadingDate: { $gte: start, $lte: end } });
+    } else if (startDate || endDate) {
       const dateFilter = {};
       if (startDate) dateFilter.$gte = new Date(startDate);
       if (endDate) {

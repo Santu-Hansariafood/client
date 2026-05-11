@@ -71,6 +71,8 @@ const loaders = {
     import("../../pages/LoadingEntry/PendingLoadingList/PendingLoadingList"),
   ReceivingList: () =>
     import("../../pages/LoadingEntry/ReceivingList/ReceivingList"),
+  LoadingReport: () =>
+    import("../../pages/LoadingEntry/LoadingReport/LoadingReport"),
   PrivacyPolicy: () => import("../../common/PrivacyPolicy/PrivacyPolicy"),
   TermsConditions: () => import("../../common/TermsConditions/TermsConditions"),
   BrokerCommissionPolicy: () =>
