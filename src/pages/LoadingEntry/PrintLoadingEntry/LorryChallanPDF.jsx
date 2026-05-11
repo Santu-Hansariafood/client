@@ -576,7 +576,9 @@ const numberToWords = (num) => {
     if (n < 100) return b[Math.floor(n / 10)] + " " + a[n % 10];
     if (n < 1000)
       return (
-        a[Math.floor(n / 100)] + "Hundred " + (n % 100 !== 0 ? makeWords(n % 100) : "")
+        a[Math.floor(n / 100)] +
+        "Hundred " +
+        (n % 100 !== 0 ? makeWords(n % 100) : "")
       );
     if (n < 100000)
       return (
@@ -695,16 +697,27 @@ const LorryChallanPDF = ({ data = {}, logoUrl, qrCodeUrl }) => {
   const gstAmount = subtotal * (gstPercent / 100);
   const totalBillAmount = subtotal + gstAmount;
 
-  const isMaize = String(data.commodity || "").toLowerCase().includes("maize");
+  const isMaize = String(data.commodity || "")
+    .toLowerCase()
+    .includes("maize");
   const billTitle = "BILL OF SUPPLY";
 
   // GST logic based on state
-  const supplierState = String(data.supplierDetails?.state || "").toLowerCase().trim();
-  const buyerState = String(data.buyerDetails?.state || "").toLowerCase().trim();
-  const consigneeState = String(data.consigneeDetails?.state || "").toLowerCase().trim();
-  
+  const supplierState = String(data.supplierDetails?.state || "")
+    .toLowerCase()
+    .trim();
+  const buyerState = String(data.buyerDetails?.state || "")
+    .toLowerCase()
+    .trim();
+  const consigneeState = String(data.consigneeDetails?.state || "")
+    .toLowerCase()
+    .trim();
+
   // Usually, GST is based on the place of supply (Consignee state)
-  const isInterState = supplierState !== consigneeState && consigneeState !== "n/a" && consigneeState !== "";
+  const isInterState =
+    supplierState !== consigneeState &&
+    consigneeState !== "n/a" &&
+    consigneeState !== "";
 
   // Seller bank details from supplierDetails (SellerCompany)
   const bankDetails = data.supplierDetails?.bankDetails?.[0] || {};
@@ -1036,12 +1049,19 @@ const LorryChallanPDF = ({ data = {}, logoUrl, qrCodeUrl }) => {
               </Text>
               <Text style={styles.companyDetails}>
                 {data.supplierDetails?.address || ""}
-                {data.supplierDetails?.district ? `, ${data.supplierDetails.district}` : ""}
-                {data.supplierDetails?.state ? `, ${data.supplierDetails.state}` : ""}
-                {data.supplierDetails?.pinNo ? ` - ${data.supplierDetails.pinNo}` : ""}
+                {data.supplierDetails?.district
+                  ? `, ${data.supplierDetails.district}`
+                  : ""}
+                {data.supplierDetails?.state
+                  ? `, ${data.supplierDetails.state}`
+                  : ""}
+                {data.supplierDetails?.pinNo
+                  ? ` - ${data.supplierDetails.pinNo}`
+                  : ""}
               </Text>
               <Text style={styles.companyDetails}>
-                GSTIN: {data.supplierDetails?.gstNo || ""} | PAN: {data.supplierDetails?.panNo || ""}
+                GSTIN: {data.supplierDetails?.gstNo || ""} | PAN:{" "}
+                {data.supplierDetails?.panNo || ""}
               </Text>
             </View>
           </View>
@@ -1066,7 +1086,9 @@ const LorryChallanPDF = ({ data = {}, logoUrl, qrCodeUrl }) => {
             </View>
             <View style={styles.metaItem}>
               <Text style={styles.metaLabel}>Date</Text>
-              <Text style={styles.metaValue}>{formatDate(data.dateOfIssue)}</Text>
+              <Text style={styles.metaValue}>
+                {formatDate(data.dateOfIssue)}
+              </Text>
             </View>
             <View style={styles.metaItem}>
               <Text style={styles.metaLabel}>Sauda No</Text>
@@ -1074,7 +1096,9 @@ const LorryChallanPDF = ({ data = {}, logoUrl, qrCodeUrl }) => {
             </View>
             <View style={styles.metaItem}>
               <Text style={styles.metaLabel}>Buyer Sauda</Text>
-              <Text style={styles.metaValue}>{data.buyerSaudaNo || data.poNumber || ""}</Text>
+              <Text style={styles.metaValue}>
+                {data.buyerSaudaNo || data.poNumber || ""}
+              </Text>
             </View>
             <View style={styles.metaItemLast}>
               <Text style={styles.metaLabel}>Lorry No</Text>
@@ -1085,10 +1109,16 @@ const LorryChallanPDF = ({ data = {}, logoUrl, qrCodeUrl }) => {
           <View style={styles.modernTable}>
             <View style={styles.modernTableHeader}>
               <Text style={[styles.col1, { fontWeight: "bold" }]}>#</Text>
-              <Text style={[styles.col2, { fontWeight: "bold" }]}>Description of Goods</Text>
+              <Text style={[styles.col2, { fontWeight: "bold" }]}>
+                Description of Goods
+              </Text>
               <Text style={[styles.col3, { fontWeight: "bold" }]}>HSN</Text>
-              <Text style={[styles.col4, { fontWeight: "bold" }]}>Qty (Tons)</Text>
-              <Text style={[styles.col5, { fontWeight: "bold" }]}>Rate (Rs)</Text>
+              <Text style={[styles.col4, { fontWeight: "bold" }]}>
+                Qty (Tons)
+              </Text>
+              <Text style={[styles.col5, { fontWeight: "bold" }]}>
+                Rate (Rs)
+              </Text>
               <Text style={[styles.col6, { fontWeight: "bold" }]}>Amount</Text>
             </View>
             <View style={styles.modernTableRow}>
@@ -1103,8 +1133,14 @@ const LorryChallanPDF = ({ data = {}, logoUrl, qrCodeUrl }) => {
 
           <View style={styles.summarySection}>
             <View style={styles.qrSection}>
-              <Text style={{ fontSize: 7, fontWeight: "bold", marginBottom: 5 }}>SCAN DETAILS</Text>
-              {qrCodeUrl && <Image src={qrCodeUrl} style={{ width: 60, height: 60 }} />}
+              <Text
+                style={{ fontSize: 7, fontWeight: "bold", marginBottom: 5 }}
+              >
+                SCAN DETAILS
+              </Text>
+              {qrCodeUrl && (
+                <Image src={qrCodeUrl} style={{ width: 60, height: 60 }} />
+              )}
             </View>
             <View style={styles.totalSection}>
               <View style={styles.summaryRow}>
@@ -1116,17 +1152,27 @@ const LorryChallanPDF = ({ data = {}, logoUrl, qrCodeUrl }) => {
                   {isInterState ? (
                     <View style={styles.summaryRow}>
                       <Text style={styles.label}>IGST ({gstPercent}%):</Text>
-                      <Text style={styles.value}>{formatAmount(gstAmount)}</Text>
+                      <Text style={styles.value}>
+                        {formatAmount(gstAmount)}
+                      </Text>
                     </View>
                   ) : (
                     <>
                       <View style={styles.summaryRow}>
-                        <Text style={styles.label}>CGST ({gstPercent/2}%):</Text>
-                        <Text style={styles.value}>{formatAmount(gstAmount/2)}</Text>
+                        <Text style={styles.label}>
+                          CGST ({gstPercent / 2}%):
+                        </Text>
+                        <Text style={styles.value}>
+                          {formatAmount(gstAmount / 2)}
+                        </Text>
                       </View>
                       <View style={styles.summaryRow}>
-                        <Text style={styles.label}>SGST ({gstPercent/2}%):</Text>
-                        <Text style={styles.value}>{formatAmount(gstAmount/2)}</Text>
+                        <Text style={styles.label}>
+                          SGST ({gstPercent / 2}%):
+                        </Text>
+                        <Text style={styles.value}>
+                          {formatAmount(gstAmount / 2)}
+                        </Text>
                       </View>
                     </>
                   )}
@@ -1134,14 +1180,28 @@ const LorryChallanPDF = ({ data = {}, logoUrl, qrCodeUrl }) => {
               )}
               <View style={styles.grandTotalRow}>
                 <Text style={styles.grandTotalLabel}>Grand Total:</Text>
-                <Text style={styles.grandTotalValue}>Rs. {formatAmount(totalBillAmount)}</Text>
+                <Text style={styles.grandTotalValue}>
+                  Rs. {formatAmount(totalBillAmount)}
+                </Text>
               </View>
             </View>
           </View>
 
           <View style={styles.amountInWordsBox}>
-            <Text style={{ fontSize: 7, fontWeight: "bold", color: "#333", marginBottom: 4, textTransform: "uppercase" }}>Amount in Words</Text>
-            <Text style={{ fontSize: 9, fontWeight: "bold", color: "#000" }}>{numberToWords(totalBillAmount)}</Text>
+            <Text
+              style={{
+                fontSize: 7,
+                fontWeight: "bold",
+                color: "#333",
+                marginBottom: 4,
+                textTransform: "uppercase",
+              }}
+            >
+              Amount in Words
+            </Text>
+            <Text style={{ fontSize: 9, fontWeight: "bold", color: "#000" }}>
+              {numberToWords(totalBillAmount)}
+            </Text>
           </View>
 
           <View style={styles.bankSection}>
@@ -1149,32 +1209,52 @@ const LorryChallanPDF = ({ data = {}, logoUrl, qrCodeUrl }) => {
             <View style={styles.bankGrid}>
               <View style={styles.bankItem}>
                 <Text style={styles.bankLabel}>Beneficiary Name</Text>
-                <Text style={styles.bankValue}>{bankDetails.accountHolderName || data.supplierCompany || ""}</Text>
+                <Text style={styles.bankValue}>
+                  {bankDetails.accountHolderName || data.supplierCompany || ""}
+                </Text>
               </View>
               <View style={styles.bankItem}>
                 <Text style={styles.bankLabel}>Bank Name</Text>
-                <Text style={styles.bankValue}>{bankDetails.bankName || ""}</Text>
+                <Text style={styles.bankValue}>
+                  {bankDetails.bankName || ""}
+                </Text>
               </View>
               <View style={styles.bankItem}>
                 <Text style={styles.bankLabel}>Account Number</Text>
-                <Text style={styles.bankValue}>{bankDetails.accountNumber || ""}</Text>
+                <Text style={styles.bankValue}>
+                  {bankDetails.accountNumber || ""}
+                </Text>
               </View>
               <View style={styles.bankItem}>
                 <Text style={styles.bankLabel}>IFSC Code</Text>
-                <Text style={styles.bankValue}>{bankDetails.ifscCode || ""}</Text>
+                <Text style={styles.bankValue}>
+                  {bankDetails.ifscCode || ""}
+                </Text>
               </View>
               <View style={styles.bankItem}>
                 <Text style={styles.bankLabel}>Branch</Text>
-                <Text style={styles.bankValue}>{bankDetails.branchName || ""}</Text>
+                <Text style={styles.bankValue}>
+                  {bankDetails.branchName || ""}
+                </Text>
               </View>
             </View>
           </View>
 
           <View style={styles.signatorySection}>
             <View style={styles.signatoryBox}>
-              <Text style={{ fontSize: 9, fontWeight: "bold", color: "#000" }}>For {data.supplierCompany || ""}</Text>
+              <Text style={{ fontSize: 9, fontWeight: "bold", color: "#000" }}>
+                For {data.supplierCompany || ""}
+              </Text>
               <View style={styles.signLine}>
-                <Text style={{ fontSize: 8, fontWeight: "bold", textTransform: "uppercase" }}>Authorized Signatory</Text>
+                <Text
+                  style={{
+                    fontSize: 8,
+                    fontWeight: "bold",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  Authorized Signatory
+                </Text>
               </View>
             </View>
           </View>
@@ -1185,7 +1265,9 @@ const LorryChallanPDF = ({ data = {}, logoUrl, qrCodeUrl }) => {
               * Certified that the particulars given above are true and correct.
             </Text>
             <Text style={styles.footerText}>
-              * This is a computer generated invoice and does not require physical signature.
+              * This bill is generated for knowledge and reference purposes
+              only. Final original invoice will be shared after unloading and
+              final quantity verification.
             </Text>
           </View>
         </Page>
