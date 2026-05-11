@@ -272,123 +272,141 @@ const styles = StyleSheet.create({
   billPage: {
     fontFamily: "Helvetica",
     fontSize: 9,
-    padding: 40,
+    padding: 35,
     color: "#1a1a1a",
     backgroundColor: "#ffffff",
+  },
+  billPageBorder: {
+    position: "absolute",
+    top: 10,
+    left: 10,
+    right: 10,
+    bottom: 10,
+    borderWidth: 1.5,
+    borderColor: "#1a1a1a",
+    borderStyle: "solid",
+  },
+  billInnerBorder: {
+    position: "absolute",
+    top: 14,
+    left: 14,
+    right: 14,
+    bottom: 14,
+    borderWidth: 0.5,
+    borderColor: "#1a1a1a",
+    borderStyle: "solid",
   },
   billHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
-    borderBottomWidth: 3,
+    alignItems: "flex-end",
+    borderBottomWidth: 2,
     borderBottomColor: "#1a1a1a",
-    paddingBottom: 20,
-    marginBottom: 25,
+    paddingBottom: 15,
+    marginBottom: 20,
   },
   companyBrand: {
-    flex: 2,
+    flex: 3,
   },
   companyName: {
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: "bold",
     color: "#1a1a1a",
-    letterSpacing: 1,
+    letterSpacing: 0.5,
     textTransform: "uppercase",
-    marginBottom: 6,
+    marginBottom: 4,
   },
   companyDetails: {
-    fontSize: 9,
-    color: "#555555",
-    lineHeight: 1.4,
+    fontSize: 8.5,
+    color: "#333333",
+    lineHeight: 1.3,
   },
   billTypeBox: {
     flex: 1,
     alignItems: "flex-end",
   },
   billTypeTitle: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: "bold",
     color: "#1a1a1a",
-    marginBottom: 5,
     textTransform: "uppercase",
   },
   partiesContainer: {
     flexDirection: "row",
-    marginBottom: 25,
-    gap: 20,
+    marginBottom: 20,
+    gap: 15,
   },
   partyBox: {
     flex: 1,
-    padding: 12,
-    borderWidth: 1,
-    borderColor: "#e0e0e0",
-    borderRadius: 6,
-    backgroundColor: "#f9f9f9",
+    padding: 10,
+    borderWidth: 0.5,
+    borderColor: "#000000",
+    backgroundColor: "#ffffff",
   },
   partyLabel: {
     fontSize: 8,
     fontWeight: "bold",
-    color: "#1a1a1a",
+    color: "#000000",
     textTransform: "uppercase",
-    marginBottom: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: "#e0e0e0",
-    paddingBottom: 4,
+    marginBottom: 6,
+    borderBottomWidth: 0.5,
+    borderBottomColor: "#000000",
+    paddingBottom: 2,
   },
   partyName: {
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: "bold",
-    marginBottom: 5,
+    marginBottom: 4,
     color: "#000000",
   },
   metaContainer: {
     flexDirection: "row",
-    backgroundColor: "#ffffff",
-    padding: 0,
-    marginBottom: 25,
-    gap: 10,
+    marginBottom: 20,
+    borderWidth: 0.5,
+    borderColor: "#000000",
   },
   metaItem: {
     flex: 1,
-    padding: 10,
-    borderWidth: 1,
-    borderColor: "#e0e0e0",
-    borderRadius: 6,
-    backgroundColor: "#f9f9f9",
+    padding: 8,
+    borderRightWidth: 0.5,
+    borderRightColor: "#000000",
+    alignItems: "center",
+  },
+  metaItemLast: {
+    flex: 1,
+    padding: 8,
     alignItems: "center",
   },
   metaLabel: {
     fontSize: 7,
-    color: "#666666",
+    color: "#333333",
     textTransform: "uppercase",
-    marginBottom: 4,
+    marginBottom: 3,
     fontWeight: "bold",
   },
   metaValue: {
-    fontSize: 10,
+    fontSize: 9,
     fontWeight: "bold",
-    color: "#1a1a1a",
+    color: "#000000",
   },
   modernTable: {
     width: "100%",
-    marginBottom: 25,
-    borderWidth: 1,
-    borderColor: "#e0e0e0",
-    borderRadius: 6,
-    overflow: "hidden",
+    marginBottom: 20,
+    borderWidth: 0.5,
+    borderColor: "#000000",
   },
   modernTableHeader: {
     flexDirection: "row",
-    backgroundColor: "#1a1a1a",
-    color: "#ffffff",
-    padding: 10,
+    backgroundColor: "#f5f5f5",
+    color: "#000000",
+    borderBottomWidth: 0.5,
+    borderBottomColor: "#000000",
+    padding: 8,
   },
   modernTableRow: {
     flexDirection: "row",
-    borderBottomWidth: 1,
-    borderBottomColor: "#e0e0e0",
-    padding: 10,
-    minHeight: 40,
+    padding: 8,
+    minHeight: 35,
     alignItems: "center",
     backgroundColor: "#ffffff",
   },
@@ -401,113 +419,104 @@ const styles = StyleSheet.create({
   summarySection: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginTop: 10,
-    gap: 20,
+    marginTop: 5,
+    gap: 15,
   },
   qrSection: {
-    width: "120pt",
-    padding: 10,
-    borderWidth: 1,
-    borderColor: "#e0e0e0",
-    borderRadius: 6,
+    width: "100pt",
+    padding: 8,
+    borderWidth: 0.5,
+    borderColor: "#000000",
     alignItems: "center",
-    backgroundColor: "#f9f9f9",
   },
   totalSection: {
     flex: 1,
-    padding: 12,
-    borderWidth: 1,
-    borderColor: "#e0e0e0",
-    borderRadius: 6,
-    backgroundColor: "#f9f9f9",
+    padding: 0,
+    borderWidth: 0.5,
+    borderColor: "#000000",
   },
   summaryRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    paddingVertical: 5,
-    borderBottomWidth: 1,
-    borderBottomColor: "#e0e0e0",
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    borderBottomWidth: 0.5,
+    borderBottomColor: "#000000",
   },
   grandTotalRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    paddingVertical: 10,
-    marginTop: 10,
-    backgroundColor: "#1a1a1a",
-    borderRadius: 4,
-    paddingHorizontal: 10,
+    paddingVertical: 8,
+    backgroundColor: "#f5f5f5",
+    paddingHorizontal: 8,
   },
   grandTotalLabel: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: "bold",
-    color: "#ffffff",
+    color: "#000000",
   },
   grandTotalValue: {
-    fontSize: 14,
+    fontSize: 11,
     fontWeight: "bold",
-    color: "#ffffff",
+    color: "#000000",
   },
   amountInWordsBox: {
     marginTop: 15,
-    padding: 10,
-    borderWidth: 1,
-    borderColor: "#e0e0e0",
-    borderRadius: 6,
-    backgroundColor: "#f9f9f9",
+    padding: 8,
+    borderWidth: 0.5,
+    borderColor: "#000000",
   },
   bankSection: {
-    marginTop: 30,
-    padding: 15,
-    borderWidth: 1,
-    borderColor: "#e0e0e0",
-    borderRadius: 8,
-    backgroundColor: "#fcfcfc",
+    marginTop: 20,
+    padding: 10,
+    borderWidth: 0.5,
+    borderColor: "#000000",
   },
   bankTitle: {
-    fontSize: 10,
+    fontSize: 9,
     fontWeight: "bold",
     textTransform: "uppercase",
-    marginBottom: 12,
-    color: "#1a1a1a",
-    borderBottomWidth: 1,
-    borderBottomColor: "#e0e0e0",
-    paddingBottom: 6,
+    marginBottom: 8,
+    color: "#000000",
+    borderBottomWidth: 0.5,
+    borderBottomColor: "#000000",
+    paddingBottom: 4,
   },
   bankGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 20,
+    gap: 15,
   },
   bankItem: {
     width: "30%",
-    marginBottom: 10,
+    marginBottom: 5,
   },
   bankLabel: {
     fontSize: 7,
-    color: "#666666",
+    color: "#333333",
     textTransform: "uppercase",
-    marginBottom: 3,
+    marginBottom: 2,
     fontWeight: "bold",
   },
   bankValue: {
-    fontSize: 9,
+    fontSize: 8.5,
     fontWeight: "bold",
-    color: "#1a1a1a",
+    color: "#000000",
   },
   signatorySection: {
-    marginTop: 50,
+    marginTop: 30,
     flexDirection: "row",
     justifyContent: "flex-end",
   },
   signatoryBox: {
-    width: "200pt",
+    width: "180pt",
     textAlign: "center",
   },
   signLine: {
-    borderTopWidth: 1,
-    borderTopColor: "#1a1a1a",
-    marginTop: 50,
-    paddingTop: 8,
+    borderTopWidth: 0.5,
+    borderTopColor: "#000000",
+    marginTop: 40,
+    paddingTop: 5,
   },
 });
 
@@ -1019,6 +1028,9 @@ const LorryChallanPDF = ({ data = {}, logoUrl, qrCodeUrl }) => {
 
       {shouldPrintBill && (
         <Page style={styles.billPage} size="A4">
+          <View style={styles.billPageBorder} fixed />
+          <View style={styles.billInnerBorder} fixed />
+
           <View style={styles.billHeader}>
             <View style={styles.companyBrand}>
               <Text style={styles.companyName}>
@@ -1036,7 +1048,6 @@ const LorryChallanPDF = ({ data = {}, logoUrl, qrCodeUrl }) => {
             </View>
             <View style={styles.billTypeBox}>
               <Text style={styles.billTypeTitle}>{billTitle}</Text>
-              {logoUrl && <Image src={logoUrl} style={{ width: 70, height: 70 }} />}
             </View>
           </View>
 
@@ -1070,7 +1081,7 @@ const LorryChallanPDF = ({ data = {}, logoUrl, qrCodeUrl }) => {
               <Text style={styles.metaLabel}>Buyer Sauda</Text>
               <Text style={styles.metaValue}>{data.buyerSaudaNo || data.poNumber || ""}</Text>
             </View>
-            <View style={styles.metaItem}>
+            <View style={styles.metaItemLast}>
               <Text style={styles.metaLabel}>Lorry No</Text>
               <Text style={styles.metaValue}>{data.lorryNumber || ""}</Text>
             </View>
@@ -1088,7 +1099,7 @@ const LorryChallanPDF = ({ data = {}, logoUrl, qrCodeUrl }) => {
             <View style={styles.modernTableRow}>
               <Text style={styles.col1}>1</Text>
               <Text style={styles.col2}>{data.commodity || "N/A"}</Text>
-              <Text style={styles.col3}>{data.hsnCode || "N/A"}</Text>
+              <Text style={styles.col3}>{data.hsnCode || ""}</Text>
               <Text style={styles.col4}>{weight.toFixed(3)}</Text>
               <Text style={styles.col5}>{formatAmount(rate)}</Text>
               <Text style={styles.col6}>{formatAmount(subtotal)}</Text>
@@ -1097,8 +1108,8 @@ const LorryChallanPDF = ({ data = {}, logoUrl, qrCodeUrl }) => {
 
           <View style={styles.summarySection}>
             <View style={styles.qrSection}>
-              <Text style={{ fontSize: 7, fontWeight: "bold", marginBottom: 5 }}>SCAN FOR DETAILS</Text>
-              {qrCodeUrl && <Image src={qrCodeUrl} style={{ width: 70, height: 70 }} />}
+              <Text style={{ fontSize: 7, fontWeight: "bold", marginBottom: 5 }}>SCAN DETAILS</Text>
+              {qrCodeUrl && <Image src={qrCodeUrl} style={{ width: 60, height: 60 }} />}
             </View>
             <View style={styles.totalSection}>
               <View style={styles.summaryRow}>
@@ -1134,12 +1145,12 @@ const LorryChallanPDF = ({ data = {}, logoUrl, qrCodeUrl }) => {
           </View>
 
           <View style={styles.amountInWordsBox}>
-            <Text style={{ fontSize: 7, fontWeight: "bold", color: "#666", marginBottom: 4, textTransform: "uppercase" }}>Amount in Words</Text>
-            <Text style={{ fontSize: 10, fontWeight: "bold", color: "#1a1a1a" }}>{numberToWords(totalBillAmount)}</Text>
+            <Text style={{ fontSize: 7, fontWeight: "bold", color: "#333", marginBottom: 4, textTransform: "uppercase" }}>Amount in Words</Text>
+            <Text style={{ fontSize: 9, fontWeight: "bold", color: "#000" }}>{numberToWords(totalBillAmount)}</Text>
           </View>
 
           <View style={styles.bankSection}>
-            <Text style={styles.bankTitle}>Bank Details</Text>
+            <Text style={styles.bankTitle}>Bank Account Details</Text>
             <View style={styles.bankGrid}>
               <View style={styles.bankItem}>
                 <Text style={styles.bankLabel}>Beneficiary Name</Text>
@@ -1166,7 +1177,7 @@ const LorryChallanPDF = ({ data = {}, logoUrl, qrCodeUrl }) => {
 
           <View style={styles.signatorySection}>
             <View style={styles.signatoryBox}>
-              <Text style={{ fontSize: 10, fontWeight: "bold", color: "#1a1a1a" }}>For {data.supplierCompany || ""}</Text>
+              <Text style={{ fontSize: 9, fontWeight: "bold", color: "#000" }}>For {data.supplierCompany || ""}</Text>
               <View style={styles.signLine}>
                 <Text style={{ fontSize: 8, fontWeight: "bold", textTransform: "uppercase" }}>Authorized Signatory</Text>
               </View>
