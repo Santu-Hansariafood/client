@@ -101,60 +101,96 @@ const LoadingReport = () => {
     </div>
   ]);
 
-  const downloadPDF = () => {
-    const doc = new jsPDF("landscape");
-    const dateStr = selectedDate ? selectedDate.toLocaleDateString("en-IN") : "All Dates";
-    
-    doc.setFontSize(22);
-    doc.setTextColor(5, 150, 105);
-    doc.text("LOADING PERFORMANCE REPORT", 14, 20);
-    
-    doc.setFontSize(10);
-    doc.setTextColor(100);
-    doc.text(`Report Date: ${dateStr}`, 14, 28);
-    doc.text(`Generated On: ${new Date().toLocaleString("en-IN")}`, 14, 33);
+  const downloadPDF = async () => {
+    let toastId;
+    try {
+      setLoading(true);
+      toastId = toast.loading("Generating PDF report...");
 
-    // Summary Section in PDF
-    doc.setDrawColor(200);
-    doc.setFillColor(245, 250, 245);
-    doc.rect(14, 38, 270, 20, 'FD');
-    
-    doc.setFontSize(11);
-    doc.setTextColor(0);
-    doc.setFont(undefined, 'bold');
-    doc.text(`TOTAL WEIGHT: ${summaryData.totalWeight.toFixed(2)} TONS`, 20, 50);
-    doc.text(`TOTAL BAGS: ${summaryData.totalBags}`, 100, 50);
-    doc.text(`TOTAL VEHICLES: ${summaryData.distinctLorry}`, 180, 50);
-    doc.text(`ENTRIES: ${summaryData.totalEntries}`, 250, 50);
+      // Fetch all entries for the selected date (no pagination limit)
+      const dateStr = selectedDate ? selectedDate.toISOString().split("T")[0] : "";
+      const params = {
+        date: dateStr,
+        commodity: selectedCommodity?.value || "",
+        limit: 1000, // Large limit to get all records for the day
+      };
 
-    const tableColumn = ["Sl No", "Time", "Sauda No", "Lorry No", "Commodity", "Weight (T)", "Bags", "Consignee", "Supplier"];
-    const tableRows = loadingEntries.map((entry, index) => [
-      index + 1,
-      new Date(entry.createdAt).toLocaleTimeString("en-IN", { hour: '2-digit', minute: '2-digit' }),
-      entry.saudaNo,
-      entry.lorryNumber,
-      entry.commodity,
-      entry.loadingWeight?.toFixed(2),
-      entry.bags || "-",
-      entry.consignee,
-      entry.supplierCompany
-    ]);
+      const response = await api.get("/loading-entries", { params });
+      const allEntries = response.data?.data || response.data || [];
 
-    doc.autoTable({
-      head: [tableColumn],
-      body: tableRows,
-      startY: 65,
-      theme: "grid",
-      headStyles: { fillColor: [5, 150, 105], textColor: 255, fontSize: 9, halign: 'center' },
-      styles: { fontSize: 8, cellPadding: 3 },
-      columnStyles: {
-        0: { halign: 'center', cellWidth: 15 },
-        5: { halign: 'right', fontStyle: 'bold' },
-        6: { halign: 'center' }
+      if (allEntries.length === 0) {
+        toast.dismiss(toastId);
+        toast.info("No records found for the selected date.");
+        return;
       }
-    });
 
-    doc.save(`Loading_Report_${dateStr.replace(/\//g, '-')}.pdf`);
+      const doc = new jsPDF("landscape");
+      const displayDate = selectedDate ? selectedDate.toLocaleDateString("en-IN") : "All Dates";
+      
+      doc.setFontSize(22);
+      doc.setTextColor(5, 150, 105);
+      doc.text("LOADING PERFORMANCE REPORT", 14, 20);
+      
+      doc.setFontSize(10);
+      doc.setTextColor(100);
+      doc.text(`Report Date: ${displayDate}`, 14, 28);
+      doc.text(`Generated On: ${new Date().toLocaleString("en-IN")}`, 14, 33);
+
+      // Recalculate summary for all entries
+      const fullWeight = allEntries.reduce((sum, e) => sum + (Number(e.loadingWeight) || 0), 0);
+      const fullBags = allEntries.reduce((sum, e) => sum + (Number(e.bags) || 0), 0);
+      const fullLorry = new Set(allEntries.map(e => e.lorryNumber)).size;
+
+      // Summary Section in PDF
+      doc.setDrawColor(200);
+      doc.setFillColor(245, 250, 245);
+      doc.rect(14, 38, 270, 20, 'FD');
+      
+      doc.setFontSize(11);
+      doc.setTextColor(0);
+      doc.setFont(undefined, 'bold');
+      doc.text(`TOTAL WEIGHT: ${fullWeight.toFixed(2)} TONS`, 20, 50);
+      doc.text(`TOTAL BAGS: ${fullBags}`, 100, 50);
+      doc.text(`TOTAL VEHICLES: ${fullLorry}`, 180, 50);
+      doc.text(`TOTAL ENTRIES: ${allEntries.length}`, 250, 50);
+
+      const tableColumn = ["Sl No", "Time", "Sauda No", "Lorry No", "Commodity", "Weight (T)", "Bags", "Consignee", "Supplier"];
+      const tableRows = allEntries.map((entry, index) => [
+        index + 1,
+        new Date(entry.createdAt).toLocaleTimeString("en-IN", { hour: '2-digit', minute: '2-digit' }),
+        entry.saudaNo,
+        entry.lorryNumber,
+        entry.commodity,
+        entry.loadingWeight?.toFixed(2),
+        entry.bags || "-",
+        entry.consignee,
+        entry.supplierCompany
+      ]);
+
+      doc.autoTable({
+        head: [tableColumn],
+        body: tableRows,
+        startY: 65,
+        theme: "grid",
+        headStyles: { fillColor: [5, 150, 105], textColor: 255, fontSize: 9, halign: 'center' },
+        styles: { fontSize: 8, cellPadding: 3 },
+        columnStyles: {
+          0: { halign: 'center', cellWidth: 15 },
+          5: { halign: 'right', fontStyle: 'bold' },
+          6: { halign: 'center' }
+        }
+      });
+
+      doc.save(`Loading_Report_${displayDate.replace(/\//g, '-')}.pdf`);
+      toast.dismiss(toastId);
+      toast.success("PDF Report generated successfully!");
+    } catch (error) {
+      console.error("PDF Generation Error:", error);
+      if (toastId) toast.dismiss(toastId);
+      toast.error("Failed to generate PDF report.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

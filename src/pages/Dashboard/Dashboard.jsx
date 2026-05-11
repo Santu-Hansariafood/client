@@ -6,9 +6,6 @@ import AdminPageShell from "../../common/AdminPageShell/AdminPageShell";
 import { FaTachometerAlt, FaUserTie, FaWeightHanging } from "react-icons/fa";
 const CardGrid = lazy(() => import("./CardGrid/CardGrid"));
 const ChartSection = lazy(() => import("./ChartSection/ChartSection"));
-const LoadingOverviewTable = lazy(
-  () => import("./LoadingOverviewTable/LoadingOverviewTable"),
-);
 
 const Dashboard = () => {
   const [counts, setCounts] = useState({
@@ -19,7 +16,6 @@ const Dashboard = () => {
     bids: 0,
   });
   const [agentSaudas, setAgentSaudas] = useState([]);
-  const [loadingEntries, setLoadingEntries] = useState([]);
 
   const fetchCounts = useCallback(async () => {
     try {
@@ -32,7 +28,6 @@ const Dashboard = () => {
         api.get("/consignees"),
         api.get("/self-order?limit=0"),
         api.get(`/bids?date=${todayStr}`),
-        api.get("/loading-entries?limit=500"),
       ]);
 
       const getCount = (res) => {
@@ -64,7 +59,6 @@ const Dashboard = () => {
       );
 
       setAgentSaudas(agentSaudaList);
-      setLoadingEntries(responses[5]?.data?.data || responses[5]?.data || []);
 
       setCounts({
         buyers: getCount(responses[0]),
@@ -103,10 +97,6 @@ const Dashboard = () => {
 
             <div className="bg-white/70 backdrop-blur-md rounded-3xl p-5 sm:p-6 border border-slate-200/70 shadow-sm animate-fade-in-up delay-150">
               <ChartSection agentSaudas={agentSaudas} />
-            </div>
-
-            <div className="bg-white/70 backdrop-blur-md rounded-3xl p-5 sm:p-6 border border-slate-200/70 shadow-sm animate-fade-in-up delay-300">
-              <LoadingOverviewTable loadingEntries={loadingEntries} />
             </div>
           </div>
         </div>
