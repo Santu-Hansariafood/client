@@ -14,7 +14,8 @@ const LoadingOverviewTable = ({ loadingEntries }) => {
 
   const filteredData = useMemo(() => {
     return loadingEntries.filter((entry) => {
-      const dateMatch = !filterDate || entry.loadingDate?.startsWith(filterDate);
+      const dateMatch =
+        !filterDate || entry.loadingDate?.startsWith(filterDate);
       const commodityMatch =
         !filterCommodity || entry.commodity === filterCommodity;
       return dateMatch && commodityMatch;
@@ -53,7 +54,7 @@ const LoadingOverviewTable = ({ loadingEntries }) => {
     doc.setFontSize(20);
     doc.setTextColor(5, 150, 105);
     doc.text("LOADING PERFORMANCE REPORT", 14, 22);
-    
+
     doc.setFontSize(10);
     doc.setTextColor(100);
     const reportInfo = `Report Period: ${filterDate || "All Time"} | Generated: ${new Date().toLocaleString("en-IN")}`;
@@ -64,26 +65,29 @@ const LoadingOverviewTable = ({ loadingEntries }) => {
       body: tableRows,
       startY: 35,
       theme: "striped",
-      headStyles: { 
+      headStyles: {
         fillColor: [5, 150, 105],
         textColor: [255, 255, 255],
         fontSize: 9,
         fontStyle: "bold",
-        halign: "center"
+        halign: "center",
       },
       columnStyles: {
         0: { halign: "center" },
         4: { halign: "right" },
       },
-      styles: { 
+      styles: {
         fontSize: 8,
-        cellPadding: 3
+        cellPadding: 3,
       },
     });
 
-    const totalWeight = sortedData.reduce((sum, e) => sum + (Number(e.loadingWeight) || 0), 0);
+    const totalWeight = sortedData.reduce(
+      (sum, e) => sum + (Number(e.loadingWeight) || 0),
+      0,
+    );
     const finalY = doc.lastAutoTable.finalY || 40;
-    
+
     doc.setFontSize(11);
     doc.setTextColor(0);
     doc.setFont(undefined, "bold");
@@ -154,10 +158,15 @@ const LoadingOverviewTable = ({ loadingEntries }) => {
         </div>
         <div className="flex items-end">
           <div className="w-full p-2.5 bg-emerald-50 border border-emerald-100 rounded-xl flex justify-between items-center">
-             <span className="text-xs font-bold text-emerald-700 uppercase">Filtered Total:</span>
-             <span className="text-lg font-black text-emerald-800">
-               {sortedData.reduce((sum, e) => sum + (Number(e.loadingWeight) || 0), 0).toFixed(2)} <small className="text-[10px] font-bold">TONS</small>
-             </span>
+            <span className="text-xs font-bold text-emerald-700 uppercase">
+              Filtered Total:
+            </span>
+            <span className="text-lg font-black text-emerald-800">
+              {sortedData
+                .reduce((sum, e) => sum + (Number(e.loadingWeight) || 0), 0)
+                .toFixed(2)}{" "}
+              <small className="text-[10px] font-bold">TONS</small>
+            </span>
           </div>
         </div>
       </div>
@@ -218,7 +227,9 @@ const LoadingOverviewTable = ({ loadingEntries }) => {
                     <div className="text-sm font-black text-slate-900">
                       {entry.loadingWeight.toFixed(2)}
                     </div>
-                    <div className="text-[10px] text-slate-400 font-bold">TONS</div>
+                    <div className="text-[10px] text-slate-400 font-bold">
+                      TONS
+                    </div>
                   </td>
                   <td className="px-6 py-4">
                     <div className="text-xs font-bold text-slate-700 truncate max-w-[150px]">
@@ -237,7 +248,9 @@ const LoadingOverviewTable = ({ loadingEntries }) => {
                       <div className="p-4 bg-slate-50 rounded-full text-slate-300">
                         <FaBoxOpen size={40} />
                       </div>
-                      <p className="text-slate-400 font-medium">No loading records found for the selected filters.</p>
+                      <p className="text-slate-400 font-medium">
+                        No loading records found for the selected filters.
+                      </p>
                     </div>
                   </td>
                 </tr>

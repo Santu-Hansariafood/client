@@ -1,7 +1,18 @@
-import { useState, useEffect, useCallback, useMemo, lazy, Suspense } from "react";
+import {
+  useState,
+  useEffect,
+  useCallback,
+  useMemo,
+  lazy,
+  Suspense,
+} from "react";
 import { toast } from "react-toastify";
-import { FaFilePdf, FaCalendarAlt, FaBoxOpen, FaTruckLoading, FaHistory } from "react-icons/fa";
-import { MdDownload } from "react-icons/md";
+import {
+  FaFilePdf,
+  FaCalendarAlt,
+  FaTruckLoading,
+  FaHistory,
+} from "react-icons/fa";
 import api from "../../../utils/apiClient/apiClient";
 import Loading from "../../../common/Loading/Loading";
 import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
@@ -9,10 +20,16 @@ import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import logoUrl from "../../../assets/Hans.png";
 
-const DateSelector = lazy(() => import("../../../common/DateSelector/DateSelector"));
+const DateSelector = lazy(
+  () => import("../../../common/DateSelector/DateSelector"),
+);
 const Tables = lazy(() => import("../../../common/Tables/Tables"));
-const DataDropdown = lazy(() => import("../../../common/DataDropdown/DataDropdown"));
-const Pagination = lazy(() => import("../../../common/Paginations/Paginations"));
+const DataDropdown = lazy(
+  () => import("../../../common/DataDropdown/DataDropdown"),
+);
+const Pagination = lazy(
+  () => import("../../../common/Paginations/Paginations"),
+);
 
 const LoadingReport = () => {
   const [loadingEntries, setLoadingEntries] = useState([]);
@@ -26,7 +43,9 @@ const LoadingReport = () => {
   const fetchLoadingEntries = useCallback(async () => {
     setLoading(true);
     try {
-      const dateStr = selectedDate ? selectedDate.toISOString().split("T")[0] : "";
+      const dateStr = selectedDate
+        ? selectedDate.toISOString().split("T")[0]
+        : "";
       const params = {
         date: dateStr,
         commodity: selectedCommodity?.value || "",
@@ -53,24 +72,33 @@ const LoadingReport = () => {
   }, [fetchLoadingEntries]);
 
   const commodityOptions = useMemo(() => {
-    const commodities = Array.from(new Set(loadingEntries.map(e => e.commodity).filter(Boolean)));
-    return commodities.map(c => ({ value: c, label: c }));
+    const commodities = Array.from(
+      new Set(loadingEntries.map((e) => e.commodity).filter(Boolean)),
+    );
+    return commodities.map((c) => ({ value: c, label: c }));
   }, [loadingEntries]);
 
   const summaryData = useMemo(() => {
-    const totalWeight = loadingEntries.reduce((sum, e) => sum + (Number(e.loadingWeight) || 0), 0);
-    const totalBags = loadingEntries.reduce((sum, e) => sum + (Number(e.bags) || 0), 0);
-    const distinctLorry = new Set(loadingEntries.map(e => e.lorryNumber)).size;
+    const totalWeight = loadingEntries.reduce(
+      (sum, e) => sum + (Number(e.loadingWeight) || 0),
+      0,
+    );
+    const totalBags = loadingEntries.reduce(
+      (sum, e) => sum + (Number(e.bags) || 0),
+      0,
+    );
+    const distinctLorry = new Set(loadingEntries.map((e) => e.lorryNumber))
+      .size;
 
     return {
       totalWeight,
       totalBags,
       totalEntries: loadingEntries.length,
-      distinctLorry
+      distinctLorry,
     };
   }, [loadingEntries]);
 
-  const headers = [
+  const headers = useMemo(() => [
     "Sl No",
     "Time",
     "Sauda No",
@@ -79,27 +107,39 @@ const LoadingReport = () => {
     "Weight (Tons)",
     "Bags",
     "Consignee",
-    "Supplier"
-  ];
+    "Supplier",
+  ], []);
 
   const rows = loadingEntries.map((entry, index) => [
     (currentPage - 1) * itemsPerPage + index + 1,
-    new Date(entry.createdAt).toLocaleTimeString("en-IN", { hour: '2-digit', minute: '2-digit' }),
+    new Date(entry.createdAt).toLocaleTimeString("en-IN", {
+      hour: "2-digit",
+      minute: "2-digit",
+    }),
     entry.saudaNo,
     entry.lorryNumber,
-    <span key={`comm-${index}`} className="px-2 py-0.5 bg-blue-50 text-blue-700 rounded text-[10px] font-bold border border-blue-100 uppercase">
+    <span
+      key={`comm-${index}`}
+      className="px-2 py-0.5 bg-blue-50 text-blue-700 rounded text-[10px] font-bold border border-blue-100 uppercase"
+    >
       {entry.commodity}
     </span>,
     <span key={`weight-${index}`} className="font-bold text-emerald-600">
-      {entry.loadingWeight?.toFixed(2)}
+      {Number(entry.loadingWeight || 0).toFixed(2)}
     </span>,
     entry.bags || "N/A",
-    <div key={`con-${index}`} className="max-w-[150px] truncate text-xs font-medium">
+    <div
+      key={`con-${index}`}
+      className="max-w-[150px] truncate text-xs font-medium"
+    >
       {entry.consignee}
     </div>,
-    <div key={`sup-${index}`} className="max-w-[150px] truncate text-xs text-slate-500 italic">
+    <div
+      key={`sup-${index}`}
+      className="max-w-[150px] truncate text-xs text-slate-500 italic"
+    >
       {entry.supplierCompany}
-    </div>
+    </div>,
   ]);
 
   const downloadPDF = async () => {
@@ -108,12 +148,13 @@ const LoadingReport = () => {
       setLoading(true);
       toastId = toast.loading("Generating PDF report...");
 
-      // Fetch all entries for the selected date (no pagination limit)
-      const dateStr = selectedDate ? selectedDate.toISOString().split("T")[0] : "";
+      const dateStr = selectedDate
+        ? selectedDate.toISOString().split("T")[0]
+        : "";
       const params = {
         date: dateStr,
         commodity: selectedCommodity?.value || "",
-        limit: 1000, // Large limit to get all records for the day
+        limit: 1000,
       };
 
       const response = await api.get("/loading-entries", { params });
@@ -126,88 +167,222 @@ const LoadingReport = () => {
       }
 
       const doc = new jsPDF("landscape");
-      const displayDate = selectedDate ? selectedDate.toLocaleDateString("en-IN") : "All Dates";
-      
-      // Add Logo to Right Side
+      const totalPagesExp = "{total_pages_count_string}";
+      const displayDate = selectedDate
+        ? selectedDate.toLocaleDateString("en-IN")
+        : "All Dates";
+
       try {
         doc.addImage(logoUrl, "PNG", 250, 5, 30, 30);
       } catch (err) {
         console.warn("Could not add logo to PDF:", err);
       }
 
-      doc.setFontSize(22);
-      doc.setTextColor(5, 150, 105);
-      doc.text("LOADING PERFORMANCE REPORT", 14, 20);
-      
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
+
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(24);
+      doc.setTextColor(5, 120, 90);
+
+      doc.text("LOADING PERFORMANCE REPORT", pageWidth / 2, 18, {
+        align: "center",
+      });
+
+      doc.setDrawColor(5, 120, 90);
+      doc.setLineWidth(0.6);
+      doc.line(70, 22, 227, 22);
+
       doc.setFontSize(10);
       doc.setTextColor(100);
-      doc.text(`Report Date: ${displayDate}`, 14, 28);
-      doc.text(`Generated On: ${new Date().toLocaleString("en-IN")}`, 14, 33);
 
-      // Recalculate summary for all entries
-      const fullWeight = allEntries.reduce((sum, e) => sum + (Number(e.loadingWeight) || 0), 0);
-      const fullBags = allEntries.reduce((sum, e) => sum + (Number(e.bags) || 0), 0);
-      const fullLorry = new Set(allEntries.map(e => e.lorryNumber)).size;
+      doc.text(`Report Date: ${displayDate}`, 14, 30);
+      doc.text(`Generated On: ${new Date().toLocaleString("en-IN")}`, 14, 35);
 
-      // Summary Section in PDF
-      doc.setDrawColor(200);
-      doc.setFillColor(245, 250, 245);
-      doc.rect(14, 38, 270, 20, 'FD');
-      
-      doc.setFontSize(11);
+      const fullWeight = allEntries.reduce(
+        (sum, e) => sum + (Number(e.loadingWeight) || 0),
+        0,
+      );
+
+      const fullBags = allEntries.reduce(
+        (sum, e) => sum + (Number(e.bags) || 0),
+        0,
+      );
+
+      const fullLorry = new Set(allEntries.map((e) => e.lorryNumber)).size;
+
+      doc.setDrawColor(220);
+      doc.setFillColor(245, 248, 250);
+
+      doc.roundedRect(14, 42, 268, 24, 3, 3, "FD");
+
+      doc.line(81, 42, 81, 66);
+      doc.line(148, 42, 148, 66);
+      doc.line(215, 42, 215, 66);
+
+      doc.setFontSize(9);
+      doc.setTextColor(120);
+      doc.setFont("helvetica", "bold");
+
+      doc.text("TOTAL WEIGHT", 47, 50, { align: "center" });
+      doc.text("TOTAL BAGS", 114, 50, { align: "center" });
+      doc.text("TOTAL VEHICLES", 181, 50, { align: "center" });
+      doc.text("TOTAL ENTRIES", 245, 50, { align: "center" });
+
+      doc.setFontSize(16);
       doc.setTextColor(0);
-      doc.setFont(undefined, 'bold');
-      doc.text(`TOTAL WEIGHT: ${fullWeight.toFixed(2)} TONS`, 20, 50);
-      doc.text(`TOTAL BAGS: ${fullBags}`, 100, 50);
-      doc.text(`TOTAL VEHICLES: ${fullLorry}`, 180, 50);
-      doc.text(`TOTAL ENTRIES: ${allEntries.length}`, 250, 50);
 
-      const tableColumn = ["Sl No", "Time", "Sauda No", "Lorry No", "Commodity", "Weight (T)", "Bags", "Consignee", "Supplier"];
+      doc.text(`${fullWeight.toFixed(2)} TONS`, 47, 60, {
+        align: "center",
+      });
+
+      doc.text(`${fullBags}`, 114, 60, {
+        align: "center",
+      });
+
+      doc.text(`${fullLorry}`, 181, 60, {
+        align: "center",
+      });
+
+      doc.text(`${allEntries.length}`, 245, 60, {
+        align: "center",
+      });
+      const tableColumn = [
+        "Sl No",
+        "Time",
+        "Sauda No",
+        "Lorry No",
+        "Commodity",
+        "Weight (T)",
+        "Bags",
+        "Consignee",
+        "Supplier",
+      ];
       const tableRows = allEntries.map((entry, index) => [
         index + 1,
-        new Date(entry.createdAt).toLocaleTimeString("en-IN", { hour: '2-digit', minute: '2-digit' }),
+        new Date(entry.createdAt).toLocaleTimeString("en-IN", {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
         entry.saudaNo,
         entry.lorryNumber,
         entry.commodity,
-        entry.loadingWeight?.toFixed(2),
+        Number(entry.loadingWeight || 0).toFixed(2),
         entry.bags || "-",
         entry.consignee,
-        entry.supplierCompany
+        entry.supplierCompany,
       ]);
 
       autoTable(doc, {
         head: [tableColumn],
         body: tableRows,
-        startY: 65,
+        startY: 75,
         theme: "grid",
-        headStyles: { fillColor: [5, 150, 105], textColor: 255, fontSize: 9, halign: 'center' },
-        styles: { fontSize: 8, cellPadding: 3, overflow: 'linebreak' },
+        headStyles: {
+          fillColor: [5, 150, 105],
+          textColor: 255,
+          fontSize: 9,
+          halign: "center",
+        },
+        styles: { fontSize: 8, cellPadding: 3, overflow: "linebreak" },
         columnStyles: {
-          0: { halign: 'center', cellWidth: 15 },
-          5: { halign: 'right', fontStyle: 'bold' },
-          6: { halign: 'center' }
-        }
+          0: { halign: "center", cellWidth: 15 },
+          5: { halign: "right", fontStyle: "bold" },
+          6: { halign: "center" },
+        },
+        didDrawPage: (data) => {
+          // Watermark
+          doc.saveGraphicsState();
+          doc.setTextColor(200, 200, 200);
+          doc.setFontSize(60);
+          doc.setFont("helvetica", "bold");
+          // doc.setGState(new doc.GState({ opacity: 0.1 })); // Some versions of jspdf need GState
+          doc.text("HANSARIA FOOD", pageWidth / 2, pageHeight / 2, {
+            align: "center",
+            angle: 45,
+          });
+          doc.restoreGraphicsState();
+
+          // Footer line
+          doc.setDrawColor(180);
+          doc.setLineWidth(0.5);
+          doc.line(14, pageHeight - 12, 282, pageHeight - 12);
+
+          // Footer Text
+          doc.setFont("helvetica", "normal");
+          doc.setFontSize(8);
+          doc.setTextColor(120);
+
+          doc.text(
+            "Hansaria Food Private Limited | Internal Logistics Monitoring Report",
+            14,
+            pageHeight - 6,
+          );
+
+          // Page Numbering
+          let str = "Page " + doc.internal.getNumberOfPages();
+          if (typeof doc.putTotalPages === "function") {
+            str = str + " of " + totalPagesExp;
+          }
+          doc.text(str, pageWidth / 2, pageHeight - 6, { align: "center" });
+
+          doc.text(
+            `Generated on ${new Date().toLocaleString("en-IN")}`,
+            282,
+            pageHeight - 6,
+            {
+              align: "right",
+            },
+          );
+        },
       });
 
-      const finalY = doc.lastAutoTable.finalY || 180;
-      
-      // Footer and Authorization
-      doc.setFontSize(8);
-      doc.setTextColor(150);
-      doc.setFont(undefined, 'italic');
-      doc.text("this is internal use purpose only", 14, finalY + 10);
-      doc.text("system generated file", 14, finalY + 15);
+      let finalY = doc.lastAutoTable.finalY || 180;
 
-      // Authorization Section
+      if (finalY + 55 > pageHeight) {
+        doc.addPage();
+        finalY = 20;
+      }
+      doc.setFont("helvetica", "bold");
       doc.setFontSize(10);
-      doc.setTextColor(0);
-      doc.setFont(undefined, 'bold');
-      doc.text("Authorized By:", 220, finalY + 25);
-      doc.text("Hansaria Food Private Limited", 220, finalY + 32);
-      doc.setFont(undefined, 'normal');
-      doc.text("Purchase Team", 220, finalY + 37);
+      doc.setTextColor(30);
 
-      doc.save(`Loading_Report_${displayDate.replace(/\//g, '-')}.pdf`);
+      doc.text("Authorized Signatory", 220, finalY + 18);
+
+      doc.setDrawColor(120);
+      doc.line(215, finalY + 20, 280, finalY + 20);
+
+      doc.setFontSize(11);
+      doc.text("Hansaria Food Private Limited", 220, finalY + 28);
+
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(9);
+      doc.text("Purchase & Logistics Department", 220, finalY + 34);
+
+      // Disclaimer Box
+      doc.setDrawColor(220);
+      doc.setFillColor(248, 249, 250);
+
+      doc.roundedRect(14, finalY + 10, 180, 38, 2, 2, "FD");
+
+      doc.setFont("helvetica", "italic");
+      doc.setFontSize(8);
+      doc.setTextColor(90);
+
+      const disclaimerText =
+        "This document is electronically generated by Hansaria Food Private Limited for internal operational and logistics monitoring purposes only. " +
+        "All loading details, vehicle records, commodity information, and quantity measurements mentioned in this report are system captured data based on operational entries. " +
+        "Any unauthorized modification, reproduction, or external circulation of this report without prior approval from the management is strictly prohibited.";
+
+      const splitText = doc.splitTextToSize(disclaimerText, 170);
+
+      doc.text(splitText, 18, finalY + 18);
+
+      if (typeof doc.putTotalPages === "function") {
+        doc.putTotalPages(totalPagesExp);
+      }
+
+      doc.save(`Loading_Report_${displayDate.replace(/\//g, "-")}.pdf`);
       toast.dismiss(toastId);
       toast.success("PDF Report generated successfully!");
     } catch (error) {
@@ -228,14 +403,16 @@ const LoadingReport = () => {
         noContentCard
       >
         <div className="max-w-7xl mx-auto space-y-6">
-          {/* Controls Section */}
           <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6">
             <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6 items-end">
               <div className="space-y-2">
                 <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">
                   Select Date
                 </label>
-                <DateSelector selectedDate={selectedDate} onChange={setSelectedDate} />
+                <DateSelector
+                  selectedDate={selectedDate}
+                  onChange={setSelectedDate}
+                />
               </div>
 
               <div className="md:col-span-1">
@@ -263,47 +440,67 @@ const LoadingReport = () => {
                   className="p-3 bg-emerald-50 text-emerald-600 rounded-2xl hover:bg-emerald-100 transition-colors border border-emerald-100"
                   title="Refresh Data"
                 >
-                  <FaTruckLoading size={20} className={loading ? "animate-bounce" : ""} />
+                  <FaTruckLoading
+                    size={20}
+                    className={loading ? "animate-bounce" : ""}
+                  />
                 </button>
               </div>
             </div>
           </div>
 
-          {/* Summary Dashboard at Top */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-3xl p-5 text-white shadow-lg shadow-emerald-500/20">
-              <p className="text-emerald-100 text-[10px] font-bold uppercase tracking-widest mb-1">Total Weight</p>
+              <p className="text-emerald-100 text-[10px] font-bold uppercase tracking-widest mb-1">
+                Total Weight
+              </p>
               <div className="flex items-end gap-2">
-                <h3 className="text-2xl font-black">{summaryData.totalWeight.toFixed(2)}</h3>
+                <h3 className="text-2xl font-black">
+                  {summaryData.totalWeight.toFixed(2)}
+                </h3>
                 <span className="text-xs font-bold mb-1 opacity-80">TONS</span>
               </div>
             </div>
             <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-3xl p-5 text-white shadow-lg shadow-blue-500/20">
-              <p className="text-blue-100 text-[10px] font-bold uppercase tracking-widest mb-1">Total Bags</p>
+              <p className="text-blue-100 text-[10px] font-bold uppercase tracking-widest mb-1">
+                Total Bags
+              </p>
               <h3 className="text-2xl font-black">{summaryData.totalBags}</h3>
             </div>
             <div className="bg-gradient-to-br from-amber-500 to-amber-600 rounded-3xl p-5 text-white shadow-lg shadow-amber-500/20">
-              <p className="text-amber-100 text-[10px] font-bold uppercase tracking-widest mb-1">Vehicles Loaded</p>
-              <h3 className="text-2xl font-black">{summaryData.distinctLorry}</h3>
+              <p className="text-amber-100 text-[10px] font-bold uppercase tracking-widest mb-1">
+                Vehicles Loaded
+              </p>
+              <h3 className="text-2xl font-black">
+                {summaryData.distinctLorry}
+              </h3>
             </div>
             <div className="bg-gradient-to-br from-slate-600 to-slate-700 rounded-3xl p-5 text-white shadow-lg shadow-slate-500/20">
-              <p className="text-slate-200 text-[10px] font-bold uppercase tracking-widest mb-1">Total Entries</p>
-              <h3 className="text-2xl font-black">{summaryData.totalEntries}</h3>
+              <p className="text-slate-200 text-[10px] font-bold uppercase tracking-widest mb-1">
+                Total Entries
+              </p>
+              <h3 className="text-2xl font-black">
+                {summaryData.totalEntries}
+              </h3>
             </div>
           </div>
 
-          {/* Table Section */}
           <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
             <div className="p-6 border-b border-slate-100 flex justify-between items-center">
               <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
                 <FaCalendarAlt className="text-emerald-500" />
-                Loading Records for {selectedDate ? selectedDate.toLocaleDateString("en-IN") : "All Dates"}
+                Loading Records for{" "}
+                {selectedDate
+                  ? selectedDate.toLocaleDateString("en-IN")
+                  : "All Dates"}
               </h3>
             </div>
-            
+
             <div className="p-4">
               {loading ? (
-                <div className="py-20"><Loading /></div>
+                <div className="py-20">
+                  <Loading />
+                </div>
               ) : (
                 <>
                   <Tables headers={headers} rows={rows} />

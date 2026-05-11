@@ -9,7 +9,6 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const UPLOAD_DIR = path.join(__dirname, "../../uploads");
 
-// Ensure upload directory exists
 try {
   await fs.access(UPLOAD_DIR);
 } catch {
@@ -21,7 +20,7 @@ const router = Router();
 const storage = multer.memoryStorage();
 const upload = multer({
   storage,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+  limits: { fileSize: 5 * 1024 * 1024 },
 });
 
 router.post("/", upload.single("file"), async (req, res) => {
@@ -32,12 +31,10 @@ router.post("/", upload.single("file"), async (req, res) => {
 
     const fileName = `${Date.now()}-${req.file.originalname}`;
 
-    // 1. Save to local server storage
     const localPath = path.join(UPLOAD_DIR, fileName);
     await fs.writeFile(localPath, req.file.buffer);
     console.log("File saved locally to:", localPath);
 
-    // 2. Upload to ImageKit
     let cloudUrl = null;
     try {
       cloudUrl = await imagekit.uploadFile(req.file, fileName);
@@ -45,7 +42,6 @@ router.post("/", upload.single("file"), async (req, res) => {
       console.error("Cloud upload failed, using local only:", ikError.message);
     }
 
-    // Return cloud URL if available, otherwise local URL
     const baseUrl = `${req.protocol}://${req.get("host")}`;
     const localUrl = `${baseUrl}/uploads/${fileName}`;
 

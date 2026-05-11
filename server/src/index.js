@@ -74,12 +74,20 @@ const corsOptions = {
     if (corsOrigins.includes(origin)) {
       return callback(null, true);
     }
-    const msg = "The CORS policy for this site does not allow access from the specified Origin.";
+    const msg =
+      "The CORS policy for this site does not allow access from the specified Origin.";
     return callback(new Error(msg), false);
   },
   credentials: true,
   methods: ["GET", "HEAD", "PUT", "PATCH", "POST", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization", "x-api-key", "Origin", "Accept", "X-Requested-With"],
+  allowedHeaders: [
+    "Content-Type",
+    "Authorization",
+    "x-api-key",
+    "Origin",
+    "Accept",
+    "X-Requested-With",
+  ],
   exposedHeaders: ["X-Cache"],
   maxAge: 86400,
 };

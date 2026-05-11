@@ -10,7 +10,6 @@ class ImageKitStorage {
     this.privateKey = process.env.IMAGEKIT_PRIVATE_KEY || "";
     this.urlEndpoint = process.env.IMAGEKIT_URL_ENDPOINT || "";
 
-    // Remove trailing slash from urlEndpoint if present
     if (this.urlEndpoint.endsWith("/")) {
       this.urlEndpoint = this.urlEndpoint.slice(0, -1);
     }
@@ -21,7 +20,10 @@ class ImageKitStorage {
         privateKey: this.privateKey,
         urlEndpoint: this.urlEndpoint,
       });
-      console.log("ImageKit configured successfully with endpoint:", this.urlEndpoint);
+      console.log(
+        "ImageKit configured successfully with endpoint:",
+        this.urlEndpoint,
+      );
     } else {
       this.imagekit = null;
       console.warn("ImageKit credentials missing:", {
@@ -34,7 +36,6 @@ class ImageKitStorage {
 
   async uploadFile(file, fileName) {
     try {
-      // Re-check config in case env vars were loaded late
       if (!this.imagekit) {
         this.refreshConfig();
       }
@@ -54,7 +55,9 @@ class ImageKitStorage {
       return response.url;
     } catch (error) {
       console.error("ImageKit upload error details:", error);
-      throw new Error(`Failed to upload file to ImageKit: ${error.message || "Unknown error"}`);
+      throw new Error(
+        `Failed to upload file to ImageKit: ${error.message || "Unknown error"}`,
+      );
     }
   }
 

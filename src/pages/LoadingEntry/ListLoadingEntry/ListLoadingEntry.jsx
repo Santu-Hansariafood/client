@@ -7,7 +7,13 @@ import React, {
   useRef,
 } from "react";
 import api from "../../../utils/apiClient/apiClient";
-import { MdVisibility, MdEdit, MdDelete, MdDownload, MdPictureAsPdf } from "react-icons/md";
+import {
+  MdVisibility,
+  MdEdit,
+  MdDelete,
+  MdDownload,
+  MdPictureAsPdf,
+} from "react-icons/md";
 import { toast } from "react-toastify";
 import { useAuth } from "../../../context/AuthContext/AuthContext";
 import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
@@ -330,14 +336,7 @@ const ListLoadingEntry = () => {
         isLoadingRef.current = false;
       }
     }
-  }, [
-    userRole,
-    mobile,
-    filters,
-    currentPage,
-    itemsPerPage,
-    fetchWithAbort,
-  ]);
+  }, [userRole, mobile, filters, currentPage, itemsPerPage, fetchWithAbort]);
 
   useEffect(() => {
     if (!userRole) return;
@@ -464,7 +463,6 @@ const ListLoadingEntry = () => {
     }
   }, [editEntry, fetchData]);
 
-  // Handle delete entry
   const handleDelete = useCallback(
     async (id) => {
       if (
@@ -560,7 +558,7 @@ const ListLoadingEntry = () => {
       "Weight",
       "Bill No",
     ];
-    
+
     const tableRows = loadingEntries.map((entry, index) => [
       totalItems - ((currentPage - 1) * itemsPerPage + index),
       formatDate(entry.loadingDate),
@@ -577,7 +575,7 @@ const ListLoadingEntry = () => {
     doc.setFontSize(20);
     doc.setTextColor(5, 150, 105);
     doc.text("LOADING ENTRIES REPORT", 14, 22);
-    
+
     doc.setFontSize(10);
     doc.setTextColor(100);
     doc.text(`Generated on: ${new Date().toLocaleString("en-IN")}`, 14, 30);
@@ -594,7 +592,6 @@ const ListLoadingEntry = () => {
     doc.save(`LoadingEntries_${new Date().toISOString().split("T")[0]}.pdf`);
   }, [loadingEntries, totalItems, currentPage, itemsPerPage, buyerMap]);
 
-  // Table headers
   const headers = useMemo(
     () => [
       "Sl No",
@@ -625,7 +622,6 @@ const ListLoadingEntry = () => {
     [],
   );
 
-  // Table rows - using loadingEntries directly
   const rows = useMemo(() => {
     const start = (currentPage - 1) * itemsPerPage;
     return loadingEntries.map((entry, index) => [
@@ -742,7 +738,6 @@ const ListLoadingEntry = () => {
         noContentCard
       >
         <div className="max-w-7xl mx-auto space-y-6">
-          {/* Filters Section */}
           <div className="rounded-2xl border border-amber-200/60 bg-white shadow-lg p-4 sm:p-6">
             <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-4">
               <div>
@@ -860,7 +855,6 @@ const ListLoadingEntry = () => {
             )}
           </div>
 
-          {/* View/Edit Popup */}
           {selectedEntry && popupType && (
             <PopupBox
               isOpen={!!popupType}
