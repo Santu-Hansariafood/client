@@ -9,18 +9,44 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+  Legend,
 } from "recharts";
+
+const COLORS = ["#6366f1", "#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6", "#ec4899", "#06b6d4"];
 
 const CustomTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
+    const isPie = !label;
+    const data = isPie ? payload[0].payload : null;
     return (
-      <div className="bg-white/90 backdrop-blur-md p-3 shadow-2xl border border-slate-100 rounded-xl">
-        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{label}</p>
-        <div className="space-y-1">
-          <p className="text-sm font-black text-slate-800 flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-indigo-500"></span>
-            {payload[0].value.toLocaleString()} Tons
+      <div className="bg-white/95 backdrop-blur-xl p-4 shadow-2xl border border-slate-100 rounded-2xl min-w-[150px]">
+        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 border-b border-slate-50 pb-2">
+          {isPie ? data.name : label}
+        </p>
+        <div className="space-y-2">
+          <p className="text-sm font-black text-slate-800 flex items-center justify-between gap-4">
+            <span className="flex items-center gap-2">
+              <span 
+                className="w-2.5 h-2.5 rounded-full shadow-sm" 
+                style={{ backgroundColor: isPie ? payload[0].payload.fill : "#6366f1" }}
+              ></span>
+              <span className="text-slate-600">Volume:</span>
+            </span>
+            <span className="text-indigo-600">{payload[0].value.toLocaleString()} T</span>
           </p>
+          {isPie && (
+            <div className="pt-2 mt-2 border-t border-slate-50">
+              <div className="flex items-center justify-between text-[10px] font-bold text-slate-500">
+                <span>Performance:</span>
+                <span className="text-slate-900 bg-slate-100 px-2 py-0.5 rounded-md">
+                  {((data.value / data.total) * 100).toFixed(1)}%
+                </span>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     );
@@ -29,14 +55,61 @@ const CustomTooltip = ({ active, payload, label }) => {
 };
 
 const AgentSaudaChart = ({ data, chartType = "bar" }) => {
-  const chartData = useMemo(() => {
-    return data.map((item) => ({
-      name: item.name,
-      tons: item.tons,
-    }));
+  const { chartData, totalTons } = useMemo(() => {
+    const total = data.reduce((sum, item) => sum + item.tons, 0);
+    return {
+      chartData: data.map((item) => ({
+        name: item.name,
+        value: item.tons, // Use value for Pie chart consistency
+        tons: item.tons,
+        total,
+      })),
+      totalTons: total,
+    };
   }, [data]);
 
   const renderChart = () => {
+    if (chartType === "pie") {
+      return (
+        <PieChart>
+          <defs>
+            <filter id="pieShadow" height="200%">
+              <feGaussianBlur in="SourceAlpha" stdDeviation="3" result="blur" />
+              <feOffset in="blur" dx="0" dy="5" result="offsetBlur" />
+              <feMerge>
+                <feMergeNode in="offsetBlur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+          </defs>
+          <Pie
+            data={chartData}
+            cx="50%"
+            cy="50%"
+            innerRadius={60}
+            outerRadius={100}
+            paddingAngle={5}
+            dataKey="value"
+            animationDuration={2000}
+            stroke="none"
+            filter="url(#pieShadow)"
+          >
+            {chartData.map((entry, index) => (
+              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+            ))}
+          </Pie>
+          <Tooltip content={<CustomTooltip />} />
+          <Legend 
+            verticalAlign="bottom" 
+            align="center" 
+            iconType="circle"
+            formatter={(value) => <span className="text-[10px] font-black text-slate-600 uppercase tracking-widest">{value}</span>}
+            wrapperStyle={{ paddingTop: '20px' }}
+          />
+        </PieChart>
+      );
+    }
+
     const commonProps = {
       data: chartData,
       margin: { top: 10, right: 10, left: -20, bottom: 20 },

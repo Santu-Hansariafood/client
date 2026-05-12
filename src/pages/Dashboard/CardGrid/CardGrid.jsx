@@ -89,7 +89,7 @@ const cardConfig = [
     color: "from-emerald-500 to-teal-500",
   },
   {
-    title: "Consignee",
+    title: "Total Consignee",
     countKey: "consignees",
     icon: FaTruck,
     link: "/consignee/list",

@@ -9,19 +9,44 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+  Legend,
 } from "recharts";
-import api from "../../../utils/apiClient/apiClient";
+
+const COLORS = ["#f59e0b", "#3b82f6", "#10b981", "#ef4444", "#8b5cf6", "#ec4899", "#06b6d4"];
 
 const CustomTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
+    const isPie = !label;
+    const data = isPie ? payload[0].payload : null;
     return (
-      <div className="bg-white/90 backdrop-blur-md p-3 shadow-2xl border border-slate-100 rounded-xl">
-        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{label}</p>
-        <div className="space-y-1">
-          <p className="text-sm font-black text-slate-800 flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-amber-500"></span>
-            {payload[0].value} Bids
+      <div className="bg-white/95 backdrop-blur-xl p-4 shadow-2xl border border-slate-100 rounded-2xl min-w-[150px]">
+        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 border-b border-slate-50 pb-2">
+          {isPie ? data.name : label}
+        </p>
+        <div className="space-y-2">
+          <p className="text-sm font-black text-slate-800 flex items-center justify-between gap-4">
+            <span className="flex items-center gap-2">
+              <span 
+                className="w-2.5 h-2.5 rounded-full shadow-sm" 
+                style={{ backgroundColor: isPie ? payload[0].payload.fill : "#f59e0b" }}
+              ></span>
+              <span className="text-slate-600">Total:</span>
+            </span>
+            <span className="text-amber-600">{payload[0].value} Bids</span>
           </p>
+          {isPie && (
+            <div className="pt-2 mt-2 border-t border-slate-50">
+              <div className="flex items-center justify-between text-[10px] font-bold text-slate-500">
+                <span>Share:</span>
+                <span className="text-slate-900 bg-slate-100 px-2 py-0.5 rounded-md">
+                  {((data.value / data.total) * 100).toFixed(1)}%
+                </span>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     );
@@ -114,6 +139,21 @@ const BidChart = ({ apiUrl, chartType = "line", data: externalData }) => {
     }
   }, [rawData, viewType]);
 
+  const pieData = useMemo(() => {
+    if (!rawData.length) return [];
+    const stats = {};
+    let total = 0;
+    rawData.forEach((item) => {
+      const key = item.commodity || "Other";
+      if (!stats[key]) stats[key] = 0;
+      stats[key] += 1;
+      total += 1;
+    });
+    return Object.entries(stats)
+      .map(([name, value]) => ({ name, value, total }))
+      .sort((a, b) => b.value - a.value);
+  }, [rawData]);
+
   const data = useMemo(() => externalData || internalData, [externalData, internalData]);
 
   if (loading) return (
@@ -123,6 +163,47 @@ const BidChart = ({ apiUrl, chartType = "line", data: externalData }) => {
   );
 
   const renderChart = () => {
+    if (chartType === "pie") {
+      return (
+        <PieChart>
+          <defs>
+            <filter id="pieShadow" height="200%">
+              <feGaussianBlur in="SourceAlpha" stdDeviation="3" result="blur" />
+              <feOffset in="blur" dx="0" dy="5" result="offsetBlur" />
+              <feMerge>
+                <feMergeNode in="offsetBlur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+          </defs>
+          <Pie
+            data={pieData}
+            cx="50%"
+            cy="50%"
+            innerRadius={60}
+            outerRadius={100}
+            paddingAngle={5}
+            dataKey="value"
+            animationDuration={2000}
+            stroke="none"
+            filter="url(#pieShadow)"
+          >
+            {pieData.map((entry, index) => (
+              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+            ))}
+          </Pie>
+          <Tooltip content={<CustomTooltip />} />
+          <Legend 
+            verticalAlign="bottom" 
+            align="center" 
+            iconType="circle"
+            formatter={(value) => <span className="text-[10px] font-black text-slate-600 uppercase tracking-widest">{value}</span>}
+            wrapperStyle={{ paddingTop: '20px' }}
+          />
+        </PieChart>
+      );
+    }
+
     const commonProps = {
       data,
       margin: { top: 10, right: 10, left: -20, bottom: 0 },
@@ -208,21 +289,23 @@ const BidChart = ({ apiUrl, chartType = "line", data: externalData }) => {
           <p className="text-[10px] font-bold text-slate-400 mt-1 uppercase tracking-tighter">Bidding activity by {viewType}</p>
         </div>
 
-        <div className="flex bg-slate-100 p-1 rounded-2xl border border-slate-200 shadow-inner">
-          {["weekly", "monthly", "quarterly", "yearly"].map((type) => (
-            <button
-              key={type}
-              onClick={() => setViewType(type)}
-              className={`px-4 py-2 rounded-xl text-[10px] font-black transition-all duration-300 uppercase tracking-widest ${
-                viewType === type
-                  ? "bg-white text-amber-600 shadow-xl scale-105"
-                  : "text-slate-500 hover:text-slate-800 hover:bg-white/50"
-              }`}
-            >
-              {type}
-            </button>
-          ))}
-        </div>
+        {chartType !== "pie" && (
+          <div className="flex bg-slate-100 p-1 rounded-2xl border border-slate-200 shadow-inner">
+            {["weekly", "monthly", "quarterly", "yearly"].map((type) => (
+              <button
+                key={type}
+                onClick={() => setViewType(type)}
+                className={`px-4 py-2 rounded-xl text-[10px] font-black transition-all duration-300 uppercase tracking-widest ${
+                  viewType === type
+                    ? "bg-white text-amber-600 shadow-xl scale-105"
+                    : "text-slate-500 hover:text-slate-800 hover:bg-white/50"
+                }`}
+              >
+                {type}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="h-[350px]">

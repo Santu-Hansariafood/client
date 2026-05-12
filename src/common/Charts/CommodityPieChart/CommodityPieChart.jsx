@@ -15,16 +15,29 @@ const CustomTooltip = ({ active, payload }) => {
   if (active && payload && payload.length) {
     const data = payload[0].payload;
     return (
-      <div className="bg-white/90 backdrop-blur-md p-3 shadow-2xl border border-slate-100 rounded-xl">
-        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{data.name}</p>
-        <div className="space-y-1">
-          <p className="text-sm font-black text-slate-800 flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full" style={{ backgroundColor: payload[0].color }}></span>
-            {data.value.toFixed(2)} Tons
+      <div className="bg-white/95 backdrop-blur-xl p-4 shadow-2xl border border-slate-100 rounded-2xl min-w-[150px]">
+        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 border-b border-slate-50 pb-2">
+          {data.name}
+        </p>
+        <div className="space-y-2">
+          <p className="text-sm font-black text-slate-800 flex items-center justify-between gap-4">
+            <span className="flex items-center gap-2">
+              <span 
+                className="w-2.5 h-2.5 rounded-full shadow-sm" 
+                style={{ backgroundColor: payload[0].color }}
+              ></span>
+              <span className="text-slate-600">Weight:</span>
+            </span>
+            <span className="text-blue-600">{data.value.toFixed(2)} T</span>
           </p>
-          <p className="text-[10px] font-bold text-slate-500 flex items-center gap-2">
-            {data.percentage}% of Total
-          </p>
+          <div className="pt-2 mt-2 border-t border-slate-50">
+            <div className="flex items-center justify-between text-[10px] font-bold text-slate-500">
+              <span>Volume Share:</span>
+              <span className="text-slate-900 bg-slate-100 px-2 py-0.5 rounded-md">
+                {data.percentage}%
+              </span>
+            </div>
+          </div>
         </div>
       </div>
     );
