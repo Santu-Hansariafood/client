@@ -87,15 +87,21 @@ const Dashboard = () => {
         icon={FaTachometerAlt}
         noContentCard
       >
-        <div className="relative">
-          <div className="absolute inset-0 -z-10 bg-gradient-to-br from-slate-50 via-emerald-50/25 to-slate-100" />
+        <div className="relative min-h-screen overflow-hidden">
+          {/* Animated Premium Background */}
+          <div className="absolute inset-0 -z-10">
+            <div className="absolute inset-0 bg-slate-50" />
+            <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-emerald-200/20 blur-[120px] rounded-full animate-pulse" />
+            <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-200/20 blur-[120px] rounded-full animate-pulse delay-700" />
+            <div className="absolute top-[20%] right-[10%] w-[30%] h-[30%] bg-amber-200/10 blur-[100px] rounded-full animate-pulse delay-1000" />
+          </div>
 
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 space-y-6">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-10">
             <div className="animate-fade-in-up">
               <CardGrid counts={counts} />
             </div>
 
-            <div className="bg-white/70 backdrop-blur-md rounded-3xl p-5 sm:p-6 border border-slate-200/70 shadow-sm animate-fade-in-up delay-150">
+            <div className="bg-white/40 backdrop-blur-2xl rounded-[3rem] p-6 sm:p-10 border border-white/60 shadow-2xl shadow-slate-200/50 animate-fade-in-up delay-150">
               <ChartSection agentSaudas={agentSaudas} />
             </div>
           </div>

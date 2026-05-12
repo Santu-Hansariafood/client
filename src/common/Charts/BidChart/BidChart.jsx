@@ -14,6 +14,7 @@ import {
   Cell,
   Legend,
 } from "recharts";
+import api from "../../../utils/apiClient/apiClient";
 
 const COLORS = ["#f59e0b", "#3b82f6", "#10b981", "#ef4444", "#8b5cf6", "#ec4899", "#06b6d4"];
 
