@@ -23,6 +23,8 @@ const loaders = {
     import("../../pages/QualityParameter/ListQualityParameter/ListQualityParameter"),
   AddSellerDetails: () =>
     import("../../pages/SellerDetails/AddSellerDetails/AddSellerDetails"),
+  EditSellerDetails: () =>
+    import("../../pages/SellerDetails/EditSellerDetails/EditSellerDetails"),
   ListSellerDetails: () =>
     import("../../pages/SellerDetails/ListSellerDetails/ListSellerDetails"),  
   AddSellerCompany: () =>
@@ -113,6 +115,7 @@ const pathToKey = {
   "/seller-company/add": "AddSellerCompany",
   "/seller-company/list": "ListSellerCompany",
   "/seller-details/add": "AddSellerDetails",
+  "/seller-details/edit/:sellerId": "EditSellerDetails",
   "/seller-details/list": "ListSellerDetails",
   "/manage-bids/buyer": "BuyerBid",
   "/manage-bids/bid-list": "BidList",
@@ -165,6 +168,8 @@ export function prefetchRouteByPathname(pathname) {
   if (prefetched.has(pathname)) return;
   let key = pathToKey[pathname];
   if (!key && pathname.startsWith("/confirm-bids/")) key = "ConfirmBids";
+  if (!key && pathname.startsWith("/seller-details/edit/"))
+    key = "EditSellerDetails";
   if (!key && pathname.startsWith("/manage-order/edit-self-order/"))
     key = "EditSelfOrder";
   if (!key && pathname.startsWith("/loading-entry-sauda/"))
@@ -191,6 +196,7 @@ const LazyPages = {
   AddQualityParameter: lazy(loaders.AddQualityParameter),
   ListQualityParameter: lazy(loaders.ListQualityParameter),
   AddSellerDetails: lazy(loaders.AddSellerDetails),
+  EditSellerDetails: lazy(loaders.EditSellerDetails),
   ListSellerDetails: lazy(loaders.ListSellerDetails),
   AddSellerCompany: lazy(loaders.AddSellerCompany),
   ListSellerCompany: lazy(loaders.ListSellerCompany),

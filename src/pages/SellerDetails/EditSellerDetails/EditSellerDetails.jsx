@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, lazy, Suspense } from "react";
 import PropTypes from "prop-types";
+import { useParams, useNavigate } from "react-router-dom";
 import api from "../../../utils/apiClient/apiClient";
 import { fetchAllPages } from "../../../utils/apiClient/fetchAllPages";
 import { toast } from "react-toastify";
@@ -29,7 +30,11 @@ const statusOptions = [
   { value: "inactive", label: "Inactive" },
 ];
 
-const EditSellerDetails = ({ sellerId, onClose, onSave, isPopup = false }) => {
+const EditSellerDetails = ({ sellerId: propSellerId, onClose, onSave, isPopup = false }) => {
+  const { sellerId: paramSellerId } = useParams();
+  const navigate = useNavigate();
+  const sellerId = propSellerId || paramSellerId;
+
   const [sellerName, setSellerName] = useState("");
   const [password, setPassword] = useState("");
   const [phoneNumbers, setPhoneNumbers] = useState([
@@ -255,6 +260,8 @@ const EditSellerDetails = ({ sellerId, onClose, onSave, isPopup = false }) => {
       }
       if (onClose) {
         onClose();
+      } else {
+        navigate("/seller-details/list");
       }
     } catch (error) {
       toast.error(
@@ -443,7 +450,7 @@ const EditSellerDetails = ({ sellerId, onClose, onSave, isPopup = false }) => {
         <div className={`mt-10 flex justify-end gap-3 ${isPopup ? "" : "border-t pt-8"}`}>
           <Buttons
             label="Cancel"
-            onClick={onClose}
+            onClick={onClose || (() => navigate("/seller-details/list"))}
             variant="secondary"
             size="lg"
           />

@@ -48,7 +48,6 @@ const ListSellerDetails = () => {
   const [companyOptions, setCompanyOptions] = useState([]);
   
   const [isPopupOpen, setIsPopupOpen] = useState(false);
-  const [popupMode, setPopupMode] = useState("view");
   const [selectedSeller, setSelectedSeller] = useState(null);
 
   const statusOptions = [
@@ -132,9 +131,7 @@ const ListSellerDetails = () => {
   }, [currentPage, searchTerm, selectedCommodity, selectedCompany, selectedStatus, fetchSellers]);
 
   const handleEditSeller = (seller) => {
-    setSelectedSeller(seller);
-    setPopupMode("edit");
-    setIsPopupOpen(true);
+    navigate(`/seller-details/edit/${seller._id}`);
   };
 
   const handlePopupClose = () => {
@@ -319,15 +316,11 @@ const ListSellerDetails = () => {
 
           {isPopupOpen && (
             <PopupBox
-              title={
-                popupMode === "view"
-                  ? "Seller Profile"
-                  : "Update Seller Information"
-              }
+              title="Seller Profile"
               isOpen={isPopupOpen}
               onClose={handlePopupClose}
             >
-              {popupMode === "view" && selectedSeller && (
+              {selectedSeller && (
                 <div className="space-y-8 py-4">
                   <div className="flex items-center gap-6 pb-6 border-b border-slate-100">
                     <div className="w-20 h-20 rounded-[2rem] bg-emerald-100 text-emerald-600 flex items-center justify-center text-3xl font-black">
@@ -404,17 +397,6 @@ const ListSellerDetails = () => {
                     </div>
                   </div>
                 </div>
-              )}
-
-              {popupMode === "edit" && selectedSeller && (
-                <EditSellerDetails
-                  sellerId={selectedSeller._id}
-                  onClose={handlePopupClose}
-                  onSave={(updatedSeller) => {
-                    fetchSellers(currentPage, searchTerm);
-                  }}
-                  isPopup={true}
-                />
               )}
             </PopupBox>
           )}
