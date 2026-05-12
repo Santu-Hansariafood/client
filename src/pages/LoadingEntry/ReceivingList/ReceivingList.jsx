@@ -1,6 +1,6 @@
 import React, { lazy, useEffect, useState, useMemo, useCallback } from "react";
 import api from "../../../utils/apiClient/apiClient";
-import { FaClipboardList, FaEye, FaPrint } from "react-icons/fa";
+import { FaClipboardList, FaEye, FaPrint, FaCopy } from "react-icons/fa";
 import { toast } from "react-toastify";
 import { useAuth } from "../../../context/AuthContext/AuthContext";
 import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
@@ -74,6 +74,39 @@ const ReceivingList = () => {
     setShowPopup(true);
   };
 
+  const handleCopy = useCallback((entry) => {
+    const documents = [];
+    if (entry.documents?.kantaSlip) documents.push(`Kanta Slip: ${entry.documents.kantaSlip}`);
+    if (entry.documents?.unloadingChallan) documents.push(`Unloading Challan: ${entry.documents.unloadingChallan}`);
+    if (entry.documents?.partyBillCopy) documents.push(`Party Bill Copy: ${entry.documents.partyBillCopy}`);
+
+    const textToCopy = `
+Receiving Entry Details:
+------------------------
+Sauda No: ${entry.saudaNo || "N/A"}
+Loading No: ${entry.billNumber || "N/A"}
+Lorry No: ${(entry.lorryNumber || "N/A").toUpperCase()}
+Loading Weight: ${entry.loadingWeight || 0} Tons
+Unloading Weight: ${entry.unloadingWeight || 0} Tons
+Loading Date: ${formatDate(entry.loadingDate)}
+Unloading Date: ${formatDate(entry.unloadingDate)}
+Rate: Rs. ${entry.actualRate || 0}
+Amount: Rs. ${((entry.unloadingWeight || 0) * (entry.actualRate || 0)).toFixed(2)}
+Seller Company: ${entry.supplierCompany || "N/A"}
+Buyer Company: ${entry.buyerCompany || "N/A"}
+
+Documents:
+${documents.length > 0 ? documents.join("\n") : "No documents attached"}
+    `.trim();
+
+    navigator.clipboard.writeText(textToCopy)
+      .then(() => toast.success("Entry details copied to clipboard!"))
+      .catch((err) => {
+        console.error("Failed to copy:", err);
+        toast.error("Failed to copy details");
+      });
+  }, []);
+
   const getBase64 = (img) =>
     new Promise((resolve) => {
       const image = new Image();
@@ -91,12 +124,6 @@ const ReceivingList = () => {
 
       image.onerror = () => resolve(null);
     });
-
-  const formatDate = (dateStr) => {
-    if (!dateStr) return "N/A";
-    const d = new Date(dateStr);
-    return isNaN(d.getTime()) ? "N/A" : d.toLocaleDateString("en-GB");
-  };
 
   const handlePrint = async () => {
     if (!selectedEntry) return;
@@ -260,7 +287,7 @@ const ReceivingList = () => {
     "Amount",
     "Seller Company",
     "Buyer Company",
-    "View Attachments",
+    "Actions",
   ];
 
   const rows = useMemo(
@@ -277,15 +304,24 @@ const ReceivingList = () => {
         ((entry.unloadingWeight || 0) * (entry.actualRate || 0)).toFixed(2),
         entry.supplierCompany || "N/A",
         entry.buyerCompany || "N/A",
-        <button
-          key={`view-${entry._id}`}
-          onClick={() => handleViewDocuments(entry)}
-          className="px-3 py-1 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition"
-        >
-          <FaEye size={16} className="inline mr-1" /> View
-        </button>,
+        <div key={`actions-${entry._id}`} className="flex items-center gap-2">
+          <button
+            onClick={() => handleViewDocuments(entry)}
+            className="p-2 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-600 hover:text-white transition-all shadow-sm border border-blue-100"
+            title="View Documents"
+          >
+            <FaEye size={16} />
+          </button>
+          <button
+            onClick={() => handleCopy(entry)}
+            className="p-2 bg-emerald-50 text-emerald-600 rounded-xl hover:bg-emerald-600 hover:text-white transition-all shadow-sm border border-emerald-100"
+            title="Copy Details"
+          >
+            <FaCopy size={16} />
+          </button>
+        </div>,
       ]),
-    [filteredEntries]
+    [filteredEntries, handleCopy]
   );
 
   return (

@@ -79,10 +79,7 @@ const EditSellerDetails = ({ sellerId, onClose, onSave }) => {
           })),
         );
         setSelectedCommodity(
-          (sellerData.commodities || []).map((commodity) => ({
-            value: commodity.name,
-            label: commodity.name,
-          })),
+          (sellerData.commodities || []).map((commodity) => commodity.name),
         );
         setBrokerageAmounts(
           (sellerData.commodities || []).reduce(
@@ -93,16 +90,8 @@ const EditSellerDetails = ({ sellerId, onClose, onSave }) => {
             {},
           ),
         );
-        setSelectedCompany(
-          (sellerData.companies || []).map((company) => ({
-            value: company,
-            label: company,
-          })),
-        );
-        setSelectedStatus(
-          statusOptions.find((option) => option.value === sellerData.status) ||
-            null,
-        );
+        setSelectedCompany(sellerData.companies || []);
+        setSelectedStatus(sellerData.status || null);
 
         setCommodityOptions(
           commodityOpts.sort((a, b) => a.label.localeCompare(b.label)),
@@ -114,15 +103,13 @@ const EditSellerDetails = ({ sellerId, onClose, onSave }) => {
           groupOpts.sort((a, b) => a.label.localeCompare(b.label)),
         );
 
-        const selectedGroupValues = (sellerData.groups || [])
-          .map((group) => group.name)
+        const selectedGroupIds = (sellerData.groups || [])
+          .map((group) => group._id || group)
           .filter(Boolean);
 
-        setSelectedGroups(
-          groupOpts.filter((g) => selectedGroupValues.includes(g.label)),
-        );
+        setSelectedGroups(selectedGroupIds);
       } catch (error) {
-        toast.error("Failed to load data from the server.", error);
+        toast.error("Failed to load data from the server.");
       }
     };
 
@@ -130,7 +117,7 @@ const EditSellerDetails = ({ sellerId, onClose, onSave }) => {
   }, [sellerId]);
 
   const handleCommodityChange = (selected) => {
-    setSelectedCommodity(selected || []);
+    setSelectedCommodity(selected ? selected.map(s => s.value) : []);
   };
 
   const handleBrokerageChange = (commodity, value) => {
@@ -171,7 +158,7 @@ const EditSellerDetails = ({ sellerId, onClose, onSave }) => {
   };
 
   const handleCompanyChange = (selected) => {
-    setSelectedCompany(selected || []);
+    setSelectedCompany(selected ? selected.map(s => s.value) : []);
   };
 
   const handleSubmit = async () => {
@@ -205,15 +192,16 @@ const EditSellerDetails = ({ sellerId, onClose, onSave }) => {
       sellerName,
       phoneNumbers: phoneNumbers.map((phone) => ({ value: phone.value })),
       emails: emails.map((email) => ({ value: email.value })),
-      commodities: selectedCommodity.map((commodity) => ({
-        name: commodity.value,
-        brokerage: brokerageAmounts[commodity.value] || 0,
+      commodities: (Array.isArray(selectedCommodity) ? selectedCommodity : [selectedCommodity]).filter(Boolean).map((commodityName) => ({
+        name: commodityName,
+        brokerage: brokerageAmounts[commodityName] || 0,
       })),
-      companies: selectedCompany.map((company) => company.value),
-      status: selectedStatus?.value,
-      groups: selectedGroups.map((group) => ({
-        name: group.label,
-      })),
+      companies: selectedCompany,
+      status: typeof selectedStatus === 'string' ? selectedStatus : selectedStatus?.value,
+      groups: (Array.isArray(selectedGroups) ? selectedGroups : [selectedGroups]).filter(Boolean).map((groupId) => {
+        const group = groupOptions.find(g => g.value === groupId);
+        return { _id: groupId, name: group?.label };
+      }),
     };
 
     try {
@@ -334,23 +322,26 @@ const EditSellerDetails = ({ sellerId, onClose, onSave }) => {
             placeholder="Select commodities"
             selectedOptions={selectedCommodity}
             onChange={handleCommodityChange}
-            isMulti
+            isMulti={true}
           />
-          {selectedCommodity.map((commodity) => (
-            <div key={commodity.value} className="mt-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Brokerage Amount (Tons) for {commodity.label}
-              </label>
-              <DataInput
-                placeholder={`Enter brokerage amount for ${commodity.label}`}
-                name={`brokerage_${commodity.value}`}
-                value={brokerageAmounts[commodity.value] || ""}
-                onChange={(e) =>
-                  handleBrokerageChange(commodity.value, e.target.value)
-                }
-              />
-            </div>
-          ))}
+          {(Array.isArray(selectedCommodity) ? selectedCommodity : [selectedCommodity]).filter(Boolean).map((commodityValue) => {
+            const commodityLabel = commodityOptions.find(o => o.value === commodityValue)?.label || commodityValue;
+            return (
+              <div key={commodityValue} className="mt-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Brokerage Amount (Tons) for {commodityLabel}
+                </label>
+                <DataInput
+                  placeholder={`Enter brokerage amount for ${commodityLabel}`}
+                  name={`brokerage_${commodityValue}`}
+                  value={brokerageAmounts[commodityValue] || ""}
+                  onChange={(e) =>
+                    handleBrokerageChange(commodityValue, e.target.value)
+                  }
+                />
+              </div>
+            );
+          })}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -361,7 +352,7 @@ const EditSellerDetails = ({ sellerId, onClose, onSave }) => {
                 placeholder="Select companies"
                 selectedOptions={selectedCompany}
                 onChange={handleCompanyChange}
-                isMulti
+                isMulti={true}
               />
             </div>
             <div>
@@ -372,7 +363,7 @@ const EditSellerDetails = ({ sellerId, onClose, onSave }) => {
                 options={statusOptions}
                 placeholder="Select status"
                 selectedOptions={selectedStatus}
-                onChange={(selected) => setSelectedStatus(selected)}
+                onChange={(selected) => setSelectedStatus(selected?.value || selected)}
               />
             </div>
           </div>
@@ -383,9 +374,9 @@ const EditSellerDetails = ({ sellerId, onClose, onSave }) => {
             <DataDropdown
               options={groupOptions}
               placeholder="Select groups"
-              isMulti
+              isMulti={true}
               selectedOptions={selectedGroups}
-              onChange={(selected) => setSelectedGroups(selected || [])}
+              onChange={(selected) => setSelectedGroups(selected ? selected.map(s => s.value) : [])}
             />
           </div>
 
