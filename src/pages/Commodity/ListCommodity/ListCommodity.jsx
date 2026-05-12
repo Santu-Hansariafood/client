@@ -18,19 +18,20 @@ const EditCommodityPopup = lazy(
 
 const ListCommodity = () => {
   const [commodities, setCommodities] = useState([]);
-  const [filteredCommodities, setFilteredCommodities] = useState([]);
+
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [isEditPopupOpen, setIsEditPopupOpen] = useState(false);
   const [selectedCommodity, setSelectedCommodity] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
-
   const [total, setTotal] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
 
   const fetchCommodities = async () => {
     try {
+      setIsLoading(true);
+
       const response = await axios.get("/commodities", {
         params: {
           page: currentPage,
@@ -38,12 +39,15 @@ const ListCommodity = () => {
           search: searchQuery,
         },
       });
+
       const items = response.data?.data || response.data || [];
-      const sortedCommodities = items.sort((a, b) =>
-        a.name.localeCompare(b.name),
+
+      const sortedCommodities = [...items].sort((a, b) =>
+        (a.name || "").localeCompare(b.name || ""),
       );
+
       setCommodities(sortedCommodities);
-      setFilteredCommodities(sortedCommodities);
+
       setTotal(response.data?.total || sortedCommodities.length);
     } catch (error) {
       toast.error(
@@ -66,15 +70,19 @@ const ListCommodity = () => {
   const handleView = async (id) => {
     try {
       const response = await axios.get(`/commodities/${id}`);
+
       setSelectedCommodity(response.data);
+
       setIsPopupOpen(true);
     } catch (error) {
-      toast.error("Error fetching commodity details:", error);
+      toast.error("Error fetching commodity details");
+      console.error(error);
     }
   };
 
   const handleEdit = (id) => {
     setSelectedCommodity({ _id: id });
+
     setIsEditPopupOpen(true);
   };
 
@@ -83,6 +91,7 @@ const ListCommodity = () => {
       const confirmDelete = window.confirm(
         "Are you sure you want to delete this commodity?",
       );
+
       if (!confirmDelete) return;
 
       await axios.delete(`/commodities/${id}`);
@@ -90,10 +99,16 @@ const ListCommodity = () => {
       const updatedCommodities = commodities.filter(
         (commodity) => commodity._id !== id,
       );
+
       setCommodities(updatedCommodities);
-      setFilteredCommodities(updatedCommodities);
+
+      setTotal((prev) => Math.max(prev - 1, 0));
 
       toast.success("Commodity deleted successfully!");
+
+      if (updatedCommodities.length === 0 && currentPage > 1) {
+        setCurrentPage((prev) => prev - 1);
+      }
     } catch (error) {
       toast.error(error?.response?.data?.message || "Error deleting commodity");
     }
@@ -101,13 +116,17 @@ const ListCommodity = () => {
 
   const tableRows = useMemo(
     () =>
-      filteredCommodities.map((commodity, index) => [
-        (currentPage - 1) * itemsPerPage + index + 1,
+      commodities.map((commodity, index) => [
+        ((Number(currentPage) || 1) - 1) * itemsPerPage + index + 1,
+
         commodity.name || "N/A",
+
         commodity.hsnCode || "N/A",
+
         Array.isArray(commodity.parameters)
           ? commodity.parameters.map((param) => param.parameter).join(", ")
           : "N/A",
+
         <Actions
           key={commodity._id}
           onView={() => handleView(commodity._id)}
@@ -115,7 +134,7 @@ const ListCommodity = () => {
           onDelete={() => handleDelete(commodity._id)}
         />,
       ]),
-    [filteredCommodities, currentPage, itemsPerPage],
+    [commodities, currentPage],
   );
 
   const tableHeaders = [
@@ -144,22 +163,29 @@ const ListCommodity = () => {
                 returnQuery
               />
             </div>
-            {filteredCommodities.length > 0 ? (
+
+            {isLoading ? (
+              <div className="py-20 flex justify-center">
+                <Loading />
+              </div>
+            ) : commodities.length > 0 ? (
               <>
                 <div className="overflow-x-auto rounded-xl border border-gray-100">
                   <Tables headers={tableHeaders} rows={tableRows} />
                 </div>
-                <div className="mt-4">
+                <div className="mt-6 flex justify-center">
                   <Pagination
-                    currentPage={currentPage}
-                    totalItems={total}
+                    currentPage={Number(currentPage)}
+                    totalItems={Number(total)}
                     itemsPerPage={itemsPerPage}
-                    onPageChange={setCurrentPage}
+                    onPageChange={(page) => setCurrentPage(Number(page))}
                   />
                 </div>
               </>
             ) : (
-              <p>No commodities found.</p>
+              <div className="py-10 text-center text-gray-500 font-medium">
+                No commodities found.
+              </div>
             )}
             <PopupBox
               isOpen={isPopupOpen}
@@ -167,14 +193,16 @@ const ListCommodity = () => {
               title="Commodity Details"
             >
               {selectedCommodity && (
-                <div>
+                <div className="space-y-3">
                   <p>
                     <strong>Name:</strong> {selectedCommodity.name || "N/A"}
                   </p>
+
                   <p>
                     <strong>HSN Code:</strong>{" "}
                     {selectedCommodity.hsnCode || "N/A"}
                   </p>
+
                   <p>
                     <strong>Parameters:</strong>{" "}
                     {selectedCommodity.parameters
@@ -190,7 +218,7 @@ const ListCommodity = () => {
               <EditCommodityPopup
                 isOpen={isEditPopupOpen}
                 onClose={() => setIsEditPopupOpen(false)}
-                commodityId={selectedCommodity ? selectedCommodity._id : null}
+                commodityId={selectedCommodity?._id || null}
                 onUpdate={fetchCommodities}
               />
             )}
