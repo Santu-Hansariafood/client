@@ -7,6 +7,7 @@ import {
   useCallback,
 } from "react";
 import api from "../../../utils/apiClient/apiClient";
+import { toast } from "react-toastify";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import Loading from "../../../common/Loading/Loading";
 import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
@@ -17,8 +18,10 @@ import {
   FaHandshake,
   FaCheckCircle,
   FaFilter,
+  FaClock,
 } from "react-icons/fa";
 import { useAuth } from "../../../context/AuthContext/AuthContext";
+import { getSocket } from "../../../utils/socket/socket";
 
 const Tables = lazy(() => import("../../../common/Tables/Tables"));
 const Pagination = lazy(
@@ -52,6 +55,7 @@ const ParticipateBidAdmin = () => {
 
   const [buyerGroups, setBuyerGroups] = useState([]);
   const [selectedGroup, setSelectedGroup] = useState(initialGroup);
+  const [isBuyerAdmin, setIsBuyerAdmin] = useState(false);
 
   const [selectedDate, setSelectedDate] = useState(new Date());
 
@@ -66,9 +70,9 @@ const ParticipateBidAdmin = () => {
       .join(" ");
   }, []);
 
-  const fetchData = useCallback(async () => {
+  const fetchData = useCallback(async (isSilent = false) => {
     try {
-      setLoading(true);
+      if (!isSilent) setLoading(true);
 
       if (userRole === "Buyer") {
         const res = await api.get("/bids/buyer-today", {
@@ -79,6 +83,7 @@ const ParticipateBidAdmin = () => {
         });
 
         const { bids: bidsData, participations, buyer } = res.data;
+        setIsBuyerAdmin(buyer.isAdmin || false);
 
         const groups = (buyer.groups || []).map(normalize);
 
@@ -101,17 +106,8 @@ const ParticipateBidAdmin = () => {
           return isOwnBid || belongsToGroup || belongsToCompany;
         });
 
-        setBids((prev) =>
-          JSON.stringify(prev) !== JSON.stringify(allowedBids)
-            ? allowedBids
-            : prev,
-        );
-
-        setParticipationBids((prev) =>
-          JSON.stringify(prev) !== JSON.stringify(participations)
-            ? participations
-            : prev,
-        );
+        setBids(allowedBids);
+        setParticipationBids(participations);
       } else {
         const [bidsRes, participateRes] = await Promise.all([
           api.get("/bids"),
@@ -123,29 +119,42 @@ const ParticipateBidAdmin = () => {
         const participations =
           participateRes.data?.data || participateRes.data || [];
 
-        setBids((prev) =>
-          JSON.stringify(prev) !== JSON.stringify(bidsData) ? bidsData : prev,
-        );
-
-        setParticipationBids((prev) =>
-          JSON.stringify(prev) !== JSON.stringify(participations)
-            ? participations
-            : prev,
-        );
+        setBids(bidsData);
+        setParticipationBids(participations);
       }
     } catch (error) {
-      console.error(error);
+      console.error("Fetch failed", error);
     } finally {
-      setLoading(false);
+      if (!isSilent) setLoading(false);
     }
-  }, [mobile, normalize, selectedDate, userRole]);
+  }, [mobile, normalize, selectedDate, userRole, selectedGroup]);
 
   useEffect(() => {
     fetchData();
+  }, [fetchData]);
 
-    const interval = setInterval(fetchData, 30000);
+  // Socket listener for real-time updates without polling
+  useEffect(() => {
+    const socket = getSocket();
+    if (!socket) return;
 
-    return () => clearInterval(interval);
+    const handleNotification = (notification) => {
+      const type = notification.type;
+      // Refresh data if any bid participation or status change occurs
+      if (
+        type === "BidParticipation" ||
+        type === "BidRejection" ||
+        type === "BidConfirmation"
+      ) {
+        console.log("Real-time bid update received, refreshing data...");
+        fetchData(true); // Silent refresh
+      }
+    };
+
+    socket.on("notification", handleNotification);
+    return () => {
+      socket.off("notification", handleNotification);
+    };
   }, [fetchData]);
 
   useEffect(() => {
@@ -187,7 +196,16 @@ const ParticipateBidAdmin = () => {
             acceptanceRate: 0,
             mobiles: new Set(),
             sellers: new Set(),
+            pendingCount: 0,
+            completedCount: 0,
           };
+        }
+
+        const status = (pBid.status || "pending").toLowerCase();
+        if (status === "pending") {
+          groupedBids[pBid.bidId].pendingCount += 1;
+        } else if (status === "accepted" || status === "rejected") {
+          groupedBids[pBid.bidId].completedCount += 1;
         }
 
         groupedBids[pBid.bidId].mobiles.add(pBid.mobile);
@@ -329,47 +347,60 @@ const ParticipateBidAdmin = () => {
     "Bid Rate",
     "Party Qty",
     "Party Rate",
-    "Acceptance Qty",
-    "Acceptance Rate",
+    "Status",
     "Interactions",
   ];
 
   const rows = useMemo(() => {
     return paginatedData.map((bid, index) => [
       (currentPage - 1) * ITEMS_PER_PAGE + index + 1,
-
-      new Date(bid.date).toLocaleDateString(),
-
-      bid.group,
-
-      bid.consignee,
-
+      <div key={`date-${bid.bidId}`} className="flex flex-col">
+        <span className="font-bold text-slate-700">
+          {new Date(bid.date).toLocaleDateString("en-IN", { day: '2-digit', month: 'short' })}
+        </span>
+        <span className="text-[10px] text-slate-400 font-medium uppercase">
+          {new Date(bid.date).toLocaleTimeString("en-IN", { hour: '2-digit', minute: '2-digit' })}
+        </span>
+      </div>,
+      <span key={`group-${bid.bidId}`} className="font-black text-emerald-700 uppercase tracking-tighter">{bid.group}</span>,
+      <span key={`consignee-${bid.bidId}`} className="font-bold text-slate-800">{bid.consignee}</span>,
       bid.origin,
-
-      bid.commodity,
-
-      Array.from(bid.sellers || []).join(", ") || "N/A",
-
-      bid.quantity,
-
-      bid.rates,
-
-      bid.quantities,
-
-      bid.rate,
-
-      `${bid.acceptanceQuantity} Tons`,
-
-      bid.acceptanceRate ? `₹${bid.acceptanceRate}` : "N/A",
-
+      <span key={`commodity-${bid.bidId}`} className="font-bold text-slate-600">{bid.commodity}</span>,
+      <div key={`sellers-${bid.bidId}`} className="max-w-[150px]">
+        <p className="text-xs font-medium text-slate-600 truncate">
+          {Array.from(bid.sellers || []).join(", ") || "N/A"}
+        </p>
+      </div>,
+      <span key={`bidqty-${bid.bidId}`} className="font-black text-slate-900">{bid.quantity} T</span>,
+      <span key={`bidrate-${bid.bidId}`} className="font-black text-emerald-600">₹{bid.rates}</span>,
+      <span key={`partyqty-${bid.bidId}`} className="font-bold text-blue-600">{bid.quantities} T</span>,
+      <span key={`partyrate-${bid.bidId}`} className="font-bold text-blue-600">₹{bid.rate}</span>,
+      <div key={`status-${bid.bidId}`} className="flex flex-col gap-1">
+        {bid.pendingCount > 0 ? (
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-amber-100 text-amber-700 text-[10px] font-black uppercase tracking-widest shadow-sm ring-1 ring-amber-200">
+            <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+            {bid.pendingCount} Pending
+          </span>
+        ) : bid.completedCount > 0 ? (
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-emerald-100 text-emerald-700 text-[10px] font-black uppercase tracking-widest shadow-sm ring-1 ring-emerald-200">
+            <FaCheckCircle size={10} />
+            Complete
+          </span>
+        ) : (
+          <span className="text-[10px] font-bold text-slate-400 uppercase">No Activity</span>
+        )}
+      </div>,
       <button
         key={bid.bidId}
         type="button"
         onClick={() => setSelectedBidId(bid.bidId)}
-        className="font-medium text-emerald-700 hover:text-emerald-800 underline decoration-emerald-200 underline-offset-4"
+        className="group relative flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-50 border border-slate-200 text-emerald-700 hover:bg-emerald-600 hover:text-white hover:border-emerald-500 transition-all duration-300 shadow-sm overflow-hidden"
       >
-        {bid.mobiles.size} interaction
-        {bid.mobiles.size !== 1 ? "s" : ""}
+        <div className="absolute inset-0 bg-gradient-to-r from-emerald-600 to-teal-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+        <span className="relative z-10 font-black text-[10px] uppercase tracking-widest flex items-center gap-2">
+          <FaUsers size={12} className="group-hover:scale-110 transition-transform" />
+          {bid.mobiles.size} interaction{bid.mobiles.size !== 1 ? "s" : ""}
+        </span>
       </button>,
     ]);
   }, [currentPage, paginatedData]);
