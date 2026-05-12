@@ -65,19 +65,7 @@ const DashboardCard = ({ title, value, icon: Icon, colorClass, shadowColor, subt
           <div className="inline-flex items-center w-fit px-4 py-2 rounded-2xl bg-white/40 border border-white/60 backdrop-blur-md shadow-sm">
             <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.15em]">{subtitle}</span>
           </div>
-        )}
-        
-        <div className="mt-auto pt-8 border-t border-slate-100/50">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Efficiency</span>
-            <span className="text-[10px] font-black text-emerald-500 bg-emerald-50 px-2 py-0.5 rounded-lg border border-emerald-100">+12.5%</span>
-          </div>
-          <div className="h-2 w-full bg-slate-100/50 rounded-full overflow-hidden backdrop-blur-sm p-[2px]">
-            <div className={`h-full w-[75%] rounded-full transition-all duration-1000 group-hover:w-[90%] bg-gradient-to-r ${colorClass} relative overflow-hidden`}>
-              <div className="absolute inset-0 bg-[linear-gradient(45deg,rgba(255,255,255,0.2)_25%,transparent_25%,transparent_50%,rgba(255,255,255,0.2)_50%,rgba(255,255,255,0.2)_75%,transparent_75%,transparent)] bg-[length:20px_20px] animate-[shimmer_2s_linear_infinite]"></div>
-            </div>
-          </div>
-        </div>
+        )}     
       </div>
     </div>
   );
