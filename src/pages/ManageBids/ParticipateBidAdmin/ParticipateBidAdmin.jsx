@@ -33,7 +33,6 @@ const ParticipateBidAdmin = () => {
   const { userRole, mobile } = useAuth();
   const [bids, setBids] = useState([]);
   const [participationBids, setParticipationBids] = useState([]);
-  const [filteredBids, setFilteredBids] = useState([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
@@ -42,6 +41,7 @@ const ParticipateBidAdmin = () => {
   const [selectedGroup, setSelectedGroup] = useState(initialGroup);
   const [isBuyerAdmin, setIsBuyerAdmin] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
+  const [searchQuery, setSearchQuery] = useState("");
 
   const normalize = (str) =>
     (str || "")
@@ -82,14 +82,8 @@ const ParticipateBidAdmin = () => {
             return isOwnBid || belongsToGroup || belongsToCompany;
           });
 
-          const allowedBidIds = new Set(allowedBids.map((b) => b._id));
-          const allowedParticipations = participations.filter((p) =>
-            allowedBidIds.has(p.bidId),
-          );
-
           setBids(allowedBids);
-          setParticipationBids(allowedParticipations);
-          setFilteredBids(allowedParticipations);
+          setParticipationBids(participations);
         } else {
           const [bidsRes, participateRes] = await Promise.all([
             api.get("/bids"),
@@ -100,7 +94,6 @@ const ParticipateBidAdmin = () => {
             participateRes.data?.data || participateRes.data || [];
           setBids(bidsData);
           setParticipationBids(participations);
-          setFilteredBids(participations);
         }
       } catch {
         // Silent error for polling
@@ -116,22 +109,35 @@ const ParticipateBidAdmin = () => {
     return () => clearInterval(interval);
   }, [userRole, mobile, selectedDate]);
 
-  const displayBids = useMemo(() => {
-    if (!selectedDate) return filteredBids;
-
+  const filteredData = useMemo(() => {
+    // 1. Filter by Date
     const targetDate = new Date(selectedDate);
     targetDate.setHours(0, 0, 0, 0);
 
-    return filteredBids.filter((pBid) => {
+    let filtered = participationBids.filter((pBid) => {
       const pDate = new Date(pBid.createdAt || pBid.participationDate);
       pDate.setHours(0, 0, 0, 0);
       return pDate.getTime() === targetDate.getTime();
     });
-  }, [filteredBids, selectedDate]);
 
-  const getBidParticipationDetails = (data) => {
+    // 2. Filter by Search Query
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      filtered = filtered.filter((pBid) => {
+        const bid = bids.find((b) => b._id === pBid.bidId);
+        return (
+          bid &&
+          (bid.consignee?.toLowerCase().includes(q) ||
+            bid.commodity?.toLowerCase().includes(q) ||
+            bid.origin?.toLowerCase().includes(q) ||
+            bid.group?.toLowerCase().includes(q))
+        );
+      });
+    }
+
+    // 3. Group by BidId and Filter by Group (for Buyer)
     const groupedBids = {};
-    data.forEach((pBid) => {
+    filtered.forEach((pBid) => {
       const matchingBid = bids.find((bid) => bid._id === pBid.bidId);
       if (!matchingBid) return;
 
@@ -176,8 +182,9 @@ const ParticipateBidAdmin = () => {
             : pBid.mobile;
       if (sellerLabel) groupedBids[pBid.bidId].sellers.add(sellerLabel);
     });
-    return Object.values(groupedBids);
-  };
+
+    return Object.values(groupedBids).sort((a, b) => new Date(b.date) - new Date(a.date));
+  }, [participationBids, bids, selectedDate, searchQuery, userRole, selectedGroup]);
 
   const headers = [
     "Sl No",
@@ -196,13 +203,21 @@ const ParticipateBidAdmin = () => {
     "Interactions",
   ];
 
-  const filteredData = getBidParticipationDetails(displayBids);
   const totalItems = filteredData.length;
   const totalPages = Math.max(1, Math.ceil(totalItems / itemsPerPage));
-  const safeCurrentPage = Math.min(currentPage, totalPages);
-  const indexOfLastItem = safeCurrentPage * itemsPerPage;
+  
+  // Auto-reset page if search/filter makes current page invalid
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(1);
+    }
+  }, [totalPages, currentPage]);
+
+  const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentItems = filteredData.slice(indexOfFirstItem, indexOfLastItem);
+  const currentItems = useMemo(() => {
+    return filteredData.slice(indexOfFirstItem, indexOfLastItem);
+  }, [filteredData, indexOfFirstItem, indexOfLastItem]);
 
   const rows = currentItems.map((bid, index) => [
     indexOfFirstItem + index + 1,
@@ -236,52 +251,13 @@ const ParticipateBidAdmin = () => {
     [bids],
   );
 
-  const handleSearch = (filteredNames) => {
-    if (typeof filteredNames === "string") {
-      const q = filteredNames.trim().toLowerCase();
-      if (!q) {
-        setFilteredBids(participationBids);
-      } else {
-        setFilteredBids(
-          participationBids.filter((pBid) => {
-            const bid = bids.find((b) => b._id === pBid.bidId);
-            return (
-              bid &&
-              (bid.consignee?.toLowerCase().includes(q) ||
-                bid.commodity?.toLowerCase().includes(q) ||
-                bid.origin?.toLowerCase().includes(q) ||
-                bid.group?.toLowerCase().includes(q))
-            );
-          }),
-        );
-      }
-    } else {
-      if (
-        !filteredNames ||
-        filteredNames.length === 0 ||
-        filteredNames.length === consigneeItems.length
-      ) {
-        setFilteredBids(participationBids);
-      } else {
-        const nameSet = new Set(filteredNames);
-        setFilteredBids(
-          participationBids.filter((pBid) => {
-            const bid = bids.find((b) => b._id === pBid.bidId);
-            return bid && nameSet.has(bid.consignee);
-          }),
-        );
-      }
-    }
+  const handleSearch = (query) => {
+    setSearchQuery(typeof query === "string" ? query : "");
     setCurrentPage(1);
   };
 
   const handlePageChange = (page) => {
-    if (Number.isNaN(page)) return;
-    const nextPage = Math.max(
-      1,
-      Math.min(page, Math.max(1, Math.ceil(totalItems / itemsPerPage))),
-    );
-    setCurrentPage(nextPage);
+    setCurrentPage(page);
   };
 
   const stats = useMemo(() => {
@@ -478,7 +454,7 @@ const ParticipateBidAdmin = () => {
 
               <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm flex items-center justify-center">
                 <Pagination
-                  currentPage={safeCurrentPage}
+                  currentPage={currentPage}
                   totalItems={totalItems}
                   itemsPerPage={itemsPerPage}
                   onPageChange={handlePageChange}
