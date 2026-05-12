@@ -25,16 +25,19 @@ const useCountUp = (end, duration = 800) => {
   return value;
 };
 
-const DashboardCard = ({ title, value, icon: Icon, colorClass, subtitle }) => {
+const DashboardCard = ({ title, value, icon: Icon, colorClass, shadowColor, subtitle }) => {
   return (
-    <div className={`relative overflow-hidden group rounded-[2.5rem] p-7 transition-all duration-700 hover:-translate-y-3 hover:shadow-[0_20px_50px_rgba(0,0,0,0.1)] border border-white/40 bg-white/80 backdrop-blur-xl shadow-xl shadow-slate-200/40`}>
+    <div className={`relative overflow-hidden group rounded-[2.5rem] p-7 transition-all duration-700 hover:-translate-y-3 hover:shadow-[0_20px_50px_rgba(0,0,0,0.1)] hover:${shadowColor} border border-white/40 bg-white/80 backdrop-blur-xl shadow-xl shadow-slate-200/40`}>
+      {/* Glass Reflection Effect */}
+      <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
+      
       {/* Dynamic Gradient Background Glow */}
       <div className={`absolute -right-12 -top-12 w-48 h-48 rounded-full blur-[60px] opacity-20 transition-all duration-1000 group-hover:opacity-40 group-hover:scale-150 bg-gradient-to-br ${colorClass}`}></div>
       
       <div className="relative z-10 flex flex-col h-full">
         <div className="flex items-start justify-between mb-6">
           <div className="space-y-1.5">
-            <p className="text-[11px] font-black text-slate-400 uppercase tracking-[0.25em] leading-tight">{title}</p>
+            <p className="text-[11px] font-black text-slate-400 uppercase tracking-[0.25em] leading-tight transition-colors duration-500 group-hover:text-slate-500">{title}</p>
             <h3 className="text-4xl font-black text-slate-900 tracking-tighter leading-none">
               {value}
             </h3>
@@ -53,9 +56,12 @@ const DashboardCard = ({ title, value, icon: Icon, colorClass, subtitle }) => {
         
         <div className="mt-auto pt-6 flex items-center gap-3">
           <div className="h-1.5 flex-1 bg-slate-100/50 rounded-full overflow-hidden backdrop-blur-sm">
-            <div className={`h-full w-[65%] rounded-full animate-pulse bg-gradient-to-r ${colorClass}`}></div>
+            <div className={`h-full w-[65%] rounded-full transition-all duration-1000 group-hover:w-[85%] bg-gradient-to-r ${colorClass}`}></div>
           </div>
-          <span className="text-[10px] font-black text-slate-400 tracking-tighter">Growth: +12%</span>
+          <div className="flex flex-col items-end">
+            <span className="text-[10px] font-black text-slate-400 tracking-tighter">Growth</span>
+            <span className="text-[10px] font-black text-emerald-500 tracking-tighter">+12.5%</span>
+          </div>
         </div>
       </div>
     </div>
@@ -71,6 +77,7 @@ const CardItem = ({ card, count }) => {
       value={animatedCount}
       icon={card.icon}
       colorClass={card.color}
+      shadowColor={card.shadowColor}
     />
   );
 };
@@ -81,28 +88,32 @@ const cardConfig = [
     countKey: "buyers",
     icon: FaUsers,
     link: "/buyer/list",
-    color: "from-blue-500 to-indigo-500",
+    color: "from-blue-600 to-cyan-500",
+    shadowColor: "shadow-blue-500/20",
   },
   {
     title: "Total Sellers",
     countKey: "sellers",
     icon: FaStore,
     link: "/seller-details/list",
-    color: "from-emerald-500 to-teal-500",
+    color: "from-emerald-600 to-teal-400",
+    shadowColor: "shadow-emerald-500/20",
   },
   {
     title: "Total Consignee",
     countKey: "consignees",
     icon: FaTruck,
     link: "/consignee/list",
-    color: "from-amber-500 to-orange-500",
+    color: "from-amber-600 to-orange-400",
+    shadowColor: "shadow-amber-500/20",
   },
   {
     title: "Today's Bids",
     countKey: "bids",
     icon: FaGavel,
     link: "/manage-bids/bid-list",
-    color: "from-purple-500 to-pink-500",
+    color: "from-fuchsia-600 to-pink-500",
+    shadowColor: "shadow-fuchsia-500/20",
   },
 ];
 
