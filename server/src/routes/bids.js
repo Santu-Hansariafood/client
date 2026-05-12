@@ -367,6 +367,18 @@ router.post("/", async (req, res) => {
           await Notification.insertMany(notifications);
         }
       }
+
+      // Notify Admin and Employees about new bid creation
+      const staffRoles = ["Admin", "Employee"];
+      const staffNotifications = staffRoles.map((role) => ({
+        recipient: "all",
+        recipientRole: role,
+        title: "New Bid Created",
+        message: `A new bid for ${item.commodity} (${item.origin} → ${item.consignee}) has been created and is now ${finalStatus}.`,
+        type: "BidParticipation",
+        relatedId: item._id,
+      }));
+      await Notification.insertMany(staffNotifications);
     } catch (notifyError) {
       console.error("Error creating bid notifications:", notifyError);
     }

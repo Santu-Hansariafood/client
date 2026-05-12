@@ -298,14 +298,46 @@ router.patch("/:id/status", async (req, res) => {
       await Promise.all(notifications);
     } else if (status === "rejected") {
       const sellerMsg = `Bid rejected • ${bidCommodity} (${bidOrigin} → ${bidConsignee}) • Group: ${bidGroup} • Company: ${companyLabel} • Participation: ${participation._id}${adminNotes ? ` • Notes: ${adminNotes}` : ""}`;
-      await Notification.create({
-        recipient: participation.mobile,
-        recipientRole: "Seller",
-        title: "Bid Rejected",
-        message: sellerMsg,
-        type: "BidRejection",
-        relatedId: participation._id,
-      });
+      
+      const notifyBuyerMobile = bid?.createdByMobile || null;
+      const buyerMsg = `Participation rejected • Seller: ${participation.mobile} • ${bidCommodity} (${bidOrigin} → ${bidConsignee}) • Group: ${bidGroup} • Company: ${companyLabel}${adminNotes ? ` • Notes: ${adminNotes}` : ""}`;
+
+      const notifications = [
+        Notification.create({
+          recipient: participation.mobile,
+          recipientRole: "Seller",
+          title: "Bid Rejected",
+          message: sellerMsg,
+          type: "BidRejection",
+          relatedId: participation._id,
+        }),
+        Notification.create({
+          recipient: notifyBuyerMobile || "all",
+          recipientRole: "Buyer",
+          title: "Participation Rejected",
+          message: buyerMsg,
+          type: "BidRejection",
+          relatedId: participation._id,
+        }),
+        Notification.create({
+          recipient: "all",
+          recipientRole: "Admin",
+          title: "Participation Rejected",
+          message: `Rejected • ${bidCommodity} (${bidOrigin} → ${bidConsignee}) • Seller: ${participation.mobile} • Company: ${companyLabel}`,
+          type: "BidRejection",
+          relatedId: participation._id,
+        }),
+        Notification.create({
+          recipient: "all",
+          recipientRole: "Employee",
+          title: "Participation Rejected",
+          message: `Rejected • ${bidCommodity} (${bidOrigin} → ${bidConsignee}) • Seller: ${participation.mobile} • Company: ${companyLabel}`,
+          type: "BidRejection",
+          relatedId: participation._id,
+        }),
+      ];
+
+      await Promise.all(notifications);
     }
 
     res.json(participation);
