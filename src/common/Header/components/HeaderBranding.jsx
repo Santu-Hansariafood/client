@@ -18,7 +18,10 @@ const HeaderBranding = ({ showMenuButton, onMenuClick, isSidebarOpen }) => {
 
       <div className="min-w-0">
         <h1 className="text-sm sm:text-lg md:text-xl font-black uppercase italic tracking-tight text-white truncate">
-          <Typewriter text="Hansaria Food Private Limited" speed={70} />
+          <span className="sm:hidden">Hansaria Food</span>
+          <span className="hidden sm:inline">
+            <Typewriter text="Hansaria Food Private Limited" speed={70} />
+          </span>
         </h1>
         <p className="hidden sm:block text-[10px] uppercase tracking-[0.25em] text-emerald-200 font-bold">
           Logistics & Bid Management

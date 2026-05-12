@@ -62,14 +62,14 @@ const WeatherWidget = () => {
     <>
       <button
         onClick={() => setIsWeatherModalOpen(true)}
-        className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-2xl bg-white/10 hover:bg-white/15 transition-all duration-300 border border-white/5 group shadow-inner"
+        className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1 sm:py-1.5 rounded-xl sm:rounded-2xl bg-white/10 hover:bg-white/15 transition-all duration-300 border border-white/5 group shadow-inner"
       >
-        <div className="text-2xl group-hover:scale-110 transition-transform duration-500">
+        <div className="text-xl sm:text-2xl group-hover:scale-110 transition-transform duration-500">
           {getWeatherIcon(weather.code, weather.isDay)}
         </div>
         <div className="flex flex-col items-start leading-none">
-          <span className="text-sm font-black text-white">{weather.temp}°C</span>
-          <span className="text-[9px] font-bold text-emerald-200 uppercase tracking-tighter">Live Weather</span>
+          <span className="text-xs sm:text-sm font-black text-white">{weather.temp}°C</span>
+          <span className="hidden xs:block text-[8px] sm:text-[9px] font-bold text-emerald-200 uppercase tracking-tighter">Live Weather</span>
         </div>
       </button>
 
