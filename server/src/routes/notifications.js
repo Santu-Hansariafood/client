@@ -14,13 +14,15 @@ router.get("/", async (req, res) => {
 
     if (mobile) {
       query.$or = [{ recipient: mobile }, { recipient: "all" }];
+    } else {
+      query.recipient = "all";
     }
 
     if (role) {
       query.recipientRole = role;
     }
 
-    if (todayOnly !== "false") {
+    if (todayOnly === "true") {
       const now = new Date();
       const startOfToday = new Date(
         now.getFullYear(),
@@ -85,8 +87,16 @@ router.patch("/read-all", async (req, res) => {
   try {
     const { mobile, role } = req.body;
     const query = { isRead: false };
-    if (mobile) query.recipient = mobile;
-    if (role) query.recipientRole = role;
+
+    if (mobile) {
+      query.$or = [{ recipient: mobile }, { recipient: "all" }];
+    } else {
+      query.recipient = "all";
+    }
+
+    if (role) {
+      query.recipientRole = role;
+    }
 
     await Notification.updateMany(query, { isRead: true });
     res.json({ message: "All notifications marked as read" });

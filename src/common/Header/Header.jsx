@@ -31,6 +31,7 @@ const Header = ({
   const {
     notifications,
     unreadCount,
+    fetchNotifications,
     markAsRead,
     markAllRead,
     deleteNotification: deleteNotificationFromContext,
@@ -61,9 +62,15 @@ const Header = ({
   }, [setProfileDropdownOpen]);
 
   const toggleNotifications = useCallback(() => {
-    setShowNotifications((prev) => !prev);
+    setShowNotifications((prev) => {
+      const newState = !prev;
+      if (newState) {
+        fetchNotifications(false);
+      }
+      return newState;
+    });
     setProfileDropdownOpen(false);
-  }, [setProfileDropdownOpen]);
+  }, [setProfileDropdownOpen, fetchNotifications]);
 
   const handleNotificationClick = async (notification) => {
     if (!notification.isRead) {

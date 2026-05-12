@@ -33,8 +33,9 @@ export const NotificationProvider = ({ children }) => {
             todayOnly: "false",
           },
         });
-        setNotifications(response.data);
-        setUnreadCount(response.data.filter((n) => !n.isRead).length);
+        const fetchedData = Array.isArray(response.data) ? response.data : [];
+        setNotifications(fetchedData);
+        setUnreadCount(fetchedData.filter((n) => !n.isRead).length);
       } catch (error) {
         console.error("Failed to fetch notifications", error);
       }
