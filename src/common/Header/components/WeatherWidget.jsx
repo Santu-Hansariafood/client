@@ -76,9 +76,9 @@ const WeatherWidget = () => {
       <PopupBox
         isOpen={isWeatherModalOpen}
         onClose={() => setIsWeatherModalOpen(false)}
-        title="Weather Forecast"
-        width="w-[90vw] sm:w-[450px]"
-        height="h-auto max-h-[85vh]"
+        title="Local Weather Intelligence"
+        width="w-[95vw] sm:w-[500px]"
+        height="h-[90vh] sm:h-auto sm:max-h-[85vh]"
       >
         <div className="space-y-8 p-2">
           {/* Current Weather Detailed */}
