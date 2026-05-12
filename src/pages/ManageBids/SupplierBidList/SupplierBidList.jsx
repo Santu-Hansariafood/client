@@ -300,18 +300,22 @@ const SupplierBidList = () => {
       const entry = groups.get(groupName);
       entry.bidCount += 1;
       entry.commodities.add(commodityName);
+      if (!entry.rates) entry.rates = new Set();
+      if (bid.rate) entry.rates.add(bid.rate);
 
       if (!entry.companies.has(companyName)) {
         entry.companies.set(companyName, {
           companyName,
           bidCount: 0,
           commodities: new Set(),
+          rates: new Set(),
         });
       }
 
       const companyEntry = entry.companies.get(companyName);
       companyEntry.bidCount += 1;
       companyEntry.commodities.add(commodityName);
+      if (bid.rate) companyEntry.rates.add(bid.rate);
     });
 
     return Array.from(groups.values())
@@ -320,12 +324,14 @@ const SupplierBidList = () => {
         commodities: Array.from(g.commodities).sort((a, b) =>
           a.localeCompare(b),
         ),
+        rates: Array.from(g.rates || []).sort((a, b) => a - b),
         companies: Array.from(g.companies.values())
           .map((c) => ({
             ...c,
             commodities: Array.from(c.commodities).sort((a, b) =>
               a.localeCompare(b),
             ),
+            rates: Array.from(c.rates).sort((a, b) => a - b),
           }))
           .sort((a, b) => a.companyName.localeCompare(b.companyName)),
         companyCount: g.companies.size,
@@ -876,6 +882,12 @@ const SupplierBidList = () => {
                           <FaGavel className="text-[10px]" />
                           {g.bidCount} bid(s)
                         </span>
+                        {g.rates && g.rates.length > 0 && (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-amber-100/70 text-amber-700 px-2 py-0.5">
+                            <FaGavel className="text-[10px]" />
+                            ₹{g.rates.length === 1 ? g.rates[0] : `${g.rates[0]} - ${g.rates[g.rates.length - 1]}`}
+                          </span>
+                        )}
                       </p>
                       {g.commodities.length > 0 && (
                         <p className="text-xs font-semibold text-slate-600 mt-2 leading-relaxed flex items-center gap-1.5">
@@ -927,11 +939,17 @@ const SupplierBidList = () => {
                             </span>
                             {c.companyName}
                           </p>
-                          <p className="text-xs font-semibold text-slate-500 mt-2">
+                          <p className="text-xs font-semibold text-slate-500 mt-2 flex flex-wrap gap-2">
                             <span className="inline-flex items-center gap-1 rounded-full bg-sky-100/70 text-sky-700 px-2 py-0.5">
                               <FaGavel className="text-[10px]" />
                               {c.bidCount} bid(s)
                             </span>
+                            {c.rates && c.rates.length > 0 && (
+                              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100/70 text-emerald-700 px-2 py-0.5">
+                                <FaGavel className="text-[10px]" />
+                                ₹{c.rates.length === 1 ? c.rates[0] : `${c.rates[0]} - ${c.rates[c.rates.length - 1]}`}
+                              </span>
+                            )}
                           </p>
                           {c.commodities.length > 0 && (
                             <p className="text-xs font-semibold text-slate-600 mt-2 leading-relaxed flex items-center gap-1.5">

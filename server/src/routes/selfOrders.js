@@ -52,16 +52,57 @@ router.get("/", async (req, res) => {
     const page = parseInt(req.query.page || "0", 10);
     const limit = parseInt(req.query.limit || "0", 10);
     const search = (req.query.search || "").trim();
-    const sellerMobile = req.query.sellerMobile;
+    const mobile = req.query.mobile || req.query.sellerMobile || req.query.buyerMobile;
+    const userRole = req.query.userRole;
     const supplier = req.query.supplier;
     const startDate = req.query.startDate;
     const endDate = req.query.endDate;
     const exportAll = String(req.query.export || "").toLowerCase() === "true";
 
     let query = {};
+    
+    // Role-based filtering
+    if (userRole === "Seller" && mobile) {
+      const phoneRegex = /^(?:\+91|0)?([6-9]\d{9})$/;
+      const phoneMatch = String(mobile).match(phoneRegex);
+      const normalizedMobile = phoneMatch ? phoneMatch[1] : mobile;
+
+      const seller = await Seller.findOne({
+        "phoneNumbers.value": { $regex: new RegExp(normalizedMobile + "$") },
+      });
+
+      const mobileConditions = [
+        { sellerMobile: normalizedMobile },
+        { sellerMobile: { $regex: new RegExp(normalizedMobile + "$") } },
+      ];
+
+      if (seller) {
+        mobileConditions.push({ supplier: seller._id });
+      }
+      query.$or = mobileConditions;
+    } else if (userRole === "Buyer" && mobile) {
+      const phoneRegex = /^(?:\+91|0)?([6-9]\d{9})$/;
+      const phoneMatch = String(mobile).match(phoneRegex);
+      const normalizedMobile = phoneMatch ? phoneMatch[1] : mobile;
+
+      const buyer = await mongoose.model("Buyer").findOne({
+        mobile: { $regex: new RegExp(normalizedMobile + "$") },
+      });
+
+      const buyerConditions = [
+        { buyerMobile: normalizedMobile },
+        { buyerMobile: { $regex: new RegExp(normalizedMobile + "$") } },
+      ];
+
+      if (buyer && buyer.companyIds && buyer.companyIds.length > 0) {
+        buyerConditions.push({ companyId: { $in: buyer.companyIds } });
+      }
+      query.$or = buyerConditions;
+    }
+
     if (search) {
       const searchRegex = new RegExp(escapeRegex(search), "i");
-      query.$or = [
+      const searchConditions = [
         { saudaNo: { $regex: searchRegex } },
         { poNumber: { $regex: searchRegex } },
         { buyer: { $regex: searchRegex } },
@@ -69,27 +110,13 @@ router.get("/", async (req, res) => {
         { supplierCompany: { $regex: searchRegex } },
         { commodity: { $regex: searchRegex } },
       ];
-    }
-
-    if (sellerMobile) {
-      const phoneRegex = /^(?:\+91|0)?([6-9]\d{9})$/;
-      const phoneMatch = String(sellerMobile).match(phoneRegex);
-      const normalizedMobile = phoneMatch ? phoneMatch[1] : sellerMobile;
-
-      const mobileQuery = {
-        $or: [
-          { sellerMobile: normalizedMobile },
-          { sellerMobile: { $regex: new RegExp(normalizedMobile + "$") } },
-        ],
-      };
 
       if (query.$or) {
-        query.$and = query.$and || [];
-        query.$and.push({ $or: query.$or });
-        query.$and.push(mobileQuery);
+        // If we already have role filters, we need to AND them with the search
+        query.$and = [{ $or: query.$or }, { $or: searchConditions }];
         delete query.$or;
       } else {
-        Object.assign(query, mobileQuery);
+        query.$or = searchConditions;
       }
     }
 
@@ -307,17 +334,56 @@ router.patch("/:id/whatsapp-sent", async (req, res) => {
 router.get("/export/excel", async (req, res) => {
   try {
     const search = (req.query.search || "").trim();
-    const sellerMobile = req.query.sellerMobile;
+    const mobile = req.query.mobile || req.query.sellerMobile || req.query.buyerMobile;
+    const userRole = req.query.userRole;
     const supplier = req.query.supplier;
     const startDate = req.query.startDate;
     const endDate = req.query.endDate;
-    const userRole = req.query.userRole;
-    const mobile = req.query.mobile;
 
     let query = {};
+    
+    // Role-based filtering
+    if (userRole === "Seller" && mobile) {
+      const phoneRegex = /^(?:\+91|0)?([6-9]\d{9})$/;
+      const phoneMatch = String(mobile).match(phoneRegex);
+      const normalizedMobile = phoneMatch ? phoneMatch[1] : mobile;
+
+      const seller = await Seller.findOne({
+        "phoneNumbers.value": { $regex: new RegExp(normalizedMobile + "$") },
+      });
+
+      const mobileConditions = [
+        { sellerMobile: normalizedMobile },
+        { sellerMobile: { $regex: new RegExp(normalizedMobile + "$") } },
+      ];
+
+      if (seller) {
+        mobileConditions.push({ supplier: seller._id });
+      }
+      query.$or = mobileConditions;
+    } else if (userRole === "Buyer" && mobile) {
+      const phoneRegex = /^(?:\+91|0)?([6-9]\d{9})$/;
+      const phoneMatch = String(mobile).match(phoneRegex);
+      const normalizedMobile = phoneMatch ? phoneMatch[1] : mobile;
+
+      const buyer = await mongoose.model("Buyer").findOne({
+        mobile: { $regex: new RegExp(normalizedMobile + "$") },
+      });
+
+      const buyerConditions = [
+        { buyerMobile: normalizedMobile },
+        { buyerMobile: { $regex: new RegExp(normalizedMobile + "$") } },
+      ];
+
+      if (buyer && buyer.companyIds && buyer.companyIds.length > 0) {
+        buyerConditions.push({ companyId: { $in: buyer.companyIds } });
+      }
+      query.$or = buyerConditions;
+    }
+
     if (search) {
       const searchRegex = new RegExp(escapeRegex(search), "i");
-      query.$or = [
+      const searchConditions = [
         { saudaNo: { $regex: searchRegex } },
         { poNumber: { $regex: searchRegex } },
         { buyer: { $regex: searchRegex } },
@@ -325,25 +391,12 @@ router.get("/export/excel", async (req, res) => {
         { supplierCompany: { $regex: searchRegex } },
         { commodity: { $regex: searchRegex } },
       ];
-    }
 
-    if (sellerMobile) {
-      const normalizedMobile = String(sellerMobile)
-        .replace(/\D/g, "")
-        .slice(-10);
-      const mobileQuery = {
-        $or: [
-          { sellerMobile: normalizedMobile },
-          { sellerMobile: { $regex: new RegExp(normalizedMobile + "$") } },
-        ],
-      };
       if (query.$or) {
-        query.$and = query.$and || [];
-        query.$and.push({ $or: query.$or });
-        query.$and.push(mobileQuery);
+        query.$and = [{ $or: query.$or }, { $or: searchConditions }];
         delete query.$or;
       } else {
-        Object.assign(query, mobileQuery);
+        query.$or = searchConditions;
       }
     }
 
@@ -376,19 +429,6 @@ router.get("/export/excel", async (req, res) => {
       .sort({ saudaNo: -1 })
       .populate("supplier", "sellerName")
       .lean();
-
-    if (userRole === "Buyer" && mobile) {
-      // Note: In a real scenario, you'd fetch the buyer's company IDs here
-      // For now, we assume the query might need more server-side role logic if not handled by client
-    } else if (userRole === "Seller" && mobile) {
-      const normalizedMobile = String(mobile).replace(/\D/g, "").slice(-10);
-      items = items.filter(
-        (item) =>
-          String(item.sellerMobile).includes(normalizedMobile) ||
-          (item.supplier &&
-            String(item.supplier._id).includes(normalizedMobile)),
-      );
-    }
 
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet("Self Orders");

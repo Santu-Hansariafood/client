@@ -9,7 +9,8 @@ import {
 import api from "../../../utils/apiClient/apiClient";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import { FaDownload, FaWhatsapp } from "react-icons/fa";
+import { FaDownload, FaWhatsapp, FaFilter, FaTimes } from "react-icons/fa";
+import { AiOutlineEye, AiOutlineSearch } from "react-icons/ai";
 import Loading from "../../../common/Loading/Loading";
 import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
 import { FaClipboardList } from "react-icons/fa";
@@ -38,164 +39,96 @@ const API_URL = "/self-order";
 const SelfOrderList = () => {
   const navigate = useNavigate();
   const { userRole, mobile } = useAuth();
-  const [filteredData, setFilteredData] = useState([]);
+  
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [totalItems, setTotalItems] = useState(0);
+  
   const [consigneeMap, setConsigneeMap] = useState(new Map());
   const [consigneeData, setConsigneeData] = useState([]);
   const [supplierData, setSupplierData] = useState([]);
   const [buyerData, setBuyerData] = useState([]);
   const [sellerProfileData, setSellerProfileData] = useState([]);
   const [companyData, setCompanyData] = useState([]);
+  
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
-  const [totalItems, setTotalItems] = useState(0);
-  const [serverPaginated, setServerPaginated] = useState(false);
   const [reloadFlag, setReloadFlag] = useState(0);
   const [selectedItem, setSelectedItem] = useState(null);
   const [searchInput, setSearchInput] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
 
-  useEffect(() => {
-    let isMounted = true;
-    const fetchData = async () => {
-      try {
-        const page = currentPage || 1;
-        const search = searchInput?.trim() || "";
-        const [
-          orderRes,
-          consignees,
-          allBuyers,
-          suppliers,
-          sellerProfiles,
-          companies,
-        ] = await Promise.all([
-          api.get(
-            `${API_URL}?page=${page}&limit=${itemsPerPage}&search=${search}&sortBy=saudaNo&sortOrder=desc`,
-          ),
-          fetchAllPages("/consignees", { limit: 200 }).catch(() => []),
-          fetchAllPages("/buyers", { limit: 200 }).catch(() => []),
-          fetchAllPages("/seller-company", { limit: 200 }).catch(() => []),
-          fetchAllPages("/sellers", { limit: 200 }).catch(() => []),
-          fetchAllPages("/companies", { limit: 200 }).catch(() => []),
-        ]);
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    try {
+      const page = currentPage || 1;
+      const search = searchInput?.trim() || "";
+      
+      const queryParams = new URLSearchParams({
+        page,
+        limit: itemsPerPage,
+        search,
+        sortBy: "saudaNo",
+        sortOrder: "desc",
+        userRole,
+        mobile,
+        startDate: startDate || "",
+        endDate: endDate || "",
+      }).toString();
+      
+      const [
+        orderRes,
+        consignees,
+        allBuyers,
+        suppliers,
+        sellerProfiles,
+        companies,
+      ] = await Promise.all([
+        api.get(`${API_URL}?${queryParams}`),
+        fetchAllPages("/consignees", { limit: 200 }).catch(() => []),
+        fetchAllPages("/buyers", { limit: 200 }).catch(() => []),
+        fetchAllPages("/seller-company", { limit: 200 }).catch(() => []),
+        fetchAllPages("/sellers", { limit: 200 }).catch(() => []),
+        fetchAllPages("/companies", { limit: 200 }).catch(() => []),
+      ]);
 
-        if (!isMounted) return;
+      const orderData = orderRes.data || {};
+      const items = Array.isArray(orderData.data) ? orderData.data : (Array.isArray(orderData) ? orderData : []);
+      const total = orderData.total || orderData.totalItems || items.length;
 
-        const orderData = orderRes.data || {};
-        let raw = [];
-        let total = 0;
-        const hasPaginationMeta =
-          typeof orderData.page === "number" ||
-          typeof orderData.totalPages === "number" ||
-          typeof orderData.limit === "number" ||
-          typeof orderData.total === "number" ||
-          typeof orderData.totalItems === "number";
+      setData(items);
+      setTotalItems(total);
+      setConsigneeData(consignees);
+      setSupplierData(suppliers);
+      setBuyerData(allBuyers);
+      setSellerProfileData(sellerProfiles);
+      setCompanyData(companies);
 
-        if (orderData && Array.isArray(orderData.data)) {
-          raw = orderData.data;
-          total =
-            typeof orderData.total === "number"
-              ? orderData.total
-              : typeof orderData.totalItems === "number"
-                ? orderData.totalItems
-                : raw.length;
-        } else if (Array.isArray(orderData)) {
-          raw = orderData;
-          total = raw.length;
-        } else {
-          raw = orderData?.data || [];
-          total = raw.length;
-        }
-        setServerPaginated(hasPaginationMeta);
-
-        let filteredOrders = raw;
-
-        if (userRole === "Buyer") {
-          const buyer = allBuyers.find((b) =>
-            b.mobile?.some((m) => String(m) === String(mobile)),
-          );
-          if (buyer) {
-            const buyerCompanyIds = (buyer.companyIds || []).map((id) =>
-              String(id),
-            );
-            const buyerCompanyNames = (buyer.companyNames || []).map((name) =>
-              name.trim().toLowerCase(),
-            );
-
-            filteredOrders = raw.filter((item) => {
-              const matchId =
-                item.companyId &&
-                buyerCompanyIds.includes(String(item.companyId));
-              const matchName =
-                item.buyerCompany &&
-                buyerCompanyNames.includes(
-                  item.buyerCompany.trim().toLowerCase(),
-                );
-
-              return matchId || matchName;
-            });
-
-            if (total === raw.length) {
-              total = filteredOrders.length;
-            }
-          }
-        } else if (userRole === "Seller") {
-          const seller = sellerProfiles.find((s) =>
-            s.phoneNumbers?.some((p) => String(p.value) === String(mobile)),
-          );
-
-          filteredOrders = raw.filter((item) => {
-            return (
-              String(item.sellerMobile) === String(mobile) ||
-              (seller && String(item.supplier) === String(seller._id))
-            );
-          });
-          if (total === raw.length) {
-            total = filteredOrders.length;
-          }
-        }
-
-        filteredOrders = [...filteredOrders].sort((a, b) => {
-          const aS = String(a.saudaNo || "");
-          const bS = String(b.saudaNo || "");
-          return bS.localeCompare(aS, undefined, { numeric: true });
-        });
-
-        setFilteredData(filteredOrders);
-        setTotalItems(total);
-
-        setConsigneeData(consignees);
-        setSupplierData(suppliers);
-
-        setBuyerData(allBuyers);
-
-        setSellerProfileData(sellerProfiles);
-        setCompanyData(companies);
-
-        const map = new Map();
-        consignees.forEach((c) => {
-          if (c?._id) map.set(String(c._id), c.name || c.label || "-");
-        });
-        setConsigneeMap(map);
-      } catch {
-        if (isMounted) toast.error("Failed to fetch data from the server.");
-      }
-    };
-    fetchData();
-    return () => {
-      isMounted = false;
-    };
-  }, [userRole, mobile, currentPage, itemsPerPage, searchInput, reloadFlag]);
-
-  const currentItems = useMemo(() => {
-    if (!filteredData || filteredData.length === 0) return [];
-    if (serverPaginated || totalItems > filteredData.length) {
-      return filteredData;
+      const map = new Map();
+      consignees.forEach((c) => {
+        if (c?._id) map.set(String(c._id), c.name || c.label || "-");
+      });
+      setConsigneeMap(map);
+    } catch (error) {
+      console.error("Fetch error:", error);
+      toast.error("Failed to fetch order data");
+    } finally {
+      setLoading(false);
     }
-    const start = (currentPage - 1) * itemsPerPage;
-    const end = start + itemsPerPage;
-    return filteredData.slice(start, end);
-  }, [filteredData, totalItems, currentPage, itemsPerPage, serverPaginated]);
+  }, [currentPage, itemsPerPage, searchInput, userRole, mobile, startDate, endDate]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData, reloadFlag]);
+
+  const handleClearFilters = () => {
+    setSearchInput("");
+    setStartDate("");
+    setEndDate("");
+    setCurrentPage(1);
+    setReloadFlag(prev => prev + 1);
+  };
 
   const handlePageChange = useCallback((pageNumber) => {
     setCurrentPage(pageNumber);
@@ -251,11 +184,11 @@ const SelfOrderList = () => {
         finalMobile = finalMobile.replace(/^0+/, "");
 
         const message = `Sauda No: ${item.saudaNo || "N/A"}
-  PO: ${item.poNumber || "N/A"}
-  Buyer: ${item.buyerCompany || item.buyer || "N/A"}
-  Supplier: ${item.supplierCompany || item.supplier || "N/A"}
-  Commodity: ${item.commodity || "N/A"}
-  Qty: ${item.quantity || "0"}`;
+PO: ${item.poNumber || "N/A"}
+Buyer: ${item.buyerCompany || item.buyer || "N/A"}
+Supplier: ${item.supplierCompany || item.supplier || "N/A"}
+Commodity: ${item.commodity || "N/A"}
+Qty: ${item.quantity || "0"}`;
 
         const pdfData = buildSaudaPdfData({
           item,
@@ -265,102 +198,47 @@ const SelfOrderList = () => {
           companyData,
           getConsigneeDisplay,
         });
-        let blob;
-
-        try {
-          blob = await pdf(<SaudaPDF data={pdfData} />).toBlob();
-
-          if (!blob || blob.size === 0) {
-            throw new Error("Empty PDF generated");
-          }
-        } catch (err) {
-          console.error("PDF generation failed:", err);
-          toast.dismiss(toastId);
-          toast.error("Failed to generate PDF");
-          return;
-        }
+        
+        const blob = await pdf(<SaudaPDF data={pdfData} />).toBlob();
+        if (!blob || blob.size === 0) throw new Error("PDF generation failed");
 
         const fileName = `Sauda-${item.saudaNo}.pdf`;
-
-        try {
-          const url = window.URL.createObjectURL(blob);
-          const link = document.createElement("a");
-
-          link.href = url;
-          link.download = fileName;
-          document.body.appendChild(link);
-
-          link.dispatchEvent(
-            new MouseEvent("click", {
-              bubbles: true,
-              cancelable: true,
-              view: window,
-            }),
-          );
-
-          document.body.removeChild(link);
-
-          setTimeout(() => {
-            window.URL.revokeObjectURL(url);
-          }, 2000);
-        } catch (downloadErr) {
-          console.error("Download failed:", downloadErr);
-        }
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
 
         let finalMessage = message;
-
         try {
           const formData = new FormData();
           formData.append("file", blob, fileName);
-
           const uploadRes = await api.post("/upload-pdf", formData, {
             headers: { "Content-Type": "multipart/form-data" },
           });
-
           const fileUrl = uploadRes?.data?.url || uploadRes?.data?.fileUrl;
-
-          if (fileUrl) {
-            finalMessage = `${message}\n\nDownload PDF: ${fileUrl}`;
-          }
+          if (fileUrl) finalMessage = `${message}\n\nDownload PDF: ${fileUrl}`;
         } catch (err) {
-          console.error("Upload failed:", err);
-          toast.error("PDF upload failed, sending text only");
+          console.warn("PDF Upload failed, falling back to text only", err);
         }
 
-        const whatsappUrl = `https://wa.me/${finalMobile}?text=${encodeURIComponent(finalMessage)}`;
-        window.open(whatsappUrl, "_blank");
-
-        toast.success("Opening WhatsApp...");
-
-        try {
-          await api.patch(`/self-order/${item._id}/whatsapp-sent`);
-
-          setFilteredData((prev) =>
-            prev.map((o) =>
-              o._id === item._id ? { ...o, whatsappSent: true } : o,
-            ),
-          );
-        } catch (err) {
-          console.error("Status update failed:", err);
-        }
-
+        window.open(`https://wa.me/${finalMobile}?text=${encodeURIComponent(finalMessage)}`, "_blank");
+        
+        await api.patch(`/self-order/${item._id}/whatsapp-sent`);
+        setData(prev => prev.map(o => o._id === item._id ? { ...o, whatsappSent: true } : o));
+        
         toast.dismiss(toastId);
+        toast.success("WhatsApp opened successfully");
       } catch (error) {
         toast.dismiss(toastId);
         console.error(error);
-        toast.error(
-          error?.message || "Something went wrong while preparing WhatsApp",
-        );
+        toast.error("Failed to prepare WhatsApp message");
       }
     },
-    [
-      userRole,
-      getConsigneeDisplay,
-      buyerData,
-      supplierData,
-      consigneeData,
-      companyData,
-    ],
+    [userRole, getConsigneeDisplay, buyerData, supplierData, consigneeData, companyData],
   );
 
   const openWhatsAppChat = useCallback((mobileNumber, item) => {
@@ -378,17 +256,11 @@ const SelfOrderList = () => {
     }
 
     let finalMobile = cleanMobile;
-    if (finalMobile.length === 10) {
-      finalMobile = `91${finalMobile}`;
-    }
-
+    if (finalMobile.length === 10) finalMobile = `91${finalMobile}`;
     finalMobile = finalMobile.replace(/^0+/, "");
+    
     const message = `Hello, regarding Sauda No: ${item?.saudaNo || ""}`;
-
-    const fallbackMessage = message;
-
-    const whatsappUrl = `https://wa.me/${finalMobile}?text=${encodeURIComponent(fallbackMessage)}`;
-    window.open(whatsappUrl, "_blank");
+    window.open(`https://wa.me/${finalMobile}?text=${encodeURIComponent(message)}`, "_blank");
   }, []);
 
   const handleView = useCallback(
@@ -400,32 +272,29 @@ const SelfOrderList = () => {
 
   const handleClosePopup = useCallback(() => setSelectedItem(null), []);
 
-  const headers = useMemo(
-    () =>
-      [
-        "Sl No",
-        "Date",
-        "Sauda No",
-        "PO Number",
-        "Buyer Company",
-        userRole === "Admin" ? "Mobile" : null,
-        "Consignee",
-        "Commodity",
-        "Quantity",
-        "Rate",
-        "Seller",
-        "Agent Name",
-        userRole === "Admin" || userRole === "Employee" ? "Buyer Emails" : null,
-        userRole === "Admin" || userRole === "Employee"
-          ? "Seller Emails"
-          : null,
-        userRole === "Admin" || userRole === "Employee"
-          ? "WhatsApp Sent"
-          : null,
-        userRole === "Admin" || userRole === "Employee" ? "Action" : null,
-      ].filter(Boolean),
-    [userRole],
-  );
+  const headers = useMemo(() => {
+    if (userRole === "Seller") {
+      return ["Sl No", "Date", "Sauda No", "Supplier", "Buyer", "Consignee", "Commodity", "Qty", "Rate", "Action"];
+    }
+    return [
+      "Sl No",
+      "Date",
+      "Sauda No",
+      "PO Number",
+      "Buyer Company",
+      userRole === "Admin" ? "Mobile" : null,
+      "Consignee",
+      "Commodity",
+      "Quantity",
+      "Rate",
+      "Seller",
+      "Agent Name",
+      userRole === "Admin" || userRole === "Employee" ? "Buyer Emails" : null,
+      userRole === "Admin" || userRole === "Employee" ? "Seller Emails" : null,
+      userRole === "Admin" || userRole === "Employee" ? "WhatsApp Sent" : null,
+      userRole === "Admin" || userRole === "Employee" ? "Action" : null,
+    ].filter(Boolean);
+  }, [userRole]);
 
   const handleEdit = useCallback(
     (item) => {
@@ -442,15 +311,11 @@ const SelfOrderList = () => {
   );
 
   const handleDelete = useCallback(async (item) => {
-    if (!item?._id) {
-      toast.error("Missing order id. Cannot delete this order.");
-      return;
-    }
+    if (!item?._id) return;
 
     const confirmDelete = window.confirm(
       `Are you sure you want to delete PO Number: ${item.poNumber || "N/A"}?`,
     );
-
     if (!confirmDelete) return;
 
     try {
@@ -464,8 +329,9 @@ const SelfOrderList = () => {
 
   const rows = useMemo(
     () =>
-      currentItems.map((item, index) => {
-        const slNo = totalItems - ((currentPage - 1) * itemsPerPage + index);
+      data.map((item, index) => {
+        const slNo = (currentPage - 1) * itemsPerPage + index + 1;
+        const displaySlNo = userRole === "Seller" ? slNo : totalItems - ((currentPage - 1) * itemsPerPage + index);
 
         const formattedDate = item.poDate
           ? new Date(item.poDate).toLocaleDateString("en-GB")
@@ -473,10 +339,49 @@ const SelfOrderList = () => {
             ? new Date(item.createdAt).toLocaleDateString("en-GB")
             : "N/A";
 
+        if (userRole === "Seller") {
+          return [
+            <span key={`sl-${item._id}`} className="font-black text-slate-400">{slNo}</span>,
+            <span key={`date-${item._id}`} className="font-bold text-slate-600">{formattedDate}</span>,
+            <span key={`sauda-${item._id}`} className="font-black text-emerald-600 bg-emerald-50 px-2 py-1 rounded-lg border border-emerald-100">{item.saudaNo || "N/A"}</span>,
+            <span key={`supplier-${item._id}`} className="font-bold text-slate-800">
+              {item?.supplier?.sellerName || item.supplierCompany || "N/A"}
+            </span>,
+            <span key={`buyer-${item._id}`} className="font-medium text-slate-600">{item.buyerCompany || "N/A"}</span>,
+            getConsigneeDisplay(item) || "N/A",
+            <span key={`comm-${item._id}`} className="font-bold text-slate-700">{item.commodity || "N/A"}</span>,
+            <span key={`qty-${item._id}`} className="font-black text-slate-900">{item.quantity || "0"}</span>,
+            <span key={`rate-${item._id}`} className="font-black text-emerald-700 bg-emerald-50 px-2 py-1 rounded-lg border border-emerald-100">₹{item.rate || "0"}</span>,
+            <div className="flex items-center gap-2" key={`actions-${item._id}`}>
+              <button
+                onClick={() => handleView(item)}
+                className="p-2 rounded-xl bg-slate-100 text-slate-600 hover:bg-indigo-600 hover:text-white transition-all shadow-sm border border-slate-200"
+                title="View Details"
+              >
+                <AiOutlineEye size={18} />
+              </button>
+              <DownloadSauda
+                data={{ ...item, consignee: getConsigneeDisplay(item) }}
+                consigneeData={consigneeData}
+                supplierData={supplierData}
+                buyerData={buyerData}
+                sellerProfileData={sellerProfileData}
+                button={
+                  <button
+                    className="p-2 rounded-xl bg-emerald-50 text-emerald-700 hover:bg-emerald-600 hover:text-white transition-all shadow-sm border border-emerald-100"
+                    title="Download Sauda"
+                  >
+                    <FaDownload size={16} />
+                  </button>
+                }
+              />
+            </div>
+          ];
+        }
+
         return [
           <div className="flex items-center gap-2" key={`sl-${item._id}`}>
-            <span>{slNo}</span>
-
+            <span className="font-black text-slate-400">{displaySlNo}</span>
             <DownloadSauda
               data={{ ...item, consignee: getConsigneeDisplay(item) }}
               consigneeData={consigneeData}
@@ -485,88 +390,72 @@ const SelfOrderList = () => {
               sellerProfileData={sellerProfileData}
               button={
                 <button
-                  className="flex items-center justify-center w-7 h-7 rounded-md bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition"
+                  className="flex items-center justify-center w-8 h-8 rounded-xl bg-emerald-50 text-emerald-700 hover:bg-emerald-600 hover:text-white transition-all shadow-sm border border-emerald-100"
                   title="Download Sauda"
                 >
-                  <FaDownload size={13} />
+                  <FaDownload size={14} />
                 </button>
               }
             />
           </div>,
 
-          formattedDate,
-          item.saudaNo || "N/A",
-          item.poNumber || "N/A",
-          item.buyerCompany || "N/A",
+          <span key={`date-${item._id}`} className="font-bold text-slate-600">{formattedDate}</span>,
+          <span key={`sauda-${item._id}`} className="font-black text-emerald-600 bg-emerald-50 px-2 py-1 rounded-lg border border-emerald-100">{item.saudaNo || "N/A"}</span>,
+          <span key={`po-${item._id}`} className="font-bold text-slate-700 uppercase tracking-tight">{item.poNumber || "N/A"}</span>,
+          <span key={`buyer-${item._id}`} className="font-bold text-slate-800">{item.buyerCompany || "N/A"}</span>,
 
           userRole === "Admin" ? (
             <div className="flex items-center gap-2" key={`mobile-${item._id}`}>
-              <span>{item.buyerMobile || "N/A"}</span>
+              <span className="font-medium text-slate-600">{item.buyerMobile || "N/A"}</span>
               {item.buyerMobile && (
                 <button
                   onClick={() => {
-                    const isMobile =
-                      typeof navigator !== "undefined" &&
-                      /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(
-                        navigator.userAgent,
-                      );
-                    if (isMobile) {
-                      openWhatsAppChat(item.buyerMobile, item);
-                    } else {
-                      handleSmartWhatsApp(item, "buyer");
-                    }
+                    const isMobile = /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent);
+                    if (isMobile) openWhatsAppChat(item.buyerMobile, item);
+                    else handleSmartWhatsApp(item, "buyer");
                   }}
-                  className="text-slate-400 hover:text-green-500"
+                  className="p-1.5 rounded-lg text-emerald-500 hover:bg-emerald-50 transition-colors"
                 >
-                  <FaWhatsapp size={18} />
+                  <FaWhatsapp size={20} />
                 </button>
               )}
             </div>
           ) : null,
 
           getConsigneeDisplay(item) || "N/A",
-          item.commodity || "N/A",
-          item.quantity || "0",
-          item.rate || "0",
+          <span key={`comm-${item._id}`} className="font-bold text-slate-700">{item.commodity || "N/A"}</span>,
+          <span key={`qty-${item._id}`} className="font-black text-slate-900">{item.quantity || "0"}</span>,
+          <span key={`rate-${item._id}`} className="font-black text-emerald-700 bg-emerald-50 px-2 py-1 rounded-lg border border-emerald-100">₹{item.rate || "0"}</span>,
 
-          <div className="flex items-center" key={`seller-${item._id}`}>
-            <span className="font-semibold text-slate-700 leading-none">
-              {item?.supplier?.sellerName || item.supplierCompany || "N/A"}
-            </span>
-          </div>,
+          <span key={`seller-${item._id}`} className="font-bold text-slate-800">
+            {item?.supplier?.sellerName || item.supplierCompany || "N/A"}
+          </span>,
 
           item.agentName || "N/A",
 
           userRole === "Admin" || userRole === "Employee"
-            ? item.buyerEmails?.filter(Boolean).join(", ") || "N/A"
+            ? <span key={`bemails-${item._id}`} className="text-xs text-slate-500 line-clamp-1">{item.buyerEmails?.filter(Boolean).join(", ") || "N/A"}</span>
             : null,
 
           userRole === "Admin" || userRole === "Employee" ? (
-            <div className="flex flex-col gap-1" key={`seller-${item._id}`}>
-              <span className="text-xs text-slate-500">
+            <div className="flex flex-col gap-1" key={`seller-dt-${item._id}`}>
+              <span className="text-[10px] text-slate-400 font-bold uppercase truncate max-w-[120px]">
                 {item.sellerEmails?.filter(Boolean).join(", ") || "N/A"}
               </span>
               <div className="flex items-center gap-2">
-                <span className="font-medium text-slate-700">
+                <span className="font-bold text-slate-700 text-xs">
                   {item.sellerMobile || "N/A"}
                 </span>
                 {item.sellerMobile && userRole === "Admin" && (
                   <button
                     onClick={() => {
-                      const isMobile =
-                        typeof navigator !== "undefined" &&
-                        /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(
-                          navigator.userAgent,
-                        );
-                      if (isMobile) {
-                        openWhatsAppChat(item.sellerMobile, item);
-                      } else {
-                        handleSmartWhatsApp(item, "seller");
-                      }
+                      const isMobile = /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent);
+                      if (isMobile) openWhatsAppChat(item.sellerMobile, item);
+                      else handleSmartWhatsApp(item, "seller");
                     }}
-                    className="text-slate-400 hover:text-green-500"
+                    className="text-emerald-500 hover:scale-110 transition-transform"
                   >
-                    <FaWhatsapp size={18} />
+                    <FaWhatsapp size={16} />
                   </button>
                 )}
               </div>
@@ -576,11 +465,11 @@ const SelfOrderList = () => {
           userRole === "Admin" || userRole === "Employee" ? (
             <div className="flex justify-center" key={`status-${item._id}`}>
               {item.whatsappSent ? (
-                <span className="px-2 py-1 rounded-full bg-green-100 text-green-700 text-xs font-bold">
+                <span className="px-3 py-1 rounded-xl bg-emerald-100 text-emerald-700 text-[10px] font-black uppercase tracking-widest shadow-sm">
                   Sent
                 </span>
               ) : (
-                <span className="px-2 py-1 rounded-full bg-slate-100 text-slate-500 text-xs font-bold">
+                <span className="px-3 py-1 rounded-xl bg-slate-100 text-slate-500 text-[10px] font-black uppercase tracking-widest shadow-sm">
                   Pending
                 </span>
               )}
@@ -601,121 +490,131 @@ const SelfOrderList = () => {
           ) : null,
         ].filter(Boolean);
       }),
-    [
-      currentItems,
-      handleView,
-      handleEdit,
-      handleDelete,
-      handleSmartWhatsApp,
-      openWhatsAppChat,
-      getConsigneeDisplay,
-      currentPage,
-      itemsPerPage,
-      userRole,
-      totalItems,
-      serverPaginated,
-      consigneeData,
-      supplierData,
-      buyerData,
-      sellerProfileData,
-    ],
+    [data, handleView, handleEdit, handleDelete, handleSmartWhatsApp, openWhatsAppChat, getConsigneeDisplay, currentPage, itemsPerPage, userRole, totalItems, consigneeData, supplierData, buyerData, sellerProfileData],
   );
 
   const handleSearchChange = useCallback((e) => {
-    const searchTerm = e.target.value;
-    setSearchInput(searchTerm);
+    setSearchInput(e.target.value);
     setCurrentPage(1);
   }, []);
 
   const handleDownloadExcel = useCallback(async () => {
     let toastId;
     try {
-      toastId = toast.loading("Preparing Excel...");
-      const formatDateParam = (value) => {
-        if (!value) return undefined;
-        const date = value instanceof Date ? value : new Date(value);
-        if (Number.isNaN(date.getTime())) return undefined;
-        return date.toISOString().split("T")[0];
+      toastId = toast.loading("Preparing Excel Data...");
+      
+      const params = {
+        search: searchInput?.trim() || "",
+        startDate: startDate || "",
+        endDate: endDate || "",
+        userRole,
+        mobile,
       };
 
-      const formattedStartDate = formatDateParam(startDate);
-      const formattedEndDate = formatDateParam(endDate);
-      const trimmedSearch = searchInput?.trim() || "";
-
       const response = await api.get(`${API_URL}/export/excel`, {
-        params: {
-          search: trimmedSearch,
-          startDate: formattedStartDate,
-          endDate: formattedEndDate,
-          userRole,
-          mobile,
-        },
+        params,
         responseType: "blob",
-        timeout: 60000, // Longer timeout for large exports
+        timeout: 120000,
       });
 
-      const blob = new Blob([response.data], {
-        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-      });
-      const url = window.URL.createObjectURL(blob);
+      const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement("a");
       link.href = url;
-      link.setAttribute(
-        "download",
-        `SelfOrders_${new Date().toISOString().split("T")[0]}.xlsx`,
-      );
+      link.setAttribute("download", `SelfOrders_${new Date().toISOString().split("T")[0]}.xlsx`);
       document.body.appendChild(link);
       link.click();
       link.remove();
       window.URL.revokeObjectURL(url);
 
       toast.dismiss(toastId);
-      toast.success("Excel downloaded");
+      toast.success("Excel downloaded successfully");
     } catch (error) {
       if (toastId) toast.dismiss(toastId);
-      console.error("Excel Download Error:", error);
-      toast.error("Failed to download Excel");
+      toast.error("Failed to download Excel file");
     }
   }, [userRole, mobile, searchInput, startDate, endDate]);
 
   return (
     <Suspense fallback={<Loading />}>
       <AdminPageShell
-        title="Self order list"
-        subtitle="Manage orders — search by buyer, Sauda no, or PO number"
+        title="Order Intelligence"
+        subtitle="Live tracking and management of purchase orders"
         icon={FaClipboardList}
         noContentCard
       >
-        <div className="max-w-full space-y-4 sm:space-y-6">
-          <SelfOrderSearchBar
-            onBack={() => navigate(-1)}
-            searchInput={searchInput}
-            onSearchChange={handleSearchChange}
-            onDownloadExcel={handleDownloadExcel}
-            startDate={startDate}
-            endDate={endDate}
-            onStartDateChange={setStartDate}
-            onEndDateChange={setEndDate}
-          />
+        <div className="relative min-h-screen overflow-hidden -m-4 sm:-m-6 lg:-m-8 p-4 sm:p-6 lg:p-8">
+          {/* Animated Background Accents */}
+          <div className="absolute inset-0 -z-10 overflow-hidden pointer-events-none">
+            <div className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] bg-emerald-200/20 blur-[120px] rounded-full animate-pulse" />
+            <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-200/20 blur-[120px] rounded-full animate-pulse delay-700" />
+          </div>
 
-          <SelfOrderTable headers={headers} rows={rows} />
+          <div className="max-w-full space-y-6 animate-fade-in-up">
+            <div className="bg-white/60 backdrop-blur-2xl rounded-[2.5rem] p-6 sm:p-8 border border-white/60 shadow-2xl shadow-slate-200/50">
+              <SelfOrderSearchBar
+                onBack={() => navigate(-1)}
+                searchInput={searchInput}
+                onSearchChange={handleSearchChange}
+                onDownloadExcel={handleDownloadExcel}
+                startDate={startDate}
+                endDate={endDate}
+                onStartDateChange={setStartDate}
+                onEndDateChange={setEndDate}
+                onClearFilters={handleClearFilters}
+              />
+            </div>
 
-          <Pagination
-            currentPage={currentPage}
-            totalItems={totalItems}
-            itemsPerPage={itemsPerPage}
-            onPageChange={handlePageChange}
-          />
+            <div className="bg-white/60 backdrop-blur-2xl rounded-[2.5rem] p-4 sm:p-8 border border-white/60 shadow-2xl shadow-slate-200/50">
+              {loading ? (
+                <div className="py-24 flex flex-col items-center justify-center gap-4">
+                  <div className="w-12 h-12 border-4 border-emerald-600 border-t-transparent rounded-full animate-spin" />
+                  <p className="text-sm font-black text-slate-400 uppercase tracking-widest">Synchronizing Data...</p>
+                </div>
+              ) : (
+                <>
+                  <SelfOrderTable headers={headers} rows={rows} />
+                  
+                  {data.length === 0 && (
+                    <div className="py-24 text-center flex flex-col items-center justify-center gap-6">
+                      <div className="w-20 h-20 bg-slate-50 rounded-[2rem] flex items-center justify-center text-slate-200 shadow-inner">
+                        <FaClipboardList size={40} />
+                      </div>
+                      <div className="space-y-1">
+                        <h3 className="text-xl font-black text-slate-800 tracking-tight">No orders found</h3>
+                        <p className="text-sm text-slate-400 font-medium">Try adjusting your filters or search terms</p>
+                      </div>
+                      <button 
+                        onClick={handleClearFilters}
+                        className="px-6 py-2.5 rounded-2xl bg-slate-900 text-white text-xs font-black uppercase tracking-widest hover:bg-slate-800 transition-all shadow-xl active:scale-95"
+                      >
+                        Clear all filters
+                      </button>
+                    </div>
+                  )}
 
-          {selectedItem && (
-            <PopupBox
-              isOpen={!!selectedItem}
-              onClose={handleClosePopup}
-              title={`Sauda details — ${selectedItem.saudaNo}`}
-            >
-              <OrderDetails item={selectedItem} />
-            </PopupBox>
-          )}
+                  <div className="mt-8 border-t border-slate-100 pt-8">
+                    <Pagination
+                      currentPage={currentPage}
+                      totalItems={totalItems}
+                      itemsPerPage={itemsPerPage}
+                      onPageChange={handlePageChange}
+                    />
+                  </div>
+                </>
+              )}
+            </div>
+
+            {selectedItem && (
+              <PopupBox
+                isOpen={!!selectedItem}
+                onClose={handleClosePopup}
+                title={`Order Intelligence — ${selectedItem.saudaNo}`}
+                width="w-[95vw] sm:w-[800px]"
+              >
+                <OrderDetails item={selectedItem} />
+              </PopupBox>
+            )}
+          </div>
         </div>
       </AdminPageShell>
     </Suspense>
@@ -731,62 +630,57 @@ const SelfOrderSearchBar = ({
   endDate,
   onStartDateChange,
   onEndDateChange,
+  onClearFilters,
 }) => {
   return (
-    <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 px-1 sm:px-0">
-      <div className="flex items-center gap-2 flex-wrap">
+    <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
+      <div className="flex items-center gap-3 flex-wrap">
         <button
           onClick={onBack}
-          className="bg-gray-200 text-gray-600 px-3 py-1.5 rounded-lg text-sm hover:bg-gray-300 transition"
+          className="px-6 py-2.5 rounded-2xl bg-white text-slate-600 text-xs font-black uppercase tracking-widest border border-slate-200 hover:bg-slate-50 transition-all shadow-sm active:scale-95"
         >
           Back
         </button>
         <button
           onClick={onDownloadExcel}
-          className="flex items-center gap-2 bg-emerald-600 text-white px-3 py-1.5 rounded-lg text-sm hover:bg-emerald-700 transition"
+          className="flex items-center gap-2 px-6 py-2.5 rounded-2xl bg-emerald-600 text-white text-xs font-black uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-200 active:scale-95"
         >
           <FaDownload size={14} />
-          <span>Download Excel</span>
+          <span>Export Excel</span>
         </button>
-        <div className="flex items-center gap-2">
+        
+        <div className="h-10 w-[1px] bg-slate-100 hidden sm:block mx-2" />
+        
+        <div className="flex items-center gap-3">
           <div className="flex flex-col">
-            <label className="text-xs text-slate-600">Start Date</label>
-            <DateSelector
-              selectedDate={startDate}
-              onChange={onStartDateChange}
-            />
+            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1 ml-1">Start Date</span>
+            <DateSelector selectedDate={startDate} onChange={onStartDateChange} />
           </div>
           <div className="flex flex-col">
-            <label className="text-xs text-slate-600">End Date</label>
+            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1 ml-1">End Date</span>
             <DateSelector selectedDate={endDate} onChange={onEndDateChange} />
           </div>
+          {(startDate || endDate || searchInput) && (
+            <button
+              onClick={onClearFilters}
+              className="mt-5 p-2 rounded-xl bg-red-50 text-red-500 hover:bg-red-100 transition-all shadow-sm"
+              title="Clear all filters"
+            >
+              <FaTimes size={16} />
+            </button>
+          )}
         </div>
       </div>
-      <div className="flex-1 w-full sm:w-auto">
-        <div
-          className="flex items-center w-full max-w-md bg-white border border-emerald-100 rounded-xl px-3 py-2 shadow-sm focus-within:ring-2 focus-within:ring-emerald-400/50 focus-within:border-emerald-400 transition-all"
-          role="search"
-        >
-          <svg
-            className="text-emerald-600/70 shrink-0"
-            xmlns="http://www.w3.org/2000/svg"
-            width="18"
-            height="18"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden
-          >
-            <circle cx="11" cy="11" r="8" />
-            <line x1="21" y1="21" x2="16.65" y2="16.65" />
-          </svg>
+
+      <div className="w-full lg:max-w-md">
+        <div className="relative group">
+          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+            <AiOutlineSearch size={20} className="text-slate-400 group-focus-within:text-emerald-600 transition-colors" />
+          </div>
           <input
             type="text"
-            placeholder="Search..."
-            className="w-full min-w-0 px-2 py-1 bg-transparent text-sm text-slate-800 placeholder-slate-400 focus:outline-none"
+            placeholder="Search by Sauda, PO, Buyer, or Commodity..."
+            className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-[1.5rem] text-sm font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500/50 transition-all"
             value={searchInput}
             onChange={onSearchChange}
           />
@@ -798,7 +692,7 @@ const SelfOrderSearchBar = ({
 
 const SelfOrderTable = ({ headers, rows }) => {
   return (
-    <div className="rounded-xl sm:rounded-2xl border border-emerald-100 bg-white p-2 sm:p-6 shadow-md sm:shadow-lg shadow-emerald-900/5 overflow-hidden">
+    <div className="rounded-[1.5rem] overflow-hidden border border-slate-100">
       <Tables headers={headers} rows={rows} />
     </div>
   );

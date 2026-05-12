@@ -107,7 +107,7 @@ const SellerDashboard = () => {
 
   const dashboardData = [
     {
-      title: "todays Buying",
+      title: "todays Bids",
       count: sellerBidCount,
       icon: FaGavel,
       link: "/Supplier-Bid-List",
