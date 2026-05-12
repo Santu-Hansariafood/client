@@ -241,27 +241,82 @@ Qty: ${item.quantity || "0"}`;
     [userRole, getConsigneeDisplay, buyerData, supplierData, consigneeData, companyData],
   );
 
-  const openWhatsAppChat = useCallback((mobileNumber, item) => {
-    if (!mobileNumber || (Array.isArray(mobileNumber) && !mobileNumber[0])) {
-      toast.error("Mobile number not available");
-      return;
-    }
+  const openWhatsAppChat = useCallback(
+    async (mobileNumber, item) => {
+      if (!mobileNumber || (Array.isArray(mobileNumber) && !mobileNumber[0])) {
+        toast.error("Mobile number not available");
+        return;
+      }
 
-    const value = Array.isArray(mobileNumber) ? mobileNumber[0] : mobileNumber;
-    const cleanMobile = String(value).replace(/\D/g, "");
+      const toastId = toast.loading("Preparing sharing...");
 
-    if (!cleanMobile || cleanMobile.length < 10) {
-      toast.error("Invalid mobile number");
-      return;
-    }
+      try {
+        const value = Array.isArray(mobileNumber) ? mobileNumber[0] : mobileNumber;
+        const cleanMobile = String(value).replace(/\D/g, "");
 
-    let finalMobile = cleanMobile;
-    if (finalMobile.length === 10) finalMobile = `91${finalMobile}`;
-    finalMobile = finalMobile.replace(/^0+/, "");
-    
-    const message = `Hello, regarding Sauda No: ${item?.saudaNo || ""}`;
-    window.open(`https://wa.me/${finalMobile}?text=${encodeURIComponent(message)}`, "_blank");
-  }, []);
+        if (!cleanMobile || cleanMobile.length < 10) {
+          toast.dismiss(toastId);
+          toast.error("Invalid mobile number");
+          return;
+        }
+
+        let finalMobile = cleanMobile;
+        if (finalMobile.length === 10) finalMobile = `91${finalMobile}`;
+        finalMobile = finalMobile.replace(/^0+/, "");
+
+        const pdfData = buildSaudaPdfData({
+          item,
+          consigneeData,
+          supplierData,
+          buyerData,
+          companyData,
+          getConsigneeDisplay,
+        });
+
+        const blob = await pdf(<SaudaPDF data={pdfData} />).toBlob();
+        const fileName = `Sauda-${item.saudaNo || "Order"}.pdf`;
+        const file = new File([blob], fileName, { type: "application/pdf" });
+
+        const shareData = {
+          files: [file],
+          title: `Sauda No: ${item.saudaNo || "Order"}`,
+          text: `Hello, regarding Sauda No: ${item?.saudaNo || ""}`,
+        };
+
+        if (navigator.canShare && navigator.canShare(shareData)) {
+          await navigator.share(shareData);
+          toast.dismiss(toastId);
+          toast.success("Shared successfully");
+          
+          // Still try to update status
+          api.patch(`/self-order/${item._id}/whatsapp-sent`).catch(() => {});
+          setData(prev => prev.map(o => o._id === item._id ? { ...o, whatsappSent: true } : o));
+          return;
+        }
+
+        // Fallback to link if can't share file
+        const message = `Hello, regarding Sauda No: ${item?.saudaNo || ""}`;
+        window.open(
+          `https://wa.me/${finalMobile}?text=${encodeURIComponent(message)}`,
+          "_blank",
+        );
+        toast.dismiss(toastId);
+        toast.success("WhatsApp opened");
+      } catch (error) {
+        toast.dismiss(toastId);
+        console.error("Share error:", error);
+        // Final fallback to simple chat link
+        const value = Array.isArray(mobileNumber) ? mobileNumber[0] : mobileNumber;
+        const cleanMobile = String(value).replace(/\D/g, "");
+        let finalMobile = cleanMobile;
+        if (finalMobile.length === 10) finalMobile = `91${finalMobile}`;
+        finalMobile = finalMobile.replace(/^0+/, "");
+        const message = `Hello, regarding Sauda No: ${item?.saudaNo || ""}`;
+        window.open(`https://wa.me/${finalMobile}?text=${encodeURIComponent(message)}`, "_blank");
+      }
+    },
+    [consigneeData, supplierData, buyerData, companyData, getConsigneeDisplay],
+  );
 
   const handleView = useCallback(
     (item) => {
