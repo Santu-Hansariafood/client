@@ -109,35 +109,9 @@ const ParticipateBidAdmin = () => {
     return () => clearInterval(interval);
   }, [userRole, mobile, selectedDate]);
 
-  const filteredData = useMemo(() => {
-    // 1. Filter by Date
-    const targetDate = new Date(selectedDate);
-    targetDate.setHours(0, 0, 0, 0);
-
-    let filtered = participationBids.filter((pBid) => {
-      const pDate = new Date(pBid.createdAt || pBid.participationDate);
-      pDate.setHours(0, 0, 0, 0);
-      return pDate.getTime() === targetDate.getTime();
-    });
-
-    // 2. Filter by Search Query
-    if (searchQuery) {
-      const q = searchQuery.toLowerCase();
-      filtered = filtered.filter((pBid) => {
-        const bid = bids.find((b) => b._id === pBid.bidId);
-        return (
-          bid &&
-          (bid.consignee?.toLowerCase().includes(q) ||
-            bid.commodity?.toLowerCase().includes(q) ||
-            bid.origin?.toLowerCase().includes(q) ||
-            bid.group?.toLowerCase().includes(q))
-        );
-      });
-    }
-
-    // 3. Group by BidId and Filter by Group (for Buyer)
+  const getBidParticipationDetails = useCallback((data) => {
     const groupedBids = {};
-    filtered.forEach((pBid) => {
+    data.forEach((pBid) => {
       const matchingBid = bids.find((bid) => bid._id === pBid.bidId);
       if (!matchingBid) return;
 
@@ -182,9 +156,37 @@ const ParticipateBidAdmin = () => {
             : pBid.mobile;
       if (sellerLabel) groupedBids[pBid.bidId].sellers.add(sellerLabel);
     });
-
     return Object.values(groupedBids).sort((a, b) => new Date(b.date) - new Date(a.date));
-  }, [participationBids, bids, selectedDate, searchQuery, userRole, selectedGroup]);
+  }, [bids, userRole, selectedGroup]);
+
+  const filteredData = useMemo(() => {
+    // 1. Filter by Date
+    const targetDate = new Date(selectedDate);
+    targetDate.setHours(0, 0, 0, 0);
+
+    let filtered = participationBids.filter((pBid) => {
+      const pDate = new Date(pBid.createdAt || pBid.participationDate);
+      pDate.setHours(0, 0, 0, 0);
+      return pDate.getTime() === targetDate.getTime();
+    });
+
+    // 2. Filter by Search Query
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      filtered = filtered.filter((pBid) => {
+        const bid = bids.find((b) => b._id === pBid.bidId);
+        return (
+          bid &&
+          (bid.consignee?.toLowerCase().includes(q) ||
+            bid.commodity?.toLowerCase().includes(q) ||
+            bid.origin?.toLowerCase().includes(q) ||
+            bid.group?.toLowerCase().includes(q))
+        );
+      });
+    }
+
+    return getBidParticipationDetails(filtered);
+  }, [participationBids, bids, selectedDate, searchQuery, getBidParticipationDetails]);
 
   const headers = [
     "Sl No",
