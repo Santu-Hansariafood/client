@@ -29,7 +29,7 @@ const statusOptions = [
   { value: "inactive", label: "Inactive" },
 ];
 
-const EditSellerDetails = ({ sellerId, onClose, onSave }) => {
+const EditSellerDetails = ({ sellerId, onClose, onSave, isPopup = false }) => {
   const [sellerName, setSellerName] = useState("");
   const [password, setPassword] = useState("");
   const [phoneNumbers, setPhoneNumbers] = useState([
@@ -263,205 +263,213 @@ const EditSellerDetails = ({ sellerId, onClose, onSave }) => {
 
   if (loading) return <Loading />;
 
-  return (
-    <Suspense fallback={<Loading />}>
-      <AdminPageShell
-        title="Edit Seller Details"
-        subtitle={`Update information for ${sellerName || "Seller"}`}
-        icon={FaUserTie}
-        noContentCard
-      >
-        <div className="max-w-5xl mx-auto">
-          <div className="w-full bg-white rounded-2xl border border-amber-200/60 shadow-lg p-4 sm:p-6 md:p-8">
-            {/* Basic Info */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-8">
-              <div>
-                <label className="block mb-1 text-sm font-semibold text-slate-700">
-                  Seller Name
-                </label>
-                <DataInput
-                  placeholder="Enter seller name"
-                  value={sellerName}
-                  onChange={(e) => setSellerName(e.target.value)}
-                  required
-                  maxLength="50"
-                  icon={FaUserTie}
-                />
-              </div>
-              <div>
-                <label className="block mb-1 text-sm font-semibold text-slate-700">
-                  Password
-                </label>
-                <DataInput
-                  placeholder="Enter password"
-                  inputType="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  icon={FaInfoCircle}
-                />
-              </div>
-            </div>
-
-            {/* Contact Details */}
-            <div className="mb-8">
-              <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
-                <FaPhone className="text-amber-500" /> Contact Details
-              </h3>
-
-              <div className="space-y-4">
-                {phoneNumbers.map((phone, index) => (
-                  <div key={phone.id} className="flex items-center gap-3">
-                    <DataInput
-                      placeholder={`Phone Number ${index + 1}`}
-                      value={phone.value}
-                      inputType="number"
-                      onChange={(e) => handlePhoneChange(phone.id, e.target.value)}
-                    />
-                    <div className="flex items-center gap-2">
-                      {index === phoneNumbers.length - 1 && (
-                        <FaPlusCircle
-                          onClick={addPhoneNumber}
-                          className="text-green-500 cursor-pointer text-xl hover:scale-110 transition-transform"
-                        />
-                      )}
-                      {index > 0 && (
-                        <FaMinusCircle
-                          onClick={() => removePhoneNumber(phone.id)}
-                          className="text-red-500 cursor-pointer text-xl hover:scale-110 transition-transform"
-                        />
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <div className="space-y-4 mt-4">
-                {emails.map((email, index) => (
-                  <div key={email.id} className="flex items-center gap-3">
-                    <DataInput
-                      placeholder={`Email ${index + 1}`}
-                      value={email.value}
-                      onChange={(e) => handleEmailChange(email.id, e.target.value)}
-                      icon={FaEnvelope}
-                    />
-                    <div className="flex items-center gap-2">
-                      {index === emails.length - 1 && (
-                        <FaPlusCircle
-                          onClick={addEmail}
-                          className="text-green-500 cursor-pointer text-xl hover:scale-110 transition-transform"
-                        />
-                      )}
-                      {index > 0 && (
-                        <FaMinusCircle
-                          onClick={() => removeEmail(email.id)}
-                          className="text-red-500 cursor-pointer text-xl hover:scale-110 transition-transform"
-                        />
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Commodities */}
-            <div className="mb-8">
-              <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
-                <FaBox className="text-amber-500" /> Commodities & Brokerage
-              </h3>
-              <DataDropdown
-                options={commodityOptions}
-                placeholder="Select commodities"
-                selectedOptions={selectedCommodity}
-                onChange={handleCommodityChange}
-                isMulti={true}
-                label="Assigned Commodities"
-              />
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                {(Array.isArray(selectedCommodity)
-                  ? selectedCommodity
-                  : [selectedCommodity]
-                )
-                  .filter(Boolean)
-                  .map((commodityValue) => {
-                    const commodityLabel =
-                      commodityOptions.find((o) => o.value === commodityValue)
-                        ?.label || commodityValue;
-                    return (
-                      <div key={commodityValue} className="p-4 bg-slate-50 rounded-xl border border-slate-100">
-                        <label className="block mb-2 text-xs font-bold text-slate-500 uppercase">
-                          Brokerage (Tons) - {commodityLabel}
-                        </label>
-                        <DataInput
-                          placeholder="0.00"
-                          inputType="number"
-                          value={brokerageAmounts[commodityValue] || ""}
-                          onChange={(e) =>
-                            handleBrokerageChange(commodityValue, e.target.value)
-                          }
-                        />
-                      </div>
-                    );
-                  })}
-              </div>
-            </div>
-
-            {/* Associations */}
-            <div className="mb-8">
-              <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
-                <FaBuilding className="text-amber-500" /> Associations & Status
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <DataDropdown
-                  options={companyOptions}
-                  placeholder="Select companies"
-                  selectedOptions={selectedCompany}
-                  onChange={handleCompanyChange}
-                  isMulti={true}
-                  label="Seller Company"
-                />
-                <DataDropdown
-                  options={statusOptions}
-                  placeholder="Select status"
-                  selectedOptions={selectedStatus}
-                  onChange={(selected) =>
-                    setSelectedStatus(selected?.value || selected)
-                  }
-                  label="Account Status"
-                />
-              </div>
-              <div className="mt-5">
-                <DataDropdown
-                  options={groupOptions}
-                  placeholder="Select groups"
-                  isMulti={true}
-                  selectedOptions={selectedGroups}
-                  onChange={(selected) =>
-                    setSelectedGroups(selected ? selected.map((s) => s.value) : [])
-                  }
-                  label="Assigned Groups"
-                />
-              </div>
-            </div>
-
-            <div className="mt-10 flex justify-end gap-3 border-t pt-8">
-              <Buttons
-                label="Cancel"
-                onClick={onClose}
-                variant="secondary"
-                size="lg"
-              />
-              <Buttons
-                label="Update Seller"
-                onClick={handleSubmit}
-                type="submit"
-                variant="primary"
-                size="lg"
-              />
-            </div>
+  const formContent = (
+    <div className={`${isPopup ? "" : "max-w-5xl mx-auto"}`}>
+      <div className={`w-full bg-white rounded-2xl ${isPopup ? "" : "border border-amber-200/60 shadow-lg p-4 sm:p-6 md:p-8"}`}>
+        {/* Basic Info */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-8">
+          <div>
+            <label className="block mb-1 text-sm font-semibold text-slate-700">
+              Seller Name
+            </label>
+            <DataInput
+              placeholder="Enter seller name"
+              value={sellerName}
+              onChange={(e) => setSellerName(e.target.value)}
+              required
+              maxLength="50"
+              icon={FaUserTie}
+            />
+          </div>
+          <div>
+            <label className="block mb-1 text-sm font-semibold text-slate-700">
+              Password
+            </label>
+            <DataInput
+              placeholder="Enter password"
+              inputType="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              icon={FaInfoCircle}
+            />
           </div>
         </div>
-      </AdminPageShell>
+
+        {/* Contact Details */}
+        <div className="mb-8">
+          <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+            <FaPhone className="text-amber-500" /> Contact Details
+          </h3>
+
+          <div className="space-y-4">
+            {phoneNumbers.map((phone, index) => (
+              <div key={phone.id} className="flex items-center gap-3">
+                <DataInput
+                  placeholder={`Phone Number ${index + 1}`}
+                  value={phone.value}
+                  inputType="number"
+                  onChange={(e) => handlePhoneChange(phone.id, e.target.value)}
+                />
+                <div className="flex items-center gap-2">
+                  {index === phoneNumbers.length - 1 && (
+                    <FaPlusCircle
+                      onClick={addPhoneNumber}
+                      className="text-green-500 cursor-pointer text-xl hover:scale-110 transition-transform"
+                    />
+                  )}
+                  {index > 0 && (
+                    <FaMinusCircle
+                      onClick={() => removePhoneNumber(phone.id)}
+                      className="text-red-500 cursor-pointer text-xl hover:scale-110 transition-transform"
+                    />
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="space-y-4 mt-4">
+            {emails.map((email, index) => (
+              <div key={email.id} className="flex items-center gap-3">
+                <DataInput
+                  placeholder={`Email ${index + 1}`}
+                  value={email.value}
+                  onChange={(e) => handleEmailChange(email.id, e.target.value)}
+                  icon={FaEnvelope}
+                />
+                <div className="flex items-center gap-2">
+                  {index === emails.length - 1 && (
+                    <FaPlusCircle
+                      onClick={addEmail}
+                      className="text-green-500 cursor-pointer text-xl hover:scale-110 transition-transform"
+                    />
+                  )}
+                  {index > 0 && (
+                    <FaMinusCircle
+                      onClick={() => removeEmail(email.id)}
+                      className="text-red-500 cursor-pointer text-xl hover:scale-110 transition-transform"
+                    />
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Commodities */}
+        <div className="mb-8">
+          <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+            <FaBox className="text-amber-500" /> Commodities & Brokerage
+          </h3>
+          <DataDropdown
+            options={commodityOptions}
+            placeholder="Select commodities"
+            selectedOptions={selectedCommodity}
+            onChange={handleCommodityChange}
+            isMulti={true}
+            label="Assigned Commodities"
+          />
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+            {(Array.isArray(selectedCommodity)
+              ? selectedCommodity
+              : [selectedCommodity]
+            )
+              .filter(Boolean)
+              .map((commodityValue) => {
+                const commodityLabel =
+                  commodityOptions.find((o) => o.value === commodityValue)
+                    ?.label || commodityValue;
+                return (
+                  <div key={commodityValue} className="p-4 bg-slate-50 rounded-xl border border-slate-100">
+                    <label className="block mb-2 text-xs font-bold text-slate-500 uppercase">
+                      Brokerage (Tons) - {commodityLabel}
+                    </label>
+                    <DataInput
+                      placeholder="0.00"
+                      inputType="number"
+                      value={brokerageAmounts[commodityValue] || ""}
+                      onChange={(e) =>
+                        handleBrokerageChange(commodityValue, e.target.value)
+                      }
+                    />
+                  </div>
+                );
+              })}
+          </div>
+        </div>
+
+        {/* Associations */}
+        <div className="mb-8">
+          <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+            <FaBuilding className="text-amber-500" /> Associations & Status
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <DataDropdown
+              options={companyOptions}
+              placeholder="Select companies"
+              selectedOptions={selectedCompany}
+              onChange={handleCompanyChange}
+              isMulti={true}
+              label="Seller Company"
+            />
+            <DataDropdown
+              options={statusOptions}
+              placeholder="Select status"
+              selectedOptions={selectedStatus}
+              onChange={(selected) =>
+                setSelectedStatus(selected?.value || selected)
+              }
+              label="Account Status"
+            />
+          </div>
+          <div className="mt-5">
+            <DataDropdown
+              options={groupOptions}
+              placeholder="Select groups"
+              isMulti={true}
+              selectedOptions={selectedGroups}
+              onChange={(selected) =>
+                setSelectedGroups(selected ? selected.map((s) => s.value) : [])
+              }
+              label="Assigned Groups"
+            />
+          </div>
+        </div>
+
+        <div className={`mt-10 flex justify-end gap-3 ${isPopup ? "" : "border-t pt-8"}`}>
+          <Buttons
+            label="Cancel"
+            onClick={onClose}
+            variant="secondary"
+            size="lg"
+          />
+          <Buttons
+            label="Update Seller"
+            onClick={handleSubmit}
+            type="submit"
+            variant="primary"
+            size="lg"
+          />
+        </div>
+      </div>
+    </div>
+  );
+
+  return (
+    <Suspense fallback={<Loading />}>
+      {isPopup ? (
+        formContent
+      ) : (
+        <AdminPageShell
+          title="Edit Seller Details"
+          subtitle={`Update information for ${sellerName || "Seller"}`}
+          icon={FaUserTie}
+          noContentCard
+        >
+          {formContent}
+        </AdminPageShell>
+      )}
     </Suspense>
   );
 };
@@ -470,6 +478,7 @@ EditSellerDetails.propTypes = {
   sellerId: PropTypes.string.isRequired,
   onClose: PropTypes.func,
   onSave: PropTypes.func,
+  isPopup: PropTypes.bool,
 };
 
 export default EditSellerDetails;
