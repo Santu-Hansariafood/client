@@ -27,34 +27,36 @@ const useCountUp = (end, duration = 800) => {
 
 const DashboardCard = ({ title, value, icon: Icon, colorClass, subtitle }) => {
   return (
-    <div className={`relative overflow-hidden group rounded-[2rem] p-6 transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl border border-white/20 bg-white shadow-xl shadow-slate-200/50`}>
-      <div className={`absolute top-0 right-0 -mr-8 -mt-8 w-32 h-32 rounded-full opacity-10 transition-transform duration-700 group-hover:scale-150 ${colorClass.split(' ')[0]}`}></div>
+    <div className={`relative overflow-hidden group rounded-[2.5rem] p-7 transition-all duration-700 hover:-translate-y-3 hover:shadow-[0_20px_50px_rgba(0,0,0,0.1)] border border-white/40 bg-white/80 backdrop-blur-xl shadow-xl shadow-slate-200/40`}>
+      {/* Dynamic Gradient Background Glow */}
+      <div className={`absolute -right-12 -top-12 w-48 h-48 rounded-full blur-[60px] opacity-20 transition-all duration-1000 group-hover:opacity-40 group-hover:scale-150 bg-gradient-to-br ${colorClass}`}></div>
       
-      <div className="relative z-10 flex items-start justify-between">
-        <div className="space-y-4">
-          <div className="space-y-1">
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">{title}</p>
-            <h3 className="text-3xl font-black text-slate-900 tracking-tighter">
+      <div className="relative z-10 flex flex-col h-full">
+        <div className="flex items-start justify-between mb-6">
+          <div className="space-y-1.5">
+            <p className="text-[11px] font-black text-slate-400 uppercase tracking-[0.25em] leading-tight">{title}</p>
+            <h3 className="text-4xl font-black text-slate-900 tracking-tighter leading-none">
               {value}
             </h3>
           </div>
-          {subtitle && (
-            <div className="inline-flex items-center px-2 py-1 rounded-lg bg-slate-50 border border-slate-100">
-              <span className="text-[10px] font-bold text-slate-500 uppercase">{subtitle}</span>
-            </div>
-          )}
+
+          <div className={`p-4.5 rounded-[1.5rem] shadow-2xl shadow-current/20 transform transition-all duration-700 group-hover:rotate-[15deg] group-hover:scale-110 bg-gradient-to-br ${colorClass} text-white`}>
+            <Icon size={24} />
+          </div>
         </div>
 
-        <div className={`p-4 rounded-2xl shadow-lg shadow-current/10 transform transition-transform duration-500 group-hover:rotate-12 group-hover:scale-110 ${colorClass}`}>
-          <Icon className="text-2xl" />
+        {subtitle && (
+          <div className="inline-flex items-center w-fit px-3 py-1.5 rounded-xl bg-slate-50/80 border border-slate-100/50 backdrop-blur-sm">
+            <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider">{subtitle}</span>
+          </div>
+        )}
+        
+        <div className="mt-auto pt-6 flex items-center gap-3">
+          <div className="h-1.5 flex-1 bg-slate-100/50 rounded-full overflow-hidden backdrop-blur-sm">
+            <div className={`h-full w-[65%] rounded-full animate-pulse bg-gradient-to-r ${colorClass}`}></div>
+          </div>
+          <span className="text-[10px] font-black text-slate-400 tracking-tighter">Growth: +12%</span>
         </div>
-      </div>
-      
-      <div className="mt-6 flex items-center gap-2">
-        <div className="h-1 flex-1 bg-slate-100 rounded-full overflow-hidden">
-          <div className={`h-full w-2/3 rounded-full ${colorClass.split(' ')[0]}`}></div>
-        </div>
-        <span className="text-[10px] font-black text-slate-400">70%</span>
       </div>
     </div>
   );

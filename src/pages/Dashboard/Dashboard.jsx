@@ -83,26 +83,44 @@ const Dashboard = () => {
     <Suspense fallback={<Loading />}>
       <AdminPageShell
         title="Administrative Overview"
-        subtitle="Manage and monitor your business operations with ease"
+        subtitle="Intelligent monitoring for your distribution network"
         icon={FaTachometerAlt}
         noContentCard
       >
-        <div className="relative min-h-screen overflow-hidden">
-          {/* Animated Premium Background */}
+        <div className="relative min-h-screen overflow-hidden -m-4 sm:-m-6 lg:-m-8 p-4 sm:p-6 lg:p-8">
+          {/* Animated Premium Background with deeper gradients */}
           <div className="absolute inset-0 -z-10">
-            <div className="absolute inset-0 bg-slate-50" />
-            <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-emerald-200/20 blur-[120px] rounded-full animate-pulse" />
-            <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-200/20 blur-[120px] rounded-full animate-pulse delay-700" />
-            <div className="absolute top-[20%] right-[10%] w-[30%] h-[30%] bg-amber-200/10 blur-[100px] rounded-full animate-pulse delay-1000" />
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_#f8fafc,_#f1f5f9)]" />
+            <div className="absolute top-[-5%] left-[-5%] w-[50%] h-[50%] bg-emerald-400/10 blur-[150px] rounded-full animate-pulse" />
+            <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-blue-400/10 blur-[150px] rounded-full animate-pulse delay-700" />
+            <div className="absolute top-[30%] left-[20%] w-[40%] h-[40%] bg-amber-400/5 blur-[120px] rounded-full animate-pulse delay-1000" />
           </div>
 
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-10">
+          <div className="max-w-7xl mx-auto space-y-12 relative z-10">
+            {/* Top Stat Cards Section with Fade-in */}
             <div className="animate-fade-in-up">
               <CardGrid counts={counts} />
             </div>
 
-            <div className="bg-white/40 backdrop-blur-2xl rounded-[3rem] p-6 sm:p-10 border border-white/60 shadow-2xl shadow-slate-200/50 animate-fade-in-up delay-150">
-              <ChartSection agentSaudas={agentSaudas} />
+            {/* Performance Analytics Section */}
+            <div className="group relative">
+              {/* Card Glow Effect */}
+              <div className="absolute -inset-1 bg-gradient-to-r from-emerald-500/10 to-blue-500/10 rounded-[3.5rem] blur opacity-25 group-hover:opacity-100 transition duration-1000 group-hover:duration-200"></div>
+              
+              <div className="relative bg-white/70 backdrop-blur-3xl rounded-[3rem] p-8 sm:p-12 border border-white/80 shadow-[0_32px_64px_-12px_rgba(0,0,0,0.08)] animate-fade-in-up delay-200">
+                <div className="flex items-center justify-between mb-10">
+                  <div className="space-y-1">
+                    <h2 className="text-2xl font-black text-slate-900 tracking-tight">Agent Performance Metrics</h2>
+                    <p className="text-slate-500 font-medium">Distribution analysis by sauda volume and tonnage</p>
+                  </div>
+                  <div className="flex gap-2">
+                    <div className="h-2 w-2 rounded-full bg-emerald-500 animate-ping"></div>
+                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Real-time Feed</span>
+                  </div>
+                </div>
+                
+                <ChartSection agentSaudas={agentSaudas} />
+              </div>
             </div>
           </div>
         </div>
