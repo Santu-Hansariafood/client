@@ -51,34 +51,37 @@ const EditSellerDetails = ({ sellerId, onClose, onSave, isPopup = false }) => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const [commodities, companies, groups, sellerData] = await Promise.all([
-          fetchAllPages("/commodities"),
-          fetchAllPages("/seller-company"),
-          fetchAllPages("/groups"),
-          api
-            .get(`/sellers/${sellerId}`)
-            .then((res) => res.data?.data || res.data || {}),
+        const [commoditiesRes, companiesRes, groupsRes, sellerRes] = await Promise.all([
+          api.get("/commodities", { params: { limit: 1000 } }),
+          api.get("/seller-company", { params: { limit: 1000 } }),
+          api.get("/groups", { params: { limit: 1000 } }),
+          api.get(`/sellers/${sellerId}`),
         ]);
 
+        const commoditiesData = commoditiesRes.data?.data || commoditiesRes.data || [];
+        const companiesData = companiesRes.data?.data || companiesRes.data || [];
+        const groupsData = groupsRes.data?.data || groupsRes.data || [];
+        const sellerData = sellerRes.data?.data || sellerRes.data || {};
+
         // 1. Set Options First
-        const commOpts = commodities
+        const commOpts = (commoditiesData || [])
           .map((item) => ({
-            value: item.name,
-            label: item.name,
+            value: item.name || item,
+            label: item.name || item,
           }))
           .sort((a, b) => a.label.localeCompare(b.label));
 
-        const compOpts = companies
+        const compOpts = (companiesData || [])
           .map((item) => ({
-            value: item.companyName,
-            label: item.companyName,
+            value: item.companyName || item.name || item,
+            label: item.companyName || item.name || item,
           }))
           .sort((a, b) => a.label.localeCompare(b.label));
 
-        const grpOpts = groups
+        const grpOpts = (groupsData || [])
           .map((item) => ({
-            value: item._id,
-            label: item.groupName,
+            value: item._id || item.id || item,
+            label: item.groupName || item.name || item,
           }))
           .sort((a, b) => a.label.localeCompare(b.label));
 

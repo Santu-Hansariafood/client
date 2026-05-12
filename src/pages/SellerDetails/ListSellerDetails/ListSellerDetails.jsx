@@ -58,10 +58,13 @@ const ListSellerDetails = () => {
 
   const fetchOptions = useCallback(async () => {
     try {
-      const [commodities, companies] = await Promise.all([
-        fetchAllPages("/commodities"),
-        fetchAllPages("/seller-company"),
+      const [commoditiesRes, companiesRes] = await Promise.all([
+        api.get("/commodities", { params: { limit: 1000 } }),
+        api.get("/seller-company", { params: { limit: 1000 } }),
       ]);
+
+      const commodities = commoditiesRes.data?.data || commoditiesRes.data || [];
+      const companies = companiesRes.data?.data || companiesRes.data || [];
 
       setCommodityOptions(
         commodities.map(c => ({ value: c.name, label: c.name }))
