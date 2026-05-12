@@ -66,10 +66,6 @@ const ParticipateBidAdmin = () => {
       .join(" ");
   }, []);
 
-  // ======================================================
-  // FETCH DATA
-  // ======================================================
-
   const fetchData = useCallback(async () => {
     try {
       setLoading(true);
@@ -86,9 +82,7 @@ const ParticipateBidAdmin = () => {
 
         const groups = (buyer.groups || []).map(normalize);
 
-        const companies = (buyer.companies || []).map((c) =>
-          String(c).trim(),
-        );
+        const companies = (buyer.companies || []).map((c) => String(c).trim());
 
         setBuyerGroups(groups);
 
@@ -107,7 +101,6 @@ const ParticipateBidAdmin = () => {
           return isOwnBid || belongsToGroup || belongsToCompany;
         });
 
-        // Prevent unnecessary rerenders
         setBids((prev) =>
           JSON.stringify(prev) !== JSON.stringify(allowedBids)
             ? allowedBids
@@ -131,9 +124,7 @@ const ParticipateBidAdmin = () => {
           participateRes.data?.data || participateRes.data || [];
 
         setBids((prev) =>
-          JSON.stringify(prev) !== JSON.stringify(bidsData)
-            ? bidsData
-            : prev,
+          JSON.stringify(prev) !== JSON.stringify(bidsData) ? bidsData : prev,
         );
 
         setParticipationBids((prev) =>
@@ -149,10 +140,6 @@ const ParticipateBidAdmin = () => {
     }
   }, [mobile, normalize, selectedDate, userRole]);
 
-  // ======================================================
-  // INITIAL FETCH
-  // ======================================================
-
   useEffect(() => {
     fetchData();
 
@@ -161,19 +148,11 @@ const ParticipateBidAdmin = () => {
     return () => clearInterval(interval);
   }, [fetchData]);
 
-  // ======================================================
-  // SET DEFAULT GROUP
-  // ======================================================
-
   useEffect(() => {
     if (buyerGroups.length > 0 && selectedGroup === "All") {
       setSelectedGroup(buyerGroups[0]);
     }
   }, [buyerGroups, selectedGroup]);
-
-  // ======================================================
-  // GROUP DATA
-  // ======================================================
 
   const getBidParticipationDetails = useCallback(
     (data) => {
@@ -241,10 +220,6 @@ const ParticipateBidAdmin = () => {
     [bids, normalize, selectedGroup, userRole],
   );
 
-  // ======================================================
-  // FILTERED DATA
-  // ======================================================
-
   const filteredData = useMemo(() => {
     const targetDate = new Date(selectedDate);
 
@@ -283,16 +258,9 @@ const ParticipateBidAdmin = () => {
     selectedDate,
   ]);
 
-  // ======================================================
-  // PAGINATION
-  // ======================================================
-
   const totalItems = filteredData.length;
 
-  const totalPages = Math.max(
-    1,
-    Math.ceil(totalItems / ITEMS_PER_PAGE),
-  );
+  const totalPages = Math.max(1, Math.ceil(totalItems / ITEMS_PER_PAGE));
 
   useEffect(() => {
     if (currentPage > totalPages) {
@@ -310,18 +278,10 @@ const ParticipateBidAdmin = () => {
     setCurrentPage(Number(page));
   }, []);
 
-  // ======================================================
-  // SEARCH
-  // ======================================================
-
   const handleSearch = useCallback((query) => {
     setSearchQuery(typeof query === "string" ? query : "");
     setCurrentPage(1);
   }, []);
-
-  // ======================================================
-  // STATS
-  // ======================================================
 
   const stats = useMemo(() => {
     const targetDate = new Date(selectedDate);
@@ -357,10 +317,6 @@ const ParticipateBidAdmin = () => {
     };
   }, [bids, filteredData.length, participationBids, selectedDate]);
 
-  // ======================================================
-  // TABLE HEADERS
-  // ======================================================
-
   const headers = [
     "Sl No",
     "Date",
@@ -377,10 +333,6 @@ const ParticipateBidAdmin = () => {
     "Acceptance Rate",
     "Interactions",
   ];
-
-  // ======================================================
-  // TABLE ROWS
-  // ======================================================
 
   const rows = useMemo(() => {
     return paginatedData.map((bid, index) => [
@@ -422,19 +374,11 @@ const ParticipateBidAdmin = () => {
     ]);
   }, [currentPage, paginatedData]);
 
-  // ======================================================
-  // SEARCH ITEMS
-  // ======================================================
-
   const consigneeItems = useMemo(() => {
     return [...new Set(bids.map((b) => b.consignee).filter(Boolean))].sort(
       (a, b) => a.localeCompare(b),
     );
   }, [bids]);
-
-  // ======================================================
-  // UI
-  // ======================================================
 
   return (
     <Suspense fallback={<Loading />}>
@@ -453,7 +397,6 @@ const ParticipateBidAdmin = () => {
         noContentCard
       >
         <div className="max-w-[1600px] mx-auto space-y-8 p-2">
-          {/* STATS */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="bg-white p-6 rounded-[2rem] shadow border">
               <div className="flex items-center gap-4">
@@ -466,9 +409,7 @@ const ParticipateBidAdmin = () => {
                     Today&apos;s Bids
                   </p>
 
-                  <p className="text-3xl font-black">
-                    {stats.totalBidsToday}
-                  </p>
+                  <p className="text-3xl font-black">{stats.totalBidsToday}</p>
                 </div>
               </div>
             </div>
@@ -520,15 +461,11 @@ const ParticipateBidAdmin = () => {
                     Filtered
                   </p>
 
-                  <p className="text-3xl font-black">
-                    {stats.filteredResults}
-                  </p>
+                  <p className="text-3xl font-black">{stats.filteredResults}</p>
                 </div>
               </div>
             </div>
           </div>
-
-          {/* FILTER BAR */}
           <div className="flex flex-col xl:flex-row gap-4 bg-white p-4 rounded-[2rem] shadow border">
             <div className="flex-1 flex flex-col sm:flex-row gap-4">
               <div className="flex-1">
@@ -577,7 +514,6 @@ const ParticipateBidAdmin = () => {
             )}
           </div>
 
-          {/* POPUP */}
           {selectedBidId && (
             <InteractionsPopup
               bidId={selectedBidId}
@@ -585,7 +521,6 @@ const ParticipateBidAdmin = () => {
             />
           )}
 
-          {/* TABLE */}
           {loading ? (
             <div className="py-32 flex justify-center">
               <Loading />
@@ -598,7 +533,6 @@ const ParticipateBidAdmin = () => {
                 </div>
               </div>
 
-              {/* PAGINATION */}
               <div className="bg-white p-6 rounded-[2rem] border shadow flex justify-center">
                 <Pagination
                   currentPage={currentPage}
