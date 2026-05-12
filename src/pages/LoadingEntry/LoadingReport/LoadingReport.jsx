@@ -353,7 +353,6 @@ const LoadingReport = () => {
       doc.setFontSize(9);
       doc.text("Purchase & Logistics Department", 220, finalY + 34);
 
-      // Disclaimer Box
       doc.setDrawColor(220);
       doc.setFillColor(248, 249, 250);
 
@@ -443,7 +442,6 @@ const LoadingReport = () => {
             </div>
           </div>
 
-          {/* Summary Dashboard at Top */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             <div className="group relative bg-white rounded-[2rem] p-6 border border-slate-200 shadow-xl shadow-slate-200/40 transition-all duration-500 hover:-translate-y-2">
               <div className="absolute top-0 right-0 -mr-4 -mt-4 w-24 h-24 bg-emerald-500/10 rounded-full transition-transform duration-700 group-hover:scale-150"></div>
