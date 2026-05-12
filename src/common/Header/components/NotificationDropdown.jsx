@@ -12,14 +12,31 @@ const NotificationDropdown = ({ notificationRef, showNotifications, setShowNotif
     unreadCount,
     fetchNotifications,
     markAsRead,
+    toggleReadStatus,
     markAllRead,
     deleteNotification: deleteNotificationFromContext,
   } = useNotifications();
 
   const [unreadOnly, setUnreadOnly] = useState(true);
 
-  const filteredNotifications = useMemo(() => {
-    return unreadOnly ? notifications.filter((n) => !n.isRead) : notifications;
+  const groupedNotifications = useMemo(() => {
+    const filtered = unreadOnly ? notifications.filter((n) => !n.isRead) : notifications;
+    
+    const groups = {};
+    const today = new Date().toLocaleDateString();
+    const yesterday = new Date(Date.now() - 86400000).toLocaleDateString();
+
+    filtered.forEach((n) => {
+      const date = new Date(n.createdAt).toLocaleDateString();
+      let label = date;
+      if (date === today) label = "Today";
+      else if (date === yesterday) label = "Yesterday";
+
+      if (!groups[label]) groups[label] = [];
+      groups[label].push(n);
+    });
+
+    return groups;
   }, [notifications, unreadOnly]);
 
   const toggleNotifications = useCallback(() => {
@@ -77,71 +94,106 @@ const NotificationDropdown = ({ notificationRef, showNotifications, setShowNotif
             </button>
           </div>
 
-          <div className="flex border-b border-slate-100">
+          <div className="flex border-b border-slate-100 bg-slate-50/50 p-1.5 gap-1">
             <button
-              className={`flex-1 py-2.5 text-xs font-bold transition ${
-                unreadOnly ? "text-emerald-600 border-b-2 border-emerald-600" : "text-slate-500"
+              className={`flex-1 py-2 rounded-xl text-xs font-black transition-all duration-300 uppercase tracking-widest ${
+                unreadOnly
+                  ? "bg-white text-emerald-600 shadow-sm scale-[1.02]"
+                  : "text-slate-500 hover:text-slate-700 hover:bg-white/50"
               }`}
               onClick={() => setUnreadOnly(true)}
             >
-              Unread
+              Unread ({notifications.filter(n => !n.isRead).length})
             </button>
             <button
-              className={`flex-1 py-2.5 text-xs font-bold transition ${
-                !unreadOnly ? "text-emerald-600 border-b-2 border-emerald-600" : "text-slate-500"
+              className={`flex-1 py-2 rounded-xl text-xs font-black transition-all duration-300 uppercase tracking-widest ${
+                !unreadOnly
+                  ? "bg-white text-emerald-600 shadow-sm scale-[1.02]"
+                  : "text-slate-500 hover:text-slate-700 hover:bg-white/50"
               }`}
               onClick={() => setUnreadOnly(false)}
             >
-              All
+              All ({notifications.length})
             </button>
           </div>
 
           <div className="max-h-[420px] overflow-y-auto">
-            {filteredNotifications.length > 0 ? (
-              filteredNotifications.map((n) => (
-                <div
-                  key={n._id}
-                  onClick={() => handleNotificationClick(n)}
-                  className={`group p-4 border-b border-slate-100 cursor-pointer transition-all hover:bg-slate-50 ${
-                    !n.isRead ? "bg-emerald-50/40" : ""
-                  }`}
-                >
-                  <div className="flex justify-between gap-3">
-                    <div className="flex-1 min-w-0">
-                      <h4 className={`text-sm font-bold truncate ${!n.isRead ? "text-emerald-700" : "text-slate-700"}`}>
-                        {n.title}
-                      </h4>
-                      <p className="text-xs text-slate-500 mt-1 line-clamp-2">{n.message}</p>
-                      <span className="text-[10px] text-slate-400 mt-2 inline-block">
-                        {new Date(n.createdAt).toLocaleString()}
-                      </span>
-                    </div>
-
-                    <div className="flex flex-col items-center gap-1 opacity-0 group-hover:opacity-100 transition">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          markAsRead(n._id);
-                        }}
-                        className="p-1.5 rounded-lg hover:bg-white"
-                      >
-                        {n.isRead ? <AiOutlineEyeInvisible size={15} /> : <AiOutlineEye size={15} />}
-                      </button>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          deleteNotificationFromContext(n._id);
-                        }}
-                        className="p-1.5 rounded-lg hover:bg-red-50 text-red-500"
-                      >
-                        <AiOutlineDelete size={15} />
-                      </button>
-                    </div>
+            {Object.keys(groupedNotifications).length > 0 ? (
+              Object.entries(groupedNotifications).map(([date, items]) => (
+                <div key={date}>
+                  <div className="sticky top-0 z-10 bg-slate-50/90 backdrop-blur-sm px-4 py-2 border-b border-slate-100">
+                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
+                      {date}
+                    </span>
                   </div>
+                  {items.map((n) => (
+                    <div
+                      key={n._id}
+                      onClick={() => handleNotificationClick(n)}
+                      className={`group p-4 border-b border-slate-100 cursor-pointer transition-all hover:bg-slate-50 ${
+                        !n.isRead ? "bg-emerald-50/40" : ""
+                      }`}
+                    >
+                      <div className="flex justify-between gap-3">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            {!n.isRead && (
+                              <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)] animate-pulse" />
+                            )}
+                            <h4 className={`text-sm font-bold truncate ${!n.isRead ? "text-emerald-700" : "text-slate-700"}`}>
+                              {n.title}
+                            </h4>
+                          </div>
+                          <p className="text-xs text-slate-500 line-clamp-2 leading-relaxed">{n.message}</p>
+                          <div className="flex items-center gap-2 mt-2">
+                            <span className="text-[10px] font-bold text-slate-400">
+                              {new Date(n.createdAt).toLocaleTimeString("en-IN", { hour: '2-digit', minute: '2-digit' })}
+                            </span>
+                            {n.type && (
+                              <span className="text-[9px] font-black text-emerald-600/70 bg-emerald-50 px-1.5 py-0.5 rounded uppercase tracking-tighter">
+                                {n.type.replace(/([A-Z])/g, ' $1').trim()}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="flex flex-col items-center gap-1 opacity-0 group-hover:opacity-100 transition">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleReadStatus(n._id);
+                            }}
+                            title={n.isRead ? "Mark as unread" : "Mark as read"}
+                            className="p-1.5 rounded-lg hover:bg-white text-slate-400 hover:text-emerald-600 transition-colors shadow-sm border border-transparent hover:border-slate-100"
+                          >
+                            {n.isRead ? <AiOutlineEyeInvisible size={16} /> : <AiOutlineEye size={16} />}
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              deleteNotificationFromContext(n._id);
+                            }}
+                            title="Delete notification"
+                            className="p-1.5 rounded-lg hover:bg-red-50 text-slate-400 hover:text-red-500 transition-colors shadow-sm border border-transparent hover:border-slate-100"
+                          >
+                            <AiOutlineDelete size={16} />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               ))
             ) : (
-              <div className="p-10 text-center text-slate-400 text-sm">No notifications found</div>
+              <div className="p-16 text-center flex flex-col items-center justify-center gap-4">
+                <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center text-slate-200">
+                  <AiOutlineBell size={32} />
+                </div>
+                <div>
+                  <p className="text-sm font-black text-slate-400 uppercase tracking-widest">No notifications</p>
+                  <p className="text-[10px] font-bold text-slate-300 uppercase tracking-tighter mt-1">Check back later for updates</p>
+                </div>
+              </div>
             )}
           </div>
         </div>
