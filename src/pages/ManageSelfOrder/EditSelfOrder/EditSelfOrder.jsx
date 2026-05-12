@@ -59,7 +59,6 @@ const INITIAL_FORM_DATA = {
   poNumber: "",
   poDate: null,
   state: "",
-  loadingState: "",
   location: "",
   quantity: "",
   pendingQuantity: "",

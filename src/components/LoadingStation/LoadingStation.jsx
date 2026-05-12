@@ -7,7 +7,7 @@ const DataDropdown = lazy(
 );
 
 const LoadingStation = ({ formData, handleChange }) => {
-  const { loadingState } = formData;
+  const { state } = formData;
 
   const stateOptions = useMemo(
     () => statesData.map((item) => ({ value: item.state, label: item.state })),
@@ -35,10 +35,10 @@ const LoadingStation = ({ formData, handleChange }) => {
             placeholder="Select State"
             options={stateOptions}
             selectedOptions={
-              stateOptions.find((o) => o.value === loadingState) || null
+              stateOptions.find((o) => o.value === state) || null
             }
-            onChange={(opt) => handleInputChange("loadingState", opt?.value ?? "")}
-            value={loadingState}
+            onChange={(opt) => handleInputChange("state", opt?.value ?? "")}
+            value={state}
           />
         </div>
       </div>
@@ -48,7 +48,7 @@ const LoadingStation = ({ formData, handleChange }) => {
 
 LoadingStation.propTypes = {
   formData: PropTypes.shape({
-    loadingState: PropTypes.string,
+    state: PropTypes.string,
   }).isRequired,
   handleChange: PropTypes.func.isRequired,
 };
