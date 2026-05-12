@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useState, useMemo } from "react";
+import { lazy, Suspense, useEffect, useState, useMemo, useCallback } from "react";
 import api from "../../../utils/apiClient/apiClient";
 import { toast } from "react-toastify";
 import { useNavigate, useSearchParams } from "react-router-dom";
