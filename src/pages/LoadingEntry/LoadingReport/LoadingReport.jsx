@@ -294,19 +294,10 @@ const LoadingReport = () => {
           5: { halign: "right", fontStyle: "bold" },
           6: { halign: "center" },
         },
-        didDrawPage: (data) => {
-          doc.saveGraphicsState();
-          doc.setTextColor(200, 200, 200);
-          doc.setFontSize(60);
-          doc.setFont("helvetica", "bold");
-          doc.text("HANSARIA FOOD", pageWidth / 2, pageHeight / 2, {
-            align: "center",
-            angle: 45,
-          });
-          doc.restoreGraphicsState();
-
+        didDrawPage: () => {
           doc.setDrawColor(180);
           doc.setLineWidth(0.5);
+
           doc.line(14, pageHeight - 12, 282, pageHeight - 12);
 
           doc.setFont("helvetica", "normal");
@@ -320,10 +311,14 @@ const LoadingReport = () => {
           );
 
           let str = "Page " + doc.internal.getNumberOfPages();
+
           if (typeof doc.putTotalPages === "function") {
             str = str + " of " + totalPagesExp;
           }
-          doc.text(str, pageWidth / 2, pageHeight - 6, { align: "center" });
+
+          doc.text(str, pageWidth / 2, pageHeight - 6, {
+            align: "center",
+          });
 
           doc.text(
             `Generated on ${new Date().toLocaleString("en-IN")}`,
@@ -454,10 +449,16 @@ const LoadingReport = () => {
               <div className="absolute top-0 right-0 -mr-4 -mt-4 w-24 h-24 bg-emerald-500/10 rounded-full transition-transform duration-700 group-hover:scale-150"></div>
               <div className="relative z-10 flex items-start justify-between">
                 <div>
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Weight</p>
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">
+                    Total Weight
+                  </p>
                   <div className="flex items-end gap-2">
-                    <h3 className="text-3xl font-black text-slate-900">{summaryData.totalWeight.toFixed(2)}</h3>
-                    <span className="text-[10px] font-bold text-emerald-600 mb-1">TONS</span>
+                    <h3 className="text-3xl font-black text-slate-900">
+                      {summaryData.totalWeight.toFixed(2)}
+                    </h3>
+                    <span className="text-[10px] font-bold text-emerald-600 mb-1">
+                      TONS
+                    </span>
                   </div>
                 </div>
                 <div className="p-4 bg-emerald-500 text-white rounded-2xl shadow-lg shadow-emerald-500/20 transform transition-transform group-hover:rotate-12">
@@ -470,8 +471,12 @@ const LoadingReport = () => {
               <div className="absolute top-0 right-0 -mr-4 -mt-4 w-24 h-24 bg-blue-500/10 rounded-full transition-transform duration-700 group-hover:scale-150"></div>
               <div className="relative z-10 flex items-start justify-between">
                 <div>
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Bags</p>
-                  <h3 className="text-3xl font-black text-slate-900">{summaryData.totalBags}</h3>
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">
+                    Total Bags
+                  </p>
+                  <h3 className="text-3xl font-black text-slate-900">
+                    {summaryData.totalBags}
+                  </h3>
                 </div>
                 <div className="p-4 bg-blue-500 text-white rounded-2xl shadow-lg shadow-blue-500/20 transform transition-transform group-hover:rotate-12">
                   <FaBoxOpen size={20} />
@@ -483,8 +488,12 @@ const LoadingReport = () => {
               <div className="absolute top-0 right-0 -mr-4 -mt-4 w-24 h-24 bg-amber-500/10 rounded-full transition-transform duration-700 group-hover:scale-150"></div>
               <div className="relative z-10 flex items-start justify-between">
                 <div>
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Vehicles Loaded</p>
-                  <h3 className="text-3xl font-black text-slate-900">{summaryData.distinctLorry}</h3>
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">
+                    Vehicles Loaded
+                  </p>
+                  <h3 className="text-3xl font-black text-slate-900">
+                    {summaryData.distinctLorry}
+                  </h3>
                 </div>
                 <div className="p-4 bg-amber-500 text-white rounded-2xl shadow-lg shadow-amber-500/20 transform transition-transform group-hover:rotate-12">
                   <FaTruckLoading size={20} />
@@ -496,8 +505,12 @@ const LoadingReport = () => {
               <div className="absolute top-0 right-0 -mr-4 -mt-4 w-24 h-24 bg-slate-500/10 rounded-full transition-transform duration-700 group-hover:scale-150"></div>
               <div className="relative z-10 flex items-start justify-between">
                 <div>
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Entries</p>
-                  <h3 className="text-3xl font-black text-slate-900">{summaryData.totalEntries}</h3>
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">
+                    Total Entries
+                  </p>
+                  <h3 className="text-3xl font-black text-slate-900">
+                    {summaryData.totalEntries}
+                  </h3>
                 </div>
                 <div className="p-4 bg-slate-700 text-white rounded-2xl shadow-lg shadow-slate-700/20 transform transition-transform group-hover:rotate-12">
                   <FaHistory size={20} />
