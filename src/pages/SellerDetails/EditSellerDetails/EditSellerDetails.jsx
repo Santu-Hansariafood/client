@@ -1,9 +1,21 @@
-import { useState, useEffect, lazy, Suspense } from "react";
+import { useState, useEffect, useCallback, lazy, Suspense } from "react";
+import PropTypes from "prop-types";
 import api from "../../../utils/apiClient/apiClient";
 import { fetchAllPages } from "../../../utils/apiClient/fetchAllPages";
 import { toast } from "react-toastify";
-import { FaPlusCircle, FaMinusCircle } from "react-icons/fa";
+import {
+  FaPlusCircle,
+  FaMinusCircle,
+  FaUserTie,
+  FaPhone,
+  FaEnvelope,
+  FaBox,
+  FaBuilding,
+  FaLayerGroup,
+  FaInfoCircle,
+} from "react-icons/fa";
 import Loading from "../../../common/Loading/Loading";
+import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
 import regexPatterns from "../../../utils/regexPatterns/regexPatterns";
 
 const DataInput = lazy(() => import("../../../common/DataInput/DataInput"));
@@ -11,8 +23,6 @@ const DataDropdown = lazy(
   () => import("../../../common/DataDropdown/DataDropdown"),
 );
 const Buttons = lazy(() => import("../../../common/Buttons/Buttons"));
-
-const apiBaseURL = "";
 
 const statusOptions = [
   { value: "active", label: "Active" },
@@ -35,9 +45,11 @@ const EditSellerDetails = ({ sellerId, onClose, onSave }) => {
   const [selectedGroups, setSelectedGroups] = useState([]);
   const [groupOptions, setGroupOptions] = useState([]);
   const [fullSellerData, setFullSellerData] = useState({});
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
+      setLoading(true);
       try {
         const [commodities, companies, groups, sellerData] = await Promise.all([
           fetchAllPages("/commodities"),
@@ -48,21 +60,33 @@ const EditSellerDetails = ({ sellerId, onClose, onSave }) => {
             .then((res) => res.data?.data || res.data || {}),
         ]);
 
-        const commodityOpts = commodities.map((item) => ({
-          value: item.name,
-          label: item.name,
-        }));
+        // 1. Set Options First
+        const commOpts = commodities
+          .map((item) => ({
+            value: item.name,
+            label: item.name,
+          }))
+          .sort((a, b) => a.label.localeCompare(b.label));
 
-        const companyOpts = companies.map((item) => ({
-          value: item.companyName,
-          label: item.companyName,
-        }));
+        const compOpts = companies
+          .map((item) => ({
+            value: item.companyName,
+            label: item.companyName,
+          }))
+          .sort((a, b) => a.label.localeCompare(b.label));
 
-        const groupOpts = groups.map((item) => ({
-          value: item._id,
-          label: item.groupName,
-        }));
+        const grpOpts = groups
+          .map((item) => ({
+            value: item._id,
+            label: item.groupName,
+          }))
+          .sort((a, b) => a.label.localeCompare(b.label));
 
+        setCommodityOptions(commOpts);
+        setCompanyOptions(compOpts);
+        setGroupOptions(grpOpts);
+
+        // 2. Set Seller Data
         setFullSellerData(sellerData);
         setSellerName(sellerData.sellerName || "");
         setPassword(sellerData.password || "");
@@ -78,88 +102,93 @@ const EditSellerDetails = ({ sellerId, onClose, onSave }) => {
             value: email.value,
           })),
         );
-        setSelectedCommodity(
-          (sellerData.commodities || []).map((commodity) => commodity.name),
+
+        // Map selected values using prepared options
+        const selectedCommNames = (sellerData.commodities || []).map(
+          (c) => c.name || c,
         );
+        setSelectedCommodity(selectedCommNames);
+
         setBrokerageAmounts(
           (sellerData.commodities || []).reduce(
-            (acc, commodity) => ({
+            (acc, c) => ({
               ...acc,
-              [commodity.name]: commodity.brokerage,
+              [c.name || c]: c.brokerage || 0,
             }),
             {},
           ),
         );
-        setSelectedCompany(sellerData.companies || []);
-        setSelectedStatus(sellerData.status || null);
 
-        setCommodityOptions(
-          commodityOpts.sort((a, b) => a.label.localeCompare(b.label)),
+        const selectedCompNames = (sellerData.companies || []).map(
+          (c) => c.companyName || c.name || c,
         );
-        setCompanyOptions(
-          companyOpts.sort((a, b) => a.label.localeCompare(b.label)),
-        );
-        setGroupOptions(
-          groupOpts.sort((a, b) => a.label.localeCompare(b.label)),
-        );
+        setSelectedCompany(selectedCompNames);
 
         const selectedGroupIds = (sellerData.groups || [])
-          .map((group) => group._id || group)
+          .map((g) => {
+            const gName = g.name || g.groupName || g;
+            const match = grpOpts.find(
+              (opt) => opt.label === gName || opt.value === (g._id || g),
+            );
+            return match ? match.value : null;
+          })
           .filter(Boolean);
-
         setSelectedGroups(selectedGroupIds);
+
+        setSelectedStatus(sellerData.status || null);
       } catch (error) {
-        toast.error("Failed to load data from the server.");
+        console.error("Fetch error:", error);
+        toast.error("Failed to load seller data from the server.");
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchData();
   }, [sellerId]);
 
-  const handleCommodityChange = (selected) => {
-    setSelectedCommodity(selected ? selected.map(s => s.value) : []);
-  };
+  const handleCommodityChange = useCallback((selected) => {
+    setSelectedCommodity(selected ? selected.map((s) => s.value) : []);
+  }, []);
 
-  const handleBrokerageChange = (commodity, value) => {
-    setBrokerageAmounts({
-      ...brokerageAmounts,
+  const handleBrokerageChange = useCallback((commodity, value) => {
+    setBrokerageAmounts((prev) => ({
+      ...prev,
       [commodity]: value,
-    });
-  };
+    }));
+  }, []);
 
-  const addPhoneNumber = () => {
-    setPhoneNumbers([...phoneNumbers, { id: Date.now(), value: "" }]);
-  };
+  const addPhoneNumber = useCallback(() => {
+    setPhoneNumbers((prev) => [...prev, { id: Date.now(), value: "" }]);
+  }, []);
 
-  const removePhoneNumber = (id) => {
-    setPhoneNumbers(phoneNumbers.filter((phone) => phone.id !== id));
-  };
+  const removePhoneNumber = useCallback((id) => {
+    setPhoneNumbers((prev) => prev.filter((phone) => phone.id !== id));
+  }, []);
 
-  const handlePhoneChange = (id, value) => {
-    setPhoneNumbers(
-      phoneNumbers.map((phone) =>
-        phone.id === id ? { ...phone, value } : phone,
-      ),
+  const handlePhoneChange = useCallback((id, value) => {
+    setPhoneNumbers((prev) =>
+      prev.map((phone) => (phone.id === id ? { ...phone, value } : phone)),
     );
-  };
+  }, []);
 
-  const addEmail = () => {
-    setEmails([...emails, { id: Date.now(), value: "" }]);
-  };
+  const addEmail = useCallback(() => {
+    setEmails((prev) => [...prev, { id: Date.now(), value: "" }]);
+  }, []);
 
-  const removeEmail = (id) => {
-    setEmails(emails.filter((email) => email.id !== id));
-  };
+  const removeEmail = useCallback((id) => {
+    setEmails((prev) => prev.filter((email) => email.id !== id));
+  }, []);
 
-  const handleEmailChange = (id, value) => {
-    setEmails(
-      emails.map((email) => (email.id === id ? { ...email, value } : email)),
+  const handleEmailChange = useCallback((id, value) => {
+    setEmails((prev) =>
+      prev.map((email) => (email.id === id ? { ...email, value } : email)),
     );
-  };
+  }, []);
 
-  const handleCompanyChange = (selected) => {
-    setSelectedCompany(selected ? selected.map(s => s.value) : []);
-  };
+  const handleCompanyChange = useCallback((selected) => {
+    setSelectedCompany(selected ? selected.map((s) => s.value) : []);
+  }, []);
 
   const handleSubmit = async () => {
     if (!sellerName) {
@@ -190,18 +219,29 @@ const EditSellerDetails = ({ sellerId, onClose, onSave }) => {
     const payload = {
       ...fullSellerData,
       sellerName,
+      password,
       phoneNumbers: phoneNumbers.map((phone) => ({ value: phone.value })),
       emails: emails.map((email) => ({ value: email.value })),
-      commodities: (Array.isArray(selectedCommodity) ? selectedCommodity : [selectedCommodity]).filter(Boolean).map((commodityName) => ({
-        name: commodityName,
-        brokerage: brokerageAmounts[commodityName] || 0,
-      })),
+      commodities: (Array.isArray(selectedCommodity)
+        ? selectedCommodity
+        : [selectedCommodity]
+      )
+        .filter(Boolean)
+        .map((commodityName) => ({
+          name: commodityName,
+          brokerage: brokerageAmounts[commodityName] || 0,
+        })),
       companies: selectedCompany,
-      status: typeof selectedStatus === 'string' ? selectedStatus : selectedStatus?.value,
-      groups: (Array.isArray(selectedGroups) ? selectedGroups : [selectedGroups]).filter(Boolean).map((groupId) => {
-        const group = groupOptions.find(g => g.value === groupId);
-        return { _id: groupId, name: group?.label };
-      }),
+      status:
+        typeof selectedStatus === "string"
+          ? selectedStatus
+          : selectedStatus?.value,
+      groups: (Array.isArray(selectedGroups) ? selectedGroups : [selectedGroups])
+        .filter(Boolean)
+        .map((groupId) => {
+          const group = groupOptions.find((g) => g.value === groupId);
+          return { name: group?.label || groupId };
+        }),
     };
 
     try {
@@ -210,7 +250,6 @@ const EditSellerDetails = ({ sellerId, onClose, onSave }) => {
       if (onSave) {
         onSave(response.data);
       }
-      resetForm();
       if (onClose) {
         onClose();
       }
@@ -222,177 +261,215 @@ const EditSellerDetails = ({ sellerId, onClose, onSave }) => {
     }
   };
 
-  const resetForm = () => {
-    setSellerName("");
-    setPassword("");
-    setPhoneNumbers([{ id: Date.now(), value: "" }]);
-    setEmails([{ id: Date.now(), value: "" }]);
-    setSelectedCommodity([]);
-    setBrokerageAmounts({});
-    setSelectedGroups([]);
-    setSelectedCompany([]);
-    setSelectedStatus(null);
-    setFullSellerData({});
-  };
+  if (loading) return <Loading />;
 
   return (
     <Suspense fallback={<Loading />}>
-      <div className="p-4 sm:p-6 md:p-10 lg:p-16 bg-gray-100 flex justify-center items-center">
-        <div className="w-full max-w-4xl bg-white rounded-lg shadow-md p-6">
-          <h2 className="text-2xl font-bold mb-4 text-gray-700 text-center">
-            Edit Seller Details
-          </h2>
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Seller Name
-            </label>
-            <DataInput
-              placeholder="Enter seller name"
-              name="sellerName"
-              value={sellerName}
-              onChange={(e) => setSellerName(e.target.value)}
-              required
-              maxLength="50"
-            />
-          </div>
-          <h3 className="text-lg font-semibold mb-2">Contact Details</h3>
-          {phoneNumbers.map((phone, index) => (
-            <div key={phone.id} className="flex items-center space-x-4 mb-4">
-              <div className="flex-1">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Phone Number {index + 1}
+      <AdminPageShell
+        title="Edit Seller Details"
+        subtitle={`Update information for ${sellerName || "Seller"}`}
+        icon={FaUserTie}
+        noContentCard
+      >
+        <div className="max-w-5xl mx-auto">
+          <div className="w-full bg-white rounded-2xl border border-amber-200/60 shadow-lg p-4 sm:p-6 md:p-8">
+            {/* Basic Info */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-8">
+              <div>
+                <label className="block mb-1 text-sm font-semibold text-slate-700">
+                  Seller Name
                 </label>
                 <DataInput
-                  placeholder="Enter phone number"
-                  name={`phoneNumber_${index}`}
-                  value={phone.value}
-                  onChange={(e) => handlePhoneChange(phone.id, e.target.value)}
+                  placeholder="Enter seller name"
+                  value={sellerName}
+                  onChange={(e) => setSellerName(e.target.value)}
+                  required
+                  maxLength="50"
+                  icon={FaUserTie}
                 />
               </div>
-              <div className="flex items-center">
-                {index === phoneNumbers.length - 1 && (
-                  <button onClick={addPhoneNumber} className="text-green-500">
-                    <FaPlusCircle size={24} />
-                  </button>
-                )}
-                {index > 0 && (
-                  <button
-                    onClick={() => removePhoneNumber(phone.id)}
-                    className="text-red-500 ml-2"
-                  >
-                    <FaMinusCircle size={24} />
-                  </button>
-                )}
-              </div>
-            </div>
-          ))}
-          {emails.map((email, index) => (
-            <div key={email.id} className="flex items-center space-x-4 mb-4">
-              <div className="flex-1">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Email {index + 1}
+              <div>
+                <label className="block mb-1 text-sm font-semibold text-slate-700">
+                  Password
                 </label>
                 <DataInput
-                  placeholder="Enter email"
-                  name={`email_${index}`}
-                  value={email.value}
-                  onChange={(e) => handleEmailChange(email.id, e.target.value)}
+                  placeholder="Enter password"
+                  inputType="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  icon={FaInfoCircle}
                 />
               </div>
-              <div className="flex items-center">
-                {index === emails.length - 1 && (
-                  <button onClick={addEmail} className="text-green-500">
-                    <FaPlusCircle size={24} />
-                  </button>
-                )}
-                {index > 0 && (
-                  <button
-                    onClick={() => removeEmail(email.id)}
-                    className="text-red-500 ml-2"
-                  >
-                    <FaMinusCircle size={24} />
-                  </button>
-                )}
-              </div>
             </div>
-          ))}
-          <h3 className="text-lg font-semibold mb-2">Commodities</h3>
-          <DataDropdown
-            options={commodityOptions}
-            placeholder="Select commodities"
-            selectedOptions={selectedCommodity}
-            onChange={handleCommodityChange}
-            isMulti={true}
-          />
-          {(Array.isArray(selectedCommodity) ? selectedCommodity : [selectedCommodity]).filter(Boolean).map((commodityValue) => {
-            const commodityLabel = commodityOptions.find(o => o.value === commodityValue)?.label || commodityValue;
-            return (
-              <div key={commodityValue} className="mt-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Brokerage Amount (Tons) for {commodityLabel}
-                </label>
-                <DataInput
-                  placeholder={`Enter brokerage amount for ${commodityLabel}`}
-                  name={`brokerage_${commodityValue}`}
-                  value={brokerageAmounts[commodityValue] || ""}
-                  onChange={(e) =>
-                    handleBrokerageChange(commodityValue, e.target.value)
-                  }
-                />
-              </div>
-            );
-          })}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Seller Company
-              </label>
-              <DataDropdown
-                options={companyOptions}
-                placeholder="Select companies"
-                selectedOptions={selectedCompany}
-                onChange={handleCompanyChange}
-                isMulti={true}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Status
-              </label>
-              <DataDropdown
-                options={statusOptions}
-                placeholder="Select status"
-                selectedOptions={selectedStatus}
-                onChange={(selected) => setSelectedStatus(selected?.value || selected)}
-              />
-            </div>
-          </div>
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Groups
-            </label>
-            <DataDropdown
-              options={groupOptions}
-              placeholder="Select groups"
-              isMulti={true}
-              selectedOptions={selectedGroups}
-              onChange={(selected) => setSelectedGroups(selected ? selected.map(s => s.value) : [])}
-            />
-          </div>
 
-          <div className="mt-6 flex justify-end">
-            <Buttons
-              label="Update"
-              onClick={handleSubmit}
-              type="submit"
-              variant="primary"
-              size="lg"
-            />
+            {/* Contact Details */}
+            <div className="mb-8">
+              <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+                <FaPhone className="text-amber-500" /> Contact Details
+              </h3>
+
+              <div className="space-y-4">
+                {phoneNumbers.map((phone, index) => (
+                  <div key={phone.id} className="flex items-center gap-3">
+                    <DataInput
+                      placeholder={`Phone Number ${index + 1}`}
+                      value={phone.value}
+                      inputType="number"
+                      onChange={(e) => handlePhoneChange(phone.id, e.target.value)}
+                    />
+                    <div className="flex items-center gap-2">
+                      {index === phoneNumbers.length - 1 && (
+                        <FaPlusCircle
+                          onClick={addPhoneNumber}
+                          className="text-green-500 cursor-pointer text-xl hover:scale-110 transition-transform"
+                        />
+                      )}
+                      {index > 0 && (
+                        <FaMinusCircle
+                          onClick={() => removePhoneNumber(phone.id)}
+                          className="text-red-500 cursor-pointer text-xl hover:scale-110 transition-transform"
+                        />
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="space-y-4 mt-4">
+                {emails.map((email, index) => (
+                  <div key={email.id} className="flex items-center gap-3">
+                    <DataInput
+                      placeholder={`Email ${index + 1}`}
+                      value={email.value}
+                      onChange={(e) => handleEmailChange(email.id, e.target.value)}
+                      icon={FaEnvelope}
+                    />
+                    <div className="flex items-center gap-2">
+                      {index === emails.length - 1 && (
+                        <FaPlusCircle
+                          onClick={addEmail}
+                          className="text-green-500 cursor-pointer text-xl hover:scale-110 transition-transform"
+                        />
+                      )}
+                      {index > 0 && (
+                        <FaMinusCircle
+                          onClick={() => removeEmail(email.id)}
+                          className="text-red-500 cursor-pointer text-xl hover:scale-110 transition-transform"
+                        />
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Commodities */}
+            <div className="mb-8">
+              <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+                <FaBox className="text-amber-500" /> Commodities & Brokerage
+              </h3>
+              <DataDropdown
+                options={commodityOptions}
+                placeholder="Select commodities"
+                selectedOptions={selectedCommodity}
+                onChange={handleCommodityChange}
+                isMulti={true}
+                label="Assigned Commodities"
+              />
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                {(Array.isArray(selectedCommodity)
+                  ? selectedCommodity
+                  : [selectedCommodity]
+                )
+                  .filter(Boolean)
+                  .map((commodityValue) => {
+                    const commodityLabel =
+                      commodityOptions.find((o) => o.value === commodityValue)
+                        ?.label || commodityValue;
+                    return (
+                      <div key={commodityValue} className="p-4 bg-slate-50 rounded-xl border border-slate-100">
+                        <label className="block mb-2 text-xs font-bold text-slate-500 uppercase">
+                          Brokerage (Tons) - {commodityLabel}
+                        </label>
+                        <DataInput
+                          placeholder="0.00"
+                          inputType="number"
+                          value={brokerageAmounts[commodityValue] || ""}
+                          onChange={(e) =>
+                            handleBrokerageChange(commodityValue, e.target.value)
+                          }
+                        />
+                      </div>
+                    );
+                  })}
+              </div>
+            </div>
+
+            {/* Associations */}
+            <div className="mb-8">
+              <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+                <FaBuilding className="text-amber-500" /> Associations & Status
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <DataDropdown
+                  options={companyOptions}
+                  placeholder="Select companies"
+                  selectedOptions={selectedCompany}
+                  onChange={handleCompanyChange}
+                  isMulti={true}
+                  label="Seller Company"
+                />
+                <DataDropdown
+                  options={statusOptions}
+                  placeholder="Select status"
+                  selectedOptions={selectedStatus}
+                  onChange={(selected) =>
+                    setSelectedStatus(selected?.value || selected)
+                  }
+                  label="Account Status"
+                />
+              </div>
+              <div className="mt-5">
+                <DataDropdown
+                  options={groupOptions}
+                  placeholder="Select groups"
+                  isMulti={true}
+                  selectedOptions={selectedGroups}
+                  onChange={(selected) =>
+                    setSelectedGroups(selected ? selected.map((s) => s.value) : [])
+                  }
+                  label="Assigned Groups"
+                />
+              </div>
+            </div>
+
+            <div className="mt-10 flex justify-end gap-3 border-t pt-8">
+              <Buttons
+                label="Cancel"
+                onClick={onClose}
+                variant="secondary"
+                size="lg"
+              />
+              <Buttons
+                label="Update Seller"
+                onClick={handleSubmit}
+                type="submit"
+                variant="primary"
+                size="lg"
+              />
+            </div>
           </div>
         </div>
-      </div>
+      </AdminPageShell>
     </Suspense>
   );
+};
+
+EditSellerDetails.propTypes = {
+  sellerId: PropTypes.string.isRequired,
+  onClose: PropTypes.func,
+  onSave: PropTypes.func,
 };
 
 export default EditSellerDetails;
