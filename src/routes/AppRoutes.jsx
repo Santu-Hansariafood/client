@@ -1,4 +1,5 @@
-import { Routes, Route, Navigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Routes, Route, Navigate, useNavigate, useLocation } from "react-router-dom";
 import LazyPages from "../utils/LazyPages/LazyPages";
 import PrivateRoute from "./PrivateRoute/PrivateRoute";
 import PublicRoute from "./PublicRoute/PublicRoute";
@@ -292,6 +293,37 @@ const privateRoutes = [
 ];
 
 const AppRoutes = ({ hydrated }) => {
+  const { isAuthenticated, userRole } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    // Force redirect to dashboard on initial app load if authenticated
+    if (hydrated && isAuthenticated) {
+      const isInitialLoad = !sessionStorage.getItem("appInitialized");
+      
+      if (isInitialLoad) {
+        const roleDashboards = {
+          Admin: "/dashboard",
+          Employee: "/employee/dashboard",
+          Buyer: "/buyer/dashboard",
+          Seller: "/seller/dashboard",
+          Transporter: "/transporter/dashboard",
+        };
+        
+        const targetDashboard = roleDashboards[userRole] || "/dashboard";
+        
+        // Mark as initialized for this session
+        sessionStorage.setItem("appInitialized", "true");
+        
+        // Redirect to dashboard if not already there
+        if (location.pathname !== targetDashboard) {
+          navigate(targetDashboard, { replace: true });
+        }
+      }
+    }
+  }, [hydrated, isAuthenticated, userRole, navigate, location.pathname]);
+
   if (!hydrated) return null;
 
   return (
