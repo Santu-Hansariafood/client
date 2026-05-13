@@ -71,6 +71,8 @@ const loaders = {
     import("../../pages/LoadingEntry/LoadingEntrySauda/LoadingEntrySauda"),
   PendingLoadingList: () =>
     import("../../pages/LoadingEntry/PendingLoadingList/PendingLoadingList"),
+  PendingSaudaSummary: () =>
+    import("../../pages/LoadingEntry/PendingSaudaSummary/PendingSaudaSummary"),
   ReceivingList: () =>
     import("../../pages/LoadingEntry/ReceivingList/ReceivingList"),
   LoadingReport: () =>
@@ -224,6 +226,7 @@ const LazyPages = {
   ConfirmBids: lazy(loaders.ConfirmBids),
   LoadingEntrySauda: lazy(loaders.LoadingEntrySauda),
   PendingLoadingList: lazy(loaders.PendingLoadingList),
+  PendingSaudaSummary: lazy(loaders.PendingSaudaSummary),
   ReceivingList: lazy(loaders.ReceivingList),
   LoadingReport: lazy(loaders.LoadingReport),
   PrivacyPolicy: lazy(loaders.PrivacyPolicy),

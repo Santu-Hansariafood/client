@@ -181,6 +181,74 @@ router.get("/", async (req, res) => {
   }
 });
 
+router.get("/pending/summary", async (req, res) => {
+  try {
+    const summary = await SelfOrder.aggregate([
+      {
+        $match: {
+          status: "active",
+          $or: [
+            { pendingQuantity: { $gt: 0 } },
+            { pendingQuantity: { $exists: false } }
+          ]
+        }
+      },
+      {
+        $lookup: {
+          from: "sellers",
+          localField: "supplier",
+          foreignField: "_id",
+          as: "sellerDetails"
+        }
+      },
+      {
+        $unwind: {
+          path: "$sellerDetails",
+          preserveNullAndEmptyArrays: true
+        }
+      },
+      {
+        $group: {
+          _id: {
+            sellerId: "$supplier",
+            sellerName: { $ifNull: ["$sellerDetails.sellerName", "$supplierCompany"] },
+            consignee: "$consignee"
+          },
+          totalPendingQuantity: { $sum: { $ifNull: ["$pendingQuantity", "$quantity"] } },
+          saudaCount: { $sum: 1 },
+          saudas: {
+            $push: {
+              saudaNo: "$saudaNo",
+              pendingQuantity: { $ifNull: ["$pendingQuantity", "$quantity"] },
+              commodity: "$commodity",
+              poDate: "$poDate"
+            }
+          }
+        }
+      },
+      {
+        $project: {
+          _id: 0,
+          sellerId: "$_id.sellerId",
+          sellerName: "$_id.sellerName",
+          consignee: "$_id.consignee",
+          totalPendingQuantity: 1,
+          saudaCount: 1,
+          saudas: 1
+        }
+      },
+      {
+        $sort: { sellerName: 1, consignee: 1 }
+      }
+    ]);
+
+    res.json(summary);
+  } catch (error) {
+    console.error("Pending Summary Error:", error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
 router.get("/pending/list", async (req, res) => {
   try {
     const page = parseInt(req.query.page || "1", 10);

@@ -184,6 +184,12 @@
           "icon": "FaClock"
         },
         {
+          "name": "Pending Summary",
+          "link": "/Loading-Entry/pending-sauda-summary",
+          "icon": "FaClipboardList",
+          "roles": ["Admin"]
+        },
+        {
           "name": "Receiving",
           "link": "/Loading-Entry/receiving-list",
           "icon": "FaClipboardList"

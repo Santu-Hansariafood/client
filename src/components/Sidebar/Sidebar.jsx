@@ -2,9 +2,11 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { Link, useLocation } from "react-router-dom";
 import * as Icons from "react-icons/fa";
 import dashboardData from "../../data/dashboardData.json";
+import { useAuth } from "../../context/AuthContext/AuthContext";
 
 const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
   const location = useLocation();
+  const { userRole } = useAuth();
 
   const [expandedSection, setExpandedSection] = useState(
     localStorage.getItem("expandedSection") || null,
@@ -117,8 +119,17 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
             isCollapsed ? "px-3" : "px-4"
           }`}
         >
-          {dashboardData.sections.map((section, index) => {
-            const isSectionExpanded = expandedSection === section.section;
+          {dashboardData.sections
+            .map((section) => {
+              const filteredActions = section.actions.filter((action) => {
+                if (!action.roles) return true;
+                return action.roles.includes(userRole);
+              });
+              return { ...section, actions: filteredActions };
+            })
+            .filter((section) => section.actions.length > 0)
+            .map((section, index) => {
+              const isSectionExpanded = expandedSection === section.section;
 
             const sectionIcon = section.icon || section.actions?.[0]?.icon;
 
