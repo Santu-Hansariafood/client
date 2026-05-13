@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, lazy, Suspense } from "react";
+import { useLocation } from "react-router-dom";
 import api from "../../../utils/apiClient/apiClient";
 import { toast } from "react-toastify";
 import { FaTruckLoading, FaSearch, FaDownload } from "react-icons/fa";
@@ -70,7 +71,10 @@ const buildDropdownOptions = (values) =>
     }));
 
 const PendingLoadingList = () => {
-  const { userRole, mobile } = useAuth();
+  const { userRole, mobile: authMobile } = useAuth();
+  const location = useLocation();
+  const mobile = location.state?.mobile || authMobile;
+
   const [data, setData] = useState([]);
   const [allData, setAllData] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -84,6 +88,21 @@ const PendingLoadingList = () => {
   const [selectedSellerCompany, setSelectedSellerCompany] = useState(null);
   const [selectedSellerName, setSelectedSellerName] = useState(null);
   const [selectedConsignee, setSelectedConsignee] = useState(null);
+
+  useEffect(() => {
+    if (location.state?.sellerCompany) {
+      setSelectedSellerCompany({
+        value: location.state.sellerCompany,
+        label: location.state.sellerCompany,
+      });
+    }
+    if (location.state?.consignee) {
+      setSelectedConsignee({
+        value: location.state.consignee,
+        label: location.state.consignee,
+      });
+    }
+  }, [location.state]);
 
   const fetchData = useCallback(async () => {
     setLoading(true);

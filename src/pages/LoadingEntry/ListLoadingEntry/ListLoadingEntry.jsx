@@ -6,6 +6,7 @@ import React, {
   useCallback,
   useRef,
 } from "react";
+import { useLocation } from "react-router-dom";
 import api from "../../../utils/apiClient/apiClient";
 import {
   MdVisibility,
@@ -112,7 +113,9 @@ const useLocalStorage = (key, initialValue) => {
 };
 
 const ListLoadingEntry = () => {
-  const { userRole, mobile } = useAuth();
+  const { userRole, mobile: authMobile } = useAuth();
+  const location = useLocation();
+  const mobile = location.state?.mobile || authMobile;
 
   const [loadingEntries, setLoadingEntries] = useState([]);
   const [sellerMap, setSellerMap] = useState({});

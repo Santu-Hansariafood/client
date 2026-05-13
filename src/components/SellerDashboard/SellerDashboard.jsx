@@ -127,6 +127,7 @@ const SellerDashboard = () => {
       icon: FaBoxOpen,
       link: "/manage-order/list-self-order",
       color: "from-blue-400 to-indigo-600",
+      state: { mobile }
     },
     {
       title: "Pending Sauda",
@@ -134,6 +135,7 @@ const SellerDashboard = () => {
       icon: FaBook,
       link: "/Loading-Entry/pending-loading-list",
       color: "from-orange-400 to-amber-500",
+      state: { mobile }
     },
     {
       title: "Participate",
@@ -141,6 +143,7 @@ const SellerDashboard = () => {
       icon: FaGavel,
       link: "/participate-bid-list",
       color: "from-purple-400 to-violet-600",
+      state: { mobile }
     },
   ];
 
@@ -218,17 +221,17 @@ const SellerDashboard = () => {
                   { 
                     label: "Order History", 
                     icon: <FaBoxOpen className="text-blue-500" />,
-                    link: "/manage-order/list-self-order" 
+                    action: () => navigate("/manage-order/list-self-order", { state: { mobile } })
                   },
                   { 
                     label: "Pending Sauda List", 
                     icon: <FaBook className="text-orange-500" />,
-                    link: "/Loading-Entry/pending-loading-list" 
+                    action: () => navigate("/Loading-Entry/pending-loading-list", { state: { mobile } })
                   },
                   { 
                     label: "Loading Entries", 
                     icon: <FaBook className="text-indigo-500" />,
-                    link: "/Loading-Entry/list-loading-entry" 
+                    action: () => navigate("/Loading-Entry/list-loading-entry", { state: { mobile } })
                   },
                   { 
                     label: "Notifications", 

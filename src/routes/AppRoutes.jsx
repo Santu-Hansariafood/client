@@ -185,22 +185,22 @@ const privateRoutes = [
   {
     path: "Loading-Entry/list-loading-entry",
     component: LazyPages.ListLoadingEntry,
-    roles: ["Admin", "Employee"],
+    roles: ["Admin", "Employee", "Seller"],
   },
   {
     path: "Loading-Entry/add-loading-entry",
     component: LazyPages.AddLoadingEntry,
-    roles: ["Admin", "Employee"],
+    roles: ["Admin", "Employee", "Seller"],
   },
   {
     path: "Loading-Entry/pending-loading-list",
     component: LazyPages.PendingLoadingList,
-    roles: ["Admin", "Employee"],
+    roles: ["Admin", "Employee", "Seller"],
   },
   {
     path: "Loading-Entry/pending-sauda-summary",
     component: LazyPages.PendingSaudaSummary,
-    roles: ["Admin"],
+    roles: ["Admin", "Seller"],
   },
   {
     path: "Loading-Entry/receiving-list",

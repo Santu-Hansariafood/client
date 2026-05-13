@@ -541,6 +541,20 @@ router.get("/pending/list", async (req, res) => {
       { $limit: limit },
       {
         $lookup: {
+          from: "sellers",
+          localField: "supplier",
+          foreignField: "_id",
+          as: "supplierDetails"
+        }
+      },
+      {
+        $unwind: {
+          path: "$supplierDetails",
+          preserveNullAndEmptyArrays: true
+        }
+      },
+      {
+        $lookup: {
           from: "loadingentries",
           localField: "saudaNo",
           foreignField: "saudaNo",
@@ -549,12 +563,14 @@ router.get("/pending/list", async (req, res) => {
       },
       {
         $addFields: {
-          totalUnloadingWeight: { $sum: "$loadingEntries.unloadingWeight" }
+          totalUnloadingWeight: { $sum: "$loadingEntries.unloadingWeight" },
+          supplier: "$supplierDetails"
         }
       },
       {
         $project: {
-          loadingEntries: 0
+          loadingEntries: 0,
+          supplierDetails: 0
         }
       }
     ];
