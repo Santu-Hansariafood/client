@@ -187,21 +187,45 @@ router.get("/pending/summary", async (req, res) => {
     const limit = parseInt(req.query.limit || "10", 10);
     const search = (req.query.search || "").trim();
     const skip = (page - 1) * limit;
+    const mobile = req.query.mobile;
+    const userRole = req.query.userRole;
+
+    const matchQuery = {
+      status: "active",
+      $or: [
+        { pendingQuantity: { $gt: 0 } },
+        { 
+          $and: [
+            { pendingQuantity: { $exists: false } },
+            { quantity: { $gt: 0 } }
+          ]
+        }
+      ]
+    };
+
+    if (userRole === "Seller" && mobile) {
+      const phoneRegex = /^(?:\+91|0)?([6-9]\d{9})$/;
+      const phoneMatch = String(mobile).match(phoneRegex);
+      const normalizedMobile = phoneMatch ? phoneMatch[1] : mobile;
+
+      const seller = await Seller.findOne({
+        "phoneNumbers.value": { $regex: new RegExp(normalizedMobile + "$") },
+      });
+
+      const mobileConditions = [
+        { sellerMobile: normalizedMobile },
+        { sellerMobile: { $regex: new RegExp(normalizedMobile + "$") } },
+      ];
+
+      if (seller) {
+        mobileConditions.push({ supplier: seller._id });
+      }
+      matchQuery.$and = [{ $or: mobileConditions }];
+    }
 
     const pipeline = [
       {
-        $match: {
-          status: "active",
-          $or: [
-            { pendingQuantity: { $gt: 0 } },
-            { 
-              $and: [
-                { pendingQuantity: { $exists: false } },
-                { quantity: { $gt: 0 } }
-              ]
-            }
-          ]
-        }
+        $match: matchQuery
       },
       {
         $lookup: {
@@ -225,6 +249,14 @@ router.get("/pending/summary", async (req, res) => {
             consignee: "$consignee"
           },
           totalPendingQuantity: { $sum: { $ifNull: ["$pendingQuantity", "$quantity"] } },
+          totalPendingBrokerage: { 
+            $sum: { 
+              $multiply: [
+                { $ifNull: ["$pendingQuantity", "$quantity"] },
+                { $ifNull: ["$buyerBrokerage.brokerageSupplier", 0] }
+              ]
+            }
+          },
           saudaCount: { $sum: 1 },
           saudas: {
             $push: {
@@ -243,6 +275,7 @@ router.get("/pending/summary", async (req, res) => {
           sellerName: "$_id.sellerName",
           consignee: "$_id.consignee",
           totalPendingQuantity: 1,
+          totalPendingBrokerage: 1,
           saudaCount: 1,
           saudas: 1
         }
@@ -276,18 +309,7 @@ router.get("/pending/summary", async (req, res) => {
     // Get overall summary stats for the current search (without pagination)
     const statsPipeline = [
       {
-        $match: {
-          status: "active",
-          $or: [
-            { pendingQuantity: { $gt: 0 } },
-            { 
-              $and: [
-                { pendingQuantity: { $exists: false } },
-                { quantity: { $gt: 0 } }
-              ]
-            }
-          ]
-        }
+        $match: matchQuery
       },
       {
         $lookup: {

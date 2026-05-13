@@ -390,35 +390,39 @@ const PendingLoadingList = () => {
                     />
                   </div>
                 </div>
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-blue-500"></span>
-                    Seller Name
-                  </label>
-                  <DataDropdown
-                    options={sellerNameOptions()}
-                    selectedOptions={selectedSellerName}
-                    onChange={setSelectedSellerName}
-                    placeholder="Select Seller Name"
-                    isMulti={false}
-                    isClearable
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-purple-500"></span>
-                    Seller Company
-                  </label>
-                  <DataDropdown
-                    options={sellerCompanyOptions()}
-                    selectedOptions={selectedSellerCompany}
-                    onChange={setSelectedSellerCompany}
-                    placeholder="Select Seller Company"
-                    isMulti={false}
-                    isClearable
-                  />
-                </div>
-                <div>
+                {userRole !== "Seller" && (
+                  <>
+                    <div>
+                      <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-blue-500"></span>
+                        Seller Name
+                      </label>
+                      <DataDropdown
+                        options={sellerNameOptions()}
+                        selectedOptions={selectedSellerName}
+                        onChange={setSelectedSellerName}
+                        placeholder="Select Seller Name"
+                        isMulti={false}
+                        isClearable
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-purple-500"></span>
+                        Seller Company
+                      </label>
+                      <DataDropdown
+                        options={sellerCompanyOptions()}
+                        selectedOptions={selectedSellerCompany}
+                        onChange={setSelectedSellerCompany}
+                        placeholder="Select Seller Company"
+                        isMulti={false}
+                        isClearable
+                      />
+                    </div>
+                  </>
+                )}
+                <div className={userRole === "Seller" ? "sm:col-span-1 xl:col-span-3" : ""}>
                   <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full bg-orange-500"></span>
                     Buyer Company

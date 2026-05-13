@@ -6,12 +6,14 @@ import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
 import Loading from "../../../common/Loading/Loading";
 import { fetchAllPages } from "../../../utils/apiClient/fetchAllPages";
 import Buttons from "../../../common/Buttons/Buttons";
+import { useAuth } from "../../../context/AuthContext/AuthContext";
 
 const Tables = lazy(() => import("../../../common/Tables/Tables"));
 const Pagination = lazy(() => import("../../../common/Paginations/Paginations"));
 const SearchBox = lazy(() => import("../../../common/SearchBox/SearchBox"));
 
 const PendingSaudaSummary = () => {
+  const { userRole, mobile } = useAuth();
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [consigneeMap, setConsigneeMap] = useState(new Map());
@@ -47,6 +49,8 @@ const PendingSaudaSummary = () => {
           page: currentPage,
           limit: itemsPerPage,
           search: searchTerm,
+          userRole,
+          mobile
         }
       });
       
@@ -69,7 +73,7 @@ const PendingSaudaSummary = () => {
     } finally {
       setLoading(false);
     }
-  }, [currentPage, itemsPerPage, searchTerm]);
+  }, [currentPage, itemsPerPage, searchTerm, userRole, mobile]);
 
   useEffect(() => {
     fetchConsignees();
@@ -104,6 +108,7 @@ const PendingSaudaSummary = () => {
     "Seller Name",
     "Consignee",
     "Total Pending Qty (Tons)",
+    "Pending Brokerage",
     "No. of Saudas",
     "Details",
   ];
@@ -126,6 +131,9 @@ const PendingSaudaSummary = () => {
     </div>,
     <span key={`qty-${index}`} className="font-black text-emerald-700 bg-emerald-50 px-3 py-1 rounded-lg border border-emerald-100">
       {item.totalPendingQuantity.toFixed(2)} T
+    </span>,
+    <span key={`brokerage-${index}`} className="font-bold text-slate-600">
+      ₹ {item.totalPendingBrokerage ? item.totalPendingBrokerage.toFixed(2) : "0.00"}
     </span>,
     <span key={`count-${index}`} className="font-bold text-slate-600">
       {item.saudaCount}
@@ -172,19 +180,21 @@ const PendingSaudaSummary = () => {
           </div>
 
           {/* Summary Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className={`grid grid-cols-1 ${userRole === "Seller" ? "md:grid-cols-2" : "md:grid-cols-3"} gap-6`}>
             <div className="bg-white p-8 rounded-[2.5rem] border border-slate-200 shadow-xl shadow-slate-900/5">
               <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Total Pending Weight</p>
               <h3 className="text-4xl font-black text-slate-900 tracking-tighter">
                 {summaryStats.totalPendingWeight.toFixed(2)} <span className="text-lg opacity-40">T</span>
               </h3>
             </div>
-            <div className="bg-white p-8 rounded-[2.5rem] border border-slate-200 shadow-xl shadow-slate-900/5">
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Active Sellers</p>
-              <h3 className="text-4xl font-black text-slate-900 tracking-tighter">
-                {summaryStats.activeSellers}
-              </h3>
-            </div>
+            {userRole !== "Seller" && (
+              <div className="bg-white p-8 rounded-[2.5rem] border border-slate-200 shadow-xl shadow-slate-900/5">
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Active Sellers</p>
+                <h3 className="text-4xl font-black text-slate-900 tracking-tighter">
+                  {summaryStats.activeSellers}
+                </h3>
+              </div>
+            )}
             <div className="bg-white p-8 rounded-[2.5rem] border border-slate-200 shadow-xl shadow-slate-900/5">
               <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Total Consignees</p>
               <h3 className="text-4xl font-black text-slate-900 tracking-tighter">
