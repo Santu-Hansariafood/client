@@ -1,10 +1,11 @@
 import { useState, useEffect, useCallback, lazy, Suspense } from "react";
 import api from "../../../utils/apiClient/apiClient";
 import { toast } from "react-toastify";
-import { FaClock, FaStore, FaTruck, FaBoxOpen, FaSearch } from "react-icons/fa";
+import { FaClock, FaStore, FaTruck, FaBoxOpen, FaSearch, FaSync } from "react-icons/fa";
 import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
 import Loading from "../../../common/Loading/Loading";
 import { fetchAllPages } from "../../../utils/apiClient/fetchAllPages";
+import Buttons from "../../../common/Buttons/Buttons";
 
 const Tables = lazy(() => import("../../../common/Tables/Tables"));
 const Pagination = lazy(() => import("../../../common/Paginations/Paginations"));
@@ -18,6 +19,7 @@ const PendingSaudaSummary = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [searchTerm, setSearchTerm] = useState("");
+  const [lastUpdated, setLastUpdated] = useState(new Date());
   const [summaryStats, setSummaryStats] = useState({
     totalPendingWeight: 0,
     activeSellers: 0,
@@ -65,6 +67,7 @@ const PendingSaudaSummary = () => {
         activeSellers: new Set(fullData.map(item => item.sellerName)).size,
         totalConsignees: new Set(fullData.map(item => item.consignee)).size,
       });
+      setLastUpdated(new Date());
 
     } catch (error) {
       console.error("Error fetching pending sauda summary:", error);
@@ -77,6 +80,11 @@ const PendingSaudaSummary = () => {
   useEffect(() => {
     fetchConsignees().then(() => fetchData());
   }, [fetchConsignees, fetchData]);
+
+  const handleRefresh = () => {
+    fetchData();
+    toast.info("Summary updated");
+  };
 
   const getConsigneeName = (id) => {
     if (!id) return "N/A";
@@ -133,6 +141,33 @@ const PendingSaudaSummary = () => {
         noContentCard
       >
         <div className="max-w-7xl mx-auto space-y-8">
+          {/* Dashboard Header with Refresh */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="p-3 rounded-2xl bg-emerald-100 text-emerald-600 shadow-sm">
+                <FaClock size={20} />
+              </div>
+              <div>
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] leading-tight">System Intelligence</p>
+                <h3 className="text-xl font-black text-slate-900 tracking-tight">Pending Sauda Summary</h3>
+              </div>
+            </div>
+            <div className="flex items-center gap-4">
+              <div className="text-right hidden sm:block">
+                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Last Intelligence Update</p>
+                <p className="text-xs font-bold text-slate-600">{lastUpdated.toLocaleTimeString()}</p>
+              </div>
+              <Buttons
+                label="Refresh Data"
+                icon={FaSync}
+                onClick={handleRefresh}
+                variant="secondary"
+                size="sm"
+                className="!rounded-xl shadow-sm"
+              />
+            </div>
+          </div>
+
           {/* Summary Stats */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="bg-white p-8 rounded-[2.5rem] border border-slate-200 shadow-xl shadow-slate-900/5">

@@ -194,7 +194,12 @@ router.get("/pending/summary", async (req, res) => {
           status: "active",
           $or: [
             { pendingQuantity: { $gt: 0 } },
-            { pendingQuantity: { $exists: false } }
+            { 
+              $and: [
+                { pendingQuantity: { $exists: false } },
+                { quantity: { $gt: 0 } }
+              ]
+            }
           ]
         }
       },
