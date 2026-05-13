@@ -273,11 +273,81 @@ router.get("/pending/summary", async (req, res) => {
 
     const summary = await SelfOrder.aggregate(pipeline);
 
+    // Get overall summary stats for the current search (without pagination)
+    const statsPipeline = [
+      {
+        $match: {
+          status: "active",
+          $or: [
+            { pendingQuantity: { $gt: 0 } },
+            { 
+              $and: [
+                { pendingQuantity: { $exists: false } },
+                { quantity: { $gt: 0 } }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        $lookup: {
+          from: "sellers",
+          localField: "supplier",
+          foreignField: "_id",
+          as: "sellerDetails"
+        }
+      },
+      {
+        $unwind: {
+          path: "$sellerDetails",
+          preserveNullAndEmptyArrays: true
+        }
+      },
+      {
+        $group: {
+          _id: {
+            sellerId: "$supplier",
+            sellerName: { $ifNull: ["$sellerDetails.sellerName", "$supplierCompany"] },
+            consignee: "$consignee"
+          },
+          totalPendingQuantity: { $sum: { $ifNull: ["$pendingQuantity", "$quantity"] } }
+        }
+      },
+      {
+        $project: {
+          sellerName: "$_id.sellerName",
+          consignee: "$_id.consignee",
+          totalPendingQuantity: 1
+        }
+      }
+    ];
+
+    if (search) {
+      const searchRegex = new RegExp(escapeRegex(search), "i");
+      statsPipeline.push({
+        $match: {
+          $or: [
+            { sellerName: { $regex: searchRegex } },
+            { consignee: { $regex: searchRegex } }
+          ]
+        }
+      });
+    }
+
+    const allDataForStats = await SelfOrder.aggregate(statsPipeline);
+    
+    const summaryStats = {
+      totalPendingWeight: allDataForStats.reduce((acc, curr) => acc + curr.totalPendingQuantity, 0),
+      activeSellers: new Set(allDataForStats.map(item => item.sellerName)).size,
+      totalConsignees: new Set(allDataForStats.map(item => item.consignee)).size,
+    };
+
     res.json({
       data: summary,
       total,
       page,
-      totalPages: Math.ceil(total / limit)
+      totalPages: Math.ceil(total / limit),
+      summaryStats
     });
   } catch (error) {
     console.error("Pending Summary Error:", error);

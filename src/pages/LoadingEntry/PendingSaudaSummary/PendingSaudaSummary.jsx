@@ -50,23 +50,17 @@ const PendingSaudaSummary = () => {
         }
       });
       
-      const { data: pagedData, total } = response.data;
+      const { data: pagedData, total, summaryStats: stats } = response.data;
       setData(pagedData || []);
       setTotalItems(total || 0);
 
-      // Fetch summary stats that reflect the current search
-      const fullRes = await api.get("/self-order/pending/summary", { 
-        params: { 
-          limit: 1000,
-          search: searchTerm 
-        } 
-      });
-      const fullData = fullRes.data.data || [];
-      setSummaryStats({
-        totalPendingWeight: fullData.reduce((acc, curr) => acc + curr.totalPendingQuantity, 0),
-        activeSellers: new Set(fullData.map(item => item.sellerName)).size,
-        totalConsignees: new Set(fullData.map(item => item.consignee)).size,
-      });
+      if (stats) {
+        setSummaryStats({
+          totalPendingWeight: stats.totalPendingWeight || 0,
+          activeSellers: stats.activeSellers || 0,
+          totalConsignees: stats.totalConsignees || 0,
+        });
+      }
       setLastUpdated(new Date());
 
     } catch (error) {
@@ -78,8 +72,12 @@ const PendingSaudaSummary = () => {
   }, [currentPage, itemsPerPage, searchTerm]);
 
   useEffect(() => {
-    fetchConsignees().then(() => fetchData());
-  }, [fetchConsignees, fetchData]);
+    fetchConsignees();
+  }, [fetchConsignees]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   const handleRefresh = () => {
     fetchData();
@@ -93,6 +91,11 @@ const PendingSaudaSummary = () => {
 
   const handleSearch = (q) => {
     setSearchTerm(q);
+    setCurrentPage(1);
+  };
+
+  const handlePageSizeChange = (size) => {
+    setItemsPerPage(size);
     setCurrentPage(1);
   };
 
@@ -227,7 +230,7 @@ const PendingSaudaSummary = () => {
                 totalItems={totalItems}
                 itemsPerPage={itemsPerPage}
                 onPageChange={setCurrentPage}
-                onPageSizeChange={setItemsPerPage}
+                onPageSizeChange={handlePageSizeChange}
               />
             </div>
           </div>
