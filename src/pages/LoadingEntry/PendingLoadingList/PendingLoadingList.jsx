@@ -277,8 +277,11 @@ const PendingLoadingList = () => {
           "Total Quantity": quantity,
           "Pending Quantity": getLast3Digits(pendingQuantity),
           "Loaded Quantity": loadedQuantity.toFixed(2),
+          "Unloading Quantity": (item.totalUnloadingWeight || 0).toFixed(2),
           "Rate": item.rate || 0,
-          "Brokerage": (loadedQuantity * (item.buyerBrokerage?.brokerageSupplier || 0)).toFixed(2),
+          "Loaded Brokerage": ( (item.totalUnloadingWeight || 0) * (item.buyerBrokerage?.brokerageSupplier || 0) ).toFixed(2),
+          "Pending Brokerage": ( pendingQuantity * (item.buyerBrokerage?.brokerageSupplier || 0) ).toFixed(2),
+          "Total Brokerage": ( ( (item.totalUnloadingWeight || 0) + pendingQuantity ) * (item.buyerBrokerage?.brokerageSupplier || 0) ).toFixed(2),
           "Payment Terms": item.paymentTerms || "N/A",
         };
       });
@@ -326,8 +329,11 @@ const PendingLoadingList = () => {
     }
     const loadedQuantity = quantity - pendingQuantity;
 
-    const brokerage = item.buyerBrokerage?.brokerageSupplier || 0;
-    const totalBrokerage = (loadedQuantity * brokerage).toFixed(2);
+    const brokerageRate = item.buyerBrokerage?.brokerageSupplier || 0;
+    const unloadingWeight = item.totalUnloadingWeight || 0;
+    const loadedBrokerage = (unloadingWeight * brokerageRate).toFixed(2);
+    const pendingBrokerage = (pendingQuantity * brokerageRate).toFixed(2);
+    const totalBrokerage = (parseFloat(loadedBrokerage) + parseFloat(pendingBrokerage)).toFixed(2);
 
     return [
       (currentPage - 1) * itemsPerPage + index + 1,
@@ -342,7 +348,11 @@ const PendingLoadingList = () => {
       <span key={`pending-${item._id}`} className="text-amber-600 font-bold">{getLast3Digits(pendingQuantity)}</span>,
       loadedQuantity.toFixed(2),
       item.rate || 0,
-      <span key={`brokerage-${item._id}`} className="text-slate-600 font-medium">₹{totalBrokerage}</span>,
+      <div key={`brokerage-${item._id}`} className="flex flex-col text-xs">
+        <span className="text-slate-600 font-medium">Total: ₹{totalBrokerage}</span>
+        <span className="text-emerald-600">Loaded: ₹{loadedBrokerage} (On {unloadingWeight.toFixed(2)}T)</span>
+        <span className="text-amber-600">Pending: ₹{pendingBrokerage}</span>
+      </div>,
       item.paymentTerms || "N/A",
       <span
         key={`status-${item._id}`}

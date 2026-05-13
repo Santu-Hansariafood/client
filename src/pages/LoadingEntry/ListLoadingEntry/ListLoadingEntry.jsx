@@ -118,6 +118,7 @@ const ListLoadingEntry = () => {
   const [sellerMap, setSellerMap] = useState({});
   const [buyerMap, setBuyerMap] = useState({});
   const [paymentTermsMap, setPaymentTermsMap] = useState({});
+  const [brokerageMap, setBrokerageMap] = useState({});
   const [statusMap, setStatusMap] = useState({});
   const [alreadyLoadedMap, setAlreadyLoadedMap] = useState({});
   const [transporters, setTransporters] = useState([]);
@@ -213,6 +214,14 @@ const ListLoadingEntry = () => {
       setPaymentTermsMap(
         Object.fromEntries(
           ordersData.map((o) => [o.saudaNo, o.paymentTerms || ""]),
+        ),
+      );
+      setBrokerageMap(
+        Object.fromEntries(
+          ordersData.map((o) => [
+            o.saudaNo,
+            o.buyerBrokerage?.brokerageSupplier || 0,
+          ]),
         ),
       );
       setStatusMap(
@@ -560,22 +569,29 @@ const ListLoadingEntry = () => {
       "Buyer",
       "Consignee",
       "Commodity",
-      "Weight",
+      "Unloading Weight",
+      "Brokerage",
       "Bill No",
     ];
 
-    const tableRows = loadingEntries.map((entry, index) => [
-      totalItems - ((currentPage - 1) * itemsPerPage + index),
-      formatDate(entry.loadingDate),
-      entry.saudaNo,
-      entry.lorryNumber,
-      entry.supplierCompany,
-      buyerMap[entry.saudaNo] || entry.buyerCompany || "N/A",
-      entry.consignee,
-      entry.commodity,
-      `${entry.loadingWeight.toFixed(2)} T`,
-      entry.billNumber || "N/A",
-    ]);
+    const tableRows = loadingEntries.map((entry, index) => {
+      const brokerageRate = brokerageMap[entry.saudaNo] || 0;
+      const totalBrokerage = ((entry.unloadingWeight || 0) * brokerageRate).toFixed(2);
+
+      return [
+        totalItems - ((currentPage - 1) * itemsPerPage + index),
+        formatDate(entry.loadingDate),
+        entry.saudaNo,
+        entry.lorryNumber,
+        entry.supplierCompany,
+        buyerMap[entry.saudaNo] || entry.buyerCompany || "N/A",
+        entry.consignee,
+        entry.commodity,
+        `${(entry.unloadingWeight || 0).toFixed(2)} T`,
+        `₹ ${totalBrokerage}`,
+        entry.billNumber || "N/A",
+      ];
+    });
 
     doc.setFontSize(20);
     doc.setTextColor(5, 150, 105);
@@ -606,8 +622,10 @@ const ListLoadingEntry = () => {
       "Buyer Company",
       "Consignee",
       "Payment Terms",
+      "Commodity",
       "Loading Weight",
       "Unloading Weight",
+      "Brokerage",
       "Already Loaded",
       "Status",
       "Lorry Number",
@@ -620,7 +638,6 @@ const ListLoadingEntry = () => {
       "Balance",
       "Bill No",
       "Date of Issue",
-      "Commodity",
       "Actions",
       "Download",
     ],
@@ -629,78 +646,86 @@ const ListLoadingEntry = () => {
 
   const rows = useMemo(() => {
     const start = (currentPage - 1) * itemsPerPage;
-    return loadingEntries.map((entry, index) => [
-      totalItems - (start + index),
-      formatDate(entry.loadingDate),
-      entry.saudaNo || "N/A",
-      entry.supplierCompany || "N/A",
-      buyerMap[entry.saudaNo] || entry.buyerCompany || "N/A",
-      entry.consignee || "N/A",
-      paymentTermsMap[entry.saudaNo] || "N/A",
-      entry.loadingWeight ? entry.loadingWeight.toFixed(2) : "0.00",
-      entry.unloadingWeight ? entry.unloadingWeight.toFixed(2) : "0.00",
-      (alreadyLoadedMap[entry.saudaNo] || 0).toFixed(2),
-      <span
-        key={`status-${entry._id}`}
-        className={`px-2 py-1 rounded-full text-xs font-semibold ${
-          statusMap[entry.saudaNo] === "closed"
-            ? "bg-red-100 text-red-700"
-            : "bg-emerald-100 text-emerald-700"
-        }`}
-      >
-        {statusMap[entry.saudaNo] === "closed" ? "Closed" : "Active"}
-      </span>,
-      entry.lorryNumber,
-      transporterMap[entry.transporterId] || entry.addedTransport || "N/A",
-      entry.driverName || "N/A",
-      entry.driverPhoneNumber || "N/A",
-      entry.freightRate ? `₹ ${entry.freightRate}` : "N/A",
-      entry.totalFreight ? `₹ ${entry.totalFreight}` : "N/A",
-      entry.advance ? `₹ ${entry.advance}` : "N/A",
-      entry.balance ? `₹ ${entry.balance}` : "N/A",
-      entry.billNumber || "N/A",
-      formatDate(entry.dateOfIssue),
-      entry.commodity || "N/A",
-      <div key={`actions-${entry._id}`} className="flex justify-center gap-2">
-        <button
-          onClick={() => handleView(entry)}
-          title="View"
-          className="p-1 text-blue-500 hover:bg-blue-100 rounded transition-colors"
-          aria-label="View entry"
+    return loadingEntries.map((entry, index) => {
+      const brokerageRate = brokerageMap[entry.saudaNo] || 0;
+      const totalBrokerage = ((entry.unloadingWeight || 0) * brokerageRate).toFixed(2);
+
+      return [
+        totalItems - (start + index),
+        formatDate(entry.loadingDate),
+        entry.saudaNo || "N/A",
+        entry.supplierCompany || "N/A",
+        buyerMap[entry.saudaNo] || entry.buyerCompany || "N/A",
+        entry.consignee || "N/A",
+        paymentTermsMap[entry.saudaNo] || "N/A",
+        entry.commodity || "N/A",
+        entry.loadingWeight ? entry.loadingWeight.toFixed(2) : "0.00",
+        entry.unloadingWeight ? entry.unloadingWeight.toFixed(2) : "0.00",
+        <span key={`brokerage-${entry._id}`} className="font-bold text-slate-600">
+          ₹ {totalBrokerage}
+        </span>,
+        (alreadyLoadedMap[entry.saudaNo] || 0).toFixed(2),
+        <span
+          key={`status-${entry._id}`}
+          className={`px-2 py-1 rounded-full text-xs font-semibold ${
+            statusMap[entry.saudaNo] === "closed"
+              ? "bg-red-100 text-red-700"
+              : "bg-emerald-100 text-emerald-700"
+          }`}
         >
-          <MdVisibility size={18} />
-        </button>
-        {(userRole === "Admin" || userRole === "Employee") && (
-          <>
-            <button
-              onClick={() => handleEdit(entry)}
-              title="Edit"
-              className="p-1 text-green-500 hover:bg-green-100 rounded transition-colors"
-              aria-label="Edit entry"
-            >
-              <MdEdit size={18} />
-            </button>
-            <button
-              onClick={() => handleDelete(entry._id)}
-              title="Delete"
-              className="p-1 text-red-500 hover:bg-red-100 rounded transition-colors"
-              aria-label="Delete entry"
-            >
-              <MdDelete size={18} />
-            </button>
-          </>
-        )}
-      </div>,
-      <button
-        key={`download-${entry._id}`}
-        onClick={() => handleDownload(entry)}
-        title="Download PDF"
-        className="p-1 text-purple-500 hover:bg-purple-100 rounded transition-colors flex justify-center"
-        aria-label="Download PDF"
-      >
-        <MdDownload size={18} />
-      </button>,
-    ]);
+          {statusMap[entry.saudaNo] === "closed" ? "Closed" : "Active"}
+        </span>,
+        entry.lorryNumber,
+        transporterMap[entry.transporterId] || entry.addedTransport || "N/A",
+        entry.driverName || "N/A",
+        entry.driverPhoneNumber || "N/A",
+        entry.freightRate ? `₹ ${entry.freightRate}` : "N/A",
+        entry.totalFreight ? `₹ ${entry.totalFreight}` : "N/A",
+        entry.advance ? `₹ ${entry.advance}` : "N/A",
+        entry.balance ? `₹ ${entry.balance}` : "N/A",
+        entry.billNumber || "N/A",
+        formatDate(entry.dateOfIssue),
+        <div key={`actions-${entry._id}`} className="flex justify-center gap-2">
+          <button
+            onClick={() => handleView(entry)}
+            title="View"
+            className="p-1 text-blue-500 hover:bg-blue-100 rounded transition-colors"
+            aria-label="View entry"
+          >
+            <MdVisibility size={18} />
+          </button>
+          {(userRole === "Admin" || userRole === "Employee") && (
+            <>
+              <button
+                onClick={() => handleEdit(entry)}
+                title="Edit"
+                className="p-1 text-green-500 hover:bg-green-100 rounded transition-colors"
+                aria-label="Edit entry"
+              >
+                <MdEdit size={18} />
+              </button>
+              <button
+                onClick={() => handleDelete(entry._id)}
+                title="Delete"
+                className="p-1 text-red-500 hover:bg-red-100 rounded transition-colors"
+                aria-label="Delete entry"
+              >
+                <MdDelete size={18} />
+              </button>
+            </>
+          )}
+        </div>,
+        <button
+          key={`download-${entry._id}`}
+          onClick={() => handleDownload(entry)}
+          title="Download PDF"
+          className="p-1 text-purple-500 hover:bg-purple-100 rounded transition-colors flex justify-center"
+          aria-label="Download PDF"
+        >
+          <MdDownload size={18} />
+        </button>,
+      ];
+    });
   }, [
     loadingEntries,
     currentPage,
@@ -711,6 +736,7 @@ const ListLoadingEntry = () => {
     userRole,
     paymentTermsMap,
     buyerMap,
+    brokerageMap,
     handleView,
     handleEdit,
     handleDelete,

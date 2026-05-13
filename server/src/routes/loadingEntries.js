@@ -358,13 +358,18 @@ router.get("/", async (req, res) => {
     let query = {};
 
     if (role === "Seller" && mobile) {
+      const phoneRegex = /^(?:\+91|0)?([6-9]\d{9})$/;
+      const phoneMatch = String(mobile).match(phoneRegex);
+      const normalizedMobile = phoneMatch ? phoneMatch[1] : mobile;
+
       const seller = await Seller.findOne({
-        "phoneNumbers.value": String(mobile),
+        "phoneNumbers.value": { $regex: new RegExp(normalizedMobile + "$") },
       }).lean();
+
       if (seller) {
         query.supplier = seller._id;
       } else {
-        return res.json({ data: [], total: 0, page, totalPages: 0 });
+        query.sellerMobile = normalizedMobile;
       }
     }
 

@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, lazy, Suspense } from "react";
+import { useNavigate } from "react-router-dom";
 import api from "../../../utils/apiClient/apiClient";
 import { toast } from "react-toastify";
 import { FaClock, FaStore, FaTruck, FaBoxOpen, FaSearch, FaSync } from "react-icons/fa";
@@ -14,6 +15,7 @@ const SearchBox = lazy(() => import("../../../common/SearchBox/SearchBox"));
 
 const PendingSaudaSummary = () => {
   const { userRole, mobile } = useAuth();
+  const navigate = useNavigate();
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [consigneeMap, setConsigneeMap] = useState(new Map());
@@ -24,6 +26,9 @@ const PendingSaudaSummary = () => {
   const [lastUpdated, setLastUpdated] = useState(new Date());
   const [summaryStats, setSummaryStats] = useState({
     totalPendingWeight: 0,
+    totalUnloadingWeight: 0,
+    totalPendingBrokerage: 0,
+    totalLoadedBrokerage: 0,
     activeSellers: 0,
     totalConsignees: 0,
   });
@@ -61,6 +66,9 @@ const PendingSaudaSummary = () => {
       if (stats) {
         setSummaryStats({
           totalPendingWeight: stats.totalPendingWeight || 0,
+          totalUnloadingWeight: stats.totalUnloadingWeight || 0,
+          totalPendingBrokerage: stats.totalPendingBrokerage || 0,
+          totalLoadedBrokerage: stats.totalLoadedBrokerage || 0,
           activeSellers: stats.activeSellers || 0,
           totalConsignees: stats.totalConsignees || 0,
         });
@@ -107,41 +115,66 @@ const PendingSaudaSummary = () => {
     "Sl No",
     "Seller Name",
     "Consignee",
-    "Total Pending Qty (Tons)",
-    "Pending Brokerage",
+    "Pending Qty (T)",
+    "Loaded Qty (T)",
+    "Brokerage Details",
     "No. of Saudas",
     "Details",
   ];
 
-  const rows = data.map((item, index) => [
-    <span key={`sl-${index}`} className="font-black text-slate-400">
-      {(currentPage - 1) * itemsPerPage + index + 1}
-    </span>,
-    <div key={`seller-${index}`} className="flex items-center gap-2">
-      <FaStore className="text-emerald-500" />
-      <span className="font-bold text-slate-800 uppercase tracking-tight">
-        {item.sellerName || "N/A"}
-      </span>
-    </div>,
-    <div key={`consignee-${index}`} className="flex items-center gap-2">
-      <FaTruck className="text-blue-500" />
-      <span className="font-medium text-slate-700">
-        {getConsigneeName(item.consignee)}
-      </span>
-    </div>,
-    <span key={`qty-${index}`} className="font-black text-emerald-700 bg-emerald-50 px-3 py-1 rounded-lg border border-emerald-100">
-      {item.totalPendingQuantity.toFixed(2)} T
-    </span>,
-    <span key={`brokerage-${index}`} className="font-bold text-slate-600">
-      ₹ {item.totalPendingBrokerage ? item.totalPendingBrokerage.toFixed(2) : "0.00"}
-    </span>,
-    <span key={`count-${index}`} className="font-bold text-slate-600">
-      {item.saudaCount}
-    </span>,
-    <div key={`details-${index}`} className="max-w-[200px] text-[10px] text-slate-500 italic truncate">
-      {item.saudas.map(s => s.saudaNo).join(", ")}
-    </div>
-  ]);
+  const rows = data.map((item, index) => {
+    const loadedBrokerage = item.totalLoadedBrokerage || 0;
+    const pendingBrokerage = item.totalPendingBrokerage || 0;
+    const totalBrokerage = loadedBrokerage + pendingBrokerage;
+
+    return [
+      <span key={`sl-${index}`} className="font-black text-slate-400">
+        {(currentPage - 1) * itemsPerPage + index + 1}
+      </span>,
+      <div key={`seller-${index}`} className="flex items-center gap-2">
+        <FaStore className="text-emerald-500" />
+        <span className="font-bold text-slate-800 uppercase tracking-tight">
+          {item.sellerName || "N/A"}
+        </span>
+      </div>,
+      <div key={`consignee-${index}`} className="flex items-center gap-2">
+        <FaTruck className="text-blue-500" />
+        <span className="font-medium text-slate-700">
+          {getConsigneeName(item.consignee)}
+        </span>
+      </div>,
+      <span key={`qty-${index}`} className="font-black text-amber-600 bg-amber-50 px-3 py-1 rounded-lg border border-amber-100">
+        {item.totalPendingQuantity.toFixed(2)} T
+      </span>,
+      <span key={`loaded-qty-${index}`} className="font-black text-emerald-700 bg-emerald-50 px-3 py-1 rounded-lg border border-emerald-100">
+        {(item.totalUnloadingWeight || 0).toFixed(2)} T
+      </span>,
+      <div key={`brokerage-${index}`} className="flex flex-col text-[11px]">
+        <span className="font-black text-slate-900">Total: ₹{totalBrokerage.toFixed(2)}</span>
+        <span className="text-emerald-600 font-bold">Loaded: ₹{loadedBrokerage.toFixed(2)}</span>
+        <span className="text-amber-600 font-bold">Pending: ₹{pendingBrokerage.toFixed(2)}</span>
+      </div>,
+      <span key={`count-${index}`} className="font-bold text-slate-600">
+        {item.saudaCount}
+      </span>,
+      <div key={`action-${index}`} className="flex items-center gap-2">
+        <button
+          onClick={() => {
+            const state = {
+              mobile,
+              userRole,
+              sellerCompany: item.sellerName,
+              consignee: item.consignee,
+            };
+            navigate("/Loading-Entry/pending-loading-list", { state });
+          }}
+          className="flex items-center gap-1.5 px-4 py-2 bg-slate-900 text-white rounded-xl hover:bg-black transition text-xs font-bold"
+        >
+          <FaBoxOpen /> View Saudas
+        </button>
+      </div>,
+    ];
+  });
 
   return (
     <Suspense fallback={<Loading />}>
@@ -180,25 +213,33 @@ const PendingSaudaSummary = () => {
           </div>
 
           {/* Summary Stats */}
-          <div className={`grid grid-cols-1 ${userRole === "Seller" ? "md:grid-cols-2" : "md:grid-cols-3"} gap-6`}>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <div className="bg-white p-8 rounded-[2.5rem] border border-slate-200 shadow-xl shadow-slate-900/5">
               <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Total Pending Weight</p>
               <h3 className="text-4xl font-black text-slate-900 tracking-tighter">
                 {summaryStats.totalPendingWeight.toFixed(2)} <span className="text-lg opacity-40">T</span>
               </h3>
             </div>
-            {userRole !== "Seller" && (
-              <div className="bg-white p-8 rounded-[2.5rem] border border-slate-200 shadow-xl shadow-slate-900/5">
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Active Sellers</p>
-                <h3 className="text-4xl font-black text-slate-900 tracking-tighter">
-                  {summaryStats.activeSellers}
-                </h3>
-              </div>
-            )}
             <div className="bg-white p-8 rounded-[2.5rem] border border-slate-200 shadow-xl shadow-slate-900/5">
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Total Consignees</p>
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Total Unloading Weight</p>
+              <h3 className="text-4xl font-black text-slate-900 tracking-tighter text-emerald-600">
+                {summaryStats.totalUnloadingWeight.toFixed(2)} <span className="text-lg opacity-40">T</span>
+              </h3>
+            </div>
+            <div className="bg-white p-8 rounded-[2.5rem] border border-slate-200 shadow-xl shadow-slate-900/5">
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Total Brokerage</p>
+              <h3 className="text-3xl font-black text-slate-900 tracking-tighter">
+                ₹{(summaryStats.totalLoadedBrokerage + summaryStats.totalPendingBrokerage).toFixed(0)}
+              </h3>
+              <div className="mt-2 flex gap-2 text-[10px] font-bold">
+                <span className="text-emerald-600">Loaded: ₹{summaryStats.totalLoadedBrokerage.toFixed(0)}</span>
+                <span className="text-amber-600">Pending: ₹{summaryStats.totalPendingBrokerage.toFixed(0)}</span>
+              </div>
+            </div>
+            <div className="bg-white p-8 rounded-[2.5rem] border border-slate-200 shadow-xl shadow-slate-900/5">
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Consignees / Sellers</p>
               <h3 className="text-4xl font-black text-slate-900 tracking-tighter">
-                {summaryStats.totalConsignees}
+                {summaryStats.totalConsignees} <span className="text-lg opacity-40">/</span> {summaryStats.activeSellers}
               </h3>
             </div>
           </div>

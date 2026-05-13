@@ -229,6 +229,19 @@ router.get("/pending/summary", async (req, res) => {
       },
       {
         $lookup: {
+          from: "loadingentries",
+          localField: "saudaNo",
+          foreignField: "saudaNo",
+          as: "loadingEntries"
+        }
+      },
+      {
+        $addFields: {
+          unloadingWeight: { $sum: "$loadingEntries.unloadingWeight" }
+        }
+      },
+      {
+        $lookup: {
           from: "sellers",
           localField: "supplier",
           foreignField: "_id",
@@ -249,10 +262,19 @@ router.get("/pending/summary", async (req, res) => {
             consignee: "$consignee"
           },
           totalPendingQuantity: { $sum: { $ifNull: ["$pendingQuantity", "$quantity"] } },
+          totalUnloadingWeight: { $sum: "$unloadingWeight" },
           totalPendingBrokerage: { 
             $sum: { 
               $multiply: [
                 { $ifNull: ["$pendingQuantity", "$quantity"] },
+                { $ifNull: ["$buyerBrokerage.brokerageSupplier", 0] }
+              ]
+            }
+          },
+          totalLoadedBrokerage: {
+            $sum: {
+              $multiply: [
+                "$unloadingWeight",
                 { $ifNull: ["$buyerBrokerage.brokerageSupplier", 0] }
               ]
             }
@@ -275,7 +297,9 @@ router.get("/pending/summary", async (req, res) => {
           sellerName: "$_id.sellerName",
           consignee: "$_id.consignee",
           totalPendingQuantity: 1,
+          totalUnloadingWeight: 1,
           totalPendingBrokerage: 1,
+          totalLoadedBrokerage: 1,
           saudaCount: 1,
           saudas: 1
         }
@@ -313,6 +337,19 @@ router.get("/pending/summary", async (req, res) => {
       },
       {
         $lookup: {
+          from: "loadingentries",
+          localField: "saudaNo",
+          foreignField: "saudaNo",
+          as: "loadingEntries"
+        }
+      },
+      {
+        $addFields: {
+          unloadingWeight: { $sum: "$loadingEntries.unloadingWeight" }
+        }
+      },
+      {
+        $lookup: {
           from: "sellers",
           localField: "supplier",
           foreignField: "_id",
@@ -327,19 +364,38 @@ router.get("/pending/summary", async (req, res) => {
       },
       {
         $group: {
-          _id: {
-            sellerId: "$supplier",
-            sellerName: { $ifNull: ["$sellerDetails.sellerName", "$supplierCompany"] },
-            consignee: "$consignee"
+          _id: null,
+          totalPendingWeight: { $sum: { $ifNull: ["$pendingQuantity", "$quantity"] } },
+          totalUnloadingWeight: { $sum: "$unloadingWeight" },
+          totalPendingBrokerage: { 
+            $sum: { 
+              $multiply: [
+                { $ifNull: ["$pendingQuantity", "$quantity"] },
+                { $ifNull: ["$buyerBrokerage.brokerageSupplier", 0] }
+              ]
+            }
           },
-          totalPendingQuantity: { $sum: { $ifNull: ["$pendingQuantity", "$quantity"] } }
+          totalLoadedBrokerage: {
+            $sum: {
+              $multiply: [
+                "$unloadingWeight",
+                { $ifNull: ["$buyerBrokerage.brokerageSupplier", 0] }
+              ]
+            }
+          },
+          activeSellers: { $addToSet: "$supplier" },
+          totalConsignees: { $addToSet: "$consignee" }
         }
       },
       {
         $project: {
-          sellerName: "$_id.sellerName",
-          consignee: "$_id.consignee",
-          totalPendingQuantity: 1
+          _id: 0,
+          totalPendingWeight: 1,
+          totalUnloadingWeight: 1,
+          totalPendingBrokerage: 1,
+          totalLoadedBrokerage: 1,
+          activeSellers: { $size: "$activeSellers" },
+          totalConsignees: { $size: "$totalConsignees" }
         }
       }
     ];
@@ -356,12 +412,14 @@ router.get("/pending/summary", async (req, res) => {
       });
     }
 
-    const allDataForStats = await SelfOrder.aggregate(statsPipeline);
-    
-    const summaryStats = {
-      totalPendingWeight: allDataForStats.reduce((acc, curr) => acc + curr.totalPendingQuantity, 0),
-      activeSellers: new Set(allDataForStats.map(item => item.sellerName)).size,
-      totalConsignees: new Set(allDataForStats.map(item => item.consignee)).size,
+    const statsResult = await SelfOrder.aggregate(statsPipeline);
+    const summaryStats = statsResult.length > 0 ? statsResult[0] : {
+      totalPendingWeight: 0,
+      totalUnloadingWeight: 0,
+      totalPendingBrokerage: 0,
+      totalLoadedBrokerage: 0,
+      activeSellers: 0,
+      totalConsignees: 0,
     };
 
     res.json({
@@ -476,13 +534,32 @@ router.get("/pending/list", async (req, res) => {
       }
     }
 
-    const items = await SelfOrder.find(query)
-      .sort({ poDate: -1, createdAt: -1 })
-      .skip((page - 1) * limit)
-      .limit(limit)
-      .populate("supplier", "sellerName")
-      .lean();
+    const pipeline = [
+      { $match: query },
+      { $sort: { poDate: -1, createdAt: -1 } },
+      { $skip: (page - 1) * limit },
+      { $limit: limit },
+      {
+        $lookup: {
+          from: "loadingentries",
+          localField: "saudaNo",
+          foreignField: "saudaNo",
+          as: "loadingEntries"
+        }
+      },
+      {
+        $addFields: {
+          totalUnloadingWeight: { $sum: "$loadingEntries.unloadingWeight" }
+        }
+      },
+      {
+        $project: {
+          loadingEntries: 0
+        }
+      }
+    ];
 
+    const items = await SelfOrder.aggregate(pipeline);
     const total = await SelfOrder.countDocuments(query);
 
     res.json({
