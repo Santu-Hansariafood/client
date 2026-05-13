@@ -183,7 +183,12 @@ router.get("/", async (req, res) => {
 
 router.get("/pending/summary", async (req, res) => {
   try {
-    const summary = await SelfOrder.aggregate([
+    const page = parseInt(req.query.page || "1", 10);
+    const limit = parseInt(req.query.limit || "10", 10);
+    const search = (req.query.search || "").trim();
+    const skip = (page - 1) * limit;
+
+    const pipeline = [
       {
         $match: {
           status: "active",
@@ -236,13 +241,39 @@ router.get("/pending/summary", async (req, res) => {
           saudaCount: 1,
           saudas: 1
         }
-      },
-      {
-        $sort: { sellerName: 1, consignee: 1 }
       }
-    ]);
+    ];
 
-    res.json(summary);
+    if (search) {
+      const searchRegex = new RegExp(escapeRegex(search), "i");
+      pipeline.push({
+        $match: {
+          $or: [
+            { sellerName: { $regex: searchRegex } },
+            { consignee: { $regex: searchRegex } }
+          ]
+        }
+      });
+    }
+
+    pipeline.push({ $sort: { sellerName: 1, consignee: 1 } });
+
+    // Get total count for pagination
+    const totalResult = await SelfOrder.aggregate([...pipeline, { $count: "total" }]);
+    const total = totalResult.length > 0 ? totalResult[0].total : 0;
+
+    // Apply skip and limit
+    pipeline.push({ $skip: skip });
+    pipeline.push({ $limit: limit });
+
+    const summary = await SelfOrder.aggregate(pipeline);
+
+    res.json({
+      data: summary,
+      total,
+      page,
+      totalPages: Math.ceil(total / limit)
+    });
   } catch (error) {
     console.error("Pending Summary Error:", error);
     res.status(500).json({ message: error.message });
