@@ -52,7 +52,8 @@ router.get("/", async (req, res) => {
     const page = parseInt(req.query.page || "0", 10);
     const limit = parseInt(req.query.limit || "0", 10);
     const search = (req.query.search || "").trim();
-    const mobile = req.query.mobile || req.query.sellerMobile || req.query.buyerMobile;
+    const mobile =
+      req.query.mobile || req.query.sellerMobile || req.query.buyerMobile;
     const userRole = req.query.userRole;
     const supplier = req.query.supplier;
     const startDate = req.query.startDate;
@@ -60,7 +61,7 @@ router.get("/", async (req, res) => {
     const exportAll = String(req.query.export || "").toLowerCase() === "true";
 
     let query = {};
-    
+
     // Role-based filtering
     if (userRole === "Seller" && mobile) {
       const phoneRegex = /^(?:\+91|0)?([6-9]\d{9})$/;
@@ -112,7 +113,6 @@ router.get("/", async (req, res) => {
       ];
 
       if (query.$or) {
-        // If we already have role filters, we need to AND them with the search
         query.$and = [{ $or: query.$or }, { $or: searchConditions }];
         delete query.$or;
       } else {
@@ -194,13 +194,13 @@ router.get("/pending/summary", async (req, res) => {
       status: "active",
       $or: [
         { pendingQuantity: { $gt: 0 } },
-        { 
+        {
           $and: [
             { pendingQuantity: { $exists: false } },
-            { quantity: { $gt: 0 } }
-          ]
-        }
-      ]
+            { quantity: { $gt: 0 } },
+          ],
+        },
+      ],
     };
 
     if (userRole === "Seller" && mobile) {
@@ -225,59 +225,63 @@ router.get("/pending/summary", async (req, res) => {
 
     const pipeline = [
       {
-        $match: matchQuery
+        $match: matchQuery,
       },
       {
         $lookup: {
           from: "loadingentries",
           localField: "saudaNo",
           foreignField: "saudaNo",
-          as: "loadingEntries"
-        }
+          as: "loadingEntries",
+        },
       },
       {
         $addFields: {
-          unloadingWeight: { $sum: "$loadingEntries.unloadingWeight" }
-        }
+          unloadingWeight: { $sum: "$loadingEntries.unloadingWeight" },
+        },
       },
       {
         $lookup: {
           from: "sellers",
           localField: "supplier",
           foreignField: "_id",
-          as: "sellerDetails"
-        }
+          as: "sellerDetails",
+        },
       },
       {
         $unwind: {
           path: "$sellerDetails",
-          preserveNullAndEmptyArrays: true
-        }
+          preserveNullAndEmptyArrays: true,
+        },
       },
       {
         $group: {
           _id: {
             sellerId: "$supplier",
-            sellerName: { $ifNull: ["$sellerDetails.sellerName", "$supplierCompany"] },
-            consignee: "$consignee"
+            sellerName: {
+              $ifNull: ["$sellerDetails.sellerName", "$supplierCompany"],
+            },
+            consignee: "$consignee",
           },
-          totalPendingQuantity: { $sum: { $ifNull: ["$pendingQuantity", "$quantity"] } },
+          totalPendingQuantity: {
+            $sum: { $ifNull: ["$pendingQuantity", "$quantity"] },
+          },
           totalUnloadingWeight: { $sum: "$unloadingWeight" },
-          totalPendingBrokerage: { 
-            $sum: { 
+          totalPendingBrokerage: {
+            $sum: {
               $multiply: [
                 { $ifNull: ["$pendingQuantity", "$quantity"] },
-                { $ifNull: ["$buyerBrokerage.brokerageSupplier", 0] }
-              ]
-            }
+                { $ifNull: ["$buyerBrokerage.brokerageSupplier", 0] },
+              ],
+            },
           },
           totalLoadedBrokerage: {
             $sum: {
               $multiply: [
                 "$unloadingWeight",
-                { $ifNull: ["$buyerBrokerage.brokerageSupplier", 0] }
-              ]
-            }
+                { $ifNull: ["$buyerBrokerage.brokerageSupplier", 0] },
+              ],
+            },
           },
           saudaCount: { $sum: 1 },
           saudas: {
@@ -285,10 +289,10 @@ router.get("/pending/summary", async (req, res) => {
               saudaNo: "$saudaNo",
               pendingQuantity: { $ifNull: ["$pendingQuantity", "$quantity"] },
               commodity: "$commodity",
-              poDate: "$poDate"
-            }
-          }
-        }
+              poDate: "$poDate",
+            },
+          },
+        },
       },
       {
         $project: {
@@ -301,9 +305,9 @@ router.get("/pending/summary", async (req, res) => {
           totalPendingBrokerage: 1,
           totalLoadedBrokerage: 1,
           saudaCount: 1,
-          saudas: 1
-        }
-      }
+          saudas: 1,
+        },
+      },
     ];
 
     if (search) {
@@ -312,80 +316,82 @@ router.get("/pending/summary", async (req, res) => {
         $match: {
           $or: [
             { sellerName: { $regex: searchRegex } },
-            { consignee: { $regex: searchRegex } }
-          ]
-        }
+            { consignee: { $regex: searchRegex } },
+          ],
+        },
       });
     }
 
     pipeline.push({ $sort: { sellerName: 1, consignee: 1 } });
 
-    // Get total count for pagination
-    const totalResult = await SelfOrder.aggregate([...pipeline, { $count: "total" }]);
+    const totalResult = await SelfOrder.aggregate([
+      ...pipeline,
+      { $count: "total" },
+    ]);
     const total = totalResult.length > 0 ? totalResult[0].total : 0;
 
-    // Apply skip and limit
     pipeline.push({ $skip: skip });
     pipeline.push({ $limit: limit });
 
     const summary = await SelfOrder.aggregate(pipeline);
 
-    // Get overall summary stats for the current search (without pagination)
     const statsPipeline = [
       {
-        $match: matchQuery
+        $match: matchQuery,
       },
       {
         $lookup: {
           from: "loadingentries",
           localField: "saudaNo",
           foreignField: "saudaNo",
-          as: "loadingEntries"
-        }
+          as: "loadingEntries",
+        },
       },
       {
         $addFields: {
-          unloadingWeight: { $sum: "$loadingEntries.unloadingWeight" }
-        }
+          unloadingWeight: { $sum: "$loadingEntries.unloadingWeight" },
+        },
       },
       {
         $lookup: {
           from: "sellers",
           localField: "supplier",
           foreignField: "_id",
-          as: "sellerDetails"
-        }
+          as: "sellerDetails",
+        },
       },
       {
         $unwind: {
           path: "$sellerDetails",
-          preserveNullAndEmptyArrays: true
-        }
+          preserveNullAndEmptyArrays: true,
+        },
       },
       {
         $group: {
           _id: null,
-          totalPendingWeight: { $sum: { $ifNull: ["$pendingQuantity", "$quantity"] } },
+          totalPendingWeight: {
+            $sum: { $ifNull: ["$pendingQuantity", "$quantity"] },
+          },
           totalUnloadingWeight: { $sum: "$unloadingWeight" },
-          totalPendingBrokerage: { 
-            $sum: { 
+          totalPendingBrokerage: {
+            $sum: {
               $multiply: [
                 { $ifNull: ["$pendingQuantity", "$quantity"] },
-                { $ifNull: ["$buyerBrokerage.brokerageSupplier", 0] }
-              ]
-            }
+                { $ifNull: ["$buyerBrokerage.brokerageSupplier", 0] },
+              ],
+            },
           },
           totalLoadedBrokerage: {
             $sum: {
               $multiply: [
                 "$unloadingWeight",
-                { $ifNull: ["$buyerBrokerage.brokerageSupplier", 0] }
-              ]
-            }
+                { $ifNull: ["$buyerBrokerage.brokerageSupplier", 0] },
+              ],
+            },
           },
           activeSellers: { $addToSet: "$supplier" },
-          totalConsignees: { $addToSet: "$consignee" }
-        }
+          totalConsignees: { $addToSet: "$consignee" },
+        },
       },
       {
         $project: {
@@ -395,9 +401,9 @@ router.get("/pending/summary", async (req, res) => {
           totalPendingBrokerage: 1,
           totalLoadedBrokerage: 1,
           activeSellers: { $size: "$activeSellers" },
-          totalConsignees: { $size: "$totalConsignees" }
-        }
-      }
+          totalConsignees: { $size: "$totalConsignees" },
+        },
+      },
     ];
 
     if (search) {
@@ -406,28 +412,31 @@ router.get("/pending/summary", async (req, res) => {
         $match: {
           $or: [
             { sellerName: { $regex: searchRegex } },
-            { consignee: { $regex: searchRegex } }
-          ]
-        }
+            { consignee: { $regex: searchRegex } },
+          ],
+        },
       });
     }
 
     const statsResult = await SelfOrder.aggregate(statsPipeline);
-    const summaryStats = statsResult.length > 0 ? statsResult[0] : {
-      totalPendingWeight: 0,
-      totalUnloadingWeight: 0,
-      totalPendingBrokerage: 0,
-      totalLoadedBrokerage: 0,
-      activeSellers: 0,
-      totalConsignees: 0,
-    };
+    const summaryStats =
+      statsResult.length > 0
+        ? statsResult[0]
+        : {
+            totalPendingWeight: 0,
+            totalUnloadingWeight: 0,
+            totalPendingBrokerage: 0,
+            totalLoadedBrokerage: 0,
+            activeSellers: 0,
+            totalConsignees: 0,
+          };
 
     res.json({
       data: summary,
       total,
       page,
       totalPages: Math.ceil(total / limit),
-      summaryStats
+      summaryStats,
     });
   } catch (error) {
     console.error("Pending Summary Error:", error);
@@ -544,35 +553,35 @@ router.get("/pending/list", async (req, res) => {
           from: "sellers",
           localField: "supplier",
           foreignField: "_id",
-          as: "supplierDetails"
-        }
+          as: "supplierDetails",
+        },
       },
       {
         $unwind: {
           path: "$supplierDetails",
-          preserveNullAndEmptyArrays: true
-        }
+          preserveNullAndEmptyArrays: true,
+        },
       },
       {
         $lookup: {
           from: "loadingentries",
           localField: "saudaNo",
           foreignField: "saudaNo",
-          as: "loadingEntries"
-        }
+          as: "loadingEntries",
+        },
       },
       {
         $addFields: {
           totalUnloadingWeight: { $sum: "$loadingEntries.unloadingWeight" },
-          supplier: "$supplierDetails"
-        }
+          supplier: "$supplierDetails",
+        },
       },
       {
         $project: {
           loadingEntries: 0,
-          supplierDetails: 0
-        }
-      }
+          supplierDetails: 0,
+        },
+      },
     ];
 
     const items = await SelfOrder.aggregate(pipeline);
@@ -601,10 +610,27 @@ router.get("/:id", async (req, res) => {
 
 router.put("/:id", async (req, res) => {
   try {
-    const item = await SelfOrder.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-    });
+    const item = await SelfOrder.findById(req.params.id);
     if (!item) return res.status(404).json({ message: "Order not found" });
+
+    Object.assign(item, req.body);
+
+    const LoadingEntry = require("../models/LoadingEntry");
+    const allEntries = await LoadingEntry.find({ saudaNo: item.saudaNo });
+    const totalLoaded = allEntries.reduce(
+      (sum, e) => sum + (e.loadingWeight || 0),
+      0,
+    );
+    item.pendingQuantity = (item.quantity || 0) - totalLoaded;
+
+    const tolerance = (item.quantity || 0) * 0.05;
+    if (Math.abs(item.pendingQuantity) <= tolerance) {
+      item.status = "closed";
+    } else {
+      item.status = "active";
+    }
+
+    await item.save();
     res.json(item);
   } catch (error) {
     res.status(400).json({ message: error.message });
@@ -648,15 +674,15 @@ router.patch("/:id/whatsapp-sent", async (req, res) => {
 router.get("/export/excel", async (req, res) => {
   try {
     const search = (req.query.search || "").trim();
-    const mobile = req.query.mobile || req.query.sellerMobile || req.query.buyerMobile;
+    const mobile =
+      req.query.mobile || req.query.sellerMobile || req.query.buyerMobile;
     const userRole = req.query.userRole;
     const supplier = req.query.supplier;
     const startDate = req.query.startDate;
     const endDate = req.query.endDate;
 
     let query = {};
-    
-    // Role-based filtering
+
     if (userRole === "Seller" && mobile) {
       const phoneRegex = /^(?:\+91|0)?([6-9]\d{9})$/;
       const phoneMatch = String(mobile).match(phoneRegex);

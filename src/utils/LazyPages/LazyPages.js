@@ -26,7 +26,7 @@ const loaders = {
   EditSellerDetails: () =>
     import("../../pages/SellerDetails/EditSellerDetails/EditSellerDetails"),
   ListSellerDetails: () =>
-    import("../../pages/SellerDetails/ListSellerDetails/ListSellerDetails"),  
+    import("../../pages/SellerDetails/ListSellerDetails/ListSellerDetails"),
   AddSellerCompany: () =>
     import("../../pages/SellerCompany/AddSellerCompany/AddSellerCompany"),
   ListSellerCompany: () =>
@@ -150,7 +150,7 @@ const pathToKey = {
   "/buyer/bid-history": "BuyerBidHistory",
   "/expense/add": "AddExpense",
   "/expense/list": "ListExpense",
-  "/data-safety": "DataSafety"
+  "/data-safety": "DataSafety",
 };
 
 const prefetched = new Set();

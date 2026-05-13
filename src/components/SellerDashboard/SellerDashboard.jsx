@@ -1,12 +1,7 @@
 import { useEffect, useState, lazy, Suspense } from "react";
 import api from "../../utils/apiClient/apiClient";
 import { toast } from "react-toastify";
-import {
-  FaGavel,
-  FaBoxOpen,
-  FaChevronRight,
-  FaBook,
-} from "react-icons/fa";
+import { FaGavel, FaBoxOpen, FaChevronRight, FaBook } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext/AuthContext";
 import { useNotifications } from "../../context/NotificationContext/NotificationContext";
@@ -52,8 +47,12 @@ const SellerDashboard = () => {
             api.get(`/sellers?mobile=${mobile}`),
             api.get("/bids?status=active"),
             api.get(`/participatebids?mobile=${mobile}&limit=1`),
-            api.get(`/self-order?sellerMobile=${mobile}&limit=1&page=1&userRole=Seller`),
-            api.get(`/self-order/pending/list?mobile=${mobile}&userRole=Seller&limit=1&page=1`),
+            api.get(
+              `/self-order?sellerMobile=${mobile}&limit=1&page=1&userRole=Seller`,
+            ),
+            api.get(
+              `/self-order/pending/list?mobile=${mobile}&userRole=Seller&limit=1&page=1`,
+            ),
           ]);
 
         const normalizePhone = (p) => {
@@ -65,7 +64,7 @@ const SellerDashboard = () => {
 
         const sellers = sellersRes?.data || [];
         const bids = bidsRes?.data?.data || bidsRes?.data || [];
-        
+
         const seller = sellers.find((s) =>
           s?.phoneNumbers?.some(
             (p) => normalizePhone(p?.value) === normalizePhone(mobile),
@@ -88,9 +87,12 @@ const SellerDashboard = () => {
         setSellerBidCount(activeSellerBids.length);
 
         // Get totals from response
-        const participateTotal = participateRes?.data?.total || participateRes?.data?.length || 0;
-        const ordersTotal = ordersRes?.data?.total || ordersRes?.data?.length || 0;
-        const pendingTotal = pendingRes?.data?.total || pendingRes?.data?.length || 0;
+        const participateTotal =
+          participateRes?.data?.total || participateRes?.data?.length || 0;
+        const ordersTotal =
+          ordersRes?.data?.total || ordersRes?.data?.length || 0;
+        const pendingTotal =
+          pendingRes?.data?.total || pendingRes?.data?.length || 0;
 
         setParticipateBidCount(participateTotal);
         setOrderCount(ordersTotal);
@@ -127,7 +129,7 @@ const SellerDashboard = () => {
       icon: FaBoxOpen,
       link: "/manage-order/list-self-order",
       color: "from-blue-400 to-indigo-600",
-      state: { mobile }
+      state: { mobile },
     },
     {
       title: "Pending Sauda",
@@ -135,7 +137,7 @@ const SellerDashboard = () => {
       icon: FaBook,
       link: "/Loading-Entry/pending-loading-list",
       color: "from-orange-400 to-amber-500",
-      state: { mobile }
+      state: { mobile },
     },
     {
       title: "Participate",
@@ -143,7 +145,7 @@ const SellerDashboard = () => {
       icon: FaGavel,
       link: "/participate-bid-list",
       color: "from-purple-400 to-violet-600",
-      state: { mobile }
+      state: { mobile },
     },
   ];
 
@@ -175,8 +177,12 @@ const SellerDashboard = () => {
                 </div>
 
                 <div className="text-xs">
-                  <p className="font-bold text-white uppercase tracking-wider">Verified Seller</p>
-                  <p className="text-emerald-200 font-medium">Trusted Partner Account</p>
+                  <p className="font-bold text-white uppercase tracking-wider">
+                    Verified Seller
+                  </p>
+                  <p className="text-emerald-200 font-medium">
+                    Trusted Partner Account
+                  </p>
                 </div>
               </div>
             </div>
@@ -207,7 +213,9 @@ const SellerDashboard = () => {
                 <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center text-emerald-600 shadow-sm">
                   <FaChevronRight className="rotate-90" />
                 </div>
-                <h3 className="text-lg font-black text-slate-800 uppercase tracking-tight">Quick Actions</h3>
+                <h3 className="text-lg font-black text-slate-800 uppercase tracking-tight">
+                  Quick Actions
+                </h3>
               </div>
 
               <div className="space-y-3">
@@ -218,25 +226,41 @@ const SellerDashboard = () => {
                     action: () =>
                       navigate("/Supplier-Bid-List", { state: { mobile } }),
                   },
-                  { 
-                    label: "Order History", 
+                  {
+                    label: "Order History",
                     icon: <FaBoxOpen className="text-blue-500" />,
-                    action: () => navigate("/manage-order/list-self-order", { state: { mobile } })
+                    action: () =>
+                      navigate("/manage-order/list-self-order", {
+                        state: { mobile },
+                      }),
                   },
-                  { 
-                    label: "Pending Sauda List", 
+                  {
+                    label: "Pending Sauda List",
                     icon: <FaBook className="text-orange-500" />,
-                    action: () => navigate("/Loading-Entry/pending-loading-list", { state: { mobile } })
+                    action: () =>
+                      navigate("/Loading-Entry/pending-loading-list", {
+                        state: { mobile },
+                      }),
                   },
-                  { 
-                    label: "Loading Entries", 
+                  {
+                    label: "Loading Entries",
                     icon: <FaBook className="text-indigo-500" />,
-                    action: () => navigate("/Loading-Entry/list-loading-entry", { state: { mobile } })
+                    action: () =>
+                      navigate("/Loading-Entry/list-loading-entry", {
+                        state: { mobile },
+                      }),
                   },
-                  { 
-                    label: "Notifications", 
-                    icon: <div className="relative"><FaChevronRight className="text-slate-400" />{notificationCount > 0 && <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full"></span>}</div>,
-                    action: () => setShowPopup(true) 
+                  {
+                    label: "Notifications",
+                    icon: (
+                      <div className="relative">
+                        <FaChevronRight className="text-slate-400" />
+                        {notificationCount > 0 && (
+                          <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+                        )}
+                      </div>
+                    ),
+                    action: () => setShowPopup(true),
                   },
                 ].map((l, i) => (
                   <button
@@ -248,7 +272,9 @@ const SellerDashboard = () => {
                       <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center group-hover:bg-white transition-colors shadow-sm">
                         {l.icon}
                       </div>
-                      <span className="font-bold text-slate-700 text-sm">{l.label}</span>
+                      <span className="font-bold text-slate-700 text-sm">
+                        {l.label}
+                      </span>
                     </div>
                     <FaChevronRight className="text-slate-300 group-hover:text-emerald-500 transition-all group-hover:translate-x-1" />
                   </button>

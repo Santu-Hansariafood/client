@@ -288,13 +288,11 @@ Qty: ${item.quantity || "0"}`;
           toast.dismiss(toastId);
           toast.success("Shared successfully");
           
-          // Still try to update status
           api.patch(`/self-order/${item._id}/whatsapp-sent`).catch(() => {});
           setData(prev => prev.map(o => o._id === item._id ? { ...o, whatsappSent: true } : o));
           return;
         }
 
-        // Fallback to link if can't share file
         const message = `Hello, regarding Sauda No: ${item?.saudaNo || ""}`;
         window.open(
           `https://wa.me/${finalMobile}?text=${encodeURIComponent(message)}`,
@@ -305,7 +303,6 @@ Qty: ${item.quantity || "0"}`;
       } catch (error) {
         toast.dismiss(toastId);
         console.error("Share error:", error);
-        // Final fallback to simple chat link
         const value = Array.isArray(mobileNumber) ? mobileNumber[0] : mobileNumber;
         const cleanMobile = String(value).replace(/\D/g, "");
         let finalMobile = cleanMobile;
@@ -598,7 +595,6 @@ Qty: ${item.quantity || "0"}`;
         noContentCard
       >
         <div className="relative min-h-screen overflow-hidden -m-4 sm:-m-6 lg:-m-8 p-4 sm:p-6 lg:p-8">
-          {/* Animated Background Accents */}
           <div className="absolute inset-0 -z-10 overflow-hidden pointer-events-none">
             <div className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] bg-emerald-200/20 blur-[120px] rounded-full animate-pulse" />
             <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-200/20 blur-[120px] rounded-full animate-pulse delay-700" />

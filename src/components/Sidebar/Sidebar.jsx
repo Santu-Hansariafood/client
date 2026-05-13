@@ -131,17 +131,17 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
             .map((section, index) => {
               const isSectionExpanded = expandedSection === section.section;
 
-            const sectionIcon = section.icon || section.actions?.[0]?.icon;
+              const sectionIcon = section.icon || section.actions?.[0]?.icon;
 
-            return (
-              <div key={index} className="mb-2 last:mb-0">
-                <button
-                  type="button"
-                  aria-expanded={isSectionExpanded}
-                  title={isCollapsed ? section.section : ""}
-                  data-tooltip={section.section}
-                  onClick={() => toggleSection(section.section)}
-                  className={`
+              return (
+                <div key={index} className="mb-2 last:mb-0">
+                  <button
+                    type="button"
+                    aria-expanded={isSectionExpanded}
+                    title={isCollapsed ? section.section : ""}
+                    data-tooltip={section.section}
+                    onClick={() => toggleSection(section.section)}
+                    className={`
                     group w-full flex items-center gap-3.5
                     rounded-2xl border border-transparent
                     transition-all duration-300
@@ -155,43 +155,43 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
                           }`
                     }
                   `}
-                >
-                  <span
-                    className={`shrink-0 transition-colors duration-300 ${
-                      isSectionExpanded
-                        ? "text-emerald-400"
-                        : "text-slate-500 group-hover:text-slate-300"
-                    }`}
                   >
-                    {renderIcon(sectionIcon)}
-                  </span>
+                    <span
+                      className={`shrink-0 transition-colors duration-300 ${
+                        isSectionExpanded
+                          ? "text-emerald-400"
+                          : "text-slate-500 group-hover:text-slate-300"
+                      }`}
+                    >
+                      {renderIcon(sectionIcon)}
+                    </span>
+
+                    {!isCollapsed && (
+                      <>
+                        <span
+                          className={`text-sm font-bold truncate flex-1 tracking-wide ${
+                            isSectionExpanded ? "text-white" : ""
+                          }`}
+                        >
+                          {section.section}
+                        </span>
+
+                        <span
+                          className={`shrink-0 transition-transform duration-300 ${
+                            isSectionExpanded
+                              ? "rotate-180 text-emerald-400"
+                              : "text-slate-600"
+                          }`}
+                        >
+                          <Icons.FaChevronDown size={10} />
+                        </span>
+                      </>
+                    )}
+                  </button>
 
                   {!isCollapsed && (
-                    <>
-                      <span
-                        className={`text-sm font-bold truncate flex-1 tracking-wide ${
-                          isSectionExpanded ? "text-white" : ""
-                        }`}
-                      >
-                        {section.section}
-                      </span>
-
-                      <span
-                        className={`shrink-0 transition-transform duration-300 ${
-                          isSectionExpanded
-                            ? "rotate-180 text-emerald-400"
-                            : "text-slate-600"
-                        }`}
-                      >
-                        <Icons.FaChevronDown size={10} />
-                      </span>
-                    </>
-                  )}
-                </button>
-
-                {!isCollapsed && (
-                  <div
-                    className={`
+                    <div
+                      className={`
                       overflow-hidden transition-all duration-300 ease-in-out
                       ${
                         isSectionExpanded
@@ -199,22 +199,22 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
                           : "max-h-0 opacity-0 mt-0"
                       }
                     `}
-                  >
-                    <div className="pl-11 pr-1 py-1 space-y-1 relative">
-                      <div className="absolute left-[23px] top-0 bottom-4 w-px bg-slate-800/60" />
+                    >
+                      <div className="pl-11 pr-1 py-1 space-y-1 relative">
+                        <div className="absolute left-[23px] top-0 bottom-4 w-px bg-slate-800/60" />
 
-                      {section.actions.map((action, idx) => {
-                        const isActive = location.pathname.startsWith(
-                          action.link,
-                        );
+                        {section.actions.map((action, idx) => {
+                          const isActive = location.pathname.startsWith(
+                            action.link,
+                          );
 
-                        return (
-                          <Link
-                            key={idx}
-                            to={action.link}
-                            aria-current={isActive ? "page" : undefined}
-                            onClick={() => setIsSidebarOpen(false)}
-                            className={`
+                          return (
+                            <Link
+                              key={idx}
+                              to={action.link}
+                              aria-current={isActive ? "page" : undefined}
+                              onClick={() => setIsSidebarOpen(false)}
+                              className={`
                               group relative flex items-center gap-3.5
                               py-2.5 px-4 rounded-xl
                               text-xs font-bold uppercase tracking-wider
@@ -225,21 +225,21 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
                                   : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/40"
                               }
                             `}
-                          >
-                            {isActive && (
-                              <div className="absolute -left-[18px] top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.6)]" />
-                            )}
+                            >
+                              {isActive && (
+                                <div className="absolute -left-[18px] top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.6)]" />
+                              )}
 
-                            <span className="truncate">{action.name}</span>
-                          </Link>
-                        );
-                      })}
+                              <span className="truncate">{action.name}</span>
+                            </Link>
+                          );
+                        })}
+                      </div>
                     </div>
-                  </div>
-                )}
-              </div>
-            );
-          })}
+                  )}
+                </div>
+              );
+            })}
         </nav>
 
         {/* FOOTER */}

@@ -374,7 +374,6 @@ const ListLoadingEntry = () => {
     [setItemsPerPage],
   );
 
-  // Handle search with debounce
   const handleSearchChange = useCallback((q, field) => {
     setFilters((prev) => {
       if (prev[field] === q) return prev;
@@ -579,7 +578,9 @@ const ListLoadingEntry = () => {
 
     const tableRows = loadingEntries.map((entry, index) => {
       const brokerageRate = brokerageMap[entry.saudaNo] || 0;
-      const totalBrokerage = ((entry.unloadingWeight || 0) * brokerageRate).toFixed(2);
+      const totalBrokerage = (
+        (entry.unloadingWeight || 0) * brokerageRate
+      ).toFixed(2);
 
       return [
         totalItems - ((currentPage - 1) * itemsPerPage + index),
@@ -651,7 +652,9 @@ const ListLoadingEntry = () => {
     const start = (currentPage - 1) * itemsPerPage;
     return loadingEntries.map((entry, index) => {
       const brokerageRate = brokerageMap[entry.saudaNo] || 0;
-      const totalBrokerage = ((entry.unloadingWeight || 0) * brokerageRate).toFixed(2);
+      const totalBrokerage = (
+        (entry.unloadingWeight || 0) * brokerageRate
+      ).toFixed(2);
 
       return [
         totalItems - (start + index),
@@ -664,7 +667,10 @@ const ListLoadingEntry = () => {
         entry.commodity || "N/A",
         entry.loadingWeight ? entry.loadingWeight.toFixed(2) : "0.00",
         entry.unloadingWeight ? entry.unloadingWeight.toFixed(2) : "0.00",
-        <span key={`brokerage-${entry._id}`} className="font-bold text-slate-600">
+        <span
+          key={`brokerage-${entry._id}`}
+          className="font-bold text-slate-600"
+        >
           ₹ {totalBrokerage}
         </span>,
         (alreadyLoadedMap[entry.saudaNo] || 0).toFixed(2),

@@ -1119,10 +1119,7 @@ router.post("/bulk", async (req, res) => {
         (sum, e) => sum + (e.loadingWeight || 0),
         0,
       );
-      selfOrder.pendingQuantity = Math.max(
-        0,
-        (selfOrder.quantity || 0) - totalLoaded,
-      );
+      selfOrder.pendingQuantity = (selfOrder.quantity || 0) - totalLoaded;
 
       const tolerance = (selfOrder.quantity || 0) * 0.05;
       if (Math.abs(selfOrder.pendingQuantity) <= tolerance) {
@@ -1155,10 +1152,7 @@ router.post("/", async (req, res) => {
         (sum, e) => sum + (e.loadingWeight || 0),
         0,
       );
-      selfOrder.pendingQuantity = Math.max(
-        0,
-        (selfOrder.quantity || 0) - totalLoaded,
-      );
+      selfOrder.pendingQuantity = (selfOrder.quantity || 0) - totalLoaded;
 
       const tolerance = (selfOrder.quantity || 0) * 0.05;
       if (Math.abs(selfOrder.pendingQuantity) <= tolerance) {
@@ -1204,10 +1198,7 @@ router.put("/:id", async (req, res) => {
           (sum, e) => sum + (e.loadingWeight || 0),
           0,
         );
-        selfOrder.pendingQuantity = Math.max(
-          0,
-          (selfOrder.quantity || 0) - totalLoaded,
-        );
+        selfOrder.pendingQuantity = (selfOrder.quantity || 0) - totalLoaded;
 
         const tolerance = (selfOrder.quantity || 0) * 0.05;
         if (Math.abs(selfOrder.pendingQuantity) <= tolerance) {
@@ -1241,10 +1232,7 @@ router.delete("/:id", async (req, res) => {
         (sum, e) => sum + (e.loadingWeight || 0),
         0,
       );
-      selfOrder.pendingQuantity = Math.max(
-        0,
-        (selfOrder.quantity || 0) - totalLoaded,
-      );
+      selfOrder.pendingQuantity = (selfOrder.quantity || 0) - totalLoaded;
 
       const tolerance = (selfOrder.quantity || 0) * 0.05;
       if (Math.abs(selfOrder.pendingQuantity) <= tolerance) {

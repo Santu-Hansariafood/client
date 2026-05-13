@@ -143,7 +143,7 @@ const PendingSaudaSummary = () => {
           {getConsigneeName(item.consignee)}
         </span>
       </div>,
-      <span key={`qty-${index}`} className="font-black text-amber-600 bg-amber-50 px-3 py-1 rounded-lg border border-amber-100">
+      <span key={`qty-${index}`} className={`font-black ${item.totalPendingQuantity < 0 ? "text-rose-600 bg-rose-50 border-rose-100" : "text-amber-600 bg-amber-50 border-amber-100"} px-3 py-1 rounded-lg border`}>
         {item.totalPendingQuantity.toFixed(2)} T
       </span>,
       <span key={`loaded-qty-${index}`} className="font-black text-emerald-700 bg-emerald-50 px-3 py-1 rounded-lg border border-emerald-100">
@@ -185,7 +185,6 @@ const PendingSaudaSummary = () => {
         noContentCard
       >
         <div className="max-w-7xl mx-auto space-y-8">
-          {/* Dashboard Header with Refresh */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               <div className="p-3 rounded-2xl bg-emerald-100 text-emerald-600 shadow-sm">
@@ -212,7 +211,6 @@ const PendingSaudaSummary = () => {
             </div>
           </div>
 
-          {/* Summary Stats */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <div className="bg-white p-8 rounded-[2.5rem] border border-slate-200 shadow-xl shadow-slate-900/5">
               <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Total Pending Weight</p>
@@ -245,7 +243,6 @@ const PendingSaudaSummary = () => {
           </div>
 
           <div className="space-y-6">
-            {/* Search and Filters Header */}
             <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
               <div className="w-full lg:max-w-md">
                 <SearchBox

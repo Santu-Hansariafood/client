@@ -9,7 +9,9 @@ import Loading from "../../../common/Loading/Loading";
 import generateExcel from "../../../common/GenerateExcel/GenerateExcel";
 
 const Tables = lazy(() => import("../../../common/Tables/Tables"));
-const Pagination = lazy(() => import("../../../common/Paginations/Paginations"));
+const Pagination = lazy(
+  () => import("../../../common/Paginations/Paginations"),
+);
 const DataDropdown = lazy(
   () => import("../../../common/DataDropdown/DataDropdown"),
 );
@@ -62,7 +64,11 @@ const getConsigneeDisplay = (item) => {
 };
 
 const buildDropdownOptions = (values) =>
-  [...new Set((values || []).map((value) => String(value || "").trim()).filter(Boolean))]
+  [
+    ...new Set(
+      (values || []).map((value) => String(value || "").trim()).filter(Boolean),
+    ),
+  ]
     .sort((a, b) => a.localeCompare(b))
     .map((value) => ({
       value,
@@ -112,7 +118,7 @@ const PendingLoadingList = () => {
           page: 1,
           limit: 1000,
           userRole,
-          mobile
+          mobile,
         },
       });
       const fetchedData = response.data.data || [];
@@ -141,13 +147,14 @@ const PendingLoadingList = () => {
   );
 
   const consigneeOptions = useCallback(
-    () => buildDropdownOptions(allData.map((item) => getConsigneeDisplay(item))),
+    () =>
+      buildDropdownOptions(allData.map((item) => getConsigneeDisplay(item))),
     [allData],
   );
 
   const filteredData = useCallback(() => {
     let result = [...allData];
-    
+
     if (searchInput) {
       const searchLower = normalizeText(searchInput);
       result = result.filter((item) => {
@@ -161,10 +168,12 @@ const PendingLoadingList = () => {
           getConsigneeDisplay(item),
         ];
 
-        return fields.some((field) => normalizeText(field).includes(searchLower));
+        return fields.some((field) =>
+          normalizeText(field).includes(searchLower),
+        );
       });
     }
-    
+
     if (selectedSellerCompany?.value) {
       result = result.filter(
         (item) =>
@@ -172,7 +181,7 @@ const PendingLoadingList = () => {
           normalizeText(selectedSellerCompany.value),
       );
     }
-    
+
     if (selectedBuyerCompany?.value) {
       result = result.filter(
         (item) =>
@@ -196,7 +205,7 @@ const PendingLoadingList = () => {
           normalizeText(selectedConsignee.value),
       );
     }
-    
+
     if (startDate) {
       const filterDate = new Date(startDate);
       filterDate.setHours(0, 0, 0, 0);
@@ -205,7 +214,7 @@ const PendingLoadingList = () => {
         return itemDate >= filterDate;
       });
     }
-    
+
     if (endDate) {
       const filterDate = new Date(endDate);
       filterDate.setHours(23, 59, 59, 999);
@@ -214,7 +223,7 @@ const PendingLoadingList = () => {
         return itemDate <= filterDate;
       });
     }
-    
+
     return result;
   }, [
     allData,
@@ -230,7 +239,7 @@ const PendingLoadingList = () => {
   useEffect(() => {
     const filtered = filteredData();
     setTotalItems(filtered.length);
-    
+
     const startIndex = (currentPage - 1) * itemsPerPage;
     const endIndex = startIndex + itemsPerPage;
     setData(filtered.slice(startIndex, endIndex));
@@ -273,11 +282,16 @@ const PendingLoadingList = () => {
     try {
       const toastId = toast.loading("Preparing Excel...");
       const exportData = filteredData();
-      
+
       const excelRows = exportData.map((item, index) => {
         const quantity = item.quantity || 0;
         let pendingQuantity = item.pendingQuantity;
-        if ((pendingQuantity === undefined || pendingQuantity === null || (pendingQuantity === 0 && item.status === "active")) && item.status !== "closed") {
+        if (
+          (pendingQuantity === undefined ||
+            pendingQuantity === null ||
+            (pendingQuantity === 0 && item.status === "active")) &&
+          item.status !== "closed"
+        ) {
           pendingQuantity = quantity;
         } else {
           pendingQuantity = pendingQuantity || 0;
@@ -286,21 +300,29 @@ const PendingLoadingList = () => {
 
         return {
           "Sl No": index + 1,
-          "Date": formatDate(item.poDate || item.createdAt),
+          Date: formatDate(item.poDate || item.createdAt),
           "Sauda No": item.saudaNo || "N/A",
           "Seller Company": item.supplierCompany || "N/A",
           "Seller Name": getSellerName(item) || "N/A",
           "Buyer Company": item.buyerCompany || "N/A",
-          "Consignee": getConsigneeDisplay(item),
-          "Commodity": item.commodity || "N/A",
+          Consignee: getConsigneeDisplay(item),
+          Commodity: item.commodity || "N/A",
           "Total Quantity": quantity,
           "Pending Quantity": getLast3Digits(pendingQuantity),
           "Loaded Quantity": loadedQuantity.toFixed(2),
           "Unloading Quantity": (item.totalUnloadingWeight || 0).toFixed(2),
-          "Rate": item.rate || 0,
-          "Loaded Brokerage": ( (item.totalUnloadingWeight || 0) * (item.buyerBrokerage?.brokerageSupplier || 0) ).toFixed(2),
-          "Pending Brokerage": ( pendingQuantity * (item.buyerBrokerage?.brokerageSupplier || 0) ).toFixed(2),
-          "Total Brokerage": ( ( (item.totalUnloadingWeight || 0) + pendingQuantity ) * (item.buyerBrokerage?.brokerageSupplier || 0) ).toFixed(2),
+          Rate: item.rate || 0,
+          "Loaded Brokerage": (
+            (item.totalUnloadingWeight || 0) *
+            (item.buyerBrokerage?.brokerageSupplier || 0)
+          ).toFixed(2),
+          "Pending Brokerage": (
+            pendingQuantity * (item.buyerBrokerage?.brokerageSupplier || 0)
+          ).toFixed(2),
+          "Total Brokerage": (
+            ((item.totalUnloadingWeight || 0) + pendingQuantity) *
+            (item.buyerBrokerage?.brokerageSupplier || 0)
+          ).toFixed(2),
           "Payment Terms": item.paymentTerms || "N/A",
         };
       });
@@ -335,49 +357,73 @@ const PendingLoadingList = () => {
     "Rate",
     "Brokerage",
     "Payment Terms",
-    "Status"
+    "Status",
   ];
 
   const rows = data.map((item, index) => {
     const quantity = item.quantity || 0;
     let pendingQuantity = item.pendingQuantity;
-    if ((pendingQuantity === undefined || pendingQuantity === null || (pendingQuantity === 0 && item.status === "active")) && item.status !== "closed") {
+
+    if (pendingQuantity === undefined || pendingQuantity === null) {
       pendingQuantity = quantity;
-    } else {
-      pendingQuantity = pendingQuantity || 0;
     }
+
     const loadedQuantity = quantity - pendingQuantity;
+    const isWithinTolerance = Math.abs(pendingQuantity) <= quantity * 0.05;
+    const isClosed = item.status === "closed" || isWithinTolerance;
 
     const brokerageRate = item.buyerBrokerage?.brokerageSupplier || 0;
     const unloadingWeight = item.totalUnloadingWeight || 0;
     const loadedBrokerage = (unloadingWeight * brokerageRate).toFixed(2);
-    const pendingBrokerage = (pendingQuantity * brokerageRate).toFixed(2);
-    const totalBrokerage = (parseFloat(loadedBrokerage) + parseFloat(pendingBrokerage)).toFixed(2);
+    const pendingBrokerage = (
+      Math.max(0, pendingQuantity) * brokerageRate
+    ).toFixed(2);
+    const totalBrokerage = (
+      parseFloat(loadedBrokerage) + parseFloat(pendingBrokerage)
+    ).toFixed(2);
 
     return [
       (currentPage - 1) * itemsPerPage + index + 1,
       formatDate(item.poDate || item.createdAt),
       item.saudaNo || "N/A",
-      <span key={`seller-co-${item._id}`} className="font-semibold text-slate-700">{item.supplierCompany || "N/A"}</span>,
+      <span
+        key={`seller-co-${item._id}`}
+        className="font-semibold text-slate-700"
+      >
+        {item.supplierCompany || "N/A"}
+      </span>,
       getSellerName(item) || "N/A",
       item.buyerCompany || "N/A",
       getConsigneeDisplay(item),
       item.commodity || "N/A",
       quantity,
-      <span key={`pending-${item._id}`} className="text-amber-600 font-bold">{getLast3Digits(pendingQuantity)}</span>,
+      <span
+        key={`pending-${item._id}`}
+        className={`${pendingQuantity < 0 ? "text-rose-600" : "text-amber-600"} font-bold`}
+      >
+        {pendingQuantity.toFixed(2)}
+      </span>,
       loadedQuantity.toFixed(2),
       item.rate || 0,
       <div key={`brokerage-${item._id}`} className="flex flex-col text-xs">
-        <span className="text-slate-600 font-medium">Total: ₹{totalBrokerage}</span>
-        <span className="text-emerald-600">Loaded: ₹{loadedBrokerage} (On {unloadingWeight.toFixed(2)}T)</span>
+        <span className="text-slate-600 font-medium">
+          Total: ₹{totalBrokerage}
+        </span>
+        <span className="text-emerald-600">
+          Loaded: ₹{loadedBrokerage} (On {unloadingWeight.toFixed(2)}T)
+        </span>
         <span className="text-amber-600">Pending: ₹{pendingBrokerage}</span>
       </div>,
       item.paymentTerms || "N/A",
       <span
         key={`status-${item._id}`}
-        className="px-2 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700"
+        className={`px-2 py-1 rounded-full text-xs font-semibold ${
+          isClosed
+            ? "bg-red-100 text-red-700"
+            : "bg-emerald-100 text-emerald-700"
+        }`}
       >
-        Active
+        {isClosed ? "Closed" : "Active"}
       </span>,
     ];
   });
@@ -397,8 +443,12 @@ const PendingLoadingList = () => {
                 <FaSearch className="text-emerald-600" />
               </div>
               <div>
-                <h3 className="text-lg font-bold text-slate-800">Filter & Search</h3>
-                <p className="text-sm text-slate-500">Filter pending sauda with independent responsive fields</p>
+                <h3 className="text-lg font-bold text-slate-800">
+                  Filter & Search
+                </h3>
+                <p className="text-sm text-slate-500">
+                  Filter pending sauda with independent responsive fields
+                </p>
               </div>
             </div>
             <div className="space-y-4">
@@ -451,7 +501,11 @@ const PendingLoadingList = () => {
                     </div>
                   </>
                 )}
-                <div className={userRole === "Seller" ? "sm:col-span-1 xl:col-span-3" : ""}>
+                <div
+                  className={
+                    userRole === "Seller" ? "sm:col-span-1 xl:col-span-3" : ""
+                  }
+                >
                   <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full bg-orange-500"></span>
                     Buyer Company
@@ -497,10 +551,7 @@ const PendingLoadingList = () => {
                     <span className="w-2 h-2 rounded-full bg-amber-500"></span>
                     End Date
                   </label>
-                  <DateSelector
-                    selectedDate={endDate}
-                    onChange={setEndDate}
-                  />
+                  <DateSelector selectedDate={endDate} onChange={setEndDate} />
                 </div>
               </div>
               <div className="flex flex-wrap items-center gap-3 pt-4 border-t border-slate-200">
@@ -525,7 +576,9 @@ const PendingLoadingList = () => {
 
           <div className="rounded-2xl border border-slate-200 bg-white shadow-sm p-3 sm:p-4 overflow-hidden">
             {loading ? (
-              <div className="py-20 flex justify-center"><Loading /></div>
+              <div className="py-20 flex justify-center">
+                <Loading />
+              </div>
             ) : data.length > 0 ? (
               <>
                 <div className="overflow-x-auto">
