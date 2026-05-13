@@ -364,6 +364,8 @@ router.get("/pending/list", async (req, res) => {
     const endDate = req.query.endDate;
     const buyerCompany = req.query.buyerCompany;
     const sellerCompany = req.query.sellerCompany;
+    const mobile = req.query.mobile;
+    const userRole = req.query.userRole;
 
     let query = {
       status: "active",
@@ -374,18 +376,41 @@ router.get("/pending/list", async (req, res) => {
       ],
     };
 
+    if (userRole === "Seller" && mobile) {
+      const phoneRegex = /^(?:\+91|0)?([6-9]\d{9})$/;
+      const phoneMatch = String(mobile).match(phoneRegex);
+      const normalizedMobile = phoneMatch ? phoneMatch[1] : mobile;
+
+      const seller = await Seller.findOne({
+        "phoneNumbers.value": { $regex: new RegExp(normalizedMobile + "$") },
+      });
+
+      const mobileConditions = [
+        { sellerMobile: normalizedMobile },
+        { sellerMobile: { $regex: new RegExp(normalizedMobile + "$") } },
+      ];
+
+      if (seller) {
+        mobileConditions.push({ supplier: seller._id });
+      }
+      query.$and = [{ $or: mobileConditions }];
+    }
+
     if (search) {
       const searchRegex = new RegExp(escapeRegex(search), "i");
-      query.$and = [
-        {
-          $or: [
-            { supplierCompany: { $regex: searchRegex } },
-            { saudaNo: { $regex: searchRegex } },
-            { buyerCompany: { $regex: searchRegex } },
-            { commodity: { $regex: searchRegex } },
-          ],
-        },
-      ];
+      const searchOr = {
+        $or: [
+          { supplierCompany: { $regex: searchRegex } },
+          { saudaNo: { $regex: searchRegex } },
+          { buyerCompany: { $regex: searchRegex } },
+          { commodity: { $regex: searchRegex } },
+        ],
+      };
+      if (!query.$and) {
+        query.$and = [searchOr];
+      } else {
+        query.$and.push(searchOr);
+      }
     }
 
     if (buyerCompany) {

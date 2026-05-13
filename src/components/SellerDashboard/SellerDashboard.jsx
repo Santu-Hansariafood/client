@@ -91,7 +91,9 @@ const SellerDashboard = () => {
 
         setParticipateBidCount(participate.length);
 
-        setOrderCount(orders.length);
+        // Fixing orderCount and saudaCount logic
+        const activeOrders = orders.filter(o => o.status === "active" || o.status === "open");
+        setOrderCount(activeOrders.length);
         setSaudaCount(orders.length);
       } catch (err) {
         console.error(err);

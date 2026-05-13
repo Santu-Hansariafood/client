@@ -92,6 +92,8 @@ const PendingLoadingList = () => {
         params: {
           page: 1,
           limit: 1000,
+          userRole,
+          mobile
         },
       });
       const fetchedData = response.data.data || [];
@@ -102,7 +104,7 @@ const PendingLoadingList = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [userRole, mobile]);
 
   const buyerCompanyOptions = useCallback(
     () => buildDropdownOptions(allData.map((item) => item.buyerCompany)),
@@ -276,6 +278,7 @@ const PendingLoadingList = () => {
           "Pending Quantity": getLast3Digits(pendingQuantity),
           "Loaded Quantity": loadedQuantity.toFixed(2),
           "Rate": item.rate || 0,
+          "Brokerage": (loadedQuantity * (item.buyerBrokerage?.brokerageSupplier || 0)).toFixed(2),
           "Payment Terms": item.paymentTerms || "N/A",
         };
       });
@@ -308,6 +311,7 @@ const PendingLoadingList = () => {
     "Pending Qty",
     "Loaded Qty",
     "Rate",
+    "Brokerage",
     "Payment Terms",
     "Status"
   ];
@@ -322,6 +326,9 @@ const PendingLoadingList = () => {
     }
     const loadedQuantity = quantity - pendingQuantity;
 
+    const brokerage = item.buyerBrokerage?.brokerageSupplier || 0;
+    const totalBrokerage = (loadedQuantity * brokerage).toFixed(2);
+
     return [
       (currentPage - 1) * itemsPerPage + index + 1,
       formatDate(item.poDate || item.createdAt),
@@ -335,6 +342,7 @@ const PendingLoadingList = () => {
       <span key={`pending-${item._id}`} className="text-amber-600 font-bold">{getLast3Digits(pendingQuantity)}</span>,
       loadedQuantity.toFixed(2),
       item.rate || 0,
+      <span key={`brokerage-${item._id}`} className="text-slate-600 font-medium">₹{totalBrokerage}</span>,
       item.paymentTerms || "N/A",
       <span
         key={`status-${item._id}`}
