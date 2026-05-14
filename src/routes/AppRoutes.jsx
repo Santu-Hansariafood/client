@@ -205,6 +205,11 @@ const privateRoutes = [
     roles: ["Admin", "Employee", "Seller"],
   },
   {
+    path: "Loading-Entry/complete-loading-list",
+    component: LazyPages.CompleteLoadingList,
+    roles: ["Admin", "Employee", "Seller"],
+  },
+  {
     path: "Loading-Entry/pending-sauda-summary",
     component: LazyPages.PendingSaudaSummary,
     roles: ["Admin", "Seller"],

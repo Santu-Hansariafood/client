@@ -184,6 +184,11 @@
           "icon": "FaClock"
         },
         {
+          "name": "Complete Sauda",
+          "link": "/Loading-Entry/complete-loading-list",
+          "icon": "FaCheckDouble"
+        },
+        {
           "name": "Pending Summary",
           "link": "/Loading-Entry/pending-sauda-summary",
           "icon": "FaClipboardList",

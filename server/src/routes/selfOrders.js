@@ -455,15 +455,17 @@ router.get("/pending/list", async (req, res) => {
     const sellerCompany = req.query.sellerCompany;
     const mobile = req.query.mobile;
     const userRole = req.query.userRole;
+    const all = req.query.all === "true";
 
-    let query = {
-      status: "active",
-      $or: [
+    let query = {};
+    if (!all) {
+      query.status = "active";
+      query.$or = [
         { pendingQuantity: { $gt: 0 } },
         { pendingQuantity: { $exists: false } },
         { pendingQuantity: 0 },
-      ],
-    };
+      ];
+    }
 
     if (userRole === "Seller" && mobile) {
       const phoneRegex = /^(?:\+91|0)?([6-9]\d{9})$/;

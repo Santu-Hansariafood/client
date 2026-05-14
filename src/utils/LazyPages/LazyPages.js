@@ -71,6 +71,8 @@ const loaders = {
     import("../../pages/LoadingEntry/LoadingEntrySauda/LoadingEntrySauda"),
   PendingLoadingList: () =>
     import("../../pages/LoadingEntry/PendingLoadingList/PendingLoadingList"),
+  CompleteLoadingList: () =>
+    import("../../pages/LoadingEntry/CompleteLoadingList/CompleteLoadingList"),
   PendingSaudaSummary: () =>
     import("../../pages/LoadingEntry/PendingSaudaSummary/PendingSaudaSummary"),
   ReceivingList: () =>
@@ -131,6 +133,7 @@ const pathToKey = {
   "/Loading-Entry/add-loading-entry": "AddLoadingEntry",
   "/Loading-Entry/list-loading-entry": "ListLoadingEntry",
   "/Loading-Entry/pending-loading-list": "PendingLoadingList",
+  "/Loading-Entry/complete-loading-list": "CompleteLoadingList",
   "/Loading-Entry/receiving-list": "ReceivingList",
   "/Loading-Entry/loading-report": "LoadingReport",
   "/employee/add": "AddEmployee",
@@ -226,6 +229,7 @@ const LazyPages = {
   ConfirmBids: lazy(loaders.ConfirmBids),
   LoadingEntrySauda: lazy(loaders.LoadingEntrySauda),
   PendingLoadingList: lazy(loaders.PendingLoadingList),
+  CompleteLoadingList: lazy(loaders.CompleteLoadingList),
   PendingSaudaSummary: lazy(loaders.PendingSaudaSummary),
   ReceivingList: lazy(loaders.ReceivingList),
   LoadingReport: lazy(loaders.LoadingReport),
