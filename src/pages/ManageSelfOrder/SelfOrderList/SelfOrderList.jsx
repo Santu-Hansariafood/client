@@ -183,15 +183,6 @@ const SelfOrderList = () => {
 
         finalMobile = finalMobile.replace(/^0+/, "");
 
-        const message = `*Sauda Confirmation*
-Sauda No: ${item.saudaNo || "N/A"}
-PO: ${item.poNumber || "N/A"}
-Buyer: ${item.buyerCompany || item.buyer || "N/A"}
-Supplier: ${item.supplierCompany || item.supplier || "N/A"}
-Commodity: ${item.commodity || "N/A"}
-Qty: ${item.quantity || "0"}
-Rate: ₹${item.rate || "0"}`;
-
         const pdfData = buildSaudaPdfData({
           item,
           consigneeData,
@@ -205,9 +196,8 @@ Rate: ₹${item.rate || "0"}`;
         if (!blob || blob.size === 0) throw new Error("PDF generation failed");
 
         const fileName = `Sauda-${item.saudaNo}.pdf`;
-
-        let finalMessage = message;
         let fileUrl = null;
+
         try {
           const formData = new FormData();
           formData.append("file", blob, fileName);
@@ -218,12 +208,39 @@ Rate: ₹${item.rate || "0"}`;
           });
           
           fileUrl = uploadRes?.data?.url || uploadRes?.data?.fileUrl;
-          if (fileUrl) {
-            finalMessage = `${message}\n\n*View/Download PDF:* ${fileUrl}`;
-          }
         } catch (err) {
           console.warn("PDF Upload failed, falling back to text only", err);
         }
+
+        const finalMessage = `*HANSARIA FOOD PRIVATE LIMITED* 
+ 
+ 📄 *SAUDA CONFIRMATION* 
+ 
+ 🆔 *Sauda No:* ${item.saudaNo || "N/A"} 
+ 📌 *PO Number:* ${item.poNumber || "N/A"} 
+ 
+ 🏢 *Buyer Company:* 
+ ${item.buyerCompany || item.buyer || "N/A"} 
+ 
+ 🏭 *Supplier Company:* 
+ ${item.supplierCompany || item.supplier || "N/A"} 
+ 
+ 📦 *Commodity:* ${item.commodity || "N/A"} 
+ ⚖️ *Quantity:* ${item.quantity || "0"} 
+ 💰 *Rate:* ₹${item.rate || "0"} 
+ 
+ 💳 *Payment Terms:* 
+ ${item.paymentTerms || "N/A"} 
+ 
+ 📧 *For complete details please check your Email.* 
+ 
+ 🔗 *View / Download Sauda PDF* 
+ ${fileUrl || "PDF Link Not Available"} 
+ 
+ 🙏 Thank You  
+ *Hansaria Food Private Limited* 
+ 
+ 🌐 https://bid.hansariafood.in`;
 
         const isMobileDevice = /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent);
         
@@ -334,7 +351,7 @@ Rate: ₹${item.rate || "0"}`;
     () =>
       data.map((item, index) => {
         const slNo = (currentPage - 1) * itemsPerPage + index + 1;
-        const displaySlNo = userRole === "Seller" ? slNo : totalItems - ((currentPage - 1) * itemsPerPage + index);
+        const displaySlNo = slNo;
 
         const formattedDate = item.poDate
           ? new Date(item.poDate).toLocaleDateString("en-GB")
