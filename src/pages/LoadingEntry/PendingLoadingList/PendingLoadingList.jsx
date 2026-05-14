@@ -379,11 +379,11 @@ const PendingLoadingList = () => {
       doc.setFontSize(10);
       doc.setTextColor(100);
       doc.setFont("helvetica", "normal");
-      doc.text("Premium Quality Food Grains & Agricultural Commodities", 60, 23);
+      doc.text("Commodities & Brokerage Services", 60, 23);
       doc.text(
-        "207, Maharshi Debendra Road, Kolkata - 700007, West Bengal",
+        "Primarc Square, Plot No.1, Salt Lake Bypass, LA Block, Sector: 3, Bidhannagar, Kolkata, West Bengal 700106",
         60,
-        28,
+        22,
       );
 
       // Title
