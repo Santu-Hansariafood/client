@@ -183,12 +183,14 @@ const SelfOrderList = () => {
 
         finalMobile = finalMobile.replace(/^0+/, "");
 
-        const message = `Sauda No: ${item.saudaNo || "N/A"}
+        const message = `*Sauda Confirmation*
+Sauda No: ${item.saudaNo || "N/A"}
 PO: ${item.poNumber || "N/A"}
 Buyer: ${item.buyerCompany || item.buyer || "N/A"}
 Supplier: ${item.supplierCompany || item.supplier || "N/A"}
 Commodity: ${item.commodity || "N/A"}
-Qty: ${item.quantity || "0"}`;
+Qty: ${item.quantity || "0"}
+Rate: ₹${item.rate || "0"}`;
 
         const pdfData = buildSaudaPdfData({
           item,
@@ -203,24 +205,21 @@ Qty: ${item.quantity || "0"}`;
         if (!blob || blob.size === 0) throw new Error("PDF generation failed");
 
         const fileName = `Sauda-${item.saudaNo}.pdf`;
-        const url = window.URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.href = url;
-        link.download = fileName;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        window.URL.revokeObjectURL(url);
 
         let finalMessage = message;
         try {
           const formData = new FormData();
           formData.append("file", blob, fileName);
-          const uploadRes = await api.post("/upload-pdf", formData, {
+          
+          // Upload to specific whatsapp share folder on ImageKit
+          const uploadRes = await api.post("/uploads/whatsapp", formData, {
             headers: { "Content-Type": "multipart/form-data" },
           });
+          
           const fileUrl = uploadRes?.data?.url || uploadRes?.data?.fileUrl;
-          if (fileUrl) finalMessage = `${message}\n\nDownload PDF: ${fileUrl}`;
+          if (fileUrl) {
+            finalMessage = `${message}\n\n*View/Download PDF:* ${fileUrl}`;
+          }
         } catch (err) {
           console.warn("PDF Upload failed, falling back to text only", err);
         }
@@ -461,12 +460,9 @@ Qty: ${item.quantity || "0"}`;
               <span className="font-medium text-slate-600">{item.buyerMobile || "N/A"}</span>
               {item.buyerMobile && (
                 <button
-                  onClick={() => {
-                    const isMobile = /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent);
-                    if (isMobile) openWhatsAppChat(item.buyerMobile, item);
-                    else handleSmartWhatsApp(item, "buyer");
-                  }}
+                  onClick={() => handleSmartWhatsApp(item, "buyer")}
                   className="p-1.5 rounded-lg text-emerald-500 hover:bg-emerald-50 transition-colors"
+                  title="Share on WhatsApp"
                 >
                   <FaWhatsapp size={20} />
                 </button>
@@ -500,12 +496,9 @@ Qty: ${item.quantity || "0"}`;
                 </span>
                 {item.sellerMobile && userRole === "Admin" && (
                   <button
-                    onClick={() => {
-                      const isMobile = /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent);
-                      if (isMobile) openWhatsAppChat(item.sellerMobile, item);
-                      else handleSmartWhatsApp(item, "seller");
-                    }}
+                    onClick={() => handleSmartWhatsApp(item, "seller")}
                     className="text-emerald-500 hover:scale-110 transition-transform"
+                    title="Share on WhatsApp"
                   >
                     <FaWhatsapp size={16} />
                   </button>

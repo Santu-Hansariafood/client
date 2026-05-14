@@ -23,6 +23,27 @@ const upload = multer({
   limits: { fileSize: 5 * 1024 * 1024 },
 });
 
+router.post("/whatsapp", upload.single("file"), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: "No file provided" });
+    }
+
+    const fileName = `whatsapp-${Date.now()}-${req.file.originalname}`;
+    
+    // Upload to ImageKit in "whatsapp share" folder
+    const cloudUrl = await imagekit.uploadFile(req.file, fileName, "/whatsapp share");
+
+    res.json({
+      url: cloudUrl,
+      fileName,
+    });
+  } catch (error) {
+    console.error("WhatsApp upload error:", error);
+    res.status(500).json({ message: error.message || "Failed to upload file" });
+  }
+});
+
 router.post("/", upload.single("file"), async (req, res) => {
   try {
     if (!req.file) {

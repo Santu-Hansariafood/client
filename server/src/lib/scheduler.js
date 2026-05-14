@@ -1,4 +1,5 @@
 import Notification from "../models/Notification.js";
+import imagekit from "./imagekit.js";
 
 const clearNotifications = async () => {
   try {
@@ -6,8 +7,11 @@ const clearNotifications = async () => {
     console.log(
       `[Scheduler] Cleared ${result.deletedCount} notifications at ${new Date().toLocaleString()}`,
     );
+
+    // Also cleanup temporary WhatsApp share files (older than 24 hours)
+    await imagekit.cleanupFolder("/whatsapp share", 1440);
   } catch (error) {
-    console.error("[Scheduler] Error clearing notifications:", error);
+    console.error("[Scheduler] Error in daily cleanup:", error);
   }
 };
 

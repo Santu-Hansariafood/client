@@ -34,7 +34,7 @@ class ImageKitStorage {
     }
   }
 
-  async uploadFile(file, fileName) {
+  async uploadFile(file, fileName, folder = "/") {
     try {
       if (!this.imagekit) {
         this.refreshConfig();
@@ -49,6 +49,7 @@ class ImageKitStorage {
         file: file.buffer,
         fileName: fileName,
         useUniqueFileName: true,
+        folder: folder,
       });
 
       console.log("ImageKit upload success:", response.url);
@@ -88,6 +89,40 @@ class ImageKitStorage {
       return fileNamePart.split(".")[0];
     } catch {
       return null;
+    }
+  }
+
+  async cleanupFolder(folder, olderThanMinutes = 60) {
+    try {
+      if (!this.imagekit) {
+        this.refreshConfig();
+      }
+      if (!this.imagekit) return;
+
+      const files = await this.imagekit.listFiles({
+        path: folder,
+      });
+
+      const now = new Date();
+      let deletedCount = 0;
+
+      for (const file of files) {
+        const createdAt = new Date(file.createdAt);
+        const diff = (now - createdAt) / 1000 / 60; // Difference in minutes
+
+        if (diff > olderThanMinutes) {
+          await this.imagekit.deleteFile(file.fileId);
+          deletedCount++;
+        }
+      }
+
+      if (deletedCount > 0) {
+        console.log(`[ImageKit] Cleaned up ${deletedCount} files from ${folder}`);
+      }
+      return deletedCount;
+    } catch (error) {
+      console.error("[ImageKit] Cleanup error:", error.message || error);
+      return 0;
     }
   }
 }
