@@ -228,14 +228,14 @@ const SelfOrderList = () => {
 
 *SAUDA CONFIRMATION*
 
-*Sauda No: - * _${item.saudaNo || "N/A"}_
-*PO Number: - * _${item.poNumber || "N/A"}_
-*Buyer Company: - * _${item.buyerCompany || item.buyer || "N/A"}_
-*Supplier Company: - * _${item.supplierCompany || item.supplier || "N/A"}_
-*Commodity: - * _${item.commodity || "N/A"}_
-*Quantity: - * _${item.quantity || "0"} Tons_
-*Rate: - * _${item.rate || "0"}_
-*Payment Terms: - * _${item.paymentTerms || "N/A"} Days_
+*Sauda No:* -  _${item.saudaNo || "N/A"}_
+*PO Number:* -  _${item.poNumber || "N/A"}_
+*Buyer Company:* -  _${item.buyerCompany || item.buyer || "N/A"}_
+*Supplier Company:* -  _${item.supplierCompany || item.supplier || "N/A"}_
+*Commodity:* -  _${item.commodity || "N/A"}_
+*Quantity:* -  _${item.quantity || "0"} Tons_
+*Rate:* -  _${item.rate || "0"}_
+*Payment Terms:* -  _${item.paymentTerms || "N/A"} Days_
 
 For complete details, please check your email.
 
