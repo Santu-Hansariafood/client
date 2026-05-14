@@ -2,11 +2,14 @@ import { useState, useEffect, useCallback, lazy, Suspense } from "react";
 import { useLocation } from "react-router-dom";
 import api from "../../../utils/apiClient/apiClient";
 import { toast } from "react-toastify";
-import { FaTruckLoading, FaSearch, FaDownload } from "react-icons/fa";
+import { FaTruckLoading, FaSearch, FaDownload, FaFilePdf } from "react-icons/fa";
 import { useAuth } from "../../../context/AuthContext/AuthContext";
 import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
 import Loading from "../../../common/Loading/Loading";
 import generateExcel from "../../../common/GenerateExcel/GenerateExcel";
+import { jsPDF } from "jspdf";
+import autoTable from "jspdf-autotable";
+import logoUrl from "../../../assets/Hans.png";
 
 const Tables = lazy(() => import("../../../common/Tables/Tables"));
 const Pagination = lazy(
@@ -294,7 +297,7 @@ const PendingLoadingList = () => {
         ) {
           pendingQuantity = quantity;
         } else {
-          pendingQuantity = pendingQuantity || 0;
+          pendingQuantity = Number(pendingQuantity || 0);
         }
         const loadedQuantity = quantity - pendingQuantity;
 
@@ -342,6 +345,180 @@ const PendingLoadingList = () => {
     }
   };
 
+  const handleDownloadPDF = async (item) => {
+    const toastId = toast.loading("Preparing PDF Report...");
+    try {
+      const saudaNo = item.saudaNo;
+      const response = await api.get("/loading-entries", {
+        params: { saudaNo, limit: 1000 },
+      });
+      const loadingEntries = response.data?.data || response.data || [];
+
+      const doc = new jsPDF({
+        orientation: "portrait",
+        unit: "mm",
+        format: "a4",
+      });
+
+      const pageWidth = doc.internal.pageSize.width;
+      const pageHeight = doc.internal.pageSize.height;
+
+      // Add Logo
+      try {
+        doc.addImage(logoUrl, "PNG", 14, 10, 40, 20);
+      } catch (e) {
+        console.warn("Logo failed to load", e);
+      }
+
+      // Company Header
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(18);
+      doc.setTextColor(5, 150, 105);
+      doc.text("HANSARIA FOOD PRIVATE LIMITED", 60, 18);
+
+      doc.setFontSize(10);
+      doc.setTextColor(100);
+      doc.setFont("helvetica", "normal");
+      doc.text("Premium Quality Food Grains & Agricultural Commodities", 60, 23);
+      doc.text(
+        "207, Maharshi Debendra Road, Kolkata - 700007, West Bengal",
+        60,
+        28,
+      );
+
+      // Title
+      doc.setDrawColor(5, 150, 105);
+      doc.setLineWidth(0.5);
+      doc.line(14, 35, pageWidth - 14, 35);
+
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(14);
+      doc.setTextColor(31, 41, 55);
+      doc.text(`PENDING SAUDA REPORT: ${saudaNo}`, 14, 45);
+
+      // Sauda Details Section
+      doc.setFillColor(249, 250, 251);
+      doc.rect(14, 50, pageWidth - 28, 45, "F");
+      doc.setDrawColor(229, 231, 235);
+      doc.rect(14, 50, pageWidth - 28, 45, "S");
+
+      doc.setFontSize(9);
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(107, 114, 128);
+
+      const col1 = 18;
+      const col2 = 60;
+      const col3 = 110;
+      const col4 = 150;
+
+      doc.text("Sauda No:", col1, 58);
+      doc.text("Date:", col1, 65);
+      doc.text("Commodity:", col1, 72);
+      doc.text("Buyer Company:", col1, 79);
+      doc.text("Seller Company:", col1, 86);
+
+      doc.text("Total Qty:", col3, 58);
+      doc.text("Loaded Qty:", col3, 65);
+      doc.text("Pending Qty:", col3, 72);
+      doc.text("Rate:", col3, 79);
+      doc.text("Consignee:", col3, 86);
+
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(31, 41, 55);
+
+      doc.text(saudaNo || "N/A", col2, 58);
+      doc.text(formatDate(item.poDate || item.createdAt), col2, 65);
+      doc.text(item.commodity || "N/A", col2, 72);
+      doc.text(item.buyerCompany || "N/A", col2, 79);
+      doc.text(item.supplierCompany || "N/A", col2, 86);
+
+      doc.text(`${(item.quantity || 0).toFixed(2)} Tons`, col4, 58);
+      doc.text(
+        `${(item.quantity - (item.pendingQuantity || 0)).toFixed(2)} Tons`,
+        col4,
+        65,
+      );
+      doc.text(`${(item.pendingQuantity || 0).toFixed(2)} Tons`, col4, 72);
+      doc.text(`Rs. ${item.rate || 0}`, col4, 79);
+      doc.text(getConsigneeDisplay(item) || "N/A", col4, 86);
+
+      // Loading Entries Table
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(11);
+      doc.setTextColor(5, 150, 105);
+      doc.text("LORRY-WISE LOADING & UNLOADING DETAILS", 14, 105);
+
+      const tableColumn = [
+        "Sl No",
+        "Lorry Number",
+        "Loading Date",
+        "Loading Wt (T)",
+        "Unloading Date",
+        "Unloading Wt (T)",
+        "Status",
+      ];
+
+      const tableRows = loadingEntries.map((entry, idx) => [
+        idx + 1,
+        entry.lorryNumber || "N/A",
+        formatDate(entry.loadingDate),
+        (entry.loadingWeight || 0).toFixed(2),
+        formatDate(entry.unloadingDate),
+        (entry.unloadingWeight || 0).toFixed(2),
+        entry.unloadingWeight > 0 ? "Delivered" : "In-Transit",
+      ]);
+
+      autoTable(doc, {
+        head: [tableColumn],
+        body: tableRows,
+        startY: 110,
+        theme: "grid",
+        headStyles: {
+          fillColor: [5, 150, 105],
+          textColor: 255,
+          fontSize: 9,
+          halign: "center",
+          fontStyle: "bold",
+        },
+        styles: {
+          fontSize: 8,
+          cellPadding: 3,
+          valign: "middle",
+          halign: "center",
+        },
+        columnStyles: {
+          1: { halign: "left", fontStyle: "bold" },
+          3: { halign: "right" },
+          5: { halign: "right" },
+        },
+        alternateRowStyles: { fillColor: [249, 250, 251] },
+      });
+
+      // Footer
+      const finalY = doc.lastAutoTable.finalY || 110;
+      doc.setFontSize(8);
+      doc.setTextColor(156, 163, 175);
+      doc.text(
+        "This is a system generated report for internal logistics monitoring.",
+        14,
+        pageHeight - 15,
+      );
+      doc.text(
+        `Generated on: ${new Date().toLocaleString("en-GB")}`,
+        pageWidth - 65,
+        pageHeight - 15,
+      );
+
+      doc.save(`Pending_Sauda_${saudaNo}_Details.pdf`);
+      toast.dismiss(toastId);
+      toast.success("PDF report generated successfully");
+    } catch (error) {
+      console.error("PDF generation failed", error);
+      toast.dismiss(toastId);
+      toast.error("Failed to generate PDF report");
+    }
+  };
+
   const headers = [
     "Sl No",
     "Date",
@@ -358,6 +535,7 @@ const PendingLoadingList = () => {
     "Brokerage",
     "Payment Terms",
     "Status",
+    "Action",
   ];
 
   const rows = data.map((item, index) => {
@@ -425,6 +603,14 @@ const PendingLoadingList = () => {
       >
         {isClosed ? "Closed" : "Active"}
       </span>,
+      <button
+        key={`pdf-${item._id}`}
+        onClick={() => handleDownloadPDF(item)}
+        className="p-2 rounded-lg bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white transition-all shadow-sm"
+        title="Download Detailed PDF"
+      >
+        <FaFilePdf size={16} />
+      </button>,
     ];
   });
 
