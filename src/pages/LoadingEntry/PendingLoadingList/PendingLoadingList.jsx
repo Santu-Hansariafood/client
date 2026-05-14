@@ -376,14 +376,14 @@ const PendingLoadingList = () => {
       doc.setTextColor(5, 150, 105);
       doc.text("HANSARIA FOOD PRIVATE LIMITED", 60, 18);
 
-      doc.setFontSize(10);
+      doc.setFontSize(7);
       doc.setTextColor(100);
       doc.setFont("helvetica", "normal");
       doc.text("Commodities & Brokerage Services", 60, 23);
       doc.text(
         "Primarc Square, Plot No.1, Salt Lake Bypass, LA Block, Sector: 3, Bidhannagar, Kolkata, West Bengal 700106",
         60,
-        22,
+        28,
       );
 
       // Title
