@@ -224,39 +224,28 @@ const SelfOrderList = () => {
           console.warn("PDF Upload failed, falling back to text only", err);
         }
 
-        const finalMessage = `*HANSARIA FOOD PRIVATE LIMITED* 
- 
- 📄 *SAUDA CONFIRMATION* 
- 
- 🆔 *Sauda No:* ${item.saudaNo || "N/A"} 
- 📌 *PO Number:* ${item.poNumber || "N/A"} 
- 
- 🏢 *Buyer Company:* 
- ${item.buyerCompany || item.buyer || "N/A"} 
- 
- 🏭 *Supplier Company:* 
- ${item.supplierCompany || item.supplier || "N/A"} 
- 
- 📦 *Commodity:* ${item.commodity || "N/A"} 
- ⚖️ *Quantity:* ${item.quantity || "0"} 
- 💰 *Rate:* ₹${item.rate || "0"} 
- 
- 💳 *Payment Terms:* 
- ${item.paymentTerms || "N/A"} 
- 
- 📧 *For complete details please check your Email.* 
- 
- 🔗 *View / Download Sauda PDF* 
- ${fileUrl || "PDF Link Not Available"} 
- 
- 🙏 Thank You  
- *Hansaria Food Private Limited* 
- 
- 🌐 https://bid.hansariafood.in
- 🏛️ Atmospheric Order Intelligence
- 
- 📱 *Download Our App:*
- https://play.google.com/store/apps/details?id=com.hansariafood.bid`;
+        const finalMessage = `*HANSARIA FOOD PRIVATE LIMITED*
+
+*SAUDA CONFIRMATION*
+
+*Sauda No: - * _${item.saudaNo || "N/A"}_
+*PO Number: - * _${item.poNumber || "N/A"}_
+*Buyer Company: - * _${item.buyerCompany || item.buyer || "N/A"}_
+*Supplier Company: - * _${item.supplierCompany || item.supplier || "N/A"}_
+*Commodity: - * _${item.commodity || "N/A"}_
+*Quantity: - * _${item.quantity || "0"} Tons_
+*Rate: - * _${item.rate || "0"}_
+*Payment Terms: - * _${item.paymentTerms || "N/A"} Days_
+
+For complete details, please check your email.
+
+*View / Download Sauda PDF:*
+_${fileUrl || "PDF Link Not Available"}_
+
+*Thank You,*
+*Hansaria Food Private Limited*
+
+*https://bid.hansariafood.in*`;
 
         const isMobileDevice =
           /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(
