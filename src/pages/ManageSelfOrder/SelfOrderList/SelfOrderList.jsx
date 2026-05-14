@@ -224,6 +224,28 @@ const SelfOrderList = () => {
           console.warn("PDF Upload failed, falling back to text only", err);
         }
 
+        const consigneeObj = consigneeData.find(
+          (c) =>
+            String(c._id) === String(item.consignee?._id || item.consignee) ||
+            c.name === item.consignee ||
+            c.label === item.consignee,
+        );
+
+        const consigneeAddress = consigneeObj
+          ? [
+              consigneeObj.location,
+              consigneeObj.district,
+              consigneeObj.state,
+              consigneeObj.pin,
+            ]
+              .filter(Boolean)
+              .join(", ")
+          : "";
+
+        const consigneeDisplay = consigneeAddress
+          ? `${getConsigneeDisplay(item)} (${consigneeAddress})`
+          : getConsigneeDisplay(item);
+
         const finalMessage = `*HANSARIA FOOD PRIVATE LIMITED*
 
 *SAUDA CONFIRMATION*
@@ -232,9 +254,12 @@ const SelfOrderList = () => {
 *PO Number:* -  _${item.poNumber || "N/A"}_
 *Buyer Company:* -  _${item.buyerCompany || item.buyer || "N/A"}_
 *Supplier Company:* -  _${item.supplierCompany || item.supplier || "N/A"}_
+*Consignee:* -  _${consigneeDisplay || "N/A"}_
 *Commodity:* -  _${item.commodity || "N/A"}_
 *Quantity:* -  _${item.quantity || "0"} Tons_
-*Rate:* -  _${item.rate || "0"}_
+*Rate:* -  _₹${item.rate || "0"}_
+*GST:* -  _${item.gst || "0"}%
+*CD:* -  _${item.cd || "N/A"}_
 *Payment Terms:* -  _${item.paymentTerms || "N/A"} Days_
 
 For complete details, please check your email.
