@@ -254,7 +254,7 @@ const SelfOrderList = () => {
 *PO Number:* -  _${item.poNumber || "N/A"}_
 *Buyer Company:* -  _${item.buyerCompany || item.buyer || "N/A"}_
 *Supplier Company:* -  _${item.supplierCompany || item.supplier || "N/A"}_
-*Consignee:* -  _${consigneeDisplay || "N/A"}_
+*Delivery Address:* -  _${consigneeDisplay || "N/A"}_
 *Commodity:* -  _${item.commodity || "N/A"}_
 *Quantity:* -  _${item.quantity || "0"} Tons_
 *Rate:* -  _₹${item.rate || "0"}_
