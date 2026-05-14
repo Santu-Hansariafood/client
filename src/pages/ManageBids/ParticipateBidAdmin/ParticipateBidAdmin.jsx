@@ -412,6 +412,14 @@ const ParticipateBidAdmin = () => {
     );
   }, [bids]);
 
+  const canInteract = useMemo(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const target = new Date(selectedDate);
+    target.setHours(0, 0, 0, 0);
+    return target.getTime() === today.getTime();
+  }, [selectedDate]);
+
   return (
     <Suspense fallback={<Loading />}>
       <AdminPageShell
@@ -550,6 +558,7 @@ const ParticipateBidAdmin = () => {
             <InteractionsPopup
               bidId={selectedBidId}
               onClose={() => setSelectedBidId(null)}
+              canInteract={canInteract}
             />
           )}
 

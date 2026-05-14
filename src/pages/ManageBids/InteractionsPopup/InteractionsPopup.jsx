@@ -53,7 +53,7 @@ const formatDateTime = (dateStr) => {
   }
 };
 
-const InteractionsPopup = ({ bidId, onClose }) => {
+const InteractionsPopup = ({ bidId, onClose, canInteract = true }) => {
   const [interactions, setInteractions] = useState([]);
   const [loading, setLoading] = useState(true);
   const { mobile: actorMobile, userRole: actorRole } = useAuth();
@@ -125,6 +125,10 @@ const InteractionsPopup = ({ bidId, onClose }) => {
 
   const handleStatusChange = useCallback(
     async (id, status, adminNotes, acceptance) => {
+      if (!canInteract) {
+        toast.error("Interactions are only allowed for today's bids.");
+        return;
+      }
       try {
         const payload =
           status === "accepted"
@@ -162,21 +166,28 @@ const InteractionsPopup = ({ bidId, onClose }) => {
         toast.error("Failed to update status.");
       }
     },
-    [actorMobile, actorRole],
+    [actorMobile, actorRole, canInteract],
   );
 
-  const handleDelete = useCallback(async (id) => {
-    if (!window.confirm("Are you sure you want to delete this interaction?"))
-      return;
-    try {
-      await api.delete(`/participatebids/${id}`);
-      setInteractions((prev) => prev.filter((i) => i._id !== id));
-      toast.success("Interaction deleted.");
-    } catch (error) {
-      console.error("Delete interaction error:", error);
-      toast.error("Failed to delete interaction.");
-    }
-  }, []);
+  const handleDelete = useCallback(
+    async (id) => {
+      if (!canInteract) {
+        toast.error("Deletions are only allowed for today's bids.");
+        return;
+      }
+      if (!window.confirm("Are you sure you want to delete this interaction?"))
+        return;
+      try {
+        await api.delete(`/participatebids/${id}`);
+        setInteractions((prev) => prev.filter((i) => i._id !== id));
+        toast.success("Interaction deleted.");
+      } catch (error) {
+        console.error("Delete interaction error:", error);
+        toast.error("Failed to delete interaction.");
+      }
+    },
+    [canInteract],
+  );
 
   const isReviewer = useMemo(
     () =>
@@ -210,6 +221,14 @@ const InteractionsPopup = ({ bidId, onClose }) => {
         </div>
 
         <div className="flex-1 overflow-y-auto p-6 sm:p-8 space-y-6">
+          {!canInteract && (
+            <div className="rounded-3xl border border-amber-200 bg-amber-50 p-4 flex items-center gap-3 text-amber-700">
+              <FaHistory className="text-lg" />
+              <p className="text-sm font-bold uppercase tracking-wider">
+                Viewing Historical Records — Interactions Disabled
+              </p>
+            </div>
+          )}
           <div className="rounded-3xl border border-emerald-100 bg-gradient-to-br from-emerald-50/80 via-white to-slate-50/50 p-5 shadow-sm">
             <div className="flex items-start gap-4">
               <div className="h-10 w-10 rounded-xl bg-emerald-600 flex items-center justify-center text-white shadow-lg shadow-emerald-200 flex-shrink-0">
@@ -228,23 +247,26 @@ const InteractionsPopup = ({ bidId, onClose }) => {
           </div>
 
           {loading ? (
-            <div className="py-20 flex flex-col items-center justify-center gap-4">
-              <Loading />
-              <p className="text-sm font-bold text-emerald-600 animate-pulse tracking-widest uppercase">
-                Loading Interactions...
+            <div className="py-24 flex flex-col items-center justify-center gap-4">
+              <div className="w-12 h-12 border-4 border-emerald-600 border-t-transparent rounded-full animate-spin" />
+              <p className="text-xs font-black text-slate-400 uppercase tracking-widest">
+                Fetching interactions...
               </p>
             </div>
           ) : interactions.length === 0 ? (
-            <div className="py-20 text-center space-y-3">
-              <div className="mx-auto w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-300">
-                <FaUserCircle className="text-3xl" />
+            <div className="py-24 text-center">
+              <div className="w-20 h-20 bg-slate-50 rounded-[2rem] flex items-center justify-center text-slate-200 mx-auto mb-6 shadow-inner">
+                <FaHistory size={40} />
               </div>
-              <p className="text-slate-500 font-bold">
-                No interactions found for this bid.
+              <h3 className="text-xl font-black text-slate-800 tracking-tight">
+                No interactions found
+              </h3>
+              <p className="text-sm text-slate-400 font-medium mt-1">
+                Wait for participants to place their bids
               </p>
             </div>
           ) : (
-            <div className="space-y-6 pb-4">
+            <div className="grid grid-cols-1 gap-6 pb-8">
               {interactions.map((interaction) => (
                 <InteractionCard
                   key={interaction._id}
@@ -253,6 +275,7 @@ const InteractionsPopup = ({ bidId, onClose }) => {
                   onDelete={handleDelete}
                   isReviewer={isReviewer}
                   actorRole={actorRole}
+                  canInteract={canInteract}
                 />
               ))}
             </div>
@@ -266,6 +289,7 @@ const InteractionsPopup = ({ bidId, onClose }) => {
 InteractionsPopup.propTypes = {
   bidId: PropTypes.string.isRequired,
   onClose: PropTypes.func.isRequired,
+  canInteract: PropTypes.bool,
 };
 
 const InteractionCard = ({
@@ -274,6 +298,7 @@ const InteractionCard = ({
   onDelete,
   isReviewer,
   actorRole,
+  canInteract,
 }) => {
   const [notes, setNotes] = useState(interaction.adminNotes || "");
   const [acceptedRate, setAcceptedRate] = useState(
@@ -556,10 +581,11 @@ const InteractionCard = ({
                     </span>
                     <input
                       type="number"
-                      className="w-full pl-8 pr-4 py-3 bg-white border border-slate-200 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none transition-all font-bold text-slate-700 shadow-sm"
+                      className="w-full pl-8 pr-4 py-3 bg-white border border-slate-200 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none transition-all font-bold text-slate-700 shadow-sm disabled:bg-slate-50 disabled:text-slate-400"
                       value={acceptedRate}
                       onChange={(e) => setAcceptedRate(e.target.value)}
                       placeholder="Rate"
+                      disabled={!canInteract}
                     />
                   </div>
                 </div>
@@ -569,10 +595,11 @@ const InteractionCard = ({
                   </label>
                   <input
                     type="number"
-                    className="w-full px-4 py-3 bg-white border border-slate-200 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none transition-all font-bold text-slate-700 shadow-sm"
+                    className="w-full px-4 py-3 bg-white border border-slate-200 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none transition-all font-bold text-slate-700 shadow-sm disabled:bg-slate-50 disabled:text-slate-400"
                     value={acceptedQuantity}
                     onChange={(e) => setAcceptedQuantity(e.target.value)}
                     placeholder="Quantity"
+                    disabled={!canInteract}
                   />
                 </div>
                 <div className="space-y-2">
@@ -581,9 +608,10 @@ const InteractionCard = ({
                   </label>
                   <input
                     type="datetime-local"
-                    className="w-full px-4 py-3 bg-white border border-slate-200 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none transition-all font-bold text-slate-700 shadow-sm"
+                    className="w-full px-4 py-3 bg-white border border-slate-200 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none transition-all font-bold text-slate-700 shadow-sm disabled:bg-slate-50 disabled:text-slate-400"
                     value={acceptedAt}
                     onChange={(e) => setAcceptedAt(e.target.value)}
+                    disabled={!canInteract}
                   />
                 </div>
               </div>
@@ -593,10 +621,11 @@ const InteractionCard = ({
                   Review Notes
                 </label>
                 <textarea
-                  className="w-full p-4 bg-white border border-slate-200 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none transition-all font-medium text-slate-700 shadow-sm min-h-[100px]"
+                  className="w-full p-4 bg-white border border-slate-200 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none transition-all font-medium text-slate-700 shadow-sm min-h-[100px] disabled:bg-slate-50 disabled:text-slate-400"
                   placeholder="Share feedback or internal reasoning for this decision..."
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
+                  disabled={!canInteract}
                 />
               </div>
             </div>
@@ -604,19 +633,22 @@ const InteractionCard = ({
             <div className="flex flex-wrap items-center justify-end gap-3">
               <button
                 onClick={() => handleSave("accepted")}
-                className="px-8 py-3.5 bg-emerald-600 text-white rounded-2xl hover:bg-emerald-700 active:scale-95 transition-all shadow-lg shadow-emerald-200 font-black text-sm uppercase tracking-widest flex items-center gap-2"
+                disabled={!canInteract}
+                className="px-8 py-3.5 bg-emerald-600 text-white rounded-2xl hover:bg-emerald-700 active:scale-95 transition-all shadow-lg shadow-emerald-200 font-black text-sm uppercase tracking-widest flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-emerald-600"
               >
                 <FaCheckCircle /> Accept Proposal
               </button>
               <button
                 onClick={() => handleSave("rejected")}
-                className="px-8 py-3.5 bg-white text-rose-600 border-2 border-rose-100 rounded-2xl hover:bg-rose-50 active:scale-95 transition-all font-black text-sm uppercase tracking-widest flex items-center gap-2"
+                disabled={!canInteract}
+                className="px-8 py-3.5 bg-white text-rose-600 border-2 border-rose-100 rounded-2xl hover:bg-rose-50 active:scale-95 transition-all font-black text-sm uppercase tracking-widest flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white"
               >
                 <FaTimesCircle /> Reject
               </button>
               <button
                 onClick={() => onDelete(interaction._id)}
-                className="p-3.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-2xl transition-all border border-transparent hover:border-rose-100 shadow-sm"
+                disabled={!canInteract}
+                className="p-3.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-2xl transition-all border border-transparent hover:border-rose-100 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
                 title="Delete Interaction"
               >
                 <FaTrashAlt />
@@ -630,13 +662,15 @@ const InteractionCard = ({
           <div className="flex justify-end gap-3 pt-4">
             <button
               onClick={() => onStatusChange(interaction._id, "pending", notes)}
-              className="px-8 py-3.5 bg-emerald-50 text-emerald-600 border-2 border-emerald-100 rounded-2xl hover:bg-emerald-100 active:scale-95 transition-all font-black text-sm uppercase tracking-widest flex items-center gap-2 shadow-sm"
+              disabled={!canInteract}
+              className="px-8 py-3.5 bg-emerald-50 text-emerald-600 border-2 border-emerald-100 rounded-2xl hover:bg-emerald-100 active:scale-95 transition-all font-black text-sm uppercase tracking-widest flex items-center gap-2 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <FaHistory className="text-xs" /> Reopen Interaction
             </button>
             <button
               onClick={() => onDelete(interaction._id)}
-              className="p-3.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-2xl transition-all border border-slate-100 hover:border-rose-100 shadow-sm"
+              disabled={!canInteract}
+              className="p-3.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-2xl transition-all border border-slate-100 hover:border-rose-100 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
               title="Delete Interaction"
             >
               <FaTrashAlt />
@@ -649,7 +683,8 @@ const InteractionCard = ({
           <div className="flex justify-end pt-2">
             <button
               onClick={() => onDelete(interaction._id)}
-              className="px-5 py-2.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-xl transition-all border border-slate-100 hover:border-rose-100 text-xs font-bold uppercase tracking-widest flex items-center gap-2"
+              disabled={!canInteract}
+              className="px-5 py-2.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-xl transition-all border border-slate-100 hover:border-rose-100 text-xs font-bold uppercase tracking-widest flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <FaTrashAlt className="text-[10px]" /> Remove Record
             </button>
