@@ -9,12 +9,13 @@ import {
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import axios from "axios";
+import api from "../../../utils/apiClient/apiClient";
 import Loading from "../../../common/Loading/Loading";
 import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
 import { FaEdit } from "react-icons/fa";
 import regexPatterns from "../../../utils/regexPatterns/regexPatterns";
 import { fetchAllPages } from "../../../utils/apiClient/fetchAllPages";
+import { sendSaudaOrderEmails } from "../../../utils/saudaPdf/sendSaudaOrderEmails";
 
 const BuyerInformation = lazy(
   () => import("../../../components/BuyerInformation/BuyerInformation"),
@@ -157,7 +158,7 @@ const EditSelfOrder = () => {
       try {
         const orderPromise =
           !orderFromState && id
-            ? axios.get(`${API_BASE_URL}/${id}`, {
+            ? api.get(`${API_BASE_URL}/${id}`, {
                 signal: abortControllerRef.current.signal,
               })
             : Promise.resolve({ data: orderFromState });
@@ -192,6 +193,10 @@ const EditSelfOrder = () => {
           };
           setFormData(processedData);
           setOriginalFormData(JSON.parse(JSON.stringify(processedData)));
+          setSelectedEmails({
+            buyer: data.sendPOToBuyer === "yes",
+            supplier: data.sendPOToSupplier === "yes",
+          });
         }
 
         setConsignees(consigneesRows);
@@ -199,7 +204,7 @@ const EditSelfOrder = () => {
         setSuppliers(suppliersRows);
         setSellerCompanies(sellerCompaniesRows);
       } catch (error) {
-        if (axios.isCancel(error)) return;
+        if (api.isCancel(error)) return;
         console.error("Error fetching data:", error);
         toast.error("Failed to fetch required data.");
       } finally {
@@ -355,7 +360,14 @@ const EditSelfOrder = () => {
         },
       };
 
-      await axios.put(`${API_BASE_URL}/${id}`, payload);
+      await api.put(`${API_BASE_URL}/${id}`, payload);
+
+      try {
+        const updatedOrder = { ...formData, ...payload };
+        await sendSaudaOrderEmails(updatedOrder);
+      } catch (emailError) {
+        console.error("Auto email error:", emailError);
+      }
 
       toast.success("Order updated successfully! Redirecting...", {
         position: "top-right",

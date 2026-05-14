@@ -4,6 +4,7 @@ import ExcelJS from "exceljs";
 import SelfOrder from "../models/SelfOrder.js";
 import Seller from "../models/Seller.js";
 import Consignee from "../models/Consignee.js";
+import LoadingEntry from "../models/LoadingEntry.js";
 
 const router = Router();
 
@@ -617,7 +618,6 @@ router.put("/:id", async (req, res) => {
 
     Object.assign(item, req.body);
 
-    const LoadingEntry = require("../models/LoadingEntry");
     const allEntries = await LoadingEntry.find({ saudaNo: item.saudaNo });
     const totalLoaded = allEntries.reduce(
       (sum, e) => sum + (e.loadingWeight || 0),
