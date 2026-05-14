@@ -67,12 +67,10 @@ router.get("/buyer-today", async (req, res) => {
       return res.status(404).json({ message: "Buyer not found" });
     }
 
-    // Get all company names associated with the buyer
     const companyIds = Array.isArray(buyer.companyIds) ? buyer.companyIds : [];
     const companies = await Company.find({ _id: { $in: companyIds } }).lean();
     const companyNames = companies.map(c => c.companyName);
 
-    // Get group name
     let groupNames = [];
     if (buyer.groupId) {
       const group = await Group.findById(buyer.groupId).lean();
@@ -81,7 +79,6 @@ router.get("/buyer-today", async (req, res) => {
       }
     }
 
-    // Also include groups from companies
     const companyGroupIds = companies.map(c => c.groupId).filter(Boolean);
     if (companyGroupIds.length > 0) {
       const companyGroups = await Group.find({ _id: { $in: companyGroupIds } }).lean();
@@ -368,7 +365,6 @@ router.post("/", async (req, res) => {
         }
       }
 
-      // Notify Admin and Employees about new bid creation
       const staffRoles = ["Admin", "Employee"];
       const staffNotifications = staffRoles.map((role) => ({
         recipient: "all",

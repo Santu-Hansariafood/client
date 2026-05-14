@@ -167,7 +167,6 @@ router.get("/buyers", async (req, res) => {
           companyNames = (fallbackCompanyNames || []).filter(Boolean);
         }
 
-        // 3. From SelfOrder consignees
         if (b.name) {
           const selfOrderConsignees = await SelfOrder.distinct("consignee", {
             buyer: b.name,

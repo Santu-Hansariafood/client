@@ -7,9 +7,6 @@ const router = express.Router();
 
 const escapeRegex = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
-// @desc    Get all expense categories
-// @route   GET /api/expense-categories
-// @access  Private
 router.get("/", authJwt, async (req, res) => {
   try {
     const categories = await ExpenseCategory.find().sort({ name: 1 });
@@ -19,9 +16,6 @@ router.get("/", authJwt, async (req, res) => {
   }
 });
 
-// @desc    Create a new expense category
-// @route   POST /api/expense-categories
-// @access  Private/Admin
 router.post("/", authJwt, adminOnly, async (req, res) => {
   const { name } = req.body;
 
@@ -46,9 +40,6 @@ router.post("/", authJwt, adminOnly, async (req, res) => {
   }
 });
 
-// @desc    Delete an expense category
-// @route   DELETE /api/expense-categories/:id
-// @access  Private/Admin
 router.delete("/:id", authJwt, adminOnly, async (req, res) => {
   try {
     const category = await ExpenseCategory.findById(req.params.id);

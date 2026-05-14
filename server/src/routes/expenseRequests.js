@@ -107,9 +107,6 @@ router.post("/", authJwt, employeeOrAdmin, async (req, res) => {
   }
 });
 
-// @desc    Update expense request status (Approve/Reject)
-// @route   PUT /api/expense-requests/:id/status
-// @access  Private/Admin
 router.put("/:id/status", authJwt, adminOnly, async (req, res) => {
   const { status, rejectionReason } = req.body;
 
