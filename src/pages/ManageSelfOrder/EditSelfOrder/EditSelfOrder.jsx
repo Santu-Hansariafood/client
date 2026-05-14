@@ -334,8 +334,10 @@ const EditSelfOrder = () => {
           ? Number(formData.pendingQuantity)
           : quantity;
 
+      const changedFields = getChangedFields();
+      
       const payload = {
-        ...formData,
+        ...changedFields,
         quantity: quantity,
         pendingQuantity: pendingQuantity,
         status: formData.status || "active",
@@ -352,13 +354,6 @@ const EditSelfOrder = () => {
             Number(formData.buyerBrokerage?.brokerageSupplier ?? 0) || 0,
         },
       };
-
-      // Clean up the payload before sending
-      // Remove large objects that might be present in formData from props
-      delete payload.buyerCommodity;
-      delete payload.supplierBrokerage;
-      delete payload.supplierBrokerageDetails;
-      delete payload.buyerBrokerageMap;
 
       await axios.put(`${API_BASE_URL}/${id}`, payload);
 
@@ -380,7 +375,7 @@ const EditSelfOrder = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [formData, id, navigate, validateFormData, selectedEmails]);
+  }, [formData, id, navigate, validateFormData, getChangedFields, selectedEmails]);
 
   if (isFetching) return <Loading />;
 
