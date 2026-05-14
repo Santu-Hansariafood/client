@@ -39,18 +39,18 @@ const API_URL = "/self-order";
 const SelfOrderList = () => {
   const navigate = useNavigate();
   const { userRole, mobile } = useAuth();
-  
+
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [totalItems, setTotalItems] = useState(0);
-  
+
   const [consigneeMap, setConsigneeMap] = useState(new Map());
   const [consigneeData, setConsigneeData] = useState([]);
   const [supplierData, setSupplierData] = useState([]);
   const [buyerData, setBuyerData] = useState([]);
   const [sellerProfileData, setSellerProfileData] = useState([]);
   const [companyData, setCompanyData] = useState([]);
-  
+
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
   const [reloadFlag, setReloadFlag] = useState(0);
@@ -64,7 +64,7 @@ const SelfOrderList = () => {
     try {
       const page = currentPage || 1;
       const search = searchInput?.trim() || "";
-      
+
       const queryParams = new URLSearchParams({
         page,
         limit: itemsPerPage,
@@ -76,7 +76,7 @@ const SelfOrderList = () => {
         startDate: startDate || "",
         endDate: endDate || "",
       }).toString();
-      
+
       const [
         orderRes,
         consignees,
@@ -94,7 +94,11 @@ const SelfOrderList = () => {
       ]);
 
       const orderData = orderRes.data || {};
-      const items = Array.isArray(orderData.data) ? orderData.data : (Array.isArray(orderData) ? orderData : []);
+      const items = Array.isArray(orderData.data)
+        ? orderData.data
+        : Array.isArray(orderData)
+          ? orderData
+          : [];
       const total = orderData.total || orderData.totalItems || items.length;
 
       setData(items);
@@ -116,7 +120,15 @@ const SelfOrderList = () => {
     } finally {
       setLoading(false);
     }
-  }, [currentPage, itemsPerPage, searchInput, userRole, mobile, startDate, endDate]);
+  }, [
+    currentPage,
+    itemsPerPage,
+    searchInput,
+    userRole,
+    mobile,
+    startDate,
+    endDate,
+  ]);
 
   useEffect(() => {
     fetchData();
@@ -127,7 +139,7 @@ const SelfOrderList = () => {
     setStartDate("");
     setEndDate("");
     setCurrentPage(1);
-    setReloadFlag(prev => prev + 1);
+    setReloadFlag((prev) => prev + 1);
   };
 
   const handlePageChange = useCallback((pageNumber) => {
@@ -191,7 +203,7 @@ const SelfOrderList = () => {
           companyData,
           getConsigneeDisplay,
         });
-        
+
         const blob = await pdf(<SaudaPDF data={pdfData} />).toBlob();
         if (!blob || blob.size === 0) throw new Error("PDF generation failed");
 
@@ -202,11 +214,11 @@ const SelfOrderList = () => {
           const formData = new FormData();
           formData.append("file", blob, fileName);
           formData.append("saudaNo", item.saudaNo || "N/A");
-          
+
           const uploadRes = await api.post("/uploads/whatsapp", formData, {
             headers: { "Content-Type": "multipart/form-data" },
           });
-          
+
           fileUrl = uploadRes?.data?.url || uploadRes?.data?.fileUrl;
         } catch (err) {
           console.warn("PDF Upload failed, falling back to text only", err);
@@ -240,26 +252,41 @@ const SelfOrderList = () => {
  🙏 Thank You  
  *Hansaria Food Private Limited* 
  
- 🌐 https://bid.hansariafood.in`;
+ 🌐 https://bid.hansariafood.in
+ 🏛️ Atmospheric Order Intelligence
+ 
+ 📱 *Download Our App:*
+ https://play.google.com/store/apps/details?id=com.hansariafood.bid`;
 
-        const isMobileDevice = /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent);
-        
+        const isMobileDevice =
+          /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(
+            navigator.userAgent,
+          );
+
         if (isMobileDevice && navigator.canShare && fileUrl) {
           try {
-            const file = new File([blob], fileName, { type: "application/pdf" });
+            const file = new File([blob], fileName, {
+              type: "application/pdf",
+            });
             const shareData = {
               files: [file],
               title: `Sauda No: ${item.saudaNo || "Order"}`,
               text: finalMessage,
             };
-            
+
             if (navigator.canShare(shareData)) {
               await navigator.share(shareData);
               toast.dismiss(toastId);
               toast.success("Shared successfully");
-              
-              api.patch(`/self-order/${item._id}/whatsapp-sent`).catch(() => {});
-              setData(prev => prev.map(o => o._id === item._id ? { ...o, whatsappSent: true } : o));
+
+              api
+                .patch(`/self-order/${item._id}/whatsapp-sent`)
+                .catch(() => {});
+              setData((prev) =>
+                prev.map((o) =>
+                  o._id === item._id ? { ...o, whatsappSent: true } : o,
+                ),
+              );
               return;
             }
           } catch (shareErr) {
@@ -267,11 +294,18 @@ const SelfOrderList = () => {
           }
         }
 
-        window.open(`https://wa.me/${finalMobile}?text=${encodeURIComponent(finalMessage)}`, "_blank");
-        
+        window.open(
+          `https://wa.me/${finalMobile}?text=${encodeURIComponent(finalMessage)}`,
+          "_blank",
+        );
+
         await api.patch(`/self-order/${item._id}/whatsapp-sent`);
-        setData(prev => prev.map(o => o._id === item._id ? { ...o, whatsappSent: true } : o));
-        
+        setData((prev) =>
+          prev.map((o) =>
+            o._id === item._id ? { ...o, whatsappSent: true } : o,
+          ),
+        );
+
         toast.dismiss(toastId);
         toast.success("WhatsApp opened successfully");
       } catch (error) {
@@ -280,7 +314,14 @@ const SelfOrderList = () => {
         toast.error("Failed to prepare WhatsApp message");
       }
     },
-    [userRole, getConsigneeDisplay, buyerData, supplierData, consigneeData, companyData],
+    [
+      userRole,
+      getConsigneeDisplay,
+      buyerData,
+      supplierData,
+      consigneeData,
+      companyData,
+    ],
   );
 
   const handleView = useCallback(
@@ -294,7 +335,18 @@ const SelfOrderList = () => {
 
   const headers = useMemo(() => {
     if (userRole === "Seller") {
-      return ["Sl No", "Date", "Sauda No", "Supplier", "Buyer", "Consignee", "Commodity", "Qty", "Rate", "Action"];
+      return [
+        "Sl No",
+        "Date",
+        "Sauda No",
+        "Supplier",
+        "Buyer",
+        "Consignee",
+        "Commodity",
+        "Qty",
+        "Rate",
+        "Action",
+      ];
     }
     return [
       "Sl No",
@@ -361,18 +413,47 @@ const SelfOrderList = () => {
 
         if (userRole === "Seller") {
           return [
-            <span key={`sl-${item._id}`} className="font-black text-slate-400">{slNo}</span>,
-            <span key={`date-${item._id}`} className="font-bold text-slate-600">{formattedDate}</span>,
-            <span key={`sauda-${item._id}`} className="font-black text-emerald-600 bg-emerald-50 px-2 py-1 rounded-lg border border-emerald-100">{item.saudaNo || "N/A"}</span>,
-            <span key={`supplier-${item._id}`} className="font-bold text-slate-800">
+            <span key={`sl-${item._id}`} className="font-black text-slate-400">
+              {slNo}
+            </span>,
+            <span key={`date-${item._id}`} className="font-bold text-slate-600">
+              {formattedDate}
+            </span>,
+            <span
+              key={`sauda-${item._id}`}
+              className="font-black text-emerald-600 bg-emerald-50 px-2 py-1 rounded-lg border border-emerald-100"
+            >
+              {item.saudaNo || "N/A"}
+            </span>,
+            <span
+              key={`supplier-${item._id}`}
+              className="font-bold text-slate-800"
+            >
               {item?.supplier?.sellerName || item.supplierCompany || "N/A"}
             </span>,
-            <span key={`buyer-${item._id}`} className="font-medium text-slate-600">{item.buyerCompany || "N/A"}</span>,
+            <span
+              key={`buyer-${item._id}`}
+              className="font-medium text-slate-600"
+            >
+              {item.buyerCompany || "N/A"}
+            </span>,
             getConsigneeDisplay(item) || "N/A",
-            <span key={`comm-${item._id}`} className="font-bold text-slate-700">{item.commodity || "N/A"}</span>,
-            <span key={`qty-${item._id}`} className="font-black text-slate-900">{item.quantity || "0"}</span>,
-            <span key={`rate-${item._id}`} className="font-black text-emerald-700 bg-emerald-50 px-2 py-1 rounded-lg border border-emerald-100">₹{item.rate || "0"}</span>,
-            <div className="flex items-center gap-2" key={`actions-${item._id}`}>
+            <span key={`comm-${item._id}`} className="font-bold text-slate-700">
+              {item.commodity || "N/A"}
+            </span>,
+            <span key={`qty-${item._id}`} className="font-black text-slate-900">
+              {item.quantity || "0"}
+            </span>,
+            <span
+              key={`rate-${item._id}`}
+              className="font-black text-emerald-700 bg-emerald-50 px-2 py-1 rounded-lg border border-emerald-100"
+            >
+              ₹{item.rate || "0"}
+            </span>,
+            <div
+              className="flex items-center gap-2"
+              key={`actions-${item._id}`}
+            >
               <button
                 onClick={() => handleView(item)}
                 className="p-2 rounded-xl bg-slate-100 text-slate-600 hover:bg-indigo-600 hover:text-white transition-all shadow-sm border border-slate-200"
@@ -395,7 +476,7 @@ const SelfOrderList = () => {
                   </button>
                 }
               />
-            </div>
+            </div>,
           ];
         }
 
@@ -419,14 +500,30 @@ const SelfOrderList = () => {
             />
           </div>,
 
-          <span key={`date-${item._id}`} className="font-bold text-slate-600">{formattedDate}</span>,
-          <span key={`sauda-${item._id}`} className="font-black text-emerald-600 bg-emerald-50 px-2 py-1 rounded-lg border border-emerald-100">{item.saudaNo || "N/A"}</span>,
-          <span key={`po-${item._id}`} className="font-bold text-slate-700 uppercase tracking-tight">{item.poNumber || "N/A"}</span>,
-          <span key={`buyer-${item._id}`} className="font-bold text-slate-800">{item.buyerCompany || "N/A"}</span>,
+          <span key={`date-${item._id}`} className="font-bold text-slate-600">
+            {formattedDate}
+          </span>,
+          <span
+            key={`sauda-${item._id}`}
+            className="font-black text-emerald-600 bg-emerald-50 px-2 py-1 rounded-lg border border-emerald-100"
+          >
+            {item.saudaNo || "N/A"}
+          </span>,
+          <span
+            key={`po-${item._id}`}
+            className="font-bold text-slate-700 uppercase tracking-tight"
+          >
+            {item.poNumber || "N/A"}
+          </span>,
+          <span key={`buyer-${item._id}`} className="font-bold text-slate-800">
+            {item.buyerCompany || "N/A"}
+          </span>,
 
           userRole === "Admin" ? (
             <div className="flex items-center gap-2" key={`mobile-${item._id}`}>
-              <span className="font-medium text-slate-600">{item.buyerMobile || "N/A"}</span>
+              <span className="font-medium text-slate-600">
+                {item.buyerMobile || "N/A"}
+              </span>
               {item.buyerMobile && (
                 <button
                   onClick={() => handleSmartWhatsApp(item, "buyer")}
@@ -440,9 +537,18 @@ const SelfOrderList = () => {
           ) : null,
 
           getConsigneeDisplay(item) || "N/A",
-          <span key={`comm-${item._id}`} className="font-bold text-slate-700">{item.commodity || "N/A"}</span>,
-          <span key={`qty-${item._id}`} className="font-black text-slate-900">{item.quantity || "0"}</span>,
-          <span key={`rate-${item._id}`} className="font-black text-emerald-700 bg-emerald-50 px-2 py-1 rounded-lg border border-emerald-100">₹{item.rate || "0"}</span>,
+          <span key={`comm-${item._id}`} className="font-bold text-slate-700">
+            {item.commodity || "N/A"}
+          </span>,
+          <span key={`qty-${item._id}`} className="font-black text-slate-900">
+            {item.quantity || "0"}
+          </span>,
+          <span
+            key={`rate-${item._id}`}
+            className="font-black text-emerald-700 bg-emerald-50 px-2 py-1 rounded-lg border border-emerald-100"
+          >
+            ₹{item.rate || "0"}
+          </span>,
 
           <span key={`seller-${item._id}`} className="font-bold text-slate-800">
             {item?.supplier?.sellerName || item.supplierCompany || "N/A"}
@@ -450,9 +556,14 @@ const SelfOrderList = () => {
 
           item.agentName || "N/A",
 
-          userRole === "Admin" || userRole === "Employee"
-            ? <span key={`bemails-${item._id}`} className="text-xs text-slate-500 line-clamp-1">{item.buyerEmails?.filter(Boolean).join(", ") || "N/A"}</span>
-            : null,
+          userRole === "Admin" || userRole === "Employee" ? (
+            <span
+              key={`bemails-${item._id}`}
+              className="text-xs text-slate-500 line-clamp-1"
+            >
+              {item.buyerEmails?.filter(Boolean).join(", ") || "N/A"}
+            </span>
+          ) : null,
 
           userRole === "Admin" || userRole === "Employee" ? (
             <div className="flex flex-col gap-1" key={`seller-dt-${item._id}`}>
@@ -504,7 +615,22 @@ const SelfOrderList = () => {
           ) : null,
         ].filter(Boolean);
       }),
-    [data, handleView, handleEdit, handleDelete, handleSmartWhatsApp, getConsigneeDisplay, currentPage, itemsPerPage, userRole, totalItems, consigneeData, supplierData, buyerData, sellerProfileData],
+    [
+      data,
+      handleView,
+      handleEdit,
+      handleDelete,
+      handleSmartWhatsApp,
+      getConsigneeDisplay,
+      currentPage,
+      itemsPerPage,
+      userRole,
+      totalItems,
+      consigneeData,
+      supplierData,
+      buyerData,
+      sellerProfileData,
+    ],
   );
 
   const handleSearchChange = useCallback((e) => {
@@ -516,7 +642,7 @@ const SelfOrderList = () => {
     let toastId;
     try {
       toastId = toast.loading("Preparing Excel Data...");
-      
+
       const params = {
         search: searchInput?.trim() || "",
         startDate: startDate || "",
@@ -534,7 +660,10 @@ const SelfOrderList = () => {
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement("a");
       link.href = url;
-      link.setAttribute("download", `SelfOrders_${new Date().toISOString().split("T")[0]}.xlsx`);
+      link.setAttribute(
+        "download",
+        `SelfOrders_${new Date().toISOString().split("T")[0]}.xlsx`,
+      );
       document.body.appendChild(link);
       link.click();
       link.remove();
@@ -581,22 +710,28 @@ const SelfOrderList = () => {
               {loading ? (
                 <div className="py-24 flex flex-col items-center justify-center gap-4">
                   <div className="w-12 h-12 border-4 border-emerald-600 border-t-transparent rounded-full animate-spin" />
-                  <p className="text-sm font-black text-slate-400 uppercase tracking-widest">Synchronizing Data...</p>
+                  <p className="text-sm font-black text-slate-400 uppercase tracking-widest">
+                    Synchronizing Data...
+                  </p>
                 </div>
               ) : (
                 <>
                   <SelfOrderTable headers={headers} rows={rows} />
-                  
+
                   {data.length === 0 && (
                     <div className="py-24 text-center flex flex-col items-center justify-center gap-6">
                       <div className="w-20 h-20 bg-slate-50 rounded-[2rem] flex items-center justify-center text-slate-200 shadow-inner">
                         <FaClipboardList size={40} />
                       </div>
                       <div className="space-y-1">
-                        <h3 className="text-xl font-black text-slate-800 tracking-tight">No orders found</h3>
-                        <p className="text-sm text-slate-400 font-medium">Try adjusting your filters or search terms</p>
+                        <h3 className="text-xl font-black text-slate-800 tracking-tight">
+                          No orders found
+                        </h3>
+                        <p className="text-sm text-slate-400 font-medium">
+                          Try adjusting your filters or search terms
+                        </p>
                       </div>
-                      <button 
+                      <button
                         onClick={handleClearFilters}
                         className="px-6 py-2.5 rounded-2xl bg-slate-900 text-white text-xs font-black uppercase tracking-widest hover:bg-slate-800 transition-all shadow-xl active:scale-95"
                       >
@@ -661,16 +796,23 @@ const SelfOrderSearchBar = ({
           <FaDownload size={14} />
           <span>Export Excel</span>
         </button>
-        
+
         <div className="h-10 w-[1px] bg-slate-100 hidden sm:block mx-2" />
-        
+
         <div className="flex items-center gap-3">
           <div className="flex flex-col">
-            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1 ml-1">Start Date</span>
-            <DateSelector selectedDate={startDate} onChange={onStartDateChange} />
+            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1 ml-1">
+              Start Date
+            </span>
+            <DateSelector
+              selectedDate={startDate}
+              onChange={onStartDateChange}
+            />
           </div>
           <div className="flex flex-col">
-            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1 ml-1">End Date</span>
+            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1 ml-1">
+              End Date
+            </span>
             <DateSelector selectedDate={endDate} onChange={onEndDateChange} />
           </div>
           {(startDate || endDate || searchInput) && (
@@ -688,7 +830,10 @@ const SelfOrderSearchBar = ({
       <div className="w-full lg:max-w-md">
         <div className="relative group">
           <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-            <AiOutlineSearch size={20} className="text-slate-400 group-focus-within:text-emerald-600 transition-colors" />
+            <AiOutlineSearch
+              size={20}
+              className="text-slate-400 group-focus-within:text-emerald-600 transition-colors"
+            />
           </div>
           <input
             type="text"

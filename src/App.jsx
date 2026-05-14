@@ -6,6 +6,7 @@ import Loading from "./common/Loading/Loading";
 import CacheHandler from "./utils/CacheHandler/CacheHandler";
 import RouteSEO from "./common/SEO/RouteSEO";
 import AppRoutes from "./routes/AppRoutes";
+import AppPrompt from "./common/AppPrompt/AppPrompt";
 import { Suspense } from "react";
 import { ToastContainer } from "react-toastify";
 import "./App.css";
@@ -40,6 +41,7 @@ const App = () => {
               theme="colored"
             />
             <AppRoutes hydrated={hydrated} />
+            <AppPrompt />
           </Suspense>
         </BrowserRouter>
       </NotificationProvider>
