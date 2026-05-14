@@ -227,6 +227,18 @@ const PendingLoadingList = () => {
       });
     }
 
+    // Filter out closed and within 5% tolerance saudas
+    result = result.filter((item) => {
+      const quantity = item.quantity || 0;
+      let pendingQuantity = item.pendingQuantity;
+      if (pendingQuantity === undefined || pendingQuantity === null) {
+        pendingQuantity = quantity;
+      }
+      const isWithinTolerance = Math.abs(pendingQuantity) <= quantity * 0.05;
+      const isClosed = item.status === "closed" || isWithinTolerance;
+      return !isClosed;
+    });
+
     return result;
   }, [
     allData,
