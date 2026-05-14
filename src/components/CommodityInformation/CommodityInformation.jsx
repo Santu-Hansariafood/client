@@ -59,10 +59,25 @@ const CommodityInformation = ({
         (item) => item.name === formData.commodity,
       );
       if (commodity) {
-        setParameters(commodity.parameters || []);
+        // If formData already has parameters (from editing), use them
+        // otherwise use the default parameters from the commodity definition
+        if (formData.parameters && formData.parameters.length > 0) {
+          const mergedParameters = (commodity.parameters || []).map((p) => {
+            const savedParam = formData.parameters.find(
+              (sp) => String(sp.id || sp._id) === String(p._id),
+            );
+            return {
+              ...p,
+              value: savedParam ? savedParam.value : p.value,
+            };
+          });
+          setParameters(mergedParameters);
+        } else {
+          setParameters(commodity.parameters || []);
+        }
       }
     }
-  }, [commodities, formData.commodity, selectedCommodity]);
+  }, [commodities, formData.commodity, formData.parameters, selectedCommodity]);
 
   const onCommodityChange = (option) => {
     const commodityName = option?.value || null;

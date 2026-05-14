@@ -27,66 +27,15 @@ const SupplierInformation = ({
   const [selectedSupplier, setSelectedSupplier] = useState(null);
 
   useEffect(() => {
-    if (formData.supplier && sellerOptions.length > 0) {
+    if (formData.supplier && sellerOptions.length > 0 && !selectedSupplier) {
       const supplierId =
         typeof formData.supplier === "object"
           ? formData.supplier._id
           : formData.supplier;
 
-      if (supplierId !== selectedSupplier) {
-        setSelectedSupplier(supplierId);
-
-        const selected = sellerOptions.find(
-          (seller) => String(seller.value) === String(supplierId),
-        );
-        if (selected) {
-          handleChange("supplierBrokerage", selected.commodities || []);
-          handleChange("supplierName", selected.label || "");
-
-          const rawEmails = selected.emails || [];
-          const sellerEmails = Array.isArray(rawEmails)
-            ? rawEmails
-                .map((e) =>
-                  typeof e === "string" ? e : (e?.value ?? e?.email ?? ""),
-                )
-                .filter(Boolean)
-            : [];
-          handleChange(
-            "sellerEmails",
-            sellerEmails.length ? sellerEmails : [""],
-          );
-
-          const rawPhones = selected.phoneNumbers || [];
-          const sellerPhones = Array.isArray(rawPhones)
-            ? rawPhones
-                .map((p) =>
-                  typeof p === "string" ? p : (p?.value ?? p?.phone ?? ""),
-                )
-                .filter(Boolean)
-            : [];
-          const firstMobile = sellerPhones[0] || "";
-          handleChange("sellerMobile", firstMobile);
-
-          if (selected.commodities?.length) {
-            handleChange(
-              "supplierBrokerageDetails",
-              selected.commodities.map((c) => ({
-                name: c.name,
-                brokerage: c.brokerage,
-              })),
-            );
-          }
-        }
-      }
+      setSelectedSupplier(supplierId);
     }
-  }, [
-    formData.supplier,
-    formData.sellerMobile,
-    formData.supplierBrokerage,
-    selectedSupplier,
-    sellerOptions,
-    handleChange,
-  ]);
+  }, [formData.supplier, sellerOptions, selectedSupplier]);
 
   const companies = useMemo(() => {
     if (selectedSupplier) {

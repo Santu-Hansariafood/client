@@ -128,16 +128,13 @@ const BuyerInformation = ({
   useEffect(() => {
     if (loading || hasManuallySelected) return;
 
-    const hasEditHints =
-      formData?.buyer ||
-      formData?.buyerCompany ||
-      formData?.companyId != null ||
-      formData?.buyerMobile;
-    if (!hasEditHints) return;
-
     const buyerList = Array.isArray(buyers) ? buyers : [];
     const companyList = Array.isArray(companies) ? companies : [];
+    const consigneeList = Array.isArray(consignees) ? consignees : [];
 
+    if (buyerList.length === 0 || companyList.length === 0) return;
+
+    // 1. Match Company first as it's the most specific
     const matchCompany =
       companyList.find(
         (c) =>
@@ -151,11 +148,15 @@ const BuyerInformation = ({
             (formData.buyerCompany || "").trim().toLowerCase(),
       );
 
-    let matchBuyer = buyerList.find(
-      (b) =>
+    // 2. Match Buyer
+    let matchBuyer = buyerList.find((b) => {
+      const buyerId = formData.buyer?._id || formData.buyer;
+      return (
+        String(b._id) === String(buyerId) ||
         b.name === formData.buyer ||
-        b.mobile?.some((m) => String(m) === String(formData.buyerMobile)),
-    );
+        b.mobile?.some((m) => String(m) === String(formData.buyerMobile))
+      );
+    });
 
     if (!matchBuyer && matchCompany) {
       matchBuyer = buyerList.find((b) =>
@@ -165,64 +166,31 @@ const BuyerInformation = ({
       );
     }
 
-    if (!matchBuyer) return;
-
-    setSelectedBuyerId(matchBuyer._id);
+    if (matchBuyer) {
+      setSelectedBuyerId(matchBuyer._id);
+    }
 
     if (matchCompany) {
       setSelectedCompanyId(matchCompany._id);
-
-      const buyerData = matchBuyer;
-      const companyData = matchCompany;
-
-      const rawEmails = buyerData?.email;
-      const buyerEmails = Array.isArray(rawEmails)
-        ? rawEmails
-            .map((e) =>
-              typeof e === "string" ? e : (e?.value ?? e?.email ?? ""),
-            )
-            .filter(Boolean)
-        : [];
-      const firstEmail = buyerEmails[0] || "";
-      const firstMobile = Array.isArray(buyerData.mobile)
-        ? buyerData.mobile[0]
-        : buyerData.mobile || "";
-
-      handleChange("companyId", companyData._id);
-      handleChange("buyerCompany", companyData.companyName || "");
-      handleChange("location", companyData.location || "");
-      handleChange("state", companyData.state || "");
-      handleChange("district", companyData.district || "");
-      handleChange("pinCode", companyData.pinCode || "");
-      handleChange("gstNumber", companyData.gstNumber || "");
-      handleChange("panNumber", companyData.panNumber || "");
-      handleChange("buyerEmail", firstEmail);
-      handleChange("buyerMobile", firstMobile);
-      handleChange("buyerEmails", buyerEmails.length ? buyerEmails : [""]);
-      handleChange("buyerCommodity", companyData.commodities || []);
-      handleChange(
-        "buyerBrokerageMap",
-        buyerData.brokerageByName || buyerData.brokerage || {},
-      );
     }
 
+    // 3. Match Consignee
     const consigneeValue =
       formData.consignee?._id ||
       formData.consignee?.value ||
       formData.consignee;
 
     if (consigneeValue) {
-      const found = consignees.find(
+      const found = consigneeList.find(
         (c) =>
           String(c._id) === String(consigneeValue) ||
           (c.name || c.label) === consigneeValue,
       );
       if (found) {
         setSelectedConsignee(String(found._id));
-        handleChange("consignee", found.name || found.label || "");
       }
     }
-  }, [buyers, companies, consignees, loading, formData, handleChange, hasManuallySelected]);
+  }, [buyers, companies, consignees, loading, formData, hasManuallySelected]);
 
   const onBuyerChange = (option) => {
     setHasManuallySelected(true);
