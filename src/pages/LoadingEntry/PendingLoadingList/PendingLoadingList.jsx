@@ -493,11 +493,22 @@ const PendingLoadingList = () => {
         },
         alternateRowStyles: { fillColor: [249, 250, 251] },
       });
-
-      // Footer
-      const finalY = doc.lastAutoTable.finalY || 110;
-      doc.setFontSize(8);
-      doc.setTextColor(156, 163, 175);
+ 
+       // Signature Section
+       const finalY = doc.lastAutoTable.finalY || 110;
+       doc.setFont("helvetica", "bold");
+       doc.setFontSize(10);
+       doc.setTextColor(31, 41, 55);
+       
+       const sigX = pageWidth - 60;
+       doc.text("Thanks and regards,", sigX, finalY + 15);
+       doc.text("Team Hansaria", sigX, finalY + 20);
+       doc.text("Purchase department", sigX, finalY + 25);
+ 
+       // Footer
+       doc.setFontSize(8);
+       doc.setTextColor(156, 163, 175);
+       doc.setFont("helvetica", "normal");
       doc.text(
         "This is a system generated report for internal logistics monitoring.",
         14,
