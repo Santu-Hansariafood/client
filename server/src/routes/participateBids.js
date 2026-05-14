@@ -8,13 +8,21 @@ import { invalidate } from "../middleware/cache.js";
 const router = Router();
 
 router.get("/", async (req, res) => {
-  const { mobile, bidId } = req.query;
+  const { mobile, bidId, date } = req.query;
   const page = parseInt(req.query.page || "0", 10);
   const limit = parseInt(req.query.limit || "0", 10);
 
   const query = {};
   if (mobile) query.mobile = mobile;
   if (bidId) query.bidId = bidId;
+
+  if (date) {
+    const startOfDay = new Date(date);
+    startOfDay.setHours(0, 0, 0, 0);
+    const endOfDay = new Date(date);
+    endOfDay.setHours(23, 59, 59, 999);
+    query.createdAt = { $gte: startOfDay, $lte: endOfDay };
+  }
 
   try {
     let items;

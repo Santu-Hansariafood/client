@@ -109,9 +109,10 @@ const ParticipateBidAdmin = () => {
         setBids(allowedBids);
         setParticipationBids(participations);
       } else {
+        const dateStr = selectedDate.toISOString().split("T")[0];
         const [bidsRes, participateRes] = await Promise.all([
-          api.get("/bids"),
-          api.get("/participatebids"),
+          api.get("/bids", { params: { date: dateStr } }),
+          api.get("/participatebids", { params: { date: dateStr } }),
         ]);
 
         const bidsData = bidsRes.data?.data || bidsRes.data || [];
@@ -437,7 +438,7 @@ const ParticipateBidAdmin = () => {
 
                 <div>
                   <p className="text-xs font-bold uppercase text-emerald-600">
-                    Today&apos;s Bids
+                    Bids
                   </p>
 
                   <p className="text-3xl font-black">{stats.totalBidsToday}</p>
