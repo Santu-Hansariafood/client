@@ -29,10 +29,11 @@ router.post("/whatsapp", upload.single("file"), async (req, res) => {
       return res.status(400).json({ message: "No file provided" });
     }
 
-    const fileName = `whatsapp-${Date.now()}-${req.file.originalname}`;
+    const saudaNo = req.body.saudaNo || "unknown";
+    const fileName = `Sauda-${saudaNo}-${Date.now()}.pdf`;
     
-    // Upload to ImageKit in "whatsapp share" folder
-    const cloudUrl = await imagekit.uploadFile(req.file, fileName, "/whatsapp share");
+    // Upload to ImageKit in "sauda_confirmations" folder
+    const cloudUrl = await imagekit.uploadFile(req.file, fileName, "/sauda_confirmations");
 
     res.json({
       url: cloudUrl,

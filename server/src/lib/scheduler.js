@@ -9,7 +9,7 @@ const clearNotifications = async () => {
     );
 
     // Also cleanup temporary WhatsApp share files (older than 24 hours)
-    await imagekit.cleanupFolder("/whatsapp share", 1440);
+    await imagekit.cleanupFolder("/sauda_confirmations", 1440);
   } catch (error) {
     console.error("[Scheduler] Error in daily cleanup:", error);
   }
