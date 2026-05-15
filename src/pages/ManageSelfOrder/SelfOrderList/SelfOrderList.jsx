@@ -256,8 +256,9 @@ const SelfOrderList = () => {
 *Delivery Address:* -  _${item.consignee || "N/A"}_
 *Commodity:* -  _${item.commodity || "N/A"}_
 *Quantity:* -  _${item.quantity || "0"} Tons_
-*Rate:* -  _₹${item.rate || "0"}_ + 
-*GST:* -  _${item.gst || "0"} % _
+*Rate:* -  _₹${item.rate || "0"}${
+  Number(item.gst) > 0 ? ` + ${item.gst}% GST` : ""
+}_
 *CD:* -  _${item.cd || "N/A"}_
 *Payment Terms:* -  _${item.paymentTerms || "N/A"} Days_
 
