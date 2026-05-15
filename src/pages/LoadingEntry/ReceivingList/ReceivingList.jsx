@@ -8,7 +8,9 @@ import Loading from "../../../common/Loading/Loading";
 import { jsPDF } from "jspdf";
 
 const Tables = lazy(() => import("../../../common/Tables/Tables"));
-const Pagination = lazy(() => import("../../../common/Paginations/Paginations"));
+const Pagination = lazy(
+  () => import("../../../common/Paginations/Paginations"),
+);
 const SearchBox = lazy(() => import("../../../common/SearchBox/SearchBox"));
 const PopupBox = lazy(() => import("../../../common/PopupBox/PopupBox"));
 
@@ -76,9 +78,12 @@ const ReceivingList = () => {
 
   const handleCopy = useCallback((entry) => {
     const documents = [];
-    if (entry.documents?.kantaSlip) documents.push(`Kanta Slip: ${entry.documents.kantaSlip}`);
-    if (entry.documents?.unloadingChallan) documents.push(`Unloading Challan: ${entry.documents.unloadingChallan}`);
-    if (entry.documents?.partyBillCopy) documents.push(`Party Bill Copy: ${entry.documents.partyBillCopy}`);
+    if (entry.documents?.kantaSlip)
+      documents.push(`Kanta Slip: ${entry.documents.kantaSlip}`);
+    if (entry.documents?.unloadingChallan)
+      documents.push(`Unloading Challan: ${entry.documents.unloadingChallan}`);
+    if (entry.documents?.partyBillCopy)
+      documents.push(`Party Bill Copy: ${entry.documents.partyBillCopy}`);
 
     const textToCopy = `
 Receiving Entry Details:
@@ -99,7 +104,8 @@ Documents:
 ${documents.length > 0 ? documents.join("\n") : "No documents attached"}
     `.trim();
 
-    navigator.clipboard.writeText(textToCopy)
+    navigator.clipboard
+      .writeText(textToCopy)
       .then(() => toast.success("Entry details copied to clipboard!"))
       .catch((err) => {
         console.error("Failed to copy:", err);
@@ -157,26 +163,47 @@ ${documents.length > 0 ? documents.join("\n") : "No documents attached"}
 
       doc.setLineWidth(0.2);
       doc.rect(margin + 2, y - 5, pageWidth - margin * 2 - 4, 60);
-      
+
       y += 5;
       setBold();
       doc.setFontSize(11);
       doc.text("ENTRY DETAILS", margin + 5, y);
-      
+
       y += 8;
       doc.setFontSize(10);
 
       const infoItems = [
         { label: "Sauda No:", value: selectedEntry.saudaNo || "N/A" },
         { label: "Loading No:", value: selectedEntry.billNumber || "N/A" },
-        { label: "Lorry No:", value: (selectedEntry.lorryNumber || "N/A").toUpperCase() },
-        { label: "Loading Weight:", value: `${selectedEntry.loadingWeight || 0} Tons` },
-        { label: "Unloading Weight:", value: `${selectedEntry.unloadingWeight || 0} Tons` },
-        { label: "Loading Date:", value: formatDate(selectedEntry.loadingDate) },
-        { label: "Unloading Date:", value: formatDate(selectedEntry.unloadingDate) },
+        {
+          label: "Lorry No:",
+          value: (selectedEntry.lorryNumber || "N/A").toUpperCase(),
+        },
+        {
+          label: "Loading Weight:",
+          value: `${selectedEntry.loadingWeight || 0} Tons`,
+        },
+        {
+          label: "Unloading Weight:",
+          value: `${selectedEntry.unloadingWeight || 0} Tons`,
+        },
+        {
+          label: "Loading Date:",
+          value: formatDate(selectedEntry.loadingDate),
+        },
+        {
+          label: "Unloading Date:",
+          value: formatDate(selectedEntry.unloadingDate),
+        },
         { label: "Rate:", value: `Rs. ${selectedEntry.actualRate || 0}` },
-        { label: "Amount:", value: `Rs. ${((selectedEntry.unloadingWeight || 0) * (selectedEntry.actualRate || 0)).toFixed(2)}` },
-        { label: "Seller Company:", value: selectedEntry.supplierCompany || "N/A" },
+        {
+          label: "Amount:",
+          value: `Rs. ${((selectedEntry.unloadingWeight || 0) * (selectedEntry.actualRate || 0)).toFixed(2)}`,
+        },
+        {
+          label: "Seller Company:",
+          value: selectedEntry.supplierCompany || "N/A",
+        },
         { label: "Buyer Company:", value: selectedEntry.buyerCompany || "N/A" },
       ];
 
@@ -186,7 +213,7 @@ ${documents.length > 0 ? documents.join("\n") : "No documents attached"}
       infoItems.forEach((item, index) => {
         const x = index % 2 === 0 ? col1X : col2X;
         const yOffset = Math.floor(index / 2) * 6;
-        
+
         setBold();
         doc.text(item.label, x, y + yOffset);
         setNormal();
@@ -197,19 +224,28 @@ ${documents.length > 0 ? documents.join("\n") : "No documents attached"}
 
       const documents = [];
       if (selectedEntry.documents?.kantaSlip) {
-        documents.push({ name: "Kanta Slip", url: selectedEntry.documents.kantaSlip });
+        documents.push({
+          name: "Kanta Slip",
+          url: selectedEntry.documents.kantaSlip,
+        });
       }
       if (selectedEntry.documents?.unloadingChallan) {
-        documents.push({ name: "Unloading Challan", url: selectedEntry.documents.unloadingChallan });
+        documents.push({
+          name: "Unloading Challan",
+          url: selectedEntry.documents.unloadingChallan,
+        });
       }
       if (selectedEntry.documents?.partyBillCopy) {
-        documents.push({ name: "Party Bill Copy", url: selectedEntry.documents.partyBillCopy });
+        documents.push({
+          name: "Party Bill Copy",
+          url: selectedEntry.documents.partyBillCopy,
+        });
       }
 
       if (documents.length > 0) {
         for (let i = 0; i < documents.length; i++) {
           const docInfo = documents[i];
-          
+
           if (i > 0) {
             doc.addPage();
             y = 20;
@@ -217,8 +253,10 @@ ${documents.length > 0 ? documents.join("\n") : "No documents attached"}
 
           setBold();
           doc.setFontSize(14);
-          doc.text(docInfo.name.toUpperCase(), pageWidth / 2, y, { align: "center" });
-          
+          doc.text(docInfo.name.toUpperCase(), pageWidth / 2, y, {
+            align: "center",
+          });
+
           y += 10;
 
           if (!docInfo.url.endsWith(".pdf")) {
@@ -229,31 +267,38 @@ ${documents.length > 0 ? documents.join("\n") : "No documents attached"}
                 const imgHeight = (imgWidth * 3) / 4;
                 const maxHeight = pageHeight - y - 20;
                 const finalHeight = Math.min(imgHeight, maxHeight);
-                
+
                 doc.addImage(
                   imgData,
                   "PNG",
                   margin + 2,
                   y,
                   imgWidth,
-                  finalHeight
+                  finalHeight,
                 );
               }
             } catch (imgErr) {
               console.error("Error loading image:", imgErr);
               setNormal();
               doc.setFontSize(10);
-              doc.text("Image could not be loaded", pageWidth / 2, y, { align: "center" });
+              doc.text("Image could not be loaded", pageWidth / 2, y, {
+                align: "center",
+              });
             }
           } else {
             setNormal();
             doc.setFontSize(10);
-            doc.text("PDF Document - Please open separately", pageWidth / 2, y, { align: "center" });
+            doc.text(
+              "PDF Document - Please open separately",
+              pageWidth / 2,
+              y,
+              { align: "center" },
+            );
             y += 10;
             doc.setTextColor(0, 0, 255);
-            doc.textWithLink(docInfo.url, pageWidth / 2, y, { 
+            doc.textWithLink(docInfo.url, pageWidth / 2, y, {
               align: "center",
-              url: docInfo.url 
+              url: docInfo.url,
             });
             doc.setTextColor(0, 0, 0);
           }
@@ -261,13 +306,14 @@ ${documents.length > 0 ? documents.join("\n") : "No documents attached"}
       } else {
         setNormal();
         doc.setFontSize(10);
-        doc.text("No documents attached", pageWidth / 2, y, { align: "center" });
+        doc.text("No documents attached", pageWidth / 2, y, {
+          align: "center",
+        });
       }
 
-      doc.save(`Receiving_Entry_${selectedEntry.saudaNo || 'Document'}.pdf`);
+      doc.save(`Receiving_Entry_${selectedEntry.saudaNo || "Document"}.pdf`);
       toast.dismiss(toastId);
       toast.success("PDF downloaded successfully!");
-
     } catch (error) {
       console.error("Error generating PDF:", error);
       toast.dismiss(toastId);
@@ -321,7 +367,7 @@ ${documents.length > 0 ? documents.join("\n") : "No documents attached"}
           </button>
         </div>,
       ]),
-    [filteredEntries, handleCopy]
+    [filteredEntries, handleCopy],
   );
 
   return (
@@ -381,7 +427,7 @@ ${documents.length > 0 ? documents.join("\n") : "No documents attached"}
               <button
                 onClick={handlePrint}
                 title="Print"
-                className="flex items-center justify-center w-10 h-10 rounded-xl text-amber-100/90 hover:text-white hover:bg-white/15 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-amber-300/50 active:scale-95"
+                className="flex items-center justify-center w-10 h-10 rounded-xl bg-slate-900 text-white hover:bg-black transition-all duration-200 shadow-lg border border-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-400/40 active:scale-95"
               >
                 <FaPrint className="w-5 h-5" />
               </button>
@@ -391,7 +437,9 @@ ${documents.length > 0 ? documents.join("\n") : "No documents attached"}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {selectedEntry.documents?.kantaSlip && (
                   <div className="space-y-2">
-                    <h4 className="text-sm font-bold text-slate-700">Kanta Slip</h4>
+                    <h4 className="text-sm font-bold text-slate-700">
+                      Kanta Slip
+                    </h4>
                     {selectedEntry.documents.kantaSlip.endsWith(".pdf") ? (
                       <a
                         href={selectedEntry.documents.kantaSlip}
@@ -412,8 +460,12 @@ ${documents.length > 0 ? documents.join("\n") : "No documents attached"}
                 )}
                 {selectedEntry.documents?.unloadingChallan && (
                   <div className="space-y-2">
-                    <h4 className="text-sm font-bold text-slate-700">Unloading Challan</h4>
-                    {selectedEntry.documents.unloadingChallan.endsWith(".pdf") ? (
+                    <h4 className="text-sm font-bold text-slate-700">
+                      Unloading Challan
+                    </h4>
+                    {selectedEntry.documents.unloadingChallan.endsWith(
+                      ".pdf",
+                    ) ? (
                       <a
                         href={selectedEntry.documents.unloadingChallan}
                         target="_blank"
@@ -433,7 +485,9 @@ ${documents.length > 0 ? documents.join("\n") : "No documents attached"}
                 )}
                 {selectedEntry.documents?.partyBillCopy && (
                   <div className="space-y-2">
-                    <h4 className="text-sm font-bold text-slate-700">Party Bill Copy</h4>
+                    <h4 className="text-sm font-bold text-slate-700">
+                      Party Bill Copy
+                    </h4>
                     {selectedEntry.documents.partyBillCopy.endsWith(".pdf") ? (
                       <a
                         href={selectedEntry.documents.partyBillCopy}
@@ -452,13 +506,13 @@ ${documents.length > 0 ? documents.join("\n") : "No documents attached"}
                     )}
                   </div>
                 )}
-                {(!selectedEntry.documents?.kantaSlip &&
+                {!selectedEntry.documents?.kantaSlip &&
                   !selectedEntry.documents?.unloadingChallan &&
-                  !selectedEntry.documents?.partyBillCopy) && (
-                  <div className="col-span-full text-center py-8 text-slate-500">
-                    No documents attached
-                  </div>
-                )}
+                  !selectedEntry.documents?.partyBillCopy && (
+                    <div className="col-span-full text-center py-8 text-slate-500">
+                      No documents attached
+                    </div>
+                  )}
               </div>
             </div>
           </PopupBox>
