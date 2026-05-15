@@ -9,7 +9,7 @@ import {
 import api from "../../../utils/apiClient/apiClient";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import { FaDownload, FaWhatsapp, FaFilter, FaTimes } from "react-icons/fa";
+import { FaDownload, FaWhatsapp, FaTimes } from "react-icons/fa";
 import { AiOutlineEye, AiOutlineSearch } from "react-icons/ai";
 import Loading from "../../../common/Loading/Loading";
 import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
@@ -243,12 +243,25 @@ const SelfOrderList = () => {
           : "";
 
         const consigneeName = getConsigneeDisplay(item);
-        const deliveryAddress = consigneeAddress || "N/A";
+        const formattedSaudaDate = item.poDate
+          ? new Date(item.poDate).toLocaleDateString("en-GB", {
+              day: "2-digit",
+              month: "2-digit",
+              year: "numeric",
+            })
+          : item.createdAt
+            ? new Date(item.createdAt).toLocaleDateString("en-GB", {
+                day: "2-digit",
+                month: "2-digit",
+                year: "numeric",
+              })
+            : "N/A";
 
         const finalMessage = `*HANSARIA FOOD PRIVATE LIMITED*
 
 *SAUDA CONFIRMATION*
 
+*Date:* -  _${formattedSaudaDate}_
 *Sauda No:* -  _${item.saudaNo || "N/A"}_
 *PO Number:* -  _${item.poNumber || "N/A"}_
 *Buyer Company:* -  _${item.buyerCompany || item.buyer || "N/A"}_
@@ -257,9 +270,13 @@ const SelfOrderList = () => {
 *Commodity:* -  _${item.commodity || "N/A"}_
 *Quantity:* -  _${item.quantity || "0"} Tons_
 *Rate:* -  _₹${item.rate || "0"}${
-  Number(item.gst) > 0 ? ` + ${item.gst}% GST` : ""
-}_
-*CD:* -  _${item.cd || "N/A"}_
+          Number(item.gst) > 0 ? ` + ${item.gst}% GST` : ""
+        }_
+${
+  item.cd && item.cd !== "0" && item.cd !== 0 && item.cd !== "N/A"
+    ? `*CD:* -  _${item.cd}_`
+    : ""
+}
 *Payment Terms:* -  _${item.paymentTerms || "N/A"} Days_
 
 For complete details, please check your email.
@@ -639,7 +656,6 @@ _${fileUrl || "PDF Link Not Available"}_
       currentPage,
       itemsPerPage,
       userRole,
-      totalItems,
       consigneeData,
       supplierData,
       buyerData,
