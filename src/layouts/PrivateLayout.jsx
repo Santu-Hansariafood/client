@@ -31,6 +31,95 @@ const PrivateLayout = () => {
     prefetchRoute("/dashboard");
   }, []);
 
+  // Screenshot and Content Protection Logic
+  useEffect(() => {
+    if (userRole === "Admin") return;
+
+    const preventActions = (e) => {
+      // Prevent Right Click
+      if (e.type === "contextmenu") {
+        e.preventDefault();
+        return false;
+      }
+
+      // Prevent Keyboard Shortcuts
+      if (e.type === "keydown") {
+        const { ctrlKey, shiftKey, key, keyCode } = e;
+        
+        // PrintScreen (Key code 44 is often not catchable, but 'PrintScreen' string might be)
+        if (key === "PrintScreen" || keyCode === 44) {
+          navigator.clipboard.writeText(""); // Clear clipboard
+          toast.warn("Screenshots are disabled for your role.");
+          return false;
+        }
+
+        // Ctrl+P (Print)
+        if (ctrlKey && (key === "p" || keyCode === 80)) {
+          e.preventDefault();
+          toast.warn("Printing is disabled.");
+          return false;
+        }
+
+        // Ctrl+S (Save)
+        if (ctrlKey && (key === "s" || keyCode === 83)) {
+          e.preventDefault();
+          return false;
+        }
+
+        // Ctrl+Shift+I, F12 (DevTools)
+        if ((ctrlKey && shiftKey && (key === "I" || keyCode === 73)) || key === "F12" || keyCode === 123) {
+          e.preventDefault();
+          return false;
+        }
+
+        // Ctrl+U (View Source)
+        if (ctrlKey && (key === "u" || keyCode === 85)) {
+          e.preventDefault();
+          return false;
+        }
+      }
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        // Optional: Can add logic here to blur content when switching apps
+      }
+    };
+
+    // Add listeners
+    window.addEventListener("contextmenu", preventActions);
+    window.addEventListener("keydown", preventActions);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    // Add CSS class for protection
+    document.body.classList.add("select-none");
+    const style = document.createElement("style");
+    style.id = "protection-styles";
+    style.innerHTML = `
+      * {
+        -webkit-touch-callout: none !important;
+        -webkit-user-select: none !important;
+        -khtml-user-select: none !important;
+        -moz-user-select: none !important;
+        -ms-user-select: none !important;
+        user-select: none !important;
+      }
+      @media print {
+        body { display: none !important; }
+      }
+    `;
+    document.head.appendChild(style);
+
+    return () => {
+      window.removeEventListener("contextmenu", preventActions);
+      window.removeEventListener("keydown", preventActions);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      document.body.classList.remove("select-none");
+      const existingStyle = document.getElementById("protection-styles");
+      if (existingStyle) existingStyle.remove();
+    };
+  }, [userRole]);
+
   return (
     <div className="flex h-screen overflow-hidden bg-slate-100">
       {(userRole === "Admin" || userRole === "Employee") && (
