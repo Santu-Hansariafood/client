@@ -256,7 +256,7 @@ const SearchFiltersCard = ({
   );
 };
 
-const OrdersTableCard = ({ orders, handleOpenPopup, toggleSaudaStatus }) => {
+const OrdersTableCard = ({ orders, handleOpenPopup, toggleSaudaStatus, userRole }) => {
   const activeCount = orders.filter((order) => order.status !== "closed").length;
   const closedCount = orders.length - activeCount;
 
@@ -346,7 +346,7 @@ const OrdersTableCard = ({ orders, handleOpenPopup, toggleSaudaStatus }) => {
                       Close
                     </button>
                   </>
-                ) : (
+                ) : userRole === "Admin" ? (
                   <button
                     onClick={() => {
                       if (order.status === "closed") {
@@ -360,6 +360,10 @@ const OrdersTableCard = ({ orders, handleOpenPopup, toggleSaudaStatus }) => {
                   >
                     Reopen to Add
                   </button>
+                ) : (
+                  <span className="text-xs font-bold text-slate-400 italic px-3 py-1.5">
+                    Closed
+                  </span>
                 )}
               </div>,
             ];
@@ -866,6 +870,7 @@ const AddLoadingEntry = () => {
               orders={orders}
               handleOpenPopup={handleOpenPopup}
               toggleSaudaStatus={toggleSaudaStatus}
+              userRole={userRole}
             />
           </div>
         )}
