@@ -253,11 +253,11 @@ const SelfOrderList = () => {
 *PO Number:* -  _${item.poNumber || "N/A"}_
 *Buyer Company:* -  _${item.buyerCompany || item.buyer || "N/A"}_
 *Supplier Company:* -  _${item.supplierCompany || item.supplier || "N/A"}_
-*Delivery Address:* -  _${consigneeName || "N/A"}_
+*Delivery Address:* -  _${item.consignee || "N/A"}_
 *Commodity:* -  _${item.commodity || "N/A"}_
 *Quantity:* -  _${item.quantity || "0"} Tons_
-*Rate:* -  _₹${item.rate || "0"}_
-*GST:* -  _${item.gst || "0"}%
+*Rate:* -  _₹${item.rate || "0"}_ + 
+*GST:* -  _${item.gst || "0"} % _
 *CD:* -  _${item.cd || "N/A"}_
 *Payment Terms:* -  _${item.paymentTerms || "N/A"} Days_
 
