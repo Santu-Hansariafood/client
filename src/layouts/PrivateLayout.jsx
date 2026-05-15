@@ -31,49 +31,56 @@ const PrivateLayout = () => {
     prefetchRoute("/dashboard");
   }, []);
 
-  // Screenshot and Content Protection Logic
   useEffect(() => {
-    if (userRole === "Admin") return;
+    if (userRole === "Admin") {
+      document.body.classList.remove("select-none", "content-protected");
+      const existingStyle = document.getElementById("protection-styles");
+      if (existingStyle) existingStyle.remove();
+      return;
+    }
 
     const preventActions = (e) => {
-      // Prevent Right Click
       if (e.type === "contextmenu") {
         e.preventDefault();
         return false;
       }
 
-      // Prevent Keyboard Shortcuts
       if (e.type === "keydown") {
-        const { ctrlKey, shiftKey, key, keyCode } = e;
+        const { ctrlKey, shiftKey, metaKey, key, keyCode } = e;
         
-        // PrintScreen (Key code 44 is often not catchable, but 'PrintScreen' string might be)
         if (key === "PrintScreen" || keyCode === 44) {
           navigator.clipboard.writeText(""); // Clear clipboard
-          toast.warn("Screenshots are disabled for your role.");
+          toast.warn("Screenshots are disabled for your role.", { autoClose: 2000 });
           return false;
         }
 
-        // Ctrl+P (Print)
+        if (metaKey && shiftKey && (key === "S" || key === "s")) {
+          toast.warn("Screen capture shortcuts are disabled.", { autoClose: 2000 });
+          return false;
+        }
+
         if (ctrlKey && (key === "p" || keyCode === 80)) {
           e.preventDefault();
-          toast.warn("Printing is disabled.");
+          toast.warn("Printing is disabled.", { autoClose: 2000 });
           return false;
         }
 
-        // Ctrl+S (Save)
         if (ctrlKey && (key === "s" || keyCode === 83)) {
           e.preventDefault();
           return false;
         }
 
-        // Ctrl+Shift+I, F12 (DevTools)
         if ((ctrlKey && shiftKey && (key === "I" || keyCode === 73)) || key === "F12" || keyCode === 123) {
           e.preventDefault();
           return false;
         }
 
-        // Ctrl+U (View Source)
         if (ctrlKey && (key === "u" || keyCode === 85)) {
+          e.preventDefault();
+          return false;
+        }
+
+        if (ctrlKey && (key === 'c' || keyCode === 67)) {
           e.preventDefault();
           return false;
         }
@@ -82,21 +89,31 @@ const PrivateLayout = () => {
 
     const handleVisibilityChange = () => {
       if (document.hidden) {
-        // Optional: Can add logic here to blur content when switching apps
+        document.body.classList.add("content-blur");
+      } else {
+        document.body.classList.remove("content-blur");
       }
     };
 
-    // Add listeners
+    const handleWindowBlur = () => {
+      document.body.classList.add("content-blur");
+    };
+
+    const handleWindowFocus = () => {
+      document.body.classList.remove("content-blur");
+    };
+
     window.addEventListener("contextmenu", preventActions);
-    window.addEventListener("keydown", preventActions);
+    window.addEventListener("keydown", preventActions, true);
+    window.addEventListener("blur", handleWindowBlur);
+    window.addEventListener("focus", handleWindowFocus);
     document.addEventListener("visibilitychange", handleVisibilityChange);
 
-    // Add CSS class for protection
-    document.body.classList.add("select-none");
+    document.body.classList.add("select-none", "content-protected");
     const style = document.createElement("style");
     style.id = "protection-styles";
     style.innerHTML = `
-      * {
+      .content-protected {
         -webkit-touch-callout: none !important;
         -webkit-user-select: none !important;
         -khtml-user-select: none !important;
@@ -104,19 +121,41 @@ const PrivateLayout = () => {
         -ms-user-select: none !important;
         user-select: none !important;
       }
+      .content-blur {
+        filter: blur(15px) !important;
+        transition: filter 0.2s ease;
+      }
       @media print {
-        body { display: none !important; }
+        body { display: none !important; visibility: hidden !important; }
+      }
+      /* Prevent screen capture software from getting clear images in some browsers */
+      body::after {
+        content: "";
+        position: fixed;
+        top: 0; left: 0; width: 100%; height: 100%;
+        pointer-events: none;
+        z-index: 9999;
+        background: rgba(255,255,255,0.001);
       }
     `;
     document.head.appendChild(style);
 
+    const clipboardInterval = setInterval(() => {
+      if (document.hidden || !document.hasFocus()) {
+        try { navigator.clipboard.writeText(""); } catch(e) { /* empty */ }
+      }
+    }, 1000);
+
     return () => {
       window.removeEventListener("contextmenu", preventActions);
-      window.removeEventListener("keydown", preventActions);
+      window.removeEventListener("keydown", preventActions, true);
+      window.removeEventListener("blur", handleWindowBlur);
+      window.removeEventListener("focus", handleWindowFocus);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
-      document.body.classList.remove("select-none");
+      document.body.classList.remove("select-none", "content-protected", "content-blur");
       const existingStyle = document.getElementById("protection-styles");
       if (existingStyle) existingStyle.remove();
+      clearInterval(clipboardInterval);
     };
   }, [userRole]);
 
