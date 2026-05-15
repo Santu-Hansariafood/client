@@ -10,7 +10,6 @@ const vendorCodeSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// Unique index for the combination of group, buyer, and seller
 vendorCodeSchema.index({ group: 1, buyer: 1, seller: 1 }, { unique: true });
 
 export default mongoose.model("VendorCode", vendorCodeSchema);

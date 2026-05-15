@@ -73,10 +73,15 @@ router.post("/forgot-password", async (req, res) => {
         ? { "phoneNumbers.value": normalizedMobile }
         : { mobile: normalizedMobile };
 
+    console.log(`Searching for user: role=${role}, mobile=${normalizedMobile}`);
     const user = await Model.findOne(query);
-    if (!user) return res.status(404).json({ message: "User not found" });
+    if (!user) {
+      console.log(`User not found for query: ${JSON.stringify(query)}`);
+      return res.status(404).json({ message: "User not found" });
+    }
 
     const email = getEmailByRole(user, role);
+    console.log(`Found user email: ${email}`);
     if (!email) {
       return res.status(400).json({
         message:
@@ -113,15 +118,19 @@ router.post("/forgot-password", async (req, res) => {
     };
 
     try {
+      console.log(`Sending OTP email to: ${email}`);
       await transporter.sendMail(mailOptions);
     } catch (mailError) {
       console.error("Error sending OTP email:", mailError);
-      return res.status(500).json({ message: "Failed to send OTP email." });
+      return res.status(500).json({ 
+        message: "Failed to send OTP email.",
+        details: mailError.message 
+      });
     }
     res.json({ message: "OTP sent to your registered email address" });
   } catch (error) {
     console.error("Forgot password error:", error);
-    res.status(500).json({ message: "Internal server error" });
+    res.status(500).json({ message: "Internal server error", details: error.message });
   }
 });
 

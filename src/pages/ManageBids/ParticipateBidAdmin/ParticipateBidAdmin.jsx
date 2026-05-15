@@ -134,21 +134,19 @@ const ParticipateBidAdmin = () => {
     fetchData();
   }, [fetchData]);
 
-  // Socket listener for real-time updates without polling
   useEffect(() => {
     const socket = getSocket();
     if (!socket) return;
 
     const handleNotification = (notification) => {
       const type = notification.type;
-      // Refresh data if any bid participation or status change occurs
       if (
         type === "BidParticipation" ||
         type === "BidRejection" ||
         type === "BidConfirmation"
       ) {
         console.log("Real-time bid update received, refreshing data...");
-        fetchData(true); // Silent refresh
+        fetchData(true);
       }
     };
 

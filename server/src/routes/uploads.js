@@ -32,7 +32,6 @@ router.post("/whatsapp", upload.single("file"), async (req, res) => {
     const saudaNo = req.body.saudaNo || "unknown";
     const fileName = `Sauda-${saudaNo}-${Date.now()}.pdf`;
     
-    // Upload to ImageKit in "sauda_confirmations" folder
     const cloudUrl = await imagekit.uploadFile(req.file, fileName, "/sauda_confirmations");
 
     res.json({

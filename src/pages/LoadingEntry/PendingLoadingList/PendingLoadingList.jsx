@@ -2,7 +2,12 @@ import { useState, useEffect, useCallback, lazy, Suspense } from "react";
 import { useLocation } from "react-router-dom";
 import api from "../../../utils/apiClient/apiClient";
 import { toast } from "react-toastify";
-import { FaTruckLoading, FaSearch, FaDownload, FaFilePdf } from "react-icons/fa";
+import {
+  FaTruckLoading,
+  FaSearch,
+  FaDownload,
+  FaFilePdf,
+} from "react-icons/fa";
 import { useAuth } from "../../../context/AuthContext/AuthContext";
 import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
 import Loading from "../../../common/Loading/Loading";
@@ -499,21 +504,21 @@ const PendingLoadingList = () => {
         },
         alternateRowStyles: { fillColor: [249, 250, 251] },
       });
- 
-       // Signature Section
-       const finalY = doc.lastAutoTable.finalY || 110;
-       doc.setFont("helvetica", "bold");
-       doc.setFontSize(10);
-       doc.setTextColor(31, 41, 55);
-       
-       const sigX = pageWidth - 60;
-       doc.text("Thanks and regards,", sigX, finalY + 15);
-       doc.text("Team Hansaria", sigX, finalY + 20);
-       doc.text("Purchase department", sigX, finalY + 25);
- 
-       doc.setFontSize(8);
-       doc.setTextColor(156, 163, 175);
-       doc.setFont("helvetica", "normal");
+
+      // Signature Section
+      const finalY = doc.lastAutoTable.finalY || 110;
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(10);
+      doc.setTextColor(31, 41, 55);
+
+      const sigX = pageWidth - 60;
+      doc.text("Thanks and regards,", sigX, finalY + 15);
+      doc.text("Team Hansaria", sigX, finalY + 20);
+      doc.text("Purchase department", sigX, finalY + 25);
+
+      doc.setFontSize(8);
+      doc.setTextColor(156, 163, 175);
+      doc.setFont("helvetica", "normal");
       doc.text(
         "This is a system generated report for internal logistics monitoring.",
         14,
@@ -623,7 +628,7 @@ const PendingLoadingList = () => {
         key={`pdf-${item._id}`}
         onClick={() => handleDownloadPDF(item)}
         className="p-2 rounded-lg bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white transition-all shadow-sm"
-        title="Download Detailed PDF"
+        title="Download PDF"
       >
         <FaFilePdf size={16} />
       </button>,

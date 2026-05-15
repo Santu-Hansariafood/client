@@ -2,7 +2,12 @@ import { useState, useEffect, useCallback, lazy, Suspense } from "react";
 import { useLocation } from "react-router-dom";
 import api from "../../../utils/apiClient/apiClient";
 import { toast } from "react-toastify";
-import { FaTruckLoading, FaSearch, FaDownload, FaFilePdf } from "react-icons/fa";
+import {
+  FaTruckLoading,
+  FaSearch,
+  FaDownload,
+  FaFilePdf,
+} from "react-icons/fa";
 import { useAuth } from "../../../context/AuthContext/AuthContext";
 import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
 import Loading from "../../../common/Loading/Loading";
@@ -228,7 +233,6 @@ const CompleteLoadingList = () => {
       });
     }
 
-    // ONLY show closed and within 5% tolerance saudas
     result = result.filter((item) => {
       const quantity = item.quantity || 0;
       let pendingQuantity = item.pendingQuantity;
@@ -376,14 +380,12 @@ const CompleteLoadingList = () => {
       const pageWidth = doc.internal.pageSize.width;
       const pageHeight = doc.internal.pageSize.height;
 
-      // Add Logo
       try {
         doc.addImage(logoUrl, "PNG", 14, 10, 40, 20);
       } catch (e) {
         console.warn("Logo failed to load", e);
       }
 
-      // Company Header
       doc.setFont("helvetica", "bold");
       doc.setFontSize(18);
       doc.setTextColor(5, 150, 105);
@@ -399,7 +401,6 @@ const CompleteLoadingList = () => {
         28,
       );
 
-      // Title
       doc.setDrawColor(5, 150, 105);
       doc.setLineWidth(0.5);
       doc.line(14, 35, pageWidth - 14, 35);
@@ -409,7 +410,6 @@ const CompleteLoadingList = () => {
       doc.setTextColor(31, 41, 55);
       doc.text(`COMPLETE SAUDA REPORT: ${saudaNo}`, 14, 45);
 
-      // Sauda Details Section
       doc.setFillColor(249, 250, 251);
       doc.rect(14, 50, pageWidth - 28, 45, "F");
       doc.setDrawColor(229, 231, 235);
@@ -455,7 +455,6 @@ const CompleteLoadingList = () => {
       doc.text(`Rs. ${item.rate || 0}`, col4, 79);
       doc.text(getConsigneeDisplay(item) || "N/A", col4, 86);
 
-      // Loading Entries Table
       doc.setFont("helvetica", "bold");
       doc.setFontSize(11);
       doc.setTextColor(5, 150, 105);
@@ -506,22 +505,20 @@ const CompleteLoadingList = () => {
         },
         alternateRowStyles: { fillColor: [249, 250, 251] },
       });
- 
-       // Signature Section
-       const finalY = doc.lastAutoTable.finalY || 110;
-       doc.setFont("helvetica", "bold");
-       doc.setFontSize(10);
-       doc.setTextColor(31, 41, 55);
-       
-       const sigX = pageWidth - 60;
-       doc.text("Thanks and regards,", sigX, finalY + 15);
-       doc.text("Team Hansaria", sigX, finalY + 20);
-       doc.text("Purchase department", sigX, finalY + 25);
- 
-       // Footer
-       doc.setFontSize(8);
-       doc.setTextColor(156, 163, 175);
-       doc.setFont("helvetica", "normal");
+
+      const finalY = doc.lastAutoTable.finalY || 110;
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(10);
+      doc.setTextColor(31, 41, 55);
+
+      const sigX = pageWidth - 60;
+      doc.text("Thanks and regards,", sigX, finalY + 15);
+      doc.text("Team Hansaria", sigX, finalY + 20);
+      doc.text("Purchase department", sigX, finalY + 25);
+
+      doc.setFontSize(8);
+      doc.setTextColor(156, 163, 175);
+      doc.setFont("helvetica", "normal");
       doc.text(
         "This is a system generated report for internal logistics monitoring.",
         14,

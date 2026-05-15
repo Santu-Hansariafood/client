@@ -18,12 +18,8 @@ import {
   FaPhoneAlt,
   FaStickyNote,
   FaHistory,
-  FaUserCircle,
 } from "react-icons/fa";
 
-/**
- * Helper to normalize strings for comparison
- */
 const normalizeString = (str) =>
   (str || "")
     .trim()
@@ -32,9 +28,6 @@ const normalizeString = (str) =>
     .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
     .join(" ");
 
-/**
- * Helper to format date and time
- */
 const formatDateTime = (dateStr) => {
   if (!dateStr) return "N/A";
   try {
@@ -74,7 +67,6 @@ const InteractionsPopup = ({ bidId, onClose, canInteract = true }) => {
         const interactionsData =
           interactionsRes.data.data || interactionsRes.data || [];
 
-        // Authorization check for Buyer
         if (actorRole === "Buyer" && bidData) {
           const buyerRes = await api.get("/bids/buyer-today", {
             params: { mobile: actorMobile },
@@ -557,7 +549,6 @@ const InteractionCard = ({
           </div>
         )}
 
-        {/* Review Controls */}
         {interaction.status === "pending" && isReviewer && (
           <div className="space-y-6 pt-4">
             <div className="rounded-3xl border border-slate-200 bg-slate-50/50 p-6 space-y-5">
@@ -657,7 +648,6 @@ const InteractionCard = ({
           </div>
         )}
 
-        {/* Reopen button for rejected interactions */}
         {interaction.status === "rejected" && isReviewer && (
           <div className="flex justify-end gap-3 pt-4">
             <button
@@ -678,7 +668,6 @@ const InteractionCard = ({
           </div>
         )}
 
-        {/* Action buttons for already accepted items */}
         {interaction.status === "accepted" && isReviewer && (
           <div className="flex justify-end pt-2">
             <button
