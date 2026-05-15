@@ -241,23 +241,11 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
               );
             })}
         </nav>
-
-        {/* FOOTER */}
         {!isCollapsed && (
           <div className="p-4 mt-auto">
             <div className="rounded-2xl bg-gradient-to-br from-slate-900 to-slate-950 border border-slate-800/50 p-3.5 flex items-center gap-3 shadow-inner">
               <div className="h-10 w-10 rounded-xl bg-slate-800 flex items-center justify-center text-slate-400 border border-slate-700/30">
                 <Icons.FaUserCircle size={24} />
-              </div>
-
-              <div className="min-w-0">
-                <p className="text-xs font-black text-white truncate uppercase tracking-wider leading-tight">
-                  Bidder Account
-                </p>
-
-                <p className="text-[10px] font-bold text-slate-500 truncate mt-0.5">
-                  Connected Ready
-                </p>
               </div>
             </div>
           </div>

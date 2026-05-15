@@ -391,7 +391,6 @@ const LoadingReport = () => {
     <Suspense fallback={<Loading />}>
       <AdminPageShell
         title="Date-wise Loading Report"
-        subtitle="Analyze loading performance and download detailed records by date"
         icon={FaHistory}
         noContentCard
       >
@@ -426,7 +425,7 @@ const LoadingReport = () => {
                   className="flex items-center justify-center gap-2 px-6 py-3 bg-slate-800 text-white rounded-2xl text-sm font-bold hover:bg-slate-900 transition-all shadow-lg active:scale-95 disabled:opacity-50"
                 >
                   <FaFilePdf size={18} />
-                  Download Date Report
+                  Download Report
                 </button>
                 <button
                   onClick={fetchLoadingEntries}
@@ -487,7 +486,7 @@ const LoadingReport = () => {
               <div className="relative z-10 flex items-start justify-between">
                 <div>
                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">
-                    Vehicles Loaded
+                    Vehicles
                   </p>
                   <h3 className="text-3xl font-black text-slate-900">
                     {summaryData.distinctLorry}

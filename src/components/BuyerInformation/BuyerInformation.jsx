@@ -6,7 +6,6 @@ import { useAuth } from "../../context/AuthContext/AuthContext";
 const DataDropdown = lazy(
   () => import("../../common/DataDropdown/DataDropdown"),
 );
-const DataInput = lazy(() => import("../../common/DataInput/DataInput"));
 
 const BuyerInformation = ({
   formData,
@@ -40,7 +39,6 @@ const BuyerInformation = ({
   useEffect(() => {
     const fetchData = async () => {
       if (propBuyers?.length > 0 && propConsignees?.length > 0) {
-        // If data is already provided via props, just fetch companies
         try {
           const companiesRows = await fetchAllPages("/companies", {
             limit: 200,
@@ -96,7 +94,6 @@ const BuyerInformation = ({
     [consignees, selectedConsignee],
   );
 
-  // Filter buyers based on role
   const buyerOptions = useMemo(() => {
     let filteredBuyers = Array.isArray(buyers) ? buyers : [];
     if (userRole === "Buyer") {
@@ -110,7 +107,6 @@ const BuyerInformation = ({
     }));
   }, [buyers, userRole, mobile]);
 
-  // Filter companies based on selected buyer
   const companyOptions = useMemo(() => {
     if (!selectedBuyer) return [];
     const linkedCompanyIds = (selectedBuyer.companyIds || []).map((id) =>
@@ -124,7 +120,6 @@ const BuyerInformation = ({
       }));
   }, [selectedBuyer, companies]);
 
-  // Handle initial data for editing
   useEffect(() => {
     if (loading || hasManuallySelected) return;
 
@@ -222,7 +217,15 @@ const BuyerInformation = ({
         handleChange("consignee", found.name || found.label || "");
       }
     }
-  }, [buyers, companies, consignees, loading, formData, handleChange, hasManuallySelected]);
+  }, [
+    buyers,
+    companies,
+    consignees,
+    loading,
+    formData,
+    handleChange,
+    hasManuallySelected,
+  ]);
 
   const onBuyerChange = (option) => {
     setHasManuallySelected(true);
