@@ -203,6 +203,12 @@
           "name": "Loading Report",
           "link": "/Loading-Entry/loading-report",
           "icon": "FaHistory"
+        },
+        {
+          "name": "Lorry Wise Report",
+          "link": "/Loading-Entry/lorry-wise-loading-list",
+          "icon": "FaTruck",
+          "roles": ["Admin", "Employee", "Seller"]
         }
       ]
     },

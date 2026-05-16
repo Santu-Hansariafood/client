@@ -224,6 +224,11 @@ const privateRoutes = [
     component: LazyPages.LoadingReport,
     roles: ["Admin", "Employee"],
   },
+  {
+    path: "Loading-Entry/lorry-wise-loading-list",
+    component: LazyPages.LorryWiseLoadingList,
+    roles: ["Admin", "Employee", "Seller"],
+  },
   { path: "employee/add", component: LazyPages.AddEmployee, roles: ["Admin"] },
   {
     path: "employee/list",

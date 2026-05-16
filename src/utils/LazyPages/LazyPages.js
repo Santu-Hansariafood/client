@@ -79,6 +79,8 @@ const loaders = {
     import("../../pages/LoadingEntry/ReceivingList/ReceivingList"),
   LoadingReport: () =>
     import("../../pages/LoadingEntry/LoadingReport/LoadingReport"),
+  LorryWiseLoadingList: () =>
+    import("../../pages/LoadingEntry/LorryWiseLoadingList/LorryWiseLoadingList"),
   PrivacyPolicy: () => import("../../common/PrivacyPolicy/PrivacyPolicy"),
   TermsConditions: () => import("../../common/TermsConditions/TermsConditions"),
   BrokerCommissionPolicy: () =>
@@ -136,6 +138,7 @@ const pathToKey = {
   "/Loading-Entry/complete-loading-list": "CompleteLoadingList",
   "/Loading-Entry/receiving-list": "ReceivingList",
   "/Loading-Entry/loading-report": "LoadingReport",
+  "/Loading-Entry/lorry-wise-loading-list": "LorryWiseLoadingList",
   "/employee/add": "AddEmployee",
   "/employee/list": "ListEmployee",
   "/transporter/add": "AddTransporter",
@@ -233,6 +236,7 @@ const LazyPages = {
   PendingSaudaSummary: lazy(loaders.PendingSaudaSummary),
   ReceivingList: lazy(loaders.ReceivingList),
   LoadingReport: lazy(loaders.LoadingReport),
+  LorryWiseLoadingList: lazy(loaders.LorryWiseLoadingList),
   PrivacyPolicy: lazy(loaders.PrivacyPolicy),
   DataSafety: lazy(loaders.DataSafety),
   TermsConditions: lazy(loaders.TermsConditions),
