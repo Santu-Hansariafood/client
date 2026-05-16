@@ -23,8 +23,7 @@ import Loading from "../../common/Loading/Loading";
 const Cards = lazy(() => import("../../common/Cards/Cards"));
 const PopupBox = lazy(() => import("../../common/PopupBox/PopupBox"));
 
-const HeaderSection = memo(({ userName }) => {
-HeaderSection.displayName = 'HeaderSection';
+const HeaderSection = memo(({ userName, totalBrokerage }) => {
   const greeting = useMemo(() => {
     const hour = new Date().getHours();
     if (hour < 12) return "Good Morning";
@@ -33,45 +32,59 @@ HeaderSection.displayName = 'HeaderSection';
   }, []);
 
   return (
-    <div className="relative overflow-hidden flex flex-col md:flex-row justify-between items-start md:items-center bg-[#020617] p-8 sm:p-10 rounded-[2.5rem] sm:rounded-[3rem] shadow-2xl text-white gap-6">
+    <div className="relative overflow-hidden flex flex-col md:flex-row justify-between items-start md:items-center bg-gradient-to-br from-emerald-600 to-teal-700 p-8 sm:p-10 rounded-[2.5rem] sm:rounded-[3rem] shadow-2xl text-white gap-6">
       {/* Glow Effects */}
-      <div className="absolute -top-24 -left-24 w-64 h-64 bg-emerald-500/10 rounded-full blur-[100px] pointer-events-none" />
-      <div className="absolute top-1/2 -right-24 w-48 h-48 bg-blue-500/10 rounded-full blur-[80px] pointer-events-none" />
+      <div className="absolute -top-24 -left-24 w-64 h-64 bg-white/10 rounded-full blur-[100px] pointer-events-none" />
+      <div className="absolute top-1/2 -right-24 w-48 h-48 bg-emerald-400/20 rounded-full blur-[80px] pointer-events-none" />
 
-      <div className="relative z-10 space-y-2">
+      <div className="relative z-10 space-y-4">
         <div className="flex items-center gap-3">
-          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,1)]" />
-          <p className="text-[10px] font-black text-emerald-400 uppercase tracking-[0.3em]">
-            Active Dashboard
+          <span className="h-1.5 w-1.5 rounded-full bg-white animate-pulse shadow-[0_0_8px_rgba(255,255,255,1)]" />
+          <p className="text-[10px] font-black text-emerald-100 uppercase tracking-[0.3em]">
+            Seller Intelligence Dashboard
           </p>
         </div>
-        <h1 className="text-2xl sm:text-4xl font-black tracking-tight italic">
-          {greeting}, <span className="text-emerald-400">Mr. {userName || "Partner"}</span>
-        </h1>
-        <p className="text-slate-400 text-xs sm:text-sm font-bold uppercase tracking-widest">
-          Hansaria Food Private Limited • Verified Seller
-        </p>
+        
+        <div className="space-y-1">
+          <h1 className="text-2xl sm:text-4xl font-black tracking-tight italic">
+            {greeting}, <span className="text-white">Mr. {userName || "Partner"}</span>
+          </h1>
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1.5 bg-white/20 backdrop-blur-md px-3 py-1 rounded-full border border-white/30">
+              <FaWallet className="text-[10px]" />
+              <p className="text-xs font-black tracking-tight">
+                Brokerage: ₹{totalBrokerage.toLocaleString("en-IN")}
+              </p>
+            </div>
+            <span className="h-1 w-1 rounded-full bg-white/40" />
+            <p className="text-emerald-50 text-[10px] font-bold uppercase tracking-widest opacity-80">
+              Verified Seller Account
+            </p>
+          </div>
+        </div>
       </div>
 
-      <div className="relative z-10 flex items-center gap-5 bg-white/5 backdrop-blur-2xl p-4 rounded-[2rem] border border-white/10 shadow-inner group hover:bg-white/10 transition-all duration-500">
-        <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-500">
-          <img src="/icons/favicon-32x32.png" alt="logo" className="w-7 h-7 object-contain" />
+      <div className="relative z-10 flex items-center gap-5 bg-white/10 backdrop-blur-2xl p-5 rounded-[2.2rem] border border-white/20 shadow-xl group hover:bg-white/20 transition-all duration-500">
+        <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform duration-500">
+          <img src="/icons/favicon-32x32.png" alt="logo" className="w-8 h-8 object-contain" />
         </div>
         <div className="text-left pr-4">
-          <p className="text-[11px] font-black text-white uppercase tracking-widest leading-tight">
-            Enterprise
+          <p className="text-[10px] font-black text-emerald-100 uppercase tracking-widest leading-tight">
+            Enterprise Partner
           </p>
-          <p className="text-[10px] text-emerald-400/80 font-bold uppercase tracking-widest mt-1">
-            Portal Access
+          <p className="text-sm font-black text-white tracking-tight mt-0.5">
+            Hansaria Food Pvt Ltd
           </p>
         </div>
       </div>
     </div>
   );
 });
+HeaderSection.displayName = 'HeaderSection';
 
 HeaderSection.propTypes = {
   userName: PropTypes.string,
+  totalBrokerage: PropTypes.number,
 };
 
 const InsightCard = memo(({ title, subtitle, value, unit, icon: Icon, colorClass, footerText }) => (
@@ -132,8 +145,8 @@ const CommodityItem = memo(({ item, totalQuantity }) => {
     <div className="group relative bg-white hover:bg-slate-50/50 p-6 rounded-[2.2rem] border border-slate-100 hover:border-emerald-200/50 transition-all duration-700 hover:shadow-xl hover:shadow-slate-200/30">
       <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-6">
         <div className="flex items-center gap-5">
-          <div className="h-16 w-16 rounded-[1.5rem] bg-[#020617] border border-white/10 flex items-center justify-center shadow-lg group-hover:scale-110 group-hover:bg-emerald-500 group-hover:border-emerald-400 transition-all duration-700">
-            <span className="text-xl font-black text-emerald-400 group-hover:text-white uppercase tracking-tighter italic transition-colors duration-700">
+          <div className="h-16 w-16 rounded-[1.5rem] bg-emerald-50 border border-emerald-100 flex items-center justify-center shadow-sm group-hover:scale-110 group-hover:bg-emerald-500 group-hover:border-emerald-400 transition-all duration-700">
+            <span className="text-xl font-black text-emerald-600 group-hover:text-white uppercase tracking-tighter italic transition-colors duration-700">
               {item?._id?.substring(0, 2) || "CM"}
             </span>
           </div>
@@ -168,6 +181,9 @@ const CommodityItem = memo(({ item, totalQuantity }) => {
             </p>
             <p className="text-xl font-black text-slate-900 group-hover:text-emerald-700 tracking-tighter transition-colors">
               ₹{brokerage.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+            </p>
+            <p className="text-[10px] font-bold text-indigo-600 mt-1 uppercase tracking-tighter">
+              ₹{effectiveRate}/T
             </p>
           </div>
         </div>
@@ -372,7 +388,7 @@ const SellerDashboard = () => {
       <AdminPageShell noContentCard>
         <div className="p-4 sm:p-8 space-y-10 sm:space-y-14 max-w-[1600px] mx-auto">
           
-          <HeaderSection userName={user?.name} />
+          <HeaderSection userName={user?.name} totalBrokerage={totalBrokerage} />
 
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-8">
             {stats.map((item, i) => (
@@ -453,14 +469,14 @@ const SellerDashboard = () => {
             {/* Sidebar Column */}
             <div className="lg:col-span-4 space-y-10">
               {/* Quick Actions */}
-              <div className="bg-[#020617] p-8 sm:p-10 rounded-[3rem] shadow-2xl text-white overflow-hidden relative group">
-                <div className="absolute -top-24 -right-24 w-64 h-64 bg-indigo-500/10 rounded-full blur-[100px] pointer-events-none group-hover:bg-indigo-500/20 transition-all duration-700" />
+              <div className="bg-white p-8 sm:p-10 rounded-[3rem] shadow-xl border border-slate-100 overflow-hidden relative group">
+                <div className="absolute -top-24 -right-24 w-64 h-64 bg-emerald-500/5 rounded-full blur-[100px] pointer-events-none group-hover:bg-emerald-500/10 transition-all duration-700" />
                 
                 <div className="relative z-10 flex items-center gap-4 mb-10">
-                  <div className="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center text-emerald-400 border border-white/10">
+                  <div className="w-12 h-12 rounded-2xl bg-emerald-50 flex items-center justify-center text-emerald-600 border border-emerald-100">
                     <FaGavel className="text-xl" />
                   </div>
-                  <h3 className="text-xl font-black uppercase tracking-tight italic">
+                  <h3 className="text-xl font-black text-slate-900 uppercase tracking-tight italic">
                     Navigation
                   </h3>
                 </div>
@@ -470,22 +486,22 @@ const SellerDashboard = () => {
                     <button
                       key={l.label || i}
                       onClick={() => (l.action ? l.action() : navigate(l.link, { state: l.state }))}
-                      className="w-full flex items-center justify-between p-4.5 bg-white/5 border border-white/5 rounded-[1.8rem] hover:bg-white/10 hover:border-white/20 transition-all duration-500 group/btn"
+                      className="w-full flex items-center justify-between p-4.5 bg-slate-50 border border-slate-100/50 rounded-[1.8rem] hover:bg-emerald-50 hover:border-emerald-100 transition-all duration-500 group/btn"
                     >
                       <div className="flex items-center gap-5">
-                        <div className={`w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center ${l.color} border border-white/5 group-hover/btn:scale-110 transition-transform duration-500`}>
+                        <div className={`w-10 h-10 rounded-xl bg-white flex items-center justify-center ${l.color} border border-slate-100 group-hover/btn:scale-110 group-hover/btn:border-emerald-200 transition-all duration-500`}>
                           {l.isNotif ? (
                             <div className="relative">
                               {l.icon}
-                              {notificationCount > 0 && <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-[#020617]" />}
+                              {notificationCount > 0 && <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white" />}
                             </div>
                           ) : l.icon}
                         </div>
-                        <span className="font-bold text-slate-100 text-[13px] tracking-wide group-hover/btn:translate-x-1 transition-transform">
+                        <span className="font-bold text-slate-700 text-[13px] tracking-wide group-hover/btn:text-emerald-700 group-hover/btn:translate-x-1 transition-all">
                           {l.label}
                         </span>
                       </div>
-                      <FaChevronRight className="text-white/20 group-hover/btn:text-emerald-400 transition-all group-hover/btn:translate-x-1" />
+                      <FaChevronRight className="text-slate-300 group-hover/btn:text-emerald-500 transition-all group-hover/btn:translate-x-1" />
                     </button>
                   ))}
                 </div>
