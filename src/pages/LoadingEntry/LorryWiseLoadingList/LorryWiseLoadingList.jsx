@@ -201,36 +201,60 @@ const LorryWiseLoadingList = () => {
       return;
     }
 
-    const toastId = toast.loading("Generating Detailed Lorry Report...");
+    const toastId = toast.loading("Fetching all records and generating report...");
     try {
+      // Fetch ALL matching records for the report, not just the current page
+      const params = {
+        lorryNumber: searchLorry,
+        status: selectedStatus.value,
+        page: 1,
+        limit: 10000, // Large limit to get all records
+      };
+
+      const response = await api.get("/loading-entries/lorry-wise", { params });
+      const allEntries = response.data?.data || [];
+      const totalMatched = response.data?.total || allEntries.length;
+
+      if (allEntries.length === 0) {
+        toast.update(toastId, { render: "No records found to download", type: "info", isLoading: false, autoClose: 3000 });
+        return;
+      }
+
       const doc = new jsPDF("landscape");
       const pageWidth = doc.internal.pageSize.getWidth();
 
-      try {
-        doc.addImage(logoUrl, "PNG", pageWidth - 45, 10, 30, 30);
-      } catch (e) {
-        /* empty */
-      }
+      // Helper for header on each page
+      const drawHeader = (data) => {
+        try {
+          doc.addImage(logoUrl, "PNG", pageWidth - 45, 10, 30, 30);
+        } catch (e) { /* empty */ }
 
-      doc.setFontSize(22);
-      doc.setTextColor(15, 23, 42); // slate-900
-      doc.setFont("helvetica", "bold");
-      doc.text("LORRY WISE LOADING REPORT", 14, 25);
+        doc.setFontSize(22);
+        doc.setTextColor(15, 23, 42);
+        doc.setFont("helvetica", "bold");
+        doc.text("LORRY WISE LOADING REPORT", 14, 25);
 
-      doc.setFontSize(10);
-      doc.setTextColor(100);
-      doc.setFont("helvetica", "normal");
-      doc.text(`Generated on: ${new Date().toLocaleString("en-IN")}`, 14, 32);
-      if (searchLorry) doc.text(`Filter - Lorry: ${searchLorry}`, 14, 37);
-      doc.text(`Filter - Status: ${selectedStatus.label}`, 14, 42);
+        doc.setFontSize(10);
+        doc.setTextColor(100);
+        doc.setFont("helvetica", "normal");
+        doc.text(`Generated on: ${new Date().toLocaleString("en-IN")}`, 14, 32);
+        
+        // Show filter info and total matches
+        let filterText = `Status: ${selectedStatus.label} | Total Matched: ${totalMatched} Records`;
+        if (searchLorry) filterText = `Lorry: ${searchLorry} | ${filterText}`;
+        doc.text(filterText, 14, 38);
+        
+        doc.setDrawColor(226, 232, 240);
+        doc.line(14, 42, pageWidth - 14, 42);
+      };
 
       const tableColumn = [
         "Sl No", "Date", "Lorry No", "Sauda No", "Commodity",
         "Bags", "L. Weight", "U. Weight", "Status", "Consignee", "Supplier"
       ];
 
-      const tableRows = loadingEntries.map((entry, index) => [
-        (currentPage - 1) * itemsPerPage + index + 1,
+      const tableRows = allEntries.map((entry, index) => [
+        index + 1,
         new Date(entry.loadingDate).toLocaleDateString("en-IN"),
         entry.lorryNumber,
         entry.saudaNo,
@@ -246,7 +270,7 @@ const LorryWiseLoadingList = () => {
       autoTable(doc, {
         head: [tableColumn],
         body: tableRows,
-        startY: 50,
+        startY: 48,
         theme: "grid",
         headStyles: {
           fillColor: [15, 23, 42],
@@ -263,27 +287,39 @@ const LorryWiseLoadingList = () => {
           7: { halign: "right" },
           8: { halign: "center" },
         },
+        // This ensures the header is drawn if the table spans multiple pages
         didDrawPage: (data) => {
-          // Footer with page numbers
+          // Footer
           doc.setFontSize(8);
+          doc.setTextColor(150);
           doc.text(
-            `Page ${data.pageNumber}`,
+            `Page ${data.pageNumber} of ${doc.internal.getNumberOfPages()}`,
             pageWidth / 2,
             doc.internal.pageSize.getHeight() - 10,
             { align: 'center' }
           );
+
+          // We don't call drawHeader here because startY handles first page 
+          // and autoTable doesn't natively re-run startY logic on new pages.
+          // Instead, we let autoTable repeat headers (default behavior).
+        },
+        // Re-draw the company info/title if it's the first page
+        willDrawPage: (data) => {
+          if (data.pageNumber === 1) {
+            drawHeader();
+          }
         }
       });
 
-      doc.save(`Lorry_Report_${searchLorry || "All"}_Page_${currentPage}.pdf`);
+      doc.save(`Lorry_Full_Report_${searchLorry || "All"}_${new Date().getTime()}.pdf`);
       toast.update(toastId, {
-        render: "Report Downloaded Successfully",
+        render: `Report Downloaded (${totalMatched} records)`,
         type: "success",
         isLoading: false,
         autoClose: 3000,
       });
     } catch (error) {
-      console.error("PDF generation failed", error);
+      console.error("PDF generation failed:", error);
       toast.update(toastId, {
         render: "Failed to generate report",
         type: "error",
