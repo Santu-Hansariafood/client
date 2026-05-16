@@ -45,6 +45,63 @@ const computePendingForSelfOrder = (order) => {
   return { pendingQuantity, isClosed };
 };
 
+router.get("/lorry-wise", async (req, res) => {
+  try {
+    const lorryNumber = (req.query.lorryNumber || "").trim();
+    const status = (req.query.status || "all").trim();
+    const page = parseInt(req.query.page || "1", 10);
+    const limit = parseInt(req.query.limit || "10", 10);
+
+    const andParts = [];
+    
+    if (lorryNumber) {
+      andParts.push({
+        lorryNumber: { $regex: new RegExp(escapeRegex(lorryNumber), "i") }
+      });
+    }
+
+    if (status !== "all") {
+      if (status === "received") {
+        andParts.push({
+          $or: [
+            { unloadingWeight: { $gt: 0 } },
+            { unloadingDate: { $exists: true, $ne: null } }
+          ]
+        });
+      } else if (status === "transit") {
+        andParts.push({
+          $and: [
+            { $or: [{ unloadingWeight: { $lte: 0 } }, { unloadingWeight: { $exists: false } }] },
+            { $or: [{ unloadingDate: { $exists: false } }, { unloadingDate: null }] }
+          ]
+        });
+      }
+    }
+
+    const finalQuery = andParts.length > 0 ? { $and: andParts } : {};
+
+    const [items, total] = await Promise.all([
+      LoadingEntry.find(finalQuery)
+        .sort({ loadingDate: -1, createdAt: -1 })
+        .skip((page - 1) * limit)
+        .limit(limit)
+        .populate("supplier", "sellerName")
+        .lean(),
+      LoadingEntry.countDocuments(finalQuery)
+    ]);
+
+    res.json({
+      data: items,
+      total,
+      page,
+      totalPages: Math.ceil(total / limit)
+    });
+  } catch (error) {
+    console.error("Lorry wise loading error:", error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
 router.get("/filters", async (req, res) => {
   try {
     const role = req.user?.role;

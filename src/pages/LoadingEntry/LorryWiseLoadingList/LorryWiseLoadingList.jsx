@@ -53,23 +53,16 @@ const LorryWiseLoadingList = () => {
     try {
       const params = {
         lorryNumber: searchLorry,
+        status: selectedStatus.value,
         page: currentPage,
         limit: itemsPerPage,
       };
 
-      const response = await api.get("/loading-entries", { params });
-      let data = response.data?.data || response.data || [];
-
-      // Client side status filtering since backend might not support it directly yet
-      if (selectedStatus.value !== "all") {
-        data = data.filter((entry) => {
-          const isReceived = entry.unloadingWeight > 0 || entry.unloadingDate;
-          return selectedStatus.value === "received" ? isReceived : !isReceived;
-        });
-      }
+      const response = await api.get("/loading-entries/lorry-wise", { params });
+      const data = response.data?.data || [];
 
       setLoadingEntries(data);
-      setTotalItems(response.data?.total || data.length);
+      setTotalItems(response.data?.total || 0);
     } catch (error) {
       console.error("Failed to fetch loading entries", error);
       toast.error("Failed to load loading records");
@@ -82,6 +75,95 @@ const LorryWiseLoadingList = () => {
     fetchLoadingEntries();
   }, [fetchLoadingEntries]);
 
+  const downloadSinglePDF = async (entry) => {
+    const toastId = toast.loading(`Generating PDF for ${entry.lorryNumber}...`);
+    try {
+      const doc = new jsPDF("p", "mm", "a4");
+      const pageWidth = doc.internal.pageSize.getWidth();
+
+      try {
+        doc.addImage(logoUrl, "PNG", pageWidth - 45, 10, 30, 30);
+      } catch (e) {
+        /* empty */
+      }
+
+      doc.setFontSize(20);
+      doc.setTextColor(15, 23, 42);
+      doc.setFont("helvetica", "bold");
+      doc.text("LORRY LOADING SLIP", 14, 25);
+
+      doc.setDrawColor(226, 232, 240);
+      doc.line(14, 35, pageWidth - 14, 35);
+
+      doc.setFontSize(10);
+      doc.setTextColor(100);
+      doc.setFont("helvetica", "normal");
+      doc.text(`Generated on: ${new Date().toLocaleString("en-IN")}`, 14, 42);
+
+      const tableColumn = ["Field", "Details"];
+      const tableRows = [
+        ["Lorry Number", entry.lorryNumber],
+        [
+          "Loading Date",
+          new Date(entry.loadingDate).toLocaleDateString("en-IN"),
+        ],
+        ["Sauda Number", entry.saudaNo],
+        ["Commodity", entry.commodity],
+        ["Bags", entry.bags || "N/A"],
+        [
+          "Loading Weight",
+          `${Number(entry.loadingWeight || 0).toFixed(2)} Tons`,
+        ],
+        [
+          "Unloading Weight",
+          entry.unloadingWeight > 0
+            ? `${Number(entry.unloadingWeight).toFixed(2)} Tons`
+            : "Not Unloaded",
+        ],
+        ["Driver Name", entry.driverName || "N/A"],
+        ["Driver Mobile", entry.driverPhoneNumber || "N/A"],
+        ["Freight Rate", entry.freightRate ? `₹${entry.freightRate}` : "N/A"],
+        ["Supplier", entry.supplierCompany || "N/A"],
+        ["Consignee", entry.consignee || "N/A"],
+        [
+          "Status",
+          entry.unloadingWeight > 0 || entry.unloadingDate
+            ? "RECEIVED"
+            : "IN TRANSIT",
+        ],
+      ];
+
+      autoTable(doc, {
+        head: [tableColumn],
+        body: tableRows,
+        startY: 50,
+        theme: "striped",
+        headStyles: { fillColor: [15, 23, 42], textColor: 255, fontSize: 10 },
+        styles: { fontSize: 10, cellPadding: 5 },
+        columnStyles: {
+          0: { fontStyle: "bold", cellWidth: 50 },
+          1: { cellWidth: "auto" },
+        },
+      });
+
+      doc.save(`Loading_Slip_${entry.lorryNumber}_${entry.saudaNo}.pdf`);
+      toast.update(toastId, {
+        render: "PDF Downloaded",
+        type: "success",
+        isLoading: false,
+        autoClose: 2000,
+      });
+    } catch (error) {
+      console.error("Single PDF generation failed", error);
+      toast.update(toastId, {
+        render: "Download Failed",
+        type: "error",
+        isLoading: false,
+        autoClose: 2000,
+      });
+    }
+  };
+
   const headers = [
     "Sl No",
     "Loading Date",
@@ -91,8 +173,7 @@ const LorryWiseLoadingList = () => {
     "L. Weight (T)",
     "U. Weight (T)",
     "Status",
-    "Consignee",
-    "Supplier",
+    "Action",
   ];
 
   const rows = loadingEntries.map((entry, index) => {
@@ -130,14 +211,14 @@ const LorryWiseLoadingList = () => {
       >
         {isReceived ? "Received" : "In Transit"}
       </span>,
-      <div key={`con-${index}`} className="max-w-[120px] truncate text-xs">
-        {entry.consignee}
-      </div>,
-      <div
-        key={`sup-${index}`}
-        className="max-w-[120px] truncate text-xs italic text-slate-500"
-      >
-        {entry.supplierCompany}
+      <div key={`actions-${index}`} className="flex items-center gap-2">
+        <button
+          onClick={() => downloadSinglePDF(entry)}
+          className="p-2 bg-emerald-50 text-emerald-600 rounded-lg hover:bg-emerald-100 transition shadow-sm"
+          title="Download PDF"
+        >
+          <FaFilePdf size={14} />
+        </button>
       </div>,
     ];
   });
