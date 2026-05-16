@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { AiOutlineCloud, AiOutlineEnvironment } from "react-icons/ai";
 import {
   WiDaySunny,
@@ -16,68 +16,108 @@ const WeatherWidget = () => {
   const [isWeatherModalOpen, setIsWeatherModalOpen] = useState(false);
   const [weatherLoading, setWeatherLoading] = useState(true);
   const [locationName, setLocationName] = useState("Local Area");
+  const [coords, setCoords] = useState(null);
 
-  useEffect(() => {
-    const fetchWeather = async (lat, lon) => {
-      setWeatherLoading(true);
+  const fetchWeather = useCallback(async (lat, lon) => {
+    setWeatherLoading(true);
+    try {
+      const response = await fetch(
+        `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,is_day,precipitation,weather_code,wind_speed_10m&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum&timezone=auto`,
+      );
+      const data = await response.json();
+
+      setWeather({
+        temp: data.current.temperature_2m,
+        humidity: data.current.relative_humidity_2m,
+        precipitation: data.current.precipitation,
+        wind: data.current.wind_speed_10m,
+        code: data.current.weather_code,
+        isDay: data.current.is_day,
+      });
+
+      const dailyForecast = data.daily.time.map((time, i) => ({
+        date: new Date(time).toLocaleDateString("en-IN", {
+          weekday: "short",
+          day: "numeric",
+          month: "short",
+        }),
+        maxTemp: data.daily.temperature_2m_max[i],
+        minTemp: data.daily.temperature_2m_min[i],
+        code: data.daily.weather_code[i],
+        precip: data.daily.precipitation_sum[i],
+      }));
+      setForecast(dailyForecast);
+
       try {
-        const response = await fetch(
-          `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,is_day,precipitation,weather_code,wind_speed_10m&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum&timezone=auto`,
+        const geoRes = await fetch(
+          `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=10`,
         );
-        const data = await response.json();
+        const geoData = await geoRes.json();
+        const city =
+          geoData.address.city ||
+          geoData.address.town ||
+          geoData.address.village ||
+          geoData.address.state ||
+          "Local Area";
+        setLocationName(city);
+      } catch (e) {
+        console.error("Geocoding failed:", e);
+      }
+    } catch (error) {
+      console.error("Weather fetch failed:", error);
+    } finally {
+      setWeatherLoading(false);
+    }
+  }, []);
 
-        setWeather({
-          temp: data.current.temperature_2m,
-          humidity: data.current.relative_humidity_2m,
-          precipitation: data.current.precipitation,
-          wind: data.current.wind_speed_10m,
-          code: data.current.weather_code,
-          isDay: data.current.is_day,
-        });
+  // Always detect and watch current location
+  useEffect(() => {
+    let watchId;
 
-        const dailyForecast = data.daily.time.map((time, i) => ({
-          date: new Date(time).toLocaleDateString("en-IN", {
-            weekday: "short",
-            day: "numeric",
-            month: "short",
-          }),
-          maxTemp: data.daily.temperature_2m_max[i],
-          minTemp: data.daily.temperature_2m_min[i],
-          code: data.daily.weather_code[i],
-          precip: data.daily.precipitation_sum[i],
-        }));
-        setForecast(dailyForecast);
+    const handleSuccess = (pos) => {
+      const { latitude, longitude } = pos.coords;
+      
+      // Only update if coords changed significantly or if we don't have coords yet
+      if (!coords || 
+          Math.abs(coords.lat - latitude) > 0.01 || 
+          Math.abs(coords.lon - longitude) > 0.01) {
+        setCoords({ lat: latitude, lon: longitude });
+        fetchWeather(latitude, longitude);
+      }
+    };
 
-        try {
-          const geoRes = await fetch(
-            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=10`,
-          );
-          const geoData = await geoRes.json();
-          const city =
-            geoData.address.city ||
-            geoData.address.town ||
-            geoData.address.state ||
-            "Local Area";
-          setLocationName(city);
-        } catch (e) {
-          console.error("Geocoding failed:", e);
-        }
-      } catch (error) {
-        console.error("Weather fetch failed:", error);
-      } finally {
-        setWeatherLoading(false);
+    const handleError = () => {
+      // Default to New Delhi if location access denied
+      if (!coords) {
+        fetchWeather(28.6139, 77.209);
       }
     };
 
     if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (pos) => fetchWeather(pos.coords.latitude, pos.coords.longitude),
-        () => fetchWeather(28.6139, 77.209), // Default to New Delhi
-      );
+      // Initial fetch
+      navigator.geolocation.getCurrentPosition(handleSuccess, handleError);
+      
+      // Background watching for location changes
+      watchId = navigator.geolocation.watchPosition(handleSuccess, handleError, {
+        enableHighAccuracy: false,
+        timeout: 10000,
+        maximumAge: 30000,
+      });
     } else {
       fetchWeather(28.6139, 77.209);
     }
-  }, []);
+
+    return () => {
+      if (watchId) navigator.geolocation.clearWatch(watchId);
+    };
+  }, [fetchWeather, coords]);
+
+  // Refresh weather when modal is opened to ensure intelligence
+  useEffect(() => {
+    if (isWeatherModalOpen && coords) {
+      fetchWeather(coords.lat, coords.lon);
+    }
+  }, [isWeatherModalOpen, coords, fetchWeather]);
 
   const getWeatherIcon = (code, isDay = 1) => {
     if (code === 0)
