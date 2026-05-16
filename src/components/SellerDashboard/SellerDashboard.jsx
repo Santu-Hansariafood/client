@@ -146,66 +146,68 @@ const CommodityItem = memo(({ item, totalQuantity, onAction, actionLabel }) => {
   const percentage = useMemo(() => Math.min((quantity / (totalQuantity || 1)) * 100, 100), [quantity, totalQuantity]);
 
   return (
-    <div className="group relative bg-white hover:bg-slate-50/50 p-8 rounded-[2.5rem] border border-slate-100 hover:border-emerald-200/50 transition-all duration-700 hover:shadow-xl hover:shadow-slate-200/30">
-      <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-8">
-        <div className="flex items-center gap-6">
-          <div className="h-20 w-20 rounded-[1.8rem] bg-emerald-50 border border-emerald-100 flex items-center justify-center shadow-sm group-hover:scale-110 group-hover:bg-emerald-500 group-hover:border-emerald-400 transition-all duration-700">
-            <span className="text-2xl font-black text-emerald-600 group-hover:text-white uppercase tracking-tighter italic transition-colors duration-700">
+    <div className="group relative bg-white hover:bg-slate-50/50 p-6 sm:p-8 rounded-[2.5rem] border border-slate-100 hover:border-emerald-200/50 transition-all duration-700 hover:shadow-xl hover:shadow-slate-200/30">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 sm:gap-8">
+        <div className="flex items-center gap-4 sm:gap-6">
+          <div className="h-16 w-16 sm:h-20 sm:w-20 rounded-[1.5rem] sm:rounded-[1.8rem] bg-emerald-50 border border-emerald-100 flex items-center justify-center shadow-sm group-hover:scale-110 group-hover:bg-emerald-500 group-hover:border-emerald-400 transition-all duration-700">
+            <span className="text-xl sm:text-2xl font-black text-emerald-600 group-hover:text-white uppercase tracking-tighter italic transition-colors duration-700">
               {item?._id?.substring(0, 2) || "CM"}
             </span>
           </div>
-          <div>
-            <h4 className="text-lg font-black text-slate-900 uppercase tracking-wider group-hover:text-emerald-700 transition-colors duration-500">
+          <div className="min-w-0 flex-1">
+            <h4 className="text-base sm:text-lg font-black text-slate-900 uppercase tracking-wider group-hover:text-emerald-700 transition-colors duration-500 truncate">
               {item?._id || "Other"}
             </h4>
-            <div className="flex items-center gap-3 mt-1.5">
-              <p className="text-xs font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2">
-                <FaHistory className="text-[10px]" /> {item?.trips || 0} Trips
+            <div className="flex items-center gap-2 sm:gap-3 mt-1.5">
+              <p className="text-[10px] sm:text-xs font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2 whitespace-nowrap">
+                <FaHistory className="text-[8px] sm:text-[10px]" /> {item?.trips || 0} Trips
               </p>
-              <span className="h-1.5 w-1.5 rounded-full bg-slate-200" />
-              <p className="text-xs font-black text-emerald-500 uppercase tracking-[0.2em]">Verified</p>
+              <span className="h-1 w-1 rounded-full bg-slate-200" />
+              <p className="text-[10px] sm:text-xs font-black text-emerald-500 uppercase tracking-[0.2em]">Verified</p>
             </div>
           </div>
         </div>
 
-        <div className="flex items-center gap-10 sm:gap-14 px-2">
-          <div className="text-right">
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.25em] mb-1.5">
+        <div className="flex flex-wrap items-center justify-between md:justify-end gap-4 sm:gap-10 lg:gap-14">
+          <div className="text-left md:text-right">
+            <p className="text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-[0.25em] mb-1.5">
               Volume x Rate
             </p>
-            <div className="flex items-center justify-end gap-2">
-              <span className="text-xl font-black text-slate-900 tracking-tight">{quantity.toFixed(2)} T</span>
+            <div className="flex items-center md:justify-end gap-2">
+              <span className="text-base sm:text-xl font-black text-slate-900 tracking-tight">{quantity.toFixed(2)} T</span>
               <span className="text-slate-300 font-bold italic">×</span>
-              <span className="text-base font-black text-indigo-600 bg-indigo-50 px-3 py-1 rounded-xl border border-indigo-100/50">₹{effectiveRate}</span>
+              <span className="text-sm sm:text-base font-black text-indigo-600 bg-indigo-50 px-2 sm:px-3 py-0.5 sm:py-1 rounded-lg sm:rounded-xl border border-indigo-100/50">₹{effectiveRate}</span>
             </div>
           </div>
-          <div className="text-right min-w-[160px] bg-slate-50 group-hover:bg-emerald-50 p-5 rounded-3xl border border-slate-100 group-hover:border-emerald-100 transition-all duration-700">
-            <p className="text-[10px] font-black text-slate-400 group-hover:text-emerald-600 uppercase tracking-[0.25em] mb-1.5 transition-colors">
+          
+          <div className="text-right min-w-[120px] sm:min-w-[160px] bg-slate-50 group-hover:bg-emerald-50 p-4 sm:p-5 rounded-2xl sm:rounded-3xl border border-slate-100 group-hover:border-emerald-100 transition-all duration-700">
+            <p className="text-[9px] sm:text-[10px] font-black text-slate-400 group-hover:text-emerald-600 uppercase tracking-[0.25em] mb-1 sm:mb-1.5 transition-colors">
               Net Earnings
             </p>
-            <p className="text-2xl font-black text-slate-900 group-hover:text-emerald-700 tracking-tighter transition-colors">
+            <p className="text-lg sm:text-2xl font-black text-slate-900 group-hover:text-emerald-700 tracking-tighter transition-colors">
               ₹{brokerage.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
             </p>
-            <p className="text-xs font-bold text-indigo-600 mt-1 uppercase tracking-tighter">
+            <p className="text-[10px] sm:text-xs font-bold text-indigo-600 mt-1 uppercase tracking-tighter">
               ₹{effectiveRate}/T
             </p>
           </div>
+
           {onAction && (
             <button 
               onClick={(e) => {
                 e.stopPropagation();
                 onAction(item?._id);
               }}
-              className="w-14 h-14 rounded-2xl bg-emerald-600 text-white shadow-lg shadow-emerald-200 flex items-center justify-center hover:bg-emerald-700 hover:scale-110 transition-all duration-300"
+              className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl bg-emerald-600 text-white shadow-lg shadow-emerald-200 flex items-center justify-center hover:bg-emerald-700 hover:scale-110 transition-all duration-300"
               title={actionLabel || "Download Invoice"}
             >
-              <FaDownload className="text-xl" />
+              <FaDownload className="text-lg sm:text-xl" />
             </button>
           )}
         </div>
       </div>
 
-      <div className="mt-10 h-2.5 w-full bg-slate-100 rounded-full overflow-hidden p-0.5 border border-slate-50">
+      <div className="mt-8 sm:mt-10 h-2 sm:h-2.5 w-full bg-slate-100 rounded-full overflow-hidden p-0.5 border border-slate-50">
         <div
           className="h-full bg-gradient-to-r from-indigo-500 via-emerald-500 to-teal-400 rounded-full transition-all duration-1000 ease-out shadow-[0_0_8px_rgba(16,185,129,0.3)]"
           style={{ width: `${percentage}%` }}
@@ -465,9 +467,9 @@ const SellerDashboard = () => {
             ))}
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+          <div className="grid grid-cols-1 xl:grid-cols-12 gap-10">
             {/* Main Content Area */}
-            <div className="lg:col-span-8 space-y-10 sm:space-y-14">
+            <div className="xl:col-span-9 space-y-10 sm:space-y-14">
               
               {/* Performance Grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -499,7 +501,7 @@ const SellerDashboard = () => {
                       <div className="p-2.5 bg-emerald-500 rounded-xl shadow-lg shadow-emerald-100">
                         <FaChartBar className="text-white text-lg" />
                       </div>
-                      <h3 className="text-2xl font-black text-slate-900 tracking-tight uppercase italic">
+                      <h3 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight uppercase italic">
                         Commodity Intelligence
                       </h3>
                     </div>
@@ -533,7 +535,7 @@ const SellerDashboard = () => {
               </div>
 
               {/* Company Breakdown Section */}
-              <div className="bg-white p-8 sm:p-10 rounded-[3rem] shadow-xl border border-slate-100 relative group overflow-hidden mt-10">
+              <div className="bg-white p-8 sm:p-12 rounded-[3rem] shadow-2xl shadow-slate-200/40 border border-slate-100 relative group overflow-hidden">
                 <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/5 rounded-full blur-[100px] pointer-events-none group-hover:bg-indigo-500/10 transition-all duration-700" />
                 
                 <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-12">
@@ -580,7 +582,7 @@ const SellerDashboard = () => {
             </div>
 
             {/* Sidebar Column */}
-            <div className="lg:col-span-4 space-y-10">
+            <div className="xl:col-span-3 space-y-10">
               {/* Quick Actions */}
               <div className="bg-white p-8 sm:p-10 rounded-[3rem] shadow-xl border border-slate-100 overflow-hidden relative group">
                 <div className="absolute -top-24 -right-24 w-64 h-64 bg-emerald-500/5 rounded-full blur-[100px] pointer-events-none group-hover:bg-emerald-500/10 transition-all duration-700" />
@@ -618,18 +620,6 @@ const SellerDashboard = () => {
                     </button>
                   ))}
                 </div>
-              </div>
-
-              {/* Info Widget */}
-              <div className="p-8 rounded-[2.5rem] bg-gradient-to-br from-indigo-600 to-blue-700 text-white relative overflow-hidden shadow-2xl">
-                <div className="absolute top-0 right-0 p-4 opacity-10">
-                  <FaBook size={80} />
-                </div>
-                <h4 className="text-lg font-black italic mb-2">Need Help?</h4>
-                <p className="text-indigo-100 text-xs font-medium leading-relaxed mb-6">Access documentation or contact support for any portal-related queries.</p>
-                <button className="w-full py-3 bg-white text-indigo-600 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-indigo-50 transition-colors shadow-lg">
-                  Support Center
-                </button>
               </div>
             </div>
           </div>
