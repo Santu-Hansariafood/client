@@ -1,345 +1,426 @@
-import React from 'react';
-import { Page, Text, View, Document, StyleSheet, Image, Font } from '@react-pdf/renderer';
-import logo from '../../assets/Hans.jpg';
+import React from "react";
+import {
+  Page,
+  Text,
+  View,
+  Document,
+  StyleSheet,
+  Image,
+} from "@react-pdf/renderer";
 
-// Standard fonts
-Font.register({
-  family: 'Roboto',
-  fonts: [
-    { src: 'https://cdnjs.cloudflare.com/ajax/libs/ink/3.1.10/fonts/Roboto/roboto-light-webfont.ttf', fontWeight: 300 },
-    { src: 'https://cdnjs.cloudflare.com/ajax/libs/ink/3.1.10/fonts/Roboto/roboto-regular-webfont.ttf', fontWeight: 400 },
-    { src: 'https://cdnjs.cloudflare.com/ajax/libs/ink/3.1.10/fonts/Roboto/roboto-medium-webfont.ttf', fontWeight: 500 },
-    { src: 'https://cdnjs.cloudflare.com/ajax/libs/ink/3.1.10/fonts/Roboto/roboto-bold-webfont.ttf', fontWeight: 700 },
-  ],
-});
+import logo from "../../assets/Hans.jpg";
 
 const styles = StyleSheet.create({
   page: {
-    padding: 30,
-    fontSize: 9,
-    fontFamily: 'Helvetica',
-    color: '#000',
-    backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: '#000',
-  },
-  tallyBorder: {
-    borderWidth: 1,
-    borderColor: '#000',
-    padding: 10,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    borderBottomWidth: 1,
-    borderBottomColor: '#000',
-    paddingBottom: 10,
-    marginBottom: 10,
-  },
-  logoContainer: {
-    width: '20%',
-  },
-  logo: {
-    width: 60,
-    height: 40,
-    objectFit: 'contain',
-  },
-  companyInfo: {
-    width: '80%',
-    textAlign: 'center',
-  },
-  companyTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginBottom: 2,
-  },
-  companyAddress: {
+    padding: 18,
     fontSize: 8,
-    lineHeight: 1.2,
+    fontFamily: "Courier",
+    color: "#000",
+    backgroundColor: "#fff",
   },
-  reportTitleContainer: {
+
+  outerBorder: {
+    borderWidth: 1,
+    borderColor: "#000",
+  },
+
+  header: {
+    flexDirection: "row",
     borderBottomWidth: 1,
-    borderBottomColor: '#000',
-    paddingBottom: 5,
-    marginBottom: 10,
-    textAlign: 'center',
+    borderColor: "#000",
+    padding: 6,
   },
-  reportTitle: {
-    fontSize: 12,
-    fontWeight: 'bold',
-    textTransform: 'uppercase',
+
+  logo: {
+    width: 55,
+    height: 55,
   },
-  detailsGrid: {
-    flexDirection: 'row',
-    borderBottomWidth: 1,
-    borderBottomColor: '#000',
-    paddingBottom: 8,
-    marginBottom: 0,
-  },
-  detailsColumn: {
+
+  companySection: {
     flex: 1,
-    paddingRight: 10,
+    textAlign: "center",
+    justifyContent: "center",
   },
-  detailItem: {
-    flexDirection: 'row',
+
+  companyName: {
+    fontSize: 14,
+    fontWeight: "bold",
+  },
+
+  companyAddress: {
+    fontSize: 7,
+    marginTop: 2,
+    lineHeight: 1.3,
+  },
+
+  title: {
+    borderBottomWidth: 1,
+    borderColor: "#000",
+    textAlign: "center",
+    padding: 5,
+    fontSize: 11,
+    fontWeight: "bold",
+  },
+
+  infoSection: {
+    flexDirection: "row",
+    borderBottomWidth: 1,
+    borderColor: "#000",
+  },
+
+  infoBox: {
+    flex: 1,
+    padding: 6,
+    minHeight: 70,
+  },
+
+  leftBox: {
+    borderRightWidth: 1,
+    borderColor: "#000",
+  },
+
+  label: {
+    fontWeight: "bold",
+  },
+
+  line: {
     marginBottom: 3,
   },
-  detailLabel: {
-    width: 70,
-    fontWeight: 'bold',
-    fontSize: 8,
-  },
-  detailValue: {
-    flex: 1,
-    fontSize: 8,
-  },
-  table: {
-    width: '100%',
-    marginTop: 0,
-    borderBottomWidth: 1,
-    borderBottomColor: '#000',
-  },
+
+  table: {},
+
   tableHeader: {
-    flexDirection: 'row',
+    flexDirection: "row",
     borderBottomWidth: 1,
-    borderBottomColor: '#000',
-    backgroundColor: '#f2f2f2',
+    borderColor: "#000",
+    backgroundColor: "#f3f3f3",
   },
-  tableHeaderCell: {
+
+  row: {
+    flexDirection: "row",
+    borderBottomWidth: 1,
+    borderColor: "#000",
+    minHeight: 22,
+    alignItems: "center",
+  },
+
+  cell: {
     padding: 4,
-    fontSize: 8,
-    fontWeight: 'bold',
-    textAlign: 'center',
     borderRightWidth: 1,
-    borderRightColor: '#000',
+    borderColor: "#000",
+    justifyContent: "center",
   },
-  tableRow: {
-    flexDirection: 'row',
+
+  headerText: {
+    fontWeight: "bold",
+    fontSize: 7.5,
+    textAlign: "center",
+  },
+
+  cellText: {
+    fontSize: 7.5,
+  },
+
+  rightText: {
+    textAlign: "right",
+  },
+
+  centerText: {
+    textAlign: "center",
+  },
+
+  totalRow: {
+    flexDirection: "row",
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-    minHeight: 20,
-    alignItems: 'center',
+    borderColor: "#000",
+    backgroundColor: "#f3f3f3",
+    minHeight: 24,
+    alignItems: "center",
   },
-  tableCell: {
-    padding: 4,
-    fontSize: 8,
-    textAlign: 'center',
-    borderRightWidth: 1,
-    borderRightColor: '#000',
-  },
-  summarySection: {
-    flexDirection: 'row',
+
+  amountWords: {
+    padding: 6,
     borderBottomWidth: 1,
-    borderBottomColor: '#000',
+    borderColor: "#000",
+    minHeight: 40,
   },
-  summaryLeft: {
-    flex: 3,
-    padding: 5,
-    borderRightWidth: 1,
-    borderRightColor: '#000',
-  },
-  summaryRight: {
-    flex: 1,
-    padding: 5,
-  },
-  amountInWords: {
-    padding: 5,
-    borderBottomWidth: 1,
-    borderBottomColor: '#000',
-    fontSize: 8,
-  },
+
   bankSection: {
-    padding: 5,
-    flexDirection: 'row',
+    flexDirection: "row",
+    minHeight: 100,
   },
-  bankTitle: {
-    fontSize: 8,
-    fontWeight: 'bold',
-    marginBottom: 4,
-    textDecoration: 'underline',
+
+  bankLeft: {
+    flex: 1,
+    padding: 6,
+    borderRightWidth: 1,
+    borderColor: "#000",
   },
-  signatureSection: {
-    marginTop: 20,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    padding: 10,
+
+  bankRight: {
+    flex: 1,
+    padding: 6,
+    textAlign: "right",
   },
+
   footer: {
-    position: 'absolute',
-    bottom: 10,
-    left: 30,
-    right: 30,
-    textAlign: 'center',
+    marginTop: 8,
+    textAlign: "center",
     fontSize: 7,
-    color: '#666',
-  }
+  },
 });
 
-const numberToWords = (num) => {
-  if (num === 0) return 'Zero';
-  const a = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
-  const b = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
-  
-  const inWords = (n) => {
-    if (n < 20) return a[n];
-    const d = Math.floor(n / 10);
-    const r = n % 10;
-    return b[d] + (r !== 0 ? ' ' + a[r] : '');
-  };
-
-  const convert = (n) => {
-    if (n === 0) return '';
-    if (n < 100) return inWords(n);
-    if (n < 1000) return a[Math.floor(n / 100)] + ' Hundred' + (n % 100 !== 0 ? ' and ' + convert(n % 100) : '');
-    if (n < 100000) return convert(Math.floor(n / 1000)) + ' Thousand' + (n % 1000 !== 0 ? ' ' + convert(n % 1000) : '');
-    if (n < 10000000) return convert(Math.floor(n / 100000)) + ' Lakh' + (n % 100000 !== 0 ? ' ' + convert(n % 100000) : '');
-    return convert(Math.floor(n / 10000000)) + ' Crore' + (n % 10000000 !== 0 ? ' ' + convert(n % 10000000) : '');
-  };
-
-  const whole = Math.floor(num);
-  const fraction = Math.round((num - whole) * 100);
-  
-  let res = convert(whole) + ' Rupees';
-  if (fraction > 0) {
-    res += ' and ' + convert(fraction) + ' Paise';
-  }
-  return res + ' Only';
+const numberToWords = (amount) => {
+  return `${amount.toLocaleString("en-IN")} Rupees Only`;
 };
 
-const ProformaInvoicePDF = ({ entries, company }) => {
-  const totalWeight = entries.reduce((sum, e) => sum + (e.unloadingWeight || 0), 0);
-  const totalLoadingWeight = entries.reduce((sum, e) => sum + (e.loadingWeight || 0), 0);
-  const totalBrokerage = entries.reduce((sum, e) => sum + (e.sellerBrokerage || 0), 0);
+const ProformaInvoicePDF = ({ entries = [], company = {} }) => {
+  const totalLoading = entries.reduce(
+    (sum, e) => sum + (e.loadingWeight || 0),
+    0,
+  );
+
+  const totalUnloading = entries.reduce(
+    (sum, e) => sum + (e.unloadingWeight || 0),
+    0,
+  );
+
+  const totalBrokerage = entries.reduce(
+    (sum, e) => sum + (e.sellerBrokerage || 0),
+    0,
+  );
 
   return (
     <Document>
       <Page size="A4" style={styles.page}>
-        {/* Header */}
-        <View style={styles.header}>
-          <View style={styles.logoContainer}>
+        <View style={styles.outerBorder}>
+          {/* HEADER */}
+          <View style={styles.header}>
             <Image src={logo} style={styles.logo} />
-          </View>
-          <View style={styles.companyInfo}>
-            <Text style={styles.companyTitle}>HANSARIA FOOD PRIVATE LIMITED</Text>
-            <Text style={styles.companyAddress}>
-              207, Maharshi Debendra Road, Kolkata - 700007{"\n"}
-              Phone: +91 33 2268 4567 | Email: info@hansariafood.com
-            </Text>
-          </View>
-        </View>
 
-        <View style={styles.reportTitleContainer}>
-          <Text style={styles.reportTitle}>Proforma Invoice / Performance Report</Text>
-        </View>
+            <View style={styles.companySection}>
+              <Text style={styles.companyName}>
+                HANSARIA FOOD PRIVATE LIMITED
+              </Text>
 
-        {/* Details Grid */}
-        <View style={styles.detailsGrid}>
-          <View style={styles.detailsColumn}>
-            <View style={styles.detailItem}>
-              <Text style={styles.detailLabel}>Seller Name:</Text>
-              <Text style={styles.detailValue}>{company.companyName}</Text>
-            </View>
-            <View style={styles.detailItem}>
-              <Text style={styles.detailLabel}>Address:</Text>
-              <Text style={styles.detailValue}>
-                {company.address || 'N/A'}{"\n"}
-                {company.district ? company.district + ', ' : ''}{company.state || ''}
+              <Text style={styles.companyAddress}>
+                207, Maharshi Debendra Road, Kolkata - 700007{"\n"}
+                Phone: +91 33 2268 4567{"\n"}
+                Email: info@hansariafood.com
               </Text>
             </View>
           </View>
-          <View style={[styles.detailsColumn, { borderLeftWidth: 1, borderLeftColor: '#000', paddingLeft: 10 }]}>
-            <View style={styles.detailItem}>
-              <Text style={styles.detailLabel}>Report No:</Text>
-              <Text style={styles.detailValue}>HF/PR/{new Date().getFullYear()}/{Math.floor(Math.random() * 1000)}</Text>
-            </View>
-            <View style={styles.detailItem}>
-              <Text style={styles.detailLabel}>Dated:</Text>
-              <Text style={styles.detailValue}>{new Date().toLocaleDateString('en-IN')}</Text>
-            </View>
-            <View style={styles.detailItem}>
-              <Text style={styles.detailLabel}>GSTIN:</Text>
-              <Text style={styles.detailValue}>{company.gstNo || 'N/A'}</Text>
-            </View>
-          </View>
-        </View>
 
-        {/* Table */}
-        <View style={styles.table}>
-          <View style={styles.tableHeader}>
-            <Text style={[styles.tableHeaderCell, { width: '10%' }]}>S.No</Text>
-            <Text style={[styles.tableHeaderCell, { width: '15%' }]}>Sauda No</Text>
-            <Text style={[styles.tableHeaderCell, { width: '15%' }]}>Lorry No</Text>
-            <Text style={[styles.tableHeaderCell, { width: '12%' }]}>Load Qty</Text>
-            <Text style={[styles.tableHeaderCell, { width: '12%' }]}>Unload Qty</Text>
-            <Text style={[styles.tableHeaderCell, { width: '12%' }]}>Commodity</Text>
-            <Text style={[styles.tableHeaderCell, { width: '12%' }]}>Rate/T</Text>
-            <Text style={[styles.tableHeaderCell, { width: '12%', borderRightWidth: 0 }]}>Brokerage</Text>
+          {/* TITLE */}
+          <View style={styles.title}>
+            <Text>PROFORMA INVOICE</Text>
           </View>
-          {entries.map((entry, index) => {
-            const ratePerTon = entry.unloadingWeight > 0 ? (entry.sellerBrokerage / entry.unloadingWeight).toFixed(2) : '0.00';
-            return (
-              <View style={styles.tableRow} key={index}>
-                <Text style={[styles.tableCell, { width: '10%' }]}>{index + 1}</Text>
-                <Text style={[styles.tableCell, { width: '15%' }]}>{entry.saudaNo || '-'}</Text>
-                <Text style={[styles.tableCell, { width: '15%' }]}>{entry.lorryNumber}</Text>
-                <Text style={[styles.tableCell, { width: '12%' }]}>{entry.loadingWeight?.toFixed(2) || '0.00'}</Text>
-                <Text style={[styles.tableCell, { width: '12%' }]}>{entry.unloadingWeight?.toFixed(2) || '0.00'}</Text>
-                <Text style={[styles.tableCell, { width: '12%' }]}>{entry.commodity}</Text>
-                <Text style={[styles.tableCell, { width: '12%' }]}>{ratePerTon}</Text>
-                <Text style={[styles.tableCell, { width: '12%', borderRightWidth: 0, textAlign: 'right' }]}>
-                  {entry.sellerBrokerage?.toFixed(2)}
+
+          {/* INFO SECTION */}
+          <View style={styles.infoSection}>
+            <View style={[styles.infoBox, styles.leftBox]}>
+              <Text style={styles.line}>
+                <Text style={styles.label}>Seller :</Text>{" "}
+                {company.companyName || "-"}
+              </Text>
+
+              <Text style={styles.line}>
+                <Text style={styles.label}>Address :</Text>{" "}
+                {company.address || "-"}
+              </Text>
+
+              <Text style={styles.line}>
+                <Text style={styles.label}>GSTIN :</Text> {company.gstNo || "-"}
+              </Text>
+            </View>
+
+            <View style={styles.infoBox}>
+              <Text style={styles.line}>
+                <Text style={styles.label}>Invoice No :</Text> HF/
+                {new Date().getFullYear()}/{Math.floor(Math.random() * 1000)}
+              </Text>
+
+              <Text style={styles.line}>
+                <Text style={styles.label}>Date :</Text>{" "}
+                {new Date().toLocaleDateString("en-IN")}
+              </Text>
+            </View>
+          </View>
+
+          {/* TABLE */}
+          <View style={styles.table}>
+            <View style={styles.tableHeader}>
+              <View style={[styles.cell, { width: "5%" }]}>
+                <Text style={styles.headerText}>#</Text>
+              </View>
+
+              <View style={[styles.cell, { width: "12%" }]}>
+                <Text style={styles.headerText}>Sauda</Text>
+              </View>
+
+              <View style={[styles.cell, { width: "14%" }]}>
+                <Text style={styles.headerText}>Lorry</Text>
+              </View>
+
+              <View style={[styles.cell, { width: "12%" }]}>
+                <Text style={styles.headerText}>Load Qty</Text>
+              </View>
+
+              <View style={[styles.cell, { width: "12%" }]}>
+                <Text style={styles.headerText}>Unload Qty</Text>
+              </View>
+
+              <View style={[styles.cell, { width: "20%" }]}>
+                <Text style={styles.headerText}>Commodity</Text>
+              </View>
+
+              <View style={[styles.cell, { width: "10%" }]}>
+                <Text style={styles.headerText}>Rate</Text>
+              </View>
+
+              <View
+                style={[styles.cell, { width: "15%", borderRightWidth: 0 }]}
+              >
+                <Text style={styles.headerText}>Brokerage</Text>
+              </View>
+            </View>
+
+            {entries.map((entry, index) => {
+              const rate =
+                entry.unloadingWeight > 0
+                  ? (entry.sellerBrokerage / entry.unloadingWeight).toFixed(2)
+                  : "0.00";
+
+              return (
+                <View style={styles.row} key={index}>
+                  <View style={[styles.cell, { width: "5%" }]}>
+                    <Text style={styles.cellText}>{index + 1}</Text>
+                  </View>
+
+                  <View style={[styles.cell, { width: "12%" }]}>
+                    <Text style={styles.cellText}>{entry.saudaNo || "-"}</Text>
+                  </View>
+
+                  <View style={[styles.cell, { width: "14%" }]}>
+                    <Text style={styles.cellText}>
+                      {entry.lorryNumber || "-"}
+                    </Text>
+                  </View>
+
+                  <View style={[styles.cell, { width: "12%" }]}>
+                    <Text style={[styles.cellText, styles.rightText]}>
+                      {entry.loadingWeight?.toFixed(2)}
+                    </Text>
+                  </View>
+
+                  <View style={[styles.cell, { width: "12%" }]}>
+                    <Text style={[styles.cellText, styles.rightText]}>
+                      {entry.unloadingWeight?.toFixed(2)}
+                    </Text>
+                  </View>
+
+                  <View style={[styles.cell, { width: "20%" }]}>
+                    <Text style={styles.cellText}>{entry.commodity}</Text>
+                  </View>
+
+                  <View style={[styles.cell, { width: "10%" }]}>
+                    <Text style={[styles.cellText, styles.rightText]}>
+                      {rate}
+                    </Text>
+                  </View>
+
+                  <View
+                    style={[
+                      styles.cell,
+                      {
+                        width: "15%",
+                        borderRightWidth: 0,
+                      },
+                    ]}
+                  >
+                    <Text style={[styles.cellText, styles.rightText]}>
+                      {entry.sellerBrokerage?.toFixed(2)}
+                    </Text>
+                  </View>
+                </View>
+              );
+            })}
+
+            {/* TOTAL ROW */}
+            <View style={styles.totalRow}>
+              <View style={[styles.cell, { width: "31%" }]}>
+                <Text style={styles.headerText}>GRAND TOTAL</Text>
+              </View>
+
+              <View style={[styles.cell, { width: "12%" }]}>
+                <Text style={styles.headerText}>{totalLoading.toFixed(2)}</Text>
+              </View>
+
+              <View style={[styles.cell, { width: "12%" }]}>
+                <Text style={styles.headerText}>
+                  {totalUnloading.toFixed(2)}
                 </Text>
               </View>
-            );
-          })}
-        </View>
 
-        {/* Summary Table-like Bottom */}
-        <View style={styles.summarySection}>
-          <View style={styles.summaryLeft}>
-            <Text style={{ fontSize: 8, fontWeight: 'bold' }}>Total:</Text>
-          </View>
-          <View style={[styles.tableCell, { width: '12%', borderRightWidth: 1 }]}>
-            <Text style={{ fontWeight: 'bold' }}>{totalLoadingWeight.toFixed(2)}</Text>
-          </View>
-          <View style={[styles.tableCell, { width: '12%', borderRightWidth: 1 }]}>
-            <Text style={{ fontWeight: 'bold' }}>{totalWeight.toFixed(2)}</Text>
-          </View>
-          <View style={[styles.tableCell, { width: '24%', borderRightWidth: 1 }]}>
-            <Text></Text>
-          </View>
-          <View style={[styles.tableCell, { width: '12%', borderRightWidth: 0, textAlign: 'right' }]}>
-            <Text style={{ fontWeight: 'bold' }}>Rs. {totalBrokerage.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</Text>
-          </View>
-        </View>
+              <View style={[styles.cell, { width: "20%" }]}>
+                <Text></Text>
+              </View>
 
-        {/* Amount in Words */}
-        <View style={styles.amountInWords}>
-          <Text style={{ fontWeight: 'bold', marginBottom: 2 }}>Amount Chargeable (in words):</Text>
-          <Text style={{ textTransform: 'capitalize' }}>{numberToWords(totalBrokerage)}</Text>
-        </View>
+              <View style={[styles.cell, { width: "10%" }]}>
+                <Text></Text>
+              </View>
 
-        {/* Bank & Signature */}
-        <View style={{ flexDirection: 'row', height: 100 }}>
-          <View style={{ flex: 1, borderRightWidth: 1, borderColor: '#000', padding: 5 }}>
-            <Text style={styles.bankTitle}>Bank Details:</Text>
-            <Text style={{ fontSize: 7 }}>A/c Name : HANSARIA FOOD PRIVATE LIMITED</Text>
-            <Text style={{ fontSize: 7 }}>A/c No.   : [PROVIDE ACCOUNT NO]</Text>
-            <Text style={{ fontSize: 7 }}>Bank Name: [PROVIDE BANK NAME]</Text>
-            <Text style={{ fontSize: 7 }}>IFSC Code: [PROVIDE IFSC]</Text>
+              <View
+                style={[
+                  styles.cell,
+                  {
+                    width: "15%",
+                    borderRightWidth: 0,
+                  },
+                ]}
+              >
+                <Text style={styles.headerText}>
+                  ₹{totalBrokerage.toFixed(2)}
+                </Text>
+              </View>
+            </View>
           </View>
-          <View style={{ flex: 1, padding: 5, textAlign: 'right' }}>
-            <Text style={{ fontSize: 8, fontWeight: 'bold' }}>for HANSARIA FOOD PRIVATE LIMITED</Text>
-            <View style={{ marginTop: 40 }}>
-              <Text style={{ fontSize: 8, fontWeight: 'bold' }}>Authorised Signatory</Text>
+
+          {/* AMOUNT WORDS */}
+          <View style={styles.amountWords}>
+            <Text>
+              <Text style={styles.label}>Amount in Words :</Text>{" "}
+              {numberToWords(totalBrokerage)}
+            </Text>
+          </View>
+
+          {/* BANK + SIGNATURE */}
+          <View style={styles.bankSection}>
+            <View style={styles.bankLeft}>
+              <Text style={{ fontWeight: "bold", marginBottom: 5 }}>
+                Bank Details
+              </Text>
+
+              <Text>A/c Name : HANSARIA FOOD PRIVATE LIMITED</Text>
+              <Text>A/c No. : XXXXXXXXXXXX</Text>
+              <Text>Bank : XXXXXXXXXXXX</Text>
+              <Text>IFSC : XXXXXXXX</Text>
+            </View>
+
+            <View style={styles.bankRight}>
+              <Text style={{ fontWeight: "bold" }}>
+                for HANSARIA FOOD PRIVATE LIMITED
+              </Text>
+
+              <View style={{ marginTop: 45 }}>
+                <Text>Authorised Signatory</Text>
+              </View>
             </View>
           </View>
         </View>
 
-        {/* Footer */}
         <View style={styles.footer}>
-          <Text>This is a Computer Generated Report</Text>
-          <Text render={({ pageNumber, totalPages }) => `Page ${pageNumber} of ${totalPages}`} />
+          <Text>This is a Computer Generated Invoice</Text>
         </View>
       </Page>
     </Document>
