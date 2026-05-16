@@ -86,6 +86,7 @@ HeaderSection.propTypes = {
   totalBrokerage: PropTypes.number,
 };
 
+// eslint-disable-next-line react/display-name
 const InsightCard = memo(({ title, subtitle, value, unit, icon: Icon, colorClass, footerText }) => (
   <div className="relative group overflow-hidden bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-xl shadow-slate-200/20 transition-all duration-700 hover:shadow-2xl hover:-translate-y-2 active:scale-[0.98]">
     <div className={`absolute top-0 right-0 w-32 h-32 opacity-0 group-hover:opacity-10 rounded-full blur-3xl -mr-16 -mt-16 transition-opacity duration-700 ${colorClass}`} />
@@ -134,6 +135,7 @@ InsightCard.propTypes = {
   footerText: PropTypes.string,
 };
 
+// eslint-disable-next-line react/display-name
 const CommodityItem = memo(({ item, totalQuantity }) => {
   const brokerage = item?.brokerage || 0;
   const quantity = item?.quantity || 0;

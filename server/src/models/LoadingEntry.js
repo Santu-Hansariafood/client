@@ -1,5 +1,13 @@
 import mongoose from "mongoose";
 
+const formatName = (name) => {
+  if (!name) return name;
+  return name
+    .toLowerCase()
+    .replace(/\b\w/g, (char) => char.toUpperCase())
+    .trim();
+};
+
 const loadingEntrySchema = new mongoose.Schema(
   {
     loadingDate: { type: Date, required: true },
@@ -22,7 +30,7 @@ const loadingEntrySchema = new mongoose.Schema(
       ref: "Seller",
       required: true,
     },
-    supplierCompany: { type: String, default: "" },
+    supplierCompany: { type: String, default: "", set: formatName },
     consignee: { type: String, required: true },
     buyerCompany: { type: String, default: "" },
     commodity: { type: String, default: "" },

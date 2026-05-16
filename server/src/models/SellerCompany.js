@@ -11,9 +11,17 @@ const bankDetailSchema = new mongoose.Schema(
   { _id: false },
 );
 
+const formatName = (name) => {
+  if (!name) return name;
+  return name
+    .toLowerCase()
+    .replace(/\b\w/g, (char) => char.toUpperCase())
+    .trim();
+};
+
 const sellerCompanySchema = new mongoose.Schema(
   {
-    companyName: { type: String, required: true, trim: true },
+    companyName: { type: String, required: true, trim: true, set: formatName },
     gstNo: { type: String, required: true, trim: true },
     panNo: { type: String, required: true, trim: true },
     aadhaarNo: { type: String, default: "", trim: true },

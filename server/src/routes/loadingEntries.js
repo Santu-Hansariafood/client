@@ -25,6 +25,21 @@ const toObjectId = (value) =>
     ? new mongoose.Types.ObjectId(value)
     : null;
 
+const getSellerBrokerage = async (supplierId, commodityName) => {
+  if (!supplierId || !commodityName) return 0;
+  try {
+    const seller = await Seller.findById(supplierId);
+    if (!seller || !seller.commodities) return 0;
+    const commodity = seller.commodities.find(
+      (c) => c.name.toLowerCase() === commodityName.toLowerCase(),
+    );
+    return commodity ? commodity.brokerage : 0;
+  } catch (error) {
+    console.error("Error fetching seller brokerage:", error);
+    return 0;
+  }
+};
+
 const computePendingForSelfOrder = (order) => {
   const quantity = Number(order.quantity || 0);
   let pendingQuantity = order.pendingQuantity;
@@ -1154,18 +1169,27 @@ router.post("/bulk", async (req, res) => {
 
     const selfOrder = await SelfOrder.findOne({ saudaNo });
 
-    const processedEntries = entries.map((entry) => {
-      const newEntry = { ...entry };
-      if (selfOrder && entry.unloadingWeight) {
-        const uWeight = parseFloat(entry.unloadingWeight) || 0;
-        const buyerRate = selfOrder.buyerBrokerage?.brokerageBuyer || 0;
-        const sellerRate = selfOrder.buyerBrokerage?.brokerageSupplier || 0;
+    const processedEntries = await Promise.all(
+      entries.map(async (entry) => {
+        const newEntry = { ...entry };
+        if (selfOrder && entry.unloadingWeight) {
+          const uWeight = parseFloat(entry.unloadingWeight) || 0;
+          const buyerRate = selfOrder.buyerBrokerage?.brokerageBuyer || 0;
+          let sellerRate = selfOrder.buyerBrokerage?.brokerageSupplier || 0;
 
-        newEntry.buyerBrokerage = +(uWeight * buyerRate).toFixed(2);
-        newEntry.sellerBrokerage = +(uWeight * sellerRate).toFixed(2);
-      }
-      return newEntry;
-    });
+          if (sellerRate === 0 && selfOrder.supplier && selfOrder.commodity) {
+            sellerRate = await getSellerBrokerage(
+              selfOrder.supplier,
+              selfOrder.commodity,
+            );
+          }
+
+          newEntry.buyerBrokerage = +(uWeight * buyerRate).toFixed(2);
+          newEntry.sellerBrokerage = +(uWeight * sellerRate).toFixed(2);
+        }
+        return newEntry;
+      }),
+    );
 
     const savedEntries = await LoadingEntry.insertMany(processedEntries);
 
@@ -1205,7 +1229,15 @@ router.post("/", async (req, res) => {
     if (selfOrder && data.unloadingWeight) {
       const uWeight = parseFloat(data.unloadingWeight) || 0;
       const buyerRate = selfOrder.buyerBrokerage?.brokerageBuyer || 0;
-      const sellerRate = selfOrder.buyerBrokerage?.brokerageSupplier || 0;
+      let sellerRate = selfOrder.buyerBrokerage?.brokerageSupplier || 0;
+
+      if (sellerRate === 0 && selfOrder.supplier && selfOrder.commodity) {
+        sellerRate = await getSellerBrokerage(
+          selfOrder.supplier,
+          selfOrder.commodity,
+        );
+      }
+
       data.buyerBrokerage = +(uWeight * buyerRate).toFixed(2);
       data.sellerBrokerage = +(uWeight * sellerRate).toFixed(2);
     }
@@ -1249,7 +1281,15 @@ router.put("/:id", async (req, res) => {
     if (selfOrder && data.unloadingWeight) {
       const uWeight = parseFloat(data.unloadingWeight) || 0;
       const buyerRate = selfOrder.buyerBrokerage?.brokerageBuyer || 0;
-      const sellerRate = selfOrder.buyerBrokerage?.brokerageSupplier || 0;
+      let sellerRate = selfOrder.buyerBrokerage?.brokerageSupplier || 0;
+
+      if (sellerRate === 0 && selfOrder.supplier && selfOrder.commodity) {
+        sellerRate = await getSellerBrokerage(
+          selfOrder.supplier,
+          selfOrder.commodity,
+        );
+      }
+
       data.buyerBrokerage = +(uWeight * buyerRate).toFixed(2);
       data.sellerBrokerage = +(uWeight * sellerRate).toFixed(2);
     }

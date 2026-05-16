@@ -230,36 +230,92 @@ router.get("/seller/stats", async (req, res) => {
         },
       },
       {
+        $lookup: {
+          from: "sellers",
+          localField: "supplier",
+          foreignField: "_id",
+          as: "sellerInfo",
+        },
+      },
+      { $unwind: { path: "$sellerInfo", preserveNullAndEmptyArrays: true } },
+      { $unwind: { path: "$loadingEntries", preserveNullAndEmptyArrays: false } },
+      {
+        $addFields: {
+          sellerRate: {
+            $let: {
+              vars: {
+                saudaRate: { $ifNull: ["$buyerBrokerage.brokerageSupplier", 0] },
+                sellerCommodity: {
+                  $filter: {
+                    input: { $ifNull: ["$sellerInfo.commodities", []] },
+                    as: "c",
+                    cond: { $eq: [{ $toLower: "$$c.name" }, { $toLower: "$commodity" }] },
+                  },
+                },
+              },
+              in: {
+                $cond: {
+                  if: { $gt: ["$$saudaRate", 0] },
+                  then: "$$saudaRate",
+                  else: { $ifNull: [{ $arrayElemAt: ["$$sellerCommodity.brokerage", 0] }, 0] },
+                },
+              },
+            },
+          },
+        },
+      },
+      {
+        $addFields: {
+          calculatedBrokerage: {
+            $cond: {
+              if: { $gt: ["$loadingEntries.sellerBrokerage", 0] },
+              then: "$loadingEntries.sellerBrokerage",
+              else: {
+                $multiply: [
+                  { $ifNull: ["$loadingEntries.unloadingWeight", 0] },
+                  "$sellerRate",
+                ],
+              },
+            },
+          },
+        },
+      },
+      {
         $facet: {
           totals: [
             {
               $group: {
                 _id: null,
-                totalBrokerage: { $sum: { $sum: "$loadingEntries.sellerBrokerage" } },
-                totalUnloadingWeight: { $sum: { $sum: "$loadingEntries.unloadingWeight" } },
-                totalSaudas: { $sum: 1 },
+                totalBrokerage: { $sum: "$calculatedBrokerage" },
+                totalUnloadingWeight: { $sum: "$loadingEntries.unloadingWeight" },
+                totalSaudas: { $addToSet: "$_id" },
+              },
+            },
+            {
+              $project: {
+                totalBrokerage: 1,
+                totalUnloadingWeight: 1,
+                totalSaudas: { $size: "$totalSaudas" },
               },
             },
           ],
           commodityBreakdown: [
-            { $unwind: { path: "$loadingEntries", preserveNullAndEmptyArrays: false } },
             {
               $group: {
                 _id: "$commodity",
                 quantity: { $sum: "$loadingEntries.unloadingWeight" },
-                brokerage: { $sum: "$loadingEntries.sellerBrokerage" },
+                brokerage: { $sum: "$calculatedBrokerage" },
                 trips: { $sum: 1 },
               },
             },
             { $sort: { quantity: -1 } },
           ],
           companyBreakdown: [
-            { $unwind: { path: "$loadingEntries", preserveNullAndEmptyArrays: false } },
             {
               $group: {
                 _id: "$supplierCompany",
                 quantity: { $sum: "$loadingEntries.unloadingWeight" },
-                brokerage: { $sum: "$loadingEntries.sellerBrokerage" },
+                brokerage: { $sum: "$calculatedBrokerage" },
                 trips: { $sum: 1 },
               },
             },
@@ -338,11 +394,6 @@ router.get("/pending/summary", async (req, res) => {
         },
       },
       {
-        $addFields: {
-          unloadingWeight: { $sum: "$loadingEntries.unloadingWeight" },
-        },
-      },
-      {
         $lookup: {
           from: "sellers",
           localField: "supplier",
@@ -354,6 +405,32 @@ router.get("/pending/summary", async (req, res) => {
         $unwind: {
           path: "$sellerDetails",
           preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $addFields: {
+          unloadingWeight: { $sum: "$loadingEntries.unloadingWeight" },
+          sellerRate: {
+            $let: {
+              vars: {
+                saudaRate: { $ifNull: ["$buyerBrokerage.brokerageSupplier", 0] },
+                sellerCommodity: {
+                  $filter: {
+                    input: { $ifNull: ["$sellerDetails.commodities", []] },
+                    as: "c",
+                    cond: { $eq: [{ $toLower: "$$c.name" }, { $toLower: "$commodity" }] },
+                  },
+                },
+              },
+              in: {
+                $cond: {
+                  if: { $gt: ["$$saudaRate", 0] },
+                  then: "$$saudaRate",
+                  else: { $ifNull: [{ $arrayElemAt: ["$$sellerCommodity.brokerage", 0] }, 0] },
+                },
+              },
+            },
+          },
         },
       },
       {
@@ -373,16 +450,13 @@ router.get("/pending/summary", async (req, res) => {
             $sum: {
               $multiply: [
                 { $ifNull: ["$pendingQuantity", "$quantity"] },
-                { $ifNull: ["$buyerBrokerage.brokerageSupplier", 0] },
+                "$sellerRate",
               ],
             },
           },
           totalLoadedBrokerage: {
             $sum: {
-              $multiply: [
-                "$unloadingWeight",
-                { $ifNull: ["$buyerBrokerage.brokerageSupplier", 0] },
-              ],
+              $multiply: ["$unloadingWeight", "$sellerRate"],
             },
           },
           saudaCount: { $sum: 1 },

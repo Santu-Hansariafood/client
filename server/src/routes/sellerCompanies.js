@@ -27,8 +27,19 @@ router.get("/", async (req, res) => {
       {
         $lookup: {
           from: "loadingentries",
-          localField: "companyName",
-          foreignField: "supplierCompany",
+          let: { compName: "$companyName" },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $eq: [
+                    { $trim: { input: { $toLower: "$supplierCompany" } } },
+                    { $trim: { input: { $toLower: "$$compName" } } },
+                  ],
+                },
+              },
+            },
+          ],
           as: "loadingEntries",
         },
       },
