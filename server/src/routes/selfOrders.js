@@ -215,24 +215,41 @@ router.get("/seller/stats", async (req, res) => {
         },
       },
       {
-        $addFields: {
-          totalUnloadingWeight: { $sum: "$loadingEntries.unloadingWeight" },
-          totalBrokerage: { $sum: "$loadingEntries.sellerBrokerage" },
-        },
-      },
-      {
-        $group: {
-          _id: null,
-          totalBrokerage: { $sum: "$totalBrokerage" },
-          totalUnloadingWeight: { $sum: "$totalUnloadingWeight" },
-          totalSaudas: { $sum: 1 },
+        $facet: {
+          totals: [
+            {
+              $group: {
+                _id: null,
+                totalBrokerage: { $sum: { $sum: "$loadingEntries.sellerBrokerage" } },
+                totalUnloadingWeight: { $sum: { $sum: "$loadingEntries.unloadingWeight" } },
+                totalSaudas: { $sum: 1 },
+              },
+            },
+          ],
+          commodityBreakdown: [
+            { $unwind: { path: "$loadingEntries", preserveNullAndEmptyArrays: false } },
+            {
+              $group: {
+                _id: "$commodity",
+                quantity: { $sum: "$loadingEntries.unloadingWeight" },
+                brokerage: { $sum: "$loadingEntries.sellerBrokerage" },
+                trips: { $sum: 1 },
+              },
+            },
+            { $sort: { quantity: -1 } },
+          ],
         },
       },
     ]);
 
-    res.json(
-      stats[0] || { totalBrokerage: 0, totalUnloadingWeight: 0, totalSaudas: 0 },
-    );
+    const result = {
+      totalBrokerage: stats[0]?.totals[0]?.totalBrokerage || 0,
+      totalUnloadingWeight: stats[0]?.totals[0]?.totalUnloadingWeight || 0,
+      totalSaudas: stats[0]?.totals[0]?.totalSaudas || 0,
+      commodityBreakdown: stats[0]?.commodityBreakdown || [],
+    };
+
+    res.json(result);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

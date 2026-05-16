@@ -1,7 +1,7 @@
 import { useEffect, useState, lazy, Suspense } from "react";
 import api from "../../utils/apiClient/apiClient";
 import { toast } from "react-toastify";
-import { FaGavel, FaBoxOpen, FaChevronRight, FaBook } from "react-icons/fa";
+import { FaGavel, FaBoxOpen, FaChevronRight, FaBook, FaChartBar } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext/AuthContext";
 import { useNotifications } from "../../context/NotificationContext/NotificationContext";
@@ -31,6 +31,7 @@ const SellerDashboard = () => {
   const [pendingSaudaCount, setPendingSaudaCount] = useState(0);
   const [totalBrokerage, setTotalBrokerage] = useState(0);
   const [totalQuantity, setTotalQuantity] = useState(0);
+  const [commodityBreakdown, setCommodityBreakdown] = useState([]);
   const [showPopup, setShowPopup] = useState(false);
 
   useEffect(() => {
@@ -102,6 +103,7 @@ const SellerDashboard = () => {
         setPendingSaudaCount(pendingTotal);
         setTotalBrokerage(statsRes.data?.totalBrokerage || 0);
         setTotalQuantity(statsRes.data?.totalUnloadingWeight || 0);
+        setCommodityBreakdown(statsRes.data?.commodityBreakdown || []);
       } catch (err) {
         console.error(err);
         toast.error("Error loading dashboard");
@@ -216,63 +218,169 @@ const SellerDashboard = () => {
             ))}
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="lg:col-span-2 space-y-8">
               {/* Performance Overview Section */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="relative group overflow-hidden bg-gradient-to-br from-indigo-600 to-blue-700 p-8 rounded-[2.5rem] shadow-2xl shadow-indigo-200 transition-all duration-500 hover:scale-[1.02]">
-                  <div className="absolute -top-12 -right-12 w-48 h-48 bg-white/10 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-700" />
+                <div className="relative group overflow-hidden bg-slate-900 p-8 rounded-[2.5rem] shadow-2xl transition-all duration-500 hover:shadow-indigo-500/10">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-indigo-500/20 transition-colors" />
                   <div className="relative z-10">
-                    <div className="flex items-center gap-4 mb-6">
-                      <div className="p-3 bg-white/20 rounded-2xl backdrop-blur-md">
-                        <FaBoxOpen className="text-white text-2xl" />
+                    <div className="flex items-center gap-4 mb-8">
+                      <div className="p-3.5 bg-indigo-500/10 rounded-2xl border border-indigo-500/20">
+                        <FaBoxOpen className="text-indigo-400 text-2xl" />
                       </div>
-                      <h3 className="text-white/80 font-black text-xs uppercase tracking-[0.3em]">
-                        Total Unloading Quantity
-                      </h3>
+                      <div>
+                        <h3 className="text-indigo-400 font-black text-[10px] uppercase tracking-[0.3em]">
+                          Volume Intelligence
+                        </h3>
+                        <p className="text-white/40 text-[10px] font-bold uppercase tracking-widest mt-1">
+                          Consolidated Load
+                        </p>
+                      </div>
                     </div>
                     <div className="flex items-baseline gap-3">
-                      <span className="text-4xl sm:text-5xl font-black text-white tracking-tighter">
+                      <span className="text-5xl font-black text-white tracking-tighter">
                         {totalQuantity.toFixed(2)}
                       </span>
-                      <span className="text-xl font-bold text-white/60">Tons</span>
+                      <span className="text-lg font-black text-slate-500 uppercase tracking-widest">
+                        Tons
+                      </span>
                     </div>
-                    <div className="mt-8 flex items-center gap-2">
-                      <div className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                      <p className="text-[10px] font-bold text-white/50 uppercase tracking-widest">
-                        Live Unloading Status
-                      </p>
+                    <div className="mt-8 pt-6 border-t border-white/5 flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="h-1.5 w-1.5 rounded-full bg-indigo-500 animate-pulse" />
+                        <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
+                          Real-time Sync
+                        </span>
+                      </div>
+                      <span className="text-[10px] font-black text-indigo-400/60 uppercase tracking-[0.2em]">
+                        Total Unloading
+                      </span>
                     </div>
                   </div>
                 </div>
 
-                <div className="relative group overflow-hidden bg-gradient-to-br from-emerald-600 to-teal-700 p-8 rounded-[2.5rem] shadow-2xl shadow-emerald-200 transition-all duration-500 hover:scale-[1.02]">
-                  <div className="absolute -bottom-12 -left-12 w-48 h-48 bg-white/10 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-700" />
+                <div className="relative group overflow-hidden bg-slate-900 p-8 rounded-[2.5rem] shadow-2xl transition-all duration-500 hover:shadow-emerald-500/10">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-emerald-500/20 transition-colors" />
                   <div className="relative z-10">
-                    <div className="flex items-center gap-4 mb-6">
-                      <div className="p-3 bg-white/20 rounded-2xl backdrop-blur-md">
-                        <FaBook className="text-white text-2xl" />
+                    <div className="flex items-center gap-4 mb-8">
+                      <div className="p-3.5 bg-emerald-500/10 rounded-2xl border border-emerald-500/20">
+                        <FaBook className="text-emerald-400 text-2xl" />
                       </div>
-                      <h3 className="text-white/80 font-black text-xs uppercase tracking-[0.3em]">
-                        Total Brokerage Earned
-                      </h3>
+                      <div>
+                        <h3 className="text-emerald-400 font-black text-[10px] uppercase tracking-[0.3em]">
+                          Financial Matrix
+                        </h3>
+                        <p className="text-white/40 text-[10px] font-bold uppercase tracking-widest mt-1">
+                          Brokerage Earnings
+                        </p>
+                      </div>
                     </div>
-                    <div className="flex items-baseline gap-3">
-                      <span className="text-4xl sm:text-5xl font-black text-white tracking-tighter">
-                        ₹{totalBrokerage.toLocaleString("en-IN", {
-                          minimumFractionDigits: 2,
+                    <div className="flex items-baseline gap-1.5">
+                      <span className="text-2xl font-black text-emerald-500/60 tracking-tight mr-1">
+                        ₹
+                      </span>
+                      <span className="text-5xl font-black text-white tracking-tighter">
+                        {totalBrokerage.toLocaleString("en-IN", {
+                          minimumFractionDigits: 0,
                         })}
                       </span>
+                      <span className="text-lg font-black text-slate-500 uppercase tracking-widest ml-2">
+                        .{(totalBrokerage % 1).toFixed(2).split(".")[1]}
+                      </span>
                     </div>
-                    <div className="mt-8 flex items-center gap-2">
-                      <div className="h-1.5 w-1.5 rounded-full bg-indigo-400 animate-pulse" />
-                      <p className="text-[10px] font-bold text-white/50 uppercase tracking-widest">
-                        Consolidated Earnings
-                      </p>
+                    <div className="mt-8 pt-6 border-t border-white/5 flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                        <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
+                          Verified
+                        </span>
+                      </div>
+                      <span className="text-[10px] font-black text-emerald-400/60 uppercase tracking-[0.2em]">
+                        Accumulated
+                      </span>
                     </div>
                   </div>
                 </div>
               </div>
+
+              {/* Commodity-wise Breakdown Section */}
+              {commodityBreakdown.length > 0 && (
+                <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-xl p-8 sm:p-10">
+                  <div className="flex items-center justify-between mb-10">
+                    <div>
+                      <h3 className="text-xl font-black text-slate-900 tracking-tight uppercase italic">
+                        Commodity Intelligence
+                      </h3>
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mt-2">
+                        Performance breakdown by material
+                      </p>
+                    </div>
+                    <div className="h-12 w-12 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-400">
+                      <FaChartBar />
+                    </div>
+                  </div>
+
+                  <div className="space-y-6">
+                    {commodityBreakdown.map((item, idx) => (
+                      <div
+                        key={idx}
+                        className="group relative bg-slate-50/50 hover:bg-white p-6 rounded-[2rem] border border-transparent hover:border-slate-200 transition-all duration-500 hover:shadow-xl hover:shadow-slate-200/40"
+                      >
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+                          <div className="flex items-center gap-5">
+                            <div className="h-14 w-14 rounded-2xl bg-white border border-slate-100 flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform duration-500">
+                              <span className="text-xl font-black text-slate-800 uppercase tracking-tighter">
+                                {item._id?.substring(0, 2)}
+                              </span>
+                            </div>
+                            <div>
+                              <h4 className="text-base font-black text-slate-800 uppercase tracking-wider group-hover:text-indigo-600 transition-colors">
+                                {item._id || "Other"}
+                              </h4>
+                              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">
+                                {item.trips} Total Trips
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-12 px-2">
+                            <div className="text-right">
+                              <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">
+                                Quantity
+                              </p>
+                              <p className="text-lg font-black text-slate-800 tracking-tight">
+                                {item.quantity.toFixed(2)}{" "}
+                                <span className="text-[10px] text-slate-400 uppercase">
+                                  Tons
+                                </span>
+                              </p>
+                            </div>
+                            <div className="text-right min-w-[120px]">
+                              <p className="text-[9px] font-black text-emerald-500 uppercase tracking-[0.2em] mb-1">
+                                Earnings
+                              </p>
+                              <p className="text-lg font-black text-emerald-600 tracking-tight">
+                                ₹{item.brokerage.toLocaleString("en-IN")}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Visual Progress Bar */}
+                        <div className="mt-6 h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-gradient-to-r from-indigo-500 to-emerald-500 rounded-full group-hover:opacity-100 transition-all duration-700"
+                            style={{
+                              width: `${Math.min((item.quantity / totalQuantity) * 100, 100)}%`,
+                            }}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               <div className="bg-white/70 backdrop-blur-xl p-4 sm:p-8 rounded-[2rem] sm:rounded-3xl shadow-sm border border-white/60">
                 <UserProfileCard user={user} />
