@@ -1,5 +1,6 @@
 import React from 'react';
 import { Page, Text, View, Document, StyleSheet, Image } from '@react-pdf/renderer';
+import logo from '../../assets/Hans.jpg';
 
 const styles = StyleSheet.create({
   page: {
@@ -8,22 +9,33 @@ const styles = StyleSheet.create({
     fontFamily: 'Helvetica',
   },
   header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: 20,
     borderBottom: '2pt solid #10b981',
     paddingBottom: 10,
   },
+  logo: {
+    width: 60,
+    height: 40,
+    objectFit: 'contain',
+  },
+  headerContent: {
+    flex: 1,
+    marginLeft: 15,
+  },
   hansariaTitle: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: 'bold',
     color: '#065f46',
-    textAlign: 'center',
-    marginBottom: 4,
+    textAlign: 'left',
+    marginBottom: 2,
   },
   hansariaSubtitle: {
-    fontSize: 10,
-    textAlign: 'center',
+    fontSize: 8,
+    textAlign: 'left',
     color: '#374151',
-    marginBottom: 10,
   },
   invoiceTitle: {
     fontSize: 16,
@@ -117,10 +129,13 @@ const ProformaInvoicePDF = ({ entries, company }) => {
       <Page size="A4" style={styles.page}>
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.hansariaTitle}>HANSARIA FOOD PRIVATE LIMITED</Text>
-          <Text style={styles.hansariaSubtitle}>
-            Corporate Office: 207, Maharshi Debendra Road, Kolkata - 700007
-          </Text>
+          <Image src={logo} style={styles.logo} />
+          <View style={styles.headerContent}>
+            <Text style={styles.hansariaTitle}>HANSARIA FOOD PRIVATE LIMITED</Text>
+            <Text style={styles.hansariaSubtitle}>
+              Corporate Office: 207, Maharshi Debendra Road, Kolkata - 700007
+            </Text>
+          </View>
         </View>
 
         <Text style={styles.invoiceTitle}>PROFORMA INVOICE / PERFORMANCE REPORT</Text>

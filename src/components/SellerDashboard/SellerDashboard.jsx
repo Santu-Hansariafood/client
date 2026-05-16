@@ -145,47 +145,47 @@ const CommodityItem = memo(({ item, totalQuantity, onAction, actionLabel }) => {
   const percentage = useMemo(() => Math.min((quantity / (totalQuantity || 1)) * 100, 100), [quantity, totalQuantity]);
 
   return (
-    <div className="group relative bg-white hover:bg-slate-50/50 p-6 rounded-[2.2rem] border border-slate-100 hover:border-emerald-200/50 transition-all duration-700 hover:shadow-xl hover:shadow-slate-200/30">
-      <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-6">
-        <div className="flex items-center gap-5">
-          <div className="h-16 w-16 rounded-[1.5rem] bg-emerald-50 border border-emerald-100 flex items-center justify-center shadow-sm group-hover:scale-110 group-hover:bg-emerald-500 group-hover:border-emerald-400 transition-all duration-700">
-            <span className="text-xl font-black text-emerald-600 group-hover:text-white uppercase tracking-tighter italic transition-colors duration-700">
+    <div className="group relative bg-white hover:bg-slate-50/50 p-8 rounded-[2.5rem] border border-slate-100 hover:border-emerald-200/50 transition-all duration-700 hover:shadow-xl hover:shadow-slate-200/30">
+      <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-8">
+        <div className="flex items-center gap-6">
+          <div className="h-20 w-20 rounded-[1.8rem] bg-emerald-50 border border-emerald-100 flex items-center justify-center shadow-sm group-hover:scale-110 group-hover:bg-emerald-500 group-hover:border-emerald-400 transition-all duration-700">
+            <span className="text-2xl font-black text-emerald-600 group-hover:text-white uppercase tracking-tighter italic transition-colors duration-700">
               {item?._id?.substring(0, 2) || "CM"}
             </span>
           </div>
           <div>
-            <h4 className="text-base font-black text-slate-900 uppercase tracking-wider group-hover:text-emerald-700 transition-colors duration-500">
+            <h4 className="text-lg font-black text-slate-900 uppercase tracking-wider group-hover:text-emerald-700 transition-colors duration-500">
               {item?._id || "Other"}
             </h4>
             <div className="flex items-center gap-3 mt-1.5">
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2">
-                <FaHistory className="text-[8px]" /> {item?.trips || 0} Trips
+              <p className="text-xs font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2">
+                <FaHistory className="text-[10px]" /> {item?.trips || 0} Trips
               </p>
-              <span className="h-1 w-1 rounded-full bg-slate-200" />
-              <p className="text-[10px] font-black text-emerald-500 uppercase tracking-[0.2em]">Verified</p>
+              <span className="h-1.5 w-1.5 rounded-full bg-slate-200" />
+              <p className="text-xs font-black text-emerald-500 uppercase tracking-[0.2em]">Verified</p>
             </div>
           </div>
         </div>
 
-        <div className="flex items-center gap-8 sm:gap-12 px-2">
+        <div className="flex items-center gap-10 sm:gap-14 px-2">
           <div className="text-right">
-            <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.25em] mb-1.5">
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.25em] mb-1.5">
               Volume x Rate
             </p>
             <div className="flex items-center justify-end gap-2">
-              <span className="text-lg font-black text-slate-900 tracking-tight">{quantity.toFixed(2)} T</span>
+              <span className="text-xl font-black text-slate-900 tracking-tight">{quantity.toFixed(2)} T</span>
               <span className="text-slate-300 font-bold italic">×</span>
-              <span className="text-sm font-black text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-lg border border-indigo-100/50">₹{effectiveRate}</span>
+              <span className="text-base font-black text-indigo-600 bg-indigo-50 px-3 py-1 rounded-xl border border-indigo-100/50">₹{effectiveRate}</span>
             </div>
           </div>
-          <div className="text-right min-w-[140px] bg-slate-50 group-hover:bg-emerald-50 p-4 rounded-2xl border border-slate-100 group-hover:border-emerald-100 transition-all duration-700">
-            <p className="text-[9px] font-black text-slate-400 group-hover:text-emerald-600 uppercase tracking-[0.25em] mb-1 transition-colors">
+          <div className="text-right min-w-[160px] bg-slate-50 group-hover:bg-emerald-50 p-5 rounded-3xl border border-slate-100 group-hover:border-emerald-100 transition-all duration-700">
+            <p className="text-[10px] font-black text-slate-400 group-hover:text-emerald-600 uppercase tracking-[0.25em] mb-1.5 transition-colors">
               Net Earnings
             </p>
-            <p className="text-xl font-black text-slate-900 group-hover:text-emerald-700 tracking-tighter transition-colors">
+            <p className="text-2xl font-black text-slate-900 group-hover:text-emerald-700 tracking-tighter transition-colors">
               ₹{brokerage.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
             </p>
-            <p className="text-[10px] font-bold text-indigo-600 mt-1 uppercase tracking-tighter">
+            <p className="text-xs font-bold text-indigo-600 mt-1 uppercase tracking-tighter">
               ₹{effectiveRate}/T
             </p>
           </div>
@@ -195,16 +195,16 @@ const CommodityItem = memo(({ item, totalQuantity, onAction, actionLabel }) => {
                 e.stopPropagation();
                 onAction(item?._id);
               }}
-              className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center group-hover:bg-emerald-500 group-hover:text-white transition-all duration-700"
+              className="w-14 h-14 rounded-2xl bg-emerald-600 text-white shadow-lg shadow-emerald-200 flex items-center justify-center hover:bg-emerald-700 hover:scale-110 transition-all duration-300"
               title={actionLabel || "Download Invoice"}
             >
-              <FaChevronRight className="text-slate-300 text-xs group-hover:translate-x-0.5 transition-transform" />
+              <FaDownload className="text-xl" />
             </button>
           )}
         </div>
       </div>
 
-      <div className="mt-8 h-2 w-full bg-slate-100 rounded-full overflow-hidden p-0.5 border border-slate-50">
+      <div className="mt-10 h-2.5 w-full bg-slate-100 rounded-full overflow-hidden p-0.5 border border-slate-50">
         <div
           className="h-full bg-gradient-to-r from-indigo-500 via-emerald-500 to-teal-400 rounded-full transition-all duration-1000 ease-out shadow-[0_0_8px_rgba(16,185,129,0.3)]"
           style={{ width: `${percentage}%` }}
