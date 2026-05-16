@@ -182,6 +182,62 @@ router.get("/", async (req, res) => {
   }
 });
 
+router.get("/seller/stats", async (req, res) => {
+  try {
+    const { mobile } = req.query;
+    if (!mobile) return res.status(400).json({ message: "Mobile is required" });
+
+    const phoneRegex = /^(?:\+91|0)?([6-9]\d{9})$/;
+    const phoneMatch = String(mobile).match(phoneRegex);
+    const normalizedMobile = phoneMatch ? phoneMatch[1] : mobile;
+
+    const seller = await Seller.findOne({
+      "phoneNumbers.value": { $regex: new RegExp(normalizedMobile + "$") },
+    });
+
+    const mobileConditions = [
+      { sellerMobile: normalizedMobile },
+      { sellerMobile: { $regex: new RegExp(normalizedMobile + "$") } },
+    ];
+
+    if (seller) {
+      mobileConditions.push({ supplier: seller._id });
+    }
+
+    const stats = await SelfOrder.aggregate([
+      { $match: { $or: mobileConditions } },
+      {
+        $lookup: {
+          from: "loadingentries",
+          localField: "saudaNo",
+          foreignField: "saudaNo",
+          as: "loadingEntries",
+        },
+      },
+      {
+        $addFields: {
+          totalUnloadingWeight: { $sum: "$loadingEntries.unloadingWeight" },
+          totalBrokerage: { $sum: "$loadingEntries.sellerBrokerage" },
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          totalBrokerage: { $sum: "$totalBrokerage" },
+          totalUnloadingWeight: { $sum: "$totalUnloadingWeight" },
+          totalSaudas: { $sum: 1 },
+        },
+      },
+    ]);
+
+    res.json(
+      stats[0] || { totalBrokerage: 0, totalUnloadingWeight: 0, totalSaudas: 0 },
+    );
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 router.get("/pending/summary", async (req, res) => {
   try {
     const page = parseInt(req.query.page || "1", 10);

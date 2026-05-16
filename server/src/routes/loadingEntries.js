@@ -1199,9 +1199,19 @@ router.post("/bulk", async (req, res) => {
 
 router.post("/", async (req, res) => {
   try {
-    const entry = await LoadingEntry.create(req.body);
+    const data = { ...req.body };
+    const selfOrder = await SelfOrder.findOne({ saudaNo: data.saudaNo });
 
-    const selfOrder = await SelfOrder.findOne({ saudaNo: entry.saudaNo });
+    if (selfOrder && data.unloadingWeight) {
+      const uWeight = parseFloat(data.unloadingWeight) || 0;
+      const buyerRate = selfOrder.buyerBrokerage?.brokerageBuyer || 0;
+      const sellerRate = selfOrder.buyerBrokerage?.brokerageSupplier || 0;
+      data.buyerBrokerage = +(uWeight * buyerRate).toFixed(2);
+      data.sellerBrokerage = +(uWeight * sellerRate).toFixed(2);
+    }
+
+    const entry = await LoadingEntry.create(data);
+
     if (selfOrder) {
       const allEntries = await LoadingEntry.find({ saudaNo: entry.saudaNo });
       const totalLoaded = allEntries.reduce(
@@ -1231,9 +1241,22 @@ router.put("/:id", async (req, res) => {
     const oldEntry = await LoadingEntry.findById(req.params.id);
     if (!oldEntry) return res.status(404).json({ message: "Entry not found" });
 
+    const data = { ...req.body };
+    const selfOrder = await SelfOrder.findOne({
+      saudaNo: data.saudaNo || oldEntry.saudaNo,
+    });
+
+    if (selfOrder && data.unloadingWeight) {
+      const uWeight = parseFloat(data.unloadingWeight) || 0;
+      const buyerRate = selfOrder.buyerBrokerage?.brokerageBuyer || 0;
+      const sellerRate = selfOrder.buyerBrokerage?.brokerageSupplier || 0;
+      data.buyerBrokerage = +(uWeight * buyerRate).toFixed(2);
+      data.sellerBrokerage = +(uWeight * sellerRate).toFixed(2);
+    }
+
     const updatedEntry = await LoadingEntry.findByIdAndUpdate(
       req.params.id,
-      req.body,
+      data,
       {
         new: true,
       },
@@ -1243,9 +1266,6 @@ router.put("/:id", async (req, res) => {
       oldEntry.loadingWeight !== updatedEntry.loadingWeight ||
       oldEntry.saudaNo !== updatedEntry.saudaNo
     ) {
-      const selfOrder = await SelfOrder.findOne({
-        saudaNo: updatedEntry.saudaNo,
-      });
       if (selfOrder) {
         const allEntries = await LoadingEntry.find({
           saudaNo: updatedEntry.saudaNo,

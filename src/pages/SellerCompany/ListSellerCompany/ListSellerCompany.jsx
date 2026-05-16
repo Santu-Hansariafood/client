@@ -137,7 +137,7 @@ const ListSellerCompany = () => {
     "Address",
     "State",
     "District",
-    "MSME No",
+    "Brokerage Amount",
     "Bank Details",
     "Actions",
   ];
@@ -151,7 +151,11 @@ const ListSellerCompany = () => {
     capitalizeWords(company.address),
     capitalizeWords(company.state),
     capitalizeWords(company.district),
-    company.msmeNo || "-",
+    <span key={`brokerage-${company._id}`} className="font-bold text-emerald-600">
+      ₹{(company.totalBrokerage || 0).toLocaleString("en-IN", {
+        minimumFractionDigits: 2,
+      })}
+    </span>,
     formatBankDetails(company.bankDetails)?.map((bank, index) => (
       <div key={index} className="text-xs space-y-0.5 mb-2">
         <strong>Bank {index + 1}:</strong>
@@ -254,6 +258,16 @@ const ListSellerCompany = () => {
                     <strong>MSME No:</strong> {selectedCompany.msmeNo}
                   </p>
                 )}
+                <p>
+                  <strong>Total Brokerage:</strong>{" "}
+                  <span className="text-emerald-600 font-bold">
+                    ₹
+                    {(selectedCompany.totalBrokerage || 0).toLocaleString(
+                      "en-IN",
+                      { minimumFractionDigits: 2 },
+                    )}
+                  </span>
+                </p>
                 <div className="mt-4">
                   <strong>Bank Details:</strong>
                 </div>

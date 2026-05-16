@@ -29,6 +29,7 @@ const SellerDashboard = () => {
   const [participateBidCount, setParticipateBidCount] = useState(0);
   const [orderCount, setOrderCount] = useState(0);
   const [pendingSaudaCount, setPendingSaudaCount] = useState(0);
+  const [totalBrokerage, setTotalBrokerage] = useState(0);
   const [showPopup, setShowPopup] = useState(false);
 
   useEffect(() => {
@@ -42,7 +43,7 @@ const SellerDashboard = () => {
       try {
         setLoading(true);
 
-        const [sellersRes, bidsRes, participateRes, ordersRes, pendingRes] =
+        const [sellersRes, bidsRes, participateRes, ordersRes, pendingRes, statsRes] =
           await Promise.all([
             api.get(`/sellers?mobile=${mobile}`),
             api.get("/bids?status=active"),
@@ -53,6 +54,7 @@ const SellerDashboard = () => {
             api.get(
               `/self-order/pending/list?mobile=${mobile}&userRole=Seller&limit=1&page=1`,
             ),
+            api.get(`/self-order/seller/stats?mobile=${mobile}`),
           ]);
 
         const normalizePhone = (p) => {
@@ -97,6 +99,7 @@ const SellerDashboard = () => {
         setParticipateBidCount(participateTotal);
         setOrderCount(ordersTotal);
         setPendingSaudaCount(pendingTotal);
+        setTotalBrokerage(statsRes.data?.totalBrokerage || 0);
       } catch (err) {
         console.error(err);
         toast.error("Error loading dashboard");
@@ -145,6 +148,14 @@ const SellerDashboard = () => {
       icon: FaGavel,
       link: "/participate-bid-list",
       color: "from-purple-400 to-violet-600",
+      state: { mobile },
+    },
+    {
+      title: "Total Brokerage",
+      count: `₹${totalBrokerage.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`,
+      icon: FaBook,
+      link: "/manage-order/list-self-order",
+      color: "from-indigo-400 to-blue-600",
       state: { mobile },
     },
   ];

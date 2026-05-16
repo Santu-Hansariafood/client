@@ -22,21 +22,34 @@ router.get("/", async (req, res) => {
       };
     }
 
+    const pipeline = [
+      { $match: query },
+      {
+        $lookup: {
+          from: "loadingentries",
+          localField: "companyName",
+          foreignField: "supplierCompany",
+          as: "loadingEntries",
+        },
+      },
+      {
+        $addFields: {
+          totalBrokerage: { $sum: "$loadingEntries.sellerBrokerage" },
+        },
+      },
+      { $sort: { companyName: 1 } },
+    ];
+
     if (page > 0 && limit > 0) {
-      const items = await SellerCompany.find(query)
-        .sort({ companyName: 1 })
-        .skip((page - 1) * limit)
-        .limit(limit)
-        .lean();
-      const total = await SellerCompany.countDocuments(query);
+      const skip = (page - 1) * limit;
+      const [items, total] = await Promise.all([
+        SellerCompany.aggregate([...pipeline, { $skip: skip }, { $limit: limit }]),
+        SellerCompany.countDocuments(query),
+      ]);
       return res.json({ data: items, total });
     }
 
-    const limitVal = limit > 0 ? limit : 0;
-    const items = await SellerCompany.find(query)
-      .sort({ companyName: 1 })
-      .limit(limitVal)
-      .lean();
+    const items = await SellerCompany.aggregate(pipeline);
     res.json({ data: items, total: items.length });
   } catch (error) {
     res.status(500).json({ message: error.message });
