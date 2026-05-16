@@ -15,186 +15,163 @@ Font.register({
 
 const styles = StyleSheet.create({
   page: {
-    padding: 40,
-    fontSize: 10,
+    padding: 30,
+    fontSize: 9,
     fontFamily: 'Helvetica',
-    color: '#333',
+    color: '#000',
     backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#000',
+  },
+  tallyBorder: {
+    borderWidth: 1,
+    borderColor: '#000',
+    padding: 10,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    borderBottomWidth: 2,
-    borderBottomColor: '#10b981',
-    paddingBottom: 15,
-    marginBottom: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#000',
+    paddingBottom: 10,
+    marginBottom: 10,
   },
   logoContainer: {
-    width: '25%',
+    width: '20%',
   },
   logo: {
-    width: 80,
-    height: 50,
+    width: 60,
+    height: 40,
     objectFit: 'contain',
   },
   companyInfo: {
-    width: '75%',
-    textAlign: 'right',
+    width: '80%',
+    textAlign: 'center',
   },
   companyTitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: 'bold',
-    color: '#065f46',
-    marginBottom: 4,
+    marginBottom: 2,
   },
   companyAddress: {
-    fontSize: 9,
-    color: '#666',
-    lineHeight: 1.4,
+    fontSize: 8,
+    lineHeight: 1.2,
   },
   reportTitleContainer: {
-    marginVertical: 20,
-    padding: 8,
-    backgroundColor: '#f3f4f6',
+    borderBottomWidth: 1,
+    borderBottomColor: '#000',
+    paddingBottom: 5,
+    marginBottom: 10,
     textAlign: 'center',
-    borderRadius: 4,
   },
   reportTitle: {
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: 'bold',
     textTransform: 'uppercase',
-    letterSpacing: 1.5,
   },
   detailsGrid: {
     flexDirection: 'row',
-    marginBottom: 25,
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-    paddingBottom: 15,
+    borderBottomColor: '#000',
+    paddingBottom: 8,
+    marginBottom: 0,
   },
   detailsColumn: {
     flex: 1,
+    paddingRight: 10,
   },
   detailItem: {
     flexDirection: 'row',
-    marginBottom: 6,
+    marginBottom: 3,
   },
   detailLabel: {
-    width: 80,
+    width: 70,
     fontWeight: 'bold',
-    color: '#4b5563',
-    fontSize: 9,
+    fontSize: 8,
   },
   detailValue: {
     flex: 1,
-    fontSize: 9,
-    color: '#1f2937',
+    fontSize: 8,
   },
   table: {
     width: '100%',
-    marginTop: 10,
+    marginTop: 0,
+    borderBottomWidth: 1,
+    borderBottomColor: '#000',
   },
   tableHeader: {
     flexDirection: 'row',
-    backgroundColor: '#065f46',
-    borderTopLeftRadius: 4,
-    borderTopRightRadius: 4,
+    borderBottomWidth: 1,
+    borderBottomColor: '#000',
+    backgroundColor: '#f2f2f2',
   },
   tableHeaderCell: {
-    padding: 8,
-    color: '#fff',
-    fontSize: 9,
+    padding: 4,
+    fontSize: 8,
     fontWeight: 'bold',
     textAlign: 'center',
     borderRightWidth: 1,
-    borderRightColor: 'rgba(255,255,255,0.1)',
+    borderRightColor: '#000',
   },
   tableRow: {
     flexDirection: 'row',
     borderBottomWidth: 1,
-    borderBottomColor: '#e5e7eb',
-    minHeight: 28,
+    borderBottomColor: '#eee',
+    minHeight: 20,
     alignItems: 'center',
   },
   tableCell: {
-    padding: 6,
-    fontSize: 8.5,
+    padding: 4,
+    fontSize: 8,
     textAlign: 'center',
     borderRightWidth: 1,
-    borderRightColor: '#e5e7eb',
+    borderRightColor: '#000',
   },
   summarySection: {
-    marginTop: 20,
     flexDirection: 'row',
-    justifyContent: 'flex-end',
+    borderBottomWidth: 1,
+    borderBottomColor: '#000',
   },
-  summaryBox: {
-    width: 200,
-    backgroundColor: '#f9fafb',
-    padding: 10,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: '#e5e7eb',
+  summaryLeft: {
+    flex: 3,
+    padding: 5,
+    borderRightWidth: 1,
+    borderRightColor: '#000',
   },
-  summaryItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 4,
-  },
-  summaryTotal: {
-    marginTop: 6,
-    paddingTop: 6,
-    borderTopWidth: 1,
-    borderTopColor: '#d1d5db',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+  summaryRight: {
+    flex: 1,
+    padding: 5,
   },
   amountInWords: {
-    marginTop: 15,
-    padding: 10,
-    backgroundColor: '#f0fdf4',
-    borderLeftWidth: 3,
-    borderLeftColor: '#10b981',
-    fontSize: 9,
-    fontStyle: 'italic',
+    padding: 5,
+    borderBottomWidth: 1,
+    borderBottomColor: '#000',
+    fontSize: 8,
   },
   bankSection: {
-    marginTop: 30,
-    padding: 15,
-    borderWidth: 1,
-    borderColor: '#10b981',
-    borderRadius: 8,
-    backgroundColor: '#fff',
-  },
-  bankTitle: {
-    fontSize: 10,
-    fontWeight: 'bold',
-    color: '#065f46',
-    marginBottom: 10,
-    textDecoration: 'underline',
-  },
-  bankGrid: {
+    padding: 5,
     flexDirection: 'row',
   },
-  bankCol: {
-    flex: 1,
+  bankTitle: {
+    fontSize: 8,
+    fontWeight: 'bold',
+    marginBottom: 4,
+    textDecoration: 'underline',
+  },
+  signatureSection: {
+    marginTop: 20,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    padding: 10,
   },
   footer: {
     position: 'absolute',
-    bottom: 30,
-    left: 40,
-    right: 40,
-    borderTopWidth: 1,
-    borderTopColor: '#eee',
-    paddingTop: 10,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    color: '#9ca3af',
-    fontSize: 8,
-  },
-  pageNumber: {
-    fontSize: 8,
-    color: '#9ca3af',
+    bottom: 10,
+    left: 30,
+    right: 30,
+    textAlign: 'center',
+    fontSize: 7,
+    color: '#666',
   }
 });
 
@@ -231,6 +208,7 @@ const numberToWords = (num) => {
 
 const ProformaInvoicePDF = ({ entries, company }) => {
   const totalWeight = entries.reduce((sum, e) => sum + (e.unloadingWeight || 0), 0);
+  const totalLoadingWeight = entries.reduce((sum, e) => sum + (e.loadingWeight || 0), 0);
   const totalBrokerage = entries.reduce((sum, e) => sum + (e.sellerBrokerage || 0), 0);
 
   return (
@@ -245,8 +223,7 @@ const ProformaInvoicePDF = ({ entries, company }) => {
             <Text style={styles.companyTitle}>HANSARIA FOOD PRIVATE LIMITED</Text>
             <Text style={styles.companyAddress}>
               207, Maharshi Debendra Road, Kolkata - 700007{"\n"}
-              Phone: +91 33 2268 4567 | Email: info@hansariafood.com{"\n"}
-              GSTIN: [CORPORATE GSTIN]
+              Phone: +91 33 2268 4567 | Email: info@hansariafood.com
             </Text>
           </View>
         </View>
@@ -270,14 +247,18 @@ const ProformaInvoicePDF = ({ entries, company }) => {
               </Text>
             </View>
           </View>
-          <View style={styles.detailsColumn}>
+          <View style={[styles.detailsColumn, { borderLeftWidth: 1, borderLeftColor: '#000', paddingLeft: 10 }]}>
+            <View style={styles.detailItem}>
+              <Text style={styles.detailLabel}>Report No:</Text>
+              <Text style={styles.detailValue}>HF/PR/{new Date().getFullYear()}/{Math.floor(Math.random() * 1000)}</Text>
+            </View>
+            <View style={styles.detailItem}>
+              <Text style={styles.detailLabel}>Dated:</Text>
+              <Text style={styles.detailValue}>{new Date().toLocaleDateString('en-IN')}</Text>
+            </View>
             <View style={styles.detailItem}>
               <Text style={styles.detailLabel}>GSTIN:</Text>
               <Text style={styles.detailValue}>{company.gstNo || 'N/A'}</Text>
-            </View>
-            <View style={styles.detailItem}>
-              <Text style={styles.detailLabel}>Report Date:</Text>
-              <Text style={styles.detailValue}>{new Date().toLocaleDateString('en-IN')}</Text>
             </View>
           </View>
         </View>
@@ -285,86 +266,80 @@ const ProformaInvoicePDF = ({ entries, company }) => {
         {/* Table */}
         <View style={styles.table}>
           <View style={styles.tableHeader}>
-            <Text style={[styles.tableHeaderCell, { width: '20%' }]}>Lorry No</Text>
-            <Text style={[styles.tableHeaderCell, { width: '15%' }]}>Load Date</Text>
-            <Text style={[styles.tableHeaderCell, { width: '15%' }]}>Unload Date</Text>
-            <Text style={[styles.tableHeaderCell, { width: '20%' }]}>Commodity</Text>
-            <Text style={[styles.tableHeaderCell, { width: '15%' }]}>Qty (T)</Text>
-            <Text style={[styles.tableHeaderCell, { width: '15%', borderRightWidth: 0 }]}>Brokerage</Text>
+            <Text style={[styles.tableHeaderCell, { width: '10%' }]}>S.No</Text>
+            <Text style={[styles.tableHeaderCell, { width: '15%' }]}>Sauda No</Text>
+            <Text style={[styles.tableHeaderCell, { width: '15%' }]}>Lorry No</Text>
+            <Text style={[styles.tableHeaderCell, { width: '12%' }]}>Load Qty</Text>
+            <Text style={[styles.tableHeaderCell, { width: '12%' }]}>Unload Qty</Text>
+            <Text style={[styles.tableHeaderCell, { width: '12%' }]}>Commodity</Text>
+            <Text style={[styles.tableHeaderCell, { width: '12%' }]}>Rate/T</Text>
+            <Text style={[styles.tableHeaderCell, { width: '12%', borderRightWidth: 0 }]}>Brokerage</Text>
           </View>
-          {entries.map((entry, index) => (
-            <View style={styles.tableRow} key={index}>
-              <Text style={[styles.tableCell, { width: '20%' }]}>{entry.lorryNumber}</Text>
-              <Text style={[styles.tableCell, { width: '15%' }]}>
-                {entry.loadingDate ? new Date(entry.loadingDate).toLocaleDateString('en-IN') : '-'}
-              </Text>
-              <Text style={[styles.tableCell, { width: '15%' }]}>
-                {entry.unloadingDate ? new Date(entry.unloadingDate).toLocaleDateString('en-IN') : '-'}
-              </Text>
-              <Text style={[styles.tableCell, { width: '20%' }]}>{entry.commodity}</Text>
-              <Text style={[styles.tableCell, { width: '15%' }]}>{entry.unloadingWeight?.toFixed(2) || '0.00'}</Text>
-              <Text style={[styles.tableCell, { width: '15%', borderRightWidth: 0 }]}>
-                Rs. {entry.sellerBrokerage?.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-              </Text>
-            </View>
-          ))}
+          {entries.map((entry, index) => {
+            const ratePerTon = entry.unloadingWeight > 0 ? (entry.sellerBrokerage / entry.unloadingWeight).toFixed(2) : '0.00';
+            return (
+              <View style={styles.tableRow} key={index}>
+                <Text style={[styles.tableCell, { width: '10%' }]}>{index + 1}</Text>
+                <Text style={[styles.tableCell, { width: '15%' }]}>{entry.saudaNo || '-'}</Text>
+                <Text style={[styles.tableCell, { width: '15%' }]}>{entry.lorryNumber}</Text>
+                <Text style={[styles.tableCell, { width: '12%' }]}>{entry.loadingWeight?.toFixed(2) || '0.00'}</Text>
+                <Text style={[styles.tableCell, { width: '12%' }]}>{entry.unloadingWeight?.toFixed(2) || '0.00'}</Text>
+                <Text style={[styles.tableCell, { width: '12%' }]}>{entry.commodity}</Text>
+                <Text style={[styles.tableCell, { width: '12%' }]}>{ratePerTon}</Text>
+                <Text style={[styles.tableCell, { width: '12%', borderRightWidth: 0, textAlign: 'right' }]}>
+                  {entry.sellerBrokerage?.toFixed(2)}
+                </Text>
+              </View>
+            );
+          })}
         </View>
 
-        {/* Summary */}
+        {/* Summary Table-like Bottom */}
         <View style={styles.summarySection}>
-          <View style={styles.summaryBox}>
-            <View style={styles.summaryItem}>
-              <Text style={{ fontSize: 9, color: '#666' }}>Total Weight:</Text>
-              <Text style={{ fontSize: 9, fontWeight: 'bold' }}>{totalWeight.toFixed(2)} MT</Text>
-            </View>
-            <View style={styles.summaryTotal}>
-              <Text style={{ fontSize: 10, fontWeight: 'bold', color: '#065f46' }}>Net Brokerage:</Text>
-              <Text style={{ fontSize: 10, fontWeight: 'bold', color: '#065f46' }}>
-                Rs. {totalBrokerage.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-              </Text>
-            </View>
+          <View style={styles.summaryLeft}>
+            <Text style={{ fontSize: 8, fontWeight: 'bold' }}>Total:</Text>
+          </View>
+          <View style={[styles.tableCell, { width: '12%', borderRightWidth: 1 }]}>
+            <Text style={{ fontWeight: 'bold' }}>{totalLoadingWeight.toFixed(2)}</Text>
+          </View>
+          <View style={[styles.tableCell, { width: '12%', borderRightWidth: 1 }]}>
+            <Text style={{ fontWeight: 'bold' }}>{totalWeight.toFixed(2)}</Text>
+          </View>
+          <View style={[styles.tableCell, { width: '24%', borderRightWidth: 1 }]}>
+            <Text></Text>
+          </View>
+          <View style={[styles.tableCell, { width: '12%', borderRightWidth: 0, textAlign: 'right' }]}>
+            <Text style={{ fontWeight: 'bold' }}>Rs. {totalBrokerage.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</Text>
           </View>
         </View>
 
         {/* Amount in Words */}
         <View style={styles.amountInWords}>
-          <Text style={{ fontWeight: 'bold', marginBottom: 2 }}>Amount in Words:</Text>
-          <Text>{numberToWords(totalBrokerage)}</Text>
+          <Text style={{ fontWeight: 'bold', marginBottom: 2 }}>Amount Chargeable (in words):</Text>
+          <Text style={{ textTransform: 'capitalize' }}>{numberToWords(totalBrokerage)}</Text>
         </View>
 
-        {/* Bank Details */}
-        <View style={styles.bankSection}>
-          <Text style={styles.bankTitle}>BANK DETAILS FOR REMITTANCE (HANSARIA FOOD PVT LTD)</Text>
-          <View style={styles.bankGrid}>
-            <View style={styles.bankCol}>
-              <View style={styles.detailItem}>
-                <Text style={[styles.detailLabel, { width: 100 }]}>Account Name:</Text>
-                <Text style={styles.detailValue}>HANSARIA FOOD PRIVATE LIMITED</Text>
-              </View>
-              <View style={styles.detailItem}>
-                <Text style={[styles.detailLabel, { width: 100 }]}>Account Number:</Text>
-                <Text style={styles.detailValue}>[PROVIDE ACCOUNT NO]</Text>
-              </View>
-            </View>
-            <View style={styles.bankCol}>
-              <View style={styles.detailItem}>
-                <Text style={[styles.detailLabel, { width: 80 }]}>IFSC Code:</Text>
-                <Text style={styles.detailValue}>[PROVIDE IFSC]</Text>
-              </View>
-              <View style={styles.detailItem}>
-                <Text style={[styles.detailLabel, { width: 80 }]}>Bank Name:</Text>
-                <Text style={styles.detailValue}>[PROVIDE BANK NAME]</Text>
-              </View>
+        {/* Bank & Signature */}
+        <View style={{ flexDirection: 'row', height: 100 }}>
+          <View style={{ flex: 1, borderRightWidth: 1, borderColor: '#000', padding: 5 }}>
+            <Text style={styles.bankTitle}>Bank Details:</Text>
+            <Text style={{ fontSize: 7 }}>A/c Name : HANSARIA FOOD PRIVATE LIMITED</Text>
+            <Text style={{ fontSize: 7 }}>A/c No.   : [PROVIDE ACCOUNT NO]</Text>
+            <Text style={{ fontSize: 7 }}>Bank Name: [PROVIDE BANK NAME]</Text>
+            <Text style={{ fontSize: 7 }}>IFSC Code: [PROVIDE IFSC]</Text>
+          </View>
+          <View style={{ flex: 1, padding: 5, textAlign: 'right' }}>
+            <Text style={{ fontSize: 8, fontWeight: 'bold' }}>for HANSARIA FOOD PRIVATE LIMITED</Text>
+            <View style={{ marginTop: 40 }}>
+              <Text style={{ fontSize: 8, fontWeight: 'bold' }}>Authorised Signatory</Text>
             </View>
           </View>
         </View>
 
         {/* Footer */}
         <View style={styles.footer}>
-          <Text>Hansaria Food Private Limited | Generated on {new Date().toLocaleString('en-IN')}</Text>
-          <Text style={styles.pageNumber} render={({ pageNumber, totalPages }) => (
-            `Page ${pageNumber} of ${totalPages}`
-          )} />
+          <Text>This is a Computer Generated Report</Text>
+          <Text render={({ pageNumber, totalPages }) => `Page ${pageNumber} of ${totalPages}`} />
         </View>
       </Page>
     </Document>
