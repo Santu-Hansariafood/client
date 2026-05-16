@@ -249,7 +249,7 @@ const LorryWiseLoadingList = () => {
     <AdminPageShell
       title="Lorry wise Loading Entry"
       subtitle="Detailed report of loading entries by lorry number and status"
-      icon={<FaTruck className="text-emerald-500" />}
+      icon={FaTruck}
     >
       <div className="space-y-6">
         {/* Filters Card */}
@@ -259,24 +259,30 @@ const LorryWiseLoadingList = () => {
               <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">
                 Search Lorry Number
               </label>
-              <SearchBox
-                placeholder="Ex: WB 23 A 1234"
-                value={searchLorry}
-                onChange={(e) => setSearchLorry(e.target.value)}
-                icon={<FaSearch className="text-slate-400" />}
-              />
+              <Suspense fallback={<div className="h-12 bg-slate-100 animate-pulse rounded-xl" />}>
+                <SearchBox
+                  placeholder="Ex: WB 23 A 1234"
+                  value={searchLorry}
+                  onSearch={(q) => setSearchLorry(q)}
+                  returnQuery={true}
+                  items={[]}
+                />
+              </Suspense>
             </div>
 
             <div className="w-full md:w-64">
               <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">
                 Lorry Status
               </label>
-              <DataDropdown
-                options={statusOptions}
-                value={selectedStatus}
-                onChange={setSelectedStatus}
-                placeholder="Select Status"
-              />
+              <Suspense fallback={<div className="h-12 bg-slate-100 animate-pulse rounded-xl" />}>
+                <DataDropdown
+                  options={statusOptions}
+                  value={selectedStatus}
+                  selectedOptions={selectedStatus}
+                  onChange={setSelectedStatus}
+                  placeholder="Select Status"
+                />
+              </Suspense>
             </div>
 
             <button
