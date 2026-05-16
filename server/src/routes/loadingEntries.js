@@ -117,6 +117,44 @@ router.get("/lorry-wise", async (req, res) => {
   }
 });
 
+router.get("/company-report", async (req, res) => {
+  try {
+    const { supplierCompany, mobile } = req.query;
+    if (!supplierCompany || !mobile) {
+      return res.status(400).json({ message: "Company name and mobile are required" });
+    }
+
+    const seller = await Seller.findOne({
+      "phoneNumbers.value": { $regex: new RegExp(mobile + "$") },
+    });
+
+    if (!seller) {
+      return res.status(404).json({ message: "Seller not found" });
+    }
+
+    const query = {
+      supplierCompany: { $regex: new RegExp(`^${escapeRegex(supplierCompany)}$`, "i") },
+      supplier: seller._id
+    };
+
+    const entries = await LoadingEntry.find(query)
+      .sort({ unloadingDate: -1, loadingDate: -1 })
+      .lean();
+
+    const companyDetails = await mongoose.model("SellerCompany").findOne({
+      companyName: { $regex: new RegExp(`^${escapeRegex(supplierCompany)}$`, "i") }
+    }).lean();
+
+    res.json({
+      entries,
+      company: companyDetails || { companyName: supplierCompany }
+    });
+  } catch (error) {
+    console.error("Company report error:", error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
 router.get("/filters", async (req, res) => {
   try {
     const role = req.user?.role;

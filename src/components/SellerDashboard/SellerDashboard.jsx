@@ -18,6 +18,9 @@ import { useAuth } from "../../context/AuthContext/AuthContext";
 import { useNotifications } from "../../context/NotificationContext/NotificationContext";
 import AdminPageShell from "../../common/AdminPageShell/AdminPageShell";
 import Loading from "../../common/Loading/Loading";
+import { pdf } from "@react-pdf/renderer";
+import ProformaInvoicePDF from "./ProformaInvoicePDF";
+import { downloadFile } from "../../utils/fileDownloader";
 
 const Cards = lazy(() => import("../../common/Cards/Cards"));
 const PopupBox = lazy(() => import("../../common/PopupBox/PopupBox"));
@@ -135,8 +138,7 @@ InsightCard.propTypes = {
   footerText: PropTypes.string,
 };
 
-// eslint-disable-next-line react/display-name
-const CommodityItem = memo(({ item, totalQuantity }) => {
+const CommodityItem = memo(({ item, totalQuantity, onAction, actionLabel }) => {
   const brokerage = item?.brokerage || 0;
   const quantity = item?.quantity || 0;
   const effectiveRate = useMemo(() => (brokerage / (quantity || 1)).toFixed(2), [brokerage, quantity]);
@@ -187,6 +189,18 @@ const CommodityItem = memo(({ item, totalQuantity }) => {
               ₹{effectiveRate}/T
             </p>
           </div>
+          {onAction && (
+            <button 
+              onClick={(e) => {
+                e.stopPropagation();
+                onAction(item?._id);
+              }}
+              className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center group-hover:bg-emerald-500 group-hover:text-white transition-all duration-700"
+              title={actionLabel || "Download Invoice"}
+            >
+              <FaChevronRight className="text-slate-300 text-xs group-hover:translate-x-0.5 transition-transform" />
+            </button>
+          )}
         </div>
       </div>
 
@@ -200,6 +214,8 @@ const CommodityItem = memo(({ item, totalQuantity }) => {
   );
 });
 
+CommodityItem.displayName = 'CommodityItem';
+
 CommodityItem.propTypes = {
   item: PropTypes.shape({
     _id: PropTypes.string,
@@ -208,6 +224,8 @@ CommodityItem.propTypes = {
     trips: PropTypes.number,
   }),
   totalQuantity: PropTypes.number,
+  onAction: PropTypes.func,
+  actionLabel: PropTypes.string,
 };
 
 // --- Main Dashboard Component ---
@@ -247,6 +265,51 @@ const SellerDashboard = () => {
 
   const togglePopup = useCallback((val) => setShowPopup(val), []);
   const refreshDashboard = useCallback(() => window.location.reload(), []);
+
+  const handleDownloadInvoice = useCallback(async (companyName) => {
+    if (!companyName || !mobile) return;
+    
+    const toastId = toast.loading(`Generating invoice for ${companyName}...`);
+    try {
+      const { data } = await api.get(`/loading-entries/company-report`, {
+        params: { supplierCompany: companyName, mobile }
+      });
+
+      if (!data.entries || data.entries.length === 0) {
+        toast.update(toastId, {
+          render: "No unloading data found for this company.",
+          type: "info",
+          isLoading: false,
+          autoClose: 3000
+        });
+        return;
+      }
+
+      const blob = await pdf(
+        <ProformaInvoicePDF 
+          entries={data.entries} 
+          company={data.company} 
+        />
+      ).toBlob();
+
+      downloadFile(blob, `Proforma_Invoice_${companyName.replace(/\s+/g, '_')}.pdf`);
+      
+      toast.update(toastId, {
+        render: "Invoice generated successfully!",
+        type: "success",
+        isLoading: false,
+        autoClose: 3000
+      });
+    } catch (err) {
+      console.error("Invoice Generation Error:", err);
+      toast.update(toastId, {
+        render: "Failed to generate invoice. Please try again.",
+        type: "error",
+        isLoading: false,
+        autoClose: 3000
+      });
+    }
+  }, [mobile]);
 
   // Memoize navigation items to prevent object reference changes on every render
   const navigationItems = useMemo(() => [
@@ -492,7 +555,13 @@ const SellerDashboard = () => {
                 {companyBreakdown.length > 0 ? (
                   <div className="grid grid-cols-1 gap-6">
                     {companyBreakdown.map((item, idx) => (
-                      <CommodityItem key={item?._id || idx} item={item} totalQuantity={totalQuantity} />
+                      <CommodityItem 
+                        key={item?._id || idx} 
+                        item={item} 
+                        totalQuantity={totalQuantity} 
+                        onAction={handleDownloadInvoice}
+                        actionLabel="Download Proforma Invoice"
+                      />
                     ))}
                   </div>
                 ) : (
