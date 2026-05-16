@@ -10,6 +10,21 @@ const router = Router();
 
 const escapeRegex = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
+const getSellerBrokerage = async (supplierId, commodityName) => {
+  if (!supplierId || !commodityName) return 0;
+  try {
+    const seller = await Seller.findById(supplierId);
+    if (!seller || !seller.commodities) return 0;
+    const commodity = seller.commodities.find(
+      (c) => c.name.toLowerCase() === commodityName.toLowerCase(),
+    );
+    return commodity ? commodity.brokerage : 0;
+  } catch (error) {
+    console.error("Error fetching seller brokerage:", error);
+    return 0;
+  }
+};
+
 const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
@@ -238,6 +253,18 @@ router.get("/seller/stats", async (req, res) => {
             },
             { $sort: { quantity: -1 } },
           ],
+          companyBreakdown: [
+            { $unwind: { path: "$loadingEntries", preserveNullAndEmptyArrays: false } },
+            {
+              $group: {
+                _id: "$supplierCompany",
+                quantity: { $sum: "$loadingEntries.unloadingWeight" },
+                brokerage: { $sum: "$loadingEntries.sellerBrokerage" },
+                trips: { $sum: 1 },
+              },
+            },
+            { $sort: { quantity: -1 } },
+          ],
         },
       },
     ]);
@@ -247,6 +274,7 @@ router.get("/seller/stats", async (req, res) => {
       totalUnloadingWeight: stats[0]?.totals[0]?.totalUnloadingWeight || 0,
       totalSaudas: stats[0]?.totals[0]?.totalSaudas || 0,
       commodityBreakdown: stats[0]?.commodityBreakdown || [],
+      companyBreakdown: stats[0]?.companyBreakdown || [],
     };
 
     res.json(result);
@@ -689,7 +717,26 @@ router.put("/:id", async (req, res) => {
     const item = await SelfOrder.findById(req.params.id);
     if (!item) return res.status(404).json({ message: "Order not found" });
 
+    const oldSupplier = item.supplier;
+    const oldCommodity = item.commodity;
+
     Object.assign(item, req.body);
+
+    if (
+      (String(item.supplier) !== String(oldSupplier) ||
+        item.commodity !== oldCommodity) &&
+      item.supplier &&
+      item.commodity
+    ) {
+      const brokerage = await getSellerBrokerage(item.supplier, item.commodity);
+      if (brokerage) {
+        item.buyerBrokerage = item.buyerBrokerage || {
+          brokerageBuyer: 0,
+          brokerageSupplier: 0,
+        };
+        item.buyerBrokerage.brokerageSupplier = brokerage;
+      }
+    }
 
     const allEntries = await LoadingEntry.find({ saudaNo: item.saudaNo });
     const totalLoaded = allEntries.reduce(
@@ -715,6 +762,22 @@ router.put("/:id", async (req, res) => {
 router.post("/", async (req, res) => {
   try {
     const data = req.body;
+
+    if (
+      data.supplier &&
+      data.commodity &&
+      (!data.buyerBrokerage || !data.buyerBrokerage.brokerageSupplier)
+    ) {
+      const brokerage = await getSellerBrokerage(data.supplier, data.commodity);
+      if (brokerage) {
+        data.buyerBrokerage = data.buyerBrokerage || {
+          brokerageBuyer: 0,
+          brokerageSupplier: 0,
+        };
+        data.buyerBrokerage.brokerageSupplier = brokerage;
+      }
+    }
+
     if (
       data.pendingQuantity === undefined ||
       data.pendingQuantity === null ||

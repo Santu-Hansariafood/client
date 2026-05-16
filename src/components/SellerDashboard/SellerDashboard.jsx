@@ -16,7 +16,6 @@ import {
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext/AuthContext";
 import { useNotifications } from "../../context/NotificationContext/NotificationContext";
-import UserProfileCard from "../UserProfileCard/UserProfileCard";
 import AdminPageShell from "../../common/AdminPageShell/AdminPageShell";
 import Loading from "../../common/Loading/Loading";
 
@@ -231,6 +230,7 @@ const SellerDashboard = () => {
   const [totalBrokerage, setTotalBrokerage] = useState(0);
   const [totalQuantity, setTotalQuantity] = useState(0);
   const [commodityBreakdown, setCommodityBreakdown] = useState([]);
+  const [companyBreakdown, setCompanyBreakdown] = useState([]);
   const [showPopup, setShowPopup] = useState(false);
 
   const handleNotificationClick = useCallback(async (notif) => {
@@ -313,6 +313,7 @@ const SellerDashboard = () => {
         setTotalBrokerage(statsRes?.data?.totalBrokerage || 0);
         setTotalQuantity(statsRes?.data?.totalUnloadingWeight || 0);
         setCommodityBreakdown(statsRes?.data?.commodityBreakdown || []);
+        setCompanyBreakdown(statsRes?.data?.companyBreakdown || []);
 
       } catch (err) {
         if (!isMounted) return;
@@ -464,6 +465,46 @@ const SellerDashboard = () => {
                   </div>
                 )}
               </div>
+
+              {/* Company Breakdown Section */}
+              <div className="bg-white p-8 sm:p-10 rounded-[3rem] shadow-xl border border-slate-100 relative group overflow-hidden mt-10">
+                <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/5 rounded-full blur-[100px] pointer-events-none group-hover:bg-indigo-500/10 transition-all duration-700" />
+                
+                <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-12">
+                  <div className="flex items-center gap-4">
+                    <div className="w-14 h-14 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600 border border-indigo-100 shadow-sm group-hover:scale-110 transition-transform duration-700">
+                      <FaChartBar className="text-2xl" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl sm:text-2xl font-black text-slate-900 uppercase tracking-tight italic">
+                        Company <span className="text-indigo-600">Performance</span>
+                      </h3>
+                      <p className="text-slate-400 font-bold uppercase tracking-[0.25em] text-[10px] mt-1.5 flex items-center gap-2">
+                        <span className="h-1.5 w-1.5 rounded-full bg-indigo-400 animate-ping" />
+                        Live Revenue Breakdown
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {companyBreakdown.length > 0 ? (
+                  <div className="grid grid-cols-1 gap-6">
+                    {companyBreakdown.map((item, idx) => (
+                      <CommodityItem key={item?._id || idx} item={item} totalQuantity={totalQuantity} />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="py-24 text-center border-2 border-dashed border-slate-100 rounded-[3rem] bg-slate-50/30">
+                    <div className="w-20 h-20 bg-white rounded-3xl flex items-center justify-center shadow-sm mx-auto mb-6 border border-slate-100">
+                      <FaBoxOpen className="text-3xl text-slate-200" />
+                    </div>
+                    <h4 className="text-slate-900 font-black text-sm uppercase tracking-widest mb-2">No Company Data</h4>
+                    <p className="text-slate-400 font-bold uppercase tracking-[0.2em] text-[10px] max-w-[240px] mx-auto leading-relaxed">
+                      Your company-wise performance breakdown will appear here once orders are processed.
+                    </p>
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Sidebar Column */}
@@ -505,11 +546,6 @@ const SellerDashboard = () => {
                     </button>
                   ))}
                 </div>
-              </div>
-
-              {/* Profile Card */}
-              <div className="hover:scale-[1.02] transition-transform duration-500">
-                <UserProfileCard user={user} />
               </div>
 
               {/* Info Widget */}
