@@ -11,11 +11,8 @@ import {
   FaFilePdf,
   FaTruck,
   FaSearch,
-  FaChevronDown,
-  FaChevronUp,
-  FaHistory,
-  FaWeightHanging,
-  FaBox,
+  FaDownload,
+  FaFilter,
 } from "react-icons/fa";
 import api from "../../../utils/apiClient/apiClient";
 import Loading from "../../../common/Loading/Loading";
@@ -34,119 +31,9 @@ const Pagination = lazy(
 const SearchBox = lazy(() => import("../../../common/SearchBox/SearchBox"));
 
 /**
- * LorryGroupCard Component
- * Renders a premium card for a single lorry with its loading history
+ * LorryWiseLoadingList Component
+ * Displays a premium table of loading entries with vehicle-wise reporting and PDF generation.
  */
-const LorryGroupCard = ({ lorryNo, entries, onDownloadSingle }) => {
-  const [isExpanded, setIsExpanded] = useState(false);
-
-  const stats = useMemo(() => {
-    const totalWeight = entries.reduce((sum, e) => sum + (Number(e.loadingWeight) || 0), 0);
-    const totalBags = entries.reduce((sum, e) => sum + (Number(e.bags) || 0), 0);
-    const lastTrip = entries[0]?.loadingDate;
-    const isAnyInTransit = entries.some(e => !(e.unloadingWeight > 0 || e.unloadingDate));
-    
-    return { totalWeight, totalBags, tripCount: entries.length, lastTrip, isAnyInTransit };
-  }, [entries]);
-
-  const headers = [
-    "Date", "Sauda No", "Commodity", "L. Weight (T)", "U. Weight (T)", "Status", "Action"
-  ];
-
-  const rows = entries.map((entry, index) => {
-    const isReceived = entry.unloadingWeight > 0 || entry.unloadingDate;
-    return [
-      new Date(entry.loadingDate).toLocaleDateString("en-IN"),
-      <span key={`sauda-${index}`} className="font-bold text-slate-600">{entry.saudaNo}</span>,
-      entry.commodity,
-      <span key={`lw-${index}`} className="font-bold text-indigo-600">{Number(entry.loadingWeight || 0).toFixed(2)}</span>,
-      <span key={`uw-${index}`} className={entry.unloadingWeight > 0 ? "font-bold text-emerald-600" : "text-slate-400"}>
-        {entry.unloadingWeight > 0 ? Number(entry.unloadingWeight).toFixed(2) : "-"}
-      </span>,
-      <span
-        key={`st-${index}`}
-        className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider ${
-          isReceived ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"
-        }`}
-      >
-        {isReceived ? "Received" : "In Transit"}
-      </span>,
-      <button
-        key={`act-${index}`}
-        onClick={(e) => { e.stopPropagation(); onDownloadSingle(entry); }}
-        className="p-1.5 bg-emerald-50 text-emerald-600 rounded-lg hover:bg-emerald-100 transition"
-        title="Download Slip"
-      >
-        <FaFilePdf size={12} />
-      </button>
-    ];
-  });
-
-  return (
-    <div className="bg-white rounded-[2.5rem] border border-slate-200 shadow-sm overflow-hidden transition-all duration-500 hover:shadow-xl hover:shadow-slate-200/40 group">
-      {/* Card Header */}
-      <div 
-        onClick={() => setIsExpanded(!isExpanded)}
-        className="p-6 sm:p-8 cursor-pointer flex flex-col lg:flex-row lg:items-center justify-between gap-6"
-      >
-        <div className="flex items-center gap-5">
-          <div className="h-16 w-14 sm:w-16 flex items-center justify-center rounded-3xl bg-slate-50 border border-slate-100 group-hover:bg-indigo-50 group-hover:border-indigo-100 transition-colors">
-            <FaTruck className="text-2xl text-slate-400 group-hover:text-indigo-500 transition-colors" />
-          </div>
-          <div>
-            <h3 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight uppercase">
-              {lorryNo}
-            </h3>
-            <div className="flex items-center gap-3 mt-1.5">
-              <span className={`h-2 w-2 rounded-full ${stats.isAnyInTransit ? 'bg-amber-500 animate-pulse' : 'bg-emerald-500'}`} />
-              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                {stats.isAnyInTransit ? 'Active Trips' : 'All Received'}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 lg:gap-12">
-          <div className="space-y-1">
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Total Load</p>
-            <div className="flex items-center gap-2">
-              <FaWeightHanging className="text-indigo-500 text-xs" />
-              <p className="text-sm sm:text-base font-black text-slate-800">{stats.totalWeight.toFixed(2)} T</p>
-            </div>
-          </div>
-          <div className="space-y-1">
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Total Bags</p>
-            <div className="flex items-center gap-2">
-              <FaBox className="text-emerald-500 text-xs" />
-              <p className="text-sm sm:text-base font-black text-slate-800">{stats.totalBags}</p>
-            </div>
-          </div>
-          <div className="space-y-1 hidden sm:block">
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Trips</p>
-            <div className="flex items-center gap-2">
-              <FaHistory className="text-amber-500 text-xs" />
-              <p className="text-sm sm:text-base font-black text-slate-800">{stats.tripCount} Entries</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="flex items-center justify-center h-10 w-10 rounded-full bg-slate-50 text-slate-400 group-hover:bg-indigo-600 group-hover:text-white transition-all">
-          {isExpanded ? <FaChevronUp size={14} /> : <FaChevronDown size={14} />}
-        </div>
-      </div>
-
-      {/* Expanded Content */}
-      <div className={`transition-all duration-500 ease-in-out overflow-hidden ${isExpanded ? 'max-h-[1000px] border-t border-slate-100' : 'max-h-0'}`}>
-        <div className="p-4 sm:p-8 bg-slate-50/50">
-          <Suspense fallback={<Loading />}>
-            <Tables headers={headers} rows={rows} />
-          </Suspense>
-        </div>
-      </div>
-    </div>
-  );
-};
-
 const LorryWiseLoadingList = () => {
   const [loadingEntries, setLoadingEntries] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -172,7 +59,7 @@ const LorryWiseLoadingList = () => {
         lorryNumber: searchLorry,
         status: selectedStatus.value,
         page: currentPage,
-        limit: 1000, // Get more for grouping
+        limit: itemsPerPage,
       };
 
       const response = await api.get("/loading-entries/lorry-wise", { params });
@@ -186,22 +73,11 @@ const LorryWiseLoadingList = () => {
     } finally {
       setLoading(false);
     }
-  }, [searchLorry, selectedStatus, currentPage]);
+  }, [searchLorry, selectedStatus, currentPage, itemsPerPage]);
 
   useEffect(() => {
     fetchLoadingEntries();
   }, [fetchLoadingEntries]);
-
-  // Group entries by lorry number
-  const groupedLorryData = useMemo(() => {
-    const groups = {};
-    loadingEntries.forEach(entry => {
-      const key = entry.lorryNumber?.toUpperCase().trim();
-      if (!groups[key]) groups[key] = [];
-      groups[key].push(entry);
-    });
-    return groups;
-  }, [loadingEntries]);
 
   const downloadSinglePDF = async (entry) => {
     const toastId = toast.loading(`Generating PDF for ${entry.lorryNumber}...`);
@@ -211,7 +87,9 @@ const LorryWiseLoadingList = () => {
 
       try {
         doc.addImage(logoUrl, "PNG", pageWidth - 45, 10, 30, 30);
-      } catch (e) { /* empty */ }
+      } catch (e) {
+        /* empty */
+      }
 
       doc.setFontSize(20);
       doc.setTextColor(15, 23, 42);
@@ -240,7 +118,7 @@ const LorryWiseLoadingList = () => {
         ["Freight Rate", entry.freightRate ? `Rs. ${entry.freightRate}` : "N/A"],
         ["Supplier", entry.supplierCompany || "N/A"],
         ["Consignee", entry.consignee || "N/A"],
-        ["Status", (entry.unloadingWeight > 0 || entry.unloadingDate) ? "RECEIVED" : "IN TRANSIT"],
+        ["Status", entry.unloadingWeight > 0 || entry.unloadingDate ? "RECEIVED" : "IN TRANSIT"],
       ];
 
       autoTable(doc, {
@@ -264,102 +142,176 @@ const LorryWiseLoadingList = () => {
     }
   };
 
+  const headers = [
+    "Sl No",
+    "Loading Date",
+    "Lorry No",
+    "Sauda No",
+    "Commodity",
+    "L. Weight (T)",
+    "U. Weight (T)",
+    "Status",
+    "Action",
+  ];
+
+  const rows = loadingEntries.map((entry, index) => {
+    const isReceived = entry.unloadingWeight > 0 || entry.unloadingDate;
+    return [
+      (currentPage - 1) * itemsPerPage + index + 1,
+      new Date(entry.loadingDate).toLocaleDateString("en-IN"),
+      <span key={`lorry-${index}`} className="font-black text-slate-900 tracking-tight">
+        {entry.lorryNumber}
+      </span>,
+      <span key={`sauda-${index}`} className="font-bold text-slate-500">{entry.saudaNo}</span>,
+      entry.commodity,
+      <span key={`lweight-${index}`} className="font-bold text-indigo-600">
+        {Number(entry.loadingWeight || 0).toFixed(2)}
+      </span>,
+      <span
+        key={`uweight-${index}`}
+        className={entry.unloadingWeight > 0 ? "font-bold text-emerald-600" : "text-slate-400"}
+      >
+        {entry.unloadingWeight > 0 ? Number(entry.unloadingWeight).toFixed(2) : "-"}
+      </span>,
+      <span
+        key={`status-${index}`}
+        className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${
+          isReceived
+            ? "bg-emerald-100 text-emerald-700 border border-emerald-200"
+            : "bg-amber-100 text-amber-700 border border-amber-200"
+        }`}
+      >
+        {isReceived ? "Received" : "In Transit"}
+      </span>,
+      <div key={`actions-${index}`} className="flex items-center gap-2">
+        <button
+          onClick={() => downloadSinglePDF(entry)}
+          className="p-2 bg-emerald-50 text-emerald-600 rounded-xl hover:bg-emerald-100 transition-all shadow-sm border border-emerald-100"
+          title="Download Slip"
+        >
+          <FaFilePdf size={14} />
+        </button>
+      </div>,
+    ];
+  });
+
   const downloadPDF = async () => {
     if (loadingEntries.length === 0) {
       toast.info("No records to download");
       return;
     }
 
-    const toastId = toast.loading("Generating Grouped Lorry Report...");
+    const toastId = toast.loading("Generating Detailed Lorry Report...");
     try {
       const doc = new jsPDF("landscape");
       const pageWidth = doc.internal.pageSize.getWidth();
 
       try {
         doc.addImage(logoUrl, "PNG", pageWidth - 45, 10, 30, 30);
-      } catch (e) { /* empty */ }
+      } catch (e) {
+        /* empty */
+      }
 
       doc.setFontSize(22);
-      doc.setTextColor(15, 23, 42);
+      doc.setTextColor(15, 23, 42); // slate-900
       doc.setFont("helvetica", "bold");
-      doc.text("LORRY WISE CONSOLIDATED REPORT", 14, 25);
+      doc.text("LORRY WISE LOADING REPORT", 14, 25);
 
       doc.setFontSize(10);
       doc.setTextColor(100);
       doc.setFont("helvetica", "normal");
       doc.text(`Generated on: ${new Date().toLocaleString("en-IN")}`, 14, 32);
-      
-      let currentY = 45;
+      if (searchLorry) doc.text(`Filter - Lorry: ${searchLorry}`, 14, 37);
+      doc.text(`Filter - Status: ${selectedStatus.label}`, 14, 42);
 
-      Object.entries(groupedLorryData).forEach(([lorryNo, entries], index) => {
-        // Lorry Header in PDF
-        doc.setFontSize(14);
-        doc.setTextColor(15, 23, 42);
-        doc.setFont("helvetica", "bold");
-        doc.text(`Lorry: ${lorryNo} (${entries.length} Trips)`, 14, currentY);
-        currentY += 5;
+      const tableColumn = [
+        "Sl No", "Date", "Lorry No", "Sauda No", "Commodity",
+        "Bags", "L. Weight", "U. Weight", "Status", "Consignee", "Supplier"
+      ];
 
-        const tableColumn = [
-          "Date", "Sauda No", "Commodity", "Bags", "L. Weight", "U. Weight", "Status", "Consignee"
-        ];
+      const tableRows = loadingEntries.map((entry, index) => [
+        (currentPage - 1) * itemsPerPage + index + 1,
+        new Date(entry.loadingDate).toLocaleDateString("en-IN"),
+        entry.lorryNumber,
+        entry.saudaNo,
+        entry.commodity,
+        entry.bags || "-",
+        entry.loadingWeight,
+        entry.unloadingWeight || "-",
+        entry.unloadingWeight > 0 || entry.unloadingDate ? "Received" : "In Transit",
+        entry.consignee,
+        entry.supplierCompany,
+      ]);
 
-        const tableRows = entries.map(entry => [
-          new Date(entry.loadingDate).toLocaleDateString("en-IN"),
-          entry.saudaNo,
-          entry.commodity,
-          entry.bags || "-",
-          entry.loadingWeight,
-          entry.unloadingWeight || "-",
-          (entry.unloadingWeight > 0 || entry.unloadingDate) ? "Received" : "In Transit",
-          entry.consignee
-        ]);
-
-        autoTable(doc, {
-          head: [tableColumn],
-          body: tableRows,
-          startY: currentY,
-          theme: "grid",
-          headStyles: { fillColor: [71, 85, 105], textColor: 255, fontSize: 8 },
-          styles: { fontSize: 7, cellPadding: 2 },
-          margin: { bottom: 20 }
-        });
-
-        currentY = doc.lastAutoTable.finalY + 15;
-        
-        // Add new page if needed
-        if (currentY > 180 && index < Object.entries(groupedLorryData).length - 1) {
-          doc.addPage();
-          currentY = 20;
+      autoTable(doc, {
+        head: [tableColumn],
+        body: tableRows,
+        startY: 50,
+        theme: "grid",
+        headStyles: {
+          fillColor: [15, 23, 42],
+          textColor: 255,
+          fontSize: 9,
+          halign: "center",
+          fontStyle: 'bold'
+        },
+        styles: { fontSize: 8, cellPadding: 3, valign: 'middle' },
+        columnStyles: {
+          0: { halign: "center", cellWidth: 12 },
+          2: { fontStyle: 'bold' },
+          6: { halign: "right" },
+          7: { halign: "right" },
+          8: { halign: "center" },
+        },
+        didDrawPage: (data) => {
+          // Footer with page numbers
+          doc.setFontSize(8);
+          doc.text(
+            `Page ${data.pageNumber}`,
+            pageWidth / 2,
+            doc.internal.pageSize.getHeight() - 10,
+            { align: 'center' }
+          );
         }
       });
 
-      doc.save(`Lorry_Consolidated_Report_${new Date().getTime()}.pdf`);
-      toast.update(toastId, { render: "Report Downloaded", type: "success", isLoading: false, autoClose: 3000 });
+      doc.save(`Lorry_Report_${searchLorry || "All"}_Page_${currentPage}.pdf`);
+      toast.update(toastId, {
+        render: "Report Downloaded Successfully",
+        type: "success",
+        isLoading: false,
+        autoClose: 3000,
+      });
     } catch (error) {
       console.error("PDF generation failed", error);
-      toast.update(toastId, { render: "Failed to generate report", type: "error", isLoading: false, autoClose: 3000 });
+      toast.update(toastId, {
+        render: "Failed to generate report",
+        type: "error",
+        isLoading: false,
+        autoClose: 3000,
+      });
     }
   };
 
   return (
     <AdminPageShell
       title="Lorry wise Loading Entry"
-      subtitle="Grouped loading history and performance metrics per vehicle"
+      subtitle="Comprehensive vehicle loading history and tracking"
       icon={FaTruck}
     >
       <div className="space-y-10">
-        {/* Filters Card */}
+        {/* Premium Filter Section */}
         <div className="bg-white p-8 rounded-[3rem] border border-slate-200 shadow-xl shadow-slate-200/30">
           <div className="flex flex-col lg:flex-row gap-8 items-end">
             <div className="flex-1 w-full">
               <label className="block text-[11px] font-black text-slate-400 uppercase tracking-[0.25em] mb-3 ml-2">
-                Search Lorry Number
+                Vehicle Number
               </label>
               <Suspense fallback={<div className="h-14 bg-slate-100 animate-pulse rounded-2xl" />}>
                 <SearchBox
-                  placeholder="Enter Lorry No (Ex: WB 23...)"
+                  placeholder="Search Lorry No..."
                   value={searchLorry}
-                  onSearch={(q) => setSearchLorry(q)}
+                  onSearch={(q) => { setSearchLorry(q); setCurrentPage(1); }}
                   returnQuery={true}
                   items={[]}
                   className="!max-w-none !h-14 !rounded-2xl !border-slate-200 shadow-inner"
@@ -369,14 +321,14 @@ const LorryWiseLoadingList = () => {
 
             <div className="w-full lg:w-72">
               <label className="block text-[11px] font-black text-slate-400 uppercase tracking-[0.25em] mb-3 ml-2">
-                Trip Status
+                Filter by Status
               </label>
               <Suspense fallback={<div className="h-14 bg-slate-100 animate-pulse rounded-2xl" />}>
                 <DataDropdown
                   options={statusOptions}
                   value={selectedStatus}
                   selectedOptions={selectedStatus}
-                  onChange={setSelectedStatus}
+                  onChange={(val) => { setSelectedStatus(val); setCurrentPage(1); }}
                   placeholder="Select Status"
                   className="!mb-0"
                 />
@@ -388,51 +340,46 @@ const LorryWiseLoadingList = () => {
               disabled={loading || loadingEntries.length === 0}
               className="w-full lg:w-auto flex items-center justify-center gap-3 px-8 h-14 bg-indigo-600 text-white rounded-2xl font-black text-[11px] uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 disabled:opacity-50 disabled:shadow-none active:scale-95"
             >
-              <FaFilePdf className="text-lg" /> Consolidated Report
+              <FaFilePdf className="text-lg" /> Download All ({loadingEntries.length})
             </button>
           </div>
         </div>
 
-        {/* Grouped Content */}
-        {loading ? (
-          <Loading />
-        ) : Object.keys(groupedLorryData).length > 0 ? (
-          <div className="space-y-6">
-            <div className="flex items-center justify-between px-6">
-              <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">
-                Found {Object.keys(groupedLorryData).length} Unique Vehicles
-              </p>
-            </div>
-            
-            {Object.entries(groupedLorryData).map(([lorryNo, entries]) => (
-              <LorryGroupCard 
-                key={lorryNo} 
-                lorryNo={lorryNo} 
-                entries={entries} 
-                onDownloadSingle={downloadSinglePDF}
-              />
-            ))}
+        {/* Premium Table Section */}
+        <div className="bg-white rounded-[3rem] border border-slate-200 shadow-xl shadow-slate-200/30 overflow-hidden">
+          <div className="px-10 py-8 border-b border-slate-100 flex items-center justify-between">
+            <h3 className="text-lg font-black text-slate-900 tracking-tight uppercase italic">
+              Loading Records
+            </h3>
+            <span className="px-4 py-1.5 bg-slate-100 text-slate-500 rounded-full text-[10px] font-black uppercase tracking-widest">
+              Total Found: {totalItems}
+            </span>
+          </div>
+          
+          <Suspense fallback={<Loading />}>
+            <Tables headers={headers} rows={rows} loading={loading} />
+          </Suspense>
 
-            <div className="pt-8">
-              <Suspense fallback={<div className="h-12" />}>
-                <Pagination
-                  currentPage={currentPage}
-                  totalItems={totalItems}
-                  itemsPerPage={itemsPerPage}
-                  onPageChange={setCurrentPage}
-                />
-              </Suspense>
+          {loadingEntries.length === 0 && !loading && (
+            <div className="py-24 text-center">
+              <div className="h-20 w-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                <FaTruck className="text-3xl text-slate-200" />
+              </div>
+              <p className="text-slate-400 font-bold uppercase tracking-widest text-xs">No records matching your filters</p>
             </div>
+          )}
+
+          <div className="px-10 py-8 bg-slate-50/50 border-t border-slate-100">
+            <Suspense fallback={<div className="h-12" />}>
+              <Pagination
+                currentPage={currentPage}
+                totalItems={totalItems}
+                itemsPerPage={itemsPerPage}
+                onPageChange={setCurrentPage}
+              />
+            </Suspense>
           </div>
-        ) : (
-          <div className="py-24 text-center bg-white rounded-[3rem] border border-dashed border-slate-300">
-            <div className="h-20 w-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6">
-              <FaTruck className="text-3xl text-slate-300" />
-            </div>
-            <h3 className="text-xl font-bold text-slate-900">No Vehicles Found</h3>
-            <p className="text-slate-500 mt-2">Try adjusting your search or filters</p>
-          </div>
-        )}
+        </div>
       </div>
     </AdminPageShell>
   );
