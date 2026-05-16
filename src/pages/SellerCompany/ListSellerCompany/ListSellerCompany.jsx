@@ -137,6 +137,7 @@ const ListSellerCompany = () => {
     "Address",
     "State",
     "District",
+    "Total Quantity (T)",
     "Brokerage Amount",
     "Bank Details",
     "Actions",
@@ -151,6 +152,9 @@ const ListSellerCompany = () => {
     capitalizeWords(company.address),
     capitalizeWords(company.state),
     capitalizeWords(company.district),
+    <span key={`qty-${company._id}`} className="font-bold text-indigo-600">
+      {(company.totalUnloadingWeight || 0).toFixed(2)} T
+    </span>,
     <span key={`brokerage-${company._id}`} className="font-bold text-emerald-600">
       ₹{(company.totalBrokerage || 0).toLocaleString("en-IN", {
         minimumFractionDigits: 2,
@@ -258,6 +262,12 @@ const ListSellerCompany = () => {
                     <strong>MSME No:</strong> {selectedCompany.msmeNo}
                   </p>
                 )}
+                <p>
+                  <strong>Total Quantity:</strong>{" "}
+                  <span className="text-indigo-600 font-bold">
+                    {(selectedCompany.totalUnloadingWeight || 0).toFixed(2)} Tons
+                  </span>
+                </p>
                 <p>
                   <strong>Total Brokerage:</strong>{" "}
                   <span className="text-emerald-600 font-bold">

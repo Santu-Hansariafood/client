@@ -35,6 +35,7 @@ router.get("/", async (req, res) => {
       {
         $addFields: {
           totalBrokerage: { $sum: "$loadingEntries.sellerBrokerage" },
+          totalUnloadingWeight: { $sum: "$loadingEntries.unloadingWeight" },
         },
       },
       { $sort: { companyName: 1 } },

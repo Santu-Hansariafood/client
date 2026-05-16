@@ -30,6 +30,7 @@ const SellerDashboard = () => {
   const [orderCount, setOrderCount] = useState(0);
   const [pendingSaudaCount, setPendingSaudaCount] = useState(0);
   const [totalBrokerage, setTotalBrokerage] = useState(0);
+  const [totalQuantity, setTotalQuantity] = useState(0);
   const [showPopup, setShowPopup] = useState(false);
 
   useEffect(() => {
@@ -100,6 +101,7 @@ const SellerDashboard = () => {
         setOrderCount(ordersTotal);
         setPendingSaudaCount(pendingTotal);
         setTotalBrokerage(statsRes.data?.totalBrokerage || 0);
+        setTotalQuantity(statsRes.data?.totalUnloadingWeight || 0);
       } catch (err) {
         console.error(err);
         toast.error("Error loading dashboard");
@@ -215,8 +217,66 @@ const SellerDashboard = () => {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2 bg-white/70 backdrop-blur-xl p-4 sm:p-8 rounded-[2rem] sm:rounded-3xl shadow-sm border border-white/60">
-              <UserProfileCard user={user} />
+            <div className="lg:col-span-2 space-y-8">
+              {/* Performance Overview Section */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="relative group overflow-hidden bg-gradient-to-br from-indigo-600 to-blue-700 p-8 rounded-[2.5rem] shadow-2xl shadow-indigo-200 transition-all duration-500 hover:scale-[1.02]">
+                  <div className="absolute -top-12 -right-12 w-48 h-48 bg-white/10 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-700" />
+                  <div className="relative z-10">
+                    <div className="flex items-center gap-4 mb-6">
+                      <div className="p-3 bg-white/20 rounded-2xl backdrop-blur-md">
+                        <FaBoxOpen className="text-white text-2xl" />
+                      </div>
+                      <h3 className="text-white/80 font-black text-xs uppercase tracking-[0.3em]">
+                        Total Unloading Quantity
+                      </h3>
+                    </div>
+                    <div className="flex items-baseline gap-3">
+                      <span className="text-4xl sm:text-5xl font-black text-white tracking-tighter">
+                        {totalQuantity.toFixed(2)}
+                      </span>
+                      <span className="text-xl font-bold text-white/60">Tons</span>
+                    </div>
+                    <div className="mt-8 flex items-center gap-2">
+                      <div className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                      <p className="text-[10px] font-bold text-white/50 uppercase tracking-widest">
+                        Live Unloading Status
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="relative group overflow-hidden bg-gradient-to-br from-emerald-600 to-teal-700 p-8 rounded-[2.5rem] shadow-2xl shadow-emerald-200 transition-all duration-500 hover:scale-[1.02]">
+                  <div className="absolute -bottom-12 -left-12 w-48 h-48 bg-white/10 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-700" />
+                  <div className="relative z-10">
+                    <div className="flex items-center gap-4 mb-6">
+                      <div className="p-3 bg-white/20 rounded-2xl backdrop-blur-md">
+                        <FaBook className="text-white text-2xl" />
+                      </div>
+                      <h3 className="text-white/80 font-black text-xs uppercase tracking-[0.3em]">
+                        Total Brokerage Earned
+                      </h3>
+                    </div>
+                    <div className="flex items-baseline gap-3">
+                      <span className="text-4xl sm:text-5xl font-black text-white tracking-tighter">
+                        ₹{totalBrokerage.toLocaleString("en-IN", {
+                          minimumFractionDigits: 2,
+                        })}
+                      </span>
+                    </div>
+                    <div className="mt-8 flex items-center gap-2">
+                      <div className="h-1.5 w-1.5 rounded-full bg-indigo-400 animate-pulse" />
+                      <p className="text-[10px] font-bold text-white/50 uppercase tracking-widest">
+                        Consolidated Earnings
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white/70 backdrop-blur-xl p-4 sm:p-8 rounded-[2rem] sm:rounded-3xl shadow-sm border border-white/60">
+                <UserProfileCard user={user} />
+              </div>
             </div>
 
             <div className="bg-white/70 backdrop-blur-xl p-6 sm:p-8 rounded-[2rem] sm:rounded-3xl shadow-sm border border-white/60">
