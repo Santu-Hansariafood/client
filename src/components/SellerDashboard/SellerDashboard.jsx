@@ -126,7 +126,7 @@ const CommodityItem = memo(({ item, totalQuantity, onAction, actionLabel }) => {
                 <FaHistory className="text-[8px]" /> {item?.trips || 0} Trips
               </p>
               <span className="h-1 w-1 rounded-full bg-slate-200" />
-              <span className="text-[9px] font-black text-emerald-500 uppercase tracking-widest">Live Sync</span>
+              {/* <span className="text-[9px] font-black text-emerald-500 uppercase tracking-widest">Live Sync</span> */}
             </div>
           </div>
         </div>
