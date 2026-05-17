@@ -56,7 +56,7 @@ const HeaderSection = memo(({ userName, totalBrokerage }) => {
             <div className="flex items-center gap-1.5 bg-white/20 backdrop-blur-md px-3 py-1 rounded-full border border-white/30">
               <FaWallet className="text-[10px]" />
               <p className="text-xs font-black tracking-tight">
-                Brokerage: ₹{totalBrokerage.toLocaleString("en-IN")}
+                Brokerage: Rs. {totalBrokerage.toLocaleString("en-IN")}
               </p>
             </div>
             <span className="h-1 w-1 rounded-full bg-white/40" />
@@ -185,10 +185,10 @@ const CommodityItem = memo(({ item, totalQuantity, onAction, actionLabel }) => {
               Net Earnings
             </p>
             <p className="text-lg sm:text-2xl font-black text-slate-900 group-hover:text-emerald-700 tracking-tighter transition-colors">
-              ₹{brokerage.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+              Rs. {brokerage.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
             </p>
             <p className="text-[10px] sm:text-xs font-bold text-indigo-600 mt-1 uppercase tracking-tighter">
-              ₹{effectiveRate}/T
+              Rs. {effectiveRate}/T
             </p>
           </div>
 
