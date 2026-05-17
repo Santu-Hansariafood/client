@@ -12,11 +12,11 @@ import logo from "../../assets/Hans.jpg";
 
 const styles = StyleSheet.create({
   page: {
-    paddingTop: 120,
-    paddingBottom: 70,
-    paddingHorizontal: 18,
-    fontSize: 8,
-    fontFamily: "Courier",
+    paddingTop: 110,
+    paddingBottom: 60,
+    paddingHorizontal: 25,
+    fontSize: 9,
+    fontFamily: "Helvetica",
     color: "#000",
     backgroundColor: "#fff",
   },
@@ -25,19 +25,19 @@ const styles = StyleSheet.create({
 
   header: {
     position: "absolute",
-    top: 18,
-    left: 18,
-    right: 18,
-    borderWidth: 1,
+    top: 25,
+    left: 25,
+    right: 25,
+    borderWidth: 1.5,
     borderColor: "#000",
     flexDirection: "row",
-    padding: 8,
+    padding: 10,
     alignItems: "center",
   },
 
   logo: {
-    width: 55,
-    height: 55,
+    width: 60,
+    height: 60,
     objectFit: "contain",
   },
 
@@ -47,37 +47,39 @@ const styles = StyleSheet.create({
   },
 
   companyName: {
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: "bold",
-    marginBottom: 3,
+    marginBottom: 4,
+    textTransform: "uppercase",
   },
 
   companyAddress: {
-    fontSize: 7.5,
-    lineHeight: 1.3,
+    fontSize: 8.5,
+    lineHeight: 1.4,
   },
 
   // ================= TITLE =================
 
   titleSection: {
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderTopWidth: 0,
     borderColor: "#000",
-    paddingVertical: 5,
+    paddingVertical: 6,
     alignItems: "center",
-    marginBottom: 0,
   },
 
   title: {
-    fontSize: 11,
+    fontSize: 13,
     fontWeight: "bold",
-    letterSpacing: 1,
+    letterSpacing: 2,
+    textTransform: "uppercase",
+    textDecoration: "underline",
   },
 
   // ================= INFO SECTION =================
 
   infoWrapper: {
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderTopWidth: 0,
     borderColor: "#000",
     flexDirection: "row",
@@ -85,20 +87,20 @@ const styles = StyleSheet.create({
 
   infoLeft: {
     flex: 1,
-    borderRightWidth: 1,
+    borderRightWidth: 1.5,
     borderColor: "#000",
-    padding: 6,
-    minHeight: 75,
+    padding: 8,
+    minHeight: 85,
   },
 
   infoRight: {
-    width: "35%",
-    padding: 6,
+    width: "38%",
+    padding: 8,
   },
 
   line: {
-    marginBottom: 4,
-    lineHeight: 1.4,
+    marginBottom: 5,
+    lineHeight: 1.5,
   },
 
   bold: {
@@ -108,18 +110,18 @@ const styles = StyleSheet.create({
   // ================= TABLE =================
 
   tableWrapper: {
-    borderLeftWidth: 1,
-    borderRightWidth: 1,
-    borderBottomWidth: 1,
+    borderLeftWidth: 1.5,
+    borderRightWidth: 1.5,
+    borderBottomWidth: 1.5,
     borderColor: "#000",
   },
 
   tableHeader: {
     flexDirection: "row",
-    borderBottomWidth: 1,
+    borderBottomWidth: 1.5,
     borderColor: "#000",
     backgroundColor: "#f2f2f2",
-    minHeight: 24,
+    minHeight: 28,
     alignItems: "center",
   },
 
@@ -127,27 +129,28 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     borderBottomWidth: 1,
     borderColor: "#000",
-    minHeight: 22,
+    minHeight: 25,
     alignItems: "center",
   },
 
   cell: {
     borderRightWidth: 1,
     borderColor: "#000",
-    paddingHorizontal: 3,
+    paddingHorizontal: 4,
     justifyContent: "center",
     height: "100%",
-    paddingVertical: 4,
+    paddingVertical: 5,
   },
 
   headerText: {
-    fontSize: 7.5,
+    fontSize: 8.5,
     fontWeight: "bold",
     textAlign: "center",
+    textTransform: "uppercase",
   },
 
   cellText: {
-    fontSize: 7.5,
+    fontSize: 8.5,
   },
 
   right: {
@@ -163,41 +166,41 @@ const styles = StyleSheet.create({
   totalRow: {
     flexDirection: "row",
     backgroundColor: "#f2f2f2",
-    minHeight: 24,
+    minHeight: 28,
     alignItems: "center",
   },
 
   // ================= AMOUNT WORDS =================
 
   amountSection: {
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderTopWidth: 0,
     borderColor: "#000",
-    padding: 6,
-    minHeight: 45,
-    lineHeight: 1.5,
+    padding: 8,
+    minHeight: 50,
+    lineHeight: 1.6,
   },
 
   // ================= BANK =================
 
   bankWrapper: {
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderTopWidth: 0,
     borderColor: "#000",
     flexDirection: "row",
-    minHeight: 100,
+    minHeight: 110,
   },
 
   bankLeft: {
     flex: 1,
-    borderRightWidth: 1,
+    borderRightWidth: 1.5,
     borderColor: "#000",
-    padding: 6,
+    padding: 8,
   },
 
   bankRight: {
     flex: 1,
-    padding: 6,
+    padding: 8,
     textAlign: "right",
     justifyContent: "space-between",
   },
@@ -206,23 +209,94 @@ const styles = StyleSheet.create({
 
   footer: {
     position: "absolute",
-    bottom: 18,
-    left: 18,
-    right: 18,
-    borderTopWidth: 1,
+    bottom: 25,
+    left: 25,
+    right: 25,
+    borderTopWidth: 1.5,
     borderColor: "#000",
-    paddingTop: 5,
+    paddingTop: 8,
     textAlign: "center",
-    fontSize: 7,
+    fontSize: 7.5,
+    color: "#555",
   },
 });
 
 // ================= NUMBER TO WORDS =================
 
 const numberToWords = (amount) => {
-  return `${amount.toLocaleString("en-IN", {
-    minimumFractionDigits: 2,
-  })} Rupees Only`;
+  if (amount === 0) return "Zero Rupees Only";
+
+  const a = [
+    "",
+    "One",
+    "Two",
+    "Three",
+    "Four",
+    "Five",
+    "Six",
+    "Seven",
+    "Eight",
+    "Nine",
+    "Ten",
+    "Eleven",
+    "Twelve",
+    "Thirteen",
+    "Fourteen",
+    "Fifteen",
+    "Sixteen",
+    "Seventeen",
+    "Eighteen",
+    "Nineteen",
+  ];
+  const b = [
+    "",
+    "",
+    "Twenty",
+    "Thirty",
+    "Forty",
+    "Fifty",
+    "Sixty",
+    "Seventy",
+    "Eighty",
+    "Ninety",
+  ];
+
+  const convert = (n) => {
+    if (n < 20) return a[n];
+    if (n < 100) return b[Math.floor(n / 10)] + (n % 10 !== 0 ? " " + a[n % 10] : "");
+    if (n < 1000)
+      return (
+        a[Math.floor(n / 100)] +
+        " Hundred" +
+        (n % 100 !== 0 ? " and " + convert(n % 100) : "")
+      );
+    if (n < 100000)
+      return (
+        convert(Math.floor(n / 1000)) +
+        " Thousand" +
+        (n % 1000 !== 0 ? " " + convert(n % 1000) : "")
+      );
+    if (n < 10000000)
+      return (
+        convert(Math.floor(n / 100000)) +
+        " Lakh" +
+        (n % 100000 !== 0 ? " " + convert(n % 100000) : "")
+      );
+    return (
+      convert(Math.floor(n / 10000000)) +
+      " Crore" +
+      (n % 10000000 !== 0 ? " " + convert(n % 10000000) : "")
+    );
+  };
+
+  const wholeNumber = Math.floor(amount);
+  const decimalPart = Math.round((amount - wholeNumber) * 100);
+
+  let result = convert(wholeNumber) + " Rupees";
+  if (decimalPart > 0) {
+    result += " and " + convert(decimalPart) + " Paise";
+  }
+  return result + " Only";
 };
 
 // ================= COMPONENT =================
@@ -311,8 +385,10 @@ const ProformaInvoicePDF = ({ entries = [], company = {} }) => {
             </Text>
 
             <Text style={styles.line}>
-              <Text style={styles.bold}>GSTIN : </Text>
-              {company.gstNo || "-"}
+              <Text style={styles.bold}>
+                {company.gstNo ? "GSTIN : " : "PAN : "}
+              </Text>
+              {company.gstNo || company.panNo || "-"}
             </Text>
           </View>
 
@@ -384,10 +460,9 @@ const ProformaInvoicePDF = ({ entries = [], company = {} }) => {
           {/* TABLE ROWS */}
 
           {entries.map((entry, index) => {
-            const rate =
-              entry.unloadingWeight > 0
-                ? (entry.sellerBrokerage / entry.unloadingWeight).toFixed(2)
-                : "0.00";
+            const brokerage = entry.sellerBrokerage || 0;
+            const weight = entry.unloadingWeight || 0;
+            const rate = weight > 0 ? (brokerage / weight).toFixed(2) : "0.00";
 
             return (
               <View style={styles.row} key={index} wrap={false}>
@@ -437,7 +512,12 @@ const ProformaInvoicePDF = ({ entries = [], company = {} }) => {
                   ]}
                 >
                   <Text style={[styles.cellText, styles.right]}>
-                    {entry.sellerBrokerage?.toFixed(2) || "0.00"}
+                    {brokerage > 0
+                      ? brokerage.toLocaleString("en-IN", {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })
+                      : "0.00"}
                   </Text>
                 </View>
               </View>
@@ -452,20 +532,20 @@ const ProformaInvoicePDF = ({ entries = [], company = {} }) => {
             </View>
 
             <View style={[styles.cell, { width: "12%" }]}>
-              <Text style={styles.headerText}>{totalLoading.toFixed(2)}</Text>
+              <Text style={[styles.headerText, styles.right]}>
+                {totalLoading.toFixed(2)}
+              </Text>
             </View>
 
             <View style={[styles.cell, { width: "12%" }]}>
-              <Text style={styles.headerText}>{totalUnloading.toFixed(2)}</Text>
+              <Text style={[styles.headerText, styles.right]}>
+                {totalUnloading.toFixed(2)}
+              </Text>
             </View>
 
-            <View style={[styles.cell, { width: "20%" }]}>
-              <Text></Text>
-            </View>
+            <View style={[styles.cell, { width: "20%" }]}></View>
 
-            <View style={[styles.cell, { width: "10%" }]}>
-              <Text></Text>
-            </View>
+            <View style={[styles.cell, { width: "10%" }]}></View>
 
             <View
               style={[
@@ -476,8 +556,12 @@ const ProformaInvoicePDF = ({ entries = [], company = {} }) => {
                 },
               ]}
             >
-              <Text style={styles.headerText}>
-                ₹{totalBrokerage.toFixed(2)}
+              <Text style={[styles.headerText, styles.right]}>
+                Rs.{" "}
+                {totalBrokerage.toLocaleString("en-IN", {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
               </Text>
             </View>
           </View>
@@ -507,11 +591,11 @@ const ProformaInvoicePDF = ({ entries = [], company = {} }) => {
 
             <Text>A/c Name : HANSARIA FOOD PRIVATE LIMITED</Text>
 
-            <Text>A/c No. : XXXXXXXXXXXX</Text>
+            <Text>A/c No. : [PROVIDE ACCOUNT NO]</Text>
 
-            <Text>Bank Name : XXXXXXXXXXXX</Text>
+            <Text>Bank Name : [PROVIDE BANK NAME]</Text>
 
-            <Text>IFSC Code : XXXXXXXX</Text>
+            <Text>IFSC Code : [PROVIDE IFSC]</Text>
           </View>
 
           <View style={styles.bankRight}>

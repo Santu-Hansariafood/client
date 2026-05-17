@@ -137,17 +137,42 @@ router.get("/company-report", async (req, res) => {
       supplier: seller._id
     };
 
-    const entries = await LoadingEntry.find(query)
+    const rawEntries = await LoadingEntry.find(query)
       .sort({ unloadingDate: -1, loadingDate: -1 })
       .lean();
 
+    // Dynamically calculate brokerage if missing
+    const entries = await Promise.all(
+      rawEntries.map(async (entry) => {
+        if (!entry.sellerBrokerage || entry.sellerBrokerage === 0) {
+          const selfOrder = await mongoose.model("SelfOrder").findOne({ saudaNo: entry.saudaNo });
+          if (selfOrder) {
+            let rate = selfOrder.buyerBrokerage?.brokerageSupplier || 0;
+            if (rate === 0 && selfOrder.supplier && selfOrder.commodity) {
+              const sellerDoc = await Seller.findById(selfOrder.supplier);
+              if (sellerDoc && sellerDoc.commodities) {
+                const comm = sellerDoc.commodities.find(
+                  (c) => c.name.toLowerCase() === selfOrder.commodity.toLowerCase(),
+                );
+                if (comm) rate = comm.brokerage;
+              }
+            }
+            if (rate > 0 && entry.unloadingWeight) {
+              entry.sellerBrokerage = +(entry.unloadingWeight * rate).toFixed(2);
+            }
+          }
+        }
+        return entry;
+      }),
+    );
+
     const companyDetails = await mongoose.model("SellerCompany").findOne({
-      companyName: { $regex: new RegExp(`^${escapeRegex(supplierCompany)}$`, "i") }
+      companyName: { $regex: new RegExp(`^${escapeRegex(supplierCompany)}$`, "i") },
     }).lean();
 
     res.json({
       entries,
-      company: companyDetails || { companyName: supplierCompany }
+      company: companyDetails || { companyName: supplierCompany },
     });
   } catch (error) {
     console.error("Company report error:", error);
