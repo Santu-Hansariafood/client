@@ -238,7 +238,7 @@ const PendingLoadingList = () => {
       if (pendingQuantity === undefined || pendingQuantity === null) {
         pendingQuantity = quantity;
       }
-      const isWithinTolerance = Math.abs(pendingQuantity) <= quantity * 0.05;
+      const isWithinTolerance = pendingQuantity <= 0 && pendingQuantity >= -quantity * 0.05;
       const isClosed = item.status === "closed" || isWithinTolerance;
       return !isClosed;
     });
@@ -568,7 +568,7 @@ const PendingLoadingList = () => {
     }
 
     const loadedQuantity = quantity - pendingQuantity;
-    const isWithinTolerance = Math.abs(pendingQuantity) <= quantity * 0.05;
+    const isWithinTolerance = pendingQuantity <= 0 && pendingQuantity >= -quantity * 0.05;
     const isClosed = item.status === "closed" || isWithinTolerance;
 
     const brokerageRate = item.buyerBrokerage?.brokerageSupplier || 0;

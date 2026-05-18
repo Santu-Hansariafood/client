@@ -934,7 +934,7 @@ router.put("/:id", async (req, res) => {
     item.pendingQuantity = (item.quantity || 0) - totalLoaded;
 
     const tolerance = (item.quantity || 0) * 0.05;
-    if (Math.abs(item.pendingQuantity) <= tolerance) {
+    if (item.pendingQuantity <= 0 && item.pendingQuantity >= -tolerance) {
       item.status = "closed";
     } else {
       item.status = "active";

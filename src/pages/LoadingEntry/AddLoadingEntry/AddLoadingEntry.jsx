@@ -301,8 +301,8 @@ const OrdersTableCard = ({ orders, handleOpenPopup, toggleSaudaStatus, userRole 
           rows={orders.map((order) => {
             const isWithinTolerance =
               order.pendingQuantity !== undefined &&
-              order.pendingQuantity <= order.quantity * 0.05 &&
-              order.pendingQuantity >= 0;
+              order.pendingQuantity <= 0 &&
+              order.pendingQuantity >= -order.quantity * 0.05;
             const isEffectivelyClosed =
               order.status === "closed" || isWithinTolerance;
 
