@@ -1,0 +1,287 @@
+import {
+  lazy,
+  Suspense,
+  useEffect,
+  useState,
+  useMemo,
+  useCallback,
+} from "react";
+import api from "../../utils/apiClient/apiClient";
+import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
+import { FaDownload, FaTimes, FaHandshake } from "react-icons/fa";
+import { AiOutlineSearch } from "react-icons/ai";
+import Loading from "../../common/Loading/Loading";
+import AdminPageShell from "../../common/AdminPageShell/AdminPageShell";
+import { fetchAllPages } from "../../utils/apiClient/fetchAllPages";
+
+const Tables = lazy(() => import("../../common/Tables/Tables"));
+const Pagination = lazy(
+  () => import("../../common/Paginations/Paginations"),
+);
+const DateSelector = lazy(
+  () => import("../../common/DateSelector/DateSelector"),
+);
+
+const API_URL = "/self-order";
+
+const BuyerBrokerage = () => {
+  const navigate = useNavigate();
+
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [totalItems, setTotalItems] = useState(0);
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
+  const [reloadFlag, setReloadFlag] = useState(0);
+  const [searchInput, setSearchInput] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    try {
+      const page = currentPage || 1;
+      const search = searchInput?.trim() || "";
+
+      const queryParams = new URLSearchParams({
+        page,
+        limit: itemsPerPage,
+        search,
+        sortBy: "saudaNo",
+        sortOrder: "desc",
+        startDate: startDate || "",
+        endDate: endDate || "",
+      }).toString();
+
+      const response = await api.get(`${API_URL}?${queryParams}`);
+      const orderData = response.data || {};
+      const items = Array.isArray(orderData.data)
+        ? orderData.data
+        : Array.isArray(orderData)
+          ? orderData
+          : [];
+      const total = orderData.total || orderData.totalItems || items.length;
+
+      setData(items);
+      setTotalItems(total);
+    } catch (error) {
+      console.error("Fetch error:", error);
+      toast.error("Failed to fetch brokerage data");
+    } finally {
+      setLoading(false);
+    }
+  }, [currentPage, itemsPerPage, searchInput, startDate, endDate]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData, reloadFlag]);
+
+  const handleClearFilters = () => {
+    setSearchInput("");
+    setStartDate("");
+    setEndDate("");
+    setCurrentPage(1);
+    setReloadFlag((prev) => prev + 1);
+  };
+
+  const handlePageChange = useCallback((pageNumber) => {
+    setCurrentPage(pageNumber);
+  }, []);
+
+  const headers = [
+    "Sl No",
+    "Date",
+    "Sauda No",
+    "Buyer Company",
+    "Commodity",
+    "Quantity",
+    "Rate",
+    "Buyer Brokerage",
+    "Total Brokerage",
+  ];
+
+  const rows = useMemo(
+    () =>
+      data.map((item, index) => {
+        const slNo = (currentPage - 1) * itemsPerPage + index + 1;
+        const formattedDate = item.poDate
+          ? new Date(item.poDate).toLocaleDateString("en-GB")
+          : item.createdAt
+            ? new Date(item.createdAt).toLocaleDateString("en-GB")
+            : "N/A";
+
+        const buyerBrokerage = item.brokerage?.buyer || 0;
+        const totalBuyerBrokerage = (buyerBrokerage * (item.quantity || 0)).toFixed(2);
+
+        return [
+          <span key={`sl-${item._id}`} className="font-black text-slate-400">
+            {slNo}
+          </span>,
+          <span key={`date-${item._id}`} className="font-bold text-slate-600">
+            {formattedDate}
+          </span>,
+          <span
+            key={`sauda-${item._id}`}
+            className="font-black text-emerald-600 bg-emerald-50 px-2 py-1 rounded-lg border border-emerald-100"
+          >
+            {item.saudaNo || "N/A"}
+          </span>,
+          <span key={`buyer-${item._id}`} className="font-bold text-slate-800">
+            {item.buyerCompany || "N/A"}
+          </span>,
+          <span key={`comm-${item._id}`} className="font-bold text-slate-700">
+            {item.commodity || "N/A"}
+          </span>,
+          <span key={`qty-${item._id}`} className="font-black text-slate-900">
+            {item.quantity || "0"}
+          </span>,
+          <span
+            key={`rate-${item._id}`}
+            className="font-black text-emerald-700 bg-emerald-50 px-2 py-1 rounded-lg border border-emerald-100"
+          >
+            ₹{item.rate || "0"}
+          </span>,
+          <span key={`brk-${item._id}`} className="font-bold text-indigo-600">
+            ₹{buyerBrokerage} / Ton
+          </span>,
+          <span
+            key={`total-${item._id}`}
+            className="font-black text-indigo-700 bg-indigo-50 px-2 py-1 rounded-lg border border-indigo-100"
+          >
+            ₹{totalBuyerBrokerage}
+          </span>,
+        ];
+      }),
+    [data, currentPage, itemsPerPage],
+  );
+
+  return (
+    <Suspense fallback={<Loading />}>
+      <AdminPageShell
+        title="Buyer Brokerage"
+        subtitle="Manage and track buyer-side brokerage records"
+        icon={FaHandshake}
+        noContentCard
+      >
+        <div className="relative min-h-screen overflow-hidden -m-4 sm:-m-6 lg:-m-8 p-4 sm:p-6 lg:p-8">
+          <div className="absolute inset-0 -z-10 overflow-hidden pointer-events-none">
+            <div className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] bg-indigo-200/20 blur-[120px] rounded-full animate-pulse" />
+            <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] bg-emerald-200/20 blur-[120px] rounded-full animate-pulse delay-700" />
+          </div>
+
+          <div className="max-w-full space-y-6 animate-fade-in-up">
+            <div className="bg-white/60 backdrop-blur-2xl rounded-[2.5rem] p-6 sm:p-8 border border-white/60 shadow-2xl shadow-slate-200/50">
+              <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
+                <div className="flex items-center gap-3 flex-wrap">
+                  <button
+                    onClick={() => navigate(-1)}
+                    className="px-6 py-2.5 rounded-2xl bg-white text-slate-600 text-xs font-black uppercase tracking-widest border border-slate-200 hover:bg-slate-50 transition-all shadow-sm active:scale-95"
+                  >
+                    Back
+                  </button>
+                  <div className="h-10 w-[1px] bg-slate-100 hidden sm:block mx-2" />
+                  <div className="flex items-center gap-3">
+                    <div className="flex flex-col">
+                      <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1 ml-1">
+                        Start Date
+                      </span>
+                      <DateSelector
+                        selectedDate={startDate}
+                        onChange={setStartDate}
+                      />
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1 ml-1">
+                        End Date
+                      </span>
+                      <DateSelector selectedDate={endDate} onChange={setEndDate} />
+                    </div>
+                    {(startDate || endDate || searchInput) && (
+                      <button
+                        onClick={handleClearFilters}
+                        className="mt-5 p-2 rounded-xl bg-red-50 text-red-500 hover:bg-red-100 transition-all shadow-sm"
+                        title="Clear all filters"
+                      >
+                        <FaTimes size={16} />
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                <div className="w-full lg:max-w-md">
+                  <div className="relative group">
+                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                      <AiOutlineSearch
+                        size={20}
+                        className="text-slate-400 group-focus-within:text-indigo-600 transition-colors"
+                      />
+                    </div>
+                    <input
+                      type="text"
+                      placeholder="Search by Sauda, Buyer, or Commodity..."
+                      className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-[1.5rem] text-sm font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500/50 transition-all"
+                      value={searchInput}
+                      onChange={(e) => setSearchInput(e.target.value)}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white/60 backdrop-blur-2xl rounded-[2.5rem] p-4 sm:p-8 border border-white/60 shadow-2xl shadow-slate-200/50">
+              {loading ? (
+                <div className="py-24 flex flex-col items-center justify-center gap-4">
+                  <div className="w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+                  <p className="text-sm font-black text-slate-400 uppercase tracking-widest">
+                    Synchronizing Data...
+                  </p>
+                </div>
+              ) : (
+                <>
+                  <div className="rounded-[1.5rem] overflow-hidden border border-slate-100">
+                    <Tables headers={headers} rows={rows} />
+                  </div>
+
+                  {data.length === 0 && (
+                    <div className="py-24 text-center flex flex-col items-center justify-center gap-6">
+                      <div className="w-20 h-20 bg-slate-50 rounded-[2rem] flex items-center justify-center text-slate-200 shadow-inner">
+                        <FaHandshake size={40} />
+                      </div>
+                      <div className="space-y-1">
+                        <h3 className="text-xl font-black text-slate-800 tracking-tight">
+                          No brokerage records found
+                        </h3>
+                        <p className="text-sm text-slate-400 font-medium">
+                          Try adjusting your filters or search terms
+                        </p>
+                      </div>
+                      <button
+                        onClick={handleClearFilters}
+                        className="px-6 py-2.5 rounded-2xl bg-slate-900 text-white text-xs font-black uppercase tracking-widest hover:bg-slate-800 transition-all shadow-xl active:scale-95"
+                      >
+                        Clear all filters
+                      </button>
+                    </div>
+                  )}
+
+                  <div className="mt-8 border-t border-slate-100 pt-8">
+                    <Pagination
+                      currentPage={currentPage}
+                      totalItems={totalItems}
+                      itemsPerPage={itemsPerPage}
+                      onPageChange={handlePageChange}
+                    />
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      </AdminPageShell>
+    </Suspense>
+  );
+};
+
+export default BuyerBrokerage;

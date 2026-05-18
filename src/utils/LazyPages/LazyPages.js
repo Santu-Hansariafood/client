@@ -96,6 +96,8 @@ const loaders = {
   AddExpense: () => import("../../pages/Expense/AddExpense/AddExpense"),
   ListExpense: () => import("../../pages/Expense/ListExpense/ListExpense"),
   DataSafety: () => import("../../pages/DataSafety/DataSafety"),
+  BuyerBrokerage: () => import("../../pages/Brokerage/BuyerBrokerage"),
+  SellerBrokerage: () => import("../../pages/Brokerage/SellerBrokerage"),
 };
 
 const pathToKey = {
@@ -157,6 +159,8 @@ const pathToKey = {
   "/expense/add": "AddExpense",
   "/expense/list": "ListExpense",
   "/data-safety": "DataSafety",
+  "/brokerage/buyer": "BuyerBrokerage",
+  "/brokerage/seller": "SellerBrokerage",
 };
 
 const prefetched = new Set();
@@ -248,6 +252,8 @@ const LazyPages = {
   ListVendorCode: lazy(loaders.ListVendorCode),
   AddExpense: lazy(loaders.AddExpense),
   ListExpense: lazy(loaders.ListExpense),
+  BuyerBrokerage: lazy(loaders.BuyerBrokerage),
+  SellerBrokerage: lazy(loaders.SellerBrokerage),
 };
 
 export default LazyPages;

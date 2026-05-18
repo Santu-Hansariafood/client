@@ -306,6 +306,16 @@ const privateRoutes = [
     component: LazyPages.ListExpense,
     roles: ["Admin", "Employee"],
   },
+  {
+    path: "/brokerage/buyer",
+    component: LazyPages.BuyerBrokerage,
+    roles: ["Admin", "Employee"],
+  },
+  {
+    path: "/brokerage/seller",
+    component: LazyPages.SellerBrokerage,
+    roles: ["Admin", "Employee"],
+  },
 ];
 
 const AppRoutes = ({ hydrated }) => {

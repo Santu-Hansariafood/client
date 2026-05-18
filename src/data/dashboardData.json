@@ -149,6 +149,22 @@
       ]
     },
     {
+      "section": "Brokerage",
+      "icon": "FaHandshake",
+      "actions": [
+        {
+          "name": "Buyer Brokerage",
+          "link": "/brokerage/buyer",
+          "icon": "FaUserTie"
+        },
+        {
+          "name": "Seller Brokerage",
+          "link": "/brokerage/seller",
+          "icon": "FaUserTie"
+        }
+      ]
+    },
+    {
       "section": "Manage Order",
       "icon": "FaClipboardList",
       "actions": [
