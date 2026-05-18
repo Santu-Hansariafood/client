@@ -422,6 +422,17 @@ router.get("/buyer/stats", async (req, res) => {
             },
             { $sort: { quantity: -1 } },
           ],
+          companyBreakdown: [
+            {
+              $group: {
+                _id: "$buyerCompany",
+                quantity: { $sum: "$loadingEntries.unloadingWeight" },
+                brokerage: { $sum: "$calculatedBrokerage" },
+                trips: { $sum: { $cond: [{ $ifNull: ["$loadingEntries._id", false] }, 1, 0] } },
+              },
+            },
+            { $sort: { brokerage: -1 } },
+          ],
         },
       },
     ]);
@@ -432,6 +443,7 @@ router.get("/buyer/stats", async (req, res) => {
       totalSaudas: stats[0]?.totals[0]?.totalSaudas || 0,
       pendingSaudas: stats[0]?.totals[0]?.pendingSaudas || 0,
       commodityBreakdown: stats[0]?.commodityBreakdown || [],
+      companyBreakdown: stats[0]?.companyBreakdown || [],
     };
 
     res.json(result);

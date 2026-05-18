@@ -9,11 +9,14 @@ import {
 import api from "../../utils/apiClient/apiClient";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import { FaDownload, FaTimes, FaHandshake } from "react-icons/fa";
+import { FaDownload, FaTimes, FaHandshake, FaFilePdf } from "react-icons/fa";
 import { AiOutlineSearch } from "react-icons/ai";
 import Loading from "../../common/Loading/Loading";
 import AdminPageShell from "../../common/AdminPageShell/AdminPageShell";
 import { fetchAllPages } from "../../utils/apiClient/fetchAllPages";
+import { pdf } from "@react-pdf/renderer";
+import BuyerProformaInvoicePDF from "../../components/BuyerDashboard/BuyerProformaInvoicePDF";
+import { downloadFile } from "../../utils/fileDownloader";
 
 const Tables = lazy(() => import("../../common/Tables/Tables"));
 const Pagination = lazy(
@@ -143,6 +146,52 @@ const BuyerBrokerage = () => {
     }
   }, [searchInput, startDate, endDate, exporting]);
 
+  const handleDownloadPDF = useCallback(async () => {
+    if (exporting) return;
+    const toastId = toast.loading("Preparing Buyer Brokerage PDF...");
+    try {
+      setExporting(true);
+      
+      const params = {
+        page: 1,
+        limit: 1000, // Get more for the PDF
+        search: searchInput?.trim() || "",
+        startDate: startDate || "",
+        endDate: endDate || "",
+      };
+
+      const { data: resData } = await api.get(API_URL, { params });
+      const items = resData.data || resData || [];
+
+      if (!items.length) {
+        toast.update(toastId, { render: "No data found to export", type: "info", isLoading: false, autoClose: 3000 });
+        return;
+      }
+
+      // Prepare entries with brokerage calculated
+      const entries = items.map(item => ({
+        ...item,
+        buyerBrokerage: (saudaRateMap[item.saudaNo] || 0) * (item.unloadingWeight || 0)
+      }));
+
+      const blob = await pdf(
+        <BuyerProformaInvoicePDF 
+          entries={entries} 
+          company={{ companyName: "Consolidated Buyer Report" }} 
+        />
+      ).toBlob();
+
+      downloadFile(blob, `BuyerBrokerage_${new Date().toISOString().split("T")[0]}.pdf`);
+      
+      toast.update(toastId, { render: "PDF downloaded successfully", type: "success", isLoading: false, autoClose: 3000 });
+    } catch (error) {
+      console.error("PDF Export Error:", error);
+      toast.update(toastId, { render: "Failed to download PDF", type: "error", isLoading: false, autoClose: 3000 });
+    } finally {
+      setExporting(false);
+    }
+  }, [searchInput, startDate, endDate, exporting, saudaRateMap]);
+
   const headers = [
     "Sl No",
     "Loading Date",
@@ -241,10 +290,18 @@ const BuyerBrokerage = () => {
                   <button
                     onClick={handleDownloadExcel}
                     disabled={exporting}
-                    className="flex items-center gap-2 px-6 py-2.5 rounded-2xl bg-indigo-600 text-white text-xs font-black uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 active:scale-95 disabled:opacity-50"
+                    className="flex items-center gap-2 px-6 py-2.5 rounded-2xl bg-emerald-600 text-white text-xs font-black uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-200 active:scale-95 disabled:opacity-50"
                   >
                     <FaDownload size={14} />
-                    <span>{exporting ? "Exporting..." : "Export Excel"}</span>
+                    <span>{exporting ? "..." : "Excel"}</span>
+                  </button>
+                  <button
+                    onClick={handleDownloadPDF}
+                    disabled={exporting}
+                    className="flex items-center gap-2 px-6 py-2.5 rounded-2xl bg-indigo-600 text-white text-xs font-black uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 active:scale-95 disabled:opacity-50"
+                  >
+                    <FaFilePdf size={14} />
+                    <span>{exporting ? "..." : "PDF Report"}</span>
                   </button>
                   <div className="h-10 w-[1px] bg-slate-100 hidden sm:block mx-2" />
                   <div className="flex items-center gap-3">

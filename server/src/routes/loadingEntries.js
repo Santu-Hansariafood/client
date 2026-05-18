@@ -119,23 +119,50 @@ router.get("/lorry-wise", async (req, res) => {
 
 router.get("/company-report", async (req, res) => {
   try {
-    const { supplierCompany, mobile } = req.query;
-    if (!supplierCompany || !mobile) {
+    const { supplierCompany, buyerCompany, mobile } = req.query;
+    if (!mobile || (!supplierCompany && !buyerCompany)) {
       return res.status(400).json({ message: "Company name and mobile are required" });
     }
 
-    const seller = await Seller.findOne({
-      "phoneNumbers.value": { $regex: new RegExp(mobile + "$") },
-    });
+    let query = {};
+    let companyDetails = null;
 
-    if (!seller) {
-      return res.status(404).json({ message: "Seller not found" });
+    if (supplierCompany) {
+      const seller = await Seller.findOne({
+        "phoneNumbers.value": { $regex: new RegExp(mobile + "$") },
+      });
+
+      if (!seller) {
+        return res.status(404).json({ message: "Seller not found" });
+      }
+
+      query = {
+        supplierCompany: { $regex: new RegExp(`^${escapeRegex(supplierCompany)}$`, "i") },
+        supplier: seller._id
+      };
+
+      companyDetails = await mongoose.model("SellerCompany").findOne({
+        companyName: { $regex: new RegExp(`^${escapeRegex(supplierCompany)}$`, "i") },
+      }).lean();
+    } else if (buyerCompany) {
+      const buyer = await Buyer.findOne({
+        mobile: { $regex: new RegExp(mobile + "$") },
+      });
+
+      if (!buyer) {
+        // Fallback: check by name if mobile not found directly on buyer doc
+        // (Assuming mobile is what we use to identify the user)
+      }
+
+      query = {
+        buyerCompany: { $regex: new RegExp(`^${escapeRegex(buyerCompany)}$`, "i") }
+      };
+
+      // For buyers, we might need to filter by their linked companies or just the company name
+      companyDetails = await mongoose.model("Company").findOne({
+        companyName: { $regex: new RegExp(`^${escapeRegex(buyerCompany)}$`, "i") },
+      }).lean();
     }
-
-    const query = {
-      supplierCompany: { $regex: new RegExp(`^${escapeRegex(supplierCompany)}$`, "i") },
-      supplier: seller._id
-    };
 
     const rawEntries = await LoadingEntry.find(query)
       .sort({ unloadingDate: -1, loadingDate: -1 })
@@ -147,32 +174,36 @@ router.get("/company-report", async (req, res) => {
         const selfOrder = await mongoose.model("SelfOrder").findOne({ saudaNo: entry.saudaNo });
         let rate = 0;
         if (selfOrder) {
-          rate = selfOrder.buyerBrokerage?.brokerageSupplier || 0;
-          if (rate === 0 && selfOrder.supplier && selfOrder.commodity) {
-            const sellerDoc = await Seller.findById(selfOrder.supplier);
-            if (sellerDoc && sellerDoc.commodities) {
-              const comm = sellerDoc.commodities.find(
-                (c) => c.name.toLowerCase() === selfOrder.commodity.toLowerCase(),
-              );
-              if (comm) rate = comm.brokerage;
+          if (supplierCompany) {
+            rate = selfOrder.buyerBrokerage?.brokerageSupplier || 0;
+            if (rate === 0 && selfOrder.supplier && selfOrder.commodity) {
+              const sellerDoc = await Seller.findById(selfOrder.supplier);
+              if (sellerDoc && sellerDoc.commodities) {
+                const comm = sellerDoc.commodities.find(
+                  (c) => c.name.toLowerCase() === selfOrder.commodity.toLowerCase(),
+                );
+                if (comm) rate = comm.brokerage;
+              }
             }
+          } else if (buyerCompany) {
+            rate = selfOrder.buyerBrokerage?.brokerageBuyer || 0;
           }
         }
 
         if (rate > 0 && entry.unloadingWeight) {
-          entry.sellerBrokerage = +(entry.unloadingWeight * rate).toFixed(2);
+          if (supplierCompany) {
+            entry.sellerBrokerage = +(entry.unloadingWeight * rate).toFixed(2);
+          } else {
+            entry.buyerBrokerage = +(entry.unloadingWeight * rate).toFixed(2);
+          }
         }
         return entry;
       }),
     );
 
-    const companyDetails = await mongoose.model("SellerCompany").findOne({
-      companyName: { $regex: new RegExp(`^${escapeRegex(supplierCompany)}$`, "i") },
-    }).lean();
-
     res.json({
       entries,
-      company: companyDetails || { companyName: supplierCompany },
+      company: companyDetails || { companyName: supplierCompany || buyerCompany },
     });
   } catch (error) {
     console.error("Company report error:", error);
