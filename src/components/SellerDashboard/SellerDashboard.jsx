@@ -103,7 +103,7 @@ const StatCard = memo(({ title, value, unit, icon, colorClass, subtitle, onClick
 ));
 StatCard.displayName = 'StatCard';
 
-const CommodityItem = memo(({ item, totalQuantity, onAction, actionLabel }) => {
+const CommodityItem = memo(({ item, totalQuantity, onAction, actionLabel, type = "commodity" }) => {
   const brokerage = item?.brokerage || 0;
   const quantity = item?.quantity || 0;
   const percentage = useMemo(() => Math.min((quantity / (totalQuantity || 1)) * 100, 100), [quantity, totalQuantity]);
@@ -112,13 +112,13 @@ const CommodityItem = memo(({ item, totalQuantity, onAction, actionLabel }) => {
     <div className="group relative bg-white hover:bg-emerald-50/30 p-5 rounded-[1.2rem] border border-slate-100 transition-all duration-300">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center gap-4 flex-1 min-w-0">
-          <div className="h-12 w-12 rounded-xl bg-emerald-700 flex items-center justify-center text-white shrink-0 shadow-sm group-hover:scale-105 transition-transform">
+          <div className={`h-12 w-12 rounded-xl flex items-center justify-center text-white shrink-0 shadow-sm group-hover:scale-105 transition-transform ${type === 'company' ? 'bg-indigo-700' : 'bg-emerald-700'}`}>
             <span className="text-sm font-black tracking-tighter italic">
               {item?._id?.substring(0, 2) || "CM"}
             </span>
           </div>
           <div className="min-w-0 flex-1">
-            <h4 className="text-sm font-black text-emerald-800 uppercase tracking-wider truncate">
+            <h4 className={`text-sm font-black uppercase tracking-wider truncate ${type === 'company' ? 'text-indigo-800' : 'text-emerald-800'}`}>
               {item?._id || "Other"}
             </h4>
             <div className="flex items-center gap-2 mt-1">
@@ -126,25 +126,27 @@ const CommodityItem = memo(({ item, totalQuantity, onAction, actionLabel }) => {
                 <FaHistory className="text-[8px]" /> {item?.trips || 0} Trips
               </p>
               <span className="h-1 w-1 rounded-full bg-slate-200" />
-              {/* <span className="text-[9px] font-black text-emerald-500 uppercase tracking-widest">Live Sync</span> */}
+              <span className={`text-[9px] font-black uppercase tracking-widest ${type === 'company' ? 'text-indigo-500' : 'text-emerald-500'}`}>
+                {type === 'company' ? 'Entity Verified' : 'Live Sync'}
+              </span>
             </div>
           </div>
         </div>
 
         <div className="flex items-center gap-6 md:gap-10 shrink-0">
           <div className="text-right">
-            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Tonnage</p>
+            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Total Quantity</p>
             <div className="flex items-baseline justify-end gap-1">
-              <span className="text-base font-black text-emerald-800">{quantity.toFixed(2)}</span>
-              <span className="text-[9px] font-bold text-slate-400 uppercase">T</span>
+              <span className={`text-base font-black ${type === 'company' ? 'text-indigo-800' : 'text-emerald-800'}`}>{quantity.toFixed(2)}</span>
+              <span className="text-[9px] font-bold text-slate-400 uppercase">Tons</span>
             </div>
           </div>
           
-          <div className="text-right min-w-[100px]">
-            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Earnings</p>
+          <div className="text-right min-w-[120px]">
+            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Brokerage Amount</p>
             <div className="flex items-baseline justify-end gap-1">
               <span className="text-[10px] font-black text-slate-400">Rs.</span>
-              <span className="text-base font-black text-emerald-800">
+              <span className={`text-base font-black ${type === 'company' ? 'text-indigo-800' : 'text-emerald-800'}`}>
                 {brokerage.toLocaleString("en-IN", { minimumFractionDigits: 0 })}
               </span>
             </div>
@@ -156,7 +158,7 @@ const CommodityItem = memo(({ item, totalQuantity, onAction, actionLabel }) => {
                 e.stopPropagation();
                 onAction(item?._id);
               }}
-              className="w-10 h-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-slate-400 hover:text-emerald-600 hover:border-emerald-200 hover:bg-emerald-50 transition-all shadow-sm"
+              className={`w-10 h-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-slate-400 transition-all shadow-sm ${type === 'company' ? 'hover:text-indigo-600 hover:border-indigo-200 hover:bg-indigo-50' : 'hover:text-emerald-600 hover:border-emerald-200 hover:bg-emerald-50'}`}
               title={actionLabel || "Download Invoice"}
             >
               <FaDownload className="text-sm" />
@@ -167,7 +169,7 @@ const CommodityItem = memo(({ item, totalQuantity, onAction, actionLabel }) => {
 
       <div className="mt-4 h-1.5 w-full bg-slate-100 rounded-full overflow-hidden p-0.5">
         <div
-          className="h-full bg-emerald-500 rounded-full transition-all duration-1000 ease-out"
+          className={`h-full rounded-full transition-all duration-1000 ease-out ${type === 'company' ? 'bg-indigo-500' : 'bg-emerald-500'}`}
           style={{ width: `${percentage}%` }}
         />
       </div>
@@ -186,6 +188,7 @@ CommodityItem.propTypes = {
   totalQuantity: PropTypes.number,
   onAction: PropTypes.func,
   actionLabel: PropTypes.string,
+  type: PropTypes.oneOf(['commodity', 'company']),
 };
 
 // --- Main Dashboard Component ---
@@ -478,6 +481,7 @@ const SellerDashboard = () => {
                       totalQuantity={totalQuantity} 
                       onAction={handleDownloadInvoice}
                       actionLabel="Download Proforma Invoice"
+                      type="company"
                     />
                   ))
                 ) : (
