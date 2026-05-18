@@ -1,4 +1,5 @@
 import { Router } from "express";
+import mongoose from "mongoose";
 import nodemailer from "nodemailer";
 import ExcelJS from "exceljs";
 import SelfOrder from "../models/SelfOrder.js";
@@ -335,6 +336,107 @@ router.get("/seller/stats", async (req, res) => {
 
     res.json(result);
   } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+router.get("/buyer/stats", async (req, res) => {
+  try {
+    const { mobile } = req.query;
+    if (!mobile) return res.status(400).json({ message: "Mobile is required" });
+
+    const phoneRegex = /^(?:\+91|0)?([6-9]\d{9})$/;
+    const phoneMatch = String(mobile).match(phoneRegex);
+    const normalizedMobile = phoneMatch ? phoneMatch[1] : mobile;
+
+    const buyer = await mongoose.model("Buyer").findOne({
+      mobile: { $regex: new RegExp(normalizedMobile + "$") },
+    });
+
+    const buyerConditions = [
+      { buyerMobile: normalizedMobile },
+      { buyerMobile: { $regex: new RegExp(normalizedMobile + "$") } },
+    ];
+
+    if (buyer && buyer.companyIds && buyer.companyIds.length > 0) {
+      buyerConditions.push({ companyId: { $in: buyer.companyIds } });
+    }
+
+    const stats = await SelfOrder.aggregate([
+      { $match: { $or: buyerConditions } },
+      {
+        $lookup: {
+          from: "loadingentries",
+          localField: "saudaNo",
+          foreignField: "saudaNo",
+          as: "loadingEntries",
+        },
+      },
+      { $unwind: { path: "$loadingEntries", preserveNullAndEmptyArrays: true } },
+      {
+        $addFields: {
+          buyerRate: { $ifNull: ["$buyerBrokerage.brokerageBuyer", 0] },
+        },
+      },
+      {
+        $addFields: {
+          calculatedBrokerage: {
+            $multiply: [
+              { $ifNull: ["$loadingEntries.unloadingWeight", 0] },
+              "$buyerRate",
+            ],
+          },
+        },
+      },
+      {
+        $facet: {
+          totals: [
+            {
+              $group: {
+                _id: null,
+                totalBrokerage: { $sum: "$calculatedBrokerage" },
+                totalUnloadingWeight: { $sum: "$loadingEntries.unloadingWeight" },
+                totalSaudas: { $addToSet: "$_id" },
+                pendingSaudas: {
+                  $sum: { $cond: [{ $eq: ["$status", "active"] }, 1, 0] }
+                }
+              },
+            },
+            {
+              $project: {
+                totalBrokerage: 1,
+                totalUnloadingWeight: 1,
+                totalSaudas: { $size: "$totalSaudas" },
+                pendingSaudas: 1
+              },
+            },
+          ],
+          commodityBreakdown: [
+            {
+              $group: {
+                _id: "$commodity",
+                quantity: { $sum: "$loadingEntries.unloadingWeight" },
+                brokerage: { $sum: "$calculatedBrokerage" },
+                trips: { $sum: { $cond: [{ $ifNull: ["$loadingEntries._id", false] }, 1, 0] } },
+              },
+            },
+            { $sort: { quantity: -1 } },
+          ],
+        },
+      },
+    ]);
+
+    const result = {
+      totalBrokerage: stats[0]?.totals[0]?.totalBrokerage || 0,
+      totalUnloadingWeight: stats[0]?.totals[0]?.totalUnloadingWeight || 0,
+      totalSaudas: stats[0]?.totals[0]?.totalSaudas || 0,
+      pendingSaudas: stats[0]?.totals[0]?.pendingSaudas || 0,
+      commodityBreakdown: stats[0]?.commodityBreakdown || [],
+    };
+
+    res.json(result);
+  } catch (error) {
+    console.error("Buyer stats error:", error);
     res.status(500).json({ message: error.message });
   }
 });

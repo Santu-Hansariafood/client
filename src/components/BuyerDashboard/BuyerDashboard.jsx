@@ -1,4 +1,4 @@
-import { Suspense, lazy, useEffect, useState } from "react";
+import { Suspense, lazy, useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   FaGavel,
@@ -8,326 +8,417 @@ import {
   FaUserCircle,
   FaMapMarkerAlt,
   FaBuilding,
+  FaWallet,
+  FaWeightHanging,
+  FaClock,
+  FaArrowRight,
+  FaSearch,
+  FaPlus,
+  FaHistory,
 } from "react-icons/fa";
 import Loading from "../../common/Loading/Loading";
 import { useAuth } from "../../context/AuthContext/AuthContext";
-import UserProfileCard from "../UserProfileCard/UserProfileCard";
 import api from "../../utils/apiClient/apiClient";
 import { toTitleCase } from "../../utils/textUtils/textUtils";
-
-const Cards = lazy(() => import("../../common/Cards/Cards"));
+import { toast } from "react-toastify";
 
 const BuyerDashboard = () => {
   const navigate = useNavigate();
   const { user, mobile } = useAuth();
   const [buyerProfile, setBuyerProfile] = useState(null);
   const [buyerGroups, setBuyerGroups] = useState([]);
-  const [showAllConsignee, setShowAllConsignee] = useState(false);
-  const [bids, setBids] = useState([]);
-  const [participations, setParticipations] = useState([]);
+  const [stats, setStats] = useState({
+    totalBrokerage: 0,
+    totalUnloadingWeight: 0,
+    totalSaudas: 0,
+    pendingSaudas: 0,
+    commodityBreakdown: [],
+  });
   const [loading, setLoading] = useState(true);
+  const [showAllConsignee, setShowAllConsignee] = useState(false);
 
   useEffect(() => {
     const fetchDashboardData = async () => {
+      if (!mobile) return;
+      setLoading(true);
       try {
-        const res = await api.get("/bids/buyer-today", {
-          params: { mobile, date: new Date().toISOString().split("T")[0] },
-        });
-        setBids(res.data.bids || []);
-        setParticipations(res.data.participations || []);
-        setBuyerGroups(res.data.buyer?.groups || []);
+        const [statsRes, profileRes] = await Promise.all([
+          api.get("/self-order/buyer/stats", { params: { mobile } }),
+          api.get(`/buyers?mobile=${mobile}`),
+        ]);
+
+        setStats(statsRes.data);
+        if (profileRes.data?.length > 0) {
+          setBuyerProfile(profileRes.data[0]);
+          setBuyerGroups(profileRes.data[0].groups || []);
+        }
       } catch (error) {
         console.error("Error fetching buyer dashboard data:", error);
+        toast.error("Failed to load dashboard data");
       } finally {
         setLoading(false);
       }
     };
-    if (mobile) fetchDashboardData();
+    fetchDashboardData();
   }, [mobile]);
 
-  useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        if (!mobile) return;
-
-        const response = await api.get(`/buyers?mobile=${mobile}`);
-        if (response.data?.length > 0) {
-          setBuyerProfile(response.data[0]);
-        }
-      } catch (error) {
-        console.error("Error fetching buyer profile:", error);
-      }
-    };
-    if (mobile) fetchProfile();
-  }, [mobile]);
-
-  const colors = [
-    "bg-indigo-50 text-indigo-600",
-    "bg-emerald-50 text-emerald-600",
-    "bg-amber-50 text-amber-600",
-    "bg-rose-50 text-rose-600",
-  ];
-
-  const dashboardData = [
+  const quickActions = [
     {
       id: "live-bids",
       title: "Live Bids",
-      count: "View",
       icon: FaGavel,
       link: "/manage-bids/bid-list",
-      color: "from-emerald-400 to-green-600",
-    },
-    {
-      id: "participate-bids",
-      title: "Participate Bids",
-      count: "Check",
-      icon: FaChartLine,
-      link: "/participate-bid-list",
-      color: "from-blue-400 to-indigo-600",
+      color: "bg-emerald-500",
+      description: "Active market bids",
     },
     {
       id: "create-bid",
-      title: "Create New Bid",
-      count: "Add",
-      icon: FaGavel,
+      title: "New Bid",
+      icon: FaPlus,
       link: "/manage-bids/buyer",
-      color: "from-blue-400 to-indigo-600",
-    },
-    {
-      id: "sodabook",
-      title: "Soudabook",
-      count: "List",
-      icon: FaBook,
-      link: "/sodabook/list",
-      color: "from-violet-400 to-purple-600",
+      color: "bg-blue-500",
+      description: "Post a new requirement",
     },
     {
       id: "orders",
-      title: "Your Orders",
-      count: "Check",
+      title: "Orders",
       icon: FaBoxOpen,
       link: "/manage-order/list-self-order",
-      color: "from-amber-400 to-orange-500",
+      color: "bg-amber-500",
+      description: "Track your sauda list",
     },
     {
-      id: "interactions",
-      title: "Interactions",
-      count: "Manage",
-      icon: FaUserCircle,
-      link: "/manage-bids/interactions",
-      color: "from-blue-400 to-indigo-600",
+      id: "history",
+      title: "History",
+      icon: FaHistory,
+      link: "/buyer/bid-history",
+      color: "bg-indigo-500",
+      description: "Your past transactions",
     },
   ];
 
-  const handleCardClick = (item) => {
-    navigate(item.link);
-  };
+  const statCards = [
+    {
+      title: "Total Brokerage",
+      value: `₹${stats.totalBrokerage.toLocaleString("en-IN", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`,
+      icon: FaWallet,
+      color: "text-emerald-600",
+      bg: "bg-emerald-50",
+    },
+    {
+      title: "Unloaded Wt.",
+      value: `${stats.totalUnloadingWeight.toFixed(2)} T`,
+      icon: FaWeightHanging,
+      color: "text-blue-600",
+      bg: "bg-blue-50",
+    },
+    {
+      title: "Active Saudas",
+      value: stats.pendingSaudas,
+      icon: FaClock,
+      color: "text-amber-600",
+      bg: "bg-amber-50",
+    },
+  ];
 
-  const handleCompanyBidClick = (groupName, type) => {
-    const link = type === "live" ? "/manage-bids/bid-list" : "/participate-bid-list";
-    navigate(`${link}?group=${encodeURIComponent(groupName)}`);
-  };
+  if (loading) return <Loading />;
 
   return (
-    <Suspense fallback={<Loading />}>
-      <div className="min-h-screen bg-gradient-to-br from-slate-100 via-white to-slate-200 p-6">
-        <header className="mb-10 flex flex-col md:flex-row justify-between gap-6">
-          <div>
-            <h1 className="text-4xl font-extrabold text-slate-900">
-              Welcome Mr. {toTitleCase(user?.name || "")},
-            </h1>
-            <p className="text-slate-500 mt-2 text-lg">
-              Manage bids, orders & analytics in one place.
-            </p>
+    <div className="min-h-screen bg-slate-50 pb-20 lg:pb-10">
+      {/* App Header Section */}
+      <div className="bg-slate-900 pt-8 pb-16 px-4 sm:px-6 rounded-b-[2.5rem] shadow-2xl relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl -mr-20 -mt-20"></div>
+        <div className="absolute bottom-0 left-0 w-48 h-48 bg-emerald-500/10 rounded-full blur-3xl -ml-20 -mb-20"></div>
+
+        <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 rounded-2xl bg-white/10 backdrop-blur-md flex items-center justify-center border border-white/20 shadow-inner">
+              <FaUserCircle className="text-3xl text-blue-400" />
+            </div>
+            <div>
+              <h1 className="text-xl sm:text-2xl font-black text-white tracking-tight">
+                {toTitleCase(user?.name || "Buyer")}
+              </h1>
+              <div className="flex items-center gap-2 mt-1">
+                <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">
+                  {buyerProfile?.companyName || "Verified Buyer"}
+                </p>
+              </div>
+            </div>
           </div>
 
-          {buyerProfile && (
-            <div className="relative z-10 flex flex-col gap-1">
-              <div className="flex items-center flex-wrap gap-2">
-                <div className="flex items-center gap-1">
-                  <span className="text-[10px] sm:text-xs font-semibold tracking-widest uppercase text-indigo-50">
-                    Trustable Buyer
-                  </span>
-                  <div className="relative flex items-center justify-center">
-                    <span className="w-4 h-4 flex items-center justify-center rounded-full bg-blue-500 text-white text-[10px] shadow-md">
-                      ✓
-                    </span>
-                    <span className="absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-50 animate-pulseSlow"></span>
-                  </div>
-                </div>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => navigate("/buyer/market-analytics")}
+              className="px-5 py-2.5 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 text-white text-xs font-black uppercase tracking-widest hover:bg-white/20 transition-all active:scale-95 flex items-center gap-2"
+            >
+              <FaChartLine className="text-blue-400" />
+              <span>Analytics</span>
+            </button>
+          </div>
+        </div>
+      </div>
 
-                <div
-                  className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-indigo-50 border border-indigo-100 
-      transition-all duration-300 hover:scale-105"
-                >
-                  <img
-                    src="/icons/favicon-16x16.png"
-                    alt="Hansaria Food"
-                    className="w-4 h-4 rounded-full object-cover"
-                  />
-                </div>
-              </div>
-              <h3 className="text-sm sm:text-base font-bold text-slate-800 leading-tight">
-                {toTitleCase(buyerProfile.companyName || "")}
-              </h3>
-              {buyerProfile.group && (
-                <p className="text-[11px] sm:text-xs font-semibold text-slate-500">
-                  Group: {toTitleCase(buyerProfile.group)}
-                </p>
-              )}
-            </div>
-          )}
-        </header>
-
-        {buyerGroups?.length > 0 && (
-          <section className="mb-10">
-            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-              <div className="flex items-center gap-2 mb-4">
-                <span className="inline-flex h-8 w-8 items-center justify-center rounded-xl border border-blue-100 bg-blue-50 text-blue-600">
-                  <FaBuilding className="text-sm" />
-                </span>
-                <div>
-                  <h2 className="text-sm font-bold text-slate-700 uppercase tracking-widest">
-                    Your Groups
-                  </h2>
-                  <p className="text-xs text-slate-500 mt-0.5">
-                    Quickly filter bids by your associated groups
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex flex-wrap gap-3">
-                {buyerGroups.map((group, idx) => (
-                  <div key={idx} className="flex flex-col gap-2">
-                    <div className="px-4 py-2 rounded-xl bg-slate-50 border border-slate-200">
-                      <p className="text-sm font-bold text-slate-800">{toTitleCase(group)}</p>
-                      <div className="flex gap-2 mt-2">
-                        <button
-                          onClick={() => handleCompanyBidClick(group, "live")}
-                          className="px-2 py-1 text-[10px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-700 rounded-md hover:bg-emerald-200 transition"
-                        >
-                          Live Bids
-                        </button>
-                        <button
-                          onClick={() => handleCompanyBidClick(group, "participate")}
-                          className="px-2 py-1 text-[10px] font-bold uppercase tracking-wider bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200 transition"
-                        >
-                          Participated
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </section>
-        )}
-
-        {buyerProfile?.consignee?.length > 0 && (
-          <section className="mb-10">
-            <div className="rounded-2xl border border-slate-200 bg-gradient-to-br from-white via-indigo-50/30 to-sky-50/40 p-4 sm:p-5 shadow-sm">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  <span className="inline-flex h-8 w-8 items-center justify-center rounded-xl border border-indigo-100 bg-indigo-50 text-indigo-600">
-                    <FaMapMarkerAlt className="text-sm" />
-                  </span>
-                  <div>
-                    <h2 className="text-sm font-bold text-slate-700 uppercase tracking-widest">
-                      Consignees
-                    </h2>
-                    <p className="text-xs text-slate-500 mt-0.5">
-                      Delivery points mapped to your buyer account
-                    </p>
-                  </div>
-                </div>
-
-                {buyerProfile.consignee.length > 3 && (
-                  <button
-                    onClick={() => setShowAllConsignee(!showAllConsignee)}
-                    className="px-3 py-1.5 rounded-lg text-xs text-indigo-700 font-semibold bg-white border border-indigo-100 hover:bg-indigo-50 transition-colors"
-                  >
-                    {showAllConsignee ? "Show Less" : "View All"}
-                  </button>
-                )}
-              </div>
-
-              <div
-                className={`flex flex-wrap gap-2.5 sm:gap-3 transition-all duration-300 ${
-                  showAllConsignee
-                    ? "max-h-[500px]"
-                    : "max-h-[76px] overflow-hidden"
-                }`}
-              >
-                {buyerProfile.consignee.map((c, idx) => {
-                  const color = colors[idx % colors.length];
-
-                  return (
-                    <div
-                      key={c.id || idx}
-                      className="flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold text-slate-700 bg-white shadow-sm border border-slate-200 hover:shadow-md hover:-translate-y-0.5 transition-all cursor-pointer group"
-                    >
-                      <span
-                        className={`flex items-center justify-center w-6 h-6 rounded-lg ${color} group-hover:scale-110 transition`}
-                      >
-                        <FaMapMarkerAlt className="text-[12px]" />
-                      </span>
-
-                      <span className="truncate">{c.label || c}</span>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </section>
-        )}
-
-        <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3 sm:gap-4 md:gap-5">
-          {dashboardData.map((item, index) => (
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 -mt-10 relative z-20 space-y-6">
+        {/* Stat Cards - Horizontal Scroll on Mobile */}
+        <div className="flex overflow-x-auto no-scrollbar gap-4 pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 sm:grid sm:grid-cols-3">
+          {statCards.map((stat, idx) => (
             <div
-              key={index}
-              className="group relative rounded-2xl overflow-hidden cursor-pointer"
-              onClick={() => handleCardClick(item)}
+              key={idx}
+              className="min-w-[280px] sm:min-w-0 bg-white p-5 rounded-[2rem] shadow-xl shadow-slate-200/50 border border-slate-100 flex items-center gap-4 group transition-all hover:scale-[1.02]"
             >
               <div
-                className="
-                            relative 
-                            bg-white 
-                            border border-slate-200 
-                            shadow-md 
-                            rounded-2xl 
-                            p-3 sm:p-4
-                            transition-all duration-300
-                            hover:shadow-2xl hover:-translate-y-1
-                            active:scale-95
-                    "
+                className={`w-14 h-14 rounded-2xl ${stat.bg} ${stat.color} flex items-center justify-center text-2xl transition-transform group-hover:rotate-12`}
               >
-                <div
-                  className={`absolute inset-0 opacity-10 group-hover:opacity-20 transition-all duration-300 bg-gradient-to-br ${item.color}`}
-                ></div>
-
-                <div className="absolute -top-6 -right-6 w-20 h-20 bg-slate-100 rounded-full opacity-40"></div>
-
-                <div className="relative z-10">
-                  <Cards
-                    title={item.title}
-                    count={item.count}
-                    icon={item.icon}
-                    link={item.link}
-                    color={item.color}
-                  />
-                </div>
+                <stat.icon />
+              </div>
+              <div>
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                  {stat.title}
+                </p>
+                <h2 className="text-xl font-black text-slate-800 tracking-tight mt-0.5">
+                  {stat.value}
+                </h2>
               </div>
             </div>
           ))}
         </div>
 
-        <div className="mt-16">
-          <div className="bg-white/70 backdrop-blur-xl border border-white/40 rounded-3xl shadow-lg p-6">
-            <UserProfileCard user={user} />
+        {/* Quick Actions Grid */}
+        <section>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-sm font-black text-slate-800 uppercase tracking-[0.2em]">
+              Quick Actions
+            </h2>
           </div>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            {quickActions.map((action) => (
+              <button
+                key={action.id}
+                onClick={() => navigate(action.link)}
+                className="bg-white p-5 rounded-[2rem] border border-slate-100 shadow-lg shadow-slate-200/50 hover:shadow-xl hover:-translate-y-1 transition-all active:scale-95 text-left group"
+              >
+                <div
+                  className={`w-10 h-10 rounded-xl ${action.color} text-white flex items-center justify-center mb-4 shadow-lg group-hover:rotate-12 transition-transform`}
+                >
+                  <action.icon size={18} />
+                </div>
+                <h3 className="font-black text-slate-800 text-sm tracking-tight">
+                  {action.title}
+                </h3>
+                <p className="text-[10px] text-slate-400 font-bold mt-1 leading-tight">
+                  {action.description}
+                </p>
+              </button>
+            ))}
+          </div>
+        </section>
+
+        {/* Two Column Layout for Groups & Commodities */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Your Groups */}
+          {buyerGroups.length > 0 && (
+            <section className="bg-white p-6 rounded-[2.5rem] border border-slate-100 shadow-xl shadow-slate-200/50">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
+                  <FaBuilding size={18} />
+                </div>
+                <div>
+                  <h2 className="text-sm font-black text-slate-800 uppercase tracking-widest">
+                    Group Intelligence
+                  </h2>
+                  <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
+                    Quick filters for your units
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                {buyerGroups.map((group, idx) => (
+                  <div
+                    key={idx}
+                    className="flex items-center justify-between p-4 rounded-2xl bg-slate-50 border border-slate-100 group hover:bg-white hover:border-indigo-200 transition-all"
+                  >
+                    <span className="font-bold text-slate-700">
+                      {toTitleCase(group)}
+                    </span>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() =>
+                          navigate(
+                            `/manage-bids/bid-list?group=${encodeURIComponent(group)}`,
+                          )
+                        }
+                        className="px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest bg-emerald-100 text-emerald-700 hover:bg-emerald-600 hover:text-white transition-all"
+                      >
+                        Live
+                      </button>
+                      <button
+                        onClick={() =>
+                          navigate(
+                            `/participate-bid-list?group=${encodeURIComponent(group)}`,
+                          )
+                        }
+                        className="px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest bg-blue-100 text-blue-700 hover:bg-blue-600 hover:text-white transition-all"
+                      >
+                        Participated
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* Commodity Breakdown */}
+          {stats.commodityBreakdown?.length > 0 && (
+            <section className="bg-white p-6 rounded-[2.5rem] border border-slate-100 shadow-xl shadow-slate-200/50">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
+                  <FaChartLine size={18} />
+                </div>
+                <div>
+                  <h2 className="text-sm font-black text-slate-800 uppercase tracking-widest">
+                    Commodity Analysis
+                  </h2>
+                  <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
+                    Usage & Brokerage Distribution
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                {stats.commodityBreakdown.map((item, idx) => (
+                  <div key={idx} className="space-y-2">
+                    <div className="flex justify-between items-end">
+                      <span className="text-xs font-black text-slate-700 uppercase tracking-widest">
+                        {item._id}
+                      </span>
+                      <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                        {item.quantity.toFixed(2)} Tons
+                      </span>
+                    </div>
+                    <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-amber-500 rounded-full transition-all duration-1000"
+                        style={{
+                          width: `${Math.min(100, (item.quantity / stats.totalUnloadingWeight) * 100)}%`,
+                        }}
+                      ></div>
+                    </div>
+                    <div className="flex justify-between text-[9px] font-black uppercase tracking-widest text-slate-400">
+                      <span>{item.trips} Shipments</span>
+                      <span className="text-emerald-600">
+                        ₹{item.brokerage.toLocaleString()}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
         </div>
+
+        {/* Consignees Section */}
+        {buyerProfile?.consignee?.length > 0 && (
+          <section className="bg-white p-6 rounded-[2.5rem] border border-slate-100 shadow-xl shadow-slate-200/50">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center">
+                  <FaMapMarkerAlt size={18} />
+                </div>
+                <div>
+                  <h2 className="text-sm font-black text-slate-800 uppercase tracking-widest">
+                    Active Consignees
+                  </h2>
+                  <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
+                    Your delivery destinations
+                  </p>
+                </div>
+              </div>
+
+              {buyerProfile.consignee.length > 4 && (
+                <button
+                  onClick={() => setShowAllConsignee(!showAllConsignee)}
+                  className="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest bg-slate-900 text-white hover:bg-slate-800 transition-all shadow-lg active:scale-95"
+                >
+                  {showAllConsignee ? "Show Less" : "View All"}
+                </button>
+              )}
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+              {(showAllConsignee
+                ? buyerProfile.consignee
+                : buyerProfile.consignee.slice(0, 4)
+              ).map((c, idx) => (
+                <div
+                  key={idx}
+                  className="flex items-center gap-3 p-3.5 rounded-2xl bg-slate-50 border border-slate-100 hover:border-rose-200 hover:bg-white transition-all cursor-default group"
+                >
+                  <div className="w-8 h-8 rounded-lg bg-rose-100 text-rose-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <FaMapMarkerAlt size={12} />
+                  </div>
+                  <span className="text-xs font-bold text-slate-700 truncate">
+                    {c.label || c}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
       </div>
-    </Suspense>
+
+      {/* Mobile App Navigation Simulation */}
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-xl border-t border-slate-100 px-6 py-3 flex justify-between items-center z-50 shadow-[0_-10px_20px_rgba(0,0,0,0.05)]">
+        <button
+          onClick={() => navigate("/dashboard")}
+          className="flex flex-col items-center gap-1 text-blue-600"
+        >
+          <FaUserCircle size={20} />
+          <span className="text-[9px] font-black uppercase tracking-widest">
+            Home
+          </span>
+        </button>
+        <button
+          onClick={() => navigate("/manage-bids/bid-list")}
+          className="flex flex-col items-center gap-1 text-slate-400 hover:text-blue-600 transition-colors"
+        >
+          <FaSearch size={20} />
+          <span className="text-[9px] font-black uppercase tracking-widest">
+            Bids
+          </span>
+        </button>
+        <div className="relative -mt-10">
+          <button
+            onClick={() => navigate("/manage-bids/buyer")}
+            className="w-14 h-14 rounded-full bg-slate-900 text-white shadow-2xl flex items-center justify-center border-4 border-white active:scale-90 transition-transform"
+          >
+            <FaPlus size={20} />
+          </button>
+        </div>
+        <button
+          onClick={() => navigate("/manage-order/list-self-order")}
+          className="flex flex-col items-center gap-1 text-slate-400 hover:text-blue-600 transition-colors"
+        >
+          <FaBoxOpen size={20} />
+          <span className="text-[9px] font-black uppercase tracking-widest">
+            Orders
+          </span>
+        </button>
+        <button
+          onClick={() => navigate("/buyer/market-analytics")}
+          className="flex flex-col items-center gap-1 text-slate-400 hover:text-blue-600 transition-colors"
+        >
+          <FaChartLine size={20} />
+          <span className="text-[9px] font-black uppercase tracking-widest">
+            Trends
+          </span>
+        </button>
+      </div>
+    </div>
   );
 };
 
