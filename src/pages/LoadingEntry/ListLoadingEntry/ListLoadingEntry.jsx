@@ -583,7 +583,7 @@ const ListLoadingEntry = () => {
       ).toFixed(2);
 
       return [
-        totalItems - ((currentPage - 1) * itemsPerPage + index),
+        entry.slNo || index + 1,
         formatDate(entry.loadingDate),
         entry.saudaNo,
         entry.lorryNumber,
@@ -657,7 +657,7 @@ const ListLoadingEntry = () => {
       ).toFixed(2);
 
       return [
-        totalItems - (start + index),
+        entry.slNo || "-",
         formatDate(entry.loadingDate),
         entry.saudaNo || "N/A",
         entry.supplierCompany || "N/A",

@@ -605,8 +605,32 @@ router.get("/", async (req, res) => {
 
     const total = await LoadingEntry.countDocuments(finalQuery);
 
+    // Get base query for Sl No calculation (role-based only)
+    const baseAndParts = [];
+    if (Object.keys(query).length > 0) {
+      baseAndParts.push(query);
+    }
+    const baseQuery = baseAndParts.length > 0 ? { $and: baseAndParts } : {};
+
+    // Calculate absolute Sl No for each item in the current page
+    const itemsWithSlNo = await Promise.all(
+      items.map(async (item) => {
+        const slNo = await LoadingEntry.countDocuments({
+          ...baseQuery,
+          $or: [
+            { loadingDate: { $lt: item.loadingDate } },
+            { 
+              loadingDate: item.loadingDate, 
+              createdAt: { $lt: item.createdAt } 
+            }
+          ]
+        }) + 1;
+        return { ...item, slNo };
+      })
+    );
+
     res.json({
-      data: items,
+      data: itemsWithSlNo,
       total,
       page,
       totalPages: Math.ceil(total / limit),
@@ -793,9 +817,27 @@ router.get("/export/excel", async (req, res) => {
       andParts.length > 1 ? { $and: andParts } : andParts[0] || {};
 
     const items = await LoadingEntry.find(finalQuery)
-      .sort({ createdAt: 1 })
+      .sort({ loadingDate: 1, createdAt: 1 })
       .populate("supplier", "sellerName")
       .lean();
+
+    // Get base query for Sl No calculation (role-based only)
+    const baseAndParts = [];
+    if (Object.keys(query).length > 0) {
+      baseAndParts.push(query);
+    }
+    const baseQuery = baseAndParts.length > 0 ? { $and: baseAndParts } : {};
+
+    // Fetch all items matching the base query to calculate absolute Sl No
+    const allBaseItems = await LoadingEntry.find(baseQuery)
+      .select("_id")
+      .sort({ loadingDate: 1, createdAt: 1 })
+      .lean();
+    
+    const idToSlNo = {};
+    allBaseItems.forEach((item, index) => {
+      idToSlNo[item._id.toString()] = index + 1;
+    });
 
     const saudaNos = [...new Set(items.map((i) => i.saudaNo).filter(Boolean))];
     const selfOrders = await SelfOrder.find({ saudaNo: { $in: saudaNos } })
@@ -839,7 +881,7 @@ router.get("/export/excel", async (req, res) => {
       { header: "Payment Terms", key: "paymentTerms", width: 20 },
     ];
 
-    items.forEach((item, index) => {
+    items.forEach((item) => {
       const rate = saudaData[item.saudaNo]?.rate || 0;
       const unloadingWeight = item.unloadingWeight || 0;
       const amount = unloadingWeight * rate;
@@ -848,7 +890,7 @@ router.get("/export/excel", async (req, res) => {
       const sBrokerageRate = saudaData[item.saudaNo]?.sellerBrokerageRate || 0;
 
       worksheet.addRow({
-        slNo: index + 1,
+        slNo: idToSlNo[item._id.toString()] || "-",
         saudaNo: item.saudaNo || "N/A",
         supplierName: item.supplier?.sellerName || "Unknown Supplier",
         supplierCompany: item.supplierCompany || "N/A",
