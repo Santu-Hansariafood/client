@@ -23,7 +23,7 @@ const DateSelector = lazy(
   () => import("../../common/DateSelector/DateSelector"),
 );
 
-const API_URL = "/self-order";
+const API_URL = "/loading-entries";
 
 const BuyerBrokerage = () => {
   const navigate = useNavigate();
@@ -31,6 +31,7 @@ const BuyerBrokerage = () => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [totalItems, setTotalItems] = useState(0);
+  const [saudaRateMap, setSaudaRateMap] = useState({});
 
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
@@ -38,6 +39,7 @@ const BuyerBrokerage = () => {
   const [searchInput, setSearchInput] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+  const [exporting, setExporting] = useState(false);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -49,13 +51,17 @@ const BuyerBrokerage = () => {
         page,
         limit: itemsPerPage,
         search,
-        sortBy: "saudaNo",
+        sortBy: "loadingDate",
         sortOrder: "desc",
         startDate: startDate || "",
         endDate: endDate || "",
       }).toString();
 
-      const response = await api.get(`${API_URL}?${queryParams}`);
+      const [response, ordersRes] = await Promise.all([
+        api.get(`${API_URL}?${queryParams}`),
+        api.get("/self-order", { params: { limit: 0 } })
+      ]);
+
       const orderData = response.data || {};
       const items = Array.isArray(orderData.data)
         ? orderData.data
@@ -64,6 +70,12 @@ const BuyerBrokerage = () => {
           : [];
       const total = orderData.total || orderData.totalItems || items.length;
 
+      const rates = {};
+      (ordersRes.data?.data || ordersRes.data || []).forEach(o => {
+        rates[o.saudaNo] = o.buyerBrokerage?.brokerageBuyer || 0;
+      });
+
+      setSaudaRateMap(rates);
       setData(items);
       setTotalItems(total);
     } catch (error) {
@@ -90,15 +102,58 @@ const BuyerBrokerage = () => {
     setCurrentPage(pageNumber);
   }, []);
 
+  const handleDownloadExcel = useCallback(async () => {
+    if (exporting) return;
+    let toastId;
+    try {
+      setExporting(true);
+      toastId = toast.loading("Preparing Buyer Brokerage Excel...");
+
+      const params = {
+        search: searchInput?.trim() || "",
+        startDate: startDate || "",
+        endDate: endDate || "",
+      };
+
+      const response = await api.get(`${API_URL}/export/excel`, {
+        params,
+        responseType: "blob",
+        timeout: 120000,
+      });
+
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute(
+        "download",
+        `BuyerBrokerage_${new Date().toISOString().split("T")[0]}.xlsx`,
+      );
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+
+      toast.dismiss(toastId);
+      toast.success("Excel downloaded successfully");
+    } catch (error) {
+      if (toastId) toast.dismiss(toastId);
+      toast.error("Failed to download Excel file");
+    } finally {
+      setExporting(false);
+    }
+  }, [searchInput, startDate, endDate, exporting]);
+
   const headers = [
     "Sl No",
-    "Date",
+    "Loading Date",
     "Sauda No",
+    "Lorry No",
     "Buyer Company",
+    "Seller Company",
     "Commodity",
-    "Quantity",
-    "Rate",
-    "Buyer Brokerage",
+    "Loading Wt",
+    "Unloading Wt",
+    "Brokerage / Ton",
     "Total Brokerage",
   ];
 
@@ -106,14 +161,13 @@ const BuyerBrokerage = () => {
     () =>
       data.map((item, index) => {
         const slNo = (currentPage - 1) * itemsPerPage + index + 1;
-        const formattedDate = item.poDate
-          ? new Date(item.poDate).toLocaleDateString("en-GB")
-          : item.createdAt
-            ? new Date(item.createdAt).toLocaleDateString("en-GB")
-            : "N/A";
+        const formattedDate = item.loadingDate
+          ? new Date(item.loadingDate).toLocaleDateString("en-GB")
+          : "N/A";
 
-        const buyerBrokerage = item.brokerage?.buyer || 0;
-        const totalBuyerBrokerage = (buyerBrokerage * (item.quantity || 0)).toFixed(2);
+        const buyerBrokeragePerTon = saudaRateMap[item.saudaNo] || 0;
+        const unloadingWeight = item.unloadingWeight || 0;
+        const totalBuyerBrokerage = (buyerBrokeragePerTon * unloadingWeight).toFixed(2);
 
         return [
           <span key={`sl-${item._id}`} className="font-black text-slate-400">
@@ -128,23 +182,26 @@ const BuyerBrokerage = () => {
           >
             {item.saudaNo || "N/A"}
           </span>,
+          <span key={`lorry-${item._id}`} className="font-bold text-slate-700">
+            {item.lorryNumber || "N/A"}
+          </span>,
           <span key={`buyer-${item._id}`} className="font-bold text-slate-800">
             {item.buyerCompany || "N/A"}
+          </span>,
+          <span key={`seller-${item._id}`} className="font-medium text-slate-600">
+            {item.supplierCompany || "N/A"}
           </span>,
           <span key={`comm-${item._id}`} className="font-bold text-slate-700">
             {item.commodity || "N/A"}
           </span>,
-          <span key={`qty-${item._id}`} className="font-black text-slate-900">
-            {item.quantity || "0"}
+          <span key={`lwt-${item._id}`} className="font-medium text-slate-600">
+            {item.loadingWeight || 0} T
           </span>,
-          <span
-            key={`rate-${item._id}`}
-            className="font-black text-emerald-700 bg-emerald-50 px-2 py-1 rounded-lg border border-emerald-100"
-          >
-            ₹{item.rate || "0"}
+          <span key={`uwt-${item._id}`} className="font-black text-slate-900">
+            {unloadingWeight} T
           </span>,
           <span key={`brk-${item._id}`} className="font-bold text-indigo-600">
-            ₹{buyerBrokerage} / Ton
+            ₹{buyerBrokeragePerTon} / Ton
           </span>,
           <span
             key={`total-${item._id}`}
@@ -154,7 +211,7 @@ const BuyerBrokerage = () => {
           </span>,
         ];
       }),
-    [data, currentPage, itemsPerPage],
+    [data, currentPage, itemsPerPage, saudaRateMap],
   );
 
   return (
@@ -180,6 +237,14 @@ const BuyerBrokerage = () => {
                     className="px-6 py-2.5 rounded-2xl bg-white text-slate-600 text-xs font-black uppercase tracking-widest border border-slate-200 hover:bg-slate-50 transition-all shadow-sm active:scale-95"
                   >
                     Back
+                  </button>
+                  <button
+                    onClick={handleDownloadExcel}
+                    disabled={exporting}
+                    className="flex items-center gap-2 px-6 py-2.5 rounded-2xl bg-indigo-600 text-white text-xs font-black uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 active:scale-95 disabled:opacity-50"
+                  >
+                    <FaDownload size={14} />
+                    <span>{exporting ? "Exporting..." : "Export Excel"}</span>
                   </button>
                   <div className="h-10 w-[1px] bg-slate-100 hidden sm:block mx-2" />
                   <div className="flex items-center gap-3">
@@ -220,7 +285,7 @@ const BuyerBrokerage = () => {
                     </div>
                     <input
                       type="text"
-                      placeholder="Search by Sauda, Buyer, or Commodity..."
+                      placeholder="Search by Sauda, Buyer, Seller, Lorry or Commodity..."
                       className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-[1.5rem] text-sm font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500/50 transition-all"
                       value={searchInput}
                       onChange={(e) => setSearchInput(e.target.value)}

@@ -517,6 +517,7 @@ router.get("/", async (req, res) => {
       andParts.push({
         $or: [
           { supplierCompany: { $regex: searchRegex } },
+          { buyerCompany: { $regex: searchRegex } },
           { consignee: { $regex: searchRegex } },
           { saudaNo: { $regex: searchRegex } },
           { lorryNumber: { $regex: searchRegex } },
@@ -767,13 +768,15 @@ router.get("/export/excel", async (req, res) => {
 
     const saudaNos = [...new Set(items.map((i) => i.saudaNo).filter(Boolean))];
     const selfOrders = await SelfOrder.find({ saudaNo: { $in: saudaNos } })
-      .select("saudaNo buyerCompany paymentTerms rate")
+      .select("saudaNo buyerCompany paymentTerms rate buyerBrokerage")
       .lean();
     const saudaData = selfOrders.reduce((acc, so) => {
       acc[so.saudaNo] = {
         buyerCompany: so.buyerCompany,
         paymentTerms: so.paymentTerms,
         rate: so.rate || 0,
+        buyerBrokerageRate: so.buyerBrokerage?.brokerageBuyer || 0,
+        sellerBrokerageRate: so.buyerBrokerage?.brokerageSupplier || 0,
       };
       return acc;
     }, {});
@@ -797,6 +800,10 @@ router.get("/export/excel", async (req, res) => {
       { header: "Unloading Weight", key: "unloadingWeight", width: 15 },
       { header: "Rate", key: "rate", width: 15 },
       { header: "Amount", key: "amount", width: 15 },
+      { header: "Buyer Brokerage/Ton", key: "buyerBrokerage", width: 20 },
+      { header: "Total Buyer Brokerage", key: "totalBuyerBrokerage", width: 20 },
+      { header: "Seller Brokerage/Ton", key: "sellerBrokerage", width: 20 },
+      { header: "Total Seller Brokerage", key: "totalSellerBrokerage", width: 20 },
       { header: "Bags", key: "bags", width: 10 },
       { header: "Payment Terms", key: "paymentTerms", width: 20 },
     ];
@@ -805,6 +812,9 @@ router.get("/export/excel", async (req, res) => {
       const rate = saudaData[item.saudaNo]?.rate || 0;
       const unloadingWeight = item.unloadingWeight || 0;
       const amount = unloadingWeight * rate;
+      
+      const bBrokerageRate = saudaData[item.saudaNo]?.buyerBrokerageRate || 0;
+      const sBrokerageRate = saudaData[item.saudaNo]?.sellerBrokerageRate || 0;
 
       worksheet.addRow({
         slNo: index + 1,
@@ -827,6 +837,10 @@ router.get("/export/excel", async (req, res) => {
         unloadingWeight: unloadingWeight,
         rate: rate,
         amount: amount,
+        buyerBrokerage: bBrokerageRate,
+        totalBuyerBrokerage: (bBrokerageRate * unloadingWeight).toFixed(2),
+        sellerBrokerage: sBrokerageRate,
+        totalSellerBrokerage: (sBrokerageRate * unloadingWeight).toFixed(2),
         bags: item.bags || 0,
         paymentTerms: saudaData[item.saudaNo]?.paymentTerms || "N/A",
       });
