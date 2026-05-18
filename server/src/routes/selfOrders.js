@@ -268,14 +268,14 @@ router.get("/seller/stats", async (req, res) => {
         $addFields: {
           calculatedBrokerage: {
             $cond: {
-              if: { $gt: ["$loadingEntries.sellerBrokerage", 0] },
-              then: "$loadingEntries.sellerBrokerage",
-              else: {
+              if: { $gt: ["$sellerRate", 0] },
+              then: {
                 $multiply: [
                   { $ifNull: ["$loadingEntries.unloadingWeight", 0] },
                   "$sellerRate",
                 ],
               },
+              else: { $ifNull: ["$loadingEntries.sellerBrokerage", 0] },
             },
           },
         },

@@ -141,26 +141,26 @@ router.get("/company-report", async (req, res) => {
       .sort({ unloadingDate: -1, loadingDate: -1 })
       .lean();
 
-    // Dynamically calculate brokerage if missing
+    // Dynamically calculate brokerage
     const entries = await Promise.all(
       rawEntries.map(async (entry) => {
-        if (!entry.sellerBrokerage || entry.sellerBrokerage === 0) {
-          const selfOrder = await mongoose.model("SelfOrder").findOne({ saudaNo: entry.saudaNo });
-          if (selfOrder) {
-            let rate = selfOrder.buyerBrokerage?.brokerageSupplier || 0;
-            if (rate === 0 && selfOrder.supplier && selfOrder.commodity) {
-              const sellerDoc = await Seller.findById(selfOrder.supplier);
-              if (sellerDoc && sellerDoc.commodities) {
-                const comm = sellerDoc.commodities.find(
-                  (c) => c.name.toLowerCase() === selfOrder.commodity.toLowerCase(),
-                );
-                if (comm) rate = comm.brokerage;
-              }
-            }
-            if (rate > 0 && entry.unloadingWeight) {
-              entry.sellerBrokerage = +(entry.unloadingWeight * rate).toFixed(2);
+        const selfOrder = await mongoose.model("SelfOrder").findOne({ saudaNo: entry.saudaNo });
+        let rate = 0;
+        if (selfOrder) {
+          rate = selfOrder.buyerBrokerage?.brokerageSupplier || 0;
+          if (rate === 0 && selfOrder.supplier && selfOrder.commodity) {
+            const sellerDoc = await Seller.findById(selfOrder.supplier);
+            if (sellerDoc && sellerDoc.commodities) {
+              const comm = sellerDoc.commodities.find(
+                (c) => c.name.toLowerCase() === selfOrder.commodity.toLowerCase(),
+              );
+              if (comm) rate = comm.brokerage;
             }
           }
+        }
+
+        if (rate > 0 && entry.unloadingWeight) {
+          entry.sellerBrokerage = +(entry.unloadingWeight * rate).toFixed(2);
         }
         return entry;
       }),

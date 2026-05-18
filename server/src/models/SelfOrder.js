@@ -1,5 +1,13 @@
 import mongoose from "mongoose";
 
+const formatName = (name) => {
+  if (!name) return name;
+  return name
+    .toLowerCase()
+    .replace(/\b\w/g, (char) => char.toUpperCase())
+    .trim();
+};
+
 const buyerBrokerageSchema = new mongoose.Schema(
   {
     brokerageBuyer: { type: Number, default: 0 },
@@ -10,14 +18,14 @@ const buyerBrokerageSchema = new mongoose.Schema(
 
 const selfOrderSchema = new mongoose.Schema(
   {
-    buyer: { type: String, required: true },
+    buyer: { type: String, required: true, set: formatName },
     companyId: { type: mongoose.Schema.Types.ObjectId, ref: "Company" },
-    buyerCompany: { type: String, default: "" },
-    consignee: { type: String, required: true },
+    buyerCompany: { type: String, default: "", set: formatName },
+    consignee: { type: String, required: true, set: formatName },
     buyerEmail: { type: String, default: "" },
     buyerCommodity: { type: [String], default: [] },
     buyerBrokerage: { type: buyerBrokerageSchema, default: () => ({}) },
-    commodity: { type: String, default: "" },
+    commodity: { type: String, default: "", set: formatName },
     parameters: { type: [mongoose.Schema.Types.Mixed], default: [] },
     poNumber: { type: String, default: "" },
     poDate: { type: Date },
@@ -30,7 +38,7 @@ const selfOrderSchema = new mongoose.Schema(
     cd: { type: Number, default: 0 },
     weight: { type: String, default: "" },
     supplier: { type: mongoose.Schema.Types.ObjectId, ref: "Seller" },
-    supplierCompany: { type: String, default: "" },
+    supplierCompany: { type: String, default: "", set: formatName },
     paymentTerms: { type: String, default: "" },
     deliveryDate: { type: Date },
     loadingDate: { type: Date },
