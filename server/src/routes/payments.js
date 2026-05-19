@@ -128,6 +128,58 @@ router.patch("/:id/status", async (req, res) => {
   }
 });
 
+router.get("/analytics", async (req, res) => {
+    try {
+        const days = parseInt(req.query.days || "30", 10);
+        const startDate = new Date();
+        startDate.setDate(startDate.getDate() - days);
+
+        const stats = await LoadingEntry.aggregate([
+            {
+                $match: {
+                    unloadingWeight: { $gt: 0 },
+                    unloadingDate: { $gte: startDate }
+                }
+            },
+            {
+                // Join with SelfOrder to get the rate for amount calculation
+                $lookup: {
+                    from: "selforders",
+                    localField: "saudaNo",
+                    foreignField: "saudaNo",
+                    as: "order"
+                }
+            },
+            { $unwind: "$order" },
+            {
+                $project: {
+                    unloadingDate: 1,
+                    paymentStatus: 1,
+                    amount: { $multiply: ["$unloadingWeight", "$order.rate"] }
+                }
+            },
+            {
+                $group: {
+                    _id: {
+                        $dateToString: { format: "%Y-%m-%d", date: "$unloadingDate" }
+                    },
+                    pending: {
+                        $sum: { $cond: [{ $eq: ["$paymentStatus", "pending"] }, "$amount", 0] }
+                    },
+                    received: {
+                        $sum: { $cond: [{ $eq: ["$paymentStatus", "done"] }, "$amount", 0] }
+                    }
+                }
+            },
+            { $sort: { _id: 1 } }
+        ]);
+
+        res.json(stats);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
 router.get("/export/excel", async (req, res) => {
     try {
         const search = (req.query.search || "").trim();

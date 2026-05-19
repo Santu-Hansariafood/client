@@ -12,6 +12,9 @@ const AgentSaudaChart = lazy(
 const LoadingChart = lazy(
   () => import("../../../common/Charts/LoadingChart/LoadingChart"),
 );
+const PaymentAnalyticsChart = lazy(
+  () => import("../../../common/Charts/PaymentAnalyticsChart/PaymentAnalyticsChart"),
+);
 const CommodityPieChart = lazy(
   () => import("../../../common/Charts/CommodityPieChart/CommodityPieChart"),
 );
@@ -119,6 +122,10 @@ const ChartSection = memo(({ agentSaudas = [] }) => {
         <div
           className={`grid gap-8 transition-all duration-500 ${viewMode === "grid" ? "grid-cols-1 lg:grid-cols-2" : "grid-cols-1"}`}
         >
+          <div className={`${containerClasses} lg:col-span-2`}>
+            <PaymentAnalyticsChart chartType={chartType} />
+          </div>
+
           <div className={containerClasses}>
             <LoadingChart apiUrl="/loading-entries" chartType={chartType} />
           </div>
