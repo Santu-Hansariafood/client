@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, lazy, Suspense } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import api from "../../../utils/apiClient/apiClient";
 import { toast } from "react-toastify";
 import {
@@ -8,6 +9,8 @@ import {
   FaFilePdf,
   FaCheckCircle,
   FaClock,
+  FaCheckDouble,
+  FaClipboardList,
 } from "react-icons/fa";
 import { useAuth } from "../../../context/AuthContext/AuthContext";
 import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
@@ -28,6 +31,12 @@ const formatDate = (date) => {
 
 const PaymentList = () => {
   const { userRole } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
+  
+  // Determine initial status from path
+  const isReceivedPath = location.pathname.includes("/payments/received");
+  
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [totalItems, setTotalItems] = useState(0);
@@ -36,8 +45,18 @@ const PaymentList = () => {
   const [searchInput, setSearchInput] = useState("");
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
-  const [paymentStatus, setPaymentStatus] = useState("all");
+  const [paymentStatus, setPaymentStatus] = useState(isReceivedPath ? "done" : "all");
   const [exporting, setExporting] = useState(false);
+
+  // Sync paymentStatus when location changes
+  useEffect(() => {
+    if (location.pathname.includes("/payments/received")) {
+      setPaymentStatus("done");
+    } else {
+      setPaymentStatus("all");
+    }
+    setCurrentPage(1);
+  }, [location.pathname]);
 
   const fetchPayments = useCallback(async () => {
     setLoading(true);
@@ -95,7 +114,7 @@ const PaymentList = () => {
         },
         responseType: "blob",
       });
-      const fileName = `Payments_${new Date().toISOString().split("T")[0]}.xlsx`;
+      const fileName = `Payments_${paymentStatus}_${new Date().toISOString().split("T")[0]}.xlsx`;
       await downloadFile(new Blob([response.data]), fileName);
       toast.update(toastId, { render: "Excel downloaded successfully", type: "success", isLoading: false, autoClose: 3000 });
     } catch (error) {
@@ -128,7 +147,7 @@ const PaymentList = () => {
 
     doc.setFontSize(18);
     doc.setTextColor(5, 150, 105);
-    doc.text("PAYMENTS REPORT", 14, 20);
+    doc.text(`PAYMENTS ${paymentStatus === 'done' ? 'RECEIVED' : 'SYNC'} REPORT`, 14, 20);
     
     doc.setFontSize(10);
     doc.setTextColor(100);
@@ -143,7 +162,7 @@ const PaymentList = () => {
       styles: { fontSize: 7, cellPadding: 2 },
     });
 
-    doc.save(`Payments_${new Date().toISOString().split("T")[0]}.pdf`);
+    doc.save(`Payments_${paymentStatus}_${new Date().toISOString().split("T")[0]}.pdf`);
   };
 
   const headers = [
@@ -175,9 +194,36 @@ const PaymentList = () => {
     </button>
   ]);
 
+  const tabs = [
+    { id: "all", label: "All Payments", icon: <FaClipboardList />, link: "/payments/list" },
+    { id: "pending", label: "Pending", icon: <FaClock />, link: "/payments/list" },
+    { id: "done", label: "Received", icon: <FaCheckDouble />, link: "/payments/received" },
+  ];
+
   return (
     <AdminPageShell noContentCard>
       <div className="min-h-screen bg-slate-50/50 p-4 sm:p-8 space-y-8">
+        {/* Sub-navbar / Tabs */}
+        <div className="flex items-center gap-4 bg-white p-2 rounded-3xl border border-slate-100 shadow-sm w-fit">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => {
+                setPaymentStatus(tab.id);
+                navigate(tab.link);
+              }}
+              className={`px-6 py-3 rounded-2xl text-xs font-black uppercase tracking-widest flex items-center gap-3 transition-all ${
+                paymentStatus === tab.id
+                  ? "bg-emerald-600 text-white shadow-lg shadow-emerald-200"
+                  : "text-slate-500 hover:bg-slate-50"
+              }`}
+            >
+              {tab.icon}
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
         <div className="bg-white rounded-[2.5rem] p-8 shadow-xl shadow-slate-200/50 border border-slate-100 relative overflow-hidden group">
           <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/5 rounded-full blur-3xl -mr-32 -mt-32 transition-transform duration-700 group-hover:scale-110" />
           
@@ -188,10 +234,10 @@ const PaymentList = () => {
               </div>
               <div>
                 <h1 className="text-3xl font-black text-slate-800 tracking-tight italic uppercase">
-                  Payment <span className="text-emerald-600">Sync</span>
+                  Payment <span className="text-emerald-600">{paymentStatus === 'done' ? 'Received' : 'Sync'}</span>
                 </h1>
                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mt-1">
-                  Financial Settlement Tracker
+                  {paymentStatus === 'done' ? 'Verified Settlement Records' : 'Financial Settlement Tracker'}
                 </p>
               </div>
             </div>
@@ -245,15 +291,12 @@ const PaymentList = () => {
               />
             </div>
 
-            <select
-              value={paymentStatus}
-              onChange={(e) => setPaymentStatus(e.target.value)}
-              className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl text-sm font-bold text-slate-700 focus:ring-2 focus:ring-emerald-500/20 transition-all appearance-none cursor-pointer"
-            >
-              <option value="all">All Status</option>
-              <option value="pending">Pending Only</option>
-              <option value="done">Completed Only</option>
-            </select>
+            <div className="bg-slate-50 rounded-2xl flex items-center px-6 py-4">
+              <span className="text-xs font-black text-slate-400 uppercase tracking-widest mr-4">Status:</span>
+              <span className={`text-sm font-black uppercase ${paymentStatus === 'done' ? 'text-emerald-600' : paymentStatus === 'pending' ? 'text-amber-600' : 'text-blue-600'}`}>
+                {paymentStatus === 'all' ? 'All Records' : paymentStatus}
+              </span>
+            </div>
           </div>
         </div>
 

@@ -236,6 +236,11 @@
           "name": "Payment List",
           "link": "/payments/list",
           "icon": "FaList"
+        },
+        {
+          "name": "Payment Received",
+          "link": "/payments/received",
+          "icon": "FaCheckDouble"
         }
       ]
     },
