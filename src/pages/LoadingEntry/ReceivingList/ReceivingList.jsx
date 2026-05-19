@@ -65,6 +65,7 @@ const ReceivingList = () => {
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [totalItems, setTotalItems] = useState(0);
   const [searchInput, setSearchInput] = useState("");
+  const [sentFilter, setSentFilter] = useState("Not Sent");
   const [selectedEntry, setSelectedEntry] = useState(null);
   const [showPopup, setShowPopup] = useState(false);
   const [masterDataCache, setMasterDataCache] = useState(null);
@@ -106,6 +107,7 @@ const ReceivingList = () => {
           page: currentPage,
           limit: itemsPerPage,
           search: searchInput,
+          sentStatus: sentFilter,
           role: userRole,
           mobile: mobile,
         },
@@ -122,7 +124,7 @@ const ReceivingList = () => {
     } finally {
       setLoading(false);
     }
-  }, [currentPage, itemsPerPage, searchInput, userRole, mobile]);
+  }, [currentPage, itemsPerPage, searchInput, sentFilter, userRole, mobile, getMasterData]);
 
   useEffect(() => {
     fetchData();
@@ -147,6 +149,18 @@ const ReceivingList = () => {
     setSearchInput(q);
     setCurrentPage(1);
   }, []);
+
+  const handleToggleSentStatus = useCallback(async (entry) => {
+    const newStatus = entry.sentStatus === "Sent" ? "Not Sent" : "Sent";
+    try {
+      await api.put(`/loading-entries/${entry._id}`, { sentStatus: newStatus });
+      toast.success(`Status updated to ${newStatus}`);
+      fetchData();
+    } catch (error) {
+      console.error("Error updating status:", error);
+      toast.error("Failed to update status");
+    }
+  }, [fetchData]);
 
   const handleCopy = useCallback((entry) => {
     const documents = [];
@@ -178,12 +192,23 @@ ${documents.length > 0 ? documents.join("\n") : "No documents attached"}
 
     navigator.clipboard
       .writeText(textToCopy)
-      .then(() => toast.success("Entry details copied to clipboard!"))
+      .then(async () => {
+        toast.success("Entry details copied to clipboard!");
+        // Automatically mark as Sent if not already
+        if (entry.sentStatus !== "Sent") {
+          try {
+            await api.put(`/loading-entries/${entry._id}`, { sentStatus: "Sent" });
+            fetchData();
+          } catch (err) {
+            console.error("Auto-status update failed:", err);
+          }
+        }
+      })
       .catch((err) => {
         console.error("Failed to copy:", err);
         toast.error("Failed to copy details");
       });
-  }, []);
+  }, [fetchData]);
 
   const handlePrint = async () => {
     if (!selectedEntry) return;
@@ -414,6 +439,7 @@ ${documents.length > 0 ? documents.join("\n") : "No documents attached"}
     "Amount",
     "Seller Co",
     "Buyer Co",
+    "Status",
     "Attachment",
     "Actions",
   ];
@@ -442,6 +468,17 @@ ${documents.length > 0 ? documents.join("\n") : "No documents attached"}
           `Rs. ${((entry.unloadingWeight || 0) * (entry.actualRate || 0)).toFixed(2)}`,
           entry.supplierCompany || "N/A",
           entry.buyerCompany || "N/A",
+          <button
+            key={`status-${entry._id}`}
+            onClick={() => handleToggleSentStatus(entry)}
+            className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border transition-all ${
+              entry.sentStatus === "Sent"
+                ? "bg-emerald-50 text-emerald-600 border-emerald-100"
+                : "bg-amber-50 text-amber-600 border-amber-100"
+            }`}
+          >
+            {entry.sentStatus || "Not Sent"}
+          </button>,
           <AttachmentBadge key={`attach-${entry._id}`} count={attachmentCount} />,
           <div key={`actions-${entry._id}`} className="flex items-center gap-2">
             <button
@@ -463,7 +500,7 @@ ${documents.length > 0 ? documents.join("\n") : "No documents attached"}
           </div>,
         ];
       }),
-    [loadingEntries, handleCopy, handleViewDocuments],
+    [loadingEntries, handleCopy, handleViewDocuments, handleToggleSentStatus],
   );
 
   if (error) {
@@ -502,8 +539,25 @@ ${documents.length > 0 ? documents.join("\n") : "No documents attached"}
           <div className="bg-white rounded-[2.5rem] p-8 shadow-xl shadow-slate-200/50 border border-slate-100 relative overflow-hidden group">
             <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/5 rounded-full blur-3xl -mr-32 -mt-32 transition-transform duration-700 group-hover:scale-110" />
             <div className="relative space-y-6">
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-black text-slate-800 uppercase tracking-[0.2em] italic">Search <span className="text-blue-600">Sync</span></h3>
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                <div className="flex flex-wrap gap-2">
+                  {["All", "Sent", "Not Sent"].map((status) => (
+                    <button
+                      key={status}
+                      onClick={() => {
+                        setSentFilter(status);
+                        setCurrentPage(1);
+                      }}
+                      className={`px-6 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${
+                        sentFilter === status
+                          ? "bg-blue-600 text-white shadow-lg shadow-blue-200"
+                          : "bg-slate-50 text-slate-400 hover:bg-slate-100 border border-slate-100"
+                      }`}
+                    >
+                      {status}
+                    </button>
+                  ))}
+                </div>
                 <div className="flex gap-3">
                   <button
                     onClick={handlePrintAllWithDocuments}

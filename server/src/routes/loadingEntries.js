@@ -645,6 +645,7 @@ router.get("/receiving", async (req, res) => {
     const page = parseInt(req.query.page || "1", 10);
     const limit = parseInt(req.query.limit || "10", 10);
     const search = (req.query.search || "").trim();
+    const sentStatus = req.query.sentStatus;
     const role = req.query.role;
     const mobile = req.query.mobile;
 
@@ -654,6 +655,10 @@ router.get("/receiving", async (req, res) => {
         { unloadingDate: { $exists: true, $ne: null } }
       ]
     };
+
+    if (sentStatus && sentStatus !== "All") {
+      query.sentStatus = sentStatus;
+    }
 
     if (role === "Seller" && mobile) {
       const seller = await Seller.findOne({

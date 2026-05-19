@@ -470,7 +470,7 @@ const MasterReceivingReportPDF = ({ entries = [], logoUrl }) => {
                     <Text style={styles.summaryValue}>{data.saudaNo || "N/A"}</Text>
                   </View>
                   <View style={[styles.summaryItem, { borderRightWidth: 0 }]}>
-                    <Text style={styles.summaryLabel}>Loading Number</Text>
+                    <Text style={styles.summaryLabel}>INVOICE NO.</Text>
                     <Text style={styles.summaryValue}>{data.billNumber || "N/A"}</Text>
                   </View>
                   <View style={styles.summaryItem}>

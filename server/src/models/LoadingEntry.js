@@ -51,6 +51,11 @@ const loadingEntrySchema = new mongoose.Schema(
       enum: ["pending", "done"],
       default: "pending",
     },
+    sentStatus: {
+      type: String,
+      enum: ["Sent", "Not Sent"],
+      default: "Not Sent",
+    },
   },
   { timestamps: true },
 );
