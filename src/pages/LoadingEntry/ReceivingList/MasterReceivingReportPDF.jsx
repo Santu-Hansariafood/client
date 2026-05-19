@@ -296,51 +296,120 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   summaryPage: {
-    padding: 40,
+    padding: 30,
     fontFamily: "Helvetica",
     backgroundColor: "#ffffff",
   },
+  summaryBorder: {
+    position: "absolute",
+    top: 15,
+    left: 15,
+    right: 15,
+    bottom: 15,
+    borderWidth: 1,
+    borderColor: "#1e293b",
+  },
   summaryHeader: {
-    borderBottomWidth: 2,
-    borderBottomColor: "#1e293b",
-    paddingBottom: 10,
+    backgroundColor: "#1e293b",
+    padding: 20,
     marginBottom: 20,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
   },
   summaryTitle: {
-    fontSize: 24,
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#ffffff",
+    textTransform: "uppercase",
+    letterSpacing: 2,
+  },
+  summarySectionTitle: {
+    fontSize: 10,
     fontWeight: "bold",
     color: "#1e293b",
     textTransform: "uppercase",
-    letterSpacing: 1,
+    backgroundColor: "#f8fafc",
+    padding: "6 12",
+    marginBottom: 0,
+    borderLeftWidth: 3,
+    borderLeftColor: "#1e293b",
   },
   summaryGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    borderWidth: 1,
-    borderColor: "#e2e8f0",
+    marginBottom: 15,
+    borderTopWidth: 0,
   },
   summaryItem: {
-    width: "50%",
-    padding: 12,
+    width: "33.33%",
+    padding: "10 12",
     borderBottomWidth: 1,
-    borderBottomColor: "#f1f5f9",
+    borderBottomColor: "#e2e8f0",
     borderRightWidth: 1,
-    borderRightColor: "#f1f5f9",
+    borderRightColor: "#e2e8f0",
+  },
+  summaryItemFull: {
+    width: "100%",
+    padding: "10 12",
+    borderBottomWidth: 1,
+    borderBottomColor: "#e2e8f0",
   },
   summaryLabel: {
-    fontSize: 8,
+    fontSize: 7,
+    color: "#64748b",
+    textTransform: "uppercase",
+    fontWeight: "bold",
+    marginBottom: 3,
+  },
+  summaryValue: {
+    fontSize: 10,
+    color: "#0f172a",
+    fontWeight: "bold",
+  },
+  amountWordsContainer: {
+    marginTop: 10,
+    padding: 12,
+    backgroundColor: "#f8fafc",
+    borderWidth: 1,
+    borderColor: "#e2e8f0",
+    borderRadius: 4,
+  },
+  amountWordsLabel: {
+    fontSize: 7,
     color: "#64748b",
     textTransform: "uppercase",
     fontWeight: "bold",
     marginBottom: 4,
   },
-  summaryValue: {
-    fontSize: 12,
+  amountWordsValue: {
+    fontSize: 9,
     color: "#1e293b",
     fontWeight: "bold",
+    fontStyle: "italic",
+  },
+  summaryFooter: {
+    marginTop: "auto",
+    padding: 20,
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+  signatureBox: {
+    width: "40%",
+    alignItems: "center",
+  },
+  signatureLine: {
+    width: "100%",
+    borderTopWidth: 1,
+    borderTopColor: "#1e293b",
+    marginTop: 35,
+    paddingTop: 5,
+  },
+  signatureText: {
+    fontSize: 8,
+    color: "#1e293b",
+    fontWeight: "bold",
+    textTransform: "uppercase",
   },
 });
 
@@ -426,72 +495,120 @@ const MasterReceivingReportPDF = ({ entries = [], logoUrl }) => {
           { url: data.documentUrl, label: "Attachment" },
         ].filter(d => d.url && typeof d.url === 'string' && d.url.trim() !== '' && !d.url.endsWith('.pdf'));
 
+        const totalAmount = (data.unloadingWeight || 0) * (data.actualRate || 0);
+        const amountInWords = numberToWords(totalAmount);
+
         return (
           <React.Fragment key={index}>
             {/* 1. Summary Page (Receiving Entry Details) */}
             <Page style={styles.summaryPage} size="A4">
+              <View style={styles.summaryBorder} fixed />
+              
               <View style={styles.summaryHeader}>
-                <Text style={styles.summaryTitle}>Receiving Entry</Text>
-                {logoUrl && <Image src={logoUrl} style={{ width: 50, height: 50 }} />}
+                <View>
+                  <Text style={styles.summaryTitle}>Receiving Entry</Text>
+                  <Text style={{ fontSize: 8, color: "#94a3b8", marginTop: 4 }}>
+                    Official Receiving Record & Documentation
+                  </Text>
+                </View>
+                {logoUrl && (
+                  <Image 
+                    src={logoUrl} 
+                    style={{ width: 45, height: 45, backgroundColor: '#fff', padding: 5, borderRadius: 5 }} 
+                  />
+                )}
               </View>
 
-              <View style={styles.summaryGrid}>
-                <View style={styles.summaryItem}>
-                  <Text style={styles.summaryLabel}>Sauda No</Text>
-                  <Text style={styles.summaryValue}>{data.saudaNo || "N/A"}</Text>
+              <View style={{ paddingHorizontal: 20 }}>
+                {/* Reference Details */}
+                <Text style={styles.summarySectionTitle}>Reference Details</Text>
+                <View style={styles.summaryGrid}>
+                  <View style={styles.summaryItem}>
+                    <Text style={styles.summaryLabel}>Sauda Number</Text>
+                    <Text style={styles.summaryValue}>{data.saudaNo || "N/A"}</Text>
+                  </View>
+                  <View style={styles.summaryItem}>
+                    <Text style={styles.summaryLabel}>Loading Number</Text>
+                    <Text style={styles.summaryValue}>{data.billNumber || "N/A"}</Text>
+                  </View>
+                  <View style={[styles.summaryItem, { borderRightWidth: 0 }]}>
+                    <Text style={styles.summaryLabel}>Lorry Number</Text>
+                    <Text style={[styles.summaryValue, { textTransform: "uppercase" }]}>
+                      {data.lorryNumber || "N/A"}
+                    </Text>
+                  </View>
                 </View>
-                <View style={styles.summaryItem}>
-                  <Text style={styles.summaryLabel}>Loading No</Text>
-                  <Text style={styles.summaryValue}>{data.billNumber || "N/A"}</Text>
+
+                {/* Logistics Details */}
+                <Text style={styles.summarySectionTitle}>Logistics & Commodity</Text>
+                <View style={styles.summaryGrid}>
+                  <View style={styles.summaryItem}>
+                    <Text style={styles.summaryLabel}>Commodity</Text>
+                    <Text style={styles.summaryValue}>{data.commodity || "N/A"}</Text>
+                  </View>
+                  <View style={styles.summaryItem}>
+                    <Text style={styles.summaryLabel}>Loading Date</Text>
+                    <Text style={styles.summaryValue}>{formatDate(data.loadingDate)}</Text>
+                  </View>
+                  <View style={[styles.summaryItem, { borderRightWidth: 0 }]}>
+                    <Text style={styles.summaryLabel}>Unloading Date</Text>
+                    <Text style={styles.summaryValue}>{formatDate(data.unloadingDate)}</Text>
+                  </View>
                 </View>
-                <View style={styles.summaryItem}>
-                  <Text style={styles.summaryLabel}>Lorry No</Text>
-                  <Text style={[styles.summaryValue, { textTransform: "uppercase" }]}>{data.lorryNumber || "N/A"}</Text>
+
+                {/* Weight & Financials */}
+                <Text style={styles.summarySectionTitle}>Weights & Financials</Text>
+                <View style={styles.summaryGrid}>
+                  <View style={styles.summaryItem}>
+                    <Text style={styles.summaryLabel}>Loading Wt</Text>
+                    <Text style={styles.summaryValue}>{data.loadingWeight || 0} Tons</Text>
+                  </View>
+                  <View style={styles.summaryItem}>
+                    <Text style={styles.summaryLabel}>Unloading Wt</Text>
+                    <Text style={styles.summaryValue}>{data.unloadingWeight || 0} Tons</Text>
+                  </View>
+                  <View style={[styles.summaryItem, { borderRightWidth: 0 }]}>
+                    <Text style={styles.summaryLabel}>Rate / Ton</Text>
+                    <Text style={styles.summaryValue}>Rs. {formatAmount(data.actualRate)}</Text>
+                  </View>
+                  <View style={[styles.summaryItemFull, { backgroundColor: "#f1f5f9" }]}>
+                    <Text style={styles.summaryLabel}>Total Payable Amount</Text>
+                    <Text style={[styles.summaryValue, { fontSize: 14, color: "#1e293b" }]}>
+                      Rs. {formatAmount(totalAmount)}
+                    </Text>
+                  </View>
                 </View>
-                <View style={styles.summaryItem}>
-                  <Text style={styles.summaryLabel}>Commodity</Text>
-                  <Text style={styles.summaryValue}>{data.commodity || "N/A"}</Text>
+
+                {/* Amount in Words */}
+                <View style={styles.amountWordsContainer}>
+                  <Text style={styles.amountWordsLabel}>Amount in Words</Text>
+                  <Text style={styles.amountWordsValue}>{amountInWords}</Text>
                 </View>
-                <View style={styles.summaryItem}>
-                  <Text style={styles.summaryLabel}>Loading Weight</Text>
-                  <Text style={styles.summaryValue}>{data.loadingWeight || 0} Tons</Text>
-                </View>
-                <View style={styles.summaryItem}>
-                  <Text style={styles.summaryLabel}>Unloading Weight</Text>
-                  <Text style={styles.summaryValue}>{data.unloadingWeight || 0} Tons</Text>
-                </View>
-                <View style={styles.summaryItem}>
-                  <Text style={styles.summaryLabel}>Loading Date</Text>
-                  <Text style={styles.summaryValue}>{formatDate(data.loadingDate)}</Text>
-                </View>
-                <View style={styles.summaryItem}>
-                  <Text style={styles.summaryLabel}>Unloading Date</Text>
-                  <Text style={styles.summaryValue}>{formatDate(data.unloadingDate)}</Text>
-                </View>
-                <View style={styles.summaryItem}>
-                  <Text style={styles.summaryLabel}>Rate</Text>
-                  <Text style={styles.summaryValue}>Rs. {data.actualRate || 0}</Text>
-                </View>
-                <View style={styles.summaryItem}>
-                  <Text style={styles.summaryLabel}>Amount</Text>
-                  <Text style={styles.summaryValue}>Rs. {formatAmount((data.unloadingWeight || 0) * (data.actualRate || 0))}</Text>
-                </View>
-                <View style={[styles.summaryItem, { width: "100%" }]}>
-                  <Text style={styles.summaryLabel}>Seller Company</Text>
-                  <Text style={styles.summaryValue}>{data.supplierCompany || "N/A"}</Text>
-                </View>
-                <View style={[styles.summaryItem, { width: "100%", borderBottomWidth: 0 }]}>
-                  <Text style={styles.summaryLabel}>Buyer Company</Text>
-                  <Text style={styles.summaryValue}>{data.buyerCompany || "N/A"}</Text>
+
+                {/* Entity Details */}
+                <View style={{ marginTop: 15 }}>
+                  <Text style={styles.summarySectionTitle}>Company Details</Text>
+                  <View style={styles.summaryGrid}>
+                    <View style={styles.summaryItemFull}>
+                      <Text style={styles.summaryLabel}>Seller / Supplier Company</Text>
+                      <Text style={styles.summaryValue}>{data.supplierCompany || "N/A"}</Text>
+                    </View>
+                    <View style={[styles.summaryItemFull, { borderBottomWidth: 0 }]}>
+                      <Text style={styles.summaryLabel}>Buyer / Consignee Company</Text>
+                      <Text style={styles.summaryValue}>{data.buyerCompany || "N/A"}</Text>
+                    </View>
+                  </View>
                 </View>
               </View>
 
-              <View style={{ marginTop: 40, flexDirection: "row", justifyContent: "space-between" }}>
-                <View style={{ width: "40%", borderTopWidth: 1, borderTopColor: "#e2e8f0", paddingTop: 8 }}>
-                  <Text style={{ fontSize: 8, color: "#64748b", textTransform: "uppercase", textAlign: "center" }}>Prepared By</Text>
+              <View style={styles.summaryFooter}>
+                <View style={styles.signatureBox}>
+                  <View style={styles.signatureLine} />
+                  <Text style={styles.signatureText}>Prepared By</Text>
                 </View>
-                <View style={{ width: "40%", borderTopWidth: 1, borderTopColor: "#e2e8f0", paddingTop: 8 }}>
-                  <Text style={{ fontSize: 8, color: "#64748b", textTransform: "uppercase", textAlign: "center" }}>Authorized Signatory</Text>
+                <View style={styles.signatureBox}>
+                  <View style={styles.signatureLine} />
+                  <Text style={styles.signatureText}>Authorized Signatory</Text>
                 </View>
               </View>
             </Page>
