@@ -296,119 +296,74 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   summaryPage: {
-    padding: 30,
+    padding: 40,
     fontFamily: "Helvetica",
     backgroundColor: "#ffffff",
   },
-  summaryBorder: {
-    position: "absolute",
-    top: 15,
-    left: 15,
-    right: 15,
-    bottom: 15,
-    borderWidth: 1,
-    borderColor: "#1e293b",
-  },
   summaryHeader: {
-    backgroundColor: "#1e293b",
-    padding: 20,
-    marginBottom: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: "#000000",
+    paddingBottom: 15,
+    marginBottom: 25,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
   },
   summaryTitle: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: "bold",
-    color: "#ffffff",
+    color: "#000000",
     textTransform: "uppercase",
-    letterSpacing: 2,
-  },
-  summarySectionTitle: {
-    fontSize: 10,
-    fontWeight: "bold",
-    color: "#1e293b",
-    textTransform: "uppercase",
-    backgroundColor: "#f8fafc",
-    padding: "6 12",
-    marginBottom: 0,
-    borderLeftWidth: 3,
-    borderLeftColor: "#1e293b",
   },
   summaryGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    marginBottom: 15,
-    borderTopWidth: 0,
+    borderWidth: 1,
+    borderColor: "#000000",
+    marginBottom: 20,
   },
   summaryItem: {
-    width: "33.33%",
-    padding: "10 12",
+    width: "50%",
+    padding: 10,
     borderBottomWidth: 1,
-    borderBottomColor: "#e2e8f0",
+    borderBottomColor: "#000000",
     borderRightWidth: 1,
-    borderRightColor: "#e2e8f0",
+    borderRightColor: "#000000",
   },
   summaryItemFull: {
     width: "100%",
-    padding: "10 12",
+    padding: 10,
     borderBottomWidth: 1,
-    borderBottomColor: "#e2e8f0",
+    borderBottomColor: "#000000",
   },
   summaryLabel: {
-    fontSize: 7,
-    color: "#64748b",
-    textTransform: "uppercase",
-    fontWeight: "bold",
-    marginBottom: 3,
-  },
-  summaryValue: {
-    fontSize: 10,
-    color: "#0f172a",
-    fontWeight: "bold",
-  },
-  amountWordsContainer: {
-    marginTop: 10,
-    padding: 12,
-    backgroundColor: "#f8fafc",
-    borderWidth: 1,
-    borderColor: "#e2e8f0",
-    borderRadius: 4,
-  },
-  amountWordsLabel: {
-    fontSize: 7,
-    color: "#64748b",
-    textTransform: "uppercase",
+    fontSize: 9,
+    color: "#4b5563",
     fontWeight: "bold",
     marginBottom: 4,
   },
-  amountWordsValue: {
-    fontSize: 9,
-    color: "#1e293b",
+  summaryValue: {
+    fontSize: 11,
+    color: "#000000",
     fontWeight: "bold",
-    fontStyle: "italic",
   },
   summaryFooter: {
-    marginTop: "auto",
-    padding: 20,
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
-  signatureBox: {
-    width: "40%",
-    alignItems: "center",
-  },
-  signatureLine: {
-    width: "100%",
+    marginTop: 40,
+    paddingTop: 20,
     borderTopWidth: 1,
-    borderTopColor: "#1e293b",
-    marginTop: 35,
-    paddingTop: 5,
+    borderTopColor: "#e5e7eb",
   },
-  signatureText: {
+  disclaimerText: {
     fontSize: 8,
-    color: "#1e293b",
+    color: "#6b7280",
+    textAlign: "center",
+    marginBottom: 4,
+  },
+  officialRecordText: {
+    fontSize: 9,
+    color: "#374151",
     fontWeight: "bold",
+    textAlign: "center",
     textTransform: "uppercase",
   },
 });
@@ -499,52 +454,40 @@ const MasterReceivingReportPDF = ({ entries = [], logoUrl }) => {
         const amountInWords = numberToWords(totalAmount);
 
         return (
-          <React.Fragment key={index}>
-            {/* 1. Summary Page (Receiving Entry Details) */}
-            <Page style={styles.summaryPage} size="A4">
-              <View style={styles.summaryBorder} fixed />
-              
-              <View style={styles.summaryHeader}>
-                <View>
-                  <Text style={styles.summaryTitle}>Receiving Entry</Text>
-                  <Text style={{ fontSize: 8, color: "#94a3b8", marginTop: 4 }}>
-                    Official Receiving Record & Documentation
-                  </Text>
+            <React.Fragment key={index}>
+              {/* 1. Summary Page (Receiving Entry Details) */}
+              <Page style={styles.summaryPage} size="A4">
+                <View style={styles.summaryHeader}>
+                  <View>
+                    <Text style={styles.summaryTitle}>Receiving Entry</Text>
+                  </View>
+                  {logoUrl && <Image src={logoUrl} style={{ width: 60, height: 60 }} />}
                 </View>
-                {logoUrl && (
-                  <Image 
-                    src={logoUrl} 
-                    style={{ width: 45, height: 45, backgroundColor: '#fff', padding: 5, borderRadius: 5 }} 
-                  />
-                )}
-              </View>
 
-              <View style={{ paddingHorizontal: 20 }}>
-                {/* Reference Details */}
-                <Text style={styles.summarySectionTitle}>Reference Details</Text>
                 <View style={styles.summaryGrid}>
                   <View style={styles.summaryItem}>
                     <Text style={styles.summaryLabel}>Sauda Number</Text>
                     <Text style={styles.summaryValue}>{data.saudaNo || "N/A"}</Text>
                   </View>
-                  <View style={styles.summaryItem}>
+                  <View style={[styles.summaryItem, { borderRightWidth: 0 }]}>
                     <Text style={styles.summaryLabel}>Loading Number</Text>
                     <Text style={styles.summaryValue}>{data.billNumber || "N/A"}</Text>
                   </View>
-                  <View style={[styles.summaryItem, { borderRightWidth: 0 }]}>
-                    <Text style={styles.summaryLabel}>Lorry Number</Text>
-                    <Text style={[styles.summaryValue, { textTransform: "uppercase" }]}>
-                      {data.lorryNumber || "N/A"}
-                    </Text>
-                  </View>
-                </View>
-
-                {/* Logistics Details */}
-                <Text style={styles.summarySectionTitle}>Logistics & Commodity</Text>
-                <View style={styles.summaryGrid}>
                   <View style={styles.summaryItem}>
+                    <Text style={styles.summaryLabel}>Lorry Number</Text>
+                    <Text style={[styles.summaryValue, { textTransform: "uppercase" }]}>{data.lorryNumber || "N/A"}</Text>
+                  </View>
+                  <View style={[styles.summaryItem, { borderRightWidth: 0 }]}>
                     <Text style={styles.summaryLabel}>Commodity</Text>
                     <Text style={styles.summaryValue}>{data.commodity || "N/A"}</Text>
+                  </View>
+                  <View style={styles.summaryItem}>
+                    <Text style={styles.summaryLabel}>Loading Weight</Text>
+                    <Text style={styles.summaryValue}>{data.loadingWeight || 0} Tons</Text>
+                  </View>
+                  <View style={[styles.summaryItem, { borderRightWidth: 0 }]}>
+                    <Text style={styles.summaryLabel}>Unloading Weight</Text>
+                    <Text style={styles.summaryValue}>{data.unloadingWeight || 0} Tons</Text>
                   </View>
                   <View style={styles.summaryItem}>
                     <Text style={styles.summaryLabel}>Loading Date</Text>
@@ -554,64 +497,33 @@ const MasterReceivingReportPDF = ({ entries = [], logoUrl }) => {
                     <Text style={styles.summaryLabel}>Unloading Date</Text>
                     <Text style={styles.summaryValue}>{formatDate(data.unloadingDate)}</Text>
                   </View>
-                </View>
-
-                {/* Weight & Financials */}
-                <Text style={styles.summarySectionTitle}>Weights & Financials</Text>
-                <View style={styles.summaryGrid}>
                   <View style={styles.summaryItem}>
-                    <Text style={styles.summaryLabel}>Loading Wt</Text>
-                    <Text style={styles.summaryValue}>{data.loadingWeight || 0} Tons</Text>
-                  </View>
-                  <View style={styles.summaryItem}>
-                    <Text style={styles.summaryLabel}>Unloading Wt</Text>
-                    <Text style={styles.summaryValue}>{data.unloadingWeight || 0} Tons</Text>
-                  </View>
-                  <View style={[styles.summaryItem, { borderRightWidth: 0 }]}>
-                    <Text style={styles.summaryLabel}>Rate / Ton</Text>
+                    <Text style={styles.summaryLabel}>Rate</Text>
                     <Text style={styles.summaryValue}>Rs. {formatAmount(data.actualRate)}</Text>
                   </View>
-                  <View style={[styles.summaryItemFull, { backgroundColor: "#f1f5f9" }]}>
-                    <Text style={styles.summaryLabel}>Total Payable Amount</Text>
-                    <Text style={[styles.summaryValue, { fontSize: 14, color: "#1e293b" }]}>
-                      Rs. {formatAmount(totalAmount)}
-                    </Text>
+                  <View style={[styles.summaryItem, { borderRightWidth: 0 }]}>
+                    <Text style={styles.summaryLabel}>Total Amount</Text>
+                    <Text style={styles.summaryValue}>Rs. {formatAmount(totalAmount)}</Text>
+                  </View>
+                  <View style={styles.summaryItemFull}>
+                    <Text style={styles.summaryLabel}>Amount in Words</Text>
+                    <Text style={styles.summaryValue}>{amountInWords}</Text>
+                  </View>
+                  <View style={styles.summaryItemFull}>
+                    <Text style={styles.summaryLabel}>Seller Company</Text>
+                    <Text style={styles.summaryValue}>{data.supplierCompany || "N/A"}</Text>
+                  </View>
+                  <View style={[styles.summaryItemFull, { borderBottomWidth: 0 }]}>
+                    <Text style={styles.summaryLabel}>Buyer Company</Text>
+                    <Text style={styles.summaryValue}>{data.buyerCompany || "N/A"}</Text>
                   </View>
                 </View>
 
-                {/* Amount in Words */}
-                <View style={styles.amountWordsContainer}>
-                  <Text style={styles.amountWordsLabel}>Amount in Words</Text>
-                  <Text style={styles.amountWordsValue}>{amountInWords}</Text>
+                <View style={styles.summaryFooter}>
+                  <Text style={styles.disclaimerText}>This is a system generated file.</Text>
+                  <Text style={styles.officialRecordText}>Official Receiving Record & Documentation as per information only</Text>
                 </View>
-
-                {/* Entity Details */}
-                <View style={{ marginTop: 15 }}>
-                  <Text style={styles.summarySectionTitle}>Company Details</Text>
-                  <View style={styles.summaryGrid}>
-                    <View style={styles.summaryItemFull}>
-                      <Text style={styles.summaryLabel}>Seller / Supplier Company</Text>
-                      <Text style={styles.summaryValue}>{data.supplierCompany || "N/A"}</Text>
-                    </View>
-                    <View style={[styles.summaryItemFull, { borderBottomWidth: 0 }]}>
-                      <Text style={styles.summaryLabel}>Buyer / Consignee Company</Text>
-                      <Text style={styles.summaryValue}>{data.buyerCompany || "N/A"}</Text>
-                    </View>
-                  </View>
-                </View>
-              </View>
-
-              <View style={styles.summaryFooter}>
-                <View style={styles.signatureBox}>
-                  <View style={styles.signatureLine} />
-                  <Text style={styles.signatureText}>Prepared By</Text>
-                </View>
-                <View style={styles.signatureBox}>
-                  <View style={styles.signatureLine} />
-                  <Text style={styles.signatureText}>Authorized Signatory</Text>
-                </View>
-              </View>
-            </Page>
+              </Page>
 
             {/* 2. Document Pages (Attachments) */}
             {docUrls.map((doc, docIdx) => (
