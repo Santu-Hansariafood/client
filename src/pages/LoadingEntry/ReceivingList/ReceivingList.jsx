@@ -14,8 +14,11 @@ import { toast } from "react-toastify";
 import { useAuth } from "../../../context/AuthContext/AuthContext";
 import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
 import Loading from "../../../common/Loading/Loading";
+import PrintLoadingEntry from "../PrintLoadingEntry/PrintLoadingEntry";
+import { downloadFile } from "../../../utils/fileDownloader";
+
 import { jsPDF } from "jspdf";
-import autoTable from "jspdf-autotable";
+import "jspdf-autotable";
 
 // --- Components ---
 const Tables = lazy(() => import("../../../common/Tables/Tables"));
@@ -28,56 +31,6 @@ const formatDate = (date) => {
   if (!date) return "N/A";
   const d = new Date(date);
   return isNaN(d.getTime()) ? "N/A" : d.toLocaleDateString("en-GB");
-};
-
-const getBase64 = (img) =>
-  new Promise((resolve) => {
-    const image = new Image();
-    image.src = img;
-    image.crossOrigin = "Anonymous";
-
-    image.onload = () => {
-      const canvas = document.createElement("canvas");
-      canvas.width = image.width;
-      canvas.height = image.height;
-      const ctx = canvas.getContext("2d");
-      ctx.drawImage(image, 0, 0);
-      resolve(canvas.toDataURL("image/png"));
-    };
-
-    image.onerror = () => resolve(null);
-  });
-
-const formatAmount = (value) => {
-  return Number(value || 0).toLocaleString("en-IN", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
-};
-
-const numberToWords = (num) => {
-  const a = [
-    "", "One ", "Two ", "Three ", "Four ", "Five ", "Six ", "Seven ", "Eight ", "Nine ", "Ten ", "Eleven ", "Twelve ", "Thirteen ", "Fourteen ", "Fifteen ", "Sixteen ", "Seventeen ", "Eighteen ", "Nineteen ",
-  ];
-  const b = ["", "", "Twenty", "Thirty", "Forty", "Fifty", "Sixty", "Seventy", "Eighty", "Ninety"];
-
-  const makeWords = (n) => {
-    if (n < 20) return a[n];
-    if (n < 100) return b[Math.floor(n / 10)] + " " + a[n % 10];
-    if (n < 1000) return a[Math.floor(n / 100)] + "Hundred " + (n % 100 !== 0 ? makeWords(n % 100) : "");
-    if (n < 100000) return makeWords(Math.floor(n / 1000)) + "Thousand " + (n % 1000 !== 0 ? makeWords(n % 1000) : "");
-    if (n < 10000000) return makeWords(Math.floor(n / 100000)) + "Lakh " + (n % 100000 !== 0 ? makeWords(n % 100000) : "");
-    return makeWords(Math.floor(n / 10000000)) + "Crore " + (n % 10000000 !== 0 ? makeWords(n % 10000000) : "");
-  };
-
-  const integer = Math.floor(num);
-  const fraction = Math.round((num - integer) * 100);
-
-  let words = makeWords(integer) + "Rupees ";
-  if (fraction > 0) {
-    words += "and " + makeWords(fraction) + "Paise ";
-  }
-  return words + "Only";
 };
 
 // --- Sub-components ---
@@ -203,274 +156,84 @@ ${documents.length > 0 ? documents.join("\n") : "No documents attached"}
     const toastId = toast.loading("Generating professional PDF report...");
 
     try {
-      const doc = new jsPDF({
-        orientation: "portrait",
-        unit: "mm",
-        format: "a4",
-      });
+      const blob = await PrintLoadingEntry(selectedEntry);
+      if (!blob) throw new Error("Failed to generate PDF");
 
-      const pageWidth = doc.internal.pageSize.width;
-      const pageHeight = doc.internal.pageSize.height;
-      const margin = 14;
-
-      const setBold = () => doc.setFont("helvetica", "bold");
-      const setNormal = () => doc.setFont("helvetica", "normal");
-
-      let y = 20;
-
-      // Draw Main Border
-      doc.setLineWidth(0.5);
-      doc.setDrawColor(30, 41, 59); // Slate-800
-      doc.rect(margin, 10, pageWidth - margin * 2, pageHeight - 18);
-
-      setBold();
-      doc.setFontSize(18);
-      doc.setTextColor(30, 41, 59);
-      doc.text("RECEIVING ENTRY REPORT", pageWidth / 2, y, { align: "center" });
-
-      y += 15;
-
-      // Entry Details Section
-      doc.setLineWidth(0.2);
-      doc.setDrawColor(226, 232, 240); // Slate-200
-      doc.setFillColor(248, 250, 252); // Slate-50
-      doc.rect(margin + 2, y - 5, pageWidth - margin * 2 - 4, 60, "F");
-      doc.rect(margin + 2, y - 5, pageWidth - margin * 2 - 4, 60, "S");
-
-      y += 5;
-      setBold();
-      doc.setFontSize(11);
-      doc.setTextColor(51, 65, 85); // Slate-700
-      doc.text("LOGISTICS & SETTLEMENT DETAILS", margin + 5, y);
-
-      y += 8;
-      doc.setFontSize(10);
-
-      const infoItems = [
-        { label: "Sauda No:", value: selectedEntry.saudaNo || "N/A" },
-        { label: "Loading No:", value: selectedEntry.billNumber || "N/A" },
-        { label: "Lorry No:", value: (selectedEntry.lorryNumber || "N/A").toUpperCase() },
-        { label: "Loading Weight:", value: `${selectedEntry.loadingWeight || 0} Tons` },
-        { label: "Unloading Weight:", value: `${selectedEntry.unloadingWeight || 0} Tons` },
-        { label: "Loading Date:", value: formatDate(selectedEntry.loadingDate) },
-        { label: "Unloading Date:", value: formatDate(selectedEntry.unloadingDate) },
-        { label: "Rate:", value: `Rs. ${selectedEntry.actualRate || 0}` },
-        { label: "Amount:", value: `Rs. ${((selectedEntry.unloadingWeight || 0) * (selectedEntry.actualRate || 0)).toFixed(2)}` },
-        { label: "Seller Company:", value: selectedEntry.supplierCompany || "N/A" },
-        { label: "Buyer Company:", value: selectedEntry.buyerCompany || "N/A" },
-      ];
-
-      let col1X = margin + 5;
-      let col2X = pageWidth / 2;
-
-      infoItems.forEach((item, index) => {
-        const x = index % 2 === 0 ? col1X : col2X;
-        const yOffset = Math.floor(index / 2) * 6;
-
-        setBold();
-        doc.text(item.label, x, y + yOffset);
-        setNormal();
-        doc.text(String(item.value), x + 40, y + yOffset);
-      });
-
-      y += 40;
-
-      // Add System Bill Page if applicable
+      let fileName = `receiving_report_${selectedEntry.saudaNo || "document"}`;
       if (selectedEntry.billNumber && selectedEntry.billNumber !== "0") {
-        doc.addPage();
-        y = 20;
-
-        // Draw Border for Bill
-        doc.setLineWidth(0.5);
-        doc.setDrawColor(30, 41, 59);
-        doc.rect(margin, 10, pageWidth - margin * 2, pageHeight - 18);
-
-        setBold();
-        doc.setFontSize(16);
-        const commodityStr = String(selectedEntry.commodity || "").toLowerCase();
-        const isExempted = commodityStr.includes("maize") || commodityStr.includes("rice");
-        doc.text(isExempted ? "BILL OF SUPPLY" : "TAX INVOICE", pageWidth / 2, y, { align: "center" });
-
-        y += 10;
-        doc.setFontSize(12);
-        doc.text(selectedEntry.supplierCompany || "N/A", margin + 5, y);
-        
-        y += 6;
-        doc.setFontSize(9);
-        setNormal();
-        const supplier = selectedEntry.supplier || {};
-        const supplierAddr = [
-          supplier.address,
-          supplier.city,
-          supplier.state,
-          supplier.pinNo || supplier.pin
-        ].filter(Boolean).join(", ");
-        doc.text(supplierAddr || "N/A", margin + 5, y);
-
-        y += 5;
-        doc.text(`GSTIN: ${supplier.gstNumber || supplier.gstin || "N/A"} | PAN: ${supplier.panNo || supplier.pan || "N/A"}`, margin + 5, y);
-
-        y += 10;
-        // Bill Meta Info
-        doc.setDrawColor(226, 232, 240);
-        doc.setFillColor(248, 250, 252);
-        doc.rect(margin + 2, y - 5, pageWidth - margin * 2 - 4, 25, "F");
-        doc.rect(margin + 2, y - 5, pageWidth - margin * 2 - 4, 25, "S");
-
-        const billMeta = [
-          { label: "Invoice No:", value: selectedEntry.billNumber },
-          { label: "Date:", value: formatDate(selectedEntry.dateOfIssue) },
-          { label: "Sauda No:", value: selectedEntry.saudaNo },
-          { label: "Lorry No:", value: (selectedEntry.lorryNumber || "").toUpperCase() },
-        ];
-
-        billMeta.forEach((item, index) => {
-          const x = index < 2 ? margin + 5 : pageWidth / 2;
-          const yOff = (index % 2) * 6;
-          setBold();
-          doc.text(item.label, x, y + yOff);
-          setNormal();
-          doc.text(String(item.value), x + 25, y + yOff);
-        });
-
-        y += 30;
-        // Parties
-        doc.rect(margin + 2, y - 5, (pageWidth - margin * 2 - 10) / 2, 35, "S");
-        doc.rect(pageWidth / 2 + 3, y - 5, (pageWidth - margin * 2 - 10) / 2, 35, "S");
-
-        setBold();
-        doc.text("BILL TO:", margin + 5, y);
-        doc.text("SHIPPED TO:", pageWidth / 2 + 6, y);
-        
-        setNormal();
-        doc.text(selectedEntry.buyerCompany || "N/A", margin + 5, y + 5);
-        doc.text(selectedEntry.consignee || "N/A", pageWidth / 2 + 6, y + 5);
-        
-        // Add addresses if available
-        const buyerAddr = [selectedEntry.location, selectedEntry.district, selectedEntry.state].filter(Boolean).join(", ");
-        doc.setFontSize(8);
-        doc.text(doc.splitTextToSize(buyerAddr || "N/A", (pageWidth - margin * 2 - 20) / 2), margin + 5, y + 10);
-        doc.text(doc.splitTextToSize(buyerAddr || "N/A", (pageWidth - margin * 2 - 20) / 2), pageWidth / 2 + 6, y + 10);
-
-        y += 45;
-        // Items Table
-        const weight = Number(selectedEntry.loadingWeight || 0);
-        const rate = Number(selectedEntry.actualRate || 0);
-        const subtotal = weight * rate;
-        const gstPercent = Number(selectedEntry.gst || 0);
-        const gstAmount = subtotal * (gstPercent / 100);
-        const total = subtotal + gstAmount;
-
-        autoTable(doc, {
-          startY: y,
-          head: [["#", "Description", "Qty (Tons)", "Rate (Rs)", "Amount (Rs)"]],
-          body: [[1, selectedEntry.commodity || "N/A", weight.toFixed(3), formatAmount(rate), formatAmount(subtotal)]],
-          theme: "grid",
-          headStyles: { fillColor: [30, 41, 59], textColor: [255, 255, 255] },
-          margin: { left: margin + 2, right: margin + 2 }
-        });
-
-        y = doc.lastAutoTable.finalY + 10;
-        
-        // Summary
-        const summaryX = pageWidth - margin - 60;
-        setBold();
-        doc.setFontSize(9);
-        doc.text("Subtotal:", summaryX, y);
-        setNormal();
-        doc.text(formatAmount(subtotal), pageWidth - margin - 5, y, { align: "right" });
-        
-        y += 6;
-        if (gstPercent > 0) {
-          setBold();
-          doc.text(`GST (${gstPercent}%):`, summaryX, y);
-          setNormal();
-          doc.text(formatAmount(gstAmount), pageWidth - margin - 5, y, { align: "right" });
-          y += 6;
-        }
-        
-        setBold();
-        doc.setFontSize(11);
-        doc.text("Grand Total:", summaryX, y);
-        doc.text(`Rs. ${formatAmount(total)}`, pageWidth - margin - 5, y, { align: "right" });
-        
-        y += 10;
-        doc.setFontSize(8);
-        setNormal();
-        doc.text(`Amount in words: ${numberToWords(total)}`, margin + 5, y);
-
-        y += 15;
-        // Bank Details
-        const bank = supplier.bankDetails?.[0] || {};
-        if (bank.bankName) {
-          setBold();
-          doc.text("BANK DETAILS:", margin + 5, y);
-          setNormal();
-          doc.text(`${bank.bankName} | A/c: ${bank.accountNumber} | IFSC: ${bank.ifscCode}`, margin + 5, y + 4);
-        }
-
-        y = pageHeight - 30;
-        setBold();
-        doc.text(`For ${selectedEntry.supplierCompany || "N/A"}`, pageWidth - margin - 50, y, { align: "center" });
-        y += 15;
-        doc.text("Authorized Signatory", pageWidth - margin - 50, y, { align: "center" });
+        fileName += `_bill_${selectedEntry.billNumber}`;
       }
+      fileName += ".pdf";
 
-      const docsToPrint = [];
-      if (selectedEntry.documents?.kantaSlip) docsToPrint.push({ name: "Kanta Slip", url: selectedEntry.documents.kantaSlip });
-      if (selectedEntry.documents?.unloadingChallan) docsToPrint.push({ name: "Unloading Challan", url: selectedEntry.documents.unloadingChallan });
-      if (selectedEntry.documents?.partyBillCopy) docsToPrint.push({ name: "Party Bill Copy", url: selectedEntry.documents.partyBillCopy });
-
-      if (docsToPrint.length > 0) {
-        for (let i = 0; i < docsToPrint.length; i++) {
-          const docInfo = docsToPrint[i];
-
-          doc.addPage();
-          y = 20;
-
-          setBold();
-          doc.setFontSize(14);
-          doc.setTextColor(30, 41, 59);
-          doc.text(docInfo.name.toUpperCase(), pageWidth / 2, y, { align: "center" });
-
-          y += 10;
-
-          if (!docInfo.url.endsWith(".pdf")) {
-            try {
-              const imgData = await getBase64(docInfo.url);
-              if (imgData) {
-                const imgWidth = pageWidth - margin * 4;
-                const imgHeight = (imgWidth * 3) / 4;
-                const maxHeight = pageHeight - y - 20;
-                const finalHeight = Math.min(imgHeight, maxHeight);
-
-                doc.addImage(imgData, "PNG", margin + 2, y, imgWidth, finalHeight);
-              }
-            } catch (imgErr) {
-              console.error("Error loading image:", imgErr);
-              setNormal();
-              doc.setFontSize(10);
-              doc.text("Image could not be rendered in PDF", pageWidth / 2, y, { align: "center" });
-            }
-          } else {
-            setNormal();
-            doc.setFontSize(10);
-            doc.text("PDF Document - Link provided below", pageWidth / 2, y, { align: "center" });
-            y += 10;
-            doc.setTextColor(37, 99, 235); // Blue-600
-            doc.textWithLink(docInfo.url, pageWidth / 2, y, { align: "center", url: docInfo.url });
-            doc.setTextColor(0, 0, 0);
-          }
-        }
-      }
-
-      doc.save(`Receiving_Entry_${selectedEntry.saudaNo || "Report"}.pdf`);
-      toast.update(toastId, { render: "PDF downloaded successfully!", type: "success", isLoading: false, autoClose: 3000 });
+      downloadFile(blob, fileName);
+      toast.update(toastId, { 
+        render: "PDF downloaded successfully!", 
+        type: "success", 
+        isLoading: false, 
+        autoClose: 3000 
+      });
     } catch (error) {
       console.error("Error generating PDF:", error);
-      toast.update(toastId, { render: "Failed to generate PDF report", type: "error", isLoading: false, autoClose: 3000 });
+      toast.update(toastId, { 
+        render: "Failed to generate PDF report", 
+        type: "error", 
+        isLoading: false, 
+        autoClose: 3000 
+      });
     }
   };
+
+  const handleDownloadPDFReport = useCallback(() => {
+    if (loadingEntries.length === 0) return;
+
+    const doc = new jsPDF("landscape");
+    const tableColumn = [
+      "Sauda No",
+      "Loading No",
+      "Lorry No",
+      "Loading Wt",
+      "Unloading Wt",
+      "Loading Date",
+      "Unloading Date",
+      "Rate",
+      "Amount",
+      "Seller Co",
+      "Buyer Co",
+    ];
+
+    const tableRows = loadingEntries.map((entry) => [
+      entry.saudaNo || "N/A",
+      entry.billNumber || "N/A",
+      (entry.lorryNumber || "N/A").toUpperCase(),
+      `${entry.loadingWeight || 0} T`,
+      `${entry.unloadingWeight || 0} T`,
+      formatDate(entry.loadingDate),
+      formatDate(entry.unloadingDate),
+      `Rs. ${entry.actualRate || 0}`,
+      `Rs. ${((entry.unloadingWeight || 0) * (entry.actualRate || 0)).toFixed(2)}`,
+      entry.supplierCompany || "N/A",
+      entry.buyerCompany || "N/A",
+    ]);
+
+    doc.setFontSize(20);
+    doc.setTextColor(30, 41, 59);
+    doc.text("RECEIVING ENTRIES REPORT", 14, 22);
+
+    doc.setFontSize(10);
+    doc.setTextColor(100);
+    doc.text(`Generated on: ${new Date().toLocaleString("en-GB")}`, 14, 30);
+
+    doc.autoTable({
+      head: [tableColumn],
+      body: tableRows,
+      startY: 35,
+      theme: "grid",
+      headStyles: { fillColor: [30, 41, 59], fontSize: 8 },
+      styles: { fontSize: 7, cellPadding: 2 },
+    });
+
+    doc.save(`ReceivingEntries_${new Date().toISOString().split("T")[0]}.pdf`);
+  }, [loadingEntries]);
 
   const headers = [
     "Sauda No",
@@ -498,7 +261,7 @@ ${documents.length > 0 ? documents.join("\n") : "No documents attached"}
           docs.unloadingChallan,
           docs.partyBillCopy,
           entry.documentUrl,
-        ].filter(url => typeof url === 'string' && url.trim() !== '').length + (entry.billNumber && entry.billNumber !== "0" ? 1 : 0);
+        ].filter(url => typeof url === 'string' && url.trim() !== '').length;
 
         return [
           entry.saudaNo || "N/A",
@@ -574,7 +337,17 @@ ${documents.length > 0 ? documents.join("\n") : "No documents attached"}
             <div className="relative space-y-6">
               <div className="flex items-center justify-between">
                 <h3 className="text-sm font-black text-slate-800 uppercase tracking-[0.2em] italic">Search <span className="text-blue-600">Sync</span></h3>
-                <span className="px-4 py-1.5 rounded-full bg-blue-50 text-blue-600 text-[10px] font-black uppercase tracking-widest border border-blue-100">Live Database</span>
+                <div className="flex gap-3">
+                  <button
+                    onClick={handleDownloadPDFReport}
+                    disabled={loadingEntries.length === 0}
+                    className="px-6 py-2 bg-slate-800 text-white rounded-xl font-bold hover:bg-slate-900 transition-all shadow-lg shadow-slate-200 disabled:opacity-50 flex items-center gap-2 text-xs uppercase tracking-widest"
+                  >
+                    <FaPrint size={14} />
+                    Download PDF
+                  </button>
+                  <span className="px-4 py-1.5 rounded-full bg-blue-50 text-blue-600 text-[10px] font-black uppercase tracking-widest border border-blue-100 flex items-center">Live Database</span>
+                </div>
               </div>
               <div className="relative group/search">
                 <SearchBox
@@ -641,31 +414,6 @@ ${documents.length > 0 ? documents.join("\n") : "No documents attached"}
             >
               <div className="p-4 sm:p-8 space-y-10">
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                  {/* System Generated Bill */}
-                  {selectedEntry.billNumber && selectedEntry.billNumber !== "0" && (
-                    <div className="space-y-4 group">
-                      <div className="flex items-center justify-between">
-                        <h4 className="text-xs font-black uppercase tracking-[0.2em] text-slate-800 flex items-center gap-3">
-                          <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
-                          System Bill
-                        </h4>
-                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-2 py-0.5 rounded bg-slate-50">Generated</span>
-                      </div>
-                      
-                      <div className="relative rounded-[2rem] overflow-hidden border border-slate-100 shadow-sm group-hover:shadow-xl transition-all duration-500 bg-slate-50 flex items-center justify-center min-h-[300px]">
-                        <div className="group/btn flex flex-col items-center gap-4 p-10 text-center">
-                          <div className="w-16 h-16 bg-amber-50 text-amber-500 rounded-2xl flex items-center justify-center shadow-lg">
-                            <FaFileAlt size={32} />
-                          </div>
-                          <div>
-                            <p className="text-sm font-black text-slate-800 uppercase tracking-tight mb-1">Invoice: {selectedEntry.billNumber}</p>
-                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Included in Print Report</p>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
                   {[
                     { key: 'kantaSlip', label: 'Kanta Slip', color: 'blue' },
                     { key: 'unloadingChallan', label: 'Unloading Challan', color: 'indigo' },
