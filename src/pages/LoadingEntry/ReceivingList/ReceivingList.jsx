@@ -68,7 +68,6 @@ AttachmentBadge.propTypes = {
 const ReceivingList = () => {
   const { userRole, mobile } = useAuth();
   const [loadingEntries, setLoadingEntries] = useState([]);
-  const [filteredEntries, setFilteredEntries] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -95,8 +94,7 @@ const ReceivingList = () => {
       const payload = response.data || {};
       const data = Array.isArray(payload.data) ? payload.data : [];
       setLoadingEntries(data);
-      setFilteredEntries(data);
-      setTotalItems(payload.total || 0);
+      setTotalItems(Number(payload.total) || 0);
     } catch (error) {
       console.error("Error fetching receiving entries:", error);
       setError("Failed to load receiving entries. Please check your connection.");
@@ -112,6 +110,7 @@ const ReceivingList = () => {
 
   const handlePageChange = useCallback((page) => {
     setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   }, []);
 
   const handlePageSizeChange = useCallback((size) => {
@@ -122,6 +121,11 @@ const ReceivingList = () => {
   const handleViewDocuments = useCallback((entry) => {
     setSelectedEntry(entry);
     setShowPopup(true);
+  }, []);
+
+  const handleSearch = useCallback((q) => {
+    setSearchInput(q);
+    setCurrentPage(1);
   }, []);
 
   const handleCopy = useCallback((entry) => {
@@ -313,10 +317,15 @@ ${documents.length > 0 ? documents.join("\n") : "No documents attached"}
 
   const rows = useMemo(
     () =>
-      filteredEntries.map((entry) => {
-        const attachmentCount = Object.values(entry.documents || {}).filter(
-          (url) => !!url,
-        ).length;
+      loadingEntries.map((entry) => {
+        // Robust attachment count logic
+        const docs = entry.documents || {};
+        const attachmentCount = [
+          docs.kantaSlip,
+          docs.unloadingChallan,
+          docs.partyBillCopy,
+          entry.documentUrl
+        ].filter(url => typeof url === 'string' && url.trim() !== '').length;
 
         return [
           entry.saudaNo || "N/A",
@@ -351,7 +360,7 @@ ${documents.length > 0 ? documents.join("\n") : "No documents attached"}
           </div>,
         ];
       }),
-    [filteredEntries, handleCopy, handleViewDocuments],
+    [loadingEntries, handleCopy, handleViewDocuments],
   );
 
   if (error) {
@@ -399,10 +408,7 @@ ${documents.length > 0 ? documents.join("\n") : "No documents attached"}
                   placeholder="Query by Sauda No, Lorry No, or Seller Company..."
                   items={[]}
                   returnQuery={true}
-                  onSearch={(q) => {
-                    setSearchInput(q);
-                    setCurrentPage(1);
-                  }}
+                  onSearch={handleSearch}
                   value={searchInput}
                 />
               </div>
@@ -410,22 +416,32 @@ ${documents.length > 0 ? documents.join("\n") : "No documents attached"}
           </div>
 
           {/* Table Content */}
-          <div className="bg-white rounded-[2.5rem] p-4 shadow-xl shadow-slate-200/50 border border-slate-100 overflow-hidden min-h-[500px]">
-            {loading ? (
-              <div className="py-32"><Loading /></div>
-            ) : (
-              <>
-                <Tables headers={headers} rows={rows} />
-                <div className="mt-10 flex justify-center pb-6">
-                  <Pagination
-                    currentPage={currentPage}
-                    totalItems={totalItems}
-                    itemsPerPage={itemsPerPage}
-                    onPageChange={handlePageChange}
-                    onPageSizeChange={handlePageSizeChange}
-                  />
-                </div>
-              </>
+          <div className="bg-white rounded-[2.5rem] p-4 shadow-xl shadow-slate-200/50 border border-slate-100 overflow-hidden min-h-[500px] relative">
+            {loading && (
+              <div className="absolute inset-0 z-10 bg-white/60 backdrop-blur-[2px] flex items-center justify-center rounded-[2.5rem]">
+                <Loading />
+              </div>
+            )}
+            
+            <Tables headers={headers} rows={rows} />
+            
+            {totalItems > 0 && (
+              <div className="mt-10 flex justify-center pb-6">
+                <Pagination
+                  currentPage={currentPage}
+                  totalItems={totalItems}
+                  itemsPerPage={itemsPerPage}
+                  onPageChange={handlePageChange}
+                  onPageSizeChange={handlePageSizeChange}
+                />
+              </div>
+            )}
+            
+            {!loading && rows.length === 0 && (
+              <div className="py-20 text-center">
+                <FaClipboardList className="text-6xl text-slate-200 mx-auto mb-4" />
+                <p className="text-slate-400 font-bold uppercase tracking-widest">No entries found</p>
+              </div>
             )}
           </div>
 
