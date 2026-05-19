@@ -648,7 +648,12 @@ router.get("/receiving", async (req, res) => {
     const role = req.query.role;
     const mobile = req.query.mobile;
 
-    let query = {};
+    let query = {
+      $or: [
+        { unloadingWeight: { $gt: 0 } },
+        { unloadingDate: { $exists: true, $ne: null } }
+      ]
+    };
 
     if (role === "Seller" && mobile) {
       const seller = await Seller.findOne({
@@ -661,10 +666,7 @@ router.get("/receiving", async (req, res) => {
       }
     }
 
-    const andParts = [];
-    if (Object.keys(query).length > 0) {
-      andParts.push(query);
-    }
+    const andParts = [query];
 
     if (search) {
       const searchRegex = new RegExp(escapeRegex(search), "i");
@@ -673,15 +675,16 @@ router.get("/receiving", async (req, res) => {
           { supplierCompany: { $regex: searchRegex } },
           { saudaNo: { $regex: searchRegex } },
           { lorryNumber: { $regex: searchRegex } },
+          { buyerCompany: { $regex: searchRegex } },
+          { consignee: { $regex: searchRegex } }
         ],
       });
     }
 
-    const finalQuery =
-      andParts.length > 1 ? { $and: andParts } : andParts[0] || {};
+    const finalQuery = { $and: andParts };
 
     const items = await LoadingEntry.find(finalQuery)
-      .sort({ loadingDate: -1, createdAt: -1 })
+      .sort({ unloadingDate: -1, createdAt: -1 })
       .skip((page - 1) * limit)
       .limit(limit)
       .populate("supplier")
