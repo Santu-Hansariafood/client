@@ -187,6 +187,7 @@ router.get("/export/excel", async (req, res) => {
         worksheet.columns = [
             { header: "Sl No", key: "slNo", width: 10 },
             { header: "Sauda No", key: "saudaNo", width: 15 },
+            { header: "Lorry No", key: "lorryNumber", width: 15 },
             { header: "Buyer Company", key: "buyerCompany", width: 30 },
             { header: "Consignee", key: "consignee", width: 30 },
             { header: "Seller Name", key: "sellerName", width: 30 },
@@ -206,6 +207,7 @@ router.get("/export/excel", async (req, res) => {
             worksheet.addRow({
                 slNo: i + 1,
                 saudaNo: item.saudaNo || "N/A",
+                lorryNumber: item.lorryNumber || "N/A",
                 buyerCompany: item.buyerCompany || order.buyerCompany || "N/A",
                 consignee: item.consignee || "N/A",
                 sellerName: item.supplier?.sellerName || "N/A",

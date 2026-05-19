@@ -128,12 +128,13 @@ const PaymentList = () => {
   const handleDownloadPDF = () => {
     const doc = new jsPDF("landscape");
     const tableColumn = [
-      "Sl No", "Sauda No", "Buyer", "Consignee", "Seller Name", "Seller Co", "Terms", "Date", "Qty", "Amount", "Status"
+      "Sl No", "Sauda No", "Lorry No", "Buyer", "Consignee", "Seller Name", "Seller Co", "Terms", "Date", "Qty", "Amount", "Status"
     ];
 
     const tableRows = data.map((item) => [
       item.slNo,
       item.saudaNo,
+      item.lorryNumber || "N/A",
       item.buyerCompany,
       item.consignee,
       item.supplier?.sellerName || "N/A",
@@ -166,12 +167,13 @@ const PaymentList = () => {
   };
 
   const headers = [
-    "Sl No", "Sauda No", "Buyer Company", "Consignee", "Seller Name", "Seller Company", "Payment Terms", "Unloading Date", "Unloading Qty", "Amount", "Status"
+    "Sl No", "Sauda No", "Lorry No", "Buyer Company", "Consignee", "Seller Name", "Seller Company", "Payment Terms", "Unloading Date", "Unloading Qty", "Amount", "Status"
   ];
 
   const rows = data.map((item) => [
     item.slNo,
     item.saudaNo,
+    <span key={`lorry-${item._id}`} className="font-bold text-slate-600 uppercase">{item.lorryNumber || "N/A"}</span>,
     <span key={`buyer-${item._id}`} className="font-semibold text-slate-700">{item.buyerCompany}</span>,
     item.consignee,
     item.supplier?.sellerName || "N/A",
