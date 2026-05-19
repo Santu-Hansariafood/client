@@ -48,6 +48,38 @@ const getBase64 = (img) =>
     image.onerror = () => resolve(null);
   });
 
+const formatAmount = (value) => {
+  return Number(value || 0).toLocaleString("en-IN", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+};
+
+const numberToWords = (num) => {
+  const a = [
+    "", "One ", "Two ", "Three ", "Four ", "Five ", "Six ", "Seven ", "Eight ", "Nine ", "Ten ", "Eleven ", "Twelve ", "Thirteen ", "Fourteen ", "Fifteen ", "Sixteen ", "Seventeen ", "Eighteen ", "Nineteen ",
+  ];
+  const b = ["", "", "Twenty", "Thirty", "Forty", "Fifty", "Sixty", "Seventy", "Eighty", "Ninety"];
+
+  const makeWords = (n) => {
+    if (n < 20) return a[n];
+    if (n < 100) return b[Math.floor(n / 10)] + " " + a[n % 10];
+    if (n < 1000) return a[Math.floor(n / 100)] + "Hundred " + (n % 100 !== 0 ? makeWords(n % 100) : "");
+    if (n < 100000) return makeWords(Math.floor(n / 1000)) + "Thousand " + (n % 1000 !== 0 ? makeWords(n % 1000) : "");
+    if (n < 10000000) return makeWords(Math.floor(n / 100000)) + "Lakh " + (n % 100000 !== 0 ? makeWords(n % 100000) : "");
+    return makeWords(Math.floor(n / 10000000)) + "Crore " + (n % 10000000 !== 0 ? makeWords(n % 10000000) : "");
+  };
+
+  const integer = Math.floor(num);
+  const fraction = Math.round((num - integer) * 100);
+
+  let words = makeWords(integer) + "Rupees ";
+  if (fraction > 0) {
+    words += "and " + makeWords(fraction) + "Paise ";
+  }
+  return words + "Only";
+};
+
 // --- Sub-components ---
 
 const AttachmentBadge = ({ count }) => (
@@ -243,6 +275,148 @@ ${documents.length > 0 ? documents.join("\n") : "No documents attached"}
 
       y += 40;
 
+      // Add System Bill Page if applicable
+      if (selectedEntry.billNumber && selectedEntry.billNumber !== "0") {
+        doc.addPage();
+        y = 20;
+
+        // Draw Border for Bill
+        doc.setLineWidth(0.5);
+        doc.setDrawColor(30, 41, 59);
+        doc.rect(margin, 10, pageWidth - margin * 2, pageHeight - 18);
+
+        setBold();
+        doc.setFontSize(16);
+        const commodityStr = String(selectedEntry.commodity || "").toLowerCase();
+        const isExempted = commodityStr.includes("maize") || commodityStr.includes("rice");
+        doc.text(isExempted ? "BILL OF SUPPLY" : "TAX INVOICE", pageWidth / 2, y, { align: "center" });
+
+        y += 10;
+        doc.setFontSize(12);
+        doc.text(selectedEntry.supplierCompany || "N/A", margin + 5, y);
+        
+        y += 6;
+        doc.setFontSize(9);
+        setNormal();
+        const supplier = selectedEntry.supplier || {};
+        const supplierAddr = [
+          supplier.address,
+          supplier.city,
+          supplier.state,
+          supplier.pinNo || supplier.pin
+        ].filter(Boolean).join(", ");
+        doc.text(supplierAddr || "N/A", margin + 5, y);
+
+        y += 5;
+        doc.text(`GSTIN: ${supplier.gstNumber || supplier.gstin || "N/A"} | PAN: ${supplier.panNo || supplier.pan || "N/A"}`, margin + 5, y);
+
+        y += 10;
+        // Bill Meta Info
+        doc.setDrawColor(226, 232, 240);
+        doc.setFillColor(248, 250, 252);
+        doc.rect(margin + 2, y - 5, pageWidth - margin * 2 - 4, 25, "F");
+        doc.rect(margin + 2, y - 5, pageWidth - margin * 2 - 4, 25, "S");
+
+        const billMeta = [
+          { label: "Invoice No:", value: selectedEntry.billNumber },
+          { label: "Date:", value: formatDate(selectedEntry.dateOfIssue) },
+          { label: "Sauda No:", value: selectedEntry.saudaNo },
+          { label: "Lorry No:", value: (selectedEntry.lorryNumber || "").toUpperCase() },
+        ];
+
+        billMeta.forEach((item, index) => {
+          const x = index < 2 ? margin + 5 : pageWidth / 2;
+          const yOff = (index % 2) * 6;
+          setBold();
+          doc.text(item.label, x, y + yOff);
+          setNormal();
+          doc.text(String(item.value), x + 25, y + yOff);
+        });
+
+        y += 30;
+        // Parties
+        doc.rect(margin + 2, y - 5, (pageWidth - margin * 2 - 10) / 2, 35, "S");
+        doc.rect(pageWidth / 2 + 3, y - 5, (pageWidth - margin * 2 - 10) / 2, 35, "S");
+
+        setBold();
+        doc.text("BILL TO:", margin + 5, y);
+        doc.text("SHIPPED TO:", pageWidth / 2 + 6, y);
+        
+        setNormal();
+        doc.text(selectedEntry.buyerCompany || "N/A", margin + 5, y + 5);
+        doc.text(selectedEntry.consignee || "N/A", pageWidth / 2 + 6, y + 5);
+        
+        // Add addresses if available
+        const buyerAddr = [selectedEntry.location, selectedEntry.district, selectedEntry.state].filter(Boolean).join(", ");
+        doc.setFontSize(8);
+        doc.text(doc.splitTextToSize(buyerAddr || "N/A", (pageWidth - margin * 2 - 20) / 2), margin + 5, y + 10);
+        doc.text(doc.splitTextToSize(buyerAddr || "N/A", (pageWidth - margin * 2 - 20) / 2), pageWidth / 2 + 6, y + 10);
+
+        y += 45;
+        // Items Table
+        const weight = Number(selectedEntry.loadingWeight || 0);
+        const rate = Number(selectedEntry.actualRate || 0);
+        const subtotal = weight * rate;
+        const gstPercent = Number(selectedEntry.gst || 0);
+        const gstAmount = subtotal * (gstPercent / 100);
+        const total = subtotal + gstAmount;
+
+        // eslint-disable-next-line no-undef
+        autoTable(doc, {
+          startY: y,
+          head: [["#", "Description", "Qty (Tons)", "Rate (Rs)", "Amount (Rs)"]],
+          body: [[1, selectedEntry.commodity || "N/A", weight.toFixed(3), formatAmount(rate), formatAmount(subtotal)]],
+          theme: "grid",
+          headStyles: { fillColor: [30, 41, 59], textColor: [255, 255, 255] },
+          margin: { left: margin + 2, right: margin + 2 }
+        });
+
+        y = doc.lastAutoTable.finalY + 10;
+        
+        // Summary
+        const summaryX = pageWidth - margin - 60;
+        setBold();
+        doc.setFontSize(9);
+        doc.text("Subtotal:", summaryX, y);
+        setNormal();
+        doc.text(formatAmount(subtotal), pageWidth - margin - 5, y, { align: "right" });
+        
+        y += 6;
+        if (gstPercent > 0) {
+          setBold();
+          doc.text(`GST (${gstPercent}%):`, summaryX, y);
+          setNormal();
+          doc.text(formatAmount(gstAmount), pageWidth - margin - 5, y, { align: "right" });
+          y += 6;
+        }
+        
+        setBold();
+        doc.setFontSize(11);
+        doc.text("Grand Total:", summaryX, y);
+        doc.text(`Rs. ${formatAmount(total)}`, pageWidth - margin - 5, y, { align: "right" });
+        
+        y += 10;
+        doc.setFontSize(8);
+        setNormal();
+        doc.text(`Amount in words: ${numberToWords(total)}`, margin + 5, y);
+
+        y += 15;
+        // Bank Details
+        const bank = supplier.bankDetails?.[0] || {};
+        if (bank.bankName) {
+          setBold();
+          doc.text("BANK DETAILS:", margin + 5, y);
+          setNormal();
+          doc.text(`${bank.bankName} | A/c: ${bank.accountNumber} | IFSC: ${bank.ifscCode}`, margin + 5, y + 4);
+        }
+
+        y = pageHeight - 30;
+        setBold();
+        doc.text(`For ${selectedEntry.supplierCompany || "N/A"}`, pageWidth - margin - 50, y, { align: "center" });
+        y += 15;
+        doc.text("Authorized Signatory", pageWidth - margin - 50, y, { align: "center" });
+      }
+
       const docsToPrint = [];
       if (selectedEntry.documents?.kantaSlip) docsToPrint.push({ name: "Kanta Slip", url: selectedEntry.documents.kantaSlip });
       if (selectedEntry.documents?.unloadingChallan) docsToPrint.push({ name: "Unloading Challan", url: selectedEntry.documents.unloadingChallan });
@@ -324,8 +498,8 @@ ${documents.length > 0 ? documents.join("\n") : "No documents attached"}
           docs.kantaSlip,
           docs.unloadingChallan,
           docs.partyBillCopy,
-          entry.documentUrl
-        ].filter(url => typeof url === 'string' && url.trim() !== '').length;
+          entry.documentUrl,
+        ].filter(url => typeof url === 'string' && url.trim() !== '').length + (entry.billNumber && entry.billNumber !== "0" ? 1 : 0);
 
         return [
           entry.saudaNo || "N/A",
@@ -468,6 +642,31 @@ ${documents.length > 0 ? documents.join("\n") : "No documents attached"}
             >
               <div className="p-4 sm:p-8 space-y-10">
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                  {/* System Generated Bill */}
+                  {selectedEntry.billNumber && selectedEntry.billNumber !== "0" && (
+                    <div className="space-y-4 group">
+                      <div className="flex items-center justify-between">
+                        <h4 className="text-xs font-black uppercase tracking-[0.2em] text-slate-800 flex items-center gap-3">
+                          <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+                          System Bill
+                        </h4>
+                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-2 py-0.5 rounded bg-slate-50">Generated</span>
+                      </div>
+                      
+                      <div className="relative rounded-[2rem] overflow-hidden border border-slate-100 shadow-sm group-hover:shadow-xl transition-all duration-500 bg-slate-50 flex items-center justify-center min-h-[300px]">
+                        <div className="group/btn flex flex-col items-center gap-4 p-10 text-center">
+                          <div className="w-16 h-16 bg-amber-50 text-amber-500 rounded-2xl flex items-center justify-center shadow-lg">
+                            <FaFileAlt size={32} />
+                          </div>
+                          <div>
+                            <p className="text-sm font-black text-slate-800 uppercase tracking-tight mb-1">Invoice: {selectedEntry.billNumber}</p>
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Included in Print Report</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   {[
                     { key: 'kantaSlip', label: 'Kanta Slip', color: 'blue' },
                     { key: 'unloadingChallan', label: 'Unloading Challan', color: 'indigo' },

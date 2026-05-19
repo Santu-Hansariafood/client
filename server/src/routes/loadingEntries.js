@@ -684,27 +684,38 @@ router.get("/receiving", async (req, res) => {
       .sort({ loadingDate: -1, createdAt: -1 })
       .skip((page - 1) * limit)
       .limit(limit)
-      .populate("supplier", "sellerName")
+      .populate("supplier")
       .lean();
 
     const total = await LoadingEntry.countDocuments(finalQuery);
 
     const saudaNos = [...new Set(items.map((i) => i.saudaNo).filter(Boolean))];
     const selfOrders = await SelfOrder.find({ saudaNo: { $in: saudaNos } })
-      .select("saudaNo rate")
+      .select("saudaNo rate gst buyerCompany consignee buyer poNumber location district state pin pinCode billTo commodity")
       .lean();
-    const saudaRateMap = selfOrders.reduce((acc, so) => {
-      acc[so.saudaNo] = so.rate;
+    const saudaMap = selfOrders.reduce((acc, so) => {
+      acc[so.saudaNo] = so;
       return acc;
     }, {});
 
-    const itemsWithRate = items.map((item) => ({
-      ...item,
-      actualRate: saudaRateMap[item.saudaNo] || 0,
-    }));
+    const itemsWithDetails = items.map((item) => {
+      const order = saudaMap[item.saudaNo] || {};
+      return {
+        ...item,
+        actualRate: order.rate || 0,
+        gst: order.gst || 0,
+        poNumber: order.poNumber || "",
+        location: order.location || "",
+        district: order.district || "",
+        state: order.state || "",
+        pin: order.pin || order.pinCode || "",
+        billTo: order.billTo || "",
+        commodity: item.commodity || order.commodity || "",
+      };
+    });
 
     res.json({
-      data: itemsWithRate,
+      data: itemsWithDetails,
       total,
       page,
       totalPages: Math.ceil(total / limit),
