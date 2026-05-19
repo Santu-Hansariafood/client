@@ -292,6 +292,11 @@ const privateRoutes = [
     roles: ["Admin", "Employee"],
   },
   {
+    path: "payments/list",
+    component: LazyPages.ListPayment,
+    roles: ["Admin", "Employee"],
+  },
+  {
     path: "/vendor-code/list",
     component: LazyPages.ListVendorCode,
     roles: ["Admin", "Employee"],

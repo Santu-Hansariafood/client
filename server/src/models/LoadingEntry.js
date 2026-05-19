@@ -46,6 +46,11 @@ const loadingEntrySchema = new mongoose.Schema(
       unloadingChallan: { type: String, default: "" },
       partyBillCopy: { type: String, default: "" },
     },
+    paymentStatus: {
+      type: String,
+      enum: ["pending", "done"],
+      default: "pending",
+    },
   },
   { timestamps: true },
 );

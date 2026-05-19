@@ -229,6 +229,17 @@
       ]
     },
     {
+      "section": "Payments",
+      "icon": "FaMoneyCheckAlt",
+      "actions": [
+        {
+          "name": "Payment List",
+          "link": "/payments/list",
+          "icon": "FaList"
+        }
+      ]
+    },
+    {
       "section": "Employee Management",
       "icon": "FaUserTie",
       "actions": [

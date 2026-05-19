@@ -95,6 +95,7 @@ const loaders = {
     import("../../pages/VendorCode/ListVendorCode/ListVendorCode"),
   AddExpense: () => import("../../pages/Expense/AddExpense/AddExpense"),
   ListExpense: () => import("../../pages/Expense/ListExpense/ListExpense"),
+  ListPayment: () => import("../../pages/Payments/PaymentList/PaymentList"),
   DataSafety: () => import("../../pages/DataSafety/DataSafety"),
   BuyerBrokerage: () => import("../../pages/Brokerage/BuyerBrokerage"),
   SellerBrokerage: () => import("../../pages/Brokerage/SellerBrokerage"),
@@ -158,6 +159,7 @@ const pathToKey = {
   "/buyer/bid-history": "BuyerBidHistory",
   "/expense/add": "AddExpense",
   "/expense/list": "ListExpense",
+  "/payments/list": "ListPayment",
   "/data-safety": "DataSafety",
   "/brokerage/buyer": "BuyerBrokerage",
   "/brokerage/seller": "SellerBrokerage",
@@ -252,6 +254,7 @@ const LazyPages = {
   ListVendorCode: lazy(loaders.ListVendorCode),
   AddExpense: lazy(loaders.AddExpense),
   ListExpense: lazy(loaders.ListExpense),
+  ListPayment: lazy(loaders.ListPayment),
   BuyerBrokerage: lazy(loaders.BuyerBrokerage),
   SellerBrokerage: lazy(loaders.SellerBrokerage),
 };
