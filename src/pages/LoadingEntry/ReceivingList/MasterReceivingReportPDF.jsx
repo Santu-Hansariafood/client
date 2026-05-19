@@ -1,0 +1,488 @@
+import React from "react";
+import {
+  Page,
+  Document,
+  StyleSheet,
+  View,
+  Text,
+  Image,
+} from "@react-pdf/renderer";
+
+const styles = StyleSheet.create({
+  billPage: {
+    fontFamily: "Helvetica",
+    fontSize: 9,
+    padding: 35,
+    color: "#1a1a1a",
+    backgroundColor: "#ffffff",
+  },
+  billPageBorder: {
+    position: "absolute",
+    top: 10,
+    left: 10,
+    right: 10,
+    bottom: 10,
+    borderWidth: 1.5,
+    borderColor: "#1a1a1a",
+    borderStyle: "solid",
+  },
+  billInnerBorder: {
+    position: "absolute",
+    top: 14,
+    left: 14,
+    right: 14,
+    bottom: 14,
+    borderWidth: 0.5,
+    borderColor: "#1a1a1a",
+    borderStyle: "solid",
+  },
+  billTitleContainer: {
+    width: "100%",
+    alignItems: "center",
+    marginBottom: 15,
+    paddingVertical: 5,
+  },
+  billTypeTitle: {
+    fontSize: 20,
+    fontWeight: "heavy",
+    color: "#000000",
+    textTransform: "uppercase",
+  },
+  billHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    marginBottom: 15,
+  },
+  companyBrand: {
+    flex: 1,
+  },
+  companyName: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#1a1a1a",
+    textTransform: "uppercase",
+    marginBottom: 4,
+  },
+  companyDetails: {
+    fontSize: 8,
+    color: "#333333",
+    lineHeight: 1.3,
+  },
+  partiesContainer: {
+    flexDirection: "row",
+    marginBottom: 12,
+    gap: 12,
+  },
+  partyBox: {
+    flex: 1,
+    padding: 8,
+    borderWidth: 0.5,
+    borderColor: "#000000",
+  },
+  partyLabel: {
+    fontSize: 7.5,
+    fontWeight: "bold",
+    color: "#000000",
+    textTransform: "uppercase",
+    marginBottom: 4,
+    borderBottomWidth: 0.5,
+    borderBottomColor: "#000000",
+    paddingBottom: 2,
+  },
+  partyName: {
+    fontSize: 9.5,
+    fontWeight: "bold",
+    marginBottom: 3,
+  },
+  metaContainer: {
+    flexDirection: "row",
+    marginBottom: 12,
+    borderWidth: 0.5,
+    borderColor: "#000000",
+  },
+  metaItem: {
+    flex: 1,
+    padding: 6,
+    borderRightWidth: 0.5,
+    borderRightColor: "#000000",
+    alignItems: "center",
+  },
+  metaItemLast: {
+    flex: 1,
+    padding: 6,
+    alignItems: "center",
+  },
+  metaLabel: {
+    fontSize: 6.5,
+    color: "#333333",
+    textTransform: "uppercase",
+    marginBottom: 2,
+    fontWeight: "bold",
+  },
+  metaValue: {
+    fontSize: 8.5,
+    fontWeight: "bold",
+    color: "#000000",
+  },
+  modernTable: {
+    width: "100%",
+    marginBottom: 12,
+    borderWidth: 0.5,
+    borderColor: "#000000",
+  },
+  modernTableHeader: {
+    flexDirection: "row",
+    backgroundColor: "#f5f5f5",
+    color: "#000000",
+    borderBottomWidth: 0.5,
+    borderBottomColor: "#000000",
+    padding: 6,
+  },
+  modernTableRow: {
+    flexDirection: "row",
+    padding: 6,
+    minHeight: 28,
+    alignItems: "center",
+    backgroundColor: "#ffffff",
+  },
+  col1: { width: "5%", textAlign: "center" },
+  col2: { width: "40%", paddingLeft: 5 },
+  col3: { width: "10%", textAlign: "center" },
+  col4: { width: "15%", textAlign: "center" },
+  col5: { width: "15%", textAlign: "center" },
+  col6: { width: "15%", textAlign: "right", paddingRight: 5 },
+  summarySection: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 5,
+    gap: 12,
+  },
+  qrSection: {
+    width: "90pt",
+    padding: 6,
+    borderWidth: 0.5,
+    borderColor: "#000000",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  qrLabel: {
+    fontSize: 7,
+    fontWeight: "bold",
+    marginTop: 4,
+    textAlign: "center",
+  },
+  totalSection: {
+    flex: 1,
+    borderWidth: 0.5,
+    borderColor: "#000000",
+  },
+  summaryRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingVertical: 3,
+    paddingHorizontal: 8,
+    borderBottomWidth: 0.5,
+    borderBottomColor: "#000000",
+  },
+  grandTotalRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingVertical: 6,
+    backgroundColor: "#f5f5f5",
+    paddingHorizontal: 8,
+    borderBottomWidth: 0.5,
+    borderBottomColor: "#000000",
+  },
+  grandTotalLabel: {
+    fontSize: 10,
+    fontWeight: "bold",
+  },
+  grandTotalValue: {
+    fontSize: 10,
+    fontWeight: "bold",
+  },
+  amountInWordsRow: {
+    padding: 6,
+    paddingHorizontal: 8,
+    backgroundColor: "#ffffff",
+  },
+  amountInWordsLabel: {
+    fontSize: 6.5,
+    fontWeight: "bold",
+    color: "#333333",
+    textTransform: "uppercase",
+    marginBottom: 2,
+  },
+  amountInWordsValue: {
+    fontSize: 8,
+    fontWeight: "bold",
+    color: "#000000",
+  },
+  bankSection: {
+    marginTop: 12,
+    padding: 8,
+    borderWidth: 0.5,
+    borderColor: "#000000",
+  },
+  bankTitle: {
+    fontSize: 8.5,
+    fontWeight: "bold",
+    textTransform: "uppercase",
+    marginBottom: 6,
+    borderBottomWidth: 0.5,
+    borderBottomColor: "#000000",
+    paddingBottom: 3,
+  },
+  bankGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+  },
+  bankItem: {
+    width: "33.33%",
+    marginBottom: 4,
+  },
+  bankLabel: {
+    fontSize: 6.5,
+    color: "#333333",
+    textTransform: "uppercase",
+    fontWeight: "bold",
+  },
+  bankValue: {
+    fontSize: 8,
+    fontWeight: "bold",
+    color: "#000000",
+  },
+  signatorySection: {
+    marginTop: 20,
+    flexDirection: "row",
+    justifyContent: "flex-end",
+  },
+  signatoryBox: {
+    width: "150pt",
+    textAlign: "center",
+  },
+  signLine: {
+    borderTopWidth: 0.5,
+    borderTopColor: "#000000",
+    marginTop: 30,
+    paddingTop: 4,
+  },
+  docPage: {
+    padding: 20,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#f8fafc",
+  },
+  docImage: {
+    maxWidth: "100%",
+    maxHeight: "100%",
+    objectFit: "contain",
+  },
+  docTitle: {
+    position: "absolute",
+    top: 10,
+    left: 20,
+    fontSize: 10,
+    fontWeight: "bold",
+    color: "#64748b",
+    textTransform: "uppercase",
+    letterSpacing: 1,
+  },
+  addressDetails: {
+    fontSize: 8,
+    color: "#000000",
+    lineHeight: 1.4,
+    marginTop: 2,
+  },
+});
+
+const formatDate = (date) => {
+  if (!date) return "N/A";
+  const d = new Date(date);
+  if (isNaN(d.getTime())) return "N/A";
+  return `${String(d.getDate()).padStart(2, "0")}-${String(
+    d.getMonth() + 1,
+  ).padStart(2, "0")}-${d.getFullYear()}`;
+};
+
+const formatAmount = (value) => {
+  return Number(value || 0).toLocaleString("en-IN", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+};
+
+const numberToWords = (num) => {
+  const a = [
+    "", "One ", "Two ", "Three ", "Four ", "Five ", "Six ", "Seven ", "Eight ", "Nine ", "Ten ",
+    "Eleven ", "Twelve ", "Thirteen ", "Fourteen ", "Fifteen ", "Sixteen ", "Seventeen ", "Eighteen ", "Nineteen ",
+  ];
+  const b = ["", "", "Twenty", "Thirty", "Forty", "Fifty", "Sixty", "Seventy", "Eighty", "Ninety"];
+  const makeWords = (n) => {
+    if (n < 20) return a[n];
+    if (n < 100) return b[Math.floor(n / 10)] + " " + a[n % 10];
+    if (n < 1000) return a[Math.floor(n / 100)] + "Hundred " + (n % 100 !== 0 ? makeWords(n % 100) : "");
+    if (n < 100000) return makeWords(Math.floor(n / 1000)) + "Thousand " + (n % 1000 !== 0 ? makeWords(n % 1000) : "");
+    if (n < 10000000) return makeWords(Math.floor(n / 100000)) + "Lakh " + (n % 100000 !== 0 ? makeWords(n % 100000) : "");
+    return makeWords(Math.floor(n / 10000000)) + "Crore " + (n % 10000000 !== 0 ? makeWords(n % 10000000) : "");
+  };
+  const integer = Math.floor(num);
+  const fraction = Math.round((num - integer) * 100);
+  let words = makeWords(integer) + "Rupees ";
+  if (fraction > 0) words += "and " + makeWords(fraction) + "Paise ";
+  return words + "Only";
+};
+
+const renderAddressDetails = (details) => {
+  if (!details) return null;
+  const { address, district, state, pinNo, pin, panNo, pan, gstNo, gst, phone, mobile, phoneNumber } = details;
+  const parts = [];
+  const finalPin = pinNo || pin;
+  if (address || district || state || finalPin) {
+    parts.push(`${address || ""}${address && (district || state || finalPin) ? ", " : ""}${district || ""}${district && (state || finalPin) ? ", " : ""}${state || ""}${state && finalPin ? " - " : ""}${finalPin || ""}`);
+  }
+  const finalPan = panNo || pan;
+  if (finalPan) parts.push(`PAN No: ${finalPan}`);
+  const finalGst = gstNo || gst;
+  if (finalGst) parts.push(`GST: ${finalGst}`);
+  const contactNumber = phone || mobile || phoneNumber;
+  if (contactNumber) parts.push(`Phone: ${contactNumber}`);
+  if (parts.length === 0) return null;
+  return <Text style={styles.addressDetails}>{parts.join("\n")}</Text>;
+};
+
+const MasterReceivingReportPDF = ({ entries = [], logoUrl }) => {
+  return (
+    <Document title="Master Receiving Report">
+      {entries.map((data, index) => {
+        const weight = Number(data.loadingWeight || 0);
+        const rate = Number(data.rate || 0);
+        const subtotal = weight * rate;
+        const gstPercent = Number(data.gst || 0);
+        const gstAmount = subtotal * (gstPercent / 100);
+        const totalBillAmount = subtotal + gstAmount;
+        const commodityStr = String(data.commodity || "").toLowerCase();
+        const isExempted = commodityStr.includes("maize") || commodityStr.includes("rice");
+        const billTitle = isExempted ? "BILL OF SUPPLY" : "TAX INVOICE";
+        const bankDetails = data.supplierDetails?.bankDetails?.[0] || {};
+        
+        const supplierState = String(data.supplierDetails?.state || "").toLowerCase().trim();
+        const consigneeState = String(data.consigneeDetails?.state || "").toLowerCase().trim();
+        const isInterState = supplierState !== consigneeState && consigneeState !== "n/a" && consigneeState !== "";
+
+        const documents = data.documents || {};
+        const docUrls = [
+          { url: documents.kantaSlip, label: "Kanta Slip" },
+          { url: documents.unloadingChallan, label: "Unloading Challan" },
+          { url: documents.partyBillCopy, label: "Party Bill Copy" },
+          { url: data.documentUrl, label: "Attachment" },
+        ].filter(d => d.url && typeof d.url === 'string' && d.url.trim() !== '' && !d.url.endsWith('.pdf'));
+
+        return (
+          <React.Fragment key={index}>
+            {/* Bill Page */}
+            <Page style={styles.billPage} size="A4">
+              <View style={styles.billPageBorder} fixed />
+              <View style={styles.billInnerBorder} fixed />
+              <View style={styles.billTitleContainer}>
+                <Text style={styles.billTypeTitle}>{billTitle}</Text>
+              </View>
+              <View style={styles.billHeader}>
+                <View style={styles.companyBrand}>
+                  <Text style={styles.companyName}>{data.supplierCompany || ""}</Text>
+                  <Text style={styles.companyDetails}>
+                    {data.supplierDetails?.address || ""}
+                    {data.supplierDetails?.district ? `, ${data.supplierDetails.district}` : ""}
+                    {data.supplierDetails?.state ? `, ${data.supplierDetails.state}` : ""}
+                    {data.supplierDetails?.pinNo ? ` - ${data.supplierDetails.pinNo}` : ""}
+                  </Text>
+                  <Text style={styles.companyDetails}>
+                    GSTIN: {data.supplierDetails?.gstNo || ""} | PAN: {data.supplierDetails?.panNo || ""}
+                  </Text>
+                </View>
+                {logoUrl && <Image src={logoUrl} style={{ width: 60, height: 60 }} />}
+              </View>
+
+              <View style={styles.partiesContainer}>
+                <View style={styles.partyBox}>
+                  <Text style={styles.partyLabel}>Bill To</Text>
+                  <Text style={styles.partyName}>{data.buyerCompany || data.buyer || "N/A"}</Text>
+                  {renderAddressDetails(data.buyerDetails)}
+                </View>
+                <View style={styles.partyBox}>
+                  <Text style={styles.partyLabel}>Shipped To</Text>
+                  <Text style={styles.partyName}>{data.consignee || "N/A"}</Text>
+                  {renderAddressDetails(data.consigneeDetails)}
+                </View>
+              </View>
+
+              <View style={styles.metaContainer}>
+                <View style={styles.metaItem}><Text style={styles.metaLabel}>Date</Text><Text style={styles.metaValue}>{formatDate(data.dateOfIssue)}</Text></View>
+                <View style={styles.metaItem}><Text style={styles.metaLabel}>Invoice No</Text><Text style={styles.metaValue}>{data.billNumber || ""}</Text></View>
+                <View style={styles.metaItem}><Text style={styles.metaLabel}>Sauda No</Text><Text style={styles.metaValue}>{data.saudaNo || ""}</Text></View>
+                <View style={styles.metaItem}><Text style={styles.metaLabel}>Lorry No</Text><Text style={styles.metaValue}>{data.lorryNumber || ""}</Text></View>
+              </View>
+
+              <View style={styles.modernTable}>
+                <View style={styles.modernTableHeader}>
+                  <Text style={styles.col1}>#</Text>
+                  <Text style={styles.col2}>Description of Goods</Text>
+                  <Text style={styles.col3}>HSN</Text>
+                  <Text style={styles.col4}>Qty (Tons)</Text>
+                  <Text style={styles.col5}>Rate (Rs)</Text>
+                  <Text style={styles.col6}>Amount</Text>
+                </View>
+                <View style={styles.modernTableRow}>
+                  <Text style={styles.col1}>1</Text>
+                  <Text style={styles.col2}>{data.commodity || "N/A"}</Text>
+                  <Text style={styles.col3}>{data.hsnCode || ""}</Text>
+                  <Text style={styles.col4}>{Number(data.loadingWeight || 0).toFixed(3)}</Text>
+                  <Text style={styles.col5}>{formatAmount(data.rate)}</Text>
+                  <Text style={styles.col6}>{formatAmount(subtotal)}</Text>
+                </View>
+              </View>
+
+              <View style={styles.summarySection}>
+                <View style={styles.qrSection}>
+                  <Text style={{ fontSize: 7, fontWeight: "bold", marginBottom: 5 }}>SCAN DETAILS</Text>
+                  {data.qrCodeUrl && <Image src={data.qrCodeUrl} style={{ width: 50, height: 50 }} />}
+                </View>
+                <View style={styles.totalSection}>
+                  <View style={styles.summaryRow}><Text style={styles.label}>Taxable Value:</Text><Text style={styles.value}>{formatAmount(subtotal)}</Text></View>
+                  {gstPercent > 0 && (
+                    <View style={styles.summaryRow}>
+                      <Text style={styles.label}>{isInterState ? "IGST" : "CGST/SGST"} ({gstPercent}%):</Text>
+                      <Text style={styles.value}>{formatAmount(gstAmount)}</Text>
+                    </View>
+                  )}
+                  <View style={styles.grandTotalRow}><Text style={styles.grandTotalLabel}>Grand Total:</Text><Text style={styles.grandTotalValue}>Rs. {formatAmount(totalBillAmount)}</Text></View>
+                  <View style={styles.amountInWordsRow}><Text style={styles.amountInWordsLabel}>Amount in Words</Text><Text style={styles.amountInWordsValue}>{numberToWords(totalBillAmount)}</Text></View>
+                </View>
+              </View>
+
+              <View style={styles.bankSection}>
+                <Text style={styles.bankTitle}>Bank Account Details</Text>
+                <View style={styles.bankGrid}>
+                  <View style={styles.bankItem}><Text style={styles.bankLabel}>Bank Name</Text><Text style={styles.bankValue}>{bankDetails.bankName || ""}</Text></View>
+                  <View style={styles.bankItem}><Text style={styles.bankLabel}>Account Number</Text><Text style={styles.bankValue}>{bankDetails.accountNumber || ""}</Text></View>
+                  <View style={styles.bankItem}><Text style={styles.bankLabel}>IFSC Code</Text><Text style={styles.bankValue}>{bankDetails.ifscCode || ""}</Text></View>
+                </View>
+              </View>
+            </Page>
+
+            {/* Document Pages */}
+            {docUrls.map((doc, docIdx) => (
+              <Page key={`doc-${index}-${docIdx}`} style={styles.docPage} size="A4">
+                <Text style={styles.docTitle}>{doc.label} - {data.lorryNumber}</Text>
+                <Image src={doc.url} style={styles.docImage} />
+              </Page>
+            ))}
+          </React.Fragment>
+        );
+      })}
+    </Document>
+  );
+};
+
+export default MasterReceivingReportPDF;

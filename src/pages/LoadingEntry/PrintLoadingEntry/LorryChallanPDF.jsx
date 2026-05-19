@@ -677,7 +677,7 @@ const renderAddressDetails = (details) => {
   return <Text style={styles.addressDetails}>{parts.join("\n")}</Text>;
 };
 
-const LorryChallanPDF = ({ data = {}, logoUrl, qrCodeUrl }) => {
+const LorryChallanPDF = ({ data = {}, logoUrl, qrCodeUrl, onlySecondPage = false }) => {
   const isConsigneeAsBuyer = data.billTo === "consignee";
 
   const normalizedConsignee = String(data.consignee || "").toLowerCase();
@@ -734,21 +734,22 @@ const LorryChallanPDF = ({ data = {}, logoUrl, qrCodeUrl }) => {
 
   return (
     <Document>
-      <Page style={styles.page} size="A4">
-        <View style={styles.pageBorder} fixed />
-        <View style={styles.innerBorder} fixed />
+      {!onlySecondPage && (
+        <Page style={styles.page} size="A4">
+          <View style={styles.pageBorder} fixed />
+          <View style={styles.innerBorder} fixed />
 
-        <View style={styles.watermark} fixed>
-          <Text
-            style={{
-              fontSize: 60,
-              color: "#000000",
-              transform: "rotate(-25deg)",
-            }}
-          >
-            HANSARIA
-          </Text>
-        </View>
+          <View style={styles.watermark} fixed>
+            <Text
+              style={{
+                fontSize: 60,
+                color: "#000000",
+                transform: "rotate(-25deg)",
+              }}
+            >
+              HANSARIA
+            </Text>
+          </View>
 
         <View style={styles.header}>
           <View style={styles.sellerInfo}>
@@ -1041,7 +1042,8 @@ const LorryChallanPDF = ({ data = {}, logoUrl, qrCodeUrl }) => {
             be considered as a legal document or proof of delivery.
           </Text>
         </View>
-      </Page>
+        </Page>
+      )}
 
       {shouldPrintBill && (
         <Page style={styles.billPage} size="A4">

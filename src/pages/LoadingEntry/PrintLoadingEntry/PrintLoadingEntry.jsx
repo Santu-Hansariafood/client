@@ -11,12 +11,14 @@ const normalize = (value) =>
     .trim()
     .toLowerCase();
 
-const PrintLoadingEntry = async (entry) => {
+const PrintLoadingEntry = async (entry, options = {}) => {
   try {
     if (!entry) {
       console.error("PrintLoadingEntry: No entry provided");
       return null;
     }
+
+    const { onlySecondPage = false } = options;
 
     const results = await Promise.allSettled([
       fetchAllPages("/consignees", { limit: 200 }),
@@ -101,6 +103,7 @@ const PrintLoadingEntry = async (entry) => {
         data={pdfData}
         logoUrl={logoUrl?.default || logoUrl}
         qrCodeUrl={qrCodeUrl}
+        onlySecondPage={onlySecondPage}
       />
     );
 

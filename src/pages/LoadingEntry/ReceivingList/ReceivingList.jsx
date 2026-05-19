@@ -17,6 +17,12 @@ import Loading from "../../../common/Loading/Loading";
 import PrintLoadingEntry from "../PrintLoadingEntry/PrintLoadingEntry";
 import { downloadFile } from "../../../utils/fileDownloader";
 
+import MasterReceivingReportPDF from "./MasterReceivingReportPDF";
+import { pdf } from "@react-pdf/renderer";
+import { fetchAllPages } from "../../../utils/apiClient/fetchAllPages";
+import { buildSaudaPdfData } from "../../../utils/saudaPdf/buildSaudaPdfData";
+import logoUrl from "../../../assets/Hans.png";
+import QRCode from "qrcode";
 import { jsPDF } from "jspdf";
 import "jspdf-autotable";
 
@@ -156,7 +162,7 @@ ${documents.length > 0 ? documents.join("\n") : "No documents attached"}
     const toastId = toast.loading("Generating professional PDF report...");
 
     try {
-      const blob = await PrintLoadingEntry(selectedEntry);
+      const blob = await PrintLoadingEntry(selectedEntry, { onlySecondPage: true });
       if (!blob) throw new Error("Failed to generate PDF");
 
       let fileName = `receiving_report_${selectedEntry.saudaNo || "document"}`;
@@ -233,6 +239,96 @@ ${documents.length > 0 ? documents.join("\n") : "No documents attached"}
     });
 
     doc.save(`ReceivingEntries_${new Date().toISOString().split("T")[0]}.pdf`);
+  }, [loadingEntries]);
+
+  const handlePrintAllWithDocuments = useCallback(async () => {
+    if (loadingEntries.length === 0) return;
+
+    const toastId = toast.loading("Generating Master Report with documents...");
+
+    try {
+      // 1. Fetch supplementary data once
+      const [
+        consigneeData,
+        supplierData,
+        buyerData,
+        companyData,
+        commodityData,
+      ] = await Promise.all([
+        fetchAllPages("/consignees", { limit: 200 }),
+        fetchAllPages("/seller-company", { limit: 200 }),
+        fetchAllPages("/buyers", { limit: 200 }),
+        fetchAllPages("/companies", { limit: 200 }),
+        fetchAllPages("/commodities", { limit: 200 }),
+      ]);
+
+      // 2. Prepare data for each entry
+      const preparedEntries = await Promise.all(
+        loadingEntries.map(async (entry) => {
+          const pdfData = buildSaudaPdfData({
+            item: entry,
+            consigneeData,
+            supplierData,
+            buyerData,
+            companyData,
+            commodityData,
+            getConsigneeDisplay: (row) => {
+              const consignee = row?.consignee;
+              if (typeof consignee === "object" && consignee?.name)
+                return consignee.name;
+              if (typeof consignee === "object" && consignee?.label)
+                return consignee.label;
+              return String(consignee || "N/A");
+            },
+          });
+
+          // Generate QR Code for each entry
+          const qrData = JSON.stringify({
+            saudaNo: entry.saudaNo,
+            billNo: entry.billNumber,
+            lorry: entry.lorryNumber,
+            weight: entry.loadingWeight,
+          });
+          let qrCodeUrl = null;
+          try {
+            qrCodeUrl = await QRCode.toDataURL(qrData);
+          } catch (e) {
+            console.error("QR Error", e);
+          }
+
+          return { ...pdfData, qrCodeUrl };
+        }),
+      );
+
+      // 3. Generate the Master PDF
+      const document = (
+        <MasterReceivingReportPDF
+          entries={preparedEntries}
+          logoUrl={logoUrl?.default || logoUrl}
+        />
+      );
+
+      const blob = await pdf(document).toBlob();
+      downloadFile(
+        blob,
+        `Master_Receiving_Report_${new Date().toISOString().split("T")[0]}.pdf`,
+      );
+
+      toast.update(toastId, {
+        render: "Master Report downloaded successfully!",
+        type: "success",
+        isLoading: false,
+        autoClose: 3000,
+      });
+    } catch (error) {
+      console.error("Error generating master report:", error);
+      toast.update(toastId, {
+        render: "Failed to generate Master Report",
+        type: "error",
+        isLoading: false,
+        autoClose: 3000,
+      });
+    }
   }, [loadingEntries]);
 
   const headers = [
@@ -339,12 +435,20 @@ ${documents.length > 0 ? documents.join("\n") : "No documents attached"}
                 <h3 className="text-sm font-black text-slate-800 uppercase tracking-[0.2em] italic">Search <span className="text-blue-600">Sync</span></h3>
                 <div className="flex gap-3">
                   <button
+                    onClick={handlePrintAllWithDocuments}
+                    disabled={loadingEntries.length === 0}
+                    className="px-6 py-2 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 disabled:opacity-50 flex items-center gap-2 text-xs uppercase tracking-widest"
+                  >
+                    <FaFileAlt size={14} />
+                    Master Report
+                  </button>
+                  <button
                     onClick={handleDownloadPDFReport}
                     disabled={loadingEntries.length === 0}
                     className="px-6 py-2 bg-slate-800 text-white rounded-xl font-bold hover:bg-slate-900 transition-all shadow-lg shadow-slate-200 disabled:opacity-50 flex items-center gap-2 text-xs uppercase tracking-widest"
                   >
                     <FaPrint size={14} />
-                    Download PDF
+                    Table Report
                   </button>
                   <span className="px-4 py-1.5 rounded-full bg-blue-50 text-blue-600 text-[10px] font-black uppercase tracking-widest border border-blue-100 flex items-center">Live Database</span>
                 </div>
