@@ -15,7 +15,7 @@ import { useAuth } from "../../../context/AuthContext/AuthContext";
 import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
 import Loading from "../../../common/Loading/Loading";
 import { jsPDF } from "jspdf";
-import "jspdf-autotable";
+import autoTable from "jspdf-autotable";
 
 // --- Components ---
 const Tables = lazy(() => import("../../../common/Tables/Tables"));
@@ -361,7 +361,6 @@ ${documents.length > 0 ? documents.join("\n") : "No documents attached"}
         const gstAmount = subtotal * (gstPercent / 100);
         const total = subtotal + gstAmount;
 
-        // eslint-disable-next-line no-undef
         autoTable(doc, {
           startY: y,
           head: [["#", "Description", "Qty (Tons)", "Rate (Rs)", "Amount (Rs)"]],
