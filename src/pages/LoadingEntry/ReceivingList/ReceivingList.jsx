@@ -159,12 +159,66 @@ ${documents.length > 0 ? documents.join("\n") : "No documents attached"}
   const handlePrint = async () => {
     if (!selectedEntry) return;
 
-    const toastId = toast.loading("Generating professional PDF report...");
+    const toastId = toast.loading("Generating comprehensive entry report...");
 
     try {
-      const blob = await PrintLoadingEntry(selectedEntry, { onlySecondPage: true });
-      if (!blob) throw new Error("Failed to generate PDF");
+      // 1. Fetch supplementary data
+      const [
+        consigneeData,
+        supplierData,
+        buyerData,
+        companyData,
+        commodityData,
+      ] = await Promise.all([
+        fetchAllPages("/consignees", { limit: 200 }),
+        fetchAllPages("/seller-company", { limit: 200 }),
+        fetchAllPages("/buyers", { limit: 200 }),
+        fetchAllPages("/companies", { limit: 200 }),
+        fetchAllPages("/commodities", { limit: 200 }),
+      ]);
 
+      // 2. Prepare entry data
+      const pdfData = buildSaudaPdfData({
+        item: selectedEntry,
+        consigneeData,
+        supplierData,
+        buyerData,
+        companyData,
+        commodityData,
+        getConsigneeDisplay: (row) => {
+          const consignee = row?.consignee;
+          if (typeof consignee === "object" && consignee?.name) return consignee.name;
+          if (typeof consignee === "object" && consignee?.label) return consignee.label;
+          return String(consignee || "N/A");
+        },
+      });
+
+      // 3. Generate QR Code
+      const qrData = JSON.stringify({
+        saudaNo: selectedEntry.saudaNo,
+        billNo: selectedEntry.billNumber,
+        lorry: selectedEntry.lorryNumber,
+        weight: selectedEntry.loadingWeight,
+      });
+      let qrCodeUrl = null;
+      try {
+        qrCodeUrl = await QRCode.toDataURL(qrData);
+      } catch (e) {
+        console.error("QR Error", e);
+      }
+
+      const preparedEntry = { ...pdfData, qrCodeUrl };
+
+      // 4. Generate PDF
+      const document = (
+        <MasterReceivingReportPDF
+          entries={[preparedEntry]}
+          logoUrl={logoUrl?.default || logoUrl}
+        />
+      );
+
+      const blob = await pdf(document).toBlob();
+      
       let fileName = `receiving_report_${selectedEntry.saudaNo || "document"}`;
       if (selectedEntry.billNumber && selectedEntry.billNumber !== "0") {
         fileName += `_bill_${selectedEntry.billNumber}`;
@@ -173,7 +227,7 @@ ${documents.length > 0 ? documents.join("\n") : "No documents attached"}
 
       downloadFile(blob, fileName);
       toast.update(toastId, { 
-        render: "PDF downloaded successfully!", 
+        render: "Report downloaded successfully!", 
         type: "success", 
         isLoading: false, 
         autoClose: 3000 
@@ -181,7 +235,7 @@ ${documents.length > 0 ? documents.join("\n") : "No documents attached"}
     } catch (error) {
       console.error("Error generating PDF:", error);
       toast.update(toastId, { 
-        render: "Failed to generate PDF report", 
+        render: "Failed to generate comprehensive report", 
         type: "error", 
         isLoading: false, 
         autoClose: 3000 

@@ -295,6 +295,53 @@ const styles = StyleSheet.create({
     lineHeight: 1.4,
     marginTop: 2,
   },
+  summaryPage: {
+    padding: 40,
+    fontFamily: "Helvetica",
+    backgroundColor: "#ffffff",
+  },
+  summaryHeader: {
+    borderBottomWidth: 2,
+    borderBottomColor: "#1e293b",
+    paddingBottom: 10,
+    marginBottom: 20,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  summaryTitle: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "#1e293b",
+    textTransform: "uppercase",
+    letterSpacing: 1,
+  },
+  summaryGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    borderWidth: 1,
+    borderColor: "#e2e8f0",
+  },
+  summaryItem: {
+    width: "50%",
+    padding: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "#f1f5f9",
+    borderRightWidth: 1,
+    borderRightColor: "#f1f5f9",
+  },
+  summaryLabel: {
+    fontSize: 8,
+    color: "#64748b",
+    textTransform: "uppercase",
+    fontWeight: "bold",
+    marginBottom: 4,
+  },
+  summaryValue: {
+    fontSize: 12,
+    color: "#1e293b",
+    fontWeight: "bold",
+  },
 });
 
 const formatDate = (date) => {
@@ -381,7 +428,83 @@ const MasterReceivingReportPDF = ({ entries = [], logoUrl }) => {
 
         return (
           <React.Fragment key={index}>
-            {/* Bill Page */}
+            {/* 1. Summary Page (Receiving Entry Details) */}
+            <Page style={styles.summaryPage} size="A4">
+              <View style={styles.summaryHeader}>
+                <Text style={styles.summaryTitle}>Receiving Entry</Text>
+                {logoUrl && <Image src={logoUrl} style={{ width: 50, height: 50 }} />}
+              </View>
+
+              <View style={styles.summaryGrid}>
+                <View style={styles.summaryItem}>
+                  <Text style={styles.summaryLabel}>Sauda No</Text>
+                  <Text style={styles.summaryValue}>{data.saudaNo || "N/A"}</Text>
+                </View>
+                <View style={styles.summaryItem}>
+                  <Text style={styles.summaryLabel}>Loading No</Text>
+                  <Text style={styles.summaryValue}>{data.billNumber || "N/A"}</Text>
+                </View>
+                <View style={styles.summaryItem}>
+                  <Text style={styles.summaryLabel}>Lorry No</Text>
+                  <Text style={[styles.summaryValue, { textTransform: "uppercase" }]}>{data.lorryNumber || "N/A"}</Text>
+                </View>
+                <View style={styles.summaryItem}>
+                  <Text style={styles.summaryLabel}>Commodity</Text>
+                  <Text style={styles.summaryValue}>{data.commodity || "N/A"}</Text>
+                </View>
+                <View style={styles.summaryItem}>
+                  <Text style={styles.summaryLabel}>Loading Weight</Text>
+                  <Text style={styles.summaryValue}>{data.loadingWeight || 0} Tons</Text>
+                </View>
+                <View style={styles.summaryItem}>
+                  <Text style={styles.summaryLabel}>Unloading Weight</Text>
+                  <Text style={styles.summaryValue}>{data.unloadingWeight || 0} Tons</Text>
+                </View>
+                <View style={styles.summaryItem}>
+                  <Text style={styles.summaryLabel}>Loading Date</Text>
+                  <Text style={styles.summaryValue}>{formatDate(data.loadingDate)}</Text>
+                </View>
+                <View style={styles.summaryItem}>
+                  <Text style={styles.summaryLabel}>Unloading Date</Text>
+                  <Text style={styles.summaryValue}>{formatDate(data.unloadingDate)}</Text>
+                </View>
+                <View style={styles.summaryItem}>
+                  <Text style={styles.summaryLabel}>Rate</Text>
+                  <Text style={styles.summaryValue}>Rs. {data.actualRate || 0}</Text>
+                </View>
+                <View style={styles.summaryItem}>
+                  <Text style={styles.summaryLabel}>Amount</Text>
+                  <Text style={styles.summaryValue}>Rs. {formatAmount((data.unloadingWeight || 0) * (data.actualRate || 0))}</Text>
+                </View>
+                <View style={[styles.summaryItem, { width: "100%" }]}>
+                  <Text style={styles.summaryLabel}>Seller Company</Text>
+                  <Text style={styles.summaryValue}>{data.supplierCompany || "N/A"}</Text>
+                </View>
+                <View style={[styles.summaryItem, { width: "100%", borderBottomWidth: 0 }]}>
+                  <Text style={styles.summaryLabel}>Buyer Company</Text>
+                  <Text style={styles.summaryValue}>{data.buyerCompany || "N/A"}</Text>
+                </View>
+              </View>
+
+              <View style={{ marginTop: 40, flexDirection: "row", justifyContent: "space-between" }}>
+                <View style={{ width: "40%", borderTopWidth: 1, borderTopColor: "#e2e8f0", paddingTop: 8 }}>
+                  <Text style={{ fontSize: 8, color: "#64748b", textTransform: "uppercase", textAlign: "center" }}>Prepared By</Text>
+                </View>
+                <View style={{ width: "40%", borderTopWidth: 1, borderTopColor: "#e2e8f0", paddingTop: 8 }}>
+                  <Text style={{ fontSize: 8, color: "#64748b", textTransform: "uppercase", textAlign: "center" }}>Authorized Signatory</Text>
+                </View>
+              </View>
+            </Page>
+
+            {/* 2. Document Pages (Attachments) */}
+            {docUrls.map((doc, docIdx) => (
+              <Page key={`doc-${index}-${docIdx}`} style={styles.docPage} size="A4">
+                <Text style={styles.docTitle}>{doc.label} - {data.lorryNumber}</Text>
+                <Image src={doc.url} style={styles.docImage} />
+              </Page>
+            ))}
+
+            {/* 3. Bill Page (Tax Invoice) */}
             <Page style={styles.billPage} size="A4">
               <View style={styles.billPageBorder} fixed />
               <View style={styles.billInnerBorder} fixed />
@@ -470,14 +593,6 @@ const MasterReceivingReportPDF = ({ entries = [], logoUrl }) => {
                 </View>
               </View>
             </Page>
-
-            {/* Document Pages */}
-            {docUrls.map((doc, docIdx) => (
-              <Page key={`doc-${index}-${docIdx}`} style={styles.docPage} size="A4">
-                <Text style={styles.docTitle}>{doc.label} - {data.lorryNumber}</Text>
-                <Image src={doc.url} style={styles.docImage} />
-              </Page>
-            ))}
           </React.Fragment>
         );
       })}
