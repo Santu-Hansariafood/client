@@ -67,6 +67,35 @@ const ReceivingList = () => {
   const [searchInput, setSearchInput] = useState("");
   const [selectedEntry, setSelectedEntry] = useState(null);
   const [showPopup, setShowPopup] = useState(false);
+  const [masterDataCache, setMasterDataCache] = useState(null);
+
+  const getMasterData = useCallback(async () => {
+    if (masterDataCache) return masterDataCache;
+
+    const [
+      consigneeData,
+      supplierData,
+      buyerData,
+      companyData,
+      commodityData,
+    ] = await Promise.all([
+      fetchAllPages("/consignees", { limit: 200 }),
+      fetchAllPages("/seller-company", { limit: 200 }),
+      fetchAllPages("/buyers", { limit: 200 }),
+      fetchAllPages("/companies", { limit: 200 }),
+      fetchAllPages("/commodities", { limit: 200 }),
+    ]);
+
+    const data = {
+      consigneeData,
+      supplierData,
+      buyerData,
+      companyData,
+      commodityData,
+    };
+    setMasterDataCache(data);
+    return data;
+  }, [masterDataCache]);
 
   const fetchData = useCallback(async () => {
     try {
@@ -162,20 +191,14 @@ ${documents.length > 0 ? documents.join("\n") : "No documents attached"}
     const toastId = toast.loading("Generating comprehensive entry report...");
 
     try {
-      // 1. Fetch supplementary data
-      const [
+      // 1. Fetch supplementary data (Cached)
+      const {
         consigneeData,
         supplierData,
         buyerData,
         companyData,
         commodityData,
-      ] = await Promise.all([
-        fetchAllPages("/consignees", { limit: 200 }),
-        fetchAllPages("/seller-company", { limit: 200 }),
-        fetchAllPages("/buyers", { limit: 200 }),
-        fetchAllPages("/companies", { limit: 200 }),
-        fetchAllPages("/commodities", { limit: 200 }),
-      ]);
+      } = await getMasterData();
 
       // 2. Prepare entry data
       const pdfData = buildSaudaPdfData({
@@ -301,20 +324,14 @@ ${documents.length > 0 ? documents.join("\n") : "No documents attached"}
     const toastId = toast.loading("Generating Master Report with documents...");
 
     try {
-      // 1. Fetch supplementary data once
-      const [
+      // 1. Fetch supplementary data once (Cached)
+      const {
         consigneeData,
         supplierData,
         buyerData,
         companyData,
         commodityData,
-      ] = await Promise.all([
-        fetchAllPages("/consignees", { limit: 200 }),
-        fetchAllPages("/seller-company", { limit: 200 }),
-        fetchAllPages("/buyers", { limit: 200 }),
-        fetchAllPages("/companies", { limit: 200 }),
-        fetchAllPages("/commodities", { limit: 200 }),
-      ]);
+      } = await getMasterData();
 
       // 2. Prepare data for each entry
       const preparedEntries = await Promise.all(
