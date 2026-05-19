@@ -65,7 +65,7 @@ const ReceivingList = () => {
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [totalItems, setTotalItems] = useState(0);
   const [searchInput, setSearchInput] = useState("");
-  const [sentFilter, setSentFilter] = useState("Not Sent");
+  const [sentFilter, setSentFilter] = useState("All");
   const [selectedEntry, setSelectedEntry] = useState(null);
   const [showPopup, setShowPopup] = useState(false);
   const [masterDataCache, setMasterDataCache] = useState(null);
@@ -540,7 +540,7 @@ ${documents.length > 0 ? documents.join("\n") : "No documents attached"}
             <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/5 rounded-full blur-3xl -mr-32 -mt-32 transition-transform duration-700 group-hover:scale-110" />
             <div className="relative space-y-6">
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-                <div className="flex flex-wrap gap-2">
+                <div className="flex items-center p-1.5 bg-slate-100/50 rounded-2xl border border-slate-200/50 w-fit backdrop-blur-sm">
                   {["All", "Sent", "Not Sent"].map((status) => (
                     <button
                       key={status}
@@ -548,17 +548,17 @@ ${documents.length > 0 ? documents.join("\n") : "No documents attached"}
                         setSentFilter(status);
                         setCurrentPage(1);
                       }}
-                      className={`px-6 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${
+                      className={`relative px-8 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-[0.15em] transition-all duration-300 ${
                         sentFilter === status
-                          ? "bg-blue-600 text-white shadow-lg shadow-blue-200"
-                          : "bg-slate-50 text-slate-400 hover:bg-slate-100 border border-slate-100"
+                          ? "bg-white text-blue-600 shadow-md shadow-blue-100 ring-1 ring-blue-50"
+                          : "text-slate-400 hover:text-slate-600 hover:bg-white/50"
                       }`}
                     >
                       {status}
                     </button>
                   ))}
                 </div>
-                <div className="flex gap-3">
+                <div className="flex flex-wrap items-center gap-3">
                   <button
                     onClick={handlePrintAllWithDocuments}
                     disabled={loadingEntries.length === 0}
