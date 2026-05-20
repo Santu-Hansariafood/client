@@ -2,11 +2,12 @@ import { useState, useEffect } from "react";
 import api from "../../../utils/apiClient/apiClient";
 import { toast } from "react-toastify";
 import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
-import { FaUsers, FaTrash, FaEdit } from "react-icons/fa";
+import { FaUsers, FaTrash, FaEdit, FaShieldAlt } from "react-icons/fa";
 import Tables from "../../../common/Tables/Tables";
 import SearchBox from "../../../common/SearchBox/SearchBox";
 import Pagination from "../../../common/Paginations/Paginations";
 import EditEmployeePopup from "../EditEmployeePopup/EditEmployeePopup";
+import AssignPermissionsPopup from "../AssignPermissionsPopup/AssignPermissionsPopup";
 
 const ListEmployee = () => {
   const [employees, setEmployees] = useState([]);
@@ -19,6 +20,7 @@ const ListEmployee = () => {
   const [searchQuery, setSearchQuery] = useState("");
 
   const [isEditPopupOpen, setIsEditPopupOpen] = useState(false);
+  const [isPermissionPopupOpen, setIsPermissionPopupOpen] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
 
   useEffect(() => {
@@ -35,6 +37,9 @@ const ListEmployee = () => {
         },
       });
       const { data, total } = response.data;
+      // In case the GET /employees doesn't include allowedPermissions, 
+      // we might need to fetch full details or ensure the API returns it.
+      // Looking at employees.js, it selects only specific fields.
       setEmployees(data);
       setFilteredEmployees(data);
       setTotalItems(total);
@@ -42,6 +47,16 @@ const ListEmployee = () => {
     } catch (error) {
       toast.error("Failed to fetch employees", error);
       setLoading(false);
+    }
+  };
+
+  const fetchEmployeeDetails = async (id) => {
+    try {
+      const response = await api.get(`/employees/${id}`);
+      return response.data;
+    } catch (error) {
+      console.error("Failed to fetch employee details", error);
+      return null;
     }
   };
 
@@ -60,6 +75,12 @@ const ListEmployee = () => {
   const handleEdit = (employee) => {
     setSelectedEmployee(employee);
     setIsEditPopupOpen(true);
+  };
+
+  const handleAssignPermissions = async (employee) => {
+    const fullDetails = await fetchEmployeeDetails(employee._id);
+    setSelectedEmployee(fullDetails || employee);
+    setIsPermissionPopupOpen(true);
   };
 
   const handleUpdate = (updatedEmployee) => {
@@ -84,6 +105,13 @@ const ListEmployee = () => {
       {emp.status}
     </span>,
     <div key={`actions-${emp._id}`} className="flex gap-2">
+      <button 
+        onClick={() => handleAssignPermissions(emp)} 
+        className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+        title="Assign Permissions"
+      >
+        <FaShieldAlt />
+      </button>
       <button onClick={() => handleEdit(emp)} className="p-2 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors">
         <FaEdit />
       </button>
@@ -120,6 +148,13 @@ const ListEmployee = () => {
         employee={selectedEmployee}
         isOpen={isEditPopupOpen}
         onClose={() => setIsEditPopupOpen(false)}
+        onUpdate={handleUpdate}
+      />
+
+      <AssignPermissionsPopup
+        employee={selectedEmployee}
+        isOpen={isPermissionPopupOpen}
+        onClose={() => setIsPermissionPopupOpen(false)}
         onUpdate={handleUpdate}
       />
     </AdminPageShell>

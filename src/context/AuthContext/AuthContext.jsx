@@ -40,11 +40,12 @@ export const AuthProvider = ({ children }) => {
     const mobileValue = userData.mobile || "";
     const userValue = userData.user || userData;
     const tokenValue = userData.token || "";
+    const allowedPermissions = userData.allowedPermissions || userData.user?.allowedPermissions || [];
 
     setIsAuthenticated(true);
     setMobile(mobileValue);
     setUserRole(role);
-    setUser(userValue);
+    setUser({ ...userValue, allowedPermissions });
     if (tokenValue) {
       setToken(tokenValue);
     }
@@ -52,7 +53,7 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem("isAuthenticated", "true");
     localStorage.setItem("mobile", mobileValue);
     localStorage.setItem("userRole", role);
-    localStorage.setItem("user", JSON.stringify(userValue));
+    localStorage.setItem("user", JSON.stringify({ ...userValue, allowedPermissions }));
     if (tokenValue) {
       localStorage.setItem("token", tokenValue);
     }

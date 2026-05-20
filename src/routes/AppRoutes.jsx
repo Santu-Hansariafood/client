@@ -11,8 +11,8 @@ import PrivateRoute from "./PrivateRoute/PrivateRoute";
 import PublicRoute from "./PublicRoute/PublicRoute";
 import { useAuth } from "../context/AuthContext/AuthContext";
 
-const RoleBasedRoute = ({ children, allowedRoles }) => {
-  const { userRole } = useAuth();
+const RoleBasedRoute = ({ children, allowedRoles, path }) => {
+  const { userRole, user } = useAuth();
 
   if (!allowedRoles) return children;
 
@@ -25,6 +25,20 @@ const RoleBasedRoute = ({ children, allowedRoles }) => {
       Transporter: "/transporter/dashboard",
     };
     return <Navigate to={roleDashboards[userRole] || "/login"} replace />;
+  }
+
+  // Permission-based restriction for Employees
+  if (userRole === "Employee" && user?.allowedPermissions?.length > 0) {
+    // Normalize path for comparison
+    const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+    const hasPermission = user.allowedPermissions.some(p => {
+      const normalizedP = p.startsWith("/") ? p : `/${p}`;
+      return normalizedPath.startsWith(normalizedP);
+    });
+
+    if (!hasPermission) {
+      return <Navigate to="/employee/dashboard" replace />;
+    }
   }
 
   return children;
@@ -394,7 +408,7 @@ const AppRoutes = ({ hydrated }) => {
             key={path}
             path={path}
             element={
-              <RoleBasedRoute allowedRoles={roles}>
+              <RoleBasedRoute allowedRoles={roles} path={path}>
                 <Component />
               </RoleBasedRoute>
             }

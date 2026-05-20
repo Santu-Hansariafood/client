@@ -6,7 +6,7 @@ import { useAuth } from "../../context/AuthContext/AuthContext";
 
 const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
   const location = useLocation();
-  const { userRole } = useAuth();
+  const { userRole, user } = useAuth();
 
   const [expandedSection, setExpandedSection] = useState(
     localStorage.getItem("expandedSection") || null,
@@ -138,6 +138,12 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
           {dashboardData.sections
             .map((section) => {
               const filteredActions = section.actions.filter((action) => {
+                // 1. Check if user has specific assigned permissions (for Employees)
+                if (userRole === "Employee" && user?.allowedPermissions?.length > 0) {
+                  return user.allowedPermissions.includes(action.link);
+                }
+
+                // 2. Fallback to default role-based filtering
                 if (!action.roles) return true;
                 return action.roles.includes(userRole);
               });

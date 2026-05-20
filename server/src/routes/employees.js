@@ -101,7 +101,7 @@ router.get("/", async (req, res) => {
     const skip = (page - 1) * limit;
 
     const employees = await Employee.find()
-      .select("name employeeId email mobile sex status")
+      .select("name employeeId email mobile sex status allowedPermissions")
       .sort({ name: 1 })
       .skip(skip)
       .limit(limit);

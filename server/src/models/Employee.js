@@ -10,6 +10,7 @@ const employeeSchema = new mongoose.Schema(
     password: { type: String, required: true },
     role: { type: String, default: "Employee" },
     status: { type: String, enum: ["Active", "Inactive"], default: "Active" },
+    allowedPermissions: { type: [String], default: [] },
     otp: { type: String },
     otpExpires: { type: Date },
   },

@@ -370,6 +370,7 @@ router.post("/employees/login", async (req, res) => {
         employeeId: employee.employeeId || "",
         sex: employee.sex || "",
         status: employee.status || "Active",
+        allowedPermissions: employee.allowedPermissions || [],
       },
       token,
     });
