@@ -561,17 +561,25 @@ const MasterReceivingReportPDF = ({ entries = [], logoUrl }) => {
                     <Text style={styles.summaryLabel}>Unloading Date</Text>
                     <Text style={styles.summaryValue}>{formatDate(data.unloadingDate)}</Text>
                   </View>
-                  <View style={styles.summaryItem}>
+                  <View style={[styles.summaryItem, { borderRightWidth: 0 }]}>
                     <Text style={styles.summaryLabel}>Rate</Text>
                     <Text style={styles.summaryValue}>Rs. {formatAmount(rate)}</Text>
                   </View>
-                  <View style={[styles.summaryItem, { borderRightWidth: 0 }]}>
-                    <Text style={styles.summaryLabel}>Total Amount</Text>
-                    <Text style={styles.summaryValue}>Rs. {formatAmount(totalAmount)}</Text>
+                  <View style={styles.summaryItem}>
+                    <Text style={styles.summaryLabel}>Gross Amount</Text>
+                    <Text style={styles.summaryValue}>Rs. {formatAmount(receivingBaseAmount)}</Text>
                   </View>
-                  <View style={styles.summaryItemFull}>
-                    <Text style={styles.summaryLabel}>Amount in Words</Text>
-                    <Text style={styles.summaryValue}>{amountInWords}</Text>
+                  {cdPercent > 0 && (
+                    <View style={[styles.summaryItem, { borderRightWidth: 0, backgroundColor: "#fff1f2" }]}>
+                      <Text style={[styles.summaryLabel, { color: "#e11d48" }]}>Cash Discount ({cdPercent}%)</Text>
+                      <Text style={[styles.summaryValue, { color: "#e11d48" }]}>- Rs. {formatAmount(receivingCDAmount)}</Text>
+                    </View>
+                  )}
+                  <View style={[styles.summaryItemFull, { backgroundColor: "#f1f5f9" }]}>
+                    <Text style={styles.summaryLabel}>Total Payable Amount</Text>
+                    <Text style={[styles.summaryValue, { fontSize: 14, color: "#1e293b" }]}>
+                      Rs. {formatAmount(totalAmount)}
+                    </Text>
                   </View>
                   <View style={styles.summaryItemFull}>
                     <Text style={styles.summaryLabel}>Seller Company</Text>
@@ -668,6 +676,13 @@ const MasterReceivingReportPDF = ({ entries = [], logoUrl }) => {
                     {data.qrCodeUrl && <Image src={data.qrCodeUrl} style={{ width: 50, height: 50 }} />}
                   </View>
                   <View style={styles.totalSection}>
+                    <View style={styles.summaryRow}><Text style={styles.label}>Gross Amount:</Text><Text style={styles.value}>{formatAmount(baseAmount)}</Text></View>
+                    {cdPercent > 0 && (
+                      <View style={[styles.summaryRow, { color: "#e11d48" }]}>
+                        <Text style={styles.label}>Less: Cash Discount ({cdPercent}%):</Text>
+                        <Text style={styles.value}>- {formatAmount(cdAmount)}</Text>
+                      </View>
+                    )}
                     <View style={styles.summaryRow}><Text style={styles.label}>Taxable Value:</Text><Text style={styles.value}>{formatAmount(subtotal)}</Text></View>
                     {gstPercent > 0 && (
                       <View style={styles.summaryRow}>

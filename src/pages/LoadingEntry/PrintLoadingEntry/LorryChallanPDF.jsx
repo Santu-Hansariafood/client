@@ -1162,6 +1162,16 @@ const LorryChallanPDF = ({ data = {}, logoUrl, qrCodeUrl, onlySecondPage = false
             </View>
             <View style={styles.totalSection}>
               <View style={styles.summaryRow}>
+                <Text style={styles.label}>Gross Amount:</Text>
+                <Text style={styles.value}>{formatAmount(baseAmount)}</Text>
+              </View>
+              {cdPercent > 0 && (
+                <View style={[styles.summaryRow, { color: "#e11d48" }]}>
+                  <Text style={styles.label}>Less: Cash Discount ({cdPercent}%):</Text>
+                  <Text style={styles.value}>- {formatAmount(cdAmount)}</Text>
+                </View>
+              )}
+              <View style={styles.summaryRow}>
                 <Text style={styles.label}>Taxable Value:</Text>
                 <Text style={styles.value}>{formatAmount(subtotal)}</Text>
               </View>
