@@ -175,7 +175,7 @@ const ReceivingList = () => {
 Receiving Entry Details:
 ------------------------
 Sauda No: ${entry.saudaNo || "N/A"}
-Loading No: ${entry.billNumber || "N/A"}
+Invoice No: ${entry.billNumber || "N/A"}
 Lorry No: ${(entry.lorryNumber || "N/A").toUpperCase()}
 Loading Weight: ${entry.loadingWeight || 0} Tons
 Unloading Weight: ${entry.unloadingWeight || 0} Tons
