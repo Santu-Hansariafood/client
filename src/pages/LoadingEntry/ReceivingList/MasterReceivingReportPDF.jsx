@@ -379,6 +379,47 @@ const styles = StyleSheet.create({
     color: "#000000",
     fontWeight: "bold",
   },
+  // Lorry Challan Specific Styles
+  challanPage: {
+    fontFamily: "Helvetica",
+    fontSize: 9,
+    paddingTop: 20,
+    paddingBottom: 70,
+    paddingHorizontal: 25,
+    lineHeight: 1.2,
+    color: "#000000",
+    backgroundColor: "#ffffff",
+  },
+  challanTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#000000",
+    textAlign: "center",
+    width: "100%",
+    marginBottom: 10,
+  },
+  challanSection: {
+    marginBottom: 8,
+    borderWidth: 0.5,
+    borderColor: "#000000",
+    padding: 8,
+    borderRadius: 4,
+  },
+  challanRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 4,
+  },
+  challanLabel: {
+    fontSize: 9,
+    fontWeight: "bold",
+    color: "#000000",
+  },
+  challanValue: {
+    fontSize: 10,
+    fontWeight: "bold",
+    color: "#000000",
+  },
 });
 
 const formatDate = (date) => {
@@ -442,7 +483,12 @@ const MasterReceivingReportPDF = ({ entries = [], logoUrl }) => {
       {entries.map((data, index) => {
         const rate = Number(data.actualRate || data.rate || 0);
         const weight = Number(data.loadingWeight || 0);
-        const subtotal = weight * rate;
+        const baseAmount = weight * rate;
+        
+        const cdPercent = Number(data.cd || 0);
+        const cdAmount = baseAmount * (cdPercent / 100);
+        const subtotal = baseAmount - cdAmount;
+
         const gstPercent = Number(data.gst || 0);
         const gstAmount = subtotal * (gstPercent / 100);
         const totalBillAmount = subtotal + gstAmount;
@@ -463,8 +509,13 @@ const MasterReceivingReportPDF = ({ entries = [], logoUrl }) => {
           { url: data.documentUrl, label: "Attachment" },
         ].filter(d => d.url && typeof d.url === 'string' && d.url.trim() !== '' && !d.url.endsWith('.pdf'));
 
-        const totalAmount = (data.unloadingWeight || 0) * (data.actualRate || 0);
+        const receivingBaseAmount = (data.unloadingWeight || 0) * (data.actualRate || 0);
+        const receivingCDAmount = receivingBaseAmount * (cdPercent / 100);
+        const totalAmount = receivingBaseAmount - receivingCDAmount;
         const amountInWords = numberToWords(totalAmount);
+
+        const billNo = String(data.billNumber || "").trim();
+        const shouldPrintBill = !/^0+$/.test(billNo) && billNo !== "";
 
         return (
             <React.Fragment key={index}>
@@ -549,125 +600,178 @@ const MasterReceivingReportPDF = ({ entries = [], logoUrl }) => {
               </Page>
             ))}
 
-            <Page style={styles.billPage} size="A4">
-              <View style={styles.billPageBorder} fixed />
-              <View style={styles.billInnerBorder} fixed />
-              <View style={styles.billTitleContainer}>
-                <Text style={styles.billTypeTitle}>{billTitle}</Text>
-              </View>
-              <View style={styles.billHeader}>
-                <View style={styles.companyBrand}>
-                  <Text style={styles.companyName}>{data.supplierCompany || ""}</Text>
-                  <Text style={styles.companyDetails}>
-                    {data.supplierDetails?.address || ""}
-                    {data.supplierDetails?.district ? `, ${data.supplierDetails.district}` : ""}
-                    {data.supplierDetails?.state ? `, ${data.supplierDetails.state}` : ""}
-                    {data.supplierDetails?.pinNo ? ` - ${data.supplierDetails.pinNo}` : ""}
-                  </Text>
-                  <Text style={styles.companyDetails}>
-                    GSTIN: {data.supplierDetails?.gstNo || ""} | PAN: {data.supplierDetails?.panNo || ""}
-                  </Text>
+            {shouldPrintBill ? (
+              <Page style={styles.billPage} size="A4">
+                <View style={styles.billPageBorder} fixed />
+                <View style={styles.billInnerBorder} fixed />
+                <View style={styles.billTitleContainer}>
+                  <Text style={styles.billTypeTitle}>{billTitle}</Text>
                 </View>
-                {logoUrl && <Image src={logoUrl} style={{ width: 60, height: 60 }} />}
-              </View>
-
-              <View style={styles.partiesContainer}>
-                <View style={styles.partyBox}>
-                  <Text style={styles.partyLabel}>Bill To</Text>
-                  <Text style={styles.partyName}>{data.buyerCompany || data.buyer || "N/A"}</Text>
-                  {renderAddressDetails(data.buyerDetails)}
-                </View>
-                <View style={styles.partyBox}>
-                  <Text style={styles.partyLabel}>Shipped To</Text>
-                  <Text style={styles.partyName}>{data.consignee || "N/A"}</Text>
-                  {renderAddressDetails(data.consigneeDetails)}
-                </View>
-              </View>
-
-              <View style={styles.metaContainer}>
-                <View style={styles.metaItem}><Text style={styles.metaLabel}>Date</Text><Text style={styles.metaValue}>{formatDate(data.dateOfIssue)}</Text></View>
-                <View style={styles.metaItem}><Text style={styles.metaLabel}>Invoice No</Text><Text style={styles.metaValue}>{data.billNumber || ""}</Text></View>
-                <View style={styles.metaItem}><Text style={styles.metaLabel}>Sauda No</Text><Text style={styles.metaValue}>{data.saudaNo || ""}</Text></View>
-                <View style={styles.metaItem}><Text style={styles.metaLabel}>Lorry No</Text><Text style={styles.metaValue}>{data.lorryNumber || ""}</Text></View>
-              </View>
-
-              <View style={styles.modernTable}>
-                <View style={styles.modernTableHeader}>
-                  <Text style={styles.col1}>#</Text>
-                  <Text style={styles.col2}>Description of Goods</Text>
-                  <Text style={styles.col3}>HSN</Text>
-                  <Text style={styles.col4}>Qty (Tons)</Text>
-                  <Text style={styles.col5}>Rate (Rs)</Text>
-                  <Text style={styles.col6}>Amount</Text>
-                </View>
-                <View style={styles.modernTableRow}>
-                  <Text style={styles.col1}>1</Text>
-                  <Text style={styles.col2}>{data.commodity || "N/A"}</Text>
-                  <Text style={styles.col3}>{data.hsnCode || ""}</Text>
-                  <Text style={styles.col4}>{Number(data.loadingWeight || 0).toFixed(3)}</Text>
-                  <Text style={styles.col5}>{formatAmount(rate)}</Text>
-                  <Text style={styles.col6}>{formatAmount(subtotal)}</Text>
-                </View>
-              </View>
-
-              <View style={styles.summarySection}>
-                <View style={styles.qrSection}>
-                  <Text style={{ fontSize: 7, fontWeight: "bold", marginBottom: 5 }}>SCAN DETAILS</Text>
-                  {data.qrCodeUrl && <Image src={data.qrCodeUrl} style={{ width: 50, height: 50 }} />}
-                </View>
-                <View style={styles.totalSection}>
-                  <View style={styles.summaryRow}><Text style={styles.label}>Taxable Value:</Text><Text style={styles.value}>{formatAmount(subtotal)}</Text></View>
-                  {gstPercent > 0 && (
-                    <View style={styles.summaryRow}>
-                      <Text style={styles.label}>{isInterState ? "IGST" : "CGST/SGST"} ({gstPercent}%):</Text>
-                      <Text style={styles.value}>{formatAmount(gstAmount)}</Text>
-                    </View>
-                  )}
-                  <View style={styles.grandTotalRow}><Text style={styles.grandTotalLabel}>Grand Total:</Text><Text style={styles.grandTotalValue}>Rs. {formatAmount(totalBillAmount)}</Text></View>
-                  <View style={styles.amountInWordsRow}><Text style={styles.amountInWordsLabel}>Amount in Words</Text><Text style={styles.amountInWordsValue}>{numberToWords(totalBillAmount)}</Text></View>
-                </View>
-              </View>
-
-              <View style={styles.bankSection}>
-                <Text style={styles.bankTitle}>Bank Account Details</Text>
-                <View style={styles.bankGrid}>
-                  <View style={styles.bankItem}>
-                    <Text style={styles.bankLabel}>Beneficiary Name</Text>
-                    <Text style={styles.bankValue}>
-                      {bankDetails.accountHolderName || data.supplierCompany || ""}
+                <View style={styles.billHeader}>
+                  <View style={styles.companyBrand}>
+                    <Text style={styles.companyName}>{data.supplierCompany || ""}</Text>
+                    <Text style={styles.companyDetails}>
+                      {data.supplierDetails?.address || ""}
+                      {data.supplierDetails?.district ? `, ${data.supplierDetails.district}` : ""}
+                      {data.supplierDetails?.state ? `, ${data.supplierDetails.state}` : ""}
+                      {data.supplierDetails?.pinNo ? ` - ${data.supplierDetails.pinNo}` : ""}
+                    </Text>
+                    <Text style={styles.companyDetails}>
+                      GSTIN: {data.supplierDetails?.gstNo || ""} | PAN: {data.supplierDetails?.panNo || ""}
                     </Text>
                   </View>
-                  <View style={styles.bankItem}>
-                    <Text style={styles.bankLabel}>Bank Name</Text>
-                    <Text style={styles.bankValue}>{bankDetails.bankName || ""}</Text>
+                  {logoUrl && <Image src={logoUrl} style={{ width: 60, height: 60 }} />}
+                </View>
+
+                <View style={styles.partiesContainer}>
+                  <View style={styles.partyBox}>
+                    <Text style={styles.partyLabel}>Bill To</Text>
+                    <Text style={styles.partyName}>{data.buyerCompany || data.buyer || "N/A"}</Text>
+                    {renderAddressDetails(data.buyerDetails)}
                   </View>
-                  <View style={styles.bankItem}>
-                    <Text style={styles.bankLabel}>Account Number</Text>
-                    <Text style={styles.bankValue}>{bankDetails.accountNumber || ""}</Text>
-                  </View>
-                  <View style={styles.bankItem}>
-                    <Text style={styles.bankLabel}>IFSC Code</Text>
-                    <Text style={styles.bankValue}>{bankDetails.ifscCode || ""}</Text>
-                  </View>
-                  <View style={styles.bankItem}>
-                    <Text style={styles.bankLabel}>Bank Branch</Text>
-                    <Text style={styles.bankValue}>{bankDetails.branchName || ""}</Text>
+                  <View style={styles.partyBox}>
+                    <Text style={styles.partyLabel}>Shipped To</Text>
+                    <Text style={styles.partyName}>{data.consignee || "N/A"}</Text>
+                    {renderAddressDetails(data.consigneeDetails)}
                   </View>
                 </View>
-              </View>
 
-              <View style={styles.signatorySection}>
-                <View style={styles.signatoryBox}>
-                  <Text style={styles.signatoryCompany}>For {data.supplierCompany || ""}</Text>
-                  <Text style={styles.signatoryLabel}>Authority Signature</Text>
+                <View style={styles.metaContainer}>
+                  <View style={styles.metaItem}><Text style={styles.metaLabel}>Date</Text><Text style={styles.metaValue}>{formatDate(data.dateOfIssue)}</Text></View>
+                  <View style={styles.metaItem}><Text style={styles.metaLabel}>Invoice No</Text><Text style={styles.metaValue}>{data.billNumber || ""}</Text></View>
+                  <View style={styles.metaItem}><Text style={styles.metaLabel}>Sauda No</Text><Text style={styles.metaValue}>{data.saudaNo || ""}</Text></View>
+                  <View style={styles.metaItem}><Text style={styles.metaLabel}>Lorry No</Text><Text style={styles.metaValue}>{data.lorryNumber || ""}</Text></View>
                 </View>
-              </View>
 
-              <View style={styles.footer} fixed>
-                 <Text style={styles.disclaimerText}>* Certified that the particulars given above are true and correct.</Text>
-                 <Text style={styles.officialRecordText}>* This bill is generated for knowledge and reference purposes only. Final original invoice will be shared after unloading and final quantity verification.</Text>
-               </View>
-            </Page>
+                <View style={styles.modernTable}>
+                  <View style={styles.modernTableHeader}>
+                    <Text style={styles.col1}>#</Text>
+                    <Text style={styles.col2}>Description of Goods</Text>
+                    <Text style={styles.col3}>HSN</Text>
+                    <Text style={styles.col4}>Qty (Tons)</Text>
+                    <Text style={styles.col5}>Rate (Rs)</Text>
+                    <Text style={styles.col6}>Amount</Text>
+                  </View>
+                  <View style={styles.modernTableRow}>
+                    <Text style={styles.col1}>1</Text>
+                    <Text style={styles.col2}>{data.commodity || "N/A"}</Text>
+                    <Text style={styles.col3}>{data.hsnCode || ""}</Text>
+                    <Text style={styles.col4}>{Number(data.loadingWeight || 0).toFixed(3)}</Text>
+                    <Text style={styles.col5}>{formatAmount(rate)}</Text>
+                    <Text style={styles.col6}>{formatAmount(subtotal)}</Text>
+                  </View>
+                </View>
+
+                <View style={styles.summarySection}>
+                  <View style={styles.qrSection}>
+                    <Text style={{ fontSize: 7, fontWeight: "bold", marginBottom: 5 }}>SCAN DETAILS</Text>
+                    {data.qrCodeUrl && <Image src={data.qrCodeUrl} style={{ width: 50, height: 50 }} />}
+                  </View>
+                  <View style={styles.totalSection}>
+                    <View style={styles.summaryRow}><Text style={styles.label}>Taxable Value:</Text><Text style={styles.value}>{formatAmount(subtotal)}</Text></View>
+                    {gstPercent > 0 && (
+                      <View style={styles.summaryRow}>
+                        <Text style={styles.label}>{isInterState ? "IGST" : "CGST/SGST"} ({gstPercent}%):</Text>
+                        <Text style={styles.value}>{formatAmount(gstAmount)}</Text>
+                      </View>
+                    )}
+                    <View style={styles.grandTotalRow}><Text style={styles.grandTotalLabel}>Grand Total:</Text><Text style={styles.grandTotalValue}>Rs. {formatAmount(totalBillAmount)}</Text></View>
+                    <View style={styles.amountInWordsRow}><Text style={styles.amountInWordsLabel}>Amount in Words</Text><Text style={styles.amountInWordsValue}>{numberToWords(totalBillAmount)}</Text></View>
+                  </View>
+                </View>
+
+                <View style={styles.bankSection}>
+                  <Text style={styles.bankTitle}>Bank Account Details</Text>
+                  <View style={styles.bankGrid}>
+                    <View style={styles.bankItem}>
+                      <Text style={styles.bankLabel}>Beneficiary Name</Text>
+                      <Text style={styles.bankValue}>
+                        {bankDetails.accountHolderName || data.supplierCompany || ""}
+                      </Text>
+                    </View>
+                    <View style={styles.bankItem}>
+                      <Text style={styles.bankLabel}>Bank Name</Text>
+                      <Text style={styles.bankValue}>{bankDetails.bankName || ""}</Text>
+                    </View>
+                    <View style={styles.bankItem}>
+                      <Text style={styles.bankLabel}>Account Number</Text>
+                      <Text style={styles.bankValue}>{bankDetails.accountNumber || ""}</Text>
+                    </View>
+                    <View style={styles.bankItem}>
+                      <Text style={styles.bankLabel}>IFSC Code</Text>
+                      <Text style={styles.bankValue}>{bankDetails.ifscCode || ""}</Text>
+                    </View>
+                    <View style={styles.bankItem}>
+                      <Text style={styles.bankLabel}>Bank Branch</Text>
+                      <Text style={styles.bankValue}>{bankDetails.branchName || ""}</Text>
+                    </View>
+                  </View>
+                </View>
+
+                <View style={styles.signatorySection}>
+                  <View style={styles.signatoryBox}>
+                    <Text style={styles.signatoryCompany}>For {data.supplierCompany || ""}</Text>
+                    <Text style={styles.signatoryLabel}>Authority Signature</Text>
+                  </View>
+                </View>
+
+                <View style={styles.footer} fixed>
+                   <Text style={styles.disclaimerText}>* Certified that the particulars given above are true and correct.</Text>
+                   <Text style={styles.officialRecordText}>* This bill is generated for knowledge and reference purposes only. Final original invoice will be shared after unloading and final quantity verification.</Text>
+                   <Text style={styles.disclaimerText}>System generated file</Text>
+                   <Text style={styles.officialRecordText}>Official Receiving Record & Documentation as per information only</Text>
+                 </View>
+              </Page>
+            ) : (
+              <Page style={styles.challanPage} size="A4">
+                <View style={styles.billPageBorder} fixed />
+                <View style={styles.billInnerBorder} fixed />
+                
+                <Text style={styles.challanTitle}>LORRY CHALLAN</Text>
+                
+                <View style={styles.challanSection}>
+                  <View style={styles.challanRow}>
+                    <Text style={styles.challanLabel}>Sauda No:</Text>
+                    <Text style={styles.challanValue}>{data.saudaNo}</Text>
+                  </View>
+                  <View style={styles.challanRow}>
+                    <Text style={styles.challanLabel}>Lorry No:</Text>
+                    <Text style={styles.challanValue}>{data.lorryNumber}</Text>
+                  </View>
+                  <View style={styles.challanRow}>
+                    <Text style={styles.challanLabel}>Commodity:</Text>
+                    <Text style={styles.challanValue}>{data.commodity}</Text>
+                  </View>
+                </View>
+
+                <View style={styles.challanSection}>
+                  <View style={styles.challanRow}>
+                    <Text style={styles.challanLabel}>Supplier:</Text>
+                    <Text style={styles.challanValue}>{data.supplierCompany}</Text>
+                  </View>
+                  <View style={styles.challanRow}>
+                    <Text style={styles.challanLabel}>Buyer:</Text>
+                    <Text style={styles.challanValue}>{data.buyerCompany}</Text>
+                  </View>
+                </View>
+
+                <View style={styles.challanSection}>
+                  <View style={styles.challanRow}>
+                    <Text style={styles.challanLabel}>Loading Weight:</Text>
+                    <Text style={styles.challanValue}>{data.loadingWeight} Tons</Text>
+                  </View>
+                  <View style={styles.challanRow}>
+                    <Text style={styles.challanLabel}>Unloading Weight:</Text>
+                    <Text style={styles.challanValue}>{data.unloadingWeight} Tons</Text>
+                  </View>
+                </View>
+
+                <View style={styles.footer} fixed>
+                  <Text style={styles.disclaimerText}>System generated file</Text>
+                  <Text style={styles.officialRecordText}>Official Receiving Record & Documentation as per information only</Text>
+                </View>
+              </Page>
+            )}
           </React.Fragment>
         );
       })}

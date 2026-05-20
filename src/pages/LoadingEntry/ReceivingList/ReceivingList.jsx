@@ -260,8 +260,34 @@ const ReceivingList = () => {
         commodityData,
       } = await getMasterData();
 
+      // Fetch self-order to get CD percentage
+      let cdValue = 0;
+      try {
+        const selfOrderRes = await api.get("/self-order", {
+          params: {
+            search: selectedEntry.saudaNo,
+            limit: 1,
+          },
+        });
+        const selfOrders = Array.isArray(selfOrderRes?.data?.data)
+          ? selfOrderRes.data.data
+          : Array.isArray(selfOrderRes?.data)
+            ? selfOrderRes.data
+            : [];
+        
+        const normalize = (v) => String(v || "").trim().toLowerCase();
+        const selfOrder = selfOrders.find(
+          (order) => normalize(order?.saudaNo) === normalize(selectedEntry?.saudaNo)
+        );
+        if (selfOrder) {
+          cdValue = Number(selfOrder.cd || 0);
+        }
+      } catch (e) {
+        console.error("Error fetching self-order for CD:", e);
+      }
+
       const pdfData = buildSaudaPdfData({
-        item: selectedEntry,
+        item: { ...selectedEntry, cd: cdValue },
         consigneeData,
         supplierData,
         buyerData,
@@ -393,8 +419,34 @@ const ReceivingList = () => {
 
       const preparedEntries = await Promise.all(
         loadingEntries.map(async (entry) => {
+          // Fetch self-order to get CD percentage
+          let cdValue = 0;
+          try {
+            const selfOrderRes = await api.get("/self-order", {
+              params: {
+                search: entry.saudaNo,
+                limit: 1,
+              },
+            });
+            const selfOrders = Array.isArray(selfOrderRes?.data?.data)
+              ? selfOrderRes.data.data
+              : Array.isArray(selfOrderRes?.data)
+                ? selfOrderRes.data
+                : [];
+            
+            const normalize = (v) => String(v || "").trim().toLowerCase();
+            const selfOrder = selfOrders.find(
+              (order) => normalize(order?.saudaNo) === normalize(entry?.saudaNo)
+            );
+            if (selfOrder) {
+              cdValue = Number(selfOrder.cd || 0);
+            }
+          } catch (e) {
+            console.error("Error fetching self-order for CD:", e);
+          }
+
           const pdfData = buildSaudaPdfData({
-            item: entry,
+            item: { ...entry, cd: cdValue },
             consigneeData,
             supplierData,
             buyerData,

@@ -702,11 +702,16 @@ const LorryChallanPDF = ({ data = {}, logoUrl, qrCodeUrl, onlySecondPage = false
   const toState = consigneeDetailsForShipTo?.state || "N/A";
 
   const billNo = String(data.billNumber || "").trim();
-  const shouldPrintBill = billNo !== "0" && billNo !== "";
+  const shouldPrintBill = !/^0+$/.test(billNo) && billNo !== "";
 
   const weight = Number(data.loadingWeight || 0);
   const rate = Number(data.rate || 0);
-  const subtotal = weight * rate;
+  const baseAmount = weight * rate;
+  
+  const cdPercent = Number(data.cd || 0);
+  const cdAmount = baseAmount * (cdPercent / 100);
+  const subtotal = baseAmount - cdAmount;
+
   const gstPercent = Number(data.gst || 0);
   const gstAmount = subtotal * (gstPercent / 100);
   const totalBillAmount = subtotal + gstAmount;
