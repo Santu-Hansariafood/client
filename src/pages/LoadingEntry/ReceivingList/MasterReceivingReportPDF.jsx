@@ -666,7 +666,7 @@ const MasterReceivingReportPDF = ({ entries = [], logoUrl }) => {
                     <Text style={styles.col3}>{data.hsnCode || ""}</Text>
                     <Text style={styles.col4}>{Number(data.loadingWeight || 0).toFixed(3)}</Text>
                     <Text style={styles.col5}>{formatAmount(rate)}</Text>
-                    <Text style={styles.col6}>{formatAmount(subtotal)}</Text>
+                    <Text style={styles.col6}>{formatAmount(baseAmount)}</Text>
                   </View>
                 </View>
 

@@ -1144,7 +1144,7 @@ const LorryChallanPDF = ({ data = {}, logoUrl, qrCodeUrl, onlySecondPage = false
               <Text style={styles.col3}>{data.hsnCode || ""}</Text>
               <Text style={styles.col4}>{weight.toFixed(3)}</Text>
               <Text style={styles.col5}>{formatAmount(rate)}</Text>
-              <Text style={styles.col6}>{formatAmount(subtotal)}</Text>
+              <Text style={styles.col6}>{formatAmount(baseAmount)}</Text>
             </View>
           </View>
 
