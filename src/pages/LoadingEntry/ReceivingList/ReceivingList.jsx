@@ -1,14 +1,21 @@
-import { lazy, useEffect, useState, useMemo, useCallback, Suspense } from "react";
+import {
+  lazy,
+  useEffect,
+  useState,
+  useMemo,
+  useCallback,
+  Suspense,
+} from "react";
 import PropTypes from "prop-types";
 import api from "../../../utils/apiClient/apiClient";
-import { 
-  FaClipboardList, 
-  FaEye, 
-  FaPrint, 
-  FaCopy, 
-  FaExclamationTriangle, 
+import {
+  FaClipboardList,
+  FaEye,
+  FaPrint,
+  FaCopy,
+  FaExclamationTriangle,
   FaSync,
-  FaFileAlt
+  FaFileAlt,
 } from "react-icons/fa";
 import { toast } from "react-toastify";
 import { useAuth } from "../../../context/AuthContext/AuthContext";
@@ -28,7 +35,9 @@ import "jspdf-autotable";
 
 // --- Components ---
 const Tables = lazy(() => import("../../../common/Tables/Tables"));
-const Pagination = lazy(() => import("../../../common/Paginations/Paginations"));
+const Pagination = lazy(
+  () => import("../../../common/Paginations/Paginations"),
+);
 const SearchBox = lazy(() => import("../../../common/SearchBox/SearchBox"));
 const PopupBox = lazy(() => import("../../../common/PopupBox/PopupBox"));
 
@@ -73,19 +82,14 @@ const ReceivingList = () => {
   const getMasterData = useCallback(async () => {
     if (masterDataCache) return masterDataCache;
 
-    const [
-      consigneeData,
-      supplierData,
-      buyerData,
-      companyData,
-      commodityData,
-    ] = await Promise.all([
-      fetchAllPages("/consignees", { limit: 200 }),
-      fetchAllPages("/seller-company", { limit: 200 }),
-      fetchAllPages("/buyers", { limit: 200 }),
-      fetchAllPages("/companies", { limit: 200 }),
-      fetchAllPages("/commodities", { limit: 200 }),
-    ]);
+    const [consigneeData, supplierData, buyerData, companyData, commodityData] =
+      await Promise.all([
+        fetchAllPages("/consignees", { limit: 200 }),
+        fetchAllPages("/seller-company", { limit: 200 }),
+        fetchAllPages("/buyers", { limit: 200 }),
+        fetchAllPages("/companies", { limit: 200 }),
+        fetchAllPages("/commodities", { limit: 200 }),
+      ]);
 
     const data = {
       consigneeData,
@@ -119,12 +123,22 @@ const ReceivingList = () => {
       setTotalItems(Number(payload.total) || 0);
     } catch (error) {
       console.error("Error fetching receiving entries:", error);
-      setError("Failed to load receiving entries. Please check your connection.");
+      setError(
+        "Failed to load receiving entries. Please check your connection.",
+      );
       toast.error("Failed to fetch receiving entries");
     } finally {
       setLoading(false);
     }
-  }, [currentPage, itemsPerPage, searchInput, sentFilter, userRole, mobile, getMasterData]);
+  }, [
+    currentPage,
+    itemsPerPage,
+    searchInput,
+    sentFilter,
+    userRole,
+    mobile,
+    getMasterData,
+  ]);
 
   useEffect(() => {
     fetchData();
@@ -150,65 +164,89 @@ const ReceivingList = () => {
     setCurrentPage(1);
   }, []);
 
-  const handleToggleSentStatus = useCallback(async (entry) => {
-    const newStatus = entry.sentStatus === "Sent" ? "Not Sent" : "Sent";
-    try {
-      await api.put(`/loading-entries/${entry._id}`, { sentStatus: newStatus });
-      toast.success(`Status updated to ${newStatus}`);
-      fetchData();
-    } catch (error) {
-      console.error("Error updating status:", error);
-      toast.error("Failed to update status");
-    }
-  }, [fetchData]);
+  const handleToggleSentStatus = useCallback(
+    async (entry) => {
+      const newStatus = entry.sentStatus === "Sent" ? "Not Sent" : "Sent";
+      try {
+        await api.put(`/loading-entries/${entry._id}`, {
+          sentStatus: newStatus,
+        });
+        toast.success(`Status updated to ${newStatus}`);
+        fetchData();
+      } catch (error) {
+        console.error("Error updating status:", error);
+        toast.error("Failed to update status");
+      }
+    },
+    [fetchData],
+  );
 
-  const handleCopy = useCallback((entry) => {
-    const documents = [];
-    if (entry.documents?.kantaSlip)
-      documents.push(`Kanta Slip: ${entry.documents.kantaSlip}`);
-    if (entry.documents?.unloadingChallan)
-      documents.push(`Unloading Challan: ${entry.documents.unloadingChallan}`);
-    if (entry.documents?.partyBillCopy)
-      documents.push(`Party Bill Copy: ${entry.documents.partyBillCopy}`);
+  const handleCopy = useCallback(
+    (entry) => {
+      const documents = [];
+      if (entry.documents?.kantaSlip)
+        documents.push(`Kanta Slip: ${entry.documents.kantaSlip}`);
+      if (entry.documents?.unloadingChallan)
+        documents.push(
+          `Unloading Challan: ${entry.documents.unloadingChallan}`,
+        );
+      if (entry.documents?.partyBillCopy)
+        documents.push(`Party Bill Copy: ${entry.documents.partyBillCopy}`);
 
-    const textToCopy = `
-Receiving Entry Details:
-------------------------
-Sauda No: ${entry.saudaNo || "N/A"}
-Invoice No: ${entry.billNumber || "N/A"}
-Lorry No: ${(entry.lorryNumber || "N/A").toUpperCase()}
-Loading Weight: ${entry.loadingWeight || 0} Tons
-Unloading Weight: ${entry.unloadingWeight || 0} Tons
-Loading Date: ${formatDate(entry.loadingDate)}
-Unloading Date: ${formatDate(entry.unloadingDate)}
-Rate: Rs. ${entry.actualRate || 0}
-Amount: Rs. ${((entry.unloadingWeight || 0) * (entry.actualRate || 0)).toFixed(2)}
-Seller Company: ${entry.supplierCompany || "N/A"}
-Buyer Company: ${entry.buyerCompany || "N/A"}
+      const textToCopy = `
+      *RECEIVING ENTRY DETAILS*
 
-Documents:
-${documents.length > 0 ? documents.join("\n") : "No documents attached"}
-    `.trim();
 
-    navigator.clipboard
-      .writeText(textToCopy)
-      .then(async () => {
-        toast.success("Entry details copied to clipboard!");
-        // Automatically mark as Sent if not already
-        if (entry.sentStatus !== "Sent") {
-          try {
-            await api.put(`/loading-entries/${entry._id}`, { sentStatus: "Sent" });
-            fetchData();
-          } catch (err) {
-            console.error("Auto-status update failed:", err);
+      *Sauda No:* _${entry.saudaNo || "N/A"}_
+      *Invoice No:* _${entry.billNumber || "N/A"}_
+
+      *Lorry No:* _${(entry.lorryNumber || "N/A").toUpperCase()}_
+
+      *Loading Weight:* _${entry.loadingWeight || 0} Tons_
+      *Unloading Weight:* _${entry.unloadingWeight || 0} Tons_
+
+      *Loading Date:* _${formatDate(entry.loadingDate)}_
+      *Unloading Date:* _${formatDate(entry.unloadingDate)}_
+
+      *Rate:* _Rs. ${entry.actualRate || 0}_
+      *Amount:* _Rs. ${(
+              (entry.unloadingWeight || 0) * (entry.actualRate || 0)
+            ).toFixed(2)}_
+
+      *Seller Company:* _${entry.supplierCompany || "N/A"}_
+      *Buyer Company:* _${entry.buyerCompany || "N/A"}_
+
+      *DOCUMENTS*
+
+      ${
+        documents.length > 0
+          ? documents.map((doc) => `• _${doc}_`).join("\n")
+          : "_No documents attached_"
+      }
+      `.trim();
+
+      navigator.clipboard
+        .writeText(textToCopy)
+        .then(async () => {
+          toast.success("Entry details copied to clipboard!");
+          if (entry.sentStatus !== "Sent") {
+            try {
+              await api.put(`/loading-entries/${entry._id}`, {
+                sentStatus: "Sent",
+              });
+              fetchData();
+            } catch (err) {
+              console.error("Auto-status update failed:", err);
+            }
           }
-        }
-      })
-      .catch((err) => {
-        console.error("Failed to copy:", err);
-        toast.error("Failed to copy details");
-      });
-  }, [fetchData]);
+        })
+        .catch((err) => {
+          console.error("Failed to copy:", err);
+          toast.error("Failed to copy details");
+        });
+    },
+    [fetchData],
+  );
 
   const handlePrint = async () => {
     if (!selectedEntry) return;
@@ -216,7 +254,6 @@ ${documents.length > 0 ? documents.join("\n") : "No documents attached"}
     const toastId = toast.loading("Generating comprehensive entry report...");
 
     try {
-      // 1. Fetch supplementary data (Cached)
       const {
         consigneeData,
         supplierData,
@@ -225,7 +262,6 @@ ${documents.length > 0 ? documents.join("\n") : "No documents attached"}
         commodityData,
       } = await getMasterData();
 
-      // 2. Prepare entry data
       const pdfData = buildSaudaPdfData({
         item: selectedEntry,
         consigneeData,
@@ -235,13 +271,14 @@ ${documents.length > 0 ? documents.join("\n") : "No documents attached"}
         commodityData,
         getConsigneeDisplay: (row) => {
           const consignee = row?.consignee;
-          if (typeof consignee === "object" && consignee?.name) return consignee.name;
-          if (typeof consignee === "object" && consignee?.label) return consignee.label;
+          if (typeof consignee === "object" && consignee?.name)
+            return consignee.name;
+          if (typeof consignee === "object" && consignee?.label)
+            return consignee.label;
           return String(consignee || "N/A");
         },
       });
 
-      // 3. Generate QR Code
       const qrData = JSON.stringify({
         saudaNo: selectedEntry.saudaNo,
         billNo: selectedEntry.billNumber,
@@ -257,7 +294,6 @@ ${documents.length > 0 ? documents.join("\n") : "No documents attached"}
 
       const preparedEntry = { ...pdfData, qrCodeUrl };
 
-      // 4. Generate PDF
       const document = (
         <MasterReceivingReportPDF
           entries={[preparedEntry]}
@@ -266,7 +302,7 @@ ${documents.length > 0 ? documents.join("\n") : "No documents attached"}
       );
 
       const blob = await pdf(document).toBlob();
-      
+
       let fileName = `receiving_report_${selectedEntry.saudaNo || "document"}`;
       if (selectedEntry.billNumber && selectedEntry.billNumber !== "0") {
         fileName += `_bill_${selectedEntry.billNumber}`;
@@ -274,19 +310,19 @@ ${documents.length > 0 ? documents.join("\n") : "No documents attached"}
       fileName += ".pdf";
 
       downloadFile(blob, fileName);
-      toast.update(toastId, { 
-        render: "Report downloaded successfully!", 
-        type: "success", 
-        isLoading: false, 
-        autoClose: 3000 
+      toast.update(toastId, {
+        render: "Report downloaded successfully!",
+        type: "success",
+        isLoading: false,
+        autoClose: 3000,
       });
     } catch (error) {
       console.error("Error generating PDF:", error);
-      toast.update(toastId, { 
-        render: "Failed to generate comprehensive report", 
-        type: "error", 
-        isLoading: false, 
-        autoClose: 3000 
+      toast.update(toastId, {
+        render: "Failed to generate comprehensive report",
+        type: "error",
+        isLoading: false,
+        autoClose: 3000,
       });
     }
   };
@@ -349,7 +385,6 @@ ${documents.length > 0 ? documents.join("\n") : "No documents attached"}
     const toastId = toast.loading("Generating Master Report with documents...");
 
     try {
-      // 1. Fetch supplementary data once (Cached)
       const {
         consigneeData,
         supplierData,
@@ -358,7 +393,6 @@ ${documents.length > 0 ? documents.join("\n") : "No documents attached"}
         commodityData,
       } = await getMasterData();
 
-      // 2. Prepare data for each entry
       const preparedEntries = await Promise.all(
         loadingEntries.map(async (entry) => {
           const pdfData = buildSaudaPdfData({
@@ -378,7 +412,6 @@ ${documents.length > 0 ? documents.join("\n") : "No documents attached"}
             },
           });
 
-          // Generate QR Code for each entry
           const qrData = JSON.stringify({
             saudaNo: entry.saudaNo,
             billNo: entry.billNumber,
@@ -396,7 +429,6 @@ ${documents.length > 0 ? documents.join("\n") : "No documents attached"}
         }),
       );
 
-      // 3. Generate the Master PDF
       const document = (
         <MasterReceivingReportPDF
           entries={preparedEntries}
@@ -447,19 +479,23 @@ ${documents.length > 0 ? documents.join("\n") : "No documents attached"}
   const rows = useMemo(
     () =>
       loadingEntries.map((entry) => {
-        // Robust attachment count logic
         const docs = entry.documents || {};
         const attachmentCount = [
           docs.kantaSlip,
           docs.unloadingChallan,
           docs.partyBillCopy,
           entry.documentUrl,
-        ].filter(url => typeof url === 'string' && url.trim() !== '').length;
+        ].filter((url) => typeof url === "string" && url.trim() !== "").length;
 
         return [
           entry.saudaNo || "N/A",
           entry.billNumber || "N/A",
-          <span key={`lorry-${entry._id}`} className="font-bold uppercase text-slate-600">{entry.lorryNumber || "N/A"}</span>,
+          <span
+            key={`lorry-${entry._id}`}
+            className="font-bold uppercase text-slate-600"
+          >
+            {entry.lorryNumber || "N/A"}
+          </span>,
           `${entry.loadingWeight || 0} T`,
           `${entry.unloadingWeight || 0} T`,
           formatDate(entry.loadingDate),
@@ -479,7 +515,10 @@ ${documents.length > 0 ? documents.join("\n") : "No documents attached"}
           >
             {entry.sentStatus || "Not Sent"}
           </button>,
-          <AttachmentBadge key={`attach-${entry._id}`} count={attachmentCount} />,
+          <AttachmentBadge
+            key={`attach-${entry._id}`}
+            count={attachmentCount}
+          />,
           <div key={`actions-${entry._id}`} className="flex items-center gap-2">
             <button
               onClick={() => handleViewDocuments(entry)}
@@ -511,10 +550,12 @@ ${documents.length > 0 ? documents.join("\n") : "No documents attached"}
             <div className="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto">
               <FaExclamationTriangle size={32} />
             </div>
-            <h2 className="text-xl font-black text-slate-800 uppercase tracking-tight">Sync Failure</h2>
+            <h2 className="text-xl font-black text-slate-800 uppercase tracking-tight">
+              Sync Failure
+            </h2>
             <p className="text-slate-500 text-sm font-semibold">{error}</p>
-            <button 
-              onClick={fetchData} 
+            <button
+              onClick={fetchData}
               className="px-8 py-3 bg-red-600 text-white rounded-2xl font-black uppercase tracking-widest text-xs flex items-center gap-3 mx-auto shadow-lg shadow-red-200 hover:bg-red-700 transition-all"
             >
               <FaSync />
@@ -575,7 +616,9 @@ ${documents.length > 0 ? documents.join("\n") : "No documents attached"}
                     <FaPrint size={14} />
                     Table Report
                   </button>
-                  <span className="px-4 py-1.5 rounded-full bg-blue-50 text-blue-600 text-[10px] font-black uppercase tracking-widest border border-blue-100 flex items-center">Live Database</span>
+                  <span className="px-4 py-1.5 rounded-full bg-blue-50 text-blue-600 text-[10px] font-black uppercase tracking-widest border border-blue-100 flex items-center">
+                    Live Database
+                  </span>
                 </div>
               </div>
               <div className="relative group/search">
@@ -590,16 +633,15 @@ ${documents.length > 0 ? documents.join("\n") : "No documents attached"}
             </div>
           </div>
 
-          {/* Table Content */}
           <div className="bg-white rounded-[2.5rem] p-4 shadow-xl shadow-slate-200/50 border border-slate-100 overflow-hidden min-h-[500px] relative">
             {loading && (
               <div className="absolute inset-0 z-10 bg-white/60 backdrop-blur-[2px] flex items-center justify-center rounded-[2.5rem]">
                 <Loading />
               </div>
             )}
-            
+
             <Tables headers={headers} rows={rows} />
-            
+
             {totalItems > 0 && (
               <div className="mt-10 flex justify-center pb-6">
                 <Pagination
@@ -611,16 +653,17 @@ ${documents.length > 0 ? documents.join("\n") : "No documents attached"}
                 />
               </div>
             )}
-            
+
             {!loading && rows.length === 0 && (
               <div className="py-20 text-center">
                 <FaClipboardList className="text-6xl text-slate-200 mx-auto mb-4" />
-                <p className="text-slate-400 font-bold uppercase tracking-widest">No entries found</p>
+                <p className="text-slate-400 font-bold uppercase tracking-widest">
+                  No entries found
+                </p>
               </div>
             )}
           </div>
 
-          {/* Document Popup */}
           {showPopup && selectedEntry && (
             <PopupBox
               isOpen={showPopup}
@@ -644,23 +687,37 @@ ${documents.length > 0 ? documents.join("\n") : "No documents attached"}
               <div className="p-4 sm:p-8 space-y-10">
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                   {[
-                    { key: 'kantaSlip', label: 'Kanta Slip', color: 'blue' },
-                    { key: 'unloadingChallan', label: 'Unloading Challan', color: 'indigo' },
-                    { key: 'partyBillCopy', label: 'Party Bill Copy', color: 'emerald' }
+                    { key: "kantaSlip", label: "Kanta Slip", color: "blue" },
+                    {
+                      key: "unloadingChallan",
+                      label: "Unloading Challan",
+                      color: "indigo",
+                    },
+                    {
+                      key: "partyBillCopy",
+                      label: "Party Bill Copy",
+                      color: "emerald",
+                    },
                   ].map((docType) => {
                     const url = selectedEntry.documents?.[docType.key];
                     if (!url) return null;
-                    
+
                     return (
                       <div key={docType.key} className="space-y-4 group">
                         <div className="flex items-center justify-between">
-                          <h4 className={`text-xs font-black uppercase tracking-[0.2em] text-slate-800 flex items-center gap-3`}>
-                            <span className={`w-2 h-2 rounded-full bg-${docType.color}-500 animate-pulse`} />
+                          <h4
+                            className={`text-xs font-black uppercase tracking-[0.2em] text-slate-800 flex items-center gap-3`}
+                          >
+                            <span
+                              className={`w-2 h-2 rounded-full bg-${docType.color}-500 animate-pulse`}
+                            />
                             {docType.label}
                           </h4>
-                          <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-2 py-0.5 rounded bg-slate-50">Verified</span>
+                          <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-2 py-0.5 rounded bg-slate-50">
+                            Verified
+                          </span>
                         </div>
-                        
+
                         <div className="relative rounded-[2rem] overflow-hidden border border-slate-100 shadow-sm group-hover:shadow-xl transition-all duration-500 bg-slate-50 flex items-center justify-center min-h-[300px]">
                           {url.endsWith(".pdf") ? (
                             <a
@@ -673,8 +730,12 @@ ${documents.length > 0 ? documents.join("\n") : "No documents attached"}
                                 <FaFileAlt size={32} />
                               </div>
                               <div>
-                                <p className="text-sm font-black text-slate-800 uppercase tracking-tight mb-1">View PDF Document</p>
-                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Opens in new tab</p>
+                                <p className="text-sm font-black text-slate-800 uppercase tracking-tight mb-1">
+                                  View PDF Document
+                                </p>
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                                  Opens in new tab
+                                </p>
                               </div>
                             </a>
                           ) : (
@@ -689,11 +750,15 @@ ${documents.length > 0 ? documents.join("\n") : "No documents attached"}
                     );
                   })}
                 </div>
-                
-                {Object.values(selectedEntry.documents || {}).every(v => !v) && (
+
+                {Object.values(selectedEntry.documents || {}).every(
+                  (v) => !v,
+                ) && (
                   <div className="py-20 text-center bg-slate-50 rounded-[2.5rem] border border-dashed border-slate-200">
                     <FaClipboardList className="text-6xl text-slate-200 mx-auto mb-6" />
-                    <p className="text-sm font-black text-slate-400 uppercase tracking-[0.2em]">Zero artifacts detected</p>
+                    <p className="text-sm font-black text-slate-400 uppercase tracking-[0.2em]">
+                      Zero artifacts detected
+                    </p>
                   </div>
                 )}
               </div>
