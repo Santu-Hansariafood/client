@@ -254,19 +254,30 @@ const styles = StyleSheet.create({
     color: "#000000",
   },
   signatorySection: {
-    marginTop: 20,
+    marginTop: 15,
     flexDirection: "row",
     justifyContent: "flex-end",
+    paddingRight: 10,
   },
   signatoryBox: {
-    width: "150pt",
+    alignItems: "center",
+    width: "180pt",
+  },
+  signatoryCompany: {
+    fontSize: 9,
+    fontWeight: "bold",
+    marginBottom: 30,
+    textTransform: "uppercase",
     textAlign: "center",
   },
-  signLine: {
+  signatoryLabel: {
+    fontSize: 8,
+    fontWeight: "bold",
     borderTopWidth: 0.5,
     borderTopColor: "#000000",
-    marginTop: 30,
     paddingTop: 4,
+    width: "100%",
+    textAlign: "center",
   },
   docPage: {
     padding: 20,
@@ -306,12 +317,12 @@ const styles = StyleSheet.create({
     paddingTop: 10,
   },
   disclaimerText: {
-    fontSize: 7,
+    fontSize: 6,
     color: "#6b7280",
     marginBottom: 2,
   },
   officialRecordText: {
-    fontSize: 8,
+    fontSize: 6,
     color: "#374151",
     fontWeight: "bold",
     textTransform: "uppercase",
@@ -532,9 +543,9 @@ const MasterReceivingReportPDF = ({ entries = [], logoUrl }) => {
                 <Text style={styles.docTitle}>{doc.label} - {data.lorryNumber}</Text>
                 <Image src={doc.url} style={styles.docImage} />
                 <View style={styles.footer} fixed>
-                   <Text style={styles.disclaimerText}>System generated file</Text>
-                   <Text style={styles.officialRecordText}>Official Receiving Record & Documentation as per information only</Text>
-                 </View>
+                  <Text style={styles.disclaimerText}>System generated file</Text>
+                  <Text style={styles.officialRecordText}>Official Receiving Record & Documentation as per information only</Text>
+                </View>
               </Page>
             ))}
 
@@ -620,15 +631,24 @@ const MasterReceivingReportPDF = ({ entries = [], logoUrl }) => {
               <View style={styles.bankSection}>
                 <Text style={styles.bankTitle}>Bank Account Details</Text>
                 <View style={styles.bankGrid}>
+                  <View style={styles.bankItem}><Text style={styles.bankLabel}>Beneficiary Name</Text><Text style={styles.bankValue}>{bankDetails.beneficiaryName || ""}</Text></View>
                   <View style={styles.bankItem}><Text style={styles.bankLabel}>Bank Name</Text><Text style={styles.bankValue}>{bankDetails.bankName || ""}</Text></View>
                   <View style={styles.bankItem}><Text style={styles.bankLabel}>Account Number</Text><Text style={styles.bankValue}>{bankDetails.accountNumber || ""}</Text></View>
                   <View style={styles.bankItem}><Text style={styles.bankLabel}>IFSC Code</Text><Text style={styles.bankValue}>{bankDetails.ifscCode || ""}</Text></View>
+                  <View style={styles.bankItem}><Text style={styles.bankLabel}>Bank Branch</Text><Text style={styles.bankValue}>{bankDetails.bankBranch || ""}</Text></View>
+                </View>
+              </View>
+
+              <View style={styles.signatorySection}>
+                <View style={styles.signatoryBox}>
+                  <Text style={styles.signatoryCompany}>For {data.supplierCompany || ""}</Text>
+                  <Text style={styles.signatoryLabel}>Authority Signature</Text>
                 </View>
               </View>
 
               <View style={styles.footer} fixed>
-                 <Text style={styles.disclaimerText}>System generated file</Text>
-                 <Text style={styles.officialRecordText}>Official Receiving Record & Documentation as per information only</Text>
+                 <Text style={styles.disclaimerText}>* Certified that the particulars given above are true and correct.</Text>
+                 <Text style={styles.officialRecordText}>* This bill is generated for knowledge and reference purposes only. Final original invoice will be shared after unloading and final quantity verification.</Text>
                </View>
             </Page>
           </React.Fragment>
