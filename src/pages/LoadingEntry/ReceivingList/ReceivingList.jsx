@@ -194,36 +194,34 @@ const ReceivingList = () => {
         documents.push(`Party Bill Copy: ${entry.documents.partyBillCopy}`);
 
       const textToCopy = `
-      *RECEIVING ENTRY DETAILS*
+          *RECEIVING ENTRY DETAILS*
 
+          *Sauda No:* _${entry.saudaNo || "N/A"}_
+          *Invoice No:* _${entry.billNumber || "N/A"}_
+          *Lorry No:* _${(entry.lorryNumber || "N/A").toUpperCase()}_
+          *Loading Weight:* _${entry.loadingWeight || 0} _ *Tons*
+          *Unloading Weight:* _${entry.unloadingWeight || 0} _ *Tons*
+          *Loading Date:* _${formatDate(entry.loadingDate)}_
+          *Unloading Date:* _${formatDate(entry.unloadingDate)}_
+          *Rate:* _Rs. ${entry.actualRate || 0}_
+          *Amount:* _Rs. ${(
+            (entry.unloadingWeight || 0) * (entry.actualRate || 0)
+          ).toFixed(2)}_
+          *Seller Company:* _${entry.supplierCompany || "N/A"}_
+          *Buyer Company:* _${entry.buyerCompany || "N/A"}_
 
-      *Sauda No:* _${entry.saudaNo || "N/A"}_
-      *Invoice No:* _${entry.billNumber || "N/A"}_
+          *DOCUMENTS*: -
 
-      *Lorry No:* _${(entry.lorryNumber || "N/A").toUpperCase()}_
+          ${
+            documents.length > 0
+              ? documents.map((doc) => `• _${doc}_`).join("\n")
+              : "_No documents attached_"
+          }
 
-      *Loading Weight:* _${entry.loadingWeight || 0} Tons_
-      *Unloading Weight:* _${entry.unloadingWeight || 0} Tons_
-
-      *Loading Date:* _${formatDate(entry.loadingDate)}_
-      *Unloading Date:* _${formatDate(entry.unloadingDate)}_
-
-      *Rate:* _Rs. ${entry.actualRate || 0}_
-      *Amount:* _Rs. ${(
-              (entry.unloadingWeight || 0) * (entry.actualRate || 0)
-            ).toFixed(2)}_
-
-      *Seller Company:* _${entry.supplierCompany || "N/A"}_
-      *Buyer Company:* _${entry.buyerCompany || "N/A"}_
-
-      *DOCUMENTS*
-
-      ${
-        documents.length > 0
-          ? documents.map((doc) => `• _${doc}_`).join("\n")
-          : "_No documents attached_"
-      }
-      `.trim();
+          _*Thanks and Regards,*_
+          _*Purchase Team*_
+          _*Hansaria Food Private Limited*_
+          `.trim();
 
       navigator.clipboard
         .writeText(textToCopy)
