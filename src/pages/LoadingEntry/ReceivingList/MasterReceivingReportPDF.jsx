@@ -631,11 +631,28 @@ const MasterReceivingReportPDF = ({ entries = [], logoUrl }) => {
               <View style={styles.bankSection}>
                 <Text style={styles.bankTitle}>Bank Account Details</Text>
                 <View style={styles.bankGrid}>
-                  <View style={styles.bankItem}><Text style={styles.bankLabel}>Beneficiary Name</Text><Text style={styles.bankValue}>{bankDetails.beneficiaryName || ""}</Text></View>
-                  <View style={styles.bankItem}><Text style={styles.bankLabel}>Bank Name</Text><Text style={styles.bankValue}>{bankDetails.bankName || ""}</Text></View>
-                  <View style={styles.bankItem}><Text style={styles.bankLabel}>Account Number</Text><Text style={styles.bankValue}>{bankDetails.accountNumber || ""}</Text></View>
-                  <View style={styles.bankItem}><Text style={styles.bankLabel}>IFSC Code</Text><Text style={styles.bankValue}>{bankDetails.ifscCode || ""}</Text></View>
-                  <View style={styles.bankItem}><Text style={styles.bankLabel}>Bank Branch</Text><Text style={styles.bankValue}>{bankDetails.bankBranch || ""}</Text></View>
+                  <View style={styles.bankItem}>
+                    <Text style={styles.bankLabel}>Beneficiary Name</Text>
+                    <Text style={styles.bankValue}>
+                      {bankDetails.accountHolderName || data.supplierCompany || ""}
+                    </Text>
+                  </View>
+                  <View style={styles.bankItem}>
+                    <Text style={styles.bankLabel}>Bank Name</Text>
+                    <Text style={styles.bankValue}>{bankDetails.bankName || ""}</Text>
+                  </View>
+                  <View style={styles.bankItem}>
+                    <Text style={styles.bankLabel}>Account Number</Text>
+                    <Text style={styles.bankValue}>{bankDetails.accountNumber || ""}</Text>
+                  </View>
+                  <View style={styles.bankItem}>
+                    <Text style={styles.bankLabel}>IFSC Code</Text>
+                    <Text style={styles.bankValue}>{bankDetails.ifscCode || ""}</Text>
+                  </View>
+                  <View style={styles.bankItem}>
+                    <Text style={styles.bankLabel}>Bank Branch</Text>
+                    <Text style={styles.bankValue}>{bankDetails.branchName || ""}</Text>
+                  </View>
                 </View>
               </View>
 
