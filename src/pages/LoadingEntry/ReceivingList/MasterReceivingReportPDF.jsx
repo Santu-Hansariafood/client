@@ -427,8 +427,8 @@ const MasterReceivingReportPDF = ({ entries = [], logoUrl }) => {
   return (
     <Document title="Master Receiving Report">
       {entries.map((data, index) => {
+        const rate = Number(data.actualRate || data.rate || 0);
         const weight = Number(data.loadingWeight || 0);
-        const rate = Number(data.rate || 0);
         const subtotal = weight * rate;
         const gstPercent = Number(data.gst || 0);
         const gstAmount = subtotal * (gstPercent / 100);
@@ -499,7 +499,7 @@ const MasterReceivingReportPDF = ({ entries = [], logoUrl }) => {
                   </View>
                   <View style={styles.summaryItem}>
                     <Text style={styles.summaryLabel}>Rate</Text>
-                    <Text style={styles.summaryValue}>Rs. {formatAmount(data.actualRate)}</Text>
+                    <Text style={styles.summaryValue}>Rs. {formatAmount(rate)}</Text>
                   </View>
                   <View style={[styles.summaryItem, { borderRightWidth: 0 }]}>
                     <Text style={styles.summaryLabel}>Total Amount</Text>
@@ -525,7 +525,6 @@ const MasterReceivingReportPDF = ({ entries = [], logoUrl }) => {
                 </View>
               </Page>
 
-            {/* 2. Document Pages (Attachments) */}
             {docUrls.map((doc, docIdx) => (
               <Page key={`doc-${index}-${docIdx}`} style={styles.docPage} size="A4">
                 <Text style={styles.docTitle}>{doc.label} - {data.lorryNumber}</Text>
@@ -533,7 +532,6 @@ const MasterReceivingReportPDF = ({ entries = [], logoUrl }) => {
               </Page>
             ))}
 
-            {/* 3. Bill Page (Tax Invoice) */}
             <Page style={styles.billPage} size="A4">
               <View style={styles.billPageBorder} fixed />
               <View style={styles.billInnerBorder} fixed />
@@ -590,7 +588,7 @@ const MasterReceivingReportPDF = ({ entries = [], logoUrl }) => {
                   <Text style={styles.col2}>{data.commodity || "N/A"}</Text>
                   <Text style={styles.col3}>{data.hsnCode || ""}</Text>
                   <Text style={styles.col4}>{Number(data.loadingWeight || 0).toFixed(3)}</Text>
-                  <Text style={styles.col5}>{formatAmount(data.rate)}</Text>
+                  <Text style={styles.col5}>{formatAmount(rate)}</Text>
                   <Text style={styles.col6}>{formatAmount(subtotal)}</Text>
                 </View>
               </View>
