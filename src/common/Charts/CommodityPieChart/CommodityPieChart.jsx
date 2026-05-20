@@ -5,11 +5,19 @@ import {
   Cell,
   Tooltip,
   ResponsiveContainer,
-  Legend
+  Legend,
 } from "recharts";
 import api from "../../../utils/apiClient/apiClient";
 
-const COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6", "#ec4899", "#06b6d4"];
+const COLORS = [
+  "#3b82f6",
+  "#10b981",
+  "#f59e0b",
+  "#ef4444",
+  "#8b5cf6",
+  "#ec4899",
+  "#06b6d4",
+];
 
 const CustomTooltip = ({ active, payload }) => {
   if (active && payload && payload.length) {
@@ -22,8 +30,8 @@ const CustomTooltip = ({ active, payload }) => {
         <div className="space-y-2">
           <p className="text-sm font-black text-slate-800 flex items-center justify-between gap-4">
             <span className="flex items-center gap-2">
-              <span 
-                className="w-2.5 h-2.5 rounded-full shadow-sm" 
+              <span
+                className="w-2.5 h-2.5 rounded-full shadow-sm"
                 style={{ backgroundColor: payload[0].color }}
               ></span>
               <span className="text-slate-600">Weight:</span>
@@ -55,14 +63,14 @@ const CommodityPieChart = ({ apiUrl }) => {
       try {
         const response = await api.get(apiUrl);
         const rawData = response.data?.data || response.data || [];
-        
+
         const stats = {};
         let totalWeight = 0;
 
         rawData.forEach((item) => {
           const commodity = item.commodity || "Unknown";
           const weight = Number(item.loadingWeight || item.quantity) || 0;
-          
+
           if (!stats[commodity]) {
             stats[commodity] = 0;
           }
@@ -74,7 +82,8 @@ const CommodityPieChart = ({ apiUrl }) => {
           .map(([name, value]) => ({
             name,
             value,
-            percentage: totalWeight > 0 ? ((value / totalWeight) * 100).toFixed(1) : 0
+            percentage:
+              totalWeight > 0 ? ((value / totalWeight) * 100).toFixed(1) : 0,
           }))
           .sort((a, b) => b.value - a.value);
 
@@ -88,11 +97,12 @@ const CommodityPieChart = ({ apiUrl }) => {
     fetchData();
   }, [apiUrl]);
 
-  if (loading) return (
-    <div className="h-[350px] flex items-center justify-center">
-      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div>
-    </div>
-  );
+  if (loading)
+    return (
+      <div className="h-[350px] flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div>
+      </div>
+    );
 
   return (
     <div className="w-full h-auto">
@@ -101,23 +111,49 @@ const CommodityPieChart = ({ apiUrl }) => {
           <span className="w-2 h-4 bg-emerald-600 rounded-full"></span>
           Commodity Distribution
         </h3>
-        <p className="text-[10px] font-bold text-slate-400 mt-1 uppercase tracking-tighter">Volume share by commodity type</p>
+        <p className="text-[10px] font-bold text-slate-400 mt-1 uppercase tracking-tighter">
+          Volume share by commodity type
+        </p>
       </div>
 
       <div className="h-[350px]">
         {!data.length ? (
           <div className="h-full flex flex-col items-center justify-center text-slate-300 gap-4">
-             <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center">
-               <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20.488 9H15V1.512A9.025 9.001 0 0120.488 9z"></path></svg>
+            <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center">
+              <svg
+                className="w-8 h-8"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"
+                ></path>
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M20.488 9H15V1.512A9.025 9.001 0 0120.488 9z"
+                ></path>
+              </svg>
             </div>
-            <p className="text-xs font-bold uppercase tracking-widest">No data available</p>
+            <p className="text-xs font-bold uppercase tracking-widest">
+              No data available
+            </p>
           </div>
         ) : (
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <defs>
                 <filter id="pieShadow" height="200%">
-                  <feGaussianBlur in="SourceAlpha" stdDeviation="3" result="blur" />
+                  <feGaussianBlur
+                    in="SourceAlpha"
+                    stdDeviation="3"
+                    result="blur"
+                  />
                   <feOffset in="blur" dx="0" dy="5" result="offsetBlur" />
                   <feMerge>
                     <feMergeNode in="offsetBlur" />
@@ -138,19 +174,23 @@ const CommodityPieChart = ({ apiUrl }) => {
                 filter="url(#pieShadow)"
               >
                 {data.map((entry, index) => (
-                  <Cell 
-                    key={`cell-${index}`} 
-                    fill={COLORS[index % COLORS.length]} 
+                  <Cell
+                    key={`cell-${index}`}
+                    fill={COLORS[index % COLORS.length]}
                   />
                 ))}
               </Pie>
               <Tooltip content={<CustomTooltip />} />
-              <Legend 
-                verticalAlign="bottom" 
-                align="center" 
+              <Legend
+                verticalAlign="bottom"
+                align="center"
                 iconType="circle"
-                formatter={(value) => <span className="text-[10px] font-black text-slate-600 uppercase tracking-widest">{value}</span>}
-                wrapperStyle={{ paddingTop: '20px' }}
+                formatter={(value) => (
+                  <span className="text-[10px] font-black text-slate-600 uppercase tracking-widest">
+                    {value}
+                  </span>
+                )}
+                wrapperStyle={{ paddingTop: "20px" }}
               />
             </PieChart>
           </ResponsiveContainer>

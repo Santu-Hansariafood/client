@@ -3,7 +3,14 @@ import { RiLogoutBoxLine } from "react-icons/ri";
 import PWAInstall from "../../PWAInstall/PWAInstall";
 import { useAuth } from "../../../context/AuthContext/AuthContext";
 
-const ProfileDropdown = ({ dropdownRef, isProfileDropdownOpen, setProfileDropdownOpen, setShowNotifications, onLogoutClick, setChangePasswordOpen }) => {
+const ProfileDropdown = ({
+  dropdownRef,
+  isProfileDropdownOpen,
+  setProfileDropdownOpen,
+  setShowNotifications,
+  onLogoutClick,
+  setChangePasswordOpen,
+}) => {
   const { userRole, mobile } = useAuth();
 
   const toggleDropdown = () => {
@@ -24,15 +31,21 @@ const ProfileDropdown = ({ dropdownRef, isProfileDropdownOpen, setProfileDropdow
 
         <div className="hidden md:flex flex-col items-start">
           <span className="text-xs text-emerald-100 font-bold">{userRole}</span>
-          <span className="text-[11px] text-white font-medium max-w-[120px] truncate">{mobile}</span>
+          <span className="text-[11px] text-white font-medium max-w-[120px] truncate">
+            {mobile}
+          </span>
         </div>
       </button>
 
       {isProfileDropdownOpen && (
         <div className="absolute right-0 mt-3 w-60 bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200">
           <div className="p-4 bg-slate-50 border-b border-slate-100">
-            <p className="text-xs uppercase text-slate-400 font-bold">Logged In As</p>
-            <h4 className="font-black text-slate-700 mt-1 truncate">{mobile}</h4>
+            <p className="text-xs uppercase text-slate-400 font-bold">
+              Logged In As
+            </p>
+            <h4 className="font-black text-slate-700 mt-1 truncate">
+              {mobile}
+            </h4>
             <span className="inline-flex mt-2 px-2 py-1 rounded-full bg-emerald-100 text-emerald-700 text-[10px] font-bold">
               {userRole}
             </span>

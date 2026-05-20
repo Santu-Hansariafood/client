@@ -68,10 +68,10 @@ router.get("/lorry-wise", async (req, res) => {
     const limit = parseInt(req.query.limit || "10", 10);
 
     const andParts = [];
-    
+
     if (lorryNumber) {
       andParts.push({
-        lorryNumber: { $regex: new RegExp(escapeRegex(lorryNumber), "i") }
+        lorryNumber: { $regex: new RegExp(escapeRegex(lorryNumber), "i") },
       });
     }
 
@@ -80,15 +80,25 @@ router.get("/lorry-wise", async (req, res) => {
         andParts.push({
           $or: [
             { unloadingWeight: { $gt: 0 } },
-            { unloadingDate: { $exists: true, $ne: null } }
-          ]
+            { unloadingDate: { $exists: true, $ne: null } },
+          ],
         });
       } else if (status === "transit") {
         andParts.push({
           $and: [
-            { $or: [{ unloadingWeight: { $lte: 0 } }, { unloadingWeight: { $exists: false } }] },
-            { $or: [{ unloadingDate: { $exists: false } }, { unloadingDate: null }] }
-          ]
+            {
+              $or: [
+                { unloadingWeight: { $lte: 0 } },
+                { unloadingWeight: { $exists: false } },
+              ],
+            },
+            {
+              $or: [
+                { unloadingDate: { $exists: false } },
+                { unloadingDate: null },
+              ],
+            },
+          ],
         });
       }
     }
@@ -102,14 +112,14 @@ router.get("/lorry-wise", async (req, res) => {
         .limit(limit)
         .populate("supplier", "sellerName")
         .lean(),
-      LoadingEntry.countDocuments(finalQuery)
+      LoadingEntry.countDocuments(finalQuery),
     ]);
 
     res.json({
       data: items,
       total,
       page,
-      totalPages: Math.ceil(total / limit)
+      totalPages: Math.ceil(total / limit),
     });
   } catch (error) {
     console.error("Lorry wise loading error:", error);
@@ -121,7 +131,9 @@ router.get("/company-report", async (req, res) => {
   try {
     const { supplierCompany, buyerCompany, mobile } = req.query;
     if (!mobile || (!supplierCompany && !buyerCompany)) {
-      return res.status(400).json({ message: "Company name and mobile are required" });
+      return res
+        .status(400)
+        .json({ message: "Company name and mobile are required" });
     }
 
     let query = {};
@@ -137,13 +149,20 @@ router.get("/company-report", async (req, res) => {
       }
 
       query = {
-        supplierCompany: { $regex: new RegExp(`^${escapeRegex(supplierCompany)}$`, "i") },
-        supplier: seller._id
+        supplierCompany: {
+          $regex: new RegExp(`^${escapeRegex(supplierCompany)}$`, "i"),
+        },
+        supplier: seller._id,
       };
 
-      companyDetails = await mongoose.model("SellerCompany").findOne({
-        companyName: { $regex: new RegExp(`^${escapeRegex(supplierCompany)}$`, "i") },
-      }).lean();
+      companyDetails = await mongoose
+        .model("SellerCompany")
+        .findOne({
+          companyName: {
+            $regex: new RegExp(`^${escapeRegex(supplierCompany)}$`, "i"),
+          },
+        })
+        .lean();
     } else if (buyerCompany) {
       const buyer = await Buyer.findOne({
         mobile: { $regex: new RegExp(mobile + "$") },
@@ -155,13 +174,20 @@ router.get("/company-report", async (req, res) => {
       }
 
       query = {
-        buyerCompany: { $regex: new RegExp(`^${escapeRegex(buyerCompany)}$`, "i") }
+        buyerCompany: {
+          $regex: new RegExp(`^${escapeRegex(buyerCompany)}$`, "i"),
+        },
       };
 
       // For buyers, we might need to filter by their linked companies or just the company name
-      companyDetails = await mongoose.model("Company").findOne({
-        companyName: { $regex: new RegExp(`^${escapeRegex(buyerCompany)}$`, "i") },
-      }).lean();
+      companyDetails = await mongoose
+        .model("Company")
+        .findOne({
+          companyName: {
+            $regex: new RegExp(`^${escapeRegex(buyerCompany)}$`, "i"),
+          },
+        })
+        .lean();
     }
 
     const rawEntries = await LoadingEntry.find(query)
@@ -171,7 +197,9 @@ router.get("/company-report", async (req, res) => {
     // Dynamically calculate brokerage
     const entries = await Promise.all(
       rawEntries.map(async (entry) => {
-        const selfOrder = await mongoose.model("SelfOrder").findOne({ saudaNo: entry.saudaNo });
+        const selfOrder = await mongoose
+          .model("SelfOrder")
+          .findOne({ saudaNo: entry.saudaNo });
         let rate = 0;
         if (selfOrder) {
           if (supplierCompany) {
@@ -180,7 +208,8 @@ router.get("/company-report", async (req, res) => {
               const sellerDoc = await Seller.findById(selfOrder.supplier);
               if (sellerDoc && sellerDoc.commodities) {
                 const comm = sellerDoc.commodities.find(
-                  (c) => c.name.toLowerCase() === selfOrder.commodity.toLowerCase(),
+                  (c) =>
+                    c.name.toLowerCase() === selfOrder.commodity.toLowerCase(),
                 );
                 if (comm) rate = comm.brokerage;
               }
@@ -203,7 +232,9 @@ router.get("/company-report", async (req, res) => {
 
     res.json({
       entries,
-      company: companyDetails || { companyName: supplierCompany || buyerCompany },
+      company: companyDetails || {
+        companyName: supplierCompany || buyerCompany,
+      },
     });
   } catch (error) {
     console.error("Company report error:", error);
@@ -615,18 +646,19 @@ router.get("/", async (req, res) => {
     // Calculate absolute Sl No for each item in the current page
     const itemsWithSlNo = await Promise.all(
       items.map(async (item) => {
-        const slNo = await LoadingEntry.countDocuments({
-          ...baseQuery,
-          $or: [
-            { loadingDate: { $lt: item.loadingDate } },
-            { 
-              loadingDate: item.loadingDate, 
-              createdAt: { $lt: item.createdAt } 
-            }
-          ]
-        }) + 1;
+        const slNo =
+          (await LoadingEntry.countDocuments({
+            ...baseQuery,
+            $or: [
+              { loadingDate: { $lt: item.loadingDate } },
+              {
+                loadingDate: item.loadingDate,
+                createdAt: { $lt: item.createdAt },
+              },
+            ],
+          })) + 1;
         return { ...item, slNo };
-      })
+      }),
     );
 
     res.json({
@@ -652,8 +684,8 @@ router.get("/receiving", async (req, res) => {
     let query = {
       $or: [
         { unloadingWeight: { $gt: 0 } },
-        { unloadingDate: { $exists: true, $ne: null } }
-      ]
+        { unloadingDate: { $exists: true, $ne: null } },
+      ],
     };
 
     if (sentStatus && sentStatus !== "All") {
@@ -681,7 +713,7 @@ router.get("/receiving", async (req, res) => {
           { saudaNo: { $regex: searchRegex } },
           { lorryNumber: { $regex: searchRegex } },
           { buyerCompany: { $regex: searchRegex } },
-          { consignee: { $regex: searchRegex } }
+          { consignee: { $regex: searchRegex } },
         ],
       });
     }
@@ -699,7 +731,9 @@ router.get("/receiving", async (req, res) => {
 
     const saudaNos = [...new Set(items.map((i) => i.saudaNo).filter(Boolean))];
     const selfOrders = await SelfOrder.find({ saudaNo: { $in: saudaNos } })
-      .select("saudaNo rate gst buyerCompany consignee buyer poNumber location district state pin pinCode billTo commodity")
+      .select(
+        "saudaNo rate gst buyerCompany consignee buyer poNumber location district state pin pinCode billTo commodity",
+      )
       .lean();
     const saudaMap = selfOrders.reduce((acc, so) => {
       acc[so.saudaNo] = so;
@@ -852,7 +886,7 @@ router.get("/export/excel", async (req, res) => {
       .select("_id")
       .sort({ loadingDate: 1, createdAt: 1 })
       .lean();
-    
+
     const idToSlNo = {};
     allBaseItems.forEach((item, index) => {
       idToSlNo[item._id.toString()] = index + 1;
@@ -893,9 +927,17 @@ router.get("/export/excel", async (req, res) => {
       { header: "Rate", key: "rate", width: 15 },
       { header: "Amount", key: "amount", width: 15 },
       { header: "Buyer Brokerage/Ton", key: "buyerBrokerage", width: 20 },
-      { header: "Total Buyer Brokerage", key: "totalBuyerBrokerage", width: 20 },
+      {
+        header: "Total Buyer Brokerage",
+        key: "totalBuyerBrokerage",
+        width: 20,
+      },
       { header: "Seller Brokerage/Ton", key: "sellerBrokerage", width: 20 },
-      { header: "Total Seller Brokerage", key: "totalSellerBrokerage", width: 20 },
+      {
+        header: "Total Seller Brokerage",
+        key: "totalSellerBrokerage",
+        width: 20,
+      },
       { header: "Bags", key: "bags", width: 10 },
       { header: "Payment Terms", key: "paymentTerms", width: 20 },
     ];
@@ -904,7 +946,7 @@ router.get("/export/excel", async (req, res) => {
       const rate = saudaData[item.saudaNo]?.rate || 0;
       const unloadingWeight = item.unloadingWeight || 0;
       const amount = unloadingWeight * rate;
-      
+
       const bBrokerageRate = saudaData[item.saudaNo]?.buyerBrokerageRate || 0;
       const sBrokerageRate = saudaData[item.saudaNo]?.sellerBrokerageRate || 0;
 
@@ -1371,7 +1413,10 @@ router.post("/bulk", async (req, res) => {
       selfOrder.pendingQuantity = (selfOrder.quantity || 0) - totalLoaded;
 
       const tolerance = (selfOrder.quantity || 0) * 0.05;
-      if (selfOrder.pendingQuantity <= 0 && selfOrder.pendingQuantity >= -tolerance) {
+      if (
+        selfOrder.pendingQuantity <= 0 &&
+        selfOrder.pendingQuantity >= -tolerance
+      ) {
         selfOrder.status = "closed";
       } else {
         selfOrder.status = "active";
@@ -1422,7 +1467,10 @@ router.post("/", async (req, res) => {
       selfOrder.pendingQuantity = (selfOrder.quantity || 0) - totalLoaded;
 
       const tolerance = (selfOrder.quantity || 0) * 0.05;
-      if (selfOrder.pendingQuantity <= 0 && selfOrder.pendingQuantity >= -tolerance) {
+      if (
+        selfOrder.pendingQuantity <= 0 &&
+        selfOrder.pendingQuantity >= -tolerance
+      ) {
         selfOrder.status = "closed";
       } else {
         selfOrder.status = "active";
@@ -1486,7 +1534,10 @@ router.put("/:id", async (req, res) => {
         selfOrder.pendingQuantity = (selfOrder.quantity || 0) - totalLoaded;
 
         const tolerance = (selfOrder.quantity || 0) * 0.05;
-        if (selfOrder.pendingQuantity <= 0 && selfOrder.pendingQuantity >= -tolerance) {
+        if (
+          selfOrder.pendingQuantity <= 0 &&
+          selfOrder.pendingQuantity >= -tolerance
+        ) {
           selfOrder.status = "closed";
         } else {
           selfOrder.status = "active";
@@ -1520,7 +1571,10 @@ router.delete("/:id", async (req, res) => {
       selfOrder.pendingQuantity = (selfOrder.quantity || 0) - totalLoaded;
 
       const tolerance = (selfOrder.quantity || 0) * 0.05;
-      if (selfOrder.pendingQuantity <= 0 && selfOrder.pendingQuantity >= -tolerance) {
+      if (
+        selfOrder.pendingQuantity <= 0 &&
+        selfOrder.pendingQuantity >= -tolerance
+      ) {
         selfOrder.status = "closed";
       } else {
         selfOrder.status = "active";

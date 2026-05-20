@@ -27,19 +27,15 @@ const RoleBasedRoute = ({ children, allowedRoles, path }) => {
     return <Navigate to={roleDashboards[userRole] || "/login"} replace />;
   }
 
-  // Permission-based restriction for Employees
   if (userRole === "Employee" && user?.allowedPermissions && user.allowedPermissions.length > 0) {
-    // Normalize path for comparison
     const normalizedPath = path.startsWith("/") ? path : `/${path}`;
     
-    // Always allow dashboard
     if (normalizedPath === "/dashboard" || normalizedPath === "/employee/dashboard") {
       return children;
     }
 
     const hasPermission = user.allowedPermissions.some(p => {
       const normalizedP = p.startsWith("/") ? p : `/${p}`;
-      // Check for exact match or if the current path is a sub-path (e.g., edit/delete routes)
       return normalizedPath === normalizedP || normalizedPath.startsWith(`${normalizedP}/`);
     });
 

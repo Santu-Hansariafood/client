@@ -16,7 +16,6 @@ const SearchBox = ({
   const [debouncedTerm, setDebouncedTerm] = useState(externalValue || "");
   const [isFocused, setIsFocused] = useState(false);
 
-  // Sync internal state with external value if provided
   useEffect(() => {
     if (externalValue !== undefined && externalValue !== searchTerm) {
       setSearchTerm(externalValue);
@@ -75,16 +74,16 @@ const SearchBox = ({
   return (
     <div
       className={`flex items-center w-full max-w-md bg-white border ${
-        isFocused 
-          ? 'border-emerald-400 ring-2 ring-emerald-400/50' 
-          : 'border-emerald-100'
+        isFocused
+          ? "border-emerald-400 ring-2 ring-emerald-400/50"
+          : "border-emerald-100"
       } rounded-xl px-4 py-2.5 shadow-md shadow-emerald-900/5 transition-all duration-200 hover:shadow-lg hover:shadow-emerald-900/10 ${className}`}
       role="search"
       aria-label="Search items"
     >
       <FiSearch
         className={`shrink-0 ${
-          isFocused ? 'text-emerald-600' : 'text-emerald-600/70'
+          isFocused ? "text-emerald-600" : "text-emerald-600/70"
         }`}
         size={20}
         aria-hidden="true"

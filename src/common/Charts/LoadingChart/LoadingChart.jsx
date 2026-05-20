@@ -25,7 +25,9 @@ const CustomTooltip = ({ active, payload, label }) => {
               <span className="w-2.5 h-2.5 rounded-full bg-blue-500 shadow-sm"></span>
               <span className="text-slate-600">Weight:</span>
             </span>
-            <span className="text-blue-600">{payload[0].value.toFixed(2)} T</span>
+            <span className="text-blue-600">
+              {payload[0].value.toFixed(2)} T
+            </span>
           </p>
           {payload[1] && (
             <div className="pt-2 mt-2 border-t border-slate-50">
@@ -85,14 +87,21 @@ const LoadingChart = ({ apiUrl, chartType = "line", data: externalData }) => {
             const diff = today - date;
             const daysDiff = Math.floor(diff / (1000 * 60 * 60 * 24));
             if (daysDiff >= 0 && daysDiff < 7) {
-              key = date.toLocaleDateString("en-IN", { weekday: "short", day: "numeric", month: "short" });
+              key = date.toLocaleDateString("en-IN", {
+                weekday: "short",
+                day: "numeric",
+                month: "short",
+              });
               sortKey = date.getTime();
             }
           } else if (viewType === "monthly") {
             const diff = today - date;
             const daysDiff = Math.floor(diff / (1000 * 60 * 60 * 24));
             if (daysDiff >= 0 && daysDiff < 30) {
-              key = date.toLocaleDateString("en-IN", { day: "2-digit", month: "short" });
+              key = date.toLocaleDateString("en-IN", {
+                day: "2-digit",
+                month: "short",
+              });
               sortKey = date.getTime();
             }
           } else if (viewType === "quarterly") {
@@ -104,8 +113,15 @@ const LoadingChart = ({ apiUrl, chartType = "line", data: externalData }) => {
               sortKey = date.getTime();
             }
           } else if (viewType === "yearly") {
-            key = date.toLocaleDateString("en-IN", { month: "long", year: "numeric" });
-            sortKey = new Date(date.getFullYear(), date.getMonth(), 1).getTime();
+            key = date.toLocaleDateString("en-IN", {
+              month: "long",
+              year: "numeric",
+            });
+            sortKey = new Date(
+              date.getFullYear(),
+              date.getMonth(),
+              1,
+            ).getTime();
           }
 
           if (key) {
@@ -122,7 +138,7 @@ const LoadingChart = ({ apiUrl, chartType = "line", data: externalData }) => {
             date,
             weight: stat.weight,
             count: stat.count,
-            sortKey: stat.sortKey
+            sortKey: stat.sortKey,
           }))
           .sort((a, b) => a.sortKey - b.sortKey);
 
@@ -132,13 +148,17 @@ const LoadingChart = ({ apiUrl, chartType = "line", data: externalData }) => {
     }
   }, [rawData, viewType]);
 
-  const data = useMemo(() => externalData || internalData, [externalData, internalData]);
-
-  if (loading) return (
-    <div className="h-[350px] flex items-center justify-center">
-      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-    </div>
+  const data = useMemo(
+    () => externalData || internalData,
+    [externalData, internalData],
   );
+
+  if (loading)
+    return (
+      <div className="h-[350px] flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    );
 
   const renderChart = () => {
     const commonProps = {
@@ -163,21 +183,29 @@ const LoadingChart = ({ apiUrl, chartType = "line", data: externalData }) => {
               <stop offset="100%" stopColor="#1d4ed8" stopOpacity={1} />
             </linearGradient>
           </defs>
-          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-          <XAxis 
-            dataKey="date" 
-            axisLine={false} 
-            tickLine={false} 
-            tick={{ fill: "#94a3b8", fontSize: 10, fontWeight: 600 }} 
-            dy={10} 
+          <CartesianGrid
+            strokeDasharray="3 3"
+            vertical={false}
+            stroke="#f1f5f9"
           />
-          <YAxis axisLine={false} tickLine={false} tick={{ fill: "#94a3b8", fontSize: 10, fontWeight: 600 }} />
-          <Tooltip content={<CustomTooltip />} cursor={{ fill: '#f8fafc' }} />
-          <Bar 
-            dataKey="weight" 
-            fill="url(#barGradient)" 
-            radius={[6, 6, 0, 0]} 
-            barSize={viewType === 'weekly' ? 40 : 20} 
+          <XAxis
+            dataKey="date"
+            axisLine={false}
+            tickLine={false}
+            tick={{ fill: "#94a3b8", fontSize: 10, fontWeight: 600 }}
+            dy={10}
+          />
+          <YAxis
+            axisLine={false}
+            tickLine={false}
+            tick={{ fill: "#94a3b8", fontSize: 10, fontWeight: 600 }}
+          />
+          <Tooltip content={<CustomTooltip />} cursor={{ fill: "#f8fafc" }} />
+          <Bar
+            dataKey="weight"
+            fill="url(#barGradient)"
+            radius={[6, 6, 0, 0]}
+            barSize={viewType === "weekly" ? 40 : 20}
             filter="url(#shadow)"
           />
         </BarChart>
@@ -203,15 +231,23 @@ const LoadingChart = ({ apiUrl, chartType = "line", data: externalData }) => {
             </feMerge>
           </filter>
         </defs>
-        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-        <XAxis 
-          dataKey="date" 
-          axisLine={false} 
-          tickLine={false} 
-          tick={{ fill: "#94a3b8", fontSize: 10, fontWeight: 600 }} 
-          dy={10} 
+        <CartesianGrid
+          strokeDasharray="3 3"
+          vertical={false}
+          stroke="#f1f5f9"
         />
-        <YAxis axisLine={false} tickLine={false} tick={{ fill: "#94a3b8", fontSize: 10, fontWeight: 600 }} />
+        <XAxis
+          dataKey="date"
+          axisLine={false}
+          tickLine={false}
+          tick={{ fill: "#94a3b8", fontSize: 10, fontWeight: 600 }}
+          dy={10}
+        />
+        <YAxis
+          axisLine={false}
+          tickLine={false}
+          tick={{ fill: "#94a3b8", fontSize: 10, fontWeight: 600 }}
+        />
         <Tooltip content={<CustomTooltip />} />
         <Area
           type="monotone"
@@ -235,7 +271,9 @@ const LoadingChart = ({ apiUrl, chartType = "line", data: externalData }) => {
             <span className="w-2 h-4 bg-blue-600 rounded-full"></span>
             Loading Analytics
           </h3>
-          <p className="text-[10px] font-bold text-slate-400 mt-1 uppercase tracking-tighter">Performance by {viewType}</p>
+          <p className="text-[10px] font-bold text-slate-400 mt-1 uppercase tracking-tighter">
+            Performance by {viewType}
+          </p>
         </div>
 
         <div className="flex bg-slate-100 p-1 rounded-2xl border border-slate-200 shadow-inner">
@@ -259,9 +297,23 @@ const LoadingChart = ({ apiUrl, chartType = "line", data: externalData }) => {
         {!data.length ? (
           <div className="h-full flex flex-col items-center justify-center text-slate-300 gap-4">
             <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center">
-               <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+              <svg
+                className="w-8 h-8"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                ></path>
+              </svg>
             </div>
-            <p className="text-xs font-bold uppercase tracking-widest">No loading data for this period</p>
+            <p className="text-xs font-bold uppercase tracking-widest">
+              No loading data for this period
+            </p>
           </div>
         ) : (
           <ResponsiveContainer width="100%" height="100%">

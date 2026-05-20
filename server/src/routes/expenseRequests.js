@@ -9,12 +9,16 @@ const router = express.Router();
 
 router.get("/employees", authJwt, adminOnly, async (req, res) => {
   try {
-    const employeeIds = await ExpenseRequest.distinct("employee", { employeeModel: "Employee" });
-    const adminIds = await ExpenseRequest.distinct("employee", { employeeModel: "User" });
+    const employeeIds = await ExpenseRequest.distinct("employee", {
+      employeeModel: "Employee",
+    });
+    const adminIds = await ExpenseRequest.distinct("employee", {
+      employeeModel: "User",
+    });
 
     const [employees, admins] = await Promise.all([
       Employee.find({ _id: { $in: employeeIds } }, "name email"),
-      User.find({ _id: { $in: adminIds } }, "name email")
+      User.find({ _id: { $in: adminIds } }, "name email"),
     ]);
 
     const combined = [...employees, ...admins];
@@ -26,7 +30,14 @@ router.get("/employees", authJwt, adminOnly, async (req, res) => {
 
 router.get("/", authJwt, employeeOrAdmin, async (req, res) => {
   try {
-    const { page = 1, limit = 10, employeeId, startDate, endDate, status } = req.query;
+    const {
+      page = 1,
+      limit = 10,
+      employeeId,
+      startDate,
+      endDate,
+      status,
+    } = req.query;
     let query = {};
     if (req.user.role !== "Admin") {
       query.employee = req.user.sub;
@@ -59,7 +70,7 @@ router.get("/", authJwt, employeeOrAdmin, async (req, res) => {
       requests,
       total,
       page: parseInt(page),
-      pages: Math.ceil(total / parseInt(limit))
+      pages: Math.ceil(total / parseInt(limit)),
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -76,14 +87,16 @@ router.post("/", authJwt, employeeOrAdmin, async (req, res) => {
     if (!items || !Array.isArray(items) || items.length === 0) {
       const { category, amount, description } = req.body;
       if (!category || !amount) {
-        return res.status(400).json({ message: "Category and amount are required" });
+        return res
+          .status(400)
+          .json({ message: "Category and amount are required" });
       }
       const request = await ExpenseRequest.create({
         category,
         amount,
         description,
         employee: userId,
-        employeeModel
+        employeeModel,
       });
       return res.status(201).json(request);
     }
@@ -96,9 +109,9 @@ router.post("/", authJwt, employeeOrAdmin, async (req, res) => {
         return await ExpenseRequest.create({
           ...item,
           employee: userId,
-          employeeModel
+          employeeModel,
         });
-      })
+      }),
     );
 
     res.status(201).json(createdRequests);

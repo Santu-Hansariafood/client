@@ -70,39 +70,40 @@ const WeatherWidget = () => {
     }
   }, []);
 
-  // Always detect and watch current location
   useEffect(() => {
     let watchId;
 
     const handleSuccess = (pos) => {
       const { latitude, longitude } = pos.coords;
-      
-      // Only update if coords changed significantly or if we don't have coords yet
-      if (!coords || 
-          Math.abs(coords.lat - latitude) > 0.01 || 
-          Math.abs(coords.lon - longitude) > 0.01) {
+
+      if (
+        !coords ||
+        Math.abs(coords.lat - latitude) > 0.01 ||
+        Math.abs(coords.lon - longitude) > 0.01
+      ) {
         setCoords({ lat: latitude, lon: longitude });
         fetchWeather(latitude, longitude);
       }
     };
 
     const handleError = () => {
-      // Default to New Delhi if location access denied
       if (!coords) {
         fetchWeather(28.6139, 77.209);
       }
     };
 
     if (navigator.geolocation) {
-      // Initial fetch
       navigator.geolocation.getCurrentPosition(handleSuccess, handleError);
-      
-      // Background watching for location changes
-      watchId = navigator.geolocation.watchPosition(handleSuccess, handleError, {
-        enableHighAccuracy: false,
-        timeout: 10000,
-        maximumAge: 30000,
-      });
+
+      watchId = navigator.geolocation.watchPosition(
+        handleSuccess,
+        handleError,
+        {
+          enableHighAccuracy: false,
+          timeout: 10000,
+          maximumAge: 30000,
+        },
+      );
     } else {
       fetchWeather(28.6139, 77.209);
     }
@@ -112,7 +113,6 @@ const WeatherWidget = () => {
     };
   }, [fetchWeather, coords]);
 
-  // Refresh weather when modal is opened to ensure intelligence
   useEffect(() => {
     if (isWeatherModalOpen && coords) {
       fetchWeather(coords.lat, coords.lon);

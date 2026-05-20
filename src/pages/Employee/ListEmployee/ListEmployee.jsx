@@ -37,9 +37,6 @@ const ListEmployee = () => {
         },
       });
       const { data, total } = response.data;
-      // In case the GET /employees doesn't include allowedPermissions, 
-      // we might need to fetch full details or ensure the API returns it.
-      // Looking at employees.js, it selects only specific fields.
       setEmployees(data);
       setFilteredEmployees(data);
       setTotalItems(total);

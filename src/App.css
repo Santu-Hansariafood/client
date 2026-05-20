@@ -24,7 +24,6 @@
   animation: spin-counter 1.5s linear infinite;
 }
 
-/* CSS to hide increment and decrement buttons */
 input[type="number"]::-webkit-inner-spin-button,
 input[type="number"]::-webkit-outer-spin-button {
   -webkit-appearance: none;
@@ -43,7 +42,6 @@ input[type="number"] {
   display: none;
 }
 
-/* Premium Toast Styles */
 .premium-toast-container {
   background: rgba(255, 255, 255, 0.8) !important;
   backdrop-filter: blur(12px) saturate(180%) !important;
@@ -72,7 +70,6 @@ input[type="number"] {
   color: #1e293b !important;
 }
 
-/* For mobile centered toasts */
 @media (max-width: 640px) {
   .premium-toast-container {
     margin: 12px !important;
@@ -80,7 +77,6 @@ input[type="number"] {
   }
 }
 
-/* Security Protection Styles */
 .security-overlay {
   position: fixed;
   top: 0;

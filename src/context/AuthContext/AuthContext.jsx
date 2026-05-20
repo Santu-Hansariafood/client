@@ -30,7 +30,6 @@ export const AuthProvider = ({ children }) => {
       const stored = localStorage.getItem("user");
       if (stored) {
         const parsed = JSON.parse(stored);
-        // Ensure allowedPermissions exists
         if (parsed && parsed.role === "Employee" && !parsed.allowedPermissions) {
           parsed.allowedPermissions = [];
         }

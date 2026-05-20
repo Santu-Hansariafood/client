@@ -79,7 +79,6 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
           flex flex-col shrink-0
         `}
       >
-        {/* Premium ambient light effect */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
           <div className="absolute -top-40 -left-40 w-96 h-96 bg-emerald-500/10 rounded-full blur-[120px]" />
           <div className="absolute bottom-0 right-0 w-64 h-64 bg-blue-500/5 rounded-full blur-[100px]" />
@@ -138,14 +137,11 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
           {dashboardData.sections
             .map((section) => {
               const filteredActions = section.actions.filter((action) => {
-                // Always allow dashboard for everyone
                 if (action.link === "/dashboard" || action.link === "/employee/dashboard") {
                   return true;
                 }
 
-                // 1. Check if user has specific assigned permissions (for Employees)
                 if (userRole === "Employee" && user?.allowedPermissions && user.allowedPermissions.length > 0) {
-                  // Check if the link is explicitly allowed
                   return user.allowedPermissions.some(p => {
                     const normalizedP = p.startsWith("/") ? p : `/${p}`;
                     const normalizedLink = action.link.startsWith("/") ? action.link : `/${action.link}`;
@@ -153,7 +149,6 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
                   });
                 }
 
-                // 2. Fallback to default role-based filtering
                 if (!action.roles) return true;
                 return action.roles.includes(userRole);
               });
@@ -226,7 +221,6 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
                       `}
                     >
                       <div className="pl-12 pr-1 py-1 space-y-2.5 relative">
-                        {/* Elegant vertical rail */}
                         <div className="absolute left-[26px] top-0 bottom-8 w-[2px] bg-gradient-to-b from-white/20 via-white/5 to-transparent rounded-full" />
 
                         {section.actions.map((action, idx) => {

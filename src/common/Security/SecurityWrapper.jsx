@@ -23,20 +23,16 @@ const SecurityWrapper = ({ children }) => {
     };
 
     const handleKeyDown = (e) => {
-      // Prevent PrintScreen, Cmd+Shift+3, Cmd+Shift+4, etc.
-      // Note: PrintScreen is hard to catch in all browsers, but blur handles it well
       if (e.key === "PrintScreen" || (e.metaKey && e.shiftKey && (e.key === "3" || e.key === "4"))) {
         setIsProtected(true);
         setTimeout(() => setIsProtected(false), 2000);
       }
     };
 
-    // Add listeners for non-admin users
     window.addEventListener("blur", handleBlur);
     window.addEventListener("focus", handleFocus);
     window.addEventListener("keydown", handleKeyDown);
     
-    // Initial state for print protection
     document.body.classList.add("protection-active");
 
     return () => {

@@ -29,14 +29,29 @@ const DataDropdown = ({
     });
 
   const selectedValue = isMulti
-    ? (Array.isArray(selectedOptions) 
-        ? selectedOptions.map(so => formattedOptions.find(fo => fo.value === (so?.value ?? so))).filter(Boolean)
-        : [selectedOptions].filter(Boolean).map(so => formattedOptions.find(fo => fo.value === (so?.value ?? so))).filter(Boolean))
-    : (Array.isArray(selectedOptions) 
-        ? formattedOptions.find(fo => fo.value === (selectedOptions[0]?.value ?? selectedOptions[0]))
-        : (typeof selectedOptions === 'string' || typeof selectedOptions === 'number'
-            ? formattedOptions.find(fo => fo.value === selectedOptions)
-            : formattedOptions.find(fo => fo.value === (selectedOptions?.value ?? selectedOptions))));
+    ? Array.isArray(selectedOptions)
+      ? selectedOptions
+          .map((so) =>
+            formattedOptions.find((fo) => fo.value === (so?.value ?? so)),
+          )
+          .filter(Boolean)
+      : [selectedOptions]
+          .filter(Boolean)
+          .map((so) =>
+            formattedOptions.find((fo) => fo.value === (so?.value ?? so)),
+          )
+          .filter(Boolean)
+    : Array.isArray(selectedOptions)
+      ? formattedOptions.find(
+          (fo) =>
+            fo.value === (selectedOptions[0]?.value ?? selectedOptions[0]),
+        )
+      : typeof selectedOptions === "string" ||
+          typeof selectedOptions === "number"
+        ? formattedOptions.find((fo) => fo.value === selectedOptions)
+        : formattedOptions.find(
+            (fo) => fo.value === (selectedOptions?.value ?? selectedOptions),
+          );
 
   return (
     <div className="mb-5 w-full">
@@ -59,7 +74,9 @@ const DataDropdown = ({
           isSearchable
           className="react-select-container"
           classNamePrefix="react-select"
-          menuPortalTarget={typeof document !== "undefined" ? document.body : null}
+          menuPortalTarget={
+            typeof document !== "undefined" ? document.body : null
+          }
           theme={(theme) => ({
             ...theme,
             colors: {

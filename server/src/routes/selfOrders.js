@@ -239,18 +239,27 @@ router.get("/seller/stats", async (req, res) => {
         },
       },
       { $unwind: { path: "$sellerInfo", preserveNullAndEmptyArrays: true } },
-      { $unwind: { path: "$loadingEntries", preserveNullAndEmptyArrays: false } },
+      {
+        $unwind: { path: "$loadingEntries", preserveNullAndEmptyArrays: false },
+      },
       {
         $addFields: {
           sellerRate: {
             $let: {
               vars: {
-                saudaRate: { $ifNull: ["$buyerBrokerage.brokerageSupplier", 0] },
+                saudaRate: {
+                  $ifNull: ["$buyerBrokerage.brokerageSupplier", 0],
+                },
                 sellerCommodity: {
                   $filter: {
                     input: { $ifNull: ["$sellerInfo.commodities", []] },
                     as: "c",
-                    cond: { $eq: [{ $toLower: "$$c.name" }, { $toLower: "$commodity" }] },
+                    cond: {
+                      $eq: [
+                        { $toLower: "$$c.name" },
+                        { $toLower: "$commodity" },
+                      ],
+                    },
                   },
                 },
               },
@@ -258,7 +267,12 @@ router.get("/seller/stats", async (req, res) => {
                 $cond: {
                   if: { $gt: ["$$saudaRate", 0] },
                   then: "$$saudaRate",
-                  else: { $ifNull: [{ $arrayElemAt: ["$$sellerCommodity.brokerage", 0] }, 0] },
+                  else: {
+                    $ifNull: [
+                      { $arrayElemAt: ["$$sellerCommodity.brokerage", 0] },
+                      0,
+                    ],
+                  },
                 },
               },
             },
@@ -288,7 +302,9 @@ router.get("/seller/stats", async (req, res) => {
               $group: {
                 _id: null,
                 totalBrokerage: { $sum: "$calculatedBrokerage" },
-                totalUnloadingWeight: { $sum: "$loadingEntries.unloadingWeight" },
+                totalUnloadingWeight: {
+                  $sum: "$loadingEntries.unloadingWeight",
+                },
                 totalSaudas: { $addToSet: "$_id" },
               },
             },
@@ -372,7 +388,9 @@ router.get("/buyer/stats", async (req, res) => {
           as: "loadingEntries",
         },
       },
-      { $unwind: { path: "$loadingEntries", preserveNullAndEmptyArrays: true } },
+      {
+        $unwind: { path: "$loadingEntries", preserveNullAndEmptyArrays: true },
+      },
       {
         $addFields: {
           buyerRate: { $ifNull: ["$buyerBrokerage.brokerageBuyer", 0] },
@@ -395,11 +413,13 @@ router.get("/buyer/stats", async (req, res) => {
               $group: {
                 _id: null,
                 totalBrokerage: { $sum: "$calculatedBrokerage" },
-                totalUnloadingWeight: { $sum: "$loadingEntries.unloadingWeight" },
+                totalUnloadingWeight: {
+                  $sum: "$loadingEntries.unloadingWeight",
+                },
                 totalSaudas: { $addToSet: "$_id" },
                 pendingSaudas: {
-                  $sum: { $cond: [{ $eq: ["$status", "active"] }, 1, 0] }
-                }
+                  $sum: { $cond: [{ $eq: ["$status", "active"] }, 1, 0] },
+                },
               },
             },
             {
@@ -407,7 +427,7 @@ router.get("/buyer/stats", async (req, res) => {
                 totalBrokerage: 1,
                 totalUnloadingWeight: 1,
                 totalSaudas: { $size: "$totalSaudas" },
-                pendingSaudas: 1
+                pendingSaudas: 1,
               },
             },
           ],
@@ -417,7 +437,11 @@ router.get("/buyer/stats", async (req, res) => {
                 _id: "$commodity",
                 quantity: { $sum: "$loadingEntries.unloadingWeight" },
                 brokerage: { $sum: "$calculatedBrokerage" },
-                trips: { $sum: { $cond: [{ $ifNull: ["$loadingEntries._id", false] }, 1, 0] } },
+                trips: {
+                  $sum: {
+                    $cond: [{ $ifNull: ["$loadingEntries._id", false] }, 1, 0],
+                  },
+                },
               },
             },
             { $sort: { quantity: -1 } },
@@ -428,7 +452,11 @@ router.get("/buyer/stats", async (req, res) => {
                 _id: "$buyerCompany",
                 quantity: { $sum: "$loadingEntries.unloadingWeight" },
                 brokerage: { $sum: "$calculatedBrokerage" },
-                trips: { $sum: { $cond: [{ $ifNull: ["$loadingEntries._id", false] }, 1, 0] } },
+                trips: {
+                  $sum: {
+                    $cond: [{ $ifNull: ["$loadingEntries._id", false] }, 1, 0],
+                  },
+                },
               },
             },
             { $sort: { brokerage: -1 } },
@@ -527,12 +555,19 @@ router.get("/pending/summary", async (req, res) => {
           sellerRate: {
             $let: {
               vars: {
-                saudaRate: { $ifNull: ["$buyerBrokerage.brokerageSupplier", 0] },
+                saudaRate: {
+                  $ifNull: ["$buyerBrokerage.brokerageSupplier", 0],
+                },
                 sellerCommodity: {
                   $filter: {
                     input: { $ifNull: ["$sellerDetails.commodities", []] },
                     as: "c",
-                    cond: { $eq: [{ $toLower: "$$c.name" }, { $toLower: "$commodity" }] },
+                    cond: {
+                      $eq: [
+                        { $toLower: "$$c.name" },
+                        { $toLower: "$commodity" },
+                      ],
+                    },
                   },
                 },
               },
@@ -540,7 +575,12 @@ router.get("/pending/summary", async (req, res) => {
                 $cond: {
                   if: { $gt: ["$$saudaRate", 0] },
                   then: "$$saudaRate",
-                  else: { $ifNull: [{ $arrayElemAt: ["$$sellerCommodity.brokerage", 0] }, 0] },
+                  else: {
+                    $ifNull: [
+                      { $arrayElemAt: ["$$sellerCommodity.brokerage", 0] },
+                      0,
+                    ],
+                  },
                 },
               },
             },

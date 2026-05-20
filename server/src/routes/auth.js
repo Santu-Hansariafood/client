@@ -122,15 +122,17 @@ router.post("/forgot-password", async (req, res) => {
       await transporter.sendMail(mailOptions);
     } catch (mailError) {
       console.error("Error sending OTP email:", mailError);
-      return res.status(500).json({ 
+      return res.status(500).json({
         message: "Failed to send OTP email.",
-        details: mailError.message 
+        details: mailError.message,
       });
     }
     res.json({ message: "OTP sent to your registered email address" });
   } catch (error) {
     console.error("Forgot password error:", error);
-    res.status(500).json({ message: "Internal server error", details: error.message });
+    res
+      .status(500)
+      .json({ message: "Internal server error", details: error.message });
   }
 });
 

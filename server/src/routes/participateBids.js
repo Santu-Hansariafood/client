@@ -98,11 +98,9 @@ router.post("/", async (req, res) => {
     }
 
     if (bid.status === "closed") {
-      return res
-        .status(403)
-        .json({
-          message: "This bid is closed and no longer accepting participations.",
-        });
+      return res.status(403).json({
+        message: "This bid is closed and no longer accepting participations.",
+      });
     }
 
     const seller = await Seller.findOne({
@@ -119,11 +117,9 @@ router.post("/", async (req, res) => {
       resolvedCompany = String(sellerCompanies[0] || "").trim();
     } else if (sellerCompanies.length > 1) {
       if (!providedCompany) {
-        return res
-          .status(400)
-          .json({
-            message: "Please select your company before participating.",
-          });
+        return res.status(400).json({
+          message: "Please select your company before participating.",
+        });
       }
       const match = sellerCompanies.find(
         (c) =>
@@ -306,7 +302,7 @@ router.patch("/:id/status", async (req, res) => {
       await Promise.all(notifications);
     } else if (status === "rejected") {
       const sellerMsg = `Bid rejected • ${bidCommodity} (${bidOrigin} → ${bidConsignee}) • Group: ${bidGroup} • Company: ${companyLabel} • Participation: ${participation._id}${adminNotes ? ` • Notes: ${adminNotes}` : ""}`;
-      
+
       const notifyBuyerMobile = bid?.createdByMobile || null;
       const buyerMsg = `Participation rejected • Seller: ${participation.mobile} • ${bidCommodity} (${bidOrigin} → ${bidConsignee}) • Group: ${bidGroup} • Company: ${companyLabel}${adminNotes ? ` • Notes: ${adminNotes}` : ""}`;
 

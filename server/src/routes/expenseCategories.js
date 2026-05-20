@@ -24,7 +24,9 @@ router.post("/", authJwt, adminOnly, async (req, res) => {
   }
 
   try {
-    const categoryExists = await ExpenseCategory.findOne({ name: { $regex: new RegExp(`^${escapeRegex(name)}$`, 'i') } });
+    const categoryExists = await ExpenseCategory.findOne({
+      name: { $regex: new RegExp(`^${escapeRegex(name)}$`, "i") },
+    });
     if (categoryExists) {
       return res.status(400).json({ message: "Category already exists" });
     }

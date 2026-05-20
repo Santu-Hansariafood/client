@@ -8,7 +8,7 @@ import Loading from "../../common/Loading/Loading";
 import AdminPageShell from "../../common/AdminPageShell/AdminPageShell";
 import { FaGavel, FaArrowLeft } from "react-icons/fa";
 
-import WhatsAppNotification from "../WhatsAppNotification/WhatsAppNotification"
+import WhatsAppNotification from "../WhatsAppNotification/WhatsAppNotification";
 
 import { useAuth } from "../../context/AuthContext/AuthContext";
 
@@ -53,16 +53,20 @@ const BaseBid = ({ type }) => {
         userRole === "Buyer" ? fetchAllPages("/buyers") : Promise.resolve([]),
       ]);
 
-      const buyer = userRole === "Buyer" 
-        ? buyers.find(b => b.mobile?.some(m => String(m) === String(mobile)))
-        : null;
+      const buyer =
+        userRole === "Buyer"
+          ? buyers.find((b) =>
+              b.mobile?.some((m) => String(m) === String(mobile)),
+            )
+          : null;
 
       const formatName = (name) => {
         if (!name) return "";
         return name
           .split(" ")
           .map(
-            (word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+            (word) =>
+              word.charAt(0).toUpperCase() + word.slice(1).toLowerCase(),
           )
           .join(" ");
       };
@@ -106,7 +110,7 @@ const BaseBid = ({ type }) => {
       });
 
       const sortedGroupOptions = Array.from(groupMap.values()).sort((a, b) =>
-        a.label.localeCompare(b.label)
+        a.label.localeCompare(b.label),
       );
 
       setState((prev) => ({
@@ -122,22 +126,23 @@ const BaseBid = ({ type }) => {
 
       if (userRole === "Buyer" && sortedGroupOptions.length > 0) {
         const group = sortedGroupOptions[0];
-        setState(prev => ({
+        setState((prev) => ({
           ...prev,
           selectedGroup: group,
-          consigneeOptions: group.consignees
-            .map((c) => ({ value: c, label: c }))
-            .sort((a, b) => a.label.localeCompare(b.label)) || [],
-          commodityOptions: group.commodities
-            .map((c) => ({
-              value: c.name,
-              label: c.name,
-              parameters: c.parameters,
-            }))
-            .sort((a, b) => a.label.localeCompare(b.label)) || [],
+          consigneeOptions:
+            group.consignees
+              .map((c) => ({ value: c, label: c }))
+              .sort((a, b) => a.label.localeCompare(b.label)) || [],
+          commodityOptions:
+            group.commodities
+              .map((c) => ({
+                value: c.name,
+                label: c.name,
+                parameters: c.parameters,
+              }))
+              .sort((a, b) => a.label.localeCompare(b.label)) || [],
         }));
       }
-
     } catch (error) {
       toast.error("Failed to fetch data. Please try again later.");
       console.error(error);
@@ -154,7 +159,7 @@ const BaseBid = ({ type }) => {
 
   const handleGroupChange = (selectedGroup) => {
     const group = state.groupOptions.find(
-      (g) => g.value === selectedGroup.value
+      (g) => g.value === selectedGroup.value,
     );
 
     setState((prev) => ({
@@ -193,7 +198,7 @@ const BaseBid = ({ type }) => {
     }
 
     const commodity = state.commodityOptions.find(
-      (c) => c.value === selectedCommodity.value
+      (c) => c.value === selectedCommodity.value,
     );
 
     if (!commodity || !commodity.parameters) {
@@ -239,7 +244,7 @@ const BaseBid = ({ type }) => {
         notes: state.notes,
         quantity: state.quantity,
         rate: state.rate,
-        bidDate: new Date(state.bidDate).toISOString().split('T')[0],
+        bidDate: new Date(state.bidDate).toISOString().split("T")[0],
         startTime: state.startTime,
         endTime: state.endTime,
         paymentTerms: state.paymentTerms,
@@ -293,7 +298,7 @@ const BaseBid = ({ type }) => {
       });
     } catch (error) {
       toast.error(
-        "Failed to submit bid or send notifications. Please try again."
+        "Failed to submit bid or send notifications. Please try again.",
       );
       console.error("Error:", error);
     } finally {
@@ -309,7 +314,10 @@ const BaseBid = ({ type }) => {
         icon={FaGavel}
         noContentCard
         extraHeaderContent={
-          <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-800">
+          <button
+            onClick={() => navigate(-1)}
+            className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-800"
+          >
             <FaArrowLeft />
             Back
           </button>

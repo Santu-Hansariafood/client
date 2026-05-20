@@ -26,7 +26,10 @@ const Header = ({
         setProfileDropdownOpen(false);
       }
 
-      if (notificationRef.current && !notificationRef.current.contains(e.target)) {
+      if (
+        notificationRef.current &&
+        !notificationRef.current.contains(e.target)
+      ) {
         setShowNotifications(false);
       }
     };
@@ -44,8 +47,7 @@ const Header = ({
     <>
       <header className="sticky top-0 z-40 border-b border-white/10 bg-gradient-to-r from-emerald-900 via-emerald-800 to-emerald-900 backdrop-blur-xl shadow-lg">
         <div className="flex items-center justify-between px-3 sm:px-5 lg:px-6 h-16 sm:h-[72px]">
-          
-          <HeaderBranding 
+          <HeaderBranding
             showMenuButton={showMenuButton}
             onMenuClick={onMenuClick}
             isSidebarOpen={isSidebarOpen}
@@ -58,14 +60,14 @@ const Header = ({
               <PWAInstall />
             </div>
 
-            <NotificationDropdown 
+            <NotificationDropdown
               notificationRef={notificationRef}
               showNotifications={showNotifications}
               setShowNotifications={setShowNotifications}
               setProfileDropdownOpen={setProfileDropdownOpen}
             />
 
-            <ProfileDropdown 
+            <ProfileDropdown
               dropdownRef={dropdownRef}
               isProfileDropdownOpen={isProfileDropdownOpen}
               setProfileDropdownOpen={setProfileDropdownOpen}

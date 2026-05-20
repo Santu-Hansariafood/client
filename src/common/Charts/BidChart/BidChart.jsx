@@ -16,7 +16,15 @@ import {
 } from "recharts";
 import api from "../../../utils/apiClient/apiClient";
 
-const COLORS = ["#f59e0b", "#3b82f6", "#10b981", "#ef4444", "#8b5cf6", "#ec4899", "#06b6d4"];
+const COLORS = [
+  "#f59e0b",
+  "#3b82f6",
+  "#10b981",
+  "#ef4444",
+  "#8b5cf6",
+  "#ec4899",
+  "#06b6d4",
+];
 
 const CustomTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
@@ -30,9 +38,11 @@ const CustomTooltip = ({ active, payload, label }) => {
         <div className="space-y-2">
           <p className="text-sm font-black text-slate-800 flex items-center justify-between gap-4">
             <span className="flex items-center gap-2">
-              <span 
-                className="w-2.5 h-2.5 rounded-full shadow-sm" 
-                style={{ backgroundColor: isPie ? payload[0].payload.fill : "#f59e0b" }}
+              <span
+                className="w-2.5 h-2.5 rounded-full shadow-sm"
+                style={{
+                  backgroundColor: isPie ? payload[0].payload.fill : "#f59e0b",
+                }}
               ></span>
               <span className="text-slate-600">Total:</span>
             </span>
@@ -95,14 +105,21 @@ const BidChart = ({ apiUrl, chartType = "line", data: externalData }) => {
             const diff = today - date;
             const daysDiff = Math.floor(diff / (1000 * 60 * 60 * 24));
             if (daysDiff >= 0 && daysDiff < 7) {
-              key = date.toLocaleDateString("en-IN", { weekday: "short", day: "numeric", month: "short" });
+              key = date.toLocaleDateString("en-IN", {
+                weekday: "short",
+                day: "numeric",
+                month: "short",
+              });
               sortKey = date.getTime();
             }
           } else if (viewType === "monthly") {
             const diff = today - date;
             const daysDiff = Math.floor(diff / (1000 * 60 * 60 * 24));
             if (daysDiff >= 0 && daysDiff < 30) {
-              key = date.toLocaleDateString("en-IN", { day: "2-digit", month: "short" });
+              key = date.toLocaleDateString("en-IN", {
+                day: "2-digit",
+                month: "short",
+              });
               sortKey = date.getTime();
             }
           } else if (viewType === "quarterly") {
@@ -114,8 +131,15 @@ const BidChart = ({ apiUrl, chartType = "line", data: externalData }) => {
               sortKey = date.getTime();
             }
           } else if (viewType === "yearly") {
-            key = date.toLocaleDateString("en-IN", { month: "long", year: "numeric" });
-            sortKey = new Date(date.getFullYear(), date.getMonth(), 1).getTime();
+            key = date.toLocaleDateString("en-IN", {
+              month: "long",
+              year: "numeric",
+            });
+            sortKey = new Date(
+              date.getFullYear(),
+              date.getMonth(),
+              1,
+            ).getTime();
           }
 
           if (key) {
@@ -130,7 +154,7 @@ const BidChart = ({ apiUrl, chartType = "line", data: externalData }) => {
           .map(([date, stat]) => ({
             date,
             count: stat.count,
-            sortKey: stat.sortKey
+            sortKey: stat.sortKey,
           }))
           .sort((a, b) => a.sortKey - b.sortKey);
 
@@ -155,13 +179,17 @@ const BidChart = ({ apiUrl, chartType = "line", data: externalData }) => {
       .sort((a, b) => b.value - a.value);
   }, [rawData]);
 
-  const data = useMemo(() => externalData || internalData, [externalData, internalData]);
-
-  if (loading) return (
-    <div className="h-[350px] flex items-center justify-center">
-      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-600"></div>
-    </div>
+  const data = useMemo(
+    () => externalData || internalData,
+    [externalData, internalData],
   );
+
+  if (loading)
+    return (
+      <div className="h-[350px] flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-600"></div>
+      </div>
+    );
 
   const renderChart = () => {
     if (chartType === "pie") {
@@ -190,16 +218,23 @@ const BidChart = ({ apiUrl, chartType = "line", data: externalData }) => {
             filter="url(#pieShadow)"
           >
             {pieData.map((entry, index) => (
-              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+              <Cell
+                key={`cell-${index}`}
+                fill={COLORS[index % COLORS.length]}
+              />
             ))}
           </Pie>
           <Tooltip content={<CustomTooltip />} />
-          <Legend 
-            verticalAlign="bottom" 
-            align="center" 
+          <Legend
+            verticalAlign="bottom"
+            align="center"
             iconType="circle"
-            formatter={(value) => <span className="text-[10px] font-black text-slate-600 uppercase tracking-widest">{value}</span>}
-            wrapperStyle={{ paddingTop: '20px' }}
+            formatter={(value) => (
+              <span className="text-[10px] font-black text-slate-600 uppercase tracking-widest">
+                {value}
+              </span>
+            )}
+            wrapperStyle={{ paddingTop: "20px" }}
           />
         </PieChart>
       );
@@ -227,15 +262,29 @@ const BidChart = ({ apiUrl, chartType = "line", data: externalData }) => {
               <stop offset="100%" stopColor="#d97706" stopOpacity={1} />
             </linearGradient>
           </defs>
-          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-          <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fill: "#94a3b8", fontSize: 10, fontWeight: 600 }} dy={10} />
-          <YAxis axisLine={false} tickLine={false} tick={{ fill: "#94a3b8", fontSize: 10, fontWeight: 600 }} />
-          <Tooltip content={<CustomTooltip />} cursor={{ fill: '#f8fafc' }} />
-          <Bar 
-            dataKey="count" 
-            fill="url(#bidBarGradient)" 
-            radius={[6, 6, 0, 0]} 
-            barSize={viewType === 'weekly' ? 40 : 20} 
+          <CartesianGrid
+            strokeDasharray="3 3"
+            vertical={false}
+            stroke="#f1f5f9"
+          />
+          <XAxis
+            dataKey="date"
+            axisLine={false}
+            tickLine={false}
+            tick={{ fill: "#94a3b8", fontSize: 10, fontWeight: 600 }}
+            dy={10}
+          />
+          <YAxis
+            axisLine={false}
+            tickLine={false}
+            tick={{ fill: "#94a3b8", fontSize: 10, fontWeight: 600 }}
+          />
+          <Tooltip content={<CustomTooltip />} cursor={{ fill: "#f8fafc" }} />
+          <Bar
+            dataKey="count"
+            fill="url(#bidBarGradient)"
+            radius={[6, 6, 0, 0]}
+            barSize={viewType === "weekly" ? 40 : 20}
             filter="url(#bidBarShadow)"
           />
         </BarChart>
@@ -261,9 +310,23 @@ const BidChart = ({ apiUrl, chartType = "line", data: externalData }) => {
             </feMerge>
           </filter>
         </defs>
-        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-        <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fill: "#94a3b8", fontSize: 10, fontWeight: 600 }} dy={10} />
-        <YAxis axisLine={false} tickLine={false} tick={{ fill: "#94a3b8", fontSize: 10, fontWeight: 600 }} />
+        <CartesianGrid
+          strokeDasharray="3 3"
+          vertical={false}
+          stroke="#f1f5f9"
+        />
+        <XAxis
+          dataKey="date"
+          axisLine={false}
+          tickLine={false}
+          tick={{ fill: "#94a3b8", fontSize: 10, fontWeight: 600 }}
+          dy={10}
+        />
+        <YAxis
+          axisLine={false}
+          tickLine={false}
+          tick={{ fill: "#94a3b8", fontSize: 10, fontWeight: 600 }}
+        />
         <Tooltip content={<CustomTooltip />} />
         <Area
           type="monotone"
@@ -287,7 +350,9 @@ const BidChart = ({ apiUrl, chartType = "line", data: externalData }) => {
             <span className="w-2 h-4 bg-amber-600 rounded-full"></span>
             Bid Tracking
           </h3>
-          <p className="text-[10px] font-bold text-slate-400 mt-1 uppercase tracking-tighter">Bidding activity by {viewType}</p>
+          <p className="text-[10px] font-bold text-slate-400 mt-1 uppercase tracking-tighter">
+            Bidding activity by {viewType}
+          </p>
         </div>
 
         {chartType !== "pie" && (
@@ -313,9 +378,29 @@ const BidChart = ({ apiUrl, chartType = "line", data: externalData }) => {
         {!data.length ? (
           <div className="h-full flex flex-col items-center justify-center text-slate-300 gap-4">
             <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center">
-               <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20.488 9H15V1.512A9.025 9.001 0 0120.488 9z"></path></svg>
+              <svg
+                className="w-8 h-8"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"
+                ></path>
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M20.488 9H15V1.512A9.025 9.001 0 0120.488 9z"
+                ></path>
+              </svg>
             </div>
-            <p className="text-xs font-bold uppercase tracking-widest">No bid data for this period</p>
+            <p className="text-xs font-bold uppercase tracking-widest">
+              No bid data for this period
+            </p>
           </div>
         ) : (
           <ResponsiveContainer width="100%" height="100%">

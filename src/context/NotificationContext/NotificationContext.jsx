@@ -172,13 +172,15 @@ export const NotificationProvider = ({ children }) => {
     try {
       const response = await api.patch(`/notifications/${id}/toggle-read`);
       const updatedNotification = response.data;
-      
+
       setNotifications((prev) =>
-        prev.map((n) => (n._id === id ? { ...n, isRead: updatedNotification.isRead } : n)),
+        prev.map((n) =>
+          n._id === id ? { ...n, isRead: updatedNotification.isRead } : n,
+        ),
       );
-      
-      setUnreadCount((prev) => 
-        updatedNotification.isRead ? Math.max(0, prev - 1) : prev + 1
+
+      setUnreadCount((prev) =>
+        updatedNotification.isRead ? Math.max(0, prev - 1) : prev + 1,
       );
     } catch (error) {
       console.error("Failed to toggle read status", error);
@@ -187,7 +189,7 @@ export const NotificationProvider = ({ children }) => {
 
   const markAsRead = async (id) => {
     try {
-      const notification = notifications.find(n => n._id === id);
+      const notification = notifications.find((n) => n._id === id);
       if (notification && notification.isRead) return;
 
       await api.patch(`/notifications/${id}/read`);

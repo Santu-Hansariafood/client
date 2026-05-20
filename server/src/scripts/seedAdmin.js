@@ -20,13 +20,13 @@ const run = async () => {
     const result = await User.findOneAndUpdate(
       { role, mobile },
       { role, mobile, password, name },
-      { upsert: true, new: true, setDefaultsOnInsert: true }
+      { upsert: true, new: true, setDefaultsOnInsert: true },
     );
 
     console.log("Admin user upserted:", {
       id: result._id.toString(),
       role: result.role,
-      mobile: result.mobile
+      mobile: result.mobile,
     });
   } catch (err) {
     console.error("Failed to seed admin user:", err.message);

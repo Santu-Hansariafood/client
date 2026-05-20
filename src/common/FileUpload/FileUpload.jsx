@@ -1,13 +1,26 @@
 import { useState, useCallback, useRef } from "react";
 import PropTypes from "prop-types";
 import Cropper from "react-easy-crop";
-import { MdCheckCircle, MdCancel, MdDelete, MdEdit, MdZoomIn, MdZoomOut } from "react-icons/md";
+import {
+  MdCheckCircle,
+  MdCancel,
+  MdDelete,
+  MdEdit,
+  MdZoomIn,
+  MdZoomOut,
+} from "react-icons/md";
 import apiClient from "../../utils/apiClient/apiClient";
 
 const A4_PORTRAIT_RATIO = 210 / 297;
 const A4_LANDSCAPE_RATIO = 297 / 210;
 
-const FileUpload = ({ label, accept, onFileChange, onFileRemove, currentUrl }) => {
+const FileUpload = ({
+  label,
+  accept,
+  onFileChange,
+  onFileRemove,
+  currentUrl,
+}) => {
   const [file, setFile] = useState(null);
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
@@ -89,15 +102,17 @@ const FileUpload = ({ label, accept, onFileChange, onFileRemove, currentUrl }) =
   };
 
   const toggleOrientation = () => {
-    setAspect(aspect === A4_PORTRAIT_RATIO ? A4_LANDSCAPE_RATIO : A4_PORTRAIT_RATIO);
+    setAspect(
+      aspect === A4_PORTRAIT_RATIO ? A4_LANDSCAPE_RATIO : A4_PORTRAIT_RATIO,
+    );
   };
 
   const handlePreviewZoomIn = () => {
-    setPreviewZoom(prev => Math.min(prev + 0.25, 3));
+    setPreviewZoom((prev) => Math.min(prev + 0.25, 3));
   };
 
   const handlePreviewZoomOut = () => {
-    setPreviewZoom(prev => Math.max(prev - 0.25, 0.5));
+    setPreviewZoom((prev) => Math.max(prev - 0.25, 0.5));
   };
 
   return (
@@ -109,9 +124,9 @@ const FileUpload = ({ label, accept, onFileChange, onFileRemove, currentUrl }) =
       {currentUrl && !showUploader && (
         <div className="mb-4">
           <div className="flex items-center justify-between mb-3">
-            <a 
-              href={currentUrl} 
-              target="_blank" 
+            <a
+              href={currentUrl}
+              target="_blank"
               rel="noopener noreferrer"
               className="text-sm text-blue-600 hover:text-blue-800 truncate"
             >
@@ -147,17 +162,17 @@ const FileUpload = ({ label, accept, onFileChange, onFileRemove, currentUrl }) =
               </button>
             </div>
           </div>
-          
+
           <div className="border border-gray-200 rounded-xl overflow-hidden bg-gray-50 p-4 flex justify-center">
             {currentUrl.match(/\.(jpg|jpeg|png|gif|webp)$/i) ? (
-              <img 
-                src={currentUrl} 
-                alt="Document preview" 
+              <img
+                src={currentUrl}
+                alt="Document preview"
                 className="max-w-full max-h-96 object-contain transition-transform duration-200"
                 style={{ transform: `scale(${previewZoom})` }}
               />
             ) : (
-              <iframe 
+              <iframe
                 src={currentUrl}
                 className="w-full h-96"
                 title="Document Preview"
@@ -175,7 +190,7 @@ const FileUpload = ({ label, accept, onFileChange, onFileRemove, currentUrl }) =
             onChange={handleFileChange}
             className="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white/70 shadow-sm transition-all duration-200 mb-4"
           />
-          
+
           {imageSrc && !isPdf && (
             <>
               <div className="relative w-full h-80 bg-gradient-to-br from-blue-100 to-blue-200 rounded-xl overflow-hidden shadow-inner border border-blue-100">
@@ -189,10 +204,12 @@ const FileUpload = ({ label, accept, onFileChange, onFileRemove, currentUrl }) =
                   onCropComplete={onCropComplete}
                 />
               </div>
-              
+
               <div className="flex flex-col md:flex-row justify-between items-center mt-4 gap-4">
                 <div className="flex items-center space-x-3 w-full md:w-auto">
-                  <label className="text-sm text-gray-700 font-medium">Zoom:</label>
+                  <label className="text-sm text-gray-700 font-medium">
+                    Zoom:
+                  </label>
                   <input
                     type="range"
                     min={0.5}
@@ -206,13 +223,14 @@ const FileUpload = ({ label, accept, onFileChange, onFileRemove, currentUrl }) =
                     {Math.round(zoom * 100)}%
                   </span>
                 </div>
-                
+
                 <div className="flex items-center space-x-2">
                   <button
                     onClick={toggleOrientation}
                     className="px-4 py-2 bg-blue-500 text-white rounded-lg text-sm font-semibold shadow hover:bg-blue-600 transition-all duration-150"
                   >
-                    {aspect === A4_PORTRAIT_RATIO ? "Landscape" : "Portrait"} (A4)
+                    {aspect === A4_PORTRAIT_RATIO ? "Landscape" : "Portrait"}{" "}
+                    (A4)
                   </button>
                   <button
                     onClick={() => setCrop({ x: 0, y: 0 })}
@@ -222,14 +240,15 @@ const FileUpload = ({ label, accept, onFileChange, onFileRemove, currentUrl }) =
                   </button>
                 </div>
               </div>
-              
+
               <div className="flex justify-end mt-6 space-x-4">
                 <button
                   onClick={handleUpload}
                   disabled={uploading}
                   className="flex items-center px-6 py-3 bg-green-500 text-white rounded-lg font-semibold shadow hover:bg-green-600 transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-green-400 disabled:opacity-50"
                 >
-                  <MdCheckCircle size={24} className="mr-2" /> {uploading ? "Uploading..." : "Save & Upload"}
+                  <MdCheckCircle size={24} className="mr-2" />{" "}
+                  {uploading ? "Uploading..." : "Save & Upload"}
                 </button>
                 <button
                   onClick={() => {
@@ -250,17 +269,20 @@ const FileUpload = ({ label, accept, onFileChange, onFileRemove, currentUrl }) =
               <div className="border border-gray-200 rounded-xl overflow-hidden bg-gray-50 p-4 mb-4">
                 <div className="text-center py-8">
                   <p className="text-gray-600 mb-2 font-medium">{fileName}</p>
-                  <p className="text-sm text-gray-500">PDF selected. Click Save & Upload to continue.</p>
+                  <p className="text-sm text-gray-500">
+                    PDF selected. Click Save & Upload to continue.
+                  </p>
                 </div>
               </div>
-              
+
               <div className="flex justify-end space-x-4">
                 <button
                   onClick={handleUpload}
                   disabled={uploading}
                   className="flex items-center px-6 py-3 bg-green-500 text-white rounded-lg font-semibold shadow hover:bg-green-600 transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-green-400 disabled:opacity-50"
                 >
-                  <MdCheckCircle size={24} className="mr-2" /> {uploading ? "Uploading..." : "Save & Upload"}
+                  <MdCheckCircle size={24} className="mr-2" />{" "}
+                  {uploading ? "Uploading..." : "Save & Upload"}
                 </button>
                 <button
                   onClick={() => {

@@ -61,7 +61,7 @@ router.get("/buyer-today", async (req, res) => {
     }
 
     const buyer = await Buyer.findOne({
-      "mobile": mobile,
+      mobile: mobile,
     }).lean();
     if (!buyer) {
       return res.status(404).json({ message: "Buyer not found" });
@@ -69,7 +69,7 @@ router.get("/buyer-today", async (req, res) => {
 
     const companyIds = Array.isArray(buyer.companyIds) ? buyer.companyIds : [];
     const companies = await Company.find({ _id: { $in: companyIds } }).lean();
-    const companyNames = companies.map(c => c.companyName);
+    const companyNames = companies.map((c) => c.companyName);
 
     let groupNames = [];
     if (buyer.groupId) {
@@ -79,10 +79,12 @@ router.get("/buyer-today", async (req, res) => {
       }
     }
 
-    const companyGroupIds = companies.map(c => c.groupId).filter(Boolean);
+    const companyGroupIds = companies.map((c) => c.groupId).filter(Boolean);
     if (companyGroupIds.length > 0) {
-      const companyGroups = await Group.find({ _id: { $in: companyGroupIds } }).lean();
-      companyGroups.forEach(g => {
+      const companyGroups = await Group.find({
+        _id: { $in: companyGroupIds },
+      }).lean();
+      companyGroups.forEach((g) => {
         if (!groupNames.includes(g.groupName)) {
           groupNames.push(g.groupName);
         }
@@ -120,7 +122,7 @@ router.get("/buyer-today", async (req, res) => {
 
     const bidIds = bids.map((b) => b._id);
 
-    const participations = bidIds.length 
+    const participations = bidIds.length
       ? await ParticipateBid.find({ bidId: { $in: bidIds } }).lean()
       : [];
 

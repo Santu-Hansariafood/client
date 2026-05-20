@@ -219,11 +219,38 @@ const BuyerProformaInvoicePDF = ({ entries = [], company = {} }) => {
 
   const numberToWords = (num) => {
     const a = [
-      "", "One ", "Two ", "Three ", "Four ", "Five ", "Six ", "Seven ", "Eight ", "Nine ", "Ten ",
-      "Eleven ", "Twelve ", "Thirteen ", "Fourteen ", "Fifteen ", "Sixteen ", "Seventeen ", "Eighteen ", "Nineteen ",
+      "",
+      "One ",
+      "Two ",
+      "Three ",
+      "Four ",
+      "Five ",
+      "Six ",
+      "Seven ",
+      "Eight ",
+      "Nine ",
+      "Ten ",
+      "Eleven ",
+      "Twelve ",
+      "Thirteen ",
+      "Fourteen ",
+      "Fifteen ",
+      "Sixteen ",
+      "Seventeen ",
+      "Eighteen ",
+      "Nineteen ",
     ];
     const b = [
-      "", "", "Twenty", "Thirty", "Forty", "Fifty", "Sixty", "Seventy", "Eighty", "Ninety",
+      "",
+      "",
+      "Twenty",
+      "Thirty",
+      "Forty",
+      "Fifty",
+      "Sixty",
+      "Seventy",
+      "Eighty",
+      "Ninety",
     ];
 
     const n = ("0000000" + Math.floor(num))
@@ -231,34 +258,45 @@ const BuyerProformaInvoicePDF = ({ entries = [], company = {} }) => {
       .match(/^(\d{2})(\d{2})(\d{2})(\d{1})$/);
     if (!n) return "";
     let str = "";
-    str += n[1] != 0 ? (a[Number(n[1])] || b[n[1][0]] + " " + a[n[1][1]]) + "Lakh " : "";
-    str += n[2] != 0 ? (a[Number(n[2])] || b[n[2][0]] + " " + a[n[2][1]]) + "Thousand " : "";
-    str += n[3] != 0 ? (a[Number(n[3])] || b[n[3][0]] + " " + a[n[3][1]]) + "Hundred " : "";
-    str += n[4] != 0 ? (str != "" ? "and " : "") + (a[Number(n[4])] || b[n[4][0]] + " " + a[n[4][1]]) : "";
+    str +=
+      n[1] != 0
+        ? (a[Number(n[1])] || b[n[1][0]] + " " + a[n[1][1]]) + "Lakh "
+        : "";
+    str +=
+      n[2] != 0
+        ? (a[Number(n[2])] || b[n[2][0]] + " " + a[n[2][1]]) + "Thousand "
+        : "";
+    str +=
+      n[3] != 0
+        ? (a[Number(n[3])] || b[n[3][0]] + " " + a[n[3][1]]) + "Hundred "
+        : "";
+    str +=
+      n[4] != 0
+        ? (str != "" ? "and " : "") +
+          (a[Number(n[4])] || b[n[4][0]] + " " + a[n[4][1]])
+        : "";
     return str + "Only";
   };
 
   return (
     <Document>
       <Page size="A4" style={styles.page}>
-        {/* HEADER */}
         <View style={styles.header}>
           <Image src={logo} style={styles.logo} />
           <View style={styles.companySection}>
-            <Text style={styles.companyName}>Hansaria Food Private Limited</Text>
+            <Text style={styles.companyName}>
+              Hansaria Food Private Limited
+            </Text>
             <Text style={styles.companyAddress}>
-              Address: Village- Bansirampur, Post- Galsi, Dist- Purba Bardhaman, WB - 713406{"\n"}
+              Address: Village- Bansirampur, Post- Galsi, Dist- Purba Bardhaman,
+              WB - 713406{"\n"}
               Email: info@hansariafood.com | Contact: +91 97321 72771
             </Text>
           </View>
         </View>
-
-        {/* TITLE */}
         <View style={styles.titleSection}>
           <Text style={styles.title}>Buyer Brokerage Report</Text>
         </View>
-
-        {/* INFO SECTION */}
         <View style={styles.infoWrapper}>
           <View style={styles.infoLeft}>
             <Text style={[styles.bold, { marginBottom: 3 }]}>Bill To:</Text>
@@ -277,8 +315,6 @@ const BuyerProformaInvoicePDF = ({ entries = [], company = {} }) => {
             </Text>
           </View>
         </View>
-
-        {/* TABLE */}
         <View style={styles.tableWrapper}>
           <View style={styles.tableHeader}>
             <View style={[styles.cell, { width: "10%" }]}>
@@ -304,60 +340,80 @@ const BuyerProformaInvoicePDF = ({ entries = [], company = {} }) => {
           {entries.map((entry, index) => (
             <View key={index} style={styles.row}>
               <View style={[styles.cell, { width: "10%" }]}>
-                <Text style={[styles.cellText, styles.center]}>{formatDate(entry.unloadingDate || entry.loadingDate)}</Text>
+                <Text style={[styles.cellText, styles.center]}>
+                  {formatDate(entry.unloadingDate || entry.loadingDate)}
+                </Text>
               </View>
               <View style={[styles.cell, { width: "15%" }]}>
-                <Text style={[styles.cellText, styles.center]}>{entry.saudaNo || "N/A"}</Text>
+                <Text style={[styles.cellText, styles.center]}>
+                  {entry.saudaNo || "N/A"}
+                </Text>
               </View>
               <View style={[styles.cell, { width: "15%" }]}>
-                <Text style={[styles.cellText, styles.center]}>{entry.lorryNumber || "N/A"}</Text>
+                <Text style={[styles.cellText, styles.center]}>
+                  {entry.lorryNumber || "N/A"}
+                </Text>
               </View>
               <View style={[styles.cell, { width: "20%" }]}>
                 <Text style={styles.cellText}>{entry.commodity || "N/A"}</Text>
               </View>
               <View style={[styles.cell, { width: "15%" }]}>
-                <Text style={[styles.cellText, styles.right]}>{Number(entry.unloadingWeight || 0).toFixed(2)} T</Text>
+                <Text style={[styles.cellText, styles.right]}>
+                  {Number(entry.unloadingWeight || 0).toFixed(2)} T
+                </Text>
               </View>
-              <View style={[styles.cell, { width: "25%", borderRightWidth: 0 }]}>
-                <Text style={[styles.cellText, styles.right]}>Rs. {Number(entry.buyerBrokerage || 0).toLocaleString("en-IN")}</Text>
+              <View
+                style={[styles.cell, { width: "25%", borderRightWidth: 0 }]}
+              >
+                <Text style={[styles.cellText, styles.right]}>
+                  Rs.{" "}
+                  {Number(entry.buyerBrokerage || 0).toLocaleString("en-IN")}
+                </Text>
               </View>
             </View>
           ))}
-
-          {/* TOTAL ROW */}
           <View style={styles.totalRow}>
             <View style={[styles.cell, { width: "60%" }]}>
-              <Text style={[styles.headerText, styles.right]}>Total Consolidated Weight & Brokerage:</Text>
+              <Text style={[styles.headerText, styles.right]}>
+                Total Consolidated Weight & Brokerage:
+              </Text>
             </View>
             <View style={[styles.cell, { width: "15%" }]}>
-              <Text style={[styles.headerText, styles.right]}>{totalWeight.toFixed(2)} T</Text>
+              <Text style={[styles.headerText, styles.right]}>
+                {totalWeight.toFixed(2)} T
+              </Text>
             </View>
             <View style={[styles.cell, { width: "25%", borderRightWidth: 0 }]}>
-              <Text style={[styles.headerText, styles.right]}>Rs. {totalBrokerage.toLocaleString("en-IN")}</Text>
+              <Text style={[styles.headerText, styles.right]}>
+                Rs. {totalBrokerage.toLocaleString("en-IN")}
+              </Text>
             </View>
           </View>
         </View>
 
-        {/* AMOUNT IN WORDS */}
         <View style={styles.amountSection}>
           <Text style={styles.bold}>Amount in words:</Text>
           <Text>Rupees {numberToWords(totalBrokerage)}</Text>
         </View>
 
-        {/* BANK & SIGNATURE */}
         <View style={styles.bankWrapper}>
           <View style={styles.bankLeft}>
-            <Text style={[styles.bold, { marginBottom: 5 }]}>Terms & Conditions:</Text>
+            <Text style={[styles.bold, { marginBottom: 5 }]}>
+              Terms & Conditions:
+            </Text>
             <Text style={{ fontSize: 7, lineHeight: 1.4 }}>
               1. This is a computer generated brokerage report.{"\n"}
-              2. Please check all details and report discrepancies within 24 hours.{"\n"}
+              2. Please check all details and report discrepancies within 24
+              hours.{"\n"}
               3. Payment should be made as per agreed terms.
             </Text>
           </View>
           <View style={styles.bankRight}>
             <Text style={styles.bold}>For Hansaria Food Private Limited</Text>
             <View style={{ height: 40 }} />
-            <Text style={[styles.bold, { borderTopWidth: 1, paddingTop: 4 }]}>Authorized Signatory</Text>
+            <Text style={[styles.bold, { borderTopWidth: 1, paddingTop: 4 }]}>
+              Authorized Signatory
+            </Text>
           </View>
         </View>
 

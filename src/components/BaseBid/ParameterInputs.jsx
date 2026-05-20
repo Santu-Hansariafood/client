@@ -8,7 +8,6 @@ const ParameterInputs = ({
 }) => {
   return (
     <div className="p-6 bg-white rounded-2xl shadow-sm border border-gray-200 hover:shadow-md transition-all duration-200">
-      
       <h3 className="text-xl font-semibold text-gray-800 text-center mb-6">
         Quality Parameters
       </h3>
@@ -35,9 +34,7 @@ const ParameterInputs = ({
       </div>
 
       <div className="mt-6 flex flex-col gap-2">
-        <label className="text-sm font-medium text-gray-600">
-          Notes
-        </label>
+        <label className="text-sm font-medium text-gray-600">Notes</label>
 
         <textarea
           className="w-full px-4 py-3 border border-gray-300 rounded-2xl

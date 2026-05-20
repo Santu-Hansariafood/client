@@ -55,7 +55,11 @@ router.get("/", async (req, res) => {
     if (page > 0 && limit > 0) {
       const skip = (page - 1) * limit;
       const [items, total] = await Promise.all([
-        SellerCompany.aggregate([...pipeline, { $skip: skip }, { $limit: limit }]),
+        SellerCompany.aggregate([
+          ...pipeline,
+          { $skip: skip },
+          { $limit: limit },
+        ]),
         SellerCompany.countDocuments(query),
       ]);
       return res.json({ data: items, total });

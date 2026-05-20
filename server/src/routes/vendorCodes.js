@@ -3,7 +3,6 @@ import VendorCode from "../models/VendorCode.js";
 
 const router = Router();
 
-// Create a new vendor code
 router.post("/", async (req, res) => {
   try {
     const { group, buyer, seller, vendorCode } = req.body;
@@ -12,7 +11,6 @@ router.post("/", async (req, res) => {
       return res.status(400).json({ message: "All fields are required" });
     }
 
-    // Check for existing vendor code with the same combination
     const existingCode = await VendorCode.findOne({ group, buyer, seller });
     if (existingCode) {
       return res.status(409).json({ message: "Vendor code already exists for this combination" });
@@ -25,7 +23,6 @@ router.post("/", async (req, res) => {
   }
 });
 
-// Get all vendor codes with pagination and filtering
 router.get("/", async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
@@ -62,7 +59,6 @@ router.get("/", async (req, res) => {
   }
 });
 
-// Get a single vendor code
 router.get("/:id", async (req, res) => {
   try {
     const vendorCode = await VendorCode.findById(req.params.id)
@@ -81,7 +77,6 @@ router.get("/:id", async (req, res) => {
   }
 });
 
-// Update a vendor code
 router.put("/:id", async (req, res) => {
   try {
     const { vendorCode } = req.body;
@@ -106,7 +101,6 @@ router.put("/:id", async (req, res) => {
   }
 });
 
-// Delete a vendor code
 router.delete("/:id", async (req, res) => {
   try {
     const deletedVendorCode = await VendorCode.findByIdAndDelete(req.params.id);

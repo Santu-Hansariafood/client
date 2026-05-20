@@ -1,5 +1,7 @@
 import { lazy } from "react";
-const DataDropdown = lazy(()=>import("../../common/DataDropdown/DataDropdown"));
+const DataDropdown = lazy(
+  () => import("../../common/DataDropdown/DataDropdown"),
+);
 
 const GroupSelection = ({
   state,
@@ -37,18 +39,20 @@ const GroupSelection = ({
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-      {dropdowns.map(({ label, options, value, onChange, isClearable }, index) => (
-        <div key={index}>
-          <label className="block text-sm font-medium mb-2">{label}</label>
-          <DataDropdown
-            options={options}
-            selectedOptions={value}
-            onChange={onChange}
-            placeholder={label}
-            isClearable={isClearable}
-          />
-        </div>
-      ))}
+      {dropdowns.map(
+        ({ label, options, value, onChange, isClearable }, index) => (
+          <div key={index}>
+            <label className="block text-sm font-medium mb-2">{label}</label>
+            <DataDropdown
+              options={options}
+              selectedOptions={value}
+              onChange={onChange}
+              placeholder={label}
+              isClearable={isClearable}
+            />
+          </div>
+        ),
+      )}
     </div>
   );
 };
