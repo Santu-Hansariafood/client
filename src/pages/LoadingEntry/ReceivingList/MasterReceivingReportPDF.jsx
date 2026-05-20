@@ -295,6 +295,27 @@ const styles = StyleSheet.create({
     lineHeight: 1.4,
     marginTop: 2,
   },
+  footer: {
+    position: "absolute",
+    bottom: 25,
+    left: 40,
+    right: 40,
+    textAlign: "center",
+    borderTopWidth: 0.5,
+    borderTopColor: "#e5e7eb",
+    paddingTop: 10,
+  },
+  disclaimerText: {
+    fontSize: 7,
+    color: "#6b7280",
+    marginBottom: 2,
+  },
+  officialRecordText: {
+    fontSize: 8,
+    color: "#374151",
+    fontWeight: "bold",
+    textTransform: "uppercase",
+  },
   summaryPage: {
     padding: 40,
     fontFamily: "Helvetica",
@@ -346,25 +367,6 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: "#000000",
     fontWeight: "bold",
-  },
-  summaryFooter: {
-    marginTop: 40,
-    paddingTop: 20,
-    borderTopWidth: 1,
-    borderTopColor: "#e5e7eb",
-  },
-  disclaimerText: {
-    fontSize: 8,
-    color: "#6b7280",
-    textAlign: "center",
-    marginBottom: 4,
-  },
-  officialRecordText: {
-    fontSize: 9,
-    color: "#374151",
-    fontWeight: "bold",
-    textAlign: "center",
-    textTransform: "uppercase",
   },
 });
 
@@ -519,8 +521,8 @@ const MasterReceivingReportPDF = ({ entries = [], logoUrl }) => {
                   </View>
                 </View>
 
-                <View style={styles.summaryFooter}>
-                  <Text style={styles.disclaimerText}>This is a system generated file.</Text>
+                <View style={styles.footer} fixed>
+                  <Text style={styles.disclaimerText}>System generated file</Text>
                   <Text style={styles.officialRecordText}>Official Receiving Record & Documentation as per information only</Text>
                 </View>
               </Page>
@@ -529,6 +531,10 @@ const MasterReceivingReportPDF = ({ entries = [], logoUrl }) => {
               <Page key={`doc-${index}-${docIdx}`} style={styles.docPage} size="A4">
                 <Text style={styles.docTitle}>{doc.label} - {data.lorryNumber}</Text>
                 <Image src={doc.url} style={styles.docImage} />
+                <View style={styles.footer} fixed>
+                   <Text style={styles.disclaimerText}>System generated file</Text>
+                   <Text style={styles.officialRecordText}>Official Receiving Record & Documentation as per information only</Text>
+                 </View>
               </Page>
             ))}
 
@@ -619,6 +625,11 @@ const MasterReceivingReportPDF = ({ entries = [], logoUrl }) => {
                   <View style={styles.bankItem}><Text style={styles.bankLabel}>IFSC Code</Text><Text style={styles.bankValue}>{bankDetails.ifscCode || ""}</Text></View>
                 </View>
               </View>
+
+              <View style={styles.footer} fixed>
+                 <Text style={styles.disclaimerText}>System generated file</Text>
+                 <Text style={styles.officialRecordText}>Official Receiving Record & Documentation as per information only</Text>
+               </View>
             </Page>
           </React.Fragment>
         );
