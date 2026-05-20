@@ -28,12 +28,19 @@ const RoleBasedRoute = ({ children, allowedRoles, path }) => {
   }
 
   // Permission-based restriction for Employees
-  if (userRole === "Employee" && user?.allowedPermissions?.length > 0) {
+  if (userRole === "Employee" && user?.allowedPermissions && user.allowedPermissions.length > 0) {
     // Normalize path for comparison
     const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+    
+    // Always allow dashboard
+    if (normalizedPath === "/dashboard" || normalizedPath === "/employee/dashboard") {
+      return children;
+    }
+
     const hasPermission = user.allowedPermissions.some(p => {
       const normalizedP = p.startsWith("/") ? p : `/${p}`;
-      return normalizedPath.startsWith(normalizedP);
+      // Check for exact match or if the current path is a sub-path (e.g., edit/delete routes)
+      return normalizedPath === normalizedP || normalizedPath.startsWith(`${normalizedP}/`);
     });
 
     if (!hasPermission) {

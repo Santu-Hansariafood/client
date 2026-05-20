@@ -27,7 +27,16 @@ export const AuthProvider = ({ children }) => {
 
   const [user, setUser] = useState(() => {
     try {
-      return JSON.parse(localStorage.getItem("user")) || null;
+      const stored = localStorage.getItem("user");
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        // Ensure allowedPermissions exists
+        if (parsed && parsed.role === "Employee" && !parsed.allowedPermissions) {
+          parsed.allowedPermissions = [];
+        }
+        return parsed;
+      }
+      return null;
     } catch {
       return null;
     }

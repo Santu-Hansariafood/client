@@ -138,9 +138,19 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
           {dashboardData.sections
             .map((section) => {
               const filteredActions = section.actions.filter((action) => {
+                // Always allow dashboard for everyone
+                if (action.link === "/dashboard" || action.link === "/employee/dashboard") {
+                  return true;
+                }
+
                 // 1. Check if user has specific assigned permissions (for Employees)
-                if (userRole === "Employee" && user?.allowedPermissions?.length > 0) {
-                  return user.allowedPermissions.includes(action.link);
+                if (userRole === "Employee" && user?.allowedPermissions && user.allowedPermissions.length > 0) {
+                  // Check if the link is explicitly allowed
+                  return user.allowedPermissions.some(p => {
+                    const normalizedP = p.startsWith("/") ? p : `/${p}`;
+                    const normalizedLink = action.link.startsWith("/") ? action.link : `/${action.link}`;
+                    return normalizedLink === normalizedP;
+                  });
                 }
 
                 // 2. Fallback to default role-based filtering
