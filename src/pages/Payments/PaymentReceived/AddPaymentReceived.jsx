@@ -324,8 +324,13 @@ const AddPaymentReceived = () => {
                                     </div>
                                 ) : entries.length > 0 ? (
                                     <Tables
-                                        columns={columns}
-                                        data={entries}
+                                        headers={columns.map(c => c.header)}
+                                        rows={entries.map(entry => columns.map(col => {
+                                            if (typeof col.accessor === 'function') {
+                                                return col.accessor(entry);
+                                            }
+                                            return entry[col.accessor];
+                                        }))}
                                     />
                                 ) : (
                                     <div className="py-20 flex flex-col items-center justify-center text-center">

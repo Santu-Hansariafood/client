@@ -150,11 +150,21 @@ const ListPaymentReceived = () => {
                 {/* Table Section */}
                 <div className="bg-white rounded-[2rem] border border-slate-100 shadow-xl shadow-slate-200/50 overflow-hidden">
                     <div className="p-2">
-                        <Tables
-                            columns={columns}
-                            data={payments}
-                            loading={loading}
-                        />
+                        {loading ? (
+                            <div className="py-20 flex justify-center">
+                                <div className="w-12 h-12 border-4 border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin" />
+                            </div>
+                        ) : (
+                            <Tables
+                                headers={columns.map(c => c.header)}
+                                rows={payments.map(payment => columns.map(col => {
+                                    if (typeof col.accessor === 'function') {
+                                        return col.accessor(payment);
+                                    }
+                                    return payment[col.accessor];
+                                }))}
+                            />
+                        )}
                     </div>
                     
                     {total > limit && (
