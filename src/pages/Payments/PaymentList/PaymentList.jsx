@@ -128,7 +128,7 @@ const PaymentList = () => {
   const handleDownloadPDF = () => {
     const doc = new jsPDF("landscape");
     const tableColumn = [
-      "Sl No", "Sauda No", "Lorry No", "Buyer", "Consignee", "Seller Name", "Seller Co", "Terms", "Date", "Qty", "Amount", "Status"
+      "Sl No", "Sauda No", "Lorry No", "Buyer", "Consignee", "Seller Name", "Seller Co", "Terms", "Due Date", "Qty", "Amount", "Status"
     ];
 
     const tableRows = data.map((item) => [
@@ -139,8 +139,8 @@ const PaymentList = () => {
       item.consignee,
       item.supplier?.sellerName || "N/A",
       item.supplierCompany,
-      item.paymentTerms,
-      formatDate(item.unloadingDate),
+      `${item.paymentTerms} Days`,
+      formatDate(item.dueDate),
       `${(item.unloadingWeight || 0).toFixed(2)} T`,
       `Rs. ${(item.amount || 0).toLocaleString("en-IN")}`,
       item.paymentStatus.toUpperCase()
@@ -148,7 +148,7 @@ const PaymentList = () => {
 
     doc.setFontSize(18);
     doc.setTextColor(5, 150, 105);
-    doc.text(`PAYMENTS ${paymentStatus === 'done' ? 'RECEIVED' : 'SYNC'} REPORT`, 14, 20);
+    doc.text(`PAYMENTS ${paymentStatus.toUpperCase()} REPORT`, 14, 20);
     
     doc.setFontSize(10);
     doc.setTextColor(100);
@@ -166,8 +166,87 @@ const PaymentList = () => {
     doc.save(`Payments_${paymentStatus}_${new Date().toISOString().split("T")[0]}.pdf`);
   };
 
+  const handleDownloadSaudaWisePDF = () => {
+    const doc = new jsPDF("landscape");
+    
+    // Group data by Sauda No
+    const grouped = data.reduce((acc, item) => {
+      const key = item.saudaNo || "N/A";
+      if (!acc[key]) {
+        acc[key] = {
+          saudaNo: key,
+          buyer: item.buyerCompany,
+          seller: item.supplierCompany,
+          consignee: item.consignee,
+          terms: item.paymentTerms,
+          dueDate: item.dueDate,
+          items: [],
+          totalQty: 0,
+          totalAmount: 0
+        };
+      }
+      acc[key].items.push(item);
+      acc[key].totalQty += item.unloadingWeight || 0;
+      acc[key].totalAmount += item.amount || 0;
+      return acc;
+    }, {});
+
+    const tableColumn = [
+      "Sauda No", "Lorry No", "Date", "Buyer", "Seller Company", "Terms", "Due Date", "Qty (T)", "Amount (Rs)", "Status"
+    ];
+
+    const tableRows = [];
+    Object.values(grouped).forEach(group => {
+      group.items.forEach((item, index) => {
+        tableRows.push([
+          index === 0 ? group.saudaNo : "",
+          item.lorryNumber || "N/A",
+          formatDate(item.unloadingDate),
+          index === 0 ? group.buyer : "",
+          index === 0 ? group.seller : "",
+          index === 0 ? `${group.terms} Days` : "",
+          index === 0 ? formatDate(group.dueDate) : "",
+          (item.unloadingWeight || 0).toFixed(2),
+          (item.amount || 0).toLocaleString("en-IN"),
+          item.paymentStatus.toUpperCase()
+        ]);
+      });
+      // Add a subtotal row for each sauda
+      tableRows.push([
+        { content: `Total for ${group.saudaNo}`, colSpan: 7, styles: { fontStyle: 'bold', fillColor: [240, 240, 240] } },
+        { content: group.totalQty.toFixed(2), styles: { fontStyle: 'bold', fillColor: [240, 240, 240] } },
+        { content: `Rs. ${group.totalAmount.toLocaleString("en-IN")}`, styles: { fontStyle: 'bold', fillColor: [240, 240, 240] } },
+        { content: "", styles: { fillColor: [240, 240, 240] } }
+      ]);
+    });
+
+    doc.setFontSize(18);
+    doc.setTextColor(30, 64, 175);
+    doc.text(`SAUDA-WISE PAYMENT REPORT`, 14, 20);
+    
+    doc.setFontSize(10);
+    doc.setTextColor(100);
+    doc.text(`Generated on: ${new Date().toLocaleString("en-IN")}`, 14, 28);
+
+    doc.autoTable({
+      head: [tableColumn],
+      body: tableRows,
+      startY: 35,
+      theme: "grid",
+      headStyles: { fillColor: [30, 64, 175], fontSize: 8 },
+      styles: { fontSize: 7, cellPadding: 2 },
+      didParseCell: function(data) {
+        if (data.row.index === tableRows.length - 1 || data.cell.raw?.content?.startsWith('Total for')) {
+          data.cell.styles.fontStyle = 'bold';
+        }
+      }
+    });
+
+    doc.save(`SaudaWise_Payments_${new Date().toISOString().split("T")[0]}.pdf`);
+  };
+
   const headers = [
-    "Sl No", "Sauda No", "Lorry No", "Buyer Company", "Consignee", "Seller Name", "Seller Company", "Payment Terms", "Unloading Date", "Unloading Qty", "Amount", "Status"
+    "Sl No", "Sauda No", "Lorry No", "Buyer Company", "Consignee", "Seller Name", "Seller Company", "Terms", "Due Date", "Unloading Date", "Unloading Qty", "Amount", "Status"
   ];
 
   const rows = data.map((item) => [
@@ -178,9 +257,10 @@ const PaymentList = () => {
     item.consignee,
     item.supplier?.sellerName || "N/A",
     item.supplierCompany,
-    <span key={`terms-${item._id}`} className="text-xs text-blue-600 font-bold">{item.paymentTerms}</span>,
+    <span key={`terms-${item._id}`} className="text-xs text-blue-600 font-bold">{item.paymentTerms} Days</span>,
+    <span key={`due-${item._id}`} className={`font-bold ${item.isDue ? 'text-rose-600' : 'text-slate-500'}`}>{formatDate(item.dueDate)}</span>,
     formatDate(item.unloadingDate),
-    <span key={`qty-${item._id}`} className="font-bold">{item.unloadingWeight.toFixed(2)} T</span>,
+    <span key={`qty-${item._id}`} className="font-bold">{(item.unloadingWeight || 0).toFixed(2)} T</span>,
     <span key={`amt-${item._id}`} className="font-black text-emerald-700">Rs. {item.amount.toLocaleString("en-IN")}</span>,
     <button
       key={`status-${item._id}`}
@@ -199,6 +279,7 @@ const PaymentList = () => {
   const tabs = [
     { id: "all", label: "All Payments", icon: <FaClipboardList />, link: "/payments/list" },
     { id: "pending", label: "Pending", icon: <FaClock />, link: "/payments/list" },
+    { id: "due", label: "Due Now", icon: <FaClock className="text-rose-500" />, link: "/payments/list" },
     { id: "done", label: "Received", icon: <FaCheckDouble />, link: "/payments/received/list" },
   ];
 
@@ -255,10 +336,17 @@ const PaymentList = () => {
               </button>
               <button
                 onClick={handleDownloadPDF}
+                className="px-6 py-3 bg-white border border-slate-200 text-slate-700 rounded-2xl font-black uppercase tracking-widest text-[10px] hover:bg-slate-50 transition-all flex items-center gap-2 shadow-sm"
+              >
+                <FaFilePdf className="text-emerald-600" />
+                Standard PDF
+              </button>
+              <button
+                onClick={handleDownloadSaudaWisePDF}
                 className="px-6 py-3 bg-emerald-600 text-white rounded-2xl font-black uppercase tracking-widest text-[10px] hover:bg-emerald-700 transition-all flex items-center gap-2 shadow-lg shadow-emerald-200"
               >
                 <FaFilePdf />
-                PDF Report
+                Sauda-wise PDF
               </button>
             </div>
           </div>
@@ -268,7 +356,7 @@ const PaymentList = () => {
               <FaSearch className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within/input:text-emerald-500 transition-colors" />
               <input
                 type="text"
-                placeholder="Search Sauda, Company..."
+                placeholder="Search Sauda No, Company, Lorry..."
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
                 className="w-full pl-12 pr-6 py-4 bg-slate-50 border-none rounded-2xl text-sm font-bold text-slate-700 focus:ring-2 focus:ring-emerald-500/20 transition-all"

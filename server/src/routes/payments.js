@@ -19,11 +19,13 @@ router.get("/", async (req, res) => {
     const paymentStatus = req.query.paymentStatus;
 
     let query = {
-      unloadingWeight: { $gt: 0 }, // Only entries with unloading data
+      unloadingWeight: { $gt: 0 },
     };
 
-    if (paymentStatus && paymentStatus !== "all") {
+    if (paymentStatus && paymentStatus !== "all" && paymentStatus !== "due") {
       query.paymentStatus = paymentStatus;
+    } else if (paymentStatus === "due") {
+      query.paymentStatus = "pending"; // Due is a subset of pending
     }
 
     const andParts = [query];
@@ -36,6 +38,7 @@ router.get("/", async (req, res) => {
           { buyerCompany: { $regex: searchRegex } },
           { supplierCompany: { $regex: searchRegex } },
           { consignee: { $regex: searchRegex } },
+          { lorryNumber: { $regex: searchRegex } },
         ],
       });
     }
@@ -73,37 +76,47 @@ router.get("/", async (req, res) => {
       return acc;
     }, {});
 
-    const itemsWithData = await Promise.all(
-      items.map(async (item) => {
-        const slNo =
-          (await LoadingEntry.countDocuments({
-            unloadingWeight: { $gt: 0 },
-            $or: [
-              { unloadingDate: { $lt: item.unloadingDate } },
-              {
-                unloadingDate: item.unloadingDate,
-                createdAt: { $lt: item.createdAt },
-              },
-            ],
-          })) + 1;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
 
-        const order = saudaMap[item.saudaNo] || {};
-        return {
-          ...item,
-          slNo,
-          paymentTerms: order.paymentTerms || "N/A",
-          rate: order.rate || 0,
-          amount: (item.unloadingWeight || 0) * (order.rate || 0),
-          buyerCompany: item.buyerCompany || order.buyerCompany || "N/A",
-        };
-      }),
-    );
+    let processedItems = items.map((item) => {
+      const order = saudaMap[item.saudaNo] || {};
+      const terms = parseInt(order.paymentTerms) || 0;
+      const unloadingDate = new Date(item.unloadingDate);
+      const dueDate = new Date(unloadingDate);
+      dueDate.setDate(unloadingDate.getDate() + terms);
+
+      const isDue = item.paymentStatus === "pending" && today >= dueDate;
+
+      return {
+        ...item,
+        paymentTerms: terms,
+        dueDate,
+        isDue,
+        rate: order.rate || 0,
+        amount: (item.unloadingWeight || 0) * (order.rate || 0),
+        buyerCompany: item.buyerCompany || order.buyerCompany || "N/A",
+      };
+    });
+
+    // If "due" filter is applied, filter only due items
+    if (paymentStatus === "due") {
+      processedItems = processedItems.filter((item) => item.isDue);
+    }
+
+    // Add Sl No after filtering
+    const finalItems = processedItems.map((item, index) => ({
+      ...item,
+      slNo: (page - 1) * limit + index + 1,
+    }));
 
     res.json({
-      data: itemsWithData,
-      total,
+      data: finalItems,
+      total: paymentStatus === "due" ? processedItems.length : total,
       page,
-      totalPages: Math.ceil(total / limit),
+      totalPages: Math.ceil(
+        (paymentStatus === "due" ? processedItems.length : total) / limit,
+      ),
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
