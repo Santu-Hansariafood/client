@@ -20,10 +20,6 @@ const AddPaymentReceived = () => {
     const [ledgers, setLedgers] = useState([]);
     const [selectedLedger, setSelectedLedger] = useState(null);
     const [entries, setEntries] = useState([]);
-    const [dateRange, setDateRange] = useState({
-        startDate: '',
-        endDate: ''
-    });
 
     const [formData, setFormData] = useState({
         date: new Date().toISOString().split('T')[0],
@@ -83,9 +79,7 @@ const AddPaymentReceived = () => {
         try {
             setFetchingEntries(true);
             let params = { 
-                paymentStatus: 'pending',
-                startDate: dateRange.startDate,
-                endDate: dateRange.endDate
+                paymentStatus: 'pending'
             };
             
             if (formData.ledgerType === 'Seller') {
@@ -107,7 +101,7 @@ const AddPaymentReceived = () => {
         } finally {
             setFetchingEntries(false);
         }
-    }, [formData.ledgerId, formData.ledgerType, formData.paymentType, dateRange]);
+    }, [formData.ledgerId, formData.ledgerType, formData.paymentType]);
 
     useEffect(() => {
         fetchEntries();
@@ -216,9 +210,9 @@ const AddPaymentReceived = () => {
         { 
             header: 'Lorry & Item', 
             accessor: (row) => (
-                <div className="flex flex-col">
-                    <span className="font-black text-slate-800 uppercase tracking-tighter">{row.lorryNumber}</span>
-                    <span className="text-[10px] text-emerald-600 font-bold uppercase">{row.commodity}</span>
+                <div className="flex flex-col gap-0.5">
+                    <span className="font-black text-slate-800 uppercase tracking-tighter text-sm">{row.lorryNumber}</span>
+                    <span className="text-[10px] text-emerald-600 font-black uppercase tracking-widest">{row.commodity}</span>
                 </div>
             )
         },
@@ -332,14 +326,14 @@ const AddPaymentReceived = () => {
                                 <FaExchangeAlt size={24} />
                             </div>
                             <div>
-                                <h3 className="text-xl font-black text-slate-800">Payment Allocation</h3>
-                                <p className="text-sm text-slate-400 font-medium">Select ledger and filter entries by date</p>
+                                <h3 className="text-xl font-black text-slate-800 uppercase tracking-tight">Payment Allocation</h3>
+                                <p className="text-sm text-slate-400 font-medium">Configure ledger and payment method</p>
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+                        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
                             <div className="space-y-2">
-                                <label className="text-[11px] font-black uppercase tracking-widest text-slate-400">Ledger Type</label>
+                                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Ledger Type</label>
                                 <DataDropdown
                                     options={ledgerTypes}
                                     selectedOptions={formData.ledgerType}
@@ -347,8 +341,8 @@ const AddPaymentReceived = () => {
                                     isMulti={false}
                                 />
                             </div>
-                            <div className="space-y-2 col-span-2">
-                                <label className="text-[11px] font-black uppercase tracking-widest text-slate-400">Select Ledger</label>
+                            <div className="space-y-2 md:col-span-2">
+                                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Select Ledger</label>
                                 <DataDropdown
                                     options={ledgers}
                                     selectedOptions={selectedLedger}
@@ -358,48 +352,53 @@ const AddPaymentReceived = () => {
                                     isDisabled={fetchingLedgers}
                                 />
                             </div>
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
                             <div className="space-y-2">
-                                <label className="text-[11px] font-black uppercase tracking-widest text-slate-400">Payment Date</label>
+                                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Payment Date</label>
                                 <DateSelector
                                     value={formData.date}
                                     onChange={(val) => setFormData(prev => ({ ...prev, date: val }))}
                                 />
                             </div>
-                            <div className="space-y-2">
-                                <label className="text-[11px] font-black uppercase tracking-widest text-slate-400">Payment Mode</label>
-                                <DataDropdown
-                                    options={paymentModes}
-                                    selectedOptions={formData.paymentMode}
-                                    onChange={(opt) => setFormData(prev => ({ ...prev, paymentMode: opt.value }))}
-                                    isMulti={false}
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <label className="text-[11px] font-black uppercase tracking-widest text-slate-400">Filter Start Date</label>
-                                <DateSelector
-                                    value={dateRange.startDate}
-                                    onChange={(val) => setDateRange(prev => ({ ...prev, startDate: val }))}
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <label className="text-[11px] font-black uppercase tracking-widest text-slate-400">Filter End Date</label>
-                                <DateSelector
-                                    value={dateRange.endDate}
-                                    onChange={(val) => setDateRange(prev => ({ ...prev, endDate: val }))}
-                                />
+                        </div>
+
+                        <div className="mt-8 pt-8 border-t border-slate-50">
+                            <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+                                <div className="space-y-2 md:col-span-2">
+                                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Payment Mode</label>
+                                    <DataDropdown
+                                        options={paymentModes}
+                                        selectedOptions={formData.paymentMode}
+                                        onChange={(opt) => setFormData(prev => ({ ...prev, paymentMode: opt.value }))}
+                                        isMulti={false}
+                                    />
+                                </div>
+                                <div className="space-y-2 md:col-span-2">
+                                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">General Note</label>
+                                    <input
+                                        type="text"
+                                        name="remarks"
+                                        value={formData.remarks}
+                                        onChange={handleInputChange}
+                                        placeholder="Internal reference or notes..."
+                                        className="w-full h-11 px-4 rounded-xl border border-slate-200 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-emerald-500/20 outline-none transition font-medium text-slate-700"
+                                    />
+                                </div>
                             </div>
                         </div>
                     </div>
 
                     {/* Entries Table Card */}
                     <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-xl shadow-slate-200/50 overflow-hidden">
-                        <div className="p-8 border-b border-slate-50 flex items-center justify-between bg-slate-50/30">
+                        <div className="px-8 py-6 border-b border-slate-50 flex items-center justify-between bg-slate-50/30">
                             <div className="flex items-center gap-3">
-                                <FaBuilding className="text-emerald-600" />
-                                <h3 className="text-lg font-black text-slate-800 uppercase tracking-tight">Pending Entries</h3>
+                                <div className="w-8 h-8 rounded-lg bg-emerald-600 flex items-center justify-center text-white shadow-sm">
+                                    <FaBuilding size={14} />
+                                </div>
+                                <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest">Pending Sauda Entries</h3>
+                            </div>
+                            <div className="flex items-center gap-2 text-[10px] font-bold text-slate-400">
+                                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                                Live Pending List
                             </div>
                         </div>
 
