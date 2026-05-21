@@ -579,9 +579,14 @@ router.get("/", async (req, res) => {
 
     if (buyerId) {
       const buyer = await Buyer.findById(buyerId).populate("companyIds").lean();
-      if (buyer && buyer.companyIds) {
-        const companyNames = buyer.companyIds.map((c) => c.companyName);
-        andParts.push({ buyerCompany: { $in: companyNames } });
+      if (buyer) {
+        const companyNames = (buyer.companyIds || []).map((c) => c.companyName);
+        // Also add the buyer's own name as a fallback for company name
+        if (buyer.name) companyNames.push(buyer.name);
+        
+        andParts.push({ 
+          buyerCompany: { $in: companyNames.map(name => new RegExp(`^${escapeRegex(name)}$`, "i")) } 
+        });
       }
     }
 

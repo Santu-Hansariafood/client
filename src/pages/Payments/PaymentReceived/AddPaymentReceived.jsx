@@ -9,7 +9,7 @@ import Tables from '../../../common/Tables/Tables';
 import api from '../../../utils/apiClient/apiClient';
 import Loading from '../../../common/Loading/Loading';
 import { useAuth } from '../../../context/AuthContext/AuthContext';
-import { FaSave, FaArrowLeft, FaMoneyBillWave, FaExchangeAlt, FaHistory, FaCalendarAlt, FaBuilding } from 'react-icons/fa';
+import { FaSave, FaArrowLeft, FaMoneyBillWave, FaExchangeAlt, FaHistory, FaCalendarAlt, FaBuilding, FaSearch, FaCheckCircle, FaExclamationCircle } from 'react-icons/fa';
 
 const AddPaymentReceived = () => {
     const navigate = useNavigate();
@@ -20,6 +20,7 @@ const AddPaymentReceived = () => {
     const [ledgers, setLedgers] = useState([]);
     const [selectedLedger, setSelectedLedger] = useState(null);
     const [entries, setEntries] = useState([]);
+    const [tableSearch, setTableSearch] = useState('');
 
     const [formData, setFormData] = useState({
         date: new Date().toISOString().split('T')[0],
@@ -121,7 +122,7 @@ const AddPaymentReceived = () => {
         const numAmount = parseFloat(amount) || 0;
         const dueAmount = netAmount - (paidAmount || 0);
         
-        if (numAmount > dueAmount) {
+        if (numAmount > dueAmount + 1) { // Allow small rounding
             toast.warning(`Allocation cannot exceed due amount (₹${dueAmount.toFixed(2)})`);
             return;
         }
@@ -182,7 +183,7 @@ const AddPaymentReceived = () => {
                     allocatedAmount: entry.allocatedAmount,
                     remarks: entry.rowRemarks
                 }],
-                remarks: entry.rowRemarks // Also set top level remarks for history
+                remarks: entry.rowRemarks 
             };
 
             await api.post('/payment-received', payload);
@@ -197,13 +198,26 @@ const AddPaymentReceived = () => {
         }
     };
 
+    // Filtered entries for table search
+    const filteredEntries = useMemo(() => {
+        if (!tableSearch) return entries;
+        const search = tableSearch.toLowerCase();
+        return entries.filter(entry => 
+            (entry.saudaNo || '').toLowerCase().includes(search) ||
+            (entry.lorryNumber || '').toLowerCase().includes(search) ||
+            (entry.buyerCompany || '').toLowerCase().includes(search) ||
+            (entry.supplierCompany || '').toLowerCase().includes(search) ||
+            (entry.commodity || '').toLowerCase().includes(search)
+        );
+    }, [entries, tableSearch]);
+
     const columns = [
         { 
             header: 'Date & Sauda', 
             accessor: (row) => (
                 <div className="flex flex-col">
                     <span className="font-bold text-slate-700">{new Date(row.loadingDate).toLocaleDateString('en-GB')}</span>
-                    <span className="text-[10px] text-slate-400 font-bold uppercase">{row.saudaNo}</span>
+                    <span className="text-[10px] text-slate-400 font-bold uppercase tracking-tight">{row.saudaNo}</span>
                 </div>
             )
         },
@@ -212,7 +226,16 @@ const AddPaymentReceived = () => {
             accessor: (row) => (
                 <div className="flex flex-col gap-0.5">
                     <span className="font-black text-slate-800 uppercase tracking-tighter text-sm">{row.lorryNumber}</span>
-                    <span className="text-[10px] text-emerald-600 font-black uppercase tracking-widest">{row.commodity}</span>
+                    <span className="text-[10px] text-emerald-600 font-black uppercase tracking-widest leading-none">{row.commodity}</span>
+                </div>
+            )
+        },
+        { 
+            header: 'Companies', 
+            accessor: (row) => (
+                <div className="flex flex-col gap-0.5 max-w-[150px]">
+                    <span className="text-[10px] font-black uppercase text-slate-400 leading-none">Buyer: {row.buyerCompany || 'N/A'}</span>
+                    <span className="text-[10px] font-black uppercase text-slate-400 leading-none">Seller: {row.supplierCompany || 'N/A'}</span>
                 </div>
             )
         },
@@ -221,14 +244,14 @@ const AddPaymentReceived = () => {
             accessor: (row) => {
                 const details = calculateTallyDetails(row);
                 return (
-                    <div className="flex flex-col gap-0.5 text-[10px] font-medium min-w-[150px]">
+                    <div className="flex flex-col gap-0.5 text-[10px] font-medium min-w-[140px]">
                         <div className="flex justify-between text-slate-500">
                             <span>Net Amount:</span>
-                            <span>₹{details.netAmount.toFixed(2)}</span>
+                            <span className="font-bold">₹{details.netAmount.toFixed(2)}</span>
                         </div>
                         <div className="flex justify-between text-emerald-600">
                             <span>Paid:</span>
-                            <span>₹{(row.paidAmount || 0).toFixed(2)}</span>
+                            <span className="font-bold">₹{(row.paidAmount || 0).toFixed(2)}</span>
                         </div>
                         <div className="flex justify-between border-t border-slate-100 pt-0.5 font-black text-rose-600 text-xs">
                             <span>Due:</span>
@@ -245,30 +268,27 @@ const AddPaymentReceived = () => {
                 const isLocked = row.isSaved && user?.role !== 'Admin';
 
                 return (
-                    <div className="flex flex-col gap-2 min-w-[200px]">
+                    <div className="flex flex-col gap-2 min-w-[180px]">
                         <div className="relative">
                             <input
                                 type="number"
                                 value={row.allocatedAmount}
                                 onChange={(e) => handleAllocationChange(row._id, e.target.value, details.netAmount, row.paidAmount)}
                                 disabled={isLocked}
-                                className={`w-full px-3 py-2 rounded-xl border ${
-                                    isLocked ? 'bg-slate-100 text-slate-400' : 'border-slate-200 bg-slate-50/50'
-                                } focus:bg-white focus:ring-2 focus:ring-emerald-500 outline-none transition font-bold text-slate-700`}
+                                className={`w-full px-3 py-1.5 rounded-xl border ${
+                                    isLocked ? 'bg-slate-50 text-slate-400 border-slate-100' : 'border-slate-200 bg-white'
+                                } focus:ring-2 focus:ring-emerald-500/20 outline-none transition font-bold text-slate-700 text-sm`}
                                 placeholder="Amount"
                             />
-                            <p className="text-[10px] font-bold text-rose-500 mt-1 ml-1">
-                                Due: ₹{details.dueAmount.toFixed(2)}
-                            </p>
                         </div>
                         <textarea
                             value={row.rowRemarks}
                             onChange={(e) => handleRowRemarksChange(row._id, e.target.value)}
                             disabled={isLocked}
                             rows={1}
-                            className={`w-full px-3 py-2 rounded-xl border text-xs ${
-                                isLocked ? 'bg-slate-100 text-slate-400' : 'border-slate-200 bg-slate-50/50'
-                            } focus:bg-white focus:ring-2 focus:ring-emerald-500 outline-none transition`}
+                            className={`w-full px-3 py-1.5 rounded-xl border text-[11px] ${
+                                isLocked ? 'bg-slate-50 text-slate-400 border-slate-100' : 'border-slate-200 bg-white'
+                            } focus:ring-2 focus:ring-emerald-500/20 outline-none transition resize-none`}
                             placeholder="Add remarks..."
                         />
                     </div>
@@ -284,14 +304,14 @@ const AddPaymentReceived = () => {
                         type="button"
                         onClick={() => handleSaveRow(row)}
                         disabled={isLocked || loading}
-                        className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 transition-all shadow-sm ${
+                        className={`px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 transition-all shadow-sm w-full ${
                             isLocked 
-                                ? 'bg-slate-100 text-slate-400 cursor-not-allowed' 
-                                : 'bg-emerald-600 text-white hover:bg-emerald-700'
+                                ? 'bg-slate-50 text-slate-400 border border-slate-100 cursor-not-allowed' 
+                                : 'bg-slate-900 text-white hover:bg-black active:scale-95'
                         }`}
                     >
-                        <FaSave />
-                        {isLocked ? 'Saved' : 'Save Entry'}
+                        {isLocked ? <FaCheckCircle size={12} /> : <FaSave size={12} />}
+                        {isLocked ? 'Saved' : 'Save'}
                     </button>
                 );
             }
@@ -301,69 +321,73 @@ const AddPaymentReceived = () => {
     return (
         <AdminPageShell
             title="Add Payment Received"
-            subtitle="Record bulk payments and map them to sauda entries"
+            subtitle="Record and allocate payments to pending sauda entries"
             icon={FaMoneyBillWave}
         >
-            <div className="max-w-7xl mx-auto space-y-8">
+            <div className="max-w-7xl mx-auto space-y-6">
                 {/* Header Actions */}
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between bg-white px-6 py-4 rounded-[1.5rem] border border-slate-100 shadow-sm">
                     <button
                         onClick={() => navigate(-1)}
-                        className="flex items-center gap-2 text-slate-500 hover:text-slate-800 font-bold transition-colors group"
+                        className="flex items-center gap-2 text-slate-400 hover:text-slate-800 font-black uppercase tracking-widest text-[10px] transition-colors"
                     >
-                        <div className="w-10 h-10 rounded-xl bg-white border border-slate-100 flex items-center justify-center shadow-sm group-hover:shadow-md transition-all">
-                            <FaArrowLeft />
-                        </div>
-                        <span>Back to List</span>
+                        <FaArrowLeft />
+                        Back to List
                     </button>
+                    <div className="flex items-center gap-3">
+                        <div className="flex flex-col items-end">
+                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Selected Date</span>
+                            <span className="text-sm font-bold text-slate-800">{new Date(formData.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                        </div>
+                        <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600">
+                            <FaCalendarAlt size={18} />
+                        </div>
+                    </div>
                 </div>
 
-                <form onSubmit={(e) => e.preventDefault()} className="space-y-8">
-                    {/* Basic Info Card */}
-                    <div className="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-xl shadow-slate-200/50">
-                        <div className="flex items-center gap-4 mb-8">
-                            <div className="w-12 h-12 rounded-2xl bg-emerald-50 flex items-center justify-center text-emerald-600">
-                                <FaExchangeAlt size={24} />
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                    {/* Left Side: Configuration (4 cols) */}
+                    <div className="lg:col-span-4 space-y-6">
+                        <div className="bg-white rounded-[2rem] p-6 border border-slate-100 shadow-sm space-y-6">
+                            <div className="flex items-center gap-3 pb-4 border-b border-slate-50">
+                                <div className="w-10 h-10 rounded-xl bg-slate-900 flex items-center justify-center text-white">
+                                    <FaExchangeAlt size={18} />
+                                </div>
+                                <div>
+                                    <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest">Configuration</h3>
+                                    <p className="text-[10px] text-slate-400 font-bold uppercase">Setup allocation rules</p>
+                                </div>
                             </div>
-                            <div>
-                                <h3 className="text-xl font-black text-slate-800 uppercase tracking-tight">Payment Allocation</h3>
-                                <p className="text-sm text-slate-400 font-medium">Configure ledger and payment method</p>
-                            </div>
-                        </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-                            <div className="space-y-2">
-                                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Ledger Type</label>
-                                <DataDropdown
-                                    options={ledgerTypes}
-                                    selectedOptions={formData.ledgerType}
-                                    onChange={(opt) => setFormData(prev => ({ ...prev, ledgerType: opt.value }))}
-                                    isMulti={false}
-                                />
-                            </div>
-                            <div className="space-y-2 md:col-span-2">
-                                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Select Ledger</label>
-                                <DataDropdown
-                                    options={ledgers}
-                                    selectedOptions={selectedLedger}
-                                    onChange={handleLedgerChange}
-                                    placeholder={fetchingLedgers ? "Loading..." : `Select ${formData.ledgerType}`}
-                                    isMulti={false}
-                                    isDisabled={fetchingLedgers}
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Payment Date</label>
-                                <DateSelector
-                                    value={formData.date}
-                                    onChange={(val) => setFormData(prev => ({ ...prev, date: val }))}
-                                />
-                            </div>
-                        </div>
-
-                        <div className="mt-8 pt-8 border-t border-slate-50">
-                            <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-                                <div className="space-y-2 md:col-span-2">
+                            <div className="space-y-4">
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Ledger Type</label>
+                                    <DataDropdown
+                                        options={ledgerTypes}
+                                        selectedOptions={formData.ledgerType}
+                                        onChange={(opt) => setFormData(prev => ({ ...prev, ledgerType: opt.value }))}
+                                        isMulti={false}
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Select Ledger</label>
+                                    <DataDropdown
+                                        options={ledgers}
+                                        selectedOptions={selectedLedger}
+                                        onChange={handleLedgerChange}
+                                        placeholder={fetchingLedgers ? "Loading..." : `Select ${formData.ledgerType}`}
+                                        isMulti={false}
+                                        isDisabled={fetchingLedgers}
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Payment Date</label>
+                                    <DateSelector
+                                        value={formData.date}
+                                        onChange={(val) => setFormData(prev => ({ ...prev, date: val }))}
+                                    />
+                                </div>
+                                <div className="space-y-2">
                                     <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Payment Mode</label>
                                     <DataDropdown
                                         options={paymentModes}
@@ -372,64 +396,97 @@ const AddPaymentReceived = () => {
                                         isMulti={false}
                                     />
                                 </div>
-                                <div className="space-y-2 md:col-span-2">
+                                <div className="space-y-2">
                                     <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">General Note</label>
-                                    <input
-                                        type="text"
+                                    <textarea
                                         name="remarks"
                                         value={formData.remarks}
                                         onChange={handleInputChange}
-                                        placeholder="Internal reference or notes..."
-                                        className="w-full h-11 px-4 rounded-xl border border-slate-200 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-emerald-500/20 outline-none transition font-medium text-slate-700"
+                                        placeholder="Internal reference..."
+                                        rows={3}
+                                        className="w-full p-4 rounded-xl border border-slate-200 bg-slate-50/30 focus:bg-white focus:ring-2 focus:ring-emerald-500/10 outline-none transition text-sm font-medium text-slate-700 resize-none"
                                     />
                                 </div>
                             </div>
                         </div>
-                    </div>
 
-                    {/* Entries Table Card */}
-                    <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-xl shadow-slate-200/50 overflow-hidden">
-                        <div className="px-8 py-6 border-b border-slate-50 flex items-center justify-between bg-slate-50/30">
-                            <div className="flex items-center gap-3">
-                                <div className="w-8 h-8 rounded-lg bg-emerald-600 flex items-center justify-center text-white shadow-sm">
-                                    <FaBuilding size={14} />
-                                </div>
-                                <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest">Pending Sauda Entries</h3>
+                        {/* Summary Widget */}
+                        <div className="bg-slate-900 rounded-[2rem] p-6 text-white shadow-xl shadow-slate-200">
+                            <div className="flex items-center justify-between mb-4">
+                                <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Selection Summary</span>
+                                <FaCheckCircle className="text-emerald-500" />
                             </div>
-                            <div className="flex items-center gap-2 text-[10px] font-bold text-slate-400">
-                                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                                Live Pending List
+                            <div className="space-y-4">
+                                <div>
+                                    <p className="text-[10px] font-bold text-slate-500 uppercase">Target Ledger</p>
+                                    <p className="font-bold truncate">{selectedLedger?.label || 'Not Selected'}</p>
+                                </div>
+                                <div className="pt-4 border-t border-white/10">
+                                    <p className="text-[10px] font-bold text-slate-500 uppercase">Total Pending</p>
+                                    <p className="text-2xl font-black">{entries.length} Entries</p>
+                                </div>
                             </div>
                         </div>
+                    </div>
 
-                        <div className="p-4">
-                            {fetchingEntries ? (
-                                <div className="py-20 flex flex-col items-center justify-center gap-4">
-                                    <div className="w-12 h-12 border-4 border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin" />
-                                    <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">Fetching Entries...</p>
-                                </div>
-                            ) : entries.length > 0 ? (
-                                <Tables
-                                    headers={columns.map(c => c.header)}
-                                    rows={entries.map(entry => columns.map(col => {
-                                        if (typeof col.accessor === 'function') {
-                                            return col.accessor(entry);
-                                        }
-                                        return entry[col.accessor];
-                                    }))}
-                                />
-                            ) : (
-                                <div className="py-20 flex flex-col items-center justify-center text-center">
-                                    <div className="w-16 h-16 rounded-3xl bg-slate-50 flex items-center justify-center text-slate-300 mb-4">
-                                        <FaHistory size={32} />
+                    {/* Right Side: Entries Table (8 cols) */}
+                    <div className="lg:col-span-8 space-y-6">
+                        <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden flex flex-col h-full">
+                            <div className="px-8 py-6 border-b border-slate-50 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-50/30">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-8 h-8 rounded-lg bg-emerald-600 flex items-center justify-center text-white">
+                                        <FaBuilding size={14} />
                                     </div>
-                                    <h4 className="text-lg font-bold text-slate-800">No Entries Found</h4>
-                                    <p className="text-slate-500 max-w-xs mx-auto">Try adjusting the date filters or select a different ledger.</p>
+                                    <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest">Pending Sauda Entries</h3>
                                 </div>
-                            )}
+                                
+                                <div className="relative w-full md:w-64">
+                                    <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 size-3" />
+                                    <input
+                                        type="text"
+                                        placeholder="SEARCH SAUDA, LORRY..."
+                                        value={tableSearch}
+                                        onChange={(e) => setTableSearch(e.target.value)}
+                                        className="w-full pl-10 pr-4 py-2 rounded-xl border border-slate-200 bg-white text-[10px] font-black uppercase tracking-widest focus:ring-2 focus:ring-emerald-500/10 outline-none transition"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="flex-1">
+                                {fetchingEntries ? (
+                                    <div className="py-32 flex flex-col items-center justify-center gap-4">
+                                        <div className="w-10 h-10 border-4 border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin" />
+                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Syncing Data...</p>
+                                    </div>
+                                ) : filteredEntries.length > 0 ? (
+                                    <div className="p-2">
+                                        <Tables
+                                            headers={columns.map(c => c.header)}
+                                            rows={filteredEntries.map(entry => columns.map(col => {
+                                                if (typeof col.accessor === 'function') {
+                                                    return col.accessor(entry);
+                                                }
+                                                return entry[col.accessor];
+                                            }))}
+                                        />
+                                    </div>
+                                ) : (
+                                    <div className="py-32 flex flex-col items-center justify-center text-center px-8">
+                                        <div className="w-16 h-16 rounded-[2rem] bg-slate-50 flex items-center justify-center text-slate-200 mb-4">
+                                            {tableSearch ? <FaExclamationCircle size={32} /> : <FaHistory size={32} />}
+                                        </div>
+                                        <h4 className="text-sm font-black text-slate-800 uppercase tracking-widest">
+                                            {tableSearch ? 'No matches found' : 'No Pending Entries'}
+                                        </h4>
+                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1 max-w-xs mx-auto">
+                                            {tableSearch ? `No sauda or lorry matches "${tableSearch}"` : 'Select a ledger to view pending payments'}
+                                        </p>
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     </div>
-                </form>
+                </div>
             </div>
         </AdminPageShell>
     );
