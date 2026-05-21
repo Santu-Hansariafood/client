@@ -235,17 +235,20 @@
         {
           "name": "Payment List",
           "link": "/payments/list",
-          "icon": "FaList"
+          "icon": "FaList",
+          "roles": ["Admin", "Employee"]
         },
         {
           "name": "Add Received",
           "link": "/payments/received/add",
-          "icon": "FaPlus"
+          "icon": "FaPlus",
+          "roles": ["Admin", "Employee"]
         },
         {
           "name": "Received List",
           "link": "/payments/received/list",
-          "icon": "FaList"
+          "icon": "FaList",
+          "roles": ["Admin", "Employee"]
         }
       ]
     },
@@ -256,9 +259,10 @@
         {
           "name": "Register Employee",
           "link": "/employee/add",
-          "icon": "FaUserPlus"
+          "icon": "FaUserPlus",
+          "roles": ["Admin"]
         },
-        { "name": "Employee List", "link": "/employee/list", "icon": "FaList" }
+        { "name": "Employee List", "link": "/employee/list", "icon": "FaList", "roles": ["Admin"] }
       ]
     },
     {
@@ -268,12 +272,14 @@
         {
           "name": "Register Transporter",
           "link": "/transporter/add",
-          "icon": "FaPlus"
+          "icon": "FaPlus",
+          "roles": ["Admin", "Employee"]
         },
         {
           "name": "Transporter List",
           "link": "/transporter/list",
-          "icon": "FaList"
+          "icon": "FaList",
+          "roles": ["Admin", "Employee"]
         }
       ]
     },
@@ -284,12 +290,14 @@
         {
           "name": "Create Vendor Code",
           "link": "/vendor-code/add",
-          "icon": "FaPlus"
+          "icon": "FaPlus",
+          "roles": ["Admin", "Employee"]
         },
         {
           "name": "Vendor Code List",
           "link": "/vendor-code/list",
-          "icon": "FaList"
+          "icon": "FaList",
+          "roles": ["Admin", "Employee"]
         }
       ]
     },
@@ -300,7 +308,14 @@
         {
           "name": "Add Expense",
           "link": "/expense/add",
-          "icon": "FaPlus"
+          "icon": "FaPlus",
+          "roles": ["Admin", "Employee"]
+        },
+        {
+          "name": "List Expense",
+          "link": "/expense/list",
+          "icon": "FaList",
+          "roles": ["Admin", "Employee"]
         }
       ]
     }

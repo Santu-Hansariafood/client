@@ -199,7 +199,7 @@ const PaymentList = () => {
   const tabs = [
     { id: "all", label: "All Payments", icon: <FaClipboardList />, link: "/payments/list" },
     { id: "pending", label: "Pending", icon: <FaClock />, link: "/payments/list" },
-    { id: "done", label: "Received", icon: <FaCheckDouble />, link: "/payments/received" },
+    { id: "done", label: "Received", icon: <FaCheckDouble />, link: "/payments/received/list" },
   ];
 
   return (
