@@ -32,7 +32,6 @@ import QRCode from "qrcode";
 import { jsPDF } from "jspdf";
 import "jspdf-autotable";
 
-// --- Components ---
 const Tables = lazy(() => import("../../../common/Tables/Tables"));
 const Pagination = lazy(
   () => import("../../../common/Paginations/Paginations"),
@@ -40,14 +39,11 @@ const Pagination = lazy(
 const SearchBox = lazy(() => import("../../../common/SearchBox/SearchBox"));
 const PopupBox = lazy(() => import("../../../common/PopupBox/PopupBox"));
 
-// --- Utilities ---
 const formatDate = (date) => {
   if (!date) return "N/A";
   const d = new Date(date);
   return isNaN(d.getTime()) ? "N/A" : d.toLocaleDateString("en-GB");
 };
-
-// --- Sub-components ---
 
 const AttachmentBadge = ({ count }) => (
   <span
@@ -259,7 +255,6 @@ const ReceivingList = () => {
         commodityData,
       } = await getMasterData();
 
-      // Fetch self-order to get CD percentage
       let cdValue = 0;
       try {
         const selfOrderRes = await api.get("/self-order", {
@@ -273,10 +268,14 @@ const ReceivingList = () => {
           : Array.isArray(selfOrderRes?.data)
             ? selfOrderRes.data
             : [];
-        
-        const normalize = (v) => String(v || "").trim().toLowerCase();
+
+        const normalize = (v) =>
+          String(v || "")
+            .trim()
+            .toLowerCase();
         const selfOrder = selfOrders.find(
-          (order) => normalize(order?.saudaNo) === normalize(selectedEntry?.saudaNo)
+          (order) =>
+            normalize(order?.saudaNo) === normalize(selectedEntry?.saudaNo),
         );
         if (selfOrder) {
           cdValue = Number(selfOrder.cd || 0);
@@ -418,7 +417,6 @@ const ReceivingList = () => {
 
       const preparedEntries = await Promise.all(
         loadingEntries.map(async (entry) => {
-          // Fetch self-order to get CD percentage
           let cdValue = 0;
           try {
             const selfOrderRes = await api.get("/self-order", {
@@ -432,10 +430,14 @@ const ReceivingList = () => {
               : Array.isArray(selfOrderRes?.data)
                 ? selfOrderRes.data
                 : [];
-            
-            const normalize = (v) => String(v || "").trim().toLowerCase();
+
+            const normalize = (v) =>
+              String(v || "")
+                .trim()
+                .toLowerCase();
             const selfOrder = selfOrders.find(
-              (order) => normalize(order?.saudaNo) === normalize(entry?.saudaNo)
+              (order) =>
+                normalize(order?.saudaNo) === normalize(entry?.saudaNo),
             );
             if (selfOrder) {
               cdValue = Number(selfOrder.cd || 0);
@@ -625,7 +627,6 @@ const ReceivingList = () => {
         noContentCard
       >
         <div className="max-w-[1700px] mx-auto space-y-8 p-4 sm:p-6 lg:p-10">
-          {/* Filter Header */}
           <div className="bg-white rounded-[2.5rem] p-8 shadow-xl shadow-slate-200/50 border border-slate-100 relative overflow-hidden group">
             <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/5 rounded-full blur-3xl -mr-32 -mt-32 transition-transform duration-700 group-hover:scale-110" />
             <div className="relative space-y-6">
@@ -683,11 +684,7 @@ const ReceivingList = () => {
           </div>
 
           <div className="bg-white rounded-[2.5rem] p-4 shadow-xl shadow-slate-200/50 border border-slate-100 overflow-hidden min-h-[500px] relative">
-            {loading && (
-              <div className="absolute inset-0 z-10 bg-white/60 backdrop-blur-[2px] flex items-center justify-center rounded-[2.5rem]">
-                <Loading />
-              </div>
-            )}
+            {loading && <Loading />}
 
             <Tables headers={headers} rows={rows} />
 

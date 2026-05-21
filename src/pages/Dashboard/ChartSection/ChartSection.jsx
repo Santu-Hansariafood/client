@@ -13,7 +13,8 @@ const LoadingChart = lazy(
   () => import("../../../common/Charts/LoadingChart/LoadingChart"),
 );
 const PaymentAnalyticsChart = lazy(
-  () => import("../../../common/Charts/PaymentAnalyticsChart/PaymentAnalyticsChart"),
+  () =>
+    import("../../../common/Charts/PaymentAnalyticsChart/PaymentAnalyticsChart"),
 );
 const CommodityPieChart = lazy(
   () => import("../../../common/Charts/CommodityPieChart/CommodityPieChart"),

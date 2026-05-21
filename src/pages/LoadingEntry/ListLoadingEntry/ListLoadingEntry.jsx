@@ -68,7 +68,6 @@ const validateEntryData = (entry) => {
   return errors;
 };
 
-// Custom hooks
 const useDebounce = (value, delay) => {
   const [debouncedValue, setDebouncedValue] = useState(value);
 
@@ -756,11 +755,7 @@ const ListLoadingEntry = () => {
     filters.search || filters.saudaNo || filters.lorryNumber;
 
   if (initialLoading && loading) {
-    return (
-      <div className="flex justify-center items-center h-96">
-        <Loading />
-      </div>
-    );
+    return <Loading />;
   }
 
   return (

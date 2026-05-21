@@ -275,9 +275,7 @@ const ConfirmBids = () => {
           </div>
 
           {loading ? (
-            <div className="flex justify-center py-20">
               <Loading />
-            </div>
           ) : (
             <div className="space-y-6">
               {bidDetails && (

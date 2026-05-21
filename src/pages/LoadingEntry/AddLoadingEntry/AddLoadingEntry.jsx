@@ -1,5 +1,19 @@
-import { useState, useEffect, lazy, Suspense, useCallback, useMemo } from "react";
-import { FaPlus, FaTrash, FaDownload, FaEdit, FaArrowLeft, FaTruckLoading } from "react-icons/fa";
+import {
+  useState,
+  useEffect,
+  lazy,
+  Suspense,
+  useCallback,
+  useMemo,
+} from "react";
+import {
+  FaPlus,
+  FaTrash,
+  FaDownload,
+  FaEdit,
+  FaArrowLeft,
+  FaTruckLoading,
+} from "react-icons/fa";
 import { toast } from "react-toastify";
 import api from "../../../utils/apiClient/apiClient";
 import Loading from "../../../common/Loading/Loading";
@@ -59,7 +73,9 @@ const SearchFiltersCard = ({
   resultCount,
 }) => {
   const canSearch =
-    userRole === "Seller" ? true : Boolean(selectedGroup?.value || saudaSearch.trim());
+    userRole === "Seller"
+      ? true
+      : Boolean(selectedGroup?.value || saudaSearch.trim());
 
   return (
     <div className="rounded-3xl border border-slate-200 bg-gradient-to-br from-white via-white to-emerald-50/30 shadow-lg p-4 sm:p-6">
@@ -256,8 +272,15 @@ const SearchFiltersCard = ({
   );
 };
 
-const OrdersTableCard = ({ orders, handleOpenPopup, toggleSaudaStatus, userRole }) => {
-  const activeCount = orders.filter((order) => order.status !== "closed").length;
+const OrdersTableCard = ({
+  orders,
+  handleOpenPopup,
+  toggleSaudaStatus,
+  userRole,
+}) => {
+  const activeCount = orders.filter(
+    (order) => order.status !== "closed",
+  ).length;
   const closedCount = orders.length - activeCount;
 
   return (
@@ -533,14 +556,16 @@ const AddLoadingEntry = () => {
   const handleOpenPopup = async (order) => {
     setSelectedOrder(order);
     const deliveryDate = order.poDate || order.createdAt || "";
-    const formattedDeliveryDate = deliveryDate 
-      ? new Date(deliveryDate).toISOString().split("T")[0] 
+    const formattedDeliveryDate = deliveryDate
+      ? new Date(deliveryDate).toISOString().split("T")[0]
       : "";
-      
-    setLoadingEntries([{ 
-      ...INITIAL_ENTRY, 
-      deliveryDate: formattedDeliveryDate 
-    }]);
+
+    setLoadingEntries([
+      {
+        ...INITIAL_ENTRY,
+        deliveryDate: formattedDeliveryDate,
+      },
+    ]);
     setActiveView("add");
     setExistingEntries([]);
 
@@ -553,11 +578,15 @@ const AddLoadingEntry = () => {
   };
 
   const handleAddMore = () => {
-    const deliveryDate = selectedOrder?.poDate || selectedOrder?.createdAt || "";
-    const formattedDeliveryDate = deliveryDate 
-      ? new Date(deliveryDate).toISOString().split("T")[0] 
+    const deliveryDate =
+      selectedOrder?.poDate || selectedOrder?.createdAt || "";
+    const formattedDeliveryDate = deliveryDate
+      ? new Date(deliveryDate).toISOString().split("T")[0]
       : "";
-    setLoadingEntries([...loadingEntries, { ...INITIAL_ENTRY, deliveryDate: formattedDeliveryDate }]);
+    setLoadingEntries([
+      ...loadingEntries,
+      { ...INITIAL_ENTRY, deliveryDate: formattedDeliveryDate },
+    ]);
   };
 
   const handleRemoveEntry = (index) => {
@@ -570,7 +599,12 @@ const AddLoadingEntry = () => {
   const handleEntryChange = (index, field, value) => {
     const newEntries = [...loadingEntries];
 
-    if (field === "loadingDate" || field === "unloadingDate" || field === "dateOfIssue" || field === "deliveryDate") {
+    if (
+      field === "loadingDate" ||
+      field === "unloadingDate" ||
+      field === "dateOfIssue" ||
+      field === "deliveryDate"
+    ) {
       const d = new Date(value);
       newEntries[index][field] = !isNaN(d.getTime())
         ? d.toISOString().split("T")[0]
@@ -638,7 +672,9 @@ const AddLoadingEntry = () => {
         entry.driverPhoneNumber &&
         !/^0?\d{10}$/.test(entry.driverPhoneNumber)
       ) {
-        toast.error("Invalid phone number - should be 10 digits (can start with 0)");
+        toast.error(
+          "Invalid phone number - should be 10 digits (can start with 0)",
+        );
         setIsSaving(false);
         return;
       }
@@ -695,7 +731,7 @@ const AddLoadingEntry = () => {
         return;
       }
       toastId = toast.loading("Preparing PDF...");
-      
+
       const blob = await PrintLoadingEntry(entry);
       if (!blob) return;
 
@@ -719,9 +755,15 @@ const AddLoadingEntry = () => {
   const handleEditHistoryEntry = (entry) => {
     setEditingEntry({
       ...entry,
-      loadingDate: entry.loadingDate ? new Date(entry.loadingDate).toISOString().split('T')[0] : '',
-      unloadingDate: entry.unloadingDate ? new Date(entry.unloadingDate).toISOString().split('T')[0] : '',
-      dateOfIssue: entry.dateOfIssue ? new Date(entry.dateOfIssue).toISOString().split('T')[0] : '',
+      loadingDate: entry.loadingDate
+        ? new Date(entry.loadingDate).toISOString().split("T")[0]
+        : "",
+      unloadingDate: entry.unloadingDate
+        ? new Date(entry.unloadingDate).toISOString().split("T")[0]
+        : "",
+      dateOfIssue: entry.dateOfIssue
+        ? new Date(entry.dateOfIssue).toISOString().split("T")[0]
+        : "",
     });
     setActiveView("edit");
   };
@@ -731,9 +773,11 @@ const AddLoadingEntry = () => {
       try {
         await api.delete(`/loading-entries/${id}`);
         toast.success("Entry deleted successfully");
-        const response = await api.get(`/loading-entries/sauda/${selectedOrder.saudaNo}`);
+        const response = await api.get(
+          `/loading-entries/sauda/${selectedOrder.saudaNo}`,
+        );
         setExistingEntries(Array.isArray(response.data) ? response.data : []);
-        
+
         const orderRes = await api.get(`/self-order/${selectedOrder._id}`);
         if (orderRes.data) {
           setSelectedOrder(orderRes.data);
@@ -748,7 +792,7 @@ const AddLoadingEntry = () => {
 
   const handleUpdateEditingEntry = async () => {
     if (!editingEntry || !editingEntry._id) return;
-    
+
     setIsSaving(true);
     try {
       const weight = parseFloat(editingEntry.loadingWeight) || 0;
@@ -760,15 +804,17 @@ const AddLoadingEntry = () => {
       const payload = {
         ...editingEntry,
         totalFreight: total,
-        balance: balance
+        balance: balance,
       };
 
       await api.put(`/loading-entries/${editingEntry._id}`, payload);
       toast.success("Entry updated successfully");
       setActiveView("add");
       setEditingEntry(null);
-      
-      const response = await api.get(`/loading-entries/sauda/${selectedOrder.saudaNo}`);
+
+      const response = await api.get(
+        `/loading-entries/sauda/${selectedOrder.saudaNo}`,
+      );
       setExistingEntries(Array.isArray(response.data) ? response.data : []);
 
       const orderRes = await api.get(`/self-order/${selectedOrder._id}`);
@@ -894,7 +940,9 @@ const AddLoadingEntry = () => {
             <div className="space-y-6 p-4 rounded-3xl border border-slate-200 bg-white shadow-sm">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-slate-500 uppercase">Loading Date</label>
+                  <label className="text-xs font-bold text-slate-500 uppercase">
+                    Loading Date
+                  </label>
                   <DateSelector
                     selectedDate={editingEntry.loadingDate}
                     onChange={(date) =>
@@ -908,7 +956,9 @@ const AddLoadingEntry = () => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-slate-500 uppercase">Unloading Date</label>
+                  <label className="text-xs font-bold text-slate-500 uppercase">
+                    Unloading Date
+                  </label>
                   <DateSelector
                     selectedDate={editingEntry.unloadingDate}
                     onChange={(date) =>
@@ -922,7 +972,9 @@ const AddLoadingEntry = () => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-slate-500 uppercase">Loading From</label>
+                  <label className="text-xs font-bold text-slate-500 uppercase">
+                    Loading From
+                  </label>
                   <DataDropdown
                     options={stateOptions}
                     selectedOptions={
@@ -943,73 +995,131 @@ const AddLoadingEntry = () => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-slate-500 uppercase">Lorry Number</label>
+                  <label className="text-xs font-bold text-slate-500 uppercase">
+                    Lorry Number
+                  </label>
                   <DataInput
                     value={editingEntry.lorryNumber}
-                    onChange={(e) => setEditingEntry({...editingEntry, lorryNumber: e.target.value.toUpperCase()})}
+                    onChange={(e) =>
+                      setEditingEntry({
+                        ...editingEntry,
+                        lorryNumber: e.target.value.toUpperCase(),
+                      })
+                    }
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-slate-500 uppercase">Bags</label>
+                  <label className="text-xs font-bold text-slate-500 uppercase">
+                    Bags
+                  </label>
                   <DataInput
                     type="number"
                     value={editingEntry.bags}
-                    onChange={(e) => setEditingEntry({...editingEntry, bags: e.target.value})}
+                    onChange={(e) =>
+                      setEditingEntry({ ...editingEntry, bags: e.target.value })
+                    }
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-slate-500 uppercase">Loading Weight (Tons)</label>
+                  <label className="text-xs font-bold text-slate-500 uppercase">
+                    Loading Weight (Tons)
+                  </label>
                   <DataInput
                     type="number"
                     value={editingEntry.loadingWeight}
-                    onChange={(e) => setEditingEntry({...editingEntry, loadingWeight: e.target.value})}
+                    onChange={(e) =>
+                      setEditingEntry({
+                        ...editingEntry,
+                        loadingWeight: e.target.value,
+                      })
+                    }
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-slate-500 uppercase">Unloading Weight (Tons)</label>
+                  <label className="text-xs font-bold text-slate-500 uppercase">
+                    Unloading Weight (Tons)
+                  </label>
                   <DataInput
                     type="number"
                     value={editingEntry.unloadingWeight}
-                    onChange={(e) => setEditingEntry({...editingEntry, unloadingWeight: e.target.value})}
+                    onChange={(e) =>
+                      setEditingEntry({
+                        ...editingEntry,
+                        unloadingWeight: e.target.value,
+                      })
+                    }
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-slate-500 uppercase">Freight Rate</label>
+                  <label className="text-xs font-bold text-slate-500 uppercase">
+                    Freight Rate
+                  </label>
                   <DataInput
                     type="number"
                     value={editingEntry.freightRate}
-                    onChange={(e) => setEditingEntry({...editingEntry, freightRate: e.target.value})}
+                    onChange={(e) =>
+                      setEditingEntry({
+                        ...editingEntry,
+                        freightRate: e.target.value,
+                      })
+                    }
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-slate-500 uppercase">Advance</label>
+                  <label className="text-xs font-bold text-slate-500 uppercase">
+                    Advance
+                  </label>
                   <DataInput
                     type="number"
                     value={editingEntry.advance}
-                    onChange={(e) => setEditingEntry({...editingEntry, advance: e.target.value})}
+                    onChange={(e) =>
+                      setEditingEntry({
+                        ...editingEntry,
+                        advance: e.target.value,
+                      })
+                    }
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-slate-500 uppercase">Bill Number</label>
+                  <label className="text-xs font-bold text-slate-500 uppercase">
+                    Bill Number
+                  </label>
                   <DataInput
                     value={editingEntry.billNumber}
-                    onChange={(e) => setEditingEntry({...editingEntry, billNumber: e.target.value})}
+                    onChange={(e) =>
+                      setEditingEntry({
+                        ...editingEntry,
+                        billNumber: e.target.value,
+                      })
+                    }
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-slate-500 uppercase">Driver Name</label>
+                  <label className="text-xs font-bold text-slate-500 uppercase">
+                    Driver Name
+                  </label>
                   <DataInput
                     value={editingEntry.driverName}
-                    onChange={(e) => setEditingEntry({...editingEntry, driverName: e.target.value})}
+                    onChange={(e) =>
+                      setEditingEntry({
+                        ...editingEntry,
+                        driverName: e.target.value,
+                      })
+                    }
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-slate-500 uppercase">Driver Phone</label>
+                  <label className="text-xs font-bold text-slate-500 uppercase">
+                    Driver Phone
+                  </label>
                   <DataInput
                     value={editingEntry.driverPhoneNumber}
                     onChange={(e) => {
                       const digitsOnly = e.target.value.replace(/\D/g, "");
-                      setEditingEntry({...editingEntry, driverPhoneNumber: digitsOnly.slice(0, 11)});
+                      setEditingEntry({
+                        ...editingEntry,
+                        driverPhoneNumber: digitsOnly.slice(0, 11),
+                      });
                     }}
                   />
                 </div>
@@ -1127,7 +1237,8 @@ const AddLoadingEntry = () => {
                                 Weight
                               </p>
                               <p className="text-sm font-bold text-emerald-600">
-                                {entry.loadingWeight} / {entry.unloadingWeight || 0} T
+                                {entry.loadingWeight} /{" "}
+                                {entry.unloadingWeight || 0} T
                               </p>
                             </div>
                             <div>
@@ -1140,7 +1251,8 @@ const AddLoadingEntry = () => {
                             </div>
                           </div>
                           <div className="flex gap-2">
-                            {(userRole === "Admin" || userRole === "Employee") && (
+                            {(userRole === "Admin" ||
+                              userRole === "Employee") && (
                               <>
                                 <button
                                   onClick={() => handleEditHistoryEntry(entry)}
@@ -1150,7 +1262,9 @@ const AddLoadingEntry = () => {
                                   <FaEdit />
                                 </button>
                                 <button
-                                  onClick={() => handleDeleteHistoryEntry(entry._id)}
+                                  onClick={() =>
+                                    handleDeleteHistoryEntry(entry._id)
+                                  }
                                   className="p-2 text-rose-600 hover:bg-rose-50 rounded-lg transition"
                                   title="Delete Entry"
                                 >
@@ -1182,7 +1296,8 @@ const AddLoadingEntry = () => {
                         New Loading Entry
                       </h3>
                       <p className="text-sm text-slate-500">
-                        Add lorry details clearly and keep each loading record easy to review.
+                        Add lorry details clearly and keep each loading record
+                        easy to review.
                       </p>
                     </div>
                   </div>
@@ -1195,352 +1310,365 @@ const AddLoadingEntry = () => {
                   >
                     <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-emerald-500 via-teal-500 to-sky-500" />
                     <div className="p-4 sm:p-5 space-y-6">
-                    <div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center border-b border-slate-100 pb-4">
-                      <div className="flex items-center gap-3">
-                        <span className="flex items-center justify-center w-10 h-10 rounded-2xl bg-emerald-600 text-white font-bold text-sm shadow-sm">
-                          {index + 1}
-                        </span>
-                        <div>
-                          <h4 className="font-bold text-slate-800">
-                            Loading Specification
-                          </h4>
-                          <p className="text-xs text-slate-500 mt-0.5">
-                            Enter transport, quantity and billing details for this lorry.
-                          </p>
+                      <div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center border-b border-slate-100 pb-4">
+                        <div className="flex items-center gap-3">
+                          <span className="flex items-center justify-center w-10 h-10 rounded-2xl bg-emerald-600 text-white font-bold text-sm shadow-sm">
+                            {index + 1}
+                          </span>
+                          <div>
+                            <h4 className="font-bold text-slate-800">
+                              Loading Specification
+                            </h4>
+                            <p className="text-xs text-slate-500 mt-0.5">
+                              Enter transport, quantity and billing details for
+                              this lorry.
+                            </p>
+                          </div>
                         </div>
-                      </div>
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => handleDownloadPDF(entry)}
-                          className="flex items-center gap-2 px-3 py-2 text-purple-600 bg-purple-50 hover:bg-purple-100 rounded-xl transition text-sm font-bold border border-purple-100"
-                          title="Download Lorry Challan"
-                        >
-                          <FaDownload /> Challan
-                        </button>
-                        {loadingEntries.length > 1 && (
+                        <div className="flex gap-2">
                           <button
-                            onClick={() => handleRemoveEntry(index)}
-                            className="p-2.5 text-red-500 bg-red-50 hover:bg-red-100 rounded-xl transition border border-red-100"
-                            title="Remove Entry"
+                            onClick={() => handleDownloadPDF(entry)}
+                            className="flex items-center gap-2 px-3 py-2 text-purple-600 bg-purple-50 hover:bg-purple-100 rounded-xl transition text-sm font-bold border border-purple-100"
+                            title="Download Lorry Challan"
                           >
-                            <FaTrash />
+                            <FaDownload /> Challan
                           </button>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="rounded-2xl border border-slate-100 bg-slate-50/50 p-5">
-                      <div className="flex items-center justify-between gap-3 mb-5">
-                        <p className="text-xs font-bold uppercase tracking-widest text-emerald-600">
-                          Basic Details
-                        </p>
-                        <span className="inline-flex items-center rounded-full bg-white border border-emerald-100 px-3 py-1 text-[10px] font-bold text-emerald-700 shadow-sm">
-                          LORRY #{index + 1}
-                        </span>
-                      </div>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-                        <div className="space-y-2">
-                          <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                            Loading Date
-                          </label>
-                          <DateSelector
-                            selectedDate={entry.loadingDate}
-                            onChange={(date) =>
-                              handleEntryChange(index, "loadingDate", date)
-                            }
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                            Unloading Date
-                          </label>
-                          <DateSelector
-                            selectedDate={entry.unloadingDate}
-                            onChange={(date) =>
-                              handleEntryChange(index, "unloadingDate", date)
-                            }
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                            Loading From
-                          </label>
-                          <DataDropdown
-                            options={stateOptions}
-                            selectedOptions={
-                              entry.loadingFrom
-                                ? stateOptions.find(
-                                    (s) => s.value === entry.loadingFrom,
-                                  ) || null
-                                : null
-                            }
-                            onChange={(option) => {
-                              const newEntries = [...loadingEntries];
-                              newEntries[index].loadingFrom =
-                                option?.value || "";
-                              setLoadingEntries(newEntries);
-                            }}
-                            placeholder="Select State"
-                            isMulti={false}
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                            Delivery Date
-                          </label>
-                          <div className="px-4 py-2.5 bg-slate-100 border border-slate-200 rounded-xl text-sm font-semibold text-slate-600 cursor-not-allowed shadow-inner">
-                            {entry.deliveryDate ? formatDate(entry.deliveryDate) : "N/A"}
-                          </div>
-                          <p className="text-[9px] text-slate-400 italic">Auto-filled from Sauda</p>
-                        </div>
-                        <div className="space-y-2">
-                          <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                            Lorry Number
-                          </label>
-                          <DataInput
-                            value={entry.lorryNumber}
-                            onChange={(e) =>
-                              handleEntryChange(
-                                index,
-                                "lorryNumber",
-                                e.target.value,
-                              )
-                            }
-                            placeholder="e.g. RJ 14 GA 1234"
-                            className="bg-white"
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                            Bags Count
-                          </label>
-                          <DataInput
-                            type="number"
-                            value={entry.bags}
-                            onChange={(e) =>
-                              handleEntryChange(index, "bags", e.target.value)
-                            }
-                            placeholder="No. of bags"
-                            className="bg-white"
-                          />
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                      <div className="rounded-2xl border border-blue-100 bg-blue-50/30 p-5">
-                        <p className="text-xs font-bold uppercase tracking-widest text-blue-600 mb-5">
-                          Weight & Brokerage
-                        </p>
-                        <div className="grid grid-cols-2 gap-4">
-                          <div className="space-y-2">
-                            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                              Loading Wt
-                            </label>
-                            <DataInput
-                              type="number"
-                              value={entry.loadingWeight}
-                              onChange={(e) =>
-                                handleEntryChange(
-                                  index,
-                                  "loadingWeight",
-                                  e.target.value,
-                                )
-                              }
-                              placeholder="0.00"
-                              className="bg-white border-blue-100 focus:border-blue-400"
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                              Unloading Wt
-                            </label>
-                            <DataInput
-                              type="number"
-                              value={entry.unloadingWeight}
-                              onChange={(e) =>
-                                handleEntryChange(
-                                  index,
-                                  "unloadingWeight",
-                                  e.target.value,
-                                )
-                              }
-                              placeholder="0.00"
-                              className="bg-white border-blue-100 focus:border-blue-400"
-                            />
-                          </div>
-                          <div className="col-span-2 mt-2 p-3 bg-white rounded-xl border border-blue-100 flex justify-between items-center shadow-sm">
-                            <div>
-                              <p className="text-[10px] font-bold text-slate-400 uppercase">Buyer Brokerage</p>
-                              <p className="text-sm font-bold text-blue-700">₹{entry.buyerBrokerage || 0}</p>
-                            </div>
-                            <div className="w-px h-8 bg-blue-100"></div>
-                            <div className="text-right">
-                              <p className="text-[10px] font-bold text-slate-400 uppercase">Seller Brokerage</p>
-                              <p className="text-sm font-bold text-blue-700">₹{entry.sellerBrokerage || 0}</p>
-                            </div>
-                          </div>
+                          {loadingEntries.length > 1 && (
+                            <button
+                              onClick={() => handleRemoveEntry(index)}
+                              className="p-2.5 text-red-500 bg-red-50 hover:bg-red-100 rounded-xl transition border border-red-100"
+                              title="Remove Entry"
+                            >
+                              <FaTrash />
+                            </button>
+                          )}
                         </div>
                       </div>
 
-                      <div className="rounded-2xl border border-amber-100 bg-amber-50/30 p-5">
-                        <p className="text-xs font-bold uppercase tracking-widest text-amber-600 mb-5">
-                          Billing Details
-                        </p>
-                        <div className="grid grid-cols-2 gap-4">
+                      <div className="rounded-2xl border border-slate-100 bg-slate-50/50 p-5">
+                        <div className="flex items-center justify-between gap-3 mb-5">
+                          <p className="text-xs font-bold uppercase tracking-widest text-emerald-600">
+                            Basic Details
+                          </p>
+                          <span className="inline-flex items-center rounded-full bg-white border border-emerald-100 px-3 py-1 text-[10px] font-bold text-emerald-700 shadow-sm">
+                            LORRY #{index + 1}
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
                           <div className="space-y-2">
                             <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                              Bill Number
-                            </label>
-                            <DataInput
-                              value={entry.billNumber}
-                              onChange={(e) =>
-                                handleEntryChange(
-                                  index,
-                                  "billNumber",
-                                  e.target.value,
-                                )
-                              }
-                              placeholder="Invoice no."
-                              className="bg-white border-amber-100 focus:border-amber-400"
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                              Issue Date
+                              Loading Date
                             </label>
                             <DateSelector
-                              selectedDate={entry.dateOfIssue}
+                              selectedDate={entry.loadingDate}
                               onChange={(date) =>
-                                handleEntryChange(index, "dateOfIssue", date)
+                                handleEntryChange(index, "loadingDate", date)
                               }
                             />
                           </div>
-                        </div>
-                      </div>
-                      <div className="rounded-2xl border border-purple-100 bg-purple-50/30 p-5">
-                        <p className="text-xs font-bold uppercase tracking-widest text-purple-600 mb-5">
-                          Transport & Freight
-                        </p>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div className="space-y-2">
                             <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                              Transporter
+                              Unloading Date
+                            </label>
+                            <DateSelector
+                              selectedDate={entry.unloadingDate}
+                              onChange={(date) =>
+                                handleEntryChange(index, "unloadingDate", date)
+                              }
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                              Loading From
                             </label>
                             <DataDropdown
-                              options={transporters}
+                              options={stateOptions}
                               selectedOptions={
-                                entry.transporterId
-                                  ? transporters.find(
-                                      (t) => t.value === entry.transporterId,
+                                entry.loadingFrom
+                                  ? stateOptions.find(
+                                      (s) => s.value === entry.loadingFrom,
                                     ) || null
                                   : null
                               }
                               onChange={(option) => {
                                 const newEntries = [...loadingEntries];
-                                newEntries[index].transporterId =
+                                newEntries[index].loadingFrom =
                                   option?.value || "";
-                                newEntries[index].addedTransport =
-                                  option?.name || "";
                                 setLoadingEntries(newEntries);
                               }}
-                              placeholder="Select Transporter"
+                              placeholder="Select State"
                               isMulti={false}
                             />
                           </div>
                           <div className="space-y-2">
                             <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                              Freight Rate
+                              Delivery Date
+                            </label>
+                            <div className="px-4 py-2.5 bg-slate-100 border border-slate-200 rounded-xl text-sm font-semibold text-slate-600 cursor-not-allowed shadow-inner">
+                              {entry.deliveryDate
+                                ? formatDate(entry.deliveryDate)
+                                : "N/A"}
+                            </div>
+                            <p className="text-[9px] text-slate-400 italic">
+                              Auto-filled from Sauda
+                            </p>
+                          </div>
+                          <div className="space-y-2">
+                            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                              Lorry Number
+                            </label>
+                            <DataInput
+                              value={entry.lorryNumber}
+                              onChange={(e) =>
+                                handleEntryChange(
+                                  index,
+                                  "lorryNumber",
+                                  e.target.value,
+                                )
+                              }
+                              placeholder="e.g. RJ 14 GA 1234"
+                              className="bg-white"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                              Bags Count
                             </label>
                             <DataInput
                               type="number"
-                              value={entry.freightRate}
+                              value={entry.bags}
                               onChange={(e) =>
-                                handleEntryChange(
-                                  index,
-                                  "freightRate",
-                                  e.target.value,
-                                )
+                                handleEntryChange(index, "bags", e.target.value)
                               }
-                              placeholder="Rs. per ton"
-                              className="bg-white border-purple-100 focus:border-purple-400"
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                              Driver Name
-                            </label>
-                            <DataInput
-                              value={entry.driverName}
-                              onChange={(e) =>
-                                handleEntryChange(
-                                  index,
-                                  "driverName",
-                                  e.target.value,
-                                )
-                              }
-                              placeholder="Driver name"
-                              className="bg-white border-purple-100 focus:border-purple-400"
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                              Driver Mobile
-                            </label>
-                            <DataInput
-                              value={entry.driverPhoneNumber}
-                              onChange={(e) =>
-                                handleEntryChange(
-                                  index,
-                                  "driverPhoneNumber",
-                                  e.target.value,
-                                )
-                              }
-                              placeholder="Phone number"
-                              className="bg-white border-purple-100 focus:border-purple-400"
+                              placeholder="No. of bags"
+                              className="bg-white"
                             />
                           </div>
                         </div>
                       </div>
-                    </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 rounded-3xl border border-slate-100 bg-slate-50/30 p-5">
-                      <div className="rounded-2xl border border-slate-200 bg-white px-4 py-4 flex flex-col items-center justify-center shadow-sm">
-                        <p className="text-[10px] text-slate-400 uppercase font-bold tracking-widest mb-1">
-                          Total Freight
-                        </p>
-                        <p className="font-bold text-slate-800 text-xl">
-                          ₹ {Number(entry.totalFreight).toFixed(2)}
-                        </p>
-                      </div>
-                      <div className="rounded-2xl border border-emerald-100 bg-emerald-50/40 px-4 py-4 flex flex-col items-center justify-center shadow-sm">
-                        <p className="text-[10px] text-slate-400 uppercase font-bold tracking-widest mb-1">
-                          Advance Amount
-                        </p>
-                        <div className="max-w-[120px]">
-                          <DataInput
-                            type="number"
-                            className="text-center font-bold !py-1"
-                            value={entry.advance}
-                            onChange={(e) =>
-                              handleEntryChange(
-                                index,
-                                "advance",
-                                e.target.value,
-                              )
-                            }
-                          />
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div className="rounded-2xl border border-blue-100 bg-blue-50/30 p-5">
+                          <p className="text-xs font-bold uppercase tracking-widest text-blue-600 mb-5">
+                            Weight & Brokerage
+                          </p>
+                          <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                              <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                                Loading Wt
+                              </label>
+                              <DataInput
+                                type="number"
+                                value={entry.loadingWeight}
+                                onChange={(e) =>
+                                  handleEntryChange(
+                                    index,
+                                    "loadingWeight",
+                                    e.target.value,
+                                  )
+                                }
+                                placeholder="0.00"
+                                className="bg-white border-blue-100 focus:border-blue-400"
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                                Unloading Wt
+                              </label>
+                              <DataInput
+                                type="number"
+                                value={entry.unloadingWeight}
+                                onChange={(e) =>
+                                  handleEntryChange(
+                                    index,
+                                    "unloadingWeight",
+                                    e.target.value,
+                                  )
+                                }
+                                placeholder="0.00"
+                                className="bg-white border-blue-100 focus:border-blue-400"
+                              />
+                            </div>
+                            <div className="col-span-2 mt-2 p-3 bg-white rounded-xl border border-blue-100 flex justify-between items-center shadow-sm">
+                              <div>
+                                <p className="text-[10px] font-bold text-slate-400 uppercase">
+                                  Buyer Brokerage
+                                </p>
+                                <p className="text-sm font-bold text-blue-700">
+                                  ₹{entry.buyerBrokerage || 0}
+                                </p>
+                              </div>
+                              <div className="w-px h-8 bg-blue-100"></div>
+                              <div className="text-right">
+                                <p className="text-[10px] font-bold text-slate-400 uppercase">
+                                  Seller Brokerage
+                                </p>
+                                <p className="text-sm font-bold text-blue-700">
+                                  ₹{entry.sellerBrokerage || 0}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="rounded-2xl border border-amber-100 bg-amber-50/30 p-5">
+                          <p className="text-xs font-bold uppercase tracking-widest text-amber-600 mb-5">
+                            Billing Details
+                          </p>
+                          <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                              <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                                Bill Number
+                              </label>
+                              <DataInput
+                                value={entry.billNumber}
+                                onChange={(e) =>
+                                  handleEntryChange(
+                                    index,
+                                    "billNumber",
+                                    e.target.value,
+                                  )
+                                }
+                                placeholder="Invoice no."
+                                className="bg-white border-amber-100 focus:border-amber-400"
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                                Issue Date
+                              </label>
+                              <DateSelector
+                                selectedDate={entry.dateOfIssue}
+                                onChange={(date) =>
+                                  handleEntryChange(index, "dateOfIssue", date)
+                                }
+                              />
+                            </div>
+                          </div>
+                        </div>
+                        <div className="rounded-2xl border border-purple-100 bg-purple-50/30 p-5">
+                          <p className="text-xs font-bold uppercase tracking-widest text-purple-600 mb-5">
+                            Transport & Freight
+                          </p>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                              <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                                Transporter
+                              </label>
+                              <DataDropdown
+                                options={transporters}
+                                selectedOptions={
+                                  entry.transporterId
+                                    ? transporters.find(
+                                        (t) => t.value === entry.transporterId,
+                                      ) || null
+                                    : null
+                                }
+                                onChange={(option) => {
+                                  const newEntries = [...loadingEntries];
+                                  newEntries[index].transporterId =
+                                    option?.value || "";
+                                  newEntries[index].addedTransport =
+                                    option?.name || "";
+                                  setLoadingEntries(newEntries);
+                                }}
+                                placeholder="Select Transporter"
+                                isMulti={false}
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                                Freight Rate
+                              </label>
+                              <DataInput
+                                type="number"
+                                value={entry.freightRate}
+                                onChange={(e) =>
+                                  handleEntryChange(
+                                    index,
+                                    "freightRate",
+                                    e.target.value,
+                                  )
+                                }
+                                placeholder="Rs. per ton"
+                                className="bg-white border-purple-100 focus:border-purple-400"
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                                Driver Name
+                              </label>
+                              <DataInput
+                                value={entry.driverName}
+                                onChange={(e) =>
+                                  handleEntryChange(
+                                    index,
+                                    "driverName",
+                                    e.target.value,
+                                  )
+                                }
+                                placeholder="Driver name"
+                                className="bg-white border-purple-100 focus:border-purple-400"
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                                Driver Mobile
+                              </label>
+                              <DataInput
+                                value={entry.driverPhoneNumber}
+                                onChange={(e) =>
+                                  handleEntryChange(
+                                    index,
+                                    "driverPhoneNumber",
+                                    e.target.value,
+                                  )
+                                }
+                                placeholder="Phone number"
+                                className="bg-white border-purple-100 focus:border-purple-400"
+                              />
+                            </div>
+                          </div>
                         </div>
                       </div>
-                      <div className="rounded-2xl border border-amber-100 bg-amber-50/40 px-4 py-4 flex flex-col items-center justify-center shadow-sm">
-                        <p className="text-[10px] text-slate-400 uppercase font-bold tracking-widest mb-1">
-                          Balance Due
-                        </p>
-                        <p className="font-bold text-amber-600 text-xl">
-                          ₹ {Number(entry.balance).toFixed(2)}
-                        </p>
+
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 rounded-3xl border border-slate-100 bg-slate-50/30 p-5">
+                        <div className="rounded-2xl border border-slate-200 bg-white px-4 py-4 flex flex-col items-center justify-center shadow-sm">
+                          <p className="text-[10px] text-slate-400 uppercase font-bold tracking-widest mb-1">
+                            Total Freight
+                          </p>
+                          <p className="font-bold text-slate-800 text-xl">
+                            ₹ {Number(entry.totalFreight).toFixed(2)}
+                          </p>
+                        </div>
+                        <div className="rounded-2xl border border-emerald-100 bg-emerald-50/40 px-4 py-4 flex flex-col items-center justify-center shadow-sm">
+                          <p className="text-[10px] text-slate-400 uppercase font-bold tracking-widest mb-1">
+                            Advance Amount
+                          </p>
+                          <div className="max-w-[120px]">
+                            <DataInput
+                              type="number"
+                              className="text-center font-bold !py-1"
+                              value={entry.advance}
+                              onChange={(e) =>
+                                handleEntryChange(
+                                  index,
+                                  "advance",
+                                  e.target.value,
+                                )
+                              }
+                            />
+                          </div>
+                        </div>
+                        <div className="rounded-2xl border border-amber-100 bg-amber-50/40 px-4 py-4 flex flex-col items-center justify-center shadow-sm">
+                          <p className="text-[10px] text-slate-400 uppercase font-bold tracking-widest mb-1">
+                            Balance Due
+                          </p>
+                          <p className="font-bold text-amber-600 text-xl">
+                            ₹ {Number(entry.balance).toFixed(2)}
+                          </p>
+                        </div>
                       </div>
-                    </div>
                     </div>
                   </div>
                 ))}

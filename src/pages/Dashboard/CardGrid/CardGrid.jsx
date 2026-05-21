@@ -25,47 +25,70 @@ const useCountUp = (end, duration = 800) => {
   return value;
 };
 
-const DashboardCard = ({ title, value, icon: Icon, colorClass, shadowColor, subtitle }) => {
+const DashboardCard = ({
+  title,
+  value,
+  icon: Icon,
+  colorClass,
+  shadowColor,
+  subtitle,
+}) => {
   return (
-    <div className={`relative overflow-hidden group rounded-[3rem] p-8 transition-all duration-700 hover:-translate-y-4 hover:shadow-[0_40px_80px_-15px_rgba(0,0,0,0.15)] border border-white/50 bg-gradient-to-br from-white/90 to-white/50 backdrop-blur-2xl shadow-2xl shadow-slate-200/40`}>
-      {/* Glossy Overlay Reflection */}
+    <div
+      className={`relative overflow-hidden group rounded-[3rem] p-8 transition-all duration-700 hover:-translate-y-4 hover:shadow-[0_40px_80px_-15px_rgba(0,0,0,0.15)] border border-white/50 bg-gradient-to-br from-white/90 to-white/50 backdrop-blur-2xl shadow-2xl shadow-slate-200/40`}
+    >
       <div className="absolute inset-0 bg-gradient-to-tr from-white/0 via-white/20 to-white/0 -translate-x-[100%] group-hover:translate-x-[100%] transition-transform duration-1000 ease-in-out"></div>
-      
-      {/* Subtle Dot Pattern Background */}
+
       <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[radial-gradient(#000_1px,transparent_1px)] [background-size:16px_16px]"></div>
-      
-      {/* Primary Gradient Glow */}
-      <div className={`absolute -right-16 -top-16 w-64 h-64 rounded-full blur-[80px] opacity-10 transition-all duration-1000 group-hover:opacity-30 group-hover:scale-125 bg-gradient-to-br ${colorClass}`}></div>
-      
-      {/* Secondary Glow for Depth */}
-      <div className={`absolute -left-16 -bottom-16 w-48 h-48 rounded-full blur-[60px] opacity-5 transition-all duration-1000 group-hover:opacity-20 bg-gradient-to-tr ${colorClass}`}></div>
+
+      <div
+        className={`absolute -right-16 -top-16 w-64 h-64 rounded-full blur-[80px] opacity-10 transition-all duration-1000 group-hover:opacity-30 group-hover:scale-125 bg-gradient-to-br ${colorClass}`}
+      ></div>
+
+      <div
+        className={`absolute -left-16 -bottom-16 w-48 h-48 rounded-full blur-[60px] opacity-5 transition-all duration-1000 group-hover:opacity-20 bg-gradient-to-tr ${colorClass}`}
+      ></div>
 
       <div className="relative z-10 flex flex-col h-full">
         <div className="flex items-start justify-between mb-8">
           <div className="space-y-2">
             <div className="flex items-center gap-2">
-              <div className={`w-1.5 h-1.5 rounded-full bg-gradient-to-r ${colorClass}`}></div>
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] leading-tight transition-colors duration-500 group-hover:text-slate-600">{title}</p>
+              <div
+                className={`w-1.5 h-1.5 rounded-full bg-gradient-to-r ${colorClass}`}
+              ></div>
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] leading-tight transition-colors duration-500 group-hover:text-slate-600">
+                {title}
+              </p>
             </div>
             <h3 className="text-5xl font-black text-slate-900 tracking-tighter leading-none flex items-baseline gap-1">
               {value}
-              <span className="text-lg font-bold text-slate-300 group-hover:text-slate-400 transition-colors">+</span>
+              <span className="text-lg font-bold text-slate-300 group-hover:text-slate-400 transition-colors">
+                +
+              </span>
             </h3>
           </div>
 
-          <div className={`relative p-5 rounded-[2rem] shadow-2xl transform transition-all duration-700 group-hover:rotate-[10deg] group-hover:scale-110 group-hover:shadow-current/30`}>
-            {/* Icon Background Layer */}
-            <div className={`absolute inset-0 rounded-[2rem] bg-gradient-to-br ${colorClass} opacity-90`}></div>
+          <div
+            className={`relative p-5 rounded-[2rem] shadow-2xl transform transition-all duration-700 group-hover:rotate-[10deg] group-hover:scale-110 group-hover:shadow-current/30`}
+          >
+            <div
+              className={`absolute inset-0 rounded-[2rem] bg-gradient-to-br ${colorClass} opacity-90`}
+            ></div>
             <div className="absolute inset-0 rounded-[2rem] bg-white/20 backdrop-blur-sm border border-white/30"></div>
-            <Icon size={28} className="relative z-10 text-white drop-shadow-md" />
+            <Icon
+              size={28}
+              className="relative z-10 text-white drop-shadow-md"
+            />
           </div>
         </div>
 
         {subtitle && (
           <div className="inline-flex items-center w-fit px-4 py-2 rounded-2xl bg-white/40 border border-white/60 backdrop-blur-md shadow-sm">
-            <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.15em]">{subtitle}</span>
+            <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.15em]">
+              {subtitle}
+            </span>
           </div>
-        )}     
+        )}
       </div>
     </div>
   );
