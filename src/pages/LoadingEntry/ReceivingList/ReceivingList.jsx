@@ -21,7 +21,6 @@ import { toast } from "react-toastify";
 import { useAuth } from "../../../context/AuthContext/AuthContext";
 import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
 import Loading from "../../../common/Loading/Loading";
-import PrintLoadingEntry from "../PrintLoadingEntry/PrintLoadingEntry";
 import { downloadFile } from "../../../utils/fileDownloader";
 
 import MasterReceivingReportPDF from "./MasterReceivingReportPDF";
@@ -199,8 +198,8 @@ const ReceivingList = () => {
           *Sauda No:* _${entry.saudaNo || "N/A"}_
           *Invoice No:* _${entry.billNumber || "N/A"}_
           *Lorry No:* _${(entry.lorryNumber || "N/A").toUpperCase()}_
-          *Loading Weight:* _${entry.loadingWeight || 0} _ *Tons*
-          *Unloading Weight:* _${entry.unloadingWeight || 0} _ *Tons*
+          *Loading Weight:* _${entry.loadingWeight || 0}_ *Tons*
+          *Unloading Weight:* _${entry.unloadingWeight || 0}_ *Tons*
           *Loading Date:* _${formatDate(entry.loadingDate)}_
           *Unloading Date:* _${formatDate(entry.unloadingDate)}_
           *Rate:* _Rs. ${entry.actualRate || 0}_
