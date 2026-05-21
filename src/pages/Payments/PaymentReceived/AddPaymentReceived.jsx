@@ -21,6 +21,7 @@ const AddPaymentReceived = () => {
     const [selectedLedger, setSelectedLedger] = useState(null);
     const [entries, setEntries] = useState([]);
     const [tableSearch, setTableSearch] = useState('');
+    const [todayTotal, setTodayTotal] = useState(0);
 
     const [formData, setFormData] = useState({
         date: new Date().toISOString().split('T')[0],
@@ -108,6 +109,29 @@ const AddPaymentReceived = () => {
         fetchEntries();
     }, [fetchEntries]);
 
+    // Fetch today's total received
+    const fetchTodayTotal = useCallback(async () => {
+        try {
+            const today = new Date().toISOString().split('T')[0];
+            const response = await api.get('/payment-received', {
+                params: {
+                    startDate: today,
+                    endDate: today,
+                    limit: 1000 // Get all for today
+                }
+            });
+            const payments = response.data.data || [];
+            const total = payments.reduce((sum, p) => sum + (p.amount || 0), 0);
+            setTodayTotal(total);
+        } catch (error) {
+            console.error('Error fetching today total:', error);
+        }
+    }, []);
+
+    useEffect(() => {
+        fetchTodayTotal();
+    }, [fetchTodayTotal]);
+
     const handleInputChange = (e) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
@@ -189,8 +213,9 @@ const AddPaymentReceived = () => {
             await api.post('/payment-received', payload);
             toast.success(`Payment saved for ${entry.lorryNumber}`);
             
-            // Refresh entries to show updated paidAmount
+            // Refresh entries and today's total
             fetchEntries();
+            fetchTodayTotal();
         } catch (error) {
             toast.error(error.response?.data?.message || 'Error saving payment');
         } finally {
@@ -325,166 +350,175 @@ const AddPaymentReceived = () => {
             icon={FaMoneyBillWave}
         >
             <div className="max-w-7xl mx-auto space-y-6">
-                {/* Header Actions */}
-                <div className="flex items-center justify-between bg-white px-6 py-4 rounded-[1.5rem] border border-slate-100 shadow-sm">
-                    <button
-                        onClick={() => navigate(-1)}
-                        className="flex items-center gap-2 text-slate-400 hover:text-slate-800 font-black uppercase tracking-widest text-[10px] transition-colors"
-                    >
-                        <FaArrowLeft />
-                        Back to List
-                    </button>
-                    <div className="flex items-center gap-3">
-                        <div className="flex flex-col items-end">
-                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Selected Date</span>
-                            <span className="text-sm font-bold text-slate-800">{new Date(formData.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                {/* Top Statistics & Navigation */}
+                <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+                    <div className="md:col-span-8 bg-white px-6 py-4 rounded-[1.5rem] border border-slate-100 shadow-sm flex items-center justify-between">
+                        <button
+                            onClick={() => navigate(-1)}
+                            className="flex items-center gap-2 text-slate-400 hover:text-slate-800 font-black uppercase tracking-widest text-[10px] transition-colors"
+                        >
+                            <FaArrowLeft />
+                            Back to List
+                        </button>
+                        <div className="flex items-center gap-6">
+                            <div className="flex items-center gap-3">
+                                <div className="flex flex-col items-end">
+                                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Payment Date</span>
+                                    <span className="text-sm font-bold text-slate-800">{new Date(formData.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                                </div>
+                                <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600">
+                                    <FaCalendarAlt size={18} />
+                                </div>
+                            </div>
                         </div>
-                        <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600">
-                            <FaCalendarAlt size={18} />
+                    </div>
+
+                    <div className="md:col-span-4 bg-gradient-to-br from-slate-900 to-slate-800 px-6 py-4 rounded-[1.5rem] shadow-xl shadow-slate-200 flex items-center justify-between group overflow-hidden relative border border-slate-800">
+                        <div className="absolute -right-4 -bottom-4 w-24 h-24 bg-emerald-500/10 rounded-full blur-2xl group-hover:bg-emerald-500/20 transition-all"></div>
+                        <div className="z-10">
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Today's Received Total</p>
+                            <p className="text-2xl font-black text-white italic tracking-tighter">₹{todayTotal.toLocaleString('en-IN')}</p>
+                        </div>
+                        <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center text-emerald-400 backdrop-blur-md border border-white/10 shadow-inner z-10">
+                            <FaMoneyBillWave size={22} />
                         </div>
                     </div>
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                    {/* Left Side: Configuration (4 cols) */}
-                    <div className="lg:col-span-4 space-y-6">
-                        <div className="bg-white rounded-[2rem] p-6 border border-slate-100 shadow-sm space-y-6">
-                            <div className="flex items-center gap-3 pb-4 border-b border-slate-50">
-                                <div className="w-10 h-10 rounded-xl bg-slate-900 flex items-center justify-center text-white">
-                                    <FaExchangeAlt size={18} />
-                                </div>
-                                <div>
-                                    <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest">Configuration</h3>
-                                    <p className="text-[10px] text-slate-400 font-bold uppercase">Setup allocation rules</p>
-                                </div>
+                {/* Configuration Card - Moved to Top */}
+                <div className="bg-white rounded-[2rem] p-6 border border-slate-100 shadow-sm space-y-6">
+                    <div className="flex items-center justify-between pb-4 border-b border-slate-50">
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-xl bg-slate-900 flex items-center justify-center text-white">
+                                <FaExchangeAlt size={18} />
                             </div>
-
-                            <div className="space-y-4">
-                                <div className="space-y-2">
-                                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Ledger Type</label>
-                                    <DataDropdown
-                                        options={ledgerTypes}
-                                        selectedOptions={formData.ledgerType}
-                                        onChange={(opt) => setFormData(prev => ({ ...prev, ledgerType: opt.value }))}
-                                        isMulti={false}
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Select Ledger</label>
-                                    <DataDropdown
-                                        options={ledgers}
-                                        selectedOptions={selectedLedger}
-                                        onChange={handleLedgerChange}
-                                        placeholder={fetchingLedgers ? "Loading..." : `Select ${formData.ledgerType}`}
-                                        isMulti={false}
-                                        isDisabled={fetchingLedgers}
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Payment Date</label>
-                                    <DateSelector
-                                        value={formData.date}
-                                        onChange={(val) => setFormData(prev => ({ ...prev, date: val }))}
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Payment Mode</label>
-                                    <DataDropdown
-                                        options={paymentModes}
-                                        selectedOptions={formData.paymentMode}
-                                        onChange={(opt) => setFormData(prev => ({ ...prev, paymentMode: opt.value }))}
-                                        isMulti={false}
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">General Note</label>
-                                    <textarea
-                                        name="remarks"
-                                        value={formData.remarks}
-                                        onChange={handleInputChange}
-                                        placeholder="Internal reference..."
-                                        rows={3}
-                                        className="w-full p-4 rounded-xl border border-slate-200 bg-slate-50/30 focus:bg-white focus:ring-2 focus:ring-emerald-500/10 outline-none transition text-sm font-medium text-slate-700 resize-none"
-                                    />
-                                </div>
+                            <div>
+                                <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest">Allocation Settings</h3>
+                                <p className="text-[10px] text-slate-400 font-bold uppercase">Setup ledger and payment rules</p>
                             </div>
                         </div>
+                        <div className="hidden md:flex items-center gap-3 px-4 py-2 bg-slate-50 rounded-xl border border-slate-100">
+                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Active Ledger:</span>
+                            <span className="text-xs font-bold text-slate-700">{selectedLedger?.label || 'None'}</span>
+                        </div>
+                    </div>
 
-                        {/* Summary Widget */}
-                        <div className="bg-slate-900 rounded-[2rem] p-6 text-white shadow-xl shadow-slate-200">
-                            <div className="flex items-center justify-between mb-4">
-                                <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Selection Summary</span>
-                                <FaCheckCircle className="text-emerald-500" />
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Ledger Type</label>
+                            <DataDropdown
+                                options={ledgerTypes}
+                                selectedOptions={formData.ledgerType}
+                                onChange={(opt) => setFormData(prev => ({ ...prev, ledgerType: opt.value }))}
+                                isMulti={false}
+                            />
+                        </div>
+                        <div className="space-y-2 md:col-span-1">
+                            <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Select Ledger</label>
+                            <DataDropdown
+                                options={ledgers}
+                                selectedOptions={selectedLedger}
+                                onChange={handleLedgerChange}
+                                placeholder={fetchingLedgers ? "Loading..." : `Select ${formData.ledgerType}`}
+                                isMulti={false}
+                                isDisabled={fetchingLedgers}
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Payment Date</label>
+                            <DateSelector
+                                value={formData.date}
+                                onChange={(val) => setFormData(prev => ({ ...prev, date: val }))}
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Payment Mode</label>
+                            <DataDropdown
+                                options={paymentModes}
+                                selectedOptions={formData.paymentMode}
+                                onChange={(opt) => setFormData(prev => ({ ...prev, paymentMode: opt.value }))}
+                                isMulti={false}
+                            />
+                        </div>
+                    </div>
+                    
+                    <div className="pt-4 border-t border-slate-50">
+                        <div className="flex flex-col md:flex-row gap-6">
+                            <div className="flex-1 space-y-2">
+                                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">General Note</label>
+                                <input
+                                    type="text"
+                                    name="remarks"
+                                    value={formData.remarks}
+                                    onChange={handleInputChange}
+                                    placeholder="Internal reference or notes for this payment session..."
+                                    className="w-full h-11 px-4 rounded-xl border border-slate-200 bg-slate-50/30 focus:bg-white focus:ring-2 focus:ring-emerald-500/10 outline-none transition text-sm font-medium text-slate-700"
+                                />
                             </div>
-                            <div className="space-y-4">
+                            <div className="md:w-64 bg-emerald-50/50 p-4 rounded-2xl border border-emerald-100 flex items-center justify-between">
                                 <div>
-                                    <p className="text-[10px] font-bold text-slate-500 uppercase">Target Ledger</p>
-                                    <p className="font-bold truncate">{selectedLedger?.label || 'Not Selected'}</p>
+                                    <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest mb-0.5">Total Pending</p>
+                                    <p className="text-lg font-black text-slate-800">{entries.length} Entries</p>
                                 </div>
-                                <div className="pt-4 border-t border-white/10">
-                                    <p className="text-[10px] font-bold text-slate-500 uppercase">Total Pending</p>
-                                    <p className="text-2xl font-black">{entries.length} Entries</p>
+                                <div className="w-10 h-10 rounded-xl bg-emerald-600 flex items-center justify-center text-white shadow-sm shadow-emerald-100">
+                                    <FaBuilding size={16} />
                                 </div>
                             </div>
                         </div>
                     </div>
+                </div>
 
-                    {/* Right Side: Entries Table (8 cols) */}
-                    <div className="lg:col-span-8 space-y-6">
-                        <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden flex flex-col h-full">
-                            <div className="px-8 py-6 border-b border-slate-50 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-50/30">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-8 h-8 rounded-lg bg-emerald-600 flex items-center justify-center text-white">
-                                        <FaBuilding size={14} />
-                                    </div>
-                                    <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest">Pending Sauda Entries</h3>
-                                </div>
-                                
-                                <div className="relative w-full md:w-64">
-                                    <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 size-3" />
-                                    <input
-                                        type="text"
-                                        placeholder="SEARCH SAUDA, LORRY..."
-                                        value={tableSearch}
-                                        onChange={(e) => setTableSearch(e.target.value)}
-                                        className="w-full pl-10 pr-4 py-2 rounded-xl border border-slate-200 bg-white text-[10px] font-black uppercase tracking-widest focus:ring-2 focus:ring-emerald-500/10 outline-none transition"
-                                    />
-                                </div>
+                {/* Main Content Area - Full Width Table */}
+                <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden flex flex-col">
+                    <div className="px-8 py-6 border-b border-slate-50 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-50/30">
+                        <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-lg bg-emerald-600 flex items-center justify-center text-white">
+                                <FaBuilding size={14} />
                             </div>
-
-                            <div className="flex-1">
-                                {fetchingEntries ? (
-                                    <div className="py-32 flex flex-col items-center justify-center gap-4">
-                                        <div className="w-10 h-10 border-4 border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin" />
-                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Syncing Data...</p>
-                                    </div>
-                                ) : filteredEntries.length > 0 ? (
-                                    <div className="p-2">
-                                        <Tables
-                                            headers={columns.map(c => c.header)}
-                                            rows={filteredEntries.map(entry => columns.map(col => {
-                                                if (typeof col.accessor === 'function') {
-                                                    return col.accessor(entry);
-                                                }
-                                                return entry[col.accessor];
-                                            }))}
-                                        />
-                                    </div>
-                                ) : (
-                                    <div className="py-32 flex flex-col items-center justify-center text-center px-8">
-                                        <div className="w-16 h-16 rounded-[2rem] bg-slate-50 flex items-center justify-center text-slate-200 mb-4">
-                                            {tableSearch ? <FaExclamationCircle size={32} /> : <FaHistory size={32} />}
-                                        </div>
-                                        <h4 className="text-sm font-black text-slate-800 uppercase tracking-widest">
-                                            {tableSearch ? 'No matches found' : 'No Pending Entries'}
-                                        </h4>
-                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1 max-w-xs mx-auto">
-                                            {tableSearch ? `No sauda or lorry matches "${tableSearch}"` : 'Select a ledger to view pending payments'}
-                                        </p>
-                                    </div>
-                                )}
-                            </div>
+                            <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest">Pending Sauda Entries</h3>
                         </div>
+                        
+                        <div className="relative w-full md:w-80">
+                            <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 size-3" />
+                            <input
+                                type="text"
+                                placeholder="SEARCH BY SAUDA NO, LORRY NO, COMPANY..."
+                                value={tableSearch}
+                                onChange={(e) => setTableSearch(e.target.value)}
+                                className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 bg-white text-[10px] font-black uppercase tracking-widest focus:ring-2 focus:ring-emerald-500/10 outline-none transition"
+                            />
+                        </div>
+                    </div>
+
+                    <div className="p-2">
+                        {fetchingEntries ? (
+                            <div className="py-32 flex flex-col items-center justify-center gap-4">
+                                <div className="w-10 h-10 border-4 border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin" />
+                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Syncing Records...</p>
+                            </div>
+                        ) : filteredEntries.length > 0 ? (
+                            <Tables
+                                headers={columns.map(c => c.header)}
+                                rows={filteredEntries.map(entry => columns.map(col => {
+                                    if (typeof col.accessor === 'function') {
+                                        return col.accessor(entry);
+                                    }
+                                    return entry[col.accessor];
+                                }))}
+                            />
+                        ) : (
+                            <div className="py-32 flex flex-col items-center justify-center text-center px-8">
+                                <div className="w-16 h-16 rounded-[2rem] bg-slate-50 flex items-center justify-center text-slate-200 mb-4">
+                                    {tableSearch ? <FaExclamationCircle size={32} /> : <FaHistory size={32} />}
+                                </div>
+                                <h4 className="text-sm font-black text-slate-800 uppercase tracking-widest">
+                                    {tableSearch ? 'No matches found' : 'No Pending Entries'}
+                                </h4>
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1 max-w-xs mx-auto">
+                                    {tableSearch ? `No sauda or lorry matches "${tableSearch}"` : 'Select a ledger above to load pending lorry-wise entries'}
+                                </p>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>
