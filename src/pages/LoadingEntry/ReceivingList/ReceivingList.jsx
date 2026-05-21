@@ -177,7 +177,44 @@ const ReceivingList = () => {
   );
 
   const handleCopy = useCallback(
-    (entry) => {
+    async (entry) => {
+      const toastId = toast.loading("Preparing details to copy...");
+
+      // 1. Fetch Sauda details to get CD and GST
+      let cdValue = 0;
+      let gstValue = 0;
+      try {
+        const selfOrderRes = await api.get("/self-order", {
+          params: {
+            search: entry.saudaNo,
+            limit: 1,
+          },
+        });
+        const selfOrders = Array.isArray(selfOrderRes?.data?.data)
+          ? selfOrderRes.data.data
+          : Array.isArray(selfOrderRes?.data)
+            ? selfOrderRes.data
+            : [];
+
+        const normalize = (v) => String(v || "").trim().toLowerCase();
+        const selfOrder = selfOrders.find(
+          (order) => normalize(order?.saudaNo) === normalize(entry?.saudaNo),
+        );
+        if (selfOrder) {
+          cdValue = Number(selfOrder.cd || 0);
+          gstValue = Number(selfOrder.gst || 0);
+        }
+      } catch (e) {
+        console.error("Error fetching sauda for copy:", e);
+      }
+
+      // 2. Perform Calculations
+      const grossAmount = (entry.unloadingWeight || 0) * (entry.actualRate || 0);
+      const cdDeduction = grossAmount * (cdValue / 100);
+      const taxableValue = grossAmount - cdDeduction;
+      const gstAmount = taxableValue * (gstValue / 100);
+      const finalAmount = taxableValue + gstAmount;
+
       const documents = [];
       if (entry.documents?.kantaSlip)
         documents.push(`Kanta Slip: ${entry.documents.kantaSlip}`);
@@ -198,9 +235,11 @@ const ReceivingList = () => {
 *Loading Date:* _${formatDate(entry.loadingDate)}_
 *Unloading Date:* _${formatDate(entry.unloadingDate)}_
 *Rate:* _Rs. ${entry.actualRate || 0}_
-*Amount:* _Rs. ${(
-        (entry.unloadingWeight || 0) * (entry.actualRate || 0)
-      ).toFixed(2)}_
+*Gross Amount:* _Rs. ${grossAmount.toFixed(2)}_
+${cdValue > 0 ? `*CD (${cdValue}%):* _- Rs. ${cdDeduction.toFixed(2)}_` : ""}
+${cdValue > 0 ? `*Taxable Value:* _Rs. ${taxableValue.toFixed(2)}_` : ""}
+${gstValue > 0 ? `*GST (${gstValue}%):* _+ Rs. ${gstAmount.toFixed(2)}_` : ""}
+*Final Amount:* _Rs. ${finalAmount.toFixed(2)}_
 *Seller Company:* _${entry.supplierCompany || "N/A"}_
 *Buyer Company:* _${entry.buyerCompany || "N/A"}_
 
@@ -215,10 +254,16 @@ ${
 _*Thanks and Regards,*_
 _*Purchase Team*_
 _*Hansaria Food Private Limited*_`;
+
       navigator.clipboard
         .writeText(textToCopy)
         .then(async () => {
-          toast.success("Entry details copied to clipboard!");
+          toast.update(toastId, {
+            render: "Entry details copied to clipboard!",
+            type: "success",
+            isLoading: false,
+            autoClose: 3000,
+          });
           if (entry.sentStatus !== "Sent") {
             try {
               await api.put(`/loading-entries/${entry._id}`, {
@@ -232,7 +277,12 @@ _*Hansaria Food Private Limited*_`;
         })
         .catch((err) => {
           console.error("Failed to copy:", err);
-          toast.error("Failed to copy details");
+          toast.update(toastId, {
+            render: "Failed to copy details",
+            type: "error",
+            isLoading: false,
+            autoClose: 3000,
+          });
         });
     },
     [fetchData],
