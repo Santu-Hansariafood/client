@@ -1,0 +1,39 @@
+import mongoose from "mongoose";
+
+const paymentReceivedSchema = new mongoose.Schema(
+  {
+    date: { type: Date, default: Date.now },
+    ledgerType: { 
+      type: String, 
+      enum: ["Buyer", "Seller"], 
+      required: true 
+    },
+    ledgerId: { 
+      type: mongoose.Schema.Types.ObjectId, 
+      refPath: 'ledgerType', 
+      required: true 
+    },
+    amount: { type: Number, required: true },
+    paymentType: { 
+      type: String, 
+      enum: ["Adjustment", "Sauda-wise"], 
+      required: true 
+    },
+    paymentMode: { 
+      type: String, 
+      enum: ["By Cash", "Bank", "Cheque", "TDS", "GST", "Adjustment"], 
+      required: true 
+    },
+    mappings: [
+      {
+        saudaNo: { type: String },
+        loadingEntryId: { type: mongoose.Schema.Types.ObjectId, ref: "LoadingEntry" },
+        allocatedAmount: { type: Number, required: true },
+      }
+    ],
+    remarks: { type: String, default: "" },
+  },
+  { timestamps: true }
+);
+
+export default mongoose.model("PaymentReceived", paymentReceivedSchema);

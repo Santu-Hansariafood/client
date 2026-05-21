@@ -180,7 +180,6 @@ const ReceivingList = () => {
     async (entry) => {
       const toastId = toast.loading("Preparing details to copy...");
 
-      // 1. Fetch Sauda details to get CD and GST
       let cdValue = 0;
       let gstValue = 0;
       try {
@@ -208,7 +207,6 @@ const ReceivingList = () => {
         console.error("Error fetching sauda for copy:", e);
       }
 
-      // 2. Perform Calculations
       const grossAmount = (entry.unloadingWeight || 0) * (entry.actualRate || 0);
       const cdDeduction = grossAmount * (cdValue / 100);
       const taxableValue = grossAmount - cdDeduction;

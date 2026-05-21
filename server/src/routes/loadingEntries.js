@@ -550,6 +550,9 @@ router.get("/", async (req, res) => {
     const commodity = (req.query.commodity || "").trim();
     const role = req.query.role;
     const mobile = req.query.mobile;
+    const buyerId = req.query.buyerId;
+    const supplierId = req.query.supplier;
+    const paymentStatus = req.query.paymentStatus;
 
     let query = {};
 
@@ -572,6 +575,22 @@ router.get("/", async (req, res) => {
     const andParts = [];
     if (Object.keys(query).length > 0) {
       andParts.push(query);
+    }
+
+    if (buyerId) {
+      const buyer = await Buyer.findById(buyerId).populate("companyIds").lean();
+      if (buyer && buyer.companyIds) {
+        const companyNames = buyer.companyIds.map((c) => c.companyName);
+        andParts.push({ buyerCompany: { $in: companyNames } });
+      }
+    }
+
+    if (supplierId) {
+      andParts.push({ supplier: toObjectId(supplierId) });
+    }
+
+    if (paymentStatus) {
+      andParts.push({ paymentStatus });
     }
 
     if (search) {

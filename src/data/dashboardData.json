@@ -238,9 +238,14 @@
           "icon": "FaList"
         },
         {
-          "name": "Payment Received",
-          "link": "/payments/received",
-          "icon": "FaCheckDouble"
+          "name": "Add Received",
+          "link": "/payments/received/add",
+          "icon": "FaPlus"
+        },
+        {
+          "name": "Received List",
+          "link": "/payments/received/list",
+          "icon": "FaList"
         }
       ]
     },
