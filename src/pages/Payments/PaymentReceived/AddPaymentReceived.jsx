@@ -8,17 +8,23 @@ import DateSelector from '../../../common/DateSelector/DateSelector';
 import Tables from '../../../common/Tables/Tables';
 import api from '../../../utils/apiClient/apiClient';
 import Loading from '../../../common/Loading/Loading';
-import { FaSave, FaArrowLeft, FaMoneyBillWave, FaExchangeAlt, FaHistory } from 'react-icons/fa';
+import { useAuth } from '../../../context/AuthContext/AuthContext';
+import { FaSave, FaArrowLeft, FaMoneyBillWave, FaExchangeAlt, FaHistory, FaCalendarAlt, FaBuilding } from 'react-icons/fa';
 
 const AddPaymentReceived = () => {
     const navigate = useNavigate();
+    const { user } = useAuth();
     const [loading, setLoading] = useState(false);
     const [fetchingLedgers, setFetchingLedgers] = useState(false);
     const [fetchingEntries, setFetchingEntries] = useState(false);
     const [ledgers, setLedgers] = useState([]);
-    const [entries, setEntries] = useState([]);
     const [selectedLedger, setSelectedLedger] = useState(null);
-    
+    const [entries, setEntries] = useState([]);
+    const [dateRange, setDateRange] = useState({
+        startDate: '',
+        endDate: ''
+    });
+
     const [formData, setFormData] = useState({
         date: new Date().toISOString().split('T')[0],
         ledgerType: 'Buyer',
@@ -26,30 +32,24 @@ const AddPaymentReceived = () => {
         amount: 0,
         paymentType: 'Sauda-wise',
         paymentMode: 'Bank',
-        remarks: '',
-        mappings: []
+        remarks: ''
     });
-
-    const paymentModes = [
-        { value: 'By Cash', label: 'By Cash' },
-        { value: 'Bank', label: 'Bank' },
-        { value: 'Cheque', label: 'Cheque' },
-        { value: 'TDS', label: 'TDS' },
-        { value: 'GST', label: 'GST' },
-        { value: 'Adjustment', label: 'Adjustment' }
-    ];
 
     const ledgerTypes = [
         { value: 'Buyer', label: 'Buyer' },
         { value: 'Seller', label: 'Seller' }
     ];
 
-    const paymentTypes = [
-        { value: 'Sauda-wise', label: 'Sauda-wise' },
-        { value: 'Adjustment', label: 'Adjustment' }
+    const paymentModes = [
+        { value: 'Bank', label: 'Bank Transfer' },
+        { value: 'By Cash', label: 'Cash' },
+        { value: 'Cheque', label: 'Cheque' },
+        { value: 'TDS', label: 'TDS' },
+        { value: 'GST', label: 'GST Adjustment' },
+        { value: 'Adjustment', label: 'General Adjustment' }
     ];
 
-    // Fetch ledgers (Buyers or Sellers)
+    // Fetch ledgers based on type
     useEffect(() => {
         const fetchLedgers = async () => {
             try {
@@ -60,7 +60,7 @@ const AddPaymentReceived = () => {
                 setLedgers(data.map(item => ({
                     value: item._id,
                     label: item.name || item.sellerName,
-                    companies: item.companyIds || [] // For buyers, to filter entries
+                    companies: item.companyIds || []
                 })));
                 setSelectedLedger(null);
                 setFormData(prev => ({ ...prev, ledgerId: '', mappings: [] }));
@@ -74,39 +74,44 @@ const AddPaymentReceived = () => {
     }, [formData.ledgerType]);
 
     // Fetch pending entries for mapping
-    useEffect(() => {
-        if (formData.ledgerId && formData.paymentType === 'Sauda-wise') {
-            const fetchEntries = async () => {
-                try {
-                    setFetchingEntries(true);
-                    let query = { paymentStatus: 'pending' };
-                    
-                    if (formData.ledgerType === 'Seller') {
-                        query.supplier = formData.ledgerId;
-                    } else {
-                        // For buyers, we need to find entries by company names associated with the buyer
-                        // This might require a specialized backend route or client-side filtering if entries are fetched
-                        // For now, let's assume we have a way to filter by buyerId if we update backend
-                        query.buyerId = formData.ledgerId;
-                    }
-                    
-                    const response = await api.get('/loading-entries', { params: query });
-                    const items = response.data.data || [];
-                    setEntries(items.map(item => ({
-                        ...item,
-                        allocatedAmount: 0
-                    })));
-                } catch (error) {
-                    toast.error('Error fetching pending entries');
-                } finally {
-                    setFetchingEntries(false);
-                }
-            };
-            fetchEntries();
-        } else {
+    const fetchEntries = useCallback(async () => {
+        if (!formData.ledgerId || formData.paymentType !== 'Sauda-wise') {
             setEntries([]);
+            return;
         }
-    }, [formData.ledgerId, formData.ledgerType, formData.paymentType]);
+
+        try {
+            setFetchingEntries(true);
+            let params = { 
+                paymentStatus: 'pending',
+                startDate: dateRange.startDate,
+                endDate: dateRange.endDate
+            };
+            
+            if (formData.ledgerType === 'Seller') {
+                params.supplier = formData.ledgerId;
+            } else {
+                params.buyerId = formData.ledgerId;
+            }
+            
+            const response = await api.get('/loading-entries', { params });
+            const items = response.data.data || [];
+            setEntries(items.map(item => ({
+                ...item,
+                allocatedAmount: 0,
+                rowRemarks: '',
+                isSaved: item.paymentStatus === 'done'
+            })));
+        } catch (error) {
+            toast.error('Error fetching pending entries');
+        } finally {
+            setFetchingEntries(false);
+        }
+    }, [formData.ledgerId, formData.ledgerType, formData.paymentType, dateRange]);
+
+    useEffect(() => {
+        fetchEntries();
+    }, [fetchEntries]);
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
@@ -118,10 +123,23 @@ const AddPaymentReceived = () => {
         setFormData(prev => ({ ...prev, ledgerId: option?.value || '' }));
     };
 
-    const handleAllocationChange = (entryId, amount) => {
+    const handleAllocationChange = (entryId, amount, netAmount, paidAmount) => {
         const numAmount = parseFloat(amount) || 0;
+        const dueAmount = netAmount - (paidAmount || 0);
+        
+        if (numAmount > dueAmount) {
+            toast.warning(`Allocation cannot exceed due amount (₹${dueAmount.toFixed(2)})`);
+            return;
+        }
+
         setEntries(prev => prev.map(entry => 
             entry._id === entryId ? { ...entry, allocatedAmount: numAmount } : entry
+        ));
+    };
+
+    const handleRowRemarksChange = (entryId, remarks) => {
+        setEntries(prev => prev.map(entry => 
+            entry._id === entryId ? { ...entry, rowRemarks: remarks } : entry
         ));
     };
 
@@ -144,44 +162,40 @@ const AddPaymentReceived = () => {
             gstAmount,
             netAmount,
             cdPercent,
-            gstPercent
+            gstPercent,
+            dueAmount: netAmount - (entry.paidAmount || 0)
         };
     };
 
-    const totalAllocated = useMemo(() => {
-        return entries.reduce((sum, entry) => sum + (entry.allocatedAmount || 0), 0);
-    }, [entries]);
-
-    const handleSubmit = async (e) => {
-        if (e) e.preventDefault();
-        
-        if (!formData.ledgerId) return toast.error('Please select a ledger');
-        if (formData.amount <= 0) return toast.error('Please enter a valid amount');
-        
-        if (formData.paymentType === 'Sauda-wise' && totalAllocated <= 0) {
-            return toast.error('Please allocate amount to at least one entry');
-        }
-
-        if (formData.paymentType === 'Sauda-wise' && totalAllocated > formData.amount) {
-            return toast.error('Total allocated amount cannot exceed bulk payment amount');
+    const handleSaveRow = async (entry) => {
+        if (entry.allocatedAmount <= 0) {
+            toast.error('Please enter an allocation amount');
+            return;
         }
 
         try {
             setLoading(true);
             const payload = {
-                ...formData,
-                mappings: entries
-                    .filter(e => e.allocatedAmount > 0)
-                    .map(e => ({
-                        loadingEntryId: e._id,
-                        saudaNo: e.saudaNo,
-                        allocatedAmount: e.allocatedAmount
-                    }))
+                date: formData.date,
+                ledgerType: formData.ledgerType,
+                ledgerId: formData.ledgerId,
+                amount: entry.allocatedAmount,
+                paymentType: 'Sauda-wise',
+                paymentMode: formData.paymentMode,
+                mappings: [{
+                    saudaNo: entry.saudaNo,
+                    loadingEntryId: entry._id,
+                    allocatedAmount: entry.allocatedAmount,
+                    remarks: entry.rowRemarks
+                }],
+                remarks: entry.rowRemarks // Also set top level remarks for history
             };
 
             await api.post('/payment-received', payload);
-            toast.success('Payment received successfully');
-            navigate('/payments/received/list');
+            toast.success(`Payment saved for ${entry.lorryNumber}`);
+            
+            // Refresh entries to show updated paidAmount
+            fetchEntries();
         } catch (error) {
             toast.error(error.response?.data?.message || 'Error saving payment');
         } finally {
@@ -191,7 +205,7 @@ const AddPaymentReceived = () => {
 
     const columns = [
         { 
-            header: 'Date', 
+            header: 'Date & Sauda', 
             accessor: (row) => (
                 <div className="flex flex-col">
                     <span className="font-bold text-slate-700">{new Date(row.loadingDate).toLocaleDateString('en-GB')}</span>
@@ -209,67 +223,82 @@ const AddPaymentReceived = () => {
             )
         },
         { 
-            header: 'Weight & Rate', 
-            accessor: (row) => (
-                <div className="flex flex-col">
-                    <span className="font-bold text-slate-700">{row.unloadingWeight} T</span>
-                    <span className="text-[10px] text-slate-400 font-bold">@ ₹{row.actualRate}/T</span>
-                </div>
-            )
-        },
-        { 
             header: 'Tally Breakdown', 
             accessor: (row) => {
                 const details = calculateTallyDetails(row);
                 return (
                     <div className="flex flex-col gap-0.5 text-[10px] font-medium min-w-[150px]">
                         <div className="flex justify-between text-slate-500">
-                            <span>Gross:</span>
-                            <span>₹{details.grossAmount.toFixed(2)}</span>
-                        </div>
-                        {details.cdAmount > 0 && (
-                            <div className="flex justify-between text-rose-500">
-                                <span>CD ({details.cdPercent}%):</span>
-                                <span>- ₹{details.cdAmount.toFixed(2)}</span>
-                            </div>
-                        )}
-                        {details.gstAmount > 0 && (
-                            <div className="flex justify-between text-blue-500">
-                                <span>GST ({details.gstPercent}%):</span>
-                                <span>+ ₹{details.gstAmount.toFixed(2)}</span>
-                            </div>
-                        )}
-                        <div className="flex justify-between border-t border-slate-100 pt-0.5 font-black text-slate-800 text-xs">
-                            <span>Net:</span>
+                            <span>Net Amount:</span>
                             <span>₹{details.netAmount.toFixed(2)}</span>
+                        </div>
+                        <div className="flex justify-between text-emerald-600">
+                            <span>Paid:</span>
+                            <span>₹{(row.paidAmount || 0).toFixed(2)}</span>
+                        </div>
+                        <div className="flex justify-between border-t border-slate-100 pt-0.5 font-black text-rose-600 text-xs">
+                            <span>Due:</span>
+                            <span>₹{details.dueAmount.toFixed(2)}</span>
                         </div>
                     </div>
                 );
             }
         },
         { 
-            header: 'Allocation', 
+            header: 'Allocation & Remarks', 
             accessor: (row) => {
                 const details = calculateTallyDetails(row);
+                const isLocked = row.isSaved && user?.role !== 'Admin';
+
                 return (
-                    <div className="flex flex-col gap-2">
-                        <input
-                            type="number"
-                            value={row.allocatedAmount}
-                            onChange={(e) => handleAllocationChange(row._id, e.target.value)}
-                            className={`w-32 px-3 py-2 rounded-xl border ${
-                                row.allocatedAmount > details.netAmount + 1 ? 'border-rose-500 bg-rose-50' : 'border-slate-200 bg-slate-50/50'
-                            } focus:bg-white focus:ring-2 focus:ring-emerald-500 outline-none transition font-bold text-slate-700`}
-                            placeholder="0.00"
+                    <div className="flex flex-col gap-2 min-w-[200px]">
+                        <div className="relative">
+                            <input
+                                type="number"
+                                value={row.allocatedAmount}
+                                onChange={(e) => handleAllocationChange(row._id, e.target.value, details.netAmount, row.paidAmount)}
+                                disabled={isLocked}
+                                className={`w-full px-3 py-2 rounded-xl border ${
+                                    isLocked ? 'bg-slate-100 text-slate-400' : 'border-slate-200 bg-slate-50/50'
+                                } focus:bg-white focus:ring-2 focus:ring-emerald-500 outline-none transition font-bold text-slate-700`}
+                                placeholder="Amount"
+                            />
+                            <p className="text-[10px] font-bold text-rose-500 mt-1 ml-1">
+                                Due: ₹{details.dueAmount.toFixed(2)}
+                            </p>
+                        </div>
+                        <textarea
+                            value={row.rowRemarks}
+                            onChange={(e) => handleRowRemarksChange(row._id, e.target.value)}
+                            disabled={isLocked}
+                            rows={1}
+                            className={`w-full px-3 py-2 rounded-xl border text-xs ${
+                                isLocked ? 'bg-slate-100 text-slate-400' : 'border-slate-200 bg-slate-50/50'
+                            } focus:bg-white focus:ring-2 focus:ring-emerald-500 outline-none transition`}
+                            placeholder="Add remarks..."
                         />
-                        <button
-                            type="button"
-                            onClick={() => handleAllocationChange(row._id, details.netAmount.toFixed(2))}
-                            className="text-[9px] font-black text-emerald-600 uppercase tracking-widest hover:text-emerald-700 text-left pl-1"
-                        >
-                            Full Settle
-                        </button>
                     </div>
+                );
+            }
+        },
+        {
+            header: 'Actions',
+            accessor: (row) => {
+                const isLocked = row.isSaved && user?.role !== 'Admin';
+                return (
+                    <button
+                        type="button"
+                        onClick={() => handleSaveRow(row)}
+                        disabled={isLocked || loading}
+                        className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 transition-all shadow-sm ${
+                            isLocked 
+                                ? 'bg-slate-100 text-slate-400 cursor-not-allowed' 
+                                : 'bg-emerald-600 text-white hover:bg-emerald-700'
+                        }`}
+                    >
+                        <FaSave />
+                        {isLocked ? 'Saved' : 'Save Entry'}
+                    </button>
                 );
             }
         }
@@ -281,173 +310,126 @@ const AddPaymentReceived = () => {
             subtitle="Record bulk payments and map them to sauda entries"
             icon={FaMoneyBillWave}
         >
-            <div className="max-w-6xl mx-auto">
-                <form onSubmit={handleSubmit} className="space-y-8">
-                    {/* Header Actions */}
-                    <div className="flex justify-between items-center">
-                        <button
-                            type="button"
-                            onClick={() => navigate(-1)}
-                            className="flex items-center gap-2 text-slate-600 hover:text-slate-900 transition font-semibold"
-                        >
-                            <FaArrowLeft /> Back to List
-                        </button>
-                        <button
-                            type="submit"
-                            disabled={loading}
-                            className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2.5 rounded-xl font-bold shadow-lg shadow-emerald-200 transition disabled:opacity-50"
-                        >
-                            <FaSave /> {loading ? 'Saving...' : 'Save Payment'}
-                        </button>
-                    </div>
+            <div className="max-w-7xl mx-auto space-y-8">
+                {/* Header Actions */}
+                <div className="flex items-center justify-between">
+                    <button
+                        onClick={() => navigate(-1)}
+                        className="flex items-center gap-2 text-slate-500 hover:text-slate-800 font-bold transition-colors group"
+                    >
+                        <div className="w-10 h-10 rounded-xl bg-white border border-slate-100 flex items-center justify-center shadow-sm group-hover:shadow-md transition-all">
+                            <FaArrowLeft />
+                        </div>
+                        <span>Back to List</span>
+                    </button>
+                </div>
 
-                    {/* Main Form Card */}
-                    <div className="bg-white rounded-[2rem] border border-slate-100 shadow-xl shadow-slate-200/50 overflow-hidden">
-                        <div className="p-8 space-y-8">
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                                <div className="space-y-2">
-                                    <label className="text-[11px] font-black uppercase tracking-widest text-slate-400">Ledger Type</label>
-                                    <DataDropdown
-                                        options={ledgerTypes}
-                                        selectedOptions={formData.ledgerType}
-                                        onChange={(opt) => setFormData(prev => ({ ...prev, ledgerType: opt.value }))}
-                                        isMulti={false}
-                                    />
-                                </div>
-                                <div className="space-y-2 col-span-2">
-                                    <label className="text-[11px] font-black uppercase tracking-widest text-slate-400">Select Ledger</label>
-                                    <DataDropdown
-                                        options={ledgers}
-                                        selectedOptions={selectedLedger}
-                                        onChange={handleLedgerChange}
-                                        placeholder={fetchingLedgers ? "Loading..." : `Select ${formData.ledgerType}`}
-                                        isMulti={false}
-                                        isDisabled={fetchingLedgers}
-                                    />
-                                </div>
+                <form onSubmit={(e) => e.preventDefault()} className="space-y-8">
+                    {/* Basic Info Card */}
+                    <div className="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-xl shadow-slate-200/50">
+                        <div className="flex items-center gap-4 mb-8">
+                            <div className="w-12 h-12 rounded-2xl bg-emerald-50 flex items-center justify-center text-emerald-600">
+                                <FaExchangeAlt size={24} />
                             </div>
-
-                            <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-                                <div className="space-y-2">
-                                    <label className="text-[11px] font-black uppercase tracking-widest text-slate-400">Payment Date</label>
-                                    <input
-                                        type="date"
-                                        name="date"
-                                        value={formData.date}
-                                        onChange={handleInputChange}
-                                        className="w-full h-12 px-4 rounded-xl border border-slate-200 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-emerald-500/20 outline-none transition font-semibold text-slate-700"
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="text-[11px] font-black uppercase tracking-widest text-slate-400">Bulk Amount</label>
-                                    <input
-                                        type="number"
-                                        name="amount"
-                                        value={formData.amount}
-                                        onChange={handleInputChange}
-                                        placeholder="0.00"
-                                        className="w-full h-12 px-4 rounded-xl border border-slate-200 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-emerald-500/20 outline-none transition font-semibold text-slate-700"
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="text-[11px] font-black uppercase tracking-widest text-slate-400">Payment Type</label>
-                                    <DataDropdown
-                                        options={paymentTypes}
-                                        selectedOptions={formData.paymentType}
-                                        onChange={(opt) => setFormData(prev => ({ ...prev, paymentType: opt.value }))}
-                                        isMulti={false}
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="text-[11px] font-black uppercase tracking-widest text-slate-400">Payment Mode</label>
-                                    <DataDropdown
-                                        options={paymentModes}
-                                        selectedOptions={formData.paymentMode}
-                                        onChange={(opt) => setFormData(prev => ({ ...prev, paymentMode: opt.value }))}
-                                        isMulti={false}
-                                    />
-                                </div>
+                            <div>
+                                <h3 className="text-xl font-black text-slate-800">Payment Allocation</h3>
+                                <p className="text-sm text-slate-400 font-medium">Select ledger and filter entries by date</p>
                             </div>
+                        </div>
 
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
                             <div className="space-y-2">
-                                <label className="text-[11px] font-black uppercase tracking-widest text-slate-400">Remarks</label>
-                                <textarea
-                                    name="remarks"
-                                    value={formData.remarks}
-                                    onChange={handleInputChange}
-                                    placeholder="Add any additional notes here..."
-                                    className="w-full min-h-[100px] p-4 rounded-xl border border-slate-200 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-emerald-500/20 outline-none transition font-medium text-slate-700 resize-none"
+                                <label className="text-[11px] font-black uppercase tracking-widest text-slate-400">Ledger Type</label>
+                                <DataDropdown
+                                    options={ledgerTypes}
+                                    selectedOptions={formData.ledgerType}
+                                    onChange={(opt) => setFormData(prev => ({ ...prev, ledgerType: opt.value }))}
+                                    isMulti={false}
+                                />
+                            </div>
+                            <div className="space-y-2 col-span-2">
+                                <label className="text-[11px] font-black uppercase tracking-widest text-slate-400">Select Ledger</label>
+                                <DataDropdown
+                                    options={ledgers}
+                                    selectedOptions={selectedLedger}
+                                    onChange={handleLedgerChange}
+                                    placeholder={fetchingLedgers ? "Loading..." : `Select ${formData.ledgerType}`}
+                                    isMulti={false}
+                                    isDisabled={fetchingLedgers}
+                                />
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+                            <div className="space-y-2">
+                                <label className="text-[11px] font-black uppercase tracking-widest text-slate-400">Payment Date</label>
+                                <DateSelector
+                                    value={formData.date}
+                                    onChange={(val) => setFormData(prev => ({ ...prev, date: val }))}
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-[11px] font-black uppercase tracking-widest text-slate-400">Payment Mode</label>
+                                <DataDropdown
+                                    options={paymentModes}
+                                    selectedOptions={formData.paymentMode}
+                                    onChange={(opt) => setFormData(prev => ({ ...prev, paymentMode: opt.value }))}
+                                    isMulti={false}
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-[11px] font-black uppercase tracking-widest text-slate-400">Filter Start Date</label>
+                                <DateSelector
+                                    value={dateRange.startDate}
+                                    onChange={(val) => setDateRange(prev => ({ ...prev, startDate: val }))}
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-[11px] font-black uppercase tracking-widest text-slate-400">Filter End Date</label>
+                                <DateSelector
+                                    value={dateRange.endDate}
+                                    onChange={(val) => setDateRange(prev => ({ ...prev, endDate: val }))}
                                 />
                             </div>
                         </div>
                     </div>
 
-                    {/* Mapping Section */}
-                    {formData.paymentType === 'Sauda-wise' && formData.ledgerId && (
-                        <div className="bg-white rounded-[2rem] border border-slate-100 shadow-xl shadow-slate-200/50 overflow-hidden">
-                            <div className="p-8 border-b border-slate-100 flex justify-between items-center">
-                                <div>
-                                    <h3 className="text-xl font-bold text-slate-800">Map Amount to Entries</h3>
-                                    <p className="text-sm text-slate-500 font-medium">Allocate the bulk payment to specific sauda/lorry records</p>
-                                </div>
-                                <div className="flex gap-4">
-                                    <button
-                                        type="button"
-                                        onClick={() => {
-                                            let remaining = formData.amount;
-                                            setEntries(prev => prev.map(entry => {
-                                                const { netAmount } = calculateTallyDetails(entry);
-                                                const allocate = Math.min(remaining, netAmount);
-                                                remaining -= allocate;
-                                                return { ...entry, allocatedAmount: parseFloat(allocate.toFixed(2)) };
-                                            }));
-                                        }}
-                                        className="px-4 py-2 bg-emerald-50 text-emerald-600 rounded-xl text-[10px] font-black uppercase tracking-widest border border-emerald-100 hover:bg-emerald-600 hover:text-white transition-all shadow-sm"
-                                    >
-                                        Auto-Allocate Bulk
-                                    </button>
-                                    <div className="text-right">
-                                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Total Allocated</p>
-                                        <p className={`text-2xl font-black ${totalAllocated > formData.amount ? 'text-red-500' : 'text-emerald-600'}`}>
-                                            ₹{totalAllocated.toLocaleString()}
-                                        </p>
-                                    </div>
-                                    <div className="text-right border-l pl-4">
-                                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Remaining</p>
-                                        <p className="text-2xl font-black text-slate-800">
-                                            ₹{(formData.amount - totalAllocated).toLocaleString()}
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="p-4">
-                                {fetchingEntries ? (
-                                    <div className="py-20 flex flex-col items-center justify-center gap-4">
-                                        <div className="w-12 h-12 border-4 border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin" />
-                                        <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">Fetching Pending Entries...</p>
-                                    </div>
-                                ) : entries.length > 0 ? (
-                                    <Tables
-                                        headers={columns.map(c => c.header)}
-                                        rows={entries.map(entry => columns.map(col => {
-                                            if (typeof col.accessor === 'function') {
-                                                return col.accessor(entry);
-                                            }
-                                            return entry[col.accessor];
-                                        }))}
-                                    />
-                                ) : (
-                                    <div className="py-20 flex flex-col items-center justify-center text-center">
-                                        <div className="w-16 h-16 rounded-3xl bg-slate-50 flex items-center justify-center text-slate-300 mb-4">
-                                            <FaHistory size={32} />
-                                        </div>
-                                        <h4 className="text-lg font-bold text-slate-800">No Pending Entries Found</h4>
-                                        <p className="text-slate-500 max-w-xs mx-auto">There are no pending sauda entries for this ledger that require payment mapping.</p>
-                                    </div>
-                                )}
+                    {/* Entries Table Card */}
+                    <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-xl shadow-slate-200/50 overflow-hidden">
+                        <div className="p-8 border-b border-slate-50 flex items-center justify-between bg-slate-50/30">
+                            <div className="flex items-center gap-3">
+                                <FaBuilding className="text-emerald-600" />
+                                <h3 className="text-lg font-black text-slate-800 uppercase tracking-tight">Pending Entries</h3>
                             </div>
                         </div>
-                    )}
+
+                        <div className="p-4">
+                            {fetchingEntries ? (
+                                <div className="py-20 flex flex-col items-center justify-center gap-4">
+                                    <div className="w-12 h-12 border-4 border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin" />
+                                    <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">Fetching Entries...</p>
+                                </div>
+                            ) : entries.length > 0 ? (
+                                <Tables
+                                    headers={columns.map(c => c.header)}
+                                    rows={entries.map(entry => columns.map(col => {
+                                        if (typeof col.accessor === 'function') {
+                                            return col.accessor(entry);
+                                        }
+                                        return entry[col.accessor];
+                                    }))}
+                                />
+                            ) : (
+                                <div className="py-20 flex flex-col items-center justify-center text-center">
+                                    <div className="w-16 h-16 rounded-3xl bg-slate-50 flex items-center justify-center text-slate-300 mb-4">
+                                        <FaHistory size={32} />
+                                    </div>
+                                    <h4 className="text-lg font-bold text-slate-800">No Entries Found</h4>
+                                    <p className="text-slate-500 max-w-xs mx-auto">Try adjusting the date filters or select a different ledger.</p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
                 </form>
             </div>
         </AdminPageShell>

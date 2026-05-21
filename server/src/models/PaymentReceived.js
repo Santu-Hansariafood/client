@@ -29,6 +29,7 @@ const paymentReceivedSchema = new mongoose.Schema(
         saudaNo: { type: String },
         loadingEntryId: { type: mongoose.Schema.Types.ObjectId, ref: "LoadingEntry" },
         allocatedAmount: { type: Number, required: true },
+        remarks: { type: String, default: "" },
       }
     ],
     remarks: { type: String, default: "" },

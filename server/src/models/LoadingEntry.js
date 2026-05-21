@@ -51,6 +51,7 @@ const loadingEntrySchema = new mongoose.Schema(
       enum: ["pending", "done"],
       default: "pending",
     },
+    paidAmount: { type: Number, default: 0 },
     sentStatus: {
       type: String,
       enum: ["Sent", "Not Sent"],
