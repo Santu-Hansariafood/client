@@ -125,6 +125,29 @@ const AddPaymentReceived = () => {
         ));
     };
 
+    const calculateTallyDetails = (entry) => {
+        const weight = entry.unloadingWeight || 0;
+        const rate = entry.actualRate || 0;
+        const cdPercent = entry.cd || 0;
+        const gstPercent = entry.gst || 0;
+
+        const grossAmount = weight * rate;
+        const cdAmount = grossAmount * (cdPercent / 100);
+        const taxableAmount = grossAmount - cdAmount;
+        const gstAmount = taxableAmount * (gstPercent / 100);
+        const netAmount = taxableAmount + gstAmount;
+
+        return {
+            grossAmount,
+            cdAmount,
+            taxableAmount,
+            gstAmount,
+            netAmount,
+            cdPercent,
+            gstPercent
+        };
+    };
+
     const totalAllocated = useMemo(() => {
         return entries.reduce((sum, entry) => sum + (entry.allocatedAmount || 0), 0);
     }, [entries]);
@@ -167,22 +190,88 @@ const AddPaymentReceived = () => {
     };
 
     const columns = [
-        { header: 'Date', accessor: (row) => new Date(row.loadingDate).toLocaleDateString() },
-        { header: 'Sauda No', accessor: 'saudaNo' },
-        { header: 'Lorry No', accessor: 'lorryNumber' },
-        { header: 'Item', accessor: 'commodity' },
-        { header: 'Unloading Wt', accessor: 'unloadingWeight' },
+        { 
+            header: 'Date', 
+            accessor: (row) => (
+                <div className="flex flex-col">
+                    <span className="font-bold text-slate-700">{new Date(row.loadingDate).toLocaleDateString('en-GB')}</span>
+                    <span className="text-[10px] text-slate-400 font-bold uppercase">{row.saudaNo}</span>
+                </div>
+            )
+        },
+        { 
+            header: 'Lorry & Item', 
+            accessor: (row) => (
+                <div className="flex flex-col">
+                    <span className="font-black text-slate-800 uppercase tracking-tighter">{row.lorryNumber}</span>
+                    <span className="text-[10px] text-emerald-600 font-bold uppercase">{row.commodity}</span>
+                </div>
+            )
+        },
+        { 
+            header: 'Weight & Rate', 
+            accessor: (row) => (
+                <div className="flex flex-col">
+                    <span className="font-bold text-slate-700">{row.unloadingWeight} T</span>
+                    <span className="text-[10px] text-slate-400 font-bold">@ ₹{row.actualRate}/T</span>
+                </div>
+            )
+        },
+        { 
+            header: 'Tally Breakdown', 
+            accessor: (row) => {
+                const details = calculateTallyDetails(row);
+                return (
+                    <div className="flex flex-col gap-0.5 text-[10px] font-medium min-w-[150px]">
+                        <div className="flex justify-between text-slate-500">
+                            <span>Gross:</span>
+                            <span>₹{details.grossAmount.toFixed(2)}</span>
+                        </div>
+                        {details.cdAmount > 0 && (
+                            <div className="flex justify-between text-rose-500">
+                                <span>CD ({details.cdPercent}%):</span>
+                                <span>- ₹{details.cdAmount.toFixed(2)}</span>
+                            </div>
+                        )}
+                        {details.gstAmount > 0 && (
+                            <div className="flex justify-between text-blue-500">
+                                <span>GST ({details.gstPercent}%):</span>
+                                <span>+ ₹{details.gstAmount.toFixed(2)}</span>
+                            </div>
+                        )}
+                        <div className="flex justify-between border-t border-slate-100 pt-0.5 font-black text-slate-800 text-xs">
+                            <span>Net:</span>
+                            <span>₹{details.netAmount.toFixed(2)}</span>
+                        </div>
+                    </div>
+                );
+            }
+        },
         { 
             header: 'Allocation', 
-            accessor: (row) => (
-                <input
-                    type="number"
-                    value={row.allocatedAmount}
-                    onChange={(e) => handleAllocationChange(row._id, e.target.value)}
-                    className="w-32 px-3 py-1.5 rounded-lg border border-slate-200 focus:ring-2 focus:ring-emerald-500 outline-none transition"
-                    placeholder="0.00"
-                />
-            )
+            accessor: (row) => {
+                const details = calculateTallyDetails(row);
+                return (
+                    <div className="flex flex-col gap-2">
+                        <input
+                            type="number"
+                            value={row.allocatedAmount}
+                            onChange={(e) => handleAllocationChange(row._id, e.target.value)}
+                            className={`w-32 px-3 py-2 rounded-xl border ${
+                                row.allocatedAmount > details.netAmount + 1 ? 'border-rose-500 bg-rose-50' : 'border-slate-200 bg-slate-50/50'
+                            } focus:bg-white focus:ring-2 focus:ring-emerald-500 outline-none transition font-bold text-slate-700`}
+                            placeholder="0.00"
+                        />
+                        <button
+                            type="button"
+                            onClick={() => handleAllocationChange(row._id, details.netAmount.toFixed(2))}
+                            className="text-[9px] font-black text-emerald-600 uppercase tracking-widest hover:text-emerald-700 text-left pl-1"
+                        >
+                            Full Settle
+                        </button>
+                    </div>
+                );
+            }
         }
     ];
 
@@ -302,6 +391,21 @@ const AddPaymentReceived = () => {
                                     <p className="text-sm text-slate-500 font-medium">Allocate the bulk payment to specific sauda/lorry records</p>
                                 </div>
                                 <div className="flex gap-4">
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            let remaining = formData.amount;
+                                            setEntries(prev => prev.map(entry => {
+                                                const { netAmount } = calculateTallyDetails(entry);
+                                                const allocate = Math.min(remaining, netAmount);
+                                                remaining -= allocate;
+                                                return { ...entry, allocatedAmount: parseFloat(allocate.toFixed(2)) };
+                                            }));
+                                        }}
+                                        className="px-4 py-2 bg-emerald-50 text-emerald-600 rounded-xl text-[10px] font-black uppercase tracking-widest border border-emerald-100 hover:bg-emerald-600 hover:text-white transition-all shadow-sm"
+                                    >
+                                        Auto-Allocate Bulk
+                                    </button>
                                     <div className="text-right">
                                         <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Total Allocated</p>
                                         <p className={`text-2xl font-black ${totalAllocated > formData.amount ? 'text-red-500' : 'text-emerald-600'}`}>

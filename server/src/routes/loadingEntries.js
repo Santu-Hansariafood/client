@@ -655,6 +655,26 @@ router.get("/", async (req, res) => {
 
     const total = await LoadingEntry.countDocuments(finalQuery);
 
+    const saudaNos = [...new Set(items.map((i) => i.saudaNo).filter(Boolean))];
+    const selfOrders = await SelfOrder.find({ saudaNo: { $in: saudaNos } })
+      .select("saudaNo rate gst cd buyerCompany consignee commodity")
+      .lean();
+    const saudaMap = selfOrders.reduce((acc, so) => {
+      acc[so.saudaNo] = so;
+      return acc;
+    }, {});
+
+    const itemsWithDetails = items.map((item) => {
+      const order = saudaMap[item.saudaNo] || {};
+      return {
+        ...item,
+        actualRate: order.rate || 0,
+        gst: order.gst || 0,
+        cd: order.cd || 0,
+        commodity: item.commodity || order.commodity || "",
+      };
+    });
+
     // Get base query for Sl No calculation (role-based only)
     const baseAndParts = [];
     if (Object.keys(query).length > 0) {
@@ -664,7 +684,7 @@ router.get("/", async (req, res) => {
 
     // Calculate absolute Sl No for each item in the current page
     const itemsWithSlNo = await Promise.all(
-      items.map(async (item) => {
+      itemsWithDetails.map(async (item) => {
         const slNo =
           (await LoadingEntry.countDocuments({
             ...baseQuery,
@@ -751,7 +771,7 @@ router.get("/receiving", async (req, res) => {
     const saudaNos = [...new Set(items.map((i) => i.saudaNo).filter(Boolean))];
     const selfOrders = await SelfOrder.find({ saudaNo: { $in: saudaNos } })
       .select(
-        "saudaNo rate gst buyerCompany consignee buyer poNumber location district state pin pinCode billTo commodity",
+        "saudaNo rate gst cd buyerCompany consignee buyer poNumber location district state pin pinCode billTo commodity",
       )
       .lean();
     const saudaMap = selfOrders.reduce((acc, so) => {
@@ -765,6 +785,7 @@ router.get("/receiving", async (req, res) => {
         ...item,
         actualRate: order.rate || 0,
         gst: order.gst || 0,
+        cd: order.cd || 0,
         poNumber: order.poNumber || "",
         location: order.location || "",
         district: order.district || "",
