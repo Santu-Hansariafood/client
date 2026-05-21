@@ -103,7 +103,7 @@ const ListPaymentReceived = () => {
         <AdminPageShell
             title="Received Payments"
             subtitle="View and manage all bulk payments received"
-            icon={<FaMoneyBillWave />}
+            icon={FaMoneyBillWave}
         >
             <div className="space-y-6">
                 {/* Top Actions & Filters */}

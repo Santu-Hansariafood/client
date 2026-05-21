@@ -190,7 +190,7 @@ const AddPaymentReceived = () => {
         <AdminPageShell
             title="Add Payment Received"
             subtitle="Record bulk payments and map them to sauda entries"
-            icon={<FaMoneyBillWave />}
+            icon={FaMoneyBillWave}
         >
             <div className="max-w-6xl mx-auto">
                 <form onSubmit={handleSubmit} className="space-y-8">
