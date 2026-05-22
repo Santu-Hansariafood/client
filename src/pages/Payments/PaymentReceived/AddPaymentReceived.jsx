@@ -142,7 +142,7 @@ const AddPaymentReceived = () => {
                     companies: item.companyIds || item.companies || []
                 })));
                 setSelectedLedger(null);
-                setFormData(prev => ({ ...prev, ledgerId: '', mappings: [] }));
+                setFormData(prev => ({ ...prev, ledgerId: '', companyId: '', mappings: [] }));
             } catch (error) {
                 toast.error('Error fetching ledgers');
             } finally {
@@ -153,7 +153,7 @@ const AddPaymentReceived = () => {
     }, [formData.ledgerType]);
 
     const fetchEntries = useCallback(async (page = 1) => {
-        if (!formData.ledgerId || formData.paymentType !== 'Sauda-wise') {
+        if (!formData.ledgerId || !formData.companyId || formData.paymentType !== 'Sauda-wise') {
             setEntries([]);
             return;
         }
@@ -881,15 +881,20 @@ const AddPaymentReceived = () => {
                                 <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">Company (Filter)</label>
                                 <DataDropdown
                                     options={selectedLedger?.companies?.map(c => {
-                                        const isString = typeof c === 'string';
-                                        const companyId = isString ? c : (c._id || c.value || c.id);
-                                        // Try to find the company in allCompanies to get its name
-                                        const companyInfo = !isString ? allCompanies.find(comp => comp._id === companyId) : null;
+                                        const isObjectId = typeof c === 'string' && c.length === 24 && /^[0-9a-fA-F]+$/.test(c);
+                                        const companyId = typeof c === 'string' ? c : (c._id || c.value || c.id);
                                         
-                                        return { 
-                                            value: companyId, 
-                                            label: isString ? c : (companyInfo?.companyName || c.companyName || c.label || c.name || 'Unknown')
-                                        };
+                                        let label = 'Unknown';
+                                        if (formData.ledgerType === 'Buyer') {
+                                            // Look up in allCompanies for Buyer
+                                            const companyInfo = allCompanies.find(comp => comp._id === companyId);
+                                            label = companyInfo?.companyName || (typeof c === 'object' ? (c.companyName || c.label) : companyId);
+                                        } else {
+                                            // For Seller, it's usually the name string
+                                            label = companyId;
+                                        }
+                                        
+                                        return { value: companyId, label };
                                     }) || []}
                                     selectedOptions={formData.companyId ? {
                                         value: formData.companyId,
@@ -898,7 +903,7 @@ const AddPaymentReceived = () => {
                                             : formData.companyId // For Sellers, value is the name
                                     } : null}
                                     onChange={handleCompanyChange}
-                                    placeholder="All Companies"
+                                    placeholder="Select Company"
                                     isMulti={false}
                                     isDisabled={!selectedLedger}
                                     className="rounded-xl border-slate-200 hover:border-slate-300 transition-all"
