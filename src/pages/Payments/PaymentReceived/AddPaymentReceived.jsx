@@ -160,18 +160,28 @@ const AddPaymentReceived = () => {
 
         try {
             setFetchingEntries(true);
+            
+            // Resolve company name from ID
+            const selectedCompany = allCompanies.find(c => c._id === formData.companyId);
+            const companyName = selectedCompany?.companyName || 
+                               selectedLedger?.companies?.find(c => (typeof c === 'string' ? c : (c._id || c.value || c.id)) === formData.companyId)?.companyName ||
+                               (typeof selectedLedger?.companies?.find(c => (typeof c === 'string' ? c : (c._id || c.value || c.id)) === formData.companyId) === 'string' 
+                                   ? selectedLedger?.companies?.find(c => c === formData.companyId) 
+                                   : '');
+
             let params = { 
                 page: page,
                 limit: 20, // Showing 20 entries per page
                 startDate: formData.filterStartDate,
                 endDate: formData.filterEndDate,
-                companyId: formData.companyId
             };
             
             if (formData.ledgerType === 'Seller') {
                 params.supplier = formData.ledgerId;
+                if (companyName) params.supplierCompany = companyName;
             } else {
                 params.buyerId = formData.ledgerId;
+                if (companyName) params.buyerCompany = companyName;
             }
             
             const response = await api.get('/loading-entries', { params });
@@ -201,7 +211,7 @@ const AddPaymentReceived = () => {
         } finally {
             setFetchingEntries(false);
         }
-    }, [formData.ledgerId, formData.ledgerType, formData.paymentType, formData.filterStartDate, formData.filterEndDate, formData.companyId]);
+    }, [formData.ledgerId, formData.ledgerType, formData.paymentType, formData.filterStartDate, formData.filterEndDate, formData.companyId, allCompanies]);
 
     useEffect(() => {
         fetchEntries(1);

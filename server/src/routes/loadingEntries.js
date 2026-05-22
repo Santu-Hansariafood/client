@@ -553,6 +553,8 @@ router.get("/", async (req, res) => {
     const buyerId = req.query.buyerId;
     const supplierId = req.query.supplier;
     const paymentStatus = req.query.paymentStatus;
+    const buyerCompany = req.query.buyerCompany;
+    const supplierCompany = req.query.supplierCompany;
 
     let query = {};
 
@@ -580,18 +582,36 @@ router.get("/", async (req, res) => {
     if (buyerId) {
       const buyer = await Buyer.findById(buyerId).populate("companyIds").lean();
       if (buyer) {
-        const companyNames = (buyer.companyIds || []).map((c) => c.companyName);
-        // Also add the buyer's own name as a fallback for company name
-        if (buyer.name) companyNames.push(buyer.name);
-        
-        andParts.push({ 
-          buyerCompany: { $in: companyNames.map(name => new RegExp(`^${escapeRegex(name)}$`, "i")) } 
-        });
+        if (buyerCompany) {
+          // If a specific company is selected, only filter by that name
+          andParts.push({ 
+            buyerCompany: { $regex: new RegExp(`^${escapeRegex(buyerCompany)}$`, "i") } 
+          });
+        } else {
+          // Otherwise filter by all company names of this buyer
+          const companyNames = (buyer.companyIds || []).map((c) => c.companyName);
+          if (buyer.name) companyNames.push(buyer.name);
+          
+          andParts.push({ 
+            buyerCompany: { $in: companyNames.map(name => new RegExp(`^${escapeRegex(name)}$`, "i")) } 
+          });
+        }
       }
     }
 
     if (supplierId) {
-      andParts.push({ supplier: toObjectId(supplierId) });
+      const supplierPart = { supplier: toObjectId(supplierId) };
+      if (supplierCompany) {
+        // If a specific seller company is selected
+        andParts.push({
+          $and: [
+            supplierPart,
+            { supplierCompany: { $regex: new RegExp(`^${escapeRegex(supplierCompany)}$`, "i") } }
+          ]
+        });
+      } else {
+        andParts.push(supplierPart);
+      }
     }
 
     if (paymentStatus) {
