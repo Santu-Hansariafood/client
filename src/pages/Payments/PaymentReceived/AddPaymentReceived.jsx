@@ -175,6 +175,10 @@ const AddPaymentReceived = () => {
                 startDate: formData.filterStartDate,
                 endDate: formData.filterEndDate,
             };
+
+            if (formData.companyId) {
+                params.companyId = formData.companyId;
+            }
             
             if (formData.ledgerType === 'Seller') {
                 params.supplier = formData.ledgerId;
