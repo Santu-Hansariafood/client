@@ -656,7 +656,9 @@ router.get("/", async (req, res) => {
       .sort({ loadingDate: -1, createdAt: -1 })
       .skip((page - 1) * limit)
       .limit(limit)
-      .select("loadingDate saudaNo lorryNumber supplier supplierCompany consignee buyerCompany commodity unloadingWeight unloadingDate paymentStatus paidAmount billNumber")
+      .select(
+        "loadingDate saudaNo lorryNumber supplier supplierCompany consignee buyerCompany commodity loadingWeight unloadingWeight unloadingDate paymentStatus paidAmount billNumber transporterId addedTransport driverName driverPhoneNumber freightRate totalFreight advance balance dateOfIssue documents bags deliveryDate buyerBrokerage sellerBrokerage loadingFrom createdAt",
+      )
       .populate("supplier", "sellerName")
       .lean();
 
@@ -664,7 +666,9 @@ router.get("/", async (req, res) => {
 
     const saudaNos = [...new Set(items.map((i) => i.saudaNo).filter(Boolean))];
     const selfOrders = await SelfOrder.find({ saudaNo: { $in: saudaNos } })
-      .select("saudaNo rate gst cd buyerCompany consignee commodity")
+      .select(
+        "saudaNo rate gst cd buyerCompany consignee commodity paymentTerms buyerBrokerage status quantity pendingQuantity",
+      )
       .lean();
     const saudaMap = selfOrders.reduce((acc, so) => {
       acc[so.saudaNo] = so;

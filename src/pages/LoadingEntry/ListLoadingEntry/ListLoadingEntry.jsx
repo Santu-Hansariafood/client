@@ -25,6 +25,7 @@ import "jspdf-autotable";
 
 import PrintLoadingEntry from "../PrintLoadingEntry/PrintLoadingEntry";
 import { downloadFile } from "../../../utils/fileDownloader";
+import stateCityData from "../../../data/state-city.json";
 
 const PopupBox = lazy(() => import("../../../common/PopupBox/PopupBox"));
 const Tables = lazy(() => import("../../../common/Tables/Tables"));
@@ -115,6 +116,13 @@ const ListLoadingEntry = () => {
   const { userRole, mobile: authMobile } = useAuth();
   const location = useLocation();
   const mobile = location.state?.mobile || authMobile;
+
+  const stateOptions = useMemo(() => {
+    return stateCityData.map((item) => ({
+      value: item.state,
+      label: item.state,
+    }));
+  }, []);
 
   const [loadingEntries, setLoadingEntries] = useState([]);
   const [sellerMap, setSellerMap] = useState({});
@@ -417,6 +425,9 @@ const ListLoadingEntry = () => {
       unloadingDate: entry.unloadingDate
         ? new Date(entry.unloadingDate).toISOString().slice(0, 10)
         : "",
+      deliveryDate: entry.deliveryDate
+        ? new Date(entry.deliveryDate).toISOString().slice(0, 10)
+        : "",
       documents: entry.documents || {
         kantaSlip: null,
         unloadingChallan: null,
@@ -428,7 +439,28 @@ const ListLoadingEntry = () => {
 
   const handleEditFieldChange = useCallback((e) => {
     const { name, value } = e.target;
-    setEditEntry((prev) => ({ ...prev, [name]: value }));
+    setEditEntry((prev) => {
+      const updated = { ...prev, [name]: value };
+
+      // Re-calculate financial totals if relevant fields change
+      if (
+        name === "loadingWeight" ||
+        name === "freightRate" ||
+        name === "advance"
+      ) {
+        const weight = parseFloat(updated.loadingWeight) || 0;
+        const rate = parseFloat(updated.freightRate) || 0;
+        const advance = parseFloat(updated.advance) || 0;
+
+        const total = +(weight * rate).toFixed(2);
+        const balance = +(total - advance).toFixed(2);
+
+        updated.totalFreight = total;
+        updated.balance = balance;
+      }
+
+      return updated;
+    });
   }, []);
 
   const handleUpdateEntry = useCallback(async () => {
@@ -455,6 +487,9 @@ const ListLoadingEntry = () => {
           : null,
         unloadingDate: editEntry.unloadingDate
           ? new Date(editEntry.unloadingDate).toISOString()
+          : null,
+        deliveryDate: editEntry.deliveryDate
+          ? new Date(editEntry.deliveryDate).toISOString()
           : null,
       };
 
@@ -1040,6 +1075,19 @@ const ListLoadingEntry = () => {
                       </div>
                       <div>
                         <label className="block text-sm font-semibold text-slate-700 mb-1">
+                          Delivery Date
+                        </label>
+                        <input
+                          type="date"
+                          name="deliveryDate"
+                          value={editEntry.deliveryDate || ""}
+                          onChange={handleEditFieldChange}
+                          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                          aria-label="Delivery Date"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-slate-700 mb-1">
                           Sauda No *
                         </label>
                         <input
@@ -1079,6 +1127,19 @@ const ListLoadingEntry = () => {
                       </div>
                       <div>
                         <label className="block text-sm font-semibold text-slate-700 mb-1">
+                          Date of Issue
+                        </label>
+                        <input
+                          type="date"
+                          name="dateOfIssue"
+                          value={editEntry.dateOfIssue || ""}
+                          onChange={handleEditFieldChange}
+                          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                          aria-label="Date of Issue"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-slate-700 mb-1">
                           Lorry Number *
                         </label>
                         <input
@@ -1110,7 +1171,7 @@ const ListLoadingEntry = () => {
                             setEditEntry((prev) => ({
                               ...prev,
                               transporterId: option?.value || "",
-                              addedTransport: option?.name || "",
+                              addedTransport: option?.label || "",
                             }));
                           }}
                           placeholder="Select Transporter"
@@ -1159,6 +1220,31 @@ const ListLoadingEntry = () => {
                       </div>
                       <div>
                         <label className="block text-sm font-semibold text-slate-700 mb-1">
+                          Loading From
+                        </label>
+                        <DataDropdown
+                          options={stateOptions}
+                          selectedOptions={
+                            editEntry.loadingFrom
+                              ? [
+                                  stateOptions.find(
+                                    (s) => s.value === editEntry.loadingFrom,
+                                  ),
+                                ].filter(Boolean)
+                              : []
+                          }
+                          onChange={(option) => {
+                            setEditEntry((prev) => ({
+                              ...prev,
+                              loadingFrom: option?.value || "",
+                            }));
+                          }}
+                          placeholder="Select State"
+                          isMulti={false}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-slate-700 mb-1">
                           Loading Weight
                         </label>
                         <input
@@ -1169,6 +1255,19 @@ const ListLoadingEntry = () => {
                           className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
                           aria-label="Loading Weight"
                           step="0.01"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-slate-700 mb-1">
+                          Bags
+                        </label>
+                        <input
+                          type="number"
+                          name="bags"
+                          value={editEntry.bags || ""}
+                          onChange={handleEditFieldChange}
+                          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                          aria-label="Bags"
                         />
                       </div>
                       <div>
@@ -1256,15 +1355,30 @@ const ListLoadingEntry = () => {
                       </div>
                       <div>
                         <label className="block text-sm font-semibold text-slate-700 mb-1">
-                          Date of Issue
+                          Buyer Brokerage
                         </label>
                         <input
-                          type="date"
-                          name="dateOfIssue"
-                          value={editEntry.dateOfIssue || ""}
+                          type="number"
+                          name="buyerBrokerage"
+                          value={editEntry.buyerBrokerage || ""}
                           onChange={handleEditFieldChange}
                           className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                          aria-label="Date of Issue"
+                          aria-label="Buyer Brokerage"
+                          step="0.01"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-slate-700 mb-1">
+                          Seller Brokerage
+                        </label>
+                        <input
+                          type="number"
+                          name="sellerBrokerage"
+                          value={editEntry.sellerBrokerage || ""}
+                          onChange={handleEditFieldChange}
+                          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                          aria-label="Seller Brokerage"
+                          step="0.01"
                         />
                       </div>
                     </div>
