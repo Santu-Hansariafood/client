@@ -37,4 +37,9 @@ const paymentReceivedSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+paymentReceivedSchema.index({ date: -1 });
+paymentReceivedSchema.index({ ledgerId: 1 });
+paymentReceivedSchema.index({ ledgerType: 1 });
+paymentReceivedSchema.index({ createdAt: -1 });
+
 export default mongoose.model("PaymentReceived", paymentReceivedSchema);

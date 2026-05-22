@@ -56,11 +56,13 @@ router.get("/", async (req, res) => {
 
     const finalQuery = andParts.length > 1 ? { $and: andParts } : andParts[0];
 
+    // Optimize: Add selection to reduce data transferred from DB
     const [items, total] = await Promise.all([
       LoadingEntry.find(finalQuery)
         .sort({ unloadingDate: -1, createdAt: -1 })
         .skip((page - 1) * limit)
         .limit(limit)
+        .select("saudaNo lorryNumber buyerCompany supplierCompany consignee unloadingWeight unloadingDate paymentStatus paidAmount supplier")
         .populate("supplier", "sellerName")
         .lean(),
       LoadingEntry.countDocuments(finalQuery),

@@ -127,6 +127,10 @@ const PaymentList = () => {
 
   const handleDownloadPDF = () => {
     const doc = new jsPDF("landscape");
+    
+    // Optimize: Set font once
+    doc.setFont("helvetica");
+
     const tableColumn = [
       "Sl No", "Sauda No", "Lorry No", "Buyer", "Consignee", "Seller Name", "Seller Co", "Terms", "Due Date", "Qty", "Amount", "Status"
     ];
@@ -160,7 +164,9 @@ const PaymentList = () => {
       startY: 35,
       theme: "grid",
       headStyles: { fillColor: [5, 150, 105], fontSize: 8 },
-      styles: { fontSize: 7, cellPadding: 2 },
+      styles: { fontSize: 7, cellPadding: 2, overflow: 'linebreak' },
+      margin: { top: 35 },
+      showHead: 'firstPage',
     });
 
     doc.save(`Payments_${paymentStatus}_${new Date().toISOString().split("T")[0]}.pdf`);
@@ -169,7 +175,6 @@ const PaymentList = () => {
   const handleDownloadSaudaWisePDF = () => {
     const doc = new jsPDF("landscape");
     
-    // Group data by Sauda No
     const grouped = data.reduce((acc, item) => {
       const key = item.saudaNo || "N/A";
       if (!acc[key]) {
@@ -211,7 +216,6 @@ const PaymentList = () => {
           item.paymentStatus.toUpperCase()
         ]);
       });
-      // Add a subtotal row for each sauda
       tableRows.push([
         { content: `Total for ${group.saudaNo}`, colSpan: 7, styles: { fontStyle: 'bold', fillColor: [240, 240, 240] } },
         { content: group.totalQty.toFixed(2), styles: { fontStyle: 'bold', fillColor: [240, 240, 240] } },

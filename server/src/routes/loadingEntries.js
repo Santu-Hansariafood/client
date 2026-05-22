@@ -651,10 +651,12 @@ router.get("/", async (req, res) => {
     const finalQuery =
       andParts.length > 1 ? { $and: andParts } : andParts[0] || {};
 
+    // Optimize: Add select and reduce DB overhead
     const items = await LoadingEntry.find(finalQuery)
       .sort({ loadingDate: -1, createdAt: -1 })
       .skip((page - 1) * limit)
       .limit(limit)
+      .select("loadingDate saudaNo lorryNumber supplier supplierCompany consignee buyerCompany commodity unloadingWeight unloadingDate paymentStatus paidAmount billNumber")
       .populate("supplier", "sellerName")
       .lean();
 

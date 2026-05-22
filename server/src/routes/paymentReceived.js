@@ -107,7 +107,9 @@ router.get("/", async (req, res) => {
         .sort({ date: -1, createdAt: -1 })
         .skip((page - 1) * limit)
         .limit(parseInt(limit))
-        .populate("ledgerId"),
+        .select("date ledgerType ledgerId amount paymentMode paymentType mappings remarks")
+        .populate("ledgerId", "name sellerName")
+        .lean(),
       PaymentReceived.countDocuments(query),
     ]);
 
@@ -117,6 +119,41 @@ router.get("/", async (req, res) => {
       page: parseInt(page),
       totalPages: Math.ceil(total / limit),
     });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Get Payment Summaries (Month-wise / Week-wise)
+router.get("/summary", async (req, res) => {
+  try {
+    const { ledgerId, type = 'month' } = req.query; // type: month, week
+    const query = {};
+    if (ledgerId) query.ledgerId = ledgerId;
+
+    let groupBy;
+    if (type === 'week') {
+      groupBy = { $week: "$date" };
+    } else {
+      groupBy = { $month: "$date" };
+    }
+
+    const summary = await PaymentReceived.aggregate([
+      { $match: query },
+      {
+        $group: {
+          _id: {
+            year: { $year: "$date" },
+            period: groupBy
+          },
+          totalAmount: { $sum: "$amount" },
+          count: { $sum: 1 }
+        }
+      },
+      { $sort: { "_id.year": -1, "_id.period": -1 } }
+    ]);
+
+    res.json(summary);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

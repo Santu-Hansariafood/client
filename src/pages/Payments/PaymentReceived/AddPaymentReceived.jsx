@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 import AdminPageShell from '../../../common/AdminPageShell/AdminPageShell';
 import DataDropdown from '../../../common/DataDropdown/DataDropdown';
 import DataInput from '../../../common/DataInput/DataInput';
@@ -9,7 +11,12 @@ import Tables from '../../../common/Tables/Tables';
 import api from '../../../utils/apiClient/apiClient';
 import Loading from '../../../common/Loading/Loading';
 import { useAuth } from '../../../context/AuthContext/AuthContext';
-import { FaSave, FaArrowLeft, FaMoneyBillWave, FaExchangeAlt, FaHistory, FaCalendarAlt, FaBuilding, FaSearch, FaCheckCircle, FaExclamationCircle } from 'react-icons/fa';
+import { 
+    FaSave, FaArrowLeft, FaMoneyBillWave, FaExchangeAlt, 
+    FaHistory, FaCalendarAlt, FaBuilding, FaSearch, 
+    FaCheckCircle, FaExclamationCircle, FaPrint, FaChartBar,
+    FaArrowRight, FaCaretRight, FaFileInvoiceDollar
+} from 'react-icons/fa';
 
 const AddPaymentReceived = () => {
     const navigate = useNavigate();
@@ -17,11 +24,16 @@ const AddPaymentReceived = () => {
     const [loading, setLoading] = useState(false);
     const [fetchingLedgers, setFetchingLedgers] = useState(false);
     const [fetchingEntries, setFetchingEntries] = useState(false);
+    const [fetchingHistory, setFetchingHistory] = useState(false);
     const [ledgers, setLedgers] = useState([]);
     const [selectedLedger, setSelectedLedger] = useState(null);
     const [entries, setEntries] = useState([]);
+    const [history, setHistory] = useState([]);
+    const [summary, setSummary] = useState([]);
+    const [summaryType, setSummaryType] = useState('month');
     const [tableSearch, setTableSearch] = useState('');
     const [todayTotal, setTodayTotal] = useState(0);
+    const [activeTab, setActiveTab] = useState('allocation'); // allocation, history, summary
 
     const [formData, setFormData] = useState({
         date: new Date().toISOString().split('T')[0],
@@ -47,7 +59,6 @@ const AddPaymentReceived = () => {
         { value: 'Adjustment', label: 'General Adjustment' }
     ];
 
-    // Fetch ledgers based on type
     useEffect(() => {
         const fetchLedgers = async () => {
             try {
@@ -71,7 +82,6 @@ const AddPaymentReceived = () => {
         fetchLedgers();
     }, [formData.ledgerType]);
 
-    // Fetch pending entries for mapping
     const fetchEntries = useCallback(async () => {
         if (!formData.ledgerId || formData.paymentType !== 'Sauda-wise') {
             setEntries([]);
@@ -105,11 +115,46 @@ const AddPaymentReceived = () => {
         }
     }, [formData.ledgerId, formData.ledgerType, formData.paymentType]);
 
+    const fetchHistory = useCallback(async () => {
+        if (!formData.ledgerId) {
+            setHistory([]);
+            return;
+        }
+
+        try {
+            setFetchingHistory(true);
+            const params = {
+                ledgerId: formData.ledgerId,
+                startDate: formData.date,
+                endDate: formData.date
+            };
+            const response = await api.get('/payment-received', { params });
+            setHistory(response.data.data || []);
+        } catch (error) {
+            console.error('Error fetching history:', error);
+        } finally {
+            setFetchingHistory(false);
+        }
+    }, [formData.ledgerId, formData.date]);
+
+    const fetchSummary = useCallback(async () => {
+        if (!formData.ledgerId) return;
+        try {
+            const response = await api.get('/payment-received/summary', {
+                params: { ledgerId: formData.ledgerId, type: summaryType }
+            });
+            setSummary(response.data || []);
+        } catch (error) {
+            console.error('Error fetching summary:', error);
+        }
+    }, [formData.ledgerId, summaryType]);
+
     useEffect(() => {
         fetchEntries();
-    }, [fetchEntries]);
+        fetchHistory();
+        fetchSummary();
+    }, [fetchEntries, fetchHistory, fetchSummary]);
 
-    // Fetch today's total received
     const fetchTodayTotal = useCallback(async () => {
         try {
             const today = new Date().toISOString().split('T')[0];
@@ -117,7 +162,7 @@ const AddPaymentReceived = () => {
                 params: {
                     startDate: today,
                     endDate: today,
-                    limit: 1000 // Get all for today
+                    limit: 1000
                 }
             });
             const payments = response.data.data || [];
@@ -146,7 +191,7 @@ const AddPaymentReceived = () => {
         const numAmount = parseFloat(amount) || 0;
         const dueAmount = netAmount - (paidAmount || 0);
         
-        if (numAmount > dueAmount + 1) { // Allow small rounding
+        if (numAmount > dueAmount + 1) {
             toast.warning(`Allocation cannot exceed due amount (₹${dueAmount.toFixed(2)})`);
             return;
         }
@@ -213,9 +258,10 @@ const AddPaymentReceived = () => {
             await api.post('/payment-received', payload);
             toast.success(`Payment saved for ${entry.lorryNumber}`);
             
-            // Refresh entries and today's total
             fetchEntries();
+            fetchHistory();
             fetchTodayTotal();
+            fetchSummary();
         } catch (error) {
             toast.error(error.response?.data?.message || 'Error saving payment');
         } finally {
@@ -223,7 +269,58 @@ const AddPaymentReceived = () => {
         }
     };
 
-    // Filtered entries for table search
+    const printVoucher = (payment) => {
+        const doc = new jsPDF();
+        const pageWidth = doc.internal.pageSize.getWidth();
+        
+        // Header
+        doc.setFontSize(20);
+        doc.setTextColor(40);
+        doc.text("PAYMENT VOUCHER", pageWidth / 2, 20, { align: "center" });
+        
+        doc.setDrawColor(200);
+        doc.line(15, 25, pageWidth - 15, 25);
+        
+        // Details
+        doc.setFontSize(10);
+        doc.text(`Voucher No: ${payment._id.substring(payment._id.length - 8).toUpperCase()}`, 15, 35);
+        doc.text(`Date: ${new Date(payment.date).toLocaleDateString('en-GB')}`, pageWidth - 15, 35, { align: "right" });
+        
+        doc.text(`Account: ${selectedLedger?.label || 'N/A'}`, 15, 45);
+        doc.text(`Mode: ${payment.paymentMode}`, pageWidth - 15, 45, { align: "right" });
+        
+        // Table
+        const tableData = (payment.mappings || []).map((m, i) => [
+            i + 1,
+            m.saudaNo || 'N/A',
+            m.remarks || '-',
+            `Rs. ${m.allocatedAmount.toLocaleString()}`
+        ]);
+        
+        doc.autoTable({
+            startY: 55,
+            head: [['No', 'Sauda No', 'Particulars', 'Amount']],
+            body: tableData,
+            theme: 'grid',
+            headStyles: { fillColor: [40, 40, 40], textColor: [255, 255, 255] },
+            foot: [['', '', 'TOTAL', `Rs. ${payment.amount.toLocaleString()}`]],
+            footStyles: { fillColor: [240, 240, 240], textColor: [0, 0, 0], fontStyle: 'bold' }
+        });
+        
+        const finalY = doc.lastAutoTable.finalY || 70;
+        doc.text(`Amount in words: ${payment.amount.toLocaleString()} Rupees Only`, 15, finalY + 15);
+        doc.text(`Remarks: ${payment.remarks || '-'}`, 15, finalY + 25);
+        
+        // Signatures
+        doc.line(15, finalY + 60, 65, finalY + 60);
+        doc.text("Receiver Signature", 15, finalY + 65);
+        
+        doc.line(pageWidth - 65, finalY + 60, pageWidth - 15, finalY + 60);
+        doc.text("Authorised Signatory", pageWidth - 15, finalY + 65, { align: "right" });
+        
+        doc.save(`Voucher_${payment._id.substring(payment._id.length - 8)}.pdf`);
+    };
+
     const filteredEntries = useMemo(() => {
         if (!tableSearch) return entries;
         const search = tableSearch.toLowerCase();
@@ -235,6 +332,25 @@ const AddPaymentReceived = () => {
             (entry.commodity || '').toLowerCase().includes(search)
         );
     }, [entries, tableSearch]);
+
+    const historyColumns = [
+        { header: 'Time', accessor: (row) => new Date(row.createdAt).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) },
+        { header: 'Mode', accessor: 'paymentMode' },
+        { header: 'Saudas', accessor: (row) => (row.mappings || []).map(m => m.saudaNo).join(', ') },
+        { header: 'Amount', accessor: (row) => <span className="font-bold text-emerald-700">₹{row.amount.toLocaleString()}</span> },
+        { header: 'Remarks', accessor: 'remarks' },
+        { 
+            header: 'Print', 
+            accessor: (row) => (
+                <button 
+                    onClick={() => printVoucher(row)}
+                    className="p-2 bg-slate-100 text-slate-600 rounded-lg hover:bg-slate-200 transition-colors"
+                >
+                    <FaPrint size={14} />
+                </button>
+            ) 
+        }
+    ];
 
     const columns = [
         { 
@@ -350,25 +466,41 @@ const AddPaymentReceived = () => {
             icon={FaMoneyBillWave}
         >
             <div className="max-w-7xl mx-auto space-y-6">
-                {/* Top Statistics & Navigation */}
+                {/* Top Nav & Stats */}
                 <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
                     <div className="md:col-span-8 bg-white px-6 py-4 rounded-[1.5rem] border border-slate-100 shadow-sm flex items-center justify-between">
-                        <button
-                            onClick={() => navigate(-1)}
-                            className="flex items-center gap-2 text-slate-400 hover:text-slate-800 font-black uppercase tracking-widest text-[10px] transition-colors"
-                        >
-                            <FaArrowLeft />
-                            Back to List
-                        </button>
                         <div className="flex items-center gap-6">
-                            <div className="flex items-center gap-3">
-                                <div className="flex flex-col items-end">
-                                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Payment Date</span>
-                                    <span className="text-sm font-bold text-slate-800">{new Date(formData.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
-                                </div>
-                                <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600">
-                                    <FaCalendarAlt size={18} />
-                                </div>
+                            <button
+                                onClick={() => navigate(-1)}
+                                className="flex items-center gap-2 text-slate-400 hover:text-slate-800 font-black uppercase tracking-widest text-[10px] transition-colors"
+                            >
+                                <FaArrowLeft />
+                                Back
+                            </button>
+                            <div className="h-6 w-px bg-slate-100"></div>
+                            <div className="flex gap-2">
+                                {['allocation', 'history', 'summary'].map(tab => (
+                                    <button
+                                        key={tab}
+                                        onClick={() => setActiveTab(tab)}
+                                        className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
+                                            activeTab === tab 
+                                                ? 'bg-slate-900 text-white shadow-md' 
+                                                : 'text-slate-400 hover:bg-slate-50'
+                                        }`}
+                                    >
+                                        {tab}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <div className="flex flex-col items-end">
+                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Voucher Date</span>
+                                <span className="text-sm font-bold text-slate-800">{new Date(formData.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                            </div>
+                            <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600">
+                                <FaCalendarAlt size={18} />
                             </div>
                         </div>
                     </div>
@@ -376,7 +508,7 @@ const AddPaymentReceived = () => {
                     <div className="md:col-span-4 bg-gradient-to-br from-slate-900 to-slate-800 px-6 py-4 rounded-[1.5rem] shadow-xl shadow-slate-200 flex items-center justify-between group overflow-hidden relative border border-slate-800">
                         <div className="absolute -right-4 -bottom-4 w-24 h-24 bg-emerald-500/10 rounded-full blur-2xl group-hover:bg-emerald-500/20 transition-all"></div>
                         <div className="z-10">
-                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Today's Received Total</p>
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Today&apos;s Total</p>
                             <p className="text-2xl font-black text-white italic tracking-tighter">₹{todayTotal.toLocaleString('en-IN')}</p>
                         </div>
                         <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center text-emerald-400 backdrop-blur-md border border-white/10 shadow-inner z-10">
@@ -385,7 +517,7 @@ const AddPaymentReceived = () => {
                     </div>
                 </div>
 
-                {/* Configuration Card - Moved to Top */}
+                {/* Configuration Card */}
                 <div className="bg-white rounded-[2rem] p-6 border border-slate-100 shadow-sm space-y-6">
                     <div className="flex items-center justify-between pb-4 border-b border-slate-50">
                         <div className="flex items-center gap-3">
@@ -393,13 +525,13 @@ const AddPaymentReceived = () => {
                                 <FaExchangeAlt size={18} />
                             </div>
                             <div>
-                                <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest">Allocation Settings</h3>
-                                <p className="text-[10px] text-slate-400 font-bold uppercase">Setup ledger and payment rules</p>
+                                <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest">Tally Voucher Setup</h3>
+                                <p className="text-[10px] text-slate-400 font-bold uppercase">Configure ledger & allocation rules</p>
                             </div>
                         </div>
-                        <div className="hidden md:flex items-center gap-3 px-4 py-2 bg-slate-50 rounded-xl border border-slate-100">
-                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Active Ledger:</span>
-                            <span className="text-xs font-bold text-slate-700">{selectedLedger?.label || 'None'}</span>
+                        <div className="hidden md:flex items-center gap-3 px-4 py-2 bg-emerald-50/50 rounded-xl border border-emerald-100">
+                            <span className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">Active Account:</span>
+                            <span className="text-xs font-bold text-slate-700">{selectedLedger?.label || 'Not Selected'}</span>
                         </div>
                     </div>
 
@@ -413,26 +545,26 @@ const AddPaymentReceived = () => {
                                 isMulti={false}
                             />
                         </div>
-                        <div className="space-y-2 md:col-span-1">
-                            <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Select Ledger</label>
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Select Ledger Account</label>
                             <DataDropdown
                                 options={ledgers}
                                 selectedOptions={selectedLedger}
                                 onChange={handleLedgerChange}
-                                placeholder={fetchingLedgers ? "Loading..." : `Select ${formData.ledgerType}`}
+                                placeholder={fetchingLedgers ? "Syncing..." : `Select ${formData.ledgerType}`}
                                 isMulti={false}
                                 isDisabled={fetchingLedgers}
                             />
                         </div>
                         <div className="space-y-2">
-                            <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Payment Date</label>
+                            <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Voucher Date</label>
                             <DateSelector
                                 value={formData.date}
                                 onChange={(val) => setFormData(prev => ({ ...prev, date: val }))}
                             />
                         </div>
                         <div className="space-y-2">
-                            <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Payment Mode</label>
+                            <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Payment Method</label>
                             <DataDropdown
                                 options={paymentModes}
                                 selectedOptions={formData.paymentMode}
@@ -441,86 +573,160 @@ const AddPaymentReceived = () => {
                             />
                         </div>
                     </div>
-                    
-                    <div className="pt-4 border-t border-slate-50">
-                        <div className="flex flex-col md:flex-row gap-6">
-                            <div className="flex-1 space-y-2">
-                                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">General Note</label>
+                </div>
+
+                {/* Tab Content */}
+                {activeTab === 'allocation' && (
+                    <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden flex flex-col min-h-[400px]">
+                        <div className="px-8 py-6 border-b border-slate-50 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-50/30">
+                            <div className="flex items-center gap-3">
+                                <div className="w-8 h-8 rounded-lg bg-emerald-600 flex items-center justify-center text-white">
+                                    <FaBuilding size={14} />
+                                </div>
+                                <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest">Allocation Ledger</h3>
+                            </div>
+                            
+                            <div className="relative w-full md:w-80">
+                                <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 size-3" />
                                 <input
                                     type="text"
-                                    name="remarks"
-                                    value={formData.remarks}
-                                    onChange={handleInputChange}
-                                    placeholder="Internal reference or notes for this payment session..."
-                                    className="w-full h-11 px-4 rounded-xl border border-slate-200 bg-slate-50/30 focus:bg-white focus:ring-2 focus:ring-emerald-500/10 outline-none transition text-sm font-medium text-slate-700"
+                                    placeholder="SEARCH BY SAUDA, LORRY, COMPANY..."
+                                    value={tableSearch}
+                                    onChange={(e) => setTableSearch(e.target.value)}
+                                    className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 bg-white text-[10px] font-black uppercase tracking-widest focus:ring-2 focus:ring-emerald-500/10 outline-none transition"
                                 />
                             </div>
-                            <div className="md:w-64 bg-emerald-50/50 p-4 rounded-2xl border border-emerald-100 flex items-center justify-between">
-                                <div>
-                                    <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest mb-0.5">Total Pending</p>
-                                    <p className="text-lg font-black text-slate-800">{entries.length} Entries</p>
-                                </div>
-                                <div className="w-10 h-10 rounded-xl bg-emerald-600 flex items-center justify-center text-white shadow-sm shadow-emerald-100">
-                                    <FaBuilding size={16} />
-                                </div>
-                            </div>
                         </div>
-                    </div>
-                </div>
 
-                {/* Main Content Area - Full Width Table */}
-                <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden flex flex-col">
-                    <div className="px-8 py-6 border-b border-slate-50 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-50/30">
-                        <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-lg bg-emerald-600 flex items-center justify-center text-white">
-                                <FaBuilding size={14} />
-                            </div>
-                            <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest">Pending Sauda Entries</h3>
-                        </div>
-                        
-                        <div className="relative w-full md:w-80">
-                            <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 size-3" />
-                            <input
-                                type="text"
-                                placeholder="SEARCH BY SAUDA NO, LORRY NO, COMPANY..."
-                                value={tableSearch}
-                                onChange={(e) => setTableSearch(e.target.value)}
-                                className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 bg-white text-[10px] font-black uppercase tracking-widest focus:ring-2 focus:ring-emerald-500/10 outline-none transition"
-                            />
-                        </div>
-                    </div>
-
-                    <div className="p-2">
-                        {fetchingEntries ? (
-                            <div className="py-32 flex flex-col items-center justify-center gap-4">
-                                <div className="w-10 h-10 border-4 border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin" />
-                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Syncing Records...</p>
-                            </div>
-                        ) : filteredEntries.length > 0 ? (
-                            <Tables
-                                headers={columns.map(c => c.header)}
-                                rows={filteredEntries.map(entry => columns.map(col => {
-                                    if (typeof col.accessor === 'function') {
-                                        return col.accessor(entry);
-                                    }
-                                    return entry[col.accessor];
-                                }))}
-                            />
-                        ) : (
-                            <div className="py-32 flex flex-col items-center justify-center text-center px-8">
-                                <div className="w-16 h-16 rounded-[2rem] bg-slate-50 flex items-center justify-center text-slate-200 mb-4">
-                                    {tableSearch ? <FaExclamationCircle size={32} /> : <FaHistory size={32} />}
+                        <div className="p-2">
+                            {fetchingEntries ? (
+                                <div className="py-32 flex flex-col items-center justify-center gap-4">
+                                    <div className="w-10 h-10 border-4 border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin" />
+                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Fetching Pending...</p>
                                 </div>
-                                <h4 className="text-sm font-black text-slate-800 uppercase tracking-widest">
-                                    {tableSearch ? 'No matches found' : 'No Pending Entries'}
-                                </h4>
-                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1 max-w-xs mx-auto">
-                                    {tableSearch ? `No sauda or lorry matches "${tableSearch}"` : 'Select a ledger above to load pending lorry-wise entries'}
-                                </p>
-                            </div>
-                        )}
+                            ) : filteredEntries.length > 0 ? (
+                                <Tables
+                                    headers={columns.map(c => c.header)}
+                                    rows={filteredEntries.map(entry => columns.map(col => {
+                                        if (typeof col.accessor === 'function') {
+                                            return col.accessor(entry);
+                                        }
+                                        return entry[col.accessor];
+                                    }))}
+                                />
+                            ) : (
+                                <div className="py-32 flex flex-col items-center justify-center text-center px-8">
+                                    <div className="w-16 h-16 rounded-[2rem] bg-slate-50 flex items-center justify-center text-slate-200 mb-4">
+                                        <FaHistory size={32} />
+                                    </div>
+                                    <h4 className="text-sm font-black text-slate-800 uppercase tracking-widest">No Pending Records</h4>
+                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1 max-w-xs mx-auto">
+                                        All entries are fully settled for this account.
+                                    </p>
+                                </div>
+                            )}
+                        </div>
                     </div>
-                </div>
+                )}
+
+                {activeTab === 'history' && (
+                    <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden min-h-[400px]">
+                        <div className="px-8 py-6 border-b border-slate-50 flex items-center gap-3 bg-slate-50/30">
+                            <div className="w-8 h-8 rounded-lg bg-slate-900 flex items-center justify-center text-white">
+                                <FaHistory size={14} />
+                            </div>
+                            <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest">Previous Payments (On {new Date(formData.date).toLocaleDateString()})</h3>
+                        </div>
+                        <div className="p-2">
+                            {fetchingHistory ? (
+                                <div className="py-32 flex flex-col items-center justify-center gap-4">
+                                    <div className="w-10 h-10 border-4 border-slate-200 border-t-slate-800 rounded-full animate-spin" />
+                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Loading History...</p>
+                                </div>
+                            ) : history.length > 0 ? (
+                                <Tables
+                                    headers={historyColumns.map(c => c.header)}
+                                    rows={history.map(row => historyColumns.map(col => {
+                                        if (typeof col.accessor === 'function') {
+                                            return col.accessor(row);
+                                        }
+                                        return row[col.accessor];
+                                    }))}
+                                />
+                            ) : (
+                                <div className="py-32 flex flex-col items-center justify-center text-center px-8">
+                                    <div className="w-16 h-16 rounded-[2rem] bg-slate-50 flex items-center justify-center text-slate-200 mb-4">
+                                        <FaExclamationCircle size={32} />
+                                    </div>
+                                    <h4 className="text-sm font-black text-slate-800 uppercase tracking-widest">No Previous Payments</h4>
+                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1 max-w-xs mx-auto">
+                                        No payments were recorded for this ledger on the selected date.
+                                    </p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
+
+                {activeTab === 'summary' && (
+                    <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden min-h-[400px]">
+                        <div className="px-8 py-6 border-b border-slate-50 flex items-center justify-between bg-slate-50/30">
+                            <div className="flex items-center gap-3">
+                                <div className="w-8 h-8 rounded-lg bg-emerald-600 flex items-center justify-center text-white">
+                                    <FaChartBar size={14} />
+                                </div>
+                                <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest">Periodic Summary</h3>
+                            </div>
+                            <div className="flex bg-slate-100 p-1 rounded-xl">
+                                {['month', 'week'].map(type => (
+                                    <button
+                                        key={type}
+                                        onClick={() => setSummaryType(type)}
+                                        className={`px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${
+                                            summaryType === type 
+                                                ? 'bg-white text-slate-900 shadow-sm' 
+                                                : 'text-slate-400 hover:text-slate-600'
+                                        }`}
+                                    >
+                                        {type}ly
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                        <div className="p-8">
+                            {summary.length > 0 ? (
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                                    {summary.map((item, idx) => (
+                                        <div key={idx} className="bg-slate-50 rounded-2xl p-6 border border-slate-100 group hover:bg-white hover:shadow-xl hover:shadow-slate-200/50 transition-all">
+                                            <div className="flex items-center justify-between mb-4">
+                                                <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center text-slate-400 group-hover:text-emerald-600 transition-colors">
+                                                    <FaFileInvoiceDollar size={18} />
+                                                </div>
+                                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{item._id.year}</span>
+                                            </div>
+                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">
+                                                {summaryType === 'month' ? `Month ${item._id.period}` : `Week ${item._id.period}`}
+                                            </p>
+                                            <p className="text-2xl font-black text-slate-800 italic">₹{item.totalAmount.toLocaleString()}</p>
+                                            <div className="mt-4 flex items-center gap-2 text-[10px] font-bold text-slate-500">
+                                                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500"></div>
+                                                {item.count} Transactions
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="py-24 flex flex-col items-center justify-center text-center">
+                                    <div className="w-16 h-16 rounded-[2rem] bg-slate-50 flex items-center justify-center text-slate-200 mb-4">
+                                        <FaChartBar size={32} />
+                                    </div>
+                                    <h4 className="text-sm font-black text-slate-800 uppercase tracking-widest">No Summary Available</h4>
+                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Select a ledger to view analytical summaries.</p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
             </div>
         </AdminPageShell>
     );
