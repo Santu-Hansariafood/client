@@ -19,12 +19,20 @@ router.post("/", async (req, res) => {
       remarks,
     } = req.body;
 
+    const totalMapped = (mappings || []).reduce((sum, m) => sum + (m.allocatedAmount || 0), 0);
+    
+    // Calculate unadjusted amount (Advance)
+    // If it's a fresh payment (amount > 0), excess becomes unadjusted
+    // If it's an adjustment from existing advance (amount = 0), unadjusted becomes negative totalMapped
+    const unadjustedAmount = amount - totalMapped;
+
     const newPayment = new PaymentReceived({
       date,
       ledgerType,
       ledgerId,
       amount,
-      paymentType,
+      unadjustedAmount,
+      paymentType: paymentType || (unadjustedAmount > 0 && totalMapped === 0 ? "Advance" : "Sauda-wise"),
       paymentMode,
       mappings,
       remarks,
@@ -58,7 +66,6 @@ router.post("/", async (req, res) => {
             
             // Validation: Prevent overpayment in backend
             if (newPaidAmount > netAmount + 1 && netAmount > 0) {
-              // We allow a small tolerance of 1 rupee for rounding
               throw new Error(`Total paid amount for ${entry.lorryNumber} exceeds net amount`);
             }
 
@@ -79,6 +86,57 @@ router.post("/", async (req, res) => {
     }
 
     res.status(201).json(savedPayment);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Get ledger balance (Advance vs Outstanding)
+router.get("/balance/:ledgerId", async (req, res) => {
+  try {
+    const { ledgerId } = req.params;
+    
+    // Sum of all unadjusted amounts (Advance balance)
+    const advanceSummary = await PaymentReceived.aggregate([
+      { $match: { ledgerId: new mongoose.Types.ObjectId(ledgerId) } },
+      { $group: { _id: null, totalAdvance: { $sum: "$unadjustedAmount" } } }
+    ]);
+
+    // Sum of all outstanding from LoadingEntries
+    // We need to fetch all pending entries and calculate their net - paid
+    const pendingEntries = await LoadingEntry.find({ 
+      $or: [
+        { buyerId: ledgerId },
+        { supplier: ledgerId }
+      ],
+      paymentStatus: "pending"
+    }).lean();
+
+    const saudaNos = [...new Set(pendingEntries.map(e => e.saudaNo))];
+    const selfOrders = await SelfOrder.find({ saudaNo: { $in: saudaNos } }).lean();
+    const saudaMap = selfOrders.reduce((acc, so) => { acc[so.saudaNo] = so; return acc; }, {});
+
+    let totalOutstanding = 0;
+    pendingEntries.forEach(entry => {
+      const order = saudaMap[entry.saudaNo];
+      if (order) {
+        const weight = entry.unloadingWeight || 0;
+        const rate = order.rate || 0;
+        const cdPercent = order.cd || 0;
+        const gstPercent = order.gst || 0;
+
+        const grossAmount = weight * rate;
+        const taxableAmount = grossAmount - (grossAmount * (cdPercent / 100));
+        const netAmount = taxableAmount + (taxableAmount * (gstPercent / 100));
+        
+        totalOutstanding += (netAmount - (entry.paidAmount || 0));
+      }
+    });
+
+    res.json({
+      advanceBalance: advanceSummary.length > 0 ? advanceSummary[0].totalAdvance : 0,
+      outstandingBalance: totalOutstanding
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

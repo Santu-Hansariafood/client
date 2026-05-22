@@ -32,8 +32,10 @@ const AddPaymentReceived = () => {
     const [summary, setSummary] = useState([]);
     const [summaryType, setSummaryType] = useState('month');
     const [tableSearch, setTableSearch] = useState('');
-    const [todayTotal, setTodayTotal] = useState(0);
+    const [dateTotal, setDateTotal] = useState(0);
+    const [ledgerBalance, setLedgerBalance] = useState({ advanceBalance: 0, outstandingBalance: 0 });
     const [activeTab, setActiveTab] = useState('allocation'); // allocation, history, summary
+    const [allocationSource, setAllocationSource] = useState('fresh'); // fresh, advance
 
     const [formData, setFormData] = useState({
         date: new Date().toISOString().split('T')[0],
@@ -149,33 +151,46 @@ const AddPaymentReceived = () => {
         }
     }, [formData.ledgerId, summaryType]);
 
+    // Fetch ledger balance
+    const fetchLedgerBalance = useCallback(async () => {
+        if (!formData.ledgerId) return;
+        try {
+            const response = await api.get(`/payment-received/balance/${formData.ledgerId}`);
+            setLedgerBalance(response.data);
+        } catch (error) {
+            console.error('Error fetching balance:', error);
+        }
+    }, [formData.ledgerId]);
+
     useEffect(() => {
         fetchEntries();
         fetchHistory();
         fetchSummary();
-    }, [fetchEntries, fetchHistory, fetchSummary]);
+        fetchLedgerBalance();
+    }, [fetchEntries, fetchHistory, fetchSummary, fetchLedgerBalance]);
 
-    const fetchTodayTotal = useCallback(async () => {
+    // Fetch total received for the selected date
+    const fetchDateTotal = useCallback(async () => {
         try {
-            const today = new Date().toISOString().split('T')[0];
+            const selectedDate = formData.date;
             const response = await api.get('/payment-received', {
                 params: {
-                    startDate: today,
-                    endDate: today,
+                    startDate: selectedDate,
+                    endDate: selectedDate,
                     limit: 1000
                 }
             });
             const payments = response.data.data || [];
             const total = payments.reduce((sum, p) => sum + (p.amount || 0), 0);
-            setTodayTotal(total);
+            setDateTotal(total);
         } catch (error) {
-            console.error('Error fetching today total:', error);
+            console.error('Error fetching date total:', error);
         }
-    }, []);
+    }, [formData.date]);
 
     useEffect(() => {
-        fetchTodayTotal();
-    }, [fetchTodayTotal]);
+        fetchDateTotal();
+    }, [fetchDateTotal]);
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
@@ -237,15 +252,20 @@ const AddPaymentReceived = () => {
             return;
         }
 
+        if (allocationSource === 'advance' && entry.allocatedAmount > ledgerBalance.advanceBalance) {
+            toast.error('Allocation exceeds available Advance Balance');
+            return;
+        }
+
         try {
             setLoading(true);
             const payload = {
                 date: formData.date,
                 ledgerType: formData.ledgerType,
                 ledgerId: formData.ledgerId,
-                amount: entry.allocatedAmount,
-                paymentType: 'Sauda-wise',
-                paymentMode: formData.paymentMode,
+                amount: allocationSource === 'fresh' ? entry.allocatedAmount : 0,
+                paymentType: allocationSource === 'fresh' ? 'Sauda-wise' : 'Adjustment',
+                paymentMode: allocationSource === 'fresh' ? formData.paymentMode : 'Adjustment',
                 mappings: [{
                     saudaNo: entry.saudaNo,
                     loadingEntryId: entry._id,
@@ -256,14 +276,42 @@ const AddPaymentReceived = () => {
             };
 
             await api.post('/payment-received', payload);
-            toast.success(`Payment saved for ${entry.lorryNumber}`);
+            toast.success(`Payment adjusted for ${entry.lorryNumber}`);
             
             fetchEntries();
             fetchHistory();
-            fetchTodayTotal();
+            fetchDateTotal();
             fetchSummary();
+            fetchLedgerBalance();
         } catch (error) {
             toast.error(error.response?.data?.message || 'Error saving payment');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleRecordAdvance = async () => {
+        if (formData.amount <= 0) {
+            toast.error('Please enter an advance amount');
+            return;
+        }
+
+        try {
+            setLoading(true);
+            const payload = {
+                ...formData,
+                paymentType: 'Advance',
+                mappings: []
+            };
+
+            await api.post('/payment-received', payload);
+            toast.success('Advance payment recorded');
+            setFormData(prev => ({ ...prev, amount: 0, remarks: '' }));
+            fetchHistory();
+            fetchDateTotal();
+            fetchLedgerBalance();
+        } catch (error) {
+            toast.error('Error recording advance');
         } finally {
             setLoading(false);
         }
@@ -478,15 +526,15 @@ const AddPaymentReceived = () => {
                                 Back
                             </button>
                             <div className="h-6 w-px bg-slate-100"></div>
-                            <div className="flex gap-2">
+                            <div className="flex gap-2 bg-slate-50 p-1 rounded-xl">
                                 {['allocation', 'history', 'summary'].map(tab => (
                                     <button
                                         key={tab}
                                         onClick={() => setActiveTab(tab)}
-                                        className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
+                                        className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${
                                             activeTab === tab 
                                                 ? 'bg-slate-900 text-white shadow-md' 
-                                                : 'text-slate-400 hover:bg-slate-50'
+                                                : 'text-slate-400 hover:text-slate-600'
                                         }`}
                                     >
                                         {tab}
@@ -494,13 +542,27 @@ const AddPaymentReceived = () => {
                                 ))}
                             </div>
                         </div>
-                        <div className="flex items-center gap-3">
-                            <div className="flex flex-col items-end">
-                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Voucher Date</span>
-                                <span className="text-sm font-bold text-slate-800">{new Date(formData.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
-                            </div>
-                            <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600">
-                                <FaCalendarAlt size={18} />
+                        <div className="flex items-center gap-8">
+                            {selectedLedger && (
+                                <div className="hidden md:flex items-center gap-6">
+                                    <div className="flex flex-col items-end">
+                                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Advance Balance</span>
+                                        <span className="text-xs font-black text-emerald-600 italic">₹{ledgerBalance.advanceBalance.toLocaleString()}</span>
+                                    </div>
+                                    <div className="flex flex-col items-end">
+                                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Outstanding</span>
+                                        <span className="text-xs font-black text-rose-600 italic">₹{ledgerBalance.outstandingBalance.toLocaleString()}</span>
+                                    </div>
+                                </div>
+                            )}
+                            <div className="flex items-center gap-3 pl-6 border-l border-slate-100">
+                                <div className="flex flex-col items-end">
+                                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Voucher Date</span>
+                                    <span className="text-sm font-bold text-slate-800">{new Date(formData.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                                </div>
+                                <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600">
+                                    <FaCalendarAlt size={18} />
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -508,8 +570,8 @@ const AddPaymentReceived = () => {
                     <div className="md:col-span-4 bg-gradient-to-br from-slate-900 to-slate-800 px-6 py-4 rounded-[1.5rem] shadow-xl shadow-slate-200 flex items-center justify-between group overflow-hidden relative border border-slate-800">
                         <div className="absolute -right-4 -bottom-4 w-24 h-24 bg-emerald-500/10 rounded-full blur-2xl group-hover:bg-emerald-500/20 transition-all"></div>
                         <div className="z-10">
-                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Today&apos;s Total</p>
-                            <p className="text-2xl font-black text-white italic tracking-tighter">₹{todayTotal.toLocaleString('en-IN')}</p>
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Date Total Received</p>
+                            <p className="text-2xl font-black text-white italic tracking-tighter">₹{dateTotal.toLocaleString('en-IN')}</p>
                         </div>
                         <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center text-emerald-400 backdrop-blur-md border border-white/10 shadow-inner z-10">
                             <FaMoneyBillWave size={22} />
@@ -529,9 +591,24 @@ const AddPaymentReceived = () => {
                                 <p className="text-[10px] text-slate-400 font-bold uppercase">Configure ledger & allocation rules</p>
                             </div>
                         </div>
-                        <div className="hidden md:flex items-center gap-3 px-4 py-2 bg-emerald-50/50 rounded-xl border border-emerald-100">
-                            <span className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">Active Account:</span>
-                            <span className="text-xs font-bold text-slate-700">{selectedLedger?.label || 'Not Selected'}</span>
+                        <div className="flex items-center gap-2 bg-slate-100 p-1 rounded-xl">
+                            {[
+                                { id: 'fresh', label: 'Fresh Payment', icon: <FaMoneyBillWave size={10}/> },
+                                { id: 'advance', label: 'Adjust from Advance', icon: <FaHistory size={10}/> }
+                            ].map(source => (
+                                <button
+                                    key={source.id}
+                                    onClick={() => setAllocationSource(source.id)}
+                                    className={`px-4 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest flex items-center gap-2 transition-all ${
+                                        allocationSource === source.id 
+                                            ? 'bg-white text-slate-900 shadow-sm' 
+                                            : 'text-slate-400 hover:text-slate-600'
+                                    }`}
+                                >
+                                    {source.icon}
+                                    {source.label}
+                                </button>
+                            ))}
                         </div>
                     </div>
 
@@ -564,14 +641,53 @@ const AddPaymentReceived = () => {
                             />
                         </div>
                         <div className="space-y-2">
-                            <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Payment Method</label>
+                            <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                                {allocationSource === 'fresh' ? 'Fresh Payment Mode' : 'Adjustment Mode'}
+                            </label>
                             <DataDropdown
-                                options={paymentModes}
-                                selectedOptions={formData.paymentMode}
+                                options={allocationSource === 'fresh' ? paymentModes : [{ value: 'Adjustment', label: 'Advance Adjustment' }]}
+                                selectedOptions={allocationSource === 'fresh' ? formData.paymentMode : 'Adjustment'}
                                 onChange={(opt) => setFormData(prev => ({ ...prev, paymentMode: opt.value }))}
                                 isMulti={false}
+                                isDisabled={allocationSource === 'advance'}
                             />
                         </div>
+                    </div>
+
+                    <div className="pt-4 border-t border-slate-50 flex flex-col md:flex-row gap-6 items-end">
+                        <div className="flex-1 space-y-2 w-full">
+                            <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Voucher Narration / Remarks</label>
+                            <input
+                                type="text"
+                                name="remarks"
+                                value={formData.remarks}
+                                onChange={handleInputChange}
+                                placeholder="Enter narration for this voucher..."
+                                className="w-full h-11 px-4 rounded-xl border border-slate-200 bg-slate-50/30 focus:bg-white focus:ring-2 focus:ring-emerald-500/10 outline-none transition text-sm font-medium text-slate-700"
+                            />
+                        </div>
+                        {allocationSource === 'fresh' && (
+                            <div className="flex gap-4 w-full md:w-auto">
+                                <div className="space-y-2 flex-1 md:w-48">
+                                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 text-emerald-600">Bulk Advance Amount</label>
+                                    <input
+                                        type="number"
+                                        name="amount"
+                                        value={formData.amount}
+                                        onChange={handleInputChange}
+                                        placeholder="0.00"
+                                        className="w-full h-11 px-4 rounded-xl border border-emerald-100 bg-emerald-50/30 focus:bg-white focus:ring-2 focus:ring-emerald-500/20 outline-none transition font-black text-emerald-700"
+                                    />
+                                </div>
+                                <button
+                                    onClick={handleRecordAdvance}
+                                    disabled={loading || !selectedLedger}
+                                    className="h-11 px-6 bg-emerald-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-100 disabled:opacity-50"
+                                >
+                                    Record Advance
+                                </button>
+                            </div>
+                        )}
                     </div>
                 </div>
 
@@ -579,12 +695,19 @@ const AddPaymentReceived = () => {
                 {activeTab === 'allocation' && (
                     <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden flex flex-col min-h-[400px]">
                         <div className="px-8 py-6 border-b border-slate-50 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-50/30">
-                            <div className="flex items-center gap-3">
-                                <div className="w-8 h-8 rounded-lg bg-emerald-600 flex items-center justify-center text-white">
-                                    <FaBuilding size={14} />
+                                <div className="flex items-center gap-3">
+                                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-white transition-colors ${allocationSource === 'fresh' ? 'bg-emerald-600' : 'bg-slate-900'}`}>
+                                        {allocationSource === 'fresh' ? <FaBuilding size={14} /> : <FaExchangeAlt size={14} />}
+                                    </div>
+                                    <div>
+                                        <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest">
+                                            {allocationSource === 'fresh' ? 'Allocation Ledger' : 'Advance Adjustment Ledger'}
+                                        </h3>
+                                        <p className="text-[9px] font-bold text-slate-400 uppercase">
+                                            {allocationSource === 'fresh' ? 'Map fresh payments to saudas' : `Using ₹${ledgerBalance.advanceBalance.toLocaleString()} from Advance Account`}
+                                        </p>
+                                    </div>
                                 </div>
-                                <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest">Allocation Ledger</h3>
-                            </div>
                             
                             <div className="relative w-full md:w-80">
                                 <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 size-3" />

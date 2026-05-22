@@ -14,10 +14,11 @@ const paymentReceivedSchema = new mongoose.Schema(
       required: true 
     },
     amount: { type: Number, required: true },
+    unadjustedAmount: { type: Number, default: 0 },
     paymentType: { 
       type: String, 
-      enum: ["Adjustment", "Sauda-wise"], 
-      required: true 
+      enum: ["Adjustment", "Sauda-wise", "Advance"], 
+      default: "Sauda-wise"
     },
     paymentMode: { 
       type: String, 
