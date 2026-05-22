@@ -410,6 +410,21 @@ const AddPaymentReceived = () => {
         );
     }, [entries, tableSearch]);
 
+    const entryStats = useMemo(() => {
+        let totalDue = 0;
+        let pendingCount = 0;
+        
+        entries.forEach(entry => {
+            const details = calculateTallyDetails(entry);
+            totalDue += details.dueAmount;
+            if (entry.paymentStatus === 'pending') {
+                pendingCount++;
+            }
+        });
+
+        return { totalDue, pendingCount };
+    }, [entries]);
+
     const historyColumns = [
         { header: 'Time', accessor: (row) => new Date(row.createdAt).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) },
         { header: 'Mode', accessor: 'paymentMode' },
@@ -543,9 +558,10 @@ const AddPaymentReceived = () => {
             icon={FaMoneyBillWave}
         >
             <div className="max-w-7xl mx-auto space-y-6">
-                {/* Top Nav & Stats */}
-                <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
-                    <div className="md:col-span-9 bg-white px-6 py-4 rounded-[1.5rem] border border-slate-100 shadow-sm flex items-center justify-between">
+                {/* Top Action Bar & Stats */}
+                <div className="flex flex-col gap-6">
+                    {/* Action Bar */}
+                    <div className="bg-white px-6 py-4 rounded-[1.5rem] border border-slate-100 shadow-sm flex flex-col lg:flex-row lg:items-center justify-between gap-6">
                         <div className="flex items-center gap-6">
                             <button
                                 onClick={() => navigate(-1)}
@@ -554,13 +570,13 @@ const AddPaymentReceived = () => {
                                 <FaArrowLeft />
                                 Back
                             </button>
-                            <div className="h-6 w-px bg-slate-100"></div>
-                            <div className="flex gap-2 bg-slate-50 p-1 rounded-xl">
+                            <div className="hidden sm:block h-6 w-px bg-slate-100"></div>
+                            <div className="flex gap-2 bg-slate-50 p-1 rounded-xl overflow-x-auto no-scrollbar">
                                 {['allocation', 'history', 'summary'].map(tab => (
                                     <button
                                         key={tab}
                                         onClick={() => setActiveTab(tab)}
-                                        className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${
+                                        className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all ${
                                             activeTab === tab 
                                                 ? 'bg-slate-900 text-white shadow-md' 
                                                 : 'text-slate-400 hover:text-slate-600'
@@ -572,10 +588,10 @@ const AddPaymentReceived = () => {
                             </div>
                         </div>
 
-                        <div className="flex items-center gap-6">
+                        <div className="flex flex-col sm:flex-row items-center gap-6">
                             {/* Payment Received Inputs at Top */}
-                            <div className="flex items-center gap-4 bg-emerald-50/50 p-2 rounded-2xl border border-emerald-100">
-                                <div className="flex flex-col gap-1">
+                            <div className="flex flex-wrap items-center gap-4 bg-emerald-50/50 p-2 rounded-2xl border border-emerald-100 w-full sm:w-auto">
+                                <div className="flex flex-col gap-1 flex-1 sm:flex-none">
                                     <label className="text-[9px] font-black text-emerald-600 uppercase tracking-widest leading-none pl-1">Amount</label>
                                     <input
                                         type="number"
@@ -583,26 +599,26 @@ const AddPaymentReceived = () => {
                                         value={formData.amount}
                                         onChange={handleInputChange}
                                         placeholder="0.00"
-                                        className="w-24 h-9 px-3 rounded-xl border border-emerald-200 bg-white focus:ring-2 focus:ring-emerald-500/20 outline-none transition font-black text-emerald-700 text-xs"
+                                        className="w-full sm:w-24 h-9 px-3 rounded-xl border border-emerald-200 bg-white focus:ring-2 focus:ring-emerald-500/20 outline-none transition font-black text-emerald-700 text-xs"
                                     />
                                 </div>
-                                <div className="flex flex-col gap-1">
+                                <div className="flex flex-col gap-1 flex-1 sm:flex-none">
                                     <label className="text-[9px] font-black text-emerald-600 uppercase tracking-widest leading-none pl-1">Date</label>
                                     <input
                                         type="date"
                                         name="date"
                                         value={formData.date}
                                         onChange={handleInputChange}
-                                        className="w-32 h-9 px-2 rounded-xl border border-emerald-200 bg-white focus:ring-2 focus:ring-emerald-500/20 outline-none transition font-bold text-slate-700 text-[10px]"
+                                        className="w-full sm:w-32 h-9 px-2 rounded-xl border border-emerald-200 bg-white focus:ring-2 focus:ring-emerald-500/20 outline-none transition font-bold text-slate-700 text-[10px]"
                                     />
                                 </div>
-                                <div className="flex flex-col gap-1">
+                                <div className="flex flex-col gap-1 flex-1 sm:flex-none">
                                     <label className="text-[9px] font-black text-emerald-600 uppercase tracking-widest leading-none pl-1">Through</label>
                                     <select
                                         name="paymentMode"
                                         value={formData.paymentMode}
                                         onChange={handleInputChange}
-                                        className="w-32 h-9 px-2 rounded-xl border border-emerald-200 bg-white focus:ring-2 focus:ring-emerald-500/20 outline-none transition font-bold text-slate-700 text-[10px] appearance-none cursor-pointer"
+                                        className="w-full sm:w-32 h-9 px-2 rounded-xl border border-emerald-200 bg-white focus:ring-2 focus:ring-emerald-500/20 outline-none transition font-bold text-slate-700 text-[10px] appearance-none cursor-pointer"
                                     >
                                         {paymentModes.map(mode => (
                                             <option key={mode.value} value={mode.value}>{mode.label}</option>
@@ -610,30 +626,61 @@ const AddPaymentReceived = () => {
                                     </select>
                                 </div>
                             </div>
-
-                            {selectedLedger && (
-                                <div className="hidden lg:flex items-center gap-6 pl-6 border-l border-slate-100">
-                                    <div className="flex flex-col items-end">
-                                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Advance Balance</span>
-                                        <span className="text-xs font-black text-emerald-600 italic">₹{ledgerBalance.advanceBalance.toLocaleString()}</span>
-                                    </div>
-                                    <div className="flex flex-col items-end">
-                                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Outstanding</span>
-                                        <span className="text-xs font-black text-rose-600 italic">₹{ledgerBalance.outstandingBalance.toLocaleString()}</span>
-                                    </div>
-                                </div>
-                            )}
                         </div>
                     </div>
 
-                    <div className="md:col-span-3 bg-gradient-to-br from-slate-900 to-slate-800 px-6 py-4 rounded-[1.5rem] shadow-xl shadow-slate-200 flex items-center justify-between group overflow-hidden relative border border-slate-800">
-                        <div className="absolute -right-4 -bottom-4 w-24 h-24 bg-emerald-500/10 rounded-full blur-2xl group-hover:bg-emerald-500/20 transition-all"></div>
-                        <div className="z-10">
-                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Date Total</p>
-                            <p className="text-xl font-black text-white italic tracking-tighter">₹{dateTotal.toLocaleString('en-IN')}</p>
+                    {/* Stats Grid */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div className="bg-gradient-to-br from-slate-900 to-slate-800 p-5 rounded-[1.5rem] shadow-xl shadow-slate-200 relative overflow-hidden group border border-slate-800">
+                            <div className="absolute -right-4 -bottom-4 w-20 h-20 bg-white/5 rounded-full blur-2xl group-hover:bg-white/10 transition-all"></div>
+                            <div className="relative z-10 flex flex-col justify-between h-full">
+                                <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3">Total Received (Date)</p>
+                                <div className="flex items-end justify-between">
+                                    <p className="text-2xl font-black text-white italic tracking-tighter">₹{dateTotal.toLocaleString('en-IN')}</p>
+                                    <div className="w-10 h-10 rounded-2xl bg-white/5 flex items-center justify-center text-emerald-400 backdrop-blur-md border border-white/10 shadow-inner">
+                                        <FaMoneyBillWave size={18} />
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <div className="w-10 h-10 rounded-2xl bg-white/5 flex items-center justify-center text-emerald-400 backdrop-blur-md border border-white/10 shadow-inner z-10">
-                            <FaMoneyBillWave size={18} />
+
+                        <div className="bg-white p-5 rounded-[1.5rem] border border-slate-100 shadow-sm relative overflow-hidden group">
+                            <div className="absolute -right-4 -bottom-4 w-20 h-20 bg-rose-500/5 rounded-full blur-2xl group-hover:bg-rose-500/10 transition-all"></div>
+                            <div className="relative z-10 flex flex-col justify-between h-full">
+                                <p className="text-[9px] font-black text-rose-400 uppercase tracking-[0.2em] mb-3">Total Due Payment</p>
+                                <div className="flex items-end justify-between">
+                                    <p className="text-2xl font-black text-rose-600 italic tracking-tighter">₹{entryStats.totalDue.toLocaleString('en-IN')}</p>
+                                    <div className="w-10 h-10 rounded-2xl bg-rose-50 flex items-center justify-center text-rose-500 border border-rose-100">
+                                        <FaExclamationCircle size={18} />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="bg-white p-5 rounded-[1.5rem] border border-slate-100 shadow-sm relative overflow-hidden group">
+                            <div className="absolute -right-4 -bottom-4 w-20 h-20 bg-emerald-500/5 rounded-full blur-2xl group-hover:bg-emerald-500/10 transition-all"></div>
+                            <div className="relative z-10 flex flex-col justify-between h-full">
+                                <p className="text-[9px] font-black text-emerald-400 uppercase tracking-[0.2em] mb-3">Advance Balance</p>
+                                <div className="flex items-end justify-between">
+                                    <p className="text-2xl font-black text-emerald-600 italic tracking-tighter">₹{ledgerBalance.advanceBalance.toLocaleString('en-IN')}</p>
+                                    <div className="w-10 h-10 rounded-2xl bg-emerald-50 flex items-center justify-center text-emerald-500 border border-emerald-100">
+                                        <FaHistory size={18} />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="bg-white p-5 rounded-[1.5rem] border border-slate-100 shadow-sm relative overflow-hidden group">
+                            <div className="absolute -right-4 -bottom-4 w-20 h-20 bg-slate-500/5 rounded-full blur-2xl group-hover:bg-slate-500/10 transition-all"></div>
+                            <div className="relative z-10 flex flex-col justify-between h-full">
+                                <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3">Pending Records</p>
+                                <div className="flex items-end justify-between">
+                                    <p className="text-2xl font-black text-slate-800 italic tracking-tighter">{entryStats.pendingCount}</p>
+                                    <div className="w-10 h-10 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-500 border border-slate-100">
+                                        <FaBuilding size={18} />
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
