@@ -585,23 +585,27 @@ router.get("/", async (req, res) => {
       if (buyer) {
         const buyerOr = [];
         
-        // Match by buyer ID if the field exists
+        // Match by buyer ID if the field exists (future proofing)
         buyerOr.push({ buyer: toObjectId(buyerId) });
         buyerOr.push({ buyerId: toObjectId(buyerId) });
 
         if (buyerCompany) {
           // If a specific company is selected
-          buyerOr.push({ buyerCompany: { $regex: new RegExp(`^${escapeRegex(buyerCompany)}$`, "i") } });
-          if (companyId) buyerOr.push({ companyId: toObjectId(companyId) });
+          const companyRegex = { $regex: new RegExp(`^${escapeRegex(buyerCompany)}$`, "i") };
+          buyerOr.push({ buyerCompany: companyRegex });
+          buyerOr.push({ consignee: companyRegex }); // Also check consignee field
+          if (companyId && mongoose.Types.ObjectId.isValid(companyId)) {
+            buyerOr.push({ companyId: toObjectId(companyId) });
+          }
         } else {
           // Otherwise filter by all company names of this buyer
           const companyNames = (buyer.companyIds || []).map((c) => c.companyName);
           if (buyer.name) companyNames.push(buyer.name);
           
           if (companyNames.length) {
-            buyerOr.push({ 
-              buyerCompany: { $in: companyNames.map(name => new RegExp(`^${escapeRegex(name)}$`, "i")) } 
-            });
+            const companyRegexes = companyNames.map(name => new RegExp(`^${escapeRegex(name)}$`, "i"));
+            buyerOr.push({ buyerCompany: { $in: companyRegexes } });
+            buyerOr.push({ consignee: { $in: companyRegexes } }); // Also check consignee field
           }
           
           const companyIds = (buyer.companyIds || []).map(c => c._id || c);
