@@ -122,7 +122,7 @@ const AddPaymentReceived = () => {
 
             setEntries(sortedItems.map(item => ({
                 ...item,
-                allocatedAmount: '',
+                allocatedAmount: item.paymentStatus === 'done' ? item.paidAmount : '',
                 rowRemarks: '',
                 isSaved: item.paymentStatus === 'done'
             })));
@@ -275,10 +275,13 @@ const AddPaymentReceived = () => {
     };
 
     const handleSaveRow = async (entry) => {
-        if (entry.allocatedAmount <= 0) {
+        if (entry.allocatedAmount === '' && !entry.isSaved) {
             toast.error('Please enter an allocation amount');
             return;
         }
+
+        const isAdmin = user?.role === 'Admin';
+        const isEditing = entry.isSaved && isAdmin;
 
         if (allocationSource === 'advance' && entry.allocatedAmount > ledgerBalance.advanceBalance) {
             toast.error('Allocation exceeds available Advance Balance');
@@ -288,26 +291,38 @@ const AddPaymentReceived = () => {
         try {
             setLoading(true);
             const numAllocated = parseFloat(entry.allocatedAmount) || 0;
-            const payload = {
-                date: formData.date,
-                ledgerType: formData.ledgerType,
-                ledgerId: formData.ledgerId,
-                amount: allocationSource === 'fresh' ? numAllocated : 0,
-                paymentType: allocationSource === 'fresh' ? 'Sauda-wise' : 'Adjustment',
-                paymentMode: allocationSource === 'fresh' ? formData.paymentMode : 'Adjustment',
-                mappings: [{
-                    saudaNo: entry.saudaNo,
-                    loadingEntryId: entry._id,
-                    allocatedAmount: numAllocated,
-                    remarks: entry.rowRemarks
-                }],
-                remarks: entry.rowRemarks 
-            };
 
-            await api.post('/payment-received', payload);
-            toast.success(`Payment adjusted for ${entry.lorryNumber}`);
+            if (isEditing) {
+                // Admin Edit: Use the special adjustment API
+                // We assume the admin is setting the TOTAL paid amount for this lorry
+                await api.patch(`/payment-received/adjust-lorry/${entry._id}`, {
+                    paidAmount: numAllocated,
+                    paymentStatus: numAllocated >= (calculateTallyDetails(entry).netAmount - 1) ? 'done' : 'pending'
+                });
+                toast.success(`Payment adjusted for ${entry.lorryNumber}`);
+            } else {
+                // Normal Save: Create a new payment record (adds to existing paidAmount)
+                const payload = {
+                    date: formData.date,
+                    ledgerType: formData.ledgerType,
+                    ledgerId: formData.ledgerId,
+                    amount: allocationSource === 'fresh' ? numAllocated : 0,
+                    paymentType: allocationSource === 'fresh' ? 'Sauda-wise' : 'Adjustment',
+                    paymentMode: allocationSource === 'fresh' ? formData.paymentMode : 'Adjustment',
+                    mappings: [{
+                        saudaNo: entry.saudaNo,
+                        loadingEntryId: entry._id,
+                        allocatedAmount: numAllocated,
+                        remarks: entry.rowRemarks
+                    }],
+                    remarks: entry.rowRemarks 
+                };
+
+                await api.post('/payment-received', payload);
+                toast.success(`Payment recorded for ${entry.lorryNumber}`);
+            }
             
-            fetchEntries();
+            fetchEntries(entriesPage);
             fetchHistory();
             fetchDateTotal();
             fetchSummary();
@@ -502,17 +517,26 @@ const AddPaymentReceived = () => {
 
                 return (
                     <div className="flex flex-col gap-2 min-w-[180px]">
-                        <div className="relative">
+                        <div className="relative group">
                             <input
                                 type="number"
                                 value={row.allocatedAmount}
                                 onChange={(e) => handleAllocationChange(row._id, e.target.value, details.netAmount, row.paidAmount)}
+                                onWheel={(e) => e.target.blur()} // Prevents value change on scroll
                                 disabled={isLocked}
                                 className={`w-full px-3 py-1.5 rounded-xl border ${
                                     isLocked ? 'bg-slate-50 text-slate-400 border-slate-100' : 'border-slate-200 bg-white'
                                 } focus:ring-2 focus:ring-emerald-500/20 outline-none transition font-bold text-slate-700 text-sm`}
                                 placeholder="Amount"
                             />
+                            {!isLocked && (
+                                <button
+                                    onClick={() => handleAllocationChange(row._id, details.dueAmount.toString(), details.netAmount, row.paidAmount)}
+                                    className="absolute right-2 top-1/2 -translate-y-1/2 text-[8px] font-black uppercase text-emerald-600 hover:text-emerald-700 opacity-0 group-hover:opacity-100 transition-opacity bg-emerald-50 px-1.5 py-0.5 rounded"
+                                >
+                                    Full
+                                </button>
+                            )}
                         </div>
                         <textarea
                             value={row.rowRemarks}
@@ -607,6 +631,7 @@ const AddPaymentReceived = () => {
                                         name="amount"
                                         value={formData.amount}
                                         onChange={handleInputChange}
+                                        onWheel={(e) => e.target.blur()}
                                         placeholder="0.00"
                                         className="w-full sm:w-24 h-9 px-3 rounded-xl border border-emerald-200 bg-white focus:ring-2 focus:ring-emerald-500/20 outline-none transition font-black text-emerald-700 text-xs"
                                     />
@@ -653,44 +678,52 @@ const AddPaymentReceived = () => {
                             </div>
                         </div>
 
-                        <div className="bg-white p-5 rounded-[1.5rem] border border-slate-100 shadow-sm relative overflow-hidden group">
-                            <div className="absolute -right-4 -bottom-4 w-20 h-20 bg-rose-500/5 rounded-full blur-2xl group-hover:bg-rose-500/10 transition-all"></div>
-                            <div className="relative z-10 flex flex-col justify-between h-full">
-                                <p className="text-[9px] font-black text-rose-400 uppercase tracking-[0.2em] mb-3">Total Due (All Time)</p>
-                                <div className="flex items-end justify-between">
-                                    <p className="text-2xl font-black text-rose-600 italic tracking-tighter">₹{ledgerBalance.outstandingBalance.toLocaleString('en-IN')}</p>
-                                    <div className="w-10 h-10 rounded-2xl bg-rose-50 flex items-center justify-center text-rose-500 border border-rose-100">
-                                        <FaExclamationCircle size={18} />
+                        {selectedLedger && (
+                            <div className="bg-white p-5 rounded-[1.5rem] border border-slate-100 shadow-sm relative overflow-hidden group">
+                                <div className="absolute -right-4 -bottom-4 w-20 h-20 bg-rose-500/5 rounded-full blur-2xl group-hover:bg-rose-500/10 transition-all"></div>
+                                <div className="relative z-10 flex flex-col justify-between h-full">
+                                    <p className="text-[9px] font-black text-rose-400 uppercase tracking-[0.2em] mb-3">
+                                        {formData.ledgerType === 'Seller' ? 'Seller Due (All Time)' : 'Buyer Due (All Time)'}
+                                    </p>
+                                    <div className="flex items-end justify-between">
+                                        <p className="text-2xl font-black text-rose-600 italic tracking-tighter">₹{ledgerBalance.outstandingBalance.toLocaleString('en-IN')}</p>
+                                        <div className="w-10 h-10 rounded-2xl bg-rose-50 flex items-center justify-center text-rose-500 border border-rose-100">
+                                            <FaExclamationCircle size={18} />
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
+                        )}
 
-                        <div className="bg-white p-5 rounded-[1.5rem] border border-slate-100 shadow-sm relative overflow-hidden group">
-                            <div className="absolute -right-4 -bottom-4 w-20 h-20 bg-emerald-500/5 rounded-full blur-2xl group-hover:bg-emerald-500/10 transition-all"></div>
-                            <div className="relative z-10 flex flex-col justify-between h-full">
-                                <p className="text-[9px] font-black text-emerald-400 uppercase tracking-[0.2em] mb-3">Advance Balance</p>
-                                <div className="flex items-end justify-between">
-                                    <p className="text-2xl font-black text-emerald-600 italic tracking-tighter">₹{ledgerBalance.advanceBalance.toLocaleString('en-IN')}</p>
-                                    <div className="w-10 h-10 rounded-2xl bg-emerald-50 flex items-center justify-center text-emerald-500 border border-emerald-100">
-                                        <FaHistory size={18} />
+                        {selectedLedger && (
+                            <div className="bg-white p-5 rounded-[1.5rem] border border-slate-100 shadow-sm relative overflow-hidden group">
+                                <div className="absolute -right-4 -bottom-4 w-20 h-20 bg-emerald-500/5 rounded-full blur-2xl group-hover:bg-emerald-500/10 transition-all"></div>
+                                <div className="relative z-10 flex flex-col justify-between h-full">
+                                    <p className="text-[9px] font-black text-emerald-400 uppercase tracking-[0.2em] mb-3">Advance Balance</p>
+                                    <div className="flex items-end justify-between">
+                                        <p className="text-2xl font-black text-emerald-600 italic tracking-tighter">₹{ledgerBalance.advanceBalance.toLocaleString('en-IN')}</p>
+                                        <div className="w-10 h-10 rounded-2xl bg-emerald-50 flex items-center justify-center text-emerald-500 border border-emerald-100">
+                                            <FaHistory size={18} />
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
+                        )}
 
-                        <div className="bg-white p-5 rounded-[1.5rem] border border-slate-100 shadow-sm relative overflow-hidden group">
-                            <div className="absolute -right-4 -bottom-4 w-20 h-20 bg-slate-500/5 rounded-full blur-2xl group-hover:bg-slate-500/10 transition-all"></div>
-                            <div className="relative z-10 flex flex-col justify-between h-full">
-                                <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3">Pending Records</p>
-                                <div className="flex items-end justify-between">
-                                    <p className="text-2xl font-black text-slate-800 italic tracking-tighter">{entryStats.pendingCount}</p>
-                                    <div className="w-10 h-10 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-500 border border-slate-100">
-                                        <FaBuilding size={18} />
+                        {selectedLedger && (
+                            <div className="bg-white p-5 rounded-[1.5rem] border border-slate-100 shadow-sm relative overflow-hidden group">
+                                <div className="absolute -right-4 -bottom-4 w-20 h-20 bg-slate-500/5 rounded-full blur-2xl group-hover:bg-slate-500/10 transition-all"></div>
+                                <div className="relative z-10 flex flex-col justify-between h-full">
+                                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3">Pending Records</p>
+                                    <div className="flex items-end justify-between">
+                                        <p className="text-2xl font-black text-slate-800 italic tracking-tighter">{entryStats.pendingCount}</p>
+                                        <div className="w-10 h-10 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-500 border border-slate-100">
+                                            <FaBuilding size={18} />
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
+                        )}
                     </div>
                 </div>
 

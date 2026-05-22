@@ -1,9 +1,41 @@
 import express from "express";
+import mongoose from "mongoose";
 import PaymentReceived from "../models/PaymentReceived.js";
 import LoadingEntry from "../models/LoadingEntry.js";
 import SelfOrder from "../models/SelfOrder.js";
+import { adminOnly } from "../middleware/roleMiddleware.js";
 
 const router = express.Router();
+
+// Admin only: Adjust a specific lorry's payment details directly
+router.patch("/adjust-lorry/:loadingEntryId", adminOnly, async (req, res) => {
+  try {
+    const { loadingEntryId } = req.params;
+    const { paidAmount, paymentStatus } = req.body;
+
+    const entry = await LoadingEntry.findById(loadingEntryId);
+    if (!entry) {
+      return res.status(404).json({ message: "Loading entry not found" });
+    }
+
+    // Update the entry directly
+    const updatedEntry = await LoadingEntry.findByIdAndUpdate(
+      loadingEntryId,
+      { 
+        paidAmount: parseFloat(paidAmount),
+        paymentStatus: paymentStatus || (parseFloat(paidAmount) > 0 ? entry.paymentStatus : "pending")
+      },
+      { new: true }
+    );
+
+    res.json({
+      message: "Lorry payment adjusted by admin",
+      data: updatedEntry
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
 
 // Create a new payment record
 router.post("/", async (req, res) => {
