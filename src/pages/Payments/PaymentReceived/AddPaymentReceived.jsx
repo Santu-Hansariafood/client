@@ -532,20 +532,29 @@ const AddPaymentReceived = () => {
             header: 'Actions',
             accessor: (row) => {
                 const isLocked = row.isSaved && user?.role !== 'Admin';
+                const isAdmin = user?.role === 'Admin';
+                
                 return (
-                    <button
-                        type="button"
-                        onClick={() => handleSaveRow(row)}
-                        disabled={isLocked || loading}
-                        className={`px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 transition-all shadow-sm w-full ${
-                            isLocked 
-                                ? 'bg-slate-50 text-slate-400 border border-slate-100 cursor-not-allowed' 
-                                : 'bg-slate-900 text-white hover:bg-black active:scale-95'
-                        }`}
-                    >
-                        {isLocked ? <FaCheckCircle size={12} /> : <FaSave size={12} />}
-                        {isLocked ? 'Saved' : 'Save'}
-                    </button>
+                    <div className="flex flex-col gap-1 w-full">
+                        <button
+                            type="button"
+                            onClick={() => handleSaveRow(row)}
+                            disabled={(isLocked && !isAdmin) || loading}
+                            className={`px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 transition-all shadow-sm w-full ${
+                                isLocked && !isAdmin
+                                    ? 'bg-slate-50 text-slate-400 border border-slate-100 cursor-not-allowed' 
+                                    : isAdmin && row.isSaved
+                                        ? 'bg-amber-500 text-white hover:bg-amber-600 active:scale-95 shadow-amber-100'
+                                        : 'bg-slate-900 text-white hover:bg-black active:scale-95'
+                            }`}
+                        >
+                            {isLocked && !isAdmin ? <FaCheckCircle size={12} /> : (isAdmin && row.isSaved ? <FaExchangeAlt size={12} /> : <FaSave size={12} />)}
+                            {isLocked && !isAdmin ? 'Saved' : (isAdmin && row.isSaved ? 'Adjust / Edit' : 'Save')}
+                        </button>
+                        {isAdmin && row.isSaved && (
+                            <span className="text-[8px] text-amber-600 font-bold text-center uppercase tracking-tighter">Admin Override</span>
+                        )}
+                    </div>
                 );
             }
         }
@@ -647,9 +656,9 @@ const AddPaymentReceived = () => {
                         <div className="bg-white p-5 rounded-[1.5rem] border border-slate-100 shadow-sm relative overflow-hidden group">
                             <div className="absolute -right-4 -bottom-4 w-20 h-20 bg-rose-500/5 rounded-full blur-2xl group-hover:bg-rose-500/10 transition-all"></div>
                             <div className="relative z-10 flex flex-col justify-between h-full">
-                                <p className="text-[9px] font-black text-rose-400 uppercase tracking-[0.2em] mb-3">Total Due Payment</p>
+                                <p className="text-[9px] font-black text-rose-400 uppercase tracking-[0.2em] mb-3">Total Due (All Time)</p>
                                 <div className="flex items-end justify-between">
-                                    <p className="text-2xl font-black text-rose-600 italic tracking-tighter">₹{entryStats.totalDue.toLocaleString('en-IN')}</p>
+                                    <p className="text-2xl font-black text-rose-600 italic tracking-tighter">₹{ledgerBalance.outstandingBalance.toLocaleString('en-IN')}</p>
                                     <div className="w-10 h-10 rounded-2xl bg-rose-50 flex items-center justify-center text-rose-500 border border-rose-100">
                                         <FaExclamationCircle size={18} />
                                     </div>
@@ -903,6 +912,27 @@ const AddPaymentReceived = () => {
                                             </div>
                                         </div>
                                     )}
+                                    <div className="bg-slate-900 rounded-2xl px-8 py-4 flex items-center justify-between mt-2 border border-slate-800 shadow-xl">
+                                        <div className="flex items-center gap-4">
+                                            <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-rose-400">
+                                                <FaExclamationCircle size={18} />
+                                            </div>
+                                            <div>
+                                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">List Summary Due</p>
+                                                <p className="text-xl font-black text-white tracking-tighter italic">₹{entryStats.totalDue.toLocaleString('en-IN')}</p>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-8">
+                                            <div className="flex flex-col items-end">
+                                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Total Records</p>
+                                                <p className="text-lg font-black text-white">{entries.length}</p>
+                                            </div>
+                                            <div className="flex flex-col items-end border-l border-white/10 pl-8">
+                                                <p className="text-[10px] font-black text-emerald-400 uppercase tracking-widest leading-none mb-1">Pending Count</p>
+                                                <p className="text-lg font-black text-white">{entryStats.pendingCount}</p>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </>
                             ) : (
                                 <div className="py-32 flex flex-col items-center justify-center text-center px-8">
