@@ -193,8 +193,11 @@ const AddPaymentReceived = () => {
             const response = await api.get('/loading-entries', { params });
             const items = response.data.data || [];
             
+            // Filter out entries with 0 unloading weight - only show unloaded records
+            const validItems = items.filter(item => (item.unloadingWeight || 0) > 0);
+            
             // Client side sorting: Pending first, then Done
-            const sortedItems = [...items].sort((a, b) => {
+            const sortedItems = [...validItems].sort((a, b) => {
                 if (a.paymentStatus === 'pending' && b.paymentStatus === 'done') return -1;
                 if (a.paymentStatus === 'done' && b.paymentStatus === 'pending') return 1;
                 return new Date(b.loadingDate) - new Date(a.loadingDate);
@@ -358,8 +361,7 @@ const AddPaymentReceived = () => {
     };
 
     const calculateTallyDetails = (entry) => {
-        // Use unloading weight if available, otherwise fallback to loading weight for allocation purposes
-        const weight = (entry.unloadingWeight || 0) > 0 ? entry.unloadingWeight : (entry.loadingWeight || 0);
+        const weight = entry.unloadingWeight || 0;
         const rate = entry.actualRate || 0;
         const cdPercent = entry.cd || 0;
         const gstPercent = entry.gst || 0;
