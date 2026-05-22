@@ -62,6 +62,7 @@ const AddPaymentReceived = () => {
         { value: 'Cheque', label: 'Cheque' },
         { value: 'TDS', label: 'TDS' },
         { value: 'GST', label: 'GST Adjustment' },
+        { value: 'Loan', label: 'Loan' },
         { value: 'Adjustment', label: 'General Adjustment' }
     ];
 
@@ -121,7 +122,7 @@ const AddPaymentReceived = () => {
 
             setEntries(sortedItems.map(item => ({
                 ...item,
-                allocatedAmount: 0,
+                allocatedAmount: '',
                 rowRemarks: '',
                 isSaved: item.paymentStatus === 'done'
             })));
@@ -223,6 +224,13 @@ const AddPaymentReceived = () => {
     };
 
     const handleAllocationChange = (entryId, amount, netAmount, paidAmount) => {
+        if (amount === '') {
+            setEntries(prev => prev.map(entry => 
+                entry._id === entryId ? { ...entry, allocatedAmount: '' } : entry
+            ));
+            return;
+        }
+
         const numAmount = parseFloat(amount) || 0;
         const dueAmount = netAmount - (paidAmount || 0);
         
@@ -232,7 +240,7 @@ const AddPaymentReceived = () => {
         }
 
         setEntries(prev => prev.map(entry => 
-            entry._id === entryId ? { ...entry, allocatedAmount: numAmount } : entry
+            entry._id === entryId ? { ...entry, allocatedAmount: amount } : entry
         ));
     };
 
@@ -279,17 +287,18 @@ const AddPaymentReceived = () => {
 
         try {
             setLoading(true);
+            const numAllocated = parseFloat(entry.allocatedAmount) || 0;
             const payload = {
                 date: formData.date,
                 ledgerType: formData.ledgerType,
                 ledgerId: formData.ledgerId,
-                amount: allocationSource === 'fresh' ? entry.allocatedAmount : 0,
+                amount: allocationSource === 'fresh' ? numAllocated : 0,
                 paymentType: allocationSource === 'fresh' ? 'Sauda-wise' : 'Adjustment',
                 paymentMode: allocationSource === 'fresh' ? formData.paymentMode : 'Adjustment',
                 mappings: [{
                     saudaNo: entry.saudaNo,
                     loadingEntryId: entry._id,
-                    allocatedAmount: entry.allocatedAmount,
+                    allocatedAmount: numAllocated,
                     remarks: entry.rowRemarks
                 }],
                 remarks: entry.rowRemarks 
@@ -564,28 +573,41 @@ const AddPaymentReceived = () => {
                         </div>
 
                         <div className="flex items-center gap-6">
-                            {/* Payment Received Input at Top */}
+                            {/* Payment Received Inputs at Top */}
                             <div className="flex items-center gap-4 bg-emerald-50/50 p-2 rounded-2xl border border-emerald-100">
                                 <div className="flex flex-col gap-1">
-                                    <label className="text-[9px] font-black text-emerald-600 uppercase tracking-widest leading-none pl-1">Payment Received</label>
+                                    <label className="text-[9px] font-black text-emerald-600 uppercase tracking-widest leading-none pl-1">Amount</label>
                                     <input
                                         type="number"
                                         name="amount"
                                         value={formData.amount}
                                         onChange={handleInputChange}
                                         placeholder="0.00"
-                                        className="w-32 h-9 px-3 rounded-xl border border-emerald-200 bg-white focus:ring-2 focus:ring-emerald-500/20 outline-none transition font-black text-emerald-700 text-sm"
+                                        className="w-24 h-9 px-3 rounded-xl border border-emerald-200 bg-white focus:ring-2 focus:ring-emerald-500/20 outline-none transition font-black text-emerald-700 text-xs"
                                     />
                                 </div>
                                 <div className="flex flex-col gap-1">
-                                    <label className="text-[9px] font-black text-emerald-600 uppercase tracking-widest leading-none pl-1">Payment Date</label>
+                                    <label className="text-[9px] font-black text-emerald-600 uppercase tracking-widest leading-none pl-1">Date</label>
                                     <input
                                         type="date"
                                         name="date"
                                         value={formData.date}
                                         onChange={handleInputChange}
-                                        className="h-9 px-3 rounded-xl border border-emerald-200 bg-white focus:ring-2 focus:ring-emerald-500/20 outline-none transition font-bold text-slate-700 text-xs"
+                                        className="w-32 h-9 px-2 rounded-xl border border-emerald-200 bg-white focus:ring-2 focus:ring-emerald-500/20 outline-none transition font-bold text-slate-700 text-[10px]"
                                     />
+                                </div>
+                                <div className="flex flex-col gap-1">
+                                    <label className="text-[9px] font-black text-emerald-600 uppercase tracking-widest leading-none pl-1">Through</label>
+                                    <select
+                                        name="paymentMode"
+                                        value={formData.paymentMode}
+                                        onChange={handleInputChange}
+                                        className="w-32 h-9 px-2 rounded-xl border border-emerald-200 bg-white focus:ring-2 focus:ring-emerald-500/20 outline-none transition font-bold text-slate-700 text-[10px] appearance-none cursor-pointer"
+                                    >
+                                        {paymentModes.map(mode => (
+                                            <option key={mode.value} value={mode.value}>{mode.label}</option>
+                                        ))}
+                                    </select>
                                 </div>
                             </div>
 
@@ -649,7 +671,7 @@ const AddPaymentReceived = () => {
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-2">
                             <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Ledger Type</label>
                             <DataDropdown
@@ -668,18 +690,6 @@ const AddPaymentReceived = () => {
                                 placeholder={fetchingLedgers ? "Syncing..." : `Select ${formData.ledgerType}`}
                                 isMulti={false}
                                 isDisabled={fetchingLedgers}
-                            />
-                        </div>
-                        <div className="space-y-2">
-                            <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">
-                                {allocationSource === 'fresh' ? 'Fresh Payment Mode' : 'Adjustment Mode'}
-                            </label>
-                            <DataDropdown
-                                options={allocationSource === 'fresh' ? paymentModes : [{ value: 'Adjustment', label: 'Advance Adjustment' }]}
-                                selectedOptions={allocationSource === 'fresh' ? formData.paymentMode : 'Adjustment'}
-                                onChange={(opt) => setFormData(prev => ({ ...prev, paymentMode: opt.value }))}
-                                isMulti={false}
-                                isDisabled={allocationSource === 'advance'}
                             />
                         </div>
                     </div>
