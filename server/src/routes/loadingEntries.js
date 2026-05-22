@@ -653,7 +653,7 @@ router.get("/", async (req, res) => {
 
     // Optimize: Add select and reduce DB overhead
     const items = await LoadingEntry.find(finalQuery)
-      .sort({ loadingDate: -1, createdAt: -1 })
+      .sort({ paymentStatus: -1, loadingDate: -1, createdAt: -1 })
       .skip((page - 1) * limit)
       .limit(limit)
       .select(

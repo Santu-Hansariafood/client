@@ -44,7 +44,9 @@ const AddPaymentReceived = () => {
         amount: 0,
         paymentType: 'Sauda-wise',
         paymentMode: 'Bank',
-        remarks: ''
+        remarks: '',
+        filterStartDate: '',
+        filterEndDate: ''
     });
 
     const ledgerTypes = [
@@ -93,7 +95,9 @@ const AddPaymentReceived = () => {
         try {
             setFetchingEntries(true);
             let params = { 
-                paymentStatus: 'pending'
+                // Removed paymentStatus: 'pending' to get all entries
+                startDate: formData.filterStartDate,
+                endDate: formData.filterEndDate
             };
             
             if (formData.ledgerType === 'Seller') {
@@ -104,18 +108,26 @@ const AddPaymentReceived = () => {
             
             const response = await api.get('/loading-entries', { params });
             const items = response.data.data || [];
-            setEntries(items.map(item => ({
+            
+            // Client side sorting to be double sure: Pending first, then Done
+            const sortedItems = [...items].sort((a, b) => {
+                if (a.paymentStatus === 'pending' && b.paymentStatus === 'done') return -1;
+                if (a.paymentStatus === 'done' && b.paymentStatus === 'pending') return 1;
+                return new Date(b.loadingDate) - new Date(a.loadingDate);
+            });
+
+            setEntries(sortedItems.map(item => ({
                 ...item,
                 allocatedAmount: 0,
                 rowRemarks: '',
                 isSaved: item.paymentStatus === 'done'
             })));
         } catch (error) {
-            toast.error('Error fetching pending entries');
+            toast.error('Error fetching entries');
         } finally {
             setFetchingEntries(false);
         }
-    }, [formData.ledgerId, formData.ledgerType, formData.paymentType]);
+    }, [formData.ledgerId, formData.ledgerType, formData.paymentType, formData.filterStartDate, formData.filterEndDate]);
 
     const fetchHistory = useCallback(async () => {
         if (!formData.ledgerId) {
@@ -516,7 +528,7 @@ const AddPaymentReceived = () => {
             <div className="max-w-7xl mx-auto space-y-6">
                 {/* Top Nav & Stats */}
                 <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
-                    <div className="md:col-span-8 bg-white px-6 py-4 rounded-[1.5rem] border border-slate-100 shadow-sm flex items-center justify-between">
+                    <div className="md:col-span-9 bg-white px-6 py-4 rounded-[1.5rem] border border-slate-100 shadow-sm flex items-center justify-between">
                         <div className="flex items-center gap-6">
                             <button
                                 onClick={() => navigate(-1)}
@@ -542,9 +554,35 @@ const AddPaymentReceived = () => {
                                 ))}
                             </div>
                         </div>
-                        <div className="flex items-center gap-8">
+
+                        <div className="flex items-center gap-6">
+                            {/* Payment Received Input at Top */}
+                            <div className="flex items-center gap-4 bg-emerald-50/50 p-2 rounded-2xl border border-emerald-100">
+                                <div className="flex flex-col gap-1">
+                                    <label className="text-[9px] font-black text-emerald-600 uppercase tracking-widest leading-none pl-1">Payment Received</label>
+                                    <input
+                                        type="number"
+                                        name="amount"
+                                        value={formData.amount}
+                                        onChange={handleInputChange}
+                                        placeholder="0.00"
+                                        className="w-32 h-9 px-3 rounded-xl border border-emerald-200 bg-white focus:ring-2 focus:ring-emerald-500/20 outline-none transition font-black text-emerald-700 text-sm"
+                                    />
+                                </div>
+                                <div className="flex flex-col gap-1">
+                                    <label className="text-[9px] font-black text-emerald-600 uppercase tracking-widest leading-none pl-1">Payment Date</label>
+                                    <input
+                                        type="date"
+                                        name="date"
+                                        value={formData.date}
+                                        onChange={handleInputChange}
+                                        className="h-9 px-3 rounded-xl border border-emerald-200 bg-white focus:ring-2 focus:ring-emerald-500/20 outline-none transition font-bold text-slate-700 text-xs"
+                                    />
+                                </div>
+                            </div>
+
                             {selectedLedger && (
-                                <div className="hidden md:flex items-center gap-6">
+                                <div className="hidden lg:flex items-center gap-6 pl-6 border-l border-slate-100">
                                     <div className="flex flex-col items-end">
                                         <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Advance Balance</span>
                                         <span className="text-xs font-black text-emerald-600 italic">₹{ledgerBalance.advanceBalance.toLocaleString()}</span>
@@ -555,26 +593,17 @@ const AddPaymentReceived = () => {
                                     </div>
                                 </div>
                             )}
-                            <div className="flex items-center gap-3 pl-6 border-l border-slate-100">
-                                <div className="flex flex-col items-end">
-                                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Voucher Date</span>
-                                    <span className="text-sm font-bold text-slate-800">{new Date(formData.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
-                                </div>
-                                <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600">
-                                    <FaCalendarAlt size={18} />
-                                </div>
-                            </div>
                         </div>
                     </div>
 
-                    <div className="md:col-span-4 bg-gradient-to-br from-slate-900 to-slate-800 px-6 py-4 rounded-[1.5rem] shadow-xl shadow-slate-200 flex items-center justify-between group overflow-hidden relative border border-slate-800">
+                    <div className="md:col-span-3 bg-gradient-to-br from-slate-900 to-slate-800 px-6 py-4 rounded-[1.5rem] shadow-xl shadow-slate-200 flex items-center justify-between group overflow-hidden relative border border-slate-800">
                         <div className="absolute -right-4 -bottom-4 w-24 h-24 bg-emerald-500/10 rounded-full blur-2xl group-hover:bg-emerald-500/20 transition-all"></div>
                         <div className="z-10">
-                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Date Total Received</p>
-                            <p className="text-2xl font-black text-white italic tracking-tighter">₹{dateTotal.toLocaleString('en-IN')}</p>
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Date Total</p>
+                            <p className="text-xl font-black text-white italic tracking-tighter">₹{dateTotal.toLocaleString('en-IN')}</p>
                         </div>
-                        <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center text-emerald-400 backdrop-blur-md border border-white/10 shadow-inner z-10">
-                            <FaMoneyBillWave size={22} />
+                        <div className="w-10 h-10 rounded-2xl bg-white/5 flex items-center justify-center text-emerald-400 backdrop-blur-md border border-white/10 shadow-inner z-10">
+                            <FaMoneyBillWave size={18} />
                         </div>
                     </div>
                 </div>
@@ -612,7 +641,7 @@ const AddPaymentReceived = () => {
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <div className="space-y-2">
                             <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Ledger Type</label>
                             <DataDropdown
@@ -631,13 +660,6 @@ const AddPaymentReceived = () => {
                                 placeholder={fetchingLedgers ? "Syncing..." : `Select ${formData.ledgerType}`}
                                 isMulti={false}
                                 isDisabled={fetchingLedgers}
-                            />
-                        </div>
-                        <div className="space-y-2">
-                            <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Voucher Date</label>
-                            <DateSelector
-                                value={formData.date}
-                                onChange={(val) => setFormData(prev => ({ ...prev, date: val }))}
                             />
                         </div>
                         <div className="space-y-2">
@@ -668,23 +690,12 @@ const AddPaymentReceived = () => {
                         </div>
                         {allocationSource === 'fresh' && (
                             <div className="flex gap-4 w-full md:w-auto">
-                                <div className="space-y-2 flex-1 md:w-48">
-                                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 text-emerald-600">Bulk Advance Amount</label>
-                                    <input
-                                        type="number"
-                                        name="amount"
-                                        value={formData.amount}
-                                        onChange={handleInputChange}
-                                        placeholder="0.00"
-                                        className="w-full h-11 px-4 rounded-xl border border-emerald-100 bg-emerald-50/30 focus:bg-white focus:ring-2 focus:ring-emerald-500/20 outline-none transition font-black text-emerald-700"
-                                    />
-                                </div>
                                 <button
                                     onClick={handleRecordAdvance}
-                                    disabled={loading || !selectedLedger}
+                                    disabled={loading || !selectedLedger || formData.amount <= 0}
                                     className="h-11 px-6 bg-emerald-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-100 disabled:opacity-50"
                                 >
-                                    Record Advance
+                                    Record Advance (₹{formData.amount})
                                 </button>
                             </div>
                         )}
@@ -694,30 +705,63 @@ const AddPaymentReceived = () => {
                 {/* Tab Content */}
                 {activeTab === 'allocation' && (
                     <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden flex flex-col min-h-[400px]">
-                        <div className="px-8 py-6 border-b border-slate-50 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-50/30">
-                                <div className="flex items-center gap-3">
-                                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-white transition-colors ${allocationSource === 'fresh' ? 'bg-emerald-600' : 'bg-slate-900'}`}>
-                                        {allocationSource === 'fresh' ? <FaBuilding size={14} /> : <FaExchangeAlt size={14} />}
-                                    </div>
-                                    <div>
-                                        <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest">
-                                            {allocationSource === 'fresh' ? 'Allocation Ledger' : 'Advance Adjustment Ledger'}
-                                        </h3>
-                                        <p className="text-[9px] font-bold text-slate-400 uppercase">
-                                            {allocationSource === 'fresh' ? 'Map fresh payments to saudas' : `Using ₹${ledgerBalance.advanceBalance.toLocaleString()} from Advance Account`}
-                                        </p>
-                                    </div>
+                        <div className="px-8 py-6 border-b border-slate-50 flex flex-col lg:flex-row lg:items-center justify-between gap-6 bg-slate-50/30">
+                            <div className="flex items-center gap-3">
+                                <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-white transition-colors ${allocationSource === 'fresh' ? 'bg-emerald-600' : 'bg-slate-900'}`}>
+                                    {allocationSource === 'fresh' ? <FaBuilding size={14} /> : <FaExchangeAlt size={14} />}
                                 </div>
-                            
-                            <div className="relative w-full md:w-80">
-                                <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 size-3" />
-                                <input
-                                    type="text"
-                                    placeholder="SEARCH BY SAUDA, LORRY, COMPANY..."
-                                    value={tableSearch}
-                                    onChange={(e) => setTableSearch(e.target.value)}
-                                    className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 bg-white text-[10px] font-black uppercase tracking-widest focus:ring-2 focus:ring-emerald-500/10 outline-none transition"
-                                />
+                                <div>
+                                    <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest">
+                                        {allocationSource === 'fresh' ? 'Allocation Ledger' : 'Advance Adjustment Ledger'}
+                                    </h3>
+                                    <p className="text-[9px] font-bold text-slate-400 uppercase">
+                                        {allocationSource === 'fresh' ? 'Map fresh payments to saudas' : `Using ₹${ledgerBalance.advanceBalance.toLocaleString()} from Advance Account`}
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div className="flex flex-wrap items-center gap-4">
+                                {/* Date Range Filters */}
+                                <div className="flex items-center gap-2 bg-white p-1 rounded-xl border border-slate-200">
+                                    <div className="flex flex-col px-2">
+                                        <span className="text-[8px] font-black text-slate-400 uppercase leading-none">From</span>
+                                        <input
+                                            type="date"
+                                            value={formData.filterStartDate}
+                                            onChange={(e) => setFormData(prev => ({ ...prev, filterStartDate: e.target.value }))}
+                                            className="text-[10px] font-bold text-slate-600 outline-none h-6"
+                                        />
+                                    </div>
+                                    <div className="w-px h-8 bg-slate-100"></div>
+                                    <div className="flex flex-col px-2">
+                                        <span className="text-[8px] font-black text-slate-400 uppercase leading-none">To</span>
+                                        <input
+                                            type="date"
+                                            value={formData.filterEndDate}
+                                            onChange={(e) => setFormData(prev => ({ ...prev, filterEndDate: e.target.value }))}
+                                            className="text-[10px] font-bold text-slate-600 outline-none h-6"
+                                        />
+                                    </div>
+                                    {(formData.filterStartDate || formData.filterEndDate) && (
+                                        <button 
+                                            onClick={() => setFormData(prev => ({ ...prev, filterStartDate: '', filterEndDate: '' }))}
+                                            className="p-1.5 text-rose-500 hover:bg-rose-50 rounded-lg transition-colors"
+                                        >
+                                            <FaArrowLeft size={10} />
+                                        </button>
+                                    )}
+                                </div>
+
+                                <div className="relative w-full md:w-64">
+                                    <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 size-3" />
+                                    <input
+                                        type="text"
+                                        placeholder="SEARCH..."
+                                        value={tableSearch}
+                                        onChange={(e) => setTableSearch(e.target.value)}
+                                        className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 bg-white text-[10px] font-black uppercase tracking-widest focus:ring-2 focus:ring-emerald-500/10 outline-none transition"
+                                    />
+                                </div>
                             </div>
                         </div>
 
