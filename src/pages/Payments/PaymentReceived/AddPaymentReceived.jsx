@@ -74,6 +74,7 @@ const AddPaymentReceived = () => {
     const [fetchingEntries, setFetchingEntries] = useState(false);
     const [fetchingHistory, setFetchingHistory] = useState(false);
     const [ledgers, setLedgers] = useState([]);
+    const [allCompanies, setAllCompanies] = useState([]);
     const [selectedLedger, setSelectedLedger] = useState(null);
     const [entries, setEntries] = useState([]);
     const [entriesPage, setEntriesPage] = useState(1);
@@ -114,6 +115,19 @@ const AddPaymentReceived = () => {
         { value: 'Loan', label: 'Loan' },
         { value: 'Adjustment', label: 'General Adjustment' }
     ];
+
+    useEffect(() => {
+        const fetchCompanies = async () => {
+            try {
+                const response = await api.get('/companies');
+                const data = response.data.data || response.data || [];
+                setAllCompanies(data);
+            } catch (error) {
+                console.error('Error fetching companies:', error);
+            }
+        };
+        fetchCompanies();
+    }, []);
 
     useEffect(() => {
         const fetchLedgers = async () => {
@@ -851,27 +865,20 @@ const AddPaymentReceived = () => {
                                 <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">Company (Filter)</label>
                                 <DataDropdown
                                     options={selectedLedger?.companies?.map(c => {
-                                        const value = typeof c === 'string' ? c : (c._id || c.value || c.id);
-                                        const label = typeof c === 'string' ? c : (c.companyName || c.label || c.name || 'Unknown');
-                                        return { value, label };
+                                        const companyId = typeof c === 'string' ? c : (c._id || c.value || c.id);
+                                        // Try to find the company in allCompanies to get its name
+                                        const companyInfo = allCompanies.find(comp => comp._id === companyId);
+                                        
+                                        return { 
+                                            value: companyId, 
+                                            label: companyInfo?.companyName || (typeof c === 'string' ? c : (c.companyName || c.label || c.name || 'Unknown'))
+                                        };
                                     }) || []}
                                     selectedOptions={formData.companyId ? {
                                         value: formData.companyId,
-                                        label: selectedLedger?.companies?.find(c => {
-                                            const val = typeof c === 'string' ? c : (c._id || c.value || c.id);
-                                            return val === formData.companyId;
-                                        })?.companyName || 
-                                        selectedLedger?.companies?.find(c => {
-                                            const val = typeof c === 'string' ? c : (c._id || c.value || c.id);
-                                            return val === formData.companyId;
-                                        })?.label || 
-                                        selectedLedger?.companies?.find(c => {
-                                            const val = typeof c === 'string' ? c : (c._id || c.value || c.id);
-                                            return val === formData.companyId;
-                                        })?.name || 
-                                        (typeof selectedLedger?.companies?.find(c => (typeof c === 'string' ? c : (c._id || c.value || c.id)) === formData.companyId) === 'string' 
-                                            ? selectedLedger?.companies?.find(c => c === formData.companyId) 
-                                            : 'Unknown')
+                                        label: allCompanies.find(comp => comp._id === formData.companyId)?.companyName || 
+                                               selectedLedger?.companies?.find(c => (typeof c === 'string' ? c : (c._id || c.value || c.id)) === formData.companyId)?.companyName || 
+                                               'Unknown'
                                     } : null}
                                     onChange={handleCompanyChange}
                                     placeholder="All Companies"
