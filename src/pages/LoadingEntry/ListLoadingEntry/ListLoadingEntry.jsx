@@ -598,6 +598,7 @@ const ListLoadingEntry = () => {
     const doc = new jsPDF("landscape");
     const tableColumn = [
       "Sl No",
+      "Loading No",
       "Date",
       "Sauda No",
       "Lorry No",
@@ -618,6 +619,7 @@ const ListLoadingEntry = () => {
 
       return [
         entry.slNo || index + 1,
+        entry.loadingNo || "-",
         formatDate(entry.loadingDate),
         entry.saudaNo,
         entry.lorryNumber,
@@ -654,6 +656,7 @@ const ListLoadingEntry = () => {
   const headers = useMemo(
     () => [
       "Sl No",
+      "Loading No",
       "Loading Date",
       "Sauda No",
       "Seller Company",
@@ -692,6 +695,7 @@ const ListLoadingEntry = () => {
 
       return [
         entry.slNo || "-",
+        entry.loadingNo || "-",
         formatDate(entry.loadingDate),
         entry.saudaNo || "N/A",
         entry.supplierCompany || "N/A",

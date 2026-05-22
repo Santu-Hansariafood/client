@@ -1,12 +1,10 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import AdminPageShell from '../../../common/AdminPageShell/AdminPageShell';
 import DataDropdown from '../../../common/DataDropdown/DataDropdown';
-import DataInput from '../../../common/DataInput/DataInput';
-import DateSelector from '../../../common/DateSelector/DateSelector';
 import Tables from '../../../common/Tables/Tables';
 import Buttons from '../../../common/Buttons/Buttons';
 import SearchBox from '../../../common/SearchBox/SearchBox';
@@ -22,7 +20,6 @@ import {
     FaRegCalendarAlt, FaWallet, FaChartLine, FaPlus, FaTrash
 } from 'react-icons/fa';
 
-// --- Sub-components ---
 
 const StatCard = ({ icon, label, value, subValue, color, iconColor, onClick }) => (
     <div 
@@ -173,10 +170,10 @@ const AddPaymentReceived = () => {
 
             let params = { 
                 page: page,
-                limit: 20, // Showing 20 entries per page
+                limit: 20,
                 startDate: formData.filterStartDate,
                 endDate: formData.filterEndDate,
-                isUnloaded: true // Only fetch records that are unloaded
+                isUnloaded: true 
             };
 
             if (formData.companyId) {

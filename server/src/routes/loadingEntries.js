@@ -8,6 +8,7 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import LoadingEntry from "../models/LoadingEntry.js";
+import Counter from "../models/Counter.js";
 import Buyer from "../models/Buyer.js";
 import Group from "../models/Group.js";
 import Seller from "../models/Seller.js";
@@ -24,6 +25,41 @@ const toObjectId = (value) =>
   mongoose.Types.ObjectId.isValid(value)
     ? new mongoose.Types.ObjectId(value)
     : null;
+
+const getNextLoadingNo = async (loadingDate) => {
+  const date = new Date(loadingDate);
+  const year = date.getFullYear();
+  const month = date.getMonth(); // 0-indexed, 3 is April
+
+  let fiscalYear = month >= 3 ? year : year - 1;
+
+  const isLegacy = fiscalYear < 2027;
+  const sequenceId = isLegacy
+    ? "loadingNo_Legacy"
+    : `loadingNo_FY${fiscalYear}`;
+
+  const startVal = isLegacy ? 2690 : 1;
+
+  let counter = await Counter.findOneAndUpdate(
+    { id: sequenceId },
+    { $inc: { seq: 1 } },
+    { new: true },
+  );
+
+  if (!counter) {
+    try {
+      counter = await Counter.create({ id: sequenceId, seq: startVal });
+    } catch (err) {
+      counter = await Counter.findOneAndUpdate(
+        { id: sequenceId },
+        { $inc: { seq: 1 } },
+        { new: true },
+      );
+    }
+  }
+
+  return counter.seq;
+};
 
 const getSellerBrokerage = async (supplierId, commodityName) => {
   if (!supplierId || !commodityName) return 0;
@@ -1013,6 +1049,7 @@ router.get("/export/excel", async (req, res) => {
 
     worksheet.columns = [
       { header: "Sl No", key: "slNo", width: 10 },
+      { header: "Loading No", key: "loadingNo", width: 15 },
       { header: "Sauda No", key: "saudaNo", width: 15 },
       { header: "Supplier", key: "supplierName", width: 30 },
       { header: "Supplier Company", key: "supplierCompany", width: 30 },
@@ -1053,6 +1090,7 @@ router.get("/export/excel", async (req, res) => {
 
       worksheet.addRow({
         slNo: idToSlNo[item._id.toString()] || "-",
+        loadingNo: item.loadingNo || "-",
         saudaNo: item.saudaNo || "N/A",
         supplierName: item.supplier?.sellerName || "Unknown Supplier",
         supplierCompany: item.supplierCompany || "N/A",
@@ -1481,27 +1519,29 @@ router.post("/bulk", async (req, res) => {
 
     const selfOrder = await SelfOrder.findOne({ saudaNo });
 
-    const processedEntries = await Promise.all(
-      entries.map(async (entry) => {
-        const newEntry = { ...entry };
-        if (selfOrder && entry.unloadingWeight) {
-          const uWeight = parseFloat(entry.unloadingWeight) || 0;
-          const buyerRate = selfOrder.buyerBrokerage?.brokerageBuyer || 0;
-          let sellerRate = selfOrder.buyerBrokerage?.brokerageSupplier || 0;
+    const processedEntries = [];
+    for (const entry of entries) {
+      const newEntry = { ...entry };
+      // Assign loadingNo
+      newEntry.loadingNo = await getNextLoadingNo(entry.loadingDate);
 
-          if (sellerRate === 0 && selfOrder.supplier && selfOrder.commodity) {
-            sellerRate = await getSellerBrokerage(
-              selfOrder.supplier,
-              selfOrder.commodity,
-            );
-          }
+      if (selfOrder && entry.unloadingWeight) {
+        const uWeight = parseFloat(entry.unloadingWeight) || 0;
+        const buyerRate = selfOrder.buyerBrokerage?.brokerageBuyer || 0;
+        let sellerRate = selfOrder.buyerBrokerage?.brokerageSupplier || 0;
 
-          newEntry.buyerBrokerage = +(uWeight * buyerRate).toFixed(2);
-          newEntry.sellerBrokerage = +(uWeight * sellerRate).toFixed(2);
+        if (sellerRate === 0 && selfOrder.supplier && selfOrder.commodity) {
+          sellerRate = await getSellerBrokerage(
+            selfOrder.supplier,
+            selfOrder.commodity,
+          );
         }
-        return newEntry;
-      }),
-    );
+
+        newEntry.buyerBrokerage = +(uWeight * buyerRate).toFixed(2);
+        newEntry.sellerBrokerage = +(uWeight * sellerRate).toFixed(2);
+      }
+      processedEntries.push(newEntry);
+    }
 
     const savedEntries = await LoadingEntry.insertMany(processedEntries);
 
@@ -1535,6 +1575,9 @@ router.post("/bulk", async (req, res) => {
 router.post("/", async (req, res) => {
   try {
     const data = { ...req.body };
+    // Assign loadingNo
+    data.loadingNo = await getNextLoadingNo(data.loadingDate);
+
     const selfOrder = await SelfOrder.findOne({ saudaNo: data.saudaNo });
 
     if (selfOrder && data.unloadingWeight) {

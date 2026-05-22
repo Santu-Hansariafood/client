@@ -11,6 +11,7 @@ const formatName = (name) => {
 const loadingEntrySchema = new mongoose.Schema(
   {
     loadingDate: { type: Date, required: true },
+    loadingNo: { type: Number },
     loadingWeight: { type: Number, required: true },
     lorryNumber: { type: String, required: true },
     transporterId: { type: mongoose.Schema.Types.ObjectId, ref: "Transporter" },
