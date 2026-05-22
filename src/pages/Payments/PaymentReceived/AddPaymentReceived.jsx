@@ -28,6 +28,8 @@ const AddPaymentReceived = () => {
     const [ledgers, setLedgers] = useState([]);
     const [selectedLedger, setSelectedLedger] = useState(null);
     const [entries, setEntries] = useState([]);
+    const [entriesPage, setEntriesPage] = useState(1);
+    const [entriesTotalPages, setEntriesTotalPages] = useState(1);
     const [history, setHistory] = useState([]);
     const [summary, setSummary] = useState([]);
     const [summaryType, setSummaryType] = useState('month');
@@ -86,7 +88,7 @@ const AddPaymentReceived = () => {
         fetchLedgers();
     }, [formData.ledgerType]);
 
-    const fetchEntries = useCallback(async () => {
+    const fetchEntries = useCallback(async (page = 1) => {
         if (!formData.ledgerId || formData.paymentType !== 'Sauda-wise') {
             setEntries([]);
             return;
@@ -95,7 +97,8 @@ const AddPaymentReceived = () => {
         try {
             setFetchingEntries(true);
             let params = { 
-                // Removed paymentStatus: 'pending' to get all entries
+                page: page,
+                limit: 20, // Showing 20 entries per page
                 startDate: formData.filterStartDate,
                 endDate: formData.filterEndDate
             };
@@ -122,12 +125,18 @@ const AddPaymentReceived = () => {
                 rowRemarks: '',
                 isSaved: item.paymentStatus === 'done'
             })));
+            setEntriesTotalPages(response.data.totalPages || 1);
+            setEntriesPage(page);
         } catch (error) {
             toast.error('Error fetching entries');
         } finally {
             setFetchingEntries(false);
         }
     }, [formData.ledgerId, formData.ledgerType, formData.paymentType, formData.filterStartDate, formData.filterEndDate]);
+
+    useEffect(() => {
+        fetchEntries(1);
+    }, [fetchEntries]);
 
     const fetchHistory = useCallback(async () => {
         if (!formData.ledgerId) {
@@ -175,11 +184,10 @@ const AddPaymentReceived = () => {
     }, [formData.ledgerId]);
 
     useEffect(() => {
-        fetchEntries();
         fetchHistory();
         fetchSummary();
         fetchLedgerBalance();
-    }, [fetchEntries, fetchHistory, fetchSummary, fetchLedgerBalance]);
+    }, [fetchHistory, fetchSummary, fetchLedgerBalance]);
 
     // Fetch total received for the selected date
     const fetchDateTotal = useCallback(async () => {
@@ -772,15 +780,73 @@ const AddPaymentReceived = () => {
                                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Fetching Pending...</p>
                                 </div>
                             ) : filteredEntries.length > 0 ? (
-                                <Tables
-                                    headers={columns.map(c => c.header)}
-                                    rows={filteredEntries.map(entry => columns.map(col => {
-                                        if (typeof col.accessor === 'function') {
-                                            return col.accessor(entry);
-                                        }
-                                        return entry[col.accessor];
-                                    }))}
-                                />
+                                <>
+                                    <Tables
+                                        headers={columns.map(c => c.header)}
+                                        rows={filteredEntries.map(entry => columns.map(col => {
+                                            if (typeof col.accessor === 'function') {
+                                                return col.accessor(entry);
+                                            }
+                                            return entry[col.accessor];
+                                        }))}
+                                    />
+                                    
+                                    {/* Pagination Controls */}
+                                    {entriesTotalPages > 1 && (
+                                        <div className="px-6 py-4 border-t border-slate-50 flex items-center justify-between bg-slate-50/20">
+                                            <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                                                Page {entriesPage} of {entriesTotalPages}
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <button
+                                                    onClick={() => fetchEntries(entriesPage - 1)}
+                                                    disabled={entriesPage === 1 || fetchingEntries}
+                                                    className="p-2 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                                                >
+                                                    <FaArrowLeft size={10} />
+                                                </button>
+                                                
+                                                {[...Array(entriesTotalPages)].map((_, i) => {
+                                                    const pageNum = i + 1;
+                                                    // Show first, last, and pages around current
+                                                    if (
+                                                        pageNum === 1 || 
+                                                        pageNum === entriesTotalPages || 
+                                                        (pageNum >= entriesPage - 1 && pageNum <= entriesPage + 1)
+                                                    ) {
+                                                        return (
+                                                            <button
+                                                                key={pageNum}
+                                                                onClick={() => fetchEntries(pageNum)}
+                                                                className={`w-8 h-8 rounded-lg text-[10px] font-black transition-all ${
+                                                                    entriesPage === pageNum 
+                                                                        ? 'bg-slate-900 text-white shadow-md' 
+                                                                        : 'border border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
+                                                                }`}
+                                                            >
+                                                                {pageNum}
+                                                            </button>
+                                                        );
+                                                    } else if (
+                                                        pageNum === entriesPage - 2 || 
+                                                        pageNum === entriesPage + 2
+                                                    ) {
+                                                        return <span key={pageNum} className="text-slate-300">...</span>;
+                                                    }
+                                                    return null;
+                                                })}
+
+                                                <button
+                                                    onClick={() => fetchEntries(entriesPage + 1)}
+                                                    disabled={entriesPage === entriesTotalPages || fetchingEntries}
+                                                    className="p-2 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                                                >
+                                                    <FaArrowRight size={10} />
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
+                                </>
                             ) : (
                                 <div className="py-32 flex flex-col items-center justify-center text-center px-8">
                                     <div className="w-16 h-16 rounded-[2rem] bg-slate-50 flex items-center justify-center text-slate-200 mb-4">
