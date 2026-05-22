@@ -194,20 +194,25 @@ const AddPaymentReceived = () => {
     const fetchDateTotal = useCallback(async () => {
         try {
             const selectedDate = formData.date;
-            const response = await api.get('/payment-received', {
-                params: {
-                    startDate: selectedDate,
-                    endDate: selectedDate,
-                    limit: 1000
-                }
-            });
+            const params = {
+                startDate: selectedDate,
+                endDate: selectedDate,
+                limit: 1000
+            };
+            
+            // Filter by ledger if selected
+            if (formData.ledgerId) {
+                params.ledgerId = formData.ledgerId;
+            }
+
+            const response = await api.get('/payment-received', { params });
             const payments = response.data.data || [];
             const total = payments.reduce((sum, p) => sum + (p.amount || 0), 0);
             setDateTotal(total);
         } catch (error) {
             console.error('Error fetching date total:', error);
         }
-    }, [formData.date]);
+    }, [formData.date, formData.ledgerId]);
 
     useEffect(() => {
         fetchDateTotal();
@@ -441,19 +446,19 @@ const AddPaymentReceived = () => {
     }, [entries]);
 
     const historyColumns = [
-        { header: 'Time', accessor: (row) => new Date(row.createdAt).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) },
-        { header: 'Mode', accessor: 'paymentMode' },
-        { header: 'Saudas', accessor: (row) => (row.mappings || []).map(m => m.saudaNo).join(', ') },
-        { header: 'Amount', accessor: (row) => <span className="font-bold text-emerald-700">₹{row.amount.toLocaleString()}</span> },
-        { header: 'Remarks', accessor: 'remarks' },
+        { header: 'TIME', accessor: (row) => <span className="text-[10px] font-black">{new Date(row.createdAt).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}</span> },
+        { header: 'MODE', accessor: (row) => <span className="text-[10px] font-black uppercase text-slate-500">{row.paymentMode}</span> },
+        { header: 'PARTICULARS (SAUDAS)', accessor: (row) => <span className="text-[10px] font-bold text-slate-600">{(row.mappings || []).map(m => m.saudaNo).join(', ') || 'Advance'}</span> },
+        { header: 'AMOUNT', accessor: (row) => <span className="font-black text-slate-900 text-sm italic">₹{row.amount.toLocaleString()}</span> },
+        { header: 'REMARKS', accessor: (row) => <span className="text-[10px] text-slate-400 font-medium italic">{row.remarks || '-'}</span> },
         { 
-            header: 'Print', 
+            header: 'PRINT', 
             accessor: (row) => (
                 <button 
                     onClick={() => printVoucher(row)}
-                    className="p-2 bg-slate-100 text-slate-600 rounded-lg hover:bg-slate-200 transition-colors"
+                    className="p-1.5 border border-slate-900 text-slate-900 hover:bg-slate-900 hover:text-white transition-all"
                 >
-                    <FaPrint size={14} />
+                    <FaPrint size={12} />
                 </button>
             ) 
         }
@@ -461,78 +466,78 @@ const AddPaymentReceived = () => {
 
     const columns = [
         { 
-            header: 'Date & Sauda', 
+            header: 'DATE & SAUDA', 
             accessor: (row) => (
                 <div className="flex flex-col">
-                    <span className="font-bold text-slate-700">{new Date(row.loadingDate).toLocaleDateString('en-GB')}</span>
-                    <span className="text-[10px] text-slate-400 font-bold uppercase tracking-tight">{row.saudaNo}</span>
+                    <span className="font-black text-slate-900 text-xs">{new Date(row.loadingDate).toLocaleDateString('en-GB')}</span>
+                    <span className="text-[9px] text-slate-400 font-black uppercase tracking-widest">{row.saudaNo}</span>
                 </div>
             )
         },
         { 
-            header: 'Lorry & Item', 
+            header: 'LORRY & ITEM', 
             accessor: (row) => (
-                <div className="flex flex-col gap-0.5">
-                    <span className="font-black text-slate-800 uppercase tracking-tighter text-sm">{row.lorryNumber}</span>
-                    <span className="text-[10px] text-emerald-600 font-black uppercase tracking-widest leading-none">{row.commodity}</span>
+                <div className="flex flex-col">
+                    <span className="font-black text-slate-900 uppercase tracking-tighter text-xs">{row.lorryNumber}</span>
+                    <span className="text-[9px] text-slate-500 font-black uppercase tracking-widest leading-none">{row.commodity}</span>
                 </div>
             )
         },
         { 
-            header: 'Companies', 
+            header: 'PARTIES', 
             accessor: (row) => (
                 <div className="flex flex-col gap-0.5 max-w-[150px]">
-                    <span className="text-[10px] font-black uppercase text-slate-400 leading-none">Buyer: {row.buyerCompany || 'N/A'}</span>
-                    <span className="text-[10px] font-black uppercase text-slate-400 leading-none">Seller: {row.supplierCompany || 'N/A'}</span>
+                    <span className="text-[9px] font-black uppercase text-slate-400 leading-none">B: {row.buyerCompany || 'N/A'}</span>
+                    <span className="text-[9px] font-black uppercase text-slate-400 leading-none">S: {row.supplierCompany || 'N/A'}</span>
                 </div>
             )
         },
         { 
-            header: 'Tally Breakdown', 
+            header: 'BREAKDOWN', 
             accessor: (row) => {
                 const details = calculateTallyDetails(row);
                 return (
-                    <div className="flex flex-col gap-0.5 text-[10px] font-medium min-w-[140px]">
-                        <div className="flex justify-between text-slate-500">
+                    <div className="flex flex-col gap-0.5 text-[9px] font-black min-w-[140px] uppercase">
+                        <div className="flex justify-between text-slate-400">
                             <span>Net Amount:</span>
-                            <span className="font-bold">₹{details.netAmount.toFixed(2)}</span>
+                            <span>₹{details.netAmount.toFixed(0)}</span>
                         </div>
-                        <div className="flex justify-between text-emerald-600">
+                        <div className="flex justify-between text-slate-500">
                             <span>Paid:</span>
-                            <span className="font-bold">₹{(row.paidAmount || 0).toFixed(2)}</span>
+                            <span>₹{(row.paidAmount || 0).toFixed(0)}</span>
                         </div>
-                        <div className="flex justify-between border-t border-slate-100 pt-0.5 font-black text-rose-600 text-xs">
+                        <div className="flex justify-between border-t border-slate-900 mt-0.5 pt-0.5 text-rose-600 text-[10px]">
                             <span>Due:</span>
-                            <span>₹{details.dueAmount.toFixed(2)}</span>
+                            <span>₹{details.dueAmount.toFixed(0)}</span>
                         </div>
                     </div>
                 );
             }
         },
         { 
-            header: 'Allocation & Remarks', 
+            header: 'ALLOCATION', 
             accessor: (row) => {
                 const details = calculateTallyDetails(row);
                 const isLocked = row.isSaved && user?.role !== 'Admin';
 
                 return (
-                    <div className="flex flex-col gap-2 min-w-[180px]">
+                    <div className="flex flex-col gap-1.5 min-w-[180px]">
                         <div className="relative group">
                             <input
                                 type="number"
                                 value={row.allocatedAmount}
                                 onChange={(e) => handleAllocationChange(row._id, e.target.value, details.netAmount, row.paidAmount)}
-                                onWheel={(e) => e.target.blur()} // Prevents value change on scroll
+                                onWheel={(e) => e.target.blur()}
                                 disabled={isLocked}
-                                className={`w-full px-3 py-1.5 rounded-xl border ${
-                                    isLocked ? 'bg-slate-50 text-slate-400 border-slate-100' : 'border-slate-200 bg-white'
-                                } focus:ring-2 focus:ring-emerald-500/20 outline-none transition font-bold text-slate-700 text-sm`}
-                                placeholder="Amount"
+                                className={`w-full px-2 py-1.5 border ${
+                                    isLocked ? 'bg-slate-50 text-slate-400 border-slate-200' : 'border-slate-900 bg-white focus:bg-yellow-50'
+                                } outline-none transition font-black text-slate-900 text-xs`}
+                                placeholder="0.00"
                             />
                             {!isLocked && (
                                 <button
                                     onClick={() => handleAllocationChange(row._id, details.dueAmount.toString(), details.netAmount, row.paidAmount)}
-                                    className="absolute right-2 top-1/2 -translate-y-1/2 text-[8px] font-black uppercase text-emerald-600 hover:text-emerald-700 opacity-0 group-hover:opacity-100 transition-opacity bg-emerald-50 px-1.5 py-0.5 rounded"
+                                    className="absolute right-1 top-1/2 -translate-y-1/2 text-[8px] font-black uppercase text-slate-900 hover:bg-slate-900 hover:text-white border border-slate-900 px-1 py-0.5 transition-all opacity-0 group-hover:opacity-100"
                                 >
                                     Full
                                 </button>
@@ -543,17 +548,17 @@ const AddPaymentReceived = () => {
                             onChange={(e) => handleRowRemarksChange(row._id, e.target.value)}
                             disabled={isLocked}
                             rows={1}
-                            className={`w-full px-3 py-1.5 rounded-xl border text-[11px] ${
-                                isLocked ? 'bg-slate-50 text-slate-400 border-slate-100' : 'border-slate-200 bg-white'
-                            } focus:ring-2 focus:ring-emerald-500/20 outline-none transition resize-none`}
-                            placeholder="Add remarks..."
+                            className={`w-full px-2 py-1 border text-[10px] font-bold ${
+                                isLocked ? 'bg-slate-50 text-slate-400 border-slate-200' : 'border-slate-900 bg-white focus:bg-yellow-50'
+                            } outline-none transition resize-none uppercase`}
+                            placeholder="Narration..."
                         />
                     </div>
                 );
             }
         },
         {
-            header: 'Actions',
+            header: 'ACTION',
             accessor: (row) => {
                 const isLocked = row.isSaved && user?.role !== 'Admin';
                 const isAdmin = user?.role === 'Admin';
@@ -564,20 +569,17 @@ const AddPaymentReceived = () => {
                             type="button"
                             onClick={() => handleSaveRow(row)}
                             disabled={(isLocked && !isAdmin) || loading}
-                            className={`px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 transition-all shadow-sm w-full ${
+                            className={`px-3 py-2 border text-[9px] font-black uppercase tracking-widest flex items-center justify-center gap-2 transition-all w-full ${
                                 isLocked && !isAdmin
-                                    ? 'bg-slate-50 text-slate-400 border border-slate-100 cursor-not-allowed' 
+                                    ? 'bg-slate-50 text-slate-400 border-slate-200 cursor-not-allowed' 
                                     : isAdmin && row.isSaved
-                                        ? 'bg-amber-500 text-white hover:bg-amber-600 active:scale-95 shadow-amber-100'
-                                        : 'bg-slate-900 text-white hover:bg-black active:scale-95'
+                                        ? 'bg-amber-500 text-white border-amber-600 hover:bg-amber-600'
+                                        : 'bg-slate-900 text-white border-slate-900 hover:bg-black'
                             }`}
                         >
-                            {isLocked && !isAdmin ? <FaCheckCircle size={12} /> : (isAdmin && row.isSaved ? <FaExchangeAlt size={12} /> : <FaSave size={12} />)}
-                            {isLocked && !isAdmin ? 'Saved' : (isAdmin && row.isSaved ? 'Adjust / Edit' : 'Save')}
+                            {isLocked && !isAdmin ? <FaCheckCircle size={10} /> : (isAdmin && row.isSaved ? <FaExchangeAlt size={10} /> : <FaSave size={10} />)}
+                            {isLocked && !isAdmin ? 'Locked' : (isAdmin && row.isSaved ? 'Adjust' : 'Save')}
                         </button>
-                        {isAdmin && row.isSaved && (
-                            <span className="text-[8px] text-amber-600 font-bold text-center uppercase tracking-tighter">Admin Override</span>
-                        )}
                     </div>
                 );
             }
@@ -586,33 +588,32 @@ const AddPaymentReceived = () => {
 
     return (
         <AdminPageShell
-            title="Add Payment Received"
-            subtitle="Record and allocate payments to pending sauda entries"
-            icon={FaMoneyBillWave}
+            title="Payment Voucher"
+            subtitle="Record and allocate payments in Tally-style ledger format"
+            icon={FaFileInvoiceDollar}
         >
-            <div className="max-w-7xl mx-auto space-y-6">
+            <div className="max-w-7xl mx-auto space-y-4">
                 {/* Top Action Bar & Stats */}
-                <div className="flex flex-col gap-6">
+                <div className="flex flex-col gap-4">
                     {/* Action Bar */}
-                    <div className="bg-white px-6 py-4 rounded-[1.5rem] border border-slate-100 shadow-sm flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-                        <div className="flex items-center gap-6">
+                    <div className="bg-white px-4 py-3 border-2 border-slate-900 shadow-[4px_4px_0px_0px_rgba(15,23,42,1)] flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                        <div className="flex items-center gap-4">
                             <button
                                 onClick={() => navigate(-1)}
-                                className="flex items-center gap-2 text-slate-400 hover:text-slate-800 font-black uppercase tracking-widest text-[10px] transition-colors"
+                                className="flex items-center gap-2 text-slate-900 hover:bg-slate-100 px-3 py-1.5 border border-slate-900 font-black uppercase tracking-widest text-[10px] transition-all"
                             >
                                 <FaArrowLeft />
-                                Back
+                                Esc - Back
                             </button>
-                            <div className="hidden sm:block h-6 w-px bg-slate-100"></div>
-                            <div className="flex gap-2 bg-slate-50 p-1 rounded-xl overflow-x-auto no-scrollbar">
+                            <div className="flex gap-1 bg-slate-100 p-1 border border-slate-200">
                                 {['allocation', 'history', 'summary'].map(tab => (
                                     <button
                                         key={tab}
                                         onClick={() => setActiveTab(tab)}
-                                        className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all ${
+                                        className={`px-4 py-1.5 text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all ${
                                             activeTab === tab 
-                                                ? 'bg-slate-900 text-white shadow-md' 
-                                                : 'text-slate-400 hover:text-slate-600'
+                                                ? 'bg-slate-900 text-white shadow-sm' 
+                                                : 'text-slate-400 hover:text-slate-900'
                                         }`}
                                     >
                                         {tab}
@@ -621,11 +622,11 @@ const AddPaymentReceived = () => {
                             </div>
                         </div>
 
-                        <div className="flex flex-col sm:flex-row items-center gap-6">
+                        <div className="flex flex-col sm:flex-row items-center gap-4">
                             {/* Payment Received Inputs at Top */}
-                            <div className="flex flex-wrap items-center gap-4 bg-emerald-50/50 p-2 rounded-2xl border border-emerald-100 w-full sm:w-auto">
+                            <div className="flex flex-wrap items-center gap-4 bg-slate-50 p-2 border border-slate-900 w-full sm:w-auto">
                                 <div className="flex flex-col gap-1 flex-1 sm:flex-none">
-                                    <label className="text-[9px] font-black text-emerald-600 uppercase tracking-widest leading-none pl-1">Amount</label>
+                                    <label className="text-[9px] font-black text-slate-900 uppercase tracking-widest leading-none pl-1">Voucher Amount</label>
                                     <input
                                         type="number"
                                         name="amount"
@@ -633,26 +634,26 @@ const AddPaymentReceived = () => {
                                         onChange={handleInputChange}
                                         onWheel={(e) => e.target.blur()}
                                         placeholder="0.00"
-                                        className="w-full sm:w-24 h-9 px-3 rounded-xl border border-emerald-200 bg-white focus:ring-2 focus:ring-emerald-500/20 outline-none transition font-black text-emerald-700 text-xs"
+                                        className="w-full sm:w-28 h-8 px-3 border border-slate-900 bg-white focus:bg-yellow-50 outline-none transition font-black text-slate-900 text-xs"
                                     />
                                 </div>
                                 <div className="flex flex-col gap-1 flex-1 sm:flex-none">
-                                    <label className="text-[9px] font-black text-emerald-600 uppercase tracking-widest leading-none pl-1">Date</label>
+                                    <label className="text-[9px] font-black text-slate-900 uppercase tracking-widest leading-none pl-1">Voucher Date</label>
                                     <input
                                         type="date"
                                         name="date"
                                         value={formData.date}
                                         onChange={handleInputChange}
-                                        className="w-full sm:w-32 h-9 px-2 rounded-xl border border-emerald-200 bg-white focus:ring-2 focus:ring-emerald-500/20 outline-none transition font-bold text-slate-700 text-[10px]"
+                                        className="w-full sm:w-36 h-8 px-2 border border-slate-900 bg-white focus:bg-yellow-50 outline-none transition font-bold text-slate-900 text-[11px]"
                                     />
                                 </div>
                                 <div className="flex flex-col gap-1 flex-1 sm:flex-none">
-                                    <label className="text-[9px] font-black text-emerald-600 uppercase tracking-widest leading-none pl-1">Through</label>
+                                    <label className="text-[9px] font-black text-slate-900 uppercase tracking-widest leading-none pl-1">Through (Mode)</label>
                                     <select
                                         name="paymentMode"
                                         value={formData.paymentMode}
                                         onChange={handleInputChange}
-                                        className="w-full sm:w-32 h-9 px-2 rounded-xl border border-emerald-200 bg-white focus:ring-2 focus:ring-emerald-500/20 outline-none transition font-bold text-slate-700 text-[10px] appearance-none cursor-pointer"
+                                        className="w-full sm:w-36 h-8 px-2 border border-slate-900 bg-white focus:bg-yellow-50 outline-none transition font-bold text-slate-900 text-[11px] appearance-none cursor-pointer"
                                     >
                                         {paymentModes.map(mode => (
                                             <option key={mode.value} value={mode.value}>{mode.label}</option>
@@ -664,63 +665,45 @@ const AddPaymentReceived = () => {
                     </div>
 
                     {/* Stats Grid */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                        <div className="bg-gradient-to-br from-slate-900 to-slate-800 p-5 rounded-[1.5rem] shadow-xl shadow-slate-200 relative overflow-hidden group border border-slate-800">
-                            <div className="absolute -right-4 -bottom-4 w-20 h-20 bg-white/5 rounded-full blur-2xl group-hover:bg-white/10 transition-all"></div>
-                            <div className="relative z-10 flex flex-col justify-between h-full">
-                                <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3">Total Received (Date)</p>
-                                <div className="flex items-end justify-between">
-                                    <p className="text-2xl font-black text-white italic tracking-tighter">₹{dateTotal.toLocaleString('en-IN')}</p>
-                                    <div className="w-10 h-10 rounded-2xl bg-white/5 flex items-center justify-center text-emerald-400 backdrop-blur-md border border-white/10 shadow-inner">
-                                        <FaMoneyBillWave size={18} />
-                                    </div>
-                                </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                        <div className="bg-slate-900 p-4 border-2 border-slate-900 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] group">
+                            <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2">
+                                {selectedLedger ? `${selectedLedger.label} RECEIVED (DATE)` : 'TOTAL RECEIVED (DATE)'}
+                            </p>
+                            <div className="flex items-end justify-between">
+                                <p className="text-xl font-black text-white tracking-tighter italic">₹{dateTotal.toLocaleString('en-IN')}</p>
+                                <FaMoneyBillWave className="text-slate-600 group-hover:text-slate-900 transition-colors" size={16} />
                             </div>
                         </div>
 
                         {selectedLedger && (
-                            <div className="bg-white p-5 rounded-[1.5rem] border border-slate-100 shadow-sm relative overflow-hidden group">
-                                <div className="absolute -right-4 -bottom-4 w-20 h-20 bg-rose-500/5 rounded-full blur-2xl group-hover:bg-rose-500/10 transition-all"></div>
-                                <div className="relative z-10 flex flex-col justify-between h-full">
-                                    <p className="text-[9px] font-black text-rose-400 uppercase tracking-[0.2em] mb-3">
-                                        {formData.ledgerType === 'Seller' ? 'Seller Due (All Time)' : 'Buyer Due (All Time)'}
-                                    </p>
-                                    <div className="flex items-end justify-between">
-                                        <p className="text-2xl font-black text-rose-600 italic tracking-tighter">₹{ledgerBalance.outstandingBalance.toLocaleString('en-IN')}</p>
-                                        <div className="w-10 h-10 rounded-2xl bg-rose-50 flex items-center justify-center text-rose-500 border border-rose-100">
-                                            <FaExclamationCircle size={18} />
-                                        </div>
-                                    </div>
+                            <div className="bg-white p-4 border-2 border-slate-900 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] group">
+                                <p className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em] mb-2">
+                                    {formData.ledgerType === 'Seller' ? 'Seller Due (All Time)' : 'Buyer Due (All Time)'}
+                                </p>
+                                <div className="flex items-end justify-between">
+                                    <p className="text-xl font-black text-rose-600 tracking-tighter italic">₹{ledgerBalance.outstandingBalance.toLocaleString('en-IN')}</p>
+                                    <FaExclamationCircle className="text-slate-200 group-hover:text-rose-400 transition-colors" size={16} />
                                 </div>
                             </div>
                         )}
 
                         {selectedLedger && (
-                            <div className="bg-white p-5 rounded-[1.5rem] border border-slate-100 shadow-sm relative overflow-hidden group">
-                                <div className="absolute -right-4 -bottom-4 w-20 h-20 bg-emerald-500/5 rounded-full blur-2xl group-hover:bg-emerald-500/10 transition-all"></div>
-                                <div className="relative z-10 flex flex-col justify-between h-full">
-                                    <p className="text-[9px] font-black text-emerald-400 uppercase tracking-[0.2em] mb-3">Advance Balance</p>
-                                    <div className="flex items-end justify-between">
-                                        <p className="text-2xl font-black text-emerald-600 italic tracking-tighter">₹{ledgerBalance.advanceBalance.toLocaleString('en-IN')}</p>
-                                        <div className="w-10 h-10 rounded-2xl bg-emerald-50 flex items-center justify-center text-emerald-500 border border-emerald-100">
-                                            <FaHistory size={18} />
-                                        </div>
-                                    </div>
+                            <div className="bg-white p-4 border-2 border-slate-900 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] group">
+                                <p className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em] mb-2">Advance Balance</p>
+                                <div className="flex items-end justify-between">
+                                    <p className="text-xl font-black text-slate-900 tracking-tighter italic">₹{ledgerBalance.advanceBalance.toLocaleString('en-IN')}</p>
+                                    <FaHistory className="text-slate-200 group-hover:text-slate-900 transition-colors" size={16} />
                                 </div>
                             </div>
                         )}
 
                         {selectedLedger && (
-                            <div className="bg-white p-5 rounded-[1.5rem] border border-slate-100 shadow-sm relative overflow-hidden group">
-                                <div className="absolute -right-4 -bottom-4 w-20 h-20 bg-slate-500/5 rounded-full blur-2xl group-hover:bg-slate-500/10 transition-all"></div>
-                                <div className="relative z-10 flex flex-col justify-between h-full">
-                                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3">Pending Records</p>
-                                    <div className="flex items-end justify-between">
-                                        <p className="text-2xl font-black text-slate-800 italic tracking-tighter">{entryStats.pendingCount}</p>
-                                        <div className="w-10 h-10 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-500 border border-slate-100">
-                                            <FaBuilding size={18} />
-                                        </div>
-                                    </div>
+                            <div className="bg-white p-4 border-2 border-slate-900 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] group">
+                                <p className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em] mb-2">Pending Records</p>
+                                <div className="flex items-end justify-between">
+                                    <p className="text-xl font-black text-slate-900 tracking-tighter italic">{entryStats.pendingCount}</p>
+                                    <FaBuilding className="text-slate-200 group-hover:text-slate-400 transition-colors" size={16} />
                                 </div>
                             </div>
                         )}
@@ -728,50 +711,50 @@ const AddPaymentReceived = () => {
                 </div>
 
                 {/* Configuration Card */}
-                <div className="bg-white rounded-[2rem] p-6 border border-slate-100 shadow-sm space-y-6">
-                    <div className="flex items-center justify-between pb-4 border-b border-slate-50">
+                <div className="bg-white border-2 border-slate-900 p-5 space-y-4">
+                    <div className="flex items-center justify-between pb-3 border-b border-slate-100">
                         <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-xl bg-slate-900 flex items-center justify-center text-white">
-                                <FaExchangeAlt size={18} />
+                            <div className="w-8 h-8 bg-slate-900 flex items-center justify-center text-white">
+                                <FaExchangeAlt size={14} />
                             </div>
                             <div>
-                                <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest">Tally Voucher Setup</h3>
-                                <p className="text-[10px] text-slate-400 font-bold uppercase">Configure ledger & allocation rules</p>
+                                <h3 className="text-xs font-black text-slate-900 uppercase tracking-widest">Account Selection</h3>
+                                <p className="text-[9px] text-slate-400 font-bold uppercase">Configure ledger & allocation rules</p>
                             </div>
                         </div>
-                        <div className="flex items-center gap-2 bg-slate-100 p-1 rounded-xl">
+                        <div className="flex items-center gap-1 bg-slate-100 p-0.5 border border-slate-200">
                             {[
-                                { id: 'fresh', label: 'Fresh Payment', icon: <FaMoneyBillWave size={10}/> },
-                                { id: 'advance', label: 'Adjust from Advance', icon: <FaHistory size={10}/> }
+                                { id: 'fresh', label: 'Fresh Payment' },
+                                { id: 'advance', label: 'From Advance' }
                             ].map(source => (
                                 <button
                                     key={source.id}
                                     onClick={() => setAllocationSource(source.id)}
-                                    className={`px-4 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest flex items-center gap-2 transition-all ${
+                                    className={`px-4 py-1.5 text-[9px] font-black uppercase tracking-widest transition-all ${
                                         allocationSource === source.id 
-                                            ? 'bg-white text-slate-900 shadow-sm' 
-                                            : 'text-slate-400 hover:text-slate-600'
+                                            ? 'bg-slate-900 text-white shadow-sm' 
+                                            : 'text-slate-400 hover:text-slate-900'
                                     }`}
                                 >
-                                    {source.icon}
                                     {source.label}
                                 </button>
                             ))}
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="space-y-2">
-                            <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Ledger Type</label>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-1">
+                            <label className="text-[9px] font-black uppercase tracking-widest text-slate-500">Ledger Type</label>
                             <DataDropdown
                                 options={ledgerTypes}
                                 selectedOptions={formData.ledgerType}
                                 onChange={(opt) => setFormData(prev => ({ ...prev, ledgerType: opt.value }))}
                                 isMulti={false}
+                                className="h-9 text-xs border-slate-900"
                             />
                         </div>
-                        <div className="space-y-2">
-                            <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Select Ledger Account</label>
+                        <div className="space-y-1">
+                            <label className="text-[9px] font-black uppercase tracking-widest text-slate-500">Select Ledger Account</label>
                             <DataDropdown
                                 options={ledgers}
                                 selectedOptions={selectedLedger}
@@ -779,46 +762,45 @@ const AddPaymentReceived = () => {
                                 placeholder={fetchingLedgers ? "Syncing..." : `Select ${formData.ledgerType}`}
                                 isMulti={false}
                                 isDisabled={fetchingLedgers}
+                                className="h-9 text-xs border-slate-900"
                             />
                         </div>
                     </div>
 
-                    <div className="pt-4 border-t border-slate-50 flex flex-col md:flex-row gap-6 items-end">
-                        <div className="flex-1 space-y-2 w-full">
-                            <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Voucher Narration / Remarks</label>
+                    <div className="pt-3 border-t border-slate-100 flex flex-col md:flex-row gap-4 items-end">
+                        <div className="flex-1 space-y-1 w-full">
+                            <label className="text-[9px] font-black uppercase tracking-widest text-slate-500">Voucher Narration / Remarks</label>
                             <input
                                 type="text"
                                 name="remarks"
                                 value={formData.remarks}
                                 onChange={handleInputChange}
                                 placeholder="Enter narration for this voucher..."
-                                className="w-full h-11 px-4 rounded-xl border border-slate-200 bg-slate-50/30 focus:bg-white focus:ring-2 focus:ring-emerald-500/10 outline-none transition text-sm font-medium text-slate-700"
+                                className="w-full h-9 px-3 border border-slate-900 bg-white focus:bg-yellow-50 outline-none transition text-xs font-bold text-slate-900"
                             />
                         </div>
                         {allocationSource === 'fresh' && (
-                            <div className="flex gap-4 w-full md:w-auto">
-                                <button
-                                    onClick={handleRecordAdvance}
-                                    disabled={loading || !selectedLedger || formData.amount <= 0}
-                                    className="h-11 px-6 bg-emerald-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-100 disabled:opacity-50"
-                                >
-                                    Record Advance (₹{formData.amount})
-                                </button>
-                            </div>
+                            <button
+                                onClick={handleRecordAdvance}
+                                disabled={loading || !selectedLedger || formData.amount <= 0}
+                                className="h-9 px-6 bg-slate-900 text-white border border-slate-900 text-[10px] font-black uppercase tracking-widest hover:bg-black active:scale-[0.98] transition-all disabled:opacity-50"
+                            >
+                                Record Advance (₹{formData.amount})
+                            </button>
                         )}
                     </div>
                 </div>
 
                 {/* Tab Content */}
                 {activeTab === 'allocation' && (
-                    <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden flex flex-col min-h-[400px]">
-                        <div className="px-8 py-6 border-b border-slate-50 flex flex-col lg:flex-row lg:items-center justify-between gap-6 bg-slate-50/30">
+                    <div className="bg-white border-2 border-slate-900 overflow-hidden flex flex-col min-h-[400px]">
+                        <div className="px-6 py-4 border-b border-slate-900 flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-slate-50">
                             <div className="flex items-center gap-3">
-                                <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-white transition-colors ${allocationSource === 'fresh' ? 'bg-emerald-600' : 'bg-slate-900'}`}>
+                                <div className={`w-8 h-8 flex items-center justify-center text-white transition-colors ${allocationSource === 'fresh' ? 'bg-slate-900' : 'bg-slate-700'}`}>
                                     {allocationSource === 'fresh' ? <FaBuilding size={14} /> : <FaExchangeAlt size={14} />}
                                 </div>
                                 <div>
-                                    <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest">
+                                    <h3 className="text-xs font-black text-slate-900 uppercase tracking-widest">
                                         {allocationSource === 'fresh' ? 'Allocation Ledger' : 'Advance Adjustment Ledger'}
                                     </h3>
                                     <p className="text-[9px] font-bold text-slate-400 uppercase">
@@ -829,30 +811,30 @@ const AddPaymentReceived = () => {
 
                             <div className="flex flex-wrap items-center gap-4">
                                 {/* Date Range Filters */}
-                                <div className="flex items-center gap-2 bg-white p-1 rounded-xl border border-slate-200">
+                                <div className="flex items-center gap-2 bg-white p-1 border border-slate-900">
                                     <div className="flex flex-col px-2">
                                         <span className="text-[8px] font-black text-slate-400 uppercase leading-none">From</span>
                                         <input
                                             type="date"
                                             value={formData.filterStartDate}
                                             onChange={(e) => setFormData(prev => ({ ...prev, filterStartDate: e.target.value }))}
-                                            className="text-[10px] font-bold text-slate-600 outline-none h-6"
+                                            className="text-[10px] font-bold text-slate-900 outline-none h-6 bg-transparent"
                                         />
                                     </div>
-                                    <div className="w-px h-8 bg-slate-100"></div>
+                                    <div className="w-px h-8 bg-slate-200"></div>
                                     <div className="flex flex-col px-2">
                                         <span className="text-[8px] font-black text-slate-400 uppercase leading-none">To</span>
                                         <input
                                             type="date"
                                             value={formData.filterEndDate}
                                             onChange={(e) => setFormData(prev => ({ ...prev, filterEndDate: e.target.value }))}
-                                            className="text-[10px] font-bold text-slate-600 outline-none h-6"
+                                            className="text-[10px] font-bold text-slate-900 outline-none h-6 bg-transparent"
                                         />
                                     </div>
                                     {(formData.filterStartDate || formData.filterEndDate) && (
                                         <button 
                                             onClick={() => setFormData(prev => ({ ...prev, filterStartDate: '', filterEndDate: '' }))}
-                                            className="p-1.5 text-rose-500 hover:bg-rose-50 rounded-lg transition-colors"
+                                            className="p-1.5 text-rose-600 hover:bg-rose-50 transition-colors"
                                         >
                                             <FaArrowLeft size={10} />
                                         </button>
@@ -860,108 +842,113 @@ const AddPaymentReceived = () => {
                                 </div>
 
                                 <div className="relative w-full md:w-64">
-                                    <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 size-3" />
+                                    <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 size-3" />
                                     <input
                                         type="text"
-                                        placeholder="SEARCH..."
+                                        placeholder="SEARCH SAUDA / LORRY..."
                                         value={tableSearch}
                                         onChange={(e) => setTableSearch(e.target.value)}
-                                        className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 bg-white text-[10px] font-black uppercase tracking-widest focus:ring-2 focus:ring-emerald-500/10 outline-none transition"
+                                        className="w-full pl-9 pr-4 py-2 border border-slate-900 bg-white text-[10px] font-black uppercase tracking-widest focus:bg-yellow-50 outline-none transition"
                                     />
                                 </div>
                             </div>
                         </div>
 
-                        <div className="p-2">
+                        <div className="p-0">
                             {fetchingEntries ? (
                                 <div className="py-32 flex flex-col items-center justify-center gap-4">
-                                    <div className="w-10 h-10 border-4 border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin" />
+                                    <div className="w-10 h-10 border-4 border-slate-200 border-t-slate-900 rounded-full animate-spin" />
                                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Fetching Pending...</p>
                                 </div>
                             ) : filteredEntries.length > 0 ? (
                                 <>
-                                    <Tables
-                                        headers={columns.map(c => c.header)}
-                                        rows={filteredEntries.map(entry => columns.map(col => {
-                                            if (typeof col.accessor === 'function') {
-                                                return col.accessor(entry);
-                                            }
-                                            return entry[col.accessor];
-                                        }))}
-                                    />
+                                    <div className="border-b border-slate-900">
+                                        <Tables
+                                            headers={columns.map(c => c.header)}
+                                            rows={filteredEntries.map(entry => columns.map(col => {
+                                                if (typeof col.accessor === 'function') {
+                                                    return col.accessor(entry);
+                                                }
+                                                return entry[col.accessor];
+                                            }))}
+                                        />
+                                    </div>
                                     
                                     {/* Pagination Controls */}
                                     {entriesTotalPages > 1 && (
-                                        <div className="px-6 py-4 border-t border-slate-50 flex items-center justify-between bg-slate-50/20">
-                                            <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                                        <div className="px-6 py-3 border-b border-slate-900 flex items-center justify-between bg-slate-50">
+                                            <div className="text-[10px] font-black text-slate-900 uppercase tracking-widest">
                                                 Page {entriesPage} of {entriesTotalPages}
                                             </div>
-                                            <div className="flex items-center gap-2">
+                                            <div className="flex items-center gap-1">
                                                 <button
                                                     onClick={() => fetchEntries(entriesPage - 1)}
                                                     disabled={entriesPage === 1 || fetchingEntries}
-                                                    className="p-2 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                                                    className="px-3 py-1.5 border border-slate-900 bg-white text-slate-900 hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed transition-all text-[10px] font-black uppercase"
                                                 >
-                                                    <FaArrowLeft size={10} />
+                                                    Prev
                                                 </button>
                                                 
-                                                {[...Array(entriesTotalPages)].map((_, i) => {
-                                                    const pageNum = i + 1;
-                                                    // Show first, last, and pages around current
-                                                    if (
-                                                        pageNum === 1 || 
-                                                        pageNum === entriesTotalPages || 
-                                                        (pageNum >= entriesPage - 1 && pageNum <= entriesPage + 1)
-                                                    ) {
-                                                        return (
-                                                            <button
-                                                                key={pageNum}
-                                                                onClick={() => fetchEntries(pageNum)}
-                                                                className={`w-8 h-8 rounded-lg text-[10px] font-black transition-all ${
-                                                                    entriesPage === pageNum 
-                                                                        ? 'bg-slate-900 text-white shadow-md' 
-                                                                        : 'border border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
-                                                                }`}
-                                                            >
-                                                                {pageNum}
-                                                            </button>
-                                                        );
-                                                    } else if (
-                                                        pageNum === entriesPage - 2 || 
-                                                        pageNum === entriesPage + 2
-                                                    ) {
-                                                        return <span key={pageNum} className="text-slate-300">...</span>;
-                                                    }
-                                                    return null;
-                                                })}
+                                                <div className="flex gap-1 mx-2">
+                                                    {[...Array(entriesTotalPages)].map((_, i) => {
+                                                        const pageNum = i + 1;
+                                                        if (
+                                                            pageNum === 1 || 
+                                                            pageNum === entriesTotalPages || 
+                                                            (pageNum >= entriesPage - 1 && pageNum <= entriesPage + 1)
+                                                        ) {
+                                                            return (
+                                                                <button
+                                                                    key={pageNum}
+                                                                    onClick={() => fetchEntries(pageNum)}
+                                                                    className={`w-7 h-7 border border-slate-900 text-[10px] font-black transition-all ${
+                                                                        entriesPage === pageNum 
+                                                                            ? 'bg-slate-900 text-white' 
+                                                                            : 'bg-white text-slate-900 hover:bg-slate-100'
+                                                                    }`}
+                                                                >
+                                                                    {pageNum}
+                                                                </button>
+                                                            );
+                                                        } else if (
+                                                            pageNum === entriesPage - 2 || 
+                                                            pageNum === entriesPage + 2
+                                                        ) {
+                                                            return <span key={pageNum} className="text-slate-400 px-1">.</span>;
+                                                        }
+                                                        return null;
+                                                    })}
+                                                </div>
 
                                                 <button
                                                     onClick={() => fetchEntries(entriesPage + 1)}
                                                     disabled={entriesPage === entriesTotalPages || fetchingEntries}
-                                                    className="p-2 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                                                    className="px-3 py-1.5 border border-slate-900 bg-white text-slate-900 hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed transition-all text-[10px] font-black uppercase"
                                                 >
-                                                    <FaArrowRight size={10} />
+                                                    Next
                                                 </button>
                                             </div>
                                         </div>
                                     )}
-                                    <div className="bg-slate-900 rounded-2xl px-8 py-4 flex items-center justify-between mt-2 border border-slate-800 shadow-xl">
-                                        <div className="flex items-center gap-4">
-                                            <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-rose-400">
-                                                <FaExclamationCircle size={18} />
-                                            </div>
+                                    <div className="bg-slate-900 px-8 py-3 flex items-center justify-between border-t-2 border-slate-900">
+                                        <div className="flex items-center gap-6">
                                             <div>
-                                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">List Summary Due</p>
-                                                <p className="text-xl font-black text-white tracking-tighter italic">₹{entryStats.totalDue.toLocaleString('en-IN')}</p>
+                                                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">List Total Due</p>
+                                                <p className="text-lg font-black text-white tracking-tighter">₹{entryStats.totalDue.toLocaleString('en-IN')}</p>
+                                            </div>
+                                            <div className="w-px h-8 bg-slate-700"></div>
+                                            <div>
+                                                <p className="text-[9px] font-black text-slate-300 uppercase tracking-widest leading-none mb-1">Date Received ({new Date(formData.date).toLocaleDateString()})</p>
+                                                <p className="text-lg font-black text-white tracking-tighter">₹{dateTotal.toLocaleString('en-IN')}</p>
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-8">
                                             <div className="flex flex-col items-end">
-                                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Total Records</p>
+                                                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Total Entries</p>
                                                 <p className="text-lg font-black text-white">{entries.length}</p>
                                             </div>
-                                            <div className="flex flex-col items-end border-l border-white/10 pl-8">
-                                                <p className="text-[10px] font-black text-emerald-400 uppercase tracking-widest leading-none mb-1">Pending Count</p>
+                                            <div className="flex flex-col items-end border-l border-slate-700 pl-8">
+                                                <p className="text-[9px] font-black text-rose-400 uppercase tracking-widest leading-none mb-1">Pending Count</p>
                                                 <p className="text-lg font-black text-white">{entryStats.pendingCount}</p>
                                             </div>
                                         </div>
@@ -969,10 +956,10 @@ const AddPaymentReceived = () => {
                                 </>
                             ) : (
                                 <div className="py-32 flex flex-col items-center justify-center text-center px-8">
-                                    <div className="w-16 h-16 rounded-[2rem] bg-slate-50 flex items-center justify-center text-slate-200 mb-4">
-                                        <FaHistory size={32} />
+                                    <div className="w-12 h-12 border-2 border-slate-200 flex items-center justify-center text-slate-300 mb-4">
+                                        <FaHistory size={24} />
                                     </div>
-                                    <h4 className="text-sm font-black text-slate-800 uppercase tracking-widest">No Pending Records</h4>
+                                    <h4 className="text-xs font-black text-slate-900 uppercase tracking-widest">No Pending Records Found</h4>
                                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1 max-w-xs mx-auto">
                                         All entries are fully settled for this account.
                                     </p>
@@ -983,17 +970,19 @@ const AddPaymentReceived = () => {
                 )}
 
                 {activeTab === 'history' && (
-                    <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden min-h-[400px]">
-                        <div className="px-8 py-6 border-b border-slate-50 flex items-center gap-3 bg-slate-50/30">
-                            <div className="w-8 h-8 rounded-lg bg-slate-900 flex items-center justify-center text-white">
-                                <FaHistory size={14} />
+                    <div className="bg-white border-2 border-slate-900 overflow-hidden min-h-[400px]">
+                        <div className="px-6 py-4 border-b border-slate-900 flex items-center justify-between bg-slate-50">
+                            <div className="flex items-center gap-3">
+                                <div className="w-8 h-8 bg-slate-900 flex items-center justify-center text-white">
+                                    <FaHistory size={14} />
+                                </div>
+                                <h3 className="text-xs font-black text-slate-900 uppercase tracking-widest">Voucher History (On {new Date(formData.date).toLocaleDateString()})</h3>
                             </div>
-                            <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest">Previous Payments (On {new Date(formData.date).toLocaleDateString()})</h3>
                         </div>
-                        <div className="p-2">
+                        <div className="p-0">
                             {fetchingHistory ? (
                                 <div className="py-32 flex flex-col items-center justify-center gap-4">
-                                    <div className="w-10 h-10 border-4 border-slate-200 border-t-slate-800 rounded-full animate-spin" />
+                                    <div className="w-10 h-10 border-4 border-slate-200 border-t-slate-900 rounded-full animate-spin" />
                                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Loading History...</p>
                                 </div>
                             ) : history.length > 0 ? (
@@ -1008,10 +997,10 @@ const AddPaymentReceived = () => {
                                 />
                             ) : (
                                 <div className="py-32 flex flex-col items-center justify-center text-center px-8">
-                                    <div className="w-16 h-16 rounded-[2rem] bg-slate-50 flex items-center justify-center text-slate-200 mb-4">
-                                        <FaExclamationCircle size={32} />
+                                    <div className="w-12 h-12 border-2 border-slate-200 flex items-center justify-center text-slate-300 mb-4">
+                                        <FaHistory size={24} />
                                     </div>
-                                    <h4 className="text-sm font-black text-slate-800 uppercase tracking-widest">No Previous Payments</h4>
+                                    <h4 className="text-xs font-black text-slate-900 uppercase tracking-widest">No Previous Payments</h4>
                                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1 max-w-xs mx-auto">
                                         No payments were recorded for this ledger on the selected date.
                                     </p>
@@ -1022,23 +1011,23 @@ const AddPaymentReceived = () => {
                 )}
 
                 {activeTab === 'summary' && (
-                    <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden min-h-[400px]">
-                        <div className="px-8 py-6 border-b border-slate-50 flex items-center justify-between bg-slate-50/30">
+                    <div className="bg-white border-2 border-slate-900 overflow-hidden min-h-[400px]">
+                        <div className="px-6 py-4 border-b border-slate-900 flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-slate-50">
                             <div className="flex items-center gap-3">
-                                <div className="w-8 h-8 rounded-lg bg-emerald-600 flex items-center justify-center text-white">
+                                <div className="w-8 h-8 bg-slate-900 flex items-center justify-center text-white">
                                     <FaChartBar size={14} />
                                 </div>
-                                <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest">Periodic Summary</h3>
+                                <h3 className="text-xs font-black text-slate-900 uppercase tracking-widest">Periodic Summary</h3>
                             </div>
-                            <div className="flex bg-slate-100 p-1 rounded-xl">
+                            <div className="flex bg-white border border-slate-900 p-0.5">
                                 {['month', 'week'].map(type => (
                                     <button
                                         key={type}
                                         onClick={() => setSummaryType(type)}
-                                        className={`px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${
+                                        className={`px-4 py-1.5 text-[9px] font-black uppercase tracking-widest transition-all ${
                                             summaryType === type 
-                                                ? 'bg-white text-slate-900 shadow-sm' 
-                                                : 'text-slate-400 hover:text-slate-600'
+                                                ? 'bg-slate-900 text-white' 
+                                                : 'text-slate-400 hover:text-slate-900'
                                         }`}
                                     >
                                         {type}ly
@@ -1046,23 +1035,22 @@ const AddPaymentReceived = () => {
                                 ))}
                             </div>
                         </div>
-                        <div className="p-8">
+                        <div className="p-4 bg-slate-50/50">
                             {summary.length > 0 ? (
-                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                                     {summary.map((item, idx) => (
-                                        <div key={idx} className="bg-slate-50 rounded-2xl p-6 border border-slate-100 group hover:bg-white hover:shadow-xl hover:shadow-slate-200/50 transition-all">
-                                            <div className="flex items-center justify-between mb-4">
-                                                <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center text-slate-400 group-hover:text-emerald-600 transition-colors">
-                                                    <FaFileInvoiceDollar size={18} />
+                                        <div key={idx} className="bg-white border-2 border-slate-900 p-5 group hover:bg-yellow-50 transition-all shadow-[2px_2px_0px_0px_rgba(15,23,42,1)]">
+                                            <div className="flex items-center justify-between mb-3">
+                                                <div className="w-8 h-8 bg-slate-900 flex items-center justify-center text-white">
+                                                    <FaFileInvoiceDollar size={14} />
                                                 </div>
                                                 <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{item._id.year}</span>
                                             </div>
-                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">
+                                            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">
                                                 {summaryType === 'month' ? `Month ${item._id.period}` : `Week ${item._id.period}`}
                                             </p>
-                                            <p className="text-2xl font-black text-slate-800 italic">₹{item.totalAmount.toLocaleString()}</p>
-                                            <div className="mt-4 flex items-center gap-2 text-[10px] font-bold text-slate-500">
-                                                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500"></div>
+                                            <p className="text-xl font-black text-slate-900 italic">₹{item.totalAmount.toLocaleString()}</p>
+                                            <div className="mt-3 flex items-center gap-2 text-[10px] font-black text-slate-900 uppercase border-t border-slate-100 pt-3">
                                                 {item.count} Transactions
                                             </div>
                                         </div>
@@ -1070,10 +1058,10 @@ const AddPaymentReceived = () => {
                                 </div>
                             ) : (
                                 <div className="py-24 flex flex-col items-center justify-center text-center">
-                                    <div className="w-16 h-16 rounded-[2rem] bg-slate-50 flex items-center justify-center text-slate-200 mb-4">
-                                        <FaChartBar size={32} />
+                                    <div className="w-12 h-12 border-2 border-slate-200 flex items-center justify-center text-slate-300 mb-4">
+                                        <FaChartBar size={24} />
                                     </div>
-                                    <h4 className="text-sm font-black text-slate-800 uppercase tracking-widest">No Summary Available</h4>
+                                    <h4 className="text-xs font-black text-slate-900 uppercase tracking-widest">No Summary Available</h4>
                                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Select a ledger to view analytical summaries.</p>
                                 </div>
                             )}
