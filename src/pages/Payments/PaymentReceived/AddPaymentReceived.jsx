@@ -176,6 +176,7 @@ const AddPaymentReceived = () => {
                 limit: 20, // Showing 20 entries per page
                 startDate: formData.filterStartDate,
                 endDate: formData.filterEndDate,
+                isUnloaded: true // Only fetch records that are unloaded
             };
 
             if (formData.companyId) {
@@ -193,11 +194,8 @@ const AddPaymentReceived = () => {
             const response = await api.get('/loading-entries', { params });
             const items = response.data.data || [];
             
-            // Filter out entries with 0 unloading weight - only show unloaded records
-            const validItems = items.filter(item => (item.unloadingWeight || 0) > 0);
-            
             // Client side sorting: Pending first, then Done
-            const sortedItems = [...validItems].sort((a, b) => {
+            const sortedItems = [...items].sort((a, b) => {
                 if (a.paymentStatus === 'pending' && b.paymentStatus === 'done') return -1;
                 if (a.paymentStatus === 'done' && b.paymentStatus === 'pending') return 1;
                 return new Date(b.loadingDate) - new Date(a.loadingDate);

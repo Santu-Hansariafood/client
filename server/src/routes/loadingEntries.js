@@ -556,6 +556,7 @@ router.get("/", async (req, res) => {
     const buyerCompany = req.query.buyerCompany;
     const supplierCompany = req.query.supplierCompany;
     const companyId = req.query.companyId;
+    const isUnloaded = req.query.isUnloaded === 'true';
 
     let query = {};
 
@@ -641,6 +642,10 @@ router.get("/", async (req, res) => {
 
     if (paymentStatus) {
       andParts.push({ paymentStatus });
+    }
+
+    if (isUnloaded) {
+      andParts.push({ unloadingWeight: { $gt: 0 } });
     }
 
     if (search) {
