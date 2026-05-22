@@ -615,16 +615,24 @@ router.get("/", async (req, res) => {
     }
 
     if (supplierId) {
-      const supplierOr = [];
       const supplierPart = { supplier: toObjectId(supplierId) };
-      supplierOr.push(supplierPart);
       
       if (supplierCompany) {
-        supplierOr.push({ supplierCompany: { $regex: new RegExp(`^${escapeRegex(supplierCompany)}$`, "i") } });
-        if (companyId) supplierOr.push({ companyId: toObjectId(companyId) });
+        const companyOr = [];
+        companyOr.push({ supplierCompany: { $regex: new RegExp(`^${escapeRegex(supplierCompany)}$`, "i") } });
+        if (companyId && mongoose.Types.ObjectId.isValid(companyId)) {
+          companyOr.push({ companyId: toObjectId(companyId) });
+        }
+        
+        andParts.push({ 
+          $and: [
+            supplierPart,
+            { $or: companyOr }
+          ]
+        });
+      } else {
+        andParts.push(supplierPart);
       }
-      
-      if (supplierOr.length) andParts.push({ $or: supplierOr });
     }
 
     if (paymentStatus) {

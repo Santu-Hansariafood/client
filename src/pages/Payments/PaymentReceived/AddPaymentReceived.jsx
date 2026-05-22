@@ -162,12 +162,14 @@ const AddPaymentReceived = () => {
             setFetchingEntries(true);
             
             // Resolve company name from ID
-            const selectedCompany = allCompanies.find(c => c._id === formData.companyId);
-            const companyName = selectedCompany?.companyName || 
-                               selectedLedger?.companies?.find(c => (typeof c === 'string' ? c : (c._id || c.value || c.id)) === formData.companyId)?.companyName ||
-                               (typeof selectedLedger?.companies?.find(c => (typeof c === 'string' ? c : (c._id || c.value || c.id)) === formData.companyId) === 'string' 
-                                   ? selectedLedger?.companies?.find(c => c === formData.companyId) 
-                                   : '');
+            let companyName = '';
+            if (formData.ledgerType === 'Buyer') {
+                const selectedCompany = allCompanies.find(c => c._id === formData.companyId);
+                companyName = selectedCompany?.companyName || '';
+            } else {
+                // For Sellers, companyId is already the name string
+                companyName = formData.companyId;
+            }
 
             let params = { 
                 page: page,
@@ -879,20 +881,21 @@ const AddPaymentReceived = () => {
                                 <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">Company (Filter)</label>
                                 <DataDropdown
                                     options={selectedLedger?.companies?.map(c => {
-                                        const companyId = typeof c === 'string' ? c : (c._id || c.value || c.id);
+                                        const isString = typeof c === 'string';
+                                        const companyId = isString ? c : (c._id || c.value || c.id);
                                         // Try to find the company in allCompanies to get its name
-                                        const companyInfo = allCompanies.find(comp => comp._id === companyId);
+                                        const companyInfo = !isString ? allCompanies.find(comp => comp._id === companyId) : null;
                                         
                                         return { 
                                             value: companyId, 
-                                            label: companyInfo?.companyName || (typeof c === 'string' ? c : (c.companyName || c.label || c.name || 'Unknown'))
+                                            label: isString ? c : (companyInfo?.companyName || c.companyName || c.label || c.name || 'Unknown')
                                         };
                                     }) || []}
                                     selectedOptions={formData.companyId ? {
                                         value: formData.companyId,
-                                        label: allCompanies.find(comp => comp._id === formData.companyId)?.companyName || 
-                                               selectedLedger?.companies?.find(c => (typeof c === 'string' ? c : (c._id || c.value || c.id)) === formData.companyId)?.companyName || 
-                                               'Unknown'
+                                        label: formData.ledgerType === 'Buyer' 
+                                            ? (allCompanies.find(comp => comp._id === formData.companyId)?.companyName || 'Unknown')
+                                            : formData.companyId // For Sellers, value is the name
                                     } : null}
                                     onChange={handleCompanyChange}
                                     placeholder="All Companies"
