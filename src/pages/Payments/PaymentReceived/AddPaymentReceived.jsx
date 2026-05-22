@@ -125,7 +125,7 @@ const AddPaymentReceived = () => {
                 setLedgers(data.map(item => ({
                     value: item._id,
                     label: item.name || item.sellerName,
-                    companies: item.companyIds || []
+                    companies: item.companyIds || item.companies || []
                 })));
                 setSelectedLedger(null);
                 setFormData(prev => ({ ...prev, ledgerId: '', mappings: [] }));
@@ -850,16 +850,29 @@ const AddPaymentReceived = () => {
                             <div className="space-y-2">
                                 <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">Company (Filter)</label>
                                 <DataDropdown
-                                    options={selectedLedger?.companies?.map(c => ({
-                                        value: c._id || c.value || c,
-                                        label: c.label || c.name || c.companyName || 'Unknown'
-                                    })) || []}
-                                    selectedOptions={formData.companyId ? (selectedLedger?.companies?.find(c => (c._id || c.value || c) === formData.companyId) ? {
+                                    options={selectedLedger?.companies?.map(c => {
+                                        const value = typeof c === 'string' ? c : (c._id || c.value || c.id);
+                                        const label = typeof c === 'string' ? c : (c.companyName || c.label || c.name || 'Unknown');
+                                        return { value, label };
+                                    }) || []}
+                                    selectedOptions={formData.companyId ? {
                                         value: formData.companyId,
-                                        label: selectedLedger?.companies?.find(c => (c._id || c.value || c) === formData.companyId)?.label || 
-                                               selectedLedger?.companies?.find(c => (c._id || c.value || c) === formData.companyId)?.name || 
-                                               selectedLedger?.companies?.find(c => (c._id || c.value || c) === formData.companyId)?.companyName || 'Unknown'
-                                    } : null) : null}
+                                        label: selectedLedger?.companies?.find(c => {
+                                            const val = typeof c === 'string' ? c : (c._id || c.value || c.id);
+                                            return val === formData.companyId;
+                                        })?.companyName || 
+                                        selectedLedger?.companies?.find(c => {
+                                            const val = typeof c === 'string' ? c : (c._id || c.value || c.id);
+                                            return val === formData.companyId;
+                                        })?.label || 
+                                        selectedLedger?.companies?.find(c => {
+                                            const val = typeof c === 'string' ? c : (c._id || c.value || c.id);
+                                            return val === formData.companyId;
+                                        })?.name || 
+                                        (typeof selectedLedger?.companies?.find(c => (typeof c === 'string' ? c : (c._id || c.value || c.id)) === formData.companyId) === 'string' 
+                                            ? selectedLedger?.companies?.find(c => c === formData.companyId) 
+                                            : 'Unknown')
+                                    } : null}
                                     onChange={handleCompanyChange}
                                     placeholder="All Companies"
                                     isMulti={false}
