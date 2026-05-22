@@ -19,7 +19,7 @@ import {
     FaHistory, FaCalendarAlt, FaBuilding, FaSearch, 
     FaCheckCircle, FaExclamationCircle, FaPrint, FaChartBar,
     FaArrowRight, FaCaretRight, FaFileInvoiceDollar, FaFilter,
-    FaRegCalendarAlt, FaWallet, FaChartLine
+    FaRegCalendarAlt, FaWallet, FaChartLine, FaPlus, FaTrash
 } from 'react-icons/fa';
 
 // --- Sub-components ---
@@ -168,8 +168,9 @@ const AddPaymentReceived = () => {
                 return new Date(b.loadingDate) - new Date(a.loadingDate);
             });
 
-            setEntries(sortedItems.map(item => ({
+            setEntries(sortedItems.map((item, index) => ({
                 ...item,
+                uiKey: `${item._id}-${index}-${Date.now()}`,
                 allocatedAmount: item.paymentStatus === 'done' ? item.paidAmount : '',
                 rowRemarks: '',
                 isSaved: item.paymentStatus === 'done'
@@ -276,10 +277,10 @@ const AddPaymentReceived = () => {
         setFormData(prev => ({ ...prev, ledgerId: option?.value || '' }));
     };
 
-    const handleAllocationChange = (entryId, amount, netAmount, paidAmount) => {
+    const handleAllocationChange = (uiKey, amount, netAmount, paidAmount) => {
         if (amount === '') {
             setEntries(prev => prev.map(entry => 
-                entry._id === entryId ? { ...entry, allocatedAmount: '' } : entry
+                entry.uiKey === uiKey ? { ...entry, allocatedAmount: '' } : entry
             ));
             return;
         }
@@ -293,14 +294,31 @@ const AddPaymentReceived = () => {
         }
 
         setEntries(prev => prev.map(entry => 
-            entry._id === entryId ? { ...entry, allocatedAmount: amount } : entry
+            entry.uiKey === uiKey ? { ...entry, allocatedAmount: amount } : entry
         ));
     };
 
-    const handleRowRemarksChange = (entryId, remarks) => {
+    const handleRowRemarksChange = (uiKey, remarks) => {
         setEntries(prev => prev.map(entry => 
-            entry._id === entryId ? { ...entry, rowRemarks: remarks } : entry
+            entry.uiKey === uiKey ? { ...entry, rowRemarks: remarks } : entry
         ));
+    };
+
+    const handleAddRow = (entry, index) => {
+        const newRow = {
+            ...entry,
+            uiKey: `${entry._id}-extra-${Date.now()}`,
+            allocatedAmount: '',
+            rowRemarks: '',
+            isSaved: false // New sub-rows are never saved initially
+        };
+        const newEntries = [...entries];
+        newEntries.splice(index + 1, 0, newRow);
+        setEntries(newEntries);
+    };
+
+    const handleRemoveRow = (uiKey) => {
+        setEntries(prev => prev.filter(entry => entry.uiKey !== uiKey));
     };
 
     const calculateTallyDetails = (entry) => {
@@ -530,6 +548,11 @@ const AddPaymentReceived = () => {
                 <div className="flex flex-col gap-0.5">
                     <span className="font-black text-slate-900 uppercase tracking-tighter text-xs">{row.lorryNumber}</span>
                     <span className="text-[9px] text-slate-500 font-black uppercase tracking-widest leading-none">{row.commodity}</span>
+                    <div className="mt-1 flex items-center gap-1">
+                        <span className="text-[8px] font-black bg-blue-50 text-blue-600 px-1 py-0.5 rounded border border-blue-100 uppercase">
+                            Unloading: {row.unloadingWeight || 0} MT
+                        </span>
+                    </div>
                 </div>
             )
         },
@@ -575,6 +598,7 @@ const AddPaymentReceived = () => {
             accessor: (row) => {
                 const details = calculateTallyDetails(row);
                 const isLocked = row.isSaved && user?.role !== 'Admin';
+                const isExtraRow = row.uiKey.includes('-extra-');
 
                 return (
                     <div className="flex flex-col gap-2 min-w-[200px]">
@@ -582,7 +606,7 @@ const AddPaymentReceived = () => {
                             <input
                                 type="number"
                                 value={row.allocatedAmount}
-                                onChange={(e) => handleAllocationChange(row._id, e.target.value, details.netAmount, row.paidAmount)}
+                                onChange={(e) => handleAllocationChange(row.uiKey, e.target.value, details.netAmount, row.paidAmount)}
                                 onWheel={(e) => e.target.blur()}
                                 disabled={isLocked}
                                 className={`w-full px-3 py-2 rounded-xl border-2 transition-all ${
@@ -594,48 +618,70 @@ const AddPaymentReceived = () => {
                             />
                             {!isLocked && (
                                 <button
-                                    onClick={() => handleAllocationChange(row._id, details.dueAmount.toString(), details.netAmount, row.paidAmount)}
+                                    onClick={() => handleAllocationChange(row.uiKey, details.dueAmount.toString(), details.netAmount, row.paidAmount)}
                                     className="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] font-black uppercase text-slate-900 bg-slate-100 hover:bg-slate-900 hover:text-white px-2 py-1 rounded-lg transition-all opacity-0 group-hover:opacity-100"
                                 >
                                     Full
                                 </button>
                             )}
                         </div>
-                        <textarea
-                            value={row.rowRemarks}
-                            onChange={(e) => handleRowRemarksChange(row._id, e.target.value)}
-                            disabled={isLocked}
-                            rows={1}
-                            className={`w-full px-3 py-1.5 rounded-lg border text-[10px] font-bold ${
-                                isLocked 
-                                    ? 'bg-slate-50 text-slate-400 border-slate-100' 
-                                    : 'border-slate-200 bg-white focus:border-slate-900 focus:bg-yellow-50'
-                            } outline-none transition-all resize-none uppercase`}
-                            placeholder="Narration..."
-                        />
+                        <div className="flex gap-1">
+                            <textarea
+                                value={row.rowRemarks}
+                                onChange={(e) => handleRowRemarksChange(row.uiKey, e.target.value)}
+                                disabled={isLocked}
+                                rows={1}
+                                className={`flex-1 px-3 py-1.5 rounded-lg border text-[10px] font-bold ${
+                                    isLocked 
+                                        ? 'bg-slate-50 text-slate-400 border-slate-100' 
+                                        : 'border-slate-200 bg-white focus:border-slate-900 focus:bg-yellow-50'
+                                } outline-none transition-all resize-none uppercase`}
+                                placeholder="Narration..."
+                            />
+                            {isExtraRow && !row.isSaved && (
+                                <button
+                                    onClick={() => handleRemoveRow(row.uiKey)}
+                                    className="p-1.5 text-rose-500 hover:bg-rose-50 rounded-lg transition-all"
+                                    title="Remove row"
+                                >
+                                    <FaTrash size={12} />
+                                </button>
+                            )}
+                        </div>
                     </div>
                 );
             }
         },
         {
             header: 'ACTION',
-            accessor: (row) => {
+            accessor: (row, index) => {
                 const isLocked = row.isSaved && user?.role !== 'Admin';
                 const isAdmin = user?.role === 'Admin';
                 
                 return (
                     <div className="flex flex-col gap-1 w-full min-w-[100px]">
-                        <Buttons
-                            label={isLocked && !isAdmin ? 'Locked' : (isAdmin && row.isSaved ? 'Adjust' : 'Save')}
-                            onClick={() => handleSaveRow(row)}
-                            disabled={(isLocked && !isAdmin) || loading}
-                            variant={isLocked && !isAdmin ? 'ghost' : (isAdmin && row.isSaved ? 'outline' : 'primary')}
-                            size="sm"
-                            icon={isLocked && !isAdmin ? <FaCheckCircle size={12} /> : (isAdmin && row.isSaved ? <FaExchangeAlt size={12} /> : <FaSave size={12} />)}
-                            className={`w-full !text-[10px] !py-2.5 ${
-                                isAdmin && row.isSaved ? '!border-amber-500 !text-amber-600 hover:!bg-amber-50' : ''
-                            }`}
-                        />
+                        <div className="flex gap-1">
+                            <Buttons
+                                label={isLocked && !isAdmin ? 'Locked' : (isAdmin && row.isSaved ? 'Adjust' : 'Save')}
+                                onClick={() => handleSaveRow(row)}
+                                disabled={(isLocked && !isAdmin) || loading}
+                                variant={isLocked && !isAdmin ? 'ghost' : (isAdmin && row.isSaved ? 'outline' : 'primary')}
+                                size="sm"
+                                icon={isLocked && !isAdmin ? <FaCheckCircle size={12} /> : (isAdmin && row.isSaved ? <FaExchangeAlt size={12} /> : <FaSave size={12} />)}
+                                className={`flex-1 !text-[10px] !py-2.5 ${
+                                    isAdmin && row.isSaved ? '!border-amber-500 !text-amber-600 hover:!bg-amber-50' : ''
+                                }`}
+                            />
+                            {!isLocked && (
+                                <button
+                                    onClick={() => handleAddRow(row, index)}
+                                    className="p-2.5 bg-slate-100 text-slate-600 hover:bg-slate-900 hover:text-white rounded-xl transition-all shadow-sm"
+                                    title="Add another allocation for this lorry"
+                                >
+                                    <FaPlus size={12} />
+                                </button>
+                            )}
+                        </div>
                     </div>
                 );
             }
@@ -912,9 +958,9 @@ const AddPaymentReceived = () => {
                                     <div className="overflow-x-auto">
                                         <Tables
                                             headers={columns.map(c => c.header)}
-                                            rows={filteredEntries.map(entry => columns.map(col => {
+                                            rows={filteredEntries.map((entry, index) => columns.map(col => {
                                                 if (typeof col.accessor === 'function') {
-                                                    return col.accessor(entry);
+                                                    return col.accessor(entry, index);
                                                 }
                                                 return entry[col.accessor];
                                             }))}
