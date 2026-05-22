@@ -91,6 +91,7 @@ const AddPaymentReceived = () => {
         date: new Date().toISOString().split('T')[0],
         ledgerType: 'Buyer',
         ledgerId: '',
+        companyId: '',
         amount: 0,
         paymentType: 'Sauda-wise',
         paymentMode: 'Bank',
@@ -149,7 +150,8 @@ const AddPaymentReceived = () => {
                 page: page,
                 limit: 20, // Showing 20 entries per page
                 startDate: formData.filterStartDate,
-                endDate: formData.filterEndDate
+                endDate: formData.filterEndDate,
+                companyId: formData.companyId
             };
             
             if (formData.ledgerType === 'Seller') {
@@ -161,8 +163,11 @@ const AddPaymentReceived = () => {
             const response = await api.get('/loading-entries', { params });
             const items = response.data.data || [];
             
+            // Filter out entries with 0 unloading weight
+            const validItems = items.filter(item => (item.unloadingWeight || 0) > 0);
+            
             // Client side sorting to be double sure: Pending first, then Done
-            const sortedItems = [...items].sort((a, b) => {
+            const sortedItems = [...validItems].sort((a, b) => {
                 if (a.paymentStatus === 'pending' && b.paymentStatus === 'done') return -1;
                 if (a.paymentStatus === 'done' && b.paymentStatus === 'pending') return 1;
                 return new Date(b.loadingDate) - new Date(a.loadingDate);
@@ -182,7 +187,7 @@ const AddPaymentReceived = () => {
         } finally {
             setFetchingEntries(false);
         }
-    }, [formData.ledgerId, formData.ledgerType, formData.paymentType, formData.filterStartDate, formData.filterEndDate]);
+    }, [formData.ledgerId, formData.ledgerType, formData.paymentType, formData.filterStartDate, formData.filterEndDate, formData.companyId]);
 
     useEffect(() => {
         fetchEntries(1);
@@ -274,7 +279,11 @@ const AddPaymentReceived = () => {
 
     const handleLedgerChange = (option) => {
         setSelectedLedger(option);
-        setFormData(prev => ({ ...prev, ledgerId: option?.value || '' }));
+        setFormData(prev => ({ ...prev, ledgerId: option?.value || '', companyId: '' }));
+    };
+
+    const handleCompanyChange = (option) => {
+        setFormData(prev => ({ ...prev, companyId: option?.value || '' }));
     };
 
     const handleAllocationChange = (uiKey, amount, netAmount, paidAmount) => {
@@ -815,7 +824,7 @@ const AddPaymentReceived = () => {
                     </div>
 
                     <div className="p-6 space-y-6">
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
                             <div className="space-y-2">
                                 <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">Ledger Type</label>
                                 <DataDropdown
@@ -835,6 +844,26 @@ const AddPaymentReceived = () => {
                                     placeholder={fetchingLedgers ? "Syncing..." : `Select ${formData.ledgerType}`}
                                     isMulti={false}
                                     isDisabled={fetchingLedgers}
+                                    className="rounded-xl border-slate-200 hover:border-slate-300 transition-all"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">Company (Filter)</label>
+                                <DataDropdown
+                                    options={selectedLedger?.companies?.map(c => ({
+                                        value: c._id || c.value || c,
+                                        label: c.label || c.name || c.companyName || 'Unknown'
+                                    })) || []}
+                                    selectedOptions={formData.companyId ? (selectedLedger?.companies?.find(c => (c._id || c.value || c) === formData.companyId) ? {
+                                        value: formData.companyId,
+                                        label: selectedLedger?.companies?.find(c => (c._id || c.value || c) === formData.companyId)?.label || 
+                                               selectedLedger?.companies?.find(c => (c._id || c.value || c) === formData.companyId)?.name || 
+                                               selectedLedger?.companies?.find(c => (c._id || c.value || c) === formData.companyId)?.companyName || 'Unknown'
+                                    } : null) : null}
+                                    onChange={handleCompanyChange}
+                                    placeholder="All Companies"
+                                    isMulti={false}
+                                    isDisabled={!selectedLedger}
                                     className="rounded-xl border-slate-200 hover:border-slate-300 transition-all"
                                 />
                             </div>
