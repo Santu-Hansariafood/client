@@ -55,6 +55,7 @@ const selfOrderSchema = new mongoose.Schema(
     sellerMobile: { type: String, default: "" },
     whatsappSent: { type: Boolean, default: false },
     status: { type: String, enum: ["active", "closed"], default: "active" },
+    closeRemarks: { type: String, default: "" },
   },
   { timestamps: true },
 );

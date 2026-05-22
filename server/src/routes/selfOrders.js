@@ -948,6 +948,9 @@ router.put("/:id", async (req, res) => {
     const oldSupplier = item.supplier;
     const oldCommodity = item.commodity;
 
+    // Check if status or remarks are being manually updated
+    const isManualUpdate = req.body.status !== undefined || req.body.closeRemarks !== undefined;
+
     Object.assign(item, req.body);
 
     if (
@@ -973,11 +976,13 @@ router.put("/:id", async (req, res) => {
     );
     item.pendingQuantity = (item.quantity || 0) - totalLoaded;
 
-    const tolerance = (item.quantity || 0) * 0.05;
-    if (item.pendingQuantity <= 0 && item.pendingQuantity >= -tolerance) {
-      item.status = "closed";
-    } else {
-      item.status = "active";
+    // Only auto-calculate status if it's NOT a manual status update
+    if (!isManualUpdate) {
+      if (totalLoaded >= (item.quantity || 0) * 0.95) {
+        item.status = "closed";
+      } else {
+        item.status = "active";
+      }
     }
 
     await item.save();

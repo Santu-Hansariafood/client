@@ -322,16 +322,18 @@ const OrdersTableCard = ({
             "Action",
           ]}
           rows={orders.map((order) => {
-            const isWithinTolerance =
-              order.pendingQuantity !== undefined &&
-              order.pendingQuantity <= 0 &&
-              order.pendingQuantity >= -order.quantity * 0.05;
-            const isEffectivelyClosed =
-              order.status === "closed" || isWithinTolerance;
+            const isClosed = order.status === "closed";
 
             return [
               formatDate(order.poDate || order.createdAt),
-              order.saudaNo,
+              <div key={`sauda-${order._id}`} className="flex flex-col">
+                <span className="font-bold">{order.saudaNo}</span>
+                {order.closeRemarks && (
+                  <span className="text-[10px] text-rose-500 italic max-w-[120px] truncate" title={order.closeRemarks}>
+                    {order.closeRemarks}
+                  </span>
+                )}
+              </div>,
               capitalizeWords(order.supplierCompany),
               capitalizeWords(order.buyerCompany),
               capitalizeWords(order.consignee),
@@ -342,18 +344,18 @@ const OrdersTableCard = ({
               <span
                 key={`status-${order._id}`}
                 className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                  isEffectivelyClosed
+                  isClosed
                     ? "bg-red-100 text-red-700"
                     : "bg-emerald-100 text-emerald-700"
                 }`}
               >
-                {isEffectivelyClosed ? "Closed" : "Active"}
+                {isClosed ? "Closed" : "Active"}
               </span>,
               <div
                 key={`actions-${order._id}`}
                 className="flex items-center gap-3"
               >
-                {!isEffectivelyClosed ? (
+                {!isClosed ? (
                   <>
                     <button
                       onClick={() => handleOpenPopup(order)}
@@ -362,27 +364,23 @@ const OrdersTableCard = ({
                     >
                       <FaPlus /> Add Loading Entry
                     </button>
-                    <button
-                      onClick={() => toggleSaudaStatus(order)}
-                      className="px-2.5 py-1.5 bg-amber-50 text-amber-700 rounded-lg hover:bg-amber-100 transition text-xs font-bold"
-                      title="Close Sauda"
-                    >
-                      Close
-                    </button>
+                    {(userRole === "Admin" || userRole === "Employee") && (
+                      <button
+                        onClick={() => toggleSaudaStatus(order)}
+                        className="px-2.5 py-1.5 bg-amber-50 text-amber-700 rounded-lg hover:bg-amber-100 transition text-xs font-bold"
+                        title="Close Sauda"
+                      >
+                        Close
+                      </button>
+                    )}
                   </>
-                ) : userRole === "Admin" ? (
+                ) : (userRole === "Admin" || userRole === "Employee") ? (
                   <button
-                    onClick={() => {
-                      if (order.status === "closed") {
-                        toggleSaudaStatus(order);
-                      } else {
-                        handleOpenPopup(order);
-                      }
-                    }}
+                    onClick={() => toggleSaudaStatus(order)}
                     className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition text-xs font-bold"
                     title="Reopen Sauda"
                   >
-                    Reopen to Add
+                    Reopen
                   </button>
                 ) : (
                   <span className="text-xs font-bold text-slate-400 italic px-3 py-1.5">
@@ -545,11 +543,25 @@ const AddLoadingEntry = () => {
       return;
     }
     try {
-      const newStatus = order.status === "closed" ? "active" : "closed";
-      await api.put(`/self-order/${order._id}`, { status: newStatus });
+      const isClosing = order.status !== "closed";
+      let remarks = "";
+      
+      if (isClosing) {
+        remarks = window.prompt("Enter remarks for closing this sauda:", "");
+        if (remarks === null) return; // User cancelled
+      }
+
+      const newStatus = isClosing ? "closed" : "active";
+      await api.put(`/self-order/${order._id}`, { 
+        status: newStatus,
+        closeRemarks: remarks 
+      });
+      
+      toast.success(`Sauda ${newStatus === 'closed' ? 'closed' : 'reopened'} successfully`);
       handleSearch();
     } catch (error) {
       console.error("Error updating sauda status:", error);
+      toast.error("Failed to update sauda status");
     }
   };
 

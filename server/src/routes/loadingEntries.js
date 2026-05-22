@@ -1513,11 +1513,7 @@ router.post("/bulk", async (req, res) => {
       );
       selfOrder.pendingQuantity = (selfOrder.quantity || 0) - totalLoaded;
 
-      const tolerance = (selfOrder.quantity || 0) * 0.05;
-      if (
-        selfOrder.pendingQuantity <= 0 &&
-        selfOrder.pendingQuantity >= -tolerance
-      ) {
+      if (totalLoaded >= (selfOrder.quantity || 0) * 0.95) {
         selfOrder.status = "closed";
       } else {
         selfOrder.status = "active";
@@ -1567,11 +1563,7 @@ router.post("/", async (req, res) => {
       );
       selfOrder.pendingQuantity = (selfOrder.quantity || 0) - totalLoaded;
 
-      const tolerance = (selfOrder.quantity || 0) * 0.05;
-      if (
-        selfOrder.pendingQuantity <= 0 &&
-        selfOrder.pendingQuantity >= -tolerance
-      ) {
+      if (totalLoaded >= (selfOrder.quantity || 0) * 0.95) {
         selfOrder.status = "closed";
       } else {
         selfOrder.status = "active";
@@ -1634,11 +1626,7 @@ router.put("/:id", async (req, res) => {
         );
         selfOrder.pendingQuantity = (selfOrder.quantity || 0) - totalLoaded;
 
-        const tolerance = (selfOrder.quantity || 0) * 0.05;
-        if (
-          selfOrder.pendingQuantity <= 0 &&
-          selfOrder.pendingQuantity >= -tolerance
-        ) {
+        if (totalLoaded >= (selfOrder.quantity || 0) * 0.95) {
           selfOrder.status = "closed";
         } else {
           selfOrder.status = "active";
