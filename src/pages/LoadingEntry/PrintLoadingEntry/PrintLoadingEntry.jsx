@@ -113,7 +113,7 @@ const PrintLoadingEntry = async (entry, options = {}) => {
 
     return blob;
   } catch (error) {
-    console.error("Error generating lorry challan PDF:", {
+    console.error("Error generating Lorry Challan PDF:", {
       error,
       entry,
     });

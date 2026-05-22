@@ -634,7 +634,6 @@ const AddLoadingEntry = () => {
       newEntries[index].totalFreight = total;
       newEntries[index].balance = balance;
 
-      // Real-time brokerage calculation for display
       if (selectedOrder) {
         const buyerRate = selectedOrder.buyerBrokerage?.brokerageBuyer || 0;
         const sellerRate = selectedOrder.buyerBrokerage?.brokerageSupplier || 0;
@@ -735,9 +734,9 @@ const AddLoadingEntry = () => {
       const blob = await PrintLoadingEntry(entry);
       if (!blob) return;
 
-      let fileName = `lorry challan - ${entry.lorryNumber || "document"}`;
+      let fileName = `Lorry Challan - ${entry.lorryNumber || "document"}`;
       if (entry.billNumber) {
-        fileName += ` and bill - ${entry.billNumber}`;
+        fileName += ` and Bill - ${entry.billNumber}`;
       }
       fileName += ".pdf";
 

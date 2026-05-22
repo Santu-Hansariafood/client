@@ -379,7 +379,7 @@ const styles = StyleSheet.create({
     color: "#000000",
     fontWeight: "bold",
   },
-  // Lorry Challan Specific Styles
+  
   challanPage: {
     fontFamily: "Helvetica",
     fontSize: 9,
@@ -597,7 +597,6 @@ const MasterReceivingReportPDF = ({ entries = [], logoUrl }) => {
 
         return (
           <React.Fragment key={index}>
-            {/* 1. Summary Page (Receiving Entry Details) */}
             <Page style={styles.summaryPage} size="A4">
               <View style={styles.summaryHeader}>
                 <View>
