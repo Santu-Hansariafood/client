@@ -35,7 +35,11 @@ const AccountSelection = ({
 
                 <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200">
                     {[
-                        { id: 'fresh', label: 'Payment Received', icon: <FaMoneyBillWave size={12} /> },
+                        { 
+                            id: 'fresh', 
+                            label: formData.ledgerType === 'Buyer' ? 'Payment Received' : 'Payment Sent', 
+                            icon: <FaMoneyBillWave size={12} /> 
+                        },
                         { id: 'advance', label: 'From Advance', icon: <FaExchangeAlt size={12} /> }
                     ].map(source => (
                         <button
@@ -118,7 +122,9 @@ const AccountSelection = ({
                         />
                     </div>
                     <div className="space-y-2">
-                        <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">Payment Amount</label>
+                        <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">
+                            {formData.ledgerType === 'Buyer' ? 'Payment Amount' : 'Sent Amount'}
+                        </label>
                         <div className="relative">
                             <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">₹</span>
                             <input
@@ -161,7 +167,7 @@ const AccountSelection = ({
                     </div>
                     <div className="flex items-end">
                         <Buttons
-                            label={`Record Advance (₹${formData.amount})`}
+                            label={formData.ledgerType === 'Buyer' ? `Record Advance (₹${formData.amount})` : `Send Payment (₹${formData.amount})`}
                             onClick={handleRecordAdvance}
                             disabled={loading || !selectedLedger || formData.amount <= 0 || allocationSource !== 'fresh'}
                             variant="primary"

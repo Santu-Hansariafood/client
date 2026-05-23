@@ -31,11 +31,22 @@ const AllocationLedger = ({
                         <FaFilter size={14} />
                     </div>
                     <div>
-                        <h4 className="font-bold text-slate-800">
-                            {allocationSource === 'fresh' ? 'Allocation Ledger' : 'Advance Adjustment'}
+                        <h4 className="font-bold text-slate-800 flex items-center gap-2">
+                            {formData.ledgerType === 'Buyer' 
+                                ? (allocationSource === 'fresh' ? 'Payment Received Ledger' : 'Advance Adjustment')
+                                : (allocationSource === 'fresh' ? 'Payment Sent Ledger' : 'Advance Adjustment')
+                            }
+                            {formData.ledgerType === 'Buyer' && allocationSource === 'fresh' && (
+                                <span className="flex items-center gap-1 px-2 py-0.5 bg-blue-50 text-blue-600 text-[10px] rounded-full border border-blue-100">
+                                    Buyer <FaArrowLeft className="rotate-180 size-2" /> Seller
+                                </span>
+                            )}
                         </h4>
                         <p className="text-[11px] text-slate-500 font-medium uppercase tracking-wider">
-                            {allocationSource === 'fresh' ? 'Map payments to saudas' : `Using ₹${ledgerBalance.advanceBalance.toLocaleString()} Credit`}
+                            {allocationSource === 'fresh' 
+                                ? (formData.ledgerType === 'Buyer' ? 'Map received payments to saudas' : 'Map sent payments to saudas')
+                                : `Using ₹${ledgerBalance.advanceBalance.toLocaleString()} Credit`
+                            }
                         </p>
                     </div>
                 </div>
@@ -44,7 +55,9 @@ const AllocationLedger = ({
                     {allocationSource === 'fresh' && formData.amount > 0 && (
                         <div className="flex items-center gap-2 bg-emerald-900 text-white px-4 py-2 rounded-xl shadow-lg border border-emerald-700 animate-in fade-in slide-in-from-right-4 duration-500">
                             <div className="flex flex-col">
-                                <span className="text-[9px] font-black uppercase tracking-[0.2em] text-emerald-400 leading-none mb-1">Available to Allocate</span>
+                                <span className="text-[9px] font-black uppercase tracking-[0.2em] text-emerald-400 leading-none mb-1">
+                                    {formData.ledgerType === 'Buyer' ? 'Available to Allocate' : 'Available to Send'}
+                                </span>
                                 <span className="text-sm font-black italic tracking-tight">₹{unallocatedBalance.toLocaleString('en-IN')}</span>
                             </div>
                             <div className="w-px h-6 bg-emerald-700/50 mx-1"></div>
@@ -121,7 +134,9 @@ const AllocationLedger = ({
                                 </div>
                                 <div className="w-px h-10 bg-slate-800 hidden md:block"></div>
                                 <div className="space-y-1">
-                                    <p className="text-[10px] font-black text-emerald-400 uppercase tracking-widest leading-none">Date Received</p>
+                                    <p className="text-[10px] font-black text-emerald-400 uppercase tracking-widest leading-none">
+                                        {formData.ledgerType === 'Buyer' ? 'Date Received' : 'Date Sent'}
+                                    </p>
                                     <p className="text-2xl font-black text-white italic tracking-tighter">₹{dateTotal.toLocaleString('en-IN')}</p>
                                 </div>
                             </div>

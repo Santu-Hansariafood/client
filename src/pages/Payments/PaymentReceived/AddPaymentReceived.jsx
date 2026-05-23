@@ -608,6 +608,13 @@ const AddPaymentReceived = () => {
                         <span className="w-3 h-3 rounded-full bg-blue-100 text-[8px] flex items-center justify-center text-blue-600 font-black">B</span>
                         <span className="text-[9px] font-black uppercase text-slate-500 truncate">{row.buyerCompany || 'N/A'}</span>
                     </div>
+                    {formData.ledgerType === 'Buyer' && (
+                        <div className="flex justify-center -my-1 ml-3">
+                            <div className="h-2 w-0.5 bg-slate-200 relative">
+                                <div className="absolute -bottom-1 -left-[3px] border-t-4 border-t-slate-200 border-x-[3px] border-x-transparent"></div>
+                            </div>
+                        </div>
+                    )}
                     <div className="flex items-center gap-1.5">
                         <span className="w-3 h-3 rounded-full bg-amber-100 text-[8px] flex items-center justify-center text-amber-600 font-black">S</span>
                         <span className="text-[9px] font-black uppercase text-slate-500 truncate">{row.supplierCompany || 'N/A'}</span>

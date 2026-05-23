@@ -7,7 +7,10 @@ const StatDashboard = ({ selectedLedger, dateTotal, formData, ledgerBalance, ent
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <StatCard
                 icon={<FaWallet size={18} />}
-                label={selectedLedger ? `${selectedLedger.label} Received` : 'Total Received'}
+                label={selectedLedger 
+                    ? `${selectedLedger.label} ${formData.ledgerType === 'Buyer' ? 'Received' : 'Sent'}` 
+                    : `Total ${formData.ledgerType === 'Buyer' ? 'Received' : 'Sent'}`
+                }
                 value={`₹${dateTotal.toLocaleString('en-IN')}`}
                 subValue={new Date(formData.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}
                 color="bg-emerald-50"
