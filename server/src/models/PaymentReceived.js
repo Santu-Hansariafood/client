@@ -13,6 +13,7 @@ const paymentReceivedSchema = new mongoose.Schema(
       refPath: 'ledgerType', 
       required: true 
     },
+    companyId: { type: String }, // Buyer's company ID (ObjectId) or Seller's company name
     amount: { type: Number, required: true },
     unadjustedAmount: { type: Number, default: 0 },
     paymentType: { 

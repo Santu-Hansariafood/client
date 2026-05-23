@@ -46,6 +46,7 @@ router.post("/", async (req, res) => {
       date,
       ledgerType,
       ledgerId,
+      companyId,
       amount,
       paymentType,
       paymentMode,
@@ -64,6 +65,7 @@ router.post("/", async (req, res) => {
       date,
       ledgerType,
       ledgerId,
+      companyId,
       amount,
       unadjustedAmount,
       paymentType: paymentType || (unadjustedAmount > 0 && totalMapped === 0 ? "Advance" : "Sauda-wise"),
@@ -179,11 +181,12 @@ router.get("/balance/:ledgerId", async (req, res) => {
 // Get all payment records with filters
 router.get("/", async (req, res) => {
   try {
-    const { ledgerType, ledgerId, startDate, endDate, page = 1, limit = 10 } = req.query;
+    const { ledgerType, ledgerId, companyId, startDate, endDate, page = 1, limit = 10 } = req.query;
     const query = {};
 
     if (ledgerType) query.ledgerType = ledgerType;
     if (ledgerId) query.ledgerId = ledgerId;
+    if (companyId) query.companyId = companyId;
     if (startDate || endDate) {
       query.date = {};
       if (startDate) query.date.$gte = new Date(startDate);

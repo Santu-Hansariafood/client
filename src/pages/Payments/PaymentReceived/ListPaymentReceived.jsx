@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { jsPDF } from "jspdf";
-import "jspdf-autotable";
+import autoTable from "jspdf-autotable";
 import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
 import Tables from "../../../common/Tables/Tables";
 import DataDropdown from "../../../common/DataDropdown/DataDropdown";
@@ -54,15 +54,30 @@ const ListPaymentReceived = () => {
   const [page, setPage] = useState(1);
   const [limit] = useState(10);
   const [ledgers, setLedgers] = useState([]);
+  const [allCompanies, setAllCompanies] = useState([]);
   const [selectedLedger, setSelectedLedger] = useState(null);
+  const [selectedCompany, setSelectedCompany] = useState(null);
   const [fetchingLedgers, setFetchingLedgers] = useState(false);
 
   const [filters, setFilters] = useState({
     ledgerType: "",
     ledgerId: "",
+    companyId: "",
     startDate: new Date().toISOString().split("T")[0],
     endDate: new Date().toISOString().split("T")[0],
   });
+
+  useEffect(() => {
+    const fetchAllCompanies = async () => {
+      try {
+        const response = await api.get('/companies');
+        setAllCompanies(response.data.data || response.data || []);
+      } catch (error) {
+        console.error('Error fetching companies:', error);
+      }
+    };
+    fetchAllCompanies();
+  }, []);
 
   const fetchLedgers = useCallback(async () => {
     if (!filters.ledgerType) {
@@ -78,6 +93,7 @@ const ListPaymentReceived = () => {
         data.map((item) => ({
           value: item._id,
           label: item.name || item.sellerName,
+          companies: item.companyIds || item.companies || []
         })),
       );
     } catch (error) {
@@ -167,12 +183,17 @@ const ListPaymentReceived = () => {
       const reportTitle = "PAYMENT RECEIVED MIS REPORT";
       doc.text(reportTitle, margin, 32);
 
+      if (selectedCompany) {
+        doc.setFontSize(10);
+        doc.text(`COMPANY: ${selectedCompany.label.toUpperCase()}`, margin, 38);
+      }
+
       doc.setFont("helvetica", "normal");
       doc.setFontSize(9);
       const dateRange = `Period: ${new Date(filters.startDate).toLocaleDateString("en-GB")} to ${new Date(filters.endDate).toLocaleDateString("en-GB")}`;
       doc.text(dateRange, pageWidth - margin, 32, { align: "right" });
 
-      doc.line(margin, 35, pageWidth - margin, 35); // Bottom Header Border
+      doc.line(margin, selectedCompany ? 41 : 35, pageWidth - margin, selectedCompany ? 41 : 35); // Bottom Header Border
 
       // Table Data
       const tableData = allPayments.map((p, idx) => {
@@ -203,8 +224,8 @@ const ListPaymentReceived = () => {
         ];
       });
 
-      doc.autoTable({
-        startY: 40,
+      autoTable(doc, {
+        startY: selectedCompany ? 45 : 40,
         head: [
           [
             "NO",
@@ -311,17 +332,31 @@ const ListPaymentReceived = () => {
       className: "font-semibold text-slate-700",
     },
     {
-      header: "Ledger",
-      accessor: (row) => (
-        <div>
-          <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-0.5">
-            {row.ledgerType}
-          </span>
-          <span className="font-bold text-slate-800">
-            {row.ledgerId?.name || row.ledgerId?.sellerName || "N/A"}
-          </span>
-        </div>
-      ),
+      header: "Ledger / Company",
+      accessor: (row) => {
+        const companyLabel = row.companyId ? (
+            filters.ledgerType === 'Buyer' 
+                ? (allCompanies.find(c => c._id === row.companyId)?.companyName || 'N/A')
+                : row.companyId
+        ) : 'Consolidated';
+
+        return (
+            <div className="flex flex-col gap-0.5">
+                <div className="flex items-center gap-1.5">
+                    <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 block">
+                        {row.ledgerType}
+                    </span>
+                    <span className="h-1 w-1 rounded-full bg-slate-200"></span>
+                    <span className="text-[10px] font-bold text-blue-500 uppercase truncate max-w-[100px]">
+                        {companyLabel}
+                    </span>
+                </div>
+                <span className="font-bold text-slate-800">
+                    {row.ledgerId?.name || row.ledgerId?.sellerName || "N/A"}
+                </span>
+            </div>
+        );
+      },
     },
     {
       header: "Amount",
@@ -450,7 +485,7 @@ const ListPaymentReceived = () => {
             </div>
           </div>
 
-          <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
             <div className="space-y-2">
               <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">
                 Ledger Type
@@ -462,8 +497,10 @@ const ListPaymentReceived = () => {
                     ...prev,
                     ledgerType: e.target.value,
                     ledgerId: "",
+                    companyId: "",
                   }));
                   setSelectedLedger(null);
+                  setSelectedCompany(null);
                 }}
                 className="w-full h-11 px-4 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-slate-900/5 focus:border-slate-900 outline-none transition text-sm font-bold text-slate-700"
               >
@@ -482,9 +519,11 @@ const ListPaymentReceived = () => {
                 selectedOptions={selectedLedger}
                 onChange={(opt) => {
                   setSelectedLedger(opt);
+                  setSelectedCompany(null);
                   setFilters((prev) => ({
                     ...prev,
                     ledgerId: opt?.value || "",
+                    companyId: "",
                   }));
                 }}
                 placeholder={
@@ -492,6 +531,37 @@ const ListPaymentReceived = () => {
                 }
                 isMulti={false}
                 isDisabled={!filters.ledgerType}
+                className="rounded-xl border-slate-200"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">
+                Company (Filter)
+              </label>
+              <DataDropdown
+                options={selectedLedger?.companies?.map(c => {
+                    const companyId = typeof c === 'string' ? c : (c._id || c.value || c.id);
+                    let label = 'Unknown';
+                    if (filters.ledgerType === 'Buyer') {
+                        const companyInfo = allCompanies.find(comp => comp._id === companyId);
+                        label = companyInfo?.companyName || (typeof c === 'object' ? (c.companyName || c.label) : companyId);
+                    } else {
+                        label = companyId;
+                    }
+                    return { value: companyId, label };
+                }) || []}
+                selectedOptions={selectedCompany}
+                onChange={(opt) => {
+                  setSelectedCompany(opt);
+                  setFilters((prev) => ({
+                    ...prev,
+                    companyId: opt?.value || "",
+                  }));
+                }}
+                placeholder="Select Company"
+                isMulti={false}
+                isDisabled={!selectedLedger}
                 className="rounded-xl border-slate-200"
               />
             </div>

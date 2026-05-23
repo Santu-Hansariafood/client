@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { jsPDF } from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 import AdminPageShell from '../../../common/AdminPageShell/AdminPageShell';
 import Buttons from '../../../common/Buttons/Buttons';
 import api from '../../../utils/apiClient/apiClient';
@@ -382,6 +382,7 @@ const AddPaymentReceived = () => {
                     date: formData.date,
                     ledgerType: formData.ledgerType,
                     ledgerId: formData.ledgerId,
+                    companyId: formData.companyId,
                     amount: allocationSource === 'fresh' ? numAllocated : 0,
                     paymentType: allocationSource === 'fresh' ? 'Sauda-wise' : 'Adjustment',
                     paymentMode: allocationSource === 'fresh' ? formData.paymentMode : 'Adjustment',
@@ -427,6 +428,7 @@ const AddPaymentReceived = () => {
             setLoading(true);
             const payload = {
                 ...formData,
+                companyId: formData.companyId,
                 paymentType: 'Advance',
                 mappings: []
             };
@@ -490,7 +492,7 @@ const AddPaymentReceived = () => {
             `Rs. ${Number(m.allocatedAmount || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}`
         ]);
         
-        doc.autoTable({
+        autoTable(doc, {
             startY: 55,
             head: [['NO', 'SAUDA NO', 'BILL NO', 'BUYER', 'SELLER', 'AMOUNT']],
             body: tableData,
@@ -519,7 +521,7 @@ const AddPaymentReceived = () => {
             margin: { left: margin, right: margin }
         });
         
-        const finalY = doc.lastAutoTable.finalY || 70;
+        const finalY = doc.lastAutoTable?.finalY || 70;
         doc.setFontSize(9);
         doc.setFont("helvetica", "bold");
         doc.text(`TOTAL AMOUNT: Rs. ${Number(payment.amount || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}`, pageWidth - margin, finalY + 10, { align: "right" });
