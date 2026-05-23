@@ -98,6 +98,18 @@ const AddPaymentReceived = () => {
         filterEndDate: ''
     });
 
+    const unallocatedBalance = useMemo(() => {
+        if (allocationSource !== 'fresh') return 0;
+        const totalAllocated = entries.reduce((sum, entry) => {
+            // Only count entries that are NOT saved yet (currently being allocated)
+            if (!entry.isSaved) {
+                return sum + (parseFloat(entry.allocatedAmount) || 0);
+            }
+            return sum;
+        }, 0);
+        return Math.max(0, (formData.amount || 0) - totalAllocated);
+    }, [formData.amount, entries, allocationSource]);
+
     const ledgerTypes = [
         { value: 'Buyer', label: 'Buyer' },
         { value: 'Seller', label: 'Seller' }
@@ -322,9 +334,22 @@ const AddPaymentReceived = () => {
         const numAmount = parseFloat(amount) || 0;
         const dueAmount = netAmount - (paidAmount || 0);
         
+        // 1. Validate against Lorry Due
         if (numAmount > dueAmount + 1) {
             toast.warning(`Allocation cannot exceed due amount (₹${dueAmount.toFixed(2)})`);
             return;
+        }
+
+        // 2. Validate against Voucher Balance (only for fresh payments)
+        if (allocationSource === 'fresh') {
+            const currentEntry = entries.find(e => e.uiKey === uiKey);
+            const currentAllocatedForThisRow = parseFloat(currentEntry?.allocatedAmount) || 0;
+            const otherAllocationsTotal = (formData.amount || 0) - unallocatedBalance - currentAllocatedForThisRow;
+            
+            if (numAmount + otherAllocationsTotal > (formData.amount || 0) + 1) {
+                toast.error(`Total allocation cannot exceed Voucher Amount (₹${formData.amount})`);
+                return;
+            }
         }
 
         setEntries(prev => prev.map(entry => 
@@ -356,7 +381,8 @@ const AddPaymentReceived = () => {
     };
 
     const calculateTallyDetails = (entry) => {
-        const weight = entry.unloadingWeight || 0;
+        // Use unloading weight if available, otherwise fallback to loading weight for allocation purposes
+        const weight = (entry.unloadingWeight || 0) > 0 ? entry.unloadingWeight : (entry.loadingWeight || 0);
         const rate = entry.actualRate || 0;
         const cdPercent = entry.cd || 0;
         const gstPercent = entry.gst || 0;
@@ -375,7 +401,7 @@ const AddPaymentReceived = () => {
             netAmount,
             cdPercent,
             gstPercent,
-            dueAmount: netAmount - (entry.paidAmount || 0)
+            dueAmount: Math.max(0, netAmount - (entry.paidAmount || 0))
         };
     };
 
@@ -425,6 +451,14 @@ const AddPaymentReceived = () => {
 
                 await api.post('/payment-received', payload);
                 toast.success(`Payment recorded for ${entry.lorryNumber}`);
+
+                // Decrease the Voucher Amount by the allocated amount
+                if (allocationSource === 'fresh') {
+                    setFormData(prev => ({
+                        ...prev,
+                        amount: Math.max(0, prev.amount - numAllocated)
+                    }));
+                }
             }
             
             fetchEntries(entriesPage);
@@ -724,7 +758,7 @@ const AddPaymentReceived = () => {
 
     return (
         <AdminPageShell
-            title="Payment Voucher"
+            title="Payment Received"
             subtitle="Record and allocate payments in Tally-style ledger format"
             icon={FaFileInvoiceDollar}
         >
@@ -829,7 +863,7 @@ const AddPaymentReceived = () => {
 
                         <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200">
                             {[
-                                { id: 'fresh', label: 'Fresh Payment', icon: <FaMoneyBillWave size={12} /> },
+                                { id: 'fresh', label: 'Payment Received', icon: <FaMoneyBillWave size={12} /> },
                                 { id: 'advance', label: 'From Advance', icon: <FaExchangeAlt size={12} /> }
                             ].map(source => (
                                 <button
@@ -980,6 +1014,17 @@ const AddPaymentReceived = () => {
                                 </div>
 
                                 <div className="flex flex-wrap items-center gap-3">
+                                    {allocationSource === 'fresh' && formData.amount > 0 && (
+                                        <div className="flex items-center gap-2 bg-emerald-900 text-white px-4 py-2 rounded-xl shadow-lg border border-emerald-700 animate-in fade-in slide-in-from-right-4 duration-500">
+                                            <div className="flex flex-col">
+                                                <span className="text-[9px] font-black uppercase tracking-[0.2em] text-emerald-400 leading-none mb-1">Available to Allocate</span>
+                                                <span className="text-sm font-black italic tracking-tight">₹{unallocatedBalance.toLocaleString('en-IN')}</span>
+                                            </div>
+                                            <div className="w-px h-6 bg-emerald-700/50 mx-1"></div>
+                                            <FaMoneyBillWave className="text-emerald-400 animate-pulse" />
+                                        </div>
+                                    )}
+
                                     <div className="flex items-center gap-2 bg-white px-3 py-2 rounded-xl border border-slate-200 shadow-sm">
                                         <input
                                             type="date"
