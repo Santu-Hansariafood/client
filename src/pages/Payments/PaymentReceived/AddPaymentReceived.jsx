@@ -507,14 +507,14 @@ const AddPaymentReceived = () => {
         // Header
         doc.setFontSize(20);
         doc.setTextColor(40);
-        doc.text("PAYMENT VOUCHER", pageWidth / 2, 20, { align: "center" });
+        doc.text("PAYMENT RECEIVED", pageWidth / 2, 20, { align: "center" });
         
         doc.setDrawColor(200);
         doc.line(15, 25, pageWidth - 15, 25);
         
         // Details
         doc.setFontSize(10);
-        doc.text(`Voucher No: ${payment._id.substring(payment._id.length - 8).toUpperCase()}`, 15, 35);
+        doc.text(`Receipt No: ${payment._id.substring(payment._id.length - 8).toUpperCase()}`, 15, 35);
         doc.text(`Date: ${new Date(payment.date).toLocaleDateString('en-GB')}`, pageWidth - 15, 35, { align: "right" });
         
         doc.text(`Account: ${selectedLedger?.label || 'N/A'}`, 15, 45);
@@ -851,7 +851,7 @@ const AddPaymentReceived = () => {
                         icon={<FaWallet size={18} />}
                         label={selectedLedger ? `${selectedLedger.label} Received` : 'Total Received'}
                         value={`₹${dateTotal.toLocaleString('en-IN')}`}
-                        subValue="Today"
+                        subValue={new Date(formData.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}
                         color="bg-emerald-50"
                         iconColor="text-emerald-600"
                     />
@@ -893,7 +893,7 @@ const AddPaymentReceived = () => {
                             </div>
                             <div>
                                 <h3 className="text-lg font-bold text-slate-800">Account Selection</h3>
-                                <p className="text-xs text-slate-500 font-medium">Configure ledger and payment details</p>
+                                <p className="text-xs text-slate-500 font-medium">Configure ledger and entry details</p>
                             </div>
                         </div>
 
@@ -919,7 +919,19 @@ const AddPaymentReceived = () => {
                     </div>
 
                     <div className="p-6 space-y-6">
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
+                            <div className="space-y-2">
+                                <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">Entry Date</label>
+                                <div className="relative">
+                                    <input
+                                        type="date"
+                                        name="date"
+                                        value={formData.date}
+                                        onChange={handleInputChange}
+                                        className="w-full h-[42px] px-4 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-slate-900/5 focus:border-slate-900 outline-none transition-all font-bold text-slate-900"
+                                    />
+                                </div>
+                            </div>
                             <div className="space-y-2">
                                 <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">Ledger Type</label>
                                 <DataDropdown
@@ -975,7 +987,7 @@ const AddPaymentReceived = () => {
                                 />
                             </div>
                             <div className="space-y-2">
-                                <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">Voucher Amount</label>
+                                <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">Payment Amount</label>
                                 <div className="relative">
                                     <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">₹</span>
                                     <input
@@ -1006,13 +1018,13 @@ const AddPaymentReceived = () => {
 
                         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 pt-4 border-t border-slate-50">
                             <div className="lg:col-span-2 space-y-2">
-                                <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">Voucher Narration</label>
+                                <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">Payment Narration</label>
                                 <input
                                     type="text"
                                     name="remarks"
                                     value={formData.remarks}
                                     onChange={handleInputChange}
-                                    placeholder="Enter narration for this voucher..."
+                                    placeholder="Enter narration for this entry..."
                                     className="w-full h-[42px] px-4 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-slate-900/5 focus:border-slate-900 outline-none transition-all font-bold text-slate-900"
                                 />
                             </div>
@@ -1169,9 +1181,9 @@ const AddPaymentReceived = () => {
                                         <FaHistory size={14} />
                                     </div>
                                     <div>
-                                        <h4 className="font-bold text-slate-800">Voucher History</h4>
+                                        <h4 className="font-bold text-slate-800">Payment History</h4>
                                         <p className="text-[11px] text-slate-500 font-medium uppercase tracking-wider">
-                                            Records for {new Date(formData.date).toLocaleDateString()}
+                                            Records for {new Date(formData.date).toLocaleDateString('en-GB')}
                                         </p>
                                     </div>
                                 </div>
