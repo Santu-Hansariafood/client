@@ -1,9 +1,9 @@
 import React from 'react';
 import { FaFilter, FaMoneyBillWave, FaArrowLeft, FaHistory, FaFileInvoiceDollar } from 'react-icons/fa';
-import SearchBox from '../../../common/SearchBox/SearchBox';
-import Loading from '../../../common/Loading/Loading';
-import Tables from '../../../common/Tables/Tables';
-import Paginations from '../../../common/Paginations/Paginations';
+import SearchBox from '../../../../common/SearchBox/SearchBox';
+import Loading from '../../../../common/Loading/Loading';
+import Tables from '../../../../common/Tables/Tables';
+import Paginations from '../../../../common/Paginations/Paginations';
 
 const AllocationLedger = ({ 
     allocationSource, 

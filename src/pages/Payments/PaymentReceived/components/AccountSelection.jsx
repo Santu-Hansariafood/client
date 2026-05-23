@@ -1,7 +1,7 @@
 import React from 'react';
 import { FaBuilding, FaMoneyBillWave, FaExchangeAlt, FaSave } from 'react-icons/fa';
-import DataDropdown from '../../../common/DataDropdown/DataDropdown';
-import Buttons from '../../../common/Buttons/Buttons';
+import DataDropdown from '../../../../common/DataDropdown/DataDropdown';
+import Buttons from '../../../../common/Buttons/Buttons';
 
 const AccountSelection = ({ 
     allocationSource, 

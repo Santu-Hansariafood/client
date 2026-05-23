@@ -1,7 +1,7 @@
 import React from 'react';
 import { FaHistory } from 'react-icons/fa';
-import Loading from '../../../common/Loading/Loading';
-import Tables from '../../../common/Tables/Tables';
+import Loading from '../../../../common/Loading/Loading';
+import Tables from '../../../../common/Tables/Tables';
 
 const PaymentHistory = ({ fetchingHistory, formData, history, historyColumns }) => {
     return (
