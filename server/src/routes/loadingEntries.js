@@ -143,7 +143,7 @@ router.get("/lorry-wise", async (req, res) => {
 
     const [items, total] = await Promise.all([
       LoadingEntry.find(finalQuery)
-        .sort({ loadingDate: -1, createdAt: -1 })
+        .sort({ loadingNo: -1, loadingDate: -1, createdAt: -1 })
         .skip((page - 1) * limit)
         .limit(limit)
         .populate("supplier", "sellerName")
@@ -1007,7 +1007,7 @@ router.get("/export/excel", async (req, res) => {
       andParts.length > 1 ? { $and: andParts } : andParts[0] || {};
 
     const items = await LoadingEntry.find(finalQuery)
-      .sort({ loadingDate: 1, createdAt: 1 })
+      .sort({ loadingNo: 1, loadingDate: 1, createdAt: 1 })
       .populate("supplier", "sellerName")
       .lean();
 
@@ -1021,7 +1021,7 @@ router.get("/export/excel", async (req, res) => {
     // Fetch all items matching the base query to calculate absolute Sl No
     const allBaseItems = await LoadingEntry.find(baseQuery)
       .select("_id")
-      .sort({ loadingDate: 1, createdAt: 1 })
+      .sort({ loadingNo: 1, loadingDate: 1, createdAt: 1 })
       .lean();
 
     const idToSlNo = {};
