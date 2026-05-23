@@ -524,18 +524,21 @@ const AddPaymentReceived = () => {
         const tableData = (payment.mappings || []).map((m, i) => [
             i + 1,
             m.saudaNo || 'N/A',
-            m.remarks || '-',
+            m.loadingEntryId?.billNumber || '-',
+            m.loadingEntryId?.buyerCompany || '-',
+            m.loadingEntryId?.supplierCompany || '-',
             `Rs. ${m.allocatedAmount.toLocaleString()}`
         ]);
         
         doc.autoTable({
             startY: 55,
-            head: [['No', 'Sauda No', 'Particulars', 'Amount']],
+            head: [['No', 'Sauda No', 'Bill No', 'Buyer', 'Seller', 'Amount']],
             body: tableData,
             theme: 'grid',
-            headStyles: { fillColor: [40, 40, 40], textColor: [255, 255, 255] },
-            foot: [['', '', 'TOTAL', `Rs. ${payment.amount.toLocaleString()}`]],
-            footStyles: { fillColor: [240, 240, 240], textColor: [0, 0, 0], fontStyle: 'bold' }
+            headStyles: { fillColor: [40, 40, 40], textColor: [255, 255, 255], fontSize: 8 },
+            styles: { fontSize: 7 },
+            foot: [['', '', '', '', 'TOTAL', `Rs. ${payment.amount.toLocaleString()}`]],
+            footStyles: { fillColor: [240, 240, 240], textColor: [0, 0, 0], fontStyle: 'bold', fontSize: 8 }
         });
         
         const finalY = doc.lastAutoTable.finalY || 70;
@@ -580,10 +583,36 @@ const AddPaymentReceived = () => {
     }, [entries]);
 
     const historyColumns = [
+        { header: 'DATE', accessor: (row) => <span className="text-[10px] font-black text-slate-900">{new Date(row.date).toLocaleDateString('en-GB')}</span> },
         { header: 'TIME', accessor: (row) => <span className="text-[10px] font-black text-slate-400">{new Date(row.createdAt).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}</span> },
         { header: 'MODE', accessor: (row) => <span className="text-[10px] font-black uppercase text-slate-500 bg-slate-50 px-2 py-1 rounded-lg border border-slate-100">{row.paymentMode}</span> },
-        { header: 'PARTICULARS', accessor: (row) => <span className="text-[10px] font-bold text-slate-600">{(row.mappings || []).map(m => m.saudaNo).join(', ') || 'Advance Payment'}</span> },
-        { header: 'AMOUNT', accessor: (row) => <span className="font-black text-slate-900 text-sm italic">₹{row.amount.toLocaleString()}</span> },
+        { 
+            header: 'PARTICULARS', 
+            accessor: (row) => (
+                <div className="flex flex-col gap-0.5">
+                    {(row.mappings || []).length > 0 ? (
+                        row.mappings.map((m, idx) => (
+                            <div key={idx} className="flex items-center gap-2">
+                                <span className="text-[9px] font-black text-slate-600 uppercase">{m.saudaNo}</span>
+                                {m.loadingEntryId?.billNumber && (
+                                    <span className="text-[8px] font-bold bg-amber-50 text-amber-600 px-1 rounded border border-amber-100 uppercase">
+                                        Bill: {m.loadingEntryId.billNumber}
+                                    </span>
+                                )}
+                                <div className="flex flex-col">
+                                    <span className="text-[7px] text-slate-400 font-bold leading-none">B: {m.loadingEntryId?.buyerCompany || 'N/A'}</span>
+                                    <span className="text-[7px] text-slate-400 font-bold leading-none">S: {m.loadingEntryId?.supplierCompany || 'N/A'}</span>
+                                </div>
+                                <span className="text-[9px] font-black text-slate-400 italic ml-auto">₹{m.allocatedAmount.toLocaleString()}</span>
+                            </div>
+                        ))
+                    ) : (
+                        <span className="text-[10px] font-bold text-blue-500 uppercase tracking-widest italic">Advance Payment</span>
+                    )}
+                </div>
+            )
+        },
+        { header: 'TOTAL AMOUNT', accessor: (row) => <span className="font-black text-slate-900 text-sm italic">₹{row.amount.toLocaleString()}</span> },
         { header: 'REMARKS', accessor: (row) => <span className="text-[10px] text-slate-400 font-medium italic">{row.remarks || '-'}</span> },
         { 
             header: 'ACTION', 
@@ -615,7 +644,14 @@ const AddPaymentReceived = () => {
             accessor: (row) => (
                 <div className="flex flex-col gap-0.5">
                     <span className="font-black text-slate-900 uppercase tracking-tighter text-xs">{row.lorryNumber}</span>
-                    <span className="text-[9px] text-slate-500 font-black uppercase tracking-widest leading-none">{row.commodity}</span>
+                    <div className="flex items-center gap-1.5">
+                        <span className="text-[9px] text-slate-500 font-black uppercase tracking-widest leading-none">{row.commodity}</span>
+                        {row.billNumber && (
+                            <span className="text-[8px] font-black bg-slate-900 text-white px-1.5 py-0.5 rounded uppercase tracking-tighter">
+                                Bill: {row.billNumber}
+                            </span>
+                        )}
+                    </div>
                     <div className="mt-1 flex items-center gap-1">
                         <span className="text-[8px] font-black bg-blue-50 text-blue-600 px-1 py-0.5 rounded border border-blue-100 uppercase">
                             Unloading: {row.unloadingWeight || 0} MT

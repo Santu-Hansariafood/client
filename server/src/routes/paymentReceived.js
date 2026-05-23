@@ -197,8 +197,9 @@ router.get("/", async (req, res) => {
         .sort({ date: -1, createdAt: -1 })
         .skip((page - 1) * limit)
         .limit(parseInt(limit))
-        .select("date ledgerType ledgerId amount paymentMode paymentType mappings remarks")
+        .select("date ledgerType ledgerId amount paymentMode paymentType mappings remarks createdAt")
         .populate("ledgerId", "name sellerName")
+        .populate("mappings.loadingEntryId", "saudaNo lorryNumber billNumber loadingDate buyerCompany supplierCompany")
         .lean(),
       PaymentReceived.countDocuments(query),
     ]);
