@@ -12,6 +12,7 @@ import {
     FaPrint, FaChartLine, FaCheckCircle, FaExclamationCircle, FaBuilding 
 } from 'react-icons/fa';
 import Paginations from '../../../common/Paginations/Paginations';
+import DateRangeSelector from '../../../common/DateSelector/DateRangeSelector';
 import logoImg from '../../../assets/Hans.png';
 
 const StatCard = ({ icon, label, value, subValue, color, iconColor }) => (
@@ -36,6 +37,7 @@ const StatCard = ({ icon, label, value, subValue, color, iconColor }) => (
 const ListPaymentReceived = () => {
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
+    const [printing, setPrinting] = useState(false);
     const [payments, setPayments] = useState([]);
     const [total, setTotal] = useState(0);
     const [page, setPage] = useState(1);
@@ -105,75 +107,129 @@ const ListPaymentReceived = () => {
         return { totalReceived, count };
     }, [payments]);
 
-    const handlePrintReport = () => {
-        const doc = new jsPDF();
-        const pageWidth = doc.internal.pageSize.getWidth();
-        
-        // --- Tally Style Header ---
-        // Logo
-        const img = new Image();
-        img.src = logoImg;
-        doc.addImage(img, 'PNG', 15, 10, 25, 25);
-        
-        // Company Name (Centered)
-        doc.setFontSize(22);
-        doc.setFont("helvetica", "bold");
-        doc.text("HANSARIA FOOD PVT. LTD.", pageWidth / 2, 20, { align: "center" });
-        
-        doc.setFontSize(10);
-        doc.setFont("helvetica", "normal");
-        doc.text("Registered Office: Hansaria Food, MIS REPORT", pageWidth / 2, 26, { align: "center" });
-        
-        doc.setDrawColor(40);
-        doc.setLineWidth(0.5);
-        doc.line(15, 38, pageWidth - 15, 38);
-        
-        // MIS Report Subtitle
-        doc.setFontSize(14);
-        doc.setFont("helvetica", "bold");
-        const reportTitle = selectedLedger 
-            ? `PAYMENT LEDGER: ${selectedLedger.label.toUpperCase()}`
-            : "CONSOLIDATED PAYMENT RECEIVED REPORT";
-        doc.text(reportTitle, 15, 48);
-        
-        // Date Range
-        doc.setFontSize(9);
-        doc.setFont("helvetica", "normal");
-        const dateRange = `Period: ${new Date(filters.startDate).toLocaleDateString('en-GB')} to ${new Date(filters.endDate).toLocaleDateString('en-GB')}`;
-        doc.text(dateRange, pageWidth - 15, 48, { align: "right" });
-        
-        // Table Data
-        const tableData = payments.map((p, idx) => [
-            idx + 1,
-            new Date(p.date).toLocaleDateString('en-GB'),
-            p.ledgerId?.name || p.ledgerId?.sellerName || 'N/A',
-            p.paymentMode,
-            p.paymentType,
-            p.mappings?.length || 0,
-            `Rs. ${p.amount.toLocaleString()}`
-        ]);
-        
-        doc.autoTable({
-            startY: 55,
-            head: [['S.No', 'Date', 'Ledger/Party Name', 'Mode', 'Type', 'Entries', 'Amount']],
-            body: tableData,
-            theme: 'grid',
-            headStyles: { fillColor: [40, 40, 40], textColor: [255, 255, 255], fontSize: 9, fontStyle: 'bold' },
-            styles: { fontSize: 8, cellPadding: 3 },
-            columnStyles: {
-                6: { halign: 'right', fontStyle: 'bold' }
-            },
-            foot: [['', '', '', '', '', 'TOTAL RECEIVED', `Rs. ${stats.totalReceived.toLocaleString()}`]],
-            footStyles: { fillColor: [240, 240, 240], textColor: [0, 0, 0], fontStyle: 'bold', fontSize: 9 }
-        });
-        
-        const finalY = doc.lastAutoTable.finalY || 80;
-        doc.setFontSize(8);
-        doc.setTextColor(100);
-        doc.text(`Generated on: ${new Date().toLocaleString()}`, 15, finalY + 15);
-        doc.text("Authorized Signatory", pageWidth - 15, finalY + 15, { align: "right" });
-        
-        doc.save(`MIS_Report_${new Date().toISOString().split('T')[0]}.pdf`);
+    const handlePrintReport = async () => {
+        try {
+            setPrinting(true);
+            
+            // Fetch ALL records for the current filters (ignoring pagination)
+            const params = {
+                ...filters,
+                limit: 5000 // High limit to get all records for MIS
+            };
+            
+            const response = await api.get('/payment-received', { params });
+            const allPayments = response.data.data || [];
+
+            if (allPayments.length === 0) {
+                toast.warning("No records found for the selected criteria");
+                return;
+            }
+
+            const doc = new jsPDF();
+            const pageWidth = doc.internal.pageSize.getWidth();
+            
+            // Company Header
+            doc.setFillColor(30, 41, 59); // Slate-800
+            doc.rect(0, 0, pageWidth, 40, 'F');
+            
+            // Logo
+            try {
+                doc.addImage(logoImg, 'PNG', 15, 8, 25, 25);
+            } catch (e) {
+                console.error("Logo failed to load");
+            }
+            
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(22);
+            doc.setFont("helvetica", "bold");
+            doc.text("HANSARIA FOOD PVT. LTD.", 45, 18);
+            
+            doc.setFontSize(10);
+            doc.setFont("helvetica", "normal");
+            doc.text("MIS REPORT: PAYMENT RECEIVED LIST", 45, 26);
+            doc.text("Sector 4, Plot 12, IMT Manesar, Gurugram, Haryana", 45, 32);
+            
+            // Sub-header
+            doc.setFillColor(248, 250, 252);
+            doc.rect(0, 40, pageWidth, 15, 'F');
+            doc.setTextColor(51, 65, 85);
+            doc.setFontSize(12);
+            doc.setFont("helvetica", "bold");
+            doc.text("PAYMENT RECEIVED SUMMARY", 15, 50);
+            
+            // Date Range
+            doc.setFontSize(9);
+            doc.setFont("helvetica", "normal");
+            const dateRange = `Period: ${new Date(filters.startDate).toLocaleDateString('en-GB')} to ${new Date(filters.endDate).toLocaleDateString('en-GB')}`;
+            doc.text(dateRange, pageWidth - 15, 50, { align: "right" });
+            
+            // Table Data
+            const tableData = allPayments.map((p, idx) => {
+                // Get Buyer and Seller names from mappings
+                const buyerNames = [...new Set(p.mappings?.map(m => m.loadingEntryId?.buyerCompany).filter(Boolean))].join(", ");
+                const sellerNames = [...new Set(p.mappings?.map(m => m.loadingEntryId?.supplierCompany).filter(Boolean))].join(", ");
+
+                return [
+                    idx + 1,
+                    new Date(p.date).toLocaleDateString('en-GB'),
+                    p.ledgerId?.name || p.ledgerId?.sellerName || 'N/A',
+                    buyerNames || '-',
+                    sellerNames || '-',
+                    p.paymentMode,
+                    `Rs. ${p.amount.toLocaleString()}`
+                ];
+            });
+            
+            doc.autoTable({
+                startY: 60,
+                head: [['NO', 'DATE', 'LEDGER NAME', 'BUYER COMPANY', 'SELLER COMPANY', 'MODE', 'AMOUNT']],
+                body: tableData,
+                theme: 'grid',
+                headStyles: {
+                    fillColor: [30, 41, 59],
+                    textColor: [255, 255, 255],
+                    fontSize: 8,
+                    fontStyle: 'bold',
+                    halign: 'center'
+                },
+                styles: {
+                    fontSize: 7,
+                    cellPadding: 3,
+                    valign: 'middle'
+                },
+                columnStyles: {
+                    0: { halign: 'center', cellWidth: 10 },
+                    1: { halign: 'center', cellWidth: 20 },
+                    6: { halign: 'right', fontStyle: 'bold' }
+                },
+                didDrawPage: (data) => {
+                    // Footer
+                    const str = "Page " + doc.internal.getNumberOfPages();
+                    doc.setFontSize(8);
+                    doc.setTextColor(100);
+                    doc.text(str, pageWidth - 20, doc.internal.pageSize.height - 10);
+                    doc.text(`Printed on: ${new Date().toLocaleString()}`, 15, doc.internal.pageSize.height - 10);
+                }
+            });
+            
+            const totalAmount = allPayments.reduce((sum, p) => sum + (p.amount || 0), 0);
+            const finalY = doc.lastAutoTable.finalY || 70;
+            
+            doc.setFillColor(241, 245, 249);
+            doc.rect(15, finalY + 5, pageWidth - 30, 10, 'F');
+            doc.setFontSize(10);
+            doc.setFont("helvetica", "bold");
+            doc.setTextColor(30, 41, 59);
+            doc.text(`TOTAL COLLECTED AMOUNT: Rs. ${totalAmount.toLocaleString()}`, pageWidth - 20, finalY + 12, { align: "right" });
+            
+            doc.save(`MIS_PaymentReceived_${filters.startDate}_to_${filters.endDate}.pdf`);
+            toast.success("MIS Report generated successfully");
+        } catch (error) {
+            console.error("Print Error:", error);
+            toast.error("Failed to generate MIS Report");
+        } finally {
+            setPrinting(false);
+        }
     };
 
     const columns = [
@@ -284,10 +340,15 @@ const ListPaymentReceived = () => {
                         <div className="flex flex-wrap items-center gap-3">
                             <button
                                 onClick={handlePrintReport}
-                                disabled={loading || payments.length === 0}
+                                disabled={loading || printing || payments.length === 0}
                                 className="flex items-center gap-2 bg-slate-900 hover:bg-black text-white px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition shadow-lg disabled:opacity-50"
                             >
-                                <FaPrint size={14} /> Print MIS Report
+                                {printing ? (
+                                    <div className="w-3.5 h-3.5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                                ) : (
+                                    <FaPrint size={14} />
+                                )}
+                                {printing ? "Generating..." : "Print MIS Report"}
                             </button>
                             <button
                                 onClick={() => navigate('/payments/received/add')}
@@ -331,30 +392,15 @@ const ListPaymentReceived = () => {
                             />
                         </div>
 
-                        <div className="space-y-2">
-                            <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">From Date</label>
-                            <div className="relative">
-                                <FaCalendarAlt className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
-                                <input
-                                    type="date"
-                                    value={filters.startDate}
-                                    onChange={(e) => setFilters(prev => ({ ...prev, startDate: e.target.value }))}
-                                    className="w-full pl-11 pr-4 h-11 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-slate-900/5 focus:border-slate-900 outline-none transition text-sm font-bold text-slate-700"
-                                />
-                            </div>
-                        </div>
-
-                        <div className="space-y-2">
-                            <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">To Date</label>
-                            <div className="relative">
-                                <FaCalendarAlt className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
-                                <input
-                                    type="date"
-                                    value={filters.endDate}
-                                    onChange={(e) => setFilters(prev => ({ ...prev, endDate: e.target.value }))}
-                                    className="w-full pl-11 pr-4 h-11 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-slate-900/5 focus:border-slate-900 outline-none transition text-sm font-bold text-slate-700"
-                                />
-                            </div>
+                        <div className="space-y-2 lg:col-span-2">
+                            <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">Period Selection</label>
+                            <DateRangeSelector 
+                                startDate={filters.startDate}
+                                endDate={filters.endDate}
+                                onStartDateChange={(date) => setFilters(prev => ({ ...prev, startDate: date }))}
+                                onEndDateChange={(date) => setFilters(prev => ({ ...prev, endDate: date }))}
+                                className="!h-11"
+                            />
                         </div>
                     </div>
                 </div>

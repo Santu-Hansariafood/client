@@ -5,6 +5,8 @@ import Loading from '../../../../common/Loading/Loading';
 import Tables from '../../../../common/Tables/Tables';
 import Paginations from '../../../../common/Paginations/Paginations';
 
+import DateRangeSelector from '../../../../common/DateSelector/DateRangeSelector';
+
 const AllocationLedger = ({ 
     allocationSource, 
     formData, 
@@ -65,29 +67,22 @@ const AllocationLedger = ({
                         </div>
                     )}
 
-                    <div className="flex items-center gap-2 bg-white px-3 py-2 rounded-xl border border-slate-200 shadow-sm">
-                        <input
-                            type="date"
-                            value={formData.filterStartDate}
-                            onChange={(e) => setFormData(prev => ({ ...prev, filterStartDate: e.target.value }))}
-                            className="text-[11px] font-bold text-slate-700 outline-none bg-transparent"
-                        />
-                        <span className="text-slate-300">|</span>
-                        <input
-                            type="date"
-                            value={formData.filterEndDate}
-                            onChange={(e) => setFormData(prev => ({ ...prev, filterEndDate: e.target.value }))}
-                            className="text-[11px] font-bold text-slate-700 outline-none bg-transparent"
-                        />
-                        {(formData.filterStartDate || formData.filterEndDate) && (
-                            <button 
-                                onClick={() => setFormData(prev => ({ ...prev, filterStartDate: '', filterEndDate: '' }))}
-                                className="ml-1 text-rose-500 hover:bg-rose-50 p-1 rounded-md transition-all"
-                            >
-                                <FaArrowLeft size={10} />
-                            </button>
-                        )}
-                    </div>
+                    <DateRangeSelector 
+                         startDate={formData.filterStartDate}
+                         endDate={formData.filterEndDate}
+                         onStartDateChange={(date) => setFormData(prev => ({ ...prev, filterStartDate: date }))}
+                         onEndDateChange={(date) => setFormData(prev => ({ ...prev, filterEndDate: date }))}
+                         className="!bg-white !px-3 !py-1.5 shadow-sm"
+                     />
+                    { (formData.filterStartDate || formData.filterEndDate) && (
+                        <button 
+                            onClick={() => setFormData(prev => ({ ...prev, filterStartDate: '', filterEndDate: '' }))}
+                            className="text-rose-500 hover:bg-rose-50 p-1.5 rounded-xl transition-all border border-slate-100 bg-white"
+                            title="Clear Dates"
+                        >
+                            <FaArrowLeft size={10} />
+                        </button>
+                    )}
 
                     <SearchBox
                         placeholder="Search Sauda / Lorry..."
