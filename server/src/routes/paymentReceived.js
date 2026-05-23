@@ -186,7 +186,9 @@ router.get("/", async (req, res) => {
 
     if (ledgerType) query.ledgerType = ledgerType;
     if (ledgerId) query.ledgerId = ledgerId;
-    if (companyId) query.companyId = companyId;
+    if (companyId && companyId !== 'null' && companyId !== 'undefined') {
+      query.companyId = companyId;
+    }
     if (startDate || endDate) {
       query.date = {};
       if (startDate) query.date.$gte = new Date(startDate);

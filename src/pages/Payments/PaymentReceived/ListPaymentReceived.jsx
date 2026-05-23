@@ -334,11 +334,25 @@ const ListPaymentReceived = () => {
     {
       header: "Ledger / Company",
       accessor: (row) => {
-        const companyLabel = row.companyId ? (
-            filters.ledgerType === 'Buyer' 
-                ? (allCompanies.find(c => c._id === row.companyId)?.companyName || 'N/A')
-                : row.companyId
-        ) : 'Consolidated';
+        let companyLabel = 'Consolidated';
+        
+        if (row.companyId) {
+            if (row.ledgerType === 'Buyer') {
+                const companyInfo = allCompanies.find(c => c._id === row.companyId);
+                companyLabel = companyInfo?.companyName || 'N/A';
+            } else {
+                // For Sellers, companyId is the name string
+                companyLabel = row.companyId;
+            }
+        } else if (row.mappings && row.mappings.length > 0) {
+            // Fallback for older records: extract company from first mapping
+            const firstMapping = row.mappings[0].loadingEntryId;
+            if (firstMapping) {
+                companyLabel = row.ledgerType === 'Buyer' 
+                    ? (firstMapping.buyerCompany || 'N/A')
+                    : (firstMapping.supplierCompany || 'N/A');
+            }
+        }
 
         return (
             <div className="flex flex-col gap-0.5">
@@ -347,7 +361,7 @@ const ListPaymentReceived = () => {
                         {row.ledgerType}
                     </span>
                     <span className="h-1 w-1 rounded-full bg-slate-200"></span>
-                    <span className="text-[10px] font-bold text-blue-500 uppercase truncate max-w-[100px]">
+                    <span className="text-[10px] font-bold text-blue-500 uppercase truncate max-w-[120px]" title={companyLabel}>
                         {companyLabel}
                     </span>
                 </div>
@@ -493,6 +507,7 @@ const ListPaymentReceived = () => {
               <select
                 value={filters.ledgerType}
                 onChange={(e) => {
+                  setPage(1);
                   setFilters((prev) => ({
                     ...prev,
                     ledgerType: e.target.value,
@@ -520,6 +535,7 @@ const ListPaymentReceived = () => {
                 onChange={(opt) => {
                   setSelectedLedger(opt);
                   setSelectedCompany(null);
+                  setPage(1);
                   setFilters((prev) => ({
                     ...prev,
                     ledgerId: opt?.value || "",
@@ -554,6 +570,7 @@ const ListPaymentReceived = () => {
                 selectedOptions={selectedCompany}
                 onChange={(opt) => {
                   setSelectedCompany(opt);
+                  setPage(1);
                   setFilters((prev) => ({
                     ...prev,
                     companyId: opt?.value || "",
@@ -573,12 +590,14 @@ const ListPaymentReceived = () => {
               <DateRangeSelector
                 startDate={filters.startDate}
                 endDate={filters.endDate}
-                onStartDateChange={(date) =>
-                  setFilters((prev) => ({ ...prev, startDate: date }))
-                }
-                onEndDateChange={(date) =>
-                  setFilters((prev) => ({ ...prev, endDate: date }))
-                }
+                onStartDateChange={(date) => {
+                  setPage(1);
+                  setFilters((prev) => ({ ...prev, startDate: date }));
+                }}
+                onEndDateChange={(date) => {
+                  setPage(1);
+                  setFilters((prev) => ({ ...prev, endDate: date }));
+                }}
                 className="!h-11"
               />
             </div>
