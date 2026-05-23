@@ -167,7 +167,7 @@ const AccountSelection = ({
                     </div>
                     <div className="flex items-end">
                         <Buttons
-                            label={formData.ledgerType === 'Buyer' ? `Record Advance (₹${formData.amount})` : `Send Payment (₹${formData.amount})`}
+                            label={formData.ledgerType === 'Buyer' ? `Record Advance (Rs. ${formData.amount})` : `Send Payment (Rs. ${formData.amount})`}
                             onClick={handleRecordAdvance}
                             disabled={loading || !selectedLedger || formData.amount <= 0 || allocationSource !== 'fresh'}
                             variant="primary"

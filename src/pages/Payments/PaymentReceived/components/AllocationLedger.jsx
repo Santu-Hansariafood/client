@@ -47,7 +47,7 @@ const AllocationLedger = ({
                         <p className="text-[11px] text-slate-500 font-medium uppercase tracking-wider">
                             {allocationSource === 'fresh' 
                                 ? (formData.ledgerType === 'Buyer' ? 'Map received payments to saudas' : 'Map sent payments to saudas')
-                                : `Using ₹${ledgerBalance.advanceBalance.toLocaleString()} Credit`
+                                : `Using Rs. ${ledgerBalance.advanceBalance.toLocaleString()} Credit`
                             }
                         </p>
                     </div>
@@ -60,7 +60,7 @@ const AllocationLedger = ({
                                 <span className="text-[9px] font-black uppercase tracking-[0.2em] text-emerald-400 leading-none mb-1">
                                     {formData.ledgerType === 'Buyer' ? 'Available to Allocate' : 'Available to Send'}
                                 </span>
-                                <span className="text-sm font-black italic tracking-tight">₹{unallocatedBalance.toLocaleString('en-IN')}</span>
+                                <span className="text-sm font-black italic tracking-tight">Rs. {unallocatedBalance.toLocaleString('en-IN')}</span>
                             </div>
                             <div className="w-px h-6 bg-emerald-700/50 mx-1"></div>
                             <FaMoneyBillWave className="text-emerald-400 animate-pulse" />
@@ -125,14 +125,14 @@ const AllocationLedger = ({
                             <div className="flex items-center gap-10">
                                 <div className="space-y-1">
                                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Total Unpaid Due</p>
-                                    <p className="text-2xl font-black text-white italic tracking-tighter">₹{entryStats.totalDue.toLocaleString('en-IN')}</p>
+                                    <p className="text-2xl font-black text-white italic tracking-tighter">Rs. {entryStats.totalDue.toLocaleString('en-IN')}</p>
                                 </div>
                                 <div className="w-px h-10 bg-slate-800 hidden md:block"></div>
                                 <div className="space-y-1">
                                     <p className="text-[10px] font-black text-emerald-400 uppercase tracking-widest leading-none">
                                         {formData.ledgerType === 'Buyer' ? 'Date Received' : 'Date Sent'}
                                     </p>
-                                    <p className="text-2xl font-black text-white italic tracking-tighter">₹{dateTotal.toLocaleString('en-IN')}</p>
+                                    <p className="text-2xl font-black text-white italic tracking-tighter">Rs. {dateTotal.toLocaleString('en-IN')}</p>
                                 </div>
                             </div>
 

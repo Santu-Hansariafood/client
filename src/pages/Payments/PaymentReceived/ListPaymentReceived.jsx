@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
+import { jsPDF } from "jspdf";
+import "jspdf-autotable";
 import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
 import Tables from "../../../common/Tables/Tables";
 import DataDropdown from "../../../common/DataDropdown/DataDropdown";
@@ -141,56 +141,38 @@ const ListPaymentReceived = () => {
       }
 
       const doc = new jsPDF({
-        orientation: "landscape",
+        orientation: "portrait",
+        unit: "mm",
+        format: "a4",
       });
 
       const pageWidth = doc.internal.pageSize.getWidth();
+      const margin = 15;
 
-      // Header Background
-      doc.setFillColor(30, 41, 59);
-      doc.rect(0, 0, pageWidth, 40, "F");
-
-      // Logo
-      try {
-        doc.addImage(logoImg, "PNG", 15, 8, 25, 25);
-      } catch (e) {
-        console.error("Logo Error", e);
-      }
-
-      // Header Text
-      doc.setTextColor(255, 255, 255);
-
-      doc.setFontSize(22);
+      // --- TALLY STYLE HEADER ---
       doc.setFont("helvetica", "bold");
-      doc.text("HANSARIA FOOD PVT. LTD.", 45, 18);
+      doc.setFontSize(16);
+      doc.setTextColor(0, 0, 0);
+      doc.text("HANSARIA FOOD PVT. LTD.", pageWidth / 2, 15, { align: "center" });
 
       doc.setFontSize(10);
       doc.setFont("helvetica", "normal");
+      doc.text("Sector 4, Plot 12, IMT Manesar, Gurugram, Haryana", pageWidth / 2, 20, { align: "center" });
+      
+      doc.setLineWidth(0.5);
+      doc.line(margin, 25, pageWidth - margin, 25); // Top Border
 
-      doc.text("MIS REPORT: PAYMENT RECEIVED LIST", 45, 26);
-
-      doc.text("Sector 4, Plot 12, IMT Manesar, Gurugram, Haryana", 45, 32);
-
-      // Sub Header
-      doc.setFillColor(248, 250, 252);
-      doc.rect(0, 40, pageWidth, 15, "F");
-
-      doc.setTextColor(51, 65, 85);
-
-      doc.setFontSize(12);
       doc.setFont("helvetica", "bold");
+      doc.setFontSize(12);
+      const reportTitle = "PAYMENT RECEIVED MIS REPORT";
+      doc.text(reportTitle, margin, 32);
 
-      doc.text("PAYMENT RECEIVED SUMMARY", 15, 50);
-
-      const dateRange = `Period: ${new Date(
-        filters.startDate,
-      ).toLocaleDateString("en-GB")} to ${new Date(
-        filters.endDate,
-      ).toLocaleDateString("en-GB")}`;
-
+      doc.setFont("helvetica", "normal");
       doc.setFontSize(9);
+      const dateRange = `Period: ${new Date(filters.startDate).toLocaleDateString("en-GB")} to ${new Date(filters.endDate).toLocaleDateString("en-GB")}`;
+      doc.text(dateRange, pageWidth - margin, 32, { align: "right" });
 
-      doc.text(dateRange, pageWidth - 15, 50, { align: "right" });
+      doc.line(margin, 35, pageWidth - margin, 35); // Bottom Header Border
 
       // Table Data
       const tableData = allPayments.map((p, idx) => {
@@ -213,17 +195,16 @@ const ListPaymentReceived = () => {
         return [
           idx + 1,
           new Date(p.date).toLocaleDateString("en-GB"),
-          p.ledgerId?.name || p.ledgerId?.sellerName || "N/A",
-          buyerNames || "-",
-          sellerNames || "-",
-          p.paymentMode,
-          `₹${Number(p.amount || 0).toLocaleString("en-IN")}`,
+          (p.ledgerId?.name || p.ledgerId?.sellerName || "N/A").toUpperCase(),
+          (buyerNames || "-").toUpperCase(),
+          (sellerNames || "-").toUpperCase(),
+          p.paymentMode.toUpperCase(),
+          `Rs. ${Number(p.amount || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}`,
         ];
       });
 
-      autoTable(doc, {
-        startY: 60,
-
+      doc.autoTable({
+        startY: 40,
         head: [
           [
             "NO",
@@ -235,56 +216,47 @@ const ListPaymentReceived = () => {
             "AMOUNT",
           ],
         ],
-
         body: tableData,
-
         theme: "grid",
-
         headStyles: {
-          fillColor: [30, 41, 59],
-          textColor: [255, 255, 255],
+          fillColor: [255, 255, 255],
+          textColor: [0, 0, 0],
           fontSize: 8,
           fontStyle: "bold",
           halign: "center",
+          lineWidth: 0.1,
+          lineColor: [0, 0, 0],
         },
-
         styles: {
           fontSize: 7,
-          cellPadding: 3,
+          cellPadding: 2,
           valign: "middle",
+          textColor: [0, 0, 0],
+          lineColor: [0, 0, 0],
         },
-
         columnStyles: {
-          0: {
-            halign: "center",
-            cellWidth: 12,
-          },
-          1: {
-            halign: "center",
-            cellWidth: 22,
-          },
-          6: {
-            halign: "right",
-            fontStyle: "bold",
-          },
+          0: { halign: "center", cellWidth: 10 },
+          1: { halign: "center", cellWidth: 20 },
+          2: { cellWidth: 'auto' },
+          3: { cellWidth: 35 },
+          4: { cellWidth: 35 },
+          5: { halign: "center", cellWidth: 20 },
+          6: { halign: "right", fontStyle: "bold", cellWidth: 25 },
         },
-
+        margin: { left: margin, right: margin },
         didDrawPage: (data) => {
           const pageCount = doc.internal.getNumberOfPages();
-
           doc.setFontSize(8);
-
-          doc.setTextColor(120);
-
+          doc.setTextColor(0, 0, 0);
           doc.text(
             `Page ${data.pageNumber} of ${pageCount}`,
-            pageWidth - 40,
+            pageWidth - margin,
             doc.internal.pageSize.height - 10,
+            { align: "right" }
           );
-
           doc.text(
             `Printed on: ${new Date().toLocaleString()}`,
-            15,
+            margin,
             doc.internal.pageSize.height - 10,
           );
         },
@@ -297,23 +269,26 @@ const ListPaymentReceived = () => {
       );
 
       const finalY = doc.lastAutoTable?.finalY || 70;
-
-      doc.setFillColor(241, 245, 249);
-
-      doc.rect(15, finalY + 5, pageWidth - 30, 10, "F");
+      
+      // Check if total row fits on current page
+      if (finalY + 20 > doc.internal.pageSize.height) {
+        doc.addPage();
+        doc.setLineWidth(0.5);
+        doc.line(margin, 10, pageWidth - margin, 10);
+      }
 
       doc.setFontSize(10);
-
       doc.setFont("helvetica", "bold");
-
-      doc.setTextColor(30, 41, 59);
-
       doc.text(
-        `TOTAL COLLECTED AMOUNT : ₹${totalAmount.toLocaleString("en-IN")}`,
-        pageWidth - 20,
-        finalY + 12,
+        `TOTAL COLLECTED AMOUNT : Rs. ${totalAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`,
+        pageWidth - margin,
+        doc.lastAutoTable.finalY + 10,
         { align: "right" },
       );
+
+      doc.setFontSize(9);
+      doc.text("Authorised Signatory", pageWidth - margin, doc.lastAutoTable.finalY + 25, { align: "right" });
+      doc.line(pageWidth - 60, doc.lastAutoTable.finalY + 22, pageWidth - margin, doc.lastAutoTable.finalY + 22);
 
       doc.save(
         `MIS_PaymentReceived_${filters.startDate}_to_${filters.endDate}.pdf`,
@@ -352,7 +327,7 @@ const ListPaymentReceived = () => {
       header: "Amount",
       accessor: (row) => (
         <span className="font-black text-emerald-600 italic tracking-tight">
-          ₹{row.amount.toLocaleString()}
+          Rs. {row.amount.toLocaleString()}
         </span>
       ),
     },
@@ -411,7 +386,7 @@ const ListPaymentReceived = () => {
           <StatCard
             icon={<FaChartLine size={18} />}
             label="Total Received"
-            value={`₹${stats.totalReceived.toLocaleString("en-IN")}`}
+            value={`Rs. ${stats.totalReceived.toLocaleString("en-IN")}`}
             subValue="In Selected Period"
             color="bg-emerald-50"
             iconColor="text-emerald-600"

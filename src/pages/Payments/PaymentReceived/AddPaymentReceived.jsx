@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import jsPDF from 'jspdf';
+import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
 import AdminPageShell from '../../../common/AdminPageShell/AdminPageShell';
 import Buttons from '../../../common/Buttons/Buttons';
@@ -286,7 +286,7 @@ const AddPaymentReceived = () => {
         const dueAmount = netAmount - (paidAmount || 0);
         
         if (numAmount > dueAmount + 1) {
-            toast.warning(`Allocation cannot exceed due amount (₹${dueAmount.toFixed(2)})`);
+            toast.warning(`Allocation cannot exceed due amount (Rs. ${dueAmount.toFixed(2)})`);
             return;
         }
 
@@ -296,7 +296,7 @@ const AddPaymentReceived = () => {
             const otherAllocationsTotal = (formData.amount || 0) - unallocatedBalance - currentAllocatedForThisRow;
             
             if (numAmount + otherAllocationsTotal > (formData.amount || 0) + 1) {
-                toast.error(`Total allocation cannot exceed Voucher Amount (₹${formData.amount})`);
+                toast.error(`Total allocation cannot exceed Voucher Amount (Rs. ${formData.amount})`);
                 return;
             }
         }
@@ -445,52 +445,94 @@ const AddPaymentReceived = () => {
     };
 
     const printVoucher = (payment) => {
-        const doc = new jsPDF();
+        const doc = new jsPDF({
+            orientation: "portrait",
+            unit: "mm",
+            format: "a4",
+        });
         const pageWidth = doc.internal.pageSize.getWidth();
+        const margin = 15;
         
-        doc.setFontSize(20);
-        doc.setTextColor(40);
-        doc.text("PAYMENT RECEIVED", pageWidth / 2, 20, { align: "center" });
-        
-        doc.setDrawColor(200);
-        doc.line(15, 25, pageWidth - 15, 25);
-        
+        // --- TALLY STYLE HEADER ---
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(16);
+        doc.setTextColor(0, 0, 0);
+        doc.text("HANSARIA FOOD PVT. LTD.", pageWidth / 2, 15, { align: "center" });
+
         doc.setFontSize(10);
-        doc.text(`Receipt No: ${payment._id.substring(payment._id.length - 8).toUpperCase()}`, 15, 35);
-        doc.text(`Date: ${new Date(payment.date).toLocaleDateString('en-GB')}`, pageWidth - 15, 35, { align: "right" });
+        doc.setFont("helvetica", "normal");
+        doc.text("Sector 4, Plot 12, IMT Manesar, Gurugram, Haryana", pageWidth / 2, 20, { align: "center" });
         
-        doc.text(`Account: ${selectedLedger?.label || 'N/A'}`, 15, 45);
-        doc.text(`Mode: ${payment.paymentMode}`, pageWidth - 15, 45, { align: "right" });
+        doc.setLineWidth(0.5);
+        doc.line(margin, 25, pageWidth - margin, 25); // Top Border
+
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(12);
+        doc.text("PAYMENT RECEIVED VOUCHER", margin, 32);
+
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(9);
+        doc.text(`Date: ${new Date(payment.date).toLocaleDateString('en-GB')}`, pageWidth - margin, 32, { align: "right" });
+
+        doc.line(margin, 35, pageWidth - margin, 35); // Bottom Header Border
+
+        doc.setFontSize(10);
+        doc.text(`Receipt No: ${payment._id.substring(payment._id.length - 8).toUpperCase()}`, margin, 42);
+        doc.text(`Account: ${(selectedLedger?.label || 'N/A').toUpperCase()}`, margin, 47);
+        doc.text(`Payment Mode: ${payment.paymentMode.toUpperCase()}`, pageWidth - margin, 42, { align: "right" });
         
         const tableData = (payment.mappings || []).map((m, i) => [
             i + 1,
-            m.saudaNo || 'N/A',
-            m.loadingEntryId?.billNumber || '-',
-            m.loadingEntryId?.buyerCompany || '-',
-            m.loadingEntryId?.supplierCompany || '-',
-            `Rs. ${m.allocatedAmount.toLocaleString()}`
+            (m.saudaNo || 'N/A').toUpperCase(),
+            (m.loadingEntryId?.billNumber || '-').toUpperCase(),
+            (m.loadingEntryId?.buyerCompany || '-').toUpperCase(),
+            (m.loadingEntryId?.supplierCompany || '-').toUpperCase(),
+            `Rs. ${Number(m.allocatedAmount || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}`
         ]);
         
         doc.autoTable({
             startY: 55,
-            head: [['No', 'Sauda No', 'Bill No', 'Buyer', 'Seller', 'Amount']],
+            head: [['NO', 'SAUDA NO', 'BILL NO', 'BUYER', 'SELLER', 'AMOUNT']],
             body: tableData,
             theme: 'grid',
-            headStyles: { fillColor: [40, 40, 40], textColor: [255, 255, 255], fontSize: 8 },
-            styles: { fontSize: 7 },
-            foot: [['', '', '', '', 'TOTAL', `Rs. ${payment.amount.toLocaleString()}`]],
-            footStyles: { fillColor: [240, 240, 240], textColor: [0, 0, 0], fontStyle: 'bold', fontSize: 8 }
+            headStyles: {
+                fillColor: [255, 255, 255],
+                textColor: [0, 0, 0],
+                fontSize: 8,
+                fontStyle: 'bold',
+                halign: 'center',
+                lineWidth: 0.1,
+                lineColor: [0, 0, 0],
+            },
+            styles: {
+                fontSize: 7,
+                cellPadding: 2,
+                valign: 'middle',
+                textColor: [0, 0, 0],
+                lineColor: [0, 0, 0],
+            },
+            columnStyles: {
+                0: { halign: 'center', cellWidth: 10 },
+                1: { halign: 'center', cellWidth: 20 },
+                5: { halign: 'right', fontStyle: 'bold', cellWidth: 25 },
+            },
+            margin: { left: margin, right: margin }
         });
         
         const finalY = doc.lastAutoTable.finalY || 70;
-        doc.text(`Amount in words: ${payment.amount.toLocaleString()} Rupees Only`, 15, finalY + 15);
-        doc.text(`Remarks: ${payment.remarks || '-'}`, 15, finalY + 25);
+        doc.setFontSize(9);
+        doc.setFont("helvetica", "bold");
+        doc.text(`TOTAL AMOUNT: Rs. ${Number(payment.amount || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}`, pageWidth - margin, finalY + 10, { align: "right" });
         
-        doc.line(15, finalY + 60, 65, finalY + 60);
-        doc.text("Receiver Signature", 15, finalY + 65);
+        doc.setFont("helvetica", "normal");
+        doc.text(`Amount in words: ${Number(payment.amount || 0).toLocaleString("en-IN")} Rupees Only`, margin, finalY + 10);
+        doc.text(`Remarks: ${(payment.remarks || '-').toUpperCase()}`, margin, finalY + 18);
         
-        doc.line(pageWidth - 65, finalY + 60, pageWidth - 15, finalY + 60);
-        doc.text("Authorised Signatory", pageWidth - 15, finalY + 65, { align: "right" });
+        doc.line(margin, finalY + 50, 65, finalY + 50);
+        doc.text("Receiver Signature", margin, finalY + 55);
+        
+        doc.line(pageWidth - 65, finalY + 50, pageWidth - margin, finalY + 50);
+        doc.text("Authorised Signatory", pageWidth - margin, finalY + 55, { align: "right" });
         
         doc.save(`Voucher_${payment._id.substring(payment._id.length - 8)}.pdf`);
     };
@@ -543,7 +585,7 @@ const AddPaymentReceived = () => {
                                     <span className="text-[7px] text-slate-400 font-bold leading-none">B: {m.loadingEntryId?.buyerCompany || 'N/A'}</span>
                                     <span className="text-[7px] text-slate-400 font-bold leading-none">S: {m.loadingEntryId?.supplierCompany || 'N/A'}</span>
                                 </div>
-                                <span className="text-[9px] font-black text-slate-400 italic ml-auto">₹{m.allocatedAmount.toLocaleString()}</span>
+                                <span className="text-[9px] font-black text-slate-400 italic ml-auto">Rs. {m.allocatedAmount.toLocaleString()}</span>
                             </div>
                         ))
                     ) : (
@@ -552,7 +594,7 @@ const AddPaymentReceived = () => {
                 </div>
             )
         },
-        { header: 'TOTAL AMOUNT', accessor: (row) => <span className="font-black text-slate-900 text-sm italic">₹{row.amount.toLocaleString()}</span> },
+        { header: 'TOTAL AMOUNT', accessor: (row) => <span className="font-black text-slate-900 text-sm italic">Rs. {row.amount.toLocaleString()}</span> },
         { header: 'REMARKS', accessor: (row) => <span className="text-[10px] text-slate-400 font-medium italic">{row.remarks || '-'}</span> },
         { 
             header: 'ACTION', 
@@ -630,15 +672,15 @@ const AddPaymentReceived = () => {
                     <div className="flex flex-col gap-1 text-[9px] font-black min-w-[140px] uppercase">
                         <div className="flex justify-between text-slate-400">
                             <span>Net Amt:</span>
-                            <span>₹{details.netAmount.toFixed(0)}</span>
+                            <span>Rs. {details.netAmount.toFixed(0)}</span>
                         </div>
                         <div className="flex justify-between text-slate-500">
                             <span>Paid:</span>
-                            <span>₹{(row.paidAmount || 0).toFixed(0)}</span>
+                            <span>Rs. {(row.paidAmount || 0).toFixed(0)}</span>
                         </div>
                         <div className="flex justify-between border-t border-slate-200 mt-1 pt-1 text-rose-600 text-[10px]">
                             <span>Due:</span>
-                            <span className="bg-rose-50 px-1.5 rounded">₹{details.dueAmount.toFixed(0)}</span>
+                            <span className="bg-rose-50 px-1.5 rounded">Rs. {details.dueAmount.toFixed(0)}</span>
                         </div>
                     </div>
                 );

@@ -62,7 +62,7 @@ const AnalyticalSummary = ({ summaryType, setSummaryType, summary }) => {
                                                     <span className="bg-emerald-50 px-2 py-0.5 rounded-lg border border-emerald-100">{item.receivedCount || 0} Entries</span>
                                                 </div>
                                                 <p className="text-2xl font-black text-slate-900 italic tracking-tighter group-hover:text-white transition-colors">
-                                                    ₹{(item.received || 0).toLocaleString()}
+                                                    Rs. {(item.received || 0).toLocaleString()}
                                                 </p>
                                             </div>
 
@@ -72,7 +72,7 @@ const AnalyticalSummary = ({ summaryType, setSummaryType, summary }) => {
                                                     <span className="bg-rose-50 px-2 py-0.5 rounded-lg border border-rose-100">{item.sentCount || 0} Entries</span>
                                                 </div>
                                                 <p className="text-2xl font-black text-slate-900 italic tracking-tighter group-hover:text-white transition-colors">
-                                                    ₹{(item.sent || 0).toLocaleString()}
+                                                    Rs. {(item.sent || 0).toLocaleString()}
                                                 </p>
                                             </div>
                                         </div>
@@ -83,7 +83,7 @@ const AnalyticalSummary = ({ summaryType, setSummaryType, summary }) => {
                                             <div>
                                                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest group-hover:text-white/60 mb-1">Net Balance</p>
                                                 <p className={`text-xl font-black italic ${netBalance >= 0 ? 'text-emerald-600' : 'text-rose-600'} group-hover:text-white transition-colors`}>
-                                                    {netBalance >= 0 ? '+' : ''}₹{netBalance.toLocaleString()}
+                                                    {netBalance >= 0 ? '+' : ''}Rs. {netBalance.toLocaleString()}
                                                 </p>
                                             </div>
                                             <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-300 group-hover:bg-white/10 group-hover:text-white transition-all">
