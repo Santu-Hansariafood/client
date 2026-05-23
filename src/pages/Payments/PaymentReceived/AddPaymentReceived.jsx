@@ -1030,7 +1030,7 @@ const AddPaymentReceived = () => {
                             </div>
                             <div className="flex items-end">
                                 <Buttons
-                                    label={`Record Advance (₹${formData.amount})`}
+                                    label={`Payment Received (₹${formData.amount})`}
                                     onClick={handleRecordAdvance}
                                     disabled={loading || !selectedLedger || formData.amount <= 0 || allocationSource !== 'fresh'}
                                     variant="primary"
