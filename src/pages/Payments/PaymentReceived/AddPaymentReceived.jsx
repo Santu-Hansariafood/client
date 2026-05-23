@@ -4,64 +4,22 @@ import { toast } from 'react-toastify';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import AdminPageShell from '../../../common/AdminPageShell/AdminPageShell';
-import DataDropdown from '../../../common/DataDropdown/DataDropdown';
-import Tables from '../../../common/Tables/Tables';
 import Buttons from '../../../common/Buttons/Buttons';
-import SearchBox from '../../../common/SearchBox/SearchBox';
-import Paginations from '../../../common/Paginations/Paginations';
 import api from '../../../utils/apiClient/apiClient';
-import Loading from '../../../common/Loading/Loading';
 import { useAuth } from '../../../context/AuthContext/AuthContext';
 import { 
-    FaSave, FaArrowLeft, FaMoneyBillWave, FaExchangeAlt, 
-    FaHistory, FaCalendarAlt, FaBuilding, FaSearch, 
-    FaCheckCircle, FaExclamationCircle, FaPrint, FaChartBar,
-    FaArrowRight, FaCaretRight, FaFileInvoiceDollar, FaFilter,
-    FaRegCalendarAlt, FaWallet, FaChartLine, FaPlus, FaTrash
+    FaSave, FaArrowLeft, FaExchangeAlt, 
+    FaHistory, FaPrint, FaChartBar,
+    FaRegCalendarAlt, FaCheckCircle, FaPlus, FaTrash
 } from 'react-icons/fa';
 
-
-const StatCard = ({ icon, label, value, subValue, color, iconColor, onClick }) => (
-    <div 
-        onClick={onClick}
-        className={`bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col gap-3 transition-all duration-300 hover:shadow-md ${onClick ? 'cursor-pointer hover:-translate-y-1' : ''}`}
-    >
-        <div className="flex items-center justify-between">
-            <div className={`p-3 rounded-xl ${color} ${iconColor}`}>
-                {icon}
-            </div>
-            {subValue && (
-                <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider bg-slate-50 px-2 py-1 rounded-lg">
-                    {subValue}
-                </span>
-            )}
-        </div>
-        <div>
-            <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest leading-none mb-1">{label}</p>
-            <p className="text-xl font-black text-slate-900 tracking-tight italic">{value}</p>
-        </div>
-    </div>
-);
-
-const TabButton = ({ active, label, icon: Icon, onClick }) => (
-    <button
-        onClick={onClick}
-        className={`flex items-center gap-2 px-6 py-3 text-xs font-black uppercase tracking-widest transition-all relative overflow-hidden group ${
-            active 
-                ? 'text-slate-900' 
-                : 'text-slate-400 hover:text-slate-600'
-        }`}
-    >
-        <Icon size={14} className={active ? 'text-slate-900' : 'text-slate-400'} />
-        {label}
-        {active && (
-            <div className="absolute bottom-0 left-0 w-full h-1 bg-slate-900 rounded-t-full" />
-        )}
-        {!active && (
-            <div className="absolute bottom-0 left-0 w-0 h-1 bg-slate-200 group-hover:w-full transition-all duration-300" />
-        )}
-    </button>
-);
+// Sub-components
+import TabButton from './components/TabButton';
+import StatDashboard from './components/StatDashboard';
+import AccountSelection from './components/AccountSelection';
+import AllocationLedger from './components/AllocationLedger';
+import PaymentHistory from './components/PaymentHistory';
+import AnalyticalSummary from './components/AnalyticalSummary';
 
 const AddPaymentReceived = () => {
     const navigate = useNavigate();
@@ -101,7 +59,6 @@ const AddPaymentReceived = () => {
     const unallocatedBalance = useMemo(() => {
         if (allocationSource !== 'fresh') return 0;
         const totalAllocated = entries.reduce((sum, entry) => {
-            // Only count entries that are NOT saved yet (currently being allocated)
             if (!entry.isSaved) {
                 return sum + (parseFloat(entry.allocatedAmount) || 0);
             }
@@ -170,13 +127,11 @@ const AddPaymentReceived = () => {
         try {
             setFetchingEntries(true);
             
-            // Resolve company name from ID
             let companyName = '';
             if (formData.ledgerType === 'Buyer') {
                 const selectedCompany = allCompanies.find(c => c._id === formData.companyId);
                 companyName = selectedCompany?.companyName || '';
             } else {
-                // For Sellers, companyId is already the name string
                 companyName = formData.companyId;
             }
 
@@ -203,7 +158,6 @@ const AddPaymentReceived = () => {
             const response = await api.get('/loading-entries', { params });
             const items = response.data.data || [];
             
-            // Client side sorting: Pending first, then Done
             const sortedItems = [...items].sort((a, b) => {
                 if (a.paymentStatus === 'pending' && b.paymentStatus === 'done') return -1;
                 if (a.paymentStatus === 'done' && b.paymentStatus === 'pending') return 1;
@@ -264,7 +218,6 @@ const AddPaymentReceived = () => {
         }
     }, [formData.ledgerId, summaryType]);
 
-    // Fetch ledger balance
     const fetchLedgerBalance = useCallback(async () => {
         if (!formData.ledgerId) return;
         try {
@@ -281,7 +234,6 @@ const AddPaymentReceived = () => {
         fetchLedgerBalance();
     }, [fetchHistory, fetchSummary, fetchLedgerBalance]);
 
-    // Fetch total received for the selected date
     const fetchDateTotal = useCallback(async () => {
         try {
             const selectedDate = formData.date;
@@ -291,7 +243,6 @@ const AddPaymentReceived = () => {
                 limit: 1000
             };
             
-            // Filter by ledger if selected
             if (formData.ledgerId) {
                 params.ledgerId = formData.ledgerId;
             }
@@ -334,13 +285,11 @@ const AddPaymentReceived = () => {
         const numAmount = parseFloat(amount) || 0;
         const dueAmount = netAmount - (paidAmount || 0);
         
-        // 1. Validate against Lorry Due
         if (numAmount > dueAmount + 1) {
             toast.warning(`Allocation cannot exceed due amount (₹${dueAmount.toFixed(2)})`);
             return;
         }
 
-        // 2. Validate against Voucher Balance (only for fresh payments)
         if (allocationSource === 'fresh') {
             const currentEntry = entries.find(e => e.uiKey === uiKey);
             const currentAllocatedForThisRow = parseFloat(currentEntry?.allocatedAmount) || 0;
@@ -369,7 +318,7 @@ const AddPaymentReceived = () => {
             uiKey: `${entry._id}-extra-${Date.now()}`,
             allocatedAmount: '',
             rowRemarks: '',
-            isSaved: false // New sub-rows are never saved initially
+            isSaved: false
         };
         const newEntries = [...entries];
         newEntries.splice(index + 1, 0, newRow);
@@ -381,7 +330,6 @@ const AddPaymentReceived = () => {
     };
 
     const calculateTallyDetails = (entry) => {
-        // Use unloading weight if available, otherwise fallback to loading weight for allocation purposes
         const weight = (entry.unloadingWeight || 0) > 0 ? entry.unloadingWeight : (entry.loadingWeight || 0);
         const rate = entry.actualRate || 0;
         const cdPercent = entry.cd || 0;
@@ -424,15 +372,12 @@ const AddPaymentReceived = () => {
             const numAllocated = parseFloat(entry.allocatedAmount) || 0;
 
             if (isEditing) {
-                // Admin Edit: Use the special adjustment API
-                // We assume the admin is setting the TOTAL paid amount for this lorry
                 await api.patch(`/payment-received/adjust-lorry/${entry._id}`, {
                     paidAmount: numAllocated,
                     paymentStatus: numAllocated >= (calculateTallyDetails(entry).netAmount - 1) ? 'done' : 'pending'
                 });
                 toast.success(`Payment adjusted for ${entry.lorryNumber}`);
             } else {
-                // Normal Save: Create a new payment record (adds to existing paidAmount)
                 const payload = {
                     date: formData.date,
                     ledgerType: formData.ledgerType,
@@ -452,7 +397,6 @@ const AddPaymentReceived = () => {
                 await api.post('/payment-received', payload);
                 toast.success(`Payment recorded for ${entry.lorryNumber}`);
 
-                // Decrease the Voucher Amount by the allocated amount
                 if (allocationSource === 'fresh') {
                     setFormData(prev => ({
                         ...prev,
@@ -504,7 +448,6 @@ const AddPaymentReceived = () => {
         const doc = new jsPDF();
         const pageWidth = doc.internal.pageSize.getWidth();
         
-        // Header
         doc.setFontSize(20);
         doc.setTextColor(40);
         doc.text("PAYMENT RECEIVED", pageWidth / 2, 20, { align: "center" });
@@ -512,7 +455,6 @@ const AddPaymentReceived = () => {
         doc.setDrawColor(200);
         doc.line(15, 25, pageWidth - 15, 25);
         
-        // Details
         doc.setFontSize(10);
         doc.text(`Receipt No: ${payment._id.substring(payment._id.length - 8).toUpperCase()}`, 15, 35);
         doc.text(`Date: ${new Date(payment.date).toLocaleDateString('en-GB')}`, pageWidth - 15, 35, { align: "right" });
@@ -520,7 +462,6 @@ const AddPaymentReceived = () => {
         doc.text(`Account: ${selectedLedger?.label || 'N/A'}`, 15, 45);
         doc.text(`Mode: ${payment.paymentMode}`, pageWidth - 15, 45, { align: "right" });
         
-        // Table
         const tableData = (payment.mappings || []).map((m, i) => [
             i + 1,
             m.saudaNo || 'N/A',
@@ -545,7 +486,6 @@ const AddPaymentReceived = () => {
         doc.text(`Amount in words: ${payment.amount.toLocaleString()} Rupees Only`, 15, finalY + 15);
         doc.text(`Remarks: ${payment.remarks || '-'}`, 15, finalY + 25);
         
-        // Signatures
         doc.line(15, finalY + 60, 65, finalY + 60);
         doc.text("Receiver Signature", 15, finalY + 65);
         
@@ -796,10 +736,9 @@ const AddPaymentReceived = () => {
         <AdminPageShell
             title="Payment Received"
             subtitle="Record and allocate payments in Tally-style ledger format"
-            icon={FaFileInvoiceDollar}
+            icon={FaHistory}
         >
             <div className="max-w-7xl mx-auto space-y-6">
-                {/* Header Section: Navigation & Quick Actions */}
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div className="flex items-center gap-3">
                         <Buttons
@@ -845,456 +784,69 @@ const AddPaymentReceived = () => {
                     </div>
                 </div>
 
-                {/* Stats Dashboard */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <StatCard
-                        icon={<FaWallet size={18} />}
-                        label={selectedLedger ? `${selectedLedger.label} Received` : 'Total Received'}
-                        value={`₹${dateTotal.toLocaleString('en-IN')}`}
-                        subValue={new Date(formData.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}
-                        color="bg-emerald-50"
-                        iconColor="text-emerald-600"
-                    />
-                    
-                    <StatCard
-                        icon={<FaExclamationCircle size={18} />}
-                        label={formData.ledgerType === 'Seller' ? 'Seller Due' : 'Buyer Due'}
-                        value={`₹${ledgerBalance.outstandingBalance.toLocaleString('en-IN')}`}
-                        subValue="Total Outstanding"
-                        color="bg-rose-50"
-                        iconColor="text-rose-600"
-                    />
+                <StatDashboard 
+                    selectedLedger={selectedLedger}
+                    dateTotal={dateTotal}
+                    formData={formData}
+                    ledgerBalance={ledgerBalance}
+                    entryStats={entryStats}
+                />
 
-                    <StatCard
-                        icon={<FaHistory size={18} />}
-                        label="Advance Balance"
-                        value={`₹${ledgerBalance.advanceBalance.toLocaleString('en-IN')}`}
-                        subValue="Available Credit"
-                        color="bg-blue-50"
-                        iconColor="text-blue-600"
-                    />
+                <AccountSelection 
+                    allocationSource={allocationSource}
+                    setAllocationSource={setAllocationSource}
+                    formData={formData}
+                    setFormData={setFormData}
+                    handleInputChange={handleInputChange}
+                    ledgerTypes={ledgerTypes}
+                    ledgers={ledgers}
+                    selectedLedger={selectedLedger}
+                    handleLedgerChange={handleLedgerChange}
+                    fetchingLedgers={fetchingLedgers}
+                    allCompanies={allCompanies}
+                    handleCompanyChange={handleCompanyChange}
+                    paymentModes={paymentModes}
+                    loading={loading}
+                    handleRecordAdvance={handleRecordAdvance}
+                />
 
-                    <StatCard
-                        icon={<FaChartLine size={18} />}
-                        label="Pending Records"
-                        value={entryStats.pendingCount.toString()}
-                        subValue="Unsettled Saudas"
-                        color="bg-amber-50"
-                        iconColor="text-amber-600"
-                    />
-                </div>
-
-                {/* Main Configuration Card */}
-                <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
-                    <div className="p-6 border-b border-slate-100 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                        <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 bg-slate-900 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-slate-200">
-                                <FaBuilding size={20} />
-                            </div>
-                            <div>
-                                <h3 className="text-lg font-bold text-slate-800">Account Selection</h3>
-                                <p className="text-xs text-slate-500 font-medium">Configure ledger and entry details</p>
-                            </div>
-                        </div>
-
-                        <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200">
-                            {[
-                                { id: 'fresh', label: 'Payment Received', icon: <FaMoneyBillWave size={12} /> },
-                                { id: 'advance', label: 'From Advance', icon: <FaExchangeAlt size={12} /> }
-                            ].map(source => (
-                                <button
-                                    key={source.id}
-                                    onClick={() => setAllocationSource(source.id)}
-                                    className={`flex items-center gap-2 px-5 py-2 text-[11px] font-black uppercase tracking-widest rounded-lg transition-all ${
-                                        allocationSource === source.id 
-                                            ? 'bg-white text-slate-900 shadow-sm' 
-                                            : 'text-slate-400 hover:text-slate-600'
-                                    }`}
-                                >
-                                    {source.icon}
-                                    {source.label}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-
-                    <div className="p-6 space-y-6">
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
-                            <div className="space-y-2">
-                                <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">Entry Date</label>
-                                <div className="relative">
-                                    <input
-                                        type="date"
-                                        name="date"
-                                        value={formData.date}
-                                        onChange={handleInputChange}
-                                        className="w-full h-[42px] px-4 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-slate-900/5 focus:border-slate-900 outline-none transition-all font-bold text-slate-900"
-                                    />
-                                </div>
-                            </div>
-                            <div className="space-y-2">
-                                <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">Ledger Type</label>
-                                <DataDropdown
-                                    options={ledgerTypes}
-                                    selectedOptions={formData.ledgerType}
-                                    onChange={(opt) => setFormData(prev => ({ ...prev, ledgerType: opt.value }))}
-                                    isMulti={false}
-                                    className="rounded-xl border-slate-200 hover:border-slate-300 transition-all"
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">Account Name</label>
-                                <DataDropdown
-                                    options={ledgers}
-                                    selectedOptions={selectedLedger}
-                                    onChange={handleLedgerChange}
-                                    placeholder={fetchingLedgers ? "Syncing..." : `Select ${formData.ledgerType}`}
-                                    isMulti={false}
-                                    isDisabled={fetchingLedgers}
-                                    className="rounded-xl border-slate-200 hover:border-slate-300 transition-all"
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">Company (Filter)</label>
-                                <DataDropdown
-                                    options={selectedLedger?.companies?.map(c => {
-                                        const isObjectId = typeof c === 'string' && c.length === 24 && /^[0-9a-fA-F]+$/.test(c);
-                                        const companyId = typeof c === 'string' ? c : (c._id || c.value || c.id);
-                                        
-                                        let label = 'Unknown';
-                                        if (formData.ledgerType === 'Buyer') {
-                                            // Look up in allCompanies for Buyer
-                                            const companyInfo = allCompanies.find(comp => comp._id === companyId);
-                                            label = companyInfo?.companyName || (typeof c === 'object' ? (c.companyName || c.label) : companyId);
-                                        } else {
-                                            // For Seller, it's usually the name string
-                                            label = companyId;
-                                        }
-                                        
-                                        return { value: companyId, label };
-                                    }) || []}
-                                    selectedOptions={formData.companyId ? {
-                                        value: formData.companyId,
-                                        label: formData.ledgerType === 'Buyer' 
-                                            ? (allCompanies.find(comp => comp._id === formData.companyId)?.companyName || 'Unknown')
-                                            : formData.companyId // For Sellers, value is the name
-                                    } : null}
-                                    onChange={handleCompanyChange}
-                                    placeholder="Select Company"
-                                    isMulti={false}
-                                    isDisabled={!selectedLedger}
-                                    className="rounded-xl border-slate-200 hover:border-slate-300 transition-all"
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">Payment Amount</label>
-                                <div className="relative">
-                                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">₹</span>
-                                    <input
-                                        type="number"
-                                        name="amount"
-                                        value={formData.amount === 0 ? '' : formData.amount}
-                                        onChange={handleInputChange}
-                                        onWheel={(e) => e.target.blur()}
-                                        placeholder="0.00"
-                                        className="w-full h-[42px] pl-8 pr-4 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-slate-900/5 focus:border-slate-900 outline-none transition-all font-bold text-slate-900"
-                                    />
-                                </div>
-                            </div>
-                            <div className="space-y-2">
-                                <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">Payment Mode</label>
-                                <select
-                                    name="paymentMode"
-                                    value={formData.paymentMode}
-                                    onChange={handleInputChange}
-                                    className="w-full h-[42px] px-4 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-slate-900/5 focus:border-slate-900 outline-none transition-all font-bold text-slate-900 appearance-none cursor-pointer"
-                                >
-                                    {paymentModes.map(mode => (
-                                        <option key={mode.value} value={mode.value}>{mode.label}</option>
-                                    ))}
-                                </select>
-                            </div>
-                        </div>
-
-                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 pt-4 border-t border-slate-50">
-                            <div className="lg:col-span-2 space-y-2">
-                                <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">Payment Narration</label>
-                                <input
-                                    type="text"
-                                    name="remarks"
-                                    value={formData.remarks}
-                                    onChange={handleInputChange}
-                                    placeholder="Enter narration for this entry..."
-                                    className="w-full h-[42px] px-4 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-slate-900/5 focus:border-slate-900 outline-none transition-all font-bold text-slate-900"
-                                />
-                            </div>
-                            <div className="flex items-end">
-                                <Buttons
-                                    label={`Payment Received (₹${formData.amount})`}
-                                    onClick={handleRecordAdvance}
-                                    disabled={loading || !selectedLedger || formData.amount <= 0 || allocationSource !== 'fresh'}
-                                    variant="primary"
-                                    className="w-full h-[42px] rounded-xl shadow-lg shadow-emerald-600/20"
-                                    icon={<FaSave />}
-                                />
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Tab Content Section */}
                 <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden min-h-[500px]">
                     {activeTab === 'allocation' && (
-                        <div className="flex flex-col h-full">
-                            <div className="p-6 border-b border-slate-100 bg-slate-50/50 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                                <div className="flex items-center gap-4">
-                                    <div className="w-10 h-10 bg-white rounded-xl border border-slate-200 flex items-center justify-center text-slate-600 shadow-sm">
-                                        <FaFilter size={14} />
-                                    </div>
-                                    <div>
-                                        <h4 className="font-bold text-slate-800">
-                                            {allocationSource === 'fresh' ? 'Allocation Ledger' : 'Advance Adjustment'}
-                                        </h4>
-                                        <p className="text-[11px] text-slate-500 font-medium uppercase tracking-wider">
-                                            {allocationSource === 'fresh' ? 'Map payments to saudas' : `Using ₹${ledgerBalance.advanceBalance.toLocaleString()} Credit`}
-                                        </p>
-                                    </div>
-                                </div>
-
-                                <div className="flex flex-wrap items-center gap-3">
-                                    {allocationSource === 'fresh' && formData.amount > 0 && (
-                                        <div className="flex items-center gap-2 bg-emerald-900 text-white px-4 py-2 rounded-xl shadow-lg border border-emerald-700 animate-in fade-in slide-in-from-right-4 duration-500">
-                                            <div className="flex flex-col">
-                                                <span className="text-[9px] font-black uppercase tracking-[0.2em] text-emerald-400 leading-none mb-1">Available to Allocate</span>
-                                                <span className="text-sm font-black italic tracking-tight">₹{unallocatedBalance.toLocaleString('en-IN')}</span>
-                                            </div>
-                                            <div className="w-px h-6 bg-emerald-700/50 mx-1"></div>
-                                            <FaMoneyBillWave className="text-emerald-400 animate-pulse" />
-                                        </div>
-                                    )}
-
-                                    <div className="flex items-center gap-2 bg-white px-3 py-2 rounded-xl border border-slate-200 shadow-sm">
-                                        <input
-                                            type="date"
-                                            value={formData.filterStartDate}
-                                            onChange={(e) => setFormData(prev => ({ ...prev, filterStartDate: e.target.value }))}
-                                            className="text-[11px] font-bold text-slate-700 outline-none bg-transparent"
-                                        />
-                                        <span className="text-slate-300">|</span>
-                                        <input
-                                            type="date"
-                                            value={formData.filterEndDate}
-                                            onChange={(e) => setFormData(prev => ({ ...prev, filterEndDate: e.target.value }))}
-                                            className="text-[11px] font-bold text-slate-700 outline-none bg-transparent"
-                                        />
-                                        {(formData.filterStartDate || formData.filterEndDate) && (
-                                            <button 
-                                                onClick={() => setFormData(prev => ({ ...prev, filterStartDate: '', filterEndDate: '' }))}
-                                                className="ml-1 text-rose-500 hover:bg-rose-50 p-1 rounded-md transition-all"
-                                            >
-                                                <FaArrowLeft size={10} />
-                                            </button>
-                                        )}
-                                    </div>
-
-                                    <SearchBox
-                                        placeholder="Search Sauda / Lorry..."
-                                        items={entries}
-                                        onSearch={setTableSearch}
-                                        returnQuery={true}
-                                        className="!max-w-[300px]"
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="flex-1">
-                                {fetchingEntries ? (
-                                    <div className="py-32 flex flex-col items-center justify-center gap-4">
-                                        <Loading size="lg" />
-                                        <p className="text-xs font-bold text-slate-400 uppercase tracking-[0.2em]">Syncing Entries...</p>
-                                    </div>
-                                ) : filteredEntries.length > 0 ? (
-                                    <div className="overflow-x-auto">
-                                        <Tables
-                                            headers={columns.map(c => c.header)}
-                                            rows={filteredEntries.map((entry, index) => columns.map(col => {
-                                                if (typeof col.accessor === 'function') {
-                                                    return col.accessor(entry, index);
-                                                }
-                                                return entry[col.accessor];
-                                            }))}
-                                        />
-                                        
-                                        <div className="p-6 bg-slate-50 border-t border-slate-100">
-                                            <Paginations
-                                                currentPage={entriesPage}
-                                                totalItems={entriesTotalPages * 20} // Assuming 20 per page as per fetchEntries
-                                                itemsPerPage={20}
-                                                onPageChange={(page) => fetchEntries(page)}
-                                            />
-                                        </div>
-
-                                        <div className="bg-slate-900 p-8 flex flex-col md:flex-row items-center justify-between gap-8">
-                                            <div className="flex items-center gap-10">
-                                                <div className="space-y-1">
-                                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Total Unpaid Due</p>
-                                                    <p className="text-2xl font-black text-white italic tracking-tighter">₹{entryStats.totalDue.toLocaleString('en-IN')}</p>
-                                                </div>
-                                                <div className="w-px h-10 bg-slate-800 hidden md:block"></div>
-                                                <div className="space-y-1">
-                                                    <p className="text-[10px] font-black text-emerald-400 uppercase tracking-widest leading-none">Date Received</p>
-                                                    <p className="text-2xl font-black text-white italic tracking-tighter">₹{dateTotal.toLocaleString('en-IN')}</p>
-                                                </div>
-                                            </div>
-
-                                            <div className="flex items-center gap-6">
-                                                <div className="text-right space-y-1">
-                                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Pending Count</p>
-                                                    <p className="text-2xl font-black text-rose-400">{entryStats.pendingCount}</p>
-                                                </div>
-                                                <div className="bg-slate-800 p-4 rounded-2xl border border-slate-700">
-                                                    <FaFileInvoiceDollar className="text-slate-500" size={24} />
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                ) : (
-                                    <div className="py-32 flex flex-col items-center justify-center text-center px-8">
-                                        <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center text-slate-200 mb-6 border border-slate-100">
-                                            <FaHistory size={32} />
-                                        </div>
-                                        <h4 className="text-lg font-bold text-slate-800">No Pending Records</h4>
-                                        <p className="text-sm text-slate-500 font-medium max-w-xs mx-auto mt-2">
-                                            All entries for this ledger are fully settled or no records match your filters.
-                                        </p>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
+                        <AllocationLedger 
+                            allocationSource={allocationSource}
+                            formData={formData}
+                            unallocatedBalance={unallocatedBalance}
+                            setFormData={setFormData}
+                            tableSearch={tableSearch}
+                            setTableSearch={setTableSearch}
+                            entries={entries}
+                            fetchingEntries={fetchingEntries}
+                            filteredEntries={filteredEntries}
+                            columns={columns}
+                            entriesPage={entriesPage}
+                            fetchEntries={fetchEntries}
+                            entriesTotalPages={entriesTotalPages}
+                            entryStats={entryStats}
+                            dateTotal={dateTotal}
+                            ledgerBalance={ledgerBalance}
+                        />
                     )}
 
                     {activeTab === 'history' && (
-                        <div className="flex flex-col h-full">
-                            <div className="p-6 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
-                                <div className="flex items-center gap-4">
-                                    <div className="w-10 h-10 bg-white rounded-xl border border-slate-200 flex items-center justify-center text-slate-600 shadow-sm">
-                                        <FaHistory size={14} />
-                                    </div>
-                                    <div>
-                                        <h4 className="font-bold text-slate-800">Payment History</h4>
-                                        <p className="text-[11px] text-slate-500 font-medium uppercase tracking-wider">
-                                            Records for {new Date(formData.date).toLocaleDateString('en-GB')}
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="flex-1">
-                                {fetchingHistory ? (
-                                    <div className="py-32 flex flex-col items-center justify-center gap-4">
-                                        <Loading size="lg" />
-                                        <p className="text-xs font-bold text-slate-400 uppercase tracking-[0.2em]">Loading History...</p>
-                                    </div>
-                                ) : history.length > 0 ? (
-                                    <Tables
-                                        headers={historyColumns.map(c => c.header)}
-                                        rows={history.map(row => historyColumns.map(col => {
-                                            if (typeof col.accessor === 'function') {
-                                                return col.accessor(row);
-                                            }
-                                            return row[col.accessor];
-                                        }))}
-                                    />
-                                ) : (
-                                    <div className="py-32 flex flex-col items-center justify-center text-center px-8">
-                                        <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center text-slate-200 mb-6 border border-slate-100">
-                                            <FaHistory size={32} />
-                                        </div>
-                                        <h4 className="text-lg font-bold text-slate-800">No Previous Payments</h4>
-                                        <p className="text-sm text-slate-500 font-medium max-w-xs mx-auto mt-2">
-                                            No payments were recorded for this ledger on the selected date.
-                                        </p>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
+                        <PaymentHistory 
+                            fetchingHistory={fetchingHistory}
+                            formData={formData}
+                            history={history}
+                            historyColumns={historyColumns}
+                        />
                     )}
 
                     {activeTab === 'summary' && (
-                        <div className="flex flex-col h-full">
-                            <div className="p-6 border-b border-slate-100 bg-slate-50/50 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                                <div className="flex items-center gap-4">
-                                    <div className="w-10 h-10 bg-white rounded-xl border border-slate-200 flex items-center justify-center text-slate-600 shadow-sm">
-                                        <FaChartBar size={14} />
-                                    </div>
-                                    <div>
-                                        <h4 className="font-bold text-slate-800">Analytical Summary</h4>
-                                        <p className="text-[11px] text-slate-500 font-medium uppercase tracking-wider">Periodic collection trends</p>
-                                    </div>
-                                </div>
-
-                                <div className="flex bg-white border border-slate-200 p-1 rounded-xl shadow-sm">
-                                    {['month', 'week'].map(type => (
-                                        <button
-                                            key={type}
-                                            onClick={() => setSummaryType(type)}
-                                            className={`px-6 py-2 text-[11px] font-black uppercase tracking-widest rounded-lg transition-all ${
-                                                summaryType === type 
-                                                    ? 'bg-slate-900 text-white shadow-md' 
-                                                    : 'text-slate-400 hover:text-slate-600'
-                                            }`}
-                                        >
-                                            {type}ly
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-
-                            <div className="p-8">
-                                {summary.length > 0 ? (
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                                        {summary.map((item, idx) => (
-                                            <div key={idx} className="bg-white border border-slate-200 p-6 rounded-[2rem] group hover:border-slate-900 hover:shadow-xl transition-all duration-300 relative overflow-hidden">
-                                                <div className="absolute top-0 right-0 w-32 h-32 bg-slate-50 rounded-full -mr-16 -mt-16 group-hover:bg-slate-900 transition-colors duration-300"></div>
-                                                
-                                                <div className="relative z-10">
-                                                    <div className="flex items-center justify-between mb-6">
-                                                        <div className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-400 group-hover:bg-white/10 group-hover:text-white transition-all duration-300">
-                                                            <FaFileInvoiceDollar size={20} />
-                                                        </div>
-                                                        <span className="text-xs font-black text-slate-400 uppercase tracking-widest group-hover:text-white/60">{item._id.year}</span>
-                                                    </div>
-                                                    
-                                                    <div className="space-y-1 mb-6">
-                                                        <p className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] group-hover:text-white/60">
-                                                            {summaryType === 'month' ? `Period ${item._id.period}` : `Week ${item._id.period}`}
-                                                        </p>
-                                                        <p className="text-3xl font-black text-slate-900 italic tracking-tighter group-hover:text-white transition-colors duration-300">
-                                                            ₹{item.totalAmount.toLocaleString()}
-                                                        </p>
-                                                    </div>
-
-                                                    <div className="pt-6 border-t border-slate-100 group-hover:border-white/10 flex items-center justify-between">
-                                                        <span className="text-[11px] font-black text-slate-900 uppercase tracking-widest group-hover:text-white">{item.count} Transactions</span>
-                                                        <FaArrowRight className="text-slate-200 group-hover:text-white transition-colors" />
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                ) : (
-                                    <div className="py-32 flex flex-col items-center justify-center text-center">
-                                        <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center text-slate-200 mb-6 border border-slate-100">
-                                            <FaChartBar size={32} />
-                                        </div>
-                                        <h4 className="text-lg font-bold text-slate-800">No Summary Data</h4>
-                                        <p className="text-sm text-slate-500 font-medium max-w-xs mx-auto mt-2">
-                                            Analytical data will appear here once you select a ledger and record transactions.
-                                        </p>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
+                        <AnalyticalSummary 
+                            summaryType={summaryType}
+                            setSummaryType={setSummaryType}
+                            summary={summary}
+                        />
                     )}
                 </div>
             </div>

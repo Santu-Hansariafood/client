@@ -3,6 +3,8 @@ import mongoose from "mongoose";
 import PaymentReceived from "../models/PaymentReceived.js";
 import LoadingEntry from "../models/LoadingEntry.js";
 import SelfOrder from "../models/SelfOrder.js";
+import Buyer from "../models/Buyer.js";
+import Seller from "../models/Seller.js";
 import { adminOnly } from "../middleware/roleMiddleware.js";
 
 const router = express.Router();
@@ -215,12 +217,20 @@ router.get("/", async (req, res) => {
   }
 });
 
-// Get Payment Summaries (Month-wise / Week-wise)
+// Get Payment Summaries (Month-wise / Week-wise with Debit/Credit logic)
 router.get("/summary", async (req, res) => {
   try {
     const { ledgerId, type = 'month' } = req.query; // type: month, week
-    const query = {};
-    if (ledgerId) query.ledgerId = ledgerId;
+    if (!ledgerId) return res.status(400).json({ message: "ledgerId is required" });
+
+    // 1. Get ledger info to determine if it's a Buyer or Seller
+    const [buyer, seller] = await Promise.all([
+      Buyer.findById(ledgerId).populate('companyIds').lean(),
+      Seller.findById(ledgerId).lean()
+    ]);
+    
+    if (!buyer && !seller) return res.status(404).json({ message: "Ledger not found" });
+    const isBuyer = !!buyer;
 
     let groupBy;
     if (type === 'week') {
@@ -229,22 +239,117 @@ router.get("/summary", async (req, res) => {
       groupBy = { $month: "$date" };
     }
 
-    const summary = await PaymentReceived.aggregate([
-      { $match: query },
+    // 2. Direct Payments (Money Received for Buyer, Money Sent for Seller)
+    const directSummary = await PaymentReceived.aggregate([
+      { $match: { ledgerId: new mongoose.Types.ObjectId(ledgerId) } },
       {
         $group: {
           _id: {
             year: { $year: "$date" },
             period: groupBy
           },
-          totalAmount: { $sum: "$amount" },
+          amount: { $sum: "$amount" },
           count: { $sum: 1 }
         }
-      },
-      { $sort: { "_id.year": -1, "_id.period": -1 } }
+      }
     ]);
 
-    res.json(summary);
+    // 3. Indirect Payments (Flow between Buyer <-> Seller)
+    let indirectSummary = [];
+    if (isBuyer) {
+      // For Buyer: "Payment Sent" means money we paid to Sellers for this Buyer's orders
+      const companyNames = (buyer.companyIds || []).map(c => c.companyName);
+      if (buyer.name) companyNames.push(buyer.name);
+      
+      const companyRegexes = companyNames.filter(Boolean).map(n => new RegExp(`^${n.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, 'i'));
+
+      indirectSummary = await PaymentReceived.aggregate([
+        { $match: { ledgerType: 'Seller' } },
+        { $unwind: "$mappings" },
+        {
+          $lookup: {
+            from: "loadingentries",
+            localField: "mappings.loadingEntryId",
+            foreignField: "_id",
+            as: "entry"
+          }
+        },
+        { $unwind: "$entry" },
+        { $match: { "entry.buyerCompany": { $in: companyRegexes } } },
+        {
+          $group: {
+            _id: {
+              year: { $year: "$date" },
+              period: groupBy
+            },
+            amount: { $sum: "$mappings.allocatedAmount" },
+            count: { $sum: 1 }
+          }
+        }
+      ]);
+    } else {
+      // For Seller: "Payment Received" means money we received from Buyers for this Seller's orders
+      indirectSummary = await PaymentReceived.aggregate([
+        { $match: { ledgerType: 'Buyer' } },
+        { $unwind: "$mappings" },
+        {
+          $lookup: {
+            from: "loadingentries",
+            localField: "mappings.loadingEntryId",
+            foreignField: "_id",
+            as: "entry"
+          }
+        },
+        { $unwind: "$entry" },
+        { $match: { "entry.supplier": new mongoose.Types.ObjectId(ledgerId) } },
+        {
+          $group: {
+            _id: {
+              year: { $year: "$date" },
+              period: groupBy
+            },
+            amount: { $sum: "$mappings.allocatedAmount" },
+            count: { $sum: 1 }
+          }
+        }
+      ]);
+    }
+
+    // 4. Merge results into a combined summary
+    const result = [];
+    const mergeData = (data, field) => {
+      data.forEach(item => {
+        const key = `${item._id.year}-${item._id.period}`;
+        let existing = result.find(r => `${r._id.year}-${r._id.period}` === key);
+        if (!existing) {
+          existing = { 
+            _id: item._id, 
+            received: 0, 
+            sent: 0, 
+            receivedCount: 0, 
+            sentCount: 0 
+          };
+          result.push(existing);
+        }
+        if (field === 'received') {
+          existing.received = item.amount;
+          existing.receivedCount = item.count;
+        } else {
+          existing.sent = item.amount;
+          existing.sentCount = item.count;
+        }
+      });
+    };
+
+    if (isBuyer) {
+      mergeData(directSummary, 'received');
+      mergeData(indirectSummary, 'sent');
+    } else {
+      mergeData(directSummary, 'sent');
+      mergeData(indirectSummary, 'received');
+    }
+
+    res.json(result.sort((a, b) => b._id.year - a._id.year || b._id.period - a._id.period));
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
