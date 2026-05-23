@@ -25,12 +25,15 @@ const AddPaymentReceived = () => {
     const navigate = useNavigate();
     const { user } = useAuth();
     const [loading, setLoading] = useState(false);
-    const [fetchingLedgers, setFetchingLedgers] = useState(false);
-    const [fetchingEntries, setFetchingEntries] = useState(false);
-    const [fetchingHistory, setFetchingHistory] = useState(false);
     const [ledgers, setLedgers] = useState([]);
+    const [opposingLedgers, setOpposingLedgers] = useState([]);
     const [allCompanies, setAllCompanies] = useState([]);
     const [selectedLedger, setSelectedLedger] = useState(null);
+    const [selectedOpposingLedger, setSelectedOpposingLedger] = useState(null);
+    const [fetchingLedgers, setFetchingLedgers] = useState(false);
+    const [fetchingOpposingLedgers, setFetchingOpposingLedgers] = useState(false);
+    const [fetchingEntries, setFetchingEntries] = useState(false);
+    const [fetchingHistory, setFetchingHistory] = useState(false);
     const [entries, setEntries] = useState([]);
     const [entriesPage, setEntriesPage] = useState(1);
     const [entriesTotalPages, setEntriesTotalPages] = useState(1);
@@ -48,6 +51,8 @@ const AddPaymentReceived = () => {
         ledgerType: 'Buyer',
         ledgerId: '',
         companyId: '',
+        opposingLedgerId: '',
+        opposingCompanyId: '',
         amount: 0,
         paymentType: 'Sauda-wise',
         paymentMode: 'Bank',
@@ -115,7 +120,30 @@ const AddPaymentReceived = () => {
                 setFetchingLedgers(false);
             }
         };
+
+        const fetchOpposingLedgers = async () => {
+            try {
+                setFetchingOpposingLedgers(true);
+                // If main is Buyer, opposing is Seller, and vice-versa
+                const endpoint = formData.ledgerType === 'Buyer' ? '/sellers' : '/buyers';
+                const response = await api.get(endpoint);
+                const data = response.data.data || response.data;
+                setOpposingLedgers(data.map(item => ({
+                    value: item._id,
+                    label: item.name || item.sellerName,
+                    companies: item.companyIds || item.companies || []
+                })));
+                setSelectedOpposingLedger(null);
+                setFormData(prev => ({ ...prev, opposingLedgerId: '', opposingCompanyId: '' }));
+            } catch (error) {
+                console.error('Error fetching opposing ledgers:', error);
+            } finally {
+                setFetchingOpposingLedgers(false);
+            }
+        };
+
         fetchLedgers();
+        fetchOpposingLedgers();
     }, [formData.ledgerType]);
 
     const fetchEntries = useCallback(async (page = 1) => {
@@ -135,6 +163,14 @@ const AddPaymentReceived = () => {
                 companyName = formData.companyId;
             }
 
+            let opposingCompanyName = '';
+            if (formData.ledgerType === 'Seller') { // Opposing is Buyer
+                const selectedOpposingCompany = allCompanies.find(c => c._id === formData.opposingCompanyId);
+                opposingCompanyName = selectedOpposingCompany?.companyName || '';
+            } else { // Opposing is Seller
+                opposingCompanyName = formData.opposingCompanyId;
+            }
+
             let params = { 
                 page: page,
                 limit: 20,
@@ -150,9 +186,17 @@ const AddPaymentReceived = () => {
             if (formData.ledgerType === 'Seller') {
                 params.supplier = formData.ledgerId;
                 if (companyName) params.supplierCompany = companyName;
+                
+                // Add Buyer filters if selected
+                if (formData.opposingLedgerId) params.buyerId = formData.opposingLedgerId;
+                if (opposingCompanyName) params.buyerCompany = opposingCompanyName;
             } else {
                 params.buyerId = formData.ledgerId;
                 if (companyName) params.buyerCompany = companyName;
+
+                // Add Seller filters if selected
+                if (formData.opposingLedgerId) params.supplier = formData.opposingLedgerId;
+                if (opposingCompanyName) params.supplierCompany = opposingCompanyName;
             }
             
             const response = await api.get('/loading-entries', { params });
@@ -178,7 +222,17 @@ const AddPaymentReceived = () => {
         } finally {
             setFetchingEntries(false);
         }
-    }, [formData.ledgerId, formData.ledgerType, formData.paymentType, formData.filterStartDate, formData.filterEndDate, formData.companyId, allCompanies]);
+    }, [
+        formData.ledgerId, 
+        formData.ledgerType, 
+        formData.paymentType, 
+        formData.filterStartDate, 
+        formData.filterEndDate, 
+        formData.companyId, 
+        formData.opposingLedgerId, 
+        formData.opposingCompanyId, 
+        allCompanies
+    ]);
 
     useEffect(() => {
         fetchEntries(1);
@@ -272,6 +326,15 @@ const AddPaymentReceived = () => {
 
     const handleCompanyChange = (option) => {
         setFormData(prev => ({ ...prev, companyId: option?.value || '' }));
+    };
+
+    const handleOpposingLedgerChange = (option) => {
+        setSelectedOpposingLedger(option);
+        setFormData(prev => ({ ...prev, opposingLedgerId: option?.value || '', opposingCompanyId: '' }));
+    };
+
+    const handleOpposingCompanyChange = (option) => {
+        setFormData(prev => ({ ...prev, opposingCompanyId: option?.value || '' }));
     };
 
     const handleAllocationChange = (uiKey, amount, netAmount, paidAmount) => {
@@ -851,11 +914,16 @@ const AddPaymentReceived = () => {
                     handleInputChange={handleInputChange}
                     ledgerTypes={ledgerTypes}
                     ledgers={ledgers}
+                    opposingLedgers={opposingLedgers}
                     selectedLedger={selectedLedger}
+                    selectedOpposingLedger={selectedOpposingLedger}
                     handleLedgerChange={handleLedgerChange}
+                    handleOpposingLedgerChange={handleOpposingLedgerChange}
                     fetchingLedgers={fetchingLedgers}
+                    fetchingOpposingLedgers={fetchingOpposingLedgers}
                     allCompanies={allCompanies}
                     handleCompanyChange={handleCompanyChange}
+                    handleOpposingCompanyChange={handleOpposingCompanyChange}
                     paymentModes={paymentModes}
                     loading={loading}
                     handleRecordAdvance={handleRecordAdvance}

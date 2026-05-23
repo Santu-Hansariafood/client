@@ -11,11 +11,16 @@ const AccountSelection = ({
     handleInputChange, 
     ledgerTypes, 
     ledgers, 
+    opposingLedgers,
     selectedLedger, 
+    selectedOpposingLedger,
     handleLedgerChange, 
+    handleOpposingLedgerChange,
     fetchingLedgers, 
+    fetchingOpposingLedgers,
     allCompanies, 
     handleCompanyChange, 
+    handleOpposingCompanyChange,
     paymentModes, 
     loading, 
     handleRecordAdvance 
@@ -58,7 +63,8 @@ const AccountSelection = ({
                 </div>
             </div>
 
-            <div className="p-6 space-y-6">
+            <div className="p-6 space-y-8">
+                {/* Primary Party & Payment Details */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
                     <div className="space-y-2">
                         <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">Entry Date</label>
@@ -153,7 +159,62 @@ const AccountSelection = ({
                     </div>
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 pt-4 border-t border-slate-50">
+                {/* Opposing Party Filters */}
+                <div className="pt-6 border-t border-slate-100">
+                    <div className="flex items-center gap-2 mb-4">
+                        <div className="w-1.5 h-4 bg-slate-900 rounded-full"></div>
+                        <h4 className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-900">
+                            Opposing Party Filter ({formData.ledgerType === 'Buyer' ? 'Seller' : 'Buyer'})
+                        </h4>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl">
+                        <div className="space-y-2">
+                            <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">
+                                {formData.ledgerType === 'Buyer' ? 'Seller Name' : 'Buyer Name'}
+                            </label>
+                            <DataDropdown
+                                options={opposingLedgers}
+                                selectedOptions={selectedOpposingLedger}
+                                onChange={handleOpposingLedgerChange}
+                                placeholder={fetchingOpposingLedgers ? "Syncing..." : `Select ${formData.ledgerType === 'Buyer' ? 'Seller' : 'Buyer'}`}
+                                isMulti={false}
+                                isDisabled={fetchingOpposingLedgers}
+                                className="rounded-xl border-slate-200 hover:border-slate-300 transition-all"
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">
+                                {formData.ledgerType === 'Buyer' ? 'Seller Company' : 'Buyer Company'}
+                            </label>
+                            <DataDropdown
+                                options={selectedOpposingLedger?.companies?.map(c => {
+                                    const companyId = typeof c === 'string' ? c : (c._id || c.value || c.id);
+                                    let label = 'Unknown';
+                                    if (formData.ledgerType === 'Seller') { // Opposing is Buyer
+                                        const companyInfo = allCompanies.find(comp => comp._id === companyId);
+                                        label = companyInfo?.companyName || (typeof c === 'object' ? (c.companyName || c.label) : companyId);
+                                    } else { // Opposing is Seller
+                                        label = companyId;
+                                    }
+                                    return { value: companyId, label };
+                                }) || []}
+                                selectedOptions={formData.opposingCompanyId ? {
+                                    value: formData.opposingCompanyId,
+                                    label: formData.ledgerType === 'Seller' // Opposing is Buyer
+                                        ? (allCompanies.find(comp => comp._id === formData.opposingCompanyId)?.companyName || 'Unknown')
+                                        : formData.opposingCompanyId
+                                } : null}
+                                onChange={handleOpposingCompanyChange}
+                                placeholder="Select Company"
+                                isMulti={false}
+                                isDisabled={!selectedOpposingLedger}
+                                className="rounded-xl border-slate-200 hover:border-slate-300 transition-all"
+                            />
+                        </div>
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 pt-6 border-t border-slate-100">
                     <div className="lg:col-span-2 space-y-2">
                         <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">Payment Narration</label>
                         <input
