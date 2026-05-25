@@ -1,29 +1,46 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { FaTimes, FaPrint, FaCalendarAlt, FaBuilding, FaUserTie, FaBox, FaArrowDown, FaFilePdf, FaImage , FaChartLine} from 'react-icons/fa';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { FaTimes, FaPrint, FaCalendarAlt, FaBuilding, FaUserTie, FaBox, FaArrowDown, FaFilePdf, FaChartLine, FaExclamationTriangle } from 'react-icons/fa';
 import { jsPDF } from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 import api from '../../../../utils/apiClient/apiClient';
 import Loading from '../../../../common/Loading/Loading';
 import logoImg from '../../../../assets/Hans.png';
 
 const SaudaDetailPopup = ({ saudaNo, onClose }) => {
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
     const [data, setData] = useState(null);
 
-    useEffect(() => {
-        const fetchDetails = async () => {
-            try {
-                setLoading(true);
-                const response = await api.get(`/self-orders/details/${saudaNo}`);
-                setData(response.data);
-            } catch (error) {
-                console.error('Error fetching sauda details:', error);
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchDetails();
+    const fetchDetails = useCallback(async () => {
+        try {
+            setLoading(true);
+            setError(null);
+            const response = await api.get(`/self-orders/details/${saudaNo}`);
+            setData(response.data);
+        } catch (err) {
+            console.error('Error fetching sauda details:', err);
+            setError(err.response?.data?.message || 'Failed to load sauda details. Please try again.');
+        } finally {
+            setLoading(false);
+        }
     }, [saudaNo]);
+
+    useEffect(() => {
+        if (saudaNo) fetchDetails();
+    }, [saudaNo, fetchDetails]);
+
+    // Handle ESC key and Backdrop click
+    useEffect(() => {
+        const handleEsc = (e) => {
+            if (e.key === 'Escape') onClose();
+        };
+        window.addEventListener('keydown', handleEsc);
+        return () => window.removeEventListener('keydown', handleEsc);
+    }, [onClose]);
+
+    const handleBackdropClick = (e) => {
+        if (e.target === e.currentTarget) onClose();
+    };
 
     const consolidatedData = useMemo(() => {
         if (!data) return [];
@@ -32,7 +49,7 @@ const SaudaDetailPopup = ({ saudaNo, onClose }) => {
         let runningBalance = 0;
 
         // Add Loading Entries
-        data.entries.forEach(entry => {
+        (data.entries || []).forEach(entry => {
             const weight = entry.unloadingWeight || entry.loadingWeight || 0;
             const rate = entry.actualRate || 0;
             const cd = entry.cd || 0;
@@ -59,9 +76,9 @@ const SaudaDetailPopup = ({ saudaNo, onClose }) => {
         });
 
         // Add Payments
-        data.payments.forEach(payment => {
+        (data.payments || []).forEach(payment => {
             // Find mappings for this specific sauda
-            const saudaMappings = payment.mappings.filter(m => m.saudaNo === saudaNo);
+            const saudaMappings = (payment.mappings || []).filter(m => m.saudaNo === saudaNo);
             const allocatedAmount = saudaMappings.reduce((sum, m) => sum + (m.allocatedAmount || 0), 0);
             
             if (allocatedAmount > 0) {
@@ -88,7 +105,7 @@ const SaudaDetailPopup = ({ saudaNo, onClose }) => {
         });
     }, [data, saudaNo]);
 
-    const handlePrint = () => {
+    const handlePrint = useCallback(() => {
         if (!data) return;
 
         const doc = new jsPDF({
@@ -100,36 +117,50 @@ const SaudaDetailPopup = ({ saudaNo, onClose }) => {
         const pageWidth = doc.internal.pageSize.getWidth();
         const margin = 15;
 
-        // Header
+        // Header Background for Logo
+        doc.setFillColor(250, 250, 250);
+        doc.rect(0, 0, pageWidth, 30, 'F');
+
+        // Logo
+        try {
+            doc.addImage(logoImg, 'PNG', margin, 5, 20, 20);
+        } catch (e) {
+            console.error("Logo failed to load for PDF");
+        }
+
+        // --- TALLY STYLE HEADER ---
         doc.setFont("helvetica", "bold");
         doc.setFontSize(16);
-        doc.text("HANSARIA FOOD PVT. LTD.", pageWidth / 2, 15, { align: "center" });
-        doc.setFontSize(10);
+        doc.setTextColor(0, 0, 0);
+        doc.text("HANSARIA FOOD PVT. LTD.", pageWidth / 2 + 10, 15, { align: "center" });
+
+        doc.setFontSize(9);
         doc.setFont("helvetica", "normal");
-        doc.text("Sector 4, Plot 12, IMT Manesar, Gurugram, Haryana", pageWidth / 2, 20, { align: "center" });
+        doc.text("Sector 4, Plot 12, IMT Manesar, Gurugram, Haryana", pageWidth / 2 + 10, 20, { align: "center" });
         
         doc.setLineWidth(0.5);
-        doc.line(margin, 25, pageWidth - margin, 25);
+        doc.line(margin, 28, pageWidth - margin, 28); // Top Border
 
         doc.setFont("helvetica", "bold");
-        doc.setFontSize(12);
-        doc.text(`DETAILS OF SAUDA: ${saudaNo}`, margin, 32);
-        doc.setFontSize(9);
+        doc.setFontSize(11);
+        doc.text(`SAUDA MIS REPORT: ${saudaNo}`, margin, 35);
+        
         doc.setFont("helvetica", "normal");
-        doc.text(`Printed on: ${new Date().toLocaleString()}`, pageWidth - margin, 32, { align: "right" });
+        doc.setFontSize(8);
+        doc.text(`Generated on: ${new Date().toLocaleString('en-GB')}`, pageWidth - margin, 35, { align: "right" });
 
-        doc.line(margin, 35, pageWidth - margin, 35);
+        doc.line(margin, 38, pageWidth - margin, 38); // Header Bottom Border
 
-        // Sauda Info
+        // Sauda Details Section
         doc.setFontSize(9);
         doc.setFont("helvetica", "bold");
-        doc.text(`Buyer : ${data.order.buyerCompany.toUpperCase()}`, margin, 42);
-        doc.text(`Seller : ${data.order.supplier?.sellerName?.toUpperCase() || data.order.supplierCompany?.toUpperCase()}`, margin, 47);
-        doc.text(`Consignee : ${data.order.consignee?.toUpperCase() || '-'}`, margin, 52);
+        doc.text(`Buyer : ${data.order.buyerCompany.toUpperCase()}`, margin, 45);
+        doc.text(`Seller : ${(data.order.supplier?.sellerName || data.order.supplierCompany).toUpperCase()}`, margin, 50);
+        doc.text(`Consignee : ${(data.order.consignee || '-').toUpperCase()}`, margin, 55);
 
-        doc.text(`Sauda Dt. : ${new Date(data.order.date).toLocaleDateString('en-GB')}`, pageWidth - margin, 42, { align: "right" });
-        doc.text(`Qty : ${data.order.quantity.toLocaleString()} ${data.order.unit || 'Ton'}`, pageWidth - margin, 47, { align: "right" });
-        doc.text(`Rate : Rs. ${data.order.rate.toLocaleString()}`, pageWidth - margin, 52, { align: "right" });
+        doc.text(`Sauda Dt. : ${new Date(data.order.date).toLocaleDateString('en-GB')}`, pageWidth - margin, 45, { align: "right" });
+        doc.text(`Qty : ${data.order.quantity.toLocaleString()} ${data.order.unit || 'Ton'}`, pageWidth - margin, 50, { align: "right" });
+        doc.text(`Rate : Rs. ${data.order.rate.toLocaleString()}`, pageWidth - margin, 55, { align: "right" });
 
         // Table
         const tableData = [];
@@ -146,35 +177,65 @@ const SaudaDetailPopup = ({ saudaNo, onClose }) => {
                     `Rs. ${item.balance.toLocaleString(undefined, { minimumFractionDigits: 2 })}`
                 ]);
             } else {
+                // Payment Description Row
                 tableData.push([
-                    { content: `${new Date(item.date).toLocaleDateString('en-GB')} - Payment made Rs. ${item.amount.toLocaleString()}/- by ${item.mode}${item.remarks ? ` (${item.remarks})` : ''}`, colSpan: 6, styles: { fontStyle: 'italic', textColor: [50, 50, 50] } },
-                    `- Rs. ${item.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}`,
-                    item.balance <= 1 && item.balance >= -1 ? 'NIL' : `Rs. ${item.balance.toLocaleString(undefined, { minimumFractionDigits: 2 })}`
+                    { 
+                        content: `${new Date(item.date).toLocaleDateString('en-GB')} – Payment made Rs. ${item.amount.toLocaleString()}/- by ${item.mode.toUpperCase()}${item.remarks ? ` [${item.remarks.toUpperCase()}]` : ''}`, 
+                        colSpan: 8, 
+                        styles: { fontStyle: 'italic', textColor: [50, 50, 50], fillColor: [245, 245, 245] } 
+                    }
+                ]);
+                // Deduction Row
+                tableData.push([
+                    '', '', '', '', '', '',
+                    { content: `– Rs. ${item.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}`, styles: { halign: 'right', fontStyle: 'bold', textColor: [150, 0, 0] } },
+                    { content: item.balance <= 1 && item.balance >= -1 ? 'NIL' : `Rs. ${item.balance.toLocaleString(undefined, { minimumFractionDigits: 2 })}`, styles: { halign: 'right', fontStyle: 'bold', textColor: [0, 80, 0] } }
                 ]);
             }
         });
 
-        doc.autoTable({
-            startY: 60,
-            head: [['Date', 'Bill No.', 'L.No.', 'L.Wt', 'Un.Dt', 'Un.Wt', 'Amount', 'Balance']],
+        autoTable(doc, {
+            startY: 62,
+            head: [['DATE', 'BILL NO.', 'L.NO.', 'L.WT', 'UN.DT', 'UN.WT', 'AMOUNT', 'BALANCE']],
             body: tableData,
             theme: 'grid',
-            headStyles: { fillColor: [255, 255, 255], textColor: [0, 0, 0], fontSize: 8, fontStyle: 'bold', lineWidth: 0.1 },
-            styles: { fontSize: 7, cellPadding: 2 },
+            headStyles: {
+                fillColor: [240, 240, 240],
+                textColor: [0, 0, 0],
+                fontSize: 8,
+                fontStyle: 'bold',
+                lineWidth: 0.1,
+                lineColor: [0, 0, 0],
+                halign: 'center'
+            },
+            styles: {
+                fontSize: 7,
+                cellPadding: 2,
+                textColor: [0, 0, 0],
+                lineColor: [200, 200, 200]
+            },
             columnStyles: {
-                0: { cellWidth: 18 },
-                1: { cellWidth: 15 },
-                2: { cellWidth: 15 },
+                0: { cellWidth: 20, halign: 'center' },
+                1: { cellWidth: 15, halign: 'center' },
+                2: { cellWidth: 15, halign: 'center' },
                 3: { halign: 'right' },
-                4: { cellWidth: 15 },
+                4: { cellWidth: 15, halign: 'center' },
                 5: { halign: 'right' },
-                6: { halign: 'right', fontStyle: 'bold' },
-                7: { halign: 'right', fontStyle: 'bold' }
+                6: { halign: 'right' },
+                7: { halign: 'right' }
+            },
+            margin: { left: margin, right: margin },
+            didDrawPage: (data) => {
+                const pageCount = doc.internal.getNumberOfPages();
+                doc.setFontSize(7);
+                doc.setTextColor(150, 150, 150);
+                doc.text(`Page ${data.pageNumber} of ${pageCount}`, pageWidth - margin, doc.internal.pageSize.height - 10, { align: "right" });
+                doc.text("This is a computer generated document.", margin, doc.internal.pageSize.height - 10);
             }
         });
 
-        doc.save(`Sauda_Details_${saudaNo}.pdf`);
-    };
+        doc.save(`Sauda_MIS_${saudaNo}.pdf`);
+    }, [data, saudaNo, consolidatedData]);
 
     if (!saudaNo) return null;
 
