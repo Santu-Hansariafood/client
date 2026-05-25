@@ -72,17 +72,9 @@ const AllocationLedger = ({
                          endDate={formData.filterEndDate}
                          onStartDateChange={(date) => setFormData(prev => ({ ...prev, filterStartDate: date }))}
                          onEndDateChange={(date) => setFormData(prev => ({ ...prev, filterEndDate: date }))}
+                         onClear={() => setFormData(prev => ({ ...prev, filterStartDate: '', filterEndDate: '' }))}
                          className="!bg-white !px-3 !py-1.5 shadow-sm"
                      />
-                    { (formData.filterStartDate || formData.filterEndDate) && (
-                        <button 
-                            onClick={() => setFormData(prev => ({ ...prev, filterStartDate: '', filterEndDate: '' }))}
-                            className="text-rose-500 hover:bg-rose-50 p-1.5 rounded-xl transition-all border border-slate-100 bg-white"
-                            title="Clear Dates"
-                        >
-                            <FaArrowLeft size={10} />
-                        </button>
-                    )}
 
                     <SearchBox
                         placeholder="Search Sauda / Lorry..."

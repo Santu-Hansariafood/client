@@ -68,8 +68,8 @@ const ListPaymentReceived = () => {
     ledgerType: "",
     ledgerId: "",
     companyId: "",
-    startDate: new Date().toISOString().split("T")[0],
-    endDate: new Date().toISOString().split("T")[0],
+    startDate: "",
+    endDate: "",
   });
 
   useEffect(() => {
@@ -200,7 +200,9 @@ const ListPaymentReceived = () => {
 
       doc.setFont("helvetica", "normal");
       doc.setFontSize(9);
-      const dateRange = `Period: ${new Date(filters.startDate).toLocaleDateString("en-GB")} to ${new Date(filters.endDate).toLocaleDateString("en-GB")}`;
+      const dateRange = filters.startDate && filters.endDate 
+        ? `Period: ${new Date(filters.startDate).toLocaleDateString("en-GB")} to ${new Date(filters.endDate).toLocaleDateString("en-GB")}`
+        : "Period: Consolidated (All Time)";
       doc.text(dateRange, pageWidth - margin, 32, { align: "right" });
 
       doc.line(margin, selectedCompany ? 41 : 35, pageWidth - margin, selectedCompany ? 41 : 35); // Bottom Header Border
@@ -651,6 +653,10 @@ const ListPaymentReceived = () => {
                 onEndDateChange={(date) => {
                   setPage(1);
                   setFilters((prev) => ({ ...prev, endDate: date }));
+                }}
+                onClear={() => {
+                  setPage(1);
+                  setFilters((prev) => ({ ...prev, startDate: "", endDate: "" }));
                 }}
                 className="!h-11"
               />
