@@ -764,7 +764,7 @@ router.get("/", async (req, res) => {
       .skip((page - 1) * limit)
       .limit(limit)
       .select(
-        "loadingDate saudaNo lorryNumber supplier supplierCompany consignee buyerCompany commodity loadingWeight unloadingWeight unloadingDate paymentStatus paidAmount billNumber transporterId addedTransport driverName driverPhoneNumber freightRate totalFreight advance balance dateOfIssue documents bags deliveryDate buyerBrokerage sellerBrokerage loadingFrom createdAt",
+        "loadingDate saudaNo lorryNumber supplier supplierCompany consignee buyerCompany commodity loadingWeight unloadingWeight unloadingDate paymentStatus paidAmount billNumber transporterId addedTransport driverName driverPhoneNumber freightRate totalFreight advance balance dateOfIssue documents bags deliveryDate buyerBrokerage sellerBrokerage loadingFrom createdAt creatorName creatorMobile entryByRole",
       )
       .populate("supplier", "sellerName")
       .lean();
@@ -1580,6 +1580,7 @@ router.post("/bulk", async (req, res) => {
         ...entry,
         createdBy: req.user.sub,
         creatorName: req.user.name || "Unknown",
+        creatorMobile: req.user.mobile || "",
         entryByRole: req.user.role,
       };
       // Assign loadingNo
@@ -1638,6 +1639,7 @@ router.post("/", async (req, res) => {
       ...req.body,
       createdBy: req.user.sub,
       creatorName: req.user.name || "Unknown",
+      creatorMobile: req.user.mobile || "",
       entryByRole: req.user.role,
     };
     // Assign loadingNo

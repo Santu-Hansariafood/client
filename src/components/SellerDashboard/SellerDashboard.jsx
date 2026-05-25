@@ -13,6 +13,7 @@ import {
   FaDownload,
   FaBell,
   FaBook,
+  FaTruckLoading,
 } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext/AuthContext";
@@ -275,6 +276,7 @@ const SellerDashboard = () => {
 
   const navigationItems = useMemo(() => [
     { label: "Today's Bids", icon: <FaGavel />, color: "text-emerald-600", link: "/Supplier-Bid-List", state: { mobile }, count: sellerBidCount },
+    { label: "Add Loading", icon: <FaTruckLoading />, color: "text-emerald-500", link: "/Loading-Entry/add-loading-entry", state: { mobile }, count: "Create" },
     { label: "Order History", icon: <FaBoxOpen />, color: "text-indigo-600", link: "/manage-order/list-self-order", state: { mobile }, count: orderCount },
     { label: "Pending Sauda", icon: <FaBook />, color: "text-amber-600", link: "/Loading-Entry/pending-loading-list", state: { mobile }, count: pendingSaudaCount },
     { label: "Loading List", icon: <FaHistory />, color: "text-blue-600", link: "/Loading-Entry/list-loading-entry", state: { mobile }, count: "Access" },

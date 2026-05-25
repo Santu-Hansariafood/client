@@ -631,7 +631,7 @@ const ListLoadingEntry = () => {
         `${(entry.unloadingWeight || 0).toFixed(2)} T`,
         `₹ ${totalBrokerage}`,
         entry.billNumber || "N/A",
-        `${entry.creatorName || "Admin"} (${entry.entryByRole || "Admin"})`,
+        `${entry.creatorMobile || "N/A"} (${entry.entryByRole || "Admin"})`,
       ];
     });
 
@@ -737,7 +737,7 @@ const ListLoadingEntry = () => {
         formatDate(entry.dateOfIssue),
         <div key={`enteredBy-${entry._id}`} className="flex flex-col">
           <span className="font-semibold text-slate-700">
-            {entry.creatorName || "Admin"}
+            {entry.creatorMobile || "N/A"}
           </span>
           <span className="text-[10px] text-slate-400 uppercase font-bold">
             {entry.entryByRole || "Admin"}
@@ -1033,7 +1033,7 @@ const ListLoadingEntry = () => {
                         </span>
                         <span className="text-slate-500">Entered By:</span>
                         <span className="font-semibold text-slate-800 flex flex-col">
-                          <span>{selectedEntry.creatorName || "Admin"}</span>
+                          <span>{selectedEntry.creatorMobile || "N/A"}</span>
                           <span className="text-[10px] text-slate-400 uppercase">
                             ({selectedEntry.entryByRole || "Admin"})
                           </span>

@@ -147,7 +147,7 @@ const LoadingReport = () => {
     </div>,
     <div key={`entered-${index}`} className="flex flex-col text-[10px]">
       <span className="font-bold text-slate-700">
-        {entry.creatorName || "Admin"}
+        {entry.creatorMobile || "N/A"}
       </span>
       <span className="text-slate-400 uppercase">
         {entry.entryByRole || "Admin"}
@@ -285,7 +285,7 @@ const LoadingReport = () => {
         entry.bags || "-",
         entry.consignee,
         entry.supplierCompany,
-        `${entry.creatorName || "Admin"} (${entry.entryByRole || "Admin"})`,
+        `${entry.creatorMobile || "N/A"} (${entry.entryByRole || "Admin"})`,
       ]);
 
       autoTable(doc, {
