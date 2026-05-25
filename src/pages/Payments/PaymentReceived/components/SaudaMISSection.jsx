@@ -11,7 +11,7 @@ const SaudaMISSection = () => {
     const [loading, setLoading] = useState(false);
     const [fetchingCompanies, setFetchingCompanies] = useState(false);
     const [allCompanies, setAllCompanies] = useState([]);
-    const [saudaNumbers, setSaudaNumbers] = useState([]);
+    const [saudas, setSaudas] = useState([]);
     const [selectedSauda, setSelectedSauda] = useState(null);
     const [showPopup, setShowPopup] = useState(false);
 
@@ -46,9 +46,9 @@ const SaudaMISSection = () => {
             };
             const response = await api.get('/self-orders', { params });
             const items = response.data.data || response.data || [];
-            setSaudaNumbers(items.map(s => s.saudaNo));
+            setSaudas(items);
         } catch (error) {
-            toast.error('Error fetching sauda numbers');
+            toast.error('Error fetching sauda details');
         } finally {
             setLoading(false);
         }
@@ -118,29 +118,82 @@ const SaudaMISSection = () => {
             </div>
 
             {/* Sauda List */}
-            <div className="bg-white rounded-[2rem] border border-slate-200 shadow-xl shadow-slate-200/50 overflow-hidden min-h-[300px]">
-                <div className="p-6 border-b border-slate-100 bg-slate-50/50">
-                    <h4 className="font-bold text-slate-800">Available Saudas</h4>
-                    <p className="text-[11px] text-slate-500 font-medium uppercase tracking-wider">Click on a number to view full details</p>
+            <div className="bg-white rounded-[2rem] border border-slate-200 shadow-xl shadow-slate-200/50 overflow-hidden min-h-[400px]">
+                <div className="p-6 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
+                    <div>
+                        <h4 className="font-bold text-slate-800">Available Saudas</h4>
+                        <p className="text-[11px] text-slate-500 font-medium uppercase tracking-wider">Review sauda status and open detailed reports</p>
+                    </div>
+                    <div className="px-3 py-1 bg-slate-900 text-white rounded-lg text-[10px] font-black uppercase tracking-widest">
+                        {saudas.length} Records Found
+                    </div>
                 </div>
 
-                <div className="p-8">
+                <div className="p-2">
                     {loading ? (
                         <div className="py-20 flex flex-col items-center justify-center gap-4">
                             <Loading size="lg" />
                             <p className="text-xs font-bold text-slate-400 uppercase tracking-[0.2em]">Searching Saudas...</p>
                         </div>
-                    ) : saudaNumbers.length > 0 ? (
-                        <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-4">
-                            {saudaNumbers.map((no, idx) => (
-                                <button
-                                    key={idx}
-                                    onClick={() => handleSaudaClick(no)}
-                                    className="bg-slate-50 hover:bg-slate-900 hover:text-white border border-slate-200 p-4 rounded-2xl transition-all duration-300 font-black italic tracking-tighter text-xl text-slate-700 shadow-sm"
-                                >
-                                    {no}
-                                </button>
-                            ))}
+                    ) : saudas.length > 0 ? (
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left border-collapse">
+                                <thead>
+                                    <tr className="bg-slate-50 border-b border-slate-200">
+                                        <th className="px-4 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">Sauda No.</th>
+                                        <th className="px-4 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">Date</th>
+                                        <th className="px-4 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">Buyer</th>
+                                        <th className="px-4 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">Seller</th>
+                                        <th className="px-4 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">Commodity</th>
+                                        <th className="px-4 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Qty</th>
+                                        <th className="px-4 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-100">
+                                    {saudas.map((s, idx) => (
+                                        <tr key={idx} className="hover:bg-slate-50 transition-colors group">
+                                            <td className="px-4 py-4">
+                                                <span className="font-black italic text-slate-900 tracking-tighter text-lg">
+                                                    {s.saudaNo}
+                                                </span>
+                                            </td>
+                                            <td className="px-4 py-4 text-xs font-bold text-slate-600">
+                                                {s.poDate ? new Date(s.poDate).toLocaleDateString('en-GB') : '-'}
+                                            </td>
+                                            <td className="px-4 py-4">
+                                                <div className="flex flex-col">
+                                                    <span className="text-xs font-black text-slate-900 uppercase">{s.buyerCompany}</span>
+                                                    <span className="text-[10px] text-slate-400 font-bold uppercase truncate max-w-[150px]">{s.buyer}</span>
+                                                </div>
+                                            </td>
+                                            <td className="px-4 py-4">
+                                                <div className="flex flex-col">
+                                                    <span className="text-xs font-black text-slate-900 uppercase">{s.supplierCompany}</span>
+                                                    <span className="text-[10px] text-slate-400 font-bold uppercase">{s.supplier?.sellerName || '-'}</span>
+                                                </div>
+                                            </td>
+                                            <td className="px-4 py-4">
+                                                <span className="px-2 py-1 rounded bg-slate-100 text-[10px] font-black text-slate-600 uppercase">
+                                                    {s.commodity}
+                                                </span>
+                                            </td>
+                                            <td className="px-4 py-4 text-right">
+                                                <span className="text-xs font-black text-slate-900 italic">
+                                                    {s.quantity?.toLocaleString()} {s.unit || 'Ton'}
+                                                </span>
+                                            </td>
+                                            <td className="px-4 py-4 text-center">
+                                                <button
+                                                    onClick={() => handleSaudaClick(s.saudaNo)}
+                                                    className="inline-flex items-center gap-2 bg-slate-900 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-black transition-all shadow-md active:scale-95"
+                                                >
+                                                    View Details <FaArrowRight size={10} />
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
                         </div>
                     ) : (
                         <div className="py-20 flex flex-col items-center justify-center text-center px-8">

@@ -77,7 +77,21 @@ router.get("/", async (req, res) => {
     const endDate = req.query.endDate;
     const exportAll = String(req.query.export || "").toLowerCase() === "true";
 
+    // New filters from SaudaMISSection
+    const { buyerCompany, supplierCompany, saudaNo } = req.query;
+
     let query = {};
+
+    // Specific filters for Sauda MIS
+    if (buyerCompany) {
+      query.buyerCompany = { $regex: new RegExp(escapeRegex(buyerCompany), "i") };
+    }
+    if (supplierCompany) {
+      query.supplierCompany = { $regex: new RegExp(escapeRegex(supplierCompany), "i") };
+    }
+    if (saudaNo) {
+      query.saudaNo = { $regex: new RegExp(escapeRegex(saudaNo), "i") };
+    }
 
     // Role-based filtering
     if (userRole === "Seller" && mobile) {
