@@ -850,6 +850,15 @@ const LorryChallanPDF = ({ data = {}, logoUrl, qrCodeUrl, onlySecondPage = false
 
                 <Text style={styles.value}>{data.poNumber || "N/A"}</Text>
               </View>
+
+              <View style={styles.headerItem}>
+                <Text style={styles.label}>ENTERED BY :</Text>
+
+                <Text style={styles.value}>
+                  {data.creatorName || "Admin"}{" "}
+                  {data.entryByRole ? `(${data.entryByRole})` : ""}
+                </Text>
+              </View>
             </View>
           </View>
         </View>

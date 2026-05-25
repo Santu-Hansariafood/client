@@ -609,6 +609,7 @@ const ListLoadingEntry = () => {
       "Unloading Weight",
       "Brokerage",
       "Bill No",
+      "Entered By",
     ];
 
     const tableRows = loadingEntries.map((entry, index) => {
@@ -630,6 +631,7 @@ const ListLoadingEntry = () => {
         `${(entry.unloadingWeight || 0).toFixed(2)} T`,
         `₹ ${totalBrokerage}`,
         entry.billNumber || "N/A",
+        `${entry.creatorName || "Admin"} (${entry.entryByRole || "Admin"})`,
       ];
     });
 
@@ -679,6 +681,7 @@ const ListLoadingEntry = () => {
       "Balance",
       "Bill No",
       "Date of Issue",
+      "Entered By",
       "Actions",
       "Download",
     ],
@@ -732,6 +735,14 @@ const ListLoadingEntry = () => {
         entry.balance ? `₹ ${entry.balance}` : "N/A",
         entry.billNumber || "N/A",
         formatDate(entry.dateOfIssue),
+        <div key={`enteredBy-${entry._id}`} className="flex flex-col">
+          <span className="font-semibold text-slate-700">
+            {entry.creatorName || "Admin"}
+          </span>
+          <span className="text-[10px] text-slate-400 uppercase font-bold">
+            {entry.entryByRole || "Admin"}
+          </span>
+        </div>,
         <div key={`actions-${entry._id}`} className="flex justify-center gap-2">
           <button
             onClick={() => handleView(entry)}
@@ -1019,6 +1030,13 @@ const ListLoadingEntry = () => {
                         <span className="text-slate-500">Bill Date:</span>
                         <span className="font-semibold text-slate-800">
                           {formatDate(selectedEntry.dateOfIssue)}
+                        </span>
+                        <span className="text-slate-500">Entered By:</span>
+                        <span className="font-semibold text-slate-800 flex flex-col">
+                          <span>{selectedEntry.creatorName || "Admin"}</span>
+                          <span className="text-[10px] text-slate-400 uppercase">
+                            ({selectedEntry.entryByRole || "Admin"})
+                          </span>
                         </span>
                       </div>
                     </div>

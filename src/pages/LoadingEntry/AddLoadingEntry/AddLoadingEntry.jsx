@@ -227,11 +227,12 @@ const SearchFiltersCard = ({
                   }
                   isMulti={false}
                   disabled={
-                    userRole !== "Seller" &&
-                    !selectedBuyer &&
-                    !saudaSearch.trim()
+                    userRole === "Seller" ||
+                    (userRole !== "Seller" &&
+                      !selectedBuyer &&
+                      !saudaSearch.trim())
                   }
-                  isClearable
+                  isClearable={userRole !== "Seller"}
                 />
               </div>
               <div>
@@ -244,7 +245,8 @@ const SearchFiltersCard = ({
                   onChange={setSelectedSellerCompany}
                   placeholder="Select Company"
                   isMulti={false}
-                  isClearable
+                  disabled={userRole === "Seller"}
+                  isClearable={userRole !== "Seller"}
                 />
               </div>
             </div>
@@ -401,7 +403,7 @@ const OrdersTableCard = ({
 };
 
 const AddLoadingEntry = () => {
-  const { userRole } = useAuth();
+  const { userRole, user } = useAuth();
 
   const {
     groups,
@@ -421,7 +423,7 @@ const AddLoadingEntry = () => {
     selectedSellerCompany,
     setSelectedSellerCompany,
     transporters,
-  } = useLoadingEntryData(api, userRole);
+  } = useLoadingEntryData(api, userRole, user);
 
   const {
     saudaSearch,
@@ -455,6 +457,7 @@ const AddLoadingEntry = () => {
     selectedSellerName,
     selectedSellerCompany,
     saudaSearch,
+    userRole,
   );
 
   const [activeView, setActiveView] = useState("list");
@@ -532,10 +535,10 @@ const AddLoadingEntry = () => {
   }, []);
 
   useEffect(() => {
-    if (selectedGroup?.value) {
+    if (selectedGroup?.value || userRole === "Seller") {
       handleSearch();
     }
-  }, [selectedGroup, selectedBuyer, selectedConsignee, handleSearch]);
+  }, [selectedGroup, selectedBuyer, selectedConsignee, handleSearch, userRole]);
 
   const toggleSaudaStatus = async (order) => {
     if (userRole === "Seller") {

@@ -296,7 +296,7 @@ router.post("/admin/login", async (req, res) => {
     }
 
     const token = jwt.sign(
-      { sub: user._id.toString(), role: "Admin", mobile: normalizedMobile },
+      { sub: user._id.toString(), role: "Admin", mobile: normalizedMobile, name: user.name },
       process.env.JWT_SECRET,
       { expiresIn: "365d" },
     );
@@ -353,6 +353,7 @@ router.post("/employees/login", async (req, res) => {
         sub: employee._id.toString(),
         role: "Employee",
         mobile: normalizedMobile,
+        name: employee.name,
       },
       process.env.JWT_SECRET,
       { expiresIn: "365d" },
@@ -415,6 +416,7 @@ router.post("/transporters/login", async (req, res) => {
         sub: transporter._id.toString(),
         role: "Transporter",
         mobile: normalizedMobile,
+        name: transporter.name,
       },
       process.env.JWT_SECRET,
       { expiresIn: "365d" },
@@ -482,7 +484,7 @@ router.post("/buyers/login", async (req, res) => {
     }
 
     const token = jwt.sign(
-      { sub: buyer._id.toString(), role: "Buyer", mobile: normalizedMobile },
+      { sub: buyer._id.toString(), role: "Buyer", mobile: normalizedMobile, name: buyer.name },
       process.env.JWT_SECRET,
       { expiresIn: "365d" },
     );
@@ -548,7 +550,7 @@ router.post("/sellers/login", async (req, res) => {
     }
 
     const token = jwt.sign(
-      { sub: seller._id.toString(), role: "Seller", mobile: normalizedPhone },
+      { sub: seller._id.toString(), role: "Seller", mobile: normalizedPhone, name: seller.sellerName },
       process.env.JWT_SECRET,
       { expiresIn: "365d" },
     );

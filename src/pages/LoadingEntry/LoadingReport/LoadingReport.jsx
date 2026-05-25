@@ -110,6 +110,7 @@ const LoadingReport = () => {
       "Bags",
       "Consignee",
       "Supplier",
+      "Entered By",
     ],
     [],
   );
@@ -143,6 +144,14 @@ const LoadingReport = () => {
       className="max-w-[150px] truncate text-xs text-slate-500 italic"
     >
       {entry.supplierCompany}
+    </div>,
+    <div key={`entered-${index}`} className="flex flex-col text-[10px]">
+      <span className="font-bold text-slate-700">
+        {entry.creatorName || "Admin"}
+      </span>
+      <span className="text-slate-400 uppercase">
+        {entry.entryByRole || "Admin"}
+      </span>
     </div>,
   ]);
 
@@ -261,6 +270,7 @@ const LoadingReport = () => {
         "Bags",
         "Consignee",
         "Supplier",
+        "Entered By",
       ];
       const tableRows = allEntries.map((entry, index) => [
         index + 1,
@@ -275,6 +285,7 @@ const LoadingReport = () => {
         entry.bags || "-",
         entry.consignee,
         entry.supplierCompany,
+        `${entry.creatorName || "Admin"} (${entry.entryByRole || "Admin"})`,
       ]);
 
       autoTable(doc, {

@@ -187,7 +187,8 @@
         {
           "name": "Add Loading Entry",
           "link": "/Loading-Entry/add-loading-entry",
-          "icon": "FaPlus"
+          "icon": "FaPlus",
+          "roles": ["Admin", "Employee", "Seller"]
         },
         {
           "name": "List Loading Entry",
@@ -197,12 +198,14 @@
         {
           "name": "Pending Sauda",
           "link": "/Loading-Entry/pending-loading-list",
-          "icon": "FaClock"
+          "icon": "FaClock",
+          "roles": ["Admin", "Employee", "Seller"]
         },
         {
           "name": "Complete Sauda",
           "link": "/Loading-Entry/complete-loading-list",
-          "icon": "FaCheckDouble"
+          "icon": "FaCheckDouble",
+          "roles": ["Admin", "Employee", "Seller"]
         },
         {
           "name": "Pending Summary",

@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { toast } from "react-toastify";
 import { capitalizeWords } from "../utils/textUtils/textUtils";
 
-const useLoadingEntryData = (api, userRole) => {
+const useLoadingEntryData = (api, userRole, user) => {
   const [groups, setGroups] = useState([]);
   const [selectedGroup, setSelectedGroup] = useState(null);
   
@@ -55,8 +55,21 @@ const useLoadingEntryData = (api, userRole) => {
             companies: s.companies || [],
           }))
           .sort((a, b) => a.label.localeCompare(b.label));
-        setAllSellers(sellerOptions);
-        setSellers(sellerOptions);
+
+        if (userRole === "Seller" && user?.id) {
+          const mySeller = sellerOptions.find(s => s.value === user.id);
+          if (mySeller) {
+            setAllSellers([mySeller]);
+            setSellers([mySeller]);
+            setSelectedSellerName(mySeller);
+          } else {
+            setAllSellers([]);
+            setSellers([]);
+          }
+        } else {
+          setAllSellers(sellerOptions);
+          setSellers(sellerOptions);
+        }
 
         const rawTransporters = Array.isArray(transportersRes.data)
           ? transportersRes.data

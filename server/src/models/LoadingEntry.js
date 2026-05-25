@@ -58,6 +58,19 @@ const loadingEntrySchema = new mongoose.Schema(
       enum: ["Sent", "Not Sent"],
       default: "Not Sent",
     },
+    createdBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
+    creatorName: {
+      type: String,
+      default: "",
+    },
+    entryByRole: {
+      type: String,
+      enum: ["Admin", "Employee", "Seller", "Buyer"],
+      default: "Admin",
+    },
   },
   { timestamps: true },
 );

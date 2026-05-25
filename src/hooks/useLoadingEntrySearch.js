@@ -9,6 +9,7 @@ const useLoadingEntrySearch = (
   selectedSellerName,
   selectedSellerCompany,
   saudaSearch,
+  userRole,
 ) => {
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -17,7 +18,7 @@ const useLoadingEntrySearch = (
   const handleSearch = useCallback(async () => {
     const trimmedSauda = saudaSearch.trim();
 
-    if (!selectedGroup?.value) {
+    if (userRole !== "Seller" && !selectedGroup?.value && !trimmedSauda) {
       return;
     }
 
@@ -28,7 +29,7 @@ const useLoadingEntrySearch = (
     try {
       const response = await api.get("/loading-entries/saudas", {
         params: {
-          groupId: selectedGroup.value,
+          groupId: selectedGroup?.value,
           buyerCompany: selectedBuyer?.value,
           consigneeName: selectedConsignee?.name,
           sellerId: selectedSellerName?.value,

@@ -610,6 +610,27 @@ router.get("/", async (req, res) => {
       } else {
         query.sellerMobile = normalizedMobile;
       }
+    } else if (role === "Buyer" && mobile) {
+      const phoneRegex = /^(?:\+91|0)?([6-9]\d{9})$/;
+      const phoneMatch = String(mobile).match(phoneRegex);
+      const normalizedMobile = phoneMatch ? phoneMatch[1] : mobile;
+
+      const buyer = await Buyer.findOne({
+        mobile: { $regex: new RegExp(normalizedMobile + "$") },
+      }).lean();
+
+      if (buyer) {
+        const companyNames = (buyer.companyIds || []).map((c) => c.companyName);
+        if (buyer.name) companyNames.push(buyer.name);
+        
+        if (companyNames.length) {
+          const companyRegexes = companyNames.map(name => new RegExp(`^${escapeRegex(name)}$`, "i"));
+          query.$or = [
+            { buyerCompany: { $in: companyRegexes } },
+            { consignee: { $in: companyRegexes } }
+          ];
+        }
+      }
     }
 
     const andParts = [];
@@ -919,6 +940,23 @@ router.get("/suggestions", async (req, res) => {
       } else {
         return res.json({ sellers: [], saudas: [], lorries: [] });
       }
+    } else if (role === "Buyer" && mobile) {
+      const buyer = await Buyer.findOne({
+        mobile: { $regex: new RegExp(mobile + "$") },
+      }).lean();
+
+      if (buyer) {
+        const companyNames = (buyer.companyIds || []).map((c) => c.companyName);
+        if (buyer.name) companyNames.push(buyer.name);
+        
+        if (companyNames.length) {
+          const companyRegexes = companyNames.map(name => new RegExp(`^${escapeRegex(name)}$`, "i"));
+          query.$or = [
+            { buyerCompany: { $in: companyRegexes } },
+            { consignee: { $in: companyRegexes } }
+          ];
+        }
+      }
     }
 
     const [sellers, buyers, saudas, lorries] = await Promise.all([
@@ -958,6 +996,23 @@ router.get("/export/excel", async (req, res) => {
         query.supplier = seller._id;
       } else {
         return res.status(403).json({ message: "Access denied" });
+      }
+    } else if (role === "Buyer" && mobile) {
+      const buyer = await Buyer.findOne({
+        mobile: { $regex: new RegExp(mobile + "$") },
+      }).lean();
+
+      if (buyer) {
+        const companyNames = (buyer.companyIds || []).map((c) => c.companyName);
+        if (buyer.name) companyNames.push(buyer.name);
+        
+        if (companyNames.length) {
+          const companyRegexes = companyNames.map(name => new RegExp(`^${escapeRegex(name)}$`, "i"));
+          query.$or = [
+            { buyerCompany: { $in: companyRegexes } },
+            { consignee: { $in: companyRegexes } }
+          ];
+        }
       }
     }
 
@@ -1521,7 +1576,12 @@ router.post("/bulk", async (req, res) => {
 
     const processedEntries = [];
     for (const entry of entries) {
-      const newEntry = { ...entry };
+      const newEntry = {
+        ...entry,
+        createdBy: req.user.sub,
+        creatorName: req.user.name || "Unknown",
+        entryByRole: req.user.role,
+      };
       // Assign loadingNo
       newEntry.loadingNo = await getNextLoadingNo(entry.loadingDate);
 
@@ -1574,7 +1634,12 @@ router.post("/bulk", async (req, res) => {
 
 router.post("/", async (req, res) => {
   try {
-    const data = { ...req.body };
+    const data = {
+      ...req.body,
+      createdBy: req.user.sub,
+      creatorName: req.user.name || "Unknown",
+      entryByRole: req.user.role,
+    };
     // Assign loadingNo
     data.loadingNo = await getNextLoadingNo(data.loadingDate);
 
