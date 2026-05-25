@@ -154,13 +154,13 @@ const SaudaDetailPopup = ({ saudaNo, onClose }) => {
         // Sauda Details Section
         doc.setFontSize(9);
         doc.setFont("helvetica", "bold");
-        doc.text(`Buyer : ${data.order.buyerCompany.toUpperCase()}`, margin, 45);
-        doc.text(`Seller : ${(data.order.supplier?.sellerName || data.order.supplierCompany).toUpperCase()}`, margin, 50);
-        doc.text(`Consignee : ${(data.order.consignee || '-').toUpperCase()}`, margin, 55);
+        doc.text(`Buyer : ${data.order?.buyerCompany?.toUpperCase() || 'N/A'}`, margin, 45);
+        doc.text(`Seller : ${(data.order?.supplier?.sellerName || data.order?.supplierCompany || 'N/A').toUpperCase()}`, margin, 50);
+        doc.text(`Consignee : ${(data.order?.consignee || '-').toUpperCase()}`, margin, 55);
 
-        doc.text(`Sauda Dt. : ${new Date(data.order.date).toLocaleDateString('en-GB')}`, pageWidth - margin, 45, { align: "right" });
-        doc.text(`Qty : ${data.order.quantity.toLocaleString()} ${data.order.unit || 'Ton'}`, pageWidth - margin, 50, { align: "right" });
-        doc.text(`Rate : Rs. ${data.order.rate.toLocaleString()}`, pageWidth - margin, 55, { align: "right" });
+        doc.text(`Sauda Dt. : ${data.order?.date ? new Date(data.order.date).toLocaleDateString('en-GB') : 'N/A'}`, pageWidth - margin, 45, { align: "right" });
+        doc.text(`Qty : ${data.order?.quantity?.toLocaleString() || '0'} ${data.order?.unit || 'Ton'}`, pageWidth - margin, 50, { align: "right" });
+        doc.text(`Rate : RS. ${data.order?.rate?.toLocaleString() || '0'}`, pageWidth - margin, 55, { align: "right" });
 
         // Table
         const tableData = [];
@@ -173,30 +173,30 @@ const SaudaDetailPopup = ({ saudaNo, onClose }) => {
                     item.lWt.toFixed(3),
                     item.unDt,
                     item.unWt.toFixed(3),
-                    `Rs. ${item.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}`,
-                    `Rs. ${item.balance.toLocaleString(undefined, { minimumFractionDigits: 2 })}`
+                    `RS. ${item.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}`,
+                    `RS. ${item.balance.toLocaleString(undefined, { minimumFractionDigits: 2 })}`
                 ]);
             } else {
                 // Payment Description Row
                 tableData.push([
                     { 
-                        content: `${new Date(item.date).toLocaleDateString('en-GB')} – Payment made Rs. ${item.amount.toLocaleString()}/- by ${item.mode.toUpperCase()}${item.remarks ? ` [${item.remarks.toUpperCase()}]` : ''}`, 
+                        content: `${new Date(item.date).toLocaleDateString('en-GB')} – PAYMENT RECEIVED RS. ${item.amount.toLocaleString()}/- BY ${item.mode.toUpperCase()}${item.remarks ? ` [${item.remarks.toUpperCase()}]` : ''}`, 
                         colSpan: 8, 
-                        styles: { fontStyle: 'italic', textColor: [50, 50, 50], fillColor: [245, 245, 245] } 
+                        styles: { fontStyle: 'bold', textColor: [0, 100, 0], fillColor: [240, 255, 240], fontSize: 7, halign: 'left' } 
                     }
                 ]);
                 // Deduction Row
                 tableData.push([
                     '', '', '', '', '', '',
-                    { content: `– Rs. ${item.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}`, styles: { halign: 'right', fontStyle: 'bold', textColor: [150, 0, 0] } },
-                    { content: item.balance <= 1 && item.balance >= -1 ? 'NIL' : `Rs. ${item.balance.toLocaleString(undefined, { minimumFractionDigits: 2 })}`, styles: { halign: 'right', fontStyle: 'bold', textColor: [0, 80, 0] } }
+                    { content: `– RS. ${item.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}`, styles: { halign: 'right', fontStyle: 'bold', textColor: [150, 0, 0] } },
+                    { content: item.balance <= 1 && item.balance >= -1 ? 'NIL' : `RS. ${item.balance.toLocaleString(undefined, { minimumFractionDigits: 2 })}`, styles: { halign: 'right', fontStyle: 'bold', textColor: [0, 0, 0] } }
                 ]);
             }
         });
 
         autoTable(doc, {
             startY: 62,
-            head: [['DATE', 'BILL NO.', 'L.NO.', 'L.WT', 'UN.DT', 'UN.WT', 'AMOUNT', 'BALANCE']],
+            head: [['DATE', 'BILL NO.', 'L.NO.', 'L.WT', 'UN.DT', 'UN.WT', 'AMOUNT (RS.)', 'BALANCE (RS.)']],
             body: tableData,
             theme: 'grid',
             headStyles: {
@@ -240,7 +240,10 @@ const SaudaDetailPopup = ({ saudaNo, onClose }) => {
     if (!saudaNo) return null;
 
     return (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300">
+        <div 
+            className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300"
+            onClick={handleBackdropClick}
+        >
             <div className="bg-white w-full max-w-5xl max-h-[90vh] rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col animate-in zoom-in-95 duration-300">
                 {/* Header */}
                 <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
@@ -254,12 +257,14 @@ const SaudaDetailPopup = ({ saudaNo, onClose }) => {
                         </div>
                     </div>
                     <div className="flex items-center gap-3">
-                        <button
-                            onClick={handlePrint}
-                            className="flex items-center gap-2 bg-slate-900 hover:bg-black text-white px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-lg"
-                        >
-                            <FaPrint /> Export PDF
-                        </button>
+                        {data && !loading && !error && (
+                            <button
+                                onClick={handlePrint}
+                                className="flex items-center gap-2 bg-slate-900 hover:bg-black text-white px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-lg"
+                            >
+                                <FaPrint /> Export PDF
+                            </button>
+                        )}
                         <button
                             onClick={onClose}
                             className="p-3 bg-white border border-slate-200 text-slate-400 hover:text-rose-500 hover:border-rose-100 hover:bg-rose-50 rounded-xl transition-all"
@@ -276,6 +281,22 @@ const SaudaDetailPopup = ({ saudaNo, onClose }) => {
                             <Loading size="lg" />
                             <p className="text-xs font-black text-slate-400 uppercase tracking-[0.2em]">Syncing Ledger Details...</p>
                         </div>
+                    ) : error ? (
+                        <div className="py-20 flex flex-col items-center justify-center text-center gap-6">
+                            <div className="w-20 h-20 bg-rose-50 rounded-full flex items-center justify-center text-rose-500">
+                                <FaExclamationTriangle size={32} />
+                            </div>
+                            <div className="space-y-2">
+                                <h4 className="text-lg font-black text-slate-900">Oops! Something went wrong</h4>
+                                <p className="text-sm text-slate-500 max-w-xs mx-auto">{error}</p>
+                            </div>
+                            <button 
+                                onClick={fetchDetails}
+                                className="px-8 py-3 bg-slate-900 text-white rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-black transition-all shadow-xl"
+                            >
+                                Try Again
+                            </button>
+                        </div>
                     ) : data ? (
                         <>
                             {/* Info Grid */}
@@ -285,7 +306,7 @@ const SaudaDetailPopup = ({ saudaNo, onClose }) => {
                                         <FaBuilding className="text-slate-400" />
                                         <div>
                                             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Buyer</p>
-                                            <p className="font-bold text-slate-800 uppercase">{data.order.buyerCompany}</p>
+                                            <p className="font-bold text-slate-800 uppercase">{data.order?.buyerCompany || 'N/A'}</p>
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-3">
@@ -293,7 +314,7 @@ const SaudaDetailPopup = ({ saudaNo, onClose }) => {
                                         <div>
                                             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Seller</p>
                                             <p className="font-bold text-slate-800 uppercase">
-                                                {data.order.supplier?.sellerName || data.order.supplierCompany}
+                                                {data.order?.supplier?.sellerName || data.order?.supplierCompany || 'N/A'}
                                             </p>
                                         </div>
                                     </div>
@@ -301,7 +322,7 @@ const SaudaDetailPopup = ({ saudaNo, onClose }) => {
                                         <FaArrowDown className="text-slate-400" />
                                         <div>
                                             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Consignee</p>
-                                            <p className="font-bold text-slate-800 uppercase">{data.order.consignee || '-'}</p>
+                                            <p className="font-bold text-slate-800 uppercase">{data.order?.consignee || '-'}</p>
                                         </div>
                                     </div>
                                 </div>
@@ -310,21 +331,27 @@ const SaudaDetailPopup = ({ saudaNo, onClose }) => {
                                     <div className="flex items-center justify-between">
                                         <div>
                                             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Sauda Date</p>
-                                            <p className="text-lg font-black italic tracking-tighter">{new Date(data.order.date).toLocaleDateString('en-GB')}</p>
+                                            <p className="text-lg font-black italic tracking-tighter">
+                                                {data.order?.date ? new Date(data.order.date).toLocaleDateString('en-GB') : 'N/A'}
+                                            </p>
                                         </div>
                                         <FaCalendarAlt className="text-slate-700" size={24} />
                                     </div>
                                     <div className="flex items-center justify-between">
                                         <div>
                                             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Quantity</p>
-                                            <p className="text-lg font-black italic tracking-tighter">{data.order.quantity.toLocaleString()} {data.order.unit || 'Ton'}</p>
+                                            <p className="text-lg font-black italic tracking-tighter">
+                                                {data.order?.quantity?.toLocaleString() || '0'} {data.order?.unit || 'Ton'}
+                                            </p>
                                         </div>
                                         <FaBox className="text-slate-700" size={24} />
                                     </div>
                                     <div className="flex items-center justify-between">
                                         <div>
                                             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Rate</p>
-                                            <p className="text-lg font-black italic tracking-tighter">Rs. {data.order.rate.toLocaleString()}</p>
+                                            <p className="text-lg font-black italic tracking-tighter">
+                                                Rs. {data.order?.rate?.toLocaleString() || '0'}
+                                            </p>
                                         </div>
                                         <FaChartLine className="text-slate-700" size={24} />
                                     </div>
@@ -333,61 +360,66 @@ const SaudaDetailPopup = ({ saudaNo, onClose }) => {
 
                             {/* Ledger Table */}
                             <div className="border border-slate-200 rounded-3xl overflow-hidden shadow-sm bg-white">
-                                <table className="w-full text-left border-collapse">
-                                    <thead>
-                                        <tr className="bg-slate-50 border-b border-slate-200">
-                                            <th className="px-4 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">Date</th>
-                                            <th className="px-4 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">Bill No.</th>
-                                            <th className="px-4 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">L.No.</th>
-                                            <th className="px-4 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">L.Wt</th>
-                                            <th className="px-4 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">Un.Dt</th>
-                                            <th className="px-4 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Un.Wt</th>
-                                            <th className="px-4 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Amount</th>
-                                            <th className="px-4 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Balance</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-slate-100">
-                                        {consolidatedData.map((item, idx) => (
-                                            <React.Fragment key={idx}>
-                                                {item.type === 'loading' ? (
-                                                    <tr className="hover:bg-slate-50 transition-colors">
-                                                        <td className="px-4 py-4 text-xs font-bold text-slate-600">{new Date(item.date).toLocaleDateString('en-GB')}</td>
-                                                        <td className="px-4 py-4 text-xs font-black text-slate-900">{item.billNo}</td>
-                                                        <td className="px-4 py-4 text-xs font-bold text-slate-600">{item.lNo}</td>
-                                                        <td className="px-4 py-4 text-xs font-black text-slate-900 text-right">{item.lWt.toFixed(3)}</td>
-                                                        <td className="px-4 py-4 text-xs font-bold text-slate-600">{item.unDt}</td>
-                                                        <td className="px-4 py-4 text-xs font-black text-slate-900 text-right">{item.unWt.toFixed(3)}</td>
-                                                        <td className="px-4 py-4 text-xs font-black text-slate-900 text-right italic">Rs. {item.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
-                                                        <td className="px-4 py-4 text-xs font-black text-slate-900 text-right italic">Rs. {item.balance.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
-                                                    </tr>
-                                                ) : (
-                                                    <tr className="bg-emerald-50/30">
-                                                        <td colSpan={6} className="px-4 py-3">
-                                                            <div className="flex items-center gap-3">
-                                                                <div className="w-1.5 h-1.5 rounded-full bg-emerald-400"></div>
-                                                                <p className="text-[11px] font-bold text-slate-600 italic">
-                                                                    {new Date(item.date).toLocaleDateString('en-GB')} – Payment made Rs. {item.amount.toLocaleString()}/- by {item.mode}
-                                                                    {item.remarks && <span className="text-slate-400 ml-1">[{item.remarks}]</span>}
-                                                                </p>
-                                                            </div>
-                                                        </td>
-                                                        <td className="px-4 py-3 text-xs font-black text-rose-500 text-right italic">– Rs. {item.amount.toLocaleString()}</td>
-                                                        <td className="px-4 py-3 text-xs font-black text-emerald-600 text-right italic">
-                                                            {item.balance <= 1 && item.balance >= -1 ? 'NIL' : `Rs. ${item.balance.toLocaleString(undefined, { minimumFractionDigits: 2 })}`}
-                                                        </td>
-                                                    </tr>
-                                                )}
-                                            </React.Fragment>
-                                        ))}
-                                    </tbody>
-                                </table>
+                                {consolidatedData.length > 0 ? (
+                                    <table className="w-full text-left border-collapse">
+                                        <thead>
+                                            <tr className="bg-slate-50 border-b border-slate-200">
+                                                <th className="px-4 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">Date</th>
+                                                <th className="px-4 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">Bill No.</th>
+                                                <th className="px-4 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">L.No.</th>
+                                                <th className="px-4 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">L.Wt</th>
+                                                <th className="px-4 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">Un.Dt</th>
+                                                <th className="px-4 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Un.Wt</th>
+                                                <th className="px-4 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Amount</th>
+                                                <th className="px-4 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Balance</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-slate-100">
+                                            {consolidatedData.map((item, idx) => (
+                                                <React.Fragment key={idx}>
+                                                    {item.type === 'loading' ? (
+                                                        <tr className="hover:bg-slate-50 transition-colors">
+                                                            <td className="px-4 py-4 text-xs font-bold text-slate-600">{new Date(item.date).toLocaleDateString('en-GB')}</td>
+                                                            <td className="px-4 py-4 text-xs font-black text-slate-900">{item.billNo}</td>
+                                                            <td className="px-4 py-4 text-xs font-bold text-slate-600">{item.lNo}</td>
+                                                            <td className="px-4 py-4 text-xs font-black text-slate-900 text-right">{item.lWt.toFixed(3)}</td>
+                                                            <td className="px-4 py-4 text-xs font-bold text-slate-600">{item.unDt}</td>
+                                                            <td className="px-4 py-4 text-xs font-black text-slate-900 text-right">{item.unWt.toFixed(3)}</td>
+                                                            <td className="px-4 py-4 text-xs font-black text-slate-900 text-right italic">Rs. {item.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                                                            <td className="px-4 py-4 text-xs font-black text-slate-900 text-right italic">Rs. {item.balance.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                                                        </tr>
+                                                    ) : (
+                                                        <tr className="bg-emerald-50/30">
+                                                            <td colSpan={6} className="px-4 py-3">
+                                                                <div className="flex items-center gap-3">
+                                                                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-400"></div>
+                                                                    <p className="text-[11px] font-bold text-slate-600 italic">
+                                                                        {new Date(item.date).toLocaleDateString('en-GB')} – Payment made Rs. {item.amount.toLocaleString()}/- by {item.mode}
+                                                                        {item.remarks && <span className="text-slate-400 ml-1">[{item.remarks}]</span>}
+                                                                    </p>
+                                                                </div>
+                                                            </td>
+                                                            <td className="px-4 py-3 text-xs font-black text-rose-500 text-right italic">– Rs. {item.amount.toLocaleString()}</td>
+                                                            <td className="px-4 py-3 text-xs font-black text-emerald-600 text-right italic">
+                                                                {item.balance <= 1 && item.balance >= -1 ? 'NIL' : `Rs. ${item.balance.toLocaleString(undefined, { minimumFractionDigits: 2 })}`}
+                                                            </td>
+                                                        </tr>
+                                                    )}
+                                                </React.Fragment>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                ) : (
+                                    <div className="py-20 flex flex-col items-center justify-center text-center gap-4">
+                                        <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center text-slate-300">
+                                            <FaBox size={24} />
+                                        </div>
+                                        <p className="text-slate-400 font-bold uppercase tracking-widest">No entries or payments found for this Sauda.</p>
+                                    </div>
+                                )}
                             </div>
                         </>
-                    ) : (
-                        <div className="py-20 flex flex-col items-center justify-center text-center">
-                            <p className="text-slate-400 font-bold uppercase tracking-widest">No details found for this Sauda.</p>
-                        </div>
-                    )}
+                    ) : null}
                 </div>
             </div>
         </div>
