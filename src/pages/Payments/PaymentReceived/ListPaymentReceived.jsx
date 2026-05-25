@@ -21,6 +21,8 @@ import {
 import Paginations from "../../../common/Paginations/Paginations";
 import DateRangeSelector from "../../../common/DateSelector/DateRangeSelector";
 import logoImg from "../../../assets/Hans.png";
+import TabButton from "./components/TabButton";
+import SaudaMISSection from "./components/SaudaMISSection";
 
 const StatCard = ({ icon, label, value, subValue, color, iconColor }) => (
   <div
@@ -51,8 +53,11 @@ const ListPaymentReceived = () => {
   const [printing, setPrinting] = useState(false);
   const [payments, setPayments] = useState([]);
   const [total, setTotal] = useState(0);
+  const [totalAmount, setTotalAmount] = useState(0);
+  const [openingBalance, setOpeningBalance] = useState(0);
   const [page, setPage] = useState(1);
   const [limit] = useState(10);
+  const [activeTab, setActiveTab] = useState("vouchers"); // vouchers, sauda
   const [ledgers, setLedgers] = useState([]);
   const [allCompanies, setAllCompanies] = useState([]);
   const [selectedLedger, setSelectedLedger] = useState(null);
@@ -119,6 +124,8 @@ const ListPaymentReceived = () => {
       });
       setPayments(response.data.data || []);
       setTotal(response.data.total || 0);
+      setTotalAmount(response.data.totalAmount || 0);
+      setOpeningBalance(response.data.openingBalance || 0);
     } catch (error) {
       toast.error("Error fetching payments");
     } finally {
@@ -131,10 +138,13 @@ const ListPaymentReceived = () => {
   }, [page, filters]);
 
   const stats = useMemo(() => {
-    const totalReceived = payments.reduce((sum, p) => sum + (p.amount || 0), 0);
-    const count = payments.length;
-    return { totalReceived, count };
-  }, [payments]);
+    return { 
+        openingBalance: openingBalance,
+        totalReceived: totalAmount, 
+        closingBalance: openingBalance + totalAmount,
+        count: total 
+    };
+  }, [openingBalance, totalAmount, total]);
 
   const handlePrintReport = async () => {
     try {
@@ -195,6 +205,17 @@ const ListPaymentReceived = () => {
 
       doc.line(margin, selectedCompany ? 41 : 35, pageWidth - margin, selectedCompany ? 41 : 35); // Bottom Header Border
 
+      let currentY = selectedCompany ? 45 : 40;
+
+      // Opening Balance Row
+      if (filters.ledgerId) {
+          doc.setFont("helvetica", "bold");
+          doc.setFontSize(10);
+          doc.text("Opening Balance:", margin, currentY + 5);
+          doc.text(`Rs. ${openingBalance.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`, pageWidth - margin, currentY + 5, { align: "right" });
+          currentY += 10;
+      }
+
       // Table Data
       const tableData = allPayments.map((p, idx) => {
         const buyerNames = [
@@ -225,7 +246,7 @@ const ListPaymentReceived = () => {
       });
 
       autoTable(doc, {
-        startY: selectedCompany ? 45 : 40,
+        startY: currentY,
         head: [
           [
             "NO",
@@ -283,33 +304,41 @@ const ListPaymentReceived = () => {
         },
       });
 
-      // Total Amount
-      const totalAmount = allPayments.reduce(
-        (sum, p) => sum + (p.amount || 0),
-        0,
-      );
-
       const finalY = doc.lastAutoTable?.finalY || 70;
       
-      // Check if total row fits on current page
-      if (finalY + 20 > doc.internal.pageSize.height) {
+      // Total and Closing Balance
+      if (finalY + 30 > doc.internal.pageSize.height) {
         doc.addPage();
         doc.setLineWidth(0.5);
         doc.line(margin, 10, pageWidth - margin, 10);
       }
 
+      const summaryY = doc.lastAutoTable?.finalY + 10 || 80;
+
       doc.setFontSize(10);
       doc.setFont("helvetica", "bold");
+      
+      // Total amount in the selected period
       doc.text(
-        `TOTAL COLLECTED AMOUNT : Rs. ${totalAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`,
+        `Period Total : Rs. ${totalAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`,
         pageWidth - margin,
-        doc.lastAutoTable.finalY + 10,
+        summaryY,
         { align: "right" },
       );
 
+      // Closing Balance (Opening + Total)
+      if (filters.ledgerId) {
+          doc.text(
+            `Closing Balance : Rs. ${(openingBalance + totalAmount).toLocaleString("en-IN", { minimumFractionDigits: 2 })}`,
+            pageWidth - margin,
+            summaryY + 7,
+            { align: "right" },
+          );
+      }
+
       doc.setFontSize(9);
-      doc.text("Authorised Signatory", pageWidth - margin, doc.lastAutoTable.finalY + 25, { align: "right" });
-      doc.line(pageWidth - 60, doc.lastAutoTable.finalY + 22, pageWidth - margin, doc.lastAutoTable.finalY + 22);
+      doc.text("Authorised Signatory", pageWidth - margin, summaryY + 20, { align: "right" });
+      doc.line(pageWidth - 60, summaryY + 17, pageWidth - margin, summaryY + 17);
 
       doc.save(
         `MIS_PaymentReceived_${filters.startDate}_to_${filters.endDate}.pdf`,
@@ -430,31 +459,56 @@ const ListPaymentReceived = () => {
       icon={FaMoneyBillWave}
     >
       <div className="space-y-6">
-        {/* MIS Summary Stats */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="flex items-center gap-4">
+            <div className="flex bg-white rounded-xl border border-slate-200 p-1 shadow-sm">
+                <TabButton 
+                    active={activeTab === 'vouchers'} 
+                    label="Voucher MIS" 
+                    icon={FaMoneyBillWave} 
+                    onClick={() => setActiveTab('vouchers')} 
+                />
+                <TabButton 
+                    active={activeTab === 'sauda'} 
+                    label="Sauda-wise MIS" 
+                    icon={FaChartLine} 
+                    onClick={() => setActiveTab('sauda')} 
+                />
+            </div>
+        </div>
+
+        {activeTab === 'vouchers' ? (
+          <>
+            {/* MIS Summary Stats */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <StatCard
             icon={<FaChartLine size={18} />}
-            label="Total Received"
+            label="Opening Balance"
+            value={`Rs. ${stats.openingBalance.toLocaleString("en-IN")}`}
+            subValue="Before Period"
+            color="bg-slate-50"
+            iconColor="text-slate-600"
+          />
+          <StatCard
+            icon={<FaMoneyBillWave size={18} />}
+            label="Period Total"
             value={`Rs. ${stats.totalReceived.toLocaleString("en-IN")}`}
             subValue="In Selected Period"
             color="bg-emerald-50"
             iconColor="text-emerald-600"
           />
           <StatCard
-            icon={<FaMoneyBillWave size={18} />}
-            label="Transaction Count"
-            value={stats.count.toString()}
-            subValue="Vouchers"
+            icon={<FaCheckCircle size={18} />}
+            label="Closing Balance"
+            value={`Rs. ${stats.closingBalance.toLocaleString("en-IN")}`}
+            subValue="At Period End"
             color="bg-blue-50"
             iconColor="text-blue-600"
           />
           <StatCard
-            icon={<FaBuilding size={18} />}
-            label="Active Filter"
-            value={
-              selectedLedger?.label || filters.ledgerType || "Consolidated"
-            }
-            subValue="Ledger Scope"
+            icon={<FaExclamationCircle size={18} />}
+            label="Transaction Count"
+            value={stats.count.toString()}
+            subValue="Vouchers"
             color="bg-amber-50"
             iconColor="text-amber-600"
           />
@@ -651,6 +705,10 @@ const ListPaymentReceived = () => {
             </div>
           )}
         </div>
+          </>
+        ) : (
+            <SaudaMISSection />
+        )}
       </div>
     </AdminPageShell>
   );

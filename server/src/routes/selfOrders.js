@@ -198,6 +198,49 @@ router.get("/", async (req, res) => {
   }
 });
 
+// Get detailed MIS report for a specific Sauda (Loading Entries + Payments)
+router.get("/details/:saudaNo", async (req, res) => {
+  try {
+    const { saudaNo } = req.params;
+
+    const order = await SelfOrder.findOne({ saudaNo }).populate("supplier", "sellerName").lean();
+    if (!order) {
+      return res.status(404).json({ message: "Sauda not found" });
+    }
+
+    // 1. Get all Loading Entries for this Sauda
+    const entries = await LoadingEntry.find({ saudaNo }).sort({ loadingDate: 1 }).lean();
+
+    // 2. Get all Payments for this Sauda
+    // A payment is linked to a sauda through its mappings
+    const payments = await mongoose.model("PaymentReceived").find({
+      "mappings.saudaNo": saudaNo
+    }).sort({ date: 1, createdAt: 1 }).lean();
+
+    // 3. Consolidate data for the Tally-style report
+    // We need to show the flow: Loading Entry -> Payment -> Balance
+    const reportData = [];
+    let runningBalance = 0;
+
+    // We'll merge entries and payments into a chronological list
+    // Each loading entry increases the balance (Debit)
+    // Each payment decreases the balance (Credit)
+    
+    // For simplicity in the MIS, we can show:
+    // Loading Entry 1 -> Amt -> Bal
+    // Payment for Entry 1 -> Amt -> Bal
+    // Loading Entry 2 -> Amt -> Bal
+    
+    res.json({
+      order,
+      entries,
+      payments
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 router.get("/seller/stats", async (req, res) => {
   try {
     const { mobile } = req.query;

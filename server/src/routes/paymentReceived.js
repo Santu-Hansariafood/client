@@ -199,7 +199,7 @@ router.get("/", async (req, res) => {
       }
     }
 
-    const [payments, total] = await Promise.all([
+    const [payments, total, totalAmountSum, openingBalanceSum] = await Promise.all([
       PaymentReceived.find(query)
         .sort({ date: -1, createdAt: -1 })
         .skip((page - 1) * limit)
@@ -209,11 +209,27 @@ router.get("/", async (req, res) => {
         .populate("mappings.loadingEntryId", "saudaNo lorryNumber billNumber loadingDate buyerCompany supplierCompany")
         .lean(),
       PaymentReceived.countDocuments(query),
+      PaymentReceived.aggregate([
+        { $match: query },
+        { $group: { _id: null, total: { $sum: "$amount" } } }
+      ]),
+      // Opening Balance logic
+      ledgerId && startDate ? PaymentReceived.aggregate([
+        { 
+          $match: { 
+            ledgerId: new mongoose.Types.ObjectId(ledgerId),
+            date: { $lt: new Date(startDate) }
+          } 
+        },
+        { $group: { _id: null, total: { $sum: "$amount" } } }
+      ]) : Promise.resolve([])
     ]);
 
     res.json({
       data: payments,
       total,
+      totalAmount: totalAmountSum.length > 0 ? totalAmountSum[0].total : 0,
+      openingBalance: openingBalanceSum.length > 0 ? openingBalanceSum[0].total : 0,
       page: parseInt(page),
       totalPages: Math.ceil(total / limit),
     });
