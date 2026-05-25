@@ -22,6 +22,7 @@ import {
   FaDownload,
   FaExclamationTriangle,
   FaSync,
+  FaCheckCircle,
 } from "react-icons/fa";
 import Loading from "../../common/Loading/Loading";
 import { useAuth } from "../../context/AuthContext/AuthContext";
@@ -277,6 +278,7 @@ const BuyerDashboard = () => {
     totalUnloadingWeight: 0,
     totalSaudas: 0,
     pendingSaudas: 0,
+    pendingBidAcceptances: 0,
     commodityBreakdown: [],
     companyBreakdown: [],
   });
@@ -387,6 +389,13 @@ const BuyerDashboard = () => {
         count: "Post",
       },
       {
+        label: "Accept Bids",
+        icon: <FaCheckCircle />,
+        color: "bg-teal-600",
+        link: "/manage-bids/bid-list/participate-bid-admin",
+        count: stats.pendingBidAcceptances,
+      },
+      {
         label: "Order History",
         icon: <FaBoxOpen />,
         color: "bg-amber-600",
@@ -401,7 +410,7 @@ const BuyerDashboard = () => {
         count: "View",
       },
     ],
-    [stats.totalSaudas],
+    [stats.totalSaudas, stats.pendingBidAcceptances],
   );
 
   if (loading) return <Loading />;

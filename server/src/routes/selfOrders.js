@@ -6,6 +6,11 @@ import SelfOrder from "../models/SelfOrder.js";
 import Seller from "../models/Seller.js";
 import Consignee from "../models/Consignee.js";
 import LoadingEntry from "../models/LoadingEntry.js";
+import Bid from "../models/Bid.js";
+import ParticipateBid from "../models/ParticipateBid.js";
+import Company from "../models/Company.js";
+import Group from "../models/Group.js";
+import Buyer from "../models/Buyer.js";
 
 const router = Router();
 
@@ -530,6 +535,32 @@ router.get("/buyer/stats", async (req, res) => {
       commodityBreakdown: stats[0]?.commodityBreakdown || [],
       companyBreakdown: stats[0]?.companyBreakdown || [],
     };
+
+    // Add pending bid acceptances count
+    try {
+      const groups = (buyer?.groups || []).map(g => String(g).trim().toLowerCase());
+      const buyerCompanies = await Company.find({ _id: { $in: buyer?.companyIds || [] } });
+      const companyNames = buyerCompanies.map(c => String(c.companyName || "").trim().toLowerCase());
+
+      const bidQuery = {
+        $or: [
+          { createdByMobile: normalizedMobile },
+          { group: { $in: groups.map(g => new RegExp(`^${escapeRegex(g)}$`, 'i')) } },
+          { company: { $in: companyNames.map(c => new RegExp(`^${escapeRegex(c)}$`, 'i')) } }
+        ]
+      };
+
+      const buyerBids = await Bid.find(bidQuery).select("_id");
+      const buyerBidIds = buyerBids.map(b => b._id);
+
+      result.pendingBidAcceptances = await ParticipateBid.countDocuments({
+        bidId: { $in: buyerBidIds },
+        status: "pending"
+      });
+    } catch (bidErr) {
+      console.error("Error fetching pending bid counts:", bidErr);
+      result.pendingBidAcceptances = 0;
+    }
 
     res.json(result);
   } catch (error) {
