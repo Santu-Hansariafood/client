@@ -134,9 +134,9 @@ const SaudaDetailPopup = ({ saudaNo, onClose }) => {
         doc.setTextColor(0, 0, 0);
         doc.text("HANSARIA FOOD PVT. LTD.", pageWidth / 2 + 10, 15, { align: "center" });
 
-        doc.setFontSize(9);
+        doc.setFontSize(7);
         doc.setFont("helvetica", "normal");
-        doc.text("Sector 4, Plot 12, IMT Manesar, Gurugram, Haryana", pageWidth / 2 + 10, 20, { align: "center" });
+        doc.text("Primarc Square, Plot No.1, Salt Lake Bypass, LA Block, Sector: 3, Bidhannagar, Kolkata, West Bengal 700106", pageWidth / 2 + 10, 20, { align: "center" });
         
         doc.setLineWidth(0.5);
         doc.line(margin, 28, pageWidth - margin, 28); // Top Border
@@ -196,7 +196,7 @@ const SaudaDetailPopup = ({ saudaNo, onClose }) => {
 
         autoTable(doc, {
             startY: 62,
-            head: [['DATE', 'BILL NO.', 'L.NO.', 'L.WT', 'UN.DT', 'UN.WT', 'AMOUNT (RS.)', 'BALANCE (RS.)']],
+            head: [['Date', 'Bill No.', 'L.No.', 'L.Wt', 'Un.Dt', 'Un.Wt', 'Amount', 'Balance']],
             body: tableData,
             theme: 'grid',
             headStyles: {
@@ -364,14 +364,14 @@ const SaudaDetailPopup = ({ saudaNo, onClose }) => {
                                     <table className="w-full text-left border-collapse">
                                         <thead>
                                             <tr className="bg-slate-50 border-b border-slate-200">
-                                                <th className="px-4 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">Date</th>
-                                                <th className="px-4 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">Bill No.</th>
-                                                <th className="px-4 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">L.No.</th>
-                                                <th className="px-4 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">L.Wt</th>
-                                                <th className="px-4 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">Un.Dt</th>
-                                                <th className="px-4 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Un.Wt</th>
-                                                <th className="px-4 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Amount</th>
-                                                <th className="px-4 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Balance</th>
+                                                <th className="px-4 py-3 text-[10px] font-black text-slate-400 tracking-widest">Date</th>
+                                                <th className="px-4 py-3 text-[10px] font-black text-slate-400 tracking-widest">Bill No.</th>
+                                                <th className="px-4 py-3 text-[10px] font-black text-slate-400 tracking-widest">L.No.</th>
+                                                <th className="px-4 py-3 text-[10px] font-black text-slate-400 tracking-widest text-right">L.Wt</th>
+                                                <th className="px-4 py-3 text-[10px] font-black text-slate-400 tracking-widest">Un.Dt</th>
+                                                <th className="px-4 py-3 text-[10px] font-black text-slate-400 tracking-widest text-right">Un.Wt</th>
+                                                <th className="px-4 py-3 text-[10px] font-black text-slate-400 tracking-widest text-right">Amount</th>
+                                                <th className="px-4 py-3 text-[10px] font-black text-slate-400 tracking-widest text-right">Balance</th>
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-slate-100">
