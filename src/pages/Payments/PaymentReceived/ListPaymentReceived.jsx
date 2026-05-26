@@ -17,12 +17,24 @@ import {
   FaCheckCircle,
   FaExclamationCircle,
   FaBuilding,
+  FaTruck,
+  FaBoxOpen,
 } from "react-icons/fa";
 import Paginations from "../../../common/Paginations/Paginations";
 import DateRangeSelector from "../../../common/DateSelector/DateRangeSelector";
 import logoImg from "../../../assets/Hans.png";
 import TabButton from "./components/TabButton";
 import SaudaMISSection from "./components/SaudaMISSection";
+
+const formatDate = (dateString) => {
+  if (!dateString) return "N/A";
+  const date = new Date(dateString);
+  return date.toLocaleDateString("en-IN", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
+};
 
 const StatCard = ({ icon, label, value, subValue, color, iconColor }) => (
   <div
@@ -64,25 +76,114 @@ const ListPaymentReceived = () => {
   const [selectedCompany, setSelectedCompany] = useState(null);
   const [fetchingLedgers, setFetchingLedgers] = useState(false);
 
+  const [allBuyers, setAllBuyers] = useState([]);
+  const [allSellers, setAllSellers] = useState([]);
+  const [saudas, setSaudas] = useState([]);
+  const [selectedSauda, setSelectedSauda] = useState(null);
+  const [selectedBuyerForSauda, setSelectedBuyerForSauda] = useState(null);
+  const [selectedSellerForSauda, setSelectedSellerForSauda] = useState(null);
+  const [lorryWiseData, setLorryWiseData] = useState([]);
+  const [fetchingLorryWise, setFetchingLorryWise] = useState(false);
+
   const [filters, setFilters] = useState({
     ledgerType: "",
     ledgerId: "",
     companyId: "",
     startDate: "",
     endDate: "",
+    saudaNo: "",
   });
 
   useEffect(() => {
-    const fetchAllCompanies = async () => {
+    const fetchInitialData = async () => {
       try {
-        const response = await api.get('/companies');
-        setAllCompanies(response.data.data || response.data || []);
+        const [companiesRes, buyersRes, sellersRes] = await Promise.all([
+          api.get('/companies'),
+          api.get('/buyers'),
+          api.get('/sellers')
+        ]);
+        setAllCompanies(companiesRes.data.data || companiesRes.data || []);
+        
+        const bData = buyersRes.data.data || buyersRes.data || [];
+        setAllBuyers(bData.map(b => ({ value: b._id, label: b.name, companies: b.companyIds || [] })));
+        
+        const sData = sellersRes.data.data || sellersRes.data || [];
+        setAllSellers(sData.map(s => ({ value: s._id, label: s.sellerName, companies: s.companies || [] })));
       } catch (error) {
-        console.error('Error fetching companies:', error);
+        console.error('Error fetching initial data:', error);
       }
     };
-    fetchAllCompanies();
+    fetchInitialData();
   }, []);
+
+  // Fetch Saudas when Buyer and Seller are selected
+  useEffect(() => {
+    const fetchSaudas = async () => {
+      if (selectedBuyerForSauda && selectedSellerForSauda) {
+        try {
+          const response = await api.get("/loading-entries/saudas", {
+            params: {
+              buyerId: selectedBuyerForSauda.value,
+              sellerId: selectedSellerForSauda.value,
+            },
+          });
+          const saudaList = response.data.data || response.data || [];
+          setSaudas(saudaList.map(s => ({ value: s.saudaNo, label: s.saudaNo })));
+        } catch (error) {
+          console.error("Error fetching saudas:", error);
+        }
+      } else {
+        setSaudas([]);
+        setSelectedSauda(null);
+      }
+    };
+    fetchSaudas();
+  }, [selectedBuyerForSauda, selectedSellerForSauda]);
+
+  // Fetch Lorry-wise data when Sauda is selected
+  useEffect(() => {
+    const fetchLorryWise = async () => {
+      if (selectedSauda) {
+        try {
+          setFetchingLorryWise(true);
+          const response = await api.get(`/self-orders/details/${selectedSauda.value}`);
+          const { entries, payments } = response.data;
+          
+          // Map payments to entries (adjustments)
+          const processedEntries = entries.map(entry => {
+            const adjustments = payments.filter(p => 
+              p.mappings && p.mappings.some(m => m.loadingEntryId === entry._id)
+            ).map(p => {
+              const mapping = p.mappings.find(m => m.loadingEntryId === entry._id);
+              return {
+                paymentDate: p.date,
+                voucherNo: p.voucherNo,
+                amount: mapping.allocatedAmount,
+                paymentMode: p.paymentMode
+              };
+            });
+            
+            const totalAdjusted = adjustments.reduce((sum, adj) => sum + adj.amount, 0);
+            return {
+              ...entry,
+              adjustments,
+              totalAdjusted,
+              balance: (entry.totalFreight || 0) - totalAdjusted
+            };
+          });
+          
+          setLorryWiseData(processedEntries);
+        } catch (error) {
+          console.error("Error fetching lorry wise data:", error);
+        } finally {
+          setFetchingLorryWise(false);
+        }
+      } else {
+        setLorryWiseData([]);
+      }
+    };
+    fetchLorryWise();
+  }, [selectedSauda]);
 
   const fetchLedgers = useCallback(async () => {
     if (!filters.ledgerType) {
@@ -555,7 +656,7 @@ const ListPaymentReceived = () => {
             </div>
           </div>
 
-          <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+          <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-6">
             <div className="space-y-2">
               <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">
                 Ledger Type
@@ -572,6 +673,9 @@ const ListPaymentReceived = () => {
                   }));
                   setSelectedLedger(null);
                   setSelectedCompany(null);
+                  setSelectedBuyerForSauda(null);
+                  setSelectedSellerForSauda(null);
+                  setSelectedSauda(null);
                 }}
                 className="w-full h-11 px-4 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-slate-900/5 focus:border-slate-900 outline-none transition text-sm font-bold text-slate-700"
               >
@@ -597,6 +701,12 @@ const ListPaymentReceived = () => {
                     ledgerId: opt?.value || "",
                     companyId: "",
                   }));
+                  // Auto-populate Sauda Buyer/Seller based on Ledger Type
+                  if (filters.ledgerType === 'Buyer') {
+                    setSelectedBuyerForSauda(opt);
+                  } else if (filters.ledgerType === 'Seller') {
+                    setSelectedSellerForSauda(opt);
+                  }
                 }}
                 placeholder={
                   fetchingLedgers ? "Syncing..." : "Search Account..."
@@ -607,34 +717,40 @@ const ListPaymentReceived = () => {
               />
             </div>
 
+            {/* Added Buyer and Seller filters for Sauda MIS */}
             <div className="space-y-2">
               <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">
-                Company (Filter)
+                {filters.ledgerType === 'Buyer' ? 'Filter by Seller' : 'Filter by Buyer'}
               </label>
               <DataDropdown
-                options={selectedLedger?.companies?.map(c => {
-                    const companyId = typeof c === 'string' ? c : (c._id || c.value || c.id);
-                    let label = 'Unknown';
-                    if (filters.ledgerType === 'Buyer') {
-                        const companyInfo = allCompanies.find(comp => comp._id === companyId);
-                        label = companyInfo?.companyName || (typeof c === 'object' ? (c.companyName || c.label) : companyId);
-                    } else {
-                        label = companyId;
-                    }
-                    return { value: companyId, label };
-                }) || []}
-                selectedOptions={selectedCompany}
+                options={filters.ledgerType === 'Buyer' ? allSellers : allBuyers}
+                selectedOptions={filters.ledgerType === 'Buyer' ? selectedSellerForSauda : selectedBuyerForSauda}
                 onChange={(opt) => {
-                  setSelectedCompany(opt);
-                  setPage(1);
-                  setFilters((prev) => ({
-                    ...prev,
-                    companyId: opt?.value || "",
-                  }));
+                  if (filters.ledgerType === 'Buyer') {
+                    setSelectedSellerForSauda(opt);
+                  } else {
+                    setSelectedBuyerForSauda(opt);
+                  }
+                  setSelectedSauda(null);
                 }}
-                placeholder="Select Company"
+                placeholder={filters.ledgerType === 'Buyer' ? "Select Seller..." : "Select Buyer..."}
                 isMulti={false}
                 isDisabled={!selectedLedger}
+                className="rounded-xl border-slate-200"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">
+                Sauda No
+              </label>
+              <DataDropdown
+                options={saudas}
+                selectedOptions={selectedSauda}
+                onChange={setSelectedSauda}
+                placeholder={(!selectedBuyerForSauda || !selectedSellerForSauda) ? "Pick Buyer & Seller" : "Select Sauda..."}
+                isMulti={false}
+                isDisabled={!selectedBuyerForSauda || !selectedSellerForSauda}
                 className="rounded-xl border-slate-200"
               />
             </div>
@@ -667,13 +783,86 @@ const ListPaymentReceived = () => {
         {/* Table Section */}
         <div className="bg-white rounded-[2rem] border border-slate-200 shadow-xl shadow-slate-200/50 overflow-hidden min-h-[400px]">
           <div className="p-2">
-            {loading ? (
+            {loading || fetchingLorryWise ? (
               <div className="py-32 flex flex-col items-center justify-center gap-4">
                 <div className="w-12 h-12 border-4 border-slate-900/10 border-t-slate-900 rounded-full animate-spin" />
                 <p className="text-xs font-bold text-slate-400 uppercase tracking-[0.2em]">
-                  Generating Ledger...
+                  {fetchingLorryWise ? "Syncing Lorry Data..." : "Generating Ledger..."}
                 </p>
               </div>
+            ) : selectedSauda ? (
+              lorryWiseData.length > 0 ? (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className="bg-slate-50 border-b border-slate-100">
+                        <th className="px-4 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Date</th>
+                        <th className="px-4 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Lorry No.</th>
+                        <th className="px-4 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Bill No.</th>
+                        <th className="px-4 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Freight</th>
+                        <th className="px-4 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Adjusted</th>
+                        <th className="px-4 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Balance</th>
+                        <th className="px-4 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Adjustments (Voucher Details)</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {lorryWiseData.map((lorry, idx) => (
+                        <tr key={lorry._id} className={`border-b border-slate-50 hover:bg-slate-50/50 transition-colors ${idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/30'}`}>
+                          <td className="px-4 py-4 text-xs font-bold text-slate-700">
+                            {formatDate(lorry.loadingDate)}
+                          </td>
+                          <td className="px-4 py-4 text-xs font-black text-slate-900 uppercase">
+                            {lorry.lorryNumber}
+                          </td>
+                          <td className="px-4 py-4 text-xs font-bold text-slate-500">
+                            {lorry.billNumber || "NIL"}
+                          </td>
+                          <td className="px-4 py-4 text-xs font-black text-slate-700">
+                            ₹ {lorry.totalFreight?.toLocaleString("en-IN") || 0}
+                          </td>
+                          <td className="px-4 py-4 text-xs font-black text-emerald-600">
+                            ₹ {lorry.totalAdjusted?.toLocaleString("en-IN") || 0}
+                          </td>
+                          <td className={`px-4 py-4 text-xs font-black ${lorry.balance > 0 ? 'text-amber-600' : 'text-slate-400'}`}>
+                            ₹ {lorry.balance?.toLocaleString("en-IN") || 0}
+                          </td>
+                          <td className="px-4 py-4">
+                            {lorry.adjustments.length > 0 ? (
+                              <div className="flex flex-col gap-1.5">
+                                {lorry.adjustments.map((adj, i) => (
+                                  <div key={i} className="flex items-center gap-2 bg-white border border-slate-100 p-1.5 rounded-lg shadow-sm">
+                                    <span className="text-[9px] font-black bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded uppercase">
+                                      {adj.voucherNo}
+                                    </span>
+                                    <span className="text-[10px] font-bold text-slate-700">
+                                      ₹ {adj.amount.toLocaleString("en-IN")}
+                                    </span>
+                                    <span className="text-[9px] font-medium text-slate-400">
+                                      ({formatDate(adj.paymentDate)})
+                                    </span>
+                                  </div>
+                                ))}
+                              </div>
+                            ) : (
+                              <span className="text-[10px] font-black text-slate-300 uppercase italic">Pending</span>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <div className="py-32 flex flex-col items-center justify-center text-center px-8">
+                  <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center text-slate-200 mb-6 border border-slate-100">
+                    <FaTruck size={32} />
+                  </div>
+                  <h4 className="text-lg font-bold text-slate-800">No Lorries Found</h4>
+                  <p className="text-sm text-slate-500 font-medium max-w-xs mx-auto mt-2">
+                    No loading entries found for Sauda {selectedSauda.label}.
+                  </p>
+                </div>
+              )
             ) : payments.length > 0 ? (
               <Tables
                 headers={columns.map((c) => c.header)}
