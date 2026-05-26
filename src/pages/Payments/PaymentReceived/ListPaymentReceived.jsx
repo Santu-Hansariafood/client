@@ -282,9 +282,9 @@ const ListPaymentReceived = () => {
       doc.setTextColor(0, 0, 0);
       doc.text("HANSARIA FOOD PVT. LTD.", pageWidth / 2, 15, { align: "center" });
 
-      doc.setFontSize(10);
+      doc.setFontSize(7);
       doc.setFont("helvetica", "normal");
-      doc.text("Sector 4, Plot 12, IMT Manesar, Gurugram, Haryana", pageWidth / 2, 20, { align: "center" });
+      doc.text("Primarc Square, Plot No.1, Salt Lake Bypass, LA Block, Sector: 3, Bidhannagar, Kolkata, West Bengal 700106", pageWidth / 2, 20, { align: "center" });
       
       doc.setLineWidth(0.5);
       doc.line(margin, 25, pageWidth - margin, 25); // Top Border
