@@ -796,20 +796,20 @@ const ListPaymentReceived = () => {
                   <table className="w-full text-left border-collapse">
                     <thead>
                       <tr className="bg-slate-50 border-b border-slate-100">
-                        <th className="px-4 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Date</th>
+                        <th className="px-4 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Sl.No</th>
                         <th className="px-4 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Lorry No.</th>
                         <th className="px-4 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Bill No.</th>
                         <th className="px-4 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Freight</th>
-                        <th className="px-4 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Adjusted</th>
-                        <th className="px-4 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Balance</th>
-                        <th className="px-4 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Adjustments (Voucher Details)</th>
+                        <th className="px-4 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Payment Date / Voucher</th>
+                        <th className="px-4 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Payment Amount</th>
+                        <th className="px-4 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Due Amount</th>
                       </tr>
                     </thead>
                     <tbody>
                       {lorryWiseData.map((lorry, idx) => (
                         <tr key={lorry._id} className={`border-b border-slate-50 hover:bg-slate-50/50 transition-colors ${idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/30'}`}>
-                          <td className="px-4 py-4 text-xs font-bold text-slate-700">
-                            {formatDate(lorry.loadingDate)}
+                          <td className="px-4 py-4 text-xs font-bold text-slate-400">
+                            {idx + 1}
                           </td>
                           <td className="px-4 py-4 text-xs font-black text-slate-900 uppercase">
                             {lorry.lorryNumber}
@@ -820,32 +820,31 @@ const ListPaymentReceived = () => {
                           <td className="px-4 py-4 text-xs font-black text-slate-700">
                             ₹ {lorry.totalFreight?.toLocaleString("en-IN") || 0}
                           </td>
-                          <td className="px-4 py-4 text-xs font-black text-emerald-600">
-                            ₹ {lorry.totalAdjusted?.toLocaleString("en-IN") || 0}
-                          </td>
-                          <td className={`px-4 py-4 text-xs font-black ${lorry.balance > 0 ? 'text-amber-600' : 'text-slate-400'}`}>
-                            ₹ {lorry.balance?.toLocaleString("en-IN") || 0}
-                          </td>
                           <td className="px-4 py-4">
                             {lorry.adjustments.length > 0 ? (
-                              <div className="flex flex-col gap-1.5">
+                              <div className="flex flex-col gap-1.5 items-center">
                                 {lorry.adjustments.map((adj, i) => (
-                                  <div key={i} className="flex items-center gap-2 bg-white border border-slate-100 p-1.5 rounded-lg shadow-sm">
-                                    <span className="text-[9px] font-black bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded uppercase">
+                                  <div key={i} className="flex items-center gap-2 bg-white border border-slate-100 p-1 rounded-lg shadow-sm w-full justify-between">
+                                    <span className="text-[9px] font-medium text-slate-500">
+                                      {formatDate(adj.paymentDate)}
+                                    </span>
+                                    <span className="text-[9px] font-black bg-slate-100 text-slate-400 px-1.5 py-0.5 rounded uppercase">
                                       {adj.voucherNo}
-                                    </span>
-                                    <span className="text-[10px] font-bold text-slate-700">
-                                      ₹ {adj.amount.toLocaleString("en-IN")}
-                                    </span>
-                                    <span className="text-[9px] font-medium text-slate-400">
-                                      ({formatDate(adj.paymentDate)})
                                     </span>
                                   </div>
                                 ))}
                               </div>
                             ) : (
-                              <span className="text-[10px] font-black text-slate-300 uppercase italic">Pending</span>
+                              <div className="text-center">
+                                <span className="text-[10px] font-black text-slate-300 uppercase italic">Pending</span>
+                              </div>
                             )}
+                          </td>
+                          <td className="px-4 py-4 text-xs font-black text-emerald-600">
+                            ₹ {lorry.totalAdjusted?.toLocaleString("en-IN") || 0}
+                          </td>
+                          <td className={`px-4 py-4 text-xs font-black ${lorry.balance > 0 ? 'text-rose-600' : 'text-slate-400'}`}>
+                            ₹ {lorry.balance?.toLocaleString("en-IN") || 0}
                           </td>
                         </tr>
                       ))}
