@@ -46,7 +46,14 @@ const AIAgent = () => {
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages, scrollToBottom, isOpen, isMinimized, isLoadingData, thinkingPath]);
+  }, [
+    messages,
+    scrollToBottom,
+    isOpen,
+    isMinimized,
+    isLoadingData,
+    thinkingPath,
+  ]);
 
   if (userRole !== "Admin" && userRole !== "Employee") return null;
 
@@ -62,11 +69,15 @@ const AIAgent = () => {
 
   const findSidebarLink = (query) => {
     const cleanQuery = query.toLowerCase().trim().replace(/\s+/g, "");
-    
+
     for (const section of sidebarModules) {
       for (const action of section.actions) {
         const actionName = action.name.toLowerCase().replace(/\s+/g, "");
-        if (cleanQuery === actionName || cleanQuery.includes(actionName) || actionName.includes(cleanQuery)) {
+        if (
+          cleanQuery === actionName ||
+          cleanQuery.includes(actionName) ||
+          actionName.includes(cleanQuery)
+        ) {
           return action;
         }
       }
@@ -74,7 +85,11 @@ const AIAgent = () => {
 
     for (const section of sidebarModules) {
       const sectionName = section.section.toLowerCase().replace(/\s+/g, "");
-      if (cleanQuery === sectionName || cleanQuery.includes(sectionName) || sectionName.includes(cleanQuery)) {
+      if (
+        cleanQuery === sectionName ||
+        cleanQuery.includes(sectionName) ||
+        sectionName.includes(cleanQuery)
+      ) {
         return section.actions[0];
       }
     }
@@ -82,15 +97,20 @@ const AIAgent = () => {
   };
 
   const getSidebarSummary = () => {
-    let content = "**System Modules & Navigation:**\n\n";
+    let content = "*System Modules & Navigation:*\n\n";
     sidebarModules.forEach((s) => {
-      content += `• **${s.section}**: ${s.actions.map((a) => `_${a.name}_`).join(", ")}\n`;
+      content += `• *${s.section}*: ${s.actions.map((a) => `_${a.name}_`).join(", ")}\n`;
     });
     content += "\n*Tip: Just type the name of any module to go there!*";
     return {
       role: "assistant",
       content,
-      suggestions: ["Buyer List", "Loading Entry", "Payment List", "Add SelfOrder"],
+      suggestions: [
+        "Buyer List",
+        "Loading Entry",
+        "Payment List",
+        "Add SelfOrder",
+      ],
     };
   };
 
@@ -104,11 +124,11 @@ const AIAgent = () => {
         return {
           role: "assistant",
           content:
-            `**Seller Profile: ${s.sellerName}**\n\n` +
-            `• **Mobile:** ${s.phoneNumbers?.[0]?.value || "N/A"}\n` +
-            `• **Status:** ${s.status || "Active"}\n` +
-            `• **Commodities:** ${s.commodities?.map((c) => c.name).join(", ") || "N/A"}\n` +
-            `• **Created:** ${new Date(s.createdAt).toLocaleDateString()}`,
+            `*Seller Profile: ${s.sellerName}*\n\n` +
+            `• *Mobile:* ${s.phoneNumbers?.[0]?.value || "N/A"}\n` +
+            `• *Status:* ${s.status || "Active"}\n` +
+            `• *Commodities:* ${s.commodities?.map((c) => c.name).join(", ") || "N/A"}\n` +
+            `• *Created:* ${new Date(s.createdAt).toLocaleDateString()}`,
           suggestions: [`Saudas for ${s.sellerName}`, "Active bids"],
         };
       }
@@ -128,10 +148,10 @@ const AIAgent = () => {
         return {
           role: "assistant",
           content:
-            `**Buyer Profile: ${b.name}**\n\n` +
-            `• **Mobile:** ${b.mobile || "N/A"}\n` +
-            `• **Group:** ${b.groupId?.groupName || "N/A"}\n` +
-            `• **Companies:** ${b.companyIds?.length || 0} registered`,
+            `*Buyer Profile: ${b.name}*\n\n` +
+            `• *Mobile:* ${b.mobile || "N/A"}\n` +
+            `• *Group:* ${b.groupId?.groupName || "N/A"}\n` +
+            `• *Companies:* ${b.companyIds?.length || 0} registered`,
           suggestions: [`Saudas for ${b.name}`, "Create Self Order"],
         };
       }
@@ -189,7 +209,7 @@ const AIAgent = () => {
 
     return {
       role: "assistant",
-      content: `I've performed a deep scan for "**${query}**" across all Saudas, Invoices, Vehicles, and Partners, but no direct match was found.`,
+      content: `I've performed a deep scan for "*${query}*" across all Saudas, Invoices, Vehicles, and Partners, but no direct match was found.`,
       suggestions: ["Total sauda today", "Active bids", "Highest rate today"],
     };
   };
@@ -202,60 +222,66 @@ const AIAgent = () => {
       const { order: sauda, entries: loadings, payments } = response.data;
 
       if (sauda) {
-        let content = `**Deep Control Profile: Sauda No ${saudaNo}**\n\n` +
-          `• **Buyer:** ${sauda.buyerCompany || sauda.buyer}\n` +
-          `• **Supplier:** ${sauda.supplierCompany || 'N/A'}\n` +
-          `• **Commodity:** ${sauda.commodity}\n` +
-          `• **Quantity:** ${sauda.quantity} MT | **Pending:** ${sauda.pendingQuantity || 0} MT\n` +
-          `• **Rate:** ₹${sauda.rate} | **CD:** ${sauda.cd}% | **GST:** ${sauda.gst}%\n` +
-          `• **Location:** ${sauda.location || sauda.state || 'N/A'}\n` +
-          `• **Status:** ${sauda.status?.toUpperCase() || 'ACTIVE'}\n\n`;
+        let content =
+          `*Deep Control Profile: Sauda No ${saudaNo}*\n\n` +
+          `• *Buyer:* ${sauda.buyerCompany || sauda.buyer}\n` +
+          `• *Supplier:* ${sauda.supplierCompany || "N/A"}\n` +
+          `• *Commodity:* ${sauda.commodity}\n` +
+          `• *Quantity:* ${sauda.quantity} MT | *Pending:* ${sauda.pendingQuantity || 0} MT\n` +
+          `• *Rate:* ₹${sauda.rate} | *CD:* ${sauda.cd}% | *GST:* ${sauda.gst}%\n` +
+          `• *Location:* ${sauda.location || sauda.state || "N/A"}\n` +
+          `• *Status:* ${sauda.status?.toUpperCase() || "ACTIVE"}\n\n`;
 
         if (loadings && loadings.length > 0) {
-          content += `**Linked Deliveries (${loadings.length}):**\n`;
+          content += `*Linked Deliveries (${loadings.length}):*\n`;
           loadings.slice(0, 5).forEach((l, idx) => {
-            content += `${idx + 1}. **Lorry:** ${l.lorryNumber} | **Bill:** ${l.billNumber || 'N/A'} | **Wt:** ${l.loadingWeight} MT\n`;
+            content += `${idx + 1}. *Lorry:* ${l.lorryNumber} | *Bill:* ${l.billNumber || "N/A"} | *Wt:* ${l.loadingWeight} MT\n`;
           });
-          if (loadings.length > 5) content += `*+ ${loadings.length - 5} more loadings*\n`;
+          if (loadings.length > 5)
+            content += `*+ ${loadings.length - 5} more loadings*\n`;
         }
 
         if (payments && payments.length > 0) {
-          content += `\n**Payment History (${payments.length}):**\n`;
+          content += `\n*Payment History (${payments.length}):*\n`;
           payments.slice(0, 3).forEach((p, idx) => {
-            content += `• ₹${p.amount} on ${new Date(p.date).toLocaleDateString()} (${p.paymentMode || 'N/A'})\n`;
+            content += `• ₹${p.amount} on ${new Date(p.date).toLocaleDateString()} (${p.paymentMode || "N/A"})\n`;
           });
         }
 
         return {
-          role: 'assistant',
+          role: "assistant",
           content: content,
-          suggestions: [`Payment of Sauda ${saudaNo}`, `Add loading for ${saudaNo}`]
+          suggestions: [
+            `Payment of Sauda ${saudaNo}`,
+            `Add loading for ${saudaNo}`,
+          ],
         };
       } else {
         const searchRes = await api.get(`/self-order?saudaNo=${saudaNo}`);
         const data = searchRes.data.data || searchRes.data;
         const fallbackSauda = Array.isArray(data) ? data[0] : null;
-        
+
         if (fallbackSauda) {
           return {
-            role: 'assistant',
-            content: `**Sauda ${saudaNo} found (Limited Details):**\n\n• **Buyer:** ${fallbackSauda.buyerCompany}\n• **Quantity:** ${fallbackSauda.quantity} MT`,
+            role: "assistant",
+            content: `*Sauda ${saudaNo} found (Limited Details):*\n\n• *Buyer:* ${fallbackSauda.buyerCompany}\n• *Quantity:* ${fallbackSauda.quantity} MT`,
           };
         }
 
         return {
-          role: 'assistant',
-          content: `I couldn't find any Sauda with number **${saudaNo}**.`,
+          role: "assistant",
+          content: `I couldn't find any Sauda with number *${saudaNo}*.`,
         };
       }
     } catch (error) {
       return {
-        role: 'assistant',
-        content: "Error in deep sauda fetch. Please check if Sauda No is correct.",
+        role: "assistant",
+        content:
+          "Error in deep sauda fetch. Please check if Sauda No is correct.",
       };
     } finally {
       setIsLoadingData(false);
-      setThinkingPath('');
+      setThinkingPath("");
     }
   };
 
@@ -286,16 +312,16 @@ const AIAgent = () => {
       if (saudas.length === 0 && loadings.length === 0) {
         return {
           role: "assistant",
-          content: `System was inactive on **${dateStr}**. No records found.`,
+          content: `System was inactive on *${dateStr}*. No records found.`,
         };
       }
 
-      let content = `**System Logs for ${dateStr}**\n\n`;
+      let content = `*System Logs for ${dateStr}*\n\n`;
 
       if (saudas.length > 0) {
-        content += `**Saudas Created (${saudas.length}):**\n`;
+        content += `*Saudas Created (${saudas.length}):*\n`;
         saudas.slice(0, 3).forEach((s) => {
-          content += `• **Sauda ${s.saudaNo}**: ${s.buyerCompany} | ${s.commodity}\n`;
+          content += `• *Sauda ${s.saudaNo}*: ${s.buyerCompany} | ${s.commodity}\n`;
         });
         if (saudas.length > 3)
           content += `*+${saudas.length - 3} more saudas*\n`;
@@ -303,9 +329,9 @@ const AIAgent = () => {
       }
 
       if (loadings.length > 0) {
-        content += `**Loadings Recorded (${loadings.length}):**\n`;
+        content += `*Loadings Recorded (${loadings.length}):*\n`;
         loadings.slice(0, 3).forEach((l) => {
-          content += `• **Lorry ${l.lorryNumber}**: Sauda ${l.saudaNo} | ${l.loadingWeight} MT\n`;
+          content += `• *Lorry ${l.lorryNumber}*: Sauda ${l.saudaNo} | ${l.loadingWeight} MT\n`;
         });
         if (loadings.length > 3)
           content += `*+${loadings.length - 3} more loadings*\n`;
@@ -336,9 +362,9 @@ const AIAgent = () => {
       const bids = response.data.data || response.data;
 
       if (bids && bids.length > 0) {
-        let content = `**Live Bids Status**\n\n`;
+        let content = `*Live Bids Status*\n\n`;
         bids.forEach((bid, idx) => {
-          content += `${idx + 1}. **${bid.commodity}** | ${bid.location} | Ends: ${bid.endTime}\n`;
+          content += `${idx + 1}. *${bid.commodity}* | ${bid.location} | Ends: ${bid.endTime}\n`;
         });
         return {
           role: "assistant",
@@ -373,10 +399,10 @@ const AIAgent = () => {
       const saudas = response.data.data || response.data;
 
       if (saudas && saudas.length > 0) {
-        let content = `**System Sauda Summary (${new Date().toLocaleDateString()})**\n\n`;
-        content += `Total Count: **${saudas.length}**\n\n`;
+        let content = `*System Sauda Summary (${new Date().toLocaleDateString()})*\n\n`;
+        content += `Total Count: *${saudas.length}*\n\n`;
         saudas.slice(0, 5).forEach((s, idx) => {
-          content += `${idx + 1}. **Sauda ${s.saudaNo}**: ${s.buyerCompany} | ${s.commodity}\n`;
+          content += `${idx + 1}. *Sauda ${s.saudaNo}*: ${s.buyerCompany} | ${s.commodity}\n`;
         });
         if (saudas.length > 5)
           content += `\n*Showing top 5 of ${saudas.length}*`;
@@ -415,17 +441,17 @@ const AIAgent = () => {
         return {
           role: "assistant",
           content:
-            `**Deep Status: ${comp.companyName}**\n\n` +
-            `• **GST:** ${comp.gstNo || "N/A"}\n` +
-            `• **District/State:** ${comp.district || "N/A"}, ${comp.state || "N/A"}\n` +
-            `• **Contact:** ${comp.mobile || "N/A"}\n` +
-            `• **Status:** VERIFIED`,
+            `*Deep Status: ${comp.companyName}*\n\n` +
+            `• *GST:* ${comp.gstNo || "N/A"}\n` +
+            `• *District/State:* ${comp.district || "N/A"}, ${comp.state || "N/A"}\n` +
+            `• *Contact:* ${comp.mobile || "N/A"}\n` +
+            `• *Status:* VERIFIED`,
           suggestions: [`Saudas for ${comp.companyName}`],
         };
       } else {
         return {
           role: "assistant",
-          content: `No records for company **${companyName}**.`,
+          content: `No records for company *${companyName}*.`,
         };
       }
     } catch (error) {
@@ -447,9 +473,9 @@ const AIAgent = () => {
       const interactions = response.data.data || response.data;
 
       if (interactions && interactions.length > 0) {
-        let content = `**Interaction Analytics: ${commodity}**\n\n`;
+        let content = `*Interaction Analytics: ${commodity}*\n\n`;
         interactions.slice(0, 5).forEach((item, idx) => {
-          content += `${idx + 1}. **${item.sellerName}**: ₹${item.rate} | ${item.quantity} MT\n`;
+          content += `${idx + 1}. *${item.sellerName}*: ₹${item.rate} | ${item.quantity} MT\n`;
         });
         return {
           role: "assistant",
@@ -458,7 +484,7 @@ const AIAgent = () => {
       } else {
         return {
           role: "assistant",
-          content: `No recent activity for **${commodity}**.`,
+          content: `No recent activity for *${commodity}*.`,
         };
       }
     } catch (error) {
@@ -488,13 +514,13 @@ const AIAgent = () => {
         return {
           role: "assistant",
           content:
-            `**Payment Ledger Summary: Sauda ${saudaNo}**\n\n` +
-            `• **Contract Quantity:** ${sauda.quantity} MT\n` +
-            `• **Pending to Load:** ${sauda.pendingQuantity || 0} MT\n` +
-            `• **Contract Rate:** ₹${sauda.rate}\n` +
-            `• **CD/GST:** ${sauda.cd}% / ${sauda.gst}%\n` +
-            `• **Terms:** ${sauda.paymentTerms || "N/A"}\n` +
-            `• **Status:** ${sauda.status?.toUpperCase()}`,
+            `*Payment Ledger Summary: Sauda ${saudaNo}*\n\n` +
+            `• *Contract Quantity:* ${sauda.quantity} MT\n` +
+            `• *Pending to Load:* ${sauda.pendingQuantity || 0} MT\n` +
+            `• *Contract Rate:* ₹${sauda.rate}\n` +
+            `• *CD/GST:* ${sauda.cd}% / ${sauda.gst}%\n` +
+            `• *Terms:* ${sauda.paymentTerms || "N/A"}\n` +
+            `• *Status:* ${sauda.status?.toUpperCase()}`,
           suggestions: [
             `Loading entries for Sauda ${saudaNo}`,
             `Sauda ${saudaNo} details`,
@@ -503,7 +529,7 @@ const AIAgent = () => {
       } else {
         return {
           role: "assistant",
-          content: `I couldn't find any Sauda with number **${saudaNo}**.`,
+          content: `I couldn't find any Sauda with number *${saudaNo}*.`,
         };
       }
     } catch (error) {
@@ -525,35 +551,43 @@ const AIAgent = () => {
       const data = response.data.data || response.data;
 
       if (data && data.length > 0) {
-        const entry = data.find(e => 
-          e.billNumber?.toString().toLowerCase().includes(billNo.toLowerCase())
-        ) || data[0];
+        const entry =
+          data.find((e) =>
+            e.billNumber
+              ?.toString()
+              .toLowerCase()
+              .includes(billNo.toLowerCase()),
+          ) || data[0];
 
         return {
-          role: 'assistant',
-          content: `**Invoice Found: ${entry.billNumber || billNo}**\n\n` +
-            `• **Lorry:** ${entry.lorryNumber}\n` +
-            `• **Sauda Link:** Sauda ${entry.saudaNo}\n` +
-            `• **Date:** ${new Date(entry.loadingDate).toLocaleDateString()}\n` +
-            `• **Weight:** ${entry.loadingWeight} MT\n` +
-            `• **Buyer/Supplier:** ${entry.buyerCompany} / ${entry.supplierCompany}\n` +
-            `• **Payment:** ${entry.paymentStatus === 'done' ? 'PAID' : 'PENDING'}`,
-          suggestions: [`Sauda ${entry.saudaNo} details`, `Lorry ${entry.lorryNumber} details`]
+          role: "assistant",
+          content:
+            `*Invoice Found: ${entry.billNumber || billNo}*\n\n` +
+            `• *Lorry:* ${entry.lorryNumber}\n` +
+            `• *Sauda Link:* Sauda ${entry.saudaNo}\n` +
+            `• *Date:* ${new Date(entry.loadingDate).toLocaleDateString()}\n` +
+            `• *Weight:* ${entry.loadingWeight} MT\n` +
+            `• *Buyer/Supplier:* ${entry.buyerCompany} / ${entry.supplierCompany}\n` +
+            `• *Payment:* ${entry.paymentStatus === "done" ? "PAID" : "PENDING"}`,
+          suggestions: [
+            `Sauda ${entry.saudaNo} details`,
+            `Lorry ${entry.lorryNumber} details`,
+          ],
         };
       } else {
         return {
-          role: 'assistant',
-          content: `Invoice **${billNo}** not found in system. Try searching by Sauda or Lorry.`,
+          role: "assistant",
+          content: `Invoice *${billNo}* not found in system. Try searching by Sauda or Lorry.`,
         };
       }
     } catch (error) {
       return {
-        role: 'assistant',
+        role: "assistant",
         content: "Error in invoice lookup.",
       };
     } finally {
       setIsLoadingData(false);
-      setThinkingPath('');
+      setThinkingPath("");
     }
   };
 
@@ -565,9 +599,9 @@ const AIAgent = () => {
       const saudas = response.data.data || response.data;
 
       if (saudas && saudas.length > 0) {
-        let content = `**Regional Intelligence: ${state.toUpperCase()}**\n\n`;
+        let content = `*Regional Intelligence: ${state.toUpperCase()}*\n\n`;
         saudas.slice(0, 5).forEach((s, idx) => {
-          content += `${idx + 1}. **Sauda ${s.saudaNo}**: ${s.buyerCompany} | ${s.commodity}\n`;
+          content += `${idx + 1}. *Sauda ${s.saudaNo}*: ${s.buyerCompany} | ${s.commodity}\n`;
         });
         if (saudas.length > 5)
           content += `\n*Showing top 5 of ${saudas.length} region records*`;
@@ -583,7 +617,7 @@ const AIAgent = () => {
       } else {
         return {
           role: "assistant",
-          content: `No records found for state **${state}**.`,
+          content: `No records found for state *${state}*.`,
         };
       }
     } catch (error) {
@@ -605,9 +639,9 @@ const AIAgent = () => {
       const entries = response.data.data || response.data;
 
       if (entries && entries.length > 0) {
-        let content = `**Loading History: Sauda ${saudaNo}**\n\n`;
+        let content = `*Loading History: Sauda ${saudaNo}*\n\n`;
         entries.slice(0, 5).forEach((entry, idx) => {
-          content += `${idx + 1}. **${entry.lorryNumber}** | ${new Date(entry.loadingDate).toLocaleDateString()} | ${entry.loadingWeight} MT\n`;
+          content += `${idx + 1}. *${entry.lorryNumber}* | ${new Date(entry.loadingDate).toLocaleDateString()} | ${entry.loadingWeight} MT\n`;
         });
         if (entries.length > 5)
           content += `\n*Total entries: ${entries.length}*`;
@@ -620,7 +654,7 @@ const AIAgent = () => {
       } else {
         return {
           role: "assistant",
-          content: `No delivery records for Sauda **${saudaNo}**.`,
+          content: `No delivery records for Sauda *${saudaNo}*.`,
           suggestions: [`Sauda ${saudaNo} details`],
         };
       }
@@ -658,22 +692,22 @@ const AIAgent = () => {
         if (entries.length === 0) {
           return {
             role: "assistant",
-            content: `No records found for Lorry ending in **${lorryNo}**.`,
+            content: `No records found for Lorry ending in *${lorryNo}*.`,
           };
         }
 
         const entry = entries[0];
         let content =
           entries.length > 1
-            ? `**Multi-Vehicle Match (${entries.length}). Latest:**\n\n`
-            : `**Vehicle Profile: ${entry.lorryNumber}**\n\n`;
+            ? `*Multi-Vehicle Match (${entries.length}). Latest:*\n\n`
+            : `*Vehicle Profile: ${entry.lorryNumber}*\n\n`;
 
         content +=
-          `• **Active Sauda:** Sauda ${entry.saudaNo}\n` +
-          `• **Last Loaded:** ${new Date(entry.loadingDate).toLocaleDateString()}\n` +
-          `• **Current Weight:** ${entry.loadingWeight} MT\n` +
-          `• **Buyer/Supplier:** ${entry.buyerCompany} / ${entry.supplierCompany}\n` +
-          `• **Status:** ${entry.unloadingDate ? "UNLOADED" : "IN TRANSIT"}`;
+          `• *Active Sauda:* Sauda ${entry.saudaNo}\n` +
+          `• *Last Loaded:* ${new Date(entry.loadingDate).toLocaleDateString()}\n` +
+          `• *Current Weight:* ${entry.loadingWeight} MT\n` +
+          `• *Buyer/Supplier:* ${entry.buyerCompany} / ${entry.supplierCompany}\n` +
+          `• *Status:* ${entry.unloadingDate ? "UNLOADED" : "IN TRANSIT"}`;
 
         return {
           role: "assistant",
@@ -686,7 +720,7 @@ const AIAgent = () => {
       } else {
         return {
           role: "assistant",
-          content: `No records found for Vehicle **${lorryNo}**.`,
+          content: `No records found for Vehicle *${lorryNo}*.`,
         };
       }
     } catch (error) {
@@ -719,10 +753,10 @@ const AIAgent = () => {
           }
         });
 
-        let content = `**Today's Market Highs (${new Date().toLocaleDateString()})**\n\n`;
+        let content = `*Today's Market Highs (${new Date().toLocaleDateString()})*\n\n`;
         Object.keys(rates).forEach((comm) => {
           const maxRate = Math.max(...rates[comm]);
-          content += `• **${comm}:** High ₹${maxRate} (Range: ₹${Math.min(...rates[comm])} - ₹${maxRate})\n`;
+          content += `• *${comm}:* High ₹${maxRate} (Range: ₹${Math.min(...rates[comm])} - ₹${maxRate})\n`;
         });
 
         return {
@@ -762,21 +796,23 @@ const AIAgent = () => {
     } else {
       const sidebarAction = findSidebarLink(cleanCmd);
       if (sidebarAction) {
-        const isDirectNameMatch = cleanCmd === sidebarAction.name.toLowerCase() || 
-                                 cleanCmd === sidebarAction.name.toLowerCase().replace(/\s+/g, '');
-        const hasNavigationKeyword = cleanCmd.includes("go to") || 
-                                    cleanCmd.includes("open") || 
-                                    cleanCmd.includes("show") ||
-                                    cleanCmd.includes("navigate");
+        const isDirectNameMatch =
+          cleanCmd === sidebarAction.name.toLowerCase() ||
+          cleanCmd === sidebarAction.name.toLowerCase().replace(/\s+/g, "");
+        const hasNavigationKeyword =
+          cleanCmd.includes("go to") ||
+          cleanCmd.includes("open") ||
+          cleanCmd.includes("show") ||
+          cleanCmd.includes("navigate");
 
         if (isDirectNameMatch || hasNavigationKeyword) {
           response = {
             role: "assistant",
-            content: `Redirecting you to **${sidebarAction.name}**...`,
+            content: `Redirecting you to *${sidebarAction.name}*...`,
             action: () => {
               console.log(`AI Agent navigating to: ${sidebarAction.link}`);
               navigate(sidebarAction.link);
-            }
+            },
           };
         }
       }
@@ -788,9 +824,15 @@ const AIAgent = () => {
       return;
     }
 
-    const saudaMatch = cleanCmd.match(/(?:sauda|order)\s*(?:no|number)?\s*[:\s]*(\d+)/i);
-    const lorryMatch = cleanCmd.match(/(?:lorry|vehicle|truck)\s*(?:no|number)?\s*[:\s]*([a-z0-9\s]{4,})/i);
-    const billMatch = cleanCmd.match(/(?:bill|invoice|challan)\s*(?:no|number)?\s*[:\s]*(\d+)/i);
+    const saudaMatch = cleanCmd.match(
+      /(?:sauda|order)\s*(?:no|number)?\s*[:\s]*(\d+)/i,
+    );
+    const lorryMatch = cleanCmd.match(
+      /(?:lorry|vehicle|truck)\s*(?:no|number)?\s*[:\s]*([a-z0-9\s]{4,})/i,
+    );
+    const billMatch = cleanCmd.match(
+      /(?:bill|invoice|challan)\s*(?:no|number)?\s*[:\s]*(\d+)/i,
+    );
     const stateMatch = cleanCmd.match(/(?:state|from)\s+([a-z\s]{3,})/i);
     const dateMatch = cleanCmd.match(
       /(?:date)\s*[:\s]*(\d{1,2}-\d{1,2}-\d{4})/i,
@@ -806,7 +848,7 @@ const AIAgent = () => {
       response = await fetchSaudaDetails(saudaMatch[1]);
       if (response && response.content) {
         response.content =
-          `**Cross-Referencing Sauda ${saudaMatch[1]}, Bill ${billMatch[1]} for ${dateMatch[1]}**\n\n` +
+          `*Cross-Referencing Sauda ${saudaMatch[1]}, Bill ${billMatch[1]} for ${dateMatch[1]}*\n\n` +
           response.content;
       }
     } else if (cleanCmd.includes("loading entry for sauda") && saudaMatch) {
@@ -847,14 +889,13 @@ const AIAgent = () => {
         cleanCmd.includes("highest"))
     ) {
       response = await fetchTodayRate();
-    }
-    else if (cleanCmd.length >= 3) {
+    } else if (cleanCmd.length >= 3) {
       response = await universalDeepSearch(cleanCmd);
     } else {
       response = {
         role: "assistant",
         content:
-          "I'm not sure how to help. Try asking for **Sauda details**, **Vehicle No**, **Regional Status**, or **Market Highs**.",
+          "I'm not sure how to help. Try asking for *Sauda details*, *Vehicle No*, *Regional Status*, or *Market Highs*.",
         suggestions: ["Total sauda today", "Highest rate today", "Active bids"],
       };
     }
