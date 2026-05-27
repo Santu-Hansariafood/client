@@ -146,6 +146,7 @@ router.get("/", async (req, res) => {
         { buyerCompany: { $regex: searchRegex } },
         { supplierCompany: { $regex: searchRegex } },
         { commodity: { $regex: searchRegex } },
+        { state: { $regex: searchRegex } },
       ];
 
       if (query.$or) {

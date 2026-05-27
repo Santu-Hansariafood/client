@@ -254,6 +254,76 @@ const AIAgent = () => {
     }
   };
 
+  const fetchDetailsByBillNo = async (billNo) => {
+    setIsLoadingData(true);
+    try {
+      const response = await api.get(`/Loading-Entry?search=${billNo}`);
+      const data = response.data.data || response.data;
+
+      if (data && data.length > 0) {
+        const entry = data[0];
+        return {
+          role: 'assistant',
+          content: `**Loading Details for Bill No: ${billNo}**\n\n` +
+            `• **Lorry:** ${entry.lorryNumber}\n` +
+            `• **Sauda No:** ${entry.saudaNo}\n` +
+            `• **Date:** ${new Date(entry.loadingDate).toLocaleDateString()}\n` +
+            `• **Weight:** ${entry.loadingWeight} MT\n` +
+            `• **Buyer:** ${entry.buyerCompany}\n` +
+            `• **Supplier:** ${entry.supplierCompany}\n` +
+            `• **Status:** ${entry.paymentStatus === 'done' ? 'Paid' : 'Pending'}`,
+          suggestions: [`Sauda ${entry.saudaNo} details`, `Lorry ${entry.lorryNumber} details`]
+        };
+      } else {
+        return {
+          role: 'assistant',
+          content: `I couldn't find any record for Bill No: **${billNo}**.`,
+        };
+      }
+    } catch (error) {
+      return {
+        role: 'assistant',
+        content: "Error fetching bill details.",
+      };
+    } finally {
+      setIsLoadingData(false);
+    }
+  };
+
+  const fetchDetailsByState = async (state) => {
+    setIsLoadingData(true);
+    try {
+      const response = await api.get(`/self-order?search=${state}`);
+      const saudas = response.data.data || response.data;
+
+      if (saudas && saudas.length > 0) {
+        let content = `**Recent Saudas for State: ${state.toUpperCase()}**\n\n`;
+        saudas.slice(0, 5).forEach((s, idx) => {
+          content += `${idx + 1}. **Sauda ${s.saudaNo}**: ${s.buyerCompany} | ${s.commodity} | ${s.quantity} MT\n`;
+        });
+        if (saudas.length > 5) content += `\n*Showing 5 of ${saudas.length} saudas.*`;
+        
+        return {
+          role: 'assistant',
+          content: content,
+          suggestions: [`Sauda ${saudas[0].saudaNo} details`, `Today's total sauda`]
+        };
+      } else {
+        return {
+          role: 'assistant',
+          content: `No saudas found for State: **${state}**.`,
+        };
+      }
+    } catch (error) {
+      return {
+        role: 'assistant',
+        content: "Error fetching state-wise details.",
+      };
+    } finally {
+      setIsLoadingData(false);
+    }
+  };
+
   const fetchLoadingEntriesBySauda = async (saudaNo) => {
     setIsLoadingData(true);
     try {
@@ -374,6 +444,8 @@ const AIAgent = () => {
     const lorryMatch = cmd.match(/lorry\s*([a-z0-9]+)/i);
     const companyMatch = cmd.match(/(?:status of|company)\s+([a-z0-9\s]+)/i);
     const interactionMatch = cmd.match(/(?:interactions for|bid info for)\s+([a-z0-9\s]+)/i);
+    const stateMatch = cmd.match(/(?:state|from)\s+([a-z\s]{3,})/i);
+    const billMatch = cmd.match(/(?:bill|invoice)\s+(?:no|number)?\s*([a-z0-9\-\/]+)/i);
 
     if (cmd.includes('loading entry for sauda') && saudaMatch) {
       response = await fetchLoadingEntriesBySauda(saudaMatch[1]);
@@ -381,8 +453,12 @@ const AIAgent = () => {
       response = await fetchSaudaPayment(saudaMatch[1]);
     } else if (saudaMatch && (cmd.includes('details') || cmd.includes('pending'))) {
       response = await fetchSaudaDetails(saudaMatch[1]);
+    } else if (billMatch) {
+      response = await fetchDetailsByBillNo(billMatch[1].toUpperCase());
     } else if (lorryMatch) {
       response = await fetchLorryDetails(lorryMatch[1].toUpperCase());
+    } else if (stateMatch && !cmd.includes('loading from')) {
+      response = await fetchDetailsByState(stateMatch[1].trim());
     } else if (cmd.includes('total sauda today') || (cmd.includes('sauda') && cmd.includes('today'))) {
       response = await fetchTodaySaudas();
     } else if (cmd.includes('active bids') || cmd.includes('show bids')) {
@@ -429,17 +505,17 @@ const AIAgent = () => {
       response = {
         role: 'assistant',
         content: `Hello ${user?.name || 'Admin'}! How can I assist you with your tasks today?`,
-        suggestions: ['Today\'s total sauda', 'Active bids', 'Create Self Order']
+        suggestions: ['Today\'s total sauda', 'Bids in Punjab', 'Create Self Order']
       };
     } else {
       response = {
         role: 'assistant',
-        content: "I'm not sure how to help with that yet. Try asking for **Total Sauda Today**, **Active Bids**, **Company Status**, or **Bid Interactions**.",
+        content: "I'm not sure how to help with that yet. Try asking for **Sauda details**, **Bill No**, **State-wise info**, or **Lorry details**.",
         suggestions: [
-          'Total sauda today',
-          'Active bids',
-          'Status of company Hansaria',
-          'Interactions for Maize'
+          'Bill No 1234 details',
+          'Saudas from Haryana',
+          'Lorry HR38X1234 info',
+          'Active bids'
         ]
       };
     }
