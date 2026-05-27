@@ -26,12 +26,12 @@ const AIAgent = () => {
     {
       role: "assistant",
       content:
-        "Hello! I am your Deep Intelligence Agent. I have full control over the system data and navigation. Ask me anything about Saudas, Loadings, Sellers, Buyers, Bids, or Payments. I can also take you to any page in the sidebar!",
+        "Hello! I am your Deep Intelligence Agent. I have full control over the system data and navigation. Ask me anything about Saudas, Loadings, Sellers, Buyers, or Payments. I can also open any page for you!",
       suggestions: [
+        "Show sidebar menu",
         "Total sauda today",
-        "Active bids",
         "Open Buyer List",
-        "Show Sidebar Menu",
+        "Active bids",
       ],
     },
   ]);
@@ -64,34 +64,38 @@ const AIAgent = () => {
   };
 
   const findSidebarLink = (query) => {
-    const cleanQuery = query.toLowerCase();
-    let bestMatch = null;
-
+    const cleanQuery = query.toLowerCase().trim().replace(/\s+/g, "");
+    
+    // First, look for exact or highly similar action names
     for (const section of sidebarModules) {
-      // Check section name match
-      if (cleanQuery.includes(section.section.toLowerCase())) {
-        bestMatch = section.actions[0]; // Default to first action of section
-      }
-      
-      // Check individual action names
       for (const action of section.actions) {
-        if (cleanQuery.includes(action.name.toLowerCase())) {
-          return action; // Direct action match is best
+        const actionName = action.name.toLowerCase().replace(/\s+/g, "");
+        if (cleanQuery === actionName || cleanQuery.includes(actionName) || actionName.includes(cleanQuery)) {
+          return action;
         }
       }
     }
-    return bestMatch;
+
+    // Second, look for section name matches
+    for (const section of sidebarModules) {
+      const sectionName = section.section.toLowerCase().replace(/\s+/g, "");
+      if (cleanQuery === sectionName || cleanQuery.includes(sectionName) || sectionName.includes(cleanQuery)) {
+        return section.actions[0];
+      }
+    }
+    return null;
   };
 
   const getSidebarSummary = () => {
-    let content = "**Available System Modules:**\n\n";
+    let content = "**System Modules & Navigation:**\n\n";
     sidebarModules.forEach((s) => {
-      content += `• **${s.section}**: ${s.actions.map((a) => a.name).join(", ")}\n`;
+      content += `• **${s.section}**: ${s.actions.map((a) => `_${a.name}_`).join(", ")}\n`;
     });
+    content += "\n*Tip: Just type the name of any module to go there!*";
     return {
       role: "assistant",
       content,
-      suggestions: ["Buyer List", "Loading Entry", "Payment List"],
+      suggestions: ["Buyer List", "Loading Entry", "Payment List", "Add SelfOrder"],
     };
   };
 
@@ -146,39 +150,54 @@ const AIAgent = () => {
     setIsLoadingData(true);
     setThinkingPath("Initiating System-Wide Scan...");
 
-    // Parallelize all possible searches for maximum speed
-    const searchTasks = [
-      // 1. Try Lorry Search (if it has digits)
+    // 1. High Priority: Check if it's a Sauda No (if purely numeric)
+    if (/^\d{3,5}$/.test(query)) {
+      setThinkingPath("Checking Sauda Records...");
+      const saudaRes = await fetchSaudaDetails(query);
+      if (saudaRes && !saudaRes.content.includes("I couldn't find")) {
+        setIsLoadingData(false);
+        setThinkingPath("");
+        return saudaRes;
+      }
+    }
+
+    // 2. Medium Priority: Check Lorry and Invoice in parallel
+    setThinkingPath("Scanning Vehicles and Invoices...");
+    const [lorryRes, billRes] = await Promise.all([
       /\d{2}/.test(query) ? fetchLorryDetails(query) : Promise.resolve(null),
-      // 2. Try Sauda Search (if it looks like a number)
-      /^\d+$/.test(query) ? fetchSaudaDetails(query) : Promise.resolve(null),
-      // 3. Try Invoice Search
       /^\d+$/.test(query) ? fetchDetailsByBillNo(query) : Promise.resolve(null),
-      // 4. Try Seller/Buyer/Company names
+    ]);
+
+    if (lorryRes && !lorryRes.content.includes("No records found")) {
+      setIsLoadingData(false);
+      setThinkingPath("");
+      return lorryRes;
+    }
+    if (billRes && !billRes.content.includes("not found in system")) {
+      setIsLoadingData(false);
+      setThinkingPath("");
+      return billRes;
+    }
+
+    // 3. Lower Priority: Partners and Companies
+    setThinkingPath("Searching Partners and Companies...");
+    const [seller, buyer, company] = await Promise.all([
       fetchSellerDetails(query),
       fetchBuyerDetails(query),
-      fetchCompanyStatus(query)
-    ];
-
-    const results = await Promise.all(searchTasks);
-    
-    // Find the first valid result (ignore "not found" messages)
-    const validResult = results.find(r => 
-      r && r.content && 
-      !r.content.includes('I couldn\'t find') && 
-      !r.content.includes('not found in system') &&
-      !r.content.includes('No records found')
-    );
+      fetchCompanyStatus(query),
+    ]);
 
     setIsLoadingData(false);
     setThinkingPath("");
 
-    if (validResult) return validResult;
+    if (seller) return seller;
+    if (buyer) return buyer;
+    if (company && !company.content.includes("I couldn't find")) return company;
 
     return {
-      role: 'assistant',
+      role: "assistant",
       content: `I've performed a deep scan for "**${query}**" across all Saudas, Invoices, Vehicles, and Partners, but no direct match was found.`,
-      suggestions: ["Total sauda today", "Active bids", "Highest rate today"]
+      suggestions: ["Total sauda today", "Active bids", "Highest rate today"],
     };
   };
 
@@ -748,16 +767,29 @@ const AIAgent = () => {
     let response = null;
 
     // 1. Navigation & Sidebar Commands (Priority)
-    if (cleanCmd.includes("sidebar") || cleanCmd.includes("menu") || cleanCmd === "modules") {
+    if (cleanCmd === "sidebar" || cleanCmd === "menu" || cleanCmd === "modules" || cleanCmd.includes("all modules")) {
       response = getSidebarSummary();
     } else {
       const sidebarAction = findSidebarLink(cleanCmd);
-      if (sidebarAction && (cleanCmd.includes("go to") || cleanCmd.includes("open") || cleanCmd.includes("show"))) {
-        response = {
-          role: "assistant",
-          content: `Navigating to **${sidebarAction.name}** module...`,
-          action: () => navigate(sidebarAction.link),
-        };
+      // If found and user either specifically asked to go or just typed the name
+      if (sidebarAction) {
+        const isDirectNameMatch = cleanCmd === sidebarAction.name.toLowerCase() || 
+                                 cleanCmd === sidebarAction.name.toLowerCase().replace(/\s+/g, '');
+        const hasNavigationKeyword = cleanCmd.includes("go to") || 
+                                    cleanCmd.includes("open") || 
+                                    cleanCmd.includes("show") ||
+                                    cleanCmd.includes("navigate");
+
+        if (isDirectNameMatch || hasNavigationKeyword) {
+          response = {
+            role: "assistant",
+            content: `Redirecting you to **${sidebarAction.name}**...`,
+            action: () => {
+              console.log(`AI Agent navigating to: ${sidebarAction.link}`);
+              navigate(sidebarAction.link);
+            }
+          };
+        }
       }
     }
 
@@ -768,11 +800,9 @@ const AIAgent = () => {
     }
 
     // 2. Specific Data Queries (Regex Patterns)
-    const saudaMatch = cleanCmd.match(/sauda\s*(?:no)?\s*[:\s]*(\d+)/i);
-    const lorryMatch = cleanCmd.match(/lorry\s*(?:no)?\s*[:\s]*([a-z0-9\s]+)/i);
-    const billMatch = cleanCmd.match(
-      /(?:bill|invoice)\s*(?:no)?\s*[:\s]*([a-z0-9\s]+)/i,
-    );
+    const saudaMatch = cleanCmd.match(/(?:sauda|order)\s*(?:no|number)?\s*[:\s]*(\d+)/i);
+    const lorryMatch = cleanCmd.match(/(?:lorry|vehicle|truck)\s*(?:no|number)?\s*[:\s]*([a-z0-9\s]{4,})/i);
+    const billMatch = cleanCmd.match(/(?:bill|invoice|challan)\s*(?:no|number)?\s*[:\s]*(\d+)/i);
     const stateMatch = cleanCmd.match(/(?:state|from)\s+([a-z\s]{3,})/i);
     const dateMatch = cleanCmd.match(
       /(?:date)\s*[:\s]*(\d{1,2}-\d{1,2}-\d{4})/i,
