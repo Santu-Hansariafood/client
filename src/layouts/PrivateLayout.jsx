@@ -5,6 +5,7 @@ import { useAuth } from "../context/AuthContext/AuthContext";
 import Sidebar from "../components/Sidebar/Sidebar";
 import Header from "../common/Header/Header";
 import Footer from "../common/Footer/Footer";
+import AIAgent from "../components/AIAgent/AIAgent";
 import LogoutConfirmationModal from "../common/LogoutConfirmationModal/LogoutConfirmationModal";
 import { prefetchRoute } from "../utils/LazyPages/LazyPages";
 import Loading from "../common/Loading/Loading";
@@ -199,6 +200,8 @@ const PrivateLayout = () => {
           onCancel={() => setShowLogoutConfirmation(false)}
         />
       )}
+
+      {userRole === "Admin" && <AIAgent />}
     </div>
   );
 };
