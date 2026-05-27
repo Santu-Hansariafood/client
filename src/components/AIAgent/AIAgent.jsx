@@ -36,7 +36,7 @@ const AIAgent = () => {
     scrollToBottom();
   }, [messages, scrollToBottom, isOpen, isMinimized, isLoadingData]);
 
-  if (userRole !== 'Admin') return null;
+  if (userRole !== 'Admin' && userRole !== 'Employee') return null;
 
   const handleSend = (text) => {
     const userMessage = text || input.trim();
@@ -51,23 +51,40 @@ const AIAgent = () => {
   const fetchSaudaDetails = async (saudaNo) => {
     setIsLoadingData(true);
     try {
-      const response = await api.get(`/self-order?saudaNo=${saudaNo}`);
-      const data = response.data;
+      const [saudaRes, loadingRes] = await Promise.all([
+        api.get(`/self-order?saudaNo=${saudaNo}`),
+        api.get(`/Loading-Entry?saudaNo=${saudaNo}`)
+      ]);
+
+      const data = saudaRes.data;
       const sauda = Array.isArray(data) ? data[0] : (data.data ? data.data[0] : null);
+      const loadings = loadingRes.data.data || loadingRes.data || [];
 
       if (sauda) {
+        let content = `**Full Details for Sauda No: ${saudaNo}**\n\n` +
+          `• **Buyer:** ${sauda.buyerCompany || sauda.buyer}\n` +
+          `• **Supplier:** ${sauda.supplierCompany || 'N/A'}\n` +
+          `• **Commodity:** ${sauda.commodity}\n` +
+          `• **Total Quantity:** ${sauda.quantity} MT\n` +
+          `• **Pending:** ${sauda.pendingQuantity || 0} MT\n` +
+          `• **Rate:** ₹${sauda.rate}\n` +
+          `• **CD:** ${sauda.cd}% | **GST:** ${sauda.gst}%\n` +
+          `• **Location:** ${sauda.location || sauda.state || 'N/A'}\n` +
+          `• **PO Date:** ${sauda.poDate ? new Date(sauda.poDate).toLocaleDateString() : 'N/A'}\n` +
+          `• **Status:** ${sauda.status || 'Active'}\n\n`;
+
+        if (loadings.length > 0) {
+          content += `**Linked Loading Entries (${loadings.length}):**\n`;
+          loadings.forEach((l, idx) => {
+            content += `${idx + 1}. **Lorry:** ${l.lorryNumber} | **Bill:** ${l.billNumber || 'N/A'} | **Wt:** ${l.loadingWeight} MT\n`;
+          });
+        } else {
+          content += `*No loading entries found for this sauda.*`;
+        }
+
         return {
           role: 'assistant',
-          content: `**Sauda Details for ${saudaNo}**\n\n` +
-            `• **Buyer:** ${sauda.buyerCompany || sauda.buyer}\n` +
-            `• **Supplier:** ${sauda.supplierCompany || 'N/A'}\n` +
-            `• **Commodity:** ${sauda.commodity}\n` +
-            `• **Quantity:** ${sauda.quantity} MT\n` +
-            `• **Rate:** ₹${sauda.rate}\n` +
-            `• **Pending:** ${sauda.pendingQuantity || 0} MT\n` +
-            `• **Payment Terms:** ${sauda.paymentTerms || 'N/A'}\n` +
-            `• **Status:** ${sauda.status || 'Active'}\n` +
-            `• **PO Number:** ${sauda.poNumber || 'N/A'}`,
+          content: content,
           suggestions: [`Payment of Sauda ${saudaNo}`, `Loading entry for Sauda ${saudaNo}`]
         };
       } else {
@@ -79,7 +96,68 @@ const AIAgent = () => {
     } catch (error) {
       return {
         role: 'assistant',
-        content: "Sorry, I encountered an error while fetching Sauda details.",
+        content: "Sorry, I encountered an error while fetching full Sauda details.",
+      };
+    } finally {
+      setIsLoadingData(false);
+    }
+  };
+
+  const fetchDetailsByDate = async (dateStr) => {
+    setIsLoadingData(true);
+    try {
+      // Normalize date from DD-MM-YYYY or similar to YYYY-MM-DD
+      let normalizedDate = dateStr;
+      if (dateStr.includes('-')) {
+        const parts = dateStr.split('-');
+        if (parts[0].length === 2) { // DD-MM-YYYY
+          normalizedDate = `${parts[2]}-${parts[1]}-${parts[0]}`;
+        }
+      }
+
+      const [saudaRes, loadingRes] = await Promise.all([
+        api.get(`/self-order?startDate=${normalizedDate}&endDate=${normalizedDate}`),
+        api.get(`/Loading-Entry?startDate=${normalizedDate}&endDate=${normalizedDate}`)
+      ]);
+
+      const saudas = saudaRes.data.data || saudaRes.data || [];
+      const loadings = loadingRes.data.data || loadingRes.data || [];
+
+      if (saudas.length === 0 && loadings.length === 0) {
+        return {
+          role: 'assistant',
+          content: `No records found for the date **${dateStr}**.`,
+        };
+      }
+
+      let content = `**Records for ${dateStr}**\n\n`;
+      
+      if (saudas.length > 0) {
+        content += `**Saudas (${saudas.length}):**\n`;
+        saudas.slice(0, 5).forEach(s => {
+          content += `• **Sauda ${s.saudaNo}**: ${s.buyerCompany} | ${s.commodity} | ${s.quantity} MT\n`;
+        });
+        if (saudas.length > 5) content += `*+${saudas.length - 5} more saudas*\n`;
+        content += '\n';
+      }
+
+      if (loadings.length > 0) {
+        content += `**Loadings (${loadings.length}):**\n`;
+        loadings.slice(0, 5).forEach(l => {
+          content += `• **Lorry ${l.lorryNumber}**: Sauda ${l.saudaNo} | ${l.loadingWeight} MT\n`;
+        });
+        if (loadings.length > 5) content += `*+${loadings.length - 5} more loadings*\n`;
+      }
+
+      return {
+        role: 'assistant',
+        content: content,
+        suggestions: saudas.length > 0 ? [`Sauda ${saudas[0].saudaNo} details`] : []
+      };
+    } catch (error) {
+      return {
+        role: 'assistant',
+        content: "Error fetching records for the specified date.",
       };
     } finally {
       setIsLoadingData(false);
@@ -440,21 +518,35 @@ const AIAgent = () => {
     let response = null;
 
     // Data Queries
-    const saudaMatch = cmd.match(/sauda\s*(\d+)/i);
+    const saudaMatch = cmd.match(/sauda\s*(?:no)?\s*(\d+)/i);
     const lorryMatch = cmd.match(/lorry\s*([a-z0-9]+)/i);
     const companyMatch = cmd.match(/(?:status of|company)\s+([a-z0-9\s]+)/i);
     const interactionMatch = cmd.match(/(?:interactions for|bid info for)\s+([a-z0-9\s]+)/i);
     const stateMatch = cmd.match(/(?:state|from)\s+([a-z\s]{3,})/i);
-    const billMatch = cmd.match(/(?:bill|invoice)\s+(?:no|number)?\s*([a-z0-9\-\/]+)/i);
+    const billMatch = cmd.match(/(?:bill|invoice)\s+(?:no|number)?\s*[:\s]*(\d+)/i);
+    const dateMatch = cmd.match(/(?:date)\s*[:\s]*(\d{1,2}-\d{1,2}-\d{4})/i);
 
-    if (cmd.includes('loading entry for sauda') && saudaMatch) {
+    // Specific combined pattern: SAUDA NO 1465 BILL NO : 29 DATE : 16-05-2026
+    if (saudaMatch && billMatch && dateMatch) {
+      const saudaNo = saudaMatch[1];
+      const billNo = billMatch[1];
+      const date = dateMatch[1];
+      
+      // Fetch sauda details first as it's the primary entity
+      response = await fetchSaudaDetails(saudaNo);
+      if (response && response.content) {
+        response.content = `**Search Results for Sauda ${saudaNo}, Bill ${billNo}, Date ${date}**\n\n` + response.content;
+      }
+    } else if (cmd.includes('loading entry for sauda') && saudaMatch) {
       response = await fetchLoadingEntriesBySauda(saudaMatch[1]);
     } else if (saudaMatch && (cmd.includes('payment') || cmd.includes('payemnt'))) {
       response = await fetchSaudaPayment(saudaMatch[1]);
     } else if (saudaMatch && (cmd.includes('details') || cmd.includes('pending'))) {
       response = await fetchSaudaDetails(saudaMatch[1]);
     } else if (billMatch) {
-      response = await fetchDetailsByBillNo(billMatch[1].toUpperCase());
+      response = await fetchDetailsByBillNo(billMatch[1]);
+    } else if (dateMatch) {
+      response = await fetchDetailsByDate(dateMatch[1]);
     } else if (lorryMatch) {
       response = await fetchLorryDetails(lorryMatch[1].toUpperCase());
     } else if (stateMatch && !cmd.includes('loading from')) {
@@ -504,17 +596,17 @@ const AIAgent = () => {
     } else if (cmd.includes('hello') || cmd.includes('hi')) {
       response = {
         role: 'assistant',
-        content: `Hello ${user?.name || 'Admin'}! How can I assist you with your tasks today?`,
+        content: `Hello ${user?.name || (userRole === 'Admin' ? 'Admin' : 'Employee')}! How can I assist you with your tasks today?`,
         suggestions: ['Today\'s total sauda', 'Bids in Punjab', 'Create Self Order']
       };
     } else {
       response = {
         role: 'assistant',
-        content: "I'm not sure how to help with that yet. Try asking for **Sauda details**, **Bill No**, **State-wise info**, or **Lorry details**.",
+        content: "I'm not sure how to help with that yet. Try asking for **Sauda details**, **Bill No**, **Date-wise info**, or **Lorry details**.",
         suggestions: [
-          'Bill No 1234 details',
-          'Saudas from Haryana',
-          'Lorry HR38X1234 info',
+          'Sauda 1465 details',
+          'Bill No 29 details',
+          'Date 16-05-2026',
           'Active bids'
         ]
       };

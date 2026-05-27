@@ -202,6 +202,7 @@ const PrivateLayout = () => {
       )}
 
       {userRole === "Admin" && <AIAgent />}
+      {userRole === "Employee" && <AIAgent />}
     </div>
   );
 };
