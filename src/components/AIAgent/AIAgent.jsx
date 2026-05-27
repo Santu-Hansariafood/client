@@ -440,20 +440,46 @@ const AIAgent = () => {
   const fetchLorryDetails = async (lorryNo) => {
     setIsLoadingData(true);
     try {
-      const response = await api.get(`/Loading-Entry/lorry-wise?lorryNumber=${lorryNo}`);
+      // Clean the lorry number (remove spaces)
+      const cleanLorry = lorryNo.replace(/\s+/g, '').toUpperCase();
+      
+      // If it's 4 digits, we assume it's the last 4 digits
+      const isLast4 = /^\d{4}$/.test(cleanLorry);
+      const url = isLast4 
+        ? `/Loading-Entry/lorry-wise?lorryNumber=${cleanLorry}` 
+        : `/Loading-Entry/lorry-wise?lorryNumber=${cleanLorry}`;
+      
+      const response = await api.get(url);
       const data = response.data.data || response.data;
 
       if (data && data.length > 0) {
-        const entry = data[0];
+        // If we searched by last 4 digits, we might get multiple results
+        const entries = isLast4 
+          ? data.filter(e => e.lorryNumber.replace(/\s+/g, '').endsWith(cleanLorry))
+          : data;
+
+        if (entries.length === 0) {
+          return {
+            role: 'assistant',
+            content: `No records found for Lorry ending in **${lorryNo}**.`,
+          };
+        }
+
+        const entry = entries[0];
+        let content = entries.length > 1 
+          ? `**Found ${entries.length} lorries matching "${lorryNo}". Showing latest:**\n\n`
+          : `**Latest Loading for Lorry ${entry.lorryNumber}**\n\n`;
+
+        content += `• **Sauda No:** ${entry.saudaNo}\n` +
+          `• **Date:** ${new Date(entry.loadingDate).toLocaleDateString()}\n` +
+          `• **Weight:** ${entry.loadingWeight} MT\n` +
+          `• **Buyer:** ${entry.buyerCompany}\n` +
+          `• **Supplier:** ${entry.supplierCompany}\n` +
+          `• **Status:** ${entry.unloadingDate ? 'Unloaded' : 'In Transit'}`;
+
         return {
           role: 'assistant',
-          content: `**Latest Loading for Lorry ${lorryNo}**\n\n` +
-            `• **Sauda No:** ${entry.saudaNo}\n` +
-            `• **Date:** ${new Date(entry.loadingDate).toLocaleDateString()}\n` +
-            `• **Weight:** ${entry.loadingWeight} MT\n` +
-            `• **Buyer:** ${entry.buyerCompany}\n` +
-            `• **Supplier:** ${entry.supplierCompany}\n` +
-            `• **Status:** ${entry.unloadingDate ? 'Unloaded' : 'In Transit'}`,
+          content: content,
           suggestions: [`Sauda ${entry.saudaNo} details`, 'Generate Lorry Challan']
         };
       } else {
@@ -488,10 +514,10 @@ const AIAgent = () => {
           }
         });
 
-        let content = `**Today's Loading Rates (${new Date().toLocaleDateString()})**\n\n`;
+        let content = `**Today's Highest Loading Rates (${new Date().toLocaleDateString()})**\n\n`;
         Object.keys(rates).forEach(comm => {
-          const avg = (rates[comm].reduce((a, b) => a + b, 0) / rates[comm].length).toFixed(2);
-          content += `• **${comm}:** Avg ₹${avg} (Range: ₹${Math.min(...rates[comm])} - ₹${Math.max(...rates[comm])})\n`;
+          const maxRate = Math.max(...rates[comm]);
+          content += `• **${comm}:** Highest ₹${maxRate} (Range: ₹${Math.min(...rates[comm])} - ₹${maxRate})\n`;
         });
 
         return {
@@ -519,20 +545,18 @@ const AIAgent = () => {
 
     // Data Queries
     const saudaMatch = cmd.match(/sauda\s*(?:no)?\s*(\d+)/i);
-    const lorryMatch = cmd.match(/lorry\s*([a-z0-9]+)/i);
+    const lorryMatch = cmd.match(/lorry\s*([a-z0-9\s]+)/i);
     const companyMatch = cmd.match(/(?:status of|company)\s+([a-z0-9\s]+)/i);
     const interactionMatch = cmd.match(/(?:interactions for|bid info for)\s+([a-z0-9\s]+)/i);
     const stateMatch = cmd.match(/(?:state|from)\s+([a-z\s]{3,})/i);
     const billMatch = cmd.match(/(?:bill|invoice)\s+(?:no|number)?\s*[:\s]*(\d+)/i);
     const dateMatch = cmd.match(/(?:date)\s*[:\s]*(\d{1,2}-\d{1,2}-\d{4})/i);
 
-    // Specific combined pattern: SAUDA NO 1465 BILL NO : 29 DATE : 16-05-2026
+    // Combined pattern
     if (saudaMatch && billMatch && dateMatch) {
       const saudaNo = saudaMatch[1];
       const billNo = billMatch[1];
       const date = dateMatch[1];
-      
-      // Fetch sauda details first as it's the primary entity
       response = await fetchSaudaDetails(saudaNo);
       if (response && response.content) {
         response.content = `**Search Results for Sauda ${saudaNo}, Bill ${billNo}, Date ${date}**\n\n` + response.content;
@@ -548,9 +572,9 @@ const AIAgent = () => {
     } else if (dateMatch) {
       response = await fetchDetailsByDate(dateMatch[1]);
     } else if (lorryMatch) {
-      response = await fetchLorryDetails(lorryMatch[1].toUpperCase());
-    } else if (stateMatch && !cmd.includes('loading from')) {
-      response = await fetchDetailsByState(stateMatch[1].trim());
+      // Extract digits and potentially some prefix if present, but keep it flexible
+      const lorryInput = lorryMatch[1].trim();
+      response = await fetchLorryDetails(lorryInput);
     } else if (cmd.includes('total sauda today') || (cmd.includes('sauda') && cmd.includes('today'))) {
       response = await fetchTodaySaudas();
     } else if (cmd.includes('active bids') || cmd.includes('show bids')) {
@@ -559,10 +583,10 @@ const AIAgent = () => {
       response = await fetchBidInteractions(interactionMatch[1].trim());
     } else if (companyMatch) {
       response = await fetchCompanyStatus(companyMatch[1].trim());
-    } else if (cmd.includes('rate') && (cmd.includes('today') || cmd.includes('loading'))) {
+    } else if (cmd.includes('rate') && (cmd.includes('today') || cmd.includes('loading') || cmd.includes('highest'))) {
       response = await fetchTodayRate();
     } 
-    // Navigation Commands
+    // Navigation...
     else if (cmd.includes('self order') || cmd.includes('create order')) {
       response = {
         role: 'assistant',
@@ -597,7 +621,7 @@ const AIAgent = () => {
       response = {
         role: 'assistant',
         content: `Hello ${user?.name || (userRole === 'Admin' ? 'Admin' : 'Employee')}! How can I assist you with your tasks today?`,
-        suggestions: ['Today\'s total sauda', 'Bids in Punjab', 'Create Self Order']
+        suggestions: ['Today\'s total sauda', 'Today\'s highest rate', 'Create Self Order']
       };
     } else {
       response = {
@@ -606,8 +630,8 @@ const AIAgent = () => {
         suggestions: [
           'Sauda 1465 details',
           'Bill No 29 details',
-          'Date 16-05-2026',
-          'Active bids'
+          'Lorry 1234 info',
+          'Today\'s highest rate'
         ]
       };
     }
@@ -625,7 +649,7 @@ const AIAgent = () => {
       suggestions: [
         'Create Self Order',
         'Add Loading Entry',
-        'Generate Lorry Challan',
+        'Today\'s highest rate',
         'View Unloading Report'
       ]
     }]);
@@ -643,7 +667,7 @@ const AIAgent = () => {
                 <FaRobot className="text-xl animate-pulse" />
               </div>
               <div>
-                <h3 className="font-bold text-sm tracking-wide">Admin AI Agent</h3>
+                <h3 className="font-bold text-sm tracking-wide">Hansaria AI Agent</h3>
                 <div className="flex items-center gap-1.5">
                   <span className="w-2 h-2 bg-emerald-400 rounded-full animate-ping" />
                   <span className="text-[10px] text-emerald-100 font-medium uppercase tracking-wider">Online</span>
