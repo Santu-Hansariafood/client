@@ -5,11 +5,8 @@ import {
   FaTimes,
   FaMinus,
   FaTrash,
-  FaMagic,
-  FaHistory,
   FaArrowRight,
   FaSpinner,
-  FaSearch,
 } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext/AuthContext";
@@ -66,7 +63,6 @@ const AIAgent = () => {
   const findSidebarLink = (query) => {
     const cleanQuery = query.toLowerCase().trim().replace(/\s+/g, "");
     
-    // First, look for exact or highly similar action names
     for (const section of sidebarModules) {
       for (const action of section.actions) {
         const actionName = action.name.toLowerCase().replace(/\s+/g, "");
@@ -76,7 +72,6 @@ const AIAgent = () => {
       }
     }
 
-    // Second, look for section name matches
     for (const section of sidebarModules) {
       const sectionName = section.section.toLowerCase().replace(/\s+/g, "");
       if (cleanQuery === sectionName || cleanQuery.includes(sectionName) || sectionName.includes(cleanQuery)) {
@@ -150,7 +145,6 @@ const AIAgent = () => {
     setIsLoadingData(true);
     setThinkingPath("Initiating System-Wide Scan...");
 
-    // 1. High Priority: Check if it's a Sauda No (if purely numeric)
     if (/^\d{3,5}$/.test(query)) {
       setThinkingPath("Checking Sauda Records...");
       const saudaRes = await fetchSaudaDetails(query);
@@ -161,7 +155,6 @@ const AIAgent = () => {
       }
     }
 
-    // 2. Medium Priority: Check Lorry and Invoice in parallel
     setThinkingPath("Scanning Vehicles and Invoices...");
     const [lorryRes, billRes] = await Promise.all([
       /\d{2}/.test(query) ? fetchLorryDetails(query) : Promise.resolve(null),
@@ -179,7 +172,6 @@ const AIAgent = () => {
       return billRes;
     }
 
-    // 3. Lower Priority: Partners and Companies
     setThinkingPath("Searching Partners and Companies...");
     const [seller, buyer, company] = await Promise.all([
       fetchSellerDetails(query),
@@ -192,7 +184,8 @@ const AIAgent = () => {
 
     if (seller) return seller;
     if (buyer) return buyer;
-    if (company && !company.content.includes("I couldn't find")) return company;
+    if (company && !company.content.includes("No records for company"))
+      return company;
 
     return {
       role: "assistant",
@@ -205,7 +198,6 @@ const AIAgent = () => {
     setIsLoadingData(true);
     setThinkingPath(`Accessing Full MIS for Sauda ${saudaNo}...`);
     try {
-      // Use the dedicated details route for better performance and complete data
       const response = await api.get(`/self-order/details/${saudaNo}`);
       const { order: sauda, entries: loadings, payments } = response.data;
 
@@ -240,7 +232,6 @@ const AIAgent = () => {
           suggestions: [`Payment of Sauda ${saudaNo}`, `Add loading for ${saudaNo}`]
         };
       } else {
-        // Fallback to basic search if details route fails
         const searchRes = await api.get(`/self-order?saudaNo=${saudaNo}`);
         const data = searchRes.data.data || searchRes.data;
         const fallbackSauda = Array.isArray(data) ? data[0] : null;
@@ -272,12 +263,10 @@ const AIAgent = () => {
     setIsLoadingData(true);
     setThinkingPath(`Searching system logs for ${dateStr}...`);
     try {
-      // Normalize date from DD-MM-YYYY or similar to YYYY-MM-DD
       let normalizedDate = dateStr;
       if (dateStr.includes("-")) {
         const parts = dateStr.split("-");
         if (parts[0].length === 2) {
-          // DD-MM-YYYY
           normalizedDate = `${parts[2]}-${parts[1]}-${parts[0]}`;
         }
       }
@@ -532,12 +521,10 @@ const AIAgent = () => {
     setIsLoadingData(true);
     setThinkingPath(`Locating invoice: ${billNo}...`);
     try {
-      // Try exact bill number first, then search
       const response = await api.get(`/Loading-Entry?search=${billNo}`);
       const data = response.data.data || response.data;
 
       if (data && data.length > 0) {
-        // Find the best match for the bill number
         const entry = data.find(e => 
           e.billNumber?.toString().toLowerCase().includes(billNo.toLowerCase())
         ) || data[0];
@@ -652,10 +639,8 @@ const AIAgent = () => {
     setIsLoadingData(true);
     setThinkingPath(`Tracking vehicle: ${lorryNo}...`);
     try {
-      // Clean the lorry number (remove spaces)
       const cleanLorry = lorryNo.replace(/\s+/g, "").toUpperCase();
 
-      // If it's 4 digits, we assume it's the last 4 digits
       const isLast4 = /^\d{4}$/.test(cleanLorry);
 
       const response = await api.get(
@@ -664,7 +649,6 @@ const AIAgent = () => {
       const data = response.data.data || response.data;
 
       if (data && data.length > 0) {
-        // If we searched by last 4 digits, we might get multiple results
         const entries = isLast4
           ? data.filter((e) =>
               e.lorryNumber.replace(/\s+/g, "").endsWith(cleanLorry),
@@ -766,12 +750,17 @@ const AIAgent = () => {
     const cleanCmd = cmd.trim().toLowerCase();
     let response = null;
 
-    // 1. Navigation & Sidebar Commands (Priority)
-    if (cleanCmd === "sidebar" || cleanCmd === "menu" || cleanCmd === "modules" || cleanCmd.includes("all modules")) {
+    if (
+      cleanCmd === "sidebar" ||
+      cleanCmd === "menu" ||
+      cleanCmd === "modules" ||
+      cleanCmd.includes("all modules") ||
+      cleanCmd.includes("sidebar menu") ||
+      cleanCmd.includes("show modules")
+    ) {
       response = getSidebarSummary();
     } else {
       const sidebarAction = findSidebarLink(cleanCmd);
-      // If found and user either specifically asked to go or just typed the name
       if (sidebarAction) {
         const isDirectNameMatch = cleanCmd === sidebarAction.name.toLowerCase() || 
                                  cleanCmd === sidebarAction.name.toLowerCase().replace(/\s+/g, '');
@@ -799,7 +788,6 @@ const AIAgent = () => {
       return;
     }
 
-    // 2. Specific Data Queries (Regex Patterns)
     const saudaMatch = cleanCmd.match(/(?:sauda|order)\s*(?:no|number)?\s*[:\s]*(\d+)/i);
     const lorryMatch = cleanCmd.match(/(?:lorry|vehicle|truck)\s*(?:no|number)?\s*[:\s]*([a-z0-9\s]{4,})/i);
     const billMatch = cleanCmd.match(/(?:bill|invoice|challan)\s*(?:no|number)?\s*[:\s]*(\d+)/i);
@@ -860,7 +848,6 @@ const AIAgent = () => {
     ) {
       response = await fetchTodayRate();
     }
-    // 3. Universal Fallback (Deep Intelligence)
     else if (cleanCmd.length >= 3) {
       response = await universalDeepSearch(cleanCmd);
     } else {
@@ -895,10 +882,8 @@ const AIAgent = () => {
 
   return (
     <div className="fixed bottom-6 right-6 z-[9999] flex flex-col items-end">
-      {/* Chat Window */}
       {isOpen && !isMinimized && (
         <div className="mb-4 w-[350px] sm:w-[400px] h-[500px] bg-white rounded-3xl shadow-2xl border border-slate-200 flex flex-col overflow-hidden animate-in slide-in-from-bottom-10 duration-300">
-          {/* Header */}
           <div className="bg-gradient-to-r from-emerald-600 to-teal-600 p-4 flex items-center justify-between text-white shadow-lg">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-md">
@@ -941,7 +926,6 @@ const AIAgent = () => {
             </div>
           </div>
 
-          {/* Messages Area */}
           <div
             ref={scrollRef}
             className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50/50 scroll-smooth no-scrollbar"
@@ -994,7 +978,6 @@ const AIAgent = () => {
             )}
           </div>
 
-          {/* Input Area */}
           <div className="p-4 bg-white border-t border-slate-100">
             <div className="relative flex items-center gap-2">
               <input
@@ -1020,7 +1003,6 @@ const AIAgent = () => {
         </div>
       )}
 
-      {/* Floating Action Button */}
       <div className="flex flex-col items-end gap-3">
         {isMinimized && isOpen && (
           <div className="bg-white px-4 py-2 rounded-2xl shadow-xl border border-slate-100 animate-in fade-in slide-in-from-right-5 duration-300 mb-2">
