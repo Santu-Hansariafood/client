@@ -9,10 +9,12 @@ import {
   FaHistory,
   FaArrowRight,
   FaSpinner,
+  FaSearch,
 } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext/AuthContext";
 import api from "../../utils/apiClient/apiClient";
+import dashboardData from "../../data/dashboardData.json";
 
 const AIAgent = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -24,18 +26,20 @@ const AIAgent = () => {
     {
       role: "assistant",
       content:
-        "Hello! I am your Deep Intelligence Agent. I have full control over the system data. Ask me anything about Saudas, Loadings, Sellers, Buyers, Bids, or Payments.",
+        "Hello! I am your Deep Intelligence Agent. I have full control over the system data and navigation. Ask me anything about Saudas, Loadings, Sellers, Buyers, Bids, or Payments. I can also take you to any page in the sidebar!",
       suggestions: [
         "Total sauda today",
         "Active bids",
-        "Highest rate today",
-        "Lorry status",
+        "Open Buyer List",
+        "Show Sidebar Menu",
       ],
     },
   ]);
   const scrollRef = useRef(null);
   const navigate = useNavigate();
   const { userRole, user } = useAuth();
+
+  const sidebarModules = dashboardData.sections;
 
   const scrollToBottom = useCallback(() => {
     if (scrollRef.current) {
@@ -57,6 +61,38 @@ const AIAgent = () => {
     setInput("");
 
     processCommand(userMessage.toLowerCase());
+  };
+
+  const findSidebarLink = (query) => {
+    const cleanQuery = query.toLowerCase();
+    let bestMatch = null;
+
+    for (const section of sidebarModules) {
+      // Check section name match
+      if (cleanQuery.includes(section.section.toLowerCase())) {
+        bestMatch = section.actions[0]; // Default to first action of section
+      }
+      
+      // Check individual action names
+      for (const action of section.actions) {
+        if (cleanQuery.includes(action.name.toLowerCase())) {
+          return action; // Direct action match is best
+        }
+      }
+    }
+    return bestMatch;
+  };
+
+  const getSidebarSummary = () => {
+    let content = "**Available System Modules:**\n\n";
+    sidebarModules.forEach((s) => {
+      content += `• **${s.section}**: ${s.actions.map((a) => a.name).join(", ")}\n`;
+    });
+    return {
+      role: "assistant",
+      content,
+      suggestions: ["Buyer List", "Loading Entry", "Payment List"],
+    };
   };
 
   const fetchSellerDetails = async (name) => {
@@ -286,14 +322,15 @@ const AIAgent = () => {
 
   const fetchActiveBids = async () => {
     setIsLoadingData(true);
+    setThinkingPath("Scanning all active bids...");
     try {
       const response = await api.get("/bids?status=active");
       const bids = response.data.data || response.data;
 
       if (bids && bids.length > 0) {
-        let content = `**Active Bids Today**\n\n`;
+        let content = `**Live Bids Status**\n\n`;
         bids.forEach((bid, idx) => {
-          content += `${idx + 1}. **${bid.commodity}** | ${bid.location} | End: ${bid.endTime}\n`;
+          content += `${idx + 1}. **${bid.commodity}** | ${bid.location} | Ends: ${bid.endTime}\n`;
         });
         return {
           role: "assistant",
@@ -303,16 +340,17 @@ const AIAgent = () => {
       } else {
         return {
           role: "assistant",
-          content: "There are no active bids at the moment.",
+          content: "No active bids found in the system right now.",
         };
       }
     } catch (error) {
       return {
         role: "assistant",
-        content: "Error fetching active bids.",
+        content: "Error fetching live bids.",
       };
     } finally {
       setIsLoadingData(false);
+      setThinkingPath("");
     }
   };
 
@@ -359,6 +397,7 @@ const AIAgent = () => {
 
   const fetchCompanyStatus = async (companyName) => {
     setIsLoadingData(true);
+    setThinkingPath(`Querying company: ${companyName}...`);
     try {
       const response = await api.get(`/companies?search=${companyName}`);
       const companies = response.data.data || response.data;
@@ -368,39 +407,41 @@ const AIAgent = () => {
         return {
           role: "assistant",
           content:
-            `**Company Status: ${comp.companyName}**\n\n` +
-            `• **Location:** ${comp.location || "N/A"}\n` +
+            `**Deep Status: ${comp.companyName}**\n\n` +
             `• **GST:** ${comp.gstNo || "N/A"}\n` +
-            `• **Status:** Active\n` +
-            `• **Contact:** ${comp.mobile || "N/A"}`,
+            `• **District/State:** ${comp.district || "N/A"}, ${comp.state || "N/A"}\n` +
+            `• **Contact:** ${comp.mobile || "N/A"}\n` +
+            `• **Status:** VERIFIED`,
           suggestions: [`Saudas for ${comp.companyName}`],
         };
       } else {
         return {
           role: "assistant",
-          content: `I couldn't find any company matching **${companyName}**.`,
+          content: `No records for company **${companyName}**.`,
         };
       }
     } catch (error) {
       return {
         role: "assistant",
-        content: "Error fetching company status.",
+        content: "Error in company query.",
       };
     } finally {
       setIsLoadingData(false);
+      setThinkingPath("");
     }
   };
 
   const fetchBidInteractions = async (commodity) => {
     setIsLoadingData(true);
+    setThinkingPath(`Analyzing interactions for ${commodity}...`);
     try {
       const response = await api.get(`/participateBids?search=${commodity}`);
       const interactions = response.data.data || response.data;
 
       if (interactions && interactions.length > 0) {
-        let content = `**Latest Bid Interactions for ${commodity}**\n\n`;
+        let content = `**Interaction Analytics: ${commodity}**\n\n`;
         interactions.slice(0, 5).forEach((item, idx) => {
-          content += `${idx + 1}. **${item.sellerName}**: ₹${item.rate} | ${item.quantity} MT | ${new Date(item.createdAt).toLocaleTimeString()}\n`;
+          content += `${idx + 1}. **${item.sellerName}**: ₹${item.rate} | ${item.quantity} MT\n`;
         });
         return {
           role: "assistant",
@@ -409,21 +450,23 @@ const AIAgent = () => {
       } else {
         return {
           role: "assistant",
-          content: `No interactions found for **${commodity}**.`,
+          content: `No recent activity for **${commodity}**.`,
         };
       }
     } catch (error) {
       return {
         role: "assistant",
-        content: "Error fetching bid interactions.",
+        content: "Error in interaction analytics.",
       };
     } finally {
       setIsLoadingData(false);
+      setThinkingPath("");
     }
   };
 
   const fetchSaudaPayment = async (saudaNo) => {
     setIsLoadingData(true);
+    setThinkingPath(`Analyzing payment ledger for Sauda ${saudaNo}...`);
     try {
       const response = await api.get(`/self-order?saudaNo=${saudaNo}`);
       const data = response.data;
@@ -437,14 +480,13 @@ const AIAgent = () => {
         return {
           role: "assistant",
           content:
-            `**Payment Details for Sauda ${saudaNo}**\n\n` +
-            `• **Total Quantity:** ${sauda.quantity} MT\n` +
-            `• **Pending Quantity:** ${sauda.pendingQuantity || 0} MT\n` +
-            `• **Rate:** ₹${sauda.rate}\n` +
-            `• **Payment Terms:** ${sauda.paymentTerms || "N/A"}\n` +
-            `• **CD:** ${sauda.cd}% | **GST:** ${sauda.gst}%\n` +
-            `• **Status:** ${sauda.status || "Active"}\n\n` +
-            `*Tip: You can check loading entries for this sauda to see actual delivered weight.*`,
+            `**Payment Ledger Summary: Sauda ${saudaNo}**\n\n` +
+            `• **Contract Quantity:** ${sauda.quantity} MT\n` +
+            `• **Pending to Load:** ${sauda.pendingQuantity || 0} MT\n` +
+            `• **Contract Rate:** ₹${sauda.rate}\n` +
+            `• **CD/GST:** ${sauda.cd}% / ${sauda.gst}%\n` +
+            `• **Terms:** ${sauda.paymentTerms || "N/A"}\n` +
+            `• **Status:** ${sauda.status?.toUpperCase()}`,
           suggestions: [
             `Loading entries for Sauda ${saudaNo}`,
             `Sauda ${saudaNo} details`,
@@ -459,10 +501,11 @@ const AIAgent = () => {
     } catch (error) {
       return {
         role: "assistant",
-        content: "Error fetching sauda payment details.",
+        content: "Error in payment analysis.",
       };
     } finally {
       setIsLoadingData(false);
+      setThinkingPath("");
     }
   };
 
@@ -510,17 +553,18 @@ const AIAgent = () => {
 
   const fetchDetailsByState = async (state) => {
     setIsLoadingData(true);
+    setThinkingPath(`Filtering system by state: ${state}...`);
     try {
       const response = await api.get(`/self-order?search=${state}`);
       const saudas = response.data.data || response.data;
 
       if (saudas && saudas.length > 0) {
-        let content = `**Recent Saudas for State: ${state.toUpperCase()}**\n\n`;
+        let content = `**Regional Intelligence: ${state.toUpperCase()}**\n\n`;
         saudas.slice(0, 5).forEach((s, idx) => {
-          content += `${idx + 1}. **Sauda ${s.saudaNo}**: ${s.buyerCompany} | ${s.commodity} | ${s.quantity} MT\n`;
+          content += `${idx + 1}. **Sauda ${s.saudaNo}**: ${s.buyerCompany} | ${s.commodity}\n`;
         });
         if (saudas.length > 5)
-          content += `\n*Showing 5 of ${saudas.length} saudas.*`;
+          content += `\n*Showing top 5 of ${saudas.length} region records*`;
 
         return {
           role: "assistant",
@@ -533,32 +577,34 @@ const AIAgent = () => {
       } else {
         return {
           role: "assistant",
-          content: `No saudas found for State: **${state}**.`,
+          content: `No records found for state **${state}**.`,
         };
       }
     } catch (error) {
       return {
         role: "assistant",
-        content: "Error fetching state-wise details.",
+        content: "Error in regional query.",
       };
     } finally {
       setIsLoadingData(false);
+      setThinkingPath("");
     }
   };
 
   const fetchLoadingEntriesBySauda = async (saudaNo) => {
     setIsLoadingData(true);
+    setThinkingPath(`Pulling loading history for Sauda ${saudaNo}...`);
     try {
       const response = await api.get(`/Loading-Entry?saudaNo=${saudaNo}`);
       const entries = response.data.data || response.data;
 
       if (entries && entries.length > 0) {
-        let content = `**Loading Entries for Sauda ${saudaNo}**\n\n`;
+        let content = `**Loading History: Sauda ${saudaNo}**\n\n`;
         entries.slice(0, 5).forEach((entry, idx) => {
-          content += `${idx + 1}. **Lorry:** ${entry.lorryNumber} | **Date:** ${new Date(entry.loadingDate).toLocaleDateString()} | **Weight:** ${entry.loadingWeight} MT\n`;
+          content += `${idx + 1}. **${entry.lorryNumber}** | ${new Date(entry.loadingDate).toLocaleDateString()} | ${entry.loadingWeight} MT\n`;
         });
         if (entries.length > 5)
-          content += `\n*Showing 5 of ${entries.length} entries.*`;
+          content += `\n*Total entries: ${entries.length}*`;
 
         return {
           role: "assistant",
@@ -568,33 +614,34 @@ const AIAgent = () => {
       } else {
         return {
           role: "assistant",
-          content: `No loading entries found for Sauda **${saudaNo}**.`,
+          content: `No delivery records for Sauda **${saudaNo}**.`,
           suggestions: [`Sauda ${saudaNo} details`],
         };
       }
     } catch (error) {
       return {
         role: "assistant",
-        content: "Error fetching loading entries. Please try again.",
+        content: "Error in delivery history fetch.",
       };
     } finally {
       setIsLoadingData(false);
+      setThinkingPath("");
     }
   };
 
   const fetchLorryDetails = async (lorryNo) => {
     setIsLoadingData(true);
+    setThinkingPath(`Tracking vehicle: ${lorryNo}...`);
     try {
       // Clean the lorry number (remove spaces)
       const cleanLorry = lorryNo.replace(/\s+/g, "").toUpperCase();
 
       // If it's 4 digits, we assume it's the last 4 digits
       const isLast4 = /^\d{4}$/.test(cleanLorry);
-      const url = isLast4
-        ? `/Loading-Entry/lorry-wise?lorryNumber=${cleanLorry}`
-        : `/Loading-Entry/lorry-wise?lorryNumber=${cleanLorry}`;
 
-      const response = await api.get(url);
+      const response = await api.get(
+        `/Loading-Entry/lorry-wise?lorryNumber=${cleanLorry}`,
+      );
       const data = response.data.data || response.data;
 
       if (data && data.length > 0) {
@@ -615,16 +662,15 @@ const AIAgent = () => {
         const entry = entries[0];
         let content =
           entries.length > 1
-            ? `**Found ${entries.length} lorries matching "${lorryNo}". Showing latest:**\n\n`
-            : `**Latest Loading for Lorry ${entry.lorryNumber}**\n\n`;
+            ? `**Multi-Vehicle Match (${entries.length}). Latest:**\n\n`
+            : `**Vehicle Profile: ${entry.lorryNumber}**\n\n`;
 
         content +=
-          `• **Sauda No:** ${entry.saudaNo}\n` +
-          `• **Date:** ${new Date(entry.loadingDate).toLocaleDateString()}\n` +
-          `• **Weight:** ${entry.loadingWeight} MT\n` +
-          `• **Buyer:** ${entry.buyerCompany}\n` +
-          `• **Supplier:** ${entry.supplierCompany}\n` +
-          `• **Status:** ${entry.unloadingDate ? "Unloaded" : "In Transit"}`;
+          `• **Active Sauda:** Sauda ${entry.saudaNo}\n` +
+          `• **Last Loaded:** ${new Date(entry.loadingDate).toLocaleDateString()}\n` +
+          `• **Current Weight:** ${entry.loadingWeight} MT\n` +
+          `• **Buyer/Supplier:** ${entry.buyerCompany} / ${entry.supplierCompany}\n` +
+          `• **Status:** ${entry.unloadingDate ? "UNLOADED" : "IN TRANSIT"}`;
 
         return {
           role: "assistant",
@@ -637,21 +683,23 @@ const AIAgent = () => {
       } else {
         return {
           role: "assistant",
-          content: `No records found for Lorry **${lorryNo}**.`,
+          content: `No records found for Vehicle **${lorryNo}**.`,
         };
       }
     } catch (error) {
       return {
         role: "assistant",
-        content: "Error fetching lorry details.",
+        content: "Error in vehicle tracking.",
       };
     } finally {
       setIsLoadingData(false);
+      setThinkingPath("");
     }
   };
 
   const fetchTodayRate = async () => {
     setIsLoadingData(true);
+    setThinkingPath("Calculating market rate highs...");
     try {
       const today = new Date().toISOString().split("T")[0];
       const response = await api.get(
@@ -668,10 +716,10 @@ const AIAgent = () => {
           }
         });
 
-        let content = `**Today's Highest Loading Rates (${new Date().toLocaleDateString()})**\n\n`;
+        let content = `**Today's Market Highs (${new Date().toLocaleDateString()})**\n\n`;
         Object.keys(rates).forEach((comm) => {
           const maxRate = Math.max(...rates[comm]);
-          content += `• **${comm}:** Highest ₹${maxRate} (Range: ₹${Math.min(...rates[comm])} - ₹${maxRate})\n`;
+          content += `• **${comm}:** High ₹${maxRate} (Range: ₹${Math.min(...rates[comm])} - ₹${maxRate})\n`;
         });
 
         return {
@@ -681,17 +729,17 @@ const AIAgent = () => {
       } else {
         return {
           role: "assistant",
-          content:
-            "No loading entries found for today yet, so I can't determine today's rates.",
+          content: "No market activity recorded today yet.",
         };
       }
     } catch (error) {
       return {
         role: "assistant",
-        content: "Error fetching today's rates.",
+        content: "Error in market high calculation.",
       };
     } finally {
       setIsLoadingData(false);
+      setThinkingPath("");
     }
   };
 
@@ -699,23 +747,56 @@ const AIAgent = () => {
     const cleanCmd = cmd.trim().toLowerCase();
     let response = null;
 
-    // 1. Specific Data Queries (Regex Patterns)
+    // 1. Navigation & Sidebar Commands (Priority)
+    if (cleanCmd.includes("sidebar") || cleanCmd.includes("menu") || cleanCmd === "modules") {
+      response = getSidebarSummary();
+    } else {
+      const sidebarAction = findSidebarLink(cleanCmd);
+      if (sidebarAction && (cleanCmd.includes("go to") || cleanCmd.includes("open") || cleanCmd.includes("show"))) {
+        response = {
+          role: "assistant",
+          content: `Navigating to **${sidebarAction.name}** module...`,
+          action: () => navigate(sidebarAction.link),
+        };
+      }
+    }
+
+    if (response) {
+      setMessages((prev) => [...prev, response]);
+      if (response.action) setTimeout(() => response.action(), 1500);
+      return;
+    }
+
+    // 2. Specific Data Queries (Regex Patterns)
     const saudaMatch = cleanCmd.match(/sauda\s*(?:no)?\s*[:\s]*(\d+)/i);
     const lorryMatch = cleanCmd.match(/lorry\s*(?:no)?\s*[:\s]*([a-z0-9\s]+)/i);
-    const billMatch = cleanCmd.match(/(?:bill|invoice)\s*(?:no)?\s*[:\s]*([a-z0-9\s]+)/i);
+    const billMatch = cleanCmd.match(
+      /(?:bill|invoice)\s*(?:no)?\s*[:\s]*([a-z0-9\s]+)/i,
+    );
     const stateMatch = cleanCmd.match(/(?:state|from)\s+([a-z\s]{3,})/i);
-    const dateMatch = cleanCmd.match(/(?:date)\s*[:\s]*(\d{1,2}-\d{1,2}-\d{4})/i);
-    const companyMatch = cleanCmd.match(/(?:status of|company)\s+([a-z0-9\s]+)/i);
-    const interactionMatch = cleanCmd.match(/(?:interactions for|bid info for)\s+([a-z0-9\s]+)/i);
+    const dateMatch = cleanCmd.match(
+      /(?:date)\s*[:\s]*(\d{1,2}-\d{1,2}-\d{4})/i,
+    );
+    const companyMatch = cleanCmd.match(
+      /(?:status of|company)\s+([a-z0-9\s]+)/i,
+    );
+    const interactionMatch = cleanCmd.match(
+      /(?:interactions for|bid info for)\s+([a-z0-9\s]+)/i,
+    );
 
     if (saudaMatch && billMatch && dateMatch) {
       response = await fetchSaudaDetails(saudaMatch[1]);
       if (response && response.content) {
-        response.content = `**Cross-Referencing Sauda ${saudaMatch[1]}, Bill ${billMatch[1]} for ${dateMatch[1]}**\n\n` + response.content;
+        response.content =
+          `**Cross-Referencing Sauda ${saudaMatch[1]}, Bill ${billMatch[1]} for ${dateMatch[1]}**\n\n` +
+          response.content;
       }
-    } else if (cleanCmd.includes('loading entry for sauda') && saudaMatch) {
+    } else if (cleanCmd.includes("loading entry for sauda") && saudaMatch) {
       response = await fetchLoadingEntriesBySauda(saudaMatch[1]);
-    } else if (saudaMatch && (cleanCmd.includes('payment') || cleanCmd.includes('payemnt'))) {
+    } else if (
+      saudaMatch &&
+      (cleanCmd.includes("payment") || cleanCmd.includes("payemnt"))
+    ) {
       response = await fetchSaudaPayment(saudaMatch[1]);
     } else if (saudaMatch) {
       response = await fetchSaudaDetails(saudaMatch[1]);
@@ -725,70 +806,43 @@ const AIAgent = () => {
       response = await fetchDetailsByDate(dateMatch[1]);
     } else if (lorryMatch) {
       response = await fetchLorryDetails(lorryMatch[1].trim());
-    } else if (stateMatch && !cleanCmd.includes('loading from')) {
+    } else if (stateMatch && !cleanCmd.includes("loading from")) {
       response = await fetchDetailsByState(stateMatch[1].trim());
-    } else if (cleanCmd.includes('total sauda today') || (cleanCmd.includes('sauda') && cleanCmd.includes('today'))) {
+    } else if (
+      cleanCmd.includes("total sauda today") ||
+      (cleanCmd.includes("sauda") && cleanCmd.includes("today"))
+    ) {
       response = await fetchTodaySaudas();
-    } else if (cleanCmd.includes('active bids') || cleanCmd.includes('show bids')) {
+    } else if (
+      cleanCmd.includes("active bids") ||
+      cleanCmd.includes("show bids")
+    ) {
       response = await fetchActiveBids();
     } else if (interactionMatch) {
       response = await fetchBidInteractions(interactionMatch[1].trim());
     } else if (companyMatch) {
       response = await fetchCompanyStatus(companyMatch[1].trim());
-    } else if (cleanCmd.includes('rate') && (cleanCmd.includes('today') || cleanCmd.includes('loading') || cleanCmd.includes('highest'))) {
+    } else if (
+      cleanCmd.includes("rate") &&
+      (cleanCmd.includes("today") ||
+        cleanCmd.includes("loading") ||
+        cleanCmd.includes("highest"))
+    ) {
       response = await fetchTodayRate();
-    } 
-    // 2. Navigation...
-    else if (cleanCmd.includes('self order') || cleanCmd.includes('create order')) {
-      response = {
-        role: 'assistant',
-        content: "Opening **Self Order** creation interface...",
-        action: () => navigate('/manage-order/add-self-order')
-      };
-    } else if (cleanCmd.includes('loading entry') || cleanCmd.includes('add loading')) {
-      response = {
-        role: 'assistant',
-        content: "Accessing **Add Loading Entry**...",
-        action: () => navigate('/Loading-Entry/add-loading-entry')
-      };
-    } else if (cleanCmd.includes('lorry challan') || cleanCmd.includes('generate challan') || cleanCmd.includes('print challan')) {
-      response = {
-        role: 'assistant',
-        content: "Opening **Loading List** for challan generation...",
-        action: () => navigate('/Loading-Entry/list-loading-entry')
-      };
-    } else if (cleanCmd.includes('unloading report') || cleanCmd.includes('receiving list') || cleanCmd.includes('view unloading')) {
-      response = {
-        role: 'assistant',
-        content: "Fetching **Receiving List** for unloading logs...",
-        action: () => navigate('/Loading-Entry/receiving-list')
-      };
-    } else if (cleanCmd.includes('dashboard')) {
-      response = {
-        role: 'assistant',
-        content: "Returning to main **Dashboard**.",
-        action: () => navigate('/dashboard')
-      };
-    } else if (cleanCmd.includes('hello') || cleanCmd.includes('hi')) {
-      response = {
-        role: 'assistant',
-        content: `Hello ${user?.name || 'User'}! I am ready to scan the system for you. What details do you need?`,
-        suggestions: ['Today\'s total sauda', 'Active bids', 'Highest rate today']
-      };
-    } 
+    }
     // 3. Universal Fallback (Deep Intelligence)
     else if (cleanCmd.length >= 3) {
       response = await universalDeepSearch(cleanCmd);
-    }
-    else {
+    } else {
       response = {
-        role: 'assistant',
-        content: "I'm not sure how to help. Try asking for **Sauda details**, **Vehicle No**, **Regional Status**, or **Market Highs**.",
-        suggestions: ['Total sauda today', 'Highest rate today', 'Active bids']
+        role: "assistant",
+        content:
+          "I'm not sure how to help. Try asking for **Sauda details**, **Vehicle No**, **Regional Status**, or **Market Highs**.",
+        suggestions: ["Total sauda today", "Highest rate today", "Active bids"],
       };
     }
 
-    setMessages(prev => [...prev, response]);
+    setMessages((prev) => [...prev, response]);
     if (response.action) {
       setTimeout(() => response.action(), 1500);
     }
@@ -822,7 +876,7 @@ const AIAgent = () => {
               </div>
               <div>
                 <h3 className="font-bold text-sm tracking-wide">
-                  Hansaria AI Agent
+                  Deep Intelligence Agent
                 </h3>
                 <div className="flex items-center gap-1.5">
                   <span className="w-2 h-2 bg-emerald-400 rounded-full animate-ping" />
