@@ -677,7 +677,12 @@ const renderAddressDetails = (details) => {
   return <Text style={styles.addressDetails}>{parts.join("\n")}</Text>;
 };
 
-const LorryChallanPDF = ({ data = {}, logoUrl, qrCodeUrl, onlySecondPage = false }) => {
+const LorryChallanPDF = ({
+  data = {},
+  logoUrl,
+  qrCodeUrl,
+  onlySecondPage = false,
+}) => {
   const isConsigneeAsBuyer = data.billTo === "consignee";
 
   const normalizedConsignee = String(data.consignee || "").toLowerCase();
@@ -707,7 +712,7 @@ const LorryChallanPDF = ({ data = {}, logoUrl, qrCodeUrl, onlySecondPage = false
   const weight = Number(data.loadingWeight || 0);
   const rate = Number(data.rate || 0);
   const baseAmount = weight * rate;
-  
+
   const cdPercent = Number(data.cd || 0);
   const cdAmount = baseAmount * (cdPercent / 100);
   const subtotal = baseAmount - cdAmount;
@@ -717,7 +722,8 @@ const LorryChallanPDF = ({ data = {}, logoUrl, qrCodeUrl, onlySecondPage = false
   const totalBillAmount = subtotal + gstAmount;
 
   const commodityStr = String(data.commodity || "").toLowerCase();
-  const isExempted = commodityStr.includes("maize") || commodityStr.includes("rice");
+  const isExempted =
+    commodityStr.includes("maize") || commodityStr.includes("rice");
   const billTitle = isExempted ? "BILL OF SUPPLY" : "TAX INVOICE";
 
   const supplierState = String(data.supplierDetails?.state || "")
@@ -756,298 +762,301 @@ const LorryChallanPDF = ({ data = {}, logoUrl, qrCodeUrl, onlySecondPage = false
             </Text>
           </View>
 
-        <View style={styles.header}>
-          <View style={styles.sellerInfo}>
-            <Text style={styles.sellerName}>
-              {data.supplierCompany || "Hansaria Food Private Limited"}
-            </Text>
+          <View style={styles.header}>
+            <View style={styles.sellerInfo}>
+              <Text style={styles.sellerName}>
+                {data.supplierCompany || "Hansaria Food Private Limited"}
+              </Text>
 
-            <Text style={styles.sellerAddress}>
-              {data.supplierDetails?.address || "207 MAHARSHI DEBENDRA ROAD"}
+              <Text style={styles.sellerAddress}>
+                {data.supplierDetails?.address || "207 MAHARSHI DEBENDRA ROAD"}
 
-              {data.supplierDetails?.address &&
-              (data.supplierDetails?.district || data.supplierDetails?.state)
-                ? ", "
-                : ""}
+                {data.supplierDetails?.address &&
+                (data.supplierDetails?.district || data.supplierDetails?.state)
+                  ? ", "
+                  : ""}
 
-              {data.supplierDetails?.district || ""}
+                {data.supplierDetails?.district || ""}
 
-              {data.supplierDetails?.district && data.supplierDetails?.state
-                ? ", "
-                : ""}
+                {data.supplierDetails?.district && data.supplierDetails?.state
+                  ? ", "
+                  : ""}
 
-              {data.supplierDetails?.state || "West Bengal"}
+                {data.supplierDetails?.state || "West Bengal"}
 
-              {data.supplierDetails?.pinNo
-                ? ` - ${data.supplierDetails.pinNo}`
-                : ""}
-            </Text>
+                {data.supplierDetails?.pinNo
+                  ? ` - ${data.supplierDetails.pinNo}`
+                  : ""}
+              </Text>
 
-            <Text style={styles.sellerAddress}>
-              {data.supplierDetails?.gstNo
-                ? `GST: ${data.supplierDetails.gstNo}`
-                : "GST: 10BOSPK6679G1ZJ"}
+              <Text style={styles.sellerAddress}>
+                {data.supplierDetails?.gstNo
+                  ? `GST: ${data.supplierDetails.gstNo}`
+                  : "GST: 10BOSPK6679G1ZJ"}
 
-              {data.supplierDetails?.panNo
-                ? `  |  PAN: ${data.supplierDetails.panNo}`
-                : ""}
-            </Text>
-          </View>
-
-          <View style={styles.logoContainer}>
-            {logoUrl && <Image src={logoUrl} style={styles.logo} />}
-          </View>
-        </View>
-
-        <View
-          style={{
-            width: "100%",
-            alignItems: "center",
-            justifyContent: "center",
-            marginBottom: 10,
-          }}
-        >
-          <Text style={styles.title}>LORRY CHALLAN</Text>
-        </View>
-
-        <View style={styles.grid}>
-          <View style={styles.gridItem}>
-            <View style={styles.headerRowNoBorder}>
-              <View style={styles.headerItem}>
-                <Text style={styles.label}>SAUDA NO</Text>
-
-                <Text style={styles.saudaValue}>{data.saudaNo || "N/A"}</Text>
-              </View>
-
-              <View style={styles.headerItem}>
-                <Text style={styles.label}>BILL NO :</Text>
-
-                <Text style={styles.value}>{data.billNumber || "N/A"}</Text>
-              </View>
-
-              <View style={styles.headerItem}>
-                <Text style={styles.label}>DATE :</Text>
-
-                <Text style={styles.value}>{formatDate(data.dateOfIssue)}</Text>
-              </View>
+                {data.supplierDetails?.panNo
+                  ? `  |  PAN: ${data.supplierDetails.panNo}`
+                  : ""}
+              </Text>
             </View>
 
-            <View style={styles.headerRowNoBorderMarginTop}>
-              <View style={styles.headerItem}>
-                <Text style={styles.label}>LOADING DATE :</Text>
-
-                <Text style={styles.value}>{formatDate(data.loadingDate)}</Text>
-              </View>
-
-              <View style={styles.headerItem}>
-                <Text style={styles.label}>COMMODITY :</Text>
-
-                <Text style={styles.value}>{data.commodity || "N/A"}</Text>
-              </View>
-
-              <View style={styles.headerItem}>
-                <Text style={styles.label}>BUYER PO NO :</Text>
-
-                <Text style={styles.value}>{data.poNumber || "N/A"}</Text>
-              </View>
-
+            <View style={styles.logoContainer}>
+              {logoUrl && <Image src={logoUrl} style={styles.logo} />}
             </View>
           </View>
-        </View>
 
-        <View style={styles.divider} />
-
-        <View style={styles.grid}>
-          <View style={styles.gridItemNoBorder}>
-            <Text style={styles.label}>BUYER ACCOUNT</Text>
-
-            <Text style={styles.nameValue}>{buyerAccountName}</Text>
-
-            {renderAddressDetails(buyerAccountDetails)}
+          <View
+            style={{
+              width: "100%",
+              alignItems: "center",
+              justifyContent: "center",
+              marginBottom: 10,
+            }}
+          >
+            <Text style={styles.title}>LORRY CHALLAN</Text>
           </View>
-        </View>
-
-        <View style={styles.divider} />
-
-        <View style={styles.grid}>
-          <View style={styles.gridItemNoBorder}>
-            <Text style={styles.label}>SHIP TO (CONSIGNEE)</Text>
-
-            <Text style={styles.nameValue}>{consigneeNameForShipTo}</Text>
-
-            {renderAddressDetails(consigneeDetailsForShipTo)}
-          </View>
-        </View>
-
-        <View style={styles.divider} />
-
-        <View style={styles.section} wrap={false}>
-          <Text style={styles.sectionTitle}>ROUTE & VEHICLE DETAILS</Text>
 
           <View style={styles.grid}>
             <View style={styles.gridItem}>
-              <Text style={styles.label}>FROM</Text>
+              <View style={styles.headerRowNoBorder}>
+                <View style={styles.headerItem}>
+                  <Text style={styles.label}>SAUDA NO :</Text>
 
-              <Text style={styles.nameValue}>{fromState}</Text>
+                  <Text style={styles.saudaValue}>{data.saudaNo || "N/A"}</Text>
+                </View>
+
+                <View style={styles.headerItem}>
+                  <Text style={styles.label}>BILL NO :</Text>
+
+                  <Text style={styles.value}>{data.billNumber || "N/A"}</Text>
+                </View>
+
+                <View style={styles.headerItem}>
+                  <Text style={styles.label}>DATE :</Text>
+
+                  <Text style={styles.value}>
+                    {formatDate(data.dateOfIssue)}
+                  </Text>
+                </View>
+              </View>
+
+              <View style={styles.headerRowNoBorderMarginTop}>
+                <View style={styles.headerItem}>
+                  <Text style={styles.label}>SAUDA DATE :</Text>
+
+                  <Text style={styles.value}>
+                    {formatDate(data.loadingDate)}
+                  </Text>
+                </View>
+
+                <View style={styles.headerItem}>
+                  <Text style={styles.label}>COMMODITY :</Text>
+
+                  <Text style={styles.value}>{data.commodity || "N/A"}</Text>
+                </View>
+
+                <View style={styles.headerItem}>
+                  <Text style={styles.label}>BUYER PO NO :</Text>
+
+                  <Text style={styles.value}>{data.poNumber || "N/A"}</Text>
+                </View>
+              </View>
             </View>
+          </View>
 
+          <View style={styles.divider} />
+
+          <View style={styles.grid}>
             <View style={styles.gridItemNoBorder}>
-              <Text style={styles.label}>TO</Text>
+              <Text style={styles.label}>BUYER ACCOUNT</Text>
 
-              <Text style={styles.nameValue}>{toState}</Text>
+              <Text style={styles.nameValue}>{buyerAccountName}</Text>
+
+              {renderAddressDetails(buyerAccountDetails)}
             </View>
           </View>
 
-          <View style={{ marginTop: 8 }}>
+          <View style={styles.divider} />
+
+          <View style={styles.grid}>
+            <View style={styles.gridItemNoBorder}>
+              <Text style={styles.label}>SHIP TO (CONSIGNEE)</Text>
+
+              <Text style={styles.nameValue}>{consigneeNameForShipTo}</Text>
+
+              {renderAddressDetails(consigneeDetailsForShipTo)}
+            </View>
+          </View>
+
+          <View style={styles.divider} />
+
+          <View style={styles.section} wrap={false}>
+            <Text style={styles.sectionTitle}>ROUTE & VEHICLE DETAILS</Text>
+
             <View style={styles.grid}>
               <View style={styles.gridItem}>
-                <Text style={styles.label}>Lorry Number</Text>
+                <Text style={styles.label}>FROM</Text>
 
-                <Text style={styles.value}>{data.lorryNumber || "N/A"}</Text>
-
-                <Text style={styles.addressDetails}>
-                  Transporter: {data.addedTransport || "N/A"}
-                </Text>
-              </View>
-
-              <View style={styles.gridItem}>
-                <Text style={styles.label}>Driver Name</Text>
-
-                <Text style={styles.value}>{data.driverName || "N/A"}</Text>
-
-                <Text style={styles.addressDetails}>
-                  Phone: {data.driverPhoneNumber || "N/A"}
-                </Text>
+                <Text style={styles.nameValue}>{fromState}</Text>
               </View>
 
               <View style={styles.gridItemNoBorder}>
-                <Text style={styles.label}>Vehicle Type</Text>
+                <Text style={styles.label}>TO</Text>
 
-                <Text style={styles.value}>{data.vehicleType || "N/A"}</Text>
+                <Text style={styles.nameValue}>{toState}</Text>
+              </View>
+            </View>
 
-                <Text style={styles.addressDetails}>
-                  Capacity: {data.vehicleCapacity || "N/A"}
-                </Text>
+            <View style={{ marginTop: 8 }}>
+              <View style={styles.grid}>
+                <View style={styles.gridItem}>
+                  <Text style={styles.label}>Lorry Number</Text>
+
+                  <Text style={styles.value}>{data.lorryNumber || "N/A"}</Text>
+
+                  <Text style={styles.addressDetails}>
+                    Transporter: {data.addedTransport || "N/A"}
+                  </Text>
+                </View>
+
+                <View style={styles.gridItem}>
+                  <Text style={styles.label}>Driver Name</Text>
+
+                  <Text style={styles.value}>{data.driverName || "N/A"}</Text>
+
+                  <Text style={styles.addressDetails}>
+                    Phone: {data.driverPhoneNumber || "N/A"}
+                  </Text>
+                </View>
+
+                <View style={styles.gridItemNoBorder}>
+                  <Text style={styles.label}>Vehicle Type</Text>
+
+                  <Text style={styles.value}>{data.vehicleType || "N/A"}</Text>
+
+                  <Text style={styles.addressDetails}>
+                    Capacity: {data.vehicleCapacity || "N/A"}
+                  </Text>
+                </View>
               </View>
             </View>
           </View>
-        </View>
 
-        <View style={styles.divider} />
+          <View style={styles.divider} />
 
-        <View style={styles.section} wrap={false}>
-          <Text style={styles.sectionTitle}>FREIGHT DETAILS</Text>
+          <View style={styles.section} wrap={false}>
+            <Text style={styles.sectionTitle}>FREIGHT DETAILS</Text>
 
-          <View style={styles.table}>
-            <View style={[styles.tableRow, styles.tableHeader]}>
-              <Text
-                style={[
-                  styles.tableCell,
-                  styles.tableHeaderText,
-                  { width: "25%" },
-                ]}
-              >
-                Loading Weight
-              </Text>
+            <View style={styles.table}>
+              <View style={[styles.tableRow, styles.tableHeader]}>
+                <Text
+                  style={[
+                    styles.tableCell,
+                    styles.tableHeaderText,
+                    { width: "25%" },
+                  ]}
+                >
+                  Loading Weight
+                </Text>
 
-              <Text
-                style={[
-                  styles.tableCell,
-                  styles.tableHeaderText,
-                  { width: "25%" },
-                ]}
-              >
-                Unloading Weight
-              </Text>
+                <Text
+                  style={[
+                    styles.tableCell,
+                    styles.tableHeaderText,
+                    { width: "25%" },
+                  ]}
+                >
+                  Unloading Weight
+                </Text>
 
-              <Text
-                style={[
-                  styles.tableCell,
-                  styles.tableHeaderText,
-                  { width: "25%" },
-                ]}
-              >
-                Freight Rate
-              </Text>
+                <Text
+                  style={[
+                    styles.tableCell,
+                    styles.tableHeaderText,
+                    { width: "25%" },
+                  ]}
+                >
+                  Freight Rate
+                </Text>
 
-              <Text
-                style={[
-                  styles.tableCellNoBorder,
-                  styles.tableHeaderText,
-                  { width: "25%" },
-                ]}
-              >
-                Total Freight
-              </Text>
-            </View>
-
-            <View style={[styles.tableRow, { borderBottomWidth: 0 }]}>
-              <Text style={[styles.tableCell, { width: "25%" }]}>
-                {data.loadingWeight || "0"} Tons
-              </Text>
-
-              <Text style={[styles.tableCell, { width: "25%" }]}>
-                {data.unloadingWeight || "0"} Tons
-              </Text>
-
-              <Text style={[styles.tableCell, { width: "25%" }]}>
-                Rs. {formatAmount(data.freightRate)}
-              </Text>
-
-              <Text style={[styles.tableCellNoBorder, { width: "25%" }]}>
-                Rs. {formatAmount(data.totalFreight)}
-              </Text>
-            </View>
-          </View>
-
-          <View style={{ marginTop: 8 }}>
-            <View style={styles.grid}>
-              <View style={styles.gridItem}>
-                <Text style={styles.label}>Advance</Text>
-
-                <Text style={styles.value}>
-                  Rs. {formatAmount(data.advance)}
+                <Text
+                  style={[
+                    styles.tableCellNoBorder,
+                    styles.tableHeaderText,
+                    { width: "25%" },
+                  ]}
+                >
+                  Total Freight
                 </Text>
               </View>
 
-              <View style={styles.gridItemNoBorder}>
-                <Text style={styles.label}>Balance</Text>
+              <View style={[styles.tableRow, { borderBottomWidth: 0 }]}>
+                <Text style={[styles.tableCell, { width: "25%" }]}>
+                  {data.loadingWeight || "0"} Tons
+                </Text>
 
-                <Text style={styles.value}>
-                  Rs. {formatAmount(data.balance)}
+                <Text style={[styles.tableCell, { width: "25%" }]}>
+                  {data.unloadingWeight || "0"} Tons
+                </Text>
+
+                <Text style={[styles.tableCell, { width: "25%" }]}>
+                  Rs. {formatAmount(data.freightRate)}
+                </Text>
+
+                <Text style={[styles.tableCellNoBorder, { width: "25%" }]}>
+                  Rs. {formatAmount(data.totalFreight)}
                 </Text>
               </View>
             </View>
+
+            <View style={{ marginTop: 8 }}>
+              <View style={styles.grid}>
+                <View style={styles.gridItem}>
+                  <Text style={styles.label}>Advance</Text>
+
+                  <Text style={styles.value}>
+                    Rs. {formatAmount(data.advance)}
+                  </Text>
+                </View>
+
+                <View style={styles.gridItemNoBorder}>
+                  <Text style={styles.label}>Balance</Text>
+
+                  <Text style={styles.value}>
+                    Rs. {formatAmount(data.balance)}
+                  </Text>
+                </View>
+              </View>
+            </View>
           </View>
-        </View>
 
-        <View style={styles.signatureSection} wrap={false}>
-          <View style={styles.signatureBox}>
-            <Text>____________________</Text>
+          <View style={styles.signatureSection} wrap={false}>
+            <View style={styles.signatureBox}>
+              <Text>____________________</Text>
 
-            <Text style={styles.label}>Seller&apos;s Signature</Text>
+              <Text style={styles.label}>Seller&apos;s Signature</Text>
+            </View>
+
+            <View style={styles.signatureBox}>
+              <Text>____________________</Text>
+
+              <Text style={styles.label}>Driver&apos;s Signature</Text>
+            </View>
           </View>
 
-          <View style={styles.signatureBox}>
-            <Text>____________________</Text>
+          <View style={styles.footer} fixed>
+            <View style={styles.footerLine} />
 
-            <Text style={styles.label}>Driver&apos;s Signature</Text>
+            <Text style={styles.footerText}>
+              *Any shortage or damage shall be deducted from the freight amount.
+            </Text>
+
+            <Text style={styles.footerText}>
+              *This is a computer-generated challan issued by Hansaria Food
+              Private Limited. It is for informational purposes only and shall
+              not be considered as a legal document or proof of delivery.
+            </Text>
           </View>
-        </View>
-
-        <View style={styles.footer} fixed>
-          <View style={styles.footerLine} />
-
-          <Text style={styles.footerText}>
-            *Any shortage or damage shall be deducted from the freight amount.
-          </Text>
-
-          <Text style={styles.footerText}>
-            *This is a computer-generated challan issued by Hansaria Food
-            Private Limited. It is for informational purposes only and shall not
-            be considered as a legal document or proof of delivery.
-          </Text>
-        </View>
         </Page>
       )}
 
@@ -1168,7 +1177,9 @@ const LorryChallanPDF = ({ data = {}, logoUrl, qrCodeUrl, onlySecondPage = false
               </View>
               {cdPercent > 0 && (
                 <View style={[styles.summaryRow, { color: "#e11d48" }]}>
-                  <Text style={styles.label}>Less: Cash Discount ({cdPercent}%):</Text>
+                  <Text style={styles.label}>
+                    Less: Cash Discount ({cdPercent}%):
+                  </Text>
                   <Text style={styles.value}>- {formatAmount(cdAmount)}</Text>
                 </View>
               )}

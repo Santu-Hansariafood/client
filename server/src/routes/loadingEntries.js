@@ -29,7 +29,7 @@ const toObjectId = (value) =>
 const getNextLoadingNo = async (loadingDate) => {
   const date = new Date(loadingDate);
   const year = date.getFullYear();
-  const month = date.getMonth(); // 0-indexed, 3 is April
+  const month = date.getMonth();
 
   let fiscalYear = month >= 3 ? year : year - 1;
 
@@ -215,7 +215,6 @@ router.get("/company-report", async (req, res) => {
         },
       };
 
-      // For buyers, we might need to filter by their linked companies or just the company name
       companyDetails = await mongoose
         .model("Company")
         .findOne({
@@ -230,7 +229,6 @@ router.get("/company-report", async (req, res) => {
       .sort({ unloadingDate: -1, loadingDate: -1 })
       .lean();
 
-    // Dynamically calculate brokerage
     const entries = await Promise.all(
       rawEntries.map(async (entry) => {
         const selfOrder = await mongoose
@@ -360,7 +358,6 @@ router.get("/buyers", async (req, res) => {
 
         const consigneeMap = new Map();
 
-        // 1. From Buyer.consigneeIds
         (b.consigneeIds || []).forEach((c) => {
           if (c && c.name) {
             const label = `${c.name || "N/A"} - ${c.location || "N/A"}, ${c.district || "N/A"}, ${c.state || "N/A"}`;
@@ -372,7 +369,6 @@ router.get("/buyers", async (req, res) => {
           }
         });
 
-        // 2. From Company.consigneeIds
         (b.companyIds || []).forEach((comp) => {
           (comp.consigneeIds || []).forEach((c) => {
             if (c && c.name) {
@@ -592,7 +588,7 @@ router.get("/", async (req, res) => {
     const buyerCompany = req.query.buyerCompany;
     const supplierCompany = req.query.supplierCompany;
     const companyId = req.query.companyId;
-    const isUnloaded = req.query.isUnloaded === 'true';
+    const isUnloaded = req.query.isUnloaded === "true";
 
     let query = {};
 
@@ -622,12 +618,14 @@ router.get("/", async (req, res) => {
       if (buyer) {
         const companyNames = (buyer.companyIds || []).map((c) => c.companyName);
         if (buyer.name) companyNames.push(buyer.name);
-        
+
         if (companyNames.length) {
-          const companyRegexes = companyNames.map(name => new RegExp(`^${escapeRegex(name)}$`, "i"));
+          const companyRegexes = companyNames.map(
+            (name) => new RegExp(`^${escapeRegex(name)}$`, "i"),
+          );
           query.$or = [
             { buyerCompany: { $in: companyRegexes } },
-            { consignee: { $in: companyRegexes } }
+            { consignee: { $in: companyRegexes } },
           ];
         }
       }
@@ -642,55 +640,61 @@ router.get("/", async (req, res) => {
       const buyer = await Buyer.findById(buyerId).populate("companyIds").lean();
       if (buyer) {
         const buyerOr = [];
-        
-        // Match by buyer ID if the field exists (future proofing)
+
         buyerOr.push({ buyer: toObjectId(buyerId) });
         buyerOr.push({ buyerId: toObjectId(buyerId) });
 
         if (buyerCompany) {
-          // If a specific company is selected
-          const companyRegex = { $regex: new RegExp(`^${escapeRegex(buyerCompany)}$`, "i") };
+          const companyRegex = {
+            $regex: new RegExp(`^${escapeRegex(buyerCompany)}$`, "i"),
+          };
           buyerOr.push({ buyerCompany: companyRegex });
-          buyerOr.push({ consignee: companyRegex }); // Also check consignee field
+          buyerOr.push({ consignee: companyRegex });
           if (companyId && mongoose.Types.ObjectId.isValid(companyId)) {
             buyerOr.push({ companyId: toObjectId(companyId) });
           }
         } else {
-          // Otherwise filter by all company names of this buyer
-          const companyNames = (buyer.companyIds || []).map((c) => c.companyName);
+          const companyNames = (buyer.companyIds || []).map(
+            (c) => c.companyName,
+          );
           if (buyer.name) companyNames.push(buyer.name);
-          
+
           if (companyNames.length) {
-            const companyRegexes = companyNames.map(name => new RegExp(`^${escapeRegex(name)}$`, "i"));
+            const companyRegexes = companyNames.map(
+              (name) => new RegExp(`^${escapeRegex(name)}$`, "i"),
+            );
             buyerOr.push({ buyerCompany: { $in: companyRegexes } });
-            buyerOr.push({ consignee: { $in: companyRegexes } }); // Also check consignee field
+            buyerOr.push({ consignee: { $in: companyRegexes } });
           }
-          
-          const companyIds = (buyer.companyIds || []).map(c => c._id || c);
+
+          const companyIds = (buyer.companyIds || []).map((c) => c._id || c);
           if (companyIds.length) {
-            buyerOr.push({ companyId: { $in: companyIds.map(id => toObjectId(id)) } });
+            buyerOr.push({
+              companyId: { $in: companyIds.map((id) => toObjectId(id)) },
+            });
           }
         }
-        
+
         if (buyerOr.length) andParts.push({ $or: buyerOr });
       }
     }
 
     if (supplierId) {
       const supplierPart = { supplier: toObjectId(supplierId) };
-      
+
       if (supplierCompany) {
         const companyOr = [];
-        companyOr.push({ supplierCompany: { $regex: new RegExp(`^${escapeRegex(supplierCompany)}$`, "i") } });
+        companyOr.push({
+          supplierCompany: {
+            $regex: new RegExp(`^${escapeRegex(supplierCompany)}$`, "i"),
+          },
+        });
         if (companyId && mongoose.Types.ObjectId.isValid(companyId)) {
           companyOr.push({ companyId: toObjectId(companyId) });
         }
-        
-        andParts.push({ 
-          $and: [
-            supplierPart,
-            { $or: companyOr }
-          ]
+
+        andParts.push({
+          $and: [supplierPart, { $or: companyOr }],
         });
       } else {
         andParts.push(supplierPart);
@@ -758,7 +762,6 @@ router.get("/", async (req, res) => {
     const finalQuery =
       andParts.length > 1 ? { $and: andParts } : andParts[0] || {};
 
-    // Optimize: Add select and reduce DB overhead
     const items = await LoadingEntry.find(finalQuery)
       .sort({ paymentStatus: -1, loadingDate: -1, createdAt: -1 })
       .skip((page - 1) * limit)
@@ -793,14 +796,12 @@ router.get("/", async (req, res) => {
       };
     });
 
-    // Get base query for Sl No calculation (role-based only)
     const baseAndParts = [];
     if (Object.keys(query).length > 0) {
       baseAndParts.push(query);
     }
     const baseQuery = baseAndParts.length > 0 ? { $and: baseAndParts } : {};
 
-    // Calculate absolute Sl No for each item in the current page
     const itemsWithSlNo = await Promise.all(
       itemsWithDetails.map(async (item) => {
         const slNo =
@@ -948,12 +949,14 @@ router.get("/suggestions", async (req, res) => {
       if (buyer) {
         const companyNames = (buyer.companyIds || []).map((c) => c.companyName);
         if (buyer.name) companyNames.push(buyer.name);
-        
+
         if (companyNames.length) {
-          const companyRegexes = companyNames.map(name => new RegExp(`^${escapeRegex(name)}$`, "i"));
+          const companyRegexes = companyNames.map(
+            (name) => new RegExp(`^${escapeRegex(name)}$`, "i"),
+          );
           query.$or = [
             { buyerCompany: { $in: companyRegexes } },
-            { consignee: { $in: companyRegexes } }
+            { consignee: { $in: companyRegexes } },
           ];
         }
       }
@@ -1005,12 +1008,14 @@ router.get("/export/excel", async (req, res) => {
       if (buyer) {
         const companyNames = (buyer.companyIds || []).map((c) => c.companyName);
         if (buyer.name) companyNames.push(buyer.name);
-        
+
         if (companyNames.length) {
-          const companyRegexes = companyNames.map(name => new RegExp(`^${escapeRegex(name)}$`, "i"));
+          const companyRegexes = companyNames.map(
+            (name) => new RegExp(`^${escapeRegex(name)}$`, "i"),
+          );
           query.$or = [
             { buyerCompany: { $in: companyRegexes } },
-            { consignee: { $in: companyRegexes } }
+            { consignee: { $in: companyRegexes } },
           ];
         }
       }
@@ -1066,14 +1071,12 @@ router.get("/export/excel", async (req, res) => {
       .populate("supplier", "sellerName")
       .lean();
 
-    // Get base query for Sl No calculation (role-based only)
     const baseAndParts = [];
     if (Object.keys(query).length > 0) {
       baseAndParts.push(query);
     }
     const baseQuery = baseAndParts.length > 0 ? { $and: baseAndParts } : {};
 
-    // Fetch all items matching the base query to calculate absolute Sl No
     const allBaseItems = await LoadingEntry.find(baseQuery)
       .select("_id")
       .sort({ loadingNo: 1, loadingDate: 1, createdAt: 1 })
