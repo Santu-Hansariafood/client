@@ -313,13 +313,13 @@ const AIAgent = () => {
           `• *Status:* ${p.status?.toUpperCase() || "ACTIVE"}\n\n`;
 
         if (type === "Buyer" && p.companyIds && p.companyIds.length > 0) {
-          content += `*Associated Companies:*\n`;
+          content += `*Registered Companies:*\n`;
           p.companyIds.forEach(c => {
             content += `• ${c.companyName || c.name || "N/A"}\n`;
           });
           content += "\n";
         } else if (type === "Seller" && p.companies && p.companies.length > 0) {
-          content += `*Associated Companies:*\n`;
+          content += `*Registered Companies:*\n`;
           p.companies.forEach(c => {
             content += `• ${c}\n`;
           });
@@ -677,12 +677,37 @@ const AIAgent = () => {
     setIsLoadingData(true);
     setThinkingPath(`Searching system logs for ${dateStr}...`);
     try {
-      let normalizedDate = dateStr;
-      if (dateStr.includes("-")) {
-        const parts = dateStr.split("-");
-        if (parts[0].length === 2) {
-          normalizedDate = `${parts[2]}-${parts[1]}-${parts[0]}`;
+      const parseDate = (str) => {
+        const months = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
+        const cleanStr = str.toLowerCase().trim();
+        
+        // Handle DD/MM/YY or DD/MM/YYYY
+        if (cleanStr.includes("/") || cleanStr.includes("-")) {
+          const parts = cleanStr.split(/[\/-]/);
+          let d = parts[0], m = parts[1], y = parts[2] || new Date().getFullYear();
+          if (y.toString().length === 2) y = "20" + y;
+          return `${y}-${m.toString().padStart(2, '0')}-${d.toString().padStart(2, '0')}`;
         }
+
+        // Handle DD Month YYYY or DD Month
+        const words = cleanStr.split(/\s+/);
+        if (words.length >= 2) {
+          const d = words[0];
+          const monthIdx = months.findIndex(m => words[1].startsWith(m)) + 1;
+          if (monthIdx > 0) {
+            let y = words[2] || new Date().getFullYear();
+            return `${y}-${monthIdx.toString().padStart(2, '0')}-${d.padStart(2, '0')}`;
+          }
+        }
+        return null;
+      };
+
+      const normalizedDate = parseDate(dateStr);
+      if (!normalizedDate) {
+        return {
+          role: "assistant",
+          content: `I couldn't understand the date format "*${dateStr}*". Please use DD/MM/YY or "22 March".`,
+        };
       }
 
       const [saudaRes, loadingRes] = await Promise.all([
@@ -742,17 +767,48 @@ const AIAgent = () => {
     }
   };
 
+  const fetchLastSauda = async () => {
+    setIsLoadingData(true);
+    setThinkingPath("Locating the most recent Sauda contract...");
+    try {
+      const response = await api.get("/self-order?limit=1&sortBy=createdAt&sortOrder=desc");
+      const saudas = response.data.data || response.data;
+      const lastSauda = Array.isArray(saudas) ? saudas[0] : null;
+
+      if (lastSauda) {
+        return await fetchSaudaDetails(lastSauda.saudaNo);
+      }
+      return {
+        role: "assistant",
+        content: "No Sauda records found in the system.",
+      };
+    } catch (e) {
+      return {
+        role: "assistant",
+        content: "Error fetching the latest Sauda.",
+      };
+    } finally {
+      setIsLoadingData(false);
+      setThinkingPath("");
+    }
+  };
+
   const fetchActiveBids = async () => {
     setIsLoadingData(true);
-    setThinkingPath("Scanning all active bids...");
+    setThinkingPath("Scanning all active bids with full intelligence...");
     try {
       const response = await api.get("/bids?status=active");
       const bids = response.data.data || response.data;
 
       if (bids && bids.length > 0) {
-        let content = `*Live Bids Status*\n\n`;
+        let content = `*Full Live Bids Intelligence*\n\n`;
         bids.forEach((bid, idx) => {
-          content += `${idx + 1}. *${bid.commodity}* | ${bid.location} | Ends: ${bid.endTime}\n`;
+          content += `${idx + 1}. *${bid.commodity}* at *${bid.location}*\n`;
+          content += `   • *Base Rate:* ₹${bid.baseRate || "N/A"}\n`;
+          content += `   • *Quantity:* ${bid.quantity || "N/A"} MT\n`;
+          content += `   • *Start:* ${new Date(bid.startTime).toLocaleString()}\n`;
+          content += `   • *End:* ${new Date(bid.endTime).toLocaleString()}\n`;
+          content += `   • *Status:* ${bid.status?.toUpperCase()}\n\n`;
         });
         return {
           role: "assistant",
@@ -1223,9 +1279,11 @@ const AIAgent = () => {
       /(?:bill|invoice|challan)\s*(?:no|number)?\s*[:\s]*(\d+)/i,
     );
     const stateMatch = cleanCmd.match(/(?:state|from)\s+([a-z\s]{3,})/i);
-    const dateMatch = cleanCmd.match(
-      /(?:date)\s*[:\s]*(\d{1,2}-\d{1,2}-\d{4})/i,
-    );
+    
+    // Improved Date Matching for formats like 22/05/26, 22 march 2026, 22 march
+    const dateMatch = cleanCmd.match(/(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})/) || 
+                      cleanCmd.match(/(\d{1,2}\s+(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\s*\d{0,4})/i);
+
     const companyMatch = cleanCmd.match(
       /(?:status of|company)\s+([a-z0-9\s]+)/i,
     );
@@ -1243,6 +1301,8 @@ const AIAgent = () => {
 
     if (cleanCmd.includes("commodity") || cleanCmd.includes("commodities")) {
       response = await fetchCommodities();
+    } else if (cleanCmd.includes("current sauda") || cleanCmd.includes("last sauda")) {
+      response = await fetchLastSauda();
     } else if (cleanCmd.includes("account status")) {
       response = await fetchAccountStatus();
     } else if (cleanCmd.includes("weather")) {
