@@ -366,6 +366,127 @@ const AIAgent = () => {
     }
   };
 
+  const fetchSellerSaudaStatus = async (sellerName, type) => {
+    setIsLoadingData(true);
+    setThinkingPath(`Analyzing ${type} saudas for ${sellerName}...`);
+    try {
+      // 1. Find the seller to get the ID and exact name
+      const sellerRes = await api.get(`/sellers?search=${sellerName}`);
+      const sellers = sellerRes.data.data || sellerRes.data;
+      if (!sellers || sellers.length === 0) {
+        return {
+          role: "assistant",
+          content: `I couldn't find any seller matching "*${sellerName}*".`,
+        };
+      }
+      const seller = sellers[0];
+      const sId = seller._id;
+      const sName = seller.sellerName;
+
+      if (type === "pending") {
+        // Fetch pending saudas (active status + pending quantity > 0)
+        const response = await api.get(`/self-order?search=${sName}&status=active`);
+        const allSaudas = response.data.data || response.data || [];
+        const pendingSaudas = allSaudas.filter(s => (s.pendingQuantity || 0) > 0);
+
+        if (pendingSaudas.length === 0) {
+          return {
+            role: "assistant",
+            content: `No pending saudas found for *${sName}*. All contracts are fully loaded or closed.`,
+          };
+        }
+
+        let content = `*Pending Sauda List: ${sName}*\n\n`;
+        pendingSaudas.forEach((s, idx) => {
+          content += `${idx + 1}. *Sauda ${s.saudaNo}*: ${s.commodity} | Pending: *${s.pendingQuantity} MT* of ${s.quantity} MT\n`;
+        });
+        content += `\n*Total Pending Saudas:* ${pendingSaudas.length}`;
+
+        return {
+          role: "assistant",
+          content,
+          suggestions: [`Sauda ${pendingSaudas[0].saudaNo} details`],
+        };
+      } else if (type === "due") {
+        // Fetch due saudas (where LoadingEntry has paymentStatus: "pending")
+        // We need to fetch all pending loading entries for this seller
+        const loadingRes = await api.get(`/loading-entries?search=${sName}&paymentStatus=pending&limit=100`);
+        const entries = loadingRes.data.data || loadingRes.data || [];
+
+        if (entries.length === 0) {
+          return {
+            role: "assistant",
+            content: `No due amounts found for *${sName}*. All delivered loads are fully paid.`,
+          };
+        }
+
+        // Group by Sauda and calculate due amount
+        const saudaGroups = {};
+        for (const entry of entries) {
+          if (!saudaGroups[entry.saudaNo]) {
+            saudaGroups[entry.saudaNo] = {
+              saudaNo: entry.saudaNo,
+              commodity: entry.commodity,
+              entries: [],
+              totalDue: 0
+            };
+          }
+          saudaGroups[entry.saudaNo].entries.push(entry);
+        }
+
+        // To get the exact due amount, we need the Sauda details for rates/gst
+        const saudaNos = Object.keys(saudaGroups);
+        const saudaDetailsRes = await api.get(`/self-order?saudaNo=${saudaNos.join(",")}`);
+        const saudaData = saudaDetailsRes.data.data || saudaDetailsRes.data || [];
+        const saudaMap = saudaData.reduce((acc, s) => { acc[s.saudaNo] = s; return acc; }, {});
+
+        let content = `*Due Sauda Report: ${sName}*\n\n`;
+        let grandTotalDue = 0;
+
+        Object.values(saudaGroups).forEach((group, idx) => {
+          const order = saudaMap[group.saudaNo];
+          if (order) {
+            let saudaDue = 0;
+            group.entries.forEach(entry => {
+              const weight = entry.unloadingWeight || entry.loadingWeight || 0;
+              const rate = order.rate || 0;
+              const cdPercent = order.cd || 0;
+              const gstPercent = order.gst || 0;
+
+              const grossAmount = weight * rate;
+              const taxableAmount = grossAmount - (grossAmount * (cdPercent / 100));
+              const netAmount = taxableAmount + (taxableAmount * (gstPercent / 100));
+              saudaDue += (netAmount - (entry.paidAmount || 0));
+            });
+            
+            if (saudaDue > 1) { // Ignore rounding errors
+              content += `${idx + 1}. *Sauda ${group.saudaNo}*: ${group.commodity}\n`;
+              content += `   Due Amount: *₹${saudaDue.toLocaleString("en-IN", { minimumFractionDigits: 2 })}*\n`;
+              grandTotalDue += saudaDue;
+            }
+          }
+        });
+
+        content += `\n*Total Outstanding Due: ₹${grandTotalDue.toLocaleString("en-IN", { minimumFractionDigits: 2 })}*`;
+
+        return {
+          role: "assistant",
+          content,
+          suggestions: [`Sauda ${saudaNos[0]} details`, `Payment of Sauda ${saudaNos[0]}`],
+        };
+      }
+    } catch (e) {
+      console.error(e);
+      return {
+        role: "assistant",
+        content: `Error analyzing sauda status for ${sellerName}.`,
+      };
+    } finally {
+      setIsLoadingData(false);
+      setThinkingPath("");
+    }
+  };
+
   const universalDeepSearch = async (query) => {
     setIsLoadingData(true);
     setThinkingPath("Initiating System-Wide Scan...");
@@ -1053,12 +1174,22 @@ const AIAgent = () => {
     const buyerMatch = cleanCmd.match(/(?:buyer)\s+([a-z0-9\s]+)/i);
     const sellerMatch = cleanCmd.match(/(?:seller)\s+([a-z0-9\s]+)/i);
 
+    const dueMatch = cleanCmd.match(/(?:due|outstanding)\s*(?:sauda|amount|list)?\s*(?:for|of)?\s+([a-z0-9\s]+)/i) ||
+                     cleanCmd.match(/([a-z0-9\s]+)\s+(?:due|outstanding)\s*(?:sauda|amount|list)?/i);
+    
+    const pendingMatch = cleanCmd.match(/(?:pending)\s*(?:sauda|order|list)?\s*(?:for|of)?\s+([a-z0-9\s]+)/i) ||
+                         cleanCmd.match(/([a-z0-9\s]+)\s+(?:pending)\s*(?:sauda|order|list)?/i);
+
     if (cleanCmd.includes("commodity") || cleanCmd.includes("commodities")) {
       response = await fetchCommodities();
     } else if (cleanCmd.includes("account status")) {
       response = await fetchAccountStatus();
     } else if (cleanCmd.includes("weather")) {
       response = await fetchWeather();
+    } else if (dueMatch && !cleanCmd.includes("sauda no")) {
+      response = await fetchSellerSaudaStatus(dueMatch[1].trim(), "due");
+    } else if (pendingMatch && !cleanCmd.includes("sauda no")) {
+      response = await fetchSellerSaudaStatus(pendingMatch[1].trim(), "pending");
     } else if (cleanCmd.includes("contact") && !buyerMatch && !sellerMatch) {
       response = {
         role: "assistant",
