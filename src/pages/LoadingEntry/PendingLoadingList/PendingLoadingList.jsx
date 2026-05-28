@@ -328,8 +328,7 @@ const PendingLoadingList = () => {
           Commodity: item.commodity || "N/A",
           "Total Quantity": quantity,
           "Pending Quantity": getLast3Digits(pendingQuantity),
-          "Loaded Quantity": loadedQuantity.toFixed(2),
-          "Unloading Quantity": (item.totalUnloadingWeight || 0).toFixed(2),
+          "Loaded Quantity": (item.totalUnloadingWeight || 0).toFixed(2),
           Rate: item.rate || 0,
           "Loaded Brokerage": (
             (item.totalUnloadingWeight || 0) *
