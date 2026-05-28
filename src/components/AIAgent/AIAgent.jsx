@@ -622,16 +622,14 @@ const AIAgent = () => {
 
         if (loadings && loadings.length > 0) {
           content += `*Linked Deliveries (${loadings.length}):*\n`;
-          loadings.slice(0, 5).forEach((l, idx) => {
+          loadings.forEach((l, idx) => {
             content += `${idx + 1}. *Lorry:* ${l.lorryNumber} | *Bill:* ${l.billNumber || "N/A"} | *Wt:* ${l.loadingWeight} MT\n`;
           });
-          if (loadings.length > 5)
-            content += `*+ ${loadings.length - 5} more loadings*\n`;
         }
 
         if (payments && payments.length > 0) {
           content += `\n*Payment History (${payments.length}):*\n`;
-          payments.slice(0, 3).forEach((p, idx) => {
+          payments.forEach((p, idx) => {
             content += `• ₹${p.amount} on ${new Date(p.date).toLocaleDateString()} (${p.paymentMode || "N/A"})\n`;
           });
         }
@@ -733,21 +731,17 @@ const AIAgent = () => {
 
       if (saudas.length > 0) {
         content += `*Saudas Created (${saudas.length}):*\n`;
-        saudas.slice(0, 3).forEach((s) => {
+        saudas.forEach((s) => {
           content += `• *Sauda ${s.saudaNo}*: ${s.buyerCompany} | ${s.commodity}\n`;
         });
-        if (saudas.length > 3)
-          content += `*+${saudas.length - 3} more saudas*\n`;
         content += "\n";
       }
 
       if (loadings.length > 0) {
         content += `*Loadings Recorded (${loadings.length}):*\n`;
-        loadings.slice(0, 3).forEach((l) => {
+        loadings.forEach((l) => {
           content += `• *Lorry ${l.lorryNumber}*: Sauda ${l.saudaNo} | ${l.loadingWeight} MT\n`;
         });
-        if (loadings.length > 3)
-          content += `*+${loadings.length - 3} more loadings*\n`;
       }
 
       return {
@@ -846,11 +840,9 @@ const AIAgent = () => {
       if (saudas && saudas.length > 0) {
         let content = `*System Sauda Summary (${new Date().toLocaleDateString()})*\n\n`;
         content += `Total Count: *${saudas.length}*\n\n`;
-        saudas.slice(0, 5).forEach((s, idx) => {
+        saudas.forEach((s, idx) => {
           content += `${idx + 1}. *Sauda ${s.saudaNo}*: ${s.buyerCompany} | ${s.commodity}\n`;
         });
-        if (saudas.length > 5)
-          content += `\n*Showing top 5 of ${saudas.length}*`;
 
         return {
           role: "assistant",
@@ -919,7 +911,7 @@ const AIAgent = () => {
 
       if (interactions && interactions.length > 0) {
         let content = `*Interaction Analytics: ${commodity}*\n\n`;
-        interactions.slice(0, 5).forEach((item, idx) => {
+        interactions.forEach((item, idx) => {
           content += `${idx + 1}. *${item.sellerName}*: ₹${item.rate} | ${item.quantity} MT\n`;
         });
         return {
@@ -1045,11 +1037,9 @@ const AIAgent = () => {
 
       if (saudas && saudas.length > 0) {
         let content = `*Regional Intelligence: ${state.toUpperCase()}*\n\n`;
-        saudas.slice(0, 5).forEach((s, idx) => {
+        saudas.forEach((s, idx) => {
           content += `${idx + 1}. *Sauda ${s.saudaNo}*: ${s.buyerCompany} | ${s.commodity}\n`;
         });
-        if (saudas.length > 5)
-          content += `\n*Showing top 5 of ${saudas.length} region records*`;
 
         return {
           role: "assistant",
@@ -1085,11 +1075,9 @@ const AIAgent = () => {
 
       if (entries && entries.length > 0) {
         let content = `*Loading History: Sauda ${saudaNo}*\n\n`;
-        entries.slice(0, 5).forEach((entry, idx) => {
+        entries.forEach((entry, idx) => {
           content += `${idx + 1}. *${entry.lorryNumber}* | ${new Date(entry.loadingDate).toLocaleDateString()} | ${entry.loadingWeight} MT\n`;
         });
-        if (entries.length > 5)
-          content += `\n*Total entries: ${entries.length}*`;
 
         return {
           role: "assistant",
