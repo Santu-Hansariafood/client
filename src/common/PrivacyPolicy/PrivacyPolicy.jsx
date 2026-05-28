@@ -71,29 +71,42 @@ const PrivacyPolicy = () => {
               <li>Platform analytics and improvement</li>
             </ul>
           </Section>
-          <Section title="3.1  Permissions Used (Camera & Location)">
+          <Section title="3.1 Permissions Used (Camera, Microphone, Media & Location)">
             Our application may request access to certain device permissions to
-            provide core functionality:
+            provide secure and essential platform functionality:
             <ul className="list-disc ml-6 mt-2 space-y-2">
               <li>
-                <b>Camera Permission:</b> Used for capturing images such as
-                documents, invoices, or QR codes for operational and
-                verification purposes. We do not access your camera without your
-                explicit action.
+                <b>Camera Permission:</b> Used for capturing images of
+                documents, invoices, receipts, QR codes, and verification
+                records based on user actions.
               </li>
 
               <li>
-                <b>Location Permission:</b> Used to improve logistics
-                coordination, delivery tracking, and operational efficiency.
-                Location data is used only when required and with your consent.
+                <b>Microphone Permission:</b> Used for voice communication,
+                audio-enabled support features, voice messages, and AI assistant
+                interactions where applicable.
+              </li>
+
+              <li>
+                <b>Media & File Access:</b> Used to allow users to upload
+                images, videos, documents, invoices, and other files required
+                for trading, logistics, communication, and account management
+                purposes.
+              </li>
+
+              <li>
+                <b>Location Permission:</b> Used for delivery tracking,
+                logistics coordination, route management, operational
+                verification, and improving service efficiency.
               </li>
             </ul>
             <p className="mt-3 text-gray-600">
-              We do not continuously track your location and do not use these
-              permissions for advertising purposes.
+              These permissions are accessed only with user consent and only
+              when required for specific features initiated by the user. We do
+              not access camera, microphone, media, files, or location data in
+              the background for advertising or unauthorized tracking purposes.
             </p>
           </Section>
-
           <Section title="4. Lawful Basis">
             We process personal data only when legally permitted including:
             <ul className="list-disc ml-6 mt-2 space-y-2">
