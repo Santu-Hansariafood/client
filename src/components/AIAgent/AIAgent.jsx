@@ -310,27 +310,46 @@ const AIAgent = () => {
           `*Contact Details:*\n` +
           `• *Mobile:* ${mobile || "N/A"}\n` +
           `• *Email:* ${p.email || p.emails?.[0]?.value || "N/A"}\n` +
-          `• *Status:* ${p.status?.toUpperCase() || "ACTIVE"}\n\n` +
-          `*Financial & Work Summary:*\n` +
+          `• *Status:* ${p.status?.toUpperCase() || "ACTIVE"}\n\n`;
+
+        if (type === "Buyer" && p.companyIds && p.companyIds.length > 0) {
+          content += `*Associated Companies:*\n`;
+          p.companyIds.forEach(c => {
+            content += `• ${c.companyName || c.name || "N/A"}\n`;
+          });
+          content += "\n";
+        } else if (type === "Seller" && p.companies && p.companies.length > 0) {
+          content += `*Associated Companies:*\n`;
+          p.companies.forEach(c => {
+            content += `• ${c}\n`;
+          });
+          content += "\n";
+        }
+
+        content += `*Financial & Work Summary:*\n` +
           `• *Total Saudas:* ${saudas.length}\n` +
           `• *Quantity Delivered:* ${totalQtyDone.toFixed(2)} MT\n` +
           `• *Total Payments:* ₹${totalPaid.toLocaleString("en-IN")}\n` +
           `• *Total Loadings:* ${loadings.length}\n\n`;
 
         if (type === "Seller") {
-          content += `*Brokerage Config:*\n`;
-          p.commodities?.forEach((c) => {
-            content += `• *${c.name}:* ₹${c.brokerage}/MT\n`;
-          });
-          content += "\n";
+          const validCommodities = p.commodities?.filter(c => c.name && c.brokerage) || [];
+          if (validCommodities.length > 0) {
+            content += `*Brokerage Config:*\n`;
+            validCommodities.forEach((c) => {
+              content += `• *${c.name}:* ₹${c.brokerage}/MT\n`;
+            });
+            content += "\n";
+          }
         } else {
-          content += `*Brokerage Config:*\n`;
-          if (p.brokerage) {
-            Object.entries(p.brokerage).forEach(([comm, rate]) => {
+          const validBrokerage = Object.entries(p.brokerage || {}).filter(([comm, rate]) => comm && rate);
+          if (validBrokerage.length > 0) {
+            content += `*Brokerage Config:*\n`;
+            validBrokerage.forEach(([comm, rate]) => {
               content += `• *${comm}:* ₹${rate}/MT\n`;
             });
+            content += "\n";
           }
-          content += "\n";
         }
 
         // Add quality parameters if available in latest sauda
@@ -359,6 +378,48 @@ const AIAgent = () => {
       return {
         role: "assistant",
         content: `Error fetching full ${type} details.`,
+      };
+    } finally {
+      setIsLoadingData(false);
+      setThinkingPath("");
+    }
+  };
+
+  const fetchPendingSaudaByEntity = async (entityName) => {
+    setIsLoadingData(true);
+    setThinkingPath(`Searching pending saudas for ${entityName}...`);
+    try {
+      // Search for the entity in saudas (buyerCompany, supplierCompany, buyer, supplier)
+      const response = await api.get(`/self-order?search=${entityName}&status=active`);
+      const allSaudas = response.data.data || response.data || [];
+      const pendingSaudas = allSaudas.filter(s => (s.pendingQuantity || 0) > 0);
+
+      if (pendingSaudas.length === 0) {
+        return {
+          role: "assistant",
+          content: `No pending saudas found for "*${entityName}*". All matching contracts are fully loaded or closed.`,
+        };
+      }
+
+      let content = `*Pending Sauda Report: ${entityName}*\n\n`;
+      pendingSaudas.forEach((s, idx) => {
+        const buyer = s.buyerCompany || s.buyer || "N/A";
+        const seller = s.supplierCompany || "N/A";
+        content += `${idx + 1}. *Sauda ${s.saudaNo}*: ${s.commodity}\n`;
+        content += `   Buyer: ${buyer} | Seller: ${seller}\n`;
+        content += `   Pending: *${s.pendingQuantity} MT* of ${s.quantity} MT\n\n`;
+      });
+      content += `*Total Pending Saudas:* ${pendingSaudas.length}`;
+
+      return {
+        role: "assistant",
+        content,
+        suggestions: [`Sauda ${pendingSaudas[0].saudaNo} details`],
+      };
+    } catch (e) {
+      return {
+        role: "assistant",
+        content: `Error fetching pending saudas for ${entityName}.`,
       };
     } finally {
       setIsLoadingData(false);
@@ -1177,7 +1238,7 @@ const AIAgent = () => {
     const dueMatch = cleanCmd.match(/(?:due|outstanding)\s*(?:sauda|amount|list)?\s*(?:for|of)?\s+([a-z0-9\s]+)/i) ||
                      cleanCmd.match(/([a-z0-9\s]+)\s+(?:due|outstanding)\s*(?:sauda|amount|list)?/i);
     
-    const pendingMatch = cleanCmd.match(/(?:pending)\s*(?:sauda|order|list)?\s*(?:for|of)?\s+([a-z0-9\s]+)/i) ||
+    const pendingMatch = cleanCmd.match(/(?:pending)\s*(?:sauda|order|list)?\s*(?:for|of|on)?\s+([a-z0-9\s]+)/i) ||
                          cleanCmd.match(/([a-z0-9\s]+)\s+(?:pending)\s*(?:sauda|order|list)?/i);
 
     if (cleanCmd.includes("commodity") || cleanCmd.includes("commodities")) {
@@ -1189,7 +1250,7 @@ const AIAgent = () => {
     } else if (dueMatch && !cleanCmd.includes("sauda no")) {
       response = await fetchSellerSaudaStatus(dueMatch[1].trim(), "due");
     } else if (pendingMatch && !cleanCmd.includes("sauda no")) {
-      response = await fetchSellerSaudaStatus(pendingMatch[1].trim(), "pending");
+      response = await fetchPendingSaudaByEntity(pendingMatch[1].trim());
     } else if (cleanCmd.includes("contact") && !buyerMatch && !sellerMatch) {
       response = {
         role: "assistant",
