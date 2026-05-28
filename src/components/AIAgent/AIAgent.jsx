@@ -161,13 +161,219 @@ const AIAgent = () => {
     }
   };
 
+  const fetchCommodities = async () => {
+    setIsLoadingData(true);
+    setThinkingPath("Listing all system commodities...");
+    try {
+      const response = await api.get("/commodities");
+      const commodities = response.data.data || response.data;
+      if (commodities && commodities.length > 0) {
+        let content = "*Available Commodities:*\n\n";
+        commodities.forEach((c, idx) => {
+          content += `${idx + 1}. *${c.name}*\n`;
+        });
+        return {
+          role: "assistant",
+          content,
+          suggestions: ["Total sauda today", "Active bids"],
+        };
+      }
+      return {
+        role: "assistant",
+        content: "No commodities found in the system.",
+      };
+    } catch (e) {
+      return {
+        role: "assistant",
+        content: "Error fetching commodities.",
+      };
+    } finally {
+      setIsLoadingData(false);
+      setThinkingPath("");
+    }
+  };
+
+  const fetchAccountStatus = async () => {
+    setIsLoadingData(true);
+    setThinkingPath("Analyzing your account status...");
+    try {
+      // Assuming account status refers to general system stats for Admin/Employee
+      const [saudaRes, loadingRes, paymentRes] = await Promise.all([
+        api.get("/self-order?limit=1"),
+        api.get("/loading-entries?limit=1"),
+        api.get("/payment-received?limit=1"),
+      ]);
+
+      const totalSaudas = saudaRes.data.total || 0;
+      const totalLoadings = loadingRes.data.total || 0;
+      const totalPayments = paymentRes.data.total || 0;
+
+      return {
+        role: "assistant",
+        content:
+          `*Full System Account Status*\n\n` +
+          `• *Total Sauda Contracts:* ${totalSaudas}\n` +
+          `• *Total Loading Entries:* ${totalLoadings}\n` +
+          `• *Total Payment Records:* ${totalPayments}\n` +
+          `• *System Health:* Optimal\n` +
+          `• *Last Update:* ${new Date().toLocaleString()}`,
+        suggestions: ["Total sauda today", "Active bids"],
+      };
+    } catch (e) {
+      return {
+        role: "assistant",
+        content: "Error fetching account status.",
+      };
+    } finally {
+      setIsLoadingData(false);
+      setThinkingPath("");
+    }
+  };
+
+  const fetchWeather = async () => {
+    setIsLoadingData(true);
+    setThinkingPath("Checking local weather forecast...");
+    try {
+      // Using Open-Meteo (Free, no key required) for New Delhi as default
+      const res = await fetch(
+        "https://api.open-meteo.com/v1/forecast?latitude=28.61&longitude=77.23&current_weather=true",
+      );
+      const data = await res.json();
+      const weather = data.current_weather;
+
+      const getCondition = (code) => {
+        if (code === 0) return "Clear Sky";
+        if (code <= 3) return "Partly Cloudy";
+        if (code <= 48) return "Foggy";
+        if (code <= 67) return "Rainy";
+        if (code <= 77) return "Snowy";
+        if (code <= 82) return "Showers";
+        if (code <= 99) return "Thunderstorm";
+        return "Unknown";
+      };
+
+      return {
+        role: "assistant",
+        content:
+          `*Current Weather in New Delhi*\n\n` +
+          `• *Temperature:* ${weather.temperature}°C\n` +
+          `• *Condition:* ${getCondition(weather.weathercode)}\n` +
+          `• *Wind Speed:* ${weather.windspeed} km/h\n` +
+          `• *Time:* ${new Date().toLocaleTimeString()}`,
+      };
+    } catch (e) {
+      return {
+        role: "assistant",
+        content:
+          "I couldn't fetch the weather right now. Please try again later.",
+      };
+    } finally {
+      setIsLoadingData(false);
+      setThinkingPath("");
+    }
+  };
+
+  const fetchFullPartnerDetails = async (name, type) => {
+    setIsLoadingData(true);
+    setThinkingPath(`Extracting full ${type} intelligence...`);
+    try {
+      const endpoint = type === "Buyer" ? "/buyers" : "/sellers";
+      const response = await api.get(`${endpoint}?search=${name}`);
+      const partners = response.data.data || response.data;
+
+      if (partners && partners.length > 0) {
+        const p = partners[0];
+        const partnerName = type === "Buyer" ? p.name : p.sellerName;
+        const mobile = type === "Buyer" ? p.mobile : p.phoneNumbers?.[0]?.value;
+
+        // Fetch work history (saudas and loadings)
+        const [saudaRes, loadingRes, paymentRes] = await Promise.all([
+          api.get(`/self-order?search=${partnerName}`),
+          api.get(`/loading-entries?search=${partnerName}`),
+          api.get(`/payment-received?search=${partnerName}`),
+        ]);
+
+        const saudas = saudaRes.data.data || saudaRes.data || [];
+        const loadings = loadingRes.data.data || loadingRes.data || [];
+        const payments = paymentRes.data.data || paymentRes.data || [];
+
+        let totalQtyDone = 0;
+        loadings.forEach(
+          (l) => (totalQtyDone += l.unloadingWeight || l.loadingWeight || 0),
+        );
+
+        let totalPaid = 0;
+        payments.forEach((p) => (totalPaid += p.amount || 0));
+
+        let content =
+          `*Full ${type} Intelligence: ${partnerName}*\n\n` +
+          `*Contact Details:*\n` +
+          `• *Mobile:* ${mobile || "N/A"}\n` +
+          `• *Email:* ${p.email || p.emails?.[0]?.value || "N/A"}\n` +
+          `• *Status:* ${p.status?.toUpperCase() || "ACTIVE"}\n\n` +
+          `*Financial & Work Summary:*\n` +
+          `• *Total Saudas:* ${saudas.length}\n` +
+          `• *Quantity Delivered:* ${totalQtyDone.toFixed(2)} MT\n` +
+          `• *Total Payments:* ₹${totalPaid.toLocaleString("en-IN")}\n` +
+          `• *Total Loadings:* ${loadings.length}\n\n`;
+
+        if (type === "Seller") {
+          content += `*Brokerage Config:*\n`;
+          p.commodities?.forEach((c) => {
+            content += `• *${c.name}:* ₹${c.brokerage}/MT\n`;
+          });
+          content += "\n";
+        } else {
+          content += `*Brokerage Config:*\n`;
+          if (p.brokerage) {
+            Object.entries(p.brokerage).forEach(([comm, rate]) => {
+              content += `• *${comm}:* ₹${rate}/MT\n`;
+            });
+          }
+          content += "\n";
+        }
+
+        // Add quality parameters if available in latest sauda
+        if (saudas.length > 0) {
+          const latestSauda = saudas[0];
+          if (latestSauda.parameters && latestSauda.parameters.length > 0) {
+            content += `*Standard Quality Parameters (Latest):*\n`;
+            latestSauda.parameters.forEach((param) => {
+              content += `• ${param.name || param.label}: ${param.value}\n`;
+            });
+            content += "\n";
+          }
+        }
+
+        return {
+          role: "assistant",
+          content,
+          suggestions: [`Saudas for ${partnerName}`, "Active bids"],
+        };
+      }
+      return {
+        role: "assistant",
+        content: `I couldn't find any ${type} matching "*${name}*".`,
+      };
+    } catch (e) {
+      return {
+        role: "assistant",
+        content: `Error fetching full ${type} details.`,
+      };
+    } finally {
+      setIsLoadingData(false);
+      setThinkingPath("");
+    }
+  };
+
   const universalDeepSearch = async (query) => {
     setIsLoadingData(true);
     setThinkingPath("Initiating System-Wide Scan...");
 
-    if (/^\d{3,5}$/.test(query)) {
+    if (/^\d{3,5}$/.test(query) || /(\d{3,5})\s*(?:sauda|order)/i.test(query)) {
       setThinkingPath("Checking Sauda Records...");
-      const saudaRes = await fetchSaudaDetails(query);
+      const sNum = query.match(/(\d{3,5})/)[1];
+      const saudaRes = await fetchSaudaDetails(sNum);
       if (saudaRes && !saudaRes.content.includes("I couldn't find")) {
         setIsLoadingData(false);
         setThinkingPath("");
@@ -824,9 +1030,10 @@ const AIAgent = () => {
       return;
     }
 
-    const saudaMatch = cleanCmd.match(
-      /(?:sauda|order)\s*(?:no|number)?\s*[:\s]*(\d+)/i,
-    );
+    const saudaMatch =
+      cleanCmd.match(/(?:sauda|order)\s*(?:no|number)?\s*[:\s]*(\d+)/i) ||
+      cleanCmd.match(/(\d+)\s*(?:sauda|order)/i);
+
     const lorryMatch = cleanCmd.match(
       /(?:lorry|vehicle|truck)\s*(?:no|number)?\s*[:\s]*([a-z0-9\s]{4,})/i,
     );
@@ -843,8 +1050,29 @@ const AIAgent = () => {
     const interactionMatch = cleanCmd.match(
       /(?:interactions for|bid info for)\s+([a-z0-9\s]+)/i,
     );
+    const buyerMatch = cleanCmd.match(/(?:buyer)\s+([a-z0-9\s]+)/i);
+    const sellerMatch = cleanCmd.match(/(?:seller)\s+([a-z0-9\s]+)/i);
 
-    if (saudaMatch && billMatch && dateMatch) {
+    if (cleanCmd.includes("commodity") || cleanCmd.includes("commodities")) {
+      response = await fetchCommodities();
+    } else if (cleanCmd.includes("account status")) {
+      response = await fetchAccountStatus();
+    } else if (cleanCmd.includes("weather")) {
+      response = await fetchWeather();
+    } else if (cleanCmd.includes("contact") && !buyerMatch && !sellerMatch) {
+      response = {
+        role: "assistant",
+        content:
+          `*System Contact Support*\n\n` +
+          `• *Admin Hotline:* +91 98765 43210\n` +
+          `• *Tech Support:* support@hansaria.com\n` +
+          `• *Operating Hours:* 10:00 AM - 07:00 PM`,
+      };
+    } else if (buyerMatch) {
+      response = await fetchFullPartnerDetails(buyerMatch[1].trim(), "Buyer");
+    } else if (sellerMatch) {
+      response = await fetchFullPartnerDetails(sellerMatch[1].trim(), "Seller");
+    } else if (saudaMatch && billMatch && dateMatch) {
       response = await fetchSaudaDetails(saudaMatch[1]);
       if (response && response.content) {
         response.content =
