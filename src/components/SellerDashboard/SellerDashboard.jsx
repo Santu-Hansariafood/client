@@ -221,6 +221,64 @@ const SellerDashboard = () => {
   const [companyBreakdown, setCompanyBreakdown] = useState([]);
   const [showPopup, setShowPopup] = useState(false);
 
+  const fetchData = useCallback(async (isMounted = true) => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const [sellersRes, bidsRes, participateRes, ordersRes, pendingRes, statsRes] =
+        await Promise.all([
+          api.get(`/sellers?mobile=${mobile}`),
+          api.get("/bids?status=active"),
+          api.get(`/participatebids?mobile=${mobile}&limit=1`),
+          api.get(`/self-order?sellerMobile=${mobile}&limit=1&page=1&userRole=Seller`),
+          api.get(`/self-order/pending/list?mobile=${mobile}&userRole=Seller&limit=1&page=1`),
+          api.get(`/self-order/seller/stats?mobile=${mobile}`),
+        ]);
+
+      if (!isMounted) return;
+
+      const normalizePhone = (p) => {
+        const m = String(p || "").trim().match(/^(?:\+91|0)?([6-9]\d{9})$/);
+        return m ? m[1] : p;
+      };
+
+      const sellers = sellersRes?.data || [];
+      const bids = bidsRes?.data?.data || bidsRes?.data || [];
+
+      const seller = sellers.find((s) =>
+        s?.phoneNumbers?.some((p) => normalizePhone(p?.value) === normalizePhone(mobile))
+      );
+
+      if (!seller) {
+        setError("No seller profile found. Please contact support.");
+        return;
+      }
+
+      const activeSellerBids = bids.filter(
+        (bid) =>
+          bid.status === "active" &&
+          seller?.commodities?.some((c) => c?.name === bid?.commodity)
+      );
+
+      setSellerBidCount(activeSellerBids.length);
+      setParticipateBidCount(participateRes?.data?.total || 0);
+      setOrderCount(ordersRes?.data?.total || 0);
+      setPendingSaudaCount(pendingRes?.data?.total || 0);
+      setTotalBrokerage(statsRes?.data?.totalBrokerage || 0);
+      setTotalQuantity(statsRes?.data?.totalUnloadingWeight || 0);
+      setCommodityBreakdown(statsRes?.data?.commodityBreakdown || []);
+      setCompanyBreakdown(statsRes?.data?.companyBreakdown || []);
+
+    } catch (err) {
+      if (!isMounted) return;
+      console.error("Dashboard Sync Error:", err);
+      setError("Unable to sync dashboard data. Please check your connection.");
+    } finally {
+      if (isMounted) setLoading(false);
+    }
+  }, [mobile]);
+
   const handleNotificationClick = useCallback(async (notif) => {
     if (!notif.isRead) {
       try {
@@ -290,64 +348,6 @@ const SellerDashboard = () => {
     { label: "Loading List", icon: <FaHistory />, color: "text-blue-600", link: "/Loading-Entry/list-loading-entry", state: { mobile }, count: "Access" },
     { label: "Alerts", icon: <FaBell />, color: "text-purple-600", isNotif: true, action: () => togglePopup(true) },
   ], [mobile, togglePopup, sellerBidCount, orderCount, pendingSaudaCount]);
-
-  const fetchData = useCallback(async (isMounted = true) => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      const [sellersRes, bidsRes, participateRes, ordersRes, pendingRes, statsRes] =
-        await Promise.all([
-          api.get(`/sellers?mobile=${mobile}`),
-          api.get("/bids?status=active"),
-          api.get(`/participatebids?mobile=${mobile}&limit=1`),
-          api.get(`/self-order?sellerMobile=${mobile}&limit=1&page=1&userRole=Seller`),
-          api.get(`/self-order/pending/list?mobile=${mobile}&userRole=Seller&limit=1&page=1`),
-          api.get(`/self-order/seller/stats?mobile=${mobile}`),
-        ]);
-
-      if (!isMounted) return;
-
-      const normalizePhone = (p) => {
-        const m = String(p || "").trim().match(/^(?:\+91|0)?([6-9]\d{9})$/);
-        return m ? m[1] : p;
-      };
-
-      const sellers = sellersRes?.data || [];
-      const bids = bidsRes?.data?.data || bidsRes?.data || [];
-
-      const seller = sellers.find((s) =>
-        s?.phoneNumbers?.some((p) => normalizePhone(p?.value) === normalizePhone(mobile))
-      );
-
-      if (!seller) {
-        setError("No seller profile found. Please contact support.");
-        return;
-      }
-
-      const activeSellerBids = bids.filter(
-        (bid) =>
-          bid.status === "active" &&
-          seller?.commodities?.some((c) => c?.name === bid?.commodity)
-      );
-
-      setSellerBidCount(activeSellerBids.length);
-      setParticipateBidCount(participateRes?.data?.total || 0);
-      setOrderCount(ordersRes?.data?.total || 0);
-      setPendingSaudaCount(pendingRes?.data?.total || 0);
-      setTotalBrokerage(statsRes?.data?.totalBrokerage || 0);
-      setTotalQuantity(statsRes?.data?.totalUnloadingWeight || 0);
-      setCommodityBreakdown(statsRes?.data?.commodityBreakdown || []);
-      setCompanyBreakdown(statsRes?.data?.companyBreakdown || []);
-
-    } catch (err) {
-      if (!isMounted) return;
-      console.error("Dashboard Sync Error:", err);
-      setError("Unable to sync dashboard data. Please check your connection.");
-    } finally {
-      if (isMounted) setLoading(false);
-    }
-  }, [mobile]);
 
   useEffect(() => {
     let isMounted = true;
