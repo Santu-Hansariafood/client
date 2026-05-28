@@ -7,6 +7,8 @@ import {
   FaTrash,
   FaArrowRight,
   FaSpinner,
+  FaMicrophone,
+  FaMicrophoneSlash,
 } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext/AuthContext";
@@ -17,6 +19,7 @@ const AIAgent = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
   const [input, setInput] = useState("");
+  const [isListening, setIsListening] = useState(false);
   const [isLoadingData, setIsLoadingData] = useState(false);
   const [thinkingPath, setThinkingPath] = useState("");
   const [messages, setMessages] = useState([
@@ -56,6 +59,51 @@ const AIAgent = () => {
   ]);
 
   if (userRole !== "Admin" && userRole !== "Employee") return null;
+
+  const startListening = () => {
+    const SpeechRecognition =
+      window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    if (!SpeechRecognition) {
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "assistant",
+          content: "Sorry, your browser does not support voice search.",
+        },
+      ]);
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = "en-IN";
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+
+    recognition.onstart = () => {
+      setIsListening(true);
+      setThinkingPath("Listening...");
+    };
+
+    recognition.onresult = (event) => {
+      const transcript = event.results[0][0].transcript;
+      setInput(transcript);
+      handleSend(transcript);
+    };
+
+    recognition.onerror = (event) => {
+      console.error("Speech recognition error:", event.error);
+      setIsListening(false);
+      setThinkingPath("");
+    };
+
+    recognition.onend = () => {
+      setIsListening(false);
+      setThinkingPath("");
+    };
+
+    recognition.start();
+  };
 
   const handleSend = (text) => {
     const userMessage = text || input.trim();
@@ -427,6 +475,99 @@ const AIAgent = () => {
     }
   };
 
+  const fetchRelationshipContext = async (buyerName, sellerName) => {
+    setIsLoadingData(true);
+    setThinkingPath(`Analyzing relationship between ${buyerName} and ${sellerName}...`);
+    try {
+      const [buyerRes, sellerRes] = await Promise.all([
+        api.get(`/buyers?search=${buyerName}`),
+        api.get(`/sellers?search=${sellerName}`),
+      ]);
+
+      const buyers = buyerRes.data.data || buyerRes.data;
+      const sellers = sellerRes.data.data || sellerRes.data;
+
+      if (buyers?.length > 0 && sellers?.length > 0) {
+        const b = buyers[0];
+        const s = sellers[0];
+
+        // Fetch shared saudas
+        const saudaRes = await api.get(`/self-order?search=${b.name}&supplierCompany=${s.sellerName}`);
+        const saudas = saudaRes.data.data || saudaRes.data || [];
+
+        let content = `*Relationship Intelligence: ${b.name} & ${s.sellerName}*\n\n`;
+        
+        content += `*Buyer Groups:* ${b.groupId?.groupName || "N/A"}\n`;
+        content += `*Seller Groups:* ${s.groups?.map(g => g.name).join(", ") || "N/A"}\n\n`;
+        
+        content += `*Trade Summary:*\n`;
+        content += `• *Total Shared Saudas:* ${saudas.length}\n`;
+        
+        if (saudas.length > 0) {
+          const totalQty = saudas.reduce((acc, curr) => acc + (curr.quantity || 0), 0);
+          content += `• *Total Contracted Volume:* ${totalQty.toFixed(2)} MT\n`;
+          content += `• *Common Commodities:* ${[...new Set(saudas.map(s => s.commodity))].join(", ")}\n\n`;
+          
+          content += `*Recent Shared Saudas:*\n`;
+          saudas.slice(0, 5).forEach((s, idx) => {
+            content += `${idx + 1}. *Sauda ${s.saudaNo}*: ${s.commodity} | ${s.quantity} MT | ${new Date(s.poDate).toLocaleDateString()}\n`;
+          });
+        }
+
+        return {
+          role: "assistant",
+          content,
+          suggestions: saudas.length > 0 ? [`Sauda ${saudas[0].saudaNo} details`] : ["Total sauda today"],
+        };
+      }
+      return null;
+    } catch (e) {
+      return null;
+    } finally {
+      setIsLoadingData(false);
+      setThinkingPath("");
+    }
+  };
+
+  const fetchSaudasByCompanyAndConsignee = async (companyName, consigneeName) => {
+    setIsLoadingData(true);
+    setThinkingPath(`Searching saudas for ${companyName} to ${consigneeName}...`);
+    try {
+      const response = await api.get(`/self-order?search=${companyName}&consignee=${consigneeName}`);
+      const saudas = response.data.data || response.data || [];
+
+      if (saudas.length > 0) {
+        let content = `*Matching Saudas for ${companyName} ➔ ${consigneeName}*\n\n`;
+        saudas.forEach((s, idx) => {
+          content += `${idx + 1}. *Sauda ${s.saudaNo}*: ${s.commodity}\n`;
+          content += `   • *Buyer:* ${s.buyerCompany || s.buyer}\n`;
+          content += `   • *Seller:* ${s.supplierCompany}\n`;
+          content += `   • *Qty:* ${s.quantity} MT | *Pending:* ${s.pendingQuantity || 0} MT\n`;
+          content += `   • *Date:* ${s.poDate ? new Date(s.poDate).toLocaleDateString() : "N/A"}\n`;
+          content += `   • *Delivery:* ${s.deliveryDate ? new Date(s.deliveryDate).toLocaleDateString() : "N/A"}\n\n`;
+        });
+
+        return {
+          role: "assistant",
+          content,
+          suggestions: [`Sauda ${saudas[0].saudaNo} details`],
+        };
+      }
+      return {
+        role: "assistant",
+        content: `No saudas found matching company "*${companyName}*" and consignee "*${consigneeName}*".`,
+      };
+    } catch (e) {
+      return {
+        role: "assistant",
+        content: "Error searching for matching saudas.",
+      };
+    } finally {
+      setIsLoadingData(false);
+      setThinkingPath("");
+    }
+  };
+
   const fetchSellerSaudaStatus = async (sellerName, type) => {
     setIsLoadingData(true);
     setThinkingPath(`Analyzing ${type} saudas for ${sellerName}...`);
@@ -614,9 +755,12 @@ const AIAgent = () => {
           `*Deep Control Profile: Sauda No ${saudaNo}*\n\n` +
           `• *Buyer:* ${sauda.buyerCompany || sauda.buyer}\n` +
           `• *Supplier:* ${sauda.supplierCompany || "N/A"}\n` +
+          `• *Consignee:* ${sauda.consignee || "N/A"}\n` +
           `• *Commodity:* ${sauda.commodity}\n` +
           `• *Quantity:* ${sauda.quantity} MT | *Pending:* ${sauda.pendingQuantity || 0} MT\n` +
           `• *Rate:* ₹${sauda.rate} | *CD:* ${sauda.cd}% | *GST:* ${sauda.gst}%\n` +
+          `• *Sauda Date:* ${sauda.poDate ? new Date(sauda.poDate).toLocaleDateString() : "N/A"}\n` +
+          `• *Delivery Date:* ${sauda.deliveryDate ? new Date(sauda.deliveryDate).toLocaleDateString() : "N/A"}\n` +
           `• *Location:* ${sauda.location || sauda.state || "N/A"}\n` +
           `• *Status:* ${sauda.status?.toUpperCase() || "ACTIVE"}\n\n`;
 
@@ -1288,6 +1432,11 @@ const AIAgent = () => {
     const pendingMatch = cleanCmd.match(/(?:pending)\s*(?:sauda|order|list)?\s*(?:for|of|on)?\s+([a-z0-9\s]+)/i) ||
                          cleanCmd.match(/([a-z0-9\s]+)\s+(?:pending)\s*(?:sauda|order|list)?/i);
 
+    // New matching patterns for Company + Consignee and Buyer + Seller
+    const companyConsigneeMatch = cleanCmd.match(/(?:sauda|order)?\s*(?:for|on)?\s*company\s+([a-z0-9\s]+)\s*(?:to|and|consignee)?\s*consignee\s+([a-z0-9\s]+)/i);
+    const relationshipMatch = cleanCmd.match(/(?:relationship|trade|info)\s*(?:between|for)?\s*buyer\s+([a-z0-9\s]+)\s*(?:and|with)?\s*seller\s+([a-z0-9\s]+)/i) ||
+                            cleanCmd.match(/buyer\s+([a-z0-9\s]+)\s*(?:and|with)?\s*seller\s+([a-z0-9\s]+)/i);
+
     if (cleanCmd.includes("commodity") || cleanCmd.includes("commodities")) {
       response = await fetchCommodities();
     } else if (cleanCmd.includes("current sauda") || cleanCmd.includes("last sauda")) {
@@ -1296,6 +1445,10 @@ const AIAgent = () => {
       response = await fetchAccountStatus();
     } else if (cleanCmd.includes("weather")) {
       response = await fetchWeather();
+    } else if (companyConsigneeMatch) {
+      response = await fetchSaudasByCompanyAndConsignee(companyConsigneeMatch[1].trim(), companyConsigneeMatch[2].trim());
+    } else if (relationshipMatch) {
+      response = await fetchRelationshipContext(relationshipMatch[1].trim(), relationshipMatch[2].trim());
     } else if (dueMatch && !cleanCmd.includes("sauda no")) {
       response = await fetchSellerSaudaStatus(dueMatch[1].trim(), "due");
     } else if (pendingMatch && !cleanCmd.includes("sauda no")) {
@@ -1490,6 +1643,22 @@ const AIAgent = () => {
 
           <div className="p-4 bg-white border-t border-slate-100">
             <div className="relative flex items-center gap-2">
+              <button
+                onClick={startListening}
+                disabled={isListening}
+                className={`w-11 h-11 rounded-2xl flex items-center justify-center transition-all shadow-lg ${
+                  isListening
+                    ? "bg-red-500 text-white animate-pulse"
+                    : "bg-slate-100 text-slate-500 hover:bg-slate-200"
+                }`}
+                title="Voice Search"
+              >
+                {isListening ? (
+                  <FaMicrophoneSlash size={16} />
+                ) : (
+                  <FaMicrophone size={16} />
+                )}
+              </button>
               <input
                 type="text"
                 value={input}
