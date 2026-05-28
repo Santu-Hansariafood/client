@@ -803,11 +803,12 @@ const AIAgent = () => {
       if (bids && bids.length > 0) {
         let content = `*Full Live Bids Intelligence*\n\n`;
         bids.forEach((bid, idx) => {
-          content += `${idx + 1}. *${bid.commodity}* at *${bid.location}*\n`;
-          content += `   • *Base Rate:* ₹${bid.baseRate || "N/A"}\n`;
+          const bDate = bid.bidDate ? new Date(bid.bidDate).toLocaleDateString() : "N/A";
+          content += `${idx + 1}. *${bid.commodity}* at *${bid.origin || bid.location || "N/A"}*\n`;
+          content += `   • *Base Rate:* ₹${bid.rate || bid.baseRate || "N/A"}\n`;
           content += `   • *Quantity:* ${bid.quantity || "N/A"} MT\n`;
-          content += `   • *Start:* ${new Date(bid.startTime).toLocaleString()}\n`;
-          content += `   • *End:* ${new Date(bid.endTime).toLocaleString()}\n`;
+          content += `   • *Date:* ${bDate}\n`;
+          content += `   • *Time:* ${bid.startTime || "N/A"} - ${bid.endTime || "N/A"}\n`;
           content += `   • *Status:* ${bid.status?.toUpperCase()}\n\n`;
         });
         return {
