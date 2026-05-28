@@ -36,8 +36,6 @@ import BuyerProformaInvoicePDF from "./BuyerProformaInvoicePDF";
 import { downloadFile } from "../../utils/fileDownloader";
 import logo from "../../assets/Hans.png";
 
-// --- Sub-components ---
-
 const HeaderSection = memo(({ userName, totalBrokerage, companyName }) => {
   const greeting = useMemo(() => {
     const hour = new Date().getHours();
@@ -68,7 +66,9 @@ const HeaderSection = memo(({ userName, totalBrokerage, companyName }) => {
             </div>
             <h1 className="text-xl sm:text-2xl md:text-4xl font-black text-slate-800 tracking-tighter">
               {greeting},{" "}
-              <span className="text-blue-600 truncate block sm:inline">{userName?.split(' ')[0] || "Partner"}</span>
+              <span className="text-blue-600 truncate block sm:inline">
+                {userName?.split(" ")[0] || "Partner"}
+              </span>
             </h1>
             <p className="text-slate-500/60 text-[10px] md:text-sm font-semibold mt-0.5 md:mt-1 hidden sm:block">
               Managing procurement for{" "}
@@ -85,7 +85,9 @@ const HeaderSection = memo(({ userName, totalBrokerage, companyName }) => {
               Total Brokerage
             </p>
             <div className="flex items-baseline justify-center gap-1 md:gap-1.5">
-              <span className="text-[10px] md:text-xs font-black text-blue-600/40">Rs.</span>
+              <span className="text-[10px] md:text-xs font-black text-blue-600/40">
+                Rs.
+              </span>
               <span className="text-xl md:text-4xl font-black text-slate-800 tracking-tighter">
                 {totalBrokerage.toLocaleString("en-IN")}
               </span>
@@ -116,7 +118,9 @@ const StatCard = memo(
       <div
         className={`w-10 h-10 md:w-16 md:h-16 rounded-xl md:rounded-2xl flex items-center justify-center ${colorClass} bg-opacity-10 shadow-inner ring-2 md:ring-4 ring-white shrink-0`}
       >
-        <span className={`text-xl md:text-2xl ${colorClass.replace("bg-", "text-")}`}>
+        <span
+          className={`text-xl md:text-2xl ${colorClass.replace("bg-", "text-")}`}
+        >
           {typeof icon === "function" ? icon({}) : icon}
         </span>
       </div>
@@ -183,7 +187,8 @@ const CommodityItem = memo(
               </h4>
               <div className="flex items-center gap-1.5 md:gap-3 mt-0.5 md:mt-1.5">
                 <p className="text-[7px] md:text-[9px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1 md:gap-2">
-                  <FaHistory className="text-[6px] md:text-[8px]" /> {item?.trips || 0} Loads
+                  <FaHistory className="text-[6px] md:text-[8px]" />{" "}
+                  {item?.trips || 0} Loads
                 </p>
                 <span className="h-0.5 w-0.5 md:h-1 md:w-1 rounded-full bg-slate-200" />
                 <span
@@ -395,7 +400,7 @@ const BuyerDashboard = () => {
         icon: <FaCheckCircle />,
         color: "bg-teal-600",
         link: "/manage-bids/bid-list/participate-bid-admin",
-        count: stats.pendingBidAcceptances,
+        count: "Accept Bids",
       },
       {
         label: "Order History",
