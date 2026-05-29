@@ -22,6 +22,9 @@ const AIAgent = () => {
   const [isListening, setIsListening] = useState(false);
   const [isLoadingData, setIsLoadingData] = useState(false);
   const [thinkingPath, setThinkingPath] = useState("");
+  const abortControllerRef = useRef(null);
+  const debounceTimerRef = useRef(null);
+
   const [messages, setMessages] = useState([
     {
       role: "assistant",
@@ -40,6 +43,20 @@ const AIAgent = () => {
   const { userRole, user } = useAuth();
 
   const sidebarModules = dashboardData.sections;
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (abortControllerRef.current) abortControllerRef.current.abort();
+      if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+    };
+  }, []);
+
+  const getApiSignal = () => {
+    if (abortControllerRef.current) abortControllerRef.current.abort();
+    abortControllerRef.current = new AbortController();
+    return abortControllerRef.current.signal;
+  };
 
   const scrollToBottom = useCallback(() => {
     if (scrollRef.current) {
@@ -107,12 +124,15 @@ const AIAgent = () => {
 
   const handleSend = (text) => {
     const userMessage = text || input.trim();
-    if (!userMessage) return;
+    if (!userMessage || isLoadingData) return;
 
-    setMessages((prev) => [...prev, { role: "user", content: userMessage }]);
-    setInput("");
+    if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
 
-    processCommand(userMessage.toLowerCase());
+    debounceTimerRef.current = setTimeout(() => {
+      setMessages((prev) => [...prev, { role: "user", content: userMessage }]);
+      setInput("");
+      processCommand(userMessage.toLowerCase());
+    }, 300);
   };
 
   const findSidebarLink = (query) => {
@@ -165,7 +185,9 @@ const AIAgent = () => {
   const fetchSellerDetails = async (name) => {
     setThinkingPath("Searching Sellers...");
     try {
-      const response = await api.get(`/sellers?search=${name}`);
+      const response = await api.get(`/sellers?search=${name}`, {
+        signal: getApiSignal(),
+      });
       const sellers = response.data.data || response.data;
       if (sellers && sellers.length > 0) {
         const s = sellers[0];
@@ -182,6 +204,8 @@ const AIAgent = () => {
       }
       return null;
     } catch (e) {
+      if (e.name === "AbortError") return null;
+      console.error("Error fetching seller details:", e);
       return null;
     }
   };
@@ -189,7 +213,9 @@ const AIAgent = () => {
   const fetchBuyerDetails = async (name) => {
     setThinkingPath("Searching Buyers...");
     try {
-      const response = await api.get(`/buyers?search=${name}`);
+      const response = await api.get(`/buyers?search=${name}`, {
+        signal: getApiSignal(),
+      });
       const buyers = response.data.data || response.data;
       if (buyers && buyers.length > 0) {
         const b = buyers[0];
@@ -205,6 +231,8 @@ const AIAgent = () => {
       }
       return null;
     } catch (e) {
+      if (e.name === "AbortError") return null;
+      console.error("Error fetching buyer details:", e);
       return null;
     }
   };
@@ -213,7 +241,9 @@ const AIAgent = () => {
     setIsLoadingData(true);
     setThinkingPath("Listing all system commodities...");
     try {
-      const response = await api.get("/commodities");
+      const response = await api.get("/commodities", {
+        signal: getApiSignal(),
+      });
       const commodities = response.data.data || response.data;
       if (commodities && commodities.length > 0) {
         let content = "*Available Commodities:*\n\n";
@@ -231,6 +261,7 @@ const AIAgent = () => {
         content: "No commodities found in the system.",
       };
     } catch (e) {
+      if (e.name === "AbortError") return null;
       return {
         role: "assistant",
         content: "Error fetching commodities.",
@@ -245,10 +276,11 @@ const AIAgent = () => {
     setIsLoadingData(true);
     setThinkingPath("Analyzing your account status...");
     try {
+      const signal = getApiSignal();
       const [saudaRes, loadingRes, paymentRes] = await Promise.all([
-        api.get("/self-order?limit=1"),
-        api.get("/loading-entries?limit=1"),
-        api.get("/payment-received?limit=1"),
+        api.get("/self-order?limit=1", { signal }),
+        api.get("/loading-entries?limit=1", { signal }),
+        api.get("/payment-received?limit=1", { signal }),
       ]);
 
       const totalSaudas = saudaRes.data.total || 0;
@@ -323,8 +355,9 @@ const AIAgent = () => {
     setIsLoadingData(true);
     setThinkingPath(`Extracting full ${type} intelligence...`);
     try {
+      const signal = getApiSignal();
       const endpoint = type === "Buyer" ? "/buyers" : "/sellers";
-      const response = await api.get(`${endpoint}?search=${name}`);
+      const response = await api.get(`${endpoint}?search=${name}`, { signal });
       const partners = response.data.data || response.data;
 
       if (partners && partners.length > 0) {
@@ -333,9 +366,9 @@ const AIAgent = () => {
         const mobile = type === "Buyer" ? p.mobile : p.phoneNumbers?.[0]?.value;
 
         const [saudaRes, loadingRes, paymentRes] = await Promise.all([
-          api.get(`/self-order?search=${partnerName}`),
-          api.get(`/loading-entries?search=${partnerName}`),
-          api.get(`/payment-received?search=${partnerName}`),
+          api.get(`/self-order?search=${partnerName}`, { signal }),
+          api.get(`/loading-entries?search=${partnerName}`, { signal }),
+          api.get(`/payment-received?search=${partnerName}`, { signal }),
         ]);
 
         const saudas = saudaRes.data.data || saudaRes.data || [];
@@ -439,6 +472,7 @@ const AIAgent = () => {
     try {
       const response = await api.get(
         `/self-order?search=${entityName}&status=active`,
+        { signal: getApiSignal() },
       );
       const allSaudas = response.data.data || response.data || [];
       const pendingSaudas = allSaudas.filter(
@@ -468,6 +502,7 @@ const AIAgent = () => {
         suggestions: [`Sauda ${pendingSaudas[0].saudaNo} details`],
       };
     } catch (e) {
+      if (e.name === "AbortError") return null;
       return {
         role: "assistant",
         content: `Error fetching pending saudas for ${entityName}.`,
@@ -484,9 +519,10 @@ const AIAgent = () => {
       `Analyzing relationship between ${buyerName} and ${sellerName}...`,
     );
     try {
+      const signal = getApiSignal();
       const [buyerRes, sellerRes] = await Promise.all([
-        api.get(`/buyers?search=${buyerName}`),
-        api.get(`/sellers?search=${sellerName}`),
+        api.get(`/buyers?search=${buyerName}`, { signal }),
+        api.get(`/sellers?search=${sellerName}`, { signal }),
       ]);
 
       const buyers = buyerRes.data.data || buyerRes.data;
@@ -498,6 +534,7 @@ const AIAgent = () => {
 
         const saudaRes = await api.get(
           `/self-order?search=${b.name}&supplierCompany=${s.sellerName}`,
+          { signal },
         );
         const saudas = saudaRes.data.data || saudaRes.data || [];
 
@@ -552,6 +589,7 @@ const AIAgent = () => {
     try {
       const response = await api.get(
         `/self-order?search=${companyName}&consignee=${consigneeName}`,
+        { signal: getApiSignal() },
       );
       const saudas = response.data.data || response.data || [];
 
@@ -577,6 +615,7 @@ const AIAgent = () => {
         content: `No saudas found matching company "*${companyName}*" and consignee "*${consigneeName}*".`,
       };
     } catch (e) {
+      if (e.name === "AbortError") return null;
       return {
         role: "assistant",
         content: "Error searching for matching saudas.",
@@ -591,7 +630,10 @@ const AIAgent = () => {
     setIsLoadingData(true);
     setThinkingPath(`Analyzing ${type} saudas for ${sellerName}...`);
     try {
-      const sellerRes = await api.get(`/sellers?search=${sellerName}`);
+      const signal = getApiSignal();
+      const sellerRes = await api.get(`/sellers?search=${sellerName}`, {
+        signal,
+      });
       const sellers = sellerRes.data.data || sellerRes.data;
       if (!sellers || sellers.length === 0) {
         return {
@@ -606,6 +648,7 @@ const AIAgent = () => {
       if (type === "pending") {
         const response = await api.get(
           `/self-order?search=${sName}&status=active`,
+          { signal },
         );
         const allSaudas = response.data.data || response.data || [];
         const pendingSaudas = allSaudas.filter(
@@ -633,6 +676,7 @@ const AIAgent = () => {
       } else if (type === "due") {
         const loadingRes = await api.get(
           `/loading-entries?search=${sName}&paymentStatus=pending&limit=100`,
+          { signal },
         );
         const entries = loadingRes.data.data || loadingRes.data || [];
 
@@ -659,6 +703,7 @@ const AIAgent = () => {
         const saudaNos = Object.keys(saudaGroups);
         const saudaDetailsRes = await api.get(
           `/self-order?saudaNo=${saudaNos.join(",")}`,
+          { signal },
         );
         const saudaData =
           saudaDetailsRes.data.data || saudaDetailsRes.data || [];
@@ -768,7 +813,7 @@ const AIAgent = () => {
 
     return {
       role: "assistant",
-      content: `I've performed a deep scan for "*${query}*" across all Saudas, Invoices, Vehicles, and Partners, but no direct match was found.`,
+      content: `I've performed a Ansaria AI scan for "*${query}*" across all Saudas, Invoices, Vehicles, and Partners, but no direct match was found.`,
       suggestions: ["Total sauda today", "Active bids", "Highest rate today"],
     };
   };
@@ -777,12 +822,15 @@ const AIAgent = () => {
     setIsLoadingData(true);
     setThinkingPath(`Accessing Full MIS for Sauda ${saudaNo}...`);
     try {
-      const response = await api.get(`/self-order/details/${saudaNo}`);
+      const signal = getApiSignal();
+      const response = await api.get(`/self-order/details/${saudaNo}`, {
+        signal,
+      });
       const { order: sauda, entries: loadings, payments } = response.data;
 
       if (sauda) {
         let content =
-          `*Deep Control Profile: Sauda No ${saudaNo}*\n\n` +
+          `*Ansaria AI Profile: Sauda No ${saudaNo}*\n\n` +
           `• *Buyer:* ${sauda.buyerCompany || sauda.buyer}\n` +
           `• *Supplier:* ${sauda.supplierCompany || "N/A"}\n` +
           `• *Consignee:* ${sauda.consignee || "N/A"}\n` +
@@ -791,7 +839,7 @@ const AIAgent = () => {
           `• *Rate:* ₹${sauda.rate} | *CD:* ${sauda.cd}% | *GST:* ${sauda.gst}%\n` +
           `• *Sauda Date:* ${sauda.poDate ? new Date(sauda.poDate).toLocaleDateString() : "N/A"}\n` +
           `• *Delivery Date:* ${sauda.deliveryDate ? new Date(sauda.deliveryDate).toLocaleDateString() : "N/A"}\n` +
-          `• *Location:* ${sauda.location || sauda.state || "N/A"}\n` +
+          // `• *Location:* ${sauda.location || sauda.state || "N/A"}\n` +
           `• *Status:* ${sauda.status?.toUpperCase() || "ACTIVE"}\n\n`;
 
         if (loadings && loadings.length > 0) {
@@ -817,7 +865,9 @@ const AIAgent = () => {
           ],
         };
       } else {
-        const searchRes = await api.get(`/self-order?saudaNo=${saudaNo}`);
+        const searchRes = await api.get(`/self-order?saudaNo=${saudaNo}`, {
+          signal,
+        });
         const data = searchRes.data.data || searchRes.data;
         const fallbackSauda = Array.isArray(data) ? data[0] : null;
 
@@ -834,10 +884,11 @@ const AIAgent = () => {
         };
       }
     } catch (error) {
+      if (error.name === "AbortError") return null;
       return {
         role: "assistant",
         content:
-          "Error in deep sauda fetch. Please check if Sauda No is correct.",
+          "Error in Ansaria AIsauda fetch. Please check if Sauda No is correct.",
       };
     } finally {
       setIsLoadingData(false);
@@ -895,12 +946,15 @@ const AIAgent = () => {
         };
       }
 
+      const signal = getApiSignal();
       const [saudaRes, loadingRes] = await Promise.all([
         api.get(
           `/self-order?startDate=${normalizedDate}&endDate=${normalizedDate}`,
+          { signal },
         ),
         api.get(
           `/Loading-Entry?startDate=${normalizedDate}&endDate=${normalizedDate}`,
+          { signal },
         ),
       ]);
 
@@ -954,6 +1008,7 @@ const AIAgent = () => {
     try {
       const response = await api.get(
         "/self-order?limit=1&sortBy=createdAt&sortOrder=desc",
+        { signal: getApiSignal() },
       );
       const saudas = response.data.data || response.data;
       const lastSauda = Array.isArray(saudas) ? saudas[0] : null;
@@ -966,6 +1021,7 @@ const AIAgent = () => {
         content: "No Sauda records found in the system.",
       };
     } catch (e) {
+      if (e.name === "AbortError") return null;
       return {
         role: "assistant",
         content: "Error fetching the latest Sauda.",
@@ -980,7 +1036,9 @@ const AIAgent = () => {
     setIsLoadingData(true);
     setThinkingPath("Scanning all active bids with full intelligence...");
     try {
-      const response = await api.get("/bids?status=active");
+      const response = await api.get("/bids?status=active", {
+        signal: getApiSignal(),
+      });
       const bids = response.data.data || response.data;
 
       if (bids && bids.length > 0) {
@@ -1008,6 +1066,7 @@ const AIAgent = () => {
         };
       }
     } catch (error) {
+      if (error.name === "AbortError") return null;
       return {
         role: "assistant",
         content: "Error fetching live bids.",
@@ -1025,6 +1084,7 @@ const AIAgent = () => {
       const today = new Date().toISOString().split("T")[0];
       const response = await api.get(
         `/self-order?startDate=${today}&endDate=${today}`,
+        { signal: getApiSignal() },
       );
       const saudas = response.data.data || response.data;
 
@@ -1047,6 +1107,7 @@ const AIAgent = () => {
         };
       }
     } catch (error) {
+      if (error.name === "AbortError") return null;
       return {
         role: "assistant",
         content: "Error in sauda summary fetch.",
@@ -1061,7 +1122,9 @@ const AIAgent = () => {
     setIsLoadingData(true);
     setThinkingPath(`Querying company: ${companyName}...`);
     try {
-      const response = await api.get(`/companies?search=${companyName}`);
+      const response = await api.get(`/companies?search=${companyName}`, {
+        signal: getApiSignal(),
+      });
       const companies = response.data.data || response.data;
 
       if (companies && companies.length > 0) {
@@ -1069,7 +1132,7 @@ const AIAgent = () => {
         return {
           role: "assistant",
           content:
-            `*Deep Status: ${comp.companyName}*\n\n` +
+            `*Ansaria AI Status: ${comp.companyName}*\n\n` +
             `• *GST:* ${comp.gstNo || "N/A"}\n` +
             `• *District/State:* ${comp.district || "N/A"}, ${comp.state || "N/A"}\n` +
             `• *Contact:* ${comp.mobile || "N/A"}\n` +
@@ -1083,6 +1146,7 @@ const AIAgent = () => {
         };
       }
     } catch (error) {
+      if (error.name === "AbortError") return null;
       return {
         role: "assistant",
         content: "Error in company query.",
@@ -1097,7 +1161,9 @@ const AIAgent = () => {
     setIsLoadingData(true);
     setThinkingPath(`Analyzing interactions for ${commodity}...`);
     try {
-      const response = await api.get(`/participateBids?search=${commodity}`);
+      const response = await api.get(`/participateBids?search=${commodity}`, {
+        signal: getApiSignal(),
+      });
       const interactions = response.data.data || response.data;
 
       if (interactions && interactions.length > 0) {
@@ -1116,6 +1182,7 @@ const AIAgent = () => {
         };
       }
     } catch (error) {
+      if (error.name === "AbortError") return null;
       return {
         role: "assistant",
         content: "Error in interaction analytics.",
@@ -1130,7 +1197,9 @@ const AIAgent = () => {
     setIsLoadingData(true);
     setThinkingPath(`Analyzing payment ledger for Sauda ${saudaNo}...`);
     try {
-      const response = await api.get(`/self-order?saudaNo=${saudaNo}`);
+      const response = await api.get(`/self-order?saudaNo=${saudaNo}`, {
+        signal: getApiSignal(),
+      });
       const data = response.data;
       const sauda = Array.isArray(data)
         ? data[0]
@@ -1161,6 +1230,7 @@ const AIAgent = () => {
         };
       }
     } catch (error) {
+      if (error.name === "AbortError") return null;
       return {
         role: "assistant",
         content: "Error in payment analysis.",
@@ -1175,7 +1245,9 @@ const AIAgent = () => {
     setIsLoadingData(true);
     setThinkingPath(`Locating invoice: ${billNo}...`);
     try {
-      const response = await api.get(`/Loading-Entry?search=${billNo}`);
+      const response = await api.get(`/Loading-Entry?search=${billNo}`, {
+        signal: getApiSignal(),
+      });
       const data = response.data.data || response.data;
 
       if (data && data.length > 0) {
@@ -1209,6 +1281,7 @@ const AIAgent = () => {
         };
       }
     } catch (error) {
+      if (error.name === "AbortError") return null;
       return {
         role: "assistant",
         content: "Error in invoice lookup.",
@@ -1223,7 +1296,9 @@ const AIAgent = () => {
     setIsLoadingData(true);
     setThinkingPath(`Filtering system by state: ${state}...`);
     try {
-      const response = await api.get(`/self-order?search=${state}`);
+      const response = await api.get(`/self-order?search=${state}`, {
+        signal: getApiSignal(),
+      });
       const saudas = response.data.data || response.data;
 
       if (saudas && saudas.length > 0) {
@@ -1247,6 +1322,7 @@ const AIAgent = () => {
         };
       }
     } catch (error) {
+      if (error.name === "AbortError") return null;
       return {
         role: "assistant",
         content: "Error in regional query.",
@@ -1261,7 +1337,9 @@ const AIAgent = () => {
     setIsLoadingData(true);
     setThinkingPath(`Pulling loading history for Sauda ${saudaNo}...`);
     try {
-      const response = await api.get(`/Loading-Entry?saudaNo=${saudaNo}`);
+      const response = await api.get(`/Loading-Entry?saudaNo=${saudaNo}`, {
+        signal: getApiSignal(),
+      });
       const entries = response.data.data || response.data;
 
       if (entries && entries.length > 0) {
@@ -1283,6 +1361,7 @@ const AIAgent = () => {
         };
       }
     } catch (error) {
+      if (error.name === "AbortError") return null;
       return {
         role: "assistant",
         content: "Error in delivery history fetch.",
@@ -1303,6 +1382,7 @@ const AIAgent = () => {
 
       const response = await api.get(
         `/Loading-Entry/lorry-wise?lorryNumber=${cleanLorry}`,
+        { signal: getApiSignal() },
       );
       const data = response.data.data || response.data;
 
@@ -1348,6 +1428,7 @@ const AIAgent = () => {
         };
       }
     } catch (error) {
+      if (error.name === "AbortError") return null;
       return {
         role: "assistant",
         content: "Error in vehicle tracking.",
@@ -1365,6 +1446,7 @@ const AIAgent = () => {
       const today = new Date().toISOString().split("T")[0];
       const response = await api.get(
         `/Loading-Entry?startDate=${today}&endDate=${today}`,
+        { signal: getApiSignal() },
       );
       const entries = response.data.data || response.data;
 
@@ -1394,6 +1476,7 @@ const AIAgent = () => {
         };
       }
     } catch (error) {
+      if (error.name === "AbortError") return null;
       return {
         role: "assistant",
         content: "Error in market high calculation.",
@@ -1527,12 +1610,13 @@ const AIAgent = () => {
       response = await fetchPendingSaudaByEntity(pendingMatch[1].trim());
     } else if (cleanCmd.includes("contact") && !buyerMatch && !sellerMatch) {
       response = {
-        role: "assistant",
+        role: "Ansaria AI Support",
         content:
-          `*System Contact Support*\n\n` +
+          `*Ansaria AI Contact Support*\n\n` +
           `• *Admin Hotline:* +91 98765 43210\n` +
-          `• *Tech Support:* support@hansaria.com\n` +
-          `• *Operating Hours:* 10:00 AM - 07:00 PM`,
+          `• *Tech Support:* info@hansariafood.com\n` +
+          `• *Operating Hours:* 10:00 AM - 07:00 PM` +
+          `• *Website:* https://www.hansariafood.com`,
       };
     } else if (buyerMatch) {
       response = await fetchFullPartnerDetails(buyerMatch[1].trim(), "Buyer");
@@ -1587,7 +1671,7 @@ const AIAgent = () => {
       response = await universalDeepSearch(cleanCmd);
     } else {
       response = {
-        role: "assistant",
+        role: "Ansaria AI",
         content:
           "I'm not sure how to help. Try asking for *Sauda details*, *Vehicle No*, *Regional Status*, or *Market Highs*.",
         suggestions: ["Total sauda today", "Highest rate today", "Active bids"],
@@ -1604,7 +1688,7 @@ const AIAgent = () => {
     setMessages([
       {
         role: "assistant",
-        content: "System cache cleared. Deep Intelligence is ready.",
+        content: "System cache cleared. Ansaria AI is ready.",
         suggestions: [
           "Total sauda today",
           "Active bids",
@@ -1625,9 +1709,7 @@ const AIAgent = () => {
                 <FaRobot className="text-xl animate-pulse" />
               </div>
               <div>
-                <h3 className="font-bold text-sm tracking-wide">
-                  Ansaria AI
-                </h3>
+                <h3 className="font-bold text-sm tracking-wide">Ansaria AI</h3>
                 <div className="flex items-center gap-1.5">
                   <span className="w-2 h-2 bg-emerald-400 rounded-full animate-ping" />
                   <span className="text-[10px] text-emerald-100 font-medium uppercase tracking-wider">
@@ -1748,7 +1830,7 @@ const AIAgent = () => {
               </button>
             </div>
             <p className="mt-2 text-[10px] text-center text-slate-400 font-medium">
-              Powered by Hansaria Admin AI • Minimal Commands Supported
+              Powered by Ansaria AI • Minimal Commands Supported
             </p>
           </div>
         </div>
@@ -1759,7 +1841,7 @@ const AIAgent = () => {
           <div className="bg-white px-4 py-2 rounded-2xl shadow-xl border border-slate-100 animate-in fade-in slide-in-from-right-5 duration-300 mb-2">
             <p className="text-xs font-bold text-slate-600 flex items-center gap-2">
               <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
-              AI Agent is active
+              Ansaria AI is active
             </p>
           </div>
         )}
