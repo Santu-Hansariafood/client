@@ -9,7 +9,6 @@ import { adminOnly } from "../middleware/roleMiddleware.js";
 
 const router = express.Router();
 
-// Admin only: Adjust a specific lorry's payment details directly
 router.patch("/adjust-lorry/:loadingEntryId", adminOnly, async (req, res) => {
   try {
     const { loadingEntryId } = req.params;
@@ -20,7 +19,6 @@ router.patch("/adjust-lorry/:loadingEntryId", adminOnly, async (req, res) => {
       return res.status(404).json({ message: "Loading entry not found" });
     }
 
-    // Update the entry directly
     const updatedEntry = await LoadingEntry.findByIdAndUpdate(
       loadingEntryId,
       { 
@@ -39,7 +37,6 @@ router.patch("/adjust-lorry/:loadingEntryId", adminOnly, async (req, res) => {
   }
 });
 
-// Create a new payment record
 router.post("/", async (req, res) => {
   try {
     const {
@@ -56,9 +53,6 @@ router.post("/", async (req, res) => {
 
     const totalMapped = (mappings || []).reduce((sum, m) => sum + (m.allocatedAmount || 0), 0);
     
-    // Calculate unadjusted amount (Advance)
-    // If it's a fresh payment (amount > 0), excess becomes unadjusted
-    // If it's an adjustment from existing advance (amount = 0), unadjusted becomes negative totalMapped
     const unadjustedAmount = amount - totalMapped;
 
     const newPayment = new PaymentReceived({
@@ -76,13 +70,11 @@ router.post("/", async (req, res) => {
 
     const savedPayment = await newPayment.save();
 
-    // Update LoadingEntry statuses and paidAmount based on mappings
     if (mappings && mappings.length > 0) {
       const updatePromises = mappings.map(async (mapping) => {
         if (mapping.loadingEntryId) {
           const entry = await LoadingEntry.findById(mapping.loadingEntryId);
           if (entry) {
-            // Calculate Net Amount to check if it's fully paid
             const selfOrder = await SelfOrder.findOne({ saudaNo: entry.saudaNo });
             let netAmount = 0;
             if (selfOrder) {
@@ -100,7 +92,6 @@ router.post("/", async (req, res) => {
 
             const newPaidAmount = (entry.paidAmount || 0) + mapping.allocatedAmount;
             
-            // Validation: Prevent overpayment in backend
             if (newPaidAmount > netAmount + 1 && netAmount > 0) {
               throw new Error(`Total paid amount for ${entry.lorryNumber} exceeds net amount`);
             }
@@ -109,7 +100,6 @@ router.post("/", async (req, res) => {
               paidAmount: newPaidAmount
             };
 
-            // If fully paid, mark as done
             if (newPaidAmount >= netAmount - 1 && netAmount > 0) {
               updateData.paymentStatus = "done";
             }
@@ -127,19 +117,15 @@ router.post("/", async (req, res) => {
   }
 });
 
-// Get ledger balance (Advance vs Outstanding)
 router.get("/balance/:ledgerId", async (req, res) => {
   try {
     const { ledgerId } = req.params;
     
-    // Sum of all unadjusted amounts (Advance balance)
     const advanceSummary = await PaymentReceived.aggregate([
       { $match: { ledgerId: new mongoose.Types.ObjectId(ledgerId) } },
       { $group: { _id: null, totalAdvance: { $sum: "$unadjustedAmount" } } }
     ]);
 
-    // Sum of all outstanding from LoadingEntries
-    // We need to fetch all pending entries and calculate their net - paid
     const pendingEntries = await LoadingEntry.find({ 
       $or: [
         { buyerId: ledgerId },
@@ -178,7 +164,6 @@ router.get("/balance/:ledgerId", async (req, res) => {
   }
 });
 
-// Get all payment records with filters
 router.get("/", async (req, res) => {
   try {
     const { ledgerType, ledgerId, companyId, startDate, endDate, page = 1, limit = 10 } = req.query;
@@ -213,7 +198,6 @@ router.get("/", async (req, res) => {
         { $match: query },
         { $group: { _id: null, total: { $sum: "$amount" } } }
       ]),
-      // Opening Balance logic
       ledgerId && startDate ? PaymentReceived.aggregate([
         { 
           $match: { 
@@ -238,13 +222,11 @@ router.get("/", async (req, res) => {
   }
 });
 
-// Get Payment Summaries (Month-wise / Week-wise with Debit/Credit logic)
 router.get("/summary", async (req, res) => {
   try {
     const { ledgerId, type = 'month' } = req.query; // type: month, week
     if (!ledgerId) return res.status(400).json({ message: "ledgerId is required" });
 
-    // 1. Get ledger info to determine if it's a Buyer or Seller
     const [buyer, seller] = await Promise.all([
       Buyer.findById(ledgerId).populate('companyIds').lean(),
       Seller.findById(ledgerId).lean()
@@ -260,7 +242,6 @@ router.get("/summary", async (req, res) => {
       groupBy = { $month: "$date" };
     }
 
-    // 2. Direct Payments (Money Received for Buyer, Money Sent for Seller)
     const directSummary = await PaymentReceived.aggregate([
       { $match: { ledgerId: new mongoose.Types.ObjectId(ledgerId) } },
       {
@@ -275,10 +256,8 @@ router.get("/summary", async (req, res) => {
       }
     ]);
 
-    // 3. Indirect Payments (Flow between Buyer <-> Seller)
     let indirectSummary = [];
     if (isBuyer) {
-      // For Buyer: "Payment Sent" means money we paid to Sellers for this Buyer's orders
       const companyNames = (buyer.companyIds || []).map(c => c.companyName);
       if (buyer.name) companyNames.push(buyer.name);
       
@@ -309,7 +288,6 @@ router.get("/summary", async (req, res) => {
         }
       ]);
     } else {
-      // For Seller: "Payment Received" means money we received from Buyers for this Seller's orders
       indirectSummary = await PaymentReceived.aggregate([
         { $match: { ledgerType: 'Buyer' } },
         { $unwind: "$mappings" },
@@ -336,7 +314,6 @@ router.get("/summary", async (req, res) => {
       ]);
     }
 
-    // 4. Merge results into a combined summary
     const result = [];
     const mergeData = (data, field) => {
       data.forEach(item => {

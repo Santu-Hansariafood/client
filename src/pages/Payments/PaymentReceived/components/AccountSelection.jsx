@@ -1,4 +1,3 @@
-import React from 'react';
 import { FaBuilding, FaMoneyBillWave, FaExchangeAlt, FaSave } from 'react-icons/fa';
 import DataDropdown from '../../../../common/DataDropdown/DataDropdown';
 import Buttons from '../../../../common/Buttons/Buttons';
@@ -64,7 +63,6 @@ const AccountSelection = ({
             </div>
 
             <div className="p-6 space-y-8">
-                {/* Primary Party & Payment Details */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
                     <div className="space-y-2">
                         <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">Entry Date</label>
@@ -159,7 +157,6 @@ const AccountSelection = ({
                     </div>
                 </div>
 
-                {/* Opposing Party Filters */}
                 <div className="pt-6 border-t border-slate-100">
                     <div className="flex items-center gap-2 mb-4">
                         <div className="w-1.5 h-4 bg-slate-900 rounded-full"></div>
@@ -193,7 +190,7 @@ const AccountSelection = ({
                                     if (formData.ledgerType === 'Seller') { // Opposing is Buyer
                                         const companyInfo = allCompanies.find(comp => comp._id === companyId);
                                         label = companyInfo?.companyName || (typeof c === 'object' ? (c.companyName || c.label) : companyId);
-                                    } else { // Opposing is Seller
+                                    } else {
                                         label = companyId;
                                     }
                                     return { value: companyId, label };
