@@ -26,7 +26,7 @@ const AIAgent = () => {
     {
       role: "assistant",
       content:
-        "Hello! I am your Deep Intelligence Agent. I have full control over the system data and navigation. Ask me anything about Saudas, Loadings, Sellers, Buyers, or Payments. I can also open any page for you!",
+        "Hello! I am your Ansaria AI. I have full control over the system data and navigation. Ask me anything about Saudas, Loadings, Sellers, Buyers, or Payments. I can also open any page for you!",
       suggestions: [
         "Show sidebar menu",
         "Total sauda today",
@@ -245,7 +245,6 @@ const AIAgent = () => {
     setIsLoadingData(true);
     setThinkingPath("Analyzing your account status...");
     try {
-      // Assuming account status refers to general system stats for Admin/Employee
       const [saudaRes, loadingRes, paymentRes] = await Promise.all([
         api.get("/self-order?limit=1"),
         api.get("/loading-entries?limit=1"),
@@ -282,7 +281,6 @@ const AIAgent = () => {
     setIsLoadingData(true);
     setThinkingPath("Checking local weather forecast...");
     try {
-      // Using Open-Meteo (Free, no key required) for New Delhi as default
       const res = await fetch(
         "https://api.open-meteo.com/v1/forecast?latitude=28.61&longitude=77.23&current_weather=true",
       );
@@ -334,7 +332,6 @@ const AIAgent = () => {
         const partnerName = type === "Buyer" ? p.name : p.sellerName;
         const mobile = type === "Buyer" ? p.mobile : p.phoneNumbers?.[0]?.value;
 
-        // Fetch work history (saudas and loadings)
         const [saudaRes, loadingRes, paymentRes] = await Promise.all([
           api.get(`/self-order?search=${partnerName}`),
           api.get(`/loading-entries?search=${partnerName}`),
@@ -362,26 +359,28 @@ const AIAgent = () => {
 
         if (type === "Buyer" && p.companyIds && p.companyIds.length > 0) {
           content += `*Registered Companies:*\n`;
-          p.companyIds.forEach(c => {
+          p.companyIds.forEach((c) => {
             content += `• ${c.companyName || c.name || "N/A"}\n`;
           });
           content += "\n";
         } else if (type === "Seller" && p.companies && p.companies.length > 0) {
           content += `*Registered Companies:*\n`;
-          p.companies.forEach(c => {
+          p.companies.forEach((c) => {
             content += `• ${c}\n`;
           });
           content += "\n";
         }
 
-        content += `*Financial & Work Summary:*\n` +
+        content +=
+          `*Financial & Work Summary:*\n` +
           `• *Total Saudas:* ${saudas.length}\n` +
           `• *Quantity Delivered:* ${totalQtyDone.toFixed(2)} MT\n` +
           `• *Total Payments:* ₹${totalPaid.toLocaleString("en-IN")}\n` +
           `• *Total Loadings:* ${loadings.length}\n\n`;
 
         if (type === "Seller") {
-          const validCommodities = p.commodities?.filter(c => c.name && c.brokerage) || [];
+          const validCommodities =
+            p.commodities?.filter((c) => c.name && c.brokerage) || [];
           if (validCommodities.length > 0) {
             content += `*Brokerage Config:*\n`;
             validCommodities.forEach((c) => {
@@ -390,7 +389,9 @@ const AIAgent = () => {
             content += "\n";
           }
         } else {
-          const validBrokerage = Object.entries(p.brokerage || {}).filter(([comm, rate]) => comm && rate);
+          const validBrokerage = Object.entries(p.brokerage || {}).filter(
+            ([comm, rate]) => comm && rate,
+          );
           if (validBrokerage.length > 0) {
             content += `*Brokerage Config:*\n`;
             validBrokerage.forEach(([comm, rate]) => {
@@ -400,7 +401,6 @@ const AIAgent = () => {
           }
         }
 
-        // Add quality parameters if available in latest sauda
         if (saudas.length > 0) {
           const latestSauda = saudas[0];
           if (latestSauda.parameters && latestSauda.parameters.length > 0) {
@@ -437,10 +437,13 @@ const AIAgent = () => {
     setIsLoadingData(true);
     setThinkingPath(`Searching pending saudas for ${entityName}...`);
     try {
-      // Search for the entity in saudas (buyerCompany, supplierCompany, buyer, supplier)
-      const response = await api.get(`/self-order?search=${entityName}&status=active`);
+      const response = await api.get(
+        `/self-order?search=${entityName}&status=active`,
+      );
       const allSaudas = response.data.data || response.data || [];
-      const pendingSaudas = allSaudas.filter(s => (s.pendingQuantity || 0) > 0);
+      const pendingSaudas = allSaudas.filter(
+        (s) => (s.pendingQuantity || 0) > 0,
+      );
 
       if (pendingSaudas.length === 0) {
         return {
@@ -477,7 +480,9 @@ const AIAgent = () => {
 
   const fetchRelationshipContext = async (buyerName, sellerName) => {
     setIsLoadingData(true);
-    setThinkingPath(`Analyzing relationship between ${buyerName} and ${sellerName}...`);
+    setThinkingPath(
+      `Analyzing relationship between ${buyerName} and ${sellerName}...`,
+    );
     try {
       const [buyerRes, sellerRes] = await Promise.all([
         api.get(`/buyers?search=${buyerName}`),
@@ -491,23 +496,27 @@ const AIAgent = () => {
         const b = buyers[0];
         const s = sellers[0];
 
-        // Fetch shared saudas
-        const saudaRes = await api.get(`/self-order?search=${b.name}&supplierCompany=${s.sellerName}`);
+        const saudaRes = await api.get(
+          `/self-order?search=${b.name}&supplierCompany=${s.sellerName}`,
+        );
         const saudas = saudaRes.data.data || saudaRes.data || [];
 
         let content = `*Relationship Intelligence: ${b.name} & ${s.sellerName}*\n\n`;
-        
+
         content += `*Buyer Groups:* ${b.groupId?.groupName || "N/A"}\n`;
-        content += `*Seller Groups:* ${s.groups?.map(g => g.name).join(", ") || "N/A"}\n\n`;
-        
+        content += `*Seller Groups:* ${s.groups?.map((g) => g.name).join(", ") || "N/A"}\n\n`;
+
         content += `*Trade Summary:*\n`;
         content += `• *Total Shared Saudas:* ${saudas.length}\n`;
-        
+
         if (saudas.length > 0) {
-          const totalQty = saudas.reduce((acc, curr) => acc + (curr.quantity || 0), 0);
+          const totalQty = saudas.reduce(
+            (acc, curr) => acc + (curr.quantity || 0),
+            0,
+          );
           content += `• *Total Contracted Volume:* ${totalQty.toFixed(2)} MT\n`;
-          content += `• *Common Commodities:* ${[...new Set(saudas.map(s => s.commodity))].join(", ")}\n\n`;
-          
+          content += `• *Common Commodities:* ${[...new Set(saudas.map((s) => s.commodity))].join(", ")}\n\n`;
+
           content += `*Recent Shared Saudas:*\n`;
           saudas.slice(0, 5).forEach((s, idx) => {
             content += `${idx + 1}. *Sauda ${s.saudaNo}*: ${s.commodity} | ${s.quantity} MT | ${new Date(s.poDate).toLocaleDateString()}\n`;
@@ -517,7 +526,10 @@ const AIAgent = () => {
         return {
           role: "assistant",
           content,
-          suggestions: saudas.length > 0 ? [`Sauda ${saudas[0].saudaNo} details`] : ["Total sauda today"],
+          suggestions:
+            saudas.length > 0
+              ? [`Sauda ${saudas[0].saudaNo} details`]
+              : ["Total sauda today"],
         };
       }
       return null;
@@ -529,11 +541,18 @@ const AIAgent = () => {
     }
   };
 
-  const fetchSaudasByCompanyAndConsignee = async (companyName, consigneeName) => {
+  const fetchSaudasByCompanyAndConsignee = async (
+    companyName,
+    consigneeName,
+  ) => {
     setIsLoadingData(true);
-    setThinkingPath(`Searching saudas for ${companyName} to ${consigneeName}...`);
+    setThinkingPath(
+      `Searching saudas for ${companyName} to ${consigneeName}...`,
+    );
     try {
-      const response = await api.get(`/self-order?search=${companyName}&consignee=${consigneeName}`);
+      const response = await api.get(
+        `/self-order?search=${companyName}&consignee=${consigneeName}`,
+      );
       const saudas = response.data.data || response.data || [];
 
       if (saudas.length > 0) {
@@ -572,7 +591,6 @@ const AIAgent = () => {
     setIsLoadingData(true);
     setThinkingPath(`Analyzing ${type} saudas for ${sellerName}...`);
     try {
-      // 1. Find the seller to get the ID and exact name
       const sellerRes = await api.get(`/sellers?search=${sellerName}`);
       const sellers = sellerRes.data.data || sellerRes.data;
       if (!sellers || sellers.length === 0) {
@@ -586,10 +604,13 @@ const AIAgent = () => {
       const sName = seller.sellerName;
 
       if (type === "pending") {
-        // Fetch pending saudas (active status + pending quantity > 0)
-        const response = await api.get(`/self-order?search=${sName}&status=active`);
+        const response = await api.get(
+          `/self-order?search=${sName}&status=active`,
+        );
         const allSaudas = response.data.data || response.data || [];
-        const pendingSaudas = allSaudas.filter(s => (s.pendingQuantity || 0) > 0);
+        const pendingSaudas = allSaudas.filter(
+          (s) => (s.pendingQuantity || 0) > 0,
+        );
 
         if (pendingSaudas.length === 0) {
           return {
@@ -610,9 +631,9 @@ const AIAgent = () => {
           suggestions: [`Sauda ${pendingSaudas[0].saudaNo} details`],
         };
       } else if (type === "due") {
-        // Fetch due saudas (where LoadingEntry has paymentStatus: "pending")
-        // We need to fetch all pending loading entries for this seller
-        const loadingRes = await api.get(`/loading-entries?search=${sName}&paymentStatus=pending&limit=100`);
+        const loadingRes = await api.get(
+          `/loading-entries?search=${sName}&paymentStatus=pending&limit=100`,
+        );
         const entries = loadingRes.data.data || loadingRes.data || [];
 
         if (entries.length === 0) {
@@ -622,7 +643,6 @@ const AIAgent = () => {
           };
         }
 
-        // Group by Sauda and calculate due amount
         const saudaGroups = {};
         for (const entry of entries) {
           if (!saudaGroups[entry.saudaNo]) {
@@ -630,17 +650,22 @@ const AIAgent = () => {
               saudaNo: entry.saudaNo,
               commodity: entry.commodity,
               entries: [],
-              totalDue: 0
+              totalDue: 0,
             };
           }
           saudaGroups[entry.saudaNo].entries.push(entry);
         }
 
-        // To get the exact due amount, we need the Sauda details for rates/gst
         const saudaNos = Object.keys(saudaGroups);
-        const saudaDetailsRes = await api.get(`/self-order?saudaNo=${saudaNos.join(",")}`);
-        const saudaData = saudaDetailsRes.data.data || saudaDetailsRes.data || [];
-        const saudaMap = saudaData.reduce((acc, s) => { acc[s.saudaNo] = s; return acc; }, {});
+        const saudaDetailsRes = await api.get(
+          `/self-order?saudaNo=${saudaNos.join(",")}`,
+        );
+        const saudaData =
+          saudaDetailsRes.data.data || saudaDetailsRes.data || [];
+        const saudaMap = saudaData.reduce((acc, s) => {
+          acc[s.saudaNo] = s;
+          return acc;
+        }, {});
 
         let content = `*Due Sauda Report: ${sName}*\n\n`;
         let grandTotalDue = 0;
@@ -649,19 +674,21 @@ const AIAgent = () => {
           const order = saudaMap[group.saudaNo];
           if (order) {
             let saudaDue = 0;
-            group.entries.forEach(entry => {
+            group.entries.forEach((entry) => {
               const weight = entry.unloadingWeight || entry.loadingWeight || 0;
               const rate = order.rate || 0;
               const cdPercent = order.cd || 0;
               const gstPercent = order.gst || 0;
 
               const grossAmount = weight * rate;
-              const taxableAmount = grossAmount - (grossAmount * (cdPercent / 100));
-              const netAmount = taxableAmount + (taxableAmount * (gstPercent / 100));
-              saudaDue += (netAmount - (entry.paidAmount || 0));
+              const taxableAmount =
+                grossAmount - grossAmount * (cdPercent / 100);
+              const netAmount =
+                taxableAmount + taxableAmount * (gstPercent / 100);
+              saudaDue += netAmount - (entry.paidAmount || 0);
             });
-            
-            if (saudaDue > 1) { // Ignore rounding errors
+
+            if (saudaDue > 1) {
               content += `${idx + 1}. *Sauda ${group.saudaNo}*: ${group.commodity}\n`;
               content += `   Due Amount: *₹${saudaDue.toLocaleString("en-IN", { minimumFractionDigits: 2 })}*\n`;
               grandTotalDue += saudaDue;
@@ -674,7 +701,10 @@ const AIAgent = () => {
         return {
           role: "assistant",
           content,
-          suggestions: [`Sauda ${saudaNos[0]} details`, `Payment of Sauda ${saudaNos[0]}`],
+          suggestions: [
+            `Sauda ${saudaNos[0]} details`,
+            `Payment of Sauda ${saudaNos[0]}`,
+          ],
         };
       }
     } catch (e) {
@@ -820,25 +850,38 @@ const AIAgent = () => {
     setThinkingPath(`Searching system logs for ${dateStr}...`);
     try {
       const parseDate = (str) => {
-        const months = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
+        const months = [
+          "jan",
+          "feb",
+          "mar",
+          "apr",
+          "may",
+          "jun",
+          "jul",
+          "aug",
+          "sep",
+          "oct",
+          "nov",
+          "dec",
+        ];
         const cleanStr = str.toLowerCase().trim();
-        
-        // Handle DD/MM/YY or DD/MM/YYYY
+
         if (cleanStr.includes("/") || cleanStr.includes("-")) {
           const parts = cleanStr.split(/[\/-]/);
-          let d = parts[0], m = parts[1], y = parts[2] || new Date().getFullYear();
+          let d = parts[0],
+            m = parts[1],
+            y = parts[2] || new Date().getFullYear();
           if (y.toString().length === 2) y = "20" + y;
-          return `${y}-${m.toString().padStart(2, '0')}-${d.toString().padStart(2, '0')}`;
+          return `${y}-${m.toString().padStart(2, "0")}-${d.toString().padStart(2, "0")}`;
         }
 
-        // Handle DD Month YYYY or DD Month
         const words = cleanStr.split(/\s+/);
         if (words.length >= 2) {
           const d = words[0];
-          const monthIdx = months.findIndex(m => words[1].startsWith(m)) + 1;
+          const monthIdx = months.findIndex((m) => words[1].startsWith(m)) + 1;
           if (monthIdx > 0) {
             let y = words[2] || new Date().getFullYear();
-            return `${y}-${monthIdx.toString().padStart(2, '0')}-${d.padStart(2, '0')}`;
+            return `${y}-${monthIdx.toString().padStart(2, "0")}-${d.padStart(2, "0")}`;
           }
         }
         return null;
@@ -909,7 +952,9 @@ const AIAgent = () => {
     setIsLoadingData(true);
     setThinkingPath("Locating the most recent Sauda contract...");
     try {
-      const response = await api.get("/self-order?limit=1&sortBy=createdAt&sortOrder=desc");
+      const response = await api.get(
+        "/self-order?limit=1&sortBy=createdAt&sortOrder=desc",
+      );
       const saudas = response.data.data || response.data;
       const lastSauda = Array.isArray(saudas) ? saudas[0] : null;
 
@@ -941,7 +986,9 @@ const AIAgent = () => {
       if (bids && bids.length > 0) {
         let content = `*Full Live Bids Intelligence*\n\n`;
         bids.forEach((bid, idx) => {
-          const bDate = bid.bidDate ? new Date(bid.bidDate).toLocaleDateString() : "N/A";
+          const bDate = bid.bidDate
+            ? new Date(bid.bidDate).toLocaleDateString()
+            : "N/A";
           content += `${idx + 1}. *${bid.commodity}* at *${bid.origin || bid.location || "N/A"}*\n`;
           content += `   • *Base Rate:* ₹${bid.rate || bid.baseRate || "N/A"}\n`;
           content += `   • *Quantity:* ${bid.quantity || "N/A"} MT\n`;
@@ -1412,10 +1459,12 @@ const AIAgent = () => {
       /(?:bill|invoice|challan)\s*(?:no|number)?\s*[:\s]*(\d+)/i,
     );
     const stateMatch = cleanCmd.match(/(?:state|from)\s+([a-z\s]{3,})/i);
-    
-    // Improved Date Matching for formats like 22/05/26, 22 march 2026, 22 march
-    const dateMatch = cleanCmd.match(/(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})/) || 
-                      cleanCmd.match(/(\d{1,2}\s+(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\s*\d{0,4})/i);
+
+    const dateMatch =
+      cleanCmd.match(/(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})/) ||
+      cleanCmd.match(
+        /(\d{1,2}\s+(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\s*\d{0,4})/i,
+      );
 
     const companyMatch = cleanCmd.match(
       /(?:status of|company)\s+([a-z0-9\s]+)/i,
@@ -1426,29 +1475,52 @@ const AIAgent = () => {
     const buyerMatch = cleanCmd.match(/(?:buyer)\s+([a-z0-9\s]+)/i);
     const sellerMatch = cleanCmd.match(/(?:seller)\s+([a-z0-9\s]+)/i);
 
-    const dueMatch = cleanCmd.match(/(?:due|outstanding)\s*(?:sauda|amount|list)?\s*(?:for|of)?\s+([a-z0-9\s]+)/i) ||
-                     cleanCmd.match(/([a-z0-9\s]+)\s+(?:due|outstanding)\s*(?:sauda|amount|list)?/i);
-    
-    const pendingMatch = cleanCmd.match(/(?:pending)\s*(?:sauda|order|list)?\s*(?:for|of|on)?\s+([a-z0-9\s]+)/i) ||
-                         cleanCmd.match(/([a-z0-9\s]+)\s+(?:pending)\s*(?:sauda|order|list)?/i);
+    const dueMatch =
+      cleanCmd.match(
+        /(?:due|outstanding)\s*(?:sauda|amount|list)?\s*(?:for|of)?\s+([a-z0-9\s]+)/i,
+      ) ||
+      cleanCmd.match(
+        /([a-z0-9\s]+)\s+(?:due|outstanding)\s*(?:sauda|amount|list)?/i,
+      );
 
-    // New matching patterns for Company + Consignee and Buyer + Seller
-    const companyConsigneeMatch = cleanCmd.match(/(?:sauda|order)?\s*(?:for|on)?\s*company\s+([a-z0-9\s]+)\s*(?:to|and|consignee)?\s*consignee\s+([a-z0-9\s]+)/i);
-    const relationshipMatch = cleanCmd.match(/(?:relationship|trade|info)\s*(?:between|for)?\s*buyer\s+([a-z0-9\s]+)\s*(?:and|with)?\s*seller\s+([a-z0-9\s]+)/i) ||
-                            cleanCmd.match(/buyer\s+([a-z0-9\s]+)\s*(?:and|with)?\s*seller\s+([a-z0-9\s]+)/i);
+    const pendingMatch =
+      cleanCmd.match(
+        /(?:pending)\s*(?:sauda|order|list)?\s*(?:for|of|on)?\s+([a-z0-9\s]+)/i,
+      ) ||
+      cleanCmd.match(/([a-z0-9\s]+)\s+(?:pending)\s*(?:sauda|order|list)?/i);
+
+    const companyConsigneeMatch = cleanCmd.match(
+      /(?:sauda|order)?\s*(?:for|on)?\s*company\s+([a-z0-9\s]+)\s*(?:to|and|consignee)?\s*consignee\s+([a-z0-9\s]+)/i,
+    );
+    const relationshipMatch =
+      cleanCmd.match(
+        /(?:relationship|trade|info)\s*(?:between|for)?\s*buyer\s+([a-z0-9\s]+)\s*(?:and|with)?\s*seller\s+([a-z0-9\s]+)/i,
+      ) ||
+      cleanCmd.match(
+        /buyer\s+([a-z0-9\s]+)\s*(?:and|with)?\s*seller\s+([a-z0-9\s]+)/i,
+      );
 
     if (cleanCmd.includes("commodity") || cleanCmd.includes("commodities")) {
       response = await fetchCommodities();
-    } else if (cleanCmd.includes("current sauda") || cleanCmd.includes("last sauda")) {
+    } else if (
+      cleanCmd.includes("current sauda") ||
+      cleanCmd.includes("last sauda")
+    ) {
       response = await fetchLastSauda();
     } else if (cleanCmd.includes("account status")) {
       response = await fetchAccountStatus();
     } else if (cleanCmd.includes("weather")) {
       response = await fetchWeather();
     } else if (companyConsigneeMatch) {
-      response = await fetchSaudasByCompanyAndConsignee(companyConsigneeMatch[1].trim(), companyConsigneeMatch[2].trim());
+      response = await fetchSaudasByCompanyAndConsignee(
+        companyConsigneeMatch[1].trim(),
+        companyConsigneeMatch[2].trim(),
+      );
     } else if (relationshipMatch) {
-      response = await fetchRelationshipContext(relationshipMatch[1].trim(), relationshipMatch[2].trim());
+      response = await fetchRelationshipContext(
+        relationshipMatch[1].trim(),
+        relationshipMatch[2].trim(),
+      );
     } else if (dueMatch && !cleanCmd.includes("sauda no")) {
       response = await fetchSellerSaudaStatus(dueMatch[1].trim(), "due");
     } else if (pendingMatch && !cleanCmd.includes("sauda no")) {
@@ -1554,7 +1626,7 @@ const AIAgent = () => {
               </div>
               <div>
                 <h3 className="font-bold text-sm tracking-wide">
-                  Deep Intelligence Agent
+                  Ansaria AI
                 </h3>
                 <div className="flex items-center gap-1.5">
                   <span className="w-2 h-2 bg-emerald-400 rounded-full animate-ping" />
