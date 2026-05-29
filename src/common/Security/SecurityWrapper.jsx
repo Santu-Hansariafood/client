@@ -12,8 +12,10 @@ const SecurityWrapper = ({ children }) => {
     if (userRole === "Admin") return;
 
     const style = document.createElement("style");
+    const isEmployee = userRole === "Employee";
 
     style.innerHTML = `
+      ${!isEmployee ? `
       * {
         -webkit-user-select: none !important;
         -moz-user-select: none !important;
@@ -21,6 +23,7 @@ const SecurityWrapper = ({ children }) => {
         user-select: none !important;
         -webkit-touch-callout: none !important;
       }
+      ` : ''}
 
       body {
         overflow: hidden !important;
@@ -93,11 +96,12 @@ const SecurityWrapper = ({ children }) => {
 
     const handleKeyDown = (e) => {
       const key = e.key.toLowerCase();
+      const isEmployee = userRole === "Employee";
 
       const blockedKeys =
         e.key === "PrintScreen" ||
         e.keyCode === 44 ||
-        (e.ctrlKey && ["u", "s", "p", "c"].includes(key)) ||
+        (e.ctrlKey && (isEmployee ? ["u", "s", "p"] : ["u", "s", "p", "c"]).includes(key)) ||
         (e.ctrlKey && e.shiftKey && ["i", "j", "c"].includes(key)) ||
         e.key === "F12" ||
         (e.metaKey && e.shiftKey);
@@ -106,7 +110,9 @@ const SecurityWrapper = ({ children }) => {
         e.preventDefault();
         e.stopPropagation();
 
-        navigator.clipboard?.writeText?.("");
+        if (!isEmployee) {
+          navigator.clipboard?.writeText?.("");
+        }
 
         activateProtection("Restricted keyboard shortcut");
       }
@@ -153,23 +159,25 @@ const SecurityWrapper = ({ children }) => {
 
     enableFullscreen();
 
-    window.addEventListener("blur", handleBlur);
+    // window.addEventListener("blur", handleBlur); // Removed to prevent "black screen" on focus loss
     document.addEventListener("visibilitychange", handleVisibility);
 
     window.addEventListener("keydown", handleKeyDown, true);
 
     window.addEventListener("contextmenu", handleContextMenu);
 
-    document.addEventListener("copy", blockAction);
-    document.addEventListener("cut", blockAction);
-    document.addEventListener("paste", blockAction);
+    if (!isEmployee) {
+      document.addEventListener("copy", blockAction);
+      document.addEventListener("cut", blockAction);
+      document.addEventListener("paste", blockAction);
+    }
 
     document.addEventListener("dragstart", handleDrag);
 
     return () => {
       clearInterval(devToolsChecker);
 
-      window.removeEventListener("blur", handleBlur);
+      // window.removeEventListener("blur", handleBlur);
 
       document.removeEventListener("visibilitychange", handleVisibility);
 
@@ -177,9 +185,11 @@ const SecurityWrapper = ({ children }) => {
 
       window.removeEventListener("contextmenu", handleContextMenu);
 
-      document.removeEventListener("copy", blockAction);
-      document.removeEventListener("cut", blockAction);
-      document.removeEventListener("paste", blockAction);
+      if (!isEmployee) {
+        document.removeEventListener("copy", blockAction);
+        document.removeEventListener("cut", blockAction);
+        document.removeEventListener("paste", blockAction);
+      }
 
       document.removeEventListener("dragstart", handleDrag);
 

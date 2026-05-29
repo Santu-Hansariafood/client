@@ -1050,30 +1050,41 @@ const AIAgent = () => {
 
   const fetchActiveBids = async () => {
     setIsLoadingData(true);
-    setThinkingPath("Scanning all active bids with full intelligence...");
+    setThinkingPath("Scanning all active bids and today's participation...");
     try {
-      const response = await api.get("/bids?status=active", {
-        signal: getApiSignal(),
-      });
-      const bids = response.data.data || response.data;
+      const today = new Date().toISOString().split("T")[0];
+      const [bidRes, partRes] = await Promise.all([
+        api.get("/bids?status=active", { signal: getApiSignal() }),
+        api.get(`/participateBids?date=${today}`, { signal: getApiSignal() }),
+      ]);
+
+      const bids = bidRes.data.data || bidRes.data || [];
+      const allParticipations = partRes.data.data || partRes.data || [];
 
       if (bids && bids.length > 0) {
-        let content = `*Full Live Bids Intelligence*\n\n`;
+        let content = `*Active Bids & Participation Status*\n\n`;
         bids.forEach((bid, idx) => {
+          const bidParts = allParticipations.filter(
+            (p) => p.bidId === bid._id || p.commodity === bid.commodity,
+          );
           const bDate = bid.bidDate
             ? new Date(bid.bidDate).toLocaleDateString("en-GB")
             : "N/A";
+
           content += `${idx + 1}. *${bid.commodity}* at *${bid.origin || bid.location || "N/A"}*\n`;
           content += `   • *Base Rate:* ₹${bid.rate || bid.baseRate || "N/A"}\n`;
           content += `   • *Quantity:* ${bid.quantity || "N/A"} Tons\n`;
-          content += `   • *Date:* ${bDate}\n`;
-          content += `   • *Time:* ${bid.startTime || "N/A"} - ${bid.endTime || "N/A"}\n`;
+          content += `   • *Participants:* ${bidParts.length > 0 ? bidParts.map((p) => p.sellerName).join(", ") : "No participants yet"}\n`;
+          content += `   • *Date:* ${bDate} | *Time:* ${bid.startTime || "N/A"} - ${bid.endTime || "N/A"}\n`;
           content += `   • *Status:* ${bid.status?.toUpperCase()}\n\n`;
         });
         return {
           role: "assistant",
           content: content,
-          suggestions: getDynamicSuggestions([`Analyze ${bids[0].commodity} bid components`], content),
+          suggestions: getDynamicSuggestions(
+            [`Analyze ${bids[0].commodity} bid components`],
+            content,
+          ),
         };
       } else {
         return {
@@ -1083,9 +1094,64 @@ const AIAgent = () => {
       }
     } catch (error) {
       if (error.name === "AbortError") return null;
+      console.error("Error fetching live bids:", error);
       return {
         role: "assistant",
-        content: "Error fetching live bids.",
+        content: "Error fetching live bids and participation status.",
+      };
+    } finally {
+      setIsLoadingData(false);
+      setThinkingPath("");
+    }
+  };
+
+  const fetchBidRateAnalysis = async () => {
+    setIsLoadingData(true);
+    setThinkingPath("Analyzing bid list for market highs...");
+    try {
+      const response = await api.get("/bids?status=active", {
+        signal: getApiSignal(),
+      });
+      const bids = response.data.data || response.data;
+
+      if (bids && bids.length > 0) {
+        let maxRate = 0;
+        let totalQty = 0;
+        let highestBid = null;
+
+        bids.forEach((bid) => {
+          const rate = bid.rate || bid.baseRate || 0;
+          if (rate > maxRate) {
+            maxRate = rate;
+            highestBid = bid;
+          }
+          totalQty += bid.quantity || 0;
+        });
+
+        let content = `*Bid Market Analysis*\n\n`;
+        content += `• *Highest Bid Rate:* ₹${maxRate} (${highestBid?.commodity})\n`;
+        content += `• *Total Quantity Needed:* ${totalQty.toFixed(2)} Tons\n\n`;
+        content += `*Active Bids Summary:*\n`;
+        bids.forEach((bid, idx) => {
+          content += `${idx + 1}. *${bid.commodity}*: ₹${bid.rate || bid.baseRate} | ${bid.quantity} Tons\n`;
+        });
+
+        return {
+          role: "assistant",
+          content,
+          suggestions: ["Active bids", "Total sauda today"],
+        };
+      } else {
+        return {
+          role: "assistant",
+          content: "No active bids found to analyze rates.",
+        };
+      }
+    } catch (error) {
+      if (error.name === "AbortError") return null;
+      return {
+        role: "assistant",
+        content: "Error in bid rate analysis.",
       };
     } finally {
       setIsLoadingData(false);
@@ -1097,18 +1163,22 @@ const AIAgent = () => {
     setIsLoadingData(true);
     setThinkingPath(`Breaking down ${commodity} bid into components...`);
     try {
+      const today = new Date().toISOString().split("T")[0];
       const signal = getApiSignal();
       const [bidRes, interactionRes] = await Promise.all([
         api.get(`/bids?commodity=${commodity}&status=active`, { signal }),
-        api.get(`/participateBids?search=${commodity}`, { signal }),
+        api.get(`/participateBids?date=${today}`, { signal }),
       ]);
 
       const bids = bidRes.data.data || bidRes.data || [];
-      const interactions = interactionRes.data.data || interactionRes.data || [];
+      const allInteractions = interactionRes.data.data || interactionRes.data || [];
 
       if (bids.length > 0) {
         const bid = bids[0];
-        let content = `*Bid Component Breakdown: ${commodity}*\n\n`;
+        // Filter interactions for this specific bid
+        const interactions = allInteractions.filter(i => i.bidId === bid._id || i.commodity === bid.commodity);
+
+        let content = `*Bid Component Breakdown: ${commodity} (Today)*\n\n`;
 
         content += `*1. Logistics Component*\n`;
         content += `   • *Origin:* ${bid.origin || bid.location || "N/A"}\n`;
@@ -1309,17 +1379,24 @@ const AIAgent = () => {
 
   const fetchBidInteractions = async (commodity) => {
     setIsLoadingData(true);
-    setThinkingPath(`Analyzing interactions for ${commodity}...`);
+    setThinkingPath(`Analyzing today's interactions for ${commodity}...`);
     try {
-      const response = await api.get(`/participateBids?search=${commodity}`, {
+      const today = new Date().toISOString().split("T")[0];
+      const response = await api.get(`/participateBids?date=${today}`, {
         signal: getApiSignal(),
       });
-      const interactions = response.data.data || response.data;
+      const allInteractions = response.data.data || response.data;
+      
+      // Filter by commodity on client side since backend doesn't support search/commodity param for participations
+      const interactions = allInteractions.filter(i => 
+        i.commodity?.toLowerCase().includes(commodity.toLowerCase()) ||
+        i.bidId?.commodity?.toLowerCase().includes(commodity.toLowerCase())
+      );
 
       if (interactions && interactions.length > 0) {
         let content = `*Interaction Analytics: ${commodity}*\n\n`;
         interactions.forEach((item, idx) => {
-          content += `${idx + 1}. *${item.sellerName}*: ₹${item.rate} | ${item.quantity} Tons\n`;
+          content += `${idx + 1}. *${item.sellerName}*: ₹${item.rate} | ${item.quantity} Tons | Status: ${item.status?.toUpperCase() || "PENDING"}\n`;
         });
         return {
           role: "assistant",
@@ -1854,9 +1931,14 @@ const AIAgent = () => {
       cleanCmd.includes("rate") &&
       (cleanCmd.includes("today") ||
         cleanCmd.includes("loading") ||
-        cleanCmd.includes("highest"))
+        cleanCmd.includes("highest") ||
+        cleanCmd.includes("bid"))
     ) {
-      response = await fetchTodayRate();
+      if (cleanCmd.includes("bid") || cleanCmd.includes("list")) {
+        response = await fetchBidRateAnalysis();
+      } else {
+        response = await fetchTodayRate();
+      }
     } else if (cleanCmd.length >= 3) {
       trackInteraction(cleanCmd);
       response = await universalDeepSearch(cleanCmd);
