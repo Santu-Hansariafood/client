@@ -1610,7 +1610,7 @@ const AIAgent = () => {
       response = await fetchPendingSaudaByEntity(pendingMatch[1].trim());
     } else if (cleanCmd.includes("contact") && !buyerMatch && !sellerMatch) {
       response = {
-        role: "Ansaria AI Support",
+        role: "assistant",
         content:
           `*Ansaria AI Contact Support*\n\n` +
           `• *Admin Hotline:* +91 98765 43210\n` +
@@ -1671,7 +1671,7 @@ const AIAgent = () => {
       response = await universalDeepSearch(cleanCmd);
     } else {
       response = {
-        role: "Ansaria AI",
+        role: "assistant",
         content:
           "I'm not sure how to help. Try asking for *Sauda details*, *Vehicle No*, *Regional Status*, or *Market Highs*.",
         suggestions: ["Total sauda today", "Highest rate today", "Active bids"],
