@@ -830,7 +830,8 @@ const AIAgent = () => {
 
       if (sauda) {
         let content =
-          `*Ansaria AI Profile: Sauda No ${saudaNo}*\n\n` +
+          `*Ansaria AI Profile:*\n\n` +
+          `•Sauda No ${saudaNo}*\n` +
           `• *Buyer:* ${sauda.buyerCompany || sauda.buyer}\n` +
           `• *Supplier:* ${sauda.supplierCompany || "N/A"}\n` +
           `• *Consignee:* ${sauda.consignee || "N/A"}\n` +
