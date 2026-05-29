@@ -182,61 +182,6 @@ const AIAgent = () => {
     };
   };
 
-  const fetchSellerDetails = async (name) => {
-    setThinkingPath("Searching Sellers...");
-    try {
-      const response = await api.get(`/sellers?search=${name}`, {
-        signal: getApiSignal(),
-      });
-      const sellers = response.data.data || response.data;
-      if (sellers && sellers.length > 0) {
-        const s = sellers[0];
-        return {
-          role: "assistant",
-          content:
-            `*Seller Profile: ${s.sellerName}*\n\n` +
-            `• *Mobile:* ${s.phoneNumbers?.[0]?.value || "N/A"}\n` +
-            `• *Status:* ${s.status || "Active"}\n` +
-            `• *Commodities:* ${s.commodities?.map((c) => c.name).join(", ") || "N/A"}\n` +
-            `• *Created:* ${new Date(s.createdAt).toLocaleDateString()}`,
-          suggestions: [`Saudas for ${s.sellerName}`, "Active bids"],
-        };
-      }
-      return null;
-    } catch (e) {
-      if (e.name === "AbortError") return null;
-      console.error("Error fetching seller details:", e);
-      return null;
-    }
-  };
-
-  const fetchBuyerDetails = async (name) => {
-    setThinkingPath("Searching Buyers...");
-    try {
-      const response = await api.get(`/buyers?search=${name}`, {
-        signal: getApiSignal(),
-      });
-      const buyers = response.data.data || response.data;
-      if (buyers && buyers.length > 0) {
-        const b = buyers[0];
-        return {
-          role: "assistant",
-          content:
-            `*Buyer Profile: ${b.name}*\n\n` +
-            `• *Mobile:* ${b.mobile || "N/A"}\n` +
-            `• *Group:* ${b.groupId?.groupName || "N/A"}\n` +
-            `• *Companies:* ${b.companyIds?.length || 0} registered`,
-          suggestions: [`Saudas for ${b.name}`, "Create Self Order"],
-        };
-      }
-      return null;
-    } catch (e) {
-      if (e.name === "AbortError") return null;
-      console.error("Error fetching buyer details:", e);
-      return null;
-    }
-  };
-
   const fetchCommodities = async () => {
     setIsLoadingData(true);
     setThinkingPath("Listing all system commodities...");
@@ -451,15 +396,9 @@ const AIAgent = () => {
           suggestions: [`Saudas for ${partnerName}`, "Active bids"],
         };
       }
-      return {
-        role: "assistant",
-        content: `I couldn't find any ${type} matching "*${name}*".`,
-      };
+      return null;
     } catch (e) {
-      return {
-        role: "assistant",
-        content: `Error fetching full ${type} details.`,
-      };
+      return null;
     } finally {
       setIsLoadingData(false);
       setThinkingPath("");
@@ -798,9 +737,9 @@ const AIAgent = () => {
 
     setThinkingPath("Searching Partners and Companies...");
     const [seller, buyer, company] = await Promise.all([
-      fetchSellerDetails(query),
-      fetchBuyerDetails(query),
-      fetchCompanyStatus(query),
+      fetchFullPartnerDetails(query, "Seller"),
+      fetchFullPartnerDetails(query, "Buyer"),
+      fetchFullCompanyDetails(query),
     ]);
 
     setIsLoadingData(false);
@@ -808,8 +747,7 @@ const AIAgent = () => {
 
     if (seller) return seller;
     if (buyer) return buyer;
-    if (company && !company.content.includes("No records for company"))
-      return company;
+    if (company) return company;
 
     return {
       role: "assistant",
@@ -1119,39 +1057,110 @@ const AIAgent = () => {
     }
   };
 
-  const fetchCompanyStatus = async (companyName) => {
+  const fetchFullCompanyDetails = async (companyName) => {
     setIsLoadingData(true);
-    setThinkingPath(`Querying company: ${companyName}...`);
+    setThinkingPath(`Querying company intelligence: ${companyName}...`);
     try {
+      const signal = getApiSignal();
       const response = await api.get(`/companies?search=${companyName}`, {
-        signal: getApiSignal(),
+        signal,
       });
       const companies = response.data.data || response.data;
 
       if (companies && companies.length > 0) {
         const comp = companies[0];
+        const cName = comp.companyName;
+
+        // Also fetch saudas for this company as buyer
+        const saudaRes = await api.get(`/self-order?search=${cName}`, {
+          signal,
+        });
+        const saudas = saudaRes.data.data || saudaRes.data || [];
+
+        // Also fetch as supplier company
+        const supplierSaudaRes = await api.get(
+          `/self-order?supplierCompany=${cName}`,
+          { signal },
+        );
+        const supplierSaudas =
+          supplierSaudaRes.data.data || supplierSaudaRes.data || [];
+
+        let content =
+          `*Full Company Intelligence: ${cName}*\n\n` +
+          `• *GST:* ${comp.gstNumber || comp.gstNo || "N/A"}\n` +
+          `• *Location:* ${comp.location || "N/A"}, ${comp.district || "N/A"}, ${comp.state || "N/A"}\n` +
+          `• *Group:* ${comp.groupId?.groupName || "N/A"}\n` +
+          `• *Status:* VERIFIED\n\n`;
+
+        if (saudas.length > 0) {
+          content += `*Trade Summary (as Buyer):*\n`;
+          content += `• *Total Saudas:* ${saudas.length}\n`;
+          const totalQty = saudas.reduce((acc, s) => acc + (s.quantity || 0), 0);
+          content += `• *Total Volume:* ${totalQty.toFixed(2)} Tons\n\n`;
+
+          content += `*Recent Buyer Saudas:*\n`;
+          saudas.slice(0, 3).forEach((s, idx) => {
+            content += `${idx + 1}. *Sauda ${s.saudaNo}*: ${s.commodity} | ${s.quantity} Tons\n`;
+          });
+          content += "\n";
+        }
+
+        if (supplierSaudas.length > 0) {
+          content += `*Trade Summary (as Supplier Company):*\n`;
+          content += `• *Total Saudas:* ${supplierSaudas.length}\n`;
+          const totalQty = supplierSaudas.reduce(
+            (acc, s) => acc + (s.quantity || 0),
+            0,
+          );
+          content += `• *Total Volume:* ${totalQty.toFixed(2)} Tons\n\n`;
+
+          content += `*Recent Supplier Saudas:*\n`;
+          supplierSaudas.slice(0, 3).forEach((s, idx) => {
+            content += `${idx + 1}. *Sauda ${s.saudaNo}*: ${s.commodity} | ${s.quantity} Tons\n`;
+          });
+          content += "\n";
+        }
+
         return {
           role: "assistant",
-          content:
-            `*Saria AI Status: ${comp.companyName}*\n\n` +
-            `• *GST:* ${comp.gstNo || "N/A"}\n` +
-            `• *District/State:* ${comp.district || "N/A"}, ${comp.state || "N/A"}\n` +
-            `• *Contact:* ${comp.mobile || "N/A"}\n` +
-            `• *Status:* VERIFIED`,
-          suggestions: [`Saudas for ${comp.companyName}`],
+          content,
+          suggestions: [`Saudas for ${cName}`, "Active bids"],
         };
       } else {
-        return {
-          role: "assistant",
-          content: `No records for company *${companyName}*.`,
-        };
+        // Try searching as supplier company in self-orders directly if not in companies model
+        const supplierSaudaRes = await api.get(
+          `/self-order?supplierCompany=${companyName}`,
+          { signal },
+        );
+        const supplierSaudas =
+          supplierSaudaRes.data.data || supplierSaudaRes.data || [];
+
+        if (supplierSaudas.length > 0) {
+          const cName = supplierSaudas[0].supplierCompany;
+          let content =
+            `*Supplier Company Intelligence: ${cName}*\n\n` +
+            `• *Total Saudas:* ${supplierSaudas.length}\n`;
+          const totalQty = supplierSaudas.reduce(
+            (acc, s) => acc + (s.quantity || 0),
+            0,
+          );
+          content += `• *Total Volume:* ${totalQty.toFixed(2)} Tons\n\n`;
+
+          content += `*Recent Supplier Saudas:*\n`;
+          supplierSaudas.slice(0, 5).forEach((s, idx) => {
+            content += `${idx + 1}. *Sauda ${s.saudaNo}*: ${s.commodity} | ${s.quantity} Tons\n`;
+          });
+
+          return {
+            role: "assistant",
+            content,
+            suggestions: [`Saudas for ${cName}`],
+          };
+        }
       }
+      return null;
     } catch (error) {
-      if (error.name === "AbortError") return null;
-      return {
-        role: "assistant",
-        content: "Error in company query.",
-      };
+      return null;
     } finally {
       setIsLoadingData(false);
       setThinkingPath("");
@@ -1620,9 +1629,17 @@ const AIAgent = () => {
           `• *Website:* https://www.hSariafood.com`,
       };
     } else if (buyerMatch) {
-      response = await fetchFullPartnerDetails(buyerMatch[1].trim(), "Buyer");
+      const details = await fetchFullPartnerDetails(buyerMatch[1].trim(), "Buyer");
+      response = details || {
+        role: "assistant",
+        content: `I couldn't find any Buyer matching "*${buyerMatch[1].trim()}*".`,
+      };
     } else if (sellerMatch) {
-      response = await fetchFullPartnerDetails(sellerMatch[1].trim(), "Seller");
+      const details = await fetchFullPartnerDetails(sellerMatch[1].trim(), "Seller");
+      response = details || {
+        role: "assistant",
+        content: `I couldn't find any Seller matching "*${sellerMatch[1].trim()}*".`,
+      };
     } else if (saudaMatch && billMatch && dateMatch) {
       response = await fetchSaudaDetails(saudaMatch[1]);
       if (response && response.content) {
@@ -1660,7 +1677,11 @@ const AIAgent = () => {
     } else if (interactionMatch) {
       response = await fetchBidInteractions(interactionMatch[1].trim());
     } else if (companyMatch) {
-      response = await fetchCompanyStatus(companyMatch[1].trim());
+      const details = await fetchFullCompanyDetails(companyMatch[1].trim());
+      response = details || {
+        role: "assistant",
+        content: `No records for company *${companyMatch[1].trim()}*.`,
+      };
     } else if (
       cleanCmd.includes("rate") &&
       (cleanCmd.includes("today") ||
