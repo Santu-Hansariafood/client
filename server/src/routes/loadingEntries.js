@@ -1089,7 +1089,9 @@ router.get("/export/excel", async (req, res) => {
 
     const saudaNos = [...new Set(items.map((i) => i.saudaNo).filter(Boolean))];
     const selfOrders = await SelfOrder.find({ saudaNo: { $in: saudaNos } })
-      .select("saudaNo buyerCompany paymentTerms rate buyerBrokerage")
+      .select(
+        "saudaNo buyerCompany paymentTerms rate buyerBrokerage quantity pendingQuantity",
+      )
       .lean();
     const saudaData = selfOrders.reduce((acc, so) => {
       acc[so.saudaNo] = {
@@ -1098,6 +1100,8 @@ router.get("/export/excel", async (req, res) => {
         rate: so.rate || 0,
         buyerBrokerageRate: so.buyerBrokerage?.brokerageBuyer || 0,
         sellerBrokerageRate: so.buyerBrokerage?.brokerageSupplier || 0,
+        totalQuantity: so.quantity || 0,
+        pendingQuantity: so.pendingQuantity || 0,
       };
       return acc;
     }, {});
@@ -1114,6 +1118,8 @@ router.get("/export/excel", async (req, res) => {
       { header: "Buyer Company", key: "buyerCompany", width: 30 },
       { header: "Consignee", key: "consignee", width: 30 },
       { header: "Commodity", key: "commodity", width: 20 },
+      { header: "Total Sauda Qty", key: "totalQuantity", width: 15 },
+      { header: "Pending Sauda Qty", key: "pendingQuantity", width: 15 },
       { header: "Bill Number", key: "billNumber", width: 20 },
       { header: "Lorry Number", key: "lorryNumber", width: 20 },
       { header: "Loading Date", key: "loadingDate", width: 15 },
@@ -1156,6 +1162,8 @@ router.get("/export/excel", async (req, res) => {
           item.buyerCompany || saudaData[item.saudaNo]?.buyerCompany || "N/A",
         consignee: item.consignee || "N/A",
         commodity: item.commodity || "N/A",
+        totalQuantity: saudaData[item.saudaNo]?.totalQuantity || 0,
+        pendingQuantity: saudaData[item.saudaNo]?.pendingQuantity || 0,
         billNumber: item.billNumber || "N/A",
         lorryNumber: item.lorryNumber || "N/A",
         loadingDate: item.loadingDate
@@ -1176,6 +1184,33 @@ router.get("/export/excel", async (req, res) => {
         paymentTerms: saudaData[item.saudaNo]?.paymentTerms || "N/A",
       });
     });
+
+    // Add total row for weights and brokerage
+    const totalLoadingWeight = items.reduce(
+      (sum, item) => sum + (item.loadingWeight || 0),
+      0,
+    );
+    const totalUnloadingWeight = items.reduce(
+      (sum, item) => sum + (item.unloadingWeight || 0),
+      0,
+    );
+    const totalBuyerBrokerage = items.reduce((sum, item) => {
+      const rate = saudaData[item.saudaNo]?.buyerBrokerageRate || 0;
+      return sum + rate * (item.unloadingWeight || 0);
+    }, 0);
+    const totalSellerBrokerage = items.reduce((sum, item) => {
+      const rate = saudaData[item.saudaNo]?.sellerBrokerageRate || 0;
+      return sum + rate * (item.unloadingWeight || 0);
+    }, 0);
+
+    const totalRow = worksheet.addRow({
+      slNo: "TOTAL",
+      loadingWeight: totalLoadingWeight,
+      unloadingWeight: totalUnloadingWeight,
+      totalBuyerBrokerage: totalBuyerBrokerage.toFixed(2),
+      totalSellerBrokerage: totalSellerBrokerage.toFixed(2),
+    });
+    totalRow.font = { bold: true };
 
     worksheet.getRow(1).font = { bold: true };
     worksheet.getRow(1).fill = {

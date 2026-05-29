@@ -25,7 +25,7 @@ const SaudaMISSection = () => {
         const fetchCompanies = async () => {
             try {
                 setFetchingCompanies(true);
-                const response = await api.get('/companies');
+                const response = await api.get('/companies', { params: { limit: 0 } });
                 setAllCompanies(response.data.data || response.data || []);
             } catch (error) {
                 console.error('Error fetching companies:', error);

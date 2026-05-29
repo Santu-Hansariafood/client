@@ -94,9 +94,9 @@ const ListPaymentReceived = () => {
     const fetchInitialData = async () => {
       try {
         const [companiesRes, buyersRes, sellersRes] = await Promise.all([
-          api.get("/companies"),
-          api.get("/buyers"),
-          api.get("/sellers"),
+          api.get("/companies", { params: { limit: 0 } }),
+          api.get("/buyers", { params: { limit: 0 } }),
+          api.get("/sellers", { params: { limit: 0 } }),
         ]);
         setAllCompanies(companiesRes.data.data || companiesRes.data || []);
 
@@ -211,7 +211,7 @@ const ListPaymentReceived = () => {
     try {
       setFetchingLedgers(true);
       const endpoint = filters.ledgerType === "Buyer" ? "/buyers" : "/sellers";
-      const response = await api.get(endpoint);
+      const response = await api.get(endpoint, { params: { limit: 0 } });
       const data = response.data.data || response.data;
       setLedgers(
         data.map((item) => ({

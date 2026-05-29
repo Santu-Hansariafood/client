@@ -292,12 +292,6 @@ const CompleteLoadingList = () => {
     endDate,
   ]);
 
-  const getLast3Digits = (num) => {
-    if (num === undefined || num === null) return "N/A";
-    const str = String(num);
-    return str.slice(-3);
-  };
-
   const handleDownloadExcel = async () => {
     try {
       const toastId = toast.loading("Preparing Excel...");
@@ -327,8 +321,8 @@ const CompleteLoadingList = () => {
           "Buyer Company": item.buyerCompany || "N/A",
           Consignee: getConsigneeDisplay(item),
           Commodity: item.commodity || "N/A",
-          "Total Quantity": quantity,
-          "Pending Quantity": getLast3Digits(pendingQuantity),
+          "Total Quantity": quantity.toFixed(2),
+          "Pending Quantity": pendingQuantity.toFixed(2),
           "Loaded Quantity": loadedQuantity.toFixed(2),
           "Unloading Quantity": (item.totalUnloadingWeight || 0).toFixed(2),
           Rate: item.rate || 0,
@@ -353,7 +347,69 @@ const CompleteLoadingList = () => {
         return;
       }
 
-      await generateExcel(excelRows, "CompleteSauda.xlsx");
+      // Add total row
+      const totals = exportData.reduce(
+        (acc, item) => {
+          const quantity = item.quantity || 0;
+          let pendingQuantity = item.pendingQuantity;
+          if (
+            (pendingQuantity === undefined ||
+              pendingQuantity === null ||
+              (pendingQuantity === 0 && item.status === "active")) &&
+            item.status !== "closed"
+          ) {
+            pendingQuantity = quantity;
+          } else {
+            pendingQuantity = Number(pendingQuantity || 0);
+          }
+          const loadedQuantity = quantity - pendingQuantity;
+          const unloadingWeight = item.totalUnloadingWeight || 0;
+          const brokerageRate = item.buyerBrokerage?.brokerageSupplier || 0;
+
+          acc.totalQty += quantity;
+          acc.totalPendingQty += pendingQuantity;
+          acc.totalLoadedQty += loadedQuantity;
+          acc.totalUnloadingQty += unloadingWeight;
+          acc.totalLoadedBrokerage += unloadingWeight * brokerageRate;
+          acc.totalPendingBrokerage += pendingQuantity * brokerageRate;
+          return acc;
+        },
+        {
+          totalQty: 0,
+          totalPendingQty: 0,
+          totalLoadedQty: 0,
+          totalUnloadingQty: 0,
+          totalLoadedBrokerage: 0,
+          totalPendingBrokerage: 0,
+        },
+      );
+
+      excelRows.push({
+        "Sl No": "TOTAL",
+        Date: "",
+        "Sauda No": "",
+        "Seller Company": "",
+        "Seller Name": "",
+        "Buyer Company": "",
+        Consignee: "",
+        Commodity: "",
+        "Total Quantity": totals.totalQty.toFixed(2),
+        "Pending Quantity": totals.totalPendingQty.toFixed(2),
+        "Loaded Quantity": totals.totalLoadedQty.toFixed(2),
+        "Unloading Quantity": totals.totalUnloadingQty.toFixed(2),
+        Rate: "",
+        "Loaded Brokerage": totals.totalLoadedBrokerage.toFixed(2),
+        "Pending Brokerage": totals.totalPendingBrokerage.toFixed(2),
+        "Total Brokerage": (
+          totals.totalLoadedBrokerage + totals.totalPendingBrokerage
+        ).toFixed(2),
+        "Payment Terms": "",
+      });
+
+      await generateExcel(
+        excelRows,
+        `CompleteSaudaReport_${new Date().toISOString().split("T")[0]}.xlsx`,
+      );
       toast.dismiss(toastId);
       toast.success("Excel downloaded successfully");
     } catch (error) {

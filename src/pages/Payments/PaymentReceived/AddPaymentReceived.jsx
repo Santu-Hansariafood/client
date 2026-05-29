@@ -90,7 +90,7 @@ const AddPaymentReceived = () => {
     useEffect(() => {
         const fetchCompanies = async () => {
             try {
-                const response = await api.get('/companies');
+                const response = await api.get('/companies', { params: { limit: 0 } });
                 const data = response.data.data || response.data || [];
                 setAllCompanies(data);
             } catch (error) {
@@ -105,7 +105,7 @@ const AddPaymentReceived = () => {
             try {
                 setFetchingLedgers(true);
                 const endpoint = formData.ledgerType === 'Buyer' ? '/buyers' : '/sellers';
-                const response = await api.get(endpoint);
+                const response = await api.get(endpoint, { params: { limit: 0 } });
                 const data = response.data.data || response.data;
                 setLedgers(data.map(item => ({
                     value: item._id,
@@ -126,7 +126,7 @@ const AddPaymentReceived = () => {
                 setFetchingOpposingLedgers(true);
                 // If main is Buyer, opposing is Seller, and vice-versa
                 const endpoint = formData.ledgerType === 'Buyer' ? '/sellers' : '/buyers';
-                const response = await api.get(endpoint);
+                const response = await api.get(endpoint, { params: { limit: 0 } });
                 const data = response.data.data || response.data;
                 setOpposingLedgers(data.map(item => ({
                     value: item._id,

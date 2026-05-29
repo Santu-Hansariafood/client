@@ -131,6 +131,7 @@ const ListLoadingEntry = () => {
   const [brokerageMap, setBrokerageMap] = useState({});
   const [statusMap, setStatusMap] = useState({});
   const [alreadyLoadedMap, setAlreadyLoadedMap] = useState({});
+  const [pendingQuantityMap, setPendingQuantityMap] = useState({});
   const [transporters, setTransporters] = useState([]);
   const [transporterMap, setTransporterMap] = useState({});
   const [selectedEntry, setSelectedEntry] = useState(null);
@@ -266,6 +267,26 @@ const ListLoadingEntry = () => {
               pendingQuantity = pendingQuantity || 0;
             }
             return [order.saudaNo, quantity - pendingQuantity];
+          }),
+        ),
+      );
+
+      setPendingQuantityMap(
+        Object.fromEntries(
+          ordersData.map((order) => {
+            const quantity = order.quantity || 0;
+            let pendingQuantity = order.pendingQuantity;
+            if (
+              (pendingQuantity === undefined ||
+                pendingQuantity === null ||
+                (pendingQuantity === 0 && order.status === "active")) &&
+              order.status !== "closed"
+            ) {
+              pendingQuantity = quantity;
+            } else {
+              pendingQuantity = pendingQuantity || 0;
+            }
+            return [order.saudaNo, pendingQuantity];
           }),
         ),
       );
@@ -670,6 +691,7 @@ const ListLoadingEntry = () => {
       "Unloading Weight",
       "Brokerage",
       "Already Loaded",
+      "Pending Qty",
       "Status",
       "Lorry Number",
       "Transport",
@@ -715,6 +737,12 @@ const ListLoadingEntry = () => {
           ₹ {totalBrokerage}
         </span>,
         (alreadyLoadedMap[entry.saudaNo] || 0).toFixed(2),
+        <span
+          key={`pending-${entry._id}`}
+          className="font-bold text-amber-600"
+        >
+          {(pendingQuantityMap[entry.saudaNo] || 0).toFixed(2)}
+        </span>,
         <span
           key={`status-${entry._id}`}
           className={`px-2 py-1 rounded-full text-xs font-semibold ${
