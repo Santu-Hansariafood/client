@@ -572,7 +572,7 @@ const AIAgent = () => {
 
           content += `*Recent Shared Saudas:*\n`;
           saudas.slice(0, 5).forEach((s, idx) => {
-            content += `${idx + 1}. *Sauda ${s.saudaNo}*: ${s.commodity} | ${s.quantity} Tons | ${new Date(s.poDate).toLocaleDateString()}\n`;
+            content += `${idx + 1}. *Sauda ${s.saudaNo}*: ${s.commodity} | ${s.quantity} Tons | ${new Date(s.poDate).toLocaleDateString("en-GB")}\n`;
           });
         }
 
@@ -616,8 +616,8 @@ const AIAgent = () => {
           content += `   • *Buyer:* ${s.buyerCompany || s.buyer}\n`;
           content += `   • *Seller:* ${s.supplierCompany}\n`;
           content += `   • *Qty:* ${s.quantity} Tons | *Pending:* ${s.pendingQuantity || 0} Tons\n`;
-          content += `   • *Date:* ${s.poDate ? new Date(s.poDate).toLocaleDateString() : "N/A"}\n`;
-          content += `   • *Delivery:* ${s.deliveryDate ? new Date(s.deliveryDate).toLocaleDateString() : "N/A"}\n\n`;
+          content += `   • *Date:* ${s.poDate ? new Date(s.poDate).toLocaleDateString("en-GB") : "N/A"}\n`;
+          content += `   • *Delivery:* ${s.deliveryDate ? new Date(s.deliveryDate).toLocaleDateString("en-GB") : "N/A"}\n\n`;
         });
 
         return {
@@ -853,8 +853,8 @@ const AIAgent = () => {
           `• *Commodity:* ${sauda.commodity}\n` +
           `• *Quantity:* ${sauda.quantity} Tons | *Pending:* ${sauda.pendingQuantity || 0} Tons\n` +
           `• *Rate:* ₹${sauda.rate} | *CD:* ${sauda.cd}% | *GST:* ${sauda.gst}%\n` +
-          `• *Sauda Date:* ${sauda.poDate ? new Date(sauda.poDate).toLocaleDateString() : "N/A"}\n` +
-          `• *Delivery Date:* ${sauda.deliveryDate ? new Date(sauda.deliveryDate).toLocaleDateString() : "N/A"}\n` +
+          `• *Sauda Date:* ${sauda.poDate ? new Date(sauda.poDate).toLocaleDateString("en-GB") : "N/A"}\n` +
+          `• *Delivery Date:* ${sauda.deliveryDate ? new Date(sauda.deliveryDate).toLocaleDateString("en-GB") : "N/A"}\n` +
           // `• *Location:* ${sauda.location || sauda.state || "N/A"}\n` +
           `• *Status:* ${sauda.status?.toUpperCase() || "ACTIVE"}\n\n`;
 
@@ -868,7 +868,7 @@ const AIAgent = () => {
         if (payments && payments.length > 0) {
           content += `\n*Payment History (${payments.length}):*\n`;
           payments.forEach((p, idx) => {
-            content += `• ₹${p.amount} on ${new Date(p.date).toLocaleDateString()} (${p.paymentMode || "N/A"})\n`;
+            content += `• ₹${p.amount} on ${new Date(p.date).toLocaleDateString("en-GB")} (${p.paymentMode || "N/A"})\n`;
           });
         }
 
@@ -877,8 +877,8 @@ const AIAgent = () => {
           content: content,
           suggestions: getDynamicSuggestions([
             `Payment of Sauda ${saudaNo}`,
-            `Add loading for ${saudaNo}`,
-          ]),
+            `Add loading for Sauda ${saudaNo}`,
+          ], content),
         };
       } else {
         const searchRes = await api.get(`/self-order?saudaNo=${saudaNo}`, {
@@ -969,7 +969,7 @@ const AIAgent = () => {
           { signal },
         ),
         api.get(
-          `/Loading-Entry?startDate=${normalizedDate}&endDate=${normalizedDate}`,
+          `/loading-entries?startDate=${normalizedDate}&endDate=${normalizedDate}`,
           { signal },
         ),
       ]);
@@ -1061,7 +1061,7 @@ const AIAgent = () => {
         let content = `*Full Live Bids Intelligence*\n\n`;
         bids.forEach((bid, idx) => {
           const bDate = bid.bidDate
-            ? new Date(bid.bidDate).toLocaleDateString()
+            ? new Date(bid.bidDate).toLocaleDateString("en-GB")
             : "N/A";
           content += `${idx + 1}. *${bid.commodity}* at *${bid.origin || bid.location || "N/A"}*\n`;
           content += `   • *Base Rate:* ₹${bid.rate || bid.baseRate || "N/A"}\n`;
@@ -1132,7 +1132,7 @@ const AIAgent = () => {
         }
 
         content += `\n*4. Timing Component*\n`;
-        content += `   • *Date:* ${new Date(bid.bidDate).toLocaleDateString()}\n`;
+        content += `   • *Date:* ${new Date(bid.bidDate).toLocaleDateString("en-GB")}\n`;
         content += `   • *Window:* ${bid.startTime} to ${bid.endTime}\n`;
 
         return {
@@ -1168,7 +1168,7 @@ const AIAgent = () => {
       const saudas = response.data.data || response.data;
 
       if (saudas && saudas.length > 0) {
-        let content = `*System Sauda Summary (${new Date().toLocaleDateString()})*\n\n`;
+        let content = `*System Sauda Summary (${new Date().toLocaleDateString("en-GB")})*\n\n`;
         content += `Total Count: *${saudas.length}*\n\n`;
         saudas.forEach((s, idx) => {
           content += `${idx + 1}. *Sauda ${s.saudaNo}*: ${s.buyerCompany} | ${s.commodity}\n`;
@@ -1395,7 +1395,7 @@ const AIAgent = () => {
     setIsLoadingData(true);
     setThinkingPath(`Locating invoice: ${billNo}...`);
     try {
-      const response = await api.get(`/Loading-Entry?search=${billNo}`, {
+      const response = await api.get(`/loading-entries?search=${billNo}`, {
         signal: getApiSignal(),
       });
       const data = response.data.data || response.data;
@@ -1415,14 +1415,15 @@ const AIAgent = () => {
             `*Invoice Found: ${entry.billNumber || billNo}*\n\n` +
             `• *Lorry No:* ${entry.lorryNumber}\n` +
             `• *Sauda Link:* Sauda ${entry.saudaNo}\n` +
-            `• *Date:* ${new Date(entry.loadingDate).toLocaleDateString()}\n` +
+            `• *Date:* ${new Date(entry.loadingDate).toLocaleDateString("en-GB")}\n` +
             `• *Weight:* ${entry.loadingWeight} Tons\n` +
             `• *Buyer/Supplier:* ${entry.buyerCompany} / ${entry.supplierCompany}\n` +
             `• *Payment:* ${entry.paymentStatus === "done" ? "PAID" : "PENDING"}`,
-          suggestions: [
+          suggestions: getDynamicSuggestions([
             `Sauda ${entry.saudaNo} details`,
             `Lorry ${entry.lorryNumber} details`,
-          ],
+            `Add loading for Sauda ${entry.saudaNo}`,
+          ], `Invoice Found: ${entry.billNumber || billNo}`),
         };
       } else {
         return {
@@ -1487,7 +1488,7 @@ const AIAgent = () => {
     setIsLoadingData(true);
     setThinkingPath(`Pulling loading history for Sauda ${saudaNo}...`);
     try {
-      const response = await api.get(`/Loading-Entry?saudaNo=${saudaNo}`, {
+      const response = await api.get(`/loading-entries?saudaNo=${saudaNo}`, {
         signal: getApiSignal(),
       });
       const entries = response.data.data || response.data;
@@ -1495,19 +1496,19 @@ const AIAgent = () => {
       if (entries && entries.length > 0) {
         let content = `*Loading History: Sauda ${saudaNo}*\n\n`;
         entries.forEach((entry, idx) => {
-          content += `${idx + 1}. *${entry.lorryNumber}* | ${new Date(entry.loadingDate).toLocaleDateString()} | ${entry.loadingWeight} Tons\n`;
+          content += `${idx + 1}. *${entry.lorryNumber}* | ${new Date(entry.loadingDate).toLocaleDateString("en-GB")} | ${entry.loadingWeight} Tons\n`;
         });
 
         return {
           role: "assistant",
           content: content,
-          suggestions: [`Sauda ${saudaNo} details`, "View Unloading Report"],
+          suggestions: getDynamicSuggestions([`Sauda ${saudaNo} details`, `Add loading for Sauda ${saudaNo}`], content),
         };
       } else {
         return {
           role: "assistant",
           content: `No delivery records for Sauda *${saudaNo}*.`,
-          suggestions: [`Sauda ${saudaNo} details`],
+          suggestions: getDynamicSuggestions([`Sauda ${saudaNo} details`, `Add loading for Sauda ${saudaNo}`]),
         };
       }
     } catch (error) {
@@ -1531,7 +1532,7 @@ const AIAgent = () => {
       const isLast4 = /^\d{4}$/.test(cleanLorry);
 
       const response = await api.get(
-        `/Loading-Entry/lorry-wise?lorryNumber=${cleanLorry}`,
+        `/loading-entries/lorry-wise?lorryNumber=${cleanLorry}`,
         { signal: getApiSignal() },
       );
       const data = response.data.data || response.data;
@@ -1558,7 +1559,7 @@ const AIAgent = () => {
 
         content +=
           `• *Active Sauda:* Sauda ${entry.saudaNo}\n` +
-          `• *Last Loaded:* ${new Date(entry.loadingDate).toLocaleDateString()}\n` +
+          `• *Last Loaded:* ${new Date(entry.loadingDate).toLocaleDateString("en-GB")}\n` +
           `• *Current Weight:* ${entry.loadingWeight} Tons\n` +
           `• *Buyer/Supplier:* ${entry.buyerCompany} / ${entry.supplierCompany}\n` +
           `• *Status:* ${entry.unloadingDate ? "UNLOADED" : "IN TRANSIT"}`;
@@ -1595,7 +1596,7 @@ const AIAgent = () => {
     try {
       const today = new Date().toISOString().split("T")[0];
       const response = await api.get(
-        `/Loading-Entry?startDate=${today}&endDate=${today}`,
+        `/loading-entries?startDate=${today}&endDate=${today}`,
         { signal: getApiSignal() },
       );
       const entries = response.data.data || response.data;
@@ -1609,7 +1610,7 @@ const AIAgent = () => {
           }
         });
 
-        let content = `*Today's Market Highs (${new Date().toLocaleDateString()})*\n\n`;
+        let content = `*Today's Market Highs (${new Date().toLocaleDateString("en-GB")})*\n\n`;
         Object.keys(rates).forEach((comm) => {
           const maxRate = Math.max(...rates[comm]);
           content += `• *${comm}:* High ₹${maxRate} (Range: ₹${Math.min(...rates[comm])} - ₹${maxRate})\n`;
@@ -1690,6 +1691,9 @@ const AIAgent = () => {
     );
     const billMatch = cleanCmd.match(
       /(?:bill|invoice|challan)\s*(?:no|number)?\s*[:\s]*(\d+)/i,
+    );
+    const addLoadingMatch = cleanCmd.match(
+      /(?:add|create)\s*(?:loading|entry)\s*(?:for|on)?\s*(?:sauda)?\s*[:\s]*(\d+)/i,
     );
     const stateMatch = cleanCmd.match(/(?:state|from)\s+([a-z\s]{3,})/i);
 
@@ -1779,6 +1783,15 @@ const AIAgent = () => {
     } else if (bidComponentMatch) {
       trackInteraction(`${bidComponentMatch[1].trim()} bid`);
       response = await fetchBidComponentAnalysis(bidComponentMatch[1].trim());
+    } else if (addLoadingMatch) {
+      const sNo = addLoadingMatch[1];
+      response = {
+        role: "assistant",
+        content: `Opening *Add Loading Entry* for Sauda ${sNo}...`,
+        action: () => {
+          navigate(`/Loading-Entry/add-loading-entry?saudaNo=${sNo}`);
+        },
+      };
     } else if (buyerMatch) {
       trackInteraction(buyerMatch[1].trim());
       const details = await fetchFullPartnerDetails(buyerMatch[1].trim(), "Buyer");
