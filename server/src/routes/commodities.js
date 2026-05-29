@@ -76,7 +76,7 @@ router.get("/", async (req, res) => {
 
     const items = await Commodity.find()
       .sort({ name: 1 })
-      .limit(100)
+      .limit(limit)
       .populate(commodityPopulate)
       .lean();
     res.json(items.map(mapCommodityForClient));

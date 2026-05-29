@@ -19,7 +19,7 @@ router.get("/", async (req, res) => {
     }
 
     const params = await QualityParameter.find({ isActive: true })
-      .limit(100)
+      .limit(limit)
       .lean();
     res.json(params);
   } catch (error) {

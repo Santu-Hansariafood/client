@@ -1185,7 +1185,6 @@ router.get("/export/excel", async (req, res) => {
       });
     });
 
-    // Add total row for weights and brokerage
     const totalLoadingWeight = items.reduce(
       (sum, item) => sum + (item.loadingWeight || 0),
       0,

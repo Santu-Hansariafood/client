@@ -36,11 +36,11 @@ router.get("/", async (req, res) => {
       });
     }
 
-    const consignees = await Consignee.find(query)
+    const items = await Consignee.find(query)
       .sort({ name: 1 })
-      .limit(100)
+      .limit(limit)
       .lean();
-    res.json(consignees);
+    res.json(items);
   } catch (error) {
     res.status(500).json({
       message: error.message,

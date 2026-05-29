@@ -209,7 +209,7 @@ router.get("/", async (req, res) => {
 
     const items = await SelfOrder.find(query)
       .sort({ saudaNo: -1 })
-      .limit(100)
+      .limit(limit)
       .populate("supplier", "sellerName")
       .lean();
     res.json(items);
