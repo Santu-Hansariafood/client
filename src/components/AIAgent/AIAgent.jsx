@@ -407,7 +407,7 @@ const AIAgent = () => {
         content +=
           `*Financial & Work Summary:*\n` +
           `• *Total Saudas:* ${saudas.length}\n` +
-          `• *Quantity Delivered:* ${totalQtyDone.toFixed(2)} MT\n` +
+          `• *Quantity Delivered:* ${totalQtyDone.toFixed(2)} Tons\n` +
           `• *Total Payments:* ₹${totalPaid.toLocaleString("en-IN")}\n` +
           `• *Total Loadings:* ${loadings.length}\n\n`;
 
@@ -417,7 +417,7 @@ const AIAgent = () => {
           if (validCommodities.length > 0) {
             content += `*Brokerage Config:*\n`;
             validCommodities.forEach((c) => {
-              content += `• *${c.name}:* ₹${c.brokerage}/MT\n`;
+              content += `• *${c.name}:* ₹${c.brokerage}/Tons\n`;
             });
             content += "\n";
           }
@@ -428,7 +428,7 @@ const AIAgent = () => {
           if (validBrokerage.length > 0) {
             content += `*Brokerage Config:*\n`;
             validBrokerage.forEach(([comm, rate]) => {
-              content += `• *${comm}:* ₹${rate}/MT\n`;
+              content += `• *${comm}:* ₹${rate}/Tons\n`;
             });
             content += "\n";
           }
@@ -492,7 +492,7 @@ const AIAgent = () => {
         const seller = s.supplierCompany || "N/A";
         content += `${idx + 1}. *Sauda ${s.saudaNo}*: ${s.commodity}\n`;
         content += `   Buyer: ${buyer} | Seller: ${seller}\n`;
-        content += `   Pending: *${s.pendingQuantity} MT* of ${s.quantity} MT\n\n`;
+        content += `   Pending: *${s.pendingQuantity} Tons* of ${s.quantity} Tons\n\n`;
       });
       content += `*Total Pending Saudas:* ${pendingSaudas.length}`;
 
@@ -551,12 +551,12 @@ const AIAgent = () => {
             (acc, curr) => acc + (curr.quantity || 0),
             0,
           );
-          content += `• *Total Contracted Volume:* ${totalQty.toFixed(2)} MT\n`;
+          content += `• *Total Contracted Volume:* ${totalQty.toFixed(2)} Tons\n`;
           content += `• *Common Commodities:* ${[...new Set(saudas.map((s) => s.commodity))].join(", ")}\n\n`;
 
           content += `*Recent Shared Saudas:*\n`;
           saudas.slice(0, 5).forEach((s, idx) => {
-            content += `${idx + 1}. *Sauda ${s.saudaNo}*: ${s.commodity} | ${s.quantity} MT | ${new Date(s.poDate).toLocaleDateString()}\n`;
+            content += `${idx + 1}. *Sauda ${s.saudaNo}*: ${s.commodity} | ${s.quantity} Tons | ${new Date(s.poDate).toLocaleDateString()}\n`;
           });
         }
 
@@ -599,7 +599,7 @@ const AIAgent = () => {
           content += `${idx + 1}. *Sauda ${s.saudaNo}*: ${s.commodity}\n`;
           content += `   • *Buyer:* ${s.buyerCompany || s.buyer}\n`;
           content += `   • *Seller:* ${s.supplierCompany}\n`;
-          content += `   • *Qty:* ${s.quantity} MT | *Pending:* ${s.pendingQuantity || 0} MT\n`;
+          content += `   • *Qty:* ${s.quantity} Tons | *Pending:* ${s.pendingQuantity || 0} Tons\n`;
           content += `   • *Date:* ${s.poDate ? new Date(s.poDate).toLocaleDateString() : "N/A"}\n`;
           content += `   • *Delivery:* ${s.deliveryDate ? new Date(s.deliveryDate).toLocaleDateString() : "N/A"}\n\n`;
         });
@@ -664,7 +664,7 @@ const AIAgent = () => {
 
         let content = `*Pending Sauda List: ${sName}*\n\n`;
         pendingSaudas.forEach((s, idx) => {
-          content += `${idx + 1}. *Sauda ${s.saudaNo}*: ${s.commodity} | Pending: *${s.pendingQuantity} MT* of ${s.quantity} MT\n`;
+          content += `${idx + 1}. *Sauda ${s.saudaNo}*: ${s.commodity} | Pending: *${s.pendingQuantity} Tons* of ${s.quantity} Tons\n`;
         });
         content += `\n*Total Pending Saudas:* ${pendingSaudas.length}`;
 
@@ -835,7 +835,7 @@ const AIAgent = () => {
           `• *Supplier:* ${sauda.supplierCompany || "N/A"}\n` +
           `• *Consignee:* ${sauda.consignee || "N/A"}\n` +
           `• *Commodity:* ${sauda.commodity}\n` +
-          `• *Quantity:* ${sauda.quantity} MT | *Pending:* ${sauda.pendingQuantity || 0} MT\n` +
+          `• *Quantity:* ${sauda.quantity} Tons | *Pending:* ${sauda.pendingQuantity || 0} Tons\n` +
           `• *Rate:* ₹${sauda.rate} | *CD:* ${sauda.cd}% | *GST:* ${sauda.gst}%\n` +
           `• *Sauda Date:* ${sauda.poDate ? new Date(sauda.poDate).toLocaleDateString() : "N/A"}\n` +
           `• *Delivery Date:* ${sauda.deliveryDate ? new Date(sauda.deliveryDate).toLocaleDateString() : "N/A"}\n` +
@@ -845,7 +845,7 @@ const AIAgent = () => {
         if (loadings && loadings.length > 0) {
           content += `*Linked Deliveries (${loadings.length}):*\n`;
           loadings.forEach((l, idx) => {
-            content += `${idx + 1}. *Lorry:* ${l.lorryNumber} | *Bill:* ${l.billNumber || "N/A"} | *Wt:* ${l.loadingWeight} MT\n`;
+            content += `${idx + 1}. *Lorry:* ${l.lorryNumber} | *Bill:* ${l.billNumber || "N/A"} | *Wt:* ${l.loadingWeight} Tons\n`;
           });
         }
 
@@ -874,7 +874,7 @@ const AIAgent = () => {
         if (fallbackSauda) {
           return {
             role: "assistant",
-            content: `*Sauda ${saudaNo} found (Limited Details):*\n\n• *Buyer:* ${fallbackSauda.buyerCompany}\n• *Quantity:* ${fallbackSauda.quantity} MT`,
+            content: `*Sauda ${saudaNo} found (Limited Details):*\n\n• *Buyer:* ${fallbackSauda.buyerCompany}\n• *Quantity:* ${fallbackSauda.quantity} Tons`,
           };
         }
 
@@ -981,7 +981,7 @@ const AIAgent = () => {
       if (loadings.length > 0) {
         content += `*Loadings Recorded (${loadings.length}):*\n`;
         loadings.forEach((l) => {
-          content += `• *Lorry ${l.lorryNumber}*: Sauda ${l.saudaNo} | ${l.loadingWeight} MT\n`;
+          content += `• *Lorry ${l.lorryNumber}*: Sauda ${l.saudaNo} | ${l.loadingWeight} Tons\n`;
         });
       }
 
@@ -1049,7 +1049,7 @@ const AIAgent = () => {
             : "N/A";
           content += `${idx + 1}. *${bid.commodity}* at *${bid.origin || bid.location || "N/A"}*\n`;
           content += `   • *Base Rate:* ₹${bid.rate || bid.baseRate || "N/A"}\n`;
-          content += `   • *Quantity:* ${bid.quantity || "N/A"} MT\n`;
+          content += `   • *Quantity:* ${bid.quantity || "N/A"} Tons\n`;
           content += `   • *Date:* ${bDate}\n`;
           content += `   • *Time:* ${bid.startTime || "N/A"} - ${bid.endTime || "N/A"}\n`;
           content += `   • *Status:* ${bid.status?.toUpperCase()}\n\n`;
@@ -1169,7 +1169,7 @@ const AIAgent = () => {
       if (interactions && interactions.length > 0) {
         let content = `*Interaction Analytics: ${commodity}*\n\n`;
         interactions.forEach((item, idx) => {
-          content += `${idx + 1}. *${item.sellerName}*: ₹${item.rate} | ${item.quantity} MT\n`;
+          content += `${idx + 1}. *${item.sellerName}*: ₹${item.rate} | ${item.quantity} Tons\n`;
         });
         return {
           role: "assistant",
@@ -1212,11 +1212,11 @@ const AIAgent = () => {
           role: "assistant",
           content:
             `*Payment Ledger Summary: Sauda ${saudaNo}*\n\n` +
-            `• *Contract Quantity:* ${sauda.quantity} MT\n` +
-            `• *Pending to Load:* ${sauda.pendingQuantity || 0} MT\n` +
+            `• *Contract Quantity:* ${sauda.quantity} Tons\n` +
+            `• *Pending to Load:* ${sauda.pendingQuantity || 0} Tons\n` +
             `• *Contract Rate:* ₹${sauda.rate}\n` +
             `• *CD/GST:* ${sauda.cd}% / ${sauda.gst}%\n` +
-            `• *Terms:* ${sauda.paymentTerms || "N/A"}\n` +
+            `• *Terms:* ${sauda.paymentTerms || "N/A"} Days\n` +
             `• *Status:* ${sauda.status?.toUpperCase()}`,
           suggestions: [
             `Loading entries for Sauda ${saudaNo}`,
@@ -1263,10 +1263,10 @@ const AIAgent = () => {
           role: "assistant",
           content:
             `*Invoice Found: ${entry.billNumber || billNo}*\n\n` +
-            `• *Lorry:* ${entry.lorryNumber}\n` +
+            `• *Lorry No:* ${entry.lorryNumber}\n` +
             `• *Sauda Link:* Sauda ${entry.saudaNo}\n` +
             `• *Date:* ${new Date(entry.loadingDate).toLocaleDateString()}\n` +
-            `• *Weight:* ${entry.loadingWeight} MT\n` +
+            `• *Weight:* ${entry.loadingWeight} Tons\n` +
             `• *Buyer/Supplier:* ${entry.buyerCompany} / ${entry.supplierCompany}\n` +
             `• *Payment:* ${entry.paymentStatus === "done" ? "PAID" : "PENDING"}`,
           suggestions: [
@@ -1345,7 +1345,7 @@ const AIAgent = () => {
       if (entries && entries.length > 0) {
         let content = `*Loading History: Sauda ${saudaNo}*\n\n`;
         entries.forEach((entry, idx) => {
-          content += `${idx + 1}. *${entry.lorryNumber}* | ${new Date(entry.loadingDate).toLocaleDateString()} | ${entry.loadingWeight} MT\n`;
+          content += `${idx + 1}. *${entry.lorryNumber}* | ${new Date(entry.loadingDate).toLocaleDateString()} | ${entry.loadingWeight} Tons\n`;
         });
 
         return {
@@ -1409,7 +1409,7 @@ const AIAgent = () => {
         content +=
           `• *Active Sauda:* Sauda ${entry.saudaNo}\n` +
           `• *Last Loaded:* ${new Date(entry.loadingDate).toLocaleDateString()}\n` +
-          `• *Current Weight:* ${entry.loadingWeight} MT\n` +
+          `• *Current Weight:* ${entry.loadingWeight} Tons\n` +
           `• *Buyer/Supplier:* ${entry.buyerCompany} / ${entry.supplierCompany}\n` +
           `• *Status:* ${entry.unloadingDate ? "UNLOADED" : "IN TRANSIT"}`;
 
