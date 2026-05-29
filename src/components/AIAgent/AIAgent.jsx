@@ -29,7 +29,7 @@ const AIAgent = () => {
     {
       role: "assistant",
       content:
-        "Hello! I am your Ansaria AI. I have full control over the system data and navigation. Ask me anything about Saudas, Loadings, Sellers, Buyers, or Payments. I can also open any page for you!",
+        "Hello! I am your Saria AI. I have full control over the system data and navigation. Ask me anything about Saudas, Loadings, Sellers, Buyers, or Payments. I can also open any page for you!",
       suggestions: [
         "Show sidebar menu",
         "Total sauda today",
@@ -813,7 +813,7 @@ const AIAgent = () => {
 
     return {
       role: "assistant",
-      content: `I've performed a Ansaria AI scan for "*${query}*" across all Saudas, Invoices, Vehicles, and Partners, but no direct match was found.`,
+      content: `I've performed a Saria AI scan for "*${query}*" across all Saudas, Invoices, Vehicles, and Partners, but no direct match was found.`,
       suggestions: ["Total sauda today", "Active bids", "Highest rate today"],
     };
   };
@@ -830,7 +830,7 @@ const AIAgent = () => {
 
       if (sauda) {
         let content =
-          `*Ansaria AI Profile:*\n\n` +
+          `*Saria AI Profile:*\n\n` +
           `•Sauda No ${saudaNo}*\n` +
           `• *Buyer:* ${sauda.buyerCompany || sauda.buyer}\n` +
           `• *Supplier:* ${sauda.supplierCompany || "N/A"}\n` +
@@ -889,7 +889,7 @@ const AIAgent = () => {
       return {
         role: "assistant",
         content:
-          "Error in Ansaria AIsauda fetch. Please check if Sauda No is correct.",
+          "Error in Saria AIsauda fetch. Please check if Sauda No is correct.",
       };
     } finally {
       setIsLoadingData(false);
@@ -1133,7 +1133,7 @@ const AIAgent = () => {
         return {
           role: "assistant",
           content:
-            `*Ansaria AI Status: ${comp.companyName}*\n\n` +
+            `*Saria AI Status: ${comp.companyName}*\n\n` +
             `• *GST:* ${comp.gstNo || "N/A"}\n` +
             `• *District/State:* ${comp.district || "N/A"}, ${comp.state || "N/A"}\n` +
             `• *Contact:* ${comp.mobile || "N/A"}\n` +
@@ -1613,11 +1613,11 @@ const AIAgent = () => {
       response = {
         role: "assistant",
         content:
-          `*Ansaria AI Contact Support*\n\n` +
+          `*Saria AI Contact Support*\n\n` +
           `• *Admin Hotline:* +91 98765 43210\n` +
-          `• *Tech Support:* info@hansariafood.com\n` +
+          `• *Tech Support:* info@hSariafood.com\n` +
           `• *Operating Hours:* 10:00 AM - 07:00 PM` +
-          `• *Website:* https://www.hansariafood.com`,
+          `• *Website:* https://www.hSariafood.com`,
       };
     } else if (buyerMatch) {
       response = await fetchFullPartnerDetails(buyerMatch[1].trim(), "Buyer");
@@ -1689,7 +1689,7 @@ const AIAgent = () => {
     setMessages([
       {
         role: "assistant",
-        content: "System cache cleared. Ansaria AI is ready.",
+        content: "System cache cleared. Saria AI is ready.",
         suggestions: [
           "Total sauda today",
           "Active bids",
@@ -1710,7 +1710,7 @@ const AIAgent = () => {
                 <FaRobot className="text-xl animate-pulse" />
               </div>
               <div>
-                <h3 className="font-bold text-sm tracking-wide">Ansaria AI</h3>
+                <h3 className="font-bold text-sm tracking-wide">Saria AI</h3>
                 <div className="flex items-center gap-1.5">
                   <span className="w-2 h-2 bg-emerald-400 rounded-full animate-ping" />
                   <span className="text-[10px] text-emerald-100 font-medium uppercase tracking-wider">
@@ -1831,7 +1831,7 @@ const AIAgent = () => {
               </button>
             </div>
             <p className="mt-2 text-[10px] text-center text-slate-400 font-medium">
-              Powered by Ansaria AI • Minimal Commands Supported
+              Powered by Saria AI • Minimal Commands Supported
             </p>
           </div>
         </div>
@@ -1842,7 +1842,7 @@ const AIAgent = () => {
           <div className="bg-white px-4 py-2 rounded-2xl shadow-xl border border-slate-100 animate-in fade-in slide-in-from-right-5 duration-300 mb-2">
             <p className="text-xs font-bold text-slate-600 flex items-center gap-2">
               <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
-              Ansaria AI is active
+              Saria AI is active
             </p>
           </div>
         )}
