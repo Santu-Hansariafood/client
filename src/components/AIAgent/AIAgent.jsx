@@ -44,6 +44,83 @@ const AIAgent = () => {
 
   const sidebarModules = dashboardData.sections;
 
+  // Learning & Suggestion Logic
+  const [learningData, setLearningData] = useState(() => {
+    const saved = localStorage.getItem("saria_ai_learning");
+    return saved ? JSON.parse(saved) : { recentQueries: [], frequentTopics: {}, intentPatterns: {} };
+  });
+
+  const trackInteraction = (topic, intentType = "general") => {
+    if (!topic || topic.length < 3) return;
+    
+    setLearningData(prev => {
+      const newRecent = [topic, ...prev.recentQueries.filter(q => q !== topic)].slice(0, 5);
+      const newFreq = { ...prev.frequentTopics, [topic]: (prev.frequentTopics[topic] || 0) + 1 };
+      
+      // "Train" intent patterns - mapping what usually follows what
+      const lastTopic = prev.recentQueries[0];
+      const newPatterns = { ...prev.intentPatterns };
+      if (lastTopic && lastTopic !== topic) {
+        if (!newPatterns[lastTopic]) newPatterns[lastTopic] = {};
+        newPatterns[lastTopic][topic] = (newPatterns[lastTopic][topic] || 0) + 1;
+      }
+      
+      const newState = { recentQueries: newRecent, frequentTopics: newFreq, intentPatterns: newPatterns };
+      localStorage.setItem("saria_ai_learning", JSON.stringify(newState));
+      return newState;
+    });
+  };
+
+  const getDynamicSuggestions = (contextSuggestions = [], responseText = "") => {
+    const suggestions = [...contextSuggestions];
+    
+    // 1. Pattern-based prediction (What usually follows the current context?)
+    const currentTopic = contextSuggestions[0];
+    if (currentTopic && learningData.intentPatterns[currentTopic]) {
+      const predicted = Object.entries(learningData.intentPatterns[currentTopic])
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 1)
+        .map(entry => entry[0]);
+      predicted.forEach(p => {
+        if (!suggestions.includes(p)) suggestions.push(p);
+      });
+    }
+
+    // 2. Response content analysis (Suggesting based on what was just said)
+    if (responseText) {
+      if (responseText.includes("Pending") && !suggestions.some(s => s.includes("Pending"))) {
+        suggestions.push("Show all pending saudas");
+      }
+      if (responseText.includes("₹") && !suggestions.some(s => s.includes("rate"))) {
+        suggestions.push("Highest rate today");
+      }
+      if (responseText.includes("Lorry") && !suggestions.some(s => s.includes("Vehicle"))) {
+        suggestions.push("Track another vehicle");
+      }
+    }
+
+    // 3. Frequency-based "Training" (Items the user asks about most)
+    const topFreq = Object.entries(learningData.frequentTopics)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 2)
+      .map(entry => entry[0]);
+    
+    topFreq.forEach(f => {
+      if (suggestions.length < 5 && !suggestions.includes(f)) {
+        suggestions.push(f);
+      }
+    });
+
+    // 4. Fill with recent queries if still space
+    learningData.recentQueries.forEach(q => {
+      if (suggestions.length < 5 && !suggestions.includes(q)) {
+        suggestions.push(q);
+      }
+    });
+    
+    return suggestions.slice(0, 5);
+  };
+
   // Cleanup on unmount
   useEffect(() => {
     return () => {
@@ -393,7 +470,7 @@ const AIAgent = () => {
         return {
           role: "assistant",
           content,
-          suggestions: [`Saudas for ${partnerName}`, "Active bids"],
+          suggestions: getDynamicSuggestions([`Saudas for ${partnerName}`, "Active bids"], content),
         };
       }
       return null;
@@ -798,10 +875,10 @@ const AIAgent = () => {
         return {
           role: "assistant",
           content: content,
-          suggestions: [
+          suggestions: getDynamicSuggestions([
             `Payment of Sauda ${saudaNo}`,
             `Add loading for ${saudaNo}`,
-          ],
+          ]),
         };
       } else {
         const searchRes = await api.get(`/self-order?saudaNo=${saudaNo}`, {
@@ -996,7 +1073,7 @@ const AIAgent = () => {
         return {
           role: "assistant",
           content: content,
-          suggestions: [`Interactions for ${bids[0].commodity}`],
+          suggestions: getDynamicSuggestions([`Analyze ${bids[0].commodity} bid components`], content),
         };
       } else {
         return {
@@ -1009,6 +1086,69 @@ const AIAgent = () => {
       return {
         role: "assistant",
         content: "Error fetching live bids.",
+      };
+    } finally {
+      setIsLoadingData(false);
+      setThinkingPath("");
+    }
+  };
+
+  const fetchBidComponentAnalysis = async (commodity) => {
+    setIsLoadingData(true);
+    setThinkingPath(`Breaking down ${commodity} bid into components...`);
+    try {
+      const signal = getApiSignal();
+      const [bidRes, interactionRes] = await Promise.all([
+        api.get(`/bids?commodity=${commodity}&status=active`, { signal }),
+        api.get(`/participateBids?search=${commodity}`, { signal }),
+      ]);
+
+      const bids = bidRes.data.data || bidRes.data || [];
+      const interactions = interactionRes.data.data || interactionRes.data || [];
+
+      if (bids.length > 0) {
+        const bid = bids[0];
+        let content = `*Bid Component Breakdown: ${commodity}*\n\n`;
+
+        content += `*1. Logistics Component*\n`;
+        content += `   • *Origin:* ${bid.origin || bid.location || "N/A"}\n`;
+        content += `   • *Destination:* ${bid.destination || "Multiple"}\n`;
+        content += `   • *Quantity:* ${bid.quantity} Tons\n\n`;
+
+        content += `*2. Commercial Component*\n`;
+        content += `   • *Base Rate:* ₹${bid.rate || bid.baseRate}\n`;
+        content += `   • *Target Rate:* ₹${bid.targetRate || "N/A"}\n`;
+        content += `   • *CD/GST:* ${bid.cd || 0}% / ${bid.gst || 0}%\n\n`;
+
+        content += `*3. Participation Component*\n`;
+        content += `   • *Active Bidders:* ${interactions.length}\n`;
+        if (interactions.length > 0) {
+          const rates = interactions.map((i) => i.rate);
+          const bestRate = Math.min(...rates);
+          content += `   • *Best Offer:* ₹${bestRate}\n`;
+          content += `   • *Avg Market Sentiment:* ₹${(rates.reduce((a, b) => a + b, 0) / rates.length).toFixed(2)}\n`;
+        } else {
+          content += `   • *Status:* No active interactions yet\n`;
+        }
+
+        content += `\n*4. Timing Component*\n`;
+        content += `   • *Date:* ${new Date(bid.bidDate).toLocaleDateString()}\n`;
+        content += `   • *Window:* ${bid.startTime} to ${bid.endTime}\n`;
+
+        return {
+          role: "assistant",
+          content,
+          suggestions: getDynamicSuggestions([`Interactions for ${commodity}`, "Show bids"], content),
+        };
+      }
+      return {
+        role: "assistant",
+        content: `I couldn't find an active bid for *${commodity}* to break down.`,
+      };
+    } catch (error) {
+      return {
+        role: "assistant",
+        content: "Error in component analysis.",
       };
     } finally {
       setIsLoadingData(false);
@@ -1037,7 +1177,7 @@ const AIAgent = () => {
         return {
           role: "assistant",
           content: content,
-          suggestions: [`Sauda ${saudas[0].saudaNo} details`],
+          suggestions: getDynamicSuggestions([`Sauda ${saudas[0].saudaNo} details`]),
         };
       } else {
         return {
@@ -1122,42 +1262,42 @@ const AIAgent = () => {
         }
 
         return {
-          role: "assistant",
-          content,
-          suggestions: [`Saudas for ${cName}`, "Active bids"],
-        };
-      } else {
-        // Try searching as supplier company in self-orders directly if not in companies model
-        const supplierSaudaRes = await api.get(
-          `/self-order?supplierCompany=${companyName}`,
-          { signal },
-        );
-        const supplierSaudas =
-          supplierSaudaRes.data.data || supplierSaudaRes.data || [];
-
-        if (supplierSaudas.length > 0) {
-          const cName = supplierSaudas[0].supplierCompany;
-          let content =
-            `*Supplier Company Intelligence: ${cName}*\n\n` +
-            `• *Total Saudas:* ${supplierSaudas.length}\n`;
-          const totalQty = supplierSaudas.reduce(
-            (acc, s) => acc + (s.quantity || 0),
-            0,
-          );
-          content += `• *Total Volume:* ${totalQty.toFixed(2)} Tons\n\n`;
-
-          content += `*Recent Supplier Saudas:*\n`;
-          supplierSaudas.slice(0, 5).forEach((s, idx) => {
-            content += `${idx + 1}. *Sauda ${s.saudaNo}*: ${s.commodity} | ${s.quantity} Tons\n`;
-          });
-
-          return {
             role: "assistant",
             content,
-            suggestions: [`Saudas for ${cName}`],
+            suggestions: getDynamicSuggestions([`Saudas for ${cName}`, "Active bids"], content),
           };
+        } else {
+          // Try searching as supplier company in self-orders directly if not in companies model
+          const supplierSaudaRes = await api.get(
+            `/self-order?supplierCompany=${companyName}`,
+            { signal },
+          );
+          const supplierSaudas =
+            supplierSaudaRes.data.data || supplierSaudaRes.data || [];
+  
+          if (supplierSaudas.length > 0) {
+            const cName = supplierSaudas[0].supplierCompany;
+            let content =
+              `*Supplier Company Intelligence: ${cName}*\n\n` +
+              `• *Total Saudas:* ${supplierSaudas.length}\n`;
+            const totalQty = supplierSaudas.reduce(
+              (acc, s) => acc + (s.quantity || 0),
+              0,
+            );
+            content += `• *Total Volume:* ${totalQty.toFixed(2)} Tons\n\n`;
+  
+            content += `*Recent Supplier Saudas:*\n`;
+            supplierSaudas.slice(0, 5).forEach((s, idx) => {
+              content += `${idx + 1}. *Sauda ${s.saudaNo}*: ${s.commodity} | ${s.quantity} Tons\n`;
+            });
+  
+            return {
+              role: "assistant",
+              content,
+              suggestions: getDynamicSuggestions([`Saudas for ${cName}`], content),
+            };
+          }
         }
-      }
       return null;
     } catch (error) {
       return null;
@@ -1565,6 +1705,9 @@ const AIAgent = () => {
     const interactionMatch = cleanCmd.match(
       /(?:interactions for|bid info for)\s+([a-z0-9\s]+)/i,
     );
+    const bidComponentMatch = cleanCmd.match(
+      /(?:analyze|break down|components of)\s+([a-z0-9\s]+)\s+bid/i,
+    );
     const buyerMatch = cleanCmd.match(/(?:buyer)\s+([a-z0-9\s]+)/i);
     const sellerMatch = cleanCmd.match(/(?:seller)\s+([a-z0-9\s]+)/i);
 
@@ -1605,18 +1748,23 @@ const AIAgent = () => {
     } else if (cleanCmd.includes("weather")) {
       response = await fetchWeather();
     } else if (companyConsigneeMatch) {
+      trackInteraction(`Sauda for ${companyConsigneeMatch[1].trim()}`);
       response = await fetchSaudasByCompanyAndConsignee(
         companyConsigneeMatch[1].trim(),
         companyConsigneeMatch[2].trim(),
       );
     } else if (relationshipMatch) {
+      trackInteraction(relationshipMatch[1].trim());
+      trackInteraction(relationshipMatch[2].trim());
       response = await fetchRelationshipContext(
         relationshipMatch[1].trim(),
         relationshipMatch[2].trim(),
       );
     } else if (dueMatch && !cleanCmd.includes("sauda no")) {
+      trackInteraction(dueMatch[1].trim());
       response = await fetchSellerSaudaStatus(dueMatch[1].trim(), "due");
     } else if (pendingMatch && !cleanCmd.includes("sauda no")) {
+      trackInteraction(pendingMatch[1].trim());
       response = await fetchPendingSaudaByEntity(pendingMatch[1].trim());
     } else if (cleanCmd.includes("contact") && !buyerMatch && !sellerMatch) {
       response = {
@@ -1628,13 +1776,18 @@ const AIAgent = () => {
           `• *Operating Hours:* 10:00 AM - 07:00 PM` +
           `• *Website:* https://www.hSariafood.com`,
       };
+    } else if (bidComponentMatch) {
+      trackInteraction(`${bidComponentMatch[1].trim()} bid`);
+      response = await fetchBidComponentAnalysis(bidComponentMatch[1].trim());
     } else if (buyerMatch) {
+      trackInteraction(buyerMatch[1].trim());
       const details = await fetchFullPartnerDetails(buyerMatch[1].trim(), "Buyer");
       response = details || {
         role: "assistant",
         content: `I couldn't find any Buyer matching "*${buyerMatch[1].trim()}*".`,
       };
     } else if (sellerMatch) {
+      trackInteraction(sellerMatch[1].trim());
       const details = await fetchFullPartnerDetails(sellerMatch[1].trim(), "Seller");
       response = details || {
         role: "assistant",
@@ -1675,8 +1828,10 @@ const AIAgent = () => {
     ) {
       response = await fetchActiveBids();
     } else if (interactionMatch) {
+      trackInteraction(`${interactionMatch[1].trim()} interactions`);
       response = await fetchBidInteractions(interactionMatch[1].trim());
     } else if (companyMatch) {
+      trackInteraction(companyMatch[1].trim());
       const details = await fetchFullCompanyDetails(companyMatch[1].trim());
       response = details || {
         role: "assistant",
@@ -1690,6 +1845,7 @@ const AIAgent = () => {
     ) {
       response = await fetchTodayRate();
     } else if (cleanCmd.length >= 3) {
+      trackInteraction(cleanCmd);
       response = await universalDeepSearch(cleanCmd);
     } else {
       response = {
