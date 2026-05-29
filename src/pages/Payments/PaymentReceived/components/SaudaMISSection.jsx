@@ -6,6 +6,7 @@ import DataDropdown from '../../../../common/DataDropdown/DataDropdown';
 import Buttons from '../../../../common/Buttons/Buttons';
 import Loading from '../../../../common/Loading/Loading';
 import SaudaDetailPopup from './SaudaDetailPopup';
+import Paginations from '../../../../common/Paginations/Paginations';
 
 const SaudaMISSection = () => {
     const [loading, setLoading] = useState(false);
@@ -14,6 +15,10 @@ const SaudaMISSection = () => {
     const [saudas, setSaudas] = useState([]);
     const [selectedSauda, setSelectedSauda] = useState(null);
     const [showPopup, setShowPopup] = useState(false);
+    
+    const [page, setPage] = useState(1);
+    const [limit] = useState(10);
+    const [total, setTotal] = useState(0);
 
     const [filters, setFilters] = useState({
         buyerCompany: '',
@@ -42,17 +47,20 @@ const SaudaMISSection = () => {
             const params = {
                 buyerCompany: filters.buyerCompany,
                 supplierCompany: filters.supplierCompany,
-                saudaNo: filters.saudaNo
+                saudaNo: filters.saudaNo,
+                page,
+                limit
             };
             const response = await api.get('/self-orders', { params });
             const items = response.data.data || response.data || [];
             setSaudas(items);
+            setTotal(response.data.total || items.length);
         } catch (error) {
             toast.error('Error fetching sauda details');
         } finally {
             setLoading(false);
         }
-    }, [filters]);
+    }, [filters, page, limit]);
 
     useEffect(() => {
         fetchSaudas();
@@ -61,6 +69,11 @@ const SaudaMISSection = () => {
     const handleSaudaClick = (saudaNo) => {
         setSelectedSauda(saudaNo);
         setShowPopup(true);
+    };
+
+    const handleFilterChange = (key, value) => {
+        setPage(1);
+        setFilters(prev => ({ ...prev, [key]: value }));
     };
 
     return (
@@ -83,7 +96,7 @@ const SaudaMISSection = () => {
                         <DataDropdown
                             options={allCompanies.map(c => ({ value: c.companyName, label: c.companyName }))}
                             selectedOptions={filters.buyerCompany ? { value: filters.buyerCompany, label: filters.buyerCompany } : null}
-                            onChange={(opt) => setFilters(prev => ({ ...prev, buyerCompany: opt?.value || '' }))}
+                            onChange={(opt) => handleFilterChange('buyerCompany', opt?.value || '')}
                             placeholder="Search Buyer..."
                             isMulti={false}
                             className="rounded-xl border-slate-200"
@@ -95,7 +108,7 @@ const SaudaMISSection = () => {
                         <input
                             type="text"
                             value={filters.supplierCompany}
-                            onChange={(e) => setFilters(prev => ({ ...prev, supplierCompany: e.target.value }))}
+                            onChange={(e) => handleFilterChange('supplierCompany', e.target.value)}
                             placeholder="Enter Seller Company..."
                             className="w-full h-11 px-4 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-slate-900/5 focus:border-slate-900 outline-none transition text-sm font-bold text-slate-700"
                         />
@@ -108,7 +121,7 @@ const SaudaMISSection = () => {
                             <input
                                 type="text"
                                 value={filters.saudaNo}
-                                onChange={(e) => setFilters(prev => ({ ...prev, saudaNo: e.target.value }))}
+                                onChange={(e) => handleFilterChange('saudaNo', e.target.value)}
                                 placeholder="Enter Sauda No..."
                                 className="w-full h-11 pl-11 pr-4 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-slate-900/5 focus:border-slate-900 outline-none transition text-sm font-bold text-slate-700"
                             />
@@ -207,6 +220,16 @@ const SaudaMISSection = () => {
                         </div>
                     )}
                 </div>
+
+                {total > limit && (
+                    <div className="p-6 border-t border-slate-100 bg-slate-50/50">
+                        <Paginations
+                            currentPage={page}
+                            totalPages={Math.ceil(total / limit)}
+                            onPageChange={setPage}
+                        />
+                    </div>
+                )}
             </div>
 
             {/* Sauda Details Popup */}

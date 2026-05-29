@@ -104,7 +104,7 @@ const ListPaymentReceived = () => {
         setAllBuyers(
           bData.map((b) => ({
             value: b._id,
-            label: b.name,
+            label: `${b.name} ${b.mobile ? `(${b.mobile})` : ""} ${b.groupId?.groupName ? `- ${b.groupId.groupName}` : ""}`,
             companies: b.companyIds || [],
           })),
         );
@@ -113,7 +113,7 @@ const ListPaymentReceived = () => {
         setAllSellers(
           sData.map((s) => ({
             value: s._id,
-            label: s.sellerName,
+            label: `${s.sellerName} ${s.phoneNumbers?.[0]?.value ? `(${s.phoneNumbers[0].value})` : ""} ${s.city ? `- ${s.city}` : ""}`,
             companies: s.companies || [],
           })),
         );
@@ -216,7 +216,10 @@ const ListPaymentReceived = () => {
       setLedgers(
         data.map((item) => ({
           value: item._id,
-          label: item.name || item.sellerName,
+          label:
+            filters.ledgerType === "Buyer"
+              ? `${item.name} ${item.mobile ? `(${item.mobile})` : ""} ${item.groupId?.groupName ? `- ${item.groupId.groupName}` : ""}`
+              : `${item.sellerName} ${item.phoneNumbers?.[0]?.value ? `(${item.phoneNumbers[0].value})` : ""} ${item.city ? `- ${item.city}` : ""}`,
           companies: item.companyIds || item.companies || [],
         })),
       );

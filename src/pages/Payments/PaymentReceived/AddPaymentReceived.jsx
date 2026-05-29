@@ -109,7 +109,9 @@ const AddPaymentReceived = () => {
                 const data = response.data.data || response.data;
                 setLedgers(data.map(item => ({
                     value: item._id,
-                    label: item.name || item.sellerName,
+                    label: formData.ledgerType === 'Buyer' 
+                        ? `${item.name} ${item.mobile ? `(${item.mobile})` : ""} ${item.groupId?.groupName ? `- ${item.groupId.groupName}` : ""}`
+                        : `${item.sellerName} ${item.phoneNumbers?.[0]?.value ? `(${item.phoneNumbers[0].value})` : ""} ${item.city ? `- ${item.city}` : ""}`,
                     companies: item.companyIds || item.companies || []
                 })));
                 setSelectedLedger(null);
@@ -130,7 +132,9 @@ const AddPaymentReceived = () => {
                 const data = response.data.data || response.data;
                 setOpposingLedgers(data.map(item => ({
                     value: item._id,
-                    label: item.name || item.sellerName,
+                    label: formData.ledgerType === 'Buyer' // Opposing is Seller
+                        ? `${item.sellerName} ${item.phoneNumbers?.[0]?.value ? `(${item.phoneNumbers[0].value})` : ""} ${item.city ? `- ${item.city}` : ""}`
+                        : `${item.name} ${item.mobile ? `(${item.mobile})` : ""} ${item.groupId?.groupName ? `- ${item.groupId.groupName}` : ""}`,
                     companies: item.companyIds || item.companies || []
                 })));
                 setSelectedOpposingLedger(null);
