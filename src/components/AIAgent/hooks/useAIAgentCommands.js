@@ -186,6 +186,9 @@ export const useAIAgentCommands = ({
     const interactionMatch = cleanCmd.match(
       /(?:interactions for|bid info for)\s+([a-z0-9\s]+)/i,
     );
+    const downloadLorryMatch = cleanCmd.match(
+      /(?:download lorry report|generate lorry report)\s*([a-z0-9\s]+)/i,
+    );
     const bidComponentMatch = cleanCmd.match(
       /(?:analyze|break down|components of)\s+([a-z0-9\s]+)\s+bid/i,
     );
@@ -251,6 +254,15 @@ export const useAIAgentCommands = ({
           `• *Tech Support:* info@hSariafood.com\n` +
           `• *Operating Hours:* 10:00 AM - 07:00 PM` +
           `• *Website:* https://www.hSariafood.com`,
+      };
+    } else if (downloadLorryMatch) {
+      const lNo = downloadLorryMatch[1].trim();
+      response = {
+        role: "assistant",
+        content: `Redirecting you to the **Loading List** to download the full Excel report for Lorry *${lNo}*...`,
+        action: () => {
+          navigate(`/Loading-Entry/list-loading-entry?lorryNumber=${lNo}`);
+        },
       };
     } else if (bidComponentMatch) {
       response = await apiMethods.fetchBidComponentAnalysis(bidComponentMatch[1].trim());

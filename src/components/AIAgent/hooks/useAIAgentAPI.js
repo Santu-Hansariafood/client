@@ -542,7 +542,7 @@ export const useAIAgentAPI = (
       if (sauda) {
         let content =
           `*Saria AI Profile:*\n\n` +
-          `•Sauda No ${saudaNo}*\n` +
+          `• *Sauda No:* ${saudaNo}\n` +
           `• *Buyer:* ${sauda.buyerCompany || sauda.buyer}\n` +
           `• *Supplier:* ${sauda.supplierCompany || "N/A"}\n` +
           `• *Consignee:* ${sauda.consignee || "N/A"}\n` +
@@ -1319,51 +1319,60 @@ export const useAIAgentAPI = (
 
   const fetchLorryDetails = async (lorryNo) => {
     setIsLoadingData(true);
-    setThinkingPath(`Tracking vehicle: ${lorryNo}...`);
+    setThinkingPath(`Extracting full Lorry Profile for ${lorryNo}...`);
     try {
-      const cleanLorry = lorryNo.replace(/\s+/g, "").toUpperCase();
-
-      const isLast4 = /^\d{4}$/.test(cleanLorry);
+      const searchLorry = lorryNo.replace(/\s+/g, "").toUpperCase();
 
       const response = await api.get(
-        `/loading-entries/lorry-wise?lorryNumber=${cleanLorry}`,
+        `/loading-entries/lorry-wise?lorryNumber=${searchLorry}`,
         { signal: getApiSignal() },
       );
-      const data = response.data.data || response.data;
+      const entries = response.data.data || response.data || [];
 
-      if (data && data.length > 0) {
-        const entries = isLast4
-          ? data.filter((e) =>
-              e.lorryNumber.replace(/\s+/g, "").endsWith(cleanLorry),
-            )
-          : data;
+      if (entries.length > 0) {
+        let content = `*Full Lorry Intelligence Report: ${lorryNo.toUpperCase()}*\n\n`;
+        
+        // Fetch Sauda details for each entry to get Payment Terms, Brokerage etc.
+        const saudaNos = [...new Set(entries.map(e => e.saudaNo))];
+        const saudaDetails = await Promise.all(
+          saudaNos.map(no => api.get(`/self-order/details/${no}`).catch(() => ({ data: { order: null } })))
+        );
+        const saudaMap = saudaDetails.reduce((acc, res) => {
+          if (res.data?.order) acc[res.data.order.saudaNo] = res.data.order;
+          return acc;
+        }, {});
 
-        if (entries.length === 0) {
-          return {
-            role: "assistant",
-            content: `No records found for Lorry ending in *${lorryNo}*.`,
-          };
-        }
+        entries.forEach((entry, idx) => {
+          const sauda = saudaMap[entry.saudaNo] || {};
+          const loadingDate = entry.loadingDate ? new Date(entry.loadingDate).toLocaleDateString("en-GB") : "N/A";
+          const billDate = entry.billDate ? new Date(entry.billDate).toLocaleDateString("en-GB") : "N/A";
+          const totalFreight = entry.totalFreight || 0;
+          const advance = entry.advanceAmount || 0;
+          const loaded = (sauda.quantity || 0) - (sauda.pendingQuantity || 0);
 
-        const entry = entries[0];
-        let content =
-          entries.length > 1
-            ? `*Multi-Vehicle Match (${entries.length}). Latest:*\n\n`
-            : `*Vehicle Profile: ${entry.lorryNumber}*\n\n`;
-
-        content +=
-          `• *Active Sauda:* Sauda ${entry.saudaNo}\n` +
-          `• *Last Loaded:* ${new Date(entry.loadingDate).toLocaleDateString("en-GB")}\n` +
-          `• *Current Weight:* ${entry.loadingWeight} Tons\n` +
-          `• *Buyer/Supplier:* ${entry.buyerCompany} / ${entry.supplierCompany}\n` +
-          `• *Status:* ${entry.unloadingDate ? "UNLOADED" : "IN TRANSIT"}`;
+          content += `*LISTING ENTRY #${idx + 1}*\n`;
+          content += `• *Loading No:* ${entry.loadingNo || "N/A"} | *Date:* ${loadingDate}\n`;
+          content += `• *Sauda No:* ${entry.saudaNo} | *Commodity:* ${entry.commodity}\n`;
+          content += `• *Seller:* ${entry.supplierCompany}\n`;
+          content += `• *Buyer:* ${entry.buyerCompany}\n`;
+          content += `• *Consignee:* ${entry.consignee || "N/A"}\n`;
+          content += `• *Payment Terms:* ${sauda.paymentTerms || "N/A"} Days\n`;
+          content += `• *Weight:* Load: ${entry.loadingWeight}T | Unload: ${entry.unloadingWeight || 0}T\n`;
+          content += `• *Sauda Status:* Total: ${sauda.quantity || 0}T | Loaded: ${loaded.toFixed(2)}T | Pending: ${sauda.pendingQuantity || 0}T\n`;
+          content += `• *Lorry:* ${entry.lorryNumber} | *Status:* ${entry.unloadingDate ? "UNLOADED" : "IN TRANSIT"}\n`;
+          content += `• *Logistics:* ${entry.transporterName || "N/A"} | Driver: ${entry.driverName || "N/A"} (${entry.driverMobile || "N/A"})\n`;
+          content += `• *Freight:* Rate: ₹${entry.freightRate || 0} | Total: ₹${totalFreight} | Advance: ₹${advance} | Balance: ₹${totalFreight - advance}\n`;
+          content += `• *Invoicing:* Bill No: ${entry.billNumber || "N/A"} | Issue Date: ${billDate}\n`;
+          content += `• *System:* Entered By: ${entry.createdBy?.name || "System"}\n\n`;
+        });
 
         return {
           role: "assistant",
           content: content,
           suggestions: [
-            `Sauda ${entry.saudaNo} details`,
-            "Generate Lorry Challan",
+            `Download Lorry Report ${searchLorry}`,
+            `Sauda ${entries[0].saudaNo} details`,
+            "Active bids"
           ],
         };
       } else {
@@ -1374,9 +1383,10 @@ export const useAIAgentAPI = (
       }
     } catch (error) {
       if (error.name === "AbortError") return null;
+      console.error("Lorry fetch error:", error);
       return {
         role: "assistant",
-        content: "Error in vehicle tracking.",
+        content: "Error in vehicle tracking. Please ensure the Lorry Number is correct.",
       };
     } finally {
       setIsLoadingData(false);
