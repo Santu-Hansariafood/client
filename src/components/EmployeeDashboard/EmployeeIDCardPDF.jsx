@@ -8,13 +8,13 @@ import {
   Font,
 } from "@react-pdf/renderer";
 
-// Register standard font for better look
+// Register standard fonts
 Font.register({
   family: "Inter",
   fonts: [
-    { src: "https://fonts.gstatic.com/s/inter/v12/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuLyfAZ9hiA.woff2", fontWeight: 400 },
-    { src: "https://fonts.gstatic.com/s/inter/v12/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuGKYAZ9hiA.woff2", fontWeight: 700 },
-    { src: "https://fonts.gstatic.com/s/inter/v12/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuFuNYZ9hiA.woff2", fontWeight: 900 },
+    { src: "https://cdnjs.cloudflare.com/ajax/libs/inter-ui/3.19.3/Inter%20UI/Inter-Regular.ttf", fontWeight: 400 },
+    { src: "https://cdnjs.cloudflare.com/ajax/libs/inter-ui/3.19.3/Inter%20UI/Inter-Bold.ttf", fontWeight: 700 },
+    { src: "https://cdnjs.cloudflare.com/ajax/libs/inter-ui/3.19.3/Inter%20UI/Inter-Black.ttf", fontWeight: 900 },
   ],
 });
 
@@ -22,7 +22,7 @@ const styles = StyleSheet.create({
   page: {
     padding: 0,
     backgroundColor: "#ffffff",
-    fontFamily: "Inter",
+    fontFamily: "Helvetica", // Use built-in font for maximum compatibility
     flexDirection: "column",
     alignItems: "center",
     justifyContent: "center",
@@ -63,7 +63,7 @@ const styles = StyleSheet.create({
   companyName: {
     color: "#ffffff",
     fontSize: 10,
-    fontWeight: 900,
+    fontWeight: "bold",
     letterSpacing: 0.5,
   },
   // Body Content
@@ -92,13 +92,13 @@ const styles = StyleSheet.create({
   },
   name: {
     fontSize: 12,
-    fontWeight: 900,
+    fontWeight: "bold",
     color: "#1e293b",
     marginBottom: 2,
   },
   role: {
     fontSize: 8,
-    fontWeight: 700,
+    fontWeight: "bold",
     textTransform: "uppercase",
     marginBottom: 4,
   },
@@ -118,13 +118,13 @@ const styles = StyleSheet.create({
   },
   detailLabel: {
     fontSize: 6,
-    fontWeight: 700,
+    fontWeight: "bold",
     color: "#64748b",
     width: 40,
   },
   detailValue: {
     fontSize: 6.5,
-    fontWeight: 700,
+    fontWeight: "bold",
     color: "#334155",
   },
   // QR Code Section
@@ -153,7 +153,7 @@ const styles = StyleSheet.create({
   },
   backTitle: {
     fontSize: 9,
-    fontWeight: 900,
+    fontWeight: "bold",
     color: "#1e293b",
     marginBottom: 4,
   },
@@ -164,7 +164,7 @@ const styles = StyleSheet.create({
   },
   contactInfo: {
     fontSize: 7,
-    fontWeight: 700,
+    fontWeight: "bold",
     marginTop: 4,
   },
   contactInfoEmployee: {
@@ -201,33 +201,36 @@ const EmployeeIDCardPDF = ({ user, qrCodeData, logoUrl, role = "Employee" }) => 
   const isBuyer = role === "Buyer";
   const isSeller = role === "Seller";
 
+  // Handle logoUrl if it's an object (Vite/Webpack asset)
+  const resolvedLogoUrl = typeof logoUrl === 'object' && logoUrl?.default ? logoUrl.default : logoUrl;
+
   const headerStyle = [
     styles.header,
     isEmployee && styles.headerEmployee,
     isBuyer && styles.headerBuyer,
     isSeller && styles.headerSeller,
-  ];
+  ].filter(Boolean);
 
   const roleTextStyle = [
     styles.role,
     isEmployee && styles.roleEmployee,
     isBuyer && styles.roleBuyer,
     isSeller && styles.roleSeller,
-  ];
+  ].filter(Boolean);
 
   const contactTextStyle = [
     styles.contactInfo,
     isEmployee && styles.contactInfoEmployee,
     isBuyer && styles.contactInfoBuyer,
     isSeller && styles.contactInfoSeller,
-  ];
+  ].filter(Boolean);
 
   const footerStyle = [
     styles.footer,
     isEmployee && styles.footerEmployee,
     isBuyer && styles.footerBuyer,
     isSeller && styles.footerSeller,
-  ];
+  ].filter(Boolean);
 
   const themeColor = isEmployee ? "#4f46e5" : isBuyer ? "#2563eb" : "#059669";
 
@@ -237,8 +240,8 @@ const EmployeeIDCardPDF = ({ user, qrCodeData, logoUrl, role = "Employee" }) => 
         {/* FRONT SIDE */}
         <View style={styles.cardContainer}>
           <View style={headerStyle}>
-            {logoUrl ? (
-              <Image src={logoUrl} style={styles.logo} />
+            {resolvedLogoUrl ? (
+              <Image src={resolvedLogoUrl} style={styles.logo} />
             ) : (
               <View style={styles.logo} />
             )}

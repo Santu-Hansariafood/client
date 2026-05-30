@@ -72,14 +72,17 @@ const EmployeeDashboard = () => {
   }, []);
 
   const handlePrintIDCard = async () => {
+    console.log("Starting ID Card generation...", { user });
     if (!user) {
       toast.error("User data not found!");
       return;
     }
 
     setIsPrinting(true);
+    const toastId = toast.loading("Generating ID Card...");
     try {
       // Generate QR Code with all employee data
+      console.log("Generating QR Code...");
       const qrData = JSON.stringify({
         id: user.employeeId,
         name: user.name,
@@ -97,10 +100,17 @@ const EmployeeDashboard = () => {
           light: "#ffffff",
         },
       });
+      console.log("QR Code generated successfully");
 
       // Generate PDF
+      console.log("Creating PDF document...");
       const doc = <EmployeeIDCardPDF user={user} qrCodeData={qrCodeUrl} logoUrl={logo} />;
-      const blob = await pdf(doc).toBlob();
+      
+      console.log("Converting PDF to blob...");
+      const pdfInstance = pdf(doc);
+      const blob = await pdfInstance.toBlob();
+      console.log("Blob created successfully", { size: blob.size });
+      
       const url = URL.createObjectURL(blob);
 
       // Create a temporary link and trigger download/print
@@ -112,10 +122,20 @@ const EmployeeDashboard = () => {
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
 
-      toast.success("ID Card generated successfully!");
+      toast.update(toastId, {
+        render: "ID Card generated successfully!",
+        type: "success",
+        isLoading: false,
+        autoClose: 3000,
+      });
     } catch (error) {
       console.error("Error generating ID Card:", error);
-      toast.error("Failed to generate ID Card");
+      toast.update(toastId, {
+        render: `Failed to generate ID Card: ${error.message}`,
+        type: "error",
+        isLoading: false,
+        autoClose: 5000,
+      });
     } finally {
       setIsPrinting(false);
     }
