@@ -109,10 +109,21 @@ export const useAIAgentCommands = ({
   };
 
   const processCommand = async (cmd) => {
+    const { trackInteraction, checkSafety } = learningMethods;
+
+    // Safety Check for harmful content or profanity
+    if (checkSafety(cmd)) {
+      const warningResponse = {
+        role: "assistant",
+        content: "⚠️ **Warning:** I detected potentially harmful content or inappropriate language in your message. Please keep our conversation professional and focused on system data.",
+        suggestions: ["Total sauda today", "Active bids"]
+      };
+      setMessages((prev) => [...prev, warningResponse]);
+      return;
+    }
+
     const rawCmd = cmd.trim().toLowerCase();
-    const cleanCmd = rectifyTypo(rawCmd);
-    
-    const { trackInteraction } = learningMethods;
+    const cleanCmd = rectifyTypo(rawCmd); // Auto-rectify typos
     let response = null;
 
     if (cleanCmd !== rawCmd) {

@@ -34,15 +34,17 @@ const AIAgent = () => {
     clearHistory,
   } = useAIAgentCore();
 
-  const { trackInteraction, getDynamicSuggestions } = useAIAgentLearning();
+  const { trackInteraction, getDynamicSuggestions, checkSafety } = useAIAgentLearning();
 
+  // API Hook
   const apiMethods = useAIAgentAPI(
     setIsLoadingData,
     setThinkingPath,
     getApiSignal,
-    getDynamicSuggestions,
+    getDynamicSuggestions
   );
 
+  // Commands Hook
   const { handleSend } = useAIAgentCommands({
     input,
     setInput,
@@ -50,7 +52,7 @@ const AIAgent = () => {
     isLoadingData,
     navigate,
     apiMethods,
-    learningMethods: { trackInteraction, getDynamicSuggestions },
+    learningMethods: { trackInteraction, getDynamicSuggestions, checkSafety }
   });
 
   const { startListening } = useAIAgentVoice(

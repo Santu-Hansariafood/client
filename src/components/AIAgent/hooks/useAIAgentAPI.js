@@ -1325,7 +1325,6 @@ export const useAIAgentAPI = (
       const rawLorry = lorryNo.toUpperCase();
       const cleanLorry = lorryNo.replace(/\s+/g, "").toUpperCase();
 
-      // Try searching with the exact string first, then the cleaned string if they are different
       let response = await api.get(
         `/loading-entries/lorry-wise?lorryNumber=${encodeURIComponent(rawLorry)}`,
         { signal },
@@ -1341,7 +1340,6 @@ export const useAIAgentAPI = (
         entries = response.data.data || response.data || [];
       }
 
-      // If still no results and it's a long number, try a more flexible search via general loading entries
       if (entries.length === 0) {
         setThinkingPath(`Searching system-wide for ${cleanLorry}...`);
         response = await api.get(
@@ -1352,12 +1350,15 @@ export const useAIAgentAPI = (
       }
 
       if (entries.length > 0) {
-        let content = `*Full Lorry Intelligence Report: ${lorryNo.toUpperCase()}*\n\n`;
-        
-        // Fetch Sauda details for each entry to get Payment Terms, Brokerage etc.
-        const saudaNos = [...new Set(entries.map(e => e.saudaNo))];
+        let content = `*Full Lorry Saria AI Report: ${lorryNo.toUpperCase()}*\n\n`;
+
+        const saudaNos = [...new Set(entries.map((e) => e.saudaNo))];
         const saudaDetails = await Promise.all(
-          saudaNos.map(no => api.get(`/self-order/details/${no}`).catch(() => ({ data: { order: null } })))
+          saudaNos.map((no) =>
+            api
+              .get(`/self-order/details/${no}`)
+              .catch(() => ({ data: { order: null } })),
+          ),
         );
         const saudaMap = saudaDetails.reduce((acc, res) => {
           if (res.data?.order) acc[res.data.order.saudaNo] = res.data.order;
@@ -1366,8 +1367,12 @@ export const useAIAgentAPI = (
 
         entries.forEach((entry, idx) => {
           const sauda = saudaMap[entry.saudaNo] || {};
-          const loadingDate = entry.loadingDate ? new Date(entry.loadingDate).toLocaleDateString("en-GB") : "N/A";
-          const billDate = entry.billDate ? new Date(entry.billDate).toLocaleDateString("en-GB") : "N/A";
+          const loadingDate = entry.loadingDate
+            ? new Date(entry.loadingDate).toLocaleDateString("en-GB")
+            : "N/A";
+          const billDate = entry.billDate
+            ? new Date(entry.billDate).toLocaleDateString("en-GB")
+            : "N/A";
           const totalFreight = entry.totalFreight || 0;
           const advance = entry.advanceAmount || 0;
           const loaded = (sauda.quantity || 0) - (sauda.pendingQuantity || 0);
@@ -1394,7 +1399,7 @@ export const useAIAgentAPI = (
           suggestions: [
             `Download Lorry Report ${cleanLorry}`,
             `Sauda ${entries[0].saudaNo} details`,
-            "Active bids"
+            "Active bids",
           ],
         };
       } else {
@@ -1408,7 +1413,8 @@ export const useAIAgentAPI = (
       console.error("Lorry fetch error:", error);
       return {
         role: "assistant",
-        content: "Error in vehicle tracking. Please ensure the Lorry Number is correct.",
+        content:
+          "Error in vehicle tracking. Please ensure the Lorry Number is correct.",
       };
     } finally {
       setIsLoadingData(false);
