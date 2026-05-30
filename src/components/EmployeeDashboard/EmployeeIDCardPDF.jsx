@@ -5,24 +5,13 @@ import {
   View,
   StyleSheet,
   Image,
-  Font,
 } from "@react-pdf/renderer";
-
-// Register standard fonts
-Font.register({
-  family: "Inter",
-  fonts: [
-    { src: "https://cdnjs.cloudflare.com/ajax/libs/inter-ui/3.19.3/Inter%20UI/Inter-Regular.ttf", fontWeight: 400 },
-    { src: "https://cdnjs.cloudflare.com/ajax/libs/inter-ui/3.19.3/Inter%20UI/Inter-Bold.ttf", fontWeight: 700 },
-    { src: "https://cdnjs.cloudflare.com/ajax/libs/inter-ui/3.19.3/Inter%20UI/Inter-Black.ttf", fontWeight: 900 },
-  ],
-});
 
 const styles = StyleSheet.create({
   page: {
     padding: 0,
     backgroundColor: "#ffffff",
-    fontFamily: "Helvetica", // Use built-in font for maximum compatibility
+    fontFamily: "Helvetica",
     flexDirection: "column",
     alignItems: "center",
     justifyContent: "center",
@@ -46,13 +35,13 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   headerEmployee: {
-    backgroundColor: "#4f46e5", // Indigo-600
+    backgroundColor: "#4f46e5",
   },
   headerBuyer: {
-    backgroundColor: "#2563eb", // Blue-600
+    backgroundColor: "#2563eb",
   },
   headerSeller: {
-    backgroundColor: "#059669", // Emerald-600
+    backgroundColor: "#059669",
   },
   logo: {
     width: 24,
@@ -201,37 +190,6 @@ const EmployeeIDCardPDF = ({ user, qrCodeData, logoUrl, role = "Employee" }) => 
   const isBuyer = role === "Buyer";
   const isSeller = role === "Seller";
 
-  // Handle logoUrl if it's an object (Vite/Webpack asset)
-  const resolvedLogoUrl = typeof logoUrl === 'object' && logoUrl?.default ? logoUrl.default : logoUrl;
-
-  const headerStyle = [
-    styles.header,
-    isEmployee && styles.headerEmployee,
-    isBuyer && styles.headerBuyer,
-    isSeller && styles.headerSeller,
-  ].filter(Boolean);
-
-  const roleTextStyle = [
-    styles.role,
-    isEmployee && styles.roleEmployee,
-    isBuyer && styles.roleBuyer,
-    isSeller && styles.roleSeller,
-  ].filter(Boolean);
-
-  const contactTextStyle = [
-    styles.contactInfo,
-    isEmployee && styles.contactInfoEmployee,
-    isBuyer && styles.contactInfoBuyer,
-    isSeller && styles.contactInfoSeller,
-  ].filter(Boolean);
-
-  const footerStyle = [
-    styles.footer,
-    isEmployee && styles.footerEmployee,
-    isBuyer && styles.footerBuyer,
-    isSeller && styles.footerSeller,
-  ].filter(Boolean);
-
   const themeColor = isEmployee ? "#4f46e5" : isBuyer ? "#2563eb" : "#059669";
 
   return (
@@ -239,12 +197,13 @@ const EmployeeIDCardPDF = ({ user, qrCodeData, logoUrl, role = "Employee" }) => 
       <Page size={[243, 153]} style={styles.page}>
         {/* FRONT SIDE */}
         <View style={styles.cardContainer}>
-          <View style={headerStyle}>
-            {resolvedLogoUrl ? (
-              <Image src={resolvedLogoUrl} style={styles.logo} />
-            ) : (
-              <View style={styles.logo} />
-            )}
+          <View style={[
+            styles.header,
+            isEmployee && styles.headerEmployee,
+            isBuyer && styles.headerBuyer,
+            isSeller && styles.headerSeller,
+          ]}>
+            <View style={styles.logo} />
             <Text style={styles.companyName}>HANSARIA FOOD PVT LTD</Text>
           </View>
 
@@ -255,7 +214,12 @@ const EmployeeIDCardPDF = ({ user, qrCodeData, logoUrl, role = "Employee" }) => 
 
             <View style={styles.infoSection}>
               <Text style={styles.name}>{user?.name?.toUpperCase()}</Text>
-              <Text style={roleTextStyle}>{user?.role || role.toUpperCase()}</Text>
+              <Text style={[
+                styles.role,
+                isEmployee && styles.roleEmployee,
+                isBuyer && styles.roleBuyer,
+                isSeller && styles.roleSeller,
+              ]}>{user?.role || role.toUpperCase()}</Text>
 
               <View style={styles.detailRow}>
                 <Text style={styles.detailLabel}>
@@ -281,16 +245,30 @@ const EmployeeIDCardPDF = ({ user, qrCodeData, logoUrl, role = "Employee" }) => 
           </View>
 
           <View style={styles.qrContainer}>
-            {qrCodeData && <Image src={qrCodeData} style={styles.qrImage} />}
+            {qrCodeData ? (
+              <Image src={qrCodeData} style={styles.qrImage} />
+            ) : (
+              <View style={{ width: "100%", height: "100%", backgroundColor: "#f1f5f9" }} />
+            )}
           </View>
-          <View style={footerStyle} />
+          <View style={[
+            styles.footer,
+            isEmployee && styles.footerEmployee,
+            isBuyer && styles.footerBuyer,
+            isSeller && styles.footerSeller,
+          ]} />
         </View>
       </Page>
 
       {/* BACK SIDE */}
       <Page size={[243, 153]} style={styles.page}>
         <View style={styles.cardContainer}>
-          <View style={headerStyle}>
+          <View style={[
+            styles.header,
+            isEmployee && styles.headerEmployee,
+            isBuyer && styles.headerBuyer,
+            isSeller && styles.headerSeller,
+          ]}>
             <Text style={[styles.companyName, { textAlign: "center", flex: 1 }]}>
               OFFICIAL IDENTITY CARD
             </Text>
@@ -310,17 +288,32 @@ const EmployeeIDCardPDF = ({ user, qrCodeData, logoUrl, role = "Employee" }) => 
               Head Office: 123 Business Hub, MG Road,{"\n"}
               New Delhi, India - 110001
             </Text>
-            <Text style={contactTextStyle}>
+            <Text style={[
+              styles.contactInfo,
+              isEmployee && styles.contactInfoEmployee,
+              isBuyer && styles.contactInfoBuyer,
+              isSeller && styles.contactInfoSeller,
+            ]}>
               Tel: +91 98765 43210 | info@hansariafood.com
             </Text>
-            <Text style={contactTextStyle}>www.hansariafood.com</Text>
+            <Text style={[
+              styles.contactInfo,
+              isEmployee && styles.contactInfoEmployee,
+              isBuyer && styles.contactInfoBuyer,
+              isSeller && styles.contactInfoSeller,
+            ]}>www.hansariafood.com</Text>
 
             <Text style={styles.terms}>
               If found, please return to the above address. This card is the
               property of Hansaria Food Pvt Ltd.
             </Text>
           </View>
-          <View style={footerStyle} />
+          <View style={[
+            styles.footer,
+            isEmployee && styles.footerEmployee,
+            isBuyer && styles.footerBuyer,
+            isSeller && styles.footerSeller,
+          ]} />
         </View>
       </Page>
     </Document>

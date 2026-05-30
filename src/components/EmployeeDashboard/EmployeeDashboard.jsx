@@ -104,11 +104,10 @@ const EmployeeDashboard = () => {
 
       // Generate PDF
       console.log("Creating PDF document...");
-      const doc = <EmployeeIDCardPDF user={user} qrCodeData={qrCodeUrl} logoUrl={logo} />;
+      const doc = <EmployeeIDCardPDF user={user} qrCodeData={qrCodeUrl} />;
       
       console.log("Converting PDF to blob...");
-      const pdfInstance = pdf(doc);
-      const blob = await pdfInstance.toBlob();
+      const blob = await pdf(doc).toBlob();
       console.log("Blob created successfully", { size: blob.size });
       
       const url = URL.createObjectURL(blob);

@@ -544,14 +544,12 @@ const SellerDashboard = () => {
             employeeId: user._id?.substring(18).toUpperCase(),
           }}
           qrCodeData={qrCodeUrl}
-          logoUrl={logo}
           role="Seller"
         />
       );
 
       console.log("Converting PDF to blob...");
-      const pdfInstance = pdf(doc);
-      const blob = await pdfInstance.toBlob();
+      const blob = await pdf(doc).toBlob();
       console.log("Blob created successfully", { size: blob.size });
 
       const url = URL.createObjectURL(blob);
