@@ -305,6 +305,22 @@ const BuyerDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isPrinting, setIsPrinting] = useState(false);
+  const [logoBase64, setLogoBase64] = useState(null);
+
+  useEffect(() => {
+    const convertLogo = async () => {
+      try {
+        const response = await fetch(logo);
+        const blob = await response.blob();
+        const reader = new FileReader();
+        reader.onloadend = () => setLogoBase64(reader.result);
+        reader.readAsDataURL(blob);
+      } catch (e) {
+        console.error("Logo conversion failed", e);
+      }
+    };
+    convertLogo();
+  }, []);
 
   const fetchDashboardData = useCallback(async () => {
     if (!mobile) {
@@ -373,12 +389,13 @@ const BuyerDashboard = () => {
           user={{
             ...user,
             role: "BUYER PARTNER",
-            employeeId: user._id?.substring(18).toUpperCase(),
-          }}
-          qrCodeData={qrCodeUrl}
-          role="Buyer"
-        />
-      );
+             employeeId: user._id?.substring(18).toUpperCase(),
+           }}
+           qrCodeData={qrCodeUrl}
+           logoUrl={logoBase64}
+           role="Buyer"
+         />
+       );
 
       console.log("Converting PDF to blob...");
       const blob = await pdf(doc).toBlob();

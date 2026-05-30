@@ -331,6 +331,22 @@ const SellerDashboard = () => {
   const [error, setError] = useState(null);
   const [retryCount, setRetryCount] = useState(0);
   const [isPrinting, setIsPrinting] = useState(false);
+  const [logoBase64, setLogoBase64] = useState(null);
+
+  useEffect(() => {
+    const convertLogo = async () => {
+      try {
+        const response = await fetch(logo);
+        const blob = await response.blob();
+        const reader = new FileReader();
+        reader.onloadend = () => setLogoBase64(reader.result);
+        reader.readAsDataURL(blob);
+      } catch (e) {
+        console.error("Logo conversion failed", e);
+      }
+    };
+    convertLogo();
+  }, []);
 
   const [sellerBidCount, setSellerBidCount] = useState(0);
   const [participateBidCount, setParticipateBidCount] = useState(0);
@@ -541,12 +557,13 @@ const SellerDashboard = () => {
           user={{
             ...user,
             role: "SELLER PARTNER",
-            employeeId: user._id?.substring(18).toUpperCase(),
-          }}
-          qrCodeData={qrCodeUrl}
-          role="Seller"
-        />
-      );
+             employeeId: user._id?.substring(18).toUpperCase(),
+           }}
+           qrCodeData={qrCodeUrl}
+           logoUrl={logoBase64}
+           role="Seller"
+         />
+       );
 
       console.log("Converting PDF to blob...");
       const blob = await pdf(doc).toBlob();

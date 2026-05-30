@@ -5,6 +5,8 @@ import {
   View,
   StyleSheet,
   Image,
+  Svg,
+  Path,
 } from "@react-pdf/renderer";
 
 const styles = StyleSheet.create({
@@ -16,7 +18,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  // Standard ID Card Size (CR80): 3.375" x 2.125" -> ~243pt x 153pt
   cardContainer: {
     width: 243,
     height: 153,
@@ -25,295 +26,293 @@ const styles = StyleSheet.create({
     position: "relative",
     display: "flex",
     flexDirection: "column",
+    border: "0.5pt solid #e2e8f0",
   },
-  // Front Side Header
+  // Modern Header with Green/Yellow theme
   header: {
-    height: 40,
+    height: 45,
+    backgroundColor: "#059669", // Primary Green
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 12,
-    gap: 8,
+    borderBottom: "3pt solid #facc15", // Yellow Accent
   },
-  headerEmployee: {
-    backgroundColor: "#4f46e5",
-  },
-  headerBuyer: {
-    backgroundColor: "#2563eb",
-  },
-  headerSeller: {
-    backgroundColor: "#059669",
+  logoContainer: {
+    width: 30,
+    height: 30,
+    backgroundColor: "#ffffff",
+    borderRadius: 6,
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 8,
   },
   logo: {
     width: 24,
     height: 24,
-    borderRadius: 6,
-    backgroundColor: "#ffffff",
+  },
+  companyInfo: {
+    flex: 1,
   },
   companyName: {
     color: "#ffffff",
-    fontSize: 10,
+    fontSize: 9,
     fontWeight: "bold",
     letterSpacing: 0.5,
+  },
+  companyTagline: {
+    color: "#facc15",
+    fontSize: 5,
+    marginTop: 1,
+    letterSpacing: 1,
   },
   // Body Content
   content: {
     flex: 1,
-    padding: 10,
+    padding: 8,
     flexDirection: "row",
-    gap: 12,
+    gap: 10,
+  },
+  photoSection: {
+    alignItems: "center",
+    gap: 4,
   },
   photoPlaceholder: {
     width: 60,
-    height: 75,
-    backgroundColor: "#f1f5f9",
-    borderRadius: 6,
-    border: "0.5pt solid #cbd5e1",
+    height: 70,
+    backgroundColor: "#f8fafc",
+    borderRadius: 8,
+    border: "1.5pt solid #facc15", // Yellow border for modern look
     justifyContent: "center",
     alignItems: "center",
+    overflow: "hidden",
   },
-  photoIcon: {
-    fontSize: 8,
-    color: "#94a3b8",
+  personIcon: {
+    width: 40,
+    height: 40,
+    opacity: 0.2,
+  },
+  idBadge: {
+    backgroundColor: "#059669",
+    color: "#ffffff",
+    fontSize: 5,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 10,
+    fontWeight: "bold",
   },
   infoSection: {
     flex: 1,
-    gap: 4,
+    gap: 3,
   },
   name: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: "bold",
-    color: "#1e293b",
-    marginBottom: 2,
+    color: "#059669",
+    marginBottom: 1,
   },
   role: {
-    fontSize: 8,
+    fontSize: 7,
     fontWeight: "bold",
+    color: "#64748b",
     textTransform: "uppercase",
-    marginBottom: 4,
-  },
-  roleEmployee: {
-    color: "#4f46e5",
-  },
-  roleBuyer: {
-    color: "#2563eb",
-  },
-  roleSeller: {
-    color: "#059669",
+    marginBottom: 3,
   },
   detailRow: {
     flexDirection: "row",
-    gap: 4,
-    alignItems: "center",
+    marginBottom: 2,
   },
   detailLabel: {
-    fontSize: 6,
+    fontSize: 5.5,
     fontWeight: "bold",
-    color: "#64748b",
-    width: 40,
+    color: "#94a3b8",
+    width: 45,
   },
   detailValue: {
-    fontSize: 6.5,
+    fontSize: 6,
     fontWeight: "bold",
-    color: "#334155",
+    color: "#1e293b",
+    flex: 1,
   },
-  // QR Code Section
+  // Back Side Specifics
+  backContent: {
+    flex: 1,
+    padding: 12,
+    alignItems: "center",
+    justifyContent: "center",
+    textAlign: "center",
+  },
+  addressBox: {
+    marginBottom: 8,
+    alignItems: "center",
+  },
+  addressTitle: {
+    fontSize: 7,
+    fontWeight: "bold",
+    color: "#059669",
+    marginBottom: 3,
+    textTransform: "uppercase",
+  },
+  addressText: {
+    fontSize: 6,
+    color: "#475569",
+    lineHeight: 1.4,
+    maxWidth: 180,
+  },
+  qrSection: {
+    marginTop: 4,
+    alignItems: "center",
+    gap: 4,
+  },
   qrContainer: {
-    position: "absolute",
-    bottom: 10,
-    right: 10,
-    width: 40,
-    height: 40,
-    border: "0.5pt solid #e2e8f0",
-    borderRadius: 4,
+    width: 45,
+    height: 45,
     padding: 2,
+    backgroundColor: "#ffffff",
+    border: "0.5pt solid #facc15",
+    borderRadius: 4,
   },
   qrImage: {
     width: "100%",
     height: "100%",
   },
-  // Back Side Specifics
-  backContent: {
-    flex: 1,
-    padding: 15,
-    alignItems: "center",
-    justifyContent: "center",
-    textAlign: "center",
-    gap: 6,
-  },
-  backTitle: {
-    fontSize: 9,
-    fontWeight: "bold",
-    color: "#1e293b",
-    marginBottom: 4,
-  },
-  address: {
-    fontSize: 7,
-    color: "#64748b",
-    lineHeight: 1.4,
-  },
-  contactInfo: {
-    fontSize: 7,
-    fontWeight: "bold",
-    marginTop: 4,
-  },
-  contactInfoEmployee: {
-    color: "#4f46e5",
-  },
-  contactInfoBuyer: {
-    color: "#2563eb",
-  },
-  contactInfoSeller: {
-    color: "#059669",
-  },
-  terms: {
-    fontSize: 5,
+  qrLabel: {
+    fontSize: 4,
     color: "#94a3b8",
-    marginTop: 10,
-    fontStyle: "italic",
+    fontWeight: "bold",
+  },
+  contactFooter: {
+    marginTop: 8,
+    borderTop: "0.5pt solid #e2e8f0",
+    paddingTop: 6,
+    width: "100%",
+  },
+  contactText: {
+    fontSize: 5.5,
+    color: "#059669",
+    fontWeight: "bold",
   },
   footer: {
-    height: 4,
+    height: 6,
+    backgroundColor: "#facc15", // Yellow Footer
+    flexDirection: "row",
   },
-  footerEmployee: {
-    backgroundColor: "#4f46e5",
-  },
-  footerBuyer: {
-    backgroundColor: "#2563eb",
-  },
-  footerSeller: {
+  footerSegment: {
+    flex: 1,
     backgroundColor: "#059669",
+    marginRight: 20,
   },
 });
 
+// Simple Person Icon SVG component
+const PersonIcon = () => (
+  <Svg viewBox="0 0 24 24" style={styles.personIcon}>
+    <Path
+      d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"
+      fill="#059669"
+    />
+  </Svg>
+);
+
 const EmployeeIDCardPDF = ({ user, qrCodeData, logoUrl, role = "Employee" }) => {
   const isEmployee = role === "Employee";
-  const isBuyer = role === "Buyer";
-  const isSeller = role === "Seller";
-
-  const themeColor = isEmployee ? "#4f46e5" : isBuyer ? "#2563eb" : "#059669";
+  const partnerId = user?.employeeId || user?._id?.substring(18).toUpperCase() || "N/A";
 
   return (
     <Document title={`ID Card - ${user?.name || role}`}>
       <Page size={[243, 153]} style={styles.page}>
         {/* FRONT SIDE */}
         <View style={styles.cardContainer}>
-          <View style={[
-            styles.header,
-            isEmployee && styles.headerEmployee,
-            isBuyer && styles.headerBuyer,
-            isSeller && styles.headerSeller,
-          ]}>
-            <View style={styles.logo} />
-            <Text style={styles.companyName}>HANSARIA FOOD PVT LTD</Text>
+          <View style={styles.header}>
+            <View style={styles.logoContainer}>
+              {logoUrl ? (
+                <Image src={logoUrl} style={styles.logo} />
+              ) : (
+                <View style={[styles.logo, { backgroundColor: "#059669", borderRadius: 4 }]} />
+              )}
+            </View>
+            <View style={styles.companyInfo}>
+              <Text style={styles.companyName}>HANSARIA FOOD PVT LTD</Text>
+              <Text style={styles.companyTagline}>GROWING TOGETHER</Text>
+            </View>
           </View>
 
           <View style={styles.content}>
-            <View style={styles.photoPlaceholder}>
-              <Text style={styles.photoIcon}>PHOTO</Text>
+            <View style={styles.photoSection}>
+              <View style={styles.photoPlaceholder}>
+                <PersonIcon />
+              </View>
+              <Text style={styles.idBadge}>{partnerId}</Text>
             </View>
 
             <View style={styles.infoSection}>
               <Text style={styles.name}>{user?.name?.toUpperCase()}</Text>
-              <Text style={[
-                styles.role,
-                isEmployee && styles.roleEmployee,
-                isBuyer && styles.roleBuyer,
-                isSeller && styles.roleSeller,
-              ]}>{user?.role || role.toUpperCase()}</Text>
+              <Text style={styles.role}>{user?.role || role.toUpperCase()}</Text>
 
               <View style={styles.detailRow}>
-                <Text style={styles.detailLabel}>
-                  {isEmployee ? "EMP ID:" : "PARTNER ID:"}
-                </Text>
-                <Text style={styles.detailValue}>
-                  {user?.employeeId || user?._id?.substring(18).toUpperCase() || "N/A"}
-                </Text>
-              </View>
-              <View style={styles.detailRow}>
-                <Text style={styles.detailLabel}>MOBILE:</Text>
+                <Text style={styles.detailLabel}>MOBILE</Text>
                 <Text style={styles.detailValue}>{user?.mobile || "N/A"}</Text>
               </View>
               <View style={styles.detailRow}>
-                <Text style={styles.detailLabel}>EMAIL:</Text>
-                <Text style={styles.detailValue}>{user?.email || "N/A"}</Text>
+                <Text style={styles.detailLabel}>EMAIL</Text>
+                <Text style={styles.detailValue}>{user?.email?.toLowerCase() || "N/A"}</Text>
               </View>
               <View style={styles.detailRow}>
-                <Text style={styles.detailLabel}>STATUS:</Text>
-                <Text style={styles.detailValue}>VERIFIED</Text>
+                <Text style={styles.detailLabel}>VALIDITY</Text>
+                <Text style={styles.detailValue}>PERMANENT</Text>
+              </View>
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>STATUS</Text>
+                <Text style={[styles.detailValue, { color: "#059669" }]}>VERIFIED PARTNER</Text>
               </View>
             </View>
           </View>
 
-          <View style={styles.qrContainer}>
-            {qrCodeData ? (
-              <Image src={qrCodeData} style={styles.qrImage} />
-            ) : (
-              <View style={{ width: "100%", height: "100%", backgroundColor: "#f1f5f9" }} />
-            )}
+          <View style={styles.footer}>
+            <View style={styles.footerSegment} />
           </View>
-          <View style={[
-            styles.footer,
-            isEmployee && styles.footerEmployee,
-            isBuyer && styles.footerBuyer,
-            isSeller && styles.footerSeller,
-          ]} />
         </View>
       </Page>
 
       {/* BACK SIDE */}
       <Page size={[243, 153]} style={styles.page}>
         <View style={styles.cardContainer}>
-          <View style={[
-            styles.header,
-            isEmployee && styles.headerEmployee,
-            isBuyer && styles.headerBuyer,
-            isSeller && styles.headerSeller,
-          ]}>
+          <View style={styles.header}>
             <Text style={[styles.companyName, { textAlign: "center", flex: 1 }]}>
               OFFICIAL IDENTITY CARD
             </Text>
           </View>
 
           <View style={styles.backContent}>
-            <Text style={styles.backTitle}>HANSARIA FOOD PVT LTD</Text>
-            <View
-              style={{
-                width: 30,
-                height: 1,
-                backgroundColor: themeColor,
-                marginBottom: 4,
-              }}
-            />
-            <Text style={styles.address}>
-              Head Office: 123 Business Hub, MG Road,{"\n"}
-              New Delhi, India - 110001
-            </Text>
-            <Text style={[
-              styles.contactInfo,
-              isEmployee && styles.contactInfoEmployee,
-              isBuyer && styles.contactInfoBuyer,
-              isSeller && styles.contactInfoSeller,
-            ]}>
-              Tel: +91 98765 43210 | info@hansariafood.com
-            </Text>
-            <Text style={[
-              styles.contactInfo,
-              isEmployee && styles.contactInfoEmployee,
-              isBuyer && styles.contactInfoBuyer,
-              isSeller && styles.contactInfoSeller,
-            ]}>www.hansariafood.com</Text>
+            <View style={styles.addressBox}>
+              <Text style={styles.addressTitle}>Corporate Office</Text>
+              <Text style={styles.addressText}>
+                Primarc Square, Plot No.1, Salt Lake Bypass,{"\n"}
+                LA Block, Sector: 3, Bidhannagar,{"\n"}
+                Kolkata, West Bengal 700106
+              </Text>
+            </View>
 
-            <Text style={styles.terms}>
-              If found, please return to the above address. This card is the
-              property of Hansaria Food Pvt Ltd.
-            </Text>
+            <View style={styles.qrSection}>
+              <View style={styles.qrContainer}>
+                {qrCodeData ? (
+                  <Image src={qrCodeData} style={styles.qrImage} />
+                ) : (
+                  <View style={{ width: "100%", height: "100%", backgroundColor: "#f1f5f9" }} />
+                )}
+              </View>
+              <Text style={styles.qrLabel}>SCAN FOR VERIFICATION</Text>
+            </View>
+
+            <View style={styles.contactFooter}>
+              <Text style={styles.contactText}>
+                www.hansariafood.com | info@hansariafood.com
+              </Text>
+            </View>
           </View>
-          <View style={[
-            styles.footer,
-            isEmployee && styles.footerEmployee,
-            isBuyer && styles.footerBuyer,
-            isSeller && styles.footerSeller,
-          ]} />
+          
+          <View style={styles.footer}>
+            <View style={styles.footerSegment} />
+          </View>
         </View>
       </Page>
     </Document>

@@ -25,10 +25,27 @@ import { toast } from "react-toastify";
 const EmployeeDashboard = () => {
   const { user } = useAuth();
   const [isPrinting, setIsPrinting] = useState(false);
+  const [logoBase64, setLogoBase64] = useState(null);
   const [stats, setStats] = useState({
     totalSaudas: 0,
     activeBids: 0,
   });
+
+  useEffect(() => {
+    // Pre-convert logo to base64 for PDF reliability
+    const convertLogo = async () => {
+      try {
+        const response = await fetch(logo);
+        const blob = await response.blob();
+        const reader = new FileReader();
+        reader.onloadend = () => setLogoBase64(reader.result);
+        reader.readAsDataURL(blob);
+      } catch (e) {
+        console.error("Logo conversion failed", e);
+      }
+    };
+    convertLogo();
+  }, []);
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -104,7 +121,7 @@ const EmployeeDashboard = () => {
 
       // Generate PDF
       console.log("Creating PDF document...");
-      const doc = <EmployeeIDCardPDF user={user} qrCodeData={qrCodeUrl} />;
+      const doc = <EmployeeIDCardPDF user={user} qrCodeData={qrCodeUrl} logoUrl={logoBase64} />;
       
       console.log("Converting PDF to blob...");
       const blob = await pdf(doc).toBlob();
