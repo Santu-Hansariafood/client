@@ -24,29 +24,41 @@ const AIAgentMessages = ({
       {messages.map((msg, idx) => (
         <div
           key={idx}
-          className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"} animate-in fade-in slide-in-from-bottom-2 duration-300`}
+          className={`flex ${
+            msg.role === "user" ? "justify-end" : "justify-start"
+          } animate-in fade-in slide-in-from-bottom-2 duration-300`}
         >
           <div
-            className={`group relative max-w-[85%] rounded-2xl p-3.5 shadow-sm ${
+            className={`group relative max-w-[85%] rounded-2xl p-3.5 pb-8 shadow-sm ${
               msg.role === "user"
                 ? "bg-emerald-600 text-white rounded-tr-none"
                 : "bg-white border border-slate-100 text-slate-700 rounded-tl-none"
             }`}
           >
+            <p className="text-sm leading-relaxed whitespace-pre-wrap">
+              {msg.content}
+            </p>
+
             <button
               onClick={() => handleCopy(msg.content, idx)}
-              className={`absolute top-2 ${msg.role === "user" ? "-left-8" : "-right-8"} p-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-all hover:bg-slate-200 text-slate-400 hover:text-slate-600 bg-white/50 backdrop-blur-sm shadow-sm`}
+              className={`absolute bottom-2 right-2 p-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-200 hover:bg-slate-200 ${
+                msg.role === "user"
+                  ? "bg-white/20 text-white hover:text-slate-700"
+                  : "bg-white/70 text-slate-400 hover:text-slate-600"
+              } backdrop-blur-sm shadow-sm`}
               title="Copy message"
             >
               {copiedIndex === idx ? (
-                <FaCheck size={12} className="text-emerald-500" />
+                <FaCheck
+                  size={12}
+                  className={
+                    msg.role === "user" ? "text-green-200" : "text-emerald-500"
+                  }
+                />
               ) : (
                 <FaCopy size={12} />
               )}
             </button>
-            <p className="text-sm leading-relaxed whitespace-pre-wrap">
-              {msg.content}
-            </p>
 
             {msg.suggestions && (
               <div className="mt-3 flex flex-wrap gap-2">
@@ -68,6 +80,7 @@ const AIAgentMessages = ({
           </div>
         </div>
       ))}
+
       {(isLoadingData || thinkingPath) && (
         <div className="flex justify-start animate-in fade-in duration-300">
           <div className="bg-white border border-slate-100 p-3.5 rounded-2xl rounded-tl-none shadow-sm flex items-center gap-3">
