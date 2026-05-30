@@ -39,26 +39,26 @@ const AIAgentMessages = ({
               {msg.content}
             </p>
 
-            <button
-              onClick={() => handleCopy(msg.content, idx)}
-              className={`absolute bottom-2 right-2 p-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-200 hover:bg-slate-200 ${
-                msg.role === "user"
-                  ? "bg-white/20 text-white hover:text-slate-700"
-                  : "bg-white/70 text-slate-400 hover:text-slate-600"
-              } backdrop-blur-sm shadow-sm`}
-              title="Copy message"
-            >
-              {copiedIndex === idx ? (
-                <FaCheck
-                  size={12}
-                  className={
-                    msg.role === "user" ? "text-green-200" : "text-emerald-500"
-                  }
-                />
-              ) : (
-                <FaCopy size={12} />
-              )}
-            </button>
+            {msg.role === "user" ? (
+              <div
+                className="absolute bottom-2 right-2 text-white/70"
+                title="Sent"
+              >
+                <FaCheck size={12} />
+              </div>
+            ) : (
+              <button
+                onClick={() => handleCopy(msg.content, idx)}
+                className="absolute bottom-2 right-2 p-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-200 hover:bg-slate-200 bg-white/70 text-slate-400 hover:text-slate-600 backdrop-blur-sm shadow-sm"
+                title="Copy message"
+              >
+                {copiedIndex === idx ? (
+                  <FaCheck size={12} className="text-emerald-500" />
+                ) : (
+                  <FaCopy size={12} />
+                )}
+              </button>
+            )}
 
             {msg.suggestions && (
               <div className="mt-3 flex flex-wrap gap-2">
