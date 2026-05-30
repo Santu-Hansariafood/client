@@ -68,18 +68,19 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
         className={`
           fixed lg:sticky top-0 left-0 z-40 h-screen
           text-slate-100
-          shadow-[2px_0_10px_rgba(0,0,0,0.1)]
-          bg-white
+          shadow-[4px_0_24px_rgba(0,0,0,0.3)]
+          bg-slate-950
           transform transition-[width,transform] duration-500 ease-[cubic-bezier(0.23,1,0.32,1)]
           ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"}
           lg:translate-x-0
           ${isCollapsed ? "w-[5rem]" : "w-72"}
           flex flex-col shrink-0
+          border-r border-white/5
         `}
       >
-        <div className="relative flex items-center h-20 px-6 shrink-0 border-b border-slate-100">
+        <div className="relative flex items-center h-20 px-6 shrink-0 border-b border-white/5">
           <div className="flex items-center gap-3 min-w-0 w-full">
-            <div className="group relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-600 shadow-lg shadow-emerald-200 transition-all duration-500 hover:rotate-6">
+            <div className="group relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-600 shadow-lg shadow-emerald-900/20 transition-all duration-500 hover:rotate-6">
               <Icons.FaLeaf className="text-lg text-white" />
             </div>
 
@@ -88,10 +89,10 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
                 isCollapsed ? "opacity-0 w-0 overflow-hidden" : "opacity-100"
               }`}
             >
-              <h1 className="font-black text-slate-900 text-lg tracking-tight leading-none">
+              <h1 className="font-black text-white text-lg tracking-tight leading-none">
                 HANSARIA
               </h1>
-              <span className="text-[9px] font-bold text-emerald-600 uppercase tracking-widest mt-1">
+              <span className="text-[9px] font-bold text-emerald-500 uppercase tracking-widest mt-1">
                 BID PORTAL
               </span>
             </div>
@@ -101,7 +102,7 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
             <button
               type="button"
               onClick={() => setIsCollapsed(true)}
-              className="absolute -right-3 top-1/2 -translate-y-1/2 flex items-center justify-center w-6 h-6 rounded-full bg-white border border-slate-200 text-slate-400 hover:text-emerald-600 hover:border-emerald-200 transition-all duration-300 shadow-sm z-50"
+              className="absolute -right-3 top-1/2 -translate-y-1/2 flex items-center justify-center w-6 h-6 rounded-full bg-slate-900 border border-white/10 text-slate-500 hover:text-emerald-400 hover:border-emerald-500/50 transition-all duration-300 shadow-lg z-50"
             >
               <Icons.FaChevronLeft size={8} />
             </button>
@@ -112,7 +113,7 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
           <button
             type="button"
             onClick={() => setIsCollapsed(false)}
-            className="mx-auto mt-4 mb-2 flex items-center justify-center w-8 h-8 rounded-lg bg-slate-50 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 transition-all duration-300"
+            className="mx-auto mt-4 mb-2 flex items-center justify-center w-8 h-8 rounded-lg bg-white/5 text-slate-400 hover:text-emerald-400 hover:bg-white/10 transition-all duration-300"
           >
             <Icons.FaChevronRight size={10} />
           </button>
@@ -158,11 +159,11 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
                       rounded-xl transition-all duration-300
                       ${
                         isCollapsed
-                          ? "justify-center py-3 h-12 hover:bg-slate-50"
+                          ? "justify-center py-3 h-12 hover:bg-white/5"
                           : `py-3 px-4 h-12 ${
                               isSectionExpanded
-                                ? "bg-emerald-50 text-emerald-700"
-                                : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
+                                ? "bg-white/10 text-white"
+                                : "text-slate-400 hover:bg-white/5 hover:text-white"
                             }`
                       }
                     `}
@@ -170,8 +171,8 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
                     <span
                       className={`shrink-0 transition-all duration-300 ${
                         isSectionExpanded
-                          ? "text-emerald-600"
-                          : "text-slate-400 group-hover:text-slate-600"
+                          ? "text-emerald-400"
+                          : "text-slate-500 group-hover:text-slate-300"
                       }`}
                     >
                       {renderIcon(sectionIcon)}
@@ -185,14 +186,14 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
                         <Icons.FaChevronDown 
                           size={8} 
                           className={`shrink-0 transition-transform duration-300 ${
-                            isSectionExpanded ? "rotate-180 text-emerald-600" : "text-slate-300 group-hover:text-slate-400"
+                            isSectionExpanded ? "rotate-180 text-emerald-400" : "text-slate-600 group-hover:text-slate-400"
                           }`}
                         />
                       </>
                     )}
 
                     {isCollapsed && isSectionExpanded && (
-                      <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-emerald-600 rounded-l-full" />
+                      <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-emerald-500 rounded-l-full shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
                     )}
                   </button>
 
@@ -207,7 +208,10 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
                         }
                       `}
                     >
-                      <div className="pl-9 pr-1 py-1 space-y-1">
+                      <div className="pl-9 pr-1 py-1 space-y-1 relative">
+                        {/* Connecting Line */}
+                        <div className="absolute left-[22px] top-0 bottom-4 w-px bg-white/5" />
+                        
                         {section.actions.map((action, idx) => {
                           const isActive = location.pathname.startsWith(action.link);
 
@@ -223,8 +227,8 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
                                 transition-all duration-200
                                 ${
                                   isActive
-                                    ? "bg-emerald-600 text-white shadow-md shadow-emerald-100"
-                                    : "text-slate-500 hover:text-emerald-600 hover:bg-emerald-50/50"
+                                    ? "bg-emerald-600 text-white shadow-lg shadow-emerald-900/20"
+                                    : "text-slate-500 hover:text-white hover:bg-white/5"
                                 }
                               `}
                             >
