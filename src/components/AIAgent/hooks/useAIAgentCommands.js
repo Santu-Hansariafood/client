@@ -1,5 +1,5 @@
 import { useRef } from "react";
-import dashboardData from "../../data/dashboardData.json";
+import dashboardData from "../../../data/dashboardData.json";
 
 export const useAIAgentCommands = ({
   input,
