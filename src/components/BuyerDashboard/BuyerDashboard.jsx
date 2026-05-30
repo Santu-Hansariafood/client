@@ -35,8 +35,10 @@ import { pdf } from "@react-pdf/renderer";
 import BuyerProformaInvoicePDF from "./BuyerProformaInvoicePDF";
 import { downloadFile } from "../../utils/fileDownloader";
 import logo from "../../assets/Hans.png";
+import QRCode from "qrcode";
+import EmployeeIDCardPDF from "../EmployeeDashboard/EmployeeIDCardPDF";
 
-const HeaderSection = memo(({ userName, totalBrokerage, companyName }) => {
+const HeaderSection = memo(({ userName, totalBrokerage, companyName, onPrintIDCard, isPrinting }) => {
   const greeting = useMemo(() => {
     const hour = new Date().getHours();
     if (hour < 12) return "Good Morning";
@@ -70,12 +72,21 @@ const HeaderSection = memo(({ userName, totalBrokerage, companyName }) => {
                 {userName?.split(" ")[0] || "Partner"}
               </span>
             </h1>
-            <p className="text-slate-500/60 text-[10px] md:text-sm font-semibold mt-0.5 md:mt-1 hidden sm:block">
-              Managing procurement for{" "}
-              <span className="text-slate-800">
-                {companyName || "Verified Buyer"}
-              </span>
-            </p>
+            <div className="flex items-center gap-3 mt-1 md:mt-2">
+              <p className="text-slate-500/60 text-[10px] md:text-sm font-semibold hidden sm:block">
+                Managing procurement for{" "}
+                <span className="text-slate-800">
+                  {companyName || "Verified Buyer"}
+                </span>
+              </p>
+              <button
+                onClick={onPrintIDCard}
+                disabled={isPrinting}
+                className="flex items-center gap-2 px-3 py-1 md:px-4 md:py-2 bg-blue-600 text-white rounded-lg text-[8px] md:text-xs font-black uppercase tracking-widest hover:bg-blue-700 transition-all shadow-lg shadow-blue-100 disabled:opacity-50"
+              >
+                {isPrinting ? "Generating..." : "Print ID Card"}
+              </button>
+            </div>
           </div>
         </div>
 
@@ -104,6 +115,8 @@ HeaderSection.propTypes = {
   userName: PropTypes.string,
   totalBrokerage: PropTypes.number.isRequired,
   companyName: PropTypes.string,
+  onPrintIDCard: PropTypes.func,
+  isPrinting: PropTypes.bool,
 };
 
 const StatCard = memo(
@@ -291,6 +304,7 @@ const BuyerDashboard = () => {
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isPrinting, setIsPrinting] = useState(false);
 
   const fetchDashboardData = useCallback(async () => {
     if (!mobile) {
@@ -325,6 +339,61 @@ const BuyerDashboard = () => {
   useEffect(() => {
     fetchDashboardData();
   }, [fetchDashboardData]);
+
+  const handlePrintIDCard = async () => {
+    if (!user) {
+      toast.error("User data not found!");
+      return;
+    }
+
+    setIsPrinting(true);
+    try {
+      const qrData = JSON.stringify({
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        mobile: user.mobile,
+        role: "Buyer",
+        status: "Verified",
+      });
+
+      const qrCodeUrl = await QRCode.toDataURL(qrData, {
+        margin: 1,
+        width: 200,
+        color: { dark: "#000000", light: "#ffffff" },
+      });
+
+      const doc = (
+        <EmployeeIDCardPDF
+          user={{
+            ...user,
+            role: "BUYER PARTNER",
+            employeeId: user._id?.substring(18).toUpperCase(),
+          }}
+          qrCodeData={qrCodeUrl}
+          logoUrl={logo}
+          role="Buyer"
+        />
+      );
+
+      const blob = await pdf(doc).toBlob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `ID_Card_Buyer_${user.name.replace(/\s+/g, "_")}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      toast.success("ID Card generated successfully!");
+    } catch (error) {
+      console.error("Error generating ID Card:", error);
+      toast.error("Failed to generate ID Card");
+    } finally {
+      setIsPrinting(false);
+    }
+  };
 
   const handleDownloadInvoice = useCallback(
     async (companyName) => {
@@ -458,6 +527,8 @@ const BuyerDashboard = () => {
             totalBrokerage={stats.totalBrokerage}
             companyName={buyerProfile?.companyName}
             onRefresh={fetchDashboardData}
+            onPrintIDCard={handlePrintIDCard}
+            isPrinting={isPrinting}
           />
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 sm:gap-8">

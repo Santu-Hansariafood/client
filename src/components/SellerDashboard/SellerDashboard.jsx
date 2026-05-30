@@ -34,10 +34,12 @@ import { pdf } from "@react-pdf/renderer";
 import ProformaInvoicePDF from "./ProformaInvoicePDF";
 import { downloadFile } from "../../utils/fileDownloader";
 import logo from "../../assets/Hans.png";
+import QRCode from "qrcode";
+import EmployeeIDCardPDF from "../EmployeeDashboard/EmployeeIDCardPDF";
 
 const PopupBox = lazy(() => import("../../common/PopupBox/PopupBox"));
 
-const HeaderSection = memo(({ userName, totalBrokerage }) => {
+const HeaderSection = memo(({ userName, totalBrokerage, onPrintIDCard, isPrinting }) => {
   const greeting = useMemo(() => {
     const hour = new Date().getHours();
     if (hour < 12) return "Good Morning";
@@ -71,9 +73,18 @@ const HeaderSection = memo(({ userName, totalBrokerage }) => {
                 Mr. {userName?.split(" ")[0] || "Partner"}
               </span>
             </h1>
-            <p className="text-slate-500/60 text-[9px] md:text-sm font-semibold mt-0.5 md:mt-1 hidden sm:block line-clamp-1">
-              Strategic intelligence and material logistics at your fingertips.
-            </p>
+            <div className="flex items-center gap-3 mt-1 md:mt-2">
+              <p className="text-slate-500/60 text-[9px] md:text-sm font-semibold hidden sm:block line-clamp-1">
+                Strategic intelligence and material logistics at your fingertips.
+              </p>
+              <button
+                onClick={onPrintIDCard}
+                disabled={isPrinting}
+                className="flex items-center gap-2 px-3 py-1 md:px-4 md:py-2 bg-emerald-600 text-white rounded-lg text-[8px] md:text-xs font-black uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-100 disabled:opacity-50"
+              >
+                {isPrinting ? "Generating..." : "Print ID Card"}
+              </button>
+            </div>
           </div>
         </div>
 
@@ -102,6 +113,8 @@ HeaderSection.displayName = "HeaderSection";
 HeaderSection.propTypes = {
   userName: PropTypes.string,
   totalBrokerage: PropTypes.number,
+  onPrintIDCard: PropTypes.func,
+  isPrinting: PropTypes.bool,
 };
 
 const StatCard = memo(
@@ -317,6 +330,7 @@ const SellerDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [retryCount, setRetryCount] = useState(0);
+  const [isPrinting, setIsPrinting] = useState(false);
 
   const [sellerBidCount, setSellerBidCount] = useState(0);
   const [participateBidCount, setParticipateBidCount] = useState(0);
@@ -494,6 +508,61 @@ const SellerDashboard = () => {
     [mobile],
   );
 
+  const handlePrintIDCard = async () => {
+    if (!user) {
+      toast.error("User data not found!");
+      return;
+    }
+
+    setIsPrinting(true);
+    try {
+      const qrData = JSON.stringify({
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        mobile: user.mobile,
+        role: "Seller",
+        status: "Verified",
+      });
+
+      const qrCodeUrl = await QRCode.toDataURL(qrData, {
+        margin: 1,
+        width: 200,
+        color: { dark: "#000000", light: "#ffffff" },
+      });
+
+      const doc = (
+        <EmployeeIDCardPDF
+          user={{
+            ...user,
+            role: "SELLER PARTNER",
+            employeeId: user._id?.substring(18).toUpperCase(),
+          }}
+          qrCodeData={qrCodeUrl}
+          logoUrl={logo}
+          role="Seller"
+        />
+      );
+
+      const blob = await pdf(doc).toBlob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `ID_Card_Seller_${user.name.replace(/\s+/g, "_")}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      toast.success("ID Card generated successfully!");
+    } catch (error) {
+      console.error("Error generating ID Card:", error);
+      toast.error("Failed to generate ID Card");
+    } finally {
+      setIsPrinting(false);
+    }
+  };
+
   const navigationItems = useMemo(
     () => [
       {
@@ -593,6 +662,8 @@ const SellerDashboard = () => {
               userName={user?.name}
               totalBrokerage={totalBrokerage}
               onRefresh={refreshDashboard}
+              onPrintIDCard={handlePrintIDCard}
+              isPrinting={isPrinting}
             />
           </header>
 

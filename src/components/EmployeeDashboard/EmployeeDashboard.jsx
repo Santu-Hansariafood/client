@@ -71,6 +71,56 @@ const EmployeeDashboard = () => {
     fetchStats();
   }, []);
 
+  const handlePrintIDCard = async () => {
+    if (!user) {
+      toast.error("User data not found!");
+      return;
+    }
+
+    setIsPrinting(true);
+    try {
+      // Generate QR Code with all employee data
+      const qrData = JSON.stringify({
+        id: user.employeeId,
+        name: user.name,
+        email: user.email,
+        mobile: user.mobile,
+        role: user.role || "Employee",
+        status: "Verified",
+      });
+
+      const qrCodeUrl = await QRCode.toDataURL(qrData, {
+        margin: 1,
+        width: 200,
+        color: {
+          dark: "#000000",
+          light: "#ffffff",
+        },
+      });
+
+      // Generate PDF
+      const doc = <EmployeeIDCardPDF user={user} qrCodeData={qrCodeUrl} logoUrl={logo} />;
+      const blob = await pdf(doc).toBlob();
+      const url = URL.createObjectURL(blob);
+
+      // Create a temporary link and trigger download/print
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `ID_Card_${user.name.replace(/\s+/g, "_")}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      toast.success("ID Card generated successfully!");
+    } catch (error) {
+      console.error("Error generating ID Card:", error);
+      toast.error("Failed to generate ID Card");
+    } finally {
+      setIsPrinting(false);
+    }
+  };
+
   const getGreeting = () => {
     const hour = new Date().getHours();
     if (hour < 12) return "Good Morning";
@@ -169,10 +219,24 @@ const EmployeeDashboard = () => {
                 </p>
               </div>
             </div>
-            <button className="flex items-center gap-2 px-5 py-2.5 bg-slate-900 text-white rounded-xl text-xs font-black uppercase tracking-widest hover:bg-indigo-600 transition-all shadow-lg shadow-slate-200">
-              <FaUserEdit />
-              Edit Profile
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handlePrintIDCard}
+                disabled={isPrinting}
+                className="flex items-center gap-2 px-5 py-2.5 bg-indigo-600 text-white rounded-xl text-xs font-black uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isPrinting ? (
+                  <FaSpinner className="animate-spin" />
+                ) : (
+                  <FaIdCard />
+                )}
+                {isPrinting ? "Generating..." : "Print ID Card"}
+              </button>
+              <button className="flex items-center gap-2 px-5 py-2.5 bg-slate-900 text-white rounded-xl text-xs font-black uppercase tracking-widest hover:bg-indigo-600 transition-all shadow-lg shadow-slate-200">
+                <FaUserEdit />
+                Edit Profile
+              </button>
+            </div>
           </div>
           
           <div className="p-8 sm:p-10 grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10">

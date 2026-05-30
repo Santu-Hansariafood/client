@@ -20,20 +20,18 @@ Font.register({
 
 const styles = StyleSheet.create({
   page: {
-    padding: 20,
-    backgroundColor: "#f8fafc",
+    padding: 0,
+    backgroundColor: "#ffffff",
     fontFamily: "Inter",
     flexDirection: "column",
     alignItems: "center",
-    gap: 20,
+    justifyContent: "center",
   },
   // Standard ID Card Size (CR80): 3.375" x 2.125" -> ~243pt x 153pt
   cardContainer: {
     width: 243,
     height: 153,
     backgroundColor: "#ffffff",
-    borderRadius: 12,
-    border: "1pt solid #e2e8f0",
     overflow: "hidden",
     position: "relative",
     display: "flex",
@@ -42,11 +40,19 @@ const styles = StyleSheet.create({
   // Front Side Header
   header: {
     height: 40,
-    backgroundColor: "#4f46e5", // Indigo-600
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 12,
     gap: 8,
+  },
+  headerEmployee: {
+    backgroundColor: "#4f46e5", // Indigo-600
+  },
+  headerBuyer: {
+    backgroundColor: "#2563eb", // Blue-600
+  },
+  headerSeller: {
+    backgroundColor: "#059669", // Emerald-600
   },
   logo: {
     width: 24,
@@ -93,9 +99,17 @@ const styles = StyleSheet.create({
   role: {
     fontSize: 8,
     fontWeight: 700,
-    color: "#4f46e5",
     textTransform: "uppercase",
     marginBottom: 4,
+  },
+  roleEmployee: {
+    color: "#4f46e5",
+  },
+  roleBuyer: {
+    color: "#2563eb",
+  },
+  roleSeller: {
+    color: "#059669",
   },
   detailRow: {
     flexDirection: "row",
@@ -151,8 +165,16 @@ const styles = StyleSheet.create({
   contactInfo: {
     fontSize: 7,
     fontWeight: 700,
-    color: "#4f46e5",
     marginTop: 4,
+  },
+  contactInfoEmployee: {
+    color: "#4f46e5",
+  },
+  contactInfoBuyer: {
+    color: "#2563eb",
+  },
+  contactInfoSeller: {
+    color: "#059669",
   },
   terms: {
     fontSize: 5,
@@ -162,85 +184,144 @@ const styles = StyleSheet.create({
   },
   footer: {
     height: 4,
+  },
+  footerEmployee: {
     backgroundColor: "#4f46e5",
+  },
+  footerBuyer: {
+    backgroundColor: "#2563eb",
+  },
+  footerSeller: {
+    backgroundColor: "#059669",
   },
 });
 
-const EmployeeIDCardPDF = ({ user, qrCodeData, logoUrl }) => (
-  <Document title={`ID Card - ${user?.name || "Employee"}`}>
-    <Page size="A4" style={styles.page}>
-      {/* FRONT SIDE */}
-      <View style={styles.cardContainer}>
-        <View style={styles.header}>
-          {logoUrl ? (
-            <Image src={logoUrl} style={styles.styles.logo} />
-          ) : (
-            <View style={styles.logo} />
-          )}
-          <Text style={styles.companyName}>HANSARIA FOOD PVT LTD</Text>
-        </View>
+const EmployeeIDCardPDF = ({ user, qrCodeData, logoUrl, role = "Employee" }) => {
+  const isEmployee = role === "Employee";
+  const isBuyer = role === "Buyer";
+  const isSeller = role === "Seller";
 
-        <View style={styles.content}>
-          <View style={styles.photoPlaceholder}>
-            <Text style={styles.photoIcon}>PHOTO</Text>
+  const headerStyle = [
+    styles.header,
+    isEmployee && styles.headerEmployee,
+    isBuyer && styles.headerBuyer,
+    isSeller && styles.headerSeller,
+  ];
+
+  const roleTextStyle = [
+    styles.role,
+    isEmployee && styles.roleEmployee,
+    isBuyer && styles.roleBuyer,
+    isSeller && styles.roleSeller,
+  ];
+
+  const contactTextStyle = [
+    styles.contactInfo,
+    isEmployee && styles.contactInfoEmployee,
+    isBuyer && styles.contactInfoBuyer,
+    isSeller && styles.contactInfoSeller,
+  ];
+
+  const footerStyle = [
+    styles.footer,
+    isEmployee && styles.footerEmployee,
+    isBuyer && styles.footerBuyer,
+    isSeller && styles.footerSeller,
+  ];
+
+  const themeColor = isEmployee ? "#4f46e5" : isBuyer ? "#2563eb" : "#059669";
+
+  return (
+    <Document title={`ID Card - ${user?.name || role}`}>
+      <Page size={[243, 153]} style={styles.page}>
+        {/* FRONT SIDE */}
+        <View style={styles.cardContainer}>
+          <View style={headerStyle}>
+            {logoUrl ? (
+              <Image src={logoUrl} style={styles.logo} />
+            ) : (
+              <View style={styles.logo} />
+            )}
+            <Text style={styles.companyName}>HANSARIA FOOD PVT LTD</Text>
           </View>
 
-          <View style={styles.infoSection}>
-            <Text style={styles.name}>{user?.name?.toUpperCase()}</Text>
-            <Text style={styles.role}>{user?.role || "EMPLOYEE"}</Text>
+          <View style={styles.content}>
+            <View style={styles.photoPlaceholder}>
+              <Text style={styles.photoIcon}>PHOTO</Text>
+            </View>
 
-            <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>EMP ID:</Text>
-              <Text style={styles.detailValue}>{user?.employeeId || "N/A"}</Text>
-            </View>
-            <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>MOBILE:</Text>
-              <Text style={styles.detailValue}>{user?.mobile || "N/A"}</Text>
-            </View>
-            <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>EMAIL:</Text>
-              <Text style={styles.detailValue}>{user?.email || "N/A"}</Text>
-            </View>
-            <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>STATUS:</Text>
-              <Text style={styles.detailValue}>VERIFIED</Text>
+            <View style={styles.infoSection}>
+              <Text style={styles.name}>{user?.name?.toUpperCase()}</Text>
+              <Text style={roleTextStyle}>{user?.role || role.toUpperCase()}</Text>
+
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>
+                  {isEmployee ? "EMP ID:" : "PARTNER ID:"}
+                </Text>
+                <Text style={styles.detailValue}>
+                  {user?.employeeId || user?._id?.substring(18).toUpperCase() || "N/A"}
+                </Text>
+              </View>
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>MOBILE:</Text>
+                <Text style={styles.detailValue}>{user?.mobile || "N/A"}</Text>
+              </View>
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>EMAIL:</Text>
+                <Text style={styles.detailValue}>{user?.email || "N/A"}</Text>
+              </View>
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>STATUS:</Text>
+                <Text style={styles.detailValue}>VERIFIED</Text>
+              </View>
             </View>
           </View>
-        </View>
 
-        <View style={styles.qrContainer}>
-          {qrCodeData && <Image src={qrCodeData} style={styles.qrImage} />}
+          <View style={styles.qrContainer}>
+            {qrCodeData && <Image src={qrCodeData} style={styles.qrImage} />}
+          </View>
+          <View style={footerStyle} />
         </View>
-        <View style={styles.footer} />
-      </View>
+      </Page>
 
       {/* BACK SIDE */}
-      <View style={styles.cardContainer}>
-        <View style={styles.header}>
-          <Text style={[styles.companyName, { textAlign: "center", flex: 1 }]}>
-            OFFICIAL IDENTITY CARD
-          </Text>
-        </View>
+      <Page size={[243, 153]} style={styles.page}>
+        <View style={styles.cardContainer}>
+          <View style={headerStyle}>
+            <Text style={[styles.companyName, { textAlign: "center", flex: 1 }]}>
+              OFFICIAL IDENTITY CARD
+            </Text>
+          </View>
 
-        <View style={styles.backContent}>
-          <Text style={styles.backTitle}>HANSARIA FOOD PVT LTD</Text>
-          <Text style={styles.address}>
-            Head Office: 123 Business Hub, MG Road,{"\n"}
-            New Delhi, India - 110001
-          </Text>
-          <Text style={styles.contactInfo}>
-            Tel: +91 98765 43210 | info@hansariafood.com
-          </Text>
-          <Text style={styles.contactInfo}>www.hansariafood.com</Text>
+          <View style={styles.backContent}>
+            <Text style={styles.backTitle}>HANSARIA FOOD PVT LTD</Text>
+            <View
+              style={{
+                width: 30,
+                height: 1,
+                backgroundColor: themeColor,
+                marginBottom: 4,
+              }}
+            />
+            <Text style={styles.address}>
+              Head Office: 123 Business Hub, MG Road,{"\n"}
+              New Delhi, India - 110001
+            </Text>
+            <Text style={contactTextStyle}>
+              Tel: +91 98765 43210 | info@hansariafood.com
+            </Text>
+            <Text style={contactTextStyle}>www.hansariafood.com</Text>
 
-          <Text style={styles.terms}>
-            If found, please return to the above address. This card is the property of Hansaria Food Pvt Ltd.
-          </Text>
+            <Text style={styles.terms}>
+              If found, please return to the above address. This card is the
+              property of Hansaria Food Pvt Ltd.
+            </Text>
+          </View>
+          <View style={footerStyle} />
         </View>
-        <View style={styles.footer} />
-      </View>
-    </Page>
-  </Document>
-);
+      </Page>
+    </Document>
+  );
+};
 
 export default EmployeeIDCardPDF;
