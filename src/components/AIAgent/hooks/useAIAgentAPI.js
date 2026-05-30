@@ -1321,13 +1321,35 @@ export const useAIAgentAPI = (
     setIsLoadingData(true);
     setThinkingPath(`Extracting full Lorry Profile for ${lorryNo}...`);
     try {
-      const searchLorry = lorryNo.replace(/\s+/g, "").toUpperCase();
+      const signal = getApiSignal();
+      const rawLorry = lorryNo.toUpperCase();
+      const cleanLorry = lorryNo.replace(/\s+/g, "").toUpperCase();
 
-      const response = await api.get(
-        `/loading-entries/lorry-wise?lorryNumber=${searchLorry}`,
-        { signal: getApiSignal() },
+      // Try searching with the exact string first, then the cleaned string if they are different
+      let response = await api.get(
+        `/loading-entries/lorry-wise?lorryNumber=${encodeURIComponent(rawLorry)}`,
+        { signal },
       );
-      const entries = response.data.data || response.data || [];
+      let entries = response.data.data || response.data || [];
+
+      if (entries.length === 0 && rawLorry !== cleanLorry) {
+        setThinkingPath(`Retrying without spaces: ${cleanLorry}...`);
+        response = await api.get(
+          `/loading-entries/lorry-wise?lorryNumber=${encodeURIComponent(cleanLorry)}`,
+          { signal },
+        );
+        entries = response.data.data || response.data || [];
+      }
+
+      // If still no results and it's a long number, try a more flexible search via general loading entries
+      if (entries.length === 0) {
+        setThinkingPath(`Searching system-wide for ${cleanLorry}...`);
+        response = await api.get(
+          `/loading-entries?search=${encodeURIComponent(cleanLorry)}`,
+          { signal },
+        );
+        entries = response.data.data || response.data || [];
+      }
 
       if (entries.length > 0) {
         let content = `*Full Lorry Intelligence Report: ${lorryNo.toUpperCase()}*\n\n`;
@@ -1370,7 +1392,7 @@ export const useAIAgentAPI = (
           role: "assistant",
           content: content,
           suggestions: [
-            `Download Lorry Report ${searchLorry}`,
+            `Download Lorry Report ${cleanLorry}`,
             `Sauda ${entries[0].saudaNo} details`,
             "Active bids"
           ],
