@@ -77,26 +77,6 @@ input[type="number"] {
   }
 }
 
-.security-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background-color: black;
-  z-index: 999999;
-  display: none;
-  justify-content: center;
-  align-items: center;
-  color: white;
-  font-family: 'Inter', sans-serif;
-  text-align: center;
-}
-
-.security-overlay.active {
-  display: flex;
-}
-
 @media print {
   body.protection-active {
     display: none !important;

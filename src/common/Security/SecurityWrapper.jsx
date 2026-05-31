@@ -37,8 +37,7 @@ const SecurityWrapper = ({ children }) => {
       .security-overlay {
         position: fixed;
         inset: 0;
-        background: rgba(0,0,0,0.97);
-        backdrop-filter: blur(25px);
+        background: #000000 !important;
         z-index: 999999999;
         display: flex;
         align-items: center;
@@ -47,7 +46,7 @@ const SecurityWrapper = ({ children }) => {
         color: white;
         text-align: center;
         font-family: sans-serif;
-        transition: all 0.2s ease;
+        transition: opacity 0.3s ease;
       }
 
       .security-watermark {
@@ -59,38 +58,46 @@ const SecurityWrapper = ({ children }) => {
         transform: rotate(-30deg);
         font-size: 42px;
         font-weight: bold;
-        color: rgba(255,255,255,0.06);
+        color: rgba(255, 255, 255, 0.08);
         z-index: 99999;
         pointer-events: none;
         white-space: nowrap;
       }
 
       .security-protected {
-        filter: blur(20px) brightness(0.3);
+        filter: blur(40px) brightness(0) !important;
         pointer-events: none !important;
       }
     `;
 
     document.head.appendChild(style);
 
-    const activateProtection = (msg = "Unauthorized action detected") => {
+    const activateProtection = (msg = "Unauthorized action detected", persistent = false) => {
       setWarning(msg);
       setBlocked(true);
 
       clearTimeout(timeoutRef.current);
 
-      timeoutRef.current = setTimeout(() => {
-        setBlocked(false);
-      }, 2500);
+      if (!persistent) {
+        timeoutRef.current = setTimeout(() => {
+          setBlocked(false);
+        }, 3000);
+      }
     };
 
     const handleBlur = () => {
-      activateProtection("Screen visibility lost");
+      // Re-enabled to prevent snapshots when focus is lost (common during screenshotting)
+      activateProtection("Screen content hidden for security", false);
     };
 
     const handleVisibility = () => {
       if (document.hidden) {
-        activateProtection("Tab switch detected");
+        activateProtection("Content protected", true);
+      } else {
+        // When coming back, keep it blocked for a moment to ensure no snapshots were taken
+        timeoutRef.current = setTimeout(() => {
+          setBlocked(false);
+        }, 1000);
       }
     };
 
@@ -98,72 +105,66 @@ const SecurityWrapper = ({ children }) => {
       const key = e.key.toLowerCase();
       const isEmployee = userRole === "Employee";
 
+      // Comprehensive list of blocked keys and shortcuts
       const blockedKeys =
         e.key === "PrintScreen" ||
         e.keyCode === 44 ||
-        (e.ctrlKey && (isEmployee ? ["u", "s", "p"] : ["u", "s", "p", "c"]).includes(key)) ||
-        (e.ctrlKey && e.shiftKey && ["i", "j", "c"].includes(key)) ||
-        e.key === "F12" ||
-        (e.metaKey && e.shiftKey);
+        // Windows + PrtSc or Windows + Shift + S (often hard to catch but trying)
+        (e.metaKey && (e.key === "PrintScreen" || e.keyCode === 44)) ||
+        (e.metaKey && e.shiftKey && (key === "s" || key === "4" || key === "3" || key === "5")) ||
+        // Standard Ctrl shortcuts
+        (e.ctrlKey && (isEmployee ? ["u", "s", "p"] : ["u", "s", "p", "c", "a"]).includes(key)) ||
+        (e.ctrlKey && e.shiftKey && ["i", "j", "c", "s"].includes(key)) ||
+        e.key === "F12" || e.keyCode === 123;
 
       if (blockedKeys) {
         e.preventDefault();
         e.stopPropagation();
 
         if (!isEmployee) {
-          navigator.clipboard?.writeText?.("");
+          try {
+            navigator.clipboard?.writeText?.("");
+          } catch (err) {}
         }
 
-        activateProtection("Restricted keyboard shortcut");
+        activateProtection("Security Alert: Restricted action blocked", false);
       }
     };
 
     const handleContextMenu = (e) => {
       e.preventDefault();
-      activateProtection("Right click disabled");
+      activateProtection("Right-click is disabled for security", false);
     };
 
     const blockAction = (e) => {
       e.preventDefault();
-      activateProtection("Copy action blocked");
+      activateProtection("Copy/Cut/Paste is restricted", false);
     };
 
     const handleDrag = (e) => {
       e.preventDefault();
     };
 
+    // More aggressive DevTools detection
     const devToolsChecker = setInterval(() => {
-      const widthThreshold = window.outerWidth - window.innerWidth > 160;
+      const threshold = 160;
+      const isDevToolsOpen = 
+        window.outerWidth - window.innerWidth > threshold || 
+        window.outerHeight - window.innerHeight > threshold;
 
-      const heightThreshold = window.outerHeight - window.innerHeight > 160;
-
-      if (widthThreshold || heightThreshold) {
-        activateProtection("Developer tools detected");
+      if (isDevToolsOpen) {
+        activateProtection("Security Alert: Developer tools detected", true);
       }
     }, 1000);
 
     window.onbeforeprint = () => {
-      activateProtection("Printing blocked");
+      activateProtection("Printing is restricted on this platform", true);
       return false;
     };
 
-    const enableFullscreen = async () => {
-      try {
-        if (!document.fullscreenElement) {
-          await document.documentElement.requestFullscreen();
-        }
-      } catch (err) {
-        activateProtection("Fullscreen request failed");
-      }
-    };
-
-    enableFullscreen();
-
-    // window.addEventListener("blur", handleBlur); // Removed to prevent "black screen" on focus loss
+    window.addEventListener("blur", handleBlur);
     document.addEventListener("visibilitychange", handleVisibility);
-
     window.addEventListener("keydown", handleKeyDown, true);
-
     window.addEventListener("contextmenu", handleContextMenu);
 
     if (!isEmployee) {
@@ -176,13 +177,9 @@ const SecurityWrapper = ({ children }) => {
 
     return () => {
       clearInterval(devToolsChecker);
-
-      // window.removeEventListener("blur", handleBlur);
-
+      window.removeEventListener("blur", handleBlur);
       document.removeEventListener("visibilitychange", handleVisibility);
-
       window.removeEventListener("keydown", handleKeyDown, true);
-
       window.removeEventListener("contextmenu", handleContextMenu);
 
       if (!isEmployee) {
@@ -192,9 +189,7 @@ const SecurityWrapper = ({ children }) => {
       }
 
       document.removeEventListener("dragstart", handleDrag);
-
       document.head.removeChild(style);
-
       clearTimeout(timeoutRef.current);
     };
   }, [userRole]);
