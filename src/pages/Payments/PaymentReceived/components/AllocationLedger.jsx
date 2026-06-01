@@ -29,10 +29,11 @@ const AllocationLedger = ({
   dateTotal,
   ledgerBalance,
   companyPair,
+  fullCompanyMapping,
 }) => {
   const hasCompanyFilter =
     Boolean(formData.companyId) || Boolean(formData.opposingCompanyId);
-  const showPagination = entriesTotal > 0;
+  const showPagination = entriesTotal > 0 && !fullCompanyMapping;
 
   return (
     <div className="flex flex-col h-full">
@@ -106,18 +107,21 @@ const AllocationLedger = ({
           </div>
         </div>
 
-        <CompanyLedgerBanner
-          buyerCompany={companyPair?.buyerCompany}
-          supplierCompany={companyPair?.supplierCompany}
-          ledgerType={formData.ledgerType || "Buyer"}
-          entryDate={formData.date}
-          allCompaniesMode={!hasCompanyFilter}
-          subtitle={
-            hasCompanyFilter
-              ? "Filtered view · buyer → seller"
-              : "All unloaded lorries · use filters above to narrow"
-          }
-        />
+        {fullCompanyMapping ? (
+          <CompanyLedgerBanner
+            buyerCompany={companyPair.buyerCompany}
+            supplierCompany={companyPair.supplierCompany}
+            mappingActive
+            unadjustedTotal={entryStats.totalDue}
+            subtitle="Only unadjusted (pending) lorry lines for this buyer → seller pair"
+          />
+        ) : (
+          <p className="text-[11px] font-bold text-slate-500 bg-slate-50 border border-slate-200 rounded-xl px-4 py-3">
+            Select <span className="text-[#1e3a5f]">buyer</span> and{" "}
+            <span className="text-amber-700">seller</span> company to open Tally
+            mapping and list unadjusted amounts for that pair.
+          </p>
+        )}
       </div>
 
       <div className="flex-1">
@@ -164,7 +168,7 @@ const AllocationLedger = ({
                 </table>
               </div>
 
-              {showPagination && (
+              {showPagination ? (
                 <Paginations
                   currentPage={entriesPage}
                   totalItems={entriesTotal}
@@ -172,7 +176,12 @@ const AllocationLedger = ({
                   onPageChange={(page) => fetchEntries(page)}
                   showPageSize={false}
                 />
-              )}
+              ) : fullCompanyMapping && entries.length > 0 ? (
+                <p className="mt-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest text-center">
+                  {entries.length} unadjusted line
+                  {entries.length !== 1 ? "s" : ""} for this mapping
+                </p>
+              ) : null}
             </div>
 
             <div className="bg-slate-900 p-6 sm:p-8 flex flex-col md:flex-row items-center justify-between gap-6">
@@ -214,9 +223,13 @@ const AllocationLedger = ({
             <FaHistory size={32} className="text-slate-200 mb-4" />
             <h4 className="text-lg font-bold text-slate-800">No records found</h4>
             <p className="text-sm text-slate-500 font-medium max-w-xs mx-auto mt-2">
-              {tableSearch
-                ? "No matches for your search. Try different keywords or clear filters."
-                : `No unloaded entries${hasCompanyFilter ? " for this filter" : ""}. Adjust filters or date range.`}
+              {fullCompanyMapping
+                ? "No unadjusted amounts for this buyer → seller mapping. All lorries may be fully paid."
+                : tableSearch
+                  ? "No matches for your search. Try different keywords or clear filters."
+                  : hasCompanyFilter
+                    ? "Select both buyer and seller for mapping view, or adjust filters."
+                    : "Select buyer and seller companies above, or browse all unloaded lorries."}
             </p>
           </div>
         )}

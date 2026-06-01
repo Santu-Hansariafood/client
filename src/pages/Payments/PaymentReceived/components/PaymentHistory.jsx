@@ -1,7 +1,10 @@
 import { FaHistory, FaPrint } from "react-icons/fa";
 import CompanyLedgerBanner from "./CompanyLedgerBanner";
 import TallyLedgerBook from "./TallyLedgerBook";
-import { formatLedgerAmount } from "../utils/paymentLedgerUtils";
+import {
+  formatLedgerAmount,
+  hasFullCompanyMapping,
+} from "../utils/paymentLedgerUtils";
 
 const PaymentHistory = ({
   fetchingHistory,
@@ -13,6 +16,7 @@ const PaymentHistory = ({
   const totalCredit = tallyRows.reduce((s, r) => s + (r.credit || 0), 0);
   const closingBalance =
     tallyRows.length > 0 ? tallyRows[tallyRows.length - 1].balance : 0;
+  const fullMapping = hasFullCompanyMapping(companyPair);
 
   return (
     <div className="flex flex-col h-full">
@@ -37,18 +41,14 @@ const PaymentHistory = ({
             </div>
           </div>
         </div>
-        <CompanyLedgerBanner
-          buyerCompany={companyPair?.buyerCompany}
-          supplierCompany={companyPair?.supplierCompany}
-          ledgerType={formData.ledgerType}
-          entryDate={formData.date}
-          allCompaniesMode={!formData.companyId}
-          subtitle={
-            formData.companyId
-              ? "Company-to-company voucher entries for selected date"
-              : "All payment vouchers recorded on the selected entry date"
-          }
-        />
+        {fullMapping ? (
+          <CompanyLedgerBanner
+            buyerCompany={companyPair.buyerCompany}
+            supplierCompany={companyPair.supplierCompany}
+            mappingActive
+            subtitle={`Vouchers on ${new Date(formData.date).toLocaleDateString("en-GB")} for this mapping`}
+          />
+        ) : null}
       </div>
 
       <div className="flex-1 p-4 sm:p-6">

@@ -29,6 +29,7 @@ import AnalyticalSummary from "./components/AnalyticalSummary";
 import {
   getCompanyPairFromForm,
   buildTallyVoucherRows,
+  hasFullCompanyMapping,
 } from "./utils/paymentLedgerUtils";
 
 const ENTRIES_PAGE_SIZE = 20;
@@ -309,6 +310,11 @@ const AddPaymentReceived = () => {
     allCompanies,
   ]);
 
+  const fullCompanyMapping = useMemo(
+    () => hasFullCompanyMapping(companyPair),
+    [companyPair],
+  );
+
   const fetchEntries = useCallback(
     async (page = 1) => {
       if (formData.paymentType !== "Sauda-wise") {
@@ -320,8 +326,8 @@ const AddPaymentReceived = () => {
         setFetchingEntries(true);
 
         const params = {
-          page,
-          limit: ENTRIES_PAGE_SIZE,
+          page: fullCompanyMapping ? 1 : page,
+          limit: fullCompanyMapping ? 500 : ENTRIES_PAGE_SIZE,
           isUnloaded: true,
         };
 
@@ -341,6 +347,10 @@ const AddPaymentReceived = () => {
           params.supplierCompany = companyPair.supplierCompany;
         }
 
+        if (fullCompanyMapping) {
+          params.paymentStatus = "pending";
+        }
+
         if (formData.companyId && formData.ledgerType !== "Seller") {
           params.companyId = formData.companyId;
         }
@@ -352,7 +362,24 @@ const AddPaymentReceived = () => {
         }
 
         const response = await api.get("/loading-entries", { params });
-        const items = response.data.data || [];
+        let items = response.data.data || [];
+
+        if (fullCompanyMapping) {
+          items = items.filter((item) => {
+            const weight =
+              (item.unloadingWeight || 0) > 0
+                ? item.unloadingWeight
+                : item.loadingWeight || 0;
+            const rate = item.actualRate || 0;
+            const gross = weight * rate;
+            const cd = gross * ((item.cd || 0) / 100);
+            const taxable = gross - cd;
+            const gst = taxable * ((item.gst || 0) / 100);
+            const net = taxable + gst;
+            const due = Math.max(0, net - (item.paidAmount || 0));
+            return due > 0.01 && item.paymentStatus !== "done";
+          });
+        }
 
         const sortedItems = [...items].sort((a, b) => {
           if (a.paymentStatus === "pending" && b.paymentStatus === "done")
@@ -372,8 +399,12 @@ const AddPaymentReceived = () => {
             isSaved: item.paymentStatus === "done",
           })),
         );
-        setEntriesTotal(response.data.total ?? items.length);
-        setEntriesPage(page);
+        setEntriesTotal(
+          fullCompanyMapping
+            ? items.length
+            : (response.data.total ?? items.length),
+        );
+        setEntriesPage(fullCompanyMapping ? 1 : page);
       } catch (error) {
         toast.error("Error fetching entries");
       } finally {
@@ -390,6 +421,7 @@ const AddPaymentReceived = () => {
       formData.opposingCompanyId,
       companyPair.buyerCompany,
       companyPair.supplierCompany,
+      fullCompanyMapping,
       tableSearch,
     ],
   );
@@ -934,8 +966,9 @@ const AddPaymentReceived = () => {
 
     entries.forEach((entry) => {
       const details = calculateTallyDetails(entry);
+      if (details.dueAmount <= 0.01) return;
       totalDue += details.dueAmount;
-      if (entry.paymentStatus === "pending") {
+      if (entry.paymentStatus !== "done") {
         pendingCount++;
       }
     });
@@ -1271,6 +1304,7 @@ const AddPaymentReceived = () => {
               dateTotal={dateTotal}
               ledgerBalance={ledgerBalance}
               companyPair={companyPair}
+              fullCompanyMapping={fullCompanyMapping}
             />
           )}
 

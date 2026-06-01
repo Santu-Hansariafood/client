@@ -115,3 +115,6 @@ export const buildTallyOutstandingRows = (entries, calculateTallyDetails) =>
 
 export const formatLedgerAmount = (n) =>
   `₹ ${Number(n || 0).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+export const hasFullCompanyMapping = (companyPair) =>
+  Boolean(companyPair?.buyerCompany && companyPair?.supplierCompany);
