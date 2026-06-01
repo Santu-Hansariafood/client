@@ -517,13 +517,11 @@ const AddPaymentReceived = () => {
         params.ledgerType = formData.ledgerType;
       }
       if (formData.ledgerId) params.ledgerId = formData.ledgerId;
-      if (formData.companyId) {
-        if (companyPair.buyerCompany) {
-          params.buyerCompany = companyPair.buyerCompany;
-        }
-        if (companyPair.supplierCompany) {
-          params.supplierCompany = companyPair.supplierCompany;
-        }
+      if (companyPair.buyerCompany) {
+        params.buyerCompany = companyPair.buyerCompany;
+      }
+      if (companyPair.supplierCompany) {
+        params.supplierCompany = companyPair.supplierCompany;
       }
       const response = await api.get("/payment-received", { params });
       setHistory(response.data.data || []);
@@ -533,13 +531,49 @@ const AddPaymentReceived = () => {
       setFetchingHistory(false);
     }
   }, [
-    formData.companyId,
     formData.ledgerId,
     formData.ledgerType,
     formData.date,
     companyPair.buyerCompany,
     companyPair.supplierCompany,
   ]);
+
+  const handleSelectCreditPair = useCallback(
+    (pair) => {
+      if (!pair?.buyerCompany || !pair?.supplierCompany) return;
+
+      const buyerCo = allCompanies.find(
+        (c) =>
+          String(c.companyName || "").trim().toLowerCase() ===
+          String(pair.buyerCompany).trim().toLowerCase(),
+      );
+
+      const ledger = buyerCo
+        ? resolveLedgerForCompany(
+            buyerCo._id,
+            formData.ledgerType,
+            ledgers,
+            opposingLedgers,
+          )
+        : null;
+
+      setSelectedLedger(ledger);
+      setFormData((prev) => ({
+        ...prev,
+        companyId: buyerCo?._id || prev.companyId,
+        ledgerId: ledger?.value || prev.ledgerId,
+        opposingCompanyId: pair.supplierCompany,
+      }));
+      setAllocationSource("advance");
+    },
+    [
+      allCompanies,
+      formData.ledgerType,
+      ledgers,
+      opposingLedgers,
+      resolveLedgerForCompany,
+    ],
+  );
 
   const tallyHistoryRows = useMemo(
     () => buildTallyVoucherRows(history, 0),
@@ -837,6 +871,11 @@ const AddPaymentReceived = () => {
       return;
     }
 
+    if (allocationSource === "advance" && !companyPair.supplierCompany) {
+      toast.error("Select seller company to adjust advance credit in the table");
+      return;
+    }
+
     if (allocationSource === "advance" && numAllocated > remainingPool + 0.01) {
       toast.error(
         `Allocation exceeds available credit (Rs. ${remainingPool.toLocaleString("en-IN")} remaining)`,
@@ -884,7 +923,7 @@ const AddPaymentReceived = () => {
           ledgerId: formData.ledgerId,
           companyId: formData.companyId,
           ...buildCompanyPayload(),
-          amount: allocationSource === "fresh" ? numAllocated : 0,
+          amount: numAllocated,
           paymentType:
             allocationSource === "fresh" ? "Sauda-wise" : "Adjustment",
           paymentMode:
@@ -901,7 +940,11 @@ const AddPaymentReceived = () => {
         };
 
         await api.post("/payment-received", payload);
-        toast.success(`Payment recorded for ${entry.lorryNumber}`);
+        toast.success(
+          allocationSource === "advance"
+            ? `Advance credit of Rs. ${numAllocated.toLocaleString("en-IN")} adjusted for ${entry.lorryNumber}`
+            : `Payment recorded for ${entry.lorryNumber}`,
+        );
 
         if (allocationSource === "fresh") {
           setFormData((prev) => ({
@@ -1466,6 +1509,7 @@ const AddPaymentReceived = () => {
               hasCompanyTableScope={hasCompanyTableScope}
               buyerOnlyMapping={buyerOnlyMapping}
               loadingSellerOptions={loadingSellerOptions}
+              onSelectCreditPair={handleSelectCreditPair}
             />
           )}
 

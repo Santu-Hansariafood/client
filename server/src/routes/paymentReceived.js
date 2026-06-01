@@ -9,6 +9,59 @@ import { adminOnly } from "../middleware/roleMiddleware.js";
 
 const router = express.Router();
 
+const escapeRegex = (value) =>
+  String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+const companyRegex = (name) =>
+  new RegExp(`^${escapeRegex(String(name).trim())}$`, "i");
+
+const buildAdvanceMatch = (ledgerId, buyerCompany, supplierCompany) => {
+  const match = { unadjustedAmount: { $gt: 0 } };
+  if (ledgerId && mongoose.Types.ObjectId.isValid(ledgerId)) {
+    match.ledgerId = new mongoose.Types.ObjectId(ledgerId);
+  }
+  if (buyerCompany) {
+    match.buyerCompany = companyRegex(buyerCompany);
+  }
+  if (supplierCompany) {
+    match.supplierCompany = companyRegex(supplierCompany);
+  }
+  return match;
+};
+
+/** Reduce unadjusted advance pool (FIFO) when allocating credit to lorries. */
+const consumeAdvanceCredit = async (
+  ledgerId,
+  buyerCompany,
+  supplierCompany,
+  amountToConsume,
+) => {
+  let remaining = Number(amountToConsume) || 0;
+  if (remaining <= 0.01) return;
+
+  const match = buildAdvanceMatch(ledgerId, buyerCompany, supplierCompany);
+  const pool = await PaymentReceived.find(match)
+    .sort({ date: 1, createdAt: 1 })
+    .select("_id unadjustedAmount");
+
+  for (const doc of pool) {
+    if (remaining <= 0.01) break;
+    const available = Number(doc.unadjustedAmount) || 0;
+    if (available <= 0) continue;
+    const take = Math.min(available, remaining);
+    await PaymentReceived.findByIdAndUpdate(doc._id, {
+      $inc: { unadjustedAmount: -take },
+    });
+    remaining -= take;
+  }
+
+  if (remaining > 0.01) {
+    throw new Error(
+      `Insufficient advance credit (${buyerCompany || "buyer"} → ${supplierCompany || "seller"}). Short by Rs. ${remaining.toFixed(2)}`,
+    );
+  }
+};
+
 router.patch("/adjust-lorry/:loadingEntryId", adminOnly, async (req, res) => {
   try {
     const { loadingEntryId } = req.params;
@@ -53,9 +106,44 @@ router.post("/", async (req, res) => {
       remarks,
     } = req.body;
 
-    const totalMapped = (mappings || []).reduce((sum, m) => sum + (m.allocatedAmount || 0), 0);
-    
-    const unadjustedAmount = amount - totalMapped;
+    const totalMapped = (mappings || []).reduce(
+      (sum, m) => sum + (Number(m.allocatedAmount) || 0),
+      0,
+    );
+
+    let resolvedType =
+      paymentType ||
+      (totalMapped > 0 ? "Sauda-wise" : "Advance");
+    let paymentAmount = Number(amount) || 0;
+
+    if (resolvedType === "Adjustment" && totalMapped > 0) {
+      if (!String(supplierCompany || "").trim()) {
+        return res.status(400).json({
+          message: "Seller company is required to adjust advance credit",
+        });
+      }
+      await consumeAdvanceCredit(
+        ledgerId,
+        buyerCompany,
+        supplierCompany,
+        totalMapped,
+      );
+      paymentAmount = totalMapped;
+    } else if (resolvedType === "Adjustment" && totalMapped <= 0) {
+      return res.status(400).json({
+        message: "Enter allocation against a lorry to use advance credit",
+      });
+    }
+
+    const unadjustedAmount =
+      resolvedType === "Adjustment"
+        ? 0
+        : Math.max(0, paymentAmount - totalMapped);
+
+    if (!paymentType) {
+      resolvedType =
+        unadjustedAmount > 0 && totalMapped === 0 ? "Advance" : "Sauda-wise";
+    }
 
     const newPayment = new PaymentReceived({
       date,
@@ -64,9 +152,9 @@ router.post("/", async (req, res) => {
       companyId,
       buyerCompany: buyerCompany || "",
       supplierCompany: supplierCompany || "",
-      amount,
+      amount: paymentAmount,
       unadjustedAmount,
-      paymentType: paymentType || (unadjustedAmount > 0 && totalMapped === 0 ? "Advance" : "Sauda-wise"),
+      paymentType: resolvedType,
       paymentMode,
       mappings,
       remarks,
@@ -120,26 +208,6 @@ router.post("/", async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 });
-
-const escapeRegex = (value) =>
-  String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-
-const companyRegex = (name) =>
-  new RegExp(`^${escapeRegex(String(name).trim())}$`, "i");
-
-const buildAdvanceMatch = (ledgerId, buyerCompany, supplierCompany) => {
-  const match = { unadjustedAmount: { $gt: 0 } };
-  if (ledgerId && mongoose.Types.ObjectId.isValid(ledgerId)) {
-    match.ledgerId = new mongoose.Types.ObjectId(ledgerId);
-  }
-  if (buyerCompany) {
-    match.buyerCompany = companyRegex(buyerCompany);
-  }
-  if (supplierCompany) {
-    match.supplierCompany = companyRegex(supplierCompany);
-  }
-  return match;
-};
 
 const sumAdvance = async (match) => {
   const rows = await PaymentReceived.aggregate([

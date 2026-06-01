@@ -41,12 +41,17 @@ const PaymentHistory = ({
             </div>
           </div>
         </div>
-        {fullMapping ? (
+        {companyPair?.buyerCompany ? (
           <CompanyLedgerBanner
             buyerCompany={companyPair.buyerCompany}
             supplierCompany={companyPair.supplierCompany}
-            mappingActive
-            subtitle={`Vouchers on ${new Date(formData.date).toLocaleDateString("en-GB")} for this mapping`}
+            mappingActive={fullMapping}
+            buyerOnly={!companyPair.supplierCompany}
+            subtitle={
+              fullMapping
+                ? `Vouchers on ${new Date(formData.date).toLocaleDateString("en-GB")} · buyer → seller`
+                : `Vouchers on ${new Date(formData.date).toLocaleDateString("en-GB")} · select seller to filter`
+            }
           />
         ) : null}
       </div>

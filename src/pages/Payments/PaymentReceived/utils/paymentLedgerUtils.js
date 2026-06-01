@@ -59,9 +59,15 @@ export const resolveCompanyPair = (
 };
 
 export const buildPaymentParticulars = (payment) => {
+  const buyer = payment.buyerCompany || "";
+  const seller = payment.supplierCompany || "";
+  const pairLabel =
+    buyer && seller ? `${buyer} → ${seller}` : buyer || seller || "";
+
   const mappings = payment.mappings || [];
   if (mappings.length === 0) {
-    return (payment.remarks || "Advance / On Account").toUpperCase();
+    const base = (payment.remarks || "Advance / On Account").toUpperCase();
+    return pairLabel ? `${pairLabel} | ${base}` : base;
   }
 
   return mappings
@@ -103,19 +109,29 @@ export const buildTallyVoucherRows = (payments, openingBalance = 0) => {
   }
 
   sorted.forEach((payment) => {
-    const amount = Number(payment.amount) || 0;
+    const mappedTotal = (payment.mappings || []).reduce(
+      (sum, m) => sum + (Number(m.allocatedAmount) || 0),
+      0,
+    );
+    const amount = Number(payment.amount) || mappedTotal || 0;
     const isReceipt = payment.ledgerType === "Buyer";
     const credit = isReceipt ? amount : 0;
     const debit = !isReceipt ? amount : 0;
     balance = balance + credit - debit;
+
+    const sellerFromMapping =
+      payment.mappings?.[0]?.loadingEntryId?.supplierCompany || "";
+    const buyerFromMapping =
+      payment.mappings?.[0]?.loadingEntryId?.buyerCompany || "";
 
     rows.push({
       id: payment._id,
       date: payment.date,
       particulars: buildPaymentParticulars(payment),
       vchType: payment.paymentType || payment.paymentMode || "—",
-      buyerCompany: payment.buyerCompany || "",
-      supplierCompany: payment.supplierCompany || "",
+      buyerCompany: payment.buyerCompany || buyerFromMapping || "",
+      supplierCompany:
+        payment.supplierCompany || sellerFromMapping || "",
       debit,
       credit,
       balance,

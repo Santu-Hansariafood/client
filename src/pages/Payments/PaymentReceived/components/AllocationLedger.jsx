@@ -35,6 +35,7 @@ const AllocationLedger = ({
   hasCompanyTableScope,
   buyerOnlyMapping,
   loadingSellerOptions,
+  onSelectCreditPair,
 }) => {
   const hasCompanyFilter =
     Boolean(formData.companyId) || Boolean(formData.opposingCompanyId);
@@ -129,6 +130,8 @@ const AllocationLedger = ({
               creditByPair={ledgerBalance.creditByPair}
               fullCompanyMapping={fullCompanyMapping}
               buyerCompany={companyPair.buyerCompany}
+              supplierCompany={companyPair.supplierCompany}
+              onSelectCreditPair={onSelectCreditPair}
             />
           )}
 
