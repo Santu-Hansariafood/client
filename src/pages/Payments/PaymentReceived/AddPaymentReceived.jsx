@@ -895,7 +895,7 @@ const AddPaymentReceived = () => {
               ? "No Dr. advance for this buyer → seller"
               : "Select seller and use From Advance",
           );
-        } else if (numAmount > remaining + 0.01) {
+        } else if (numAmount > remaining + 1) { // Increased tolerance to 1
           valueToStore = String(
             Math.round(Math.min(numAmount, Math.max(remaining, 0)) * 100) / 100,
           );
@@ -908,9 +908,9 @@ const AddPaymentReceived = () => {
       } else {
         const maxAllowed = Math.min(
           remaining,
-          dueAmount > 0.01 ? dueAmount : remaining,
+          dueAmount > 1 ? dueAmount : remaining, // Increased tolerance
         );
-        if (numAmount > maxAllowed + 0.01) {
+        if (numAmount > maxAllowed + 1) { // Increased tolerance
           valueToStore = String(
             Math.round(Math.min(numAmount, maxAllowed) * 100) / 100,
           );
@@ -1001,7 +1001,7 @@ const AddPaymentReceived = () => {
       return;
     }
 
-    if (allocationSource === "advance" && numAllocated > remainingPool + 0.01) {
+    if (allocationSource === "advance" && numAllocated > remainingPool + 1) {
       toast.error(
         `Cr. allocation cannot exceed Dr. advance (Rs. ${debitPool.toLocaleString("en-IN")} Dr., Rs. ${remainingPool.toLocaleString("en-IN")} Cr. left)`,
       );
@@ -1010,8 +1010,8 @@ const AddPaymentReceived = () => {
 
     if (
       allocationSource === "fresh" &&
-      dueAmount > 0.01 &&
-      numAllocated > dueAmount + 0.01
+      dueAmount > 1 &&
+      numAllocated > dueAmount + 1
     ) {
       toast.warning(
         `Allocation cannot exceed due amount (Rs. ${dueAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })})`,
@@ -1021,7 +1021,7 @@ const AddPaymentReceived = () => {
 
     if (
       allocationSource === "fresh" &&
-      numAllocated > remainingPool + 0.01
+      numAllocated > remainingPool + 1
     ) {
       toast.error(
         `Allocation exceeds voucher amount (Rs. ${remainingPool.toLocaleString("en-IN")} remaining)`,
@@ -1435,6 +1435,7 @@ const AddPaymentReceived = () => {
                   <button
                     type="button"
                     onClick={() => {
+                      // Use precise rowMax to avoid rounding errors
                       handleAllocationChange(
                         row.uiKey,
                         String(rowMax),
@@ -1443,20 +1444,30 @@ const AddPaymentReceived = () => {
                     }}
                     className="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] font-black uppercase text-emerald-700 bg-emerald-50 hover:bg-emerald-600 hover:text-white px-2 py-1 rounded-md transition-all border border-emerald-200"
                   >
-                    Max
+                    Settle Full
                   </button>
                 )}
               </div>
               {!isLocked && (
-                <div className="flex items-center gap-1.5 mt-1.5 px-1">
-                  <div className="w-1 h-1 rounded-full bg-slate-400" />
-                  <p className="text-[8px] font-black text-slate-500 normal-case tracking-tight">
-                    {allocationSource === "advance"
-                      ? `Available to Post: Rs. ${rowMax.toLocaleString("en-IN")} (from Dr. pool)`
-                      : rowMax > 0
-                        ? `Available to Allocate: Rs. ${rowMax.toLocaleString("en-IN")}`
-                        : "Set entry amount above first"}
-                  </p>
+                <div className="flex flex-col gap-1 mt-1.5 px-1">
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-1 h-1 rounded-full bg-slate-400" />
+                    <p className="text-[8px] font-black text-slate-500 normal-case tracking-tight">
+                      {allocationSource === "advance"
+                        ? `Available to Post: Rs. ${rowMax.toLocaleString("en-IN")} (from Dr. pool)`
+                        : rowMax > 0
+                          ? `Available to Allocate: Rs. ${rowMax.toLocaleString("en-IN")}`
+                          : "Set entry amount above first"}
+                    </p>
+                  </div>
+                  {allocationSource === "advance" && pool > 0 && (
+                    <div className="flex items-center gap-1.5">
+                      <div className="w-1 h-1 rounded-full bg-blue-400" />
+                      <p className="text-[8px] font-black text-blue-600 normal-case tracking-tight">
+                        Dr. Pool Balance: Rs. {pool.toLocaleString("en-IN")}
+                      </p>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
