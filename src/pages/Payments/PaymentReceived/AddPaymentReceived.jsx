@@ -701,6 +701,100 @@ const AddPaymentReceived = () => {
     fetchDateTotal();
   }, [fetchDateTotal]);
 
+  const handleAutoAllocate = useCallback(() => {
+    const pool = Number(availableAllocationPool) || 0;
+    if (pool <= 0) {
+      toast.warning("Please enter a payment amount first");
+      return;
+    }
+
+    let remainingPool = pool;
+    const newEntries = entries.map((entry) => {
+      if (entry.isSaved || remainingPool <= 0.01) {
+        return entry;
+      }
+
+      const { dueAmount } = calculateTallyDetails(entry);
+      const alloc = Math.min(remainingPool, dueAmount);
+      
+      if (alloc > 0.01) {
+        remainingPool -= alloc;
+        return { ...entry, allocatedAmount: String(Math.round(alloc * 100) / 100) };
+      }
+      return entry;
+    });
+
+    setEntries(newEntries);
+    toast.success("Amount allocated to pending lorries");
+  }, [availableAllocationPool, entries]);
+
+  const handleSaveAllAllocations = async () => {
+    const allocations = entries.filter(
+      (e) => !e.isSaved && parseFloat(e.allocatedAmount) > 0.01,
+    );
+
+    if (allocations.length === 0) {
+      toast.error("No new allocations to save");
+      return;
+    }
+
+    if (!formData.companyId || !formData.ledgerId) {
+      toast.error("Select a company linked to a ledger first");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const recordLedgerType =
+        formData.ledgerType ||
+        inferLedgerTypeForCompany(formData.companyId, ledgers, opposingLedgers);
+
+      const totalAllocated = allocations.reduce(
+        (sum, e) => sum + parseFloat(e.allocatedAmount),
+        0,
+      );
+
+      const payload = {
+        date: formData.date,
+        ledgerType: recordLedgerType,
+        ledgerId: formData.ledgerId,
+        companyId: formData.companyId,
+        ...buildCompanyPayload(),
+        amount: totalAllocated,
+        paymentType: allocationSource === "fresh" ? "Sauda-wise" : "Adjustment",
+        paymentMode:
+          allocationSource === "fresh" ? formData.paymentMode : "Adjustment",
+        mappings: allocations.map((e) => ({
+          saudaNo: e.saudaNo,
+          loadingEntryId: e._id,
+          allocatedAmount: parseFloat(e.allocatedAmount),
+          remarks: e.rowRemarks,
+        })),
+        remarks: formData.remarks || "Bulk Allocation",
+      };
+
+      await api.post("/payment-received", payload);
+      toast.success(`Recorded payment with ${allocations.length} allocations`);
+
+      if (allocationSource === "fresh") {
+        setFormData((prev) => ({
+          ...prev,
+          amount: Math.max(0, prev.amount - totalAllocated),
+        }));
+      }
+
+      fetchEntries(entriesPage);
+      fetchHistory();
+      fetchDateTotal();
+      fetchSummary();
+      fetchLedgerBalance();
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Error saving bulk payment");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     if (name === "date") {
@@ -1570,6 +1664,9 @@ const AddPaymentReceived = () => {
               buyerOnlyMapping={buyerOnlyMapping}
               loadingSellerOptions={loadingSellerOptions}
               onSelectCreditPair={handleSelectCreditPair}
+              onAutoAllocate={handleAutoAllocate}
+              onSaveAll={handleSaveAllAllocations}
+              loading={loading}
             />
           )}
 

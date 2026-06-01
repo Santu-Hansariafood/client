@@ -3,6 +3,9 @@ import {
   FaMoneyBillWave,
   FaHistory,
   FaFileInvoiceDollar,
+  FaMagic,
+  FaCloudUploadAlt,
+  FaCheckCircle,
 } from "react-icons/fa";
 import SearchBox from "../../../../common/SearchBox/SearchBox";
 import Loading from "../../../../common/Loading/Loading";
@@ -36,6 +39,9 @@ const AllocationLedger = ({
   buyerOnlyMapping,
   loadingSellerOptions,
   onSelectCreditPair,
+  onAutoAllocate,
+  onSaveAll,
+  loading,
 }) => {
   const hasCompanyFilter =
     Boolean(formData.companyId) || Boolean(formData.opposingCompanyId);
@@ -44,6 +50,11 @@ const AllocationLedger = ({
     !fullCompanyMapping &&
     !buyerOnlyMapping;
   const showMappingBanner = hasBuyerCompany;
+
+  const totalAllocated = entries.reduce((sum, e) => {
+    if (!e.isSaved) return sum + (parseFloat(e.allocatedAmount) || 0);
+    return sum;
+  }, 0);
 
   return (
     <div className="flex flex-col h-full">
@@ -76,6 +87,22 @@ const AllocationLedger = ({
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
+            <div className="flex items-center bg-white border border-slate-200 rounded-xl p-1 shadow-sm">
+               <button
+                type="button"
+                onClick={onAutoAllocate}
+                disabled={unallocatedBalance <= 0 || loading}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${
+                  unallocatedBalance > 0 && !loading
+                    ? "bg-amber-500 text-white hover:bg-amber-600 shadow-md shadow-amber-100"
+                    : "bg-slate-50 text-slate-400 cursor-not-allowed"
+                }`}
+              >
+                <FaMagic />
+                Auto-Allocate
+              </button>
+            </div>
+
             {unallocatedBalance > 0 && (
               <div className="flex items-center gap-2 bg-emerald-900 text-white px-4 py-2 rounded-xl shadow-lg border border-emerald-700">
                 <div className="flex flex-col">
@@ -92,6 +119,22 @@ const AllocationLedger = ({
                 </div>
                 <FaMoneyBillWave className="text-emerald-400 animate-pulse" />
               </div>
+            )}
+
+            {totalAllocated > 0 && (
+              <button
+                type="button"
+                onClick={onSaveAll}
+                disabled={loading}
+                className="flex items-center gap-2 bg-blue-600 text-white px-6 py-2 rounded-xl shadow-xl shadow-blue-200 border border-blue-500 hover:bg-blue-700 transition-all text-[11px] font-black uppercase tracking-widest animate-in fade-in zoom-in duration-300"
+              >
+                {loading ? (
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                ) : (
+                  <FaCloudUploadAlt size={16} />
+                )}
+                {loading ? "Saving..." : `Save All (${totalAllocated.toLocaleString("en-IN")})`}
+              </button>
             )}
 
             <DateRangeSelector

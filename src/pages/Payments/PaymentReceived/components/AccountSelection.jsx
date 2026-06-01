@@ -31,8 +31,7 @@ const AccountSelection = ({
   hasBuyerCompany,
 }) => {
   const ledgerTypeOption =
-    ledgerTypes.find((t) => t.value === formData.ledgerType) ||
-    ledgerTypes[0];
+    ledgerTypes.find((t) => t.value === formData.ledgerType) || ledgerTypes[0];
 
   return (
     <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
@@ -58,7 +57,11 @@ const AccountSelection = ({
               label: "Payment Received",
               icon: <FaMoneyBillWave size={12} />,
             },
-            { id: "advance", label: "From Advance", icon: <FaExchangeAlt size={12} /> },
+            {
+              id: "advance",
+              label: "From Advance",
+              icon: <FaExchangeAlt size={12} />,
+            },
           ].map((source) => (
             <button
               key={source.id}
@@ -169,9 +172,7 @@ const AccountSelection = ({
                   }
                   isMulti={false}
                   isDisabled={
-                    formData.ledgerType === "Seller"
-                      ? false
-                      : !hasBuyerCompany
+                    formData.ledgerType === "Seller" ? false : !hasBuyerCompany
                   }
                   className="rounded-xl border-slate-200 hover:border-slate-300 transition-all"
                 />
@@ -190,20 +191,20 @@ const AccountSelection = ({
           </div>
         </div>
 
-        <div className="pt-6 border-t border-slate-100">
+        <div className="pt-6 border-t border-slate-100 bg-emerald-50/30 -mx-6 px-6 pb-6 rounded-b-3xl">
           <div className="flex items-center gap-2 mb-4">
             <div className="w-1.5 h-4 bg-emerald-600 rounded-full" />
             <h4 className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-900">
-              Record new payment
+              Record new payment (Entry Amount)
             </h4>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="space-y-2">
               <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">
-                Amount
+                Amount to Allocate
               </label>
               <div className="relative">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-emerald-600 font-black">
                   ₹
                 </span>
                 <input
@@ -213,7 +214,7 @@ const AccountSelection = ({
                   onChange={handleInputChange}
                   onWheel={(e) => e.target.blur()}
                   placeholder="0.00"
-                  className="w-full h-[42px] pl-8 pr-4 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-emerald-600/10 focus:border-emerald-600 outline-none transition-all font-bold text-slate-900"
+                  className="w-full h-[48px] pl-8 pr-4 rounded-xl border-2 border-emerald-100 bg-white focus:ring-4 focus:ring-emerald-600/10 focus:border-emerald-600 outline-none transition-all font-black text-lg text-emerald-900 shadow-sm"
                 />
               </div>
             </div>
@@ -221,57 +222,98 @@ const AccountSelection = ({
               <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">
                 Payment mode
               </label>
-              <select
-                name="paymentMode"
-                value={formData.paymentMode}
-                onChange={handleInputChange}
-                className="w-full h-[42px] px-4 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-emerald-600/10 focus:border-emerald-600 outline-none transition-all font-bold text-slate-900 appearance-none cursor-pointer"
-              >
-                {paymentModes.map((mode) => (
-                  <option key={mode.value} value={mode.value}>
-                    {mode.label}
-                  </option>
-                ))}
-              </select>
+              <div className="relative">
+                <select
+                  name="paymentMode"
+                  value={formData.paymentMode}
+                  onChange={handleInputChange}
+                  className="w-full h-[48px] px-4 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-emerald-600/10 focus:border-emerald-600 outline-none transition-all font-bold text-slate-900 appearance-none cursor-pointer shadow-sm"
+                >
+                  {paymentModes.map((mode) => (
+                    <option key={mode.value} value={mode.value}>
+                      {mode.label}
+                    </option>
+                  ))}
+                </select>
+                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M19 9l-7 7-7-7"
+                    ></path>
+                  </svg>
+                </div>
+              </div>
             </div>
-            <div className="lg:col-span-2 space-y-2">
+            <div className="lg:col-span-1 space-y-2">
               <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">
-                Narration
+                Narration / Remarks
               </label>
               <input
                 type="text"
                 name="remarks"
                 value={formData.remarks}
                 onChange={handleInputChange}
-                placeholder="Narration for advance / on-account..."
-                className="w-full h-[42px] px-4 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-emerald-600/10 focus:border-emerald-600 outline-none transition-all font-bold text-slate-900"
+                placeholder="Payment details..."
+                className="w-full h-[48px] px-4 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-emerald-600/10 focus:border-emerald-600 outline-none transition-all font-bold text-slate-900 shadow-sm"
               />
             </div>
+            <div className="flex items-end">
+              <button
+                type="button"
+                onClick={handleRecordAdvance}
+                disabled={loading || formData.amount <= 0}
+                className={`w-full h-[48px] flex items-center justify-center gap-2 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all ${
+                  formData.amount > 0 && !loading
+                    ? "bg-slate-900 text-white hover:bg-black shadow-lg shadow-slate-200"
+                    : "bg-slate-100 text-slate-400 cursor-not-allowed"
+                }`}
+              >
+                <FaSave />
+                Record as Advance
+              </button>
+            </div>
           </div>
-          <div className="mt-4 flex flex-col sm:flex-row sm:items-center gap-3">
-            <Buttons
-              label={`Record advance (Rs. ${formData.amount || 0})`}
-              onClick={handleRecordAdvance}
-              disabled={
-                loading ||
-                !formData.companyId ||
-                !hasResolvedLedger ||
-                formData.amount <= 0 ||
-                allocationSource !== "fresh"
-              }
-              variant="primary"
-              className="h-[42px] rounded-xl shadow-lg shadow-emerald-600/20 sm:min-w-[240px]"
-              icon={<FaSave />}
-            />
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">
-              Company + ledger required only when saving a payment
-            </p>
-          </div>
+          {formData.amount > 0 && (
+            <div className="mt-4 p-3 bg-blue-50 border border-blue-100 rounded-xl flex items-center gap-3 animate-pulse">
+              <div className="w-2 h-2 rounded-full bg-blue-600"></div>
+              <p className="text-[10px] font-bold text-blue-700 uppercase tracking-wider">
+                Amount set to ₹{Number(formData.amount).toLocaleString("en-IN")}
+                . Now use the <span className="underline">Auto-Allocate</span>{" "}
+                or manually adjust lorries below.
+              </p>
+            </div>
+          )}
+        </div>
+        <div className="mt-4 flex flex-col sm:flex-row sm:items-center gap-3">
+          <Buttons
+            label={`Record advance (Rs. ${formData.amount || 0})`}
+            onClick={handleRecordAdvance}
+            disabled={
+              loading ||
+              !formData.companyId ||
+              !hasResolvedLedger ||
+              formData.amount <= 0 ||
+              allocationSource !== "fresh"
+            }
+            variant="primary"
+            className="h-[42px] rounded-xl shadow-lg shadow-emerald-600/20 sm:min-w-[240px]"
+            icon={<FaSave />}
+          />
+          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">
+            Company + ledger required only when saving a payment
+          </p>
         </div>
       </div>
     </div>
   );
-
 };
 
 export default AccountSelection;
