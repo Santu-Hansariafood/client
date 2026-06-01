@@ -60,7 +60,7 @@ const AddPaymentReceived = () => {
 
   const [formData, setFormData] = useState({
     date: new Date().toISOString().split("T")[0],
-    ledgerType: "Buyer",
+    ledgerType: "",
     ledgerId: "",
     companyId: "",
     opposingCompanyId: "",
@@ -84,6 +84,7 @@ const AddPaymentReceived = () => {
   }, [formData.amount, entries, allocationSource]);
 
   const ledgerTypes = [
+    { value: "", label: "All" },
     { value: "Buyer", label: "Buyer" },
     { value: "Seller", label: "Seller" },
   ];
@@ -101,26 +102,46 @@ const AddPaymentReceived = () => {
   };
 
   const resolveLedgerForCompany = useCallback(
-    (companyId, ledgerType, ledgerList) => {
+    (companyId, ledgerType, buyerLedgerList, sellerLedgerList) => {
       if (!companyId) return null;
 
-      if (ledgerType === "Buyer") {
-        return (
-          ledgerList.find((ledger) =>
-            (ledger.companies || []).some(
-              (c) => getCompanyIdFromRef(c) === companyId,
-            ),
-          ) || null
-        );
-      }
+      const findBuyer = () =>
+        buyerLedgerList.find((ledger) =>
+          (ledger.companies || []).some(
+            (c) => getCompanyIdFromRef(c) === companyId,
+          ),
+        ) || null;
 
-      return (
-        ledgerList.find((ledger) =>
+      const findSeller = () =>
+        sellerLedgerList.find((ledger) =>
           (ledger.companies || []).some(
             (c) => getCompanyNameFromRef(c) === companyId,
           ),
-        ) || null
+        ) || null;
+
+      if (ledgerType === "Buyer") return findBuyer();
+      if (ledgerType === "Seller") return findSeller();
+      return findBuyer() || findSeller();
+    },
+    [],
+  );
+
+  const inferLedgerTypeForCompany = useCallback(
+    (companyId, buyerLedgerList, sellerLedgerList) => {
+      if (!companyId) return "Buyer";
+      const buyer = buyerLedgerList.find((ledger) =>
+        (ledger.companies || []).some(
+          (c) => getCompanyIdFromRef(c) === companyId,
+        ),
       );
+      if (buyer) return "Buyer";
+      const seller = sellerLedgerList.find((ledger) =>
+        (ledger.companies || []).some(
+          (c) => getCompanyNameFromRef(c) === companyId,
+        ),
+      );
+      if (seller) return "Seller";
+      return "Buyer";
     },
     [],
   );
@@ -139,51 +160,59 @@ const AddPaymentReceived = () => {
   };
 
   const primaryCompanyOptions = useMemo(() => {
-    if (formData.ledgerType === "Buyer") {
-      return allCompanies.map((c) => ({
-        value: c._id,
-        label: c.companyName,
-      }));
-    }
-    return collectUniqueCompanyNames(ledgers);
-  }, [formData.ledgerType, allCompanies, ledgers]);
-
-  const opposingCompanyOptions = useMemo(() => {
-    if (formData.ledgerType === "Buyer") {
+    if (formData.ledgerType === "Seller") {
       return collectUniqueCompanyNames(opposingLedgers);
     }
     return allCompanies.map((c) => ({
       value: c._id,
       label: c.companyName,
     }));
+  }, [formData.ledgerType, allCompanies, opposingLedgers]);
+
+  const opposingCompanyOptions = useMemo(() => {
+    const sellerNames = collectUniqueCompanyNames(opposingLedgers);
+    const buyerOptions = allCompanies.map((c) => ({
+      value: c._id,
+      label: c.companyName,
+    }));
+    if (formData.ledgerType === "Seller") {
+      return buyerOptions;
+    }
+    if (formData.ledgerType === "Buyer") {
+      return sellerNames;
+    }
+    const seen = new Set();
+    return [...sellerNames, ...buyerOptions].filter((opt) => {
+      if (seen.has(opt.label)) return false;
+      seen.add(opt.label);
+      return true;
+    });
   }, [formData.ledgerType, opposingLedgers, allCompanies]);
 
   const selectedCompanyOption = useMemo(() => {
     if (!formData.companyId) return null;
-    if (formData.ledgerType === "Buyer") {
+    if (formData.ledgerType !== "Seller") {
       const company = allCompanies.find((c) => c._id === formData.companyId);
-      return company
-        ? { value: company._id, label: company.companyName }
-        : null;
+      if (company) {
+        return { value: company._id, label: company.companyName };
+      }
     }
     return { value: formData.companyId, label: formData.companyId };
   }, [formData.companyId, formData.ledgerType, allCompanies]);
 
   const selectedOpposingCompanyOption = useMemo(() => {
     if (!formData.opposingCompanyId) return null;
-    if (formData.ledgerType === "Buyer") {
-      return {
-        value: formData.opposingCompanyId,
-        label: formData.opposingCompanyId,
-      };
-    }
     const company = allCompanies.find(
       (c) => c._id === formData.opposingCompanyId,
     );
-    return company
-      ? { value: company._id, label: company.companyName }
-      : null;
-  }, [formData.opposingCompanyId, formData.ledgerType, allCompanies]);
+    if (company) {
+      return { value: company._id, label: company.companyName };
+    }
+    return {
+      value: formData.opposingCompanyId,
+      label: formData.opposingCompanyId,
+    };
+  }, [formData.opposingCompanyId, allCompanies]);
 
   const paymentModes = [
     { value: "Bank", label: "Bank Transfer" },
@@ -211,30 +240,33 @@ const AddPaymentReceived = () => {
   }, []);
 
   useEffect(() => {
-    const fetchLedgers = async () => {
+    const mapBuyers = (data) =>
+      data.map((item) => ({
+        value: item._id,
+        label: `${item.name} ${item.mobile ? `(${item.mobile})` : ""} ${item.groupId?.groupName ? `- ${item.groupId.groupName}` : ""}`,
+        companies: item.companyIds || item.companies || [],
+        ledgerType: "Buyer",
+      }));
+
+    const mapSellers = (data) =>
+      data.map((item) => ({
+        value: item._id,
+        label: `${item.sellerName} ${item.phoneNumbers?.[0]?.value ? `(${item.phoneNumbers[0].value})` : ""} ${item.city ? `- ${item.city}` : ""}`,
+        companies: item.companyIds || item.companies || [],
+        ledgerType: "Seller",
+      }));
+
+    const loadLedgers = async () => {
       try {
         setFetchingLedgers(true);
-        const endpoint =
-          formData.ledgerType === "Buyer" ? "/buyers" : "/sellers";
-        const response = await api.get(endpoint, { params: { limit: 0 } });
-        const data = response.data.data || response.data;
-        setLedgers(
-          data.map((item) => ({
-            value: item._id,
-            label:
-              formData.ledgerType === "Buyer"
-                ? `${item.name} ${item.mobile ? `(${item.mobile})` : ""} ${item.groupId?.groupName ? `- ${item.groupId.groupName}` : ""}`
-                : `${item.sellerName} ${item.phoneNumbers?.[0]?.value ? `(${item.phoneNumbers[0].value})` : ""} ${item.city ? `- ${item.city}` : ""}`,
-            companies: item.companyIds || item.companies || [],
-          })),
-        );
-        setSelectedLedger(null);
-        setFormData((prev) => ({
-          ...prev,
-          ledgerId: "",
-          companyId: "",
-          mappings: [],
-        }));
+        const [buyersRes, sellersRes] = await Promise.all([
+          api.get("/buyers", { params: { limit: 0 } }),
+          api.get("/sellers", { params: { limit: 0 } }),
+        ]);
+        const buyers = buyersRes.data.data || buyersRes.data || [];
+        const sellers = sellersRes.data.data || sellersRes.data || [];
+        setLedgers(mapBuyers(buyers));
+        setOpposingLedgers(mapSellers(sellers));
       } catch (error) {
         toast.error("Error fetching ledgers");
       } finally {
@@ -242,38 +274,43 @@ const AddPaymentReceived = () => {
       }
     };
 
-    const fetchOpposingLedgers = async () => {
-      try {
-        const endpoint =
-          formData.ledgerType === "Buyer" ? "/sellers" : "/buyers";
-        const response = await api.get(endpoint, { params: { limit: 0 } });
-        const data = response.data.data || response.data;
-        setOpposingLedgers(
-          data.map((item) => ({
-            value: item._id,
-            label:
-              formData.ledgerType === "Buyer"
-                ? `${item.sellerName} ${item.phoneNumbers?.[0]?.value ? `(${item.phoneNumbers[0].value})` : ""} ${item.city ? `- ${item.city}` : ""}`
-                : `${item.name} ${item.mobile ? `(${item.mobile})` : ""} ${item.groupId?.groupName ? `- ${item.groupId.groupName}` : ""}`,
-            companies: item.companyIds || item.companies || [],
-          })),
-        );
-        setFormData((prev) => ({
-          ...prev,
-          opposingCompanyId: "",
-        }));
-      } catch (error) {
-        console.error("Error fetching opposing ledgers:", error);
-      }
-    };
+    loadLedgers();
+  }, []);
 
-    fetchLedgers();
-    fetchOpposingLedgers();
-  }, [formData.ledgerType]);
+  const companyPair = useMemo(() => {
+    if (formData.ledgerType) {
+      return getCompanyPairFromForm(
+        formData,
+        selectedCompanyOption,
+        selectedOpposingCompanyOption,
+      );
+    }
+    const primary = selectedCompanyOption?.label || "";
+    const opposing = selectedOpposingCompanyOption?.label || "";
+    const primaryIsBuyer =
+      formData.companyId &&
+      allCompanies.some((c) => c._id === formData.companyId);
+    const opposingIsBuyer =
+      formData.opposingCompanyId &&
+      allCompanies.some((c) => c._id === formData.opposingCompanyId);
+
+    let buyerCompany = "";
+    let supplierCompany = "";
+    if (primaryIsBuyer) buyerCompany = primary;
+    else if (primary) supplierCompany = primary;
+    if (opposingIsBuyer) buyerCompany = opposing;
+    else if (opposing) supplierCompany = opposing;
+    return { buyerCompany, supplierCompany };
+  }, [
+    formData,
+    selectedCompanyOption,
+    selectedOpposingCompanyOption,
+    allCompanies,
+  ]);
 
   const fetchEntries = useCallback(
     async (page = 1) => {
-      if (formData.paymentType !== "Sauda-wise" || !formData.date) {
+      if (formData.paymentType !== "Sauda-wise") {
         setEntries([]);
         return;
       }
@@ -281,55 +318,38 @@ const AddPaymentReceived = () => {
       try {
         setFetchingEntries(true);
 
-        let companyName = "";
-        if (formData.companyId) {
-          if (formData.ledgerType === "Buyer") {
-            const selectedCompany = allCompanies.find(
-              (c) => c._id === formData.companyId,
-            );
-            companyName = selectedCompany?.companyName || "";
-          } else {
-            companyName = formData.companyId;
-          }
-        }
-
-        let opposingCompanyName = "";
-        if (formData.opposingCompanyId) {
-          if (formData.ledgerType === "Seller") {
-            const selectedOpposingCompany = allCompanies.find(
-              (c) => c._id === formData.opposingCompanyId,
-            );
-            opposingCompanyName = selectedOpposingCompany?.companyName || "";
-          } else {
-            opposingCompanyName = formData.opposingCompanyId;
-          }
-        }
+        const hasFilters =
+          formData.companyId ||
+          formData.opposingCompanyId ||
+          formData.filterStartDate ||
+          formData.filterEndDate;
 
         const params = {
           page,
-          limit: formData.companyId ? 20 : 100,
+          limit: hasFilters ? 50 : 100,
           isUnloaded: true,
         };
 
         if (formData.filterStartDate || formData.filterEndDate) {
           params.startDate = formData.filterStartDate;
           params.endDate = formData.filterEndDate;
-        } else {
-          params.date = formData.date;
         }
 
-        if (formData.companyId) {
+        if (companyPair.buyerCompany) {
+          params.buyerCompany = companyPair.buyerCompany;
+        }
+        if (companyPair.supplierCompany) {
+          params.supplierCompany = companyPair.supplierCompany;
+        }
+
+        if (formData.companyId && formData.ledgerType !== "Seller") {
           params.companyId = formData.companyId;
         }
 
-        if (formData.ledgerType === "Seller") {
-          if (formData.ledgerId) params.supplier = formData.ledgerId;
-          if (companyName) params.supplierCompany = companyName;
-          if (opposingCompanyName) params.buyerCompany = opposingCompanyName;
-        } else {
-          if (formData.ledgerId) params.buyerId = formData.ledgerId;
-          if (companyName) params.buyerCompany = companyName;
-          if (opposingCompanyName) params.supplierCompany = opposingCompanyName;
+        if (formData.ledgerType === "Seller" && formData.ledgerId) {
+          params.supplier = formData.ledgerId;
+        } else if (formData.ledgerType === "Buyer" && formData.ledgerId) {
+          params.buyerId = formData.ledgerId;
         }
 
         const response = await api.get("/loading-entries", { params });
@@ -362,7 +382,6 @@ const AddPaymentReceived = () => {
       }
     },
     [
-      formData.date,
       formData.ledgerId,
       formData.ledgerType,
       formData.paymentType,
@@ -370,23 +389,14 @@ const AddPaymentReceived = () => {
       formData.filterEndDate,
       formData.companyId,
       formData.opposingCompanyId,
-      allCompanies,
+      companyPair.buyerCompany,
+      companyPair.supplierCompany,
     ],
   );
 
   useEffect(() => {
     fetchEntries(1);
   }, [fetchEntries]);
-
-  const companyPair = useMemo(
-    () =>
-      getCompanyPairFromForm(
-        formData,
-        selectedCompanyOption,
-        selectedOpposingCompanyOption,
-      ),
-    [formData, selectedCompanyOption, selectedOpposingCompanyOption],
-  );
 
   const buildCompanyPayload = useCallback(
     () => ({
@@ -408,8 +418,10 @@ const AddPaymentReceived = () => {
         startDate: formData.date,
         endDate: formData.date,
         limit: 500,
-        ledgerType: formData.ledgerType,
       };
+      if (formData.ledgerType) {
+        params.ledgerType = formData.ledgerType;
+      }
       if (formData.ledgerId) params.ledgerId = formData.ledgerId;
       if (formData.companyId) {
         if (companyPair.buyerCompany) {
@@ -485,6 +497,12 @@ const AddPaymentReceived = () => {
       if (formData.ledgerType) {
         params.ledgerType = formData.ledgerType;
       }
+      if (companyPair.buyerCompany) {
+        params.buyerCompany = companyPair.buyerCompany;
+      }
+      if (companyPair.supplierCompany) {
+        params.supplierCompany = companyPair.supplierCompany;
+      }
 
       const response = await api.get("/payment-received", { params });
       const payments = response.data.data || [];
@@ -493,7 +511,14 @@ const AddPaymentReceived = () => {
     } catch (error) {
       console.error("Error fetching date total:", error);
     }
-  }, [formData.date, formData.ledgerId, formData.companyId, formData.ledgerType]);
+  }, [
+    formData.date,
+    formData.ledgerId,
+    formData.companyId,
+    formData.ledgerType,
+    companyPair.buyerCompany,
+    companyPair.supplierCompany,
+  ]);
 
   useEffect(() => {
     fetchDateTotal();
@@ -519,12 +544,28 @@ const AddPaymentReceived = () => {
       companyId,
       formData.ledgerType,
       ledgers,
+      opposingLedgers,
     );
     setSelectedLedger(ledger);
     setFormData((prev) => ({
       ...prev,
       companyId,
       ledgerId: ledger?.value || "",
+    }));
+  };
+
+  const handleClearCompany = () => {
+    setSelectedLedger(null);
+    setFormData((prev) => ({
+      ...prev,
+      companyId: "",
+      ledgerId: "",
+    }));
+  };
+
+  const handleClearOpposingCompany = () => {
+    setFormData((prev) => ({
+      ...prev,
       opposingCompanyId: "",
     }));
   };
@@ -649,6 +690,13 @@ const AddPaymentReceived = () => {
       return;
     }
 
+    if (!isEditing && (!formData.companyId || !formData.ledgerId)) {
+      toast.error(
+        "Select a company linked to a ledger to record payment (filters are optional for viewing only)",
+      );
+      return;
+    }
+
     try {
       setLoading(true);
       const numAllocated = parseFloat(entry.allocatedAmount) || 0;
@@ -663,9 +711,13 @@ const AddPaymentReceived = () => {
         });
         toast.success(`Payment adjusted for ${entry.lorryNumber}`);
       } else {
+        const recordLedgerType =
+          formData.ledgerType ||
+          inferLedgerTypeForCompany(formData.companyId, ledgers, opposingLedgers);
+
         const payload = {
           date: formData.date,
-          ledgerType: formData.ledgerType,
+          ledgerType: recordLedgerType,
           ledgerId: formData.ledgerId,
           companyId: formData.companyId,
           ...buildCompanyPayload(),
@@ -718,10 +770,15 @@ const AddPaymentReceived = () => {
       return;
     }
 
+    const recordLedgerType =
+      formData.ledgerType ||
+      inferLedgerTypeForCompany(formData.companyId, ledgers, opposingLedgers);
+
     try {
       setLoading(true);
       const payload = {
         ...formData,
+        ledgerType: recordLedgerType,
         companyId: formData.companyId,
         ...buildCompanyPayload(),
         paymentType: "Advance",
@@ -1204,6 +1261,8 @@ const AddPaymentReceived = () => {
           selectedOpposingCompanyOption={selectedOpposingCompanyOption}
           handleCompanyChange={handleCompanyChange}
           handleOpposingCompanyChange={handleOpposingCompanyChange}
+          handleClearCompany={handleClearCompany}
+          handleClearOpposingCompany={handleClearOpposingCompany}
           paymentModes={paymentModes}
           loading={loading}
           handleRecordAdvance={handleRecordAdvance}

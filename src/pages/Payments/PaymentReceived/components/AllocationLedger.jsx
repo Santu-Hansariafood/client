@@ -33,9 +33,9 @@ const AllocationLedger = ({
   companyPair,
   tallyOutstandingRows,
 }) => {
-  const showTallyView = Boolean(formData.date);
-  const hasCompanyFilter = Boolean(formData.companyId);
-  const pageSize = hasCompanyFilter ? 20 : 100;
+  const hasCompanyFilter =
+    Boolean(formData.companyId) || Boolean(formData.opposingCompanyId);
+  const pageSize = hasCompanyFilter ? 50 : 100;
 
   return (
     <div className="flex flex-col h-full">
@@ -54,9 +54,14 @@ const AllocationLedger = ({
                   : allocationSource === "fresh"
                     ? "Payment Sent Ledger (Tally)"
                     : "Advance Adjustment"}
-                {formData.ledgerType === "Buyer" && allocationSource === "fresh" && (
+                {allocationSource === "fresh" && (
                   <span className="flex items-center gap-1 px-2 py-0.5 bg-blue-50 text-blue-600 text-[10px] rounded-full border border-blue-100">
-                    Buyer <FaArrowLeft className="rotate-180 size-2" /> Seller
+                    {formData.ledgerType === "Seller"
+                      ? "Seller"
+                      : formData.ledgerType === "Buyer"
+                        ? "Buyer"
+                        : "All"}{" "}
+                    <FaArrowLeft className="rotate-180 size-2" /> Outstanding
                   </span>
                 )}
               </h4>
@@ -114,20 +119,18 @@ const AllocationLedger = ({
           </div>
         </div>
 
-        {showTallyView && (
-          <CompanyLedgerBanner
-            buyerCompany={companyPair?.buyerCompany}
-            supplierCompany={companyPair?.supplierCompany}
-            ledgerType={formData.ledgerType}
-            entryDate={formData.date}
-            allCompaniesMode={!hasCompanyFilter}
-            subtitle={
-              hasCompanyFilter
-                ? "Outstanding mapped by buyer company → seller company"
-                : `All unloaded entries for ${new Date(formData.date).toLocaleDateString("en-GB")} · filter by company optional`
-            }
-          />
-        )}
+        <CompanyLedgerBanner
+          buyerCompany={companyPair?.buyerCompany}
+          supplierCompany={companyPair?.supplierCompany}
+          ledgerType={formData.ledgerType || "Buyer"}
+          entryDate={formData.date}
+          allCompaniesMode={!hasCompanyFilter}
+          subtitle={
+            hasCompanyFilter
+              ? "Filtered view · buyer → seller"
+              : "All unloaded lorries · use filters above to narrow"
+          }
+        />
       </div>
 
       <div className="flex-1">
@@ -136,16 +139,6 @@ const AllocationLedger = ({
             <Loading size="lg" />
             <p className="text-xs font-bold text-slate-400 uppercase tracking-[0.2em]">
               Syncing ledger...
-            </p>
-          </div>
-        ) : !formData.date ? (
-          <div className="py-32 flex flex-col items-center justify-center text-center px-8">
-            <h4 className="text-lg font-bold text-slate-800">
-              Select entry date
-            </h4>
-            <p className="text-sm text-slate-500 font-medium max-w-sm mt-2">
-              Choose an entry date above to load all payment and loading data for
-              that day. Company filters are optional.
             </p>
           </div>
         ) : filteredEntries.length > 0 ? (

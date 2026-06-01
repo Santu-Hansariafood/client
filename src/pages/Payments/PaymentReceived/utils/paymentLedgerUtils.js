@@ -5,16 +5,22 @@ export const getCompanyPairFromForm = (
   selectedCompanyOption,
   selectedOpposingCompanyOption,
 ) => {
-  const buyerCompany =
-    formData.ledgerType === "Buyer"
-      ? selectedCompanyOption?.label || ""
-      : selectedOpposingCompanyOption?.label || "";
-  const supplierCompany =
-    formData.ledgerType === "Buyer"
-      ? selectedOpposingCompanyOption?.label || ""
-      : selectedCompanyOption?.label || "";
-
-  return { buyerCompany, supplierCompany };
+  if (formData.ledgerType === "Buyer") {
+    return {
+      buyerCompany: selectedCompanyOption?.label || "",
+      supplierCompany: selectedOpposingCompanyOption?.label || "",
+    };
+  }
+  if (formData.ledgerType === "Seller") {
+    return {
+      buyerCompany: selectedOpposingCompanyOption?.label || "",
+      supplierCompany: selectedCompanyOption?.label || "",
+    };
+  }
+  return {
+    buyerCompany: selectedCompanyOption?.label || "",
+    supplierCompany: selectedOpposingCompanyOption?.label || "",
+  };
 };
 
 export const buildPaymentParticulars = (payment) => {

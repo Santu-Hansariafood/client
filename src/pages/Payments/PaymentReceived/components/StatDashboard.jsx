@@ -10,8 +10,8 @@ const StatDashboard = ({ selectedLedger, selectedCompanyOption, dateTotal, formD
             <StatCard
                 icon={<FaWallet size={18} />}
                 label={accountLabel
-                    ? `${accountLabel} ${formData.ledgerType === 'Buyer' ? 'Received' : 'Sent'}`
-                    : `Total ${formData.ledgerType === 'Buyer' ? 'Received' : 'Sent'}`
+                    ? `${accountLabel} ${formData.ledgerType === 'Seller' ? 'Sent' : 'Received'}`
+                    : `Total ${formData.ledgerType === 'Seller' ? 'Sent' : formData.ledgerType === 'Buyer' ? 'Received' : 'Payments'}`
                 }
                 value={`Rs. ${dateTotal.toLocaleString('en-IN')}`}
                 subValue={new Date(formData.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}
