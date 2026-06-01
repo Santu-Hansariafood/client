@@ -32,6 +32,7 @@ const AllocationLedger = ({
   companyPair,
   fullCompanyMapping,
   hasBuyerCompany,
+  hasCompanyTableScope,
   buyerOnlyMapping,
   loadingSellerOptions,
 }) => {
@@ -151,7 +152,18 @@ const AllocationLedger = ({
       </div>
 
       <div className="flex-1">
-        {fetchingEntries ? (
+        {!hasCompanyTableScope ? (
+          <div className="py-32 flex flex-col items-center justify-center text-center px-8">
+            <h4 className="text-lg font-bold text-slate-800">
+              Select company to load lorry table
+            </h4>
+            <p className="text-sm text-slate-500 font-medium max-w-md mt-2">
+              DATE & SAUDA, LORRY, PARTIES, BREAKDOWN, ALLOCATION and ACTION
+              rows appear only for your selected buyer
+              {formData.ledgerType !== "Seller" ? " (and seller when chosen)" : ""}.
+            </p>
+          </div>
+        ) : fetchingEntries ? (
           <div className="py-32 flex flex-col items-center justify-center gap-4">
             <Loading size="lg" />
             <p className="text-xs font-bold text-slate-400 uppercase tracking-[0.2em]">
@@ -161,6 +173,29 @@ const AllocationLedger = ({
         ) : entries.length > 0 ? (
           <div>
             <div className="px-4 sm:px-6 py-6">
+              <div className="mb-3 flex flex-wrap items-center gap-2">
+                <span className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-500">
+                  Showing lorries for
+                </span>
+                {companyPair.buyerCompany && (
+                  <span className="px-2 py-1 rounded-lg bg-blue-600 text-white text-[10px] font-black uppercase">
+                    {companyPair.buyerCompany}
+                  </span>
+                )}
+                {companyPair.buyerCompany && companyPair.supplierCompany && (
+                  <span className="text-slate-400 text-xs">→</span>
+                )}
+                {companyPair.supplierCompany && (
+                  <span className="px-2 py-1 rounded-lg bg-amber-500 text-white text-[10px] font-black uppercase">
+                    {companyPair.supplierCompany}
+                  </span>
+                )}
+                {buyerOnlyMapping && (
+                  <span className="text-[10px] font-bold text-slate-500">
+                    (all sellers for this buyer)
+                  </span>
+                )}
+              </div>
               <div className="overflow-x-auto rounded-xl border border-slate-200">
                 <table className="w-full border-collapse text-left min-w-[900px]">
                   <thead>
@@ -252,12 +287,10 @@ const AllocationLedger = ({
               {fullCompanyMapping
                 ? "No pending lorries for this buyer → seller. Try another seller or clear filters."
                 : hasBuyerCompany
-                  ? "No pending lorries for this buyer. Select a seller or check filters."
+                  ? "No pending lorries for this buyer with current filters."
                   : tableSearch
-                  ? "No matches for your search. Try different keywords or clear filters."
-                  : hasCompanyFilter
-                    ? "Select both buyer and seller for mapping view, or adjust filters."
-                    : "Select buyer and seller companies above, or browse all unloaded lorries."}
+                    ? "No matches for your search under selected company."
+                    : "Select buyer company above to load the table."}
             </p>
           </div>
         )}

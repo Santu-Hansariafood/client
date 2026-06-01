@@ -118,3 +118,49 @@ export const formatLedgerAmount = (n) =>
 
 export const hasFullCompanyMapping = (companyPair) =>
   Boolean(companyPair?.buyerCompany && companyPair?.supplierCompany);
+
+export const matchCompanyName = (value, filterName) => {
+  if (!filterName) return true;
+  return (
+    String(value || "")
+      .trim()
+      .toLowerCase() === String(filterName).trim().toLowerCase()
+  );
+};
+
+/** Keep loading rows that match selected buyer / seller filters. */
+export const filterEntriesForCompanyScope = (
+  items,
+  companyPair,
+  { pendingOnly = false, unadjustedOnly = false } = {},
+  calculateDue,
+) =>
+  items.filter((item) => {
+    if (
+      companyPair?.buyerCompany &&
+      !matchCompanyName(item.buyerCompany, companyPair.buyerCompany)
+    ) {
+      return false;
+    }
+    if (
+      companyPair?.supplierCompany &&
+      !matchCompanyName(item.supplierCompany, companyPair.supplierCompany)
+    ) {
+      return false;
+    }
+    if (pendingOnly && item.paymentStatus === "done") {
+      return false;
+    }
+    if (unadjustedOnly && calculateDue) {
+      const due = calculateDue(item);
+      return due > 0.01;
+    }
+    return true;
+  });
+
+export const hasAllocationTableScope = (ledgerType, companyPair) => {
+  if (ledgerType === "Seller") {
+    return Boolean(companyPair?.supplierCompany);
+  }
+  return Boolean(companyPair?.buyerCompany);
+};

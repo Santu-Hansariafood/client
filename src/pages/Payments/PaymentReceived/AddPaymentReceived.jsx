@@ -30,6 +30,9 @@ import {
   getCompanyPairFromForm,
   buildTallyVoucherRows,
   hasFullCompanyMapping,
+  hasAllocationTableScope,
+  filterEntriesForCompanyScope,
+  matchCompanyName,
 } from "./utils/paymentLedgerUtils";
 
 const ENTRIES_PAGE_SIZE = 20;
@@ -299,6 +302,11 @@ const AddPaymentReceived = () => {
     [companyPair],
   );
 
+  const hasCompanyTableScope = useMemo(
+    () => hasAllocationTableScope(formData.ledgerType, companyPair),
+    [formData.ledgerType, companyPair],
+  );
+
   const hasBuyerCompany = Boolean(companyPair.buyerCompany);
   const buyerOnlyMapping =
     hasBuyerCompany && !companyPair.supplierCompany;
@@ -380,6 +388,13 @@ const AddPaymentReceived = () => {
     async (page = 1) => {
       if (formData.paymentType !== "Sauda-wise") {
         setEntries([]);
+        setEntriesTotal(0);
+        return;
+      }
+
+      if (!hasCompanyTableScope) {
+        setEntries([]);
+        setEntriesTotal(0);
         return;
       }
 
@@ -390,6 +405,7 @@ const AddPaymentReceived = () => {
           page: fullCompanyMapping ? 1 : page,
           limit: fullCompanyMapping ? 500 : ENTRIES_PAGE_SIZE,
           isUnloaded: true,
+          paymentStatus: "pending",
         };
 
         if (tableSearch.trim()) {
@@ -408,10 +424,6 @@ const AddPaymentReceived = () => {
           params.supplierCompany = companyPair.supplierCompany;
         }
 
-        if (fullCompanyMapping) {
-          params.paymentStatus = "pending";
-        }
-
         if (formData.companyId && formData.ledgerType !== "Seller") {
           params.companyId = formData.companyId;
         }
@@ -425,22 +437,29 @@ const AddPaymentReceived = () => {
         const response = await api.get("/loading-entries", { params });
         let items = response.data.data || [];
 
-        if (fullCompanyMapping) {
-          items = items.filter((item) => {
-            const weight =
-              (item.unloadingWeight || 0) > 0
-                ? item.unloadingWeight
-                : item.loadingWeight || 0;
-            const rate = item.actualRate || 0;
-            const gross = weight * rate;
-            const cd = gross * ((item.cd || 0) / 100);
-            const taxable = gross - cd;
-            const gst = taxable * ((item.gst || 0) / 100);
-            const net = taxable + gst;
-            const due = Math.max(0, net - (item.paidAmount || 0));
-            return due > 0.01 && item.paymentStatus !== "done";
-          });
-        }
+        const getDue = (item) => {
+          const weight =
+            (item.unloadingWeight || 0) > 0
+              ? item.unloadingWeight
+              : item.loadingWeight || 0;
+          const rate = item.actualRate || 0;
+          const gross = weight * rate;
+          const cd = gross * ((item.cd || 0) / 100);
+          const taxable = gross - cd;
+          const gst = taxable * ((item.gst || 0) / 100);
+          const net = taxable + gst;
+          return Math.max(0, net - (item.paidAmount || 0));
+        };
+
+        items = filterEntriesForCompanyScope(
+          items,
+          companyPair,
+          {
+            pendingOnly: true,
+            unadjustedOnly: fullCompanyMapping,
+          },
+          getDue,
+        );
 
         const sortedItems = [...items].sort((a, b) => {
           if (a.paymentStatus === "pending" && b.paymentStatus === "done")
@@ -461,9 +480,7 @@ const AddPaymentReceived = () => {
           })),
         );
         setEntriesTotal(
-          fullCompanyMapping
-            ? items.length
-            : (response.data.total ?? items.length),
+          fullCompanyMapping ? items.length : (response.data.total ?? items.length),
         );
         setEntriesPage(fullCompanyMapping ? 1 : page);
       } catch (error) {
@@ -483,6 +500,7 @@ const AddPaymentReceived = () => {
       companyPair.buyerCompany,
       companyPair.supplierCompany,
       fullCompanyMapping,
+      hasCompanyTableScope,
       tableSearch,
     ],
   );
@@ -1125,22 +1143,32 @@ const AddPaymentReceived = () => {
             <span className="w-3 h-3 rounded-full bg-blue-100 text-[8px] flex items-center justify-center text-blue-600 font-black">
               B
             </span>
-            <span className="text-[9px] font-black uppercase text-slate-500 truncate">
+            <span
+              className={`text-[9px] font-black uppercase truncate ${
+                matchCompanyName(row.buyerCompany, companyPair.buyerCompany)
+                  ? "text-blue-700"
+                  : "text-slate-400"
+              }`}
+            >
               {row.buyerCompany || "N/A"}
             </span>
           </div>
-          {formData.ledgerType === "Buyer" && (
-            <div className="flex justify-center -my-1 ml-3">
-              <div className="h-2 w-0.5 bg-slate-200 relative">
-                <div className="absolute -bottom-1 -left-[3px] border-t-4 border-t-slate-200 border-x-[3px] border-x-transparent"></div>
-              </div>
+          <div className="flex justify-center -my-1 ml-3">
+            <div className="h-2 w-0.5 bg-slate-200 relative">
+              <div className="absolute -bottom-1 -left-[3px] border-t-4 border-t-slate-200 border-x-[3px] border-x-transparent"></div>
             </div>
-          )}
+          </div>
           <div className="flex items-center gap-1.5">
             <span className="w-3 h-3 rounded-full bg-amber-100 text-[8px] flex items-center justify-center text-amber-600 font-black">
               S
             </span>
-            <span className="text-[9px] font-black uppercase text-slate-500 truncate">
+            <span
+              className={`text-[9px] font-black uppercase truncate ${
+                matchCompanyName(row.supplierCompany, companyPair.supplierCompany)
+                  ? "text-amber-700"
+                  : "text-slate-400"
+              }`}
+            >
               {row.supplierCompany || "N/A"}
             </span>
           </div>
@@ -1412,6 +1440,7 @@ const AddPaymentReceived = () => {
               companyPair={companyPair}
               fullCompanyMapping={fullCompanyMapping}
               hasBuyerCompany={hasBuyerCompany}
+              hasCompanyTableScope={hasCompanyTableScope}
               buyerOnlyMapping={buyerOnlyMapping}
               unallocatedBalance={unallocatedBalance}
               loadingSellerOptions={loadingSellerOptions}
