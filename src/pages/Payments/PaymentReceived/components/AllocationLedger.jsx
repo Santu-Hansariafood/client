@@ -1,158 +1,252 @@
-import React from 'react';
-import { FaFilter, FaMoneyBillWave, FaArrowLeft, FaHistory, FaFileInvoiceDollar } from 'react-icons/fa';
-import SearchBox from '../../../../common/SearchBox/SearchBox';
-import Loading from '../../../../common/Loading/Loading';
-import Tables from '../../../../common/Tables/Tables';
-import Paginations from '../../../../common/Paginations/Paginations';
+import {
+  FaFilter,
+  FaMoneyBillWave,
+  FaArrowLeft,
+  FaHistory,
+  FaFileInvoiceDollar,
+} from "react-icons/fa";
+import SearchBox from "../../../../common/SearchBox/SearchBox";
+import Loading from "../../../../common/Loading/Loading";
+import Paginations from "../../../../common/Paginations/Paginations";
+import DateRangeSelector from "../../../../common/DateSelector/DateRangeSelector";
+import CompanyLedgerBanner from "./CompanyLedgerBanner";
+import TallyLedgerBook from "./TallyLedgerBook";
+import { formatLedgerAmount } from "../utils/paymentLedgerUtils";
 
-import DateRangeSelector from '../../../../common/DateSelector/DateRangeSelector';
-
-const AllocationLedger = ({ 
-    allocationSource, 
-    formData, 
-    unallocatedBalance, 
-    setFormData, 
-    tableSearch, 
-    setTableSearch, 
-    entries, 
-    fetchingEntries, 
-    filteredEntries, 
-    columns, 
-    entriesPage, 
-    fetchEntries, 
-    entriesTotalPages, 
-    entryStats, 
-    dateTotal,
-    ledgerBalance
+const AllocationLedger = ({
+  allocationSource,
+  formData,
+  unallocatedBalance,
+  setFormData,
+  tableSearch,
+  setTableSearch,
+  entries,
+  fetchingEntries,
+  filteredEntries,
+  columns,
+  entriesPage,
+  fetchEntries,
+  entriesTotalPages,
+  entryStats,
+  dateTotal,
+  ledgerBalance,
+  companyPair,
+  tallyOutstandingRows,
 }) => {
-    return (
-        <div className="flex flex-col h-full">
-            <div className="p-6 border-b border-slate-100 bg-slate-50/50 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 bg-white rounded-xl border border-slate-200 flex items-center justify-center text-slate-600 shadow-sm">
-                        <FaFilter size={14} />
-                    </div>
-                    <div>
-                        <h4 className="font-bold text-slate-800 flex items-center gap-2">
-                            {formData.ledgerType === 'Buyer' 
-                                ? (allocationSource === 'fresh' ? 'Payment Received Ledger' : 'Advance Adjustment')
-                                : (allocationSource === 'fresh' ? 'Payment Sent Ledger' : 'Advance Adjustment')
-                            }
-                            {formData.ledgerType === 'Buyer' && allocationSource === 'fresh' && (
-                                <span className="flex items-center gap-1 px-2 py-0.5 bg-blue-50 text-blue-600 text-[10px] rounded-full border border-blue-100">
-                                    Buyer <FaArrowLeft className="rotate-180 size-2" /> Seller
-                                </span>
-                            )}
-                        </h4>
-                        <p className="text-[11px] text-slate-500 font-medium uppercase tracking-wider">
-                            {allocationSource === 'fresh' 
-                                ? (formData.ledgerType === 'Buyer' ? 'Map received payments to saudas' : 'Map sent payments to saudas')
-                                : `Using Rs. ${ledgerBalance.advanceBalance.toLocaleString()} Credit`
-                            }
-                        </p>
-                    </div>
-                </div>
+  const showTallyView = Boolean(formData.companyId);
 
-                <div className="flex flex-wrap items-center gap-3">
-                    {allocationSource === 'fresh' && formData.amount > 0 && (
-                        <div className="flex items-center gap-2 bg-emerald-900 text-white px-4 py-2 rounded-xl shadow-lg border border-emerald-700 animate-in fade-in slide-in-from-right-4 duration-500">
-                            <div className="flex flex-col">
-                                <span className="text-[9px] font-black uppercase tracking-[0.2em] text-emerald-400 leading-none mb-1">
-                                    {formData.ledgerType === 'Buyer' ? 'Available to Allocate' : 'Available to Send'}
-                                </span>
-                                <span className="text-sm font-black italic tracking-tight">Rs. {unallocatedBalance.toLocaleString('en-IN')}</span>
-                            </div>
-                            <div className="w-px h-6 bg-emerald-700/50 mx-1"></div>
-                            <FaMoneyBillWave className="text-emerald-400 animate-pulse" />
-                        </div>
-                    )}
-
-                    <DateRangeSelector 
-                         startDate={formData.filterStartDate}
-                         endDate={formData.filterEndDate}
-                         onStartDateChange={(date) => setFormData(prev => ({ ...prev, filterStartDate: date }))}
-                         onEndDateChange={(date) => setFormData(prev => ({ ...prev, filterEndDate: date }))}
-                         onClear={() => setFormData(prev => ({ ...prev, filterStartDate: '', filterEndDate: '' }))}
-                         className="!bg-white !px-3 !py-1.5 shadow-sm"
-                     />
-
-                    <SearchBox
-                        placeholder="Search Sauda / Lorry..."
-                        items={entries}
-                        onSearch={setTableSearch}
-                        returnQuery={true}
-                        className="!max-w-[300px]"
-                    />
-                </div>
+  return (
+    <div className="flex flex-col h-full">
+      <div className="p-6 border-b border-slate-100 bg-slate-50/50 flex flex-col gap-4">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <div className="w-10 h-10 bg-[#1e3a5f] rounded-xl flex items-center justify-center text-white shadow-sm">
+              <FaFilter size={14} />
             </div>
-
-            <div className="flex-1">
-                {fetchingEntries ? (
-                    <div className="py-32 flex flex-col items-center justify-center gap-4">
-                        <Loading size="lg" />
-                        <p className="text-xs font-bold text-slate-400 uppercase tracking-[0.2em]">Syncing Entries...</p>
-                    </div>
-                ) : filteredEntries.length > 0 ? (
-                    <div className="overflow-x-auto">
-                        <Tables
-                            headers={columns.map(c => c.header)}
-                            rows={filteredEntries.map((entry, index) => columns.map(col => {
-                                if (typeof col.accessor === 'function') {
-                                    return col.accessor(entry, index);
-                                }
-                                return entry[col.accessor];
-                            }))}
-                        />
-                        
-                        <div className="p-6 bg-slate-50 border-t border-slate-100">
-                            <Paginations
-                                currentPage={entriesPage}
-                                totalItems={entriesTotalPages * 20}
-                                itemsPerPage={20}
-                                onPageChange={(page) => fetchEntries(page)}
-                            />
-                        </div>
-
-                        <div className="bg-slate-900 p-8 flex flex-col md:flex-row items-center justify-between gap-8">
-                            <div className="flex items-center gap-10">
-                                <div className="space-y-1">
-                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Total Unpaid Due</p>
-                                    <p className="text-2xl font-black text-white italic tracking-tighter">Rs. {entryStats.totalDue.toLocaleString('en-IN')}</p>
-                                </div>
-                                <div className="w-px h-10 bg-slate-800 hidden md:block"></div>
-                                <div className="space-y-1">
-                                    <p className="text-[10px] font-black text-emerald-400 uppercase tracking-widest leading-none">
-                                        {formData.ledgerType === 'Buyer' ? 'Date Received' : 'Date Sent'}
-                                    </p>
-                                    <p className="text-2xl font-black text-white italic tracking-tighter">Rs. {dateTotal.toLocaleString('en-IN')}</p>
-                                </div>
-                            </div>
-
-                            <div className="flex items-center gap-6">
-                                <div className="text-right space-y-1">
-                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Pending Count</p>
-                                    <p className="text-2xl font-black text-rose-400">{entryStats.pendingCount}</p>
-                                </div>
-                                <div className="bg-slate-800 p-4 rounded-2xl border border-slate-700">
-                                    <FaFileInvoiceDollar className="text-slate-500" size={24} />
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                ) : (
-                    <div className="py-32 flex flex-col items-center justify-center text-center px-8">
-                        <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center text-slate-200 mb-6 border border-slate-100">
-                            <FaHistory size={32} />
-                        </div>
-                        <h4 className="text-lg font-bold text-slate-800">No Pending Records</h4>
-                        <p className="text-sm text-slate-500 font-medium max-w-xs mx-auto mt-2">
-                            All entries for this ledger are fully settled or no records match your filters.
-                        </p>
-                    </div>
+            <div>
+              <h4 className="font-bold text-slate-800 flex items-center gap-2 flex-wrap">
+                {formData.ledgerType === "Buyer"
+                  ? allocationSource === "fresh"
+                    ? "Payment Received Ledger (Tally)"
+                    : "Advance Adjustment"
+                  : allocationSource === "fresh"
+                    ? "Payment Sent Ledger (Tally)"
+                    : "Advance Adjustment"}
+                {formData.ledgerType === "Buyer" && allocationSource === "fresh" && (
+                  <span className="flex items-center gap-1 px-2 py-0.5 bg-blue-50 text-blue-600 text-[10px] rounded-full border border-blue-100">
+                    Buyer <FaArrowLeft className="rotate-180 size-2" /> Seller
+                  </span>
                 )}
+              </h4>
+              <p className="text-[11px] text-slate-500 font-medium uppercase tracking-wider">
+                {allocationSource === "fresh"
+                  ? "Company-wise outstanding · Debit = due · Credit = paid"
+                  : `Using Rs. ${ledgerBalance.advanceBalance.toLocaleString()} credit`}
+              </p>
             </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-3">
+            {allocationSource === "fresh" && formData.amount > 0 && (
+              <div className="flex items-center gap-2 bg-emerald-900 text-white px-4 py-2 rounded-xl shadow-lg border border-emerald-700">
+                <div className="flex flex-col">
+                  <span className="text-[9px] font-black uppercase tracking-[0.2em] text-emerald-400 leading-none mb-1">
+                    {formData.ledgerType === "Buyer"
+                      ? "Available to allocate"
+                      : "Available to send"}
+                  </span>
+                  <span className="text-sm font-black italic tracking-tight tabular-nums">
+                    Rs. {unallocatedBalance.toLocaleString("en-IN")}
+                  </span>
+                </div>
+                <FaMoneyBillWave className="text-emerald-400 animate-pulse" />
+              </div>
+            )}
+
+            <DateRangeSelector
+              startDate={formData.filterStartDate}
+              endDate={formData.filterEndDate}
+              onStartDateChange={(date) =>
+                setFormData((prev) => ({ ...prev, filterStartDate: date }))
+              }
+              onEndDateChange={(date) =>
+                setFormData((prev) => ({ ...prev, filterEndDate: date }))
+              }
+              onClear={() =>
+                setFormData((prev) => ({
+                  ...prev,
+                  filterStartDate: "",
+                  filterEndDate: "",
+                }))
+              }
+              className="!bg-white !px-3 !py-1.5 shadow-sm"
+            />
+
+            <SearchBox
+              placeholder="Search Sauda / Lorry..."
+              items={entries}
+              onSearch={setTableSearch}
+              returnQuery={true}
+              className="!max-w-[300px]"
+            />
+          </div>
         </div>
-    );
+
+        {showTallyView && (
+          <CompanyLedgerBanner
+            buyerCompany={companyPair?.buyerCompany}
+            supplierCompany={companyPair?.supplierCompany}
+            ledgerType={formData.ledgerType}
+            subtitle="Outstanding mapped by buyer company → seller company"
+          />
+        )}
+      </div>
+
+      <div className="flex-1">
+        {fetchingEntries ? (
+          <div className="py-32 flex flex-col items-center justify-center gap-4">
+            <Loading size="lg" />
+            <p className="text-xs font-bold text-slate-400 uppercase tracking-[0.2em]">
+              Syncing ledger...
+            </p>
+          </div>
+        ) : !formData.companyId ? (
+          <div className="py-32 flex flex-col items-center justify-center text-center px-8">
+            <h4 className="text-lg font-bold text-slate-800">
+              Select company to view ledger
+            </h4>
+            <p className="text-sm text-slate-500 font-medium max-w-sm mt-2">
+              Choose buyer company (and optional seller company) above to load
+              Tally-style company-wise entries.
+            </p>
+          </div>
+        ) : filteredEntries.length > 0 ? (
+          <div>
+            <div className="px-4 sm:px-6 pt-4">
+              <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-2">
+                Outstanding book (Tally format)
+              </p>
+              <TallyLedgerBook
+                rows={tallyOutstandingRows}
+                showCompanyColumns
+                emptyMessage="No outstanding lines"
+              />
+            </div>
+
+            <div className="px-4 sm:px-6 py-6 border-t border-slate-200 mt-4">
+              <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-3">
+                Allocate payment to lorry / sauda
+              </p>
+              <div className="overflow-x-auto rounded-xl border border-slate-200">
+                <table className="w-full border-collapse text-left min-w-[900px]">
+                  <thead>
+                    <tr className="bg-slate-100 border-b border-slate-200">
+                      {columns.map((col) => (
+                        <th
+                          key={col.header}
+                          className="px-3 py-2.5 text-[10px] font-black text-slate-600 uppercase tracking-wider"
+                        >
+                          {col.header}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredEntries.map((entry, index) => (
+                      <tr
+                        key={entry.uiKey || entry._id}
+                        className="border-b border-slate-100 hover:bg-slate-50/80"
+                      >
+                        {columns.map((col) => (
+                          <td key={col.header} className="px-3 py-3 align-top">
+                            {typeof col.accessor === "function"
+                              ? col.accessor(entry, index)
+                              : entry[col.accessor]}
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="p-4 sm:p-6 bg-slate-50 border-t border-slate-100">
+                <Paginations
+                  currentPage={entriesPage}
+                  totalItems={entriesTotalPages * 20}
+                  itemsPerPage={20}
+                  onPageChange={(page) => fetchEntries(page)}
+                />
+              </div>
+            </div>
+
+            <div className="bg-slate-900 p-6 sm:p-8 flex flex-col md:flex-row items-center justify-between gap-6">
+              <div className="flex flex-wrap items-center gap-8">
+                <div>
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                    Total unpaid (Dr.)
+                  </p>
+                  <p className="text-xl font-black text-white tabular-nums">
+                    {formatLedgerAmount(entryStats.totalDue)}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">
+                    {formData.ledgerType === "Buyer"
+                      ? "Received today"
+                      : "Sent today"}
+                  </p>
+                  <p className="text-xl font-black text-white tabular-nums">
+                    {formatLedgerAmount(dateTotal)}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-4">
+                <div className="text-right">
+                  <p className="text-[10px] font-black text-slate-400 uppercase">
+                    Pending
+                  </p>
+                  <p className="text-2xl font-black text-rose-400">
+                    {entryStats.pendingCount}
+                  </p>
+                </div>
+                <FaFileInvoiceDollar className="text-slate-500" size={28} />
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="py-32 flex flex-col items-center justify-center text-center px-8">
+            <FaHistory size={32} className="text-slate-200 mb-4" />
+            <h4 className="text-lg font-bold text-slate-800">No pending records</h4>
+            <p className="text-sm text-slate-500 font-medium max-w-xs mx-auto mt-2">
+              No outstanding entries for this company mapping, or adjust date
+              filters.
+            </p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
 };
 
 export default AllocationLedger;

@@ -1,55 +1,97 @@
-import React from 'react';
-import { FaHistory } from 'react-icons/fa';
-import Loading from '../../../../common/Loading/Loading';
-import Tables from '../../../../common/Tables/Tables';
+import { FaHistory, FaPrint } from "react-icons/fa";
+import CompanyLedgerBanner from "./CompanyLedgerBanner";
+import TallyLedgerBook from "./TallyLedgerBook";
+import { formatLedgerAmount } from "../utils/paymentLedgerUtils";
 
-const PaymentHistory = ({ fetchingHistory, formData, history, historyColumns }) => {
-    return (
-        <div className="flex flex-col h-full">
-            <div className="p-6 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 bg-white rounded-xl border border-slate-200 flex items-center justify-center text-slate-600 shadow-sm">
-                        <FaHistory size={14} />
-                    </div>
-                    <div>
-                        <h4 className="font-bold text-slate-800">Payment History</h4>
-                        <p className="text-[11px] text-slate-500 font-medium uppercase tracking-wider">
-                            Records for {new Date(formData.date).toLocaleDateString('en-GB')}
-                        </p>
-                    </div>
-                </div>
-            </div>
+const PaymentHistory = ({
+  fetchingHistory,
+  formData,
+  companyPair,
+  tallyRows,
+  onPrintVoucher,
+}) => {
+  const totalCredit = tallyRows.reduce((s, r) => s + (r.credit || 0), 0);
+  const closingBalance =
+    tallyRows.length > 0 ? tallyRows[tallyRows.length - 1].balance : 0;
 
-            <div className="flex-1">
-                {fetchingHistory ? (
-                    <div className="py-32 flex flex-col items-center justify-center gap-4">
-                        <Loading size="lg" />
-                        <p className="text-xs font-bold text-slate-400 uppercase tracking-[0.2em]">Loading History...</p>
-                    </div>
-                ) : history.length > 0 ? (
-                    <Tables
-                        headers={historyColumns.map(c => c.header)}
-                        rows={history.map(row => historyColumns.map(col => {
-                            if (typeof col.accessor === 'function') {
-                                return col.accessor(row);
-                            }
-                            return row[col.accessor];
-                        }))}
-                    />
-                ) : (
-                    <div className="py-32 flex flex-col items-center justify-center text-center px-8">
-                        <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center text-slate-200 mb-6 border border-slate-100">
-                            <FaHistory size={32} />
-                        </div>
-                        <h4 className="text-lg font-bold text-slate-800">No Previous Payments</h4>
-                        <p className="text-sm text-slate-500 font-medium max-w-xs mx-auto mt-2">
-                            No payments were recorded for this ledger on the selected date.
-                        </p>
-                    </div>
-                )}
+  return (
+    <div className="flex flex-col h-full">
+      <div className="p-6 border-b border-slate-100 bg-slate-50/50 space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <div className="w-10 h-10 bg-[#1e3a5f] rounded-xl flex items-center justify-center text-white shadow-sm">
+              <FaHistory size={14} />
             </div>
+            <div>
+              <h4 className="font-bold text-slate-800">
+                Tally Payment Voucher Register
+              </h4>
+              <p className="text-[11px] text-slate-500 font-medium uppercase tracking-wider">
+                {new Date(formData.date).toLocaleDateString("en-GB", {
+                  weekday: "short",
+                  day: "2-digit",
+                  month: "short",
+                  year: "numeric",
+                })}
+              </p>
+            </div>
+          </div>
         </div>
-    );
+        <CompanyLedgerBanner
+          buyerCompany={companyPair?.buyerCompany}
+          supplierCompany={companyPair?.supplierCompany}
+          ledgerType={formData.ledgerType}
+          subtitle="Company-to-company voucher entries for selected date"
+        />
+      </div>
+
+      <div className="flex-1 p-4 sm:p-6">
+        <TallyLedgerBook
+          rows={tallyRows.map((row) => ({
+            ...row,
+            buyerCompany: row.buyerCompany || companyPair?.buyerCompany,
+            supplierCompany:
+              row.supplierCompany || companyPair?.supplierCompany,
+          }))}
+          loading={fetchingHistory}
+          emptyMessage="No Tally vouchers recorded for this company mapping on the selected date."
+          showCompanyColumns
+        />
+
+        {tallyRows.length > 0 && (
+          <div className="mt-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 rounded-xl bg-slate-900 text-white">
+            <div className="flex flex-wrap gap-6">
+              <div>
+                <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest">
+                  Day receipts (Cr.)
+                </p>
+                <p className="text-lg font-black text-emerald-400 tabular-nums">
+                  {formatLedgerAmount(totalCredit)}
+                </p>
+              </div>
+              <div>
+                <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest">
+                  Closing balance
+                </p>
+                <p className="text-lg font-black tabular-nums">
+                  {formatLedgerAmount(closingBalance)}
+                </p>
+              </div>
+            </div>
+            {onPrintVoucher && tallyRows[tallyRows.length - 1]?.raw && (
+              <button
+                type="button"
+                onClick={() => onPrintVoucher(tallyRows[tallyRows.length - 1].raw)}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-[10px] font-black uppercase tracking-widest"
+              >
+                <FaPrint size={12} /> Print last voucher
+              </button>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
 };
 
 export default PaymentHistory;

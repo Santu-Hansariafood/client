@@ -26,6 +26,11 @@ import AccountSelection from "./components/AccountSelection";
 import AllocationLedger from "./components/AllocationLedger";
 import PaymentHistory from "./components/PaymentHistory";
 import AnalyticalSummary from "./components/AnalyticalSummary";
+import {
+  getCompanyPairFromForm,
+  buildTallyVoucherRows,
+  buildTallyOutstandingRows,
+} from "./utils/paymentLedgerUtils";
 
 const AddPaymentReceived = () => {
   const navigate = useNavigate();
@@ -363,8 +368,26 @@ const AddPaymentReceived = () => {
     fetchEntries(1);
   }, [fetchEntries]);
 
+  const companyPair = useMemo(
+    () =>
+      getCompanyPairFromForm(
+        formData,
+        selectedCompanyOption,
+        selectedOpposingCompanyOption,
+      ),
+    [formData, selectedCompanyOption, selectedOpposingCompanyOption],
+  );
+
+  const buildCompanyPayload = useCallback(
+    () => ({
+      buyerCompany: companyPair.buyerCompany,
+      supplierCompany: companyPair.supplierCompany,
+    }),
+    [companyPair],
+  );
+
   const fetchHistory = useCallback(async () => {
-    if (!formData.ledgerId) {
+    if (!formData.companyId) {
       setHistory([]);
       return;
     }
@@ -372,10 +395,15 @@ const AddPaymentReceived = () => {
     try {
       setFetchingHistory(true);
       const params = {
-        ledgerId: formData.ledgerId,
         startDate: formData.date,
         endDate: formData.date,
+        limit: 500,
       };
+      if (formData.ledgerId) params.ledgerId = formData.ledgerId;
+      if (companyPair.buyerCompany) params.buyerCompany = companyPair.buyerCompany;
+      if (companyPair.supplierCompany) {
+        params.supplierCompany = companyPair.supplierCompany;
+      }
       const response = await api.get("/payment-received", { params });
       setHistory(response.data.data || []);
     } catch (error) {
@@ -383,7 +411,18 @@ const AddPaymentReceived = () => {
     } finally {
       setFetchingHistory(false);
     }
-  }, [formData.ledgerId, formData.date]);
+  }, [
+    formData.companyId,
+    formData.ledgerId,
+    formData.date,
+    companyPair.buyerCompany,
+    companyPair.supplierCompany,
+  ]);
+
+  const tallyHistoryRows = useMemo(
+    () => buildTallyVoucherRows(history, 0),
+    [history],
+  );
 
   const fetchSummary = useCallback(async () => {
     if (!formData.ledgerId) return;
@@ -601,6 +640,7 @@ const AddPaymentReceived = () => {
           ledgerType: formData.ledgerType,
           ledgerId: formData.ledgerId,
           companyId: formData.companyId,
+          ...buildCompanyPayload(),
           amount: allocationSource === "fresh" ? numAllocated : 0,
           paymentType:
             allocationSource === "fresh" ? "Sauda-wise" : "Adjustment",
@@ -655,6 +695,7 @@ const AddPaymentReceived = () => {
       const payload = {
         ...formData,
         companyId: formData.companyId,
+        ...buildCompanyPayload(),
         paymentType: "Advance",
         mappings: [],
       };
@@ -815,6 +856,11 @@ const AddPaymentReceived = () => {
     );
   }, [entries, tableSearch]);
 
+  const tallyOutstandingRows = useMemo(
+    () => buildTallyOutstandingRows(filteredEntries, calculateTallyDetails),
+    [filteredEntries],
+  );
+
   const entryStats = useMemo(() => {
     let totalDue = 0;
     let pendingCount = 0;
@@ -829,101 +875,6 @@ const AddPaymentReceived = () => {
 
     return { totalDue, pendingCount };
   }, [entries]);
-
-  const historyColumns = [
-    {
-      header: "DATE",
-      accessor: (row) => (
-        <span className="text-[10px] font-black text-slate-900">
-          {new Date(row.date).toLocaleDateString("en-GB")}
-        </span>
-      ),
-    },
-    {
-      header: "TIME",
-      accessor: (row) => (
-        <span className="text-[10px] font-black text-slate-400">
-          {new Date(row.createdAt).toLocaleTimeString("en-GB", {
-            hour: "2-digit",
-            minute: "2-digit",
-          })}
-        </span>
-      ),
-    },
-    {
-      header: "MODE",
-      accessor: (row) => (
-        <span className="text-[10px] font-black uppercase text-slate-500 bg-slate-50 px-2 py-1 rounded-lg border border-slate-100">
-          {row.paymentMode}
-        </span>
-      ),
-    },
-    {
-      header: "PARTICULARS",
-      accessor: (row) => (
-        <div className="flex flex-col gap-0.5">
-          {(row.mappings || []).length > 0 ? (
-            row.mappings.map((m, idx) => (
-              <div key={idx} className="flex items-center gap-2">
-                <span className="text-[9px] font-black text-slate-600 uppercase">
-                  {m.saudaNo}
-                </span>
-                {m.loadingEntryId?.billNumber && (
-                  <span className="text-[8px] font-bold bg-amber-50 text-amber-600 px-1 rounded border border-amber-100 uppercase">
-                    Bill: {m.loadingEntryId.billNumber}
-                  </span>
-                )}
-                <div className="flex flex-col">
-                  <span className="text-[7px] text-slate-400 font-bold leading-none">
-                    B: {m.loadingEntryId?.buyerCompany || "N/A"}
-                  </span>
-                  <span className="text-[7px] text-slate-400 font-bold leading-none">
-                    S: {m.loadingEntryId?.supplierCompany || "N/A"}
-                  </span>
-                </div>
-                <span className="text-[9px] font-black text-slate-400 italic ml-auto">
-                  Rs. {m.allocatedAmount.toLocaleString()}
-                </span>
-              </div>
-            ))
-          ) : (
-            <span className="text-[10px] font-bold text-blue-500 uppercase tracking-widest italic">
-              Advance Payment
-            </span>
-          )}
-        </div>
-      ),
-    },
-    {
-      header: "TOTAL AMOUNT",
-      accessor: (row) => (
-        <span className="font-black text-slate-900 text-sm italic">
-          Rs. {row.amount.toLocaleString()}
-        </span>
-      ),
-    },
-    {
-      header: "REMARKS",
-      accessor: (row) => (
-        <span className="text-[10px] text-slate-400 font-medium italic">
-          {row.remarks || "-"}
-        </span>
-      ),
-    },
-    {
-      header: "ACTION",
-      accessor: (row) => (
-        <Buttons
-          label=""
-          icon={<FaPrint size={12} />}
-          variant="ghost"
-          size="sm"
-          onClick={() => printVoucher(row)}
-          className="!p-2 hover:bg-slate-100"
-        />
-      ),
-    },
-  ];
 
   const columns = [
     {
@@ -1250,6 +1201,8 @@ const AddPaymentReceived = () => {
               entryStats={entryStats}
               dateTotal={dateTotal}
               ledgerBalance={ledgerBalance}
+              companyPair={companyPair}
+              tallyOutstandingRows={tallyOutstandingRows}
             />
           )}
 
@@ -1257,8 +1210,9 @@ const AddPaymentReceived = () => {
             <PaymentHistory
               fetchingHistory={fetchingHistory}
               formData={formData}
-              history={history}
-              historyColumns={historyColumns}
+              companyPair={companyPair}
+              tallyRows={tallyHistoryRows}
+              onPrintVoucher={printVoucher}
             />
           )}
 

@@ -44,6 +44,8 @@ router.post("/", async (req, res) => {
       ledgerType,
       ledgerId,
       companyId,
+      buyerCompany,
+      supplierCompany,
       amount,
       paymentType,
       paymentMode,
@@ -60,6 +62,8 @@ router.post("/", async (req, res) => {
       ledgerType,
       ledgerId,
       companyId,
+      buyerCompany: buyerCompany || "",
+      supplierCompany: supplierCompany || "",
       amount,
       unadjustedAmount,
       paymentType: paymentType || (unadjustedAmount > 0 && totalMapped === 0 ? "Advance" : "Sauda-wise"),
@@ -166,13 +170,39 @@ router.get("/balance/:ledgerId", async (req, res) => {
 
 router.get("/", async (req, res) => {
   try {
-    const { ledgerType, ledgerId, companyId, startDate, endDate, page = 1, limit = 10 } = req.query;
+    const {
+      ledgerType,
+      ledgerId,
+      companyId,
+      buyerCompany,
+      supplierCompany,
+      startDate,
+      endDate,
+      page = 1,
+      limit = 10,
+    } = req.query;
     const query = {};
 
     if (ledgerType) query.ledgerType = ledgerType;
     if (ledgerId) query.ledgerId = ledgerId;
-    if (companyId && companyId !== 'null' && companyId !== 'undefined') {
+    if (companyId && companyId !== "null" && companyId !== "undefined") {
       query.companyId = companyId;
+    }
+    if (buyerCompany) {
+      query.buyerCompany = {
+        $regex: new RegExp(
+          `^${String(buyerCompany).replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`,
+          "i",
+        ),
+      };
+    }
+    if (supplierCompany) {
+      query.supplierCompany = {
+        $regex: new RegExp(
+          `^${String(supplierCompany).replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`,
+          "i",
+        ),
+      };
     }
     if (startDate || endDate) {
       query.date = {};
@@ -189,7 +219,9 @@ router.get("/", async (req, res) => {
         .sort({ date: -1, createdAt: -1 })
         .skip((page - 1) * limit)
         .limit(parseInt(limit))
-        .select("date ledgerType ledgerId amount paymentMode paymentType mappings remarks createdAt")
+        .select(
+          "date ledgerType ledgerId companyId buyerCompany supplierCompany amount paymentMode paymentType mappings remarks createdAt",
+        )
         .populate("ledgerId", "name sellerName")
         .populate("mappings.loadingEntryId", "saudaNo lorryNumber billNumber loadingDate buyerCompany supplierCompany")
         .lean(),

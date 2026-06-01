@@ -4,56 +4,20 @@ import { toast } from "react-toastify";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
-import Tables from "../../../common/Tables/Tables";
-import DataDropdown from "../../../common/DataDropdown/DataDropdown";
 import api from "../../../utils/apiClient/apiClient";
 import {
-  FaPlus,
   FaMoneyBillWave,
-  FaFilter,
-  FaPrint,
   FaChartLine,
   FaCheckCircle,
   FaExclamationCircle,
-  FaTruck,
 } from "react-icons/fa";
-import Paginations from "../../../common/Paginations/Paginations";
-import DateRangeSelector from "../../../common/DateSelector/DateRangeSelector";
-import TabButton from "./components/TabButton";
 import SaudaMISSection from "./components/SaudaMISSection";
-
-const formatDate = (dateString) => {
-  if (!dateString) return "N/A";
-  const date = new Date(dateString);
-  return date.toLocaleDateString("en-IN", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  });
-};
-
-const StatCard = ({ icon, label, value, subValue, color, iconColor }) => (
-  <div
-    className={`bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col gap-3 transition-all duration-300`}
-  >
-    <div className="flex items-center justify-between">
-      <div className={`p-3 rounded-xl ${color} ${iconColor}`}>{icon}</div>
-      {subValue && (
-        <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider bg-slate-50 px-2 py-1 rounded-lg">
-          {subValue}
-        </span>
-      )}
-    </div>
-    <div>
-      <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest leading-none mb-1">
-        {label}
-      </p>
-      <p className="text-xl font-black text-slate-900 tracking-tight italic">
-        {value}
-      </p>
-    </div>
-  </div>
-);
+import MisStatCard from "./components/MisStatCard";
+import MisFilterPanel from "./components/MisFilterPanel";
+import MisVoucherLedger from "./components/MisVoucherLedger";
+import MisLorryLedger from "./components/MisLorryLedger";
+import MisPageHeader from "./components/MisPageHeader";
+import { buildTallyVoucherRows } from "./utils/paymentLedgerUtils";
 
 const ListPaymentReceived = () => {
   const navigate = useNavigate();
@@ -128,7 +92,12 @@ const ListPaymentReceived = () => {
   }, [filters.ledgerType]);
 
   const primaryCompanyOptions = useMemo(() => {
-    if (!filters.ledgerType) return [];
+    if (!filters.ledgerType) {
+      return allCompanies.map((c) => ({
+        value: c._id,
+        label: c.companyName,
+      }));
+    }
     if (filters.ledgerType === "Buyer") {
       return allCompanies.map((c) => ({
         value: c._id,
@@ -349,6 +318,97 @@ const ListPaymentReceived = () => {
       count: total,
     };
   }, [openingBalance, totalAmount, total]);
+
+  const listCompanyPair = useMemo(
+    () => ({
+      buyerCompany:
+        filters.ledgerType === "Buyer"
+          ? selectedCompany?.label || ""
+          : selectedOpposingCompany?.label || "",
+      supplierCompany:
+        filters.ledgerType === "Buyer"
+          ? selectedOpposingCompany?.label || ""
+          : selectedCompany?.label || "",
+    }),
+    [filters.ledgerType, selectedCompany, selectedOpposingCompany],
+  );
+
+  const tallyListRows = useMemo(
+    () => buildTallyVoucherRows(payments, openingBalance),
+    [payments, openingBalance],
+  );
+
+  const periodCredit = useMemo(
+    () => tallyListRows.reduce((s, r) => s + (r.credit || 0), 0),
+    [tallyListRows],
+  );
+
+  const handleResetFilters = () => {
+    setPage(1);
+    setFilters({
+      ledgerType: "",
+      ledgerId: "",
+      companyId: "",
+      startDate: "",
+      endDate: "",
+      saudaNo: "",
+      supplierCompany: "",
+      buyerCompany: "",
+    });
+    setSelectedLedger(null);
+    setSelectedCompany(null);
+    setSelectedOpposingCompany(null);
+    setSelectedSauda(null);
+    setLorryWiseData([]);
+  };
+
+  const handleFilterField = (key, value) => {
+    setPage(1);
+    setFilters((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const handleCompanySelect = (opt) => {
+    const companyId = opt?.value || "";
+    const ledger = resolveLedgerForCompany(
+      companyId,
+      filters.ledgerType,
+      ledgers,
+    );
+    setSelectedCompany(opt);
+    setSelectedLedger(ledger);
+    setSelectedOpposingCompany(null);
+    setSelectedSauda(null);
+    setPage(1);
+    setFilters((prev) => ({
+      ...prev,
+      companyId,
+      ledgerId: ledger?.value || "",
+      supplierCompany: "",
+      buyerCompany: "",
+      ...(filters.ledgerType === "Buyer"
+        ? { buyerCompany: opt?.label || "" }
+        : {}),
+      ...(filters.ledgerType === "Seller"
+        ? { supplierCompany: opt?.label || "" }
+        : {}),
+      ...(!filters.ledgerType && opt?.label
+        ? { buyerCompany: opt.label, supplierCompany: "" }
+        : {}),
+    }));
+  };
+
+  const handleOpposingSelect = (opt) => {
+    setSelectedOpposingCompany(opt);
+    setSelectedSauda(null);
+    setPage(1);
+    setFilters((prev) => ({
+      ...prev,
+      supplierCompany:
+        filters.ledgerType === "Buyer" ? opt?.value || "" : prev.supplierCompany,
+      buyerCompany:
+        filters.ledgerType === "Seller" ? opt?.label || "" : prev.buyerCompany,
+    }));
+  };
 
   const handlePrintReport = async () => {
     try {
@@ -579,524 +639,157 @@ const ListPaymentReceived = () => {
     }
   };
 
-  const columns = [
-    {
-      header: "Date",
-      accessor: (row) => new Date(row.date).toLocaleDateString(),
-      className: "font-semibold text-slate-700",
-    },
-    {
-      header: "Ledger / Company",
-      accessor: (row) => {
-        let companyLabel = "Consolidated";
-
-        if (row.companyId) {
-          if (row.ledgerType === "Buyer") {
-            const companyInfo = allCompanies.find(
-              (c) => c._id === row.companyId,
-            );
-            companyLabel = companyInfo?.companyName || "N/A";
-          } else {
-            companyLabel = row.companyId;
-          }
-        } else if (row.mappings && row.mappings.length > 0) {
-          const firstMapping = row.mappings[0].loadingEntryId;
-          if (firstMapping) {
-            companyLabel =
-              row.ledgerType === "Buyer"
-                ? firstMapping.buyerCompany || "N/A"
-                : firstMapping.supplierCompany || "N/A";
-          }
-        }
-
-        return (
-          <div className="flex flex-col gap-0.5">
-            <div className="flex items-center gap-1.5">
-              <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 block">
-                {row.ledgerType}
-              </span>
-              <span className="h-1 w-1 rounded-full bg-slate-200"></span>
-              <span
-                className="text-[10px] font-bold text-blue-500 uppercase truncate max-w-[120px]"
-                title={companyLabel}
-              >
-                {companyLabel}
-              </span>
-            </div>
-            <span className="font-bold text-slate-800">
-              {row.ledgerId?.name || row.ledgerId?.sellerName || "N/A"}
-            </span>
-          </div>
-        );
-      },
-    },
-    {
-      header: "Amount",
-      accessor: (row) => (
-        <span className="font-black text-emerald-600 italic tracking-tight">
-          Rs. {row.amount.toLocaleString()}
-        </span>
-      ),
-    },
-    {
-      header: "Mode",
-      accessor: (row) => (
-        <span className="px-3 py-1 rounded-lg bg-slate-50 text-slate-600 text-[10px] font-black uppercase tracking-widest border border-slate-100 shadow-sm">
-          {row.paymentMode}
-        </span>
-      ),
-    },
-    {
-      header: "Type",
-      accessor: (row) => (
-        <span
-          className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest border shadow-sm ${
-            row.paymentType === "Sauda-wise"
-              ? "bg-blue-50 text-blue-600 border-blue-100"
-              : "bg-amber-50 text-amber-600 border-amber-100"
-          }`}
-        >
-          {row.paymentType}
-        </span>
-      ),
-    },
-    {
-      header: "Mappings",
-      accessor: (row) => (
-        <div className="flex flex-col gap-0.5">
-          <span className="text-[10px] font-black text-slate-900">
-            {row.mappings?.length || 0} Entries
-          </span>
-          <span className="text-[9px] text-slate-400 font-bold uppercase tracking-tighter">
-            Settled Records
-          </span>
-        </div>
-      ),
-    },
-    {
-      header: "Remarks",
-      accessor: "remarks",
-      className:
-        "max-w-[200px] truncate italic text-slate-400 text-xs font-medium",
-    },
-  ];
+  const handleLedgerTypeChange = (value) => {
+    setPage(1);
+    setSelectedLedger(null);
+    setSelectedCompany(null);
+    setSelectedOpposingCompany(null);
+    setSelectedSauda(null);
+    setLorryWiseData([]);
+    setFilters((prev) => ({
+      ...prev,
+      ledgerType: value,
+      ledgerId: "",
+      companyId: "",
+      supplierCompany: "",
+      buyerCompany: "",
+    }));
+  };
 
   return (
     <AdminPageShell
       title="Payment Ledger MIS"
-      subtitle="Analyze and print company-wise collection reports"
+      subtitle="Tally-style company ledger, voucher register & sauda drill-down"
       icon={FaMoneyBillWave}
+      noContentCard
     >
-      <div className="space-y-6">
-        <div className="flex items-center gap-4">
-          <div className="flex bg-white rounded-xl border border-slate-200 p-1 shadow-sm">
-            <TabButton
-              active={activeTab === "vouchers"}
-              label="Voucher MIS"
-              icon={FaMoneyBillWave}
-              onClick={() => setActiveTab("vouchers")}
-            />
-            <TabButton
-              active={activeTab === "sauda"}
-              label="Sauda-wise MIS"
-              icon={FaChartLine}
-              onClick={() => setActiveTab("sauda")}
-            />
-          </div>
-        </div>
+      <div className="relative -m-4 sm:-m-6 lg:-m-8 p-4 sm:p-6 lg:p-8 min-w-0">
+        <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top_right,_#f0f9ff_0%,_#f8fafc_45%,_#f1f5f9_100%)]" />
 
-        {activeTab === "vouchers" ? (
-          <>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              <StatCard
-                icon={<FaChartLine size={18} />}
-                label="Opening Balance"
-                value={`Rs. ${stats.openingBalance.toLocaleString("en-IN")}`}
-                subValue="Before Period"
-                color="bg-slate-50"
-                iconColor="text-slate-600"
-              />
-              <StatCard
-                icon={<FaMoneyBillWave size={18} />}
-                label="Period Total"
-                value={`Rs. ${stats.totalReceived.toLocaleString("en-IN")}`}
-                subValue="In Selected Period"
-                color="bg-emerald-50"
-                iconColor="text-emerald-600"
-              />
-              <StatCard
-                icon={<FaCheckCircle size={18} />}
-                label="Closing Balance"
-                value={`Rs. ${stats.closingBalance.toLocaleString("en-IN")}`}
-                subValue="At Period End"
-                color="bg-blue-50"
-                iconColor="text-blue-600"
-              />
-              <StatCard
-                icon={<FaExclamationCircle size={18} />}
-                label="Transaction Count"
-                value={stats.count.toString()}
-                subValue="Vouchers"
-                color="bg-amber-50"
-                iconColor="text-amber-600"
-              />
-            </div>
-            <div className="bg-white rounded-[2rem] border border-slate-200 shadow-xl shadow-slate-200/50 overflow-hidden">
-              <div className="p-6 border-b border-slate-100 bg-slate-50/50 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 bg-slate-900 rounded-xl flex items-center justify-center text-white">
-                    <FaFilter size={14} />
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-slate-800">
-                      Filter Configuration
-                    </h4>
-                    <p className="text-[11px] text-slate-500 font-medium uppercase tracking-wider">
-                      Define report scope and dates
-                    </p>
-                  </div>
-                </div>
+        <div className="max-w-[1600px] mx-auto space-y-5 sm:space-y-6">
+          <MisPageHeader
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
+          />
 
-                <div className="flex flex-wrap items-center gap-3">
-                  <button
-                    onClick={handlePrintReport}
-                    disabled={loading || printing || payments.length === 0}
-                    className="flex items-center gap-2 bg-slate-900 hover:bg-black text-white px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition shadow-lg disabled:opacity-50"
-                  >
-                    {printing ? (
-                      <div className="w-3.5 h-3.5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-                    ) : (
-                      <FaPrint size={14} />
-                    )}
-                    {printing ? "Generating..." : "Print MIS Report"}
-                  </button>
-                  <button
-                    onClick={() => navigate("/payments/received/add")}
-                    className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition shadow-lg"
-                  >
-                    <FaPlus size={14} /> Record Payment
-                  </button>
-                </div>
+          {activeTab === "vouchers" ? (
+            <>
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4">
+                <MisStatCard
+                  icon={<FaChartLine size={18} />}
+                  label="Opening balance"
+                  value={`₹ ${stats.openingBalance.toLocaleString("en-IN")}`}
+                  subValue="Before period"
+                  accent="navy"
+                />
+                <MisStatCard
+                  icon={<FaMoneyBillWave size={18} />}
+                  label="Period receipts"
+                  value={`₹ ${stats.totalReceived.toLocaleString("en-IN")}`}
+                  subValue="Credit total"
+                  accent="emerald"
+                />
+                <MisStatCard
+                  icon={<FaCheckCircle size={18} />}
+                  label="Closing balance"
+                  value={`₹ ${stats.closingBalance.toLocaleString("en-IN")}`}
+                  subValue="After period"
+                  accent="blue"
+                />
+                <MisStatCard
+                  icon={<FaExclamationCircle size={18} />}
+                  label="Vouchers"
+                  value={stats.count.toString()}
+                  subValue="In view"
+                  accent="amber"
+                />
               </div>
 
-              <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-6">
-                <div className="space-y-2">
-                  <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">
-                    Ledger Type
-                  </label>
-                  <select
-                    value={filters.ledgerType}
-                    onChange={(e) => {
-                      setPage(1);
-                      setFilters((prev) => ({
-                        ...prev,
-                        ledgerType: e.target.value,
-                        ledgerId: "",
-                        companyId: "",
-                      }));
-                      setSelectedLedger(null);
-                      setSelectedCompany(null);
-                      setSelectedOpposingCompany(null);
-                      setSelectedSauda(null);
-                      setFilters((prev) => ({
-                        ...prev,
-                        supplierCompany: "",
-                        buyerCompany: "",
-                      }));
-                    }}
-                    className="w-full h-11 px-4 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-slate-900/5 focus:border-slate-900 outline-none transition text-sm font-bold text-slate-700"
-                  >
-                    <option value="">Consolidated</option>
-                    <option value="Buyer">Buyer Ledger</option>
-                    <option value="Seller">Seller Ledger</option>
-                  </select>
-                </div>
+              <MisFilterPanel
+                filters={filters}
+                onFilterChange={(key, value) => {
+                  if (key === "ledgerType") handleLedgerTypeChange(value);
+                  else handleFilterField(key, value);
+                }}
+                onReset={handleResetFilters}
+                primaryCompanyOptions={primaryCompanyOptions}
+                opposingCompanyOptions={opposingCompanyOptions}
+                saudaOptions={saudas}
+                selectedCompany={selectedCompany}
+                selectedOpposingCompany={selectedOpposingCompany}
+                selectedSauda={selectedSauda}
+                onCompanyChange={handleCompanySelect}
+                onOpposingCompanyChange={handleOpposingSelect}
+                onSaudaChange={setSelectedSauda}
+                onPrint={handlePrintReport}
+                onRecordPayment={() => navigate("/payments/received/add")}
+                printing={printing}
+                printDisabled={loading || printing || payments.length === 0}
+                ledgerTypeDisabled={false}
+              />
 
-                <div className="space-y-2">
-                  <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">
-                    {filters.ledgerType === "Buyer"
-                      ? "Buyer Company"
-                      : filters.ledgerType === "Seller"
-                        ? "Seller Company"
-                        : "Company"}
-                    {filters.ledgerType && (
-                      <span className="text-rose-500 ml-0.5">*</span>
-                    )}
-                  </label>
-                  <DataDropdown
-                    options={primaryCompanyOptions}
-                    selectedOptions={selectedCompany}
-                    onChange={(opt) => {
-                      const companyId = opt?.value || "";
-                      const ledger = resolveLedgerForCompany(
-                        companyId,
-                        filters.ledgerType,
-                        ledgers,
-                      );
-                      setSelectedCompany(opt);
-                      setSelectedLedger(ledger);
-                      setSelectedOpposingCompany(null);
-                      setSelectedSauda(null);
-                      setPage(1);
-                      setFilters((prev) => ({
-                        ...prev,
-                        companyId,
-                        ledgerId: ledger?.value || "",
-                        supplierCompany: "",
-                        buyerCompany: "",
-                      }));
-                    }}
-                    placeholder="Select company..."
-                    isMulti={false}
-                    isDisabled={!filters.ledgerType}
-                    className="rounded-xl border-slate-200"
-                  />
+              {fetchingLorryWise ? (
+                <div className="rounded-3xl border border-slate-200 bg-white py-24 flex flex-col items-center gap-4 shadow-sm">
+                  <div className="w-12 h-12 border-4 border-[#1e3a5f]/20 border-t-[#1e3a5f] rounded-full animate-spin" />
+                  <p className="text-xs font-black text-slate-400 uppercase tracking-[0.2em]">
+                    Loading lorry ledger…
+                  </p>
                 </div>
-
-                <div className="space-y-2">
-                  <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">
-                    {filters.ledgerType === "Buyer"
-                      ? "Seller Company"
-                      : filters.ledgerType === "Seller"
-                        ? "Buyer Company"
-                        : "Opposing Company"}
-                  </label>
-                  <DataDropdown
-                    options={opposingCompanyOptions}
-                    selectedOptions={selectedOpposingCompany}
-                    onChange={(opt) => {
-                      setSelectedOpposingCompany(opt);
-                      setSelectedSauda(null);
-                      setPage(1);
-                      setFilters((prev) => ({
-                        ...prev,
-                        supplierCompany:
-                          filters.ledgerType === "Buyer"
-                            ? opt?.value || ""
-                            : "",
-                        buyerCompany:
-                          filters.ledgerType === "Seller"
-                            ? opt?.label || ""
-                            : "",
-                      }));
-                    }}
-                    placeholder={
-                      selectedCompany
-                        ? "Optional filter..."
-                        : "Select primary company first"
-                    }
-                    isMulti={false}
-                    isDisabled={!selectedCompany}
-                    className="rounded-xl border-slate-200"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">
-                    Sauda No
-                  </label>
-                  <DataDropdown
-                    options={saudas}
-                    selectedOptions={selectedSauda}
-                    onChange={setSelectedSauda}
-                    placeholder={
-                      !selectedCompany
-                        ? "Select company first"
-                        : saudas.length === 0
-                          ? "No saudas found"
-                          : "Select Sauda..."
-                    }
-                    isMulti={false}
-                    isDisabled={!selectedCompany || saudas.length === 0}
-                    className="rounded-xl border-slate-200"
-                  />
-                </div>
-
-                <div className="space-y-2 lg:col-span-2">
-                  <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">
-                    Period Selection
-                  </label>
-                  <DateRangeSelector
-                    startDate={filters.startDate}
-                    endDate={filters.endDate}
-                    onStartDateChange={(date) => {
-                      setPage(1);
-                      setFilters((prev) => ({ ...prev, startDate: date }));
-                    }}
-                    onEndDateChange={(date) => {
-                      setPage(1);
-                      setFilters((prev) => ({ ...prev, endDate: date }));
-                    }}
-                    onClear={() => {
-                      setPage(1);
-                      setFilters((prev) => ({
-                        ...prev,
-                        startDate: "",
-                        endDate: "",
-                      }));
-                    }}
-                    className="!h-11"
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-[2rem] border border-slate-200 shadow-xl shadow-slate-200/50 overflow-hidden min-h-[400px]">
-              <div className="p-2">
-                {loading || fetchingLorryWise ? (
-                  <div className="py-32 flex flex-col items-center justify-center gap-4">
-                    <div className="w-12 h-12 border-4 border-slate-900/10 border-t-slate-900 rounded-full animate-spin" />
-                    <p className="text-xs font-bold text-slate-400 uppercase tracking-[0.2em]">
-                      {fetchingLorryWise
-                        ? "Syncing Lorry Data..."
-                        : "Generating Ledger..."}
-                    </p>
-                  </div>
-                ) : selectedSauda ? (
-                  lorryWiseData.length > 0 ? (
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-left border-collapse">
-                        <thead>
-                          <tr className="bg-slate-50 border-b border-slate-100">
-                            <th className="px-4 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                              Sl.No
-                            </th>
-                            <th className="px-4 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                              Lorry No.
-                            </th>
-                            <th className="px-4 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                              Bill No.
-                            </th>
-                            <th className="px-4 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                              Freight
-                            </th>
-                            <th className="px-4 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">
-                              Payment Date / Voucher
-                            </th>
-                            <th className="px-4 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                              Payment Amount
-                            </th>
-                            <th className="px-4 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                              Due Amount
-                            </th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {lorryWiseData.map((lorry, idx) => (
-                            <tr
-                              key={lorry._id}
-                              className={`border-b border-slate-50 hover:bg-slate-50/50 transition-colors ${idx % 2 === 0 ? "bg-white" : "bg-slate-50/30"}`}
-                            >
-                              <td className="px-4 py-4 text-xs font-bold text-slate-400">
-                                {idx + 1}
-                              </td>
-                              <td className="px-4 py-4 text-xs font-black text-slate-900 uppercase">
-                                {lorry.lorryNumber}
-                              </td>
-                              <td className="px-4 py-4 text-xs font-bold text-slate-500">
-                                {lorry.billNumber || "NIL"}
-                              </td>
-                              <td className="px-4 py-4 text-xs font-black text-slate-700">
-                                ₹{" "}
-                                {lorry.totalFreight?.toLocaleString("en-IN") ||
-                                  0}
-                              </td>
-                              <td className="px-4 py-4">
-                                {lorry.adjustments.length > 0 ? (
-                                  <div className="flex flex-col gap-1.5 items-center">
-                                    {lorry.adjustments.map((adj, i) => (
-                                      <div
-                                        key={i}
-                                        className="flex items-center gap-2 bg-white border border-slate-100 p-1 rounded-lg shadow-sm w-full justify-between"
-                                      >
-                                        <span className="text-[9px] font-medium text-slate-500">
-                                          {formatDate(adj.paymentDate)}
-                                        </span>
-                                        <span className="text-[9px] font-black bg-slate-100 text-slate-400 px-1.5 py-0.5 rounded uppercase">
-                                          {adj.voucherNo}
-                                        </span>
-                                      </div>
-                                    ))}
-                                  </div>
-                                ) : (
-                                  <div className="text-center">
-                                    <span className="text-[10px] font-black text-slate-300 uppercase italic">
-                                      Pending
-                                    </span>
-                                  </div>
-                                )}
-                              </td>
-                              <td className="px-4 py-4 text-xs font-black text-emerald-600">
-                                ₹{" "}
-                                {lorry.totalAdjusted?.toLocaleString("en-IN") ||
-                                  0}
-                              </td>
-                              <td
-                                className={`px-4 py-4 text-xs font-black ${lorry.balance > 0 ? "text-rose-600" : "text-slate-400"}`}
-                              >
-                                ₹ {lorry.balance?.toLocaleString("en-IN") || 0}
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  ) : (
-                    <div className="py-32 flex flex-col items-center justify-center text-center px-8">
-                      <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center text-slate-200 mb-6 border border-slate-100">
-                        <FaTruck size={32} />
-                      </div>
-                      <h4 className="text-lg font-bold text-slate-800">
-                        No Lorries Found
-                      </h4>
-                      <p className="text-sm text-slate-500 font-medium max-w-xs mx-auto mt-2">
-                        No loading entries found for Sauda {selectedSauda.label}
-                        .
-                      </p>
-                    </div>
-                  )
-                ) : payments.length > 0 ? (
-                  <Tables
-                    headers={columns.map((c) => c.header)}
-                    rows={payments.map((payment) =>
-                      columns.map((col) => {
-                        if (typeof col.accessor === "function") {
-                          return col.accessor(payment);
-                        }
-                        return payment[col.accessor];
-                      }),
-                    )}
+              ) : selectedSauda ? (
+                lorryWiseData.length > 0 ? (
+                  <MisLorryLedger
+                    saudaLabel={selectedSauda.label}
+                    lorryWiseData={lorryWiseData}
+                    onBack={() => setSelectedSauda(null)}
+                    buyerCompany={listCompanyPair.buyerCompany}
+                    supplierCompany={listCompanyPair.supplierCompany}
                   />
                 ) : (
-                  <div className="py-32 flex flex-col items-center justify-center text-center px-8">
-                    <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center text-slate-200 mb-6 border border-slate-100">
-                      <FaMoneyBillWave size={32} />
-                    </div>
-                    <h4 className="text-lg font-bold text-slate-800">
-                      No Records Found
-                    </h4>
-                    <p className="text-sm text-slate-500 font-medium max-w-xs mx-auto mt-2">
-                      No payment receipts match your current filters and date
-                      range.
+                  <div className="rounded-3xl border border-dashed border-slate-200 bg-white py-20 text-center px-6">
+                    <p className="font-bold text-slate-800">No lorries for this sauda</p>
+                    <p className="text-sm text-slate-500 mt-2">
+                      Sauda {selectedSauda.label} has no loading entries in the system.
                     </p>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedSauda(null)}
+                      className="mt-4 text-[10px] font-black uppercase tracking-widest text-[#1e3a5f] hover:underline"
+                    >
+                      Back to register
+                    </button>
                   </div>
-                )}
-              </div>
-
-              {total > limit && (
-                <div className="p-6 border-t border-slate-100 bg-slate-50/50">
-                  <Paginations
-                    currentPage={page}
-                    totalPages={Math.ceil(total / limit)}
-                    onPageChange={setPage}
-                  />
-                </div>
+                )
+              ) : (
+                <MisVoucherLedger
+                  loading={loading}
+                  tallyRows={tallyListRows}
+                  listCompanyPair={listCompanyPair}
+                  ledgerType={filters.ledgerType}
+                  showCompanyBanner={Boolean(
+                    selectedCompany || listCompanyPair.buyerCompany,
+                  )}
+                  totalCredit={periodCredit}
+                  closingBalance={stats.closingBalance}
+                  openingBalance={stats.openingBalance}
+                  voucherCount={payments.length}
+                  page={page}
+                  total={total}
+                  limit={limit}
+                  onPageChange={setPage}
+                  emptyMessage={
+                    filters.ledgerType && !selectedCompany
+                      ? "Select a company to view the Tally voucher register."
+                      : "No vouchers match your filters and date range."
+                  }
+                />
               )}
+            </>
+          ) : (
+            <div className="rounded-2xl sm:rounded-3xl border border-slate-200/80 bg-white shadow-[0_8px_30px_rgba(15,23,42,0.06)] overflow-hidden p-4 sm:p-6">
+              <SaudaMISSection />
             </div>
-          </>
-        ) : (
-          <SaudaMISSection />
-        )}
+          )}
+        </div>
       </div>
     </AdminPageShell>
   );
