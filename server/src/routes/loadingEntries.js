@@ -707,21 +707,33 @@ router.get("/", async (req, res) => {
       });
     }
 
-    if (!buyerId && buyerCompany) {
+    if (buyerCompany) {
       const companyRegex = {
-        $regex: new RegExp(`^${escapeRegex(buyerCompany)}$`, "i"),
+        $regex: new RegExp(`^${escapeRegex(String(buyerCompany).trim())}$`, "i"),
       };
-      andParts.push({
-        $or: [{ buyerCompany: companyRegex }, { consignee: companyRegex }],
-      });
+      const buyerCompanyOr = [
+        { buyerCompany: companyRegex },
+        { consignee: companyRegex },
+      ];
+      if (companyId && mongoose.Types.ObjectId.isValid(companyId)) {
+        buyerCompanyOr.push({ companyId: toObjectId(companyId) });
+      }
+      andParts.push({ $or: buyerCompanyOr });
     }
 
-    if (paymentStatus) {
+    if (paymentStatus === "pending") {
+      andParts.push({ paymentStatus: { $ne: "done" } });
+    } else if (paymentStatus) {
       andParts.push({ paymentStatus });
     }
 
     if (isUnloaded) {
-      andParts.push({ unloadingWeight: { $gt: 0 } });
+      andParts.push({
+        $or: [
+          { unloadingWeight: { $gt: 0 } },
+          { loadingWeight: { $gt: 0 } },
+        ],
+      });
     }
 
     if (search) {

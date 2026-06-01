@@ -167,7 +167,7 @@ export const matchCompanyName = (value, filterName) => {
 export const filterEntriesForCompanyScope = (
   items,
   companyPair,
-  { pendingOnly = false, unadjustedOnly = false } = {},
+  { pendingOnly = false, unadjustedOnly = false, excludeFullyPaid = false } = {},
   calculateDue,
 ) =>
   items.filter((item) => {
@@ -186,12 +186,31 @@ export const filterEntriesForCompanyScope = (
     if (pendingOnly && item.paymentStatus === "done") {
       return false;
     }
+    if (excludeFullyPaid && calculateDue) {
+      const due = calculateDue(item);
+      if (item.paymentStatus === "done" && due <= 0.01) return false;
+    }
     if (unadjustedOnly && calculateDue) {
       const due = calculateDue(item);
       return due > 0.01;
     }
     return true;
   });
+
+/** Due amount from enriched loading row (self-order rate on API). */
+export const calculateEntryDueAmount = (item) => {
+  const weight =
+    (item.unloadingWeight || 0) > 0
+      ? item.unloadingWeight
+      : item.loadingWeight || 0;
+  const rate = item.actualRate || 0;
+  const gross = weight * rate;
+  const cd = gross * ((item.cd || 0) / 100);
+  const taxable = gross - cd;
+  const gst = taxable * ((item.gst || 0) / 100);
+  const net = taxable + gst;
+  return Math.max(0, net - (item.paidAmount || 0));
+};
 
 export const hasAllocationTableScope = (ledgerType, companyPair) => {
   if (ledgerType === "Seller") {

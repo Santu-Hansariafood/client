@@ -38,7 +38,10 @@ const AllocationLedger = ({
 }) => {
   const hasCompanyFilter =
     Boolean(formData.companyId) || Boolean(formData.opposingCompanyId);
-  const showPagination = entriesTotal > 0 && !fullCompanyMapping;
+  const showPagination =
+    entriesTotal > entriesPageSize &&
+    !fullCompanyMapping &&
+    !buyerOnlyMapping;
   const showMappingBanner = hasBuyerCompany;
 
   return (
@@ -285,9 +288,11 @@ const AllocationLedger = ({
             <h4 className="text-lg font-bold text-slate-800">No records found</h4>
             <p className="text-sm text-slate-500 font-medium max-w-xs mx-auto mt-2">
               {fullCompanyMapping
-                ? "No pending lorries for this buyer → seller. Try another seller or clear filters."
+                ? (ledgerBalance.advanceBalance ?? 0) > 0
+                  ? "Credit is available for this pair, but no open lorry lines match. Check date/search filters or confirm lorries are loaded for this buyer → seller."
+                  : "No open lorry lines for this buyer → seller. Record an advance first, or pick another seller."
                 : hasBuyerCompany
-                  ? "No pending lorries for this buyer with current filters."
+                  ? "No open lorry lines for this buyer. Select a seller to narrow, or clear date/search filters."
                   : tableSearch
                     ? "No matches for your search under selected company."
                     : "Select buyer company above to load the table."}

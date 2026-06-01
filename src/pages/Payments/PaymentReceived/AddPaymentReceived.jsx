@@ -32,6 +32,7 @@ import {
   hasFullCompanyMapping,
   hasAllocationTableScope,
   filterEntriesForCompanyScope,
+  calculateEntryDueAmount,
   matchCompanyName,
 } from "./utils/paymentLedgerUtils";
 
@@ -386,9 +387,12 @@ const AddPaymentReceived = () => {
       try {
         setFetchingEntries(true);
 
+        const useWideFetch =
+          fullCompanyMapping || Boolean(companyPair.buyerCompany);
+
         const params = {
-          page: fullCompanyMapping ? 1 : page,
-          limit: fullCompanyMapping ? 500 : ENTRIES_PAGE_SIZE,
+          page: useWideFetch ? 1 : page,
+          limit: useWideFetch ? 500 : ENTRIES_PAGE_SIZE,
           isUnloaded: true,
           paymentStatus: "pending",
         };
@@ -408,22 +412,23 @@ const AddPaymentReceived = () => {
         if (companyPair.supplierCompany) {
           params.supplierCompany = companyPair.supplierCompany;
         }
+        if (formData.companyId && formData.ledgerType !== "Seller") {
+          params.companyId = formData.companyId;
+        }
 
         if (formData.ledgerType === "Seller" && formData.ledgerId) {
           params.supplier = formData.ledgerId;
-        } else if (
-          formData.ledgerId &&
-          formData.ledgerType !== "Seller"
-        ) {
-          params.buyerId = formData.ledgerId;
         }
 
         const response = await api.get("/loading-entries", { params });
         let items = response.data.data || [];
 
-        items = filterEntriesForCompanyScope(items, companyPair, {
-          pendingOnly: true,
-        });
+        items = filterEntriesForCompanyScope(
+          items,
+          companyPair,
+          { excludeFullyPaid: true },
+          calculateEntryDueAmount,
+        );
 
         const sortedItems = [...items].sort((a, b) => {
           if (a.paymentStatus === "pending" && b.paymentStatus === "done")
@@ -444,9 +449,9 @@ const AddPaymentReceived = () => {
           })),
         );
         setEntriesTotal(
-          fullCompanyMapping ? items.length : (response.data.total ?? items.length),
+          useWideFetch ? items.length : (response.data.total ?? items.length),
         );
-        setEntriesPage(fullCompanyMapping ? 1 : page);
+        setEntriesPage(useWideFetch ? 1 : page);
       } catch (error) {
         toast.error("Error fetching entries");
       } finally {
