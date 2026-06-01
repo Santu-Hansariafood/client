@@ -44,14 +44,12 @@ const StatDashboard = ({
 
             <StatCard
                 icon={<FaHistory size={18} />}
-                label="Debit Balance (Advance)"
+                label="DEBIT BALANCE (ADVANCE) · FROM"
                 value={`Dr. Rs. ${(ledgerBalance.totalAdvanceBalance ?? ledgerBalance.advanceBalance ?? 0).toLocaleString('en-IN')}`}
                 subValue={
                     fullCompanyMapping
-                        ? `Pair Dr: Rs. ${(ledgerBalance.advanceBalance ?? 0).toLocaleString('en-IN')} · All Dr: Rs. ${(ledgerBalance.totalAdvanceBalance ?? 0).toLocaleString('en-IN')}`
-                        : companyPair?.buyerCompany
-                          ? `${ledgerBalance.creditByPair?.length || 0} company mapping(s)`
-                          : "Select buyer company"
+                        ? `Money coming FROM this Dr. pool`
+                        : "Select buyer + seller to see pair Dr."
                 }
                 color="bg-blue-50"
                 iconColor="text-blue-600"

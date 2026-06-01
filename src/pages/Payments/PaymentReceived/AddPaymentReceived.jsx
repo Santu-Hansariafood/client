@@ -1409,7 +1409,7 @@ const AddPaymentReceived = () => {
             </div>
             <div className="border-t border-emerald-200 pt-2 mt-0.5">
               <label className="text-[9px] text-emerald-900 font-black tracking-widest block mb-1">
-                {allocationSource === "advance" ? "Post Cr. (Adjust from Dr. Advance)" : "Post Cr. (type here)"}
+                {allocationSource === "advance" ? "POST Cr. · TO THIS LORRY" : "POST Cr. (TYPE HERE)"}
               </label>
               <div className="relative group">
                 <input
@@ -1454,17 +1454,17 @@ const AddPaymentReceived = () => {
                     <div className="w-1 h-1 rounded-full bg-slate-400" />
                     <p className="text-[8px] font-black text-slate-500 normal-case tracking-tight">
                       {allocationSource === "advance"
-                        ? `Available to Post: Rs. ${rowMax.toLocaleString("en-IN")} (from Dr. pool)`
+                        ? `Amount going TO this row (Rs. ${rowMax.toLocaleString("en-IN")} max)`
                         : rowMax > 0
                           ? `Available to Allocate: Rs. ${rowMax.toLocaleString("en-IN")}`
                           : "Set entry amount above first"}
                     </p>
                   </div>
-                  {allocationSource === "advance" && pool > 0 && (
+                  {allocationSource === "advance" && Number(availableAllocationPool) > 0 && (
                     <div className="flex items-center gap-1.5">
                       <div className="w-1 h-1 rounded-full bg-blue-400" />
-                      <p className="text-[8px] font-black text-blue-600 normal-case tracking-tight">
-                        Dr. Pool Balance: Rs. {pool.toLocaleString("en-IN")}
+                      <p className="text-[8px] font-black text-blue-600 normal-case tracking-tight italic">
+                        Deducting FROM Dr. Pool Balance: Rs. {pool.toLocaleString("en-IN")}
                       </p>
                     </div>
                   )}
