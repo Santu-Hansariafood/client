@@ -41,7 +41,13 @@ const PaymentHistory = ({
           buyerCompany={companyPair?.buyerCompany}
           supplierCompany={companyPair?.supplierCompany}
           ledgerType={formData.ledgerType}
-          subtitle="Company-to-company voucher entries for selected date"
+          entryDate={formData.date}
+          allCompaniesMode={!formData.companyId}
+          subtitle={
+            formData.companyId
+              ? "Company-to-company voucher entries for selected date"
+              : "All payment vouchers recorded on the selected entry date"
+          }
         />
       </div>
 
@@ -54,7 +60,7 @@ const PaymentHistory = ({
               row.supplierCompany || companyPair?.supplierCompany,
           }))}
           loading={fetchingHistory}
-          emptyMessage="No Tally vouchers recorded for this company mapping on the selected date."
+          emptyMessage="No payment vouchers recorded on the selected entry date."
           showCompanyColumns
         />
 

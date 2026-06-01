@@ -273,7 +273,7 @@ const AddPaymentReceived = () => {
 
   const fetchEntries = useCallback(
     async (page = 1) => {
-      if (!formData.companyId || formData.paymentType !== "Sauda-wise") {
+      if (formData.paymentType !== "Sauda-wise" || !formData.date) {
         setEntries([]);
         return;
       }
@@ -282,32 +282,41 @@ const AddPaymentReceived = () => {
         setFetchingEntries(true);
 
         let companyName = "";
-        if (formData.ledgerType === "Buyer") {
-          const selectedCompany = allCompanies.find(
-            (c) => c._id === formData.companyId,
-          );
-          companyName = selectedCompany?.companyName || "";
-        } else {
-          companyName = formData.companyId;
+        if (formData.companyId) {
+          if (formData.ledgerType === "Buyer") {
+            const selectedCompany = allCompanies.find(
+              (c) => c._id === formData.companyId,
+            );
+            companyName = selectedCompany?.companyName || "";
+          } else {
+            companyName = formData.companyId;
+          }
         }
 
         let opposingCompanyName = "";
-        if (formData.ledgerType === "Seller") {
-          const selectedOpposingCompany = allCompanies.find(
-            (c) => c._id === formData.opposingCompanyId,
-          );
-          opposingCompanyName = selectedOpposingCompany?.companyName || "";
-        } else {
-          opposingCompanyName = formData.opposingCompanyId;
+        if (formData.opposingCompanyId) {
+          if (formData.ledgerType === "Seller") {
+            const selectedOpposingCompany = allCompanies.find(
+              (c) => c._id === formData.opposingCompanyId,
+            );
+            opposingCompanyName = selectedOpposingCompany?.companyName || "";
+          } else {
+            opposingCompanyName = formData.opposingCompanyId;
+          }
         }
 
-        let params = {
-          page: page,
-          limit: 20,
-          startDate: formData.filterStartDate,
-          endDate: formData.filterEndDate,
+        const params = {
+          page,
+          limit: formData.companyId ? 20 : 100,
           isUnloaded: true,
         };
+
+        if (formData.filterStartDate || formData.filterEndDate) {
+          params.startDate = formData.filterStartDate;
+          params.endDate = formData.filterEndDate;
+        } else {
+          params.date = formData.date;
+        }
 
         if (formData.companyId) {
           params.companyId = formData.companyId;
@@ -353,6 +362,7 @@ const AddPaymentReceived = () => {
       }
     },
     [
+      formData.date,
       formData.ledgerId,
       formData.ledgerType,
       formData.paymentType,
@@ -387,7 +397,7 @@ const AddPaymentReceived = () => {
   );
 
   const fetchHistory = useCallback(async () => {
-    if (!formData.companyId) {
+    if (!formData.date) {
       setHistory([]);
       return;
     }
@@ -398,11 +408,16 @@ const AddPaymentReceived = () => {
         startDate: formData.date,
         endDate: formData.date,
         limit: 500,
+        ledgerType: formData.ledgerType,
       };
       if (formData.ledgerId) params.ledgerId = formData.ledgerId;
-      if (companyPair.buyerCompany) params.buyerCompany = companyPair.buyerCompany;
-      if (companyPair.supplierCompany) {
-        params.supplierCompany = companyPair.supplierCompany;
+      if (formData.companyId) {
+        if (companyPair.buyerCompany) {
+          params.buyerCompany = companyPair.buyerCompany;
+        }
+        if (companyPair.supplierCompany) {
+          params.supplierCompany = companyPair.supplierCompany;
+        }
       }
       const response = await api.get("/payment-received", { params });
       setHistory(response.data.data || []);
@@ -414,6 +429,7 @@ const AddPaymentReceived = () => {
   }, [
     formData.companyId,
     formData.ledgerId,
+    formData.ledgerType,
     formData.date,
     companyPair.buyerCompany,
     companyPair.supplierCompany,
@@ -463,8 +479,11 @@ const AddPaymentReceived = () => {
         limit: 1000,
       };
 
-      if (formData.ledgerId) {
+      if (formData.ledgerId && formData.companyId) {
         params.ledgerId = formData.ledgerId;
+      }
+      if (formData.ledgerType) {
+        params.ledgerType = formData.ledgerType;
       }
 
       const response = await api.get("/payment-received", { params });
@@ -474,7 +493,7 @@ const AddPaymentReceived = () => {
     } catch (error) {
       console.error("Error fetching date total:", error);
     }
-  }, [formData.date, formData.ledgerId]);
+  }, [formData.date, formData.ledgerId, formData.companyId, formData.ledgerType]);
 
   useEffect(() => {
     fetchDateTotal();
@@ -482,6 +501,15 @@ const AddPaymentReceived = () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
+    if (name === "date") {
+      setFormData((prev) => ({
+        ...prev,
+        date: value,
+        filterStartDate: "",
+        filterEndDate: "",
+      }));
+      return;
+    }
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 

@@ -33,7 +33,9 @@ const AllocationLedger = ({
   companyPair,
   tallyOutstandingRows,
 }) => {
-  const showTallyView = Boolean(formData.companyId);
+  const showTallyView = Boolean(formData.date);
+  const hasCompanyFilter = Boolean(formData.companyId);
+  const pageSize = hasCompanyFilter ? 20 : 100;
 
   return (
     <div className="flex flex-col h-full">
@@ -117,7 +119,13 @@ const AllocationLedger = ({
             buyerCompany={companyPair?.buyerCompany}
             supplierCompany={companyPair?.supplierCompany}
             ledgerType={formData.ledgerType}
-            subtitle="Outstanding mapped by buyer company → seller company"
+            entryDate={formData.date}
+            allCompaniesMode={!hasCompanyFilter}
+            subtitle={
+              hasCompanyFilter
+                ? "Outstanding mapped by buyer company → seller company"
+                : `All unloaded entries for ${new Date(formData.date).toLocaleDateString("en-GB")} · filter by company optional`
+            }
           />
         )}
       </div>
@@ -130,14 +138,14 @@ const AllocationLedger = ({
               Syncing ledger...
             </p>
           </div>
-        ) : !formData.companyId ? (
+        ) : !formData.date ? (
           <div className="py-32 flex flex-col items-center justify-center text-center px-8">
             <h4 className="text-lg font-bold text-slate-800">
-              Select company to view ledger
+              Select entry date
             </h4>
             <p className="text-sm text-slate-500 font-medium max-w-sm mt-2">
-              Choose buyer company (and optional seller company) above to load
-              Tally-style company-wise entries.
+              Choose an entry date above to load all payment and loading data for
+              that day. Company filters are optional.
             </p>
           </div>
         ) : filteredEntries.length > 0 ? (
@@ -193,8 +201,8 @@ const AllocationLedger = ({
               <div className="p-4 sm:p-6 bg-slate-50 border-t border-slate-100">
                 <Paginations
                   currentPage={entriesPage}
-                  totalItems={entriesTotalPages * 20}
-                  itemsPerPage={20}
+                  totalItems={entriesTotalPages * pageSize}
+                  itemsPerPage={pageSize}
                   onPageChange={(page) => fetchEntries(page)}
                 />
               </div>
@@ -239,8 +247,9 @@ const AllocationLedger = ({
             <FaHistory size={32} className="text-slate-200 mb-4" />
             <h4 className="text-lg font-bold text-slate-800">No pending records</h4>
             <p className="text-sm text-slate-500 font-medium max-w-xs mx-auto mt-2">
-              No outstanding entries for this company mapping, or adjust date
-              filters.
+              No unloaded entries for this date
+              {hasCompanyFilter ? " and company filter" : ""}. Try another date
+              or clear optional filters.
             </p>
           </div>
         )}

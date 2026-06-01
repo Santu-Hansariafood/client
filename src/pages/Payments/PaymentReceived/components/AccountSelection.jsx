@@ -30,7 +30,7 @@ const AccountSelection = ({
           <div>
             <h3 className="text-lg font-bold text-slate-800">Account Selection</h3>
             <p className="text-xs text-slate-500 font-medium">
-              Select company to load pending saudas
+              Entry date loads all data · company filter is optional
             </p>
           </div>
         </div>
@@ -101,7 +101,9 @@ const AccountSelection = ({
           <div className="space-y-2">
             <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">
               {formData.ledgerType === "Buyer" ? "Buyer Company" : "Seller Company"}
-              <span className="text-rose-500 ml-0.5">*</span>
+              <span className="text-slate-400 font-bold normal-case tracking-normal ml-1">
+                (optional)
+              </span>
             </label>
             <DataDropdown
               options={primaryCompanyOptions}
