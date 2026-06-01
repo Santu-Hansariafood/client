@@ -9,6 +9,7 @@ import Loading from "../../../../common/Loading/Loading";
 import Paginations from "../../../../common/Paginations/Paginations";
 import DateRangeSelector from "../../../../common/DateSelector/DateRangeSelector";
 import CompanyLedgerBanner from "./CompanyLedgerBanner";
+import CreditBalancePanel from "./CreditBalancePanel";
 import { formatLedgerAmount } from "../utils/paymentLedgerUtils";
 
 const AllocationLedger = ({
@@ -61,8 +62,10 @@ const AllocationLedger = ({
                 {allocationSource === "fresh"
                   ? "Allocate payment to lorry / sauda"
                   : fullCompanyMapping
-                    ? `Using Rs. ${ledgerBalance.advanceBalance.toLocaleString("en-IN")} credit (${companyPair.buyerCompany} → ${companyPair.supplierCompany})`
-                    : "Select buyer and seller for advance credit"}
+                    ? `Adjust from Rs. ${(ledgerBalance.advanceBalance ?? 0).toLocaleString("en-IN")} credit (${companyPair.buyerCompany} → ${companyPair.supplierCompany})`
+                    : (ledgerBalance.totalAdvanceBalance ?? 0) > 0
+                      ? `Total credit Rs. ${ledgerBalance.totalAdvanceBalance.toLocaleString("en-IN")} — select seller for pair`
+                      : "Record advance with buyer + seller to build credit"}
               </p>
             </div>
           </div>
@@ -112,6 +115,16 @@ const AllocationLedger = ({
             />
           </div>
         </div>
+
+        {hasBuyerCompany && (
+            <CreditBalancePanel
+              totalAdvanceBalance={ledgerBalance.totalAdvanceBalance}
+              advanceBalance={ledgerBalance.advanceBalance}
+              creditByPair={ledgerBalance.creditByPair}
+              fullCompanyMapping={fullCompanyMapping}
+              buyerCompany={companyPair.buyerCompany}
+            />
+          )}
 
         {showMappingBanner ? (
           <CompanyLedgerBanner

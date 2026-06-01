@@ -124,87 +124,147 @@ router.post("/", async (req, res) => {
 const escapeRegex = (value) =>
   String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
-router.get("/balance/:ledgerId", async (req, res) => {
+const companyRegex = (name) =>
+  new RegExp(`^${escapeRegex(String(name).trim())}$`, "i");
+
+const buildAdvanceMatch = (ledgerId, buyerCompany, supplierCompany) => {
+  const match = { unadjustedAmount: { $gt: 0 } };
+  if (ledgerId && mongoose.Types.ObjectId.isValid(ledgerId)) {
+    match.ledgerId = new mongoose.Types.ObjectId(ledgerId);
+  }
+  if (buyerCompany) {
+    match.buyerCompany = companyRegex(buyerCompany);
+  }
+  if (supplierCompany) {
+    match.supplierCompany = companyRegex(supplierCompany);
+  }
+  return match;
+};
+
+const sumAdvance = async (match) => {
+  const rows = await PaymentReceived.aggregate([
+    { $match: match },
+    { $group: { _id: null, total: { $sum: "$unadjustedAmount" } } },
+  ]);
+  return rows.length > 0 ? rows[0].total : 0;
+};
+
+const getCreditByPair = async (baseMatch) => {
+  const rows = await PaymentReceived.aggregate([
+    { $match: baseMatch },
+    {
+      $group: {
+        _id: {
+          buyerCompany: { $ifNull: ["$buyerCompany", ""] },
+          supplierCompany: { $ifNull: ["$supplierCompany", ""] },
+        },
+        amount: { $sum: "$unadjustedAmount" },
+      },
+    },
+    { $match: { amount: { $gt: 0 } } },
+    { $sort: { amount: -1 } },
+  ]);
+
+  return rows.map((row) => ({
+    buyerCompany: row._id.buyerCompany || "—",
+    supplierCompany: row._id.supplierCompany || "—",
+    amount: row.amount,
+  }));
+};
+
+const getBalancePayload = async (ledgerId, buyerCompany, supplierCompany) => {
+  const scopedMatch = buildAdvanceMatch(ledgerId, buyerCompany, supplierCompany);
+  const buyerScopeMatch = buildAdvanceMatch(ledgerId, buyerCompany, "");
+  const ledgerMatch = buildAdvanceMatch(ledgerId, "", "");
+
+  const [advanceBalance, totalAdvanceBalance, creditByPair] = await Promise.all([
+    sumAdvance(scopedMatch),
+    sumAdvance(buyerCompany ? buyerScopeMatch : ledgerMatch),
+    getCreditByPair(buyerCompany ? buyerScopeMatch : ledgerMatch),
+  ]);
+
+  const entryQuery = {
+    paymentStatus: "pending",
+    unloadingWeight: { $gt: 0 },
+  };
+
+  if (buyerCompany || supplierCompany) {
+    if (buyerCompany) {
+      entryQuery.buyerCompany = companyRegex(buyerCompany);
+    }
+    if (supplierCompany) {
+      entryQuery.supplierCompany = companyRegex(supplierCompany);
+    }
+  } else if (ledgerId) {
+    entryQuery.$or = [{ buyerId: ledgerId }, { supplier: ledgerId }];
+  } else {
+    return {
+      advanceBalance,
+      totalAdvanceBalance,
+      creditByPair,
+      outstandingBalance: 0,
+    };
+  }
+
+  const pendingEntries = await LoadingEntry.find(entryQuery).lean();
+  const saudaNos = [...new Set(pendingEntries.map((e) => e.saudaNo))];
+  const selfOrders = await SelfOrder.find({ saudaNo: { $in: saudaNos } }).lean();
+  const saudaMap = selfOrders.reduce((acc, so) => {
+    acc[so.saudaNo] = so;
+    return acc;
+  }, {});
+
+  let totalOutstanding = 0;
+  pendingEntries.forEach((entry) => {
+    const order = saudaMap[entry.saudaNo];
+    if (order) {
+      const weight = entry.unloadingWeight || 0;
+      const rate = order.rate || 0;
+      const cdPercent = order.cd || 0;
+      const gstPercent = order.gst || 0;
+      const grossAmount = weight * rate;
+      const taxableAmount = grossAmount - grossAmount * (cdPercent / 100);
+      const netAmount = taxableAmount + taxableAmount * (gstPercent / 100);
+      totalOutstanding += netAmount - (entry.paidAmount || 0);
+    }
+  });
+
+  return {
+    advanceBalance,
+    totalAdvanceBalance,
+    creditByPair,
+    outstandingBalance: Math.max(0, totalOutstanding),
+  };
+};
+
+const handleBalanceRequest = async (req, res) => {
   try {
-    const { ledgerId } = req.params;
+    const ledgerId = req.params.ledgerId || req.query.ledgerId || "";
     const buyerCompany = String(req.query.buyerCompany || "").trim();
     const supplierCompany = String(req.query.supplierCompany || "").trim();
 
-    const advanceMatch = {
-      ledgerId: new mongoose.Types.ObjectId(ledgerId),
-      unadjustedAmount: { $gt: 0 },
-    };
-
-    if (buyerCompany) {
-      advanceMatch.buyerCompany = {
-        $regex: new RegExp(`^${escapeRegex(buyerCompany)}$`, "i"),
-      };
-    }
-    if (supplierCompany) {
-      advanceMatch.supplierCompany = {
-        $regex: new RegExp(`^${escapeRegex(supplierCompany)}$`, "i"),
-      };
+    if (!ledgerId && !buyerCompany) {
+      return res.json({
+        advanceBalance: 0,
+        totalAdvanceBalance: 0,
+        creditByPair: [],
+        outstandingBalance: 0,
+      });
     }
 
-    const advanceSummary = await PaymentReceived.aggregate([
-      { $match: advanceMatch },
-      { $group: { _id: null, totalAdvance: { $sum: "$unadjustedAmount" } } },
-    ]);
-
-    const entryQuery = {
-      paymentStatus: "pending",
-      unloadingWeight: { $gt: 0 },
-    };
-
-    if (buyerCompany || supplierCompany) {
-      if (buyerCompany) {
-        entryQuery.buyerCompany = {
-          $regex: new RegExp(`^${escapeRegex(buyerCompany)}$`, "i"),
-        };
-      }
-      if (supplierCompany) {
-        entryQuery.supplierCompany = {
-          $regex: new RegExp(`^${escapeRegex(supplierCompany)}$`, "i"),
-        };
-      }
-    } else {
-      entryQuery.$or = [
-        { buyerId: ledgerId },
-        { supplier: ledgerId },
-      ];
-    }
-
-    const pendingEntries = await LoadingEntry.find(entryQuery).lean();
-
-    const saudaNos = [...new Set(pendingEntries.map(e => e.saudaNo))];
-    const selfOrders = await SelfOrder.find({ saudaNo: { $in: saudaNos } }).lean();
-    const saudaMap = selfOrders.reduce((acc, so) => { acc[so.saudaNo] = so; return acc; }, {});
-
-    let totalOutstanding = 0;
-    pendingEntries.forEach(entry => {
-      const order = saudaMap[entry.saudaNo];
-      if (order) {
-        const weight = entry.unloadingWeight || 0;
-        const rate = order.rate || 0;
-        const cdPercent = order.cd || 0;
-        const gstPercent = order.gst || 0;
-
-        const grossAmount = weight * rate;
-        const taxableAmount = grossAmount - (grossAmount * (cdPercent / 100));
-        const netAmount = taxableAmount + (taxableAmount * (gstPercent / 100));
-        
-        totalOutstanding += (netAmount - (entry.paidAmount || 0));
-      }
-    });
-
-    res.json({
-      advanceBalance: advanceSummary.length > 0 ? advanceSummary[0].totalAdvance : 0,
-      outstandingBalance: totalOutstanding
-    });
+    const payload = await getBalancePayload(
+      ledgerId,
+      buyerCompany,
+      supplierCompany,
+    );
+    res.json(payload);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
-});
+};
+
+router.get("/balance", handleBalanceRequest);
+router.get("/balance/:ledgerId", handleBalanceRequest);
 
 router.get("/", async (req, res) => {
   try {

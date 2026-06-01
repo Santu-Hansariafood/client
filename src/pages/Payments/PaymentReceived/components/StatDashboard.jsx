@@ -44,14 +44,14 @@ const StatDashboard = ({
 
             <StatCard
                 icon={<FaHistory size={18} />}
-                label="Advance Balance"
-                value={`Rs. ${ledgerBalance.advanceBalance.toLocaleString('en-IN')}`}
+                label="Credit Balance"
+                value={`Rs. ${(ledgerBalance.totalAdvanceBalance ?? ledgerBalance.advanceBalance ?? 0).toLocaleString('en-IN')}`}
                 subValue={
                     fullCompanyMapping
-                        ? `Credit · ${companyScopeLabel}`
+                        ? `All: Rs. ${(ledgerBalance.totalAdvanceBalance ?? 0).toLocaleString('en-IN')} · Pair: Rs. ${(ledgerBalance.advanceBalance ?? 0).toLocaleString('en-IN')}`
                         : companyPair?.buyerCompany
-                          ? "Select seller for pair credit"
-                          : "Company-to-company only"
+                          ? `${ledgerBalance.creditByPair?.length || 0} company mapping(s)`
+                          : "Select buyer company"
                 }
                 color="bg-blue-50"
                 iconColor="text-blue-600"

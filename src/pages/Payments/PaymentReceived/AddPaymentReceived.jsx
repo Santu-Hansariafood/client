@@ -57,6 +57,8 @@ const AddPaymentReceived = () => {
   const [dateTotal, setDateTotal] = useState(0);
   const [ledgerBalance, setLedgerBalance] = useState({
     advanceBalance: 0,
+    totalAdvanceBalance: 0,
+    creditByPair: [],
     outstandingBalance: 0,
   });
   const [activeTab, setActiveTab] = useState("allocation"); // allocation, history, summary
@@ -556,26 +558,35 @@ const AddPaymentReceived = () => {
   }, [formData.ledgerId, summaryType]);
 
   const fetchLedgerBalance = useCallback(async () => {
-    if (!formData.ledgerId || !companyPair.buyerCompany) {
-      setLedgerBalance({ advanceBalance: 0, outstandingBalance: 0 });
+    if (!formData.ledgerId && !companyPair.buyerCompany) {
+      setLedgerBalance({
+        advanceBalance: 0,
+        totalAdvanceBalance: 0,
+        creditByPair: [],
+        outstandingBalance: 0,
+      });
       return;
     }
 
     try {
-      const params = { buyerCompany: companyPair.buyerCompany };
+      const params = {};
+      if (companyPair.buyerCompany) {
+        params.buyerCompany = companyPair.buyerCompany;
+      }
       if (companyPair.supplierCompany) {
         params.supplierCompany = companyPair.supplierCompany;
       }
 
-      const response = await api.get(
-        `/payment-received/balance/${formData.ledgerId}`,
-        { params },
-      );
+      const url = formData.ledgerId
+        ? `/payment-received/balance/${formData.ledgerId}`
+        : "/payment-received/balance";
+
+      const response = await api.get(url, { params });
       setLedgerBalance({
         outstandingBalance: response.data.outstandingBalance ?? 0,
-        advanceBalance: fullCompanyMapping
-          ? (response.data.advanceBalance ?? 0)
-          : 0,
+        advanceBalance: response.data.advanceBalance ?? 0,
+        totalAdvanceBalance: response.data.totalAdvanceBalance ?? 0,
+        creditByPair: response.data.creditByPair ?? [],
       });
     } catch (error) {
       console.error("Error fetching balance:", error);
@@ -584,7 +595,6 @@ const AddPaymentReceived = () => {
     formData.ledgerId,
     companyPair.buyerCompany,
     companyPair.supplierCompany,
-    fullCompanyMapping,
   ]);
 
   useEffect(() => {
@@ -796,11 +806,15 @@ const AddPaymentReceived = () => {
     const isAdmin = user?.role === "Admin";
     const isEditing = entry.isSaved && isAdmin;
 
+    const availableCredit = fullCompanyMapping
+      ? ledgerBalance.advanceBalance
+      : ledgerBalance.totalAdvanceBalance;
+
     if (
       allocationSource === "advance" &&
-      entry.allocatedAmount > ledgerBalance.advanceBalance
+      entry.allocatedAmount > availableCredit
     ) {
-      toast.error("Allocation exceeds available Advance Balance");
+      toast.error("Allocation exceeds available credit balance");
       return;
     }
 
