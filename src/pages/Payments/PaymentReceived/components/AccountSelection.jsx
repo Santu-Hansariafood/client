@@ -50,33 +50,40 @@ const AccountSelection = ({
           </div>
         </div>
 
-        <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200">
-          {[
-            {
-              id: "fresh",
-              label: "Payment Received",
-              icon: <FaMoneyBillWave size={12} />,
-            },
-            {
-              id: "advance",
-              label: "From Advance",
-              icon: <FaExchangeAlt size={12} />,
-            },
-          ].map((source) => (
-            <button
-              key={source.id}
-              type="button"
-              onClick={() => setAllocationSource(source.id)}
-              className={`flex items-center gap-2 px-5 py-2 text-[11px] font-black uppercase tracking-widest rounded-lg transition-all ${
-                allocationSource === source.id
-                  ? "bg-white text-slate-900 shadow-sm"
-                  : "text-slate-400 hover:text-slate-600"
-              }`}
-            >
-              {source.icon}
-              {source.label}
-            </button>
-          ))}
+        <div className="flex flex-col items-end gap-2">
+          <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200">
+            {[
+              {
+                id: "fresh",
+                label: "Payment Received",
+                icon: <FaMoneyBillWave size={12} />,
+              },
+              {
+                id: "advance",
+                label: "From Advance",
+                icon: <FaExchangeAlt size={12} />,
+              },
+            ].map((source) => (
+              <button
+                key={source.id}
+                type="button"
+                onClick={() => setAllocationSource(source.id)}
+                className={`flex items-center gap-2 px-5 py-2 text-[11px] font-black uppercase tracking-widest rounded-lg transition-all ${
+                  allocationSource === source.id
+                    ? "bg-white text-slate-900 shadow-sm"
+                    : "text-slate-400 hover:text-slate-600"
+                }`}
+              >
+                {source.icon}
+                {source.label}
+              </button>
+            ))}
+          </div>
+          {allocationSource === "fresh" && (formData.amount || 0) <= 0 && (
+            <p className="text-[9px] font-black text-blue-600 uppercase tracking-tighter animate-pulse">
+              Tip: Switch to "From Advance" to adjust existing Dr. balance
+            </p>
+          )}
         </div>
       </div>
 

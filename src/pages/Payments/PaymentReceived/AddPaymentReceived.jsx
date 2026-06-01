@@ -1023,9 +1023,16 @@ const AddPaymentReceived = () => {
       allocationSource === "fresh" &&
       numAllocated > remainingPool + 1
     ) {
-      toast.error(
-        `Allocation exceeds voucher amount (Rs. ${remainingPool.toLocaleString("en-IN")} remaining)`,
-      );
+      if (remainingPool <= 0.01 && (ledgerBalance.totalAdvanceBalance || 0) > 0) {
+        toast.info(
+          "Your entry amount is Rs. 0. If you want to use the Advance balance, please switch to 'From Advance' at the top.",
+          { autoClose: 6000 },
+        );
+      } else {
+        toast.error(
+          `Allocation exceeds voucher amount (Rs. ${remainingPool.toLocaleString("en-IN")} remaining)`,
+        );
+      }
       return;
     }
 
