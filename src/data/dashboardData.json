@@ -256,6 +256,18 @@
       ]
     },
     {
+      "section": "Reports",
+      "icon": "FaFileAlt",
+      "actions": [
+        {
+          "name": "Sauda Wise Details",
+          "link": "/reports/sauda-wise-details",
+          "icon": "FaFileInvoice",
+          "roles": ["Admin", "Employee"]
+        }
+      ]
+    },
+    {
       "section": "Employee Management",
       "icon": "FaUserTie",
       "actions": [

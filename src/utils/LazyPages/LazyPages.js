@@ -101,6 +101,7 @@ const loaders = {
   DataSafety: () => import("../../pages/DataSafety/DataSafety"),
   BuyerBrokerage: () => import("../../pages/Brokerage/BuyerBrokerage"),
   SellerBrokerage: () => import("../../pages/Brokerage/SellerBrokerage"),
+  SaudaWiseDetails: () => import("../../pages/Reports/SaudaWiseDetails/SaudaWiseDetails"),
 };
 
 const pathToKey = {
@@ -164,6 +165,7 @@ const pathToKey = {
   "/payments/list": "ListPayment",
   "/payments/received/add": "AddPaymentReceived",
   "/payments/received/list": "ListPaymentReceived",
+  "/reports/sauda-wise-details": "SaudaWiseDetails",
   "/data-safety": "DataSafety",
   "/brokerage/buyer": "BuyerBrokerage",
   "/brokerage/seller": "SellerBrokerage",

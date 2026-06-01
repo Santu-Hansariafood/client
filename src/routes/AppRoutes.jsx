@@ -324,9 +324,14 @@ const privateRoutes = [
     roles: ["Admin", "Employee"],
   },
   {
+    path: "reports/sauda-wise-details",
+    component: LazyPages.SaudaWiseDetails,
+    roles: ["Admin", "Employee"],
+  },
+  {
     path: "data-safety",
     component: LazyPages.DataSafety,
-    roles: ["Admin", "Employee"],
+    roles: ["Admin", "Employee", "Buyer", "Seller"],
   },
   {
     path: "/vendor-code/list",
