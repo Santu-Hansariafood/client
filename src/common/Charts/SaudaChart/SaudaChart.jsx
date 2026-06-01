@@ -15,6 +15,24 @@ import {
   Legend,
 } from "recharts";
 import api from "../../../utils/apiClient/apiClient";
+import {
+  BarGradientDefs,
+  BAR_SERIES_THEMES,
+  MODERN_AXIS_TICK,
+  MODERN_BAR_ANIMATION,
+  MODERN_BAR_CURSOR,
+  MODERN_CHART_MARGIN,
+  MODERN_GRID_PROPS,
+  modernActiveBar,
+} from "../modernBarChartShared";
+import {
+  CHART_AREA_CLASS,
+  CHART_LOADING_CLASS,
+  ChartPanelHeader,
+  ChartPeriodToggle,
+  ChartSpinner,
+  RESPONSIVE_X_AXIS_PROPS,
+} from "../chartLayoutShared";
 
 const COLORS = [
   "#10b981",
@@ -186,8 +204,8 @@ const SaudaChart = ({ apiUrl, chartType = "line", data: externalData }) => {
 
   if (loading)
     return (
-      <div className="h-[350px] flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div>
+      <div className={CHART_LOADING_CLASS}>
+        <ChartSpinner colorClass="border-emerald-600" />
       </div>
     );
 
@@ -209,8 +227,8 @@ const SaudaChart = ({ apiUrl, chartType = "line", data: externalData }) => {
             data={pieData}
             cx="50%"
             cy="50%"
-            innerRadius={60}
-            outerRadius={100}
+            innerRadius="52%"
+            outerRadius="78%"
             paddingAngle={5}
             dataKey="value"
             animationDuration={2000}
@@ -240,52 +258,53 @@ const SaudaChart = ({ apiUrl, chartType = "line", data: externalData }) => {
       );
     }
 
+    const theme = BAR_SERIES_THEMES.emerald;
     const commonProps = {
       data,
-      margin: { top: 10, right: 10, left: -20, bottom: 0 },
+      margin: { ...MODERN_CHART_MARGIN, left: -12 },
     };
 
     if (chartType === "bar") {
       return (
-        <BarChart {...commonProps}>
-          <defs>
-            <filter id="barShadow" height="200%">
-              <feGaussianBlur in="SourceAlpha" stdDeviation="3" result="blur" />
-              <feOffset in="blur" dx="0" dy="4" result="offsetBlur" />
-              <feMerge>
-                <feMergeNode in="offsetBlur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-            <linearGradient id="saudaBarGradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#10b981" stopOpacity={1} />
-              <stop offset="100%" stopColor="#059669" stopOpacity={1} />
-            </linearGradient>
-          </defs>
-          <CartesianGrid
-            strokeDasharray="3 3"
-            vertical={false}
-            stroke="#f1f5f9"
+        <BarChart
+          {...commonProps}
+          barCategoryGap="24%"
+          maxBarSize={viewType === "weekly" ? 48 : 28}
+        >
+          <BarGradientDefs
+            gradientId={theme.gradientId}
+            shadowId="saudaBarShadow"
+            topColor={theme.top}
+            midColor={theme.mid}
+            bottomColor={theme.bottom}
           />
+          <CartesianGrid {...MODERN_GRID_PROPS} />
           <XAxis
             dataKey="date"
             axisLine={false}
             tickLine={false}
-            tick={{ fill: "#94a3b8", fontSize: 10, fontWeight: 600 }}
+            tick={MODERN_AXIS_TICK}
             dy={10}
+            {...RESPONSIVE_X_AXIS_PROPS}
           />
           <YAxis
             axisLine={false}
             tickLine={false}
-            tick={{ fill: "#94a3b8", fontSize: 10, fontWeight: 600 }}
+            tick={MODERN_AXIS_TICK}
+            width={40}
+            domain={[0, (dataMax) => Math.ceil(dataMax * 1.12) || 1]}
           />
-          <Tooltip content={<CustomTooltip />} cursor={{ fill: "#f8fafc" }} />
+          <Tooltip
+            content={<CustomTooltip />}
+            cursor={MODERN_BAR_CURSOR}
+          />
           <Bar
             dataKey="count"
-            fill="url(#saudaBarGradient)"
-            radius={[6, 6, 0, 0]}
-            barSize={viewType === "weekly" ? 40 : 20}
-            filter="url(#barShadow)"
+            fill={`url(#${theme.gradientId})`}
+            radius={[10, 10, 0, 0]}
+            filter="url(#saudaBarShadow)"
+            {...MODERN_BAR_ANIMATION}
+            activeBar={modernActiveBar(`url(#${theme.gradientId})`)}
           />
         </BarChart>
       );
@@ -319,13 +338,15 @@ const SaudaChart = ({ apiUrl, chartType = "line", data: externalData }) => {
           dataKey="date"
           axisLine={false}
           tickLine={false}
-          tick={{ fill: "#94a3b8", fontSize: 10, fontWeight: 600 }}
+          tick={MODERN_AXIS_TICK}
           dy={10}
+          {...RESPONSIVE_X_AXIS_PROPS}
         />
         <YAxis
           axisLine={false}
           tickLine={false}
-          tick={{ fill: "#94a3b8", fontSize: 10, fontWeight: 600 }}
+          tick={MODERN_AXIS_TICK}
+          width={40}
         />
         <Tooltip content={<CustomTooltip />} />
         <Area
@@ -343,38 +364,23 @@ const SaudaChart = ({ apiUrl, chartType = "line", data: externalData }) => {
   };
 
   return (
-    <div className="w-full h-auto">
-      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-8">
-        <div>
-          <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest flex items-center gap-2">
-            <span className="w-2 h-4 bg-emerald-600 rounded-full"></span>
-            Sauda Activity
-          </h3>
-          <p className="text-[10px] font-bold text-slate-400 mt-1 uppercase tracking-tighter">
-            Market momentum by {viewType}
-          </p>
-        </div>
-
+    <div className="w-full min-w-0">
+      <ChartPanelHeader
+        accentClass="bg-emerald-600"
+        title="Sauda Activity"
+        subtitle={`Market momentum by ${viewType}`}
+      >
         {chartType !== "pie" && (
-          <div className="flex bg-slate-100 p-1 rounded-2xl border border-slate-200 shadow-inner">
-            {["weekly", "monthly", "quarterly", "yearly"].map((type) => (
-              <button
-                key={type}
-                onClick={() => setViewType(type)}
-                className={`px-4 py-2 rounded-xl text-[10px] font-black transition-all duration-300 uppercase tracking-widest ${
-                  viewType === type
-                    ? "bg-white text-emerald-600 shadow-xl scale-105"
-                    : "text-slate-500 hover:text-slate-800 hover:bg-white/50"
-                }`}
-              >
-                {type}
-              </button>
-            ))}
-          </div>
+          <ChartPeriodToggle
+            options={["weekly", "monthly", "quarterly", "yearly"]}
+            value={viewType}
+            onChange={setViewType}
+            activeClass="bg-white text-emerald-600 shadow-md ring-1 ring-emerald-100"
+          />
         )}
-      </div>
+      </ChartPanelHeader>
 
-      <div className="h-[350px]">
+      <div className={CHART_AREA_CLASS}>
         {!data.length ? (
           <div className="h-full flex flex-col items-center justify-center text-slate-300 gap-4">
             <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center">

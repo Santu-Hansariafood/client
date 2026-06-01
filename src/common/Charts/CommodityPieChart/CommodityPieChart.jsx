@@ -8,6 +8,12 @@ import {
   Legend,
 } from "recharts";
 import api from "../../../utils/apiClient/apiClient";
+import {
+  CHART_AREA_CLASS,
+  CHART_LOADING_CLASS,
+  ChartPanelHeader,
+  ChartSpinner,
+} from "../chartLayoutShared";
 
 const COLORS = [
   "#3b82f6",
@@ -99,24 +105,20 @@ const CommodityPieChart = ({ apiUrl }) => {
 
   if (loading)
     return (
-      <div className="h-[350px] flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div>
+      <div className={CHART_LOADING_CLASS}>
+        <ChartSpinner colorClass="border-emerald-600" />
       </div>
     );
 
   return (
-    <div className="w-full h-auto">
-      <div className="mb-8">
-        <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest flex items-center gap-2">
-          <span className="w-2 h-4 bg-emerald-600 rounded-full"></span>
-          Commodity Distribution
-        </h3>
-        <p className="text-[10px] font-bold text-slate-400 mt-1 uppercase tracking-tighter">
-          Volume share by commodity type
-        </p>
-      </div>
+    <div className="w-full min-w-0">
+      <ChartPanelHeader
+        accentClass="bg-emerald-600"
+        title="Commodity Distribution"
+        subtitle="Volume share by commodity type"
+      />
 
-      <div className="h-[350px]">
+      <div className={CHART_AREA_CLASS}>
         {!data.length ? (
           <div className="h-full flex flex-col items-center justify-center text-slate-300 gap-4">
             <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center">
@@ -165,8 +167,8 @@ const CommodityPieChart = ({ apiUrl }) => {
                 data={data}
                 cx="50%"
                 cy="50%"
-                innerRadius={65}
-                outerRadius={105}
+                innerRadius="50%"
+                outerRadius="76%"
                 paddingAngle={8}
                 dataKey="value"
                 animationDuration={2000}
@@ -185,12 +187,13 @@ const CommodityPieChart = ({ apiUrl }) => {
                 verticalAlign="bottom"
                 align="center"
                 iconType="circle"
+                layout="horizontal"
                 formatter={(value) => (
-                  <span className="text-[10px] font-black text-slate-600 uppercase tracking-widest">
+                  <span className="text-[9px] sm:text-[10px] font-black text-slate-600 uppercase tracking-widest">
                     {value}
                   </span>
                 )}
-                wrapperStyle={{ paddingTop: "20px" }}
+                wrapperStyle={{ paddingTop: "12px" }}
               />
             </PieChart>
           </ResponsiveContainer>

@@ -9,9 +9,25 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  Legend,
 } from "recharts";
 import api from "../../../utils/apiClient/apiClient";
+import {
+  BarGradientDefs,
+  BAR_SERIES_THEMES,
+  MODERN_AXIS_TICK,
+  MODERN_BAR_ANIMATION,
+  MODERN_BAR_CURSOR,
+  MODERN_CHART_MARGIN,
+  MODERN_GRID_PROPS,
+  modernActiveBar,
+} from "../modernBarChartShared";
+import {
+  CHART_AREA_CLASS,
+  CHART_LOADING_CLASS,
+  ChartPanelHeader,
+  ChartSpinner,
+  RESPONSIVE_X_AXIS_PROPS,
+} from "../chartLayoutShared";
 
 const CustomTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
@@ -86,80 +102,112 @@ const PaymentAnalyticsChart = ({ days = 30, chartType = "line" }) => {
 
   if (loading)
     return (
-      <div className="h-[350px] flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div>
+      <div className={CHART_LOADING_CLASS}>
+        <ChartSpinner colorClass="border-emerald-600" />
       </div>
     );
 
   if (!data.length)
     return (
-      <div className="h-[350px] flex flex-col items-center justify-center text-slate-400">
+      <div
+        className={`${CHART_AREA_CLASS} flex flex-col items-center justify-center text-slate-400 px-4 text-center`}
+      >
         <p className="font-bold uppercase tracking-widest text-xs">
           No payment data for this period
         </p>
       </div>
     );
 
-  return (
-    <div className="h-[400px] w-full mt-6">
-      <div className="flex items-center justify-between mb-6">
-        <h3 className="text-lg font-black text-slate-800 uppercase tracking-tight italic">
-          Payment <span className="text-emerald-600">Settlement Trend</span>
-        </h3>
-        <div className="flex gap-4">
-          <div className="flex items-center gap-2">
-            <span className="w-3 h-3 rounded-full bg-amber-400 shadow-sm shadow-amber-100"></span>
-            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-              Pending
-            </span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="w-3 h-3 rounded-full bg-emerald-500 shadow-sm shadow-emerald-100"></span>
-            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-              Received
-            </span>
-          </div>
-        </div>
+  const legend = (
+    <div className="flex flex-wrap gap-3 sm:gap-4">
+      <div className="flex items-center gap-2">
+        <span className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-amber-400 shadow-sm" />
+        <span className="text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest">
+          Pending
+        </span>
       </div>
+      <div className="flex items-center gap-2">
+        <span className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-emerald-500 shadow-sm" />
+        <span className="text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest">
+          Received
+        </span>
+      </div>
+    </div>
+  );
 
+  return (
+    <div className="w-full min-w-0">
+      <ChartPanelHeader
+        accentClass="bg-emerald-600"
+        title="Payment"
+        highlight={{ text: "Settlement", className: "text-emerald-600" }}
+        subtitle="Pending vs received over time"
+      >
+        {legend}
+      </ChartPanelHeader>
+
+      <div className={CHART_AREA_CLASS}>
       <ResponsiveContainer width="100%" height="100%">
         {chartType === "bar" ? (
           <BarChart
             data={data}
-            margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
+            margin={MODERN_CHART_MARGIN}
+            barCategoryGap="22%"
+            barGap={6}
+            maxBarSize={36}
           >
-            <CartesianGrid
-              strokeDasharray="3 3"
-              vertical={false}
-              stroke="#f1f5f9"
+            <BarGradientDefs
+              gradientId={BAR_SERIES_THEMES.pending.gradientId}
+              topColor={BAR_SERIES_THEMES.pending.top}
+              midColor={BAR_SERIES_THEMES.pending.mid}
+              bottomColor={BAR_SERIES_THEMES.pending.bottom}
             />
+            <BarGradientDefs
+              gradientId={BAR_SERIES_THEMES.received.gradientId}
+              topColor={BAR_SERIES_THEMES.received.top}
+              midColor={BAR_SERIES_THEMES.received.mid}
+              bottomColor={BAR_SERIES_THEMES.received.bottom}
+            />
+            <CartesianGrid {...MODERN_GRID_PROPS} />
             <XAxis
               dataKey="date"
               axisLine={false}
               tickLine={false}
-              tick={{ fill: "#94a3b8", fontSize: 10, fontWeight: 700 }}
+              tick={MODERN_AXIS_TICK}
               dy={10}
+              {...RESPONSIVE_X_AXIS_PROPS}
             />
             <YAxis
               axisLine={false}
               tickLine={false}
-              tick={{ fill: "#94a3b8", fontSize: 10, fontWeight: 700 }}
+              tick={MODERN_AXIS_TICK}
               tickFormatter={(value) => `₹${(value / 1000).toFixed(0)}k`}
+              width={48}
+              domain={[0, (dataMax) => Math.ceil(dataMax * 1.1)]}
             />
-            <Tooltip content={<CustomTooltip />} cursor={{ fill: "#f8fafc" }} />
+            <Tooltip
+              content={<CustomTooltip />}
+              cursor={MODERN_BAR_CURSOR}
+            />
             <Bar
               dataKey="pending"
               name="Pending"
-              fill="#fbbf24"
-              radius={[4, 4, 0, 0]}
-              animationDuration={1500}
+              fill={`url(#${BAR_SERIES_THEMES.pending.gradientId})`}
+              radius={[8, 8, 0, 0]}
+              {...MODERN_BAR_ANIMATION}
+              activeBar={modernActiveBar(
+                `url(#${BAR_SERIES_THEMES.pending.gradientId})`,
+              )}
             />
             <Bar
               dataKey="received"
               name="Received"
-              fill="#10b981"
-              radius={[4, 4, 0, 0]}
-              animationDuration={1500}
+              fill={`url(#${BAR_SERIES_THEMES.received.gradientId})`}
+              radius={[8, 8, 0, 0]}
+              {...MODERN_BAR_ANIMATION}
+              activeBar={modernActiveBar(
+                `url(#${BAR_SERIES_THEMES.received.gradientId})`,
+              )}
             />
           </BarChart>
         ) : (
@@ -186,14 +234,16 @@ const PaymentAnalyticsChart = ({ days = 30, chartType = "line" }) => {
               dataKey="date"
               axisLine={false}
               tickLine={false}
-              tick={{ fill: "#94a3b8", fontSize: 10, fontWeight: 700 }}
+              tick={MODERN_AXIS_TICK}
               dy={10}
+              {...RESPONSIVE_X_AXIS_PROPS}
             />
             <YAxis
               axisLine={false}
               tickLine={false}
-              tick={{ fill: "#94a3b8", fontSize: 10, fontWeight: 700 }}
+              tick={MODERN_AXIS_TICK}
               tickFormatter={(value) => `₹${(value / 1000).toFixed(0)}k`}
+              width={48}
             />
             <Tooltip content={<CustomTooltip />} />
             <Area
@@ -219,6 +269,7 @@ const PaymentAnalyticsChart = ({ days = 30, chartType = "line" }) => {
           </AreaChart>
         )}
       </ResponsiveContainer>
+      </div>
     </div>
   );
 };

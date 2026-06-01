@@ -13,7 +13,21 @@ import {
   Pie,
   Cell,
   Legend,
+  LabelList,
 } from "recharts";
+import {
+  BarGradientDefs,
+  MultiBarGradientDefs,
+  MODERN_AXIS_TICK,
+  MODERN_BAR_ANIMATION,
+  MODERN_BAR_CURSOR,
+  MODERN_CHART_MARGIN,
+  MODERN_GRID_PROPS,
+} from "../modernBarChartShared";
+import {
+  CHART_AREA_CLASS,
+  ChartPanelHeader,
+} from "../chartLayoutShared";
 
 const COLORS = [
   "#6366f1",
@@ -99,8 +113,8 @@ const AgentSaudaChart = ({ data, chartType = "bar" }) => {
             data={chartData}
             cx="50%"
             cy="50%"
-            innerRadius={60}
-            outerRadius={100}
+            innerRadius="52%"
+            outerRadius="78%"
             paddingAngle={5}
             dataKey="value"
             animationDuration={2000}
@@ -132,54 +146,80 @@ const AgentSaudaChart = ({ data, chartType = "bar" }) => {
 
     const commonProps = {
       data: chartData,
-      margin: { top: 10, right: 10, left: -20, bottom: 20 },
+      margin: { ...MODERN_CHART_MARGIN, left: -12, bottom: 24 },
     };
 
     if (chartType === "bar") {
+      const barColors = chartData.map(
+        (_, index) => COLORS[index % COLORS.length],
+      );
+
       return (
-        <BarChart {...commonProps}>
-          <defs>
-            <filter id="agentBarShadow" height="200%">
-              <feGaussianBlur in="SourceAlpha" stdDeviation="3" result="blur" />
-              <feOffset in="blur" dx="0" dy="4" result="offsetBlur" />
-              <feMerge>
-                <feMergeNode in="offsetBlur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-            <linearGradient id="agentBarGradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#6366f1" stopOpacity={1} />
-              <stop offset="100%" stopColor="#4338ca" stopOpacity={1} />
-            </linearGradient>
-          </defs>
-          <CartesianGrid
-            strokeDasharray="3 3"
-            vertical={false}
-            stroke="#f1f5f9"
-          />
+        <BarChart
+          {...commonProps}
+          barCategoryGap="28%"
+          maxBarSize={44}
+        >
+          <MultiBarGradientDefs idPrefix="agentBar" colors={barColors} />
+          <CartesianGrid {...MODERN_GRID_PROPS} />
           <XAxis
             dataKey="name"
             axisLine={false}
             tickLine={false}
-            tick={{ fill: "#94a3b8", fontSize: 10, fontWeight: 600 }}
-            angle={-25}
+            angle={chartData.length > 4 ? -35 : -22}
             textAnchor="end"
             interval={0}
-            height={60}
+            height={chartData.length > 4 ? 72 : 56}
+            tick={{
+              ...MODERN_AXIS_TICK,
+              fontSize: chartData.length > 6 ? 9 : 11,
+            }}
+            dy={4}
           />
           <YAxis
             axisLine={false}
             tickLine={false}
-            tick={{ fill: "#94a3b8", fontSize: 10, fontWeight: 600 }}
+            tick={MODERN_AXIS_TICK}
+            tickFormatter={(v) =>
+              v >= 1000 ? `${(v / 1000).toFixed(1)}k` : v
+            }
+            width={44}
+            domain={[0, (dataMax) => Math.ceil(dataMax * 1.12)]}
           />
-          <Tooltip content={<CustomTooltip />} cursor={{ fill: "#f8fafc" }} />
+          <Tooltip
+            content={<CustomTooltip />}
+            cursor={MODERN_BAR_CURSOR}
+          />
           <Bar
             dataKey="tons"
-            fill="url(#agentBarGradient)"
-            radius={[6, 6, 0, 0]}
-            barSize={30}
-            filter="url(#agentBarShadow)"
-          />
+            radius={[10, 10, 0, 0]}
+            {...MODERN_BAR_ANIMATION}
+            activeBar={{
+              stroke: "rgba(255,255,255,0.95)",
+              strokeWidth: 2,
+              radius: [12, 12, 0, 0],
+            }}
+          >
+            {chartData.map((_, index) => (
+              <Cell
+                key={`agent-bar-${index}`}
+                fill={`url(#agentBar-${index})`}
+              />
+            ))}
+            {chartData.length <= 8 && (
+              <LabelList
+                dataKey="tons"
+                position="top"
+                offset={8}
+                formatter={(v) => (v > 0 ? `${v.toLocaleString()} T` : "")}
+                style={{
+                  fill: "#475569",
+                  fontSize: 10,
+                  fontWeight: 800,
+                }}
+              />
+            )}
+          </Bar>
         </BarChart>
       );
     }
@@ -239,18 +279,14 @@ const AgentSaudaChart = ({ data, chartType = "bar" }) => {
   };
 
   return (
-    <div className="w-full h-auto">
-      <div className="mb-8">
-        <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest flex items-center gap-2">
-          <span className="w-2 h-4 bg-indigo-600 rounded-full"></span>
-          Agent Distribution
-        </h3>
-        <p className="text-[10px] font-bold text-slate-400 mt-1 uppercase tracking-tighter">
-          Volume metrics by representative
-        </p>
-      </div>
+    <div className="w-full min-w-0">
+      <ChartPanelHeader
+        accentClass="bg-indigo-600"
+        title="Agent Distribution"
+        subtitle="Volume metrics by representative"
+      />
 
-      <div className="h-[350px]">
+      <div className={CHART_AREA_CLASS}>
         {!chartData.length ? (
           <div className="h-full flex flex-col items-center justify-center text-slate-300 gap-4">
             <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center">
