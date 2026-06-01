@@ -1408,8 +1408,8 @@ const AddPaymentReceived = () => {
               </span>
             </div>
             <div className="border-t border-emerald-200 pt-2 mt-0.5">
-              <label className="text-[8px] text-emerald-800 tracking-widest block mb-1">
-                Post Cr. (type here)
+              <label className="text-[9px] text-emerald-900 font-black tracking-widest block mb-1">
+                {allocationSource === "advance" ? "Post Cr. (Adjust from Dr. Advance)" : "Post Cr. (type here)"}
               </label>
               <div className="relative group">
                 <input
@@ -1424,12 +1424,12 @@ const AddPaymentReceived = () => {
                     )
                   }
                   disabled={isLocked}
-                  className={`w-full px-3 py-2 rounded-lg border-2 text-xs font-black tabular-nums normal-case ${
+                  className={`w-full px-3 py-2.5 rounded-lg border-2 text-sm font-black tabular-nums normal-case ${
                     isLocked
                       ? "bg-slate-50 text-slate-400 border-slate-100"
-                      : "border-emerald-300 bg-emerald-50/50 focus:border-emerald-600 focus:ring-2 focus:ring-emerald-500/20 text-emerald-900"
+                      : "border-emerald-300 bg-white focus:border-emerald-600 focus:ring-4 focus:ring-emerald-500/10 text-emerald-900 shadow-sm"
                   }`}
-                  placeholder="0"
+                  placeholder="0.00"
                 />
                 {!isLocked && rowMax > 0 && (
                   <button
@@ -1441,20 +1441,23 @@ const AddPaymentReceived = () => {
                         details.dueAmount,
                       );
                     }}
-                    className="absolute right-1.5 top-1/2 -translate-y-1/2 text-[8px] font-black uppercase text-emerald-800 bg-white border border-emerald-200 hover:bg-emerald-600 hover:text-white px-1.5 py-0.5 rounded"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] font-black uppercase text-emerald-700 bg-emerald-50 hover:bg-emerald-600 hover:text-white px-2 py-1 rounded-md transition-all border border-emerald-200"
                   >
                     Max
                   </button>
                 )}
               </div>
               {!isLocked && (
-                <p className="text-[7px] font-bold text-slate-500 mt-1 normal-case">
-                  {allocationSource === "advance"
-                    ? `Max Cr. Rs. ${rowMax.toLocaleString("en-IN")} from Dr. advance`
-                    : rowMax > 0
-                      ? `Max Cr. Rs. ${rowMax.toLocaleString("en-IN")}`
-                      : "Set amount above or use From Advance"}
-                </p>
+                <div className="flex items-center gap-1.5 mt-1.5 px-1">
+                  <div className="w-1 h-1 rounded-full bg-slate-400" />
+                  <p className="text-[8px] font-black text-slate-500 normal-case tracking-tight">
+                    {allocationSource === "advance"
+                      ? `Available to Post: Rs. ${rowMax.toLocaleString("en-IN")} (from Dr. pool)`
+                      : rowMax > 0
+                        ? `Available to Allocate: Rs. ${rowMax.toLocaleString("en-IN")}`
+                        : "Set entry amount above first"}
+                  </p>
+                </div>
               )}
             </div>
           </div>
