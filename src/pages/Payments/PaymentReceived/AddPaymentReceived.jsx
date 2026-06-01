@@ -791,55 +791,40 @@ const AddPaymentReceived = () => {
     const remaining = getRemainingAllocationForRow(uiKey);
     const dueAmount = Math.max(0, Number(rowDueAmount) || 0);
     const numAmount = parseFloat(amount);
-
-    if (allocationSource === "advance") {
-      if (pool <= 0.01) {
-        toast.error(
-          fullCompanyMapping
-            ? "No debit advance (Dr.) for this buyer → seller"
-            : "Select seller — advance is Dr. per buyer → seller",
-        );
-        return;
-      }
-
-      let valueToStore = amount;
-      if (!Number.isNaN(numAmount) && numAmount > remaining + 0.01) {
-        valueToStore = String(
-          Math.round(Math.min(numAmount, remaining) * 100) / 100,
-        );
-        toast.warning(
-          `Cannot exceed debit advance (Dr.) — max Cr. Rs. ${remaining.toLocaleString("en-IN")} on this row (Dr. pool Rs. ${pool.toLocaleString("en-IN")})`,
-        );
-      }
-
-      setEntries((prev) =>
-        prev.map((entry) =>
-          entry.uiKey === uiKey
-            ? { ...entry, allocatedAmount: valueToStore }
-            : entry,
-        ),
-      );
-      return;
-    }
-
-    if (pool <= 0.01) {
-      toast.error("Enter payment amount in the form above before allocating");
-      return;
-    }
-
-    const maxFromDue = dueAmount > 0.01 ? dueAmount : remaining;
-    const maxAllowed = Math.min(remaining, maxFromDue);
-
     let valueToStore = amount;
-    if (!Number.isNaN(numAmount) && numAmount > maxAllowed + 0.01) {
-      valueToStore = String(
-        Math.round(Math.min(numAmount, maxAllowed) * 100) / 100,
-      );
-      toast.warning(
-        dueAmount > 0.01 && numAmount > dueAmount + 0.01
-          ? `Cannot exceed due (Rs. ${dueAmount.toLocaleString("en-IN")}) or voucher balance`
-          : `Cannot exceed voucher amount — max Rs. ${maxAllowed.toLocaleString("en-IN")} on this row`,
-      );
+
+    if (!Number.isNaN(numAmount)) {
+      if (allocationSource === "advance") {
+        if (pool <= 0.01 && numAmount > 0) {
+          toast.error(
+            fullCompanyMapping
+              ? "No Dr. advance for this buyer → seller"
+              : "Select seller and use From Advance",
+          );
+        } else if (numAmount > remaining + 0.01) {
+          valueToStore = String(
+            Math.round(Math.min(numAmount, Math.max(remaining, 0)) * 100) / 100,
+          );
+          toast.warning(
+            `Max Cr. Rs. ${remaining.toLocaleString("en-IN")} (Dr. advance Rs. ${pool.toLocaleString("en-IN")})`,
+          );
+        }
+      } else if (pool <= 0.01 && numAmount > 0) {
+        toast.error("Enter payment amount in the form above first");
+      } else {
+        const maxAllowed = Math.min(
+          remaining,
+          dueAmount > 0.01 ? dueAmount : remaining,
+        );
+        if (numAmount > maxAllowed + 0.01) {
+          valueToStore = String(
+            Math.round(Math.min(numAmount, maxAllowed) * 100) / 100,
+          );
+          toast.warning(
+            `Max Cr. Rs. ${maxAllowed.toLocaleString("en-IN")} on this row`,
+          );
+        }
+      }
     }
 
     setEntries((prev) =>
@@ -1293,35 +1278,10 @@ const AddPaymentReceived = () => {
       ),
     },
     {
-      header: "BREAKDOWN",
-      accessor: (row) => {
-        const details = calculateTallyDetails(row);
-        return (
-          <div className="flex flex-col gap-1 text-[9px] font-black min-w-[140px] uppercase">
-            <div className="flex justify-between text-slate-400">
-              <span>Net Amt:</span>
-              <span>Rs. {details.netAmount.toFixed(0)}</span>
-            </div>
-            <div className="flex justify-between text-emerald-700">
-              <span>Paid (Cr.):</span>
-              <span>Rs. {(row.paidAmount || 0).toFixed(0)}</span>
-            </div>
-            <div className="flex justify-between border-t border-slate-200 mt-1 pt-1 text-rose-600 text-[10px]">
-              <span>Due (Dr.):</span>
-              <span className="bg-rose-50 px-1.5 rounded">
-                Rs. {details.dueAmount.toFixed(0)}
-              </span>
-            </div>
-          </div>
-        );
-      },
-    },
-    {
-      header: "ALLOCATION (Cr.)",
+      header: "BREAKDOWN & POST Cr.",
       accessor: (row) => {
         const details = calculateTallyDetails(row);
         const isLocked = row.isSaved && user?.role !== "Admin";
-        const isExtraRow = row.uiKey.includes("-extra-");
         const rowRemaining = getRemainingAllocationForRow(row.uiKey);
         const rowMax =
           allocationSource === "advance"
@@ -1330,86 +1290,112 @@ const AddPaymentReceived = () => {
                 rowRemaining,
                 details.dueAmount > 0.01 ? details.dueAmount : rowRemaining,
               );
+        const allocDisplay =
+          row.allocatedAmount === "" || row.allocatedAmount == null
+            ? ""
+            : String(row.allocatedAmount);
 
         return (
-          <div className="flex flex-col gap-2 min-w-[200px]">
-            <div className="relative group">
-              <input
-                type="number"
-                min={0}
-                max={rowMax > 0 ? rowMax : undefined}
-                step="0.01"
-                value={row.allocatedAmount}
-                onChange={(e) =>
-                  handleAllocationChange(
-                    row.uiKey,
-                    e.target.value,
-                    details.dueAmount,
-                  )
-                }
-                onWheel={(e) => e.target.blur()}
-                disabled={isLocked}
-                className={`w-full px-3 py-2 rounded-xl border-2 transition-all ${
-                  isLocked
-                    ? "bg-slate-50 text-slate-400 border-slate-100"
-                    : "border-slate-200 bg-white focus:border-slate-900 focus:ring-4 focus:ring-slate-900/5"
-                } font-black text-slate-900 text-xs`}
-                placeholder="0.00"
-              />
-              {!isLocked && allocationSource === "advance" && (
-                <p className="text-[8px] font-bold text-blue-600 uppercase tracking-wide mt-1">
-                  Max Cr. Rs. {rowMax.toLocaleString("en-IN")} (from Dr. advance)
-                </p>
-              )}
-              {!isLocked && (
-                <button
-                  onClick={() => {
-                    const fillAmount =
-                      allocationSource === "advance"
-                        ? rowRemaining
-                        : Math.min(
-                            details.dueAmount > 0.01
-                              ? details.dueAmount
-                              : rowRemaining,
-                            rowRemaining,
-                          );
+          <div className="flex flex-col gap-2 text-[9px] font-black min-w-[180px] uppercase">
+            <div className="flex justify-between text-slate-400">
+              <span>Net:</span>
+              <span>Rs. {details.netAmount.toFixed(0)}</span>
+            </div>
+            <div className="flex justify-between text-slate-500">
+              <span>Already paid (Cr.):</span>
+              <span className="tabular-nums">
+                Rs. {(row.paidAmount || 0).toFixed(0)}
+              </span>
+            </div>
+            <div className="flex justify-between text-rose-600">
+              <span>Due (Dr.):</span>
+              <span className="bg-rose-50 px-1.5 rounded tabular-nums">
+                Rs. {details.dueAmount.toFixed(0)}
+              </span>
+            </div>
+            <div className="border-t border-emerald-200 pt-2 mt-0.5">
+              <label className="text-[8px] text-emerald-800 tracking-widest block mb-1">
+                Post Cr. (type here)
+              </label>
+              <div className="relative group">
+                <input
+                  type="text"
+                  inputMode="decimal"
+                  value={allocDisplay}
+                  onChange={(e) =>
                     handleAllocationChange(
                       row.uiKey,
-                      fillAmount > 0 ? String(fillAmount) : "",
+                      e.target.value,
                       details.dueAmount,
-                    );
-                  }}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] font-black uppercase text-slate-900 bg-slate-100 hover:bg-slate-900 hover:text-white px-2 py-1 rounded-lg transition-all opacity-0 group-hover:opacity-100"
-                >
-                  Full
-                </button>
+                    )
+                  }
+                  disabled={isLocked}
+                  className={`w-full px-3 py-2 rounded-lg border-2 text-xs font-black tabular-nums normal-case ${
+                    isLocked
+                      ? "bg-slate-50 text-slate-400 border-slate-100"
+                      : "border-emerald-300 bg-emerald-50/50 focus:border-emerald-600 focus:ring-2 focus:ring-emerald-500/20 text-emerald-900"
+                  }`}
+                  placeholder="0"
+                />
+                {!isLocked && rowMax > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      handleAllocationChange(
+                        row.uiKey,
+                        String(rowMax),
+                        details.dueAmount,
+                      );
+                    }}
+                    className="absolute right-1.5 top-1/2 -translate-y-1/2 text-[8px] font-black uppercase text-emerald-800 bg-white border border-emerald-200 hover:bg-emerald-600 hover:text-white px-1.5 py-0.5 rounded"
+                  >
+                    Max
+                  </button>
+                )}
+              </div>
+              {!isLocked && (
+                <p className="text-[7px] font-bold text-slate-500 mt-1 normal-case">
+                  {allocationSource === "advance"
+                    ? `Max Cr. Rs. ${rowMax.toLocaleString("en-IN")} from Dr. advance`
+                    : rowMax > 0
+                      ? `Max Cr. Rs. ${rowMax.toLocaleString("en-IN")}`
+                      : "Set amount above or use From Advance"}
+                </p>
               )}
             </div>
-            <div className="flex gap-1">
-              <textarea
-                value={row.rowRemarks}
-                onChange={(e) =>
-                  handleRowRemarksChange(row.uiKey, e.target.value)
-                }
-                disabled={isLocked}
-                rows={1}
-                className={`flex-1 px-3 py-1.5 rounded-lg border text-[10px] font-bold ${
-                  isLocked
-                    ? "bg-slate-50 text-slate-400 border-slate-100"
-                    : "border-slate-200 bg-white focus:border-slate-900 focus:bg-yellow-50"
-                } outline-none transition-all resize-none uppercase`}
-                placeholder="Narration..."
-              />
-              {isExtraRow && !row.isSaved && (
-                <button
-                  onClick={() => handleRemoveRow(row.uiKey)}
-                  className="p-1.5 text-rose-500 hover:bg-rose-50 rounded-lg transition-all"
-                  title="Remove row"
-                >
-                  <FaTrash size={12} />
-                </button>
-              )}
-            </div>
+          </div>
+        );
+      },
+    },
+    {
+      header: "NARRATION",
+      accessor: (row) => {
+        const isLocked = row.isSaved && user?.role !== "Admin";
+        const isExtraRow = row.uiKey.includes("-extra-");
+
+        return (
+          <div className="flex flex-col gap-2 min-w-[140px]">
+            <textarea
+              value={row.rowRemarks}
+              onChange={(e) => handleRowRemarksChange(row.uiKey, e.target.value)}
+              disabled={isLocked}
+              rows={2}
+              className={`w-full px-3 py-2 rounded-lg border text-[10px] font-bold ${
+                isLocked
+                  ? "bg-slate-50 text-slate-400 border-slate-100"
+                  : "border-slate-200 bg-white focus:border-slate-900 focus:bg-yellow-50"
+              } outline-none transition-all resize-none uppercase`}
+              placeholder="Narration..."
+            />
+            {isExtraRow && !row.isSaved && (
+              <button
+                type="button"
+                onClick={() => handleRemoveRow(row.uiKey)}
+                className="p-1.5 text-rose-500 hover:bg-rose-50 rounded-lg transition-all text-[10px] font-bold"
+              >
+                <FaTrash size={12} className="inline mr-1" /> Remove row
+              </button>
+            )}
           </div>
         );
       },
