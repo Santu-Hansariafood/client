@@ -35,9 +35,7 @@ const AddPaymentReceived = () => {
   const [opposingLedgers, setOpposingLedgers] = useState([]);
   const [allCompanies, setAllCompanies] = useState([]);
   const [selectedLedger, setSelectedLedger] = useState(null);
-  const [selectedOpposingLedger, setSelectedOpposingLedger] = useState(null);
   const [fetchingLedgers, setFetchingLedgers] = useState(false);
-  const [fetchingOpposingLedgers, setFetchingOpposingLedgers] = useState(false);
   const [fetchingEntries, setFetchingEntries] = useState(false);
   const [fetchingHistory, setFetchingHistory] = useState(false);
   const [entries, setEntries] = useState([]);
@@ -60,7 +58,6 @@ const AddPaymentReceived = () => {
     ledgerType: "Buyer",
     ledgerId: "",
     companyId: "",
-    opposingLedgerId: "",
     opposingCompanyId: "",
     amount: 0,
     paymentType: "Sauda-wise",
@@ -85,6 +82,103 @@ const AddPaymentReceived = () => {
     { value: "Buyer", label: "Buyer" },
     { value: "Seller", label: "Seller" },
   ];
+
+  const getCompanyIdFromRef = (companyRef) => {
+    if (!companyRef) return "";
+    if (typeof companyRef === "string") return companyRef;
+    return companyRef._id || companyRef.value || companyRef.id || "";
+  };
+
+  const getCompanyNameFromRef = (companyRef) => {
+    if (!companyRef) return "";
+    if (typeof companyRef === "string") return companyRef;
+    return companyRef.companyName || companyRef.label || "";
+  };
+
+  const resolveLedgerForCompany = useCallback(
+    (companyId, ledgerType, ledgerList) => {
+      if (!companyId) return null;
+
+      if (ledgerType === "Buyer") {
+        return (
+          ledgerList.find((ledger) =>
+            (ledger.companies || []).some(
+              (c) => getCompanyIdFromRef(c) === companyId,
+            ),
+          ) || null
+        );
+      }
+
+      return (
+        ledgerList.find((ledger) =>
+          (ledger.companies || []).some(
+            (c) => getCompanyNameFromRef(c) === companyId,
+          ),
+        ) || null
+      );
+    },
+    [],
+  );
+
+  const collectUniqueCompanyNames = (ledgerList) => {
+    const names = new Set();
+    ledgerList.forEach((ledger) => {
+      (ledger.companies || []).forEach((c) => {
+        const name = getCompanyNameFromRef(c);
+        if (name) names.add(name);
+      });
+    });
+    return Array.from(names)
+      .sort((a, b) => a.localeCompare(b))
+      .map((name) => ({ value: name, label: name }));
+  };
+
+  const primaryCompanyOptions = useMemo(() => {
+    if (formData.ledgerType === "Buyer") {
+      return allCompanies.map((c) => ({
+        value: c._id,
+        label: c.companyName,
+      }));
+    }
+    return collectUniqueCompanyNames(ledgers);
+  }, [formData.ledgerType, allCompanies, ledgers]);
+
+  const opposingCompanyOptions = useMemo(() => {
+    if (formData.ledgerType === "Buyer") {
+      return collectUniqueCompanyNames(opposingLedgers);
+    }
+    return allCompanies.map((c) => ({
+      value: c._id,
+      label: c.companyName,
+    }));
+  }, [formData.ledgerType, opposingLedgers, allCompanies]);
+
+  const selectedCompanyOption = useMemo(() => {
+    if (!formData.companyId) return null;
+    if (formData.ledgerType === "Buyer") {
+      const company = allCompanies.find((c) => c._id === formData.companyId);
+      return company
+        ? { value: company._id, label: company.companyName }
+        : null;
+    }
+    return { value: formData.companyId, label: formData.companyId };
+  }, [formData.companyId, formData.ledgerType, allCompanies]);
+
+  const selectedOpposingCompanyOption = useMemo(() => {
+    if (!formData.opposingCompanyId) return null;
+    if (formData.ledgerType === "Buyer") {
+      return {
+        value: formData.opposingCompanyId,
+        label: formData.opposingCompanyId,
+      };
+    }
+    const company = allCompanies.find(
+      (c) => c._id === formData.opposingCompanyId,
+    );
+    return company
+      ? { value: company._id, label: company.companyName }
+      : null;
+  }, [formData.opposingCompanyId, formData.ledgerType, allCompanies]);
 
   const paymentModes = [
     { value: "Bank", label: "Bank Transfer" },
@@ -145,7 +239,6 @@ const AddPaymentReceived = () => {
 
     const fetchOpposingLedgers = async () => {
       try {
-        setFetchingOpposingLedgers(true);
         const endpoint =
           formData.ledgerType === "Buyer" ? "/sellers" : "/buyers";
         const response = await api.get(endpoint, { params: { limit: 0 } });
@@ -160,16 +253,12 @@ const AddPaymentReceived = () => {
             companies: item.companyIds || item.companies || [],
           })),
         );
-        setSelectedOpposingLedger(null);
         setFormData((prev) => ({
           ...prev,
-          opposingLedgerId: "",
           opposingCompanyId: "",
         }));
       } catch (error) {
         console.error("Error fetching opposing ledgers:", error);
-      } finally {
-        setFetchingOpposingLedgers(false);
       }
     };
 
@@ -179,11 +268,7 @@ const AddPaymentReceived = () => {
 
   const fetchEntries = useCallback(
     async (page = 1) => {
-      if (
-        !formData.ledgerId ||
-        !formData.companyId ||
-        formData.paymentType !== "Sauda-wise"
-      ) {
+      if (!formData.companyId || formData.paymentType !== "Sauda-wise") {
         setEntries([]);
         return;
       }
@@ -224,18 +309,12 @@ const AddPaymentReceived = () => {
         }
 
         if (formData.ledgerType === "Seller") {
-          params.supplier = formData.ledgerId;
+          if (formData.ledgerId) params.supplier = formData.ledgerId;
           if (companyName) params.supplierCompany = companyName;
-
-          if (formData.opposingLedgerId)
-            params.buyerId = formData.opposingLedgerId;
           if (opposingCompanyName) params.buyerCompany = opposingCompanyName;
         } else {
-          params.buyerId = formData.ledgerId;
+          if (formData.ledgerId) params.buyerId = formData.ledgerId;
           if (companyName) params.buyerCompany = companyName;
-
-          if (formData.opposingLedgerId)
-            params.supplier = formData.opposingLedgerId;
           if (opposingCompanyName) params.supplierCompany = opposingCompanyName;
         }
 
@@ -275,7 +354,6 @@ const AddPaymentReceived = () => {
       formData.filterStartDate,
       formData.filterEndDate,
       formData.companyId,
-      formData.opposingLedgerId,
       formData.opposingCompanyId,
       allCompanies,
     ],
@@ -368,24 +446,18 @@ const AddPaymentReceived = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleLedgerChange = (option) => {
-    setSelectedLedger(option);
-    setFormData((prev) => ({
-      ...prev,
-      ledgerId: option?.value || "",
-      companyId: "",
-    }));
-  };
-
   const handleCompanyChange = (option) => {
-    setFormData((prev) => ({ ...prev, companyId: option?.value || "" }));
-  };
-
-  const handleOpposingLedgerChange = (option) => {
-    setSelectedOpposingLedger(option);
+    const companyId = option?.value || "";
+    const ledger = resolveLedgerForCompany(
+      companyId,
+      formData.ledgerType,
+      ledgers,
+    );
+    setSelectedLedger(ledger);
     setFormData((prev) => ({
       ...prev,
-      opposingLedgerId: option?.value || "",
+      companyId,
+      ledgerId: ledger?.value || "",
       opposingCompanyId: "",
     }));
   };
@@ -573,6 +645,10 @@ const AddPaymentReceived = () => {
       toast.error("Please enter an advance amount");
       return;
     }
+    if (!formData.companyId || !formData.ledgerId) {
+      toast.error("Select a company linked to a ledger account");
+      return;
+    }
 
     try {
       setLoading(true);
@@ -644,7 +720,7 @@ const AddPaymentReceived = () => {
       42,
     );
     doc.text(
-      `Account: ${(selectedLedger?.label || "N/A").toUpperCase()}`,
+      `Company: ${(selectedCompanyOption?.label || selectedLedger?.label || "N/A").toUpperCase()}`,
       margin,
       47,
     );
@@ -1129,6 +1205,7 @@ const AddPaymentReceived = () => {
 
         <StatDashboard
           selectedLedger={selectedLedger}
+          selectedCompanyOption={selectedCompanyOption}
           dateTotal={dateTotal}
           formData={formData}
           ledgerBalance={ledgerBalance}
@@ -1142,20 +1219,16 @@ const AddPaymentReceived = () => {
           setFormData={setFormData}
           handleInputChange={handleInputChange}
           ledgerTypes={ledgerTypes}
-          ledgers={ledgers}
-          opposingLedgers={opposingLedgers}
-          selectedLedger={selectedLedger}
-          selectedOpposingLedger={selectedOpposingLedger}
-          handleLedgerChange={handleLedgerChange}
-          handleOpposingLedgerChange={handleOpposingLedgerChange}
-          fetchingLedgers={fetchingLedgers}
-          fetchingOpposingLedgers={fetchingOpposingLedgers}
-          allCompanies={allCompanies}
+          primaryCompanyOptions={primaryCompanyOptions}
+          opposingCompanyOptions={opposingCompanyOptions}
+          selectedCompanyOption={selectedCompanyOption}
+          selectedOpposingCompanyOption={selectedOpposingCompanyOption}
           handleCompanyChange={handleCompanyChange}
           handleOpposingCompanyChange={handleOpposingCompanyChange}
           paymentModes={paymentModes}
           loading={loading}
           handleRecordAdvance={handleRecordAdvance}
+          hasResolvedLedger={Boolean(formData.ledgerId)}
         />
 
         <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden min-h-[500px]">

@@ -2,13 +2,15 @@ import React from 'react';
 import { FaWallet, FaExclamationCircle, FaHistory, FaChartLine } from 'react-icons/fa';
 import StatCard from './StatCard';
 
-const StatDashboard = ({ selectedLedger, dateTotal, formData, ledgerBalance, entryStats }) => {
+const StatDashboard = ({ selectedLedger, selectedCompanyOption, dateTotal, formData, ledgerBalance, entryStats }) => {
+    const accountLabel = selectedCompanyOption?.label || selectedLedger?.label;
+
     return (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <StatCard
                 icon={<FaWallet size={18} />}
-                label={selectedLedger 
-                    ? `${selectedLedger.label} ${formData.ledgerType === 'Buyer' ? 'Received' : 'Sent'}` 
+                label={accountLabel
+                    ? `${accountLabel} ${formData.ledgerType === 'Buyer' ? 'Received' : 'Sent'}`
                     : `Total ${formData.ledgerType === 'Buyer' ? 'Received' : 'Sent'}`
                 }
                 value={`Rs. ${dateTotal.toLocaleString('en-IN')}`}

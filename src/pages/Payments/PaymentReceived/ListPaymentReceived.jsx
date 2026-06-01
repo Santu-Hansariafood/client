@@ -72,12 +72,10 @@ const ListPaymentReceived = () => {
   const [selectedCompany, setSelectedCompany] = useState(null);
   const [fetchingLedgers, setFetchingLedgers] = useState(false);
 
-  const [allBuyers, setAllBuyers] = useState([]);
-  const [allSellers, setAllSellers] = useState([]);
+  const [opposingLedgers, setOpposingLedgers] = useState([]);
   const [saudas, setSaudas] = useState([]);
   const [selectedSauda, setSelectedSauda] = useState(null);
-  const [selectedBuyerForSauda, setSelectedBuyerForSauda] = useState(null);
-  const [selectedSellerForSauda, setSelectedSellerForSauda] = useState(null);
+  const [selectedOpposingCompany, setSelectedOpposingCompany] = useState(null);
   const [lorryWiseData, setLorryWiseData] = useState([]);
   const [fetchingLorryWise, setFetchingLorryWise] = useState(false);
 
@@ -88,35 +86,17 @@ const ListPaymentReceived = () => {
     startDate: "",
     endDate: "",
     saudaNo: "",
+    supplierCompany: "",
+    buyerCompany: "",
   });
 
   useEffect(() => {
     const fetchInitialData = async () => {
       try {
-        const [companiesRes, buyersRes, sellersRes] = await Promise.all([
-          api.get("/companies", { params: { limit: 0 } }),
-          api.get("/buyers", { params: { limit: 0 } }),
-          api.get("/sellers", { params: { limit: 0 } }),
-        ]);
+        const companiesRes = await api.get("/companies", {
+          params: { limit: 0 },
+        });
         setAllCompanies(companiesRes.data.data || companiesRes.data || []);
-
-        const bData = buyersRes.data.data || buyersRes.data || [];
-        setAllBuyers(
-          bData.map((b) => ({
-            value: b._id,
-            label: `${b.name} ${b.mobile ? `(${b.mobile})` : ""} ${b.groupId?.groupName ? `- ${b.groupId.groupName}` : ""}`,
-            companies: b.companyIds || [],
-          })),
-        );
-
-        const sData = sellersRes.data.data || sellersRes.data || [];
-        setAllSellers(
-          sData.map((s) => ({
-            value: s._id,
-            label: `${s.sellerName} ${s.phoneNumbers?.[0]?.value ? `(${s.phoneNumbers[0].value})` : ""} ${s.city ? `- ${s.city}` : ""}`,
-            companies: s.companies || [],
-          })),
-        );
       } catch (error) {
         console.error("Error fetching initial data:", error);
       }
@@ -125,29 +105,131 @@ const ListPaymentReceived = () => {
   }, []);
 
   useEffect(() => {
+    const fetchOpposingLedgers = async () => {
+      if (!filters.ledgerType) {
+        setOpposingLedgers([]);
+        return;
+      }
+      try {
+        const endpoint =
+          filters.ledgerType === "Buyer" ? "/sellers" : "/buyers";
+        const response = await api.get(endpoint, { params: { limit: 0 } });
+        const data = response.data.data || response.data || [];
+        setOpposingLedgers(
+          data.map((item) => ({
+            companies: item.companyIds || item.companies || [],
+          })),
+        );
+      } catch (error) {
+        console.error("Error fetching opposing companies:", error);
+      }
+    };
+    fetchOpposingLedgers();
+  }, [filters.ledgerType]);
+
+  const primaryCompanyOptions = useMemo(() => {
+    if (!filters.ledgerType) return [];
+    if (filters.ledgerType === "Buyer") {
+      return allCompanies.map((c) => ({
+        value: c._id,
+        label: c.companyName,
+      }));
+    }
+    const names = new Set();
+    ledgers.forEach((l) => {
+      (l.companies || []).forEach((c) => {
+        const name = typeof c === "string" ? c : c?.companyName || c?.label;
+        if (name) names.add(name);
+      });
+    });
+    return Array.from(names)
+      .sort((a, b) => a.localeCompare(b))
+      .map((name) => ({ value: name, label: name }));
+  }, [filters.ledgerType, allCompanies, ledgers]);
+
+  const opposingCompanyOptions = useMemo(() => {
+    if (!filters.ledgerType) return [];
+    if (filters.ledgerType === "Buyer") {
+      const names = new Set();
+      opposingLedgers.forEach((l) => {
+        (l.companies || []).forEach((c) => {
+          const name = typeof c === "string" ? c : c?.companyName || c?.label;
+          if (name) names.add(name);
+        });
+      });
+      return Array.from(names)
+        .sort((a, b) => a.localeCompare(b))
+        .map((name) => ({ value: name, label: name }));
+    }
+    return allCompanies.map((c) => ({
+      value: c._id,
+      label: c.companyName,
+    }));
+  }, [filters.ledgerType, opposingLedgers, allCompanies]);
+
+  const resolveLedgerForCompany = useCallback(
+    (companyId, ledgerType, ledgerList) => {
+      if (!companyId) return null;
+      if (ledgerType === "Buyer") {
+        return (
+          ledgerList.find((ledger) =>
+            (ledger.companies || []).some((c) => {
+              const id = typeof c === "string" ? c : c._id || c.value || c.id;
+              return id === companyId;
+            }),
+          ) || null
+        );
+      }
+      return (
+        ledgerList.find((ledger) =>
+          (ledger.companies || []).some((c) => {
+            const name = typeof c === "string" ? c : c?.companyName || c?.label;
+            return name === companyId;
+          }),
+        ) || null
+      );
+    },
+    [],
+  );
+
+  useEffect(() => {
     const fetchSaudas = async () => {
-      if (selectedBuyerForSauda && selectedSellerForSauda) {
-        try {
-          const response = await api.get("/loading-entries/saudas", {
-            params: {
-              buyerId: selectedBuyerForSauda.value,
-              sellerId: selectedSellerForSauda.value,
-            },
-          });
-          const saudaList = response.data.data || response.data || [];
-          setSaudas(
-            saudaList.map((s) => ({ value: s.saudaNo, label: s.saudaNo })),
-          );
-        } catch (error) {
-          console.error("Error fetching saudas:", error);
-        }
-      } else {
+      const buyerCompany =
+        filters.ledgerType === "Buyer"
+          ? selectedCompany?.label || ""
+          : selectedOpposingCompany?.label || "";
+      const sellerCompany =
+        filters.ledgerType === "Buyer"
+          ? selectedOpposingCompany?.label || ""
+          : selectedCompany?.label || "";
+
+      if (!buyerCompany && !sellerCompany) {
         setSaudas([]);
         setSelectedSauda(null);
+        return;
+      }
+
+      try {
+        const params = {};
+        if (buyerCompany) params.buyerCompany = buyerCompany;
+        if (sellerCompany) params.sellerCompany = sellerCompany;
+
+        const response = await api.get("/loading-entries/saudas", { params });
+        const saudaList = response.data.data || response.data || [];
+        setSaudas(
+          saudaList.map((s) => ({ value: s.saudaNo, label: s.saudaNo })),
+        );
+      } catch (error) {
+        console.error("Error fetching saudas:", error);
+        setSaudas([]);
       }
     };
     fetchSaudas();
-  }, [selectedBuyerForSauda, selectedSellerForSauda]);
+  }, [
+    filters.ledgerType,
+    selectedCompany,
+    selectedOpposingCompany,
+  ]);
 
   useEffect(() => {
     const fetchLorryWise = async () => {
@@ -714,9 +796,13 @@ const ListPaymentReceived = () => {
                       }));
                       setSelectedLedger(null);
                       setSelectedCompany(null);
-                      setSelectedBuyerForSauda(null);
-                      setSelectedSellerForSauda(null);
+                      setSelectedOpposingCompany(null);
                       setSelectedSauda(null);
+                      setFilters((prev) => ({
+                        ...prev,
+                        supplierCompany: "",
+                        buyerCompany: "",
+                      }));
                     }}
                     className="w-full h-11 px-4 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-slate-900/5 focus:border-slate-900 outline-none transition text-sm font-bold text-slate-700"
                   >
@@ -728,29 +814,39 @@ const ListPaymentReceived = () => {
 
                 <div className="space-y-2">
                   <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">
-                    Account Name
+                    {filters.ledgerType === "Buyer"
+                      ? "Buyer Company"
+                      : filters.ledgerType === "Seller"
+                        ? "Seller Company"
+                        : "Company"}
+                    {filters.ledgerType && (
+                      <span className="text-rose-500 ml-0.5">*</span>
+                    )}
                   </label>
                   <DataDropdown
-                    options={ledgers}
-                    selectedOptions={selectedLedger}
+                    options={primaryCompanyOptions}
+                    selectedOptions={selectedCompany}
                     onChange={(opt) => {
-                      setSelectedLedger(opt);
-                      setSelectedCompany(null);
+                      const companyId = opt?.value || "";
+                      const ledger = resolveLedgerForCompany(
+                        companyId,
+                        filters.ledgerType,
+                        ledgers,
+                      );
+                      setSelectedCompany(opt);
+                      setSelectedLedger(ledger);
+                      setSelectedOpposingCompany(null);
+                      setSelectedSauda(null);
                       setPage(1);
                       setFilters((prev) => ({
                         ...prev,
-                        ledgerId: opt?.value || "",
-                        companyId: "",
+                        companyId,
+                        ledgerId: ledger?.value || "",
+                        supplierCompany: "",
+                        buyerCompany: "",
                       }));
-                      if (filters.ledgerType === "Buyer") {
-                        setSelectedBuyerForSauda(opt);
-                      } else if (filters.ledgerType === "Seller") {
-                        setSelectedSellerForSauda(opt);
-                      }
                     }}
-                    placeholder={
-                      fetchingLedgers ? "Syncing..." : "Search Account..."
-                    }
+                    placeholder="Select company..."
                     isMulti={false}
                     isDisabled={!filters.ledgerType}
                     className="rounded-xl border-slate-200"
@@ -760,33 +856,37 @@ const ListPaymentReceived = () => {
                 <div className="space-y-2">
                   <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">
                     {filters.ledgerType === "Buyer"
-                      ? "Filter by Seller"
-                      : "Filter by Buyer"}
+                      ? "Seller Company"
+                      : filters.ledgerType === "Seller"
+                        ? "Buyer Company"
+                        : "Opposing Company"}
                   </label>
                   <DataDropdown
-                    options={
-                      filters.ledgerType === "Buyer" ? allSellers : allBuyers
-                    }
-                    selectedOptions={
-                      filters.ledgerType === "Buyer"
-                        ? selectedSellerForSauda
-                        : selectedBuyerForSauda
-                    }
+                    options={opposingCompanyOptions}
+                    selectedOptions={selectedOpposingCompany}
                     onChange={(opt) => {
-                      if (filters.ledgerType === "Buyer") {
-                        setSelectedSellerForSauda(opt);
-                      } else {
-                        setSelectedBuyerForSauda(opt);
-                      }
+                      setSelectedOpposingCompany(opt);
                       setSelectedSauda(null);
+                      setPage(1);
+                      setFilters((prev) => ({
+                        ...prev,
+                        supplierCompany:
+                          filters.ledgerType === "Buyer"
+                            ? opt?.value || ""
+                            : "",
+                        buyerCompany:
+                          filters.ledgerType === "Seller"
+                            ? opt?.label || ""
+                            : "",
+                      }));
                     }}
                     placeholder={
-                      filters.ledgerType === "Buyer"
-                        ? "Select Seller..."
-                        : "Select Buyer..."
+                      selectedCompany
+                        ? "Optional filter..."
+                        : "Select primary company first"
                     }
                     isMulti={false}
-                    isDisabled={!selectedLedger}
+                    isDisabled={!selectedCompany}
                     className="rounded-xl border-slate-200"
                   />
                 </div>
@@ -800,14 +900,14 @@ const ListPaymentReceived = () => {
                     selectedOptions={selectedSauda}
                     onChange={setSelectedSauda}
                     placeholder={
-                      !selectedBuyerForSauda || !selectedSellerForSauda
-                        ? "Pick Buyer & Seller"
-                        : "Select Sauda..."
+                      !selectedCompany
+                        ? "Select company first"
+                        : saudas.length === 0
+                          ? "No saudas found"
+                          : "Select Sauda..."
                     }
                     isMulti={false}
-                    isDisabled={
-                      !selectedBuyerForSauda || !selectedSellerForSauda
-                    }
+                    isDisabled={!selectedCompany || saudas.length === 0}
                     className="rounded-xl border-slate-200"
                   />
                 </div>
