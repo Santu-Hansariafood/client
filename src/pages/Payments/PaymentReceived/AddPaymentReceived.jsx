@@ -1406,7 +1406,6 @@ const AddPaymentReceived = () => {
               hasBuyerCompany={hasBuyerCompany}
               hasCompanyTableScope={hasCompanyTableScope}
               buyerOnlyMapping={buyerOnlyMapping}
-              unallocatedBalance={unallocatedBalance}
               loadingSellerOptions={loadingSellerOptions}
             />
           )}
