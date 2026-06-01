@@ -63,10 +63,25 @@
     animation: shimmer 1.2s linear infinite;
   }
 
+  @keyframes weatherFloat {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-8px);
+    }
+  }
+
+  .animate-weather-float {
+    animation: weatherFloat 4s ease-in-out infinite;
+  }
+
   @media (prefers-reduced-motion: reduce) {
     .animate-page-title,
     .animate-page-underline,
-    .animate-shimmer {
+    .animate-shimmer,
+    .animate-weather-float {
       animation: none !important;
     }
   }

@@ -22,10 +22,14 @@ const PopupBox = ({
         className={`relative ${width} ${height} max-w-full max-h-full bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-[0_35px_60px_-15px_rgba(0,0,0,0.3)] border border-white/20 flex flex-col overflow-hidden animate-in zoom-in-95 fade-in duration-300`}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="sticky top-0 z-10 flex items-center justify-between px-6 py-5 border-b border-slate-100 bg-white/80 backdrop-blur-xl">
-          <h3 className="text-xl font-black text-slate-900 tracking-tight uppercase">
-            {title}
-          </h3>
+        <div className="sticky top-0 z-10 flex items-center justify-between gap-4 px-4 sm:px-6 py-4 sm:py-5 border-b border-slate-100 bg-white/80 backdrop-blur-xl min-w-0">
+          {typeof title === "string" ? (
+            <h3 className="text-lg sm:text-xl font-black text-slate-900 tracking-tight uppercase min-w-0 truncate">
+              {title}
+            </h3>
+          ) : (
+            <div className="min-w-0 flex-1">{title}</div>
+          )}
 
           <div className="flex items-center gap-3">
             {headerActions}
@@ -52,7 +56,7 @@ const PopupBox = ({
 PopupBox.propTypes = {
   isOpen: PropTypes.bool.isRequired,
   onClose: PropTypes.func.isRequired,
-  title: PropTypes.string.isRequired,
+  title: PropTypes.oneOfType([PropTypes.string, PropTypes.node]).isRequired,
   children: PropTypes.node.isRequired,
   width: PropTypes.string,
   height: PropTypes.string,
