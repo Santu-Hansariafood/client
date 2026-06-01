@@ -796,8 +796,8 @@ const AddPaymentReceived = () => {
       if (pool <= 0.01) {
         toast.error(
           fullCompanyMapping
-            ? "No advance credit for this buyer → seller"
-            : "Select seller company — credit is tracked per buyer → seller",
+            ? "No debit advance (Dr.) for this buyer → seller"
+            : "Select seller — advance is Dr. per buyer → seller",
         );
         return;
       }
@@ -808,7 +808,7 @@ const AddPaymentReceived = () => {
           Math.round(Math.min(numAmount, remaining) * 100) / 100,
         );
         toast.warning(
-          `Cannot exceed credit balance — max Rs. ${remaining.toLocaleString("en-IN")} on this row (total credit Rs. ${pool.toLocaleString("en-IN")})`,
+          `Cannot exceed debit advance (Dr.) — max Cr. Rs. ${remaining.toLocaleString("en-IN")} on this row (Dr. pool Rs. ${pool.toLocaleString("en-IN")})`,
         );
       }
 
@@ -915,16 +915,16 @@ const AddPaymentReceived = () => {
     const { dueAmount } = calculateTallyDetails(entry);
 
     const remainingPool = getRemainingAllocationForRow(entry.uiKey);
-    const creditPool = Number(availableAllocationPool) || 0;
+    const debitPool = Number(availableAllocationPool) || 0;
 
     if (allocationSource === "advance" && !companyPair.supplierCompany) {
-      toast.error("Select seller company to adjust advance credit in the table");
+      toast.error("Select seller company to post Cr. against Dr. advance");
       return;
     }
 
     if (allocationSource === "advance" && numAllocated > remainingPool + 0.01) {
       toast.error(
-        `Allocation cannot exceed credit balance (Rs. ${creditPool.toLocaleString("en-IN")} total, Rs. ${remainingPool.toLocaleString("en-IN")} left)`,
+        `Cr. allocation cannot exceed Dr. advance (Rs. ${debitPool.toLocaleString("en-IN")} Dr., Rs. ${remainingPool.toLocaleString("en-IN")} Cr. left)`,
       );
       return;
     }
@@ -999,7 +999,7 @@ const AddPaymentReceived = () => {
         await api.post("/payment-received", payload);
         toast.success(
           allocationSource === "advance"
-            ? `Advance credit of Rs. ${numAllocated.toLocaleString("en-IN")} adjusted for ${entry.lorryNumber}`
+            ? `Cr. Rs. ${numAllocated.toLocaleString("en-IN")} posted against ${entry.lorryNumber} (from Dr. advance)`
             : `Payment recorded for ${entry.lorryNumber}`,
         );
 
@@ -1302,12 +1302,12 @@ const AddPaymentReceived = () => {
               <span>Net Amt:</span>
               <span>Rs. {details.netAmount.toFixed(0)}</span>
             </div>
-            <div className="flex justify-between text-slate-500">
-              <span>Paid:</span>
+            <div className="flex justify-between text-emerald-700">
+              <span>Paid (Cr.):</span>
               <span>Rs. {(row.paidAmount || 0).toFixed(0)}</span>
             </div>
             <div className="flex justify-between border-t border-slate-200 mt-1 pt-1 text-rose-600 text-[10px]">
-              <span>Due:</span>
+              <span>Due (Dr.):</span>
               <span className="bg-rose-50 px-1.5 rounded">
                 Rs. {details.dueAmount.toFixed(0)}
               </span>
@@ -1317,7 +1317,7 @@ const AddPaymentReceived = () => {
       },
     },
     {
-      header: "ALLOCATION",
+      header: "ALLOCATION (Cr.)",
       accessor: (row) => {
         const details = calculateTallyDetails(row);
         const isLocked = row.isSaved && user?.role !== "Admin";
@@ -1358,7 +1358,7 @@ const AddPaymentReceived = () => {
               />
               {!isLocked && allocationSource === "advance" && (
                 <p className="text-[8px] font-bold text-blue-600 uppercase tracking-wide mt-1">
-                  Max Rs. {rowMax.toLocaleString("en-IN")} (credit)
+                  Max Cr. Rs. {rowMax.toLocaleString("en-IN")} (from Dr. advance)
                 </p>
               )}
               {!isLocked && (

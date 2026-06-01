@@ -13,6 +13,7 @@ const PaymentHistory = ({
   tallyRows,
   onPrintVoucher,
 }) => {
+  const totalDebit = tallyRows.reduce((s, r) => s + (r.debit || 0), 0);
   const totalCredit = tallyRows.reduce((s, r) => s + (r.credit || 0), 0);
   const closingBalance =
     tallyRows.length > 0 ? tallyRows[tallyRows.length - 1].balance : 0;
@@ -74,7 +75,15 @@ const PaymentHistory = ({
             <div className="flex flex-wrap gap-6">
               <div>
                 <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest">
-                  Day receipts (Cr.)
+                  Day debit (Dr.)
+                </p>
+                <p className="text-lg font-black text-rose-400 tabular-nums">
+                  {formatLedgerAmount(totalDebit)}
+                </p>
+              </div>
+              <div>
+                <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest">
+                  Day credit (Cr.)
                 </p>
                 <p className="text-lg font-black text-emerald-400 tabular-nums">
                   {formatLedgerAmount(totalCredit)}
@@ -82,7 +91,7 @@ const PaymentHistory = ({
               </div>
               <div>
                 <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest">
-                  Closing balance
+                  Closing (Dr. balance)
                 </p>
                 <p className="text-lg font-black tabular-nums">
                   {formatLedgerAmount(closingBalance)}

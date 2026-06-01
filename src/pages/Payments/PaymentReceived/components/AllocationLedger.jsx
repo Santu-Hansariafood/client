@@ -67,10 +67,10 @@ const AllocationLedger = ({
                 {allocationSource === "fresh"
                   ? "Allocate payment to lorry / sauda"
                   : fullCompanyMapping
-                    ? `Adjust from Rs. ${(ledgerBalance.advanceBalance ?? 0).toLocaleString("en-IN")} credit (${companyPair.buyerCompany} → ${companyPair.supplierCompany})`
+                    ? `Post Cr. against lorries from Dr. advance Rs. ${(ledgerBalance.advanceBalance ?? 0).toLocaleString("en-IN")} (${companyPair.buyerCompany} → ${companyPair.supplierCompany})`
                     : (ledgerBalance.totalAdvanceBalance ?? 0) > 0
-                      ? `Total credit Rs. ${ledgerBalance.totalAdvanceBalance.toLocaleString("en-IN")} — select seller for pair`
-                      : "Record advance with buyer + seller to build credit"}
+                      ? `Total Dr. advance Rs. ${ledgerBalance.totalAdvanceBalance.toLocaleString("en-IN")} — select seller`
+                      : "Record advance (Dr.) with buyer + seller first"}
               </p>
             </div>
           </div>
@@ -81,9 +81,9 @@ const AllocationLedger = ({
                 <div className="flex flex-col">
                   <span className="text-[9px] font-black uppercase tracking-[0.2em] text-emerald-400 leading-none mb-1">
                     {allocationSource === "advance"
-                      ? "Credit left to allocate"
+                      ? "Cr. left to post (Dr. pool)"
                       : formData.ledgerType === "Buyer"
-                        ? "Available to allocate"
+                        ? "Cr. remaining"
                         : "Available to send"}
                   </span>
                   <span className="text-sm font-black italic tracking-tight tabular-nums">
@@ -141,6 +141,12 @@ const AllocationLedger = ({
             supplierCompany={companyPair.supplierCompany}
             mappingActive={fullCompanyMapping}
             buyerOnly={buyerOnlyMapping}
+            allocationSource={allocationSource}
+            debitAdvanceBalance={
+              fullCompanyMapping
+                ? ledgerBalance.advanceBalance ?? 0
+                : ledgerBalance.totalAdvanceBalance ?? 0
+            }
             entryAmount={formData.amount || 0}
             unallocatedBalance={unallocatedBalance}
             subtitle={
@@ -294,8 +300,8 @@ const AllocationLedger = ({
             <p className="text-sm text-slate-500 font-medium max-w-xs mx-auto mt-2">
               {fullCompanyMapping
                 ? (ledgerBalance.advanceBalance ?? 0) > 0
-                  ? "Credit is available for this pair, but no open lorry lines match. Check date/search filters or confirm lorries are loaded for this buyer → seller."
-                  : "No open lorry lines for this buyer → seller. Record an advance first, or pick another seller."
+                  ? "Dr. advance exists for this pair — post Cr. in allocation when lorry lines appear. Check date/search filters."
+                  : "No open lorry lines. Record advance (Dr.) first, or pick another seller."
                 : hasBuyerCompany
                   ? "No open lorry lines for this buyer. Select a seller to narrow, or clear date/search filters."
                   : tableSearch

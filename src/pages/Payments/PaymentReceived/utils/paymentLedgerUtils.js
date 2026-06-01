@@ -66,7 +66,11 @@ export const buildPaymentParticulars = (payment) => {
 
   const mappings = payment.mappings || [];
   if (mappings.length === 0) {
-    const base = (payment.remarks || "Advance / On Account").toUpperCase();
+    const base = (
+      payment.paymentType === "Advance"
+        ? payment.remarks || "Advance on account (Dr.)"
+        : payment.remarks || "On account"
+    ).toUpperCase();
     return pairLabel ? `${pairLabel} | ${base}` : base;
   }
 
@@ -101,8 +105,8 @@ export const buildTallyVoucherRows = (payments, openingBalance = 0) => {
       date: null,
       particulars: "Opening Balance b/f",
       vchType: "—",
-      debit: balance < 0 ? Math.abs(balance) : 0,
-      credit: balance > 0 ? balance : 0,
+      debit: balance > 0 ? balance : 0,
+      credit: balance < 0 ? Math.abs(balance) : 0,
       balance,
       isOpening: true,
     });
@@ -114,10 +118,23 @@ export const buildTallyVoucherRows = (payments, openingBalance = 0) => {
       0,
     );
     const amount = Number(payment.amount) || mappedTotal || 0;
-    const isReceipt = payment.ledgerType === "Buyer";
-    const credit = isReceipt ? amount : 0;
-    const debit = !isReceipt ? amount : 0;
-    balance = balance + credit - debit;
+    const isBuyer = payment.ledgerType === "Buyer";
+    const paymentType = payment.paymentType || "";
+
+    let debit = 0;
+    let credit = 0;
+    if (isBuyer) {
+      if (paymentType === "Advance") {
+        debit = amount;
+      } else if (paymentType === "Adjustment") {
+        credit = amount;
+      } else {
+        credit = amount;
+      }
+    } else {
+      debit = amount;
+    }
+    balance = balance + debit - credit;
 
     const sellerFromMapping =
       payment.mappings?.[0]?.loadingEntryId?.supplierCompany || "";
@@ -142,12 +159,13 @@ export const buildTallyVoucherRows = (payments, openingBalance = 0) => {
   return rows;
 };
 
-/** Outstanding sauda lines for allocation (Dr = due, Cr = paid on row). */
+/** Outstanding sauda lines: Dr = due, Cr = paid + allocation (Cr. posting). */
 export const buildTallyOutstandingRows = (entries, calculateTallyDetails) =>
   entries.map((entry) => {
     const details = calculateTallyDetails(entry);
     const paid = Number(entry.paidAmount) || 0;
     const alloc = Number(entry.allocatedAmount) || 0;
+    const creditPosted = paid + alloc;
 
     return {
       id: entry.uiKey || entry._id,
@@ -157,8 +175,8 @@ export const buildTallyOutstandingRows = (entries, calculateTallyDetails) =>
       buyerCompany: entry.buyerCompany || "—",
       supplierCompany: entry.supplierCompany || "—",
       debit: details.dueAmount,
-      credit: paid,
-      balance: details.netAmount,
+      credit: creditPosted,
+      balance: Math.max(0, details.netAmount - creditPosted),
       entry,
       details,
     };

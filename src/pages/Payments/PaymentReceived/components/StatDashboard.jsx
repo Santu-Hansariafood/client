@@ -44,7 +44,7 @@ const StatDashboard = ({
 
             <StatCard
                 icon={<FaHistory size={18} />}
-                label="Credit Balance"
+                label="Debit Balance (Advance)"
                 value={`Rs. ${(ledgerBalance.totalAdvanceBalance ?? ledgerBalance.advanceBalance ?? 0).toLocaleString('en-IN')}`}
                 subValue={
                     fullCompanyMapping

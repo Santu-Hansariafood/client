@@ -10,34 +10,34 @@ const CreditBalancePanel = ({
   supplierCompany = "",
   onSelectCreditPair,
 }) => {
-  const hasCredit = totalAdvanceBalance > 0 || creditByPair.length > 0;
-  const pairCredit =
+  const hasDebit = totalAdvanceBalance > 0 || creditByPair.length > 0;
+  const pairDebit =
     fullCompanyMapping && supplierCompany ? advanceBalance : null;
 
   return (
-    <div className="rounded-xl border border-blue-200 bg-gradient-to-br from-blue-50 via-white to-indigo-50/80 p-4 shadow-sm">
+    <div className="rounded-xl border border-rose-200 bg-gradient-to-br from-rose-50 via-white to-amber-50/80 p-4 shadow-sm">
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-3">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-md">
+          <div className="w-10 h-10 rounded-xl bg-rose-700 text-white flex items-center justify-center shadow-md">
             <FaCoins size={16} />
           </div>
           <div>
-            <p className="text-[9px] font-black text-blue-800 uppercase tracking-[0.25em]">
-              Credit balance (Advance)
+            <p className="text-[9px] font-black text-rose-800 uppercase tracking-[0.25em]">
+              Debit balance (Advance) · Dr.
             </p>
-            <p className="text-xl font-black text-blue-900 tabular-nums">
-              {hasCredit
+            <p className="text-xl font-black text-rose-900 tabular-nums">
+              {hasDebit
                 ? formatLedgerAmount(
-                    pairCredit != null ? pairCredit : totalAdvanceBalance,
+                    pairDebit != null ? pairDebit : totalAdvanceBalance,
                   )
                 : formatLedgerAmount(0)}
             </p>
-            <p className="text-[10px] font-bold text-blue-600/80 mt-0.5">
+            <p className="text-[10px] font-bold text-rose-600/80 mt-0.5">
               {fullCompanyMapping && supplierCompany
-                ? `${buyerCompany} → ${supplierCompany} · adjust in table below`
+                ? `${buyerCompany} → ${supplierCompany} · post Cr. in table below`
                 : buyerCompany
-                  ? `All unadjusted credit for ${buyerCompany} — select seller or click a row`
-                  : "Total unadjusted credit on ledger"}
+                  ? `All unadjusted advance (Dr.) for ${buyerCompany} — select seller or click a row`
+                  : "Total advance on account (Dr.)"}
             </p>
           </div>
         </div>
@@ -53,28 +53,28 @@ const CreditBalancePanel = ({
         )}
       </div>
 
-      {!hasCredit && (
+      {!hasDebit && (
         <p className="text-[11px] font-bold text-slate-500">
-          No unadjusted advance credit for this scope. Record an advance with buyer
-          and seller to create company-to-company credit.
+          No advance on account (Dr.). Record an advance with buyer and seller,
+          then post credit (Cr.) against lorries in the table.
         </p>
       )}
 
-      {hasCredit && !fullCompanyMapping && (
-        <p className="text-[11px] font-bold text-blue-700 mb-2">
-          Select seller company, switch to <span className="uppercase">From Advance</span>,
-          then enter amounts in the allocation table.
+      {hasDebit && !fullCompanyMapping && (
+        <p className="text-[11px] font-bold text-rose-700 mb-2">
+          Select seller, switch to <span className="uppercase">From Advance</span>,
+          then enter <span className="uppercase">Cr.</span> amounts in allocation.
         </p>
       )}
 
       {creditByPair.length > 0 && (
         <div>
           <p className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em] mb-2">
-            Company-to-company credit · click row to load seller
+            Company mapping · advance (Dr.) · click row to load seller
           </p>
-          <div className="max-h-40 overflow-y-auto rounded-lg border border-blue-100 bg-white/90">
+          <div className="max-h-40 overflow-y-auto rounded-lg border border-rose-100 bg-white/90">
             <table className="w-full text-left text-xs">
-              <thead className="sticky top-0 bg-blue-50 border-b border-blue-100">
+              <thead className="sticky top-0 bg-rose-50 border-b border-rose-100">
                 <tr>
                   <th className="px-3 py-2 font-black text-[9px] uppercase text-slate-500">
                     Buyer
@@ -83,7 +83,7 @@ const CreditBalancePanel = ({
                     Seller
                   </th>
                   <th className="px-3 py-2 font-black text-[9px] uppercase text-slate-500 text-right">
-                    Credit
+                    Dr.
                   </th>
                 </tr>
               </thead>
@@ -93,12 +93,12 @@ const CreditBalancePanel = ({
                     key={`${row.buyerCompany}-${row.supplierCompany}-${idx}`}
                     className={`border-b border-slate-50 last:border-0 ${
                       onSelectCreditPair
-                        ? "cursor-pointer hover:bg-blue-50/80"
+                        ? "cursor-pointer hover:bg-rose-50/80"
                         : ""
                     } ${
                       fullCompanyMapping &&
                       row.supplierCompany === supplierCompany
-                        ? "bg-blue-50"
+                        ? "bg-rose-50"
                         : ""
                     }`}
                     onClick={() => onSelectCreditPair?.(row)}
@@ -116,7 +116,7 @@ const CreditBalancePanel = ({
                     <td className="px-3 py-2 font-bold text-amber-800 uppercase truncate max-w-[120px]">
                       {row.supplierCompany}
                     </td>
-                    <td className="px-3 py-2 font-black text-blue-700 text-right tabular-nums">
+                    <td className="px-3 py-2 font-black text-rose-700 text-right tabular-nums">
                       {formatLedgerAmount(row.amount)}
                     </td>
                   </tr>
