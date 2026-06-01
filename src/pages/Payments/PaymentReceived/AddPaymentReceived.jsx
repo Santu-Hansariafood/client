@@ -286,19 +286,40 @@ const AddPaymentReceived = () => {
   const buyerOnlyMapping =
     hasBuyerCompany && !companyPair.supplierCompany;
 
+  const pairCreditFromList = useMemo(() => {
+    if (!fullCompanyMapping || !ledgerBalance.creditByPair?.length) return 0;
+    const row = ledgerBalance.creditByPair.find(
+      (p) =>
+        matchCompanyName(p.buyerCompany, companyPair.buyerCompany) &&
+        matchCompanyName(p.supplierCompany, companyPair.supplierCompany),
+    );
+    return Number(row?.amount) || 0;
+  }, [
+    fullCompanyMapping,
+    ledgerBalance.creditByPair,
+    companyPair.buyerCompany,
+    companyPair.supplierCompany,
+  ]);
+
   const availableAllocationPool = useMemo(() => {
     if (allocationSource === "advance") {
-      return fullCompanyMapping
-        ? ledgerBalance.advanceBalance ?? 0
-        : ledgerBalance.totalAdvanceBalance ?? 0;
+      if (fullCompanyMapping) {
+        return (
+          Number(ledgerBalance.advanceBalance) ||
+          pairCreditFromList ||
+          0
+        );
+      }
+      return Number(ledgerBalance.totalAdvanceBalance) || 0;
     }
-    return formData.amount || 0;
+    return Number(formData.amount) || 0;
   }, [
     allocationSource,
     formData.amount,
     fullCompanyMapping,
     ledgerBalance.advanceBalance,
     ledgerBalance.totalAdvanceBalance,
+    pairCreditFromList,
   ]);
 
   const unallocatedBalance = useMemo(() => {
@@ -745,7 +766,16 @@ const AddPaymentReceived = () => {
     [entries],
   );
 
-  const handleAllocationChange = (uiKey, amount, netAmount, paidAmount) => {
+  const getRemainingAllocationForRow = useCallback(
+    (uiKey) => {
+      const pool = Number(availableAllocationPool) || 0;
+      const other = sumOpenAllocationsExcept(uiKey);
+      return Math.max(0, pool - other);
+    },
+    [availableAllocationPool, sumOpenAllocationsExcept],
+  );
+
+  const handleAllocationChange = (uiKey, amount, rowDueAmount = 0) => {
     if (amount === "") {
       setEntries((prev) =>
         prev.map((entry) =>
@@ -755,45 +785,68 @@ const AddPaymentReceived = () => {
       return;
     }
 
-    const numAmount = parseFloat(amount) || 0;
-    if (numAmount < 0) return;
+    if (!/^\d*\.?\d*$/.test(amount)) return;
 
-    const dueAmount = Math.max(0, (netAmount || 0) - (paidAmount || 0));
-    const otherAllocationsTotal = sumOpenAllocationsExcept(uiKey);
-    const remainingPool = availableAllocationPool - otherAllocationsTotal;
+    const pool = Number(availableAllocationPool) || 0;
+    const remaining = getRemainingAllocationForRow(uiKey);
+    const dueAmount = Math.max(0, Number(rowDueAmount) || 0);
+    const numAmount = parseFloat(amount);
 
-    if (allocationSource === "fresh" && availableAllocationPool <= 0) {
+    if (allocationSource === "advance") {
+      if (pool <= 0.01) {
+        toast.error(
+          fullCompanyMapping
+            ? "No advance credit for this buyer → seller"
+            : "Select seller company — credit is tracked per buyer → seller",
+        );
+        return;
+      }
+
+      let valueToStore = amount;
+      if (!Number.isNaN(numAmount) && numAmount > remaining + 0.01) {
+        valueToStore = String(
+          Math.round(Math.min(numAmount, remaining) * 100) / 100,
+        );
+        toast.warning(
+          `Cannot exceed credit balance — max Rs. ${remaining.toLocaleString("en-IN")} on this row (total credit Rs. ${pool.toLocaleString("en-IN")})`,
+        );
+      }
+
+      setEntries((prev) =>
+        prev.map((entry) =>
+          entry.uiKey === uiKey
+            ? { ...entry, allocatedAmount: valueToStore }
+            : entry,
+        ),
+      );
+      return;
+    }
+
+    if (pool <= 0.01) {
       toast.error("Enter payment amount in the form above before allocating");
       return;
     }
 
-    if (allocationSource === "advance" && availableAllocationPool <= 0) {
-      toast.error("No advance credit available for this buyer → seller");
-      return;
-    }
+    const maxFromDue = dueAmount > 0.01 ? dueAmount : remaining;
+    const maxAllowed = Math.min(remaining, maxFromDue);
 
-    const maxFromPool = remainingPool;
-    const maxFromDue = dueAmount > 0.01 ? dueAmount : Number.POSITIVE_INFINITY;
-    const maxAllowed = Math.min(maxFromPool, maxFromDue);
-
-    if (numAmount > maxAllowed + 0.01) {
-      if (dueAmount > 0.01 && numAmount > dueAmount + 0.01) {
-        toast.warning(
-          `Allocation cannot exceed due amount (Rs. ${dueAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })})`,
-        );
-      } else {
-        toast.error(
-          allocationSource === "advance"
-            ? `Total allocation cannot exceed available credit (Rs. ${availableAllocationPool.toLocaleString("en-IN")})`
-            : `Total allocation cannot exceed voucher amount (Rs. ${availableAllocationPool.toLocaleString("en-IN")})`,
-        );
-      }
-      return;
+    let valueToStore = amount;
+    if (!Number.isNaN(numAmount) && numAmount > maxAllowed + 0.01) {
+      valueToStore = String(
+        Math.round(Math.min(numAmount, maxAllowed) * 100) / 100,
+      );
+      toast.warning(
+        dueAmount > 0.01 && numAmount > dueAmount + 0.01
+          ? `Cannot exceed due (Rs. ${dueAmount.toLocaleString("en-IN")}) or voucher balance`
+          : `Cannot exceed voucher amount — max Rs. ${maxAllowed.toLocaleString("en-IN")} on this row`,
+      );
     }
 
     setEntries((prev) =>
       prev.map((entry) =>
-        entry.uiKey === uiKey ? { ...entry, allocatedAmount: amount } : entry,
+        entry.uiKey === uiKey
+          ? { ...entry, allocatedAmount: valueToStore }
+          : entry,
       ),
     );
   };
@@ -861,15 +914,8 @@ const AddPaymentReceived = () => {
     const numAllocated = parseFloat(entry.allocatedAmount) || 0;
     const { dueAmount } = calculateTallyDetails(entry);
 
-    const otherAllocationsTotal = sumOpenAllocationsExcept(entry.uiKey);
-    const remainingPool = availableAllocationPool - otherAllocationsTotal;
-
-    if (dueAmount > 0.01 && numAllocated > dueAmount + 0.01) {
-      toast.warning(
-        `Allocation cannot exceed due amount (Rs. ${dueAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })})`,
-      );
-      return;
-    }
+    const remainingPool = getRemainingAllocationForRow(entry.uiKey);
+    const creditPool = Number(availableAllocationPool) || 0;
 
     if (allocationSource === "advance" && !companyPair.supplierCompany) {
       toast.error("Select seller company to adjust advance credit in the table");
@@ -878,7 +924,18 @@ const AddPaymentReceived = () => {
 
     if (allocationSource === "advance" && numAllocated > remainingPool + 0.01) {
       toast.error(
-        `Allocation exceeds available credit (Rs. ${remainingPool.toLocaleString("en-IN")} remaining)`,
+        `Allocation cannot exceed credit balance (Rs. ${creditPool.toLocaleString("en-IN")} total, Rs. ${remainingPool.toLocaleString("en-IN")} left)`,
+      );
+      return;
+    }
+
+    if (
+      allocationSource === "fresh" &&
+      dueAmount > 0.01 &&
+      numAllocated > dueAmount + 0.01
+    ) {
+      toast.warning(
+        `Allocation cannot exceed due amount (Rs. ${dueAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })})`,
       );
       return;
     }
@@ -1265,19 +1322,29 @@ const AddPaymentReceived = () => {
         const details = calculateTallyDetails(row);
         const isLocked = row.isSaved && user?.role !== "Admin";
         const isExtraRow = row.uiKey.includes("-extra-");
+        const rowRemaining = getRemainingAllocationForRow(row.uiKey);
+        const rowMax =
+          allocationSource === "advance"
+            ? rowRemaining
+            : Math.min(
+                rowRemaining,
+                details.dueAmount > 0.01 ? details.dueAmount : rowRemaining,
+              );
 
         return (
           <div className="flex flex-col gap-2 min-w-[200px]">
             <div className="relative group">
               <input
                 type="number"
+                min={0}
+                max={rowMax > 0 ? rowMax : undefined}
+                step="0.01"
                 value={row.allocatedAmount}
                 onChange={(e) =>
                   handleAllocationChange(
                     row.uiKey,
                     e.target.value,
-                    details.netAmount,
-                    row.paidAmount,
+                    details.dueAmount,
                   )
                 }
                 onWheel={(e) => e.target.blur()}
@@ -1289,20 +1356,27 @@ const AddPaymentReceived = () => {
                 } font-black text-slate-900 text-xs`}
                 placeholder="0.00"
               />
+              {!isLocked && allocationSource === "advance" && (
+                <p className="text-[8px] font-bold text-blue-600 uppercase tracking-wide mt-1">
+                  Max Rs. {rowMax.toLocaleString("en-IN")} (credit)
+                </p>
+              )}
               {!isLocked && (
                 <button
                   onClick={() => {
-                    const fillAmount = Math.min(
-                      details.dueAmount > 0.01
-                        ? details.dueAmount
-                        : unallocatedBalance,
-                      unallocatedBalance,
-                    );
+                    const fillAmount =
+                      allocationSource === "advance"
+                        ? rowRemaining
+                        : Math.min(
+                            details.dueAmount > 0.01
+                              ? details.dueAmount
+                              : rowRemaining,
+                            rowRemaining,
+                          );
                     handleAllocationChange(
                       row.uiKey,
                       fillAmount > 0 ? String(fillAmount) : "",
-                      details.netAmount,
-                      row.paidAmount,
+                      details.dueAmount,
                     );
                   }}
                   className="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] font-black uppercase text-slate-900 bg-slate-100 hover:bg-slate-900 hover:text-white px-2 py-1 rounded-lg transition-all opacity-0 group-hover:opacity-100"
