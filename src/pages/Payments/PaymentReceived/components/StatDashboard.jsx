@@ -2,8 +2,22 @@ import React from 'react';
 import { FaWallet, FaExclamationCircle, FaHistory, FaChartLine } from 'react-icons/fa';
 import StatCard from './StatCard';
 
-const StatDashboard = ({ selectedLedger, selectedCompanyOption, dateTotal, formData, ledgerBalance, entryStats }) => {
+const StatDashboard = ({
+    selectedLedger,
+    selectedCompanyOption,
+    dateTotal,
+    formData,
+    ledgerBalance,
+    entryStats,
+    companyPair,
+    fullCompanyMapping,
+}) => {
     const accountLabel = selectedCompanyOption?.label || selectedLedger?.label;
+    const companyScopeLabel = fullCompanyMapping
+        ? `${companyPair.buyerCompany} → ${companyPair.supplierCompany}`
+        : companyPair?.buyerCompany
+          ? `${companyPair.buyerCompany} (select seller for pair)`
+          : "Select buyer company";
 
     return (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -23,7 +37,7 @@ const StatDashboard = ({ selectedLedger, selectedCompanyOption, dateTotal, formD
                 icon={<FaExclamationCircle size={18} />}
                 label={formData.ledgerType === 'Seller' ? 'Seller Due' : 'Buyer Due'}
                 value={`Rs. ${ledgerBalance.outstandingBalance.toLocaleString('en-IN')}`}
-                subValue="Total Outstanding"
+                subValue={companyPair?.buyerCompany ? "Outstanding · company scope" : "Select companies"}
                 color="bg-rose-50"
                 iconColor="text-rose-600"
             />
@@ -32,7 +46,13 @@ const StatDashboard = ({ selectedLedger, selectedCompanyOption, dateTotal, formD
                 icon={<FaHistory size={18} />}
                 label="Advance Balance"
                 value={`Rs. ${ledgerBalance.advanceBalance.toLocaleString('en-IN')}`}
-                subValue="Available Credit"
+                subValue={
+                    fullCompanyMapping
+                        ? `Credit · ${companyScopeLabel}`
+                        : companyPair?.buyerCompany
+                          ? "Select seller for pair credit"
+                          : "Company-to-company only"
+                }
                 color="bg-blue-50"
                 iconColor="text-blue-600"
             />

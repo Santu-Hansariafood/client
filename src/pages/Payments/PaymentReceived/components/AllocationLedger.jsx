@@ -60,7 +60,9 @@ const AllocationLedger = ({
               <p className="text-[11px] text-slate-500 font-medium uppercase tracking-wider">
                 {allocationSource === "fresh"
                   ? "Allocate payment to lorry / sauda"
-                  : `Using Rs. ${ledgerBalance.advanceBalance.toLocaleString()} credit`}
+                  : fullCompanyMapping
+                    ? `Using Rs. ${ledgerBalance.advanceBalance.toLocaleString("en-IN")} credit (${companyPair.buyerCompany} → ${companyPair.supplierCompany})`
+                    : "Select buyer and seller for advance credit"}
               </p>
             </div>
           </div>

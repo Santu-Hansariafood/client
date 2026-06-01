@@ -121,22 +121,60 @@ router.post("/", async (req, res) => {
   }
 });
 
+const escapeRegex = (value) =>
+  String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
 router.get("/balance/:ledgerId", async (req, res) => {
   try {
     const { ledgerId } = req.params;
-    
+    const buyerCompany = String(req.query.buyerCompany || "").trim();
+    const supplierCompany = String(req.query.supplierCompany || "").trim();
+
+    const advanceMatch = {
+      ledgerId: new mongoose.Types.ObjectId(ledgerId),
+      unadjustedAmount: { $gt: 0 },
+    };
+
+    if (buyerCompany) {
+      advanceMatch.buyerCompany = {
+        $regex: new RegExp(`^${escapeRegex(buyerCompany)}$`, "i"),
+      };
+    }
+    if (supplierCompany) {
+      advanceMatch.supplierCompany = {
+        $regex: new RegExp(`^${escapeRegex(supplierCompany)}$`, "i"),
+      };
+    }
+
     const advanceSummary = await PaymentReceived.aggregate([
-      { $match: { ledgerId: new mongoose.Types.ObjectId(ledgerId) } },
-      { $group: { _id: null, totalAdvance: { $sum: "$unadjustedAmount" } } }
+      { $match: advanceMatch },
+      { $group: { _id: null, totalAdvance: { $sum: "$unadjustedAmount" } } },
     ]);
 
-    const pendingEntries = await LoadingEntry.find({ 
-      $or: [
+    const entryQuery = {
+      paymentStatus: "pending",
+      unloadingWeight: { $gt: 0 },
+    };
+
+    if (buyerCompany || supplierCompany) {
+      if (buyerCompany) {
+        entryQuery.buyerCompany = {
+          $regex: new RegExp(`^${escapeRegex(buyerCompany)}$`, "i"),
+        };
+      }
+      if (supplierCompany) {
+        entryQuery.supplierCompany = {
+          $regex: new RegExp(`^${escapeRegex(supplierCompany)}$`, "i"),
+        };
+      }
+    } else {
+      entryQuery.$or = [
         { buyerId: ledgerId },
-        { supplier: ledgerId }
-      ],
-      paymentStatus: "pending"
-    }).lean();
+        { supplier: ledgerId },
+      ];
+    }
+
+    const pendingEntries = await LoadingEntry.find(entryQuery).lean();
 
     const saudaNos = [...new Set(pendingEntries.map(e => e.saudaNo))];
     const selfOrders = await SelfOrder.find({ saudaNo: { $in: saudaNos } }).lean();

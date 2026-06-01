@@ -556,16 +556,36 @@ const AddPaymentReceived = () => {
   }, [formData.ledgerId, summaryType]);
 
   const fetchLedgerBalance = useCallback(async () => {
-    if (!formData.ledgerId) return;
+    if (!formData.ledgerId || !companyPair.buyerCompany) {
+      setLedgerBalance({ advanceBalance: 0, outstandingBalance: 0 });
+      return;
+    }
+
     try {
+      const params = { buyerCompany: companyPair.buyerCompany };
+      if (companyPair.supplierCompany) {
+        params.supplierCompany = companyPair.supplierCompany;
+      }
+
       const response = await api.get(
         `/payment-received/balance/${formData.ledgerId}`,
+        { params },
       );
-      setLedgerBalance(response.data);
+      setLedgerBalance({
+        outstandingBalance: response.data.outstandingBalance ?? 0,
+        advanceBalance: fullCompanyMapping
+          ? (response.data.advanceBalance ?? 0)
+          : 0,
+      });
     } catch (error) {
       console.error("Error fetching balance:", error);
     }
-  }, [formData.ledgerId]);
+  }, [
+    formData.ledgerId,
+    companyPair.buyerCompany,
+    companyPair.supplierCompany,
+    fullCompanyMapping,
+  ]);
 
   useEffect(() => {
     fetchHistory();
@@ -861,6 +881,12 @@ const AddPaymentReceived = () => {
     }
     if (!formData.companyId || !formData.ledgerId) {
       toast.error("Select a company linked to a ledger account");
+      return;
+    }
+    if (!companyPair.supplierCompany) {
+      toast.error(
+        "Select seller company — advance is tracked buyer → seller only",
+      );
       return;
     }
 
@@ -1323,6 +1349,8 @@ const AddPaymentReceived = () => {
           formData={formData}
           ledgerBalance={ledgerBalance}
           entryStats={entryStats}
+          companyPair={companyPair}
+          fullCompanyMapping={fullCompanyMapping}
         />
 
         <AccountSelection
