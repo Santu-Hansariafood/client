@@ -23,6 +23,41 @@ export const getCompanyPairFromForm = (
   };
 };
 
+/** Resolve buyer/seller names from primary + opposing dropdowns (company _id or seller name). */
+export const resolveCompanyPair = (
+  formData,
+  selectedCompanyOption,
+  selectedOpposingCompanyOption,
+  allCompanies = [],
+) => {
+  if (formData.ledgerType) {
+    return getCompanyPairFromForm(
+      formData,
+      selectedCompanyOption,
+      selectedOpposingCompanyOption,
+    );
+  }
+
+  const primary = selectedCompanyOption?.label || "";
+  const opposing = selectedOpposingCompanyOption?.label || "";
+  const primaryId = formData.companyId || "";
+  const opposingId = formData.opposingCompanyId || "";
+
+  const idIsBuyerCompany = (id) =>
+    id && allCompanies.some((c) => String(c._id) === String(id));
+
+  if (idIsBuyerCompany(primaryId)) {
+    return { buyerCompany: primary, supplierCompany: opposing };
+  }
+  if (idIsBuyerCompany(opposingId)) {
+    return { buyerCompany: opposing, supplierCompany: primary };
+  }
+  if (primary && !opposing) {
+    return { buyerCompany: primary, supplierCompany: "" };
+  }
+  return { buyerCompany: opposing, supplierCompany: primary };
+};
+
 export const buildPaymentParticulars = (payment) => {
   const mappings = payment.mappings || [];
   if (mappings.length === 0) {
@@ -136,11 +171,11 @@ export const filterEntriesForCompanyScope = (
   calculateDue,
 ) =>
   items.filter((item) => {
-    if (
-      companyPair?.buyerCompany &&
-      !matchCompanyName(item.buyerCompany, companyPair.buyerCompany)
-    ) {
-      return false;
+    if (companyPair?.buyerCompany) {
+      const matchesBuyer =
+        matchCompanyName(item.buyerCompany, companyPair.buyerCompany) ||
+        matchCompanyName(item.consignee, companyPair.buyerCompany);
+      if (!matchesBuyer) return false;
     }
     if (
       companyPair?.supplierCompany &&

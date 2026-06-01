@@ -699,6 +699,21 @@ router.get("/", async (req, res) => {
       } else {
         andParts.push(supplierPart);
       }
+    } else if (supplierCompany) {
+      andParts.push({
+        supplierCompany: {
+          $regex: new RegExp(`^${escapeRegex(supplierCompany)}$`, "i"),
+        },
+      });
+    }
+
+    if (!buyerId && buyerCompany) {
+      const companyRegex = {
+        $regex: new RegExp(`^${escapeRegex(buyerCompany)}$`, "i"),
+      };
+      andParts.push({
+        $or: [{ buyerCompany: companyRegex }, { consignee: companyRegex }],
+      });
     }
 
     if (paymentStatus) {

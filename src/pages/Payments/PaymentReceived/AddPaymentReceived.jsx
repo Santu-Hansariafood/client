@@ -27,7 +27,7 @@ import AllocationLedger from "./components/AllocationLedger";
 import PaymentHistory from "./components/PaymentHistory";
 import AnalyticalSummary from "./components/AnalyticalSummary";
 import {
-  getCompanyPairFromForm,
+  resolveCompanyPair,
   buildTallyVoucherRows,
   hasFullCompanyMapping,
   hasAllocationTableScope,
@@ -266,36 +266,21 @@ const AddPaymentReceived = () => {
     loadLedgers();
   }, []);
 
-  const companyPair = useMemo(() => {
-    if (formData.ledgerType) {
-      return getCompanyPairFromForm(
+  const companyPair = useMemo(
+    () =>
+      resolveCompanyPair(
         formData,
         selectedCompanyOption,
         selectedOpposingCompanyOption,
-      );
-    }
-    const primary = selectedCompanyOption?.label || "";
-    const opposing = selectedOpposingCompanyOption?.label || "";
-    const primaryIsBuyer =
-      formData.companyId &&
-      allCompanies.some((c) => c._id === formData.companyId);
-    const opposingIsBuyer =
-      formData.opposingCompanyId &&
-      allCompanies.some((c) => c._id === formData.opposingCompanyId);
-
-    let buyerCompany = "";
-    let supplierCompany = "";
-    if (primaryIsBuyer) buyerCompany = primary;
-    else if (primary) supplierCompany = primary;
-    if (opposingIsBuyer) buyerCompany = opposing;
-    else if (opposing) supplierCompany = opposing;
-    return { buyerCompany, supplierCompany };
-  }, [
-    formData,
-    selectedCompanyOption,
-    selectedOpposingCompanyOption,
-    allCompanies,
-  ]);
+        allCompanies,
+      ),
+    [
+      formData,
+      selectedCompanyOption,
+      selectedOpposingCompanyOption,
+      allCompanies,
+    ],
+  );
 
   const fullCompanyMapping = useMemo(
     () => hasFullCompanyMapping(companyPair),
@@ -424,42 +409,21 @@ const AddPaymentReceived = () => {
           params.supplierCompany = companyPair.supplierCompany;
         }
 
-        if (formData.companyId && formData.ledgerType !== "Seller") {
-          params.companyId = formData.companyId;
-        }
-
         if (formData.ledgerType === "Seller" && formData.ledgerId) {
           params.supplier = formData.ledgerId;
-        } else if (formData.ledgerType === "Buyer" && formData.ledgerId) {
+        } else if (
+          formData.ledgerId &&
+          formData.ledgerType !== "Seller"
+        ) {
           params.buyerId = formData.ledgerId;
         }
 
         const response = await api.get("/loading-entries", { params });
         let items = response.data.data || [];
 
-        const getDue = (item) => {
-          const weight =
-            (item.unloadingWeight || 0) > 0
-              ? item.unloadingWeight
-              : item.loadingWeight || 0;
-          const rate = item.actualRate || 0;
-          const gross = weight * rate;
-          const cd = gross * ((item.cd || 0) / 100);
-          const taxable = gross - cd;
-          const gst = taxable * ((item.gst || 0) / 100);
-          const net = taxable + gst;
-          return Math.max(0, net - (item.paidAmount || 0));
-        };
-
-        items = filterEntriesForCompanyScope(
-          items,
-          companyPair,
-          {
-            pendingOnly: true,
-            unadjustedOnly: fullCompanyMapping,
-          },
-          getDue,
-        );
+        items = filterEntriesForCompanyScope(items, companyPair, {
+          pendingOnly: true,
+        });
 
         const sortedItems = [...items].sort((a, b) => {
           if (a.paymentStatus === "pending" && b.paymentStatus === "done")
