@@ -29,8 +29,9 @@ import AnalyticalSummary from "./components/AnalyticalSummary";
 import {
   getCompanyPairFromForm,
   buildTallyVoucherRows,
-  buildTallyOutstandingRows,
 } from "./utils/paymentLedgerUtils";
+
+const ENTRIES_PAGE_SIZE = 20;
 
 const AddPaymentReceived = () => {
   const navigate = useNavigate();
@@ -45,7 +46,7 @@ const AddPaymentReceived = () => {
   const [fetchingHistory, setFetchingHistory] = useState(false);
   const [entries, setEntries] = useState([]);
   const [entriesPage, setEntriesPage] = useState(1);
-  const [entriesTotalPages, setEntriesTotalPages] = useState(1);
+  const [entriesTotal, setEntriesTotal] = useState(0);
   const [history, setHistory] = useState([]);
   const [summary, setSummary] = useState([]);
   const [summaryType, setSummaryType] = useState("month");
@@ -318,17 +319,15 @@ const AddPaymentReceived = () => {
       try {
         setFetchingEntries(true);
 
-        const hasFilters =
-          formData.companyId ||
-          formData.opposingCompanyId ||
-          formData.filterStartDate ||
-          formData.filterEndDate;
-
         const params = {
           page,
-          limit: hasFilters ? 50 : 100,
+          limit: ENTRIES_PAGE_SIZE,
           isUnloaded: true,
         };
+
+        if (tableSearch.trim()) {
+          params.search = tableSearch.trim();
+        }
 
         if (formData.filterStartDate || formData.filterEndDate) {
           params.startDate = formData.filterStartDate;
@@ -373,7 +372,7 @@ const AddPaymentReceived = () => {
             isSaved: item.paymentStatus === "done",
           })),
         );
-        setEntriesTotalPages(response.data.totalPages || 1);
+        setEntriesTotal(response.data.total ?? items.length);
         setEntriesPage(page);
       } catch (error) {
         toast.error("Error fetching entries");
@@ -391,6 +390,7 @@ const AddPaymentReceived = () => {
       formData.opposingCompanyId,
       companyPair.buyerCompany,
       companyPair.supplierCompany,
+      tableSearch,
     ],
   );
 
@@ -928,24 +928,6 @@ const AddPaymentReceived = () => {
     doc.save(`Voucher_${payment._id.substring(payment._id.length - 8)}.pdf`);
   };
 
-  const filteredEntries = useMemo(() => {
-    if (!tableSearch) return entries;
-    const search = tableSearch.toLowerCase();
-    return entries.filter(
-      (entry) =>
-        (entry.saudaNo || "").toLowerCase().includes(search) ||
-        (entry.lorryNumber || "").toLowerCase().includes(search) ||
-        (entry.buyerCompany || "").toLowerCase().includes(search) ||
-        (entry.supplierCompany || "").toLowerCase().includes(search) ||
-        (entry.commodity || "").toLowerCase().includes(search),
-    );
-  }, [entries, tableSearch]);
-
-  const tallyOutstandingRows = useMemo(
-    () => buildTallyOutstandingRows(filteredEntries, calculateTallyDetails),
-    [filteredEntries],
-  );
-
   const entryStats = useMemo(() => {
     let totalDue = 0;
     let pendingCount = 0;
@@ -1280,16 +1262,15 @@ const AddPaymentReceived = () => {
               setTableSearch={setTableSearch}
               entries={entries}
               fetchingEntries={fetchingEntries}
-              filteredEntries={filteredEntries}
               columns={columns}
               entriesPage={entriesPage}
+              entriesTotal={entriesTotal}
+              entriesPageSize={ENTRIES_PAGE_SIZE}
               fetchEntries={fetchEntries}
-              entriesTotalPages={entriesTotalPages}
               entryStats={entryStats}
               dateTotal={dateTotal}
               ledgerBalance={ledgerBalance}
               companyPair={companyPair}
-              tallyOutstandingRows={tallyOutstandingRows}
             />
           )}
 

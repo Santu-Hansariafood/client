@@ -1,7 +1,6 @@
 import {
   FaFilter,
   FaMoneyBillWave,
-  FaArrowLeft,
   FaHistory,
   FaFileInvoiceDollar,
 } from "react-icons/fa";
@@ -10,7 +9,6 @@ import Loading from "../../../../common/Loading/Loading";
 import Paginations from "../../../../common/Paginations/Paginations";
 import DateRangeSelector from "../../../../common/DateSelector/DateRangeSelector";
 import CompanyLedgerBanner from "./CompanyLedgerBanner";
-import TallyLedgerBook from "./TallyLedgerBook";
 import { formatLedgerAmount } from "../utils/paymentLedgerUtils";
 
 const AllocationLedger = ({
@@ -22,20 +20,19 @@ const AllocationLedger = ({
   setTableSearch,
   entries,
   fetchingEntries,
-  filteredEntries,
   columns,
   entriesPage,
+  entriesTotal,
+  entriesPageSize,
   fetchEntries,
-  entriesTotalPages,
   entryStats,
   dateTotal,
   ledgerBalance,
   companyPair,
-  tallyOutstandingRows,
 }) => {
   const hasCompanyFilter =
     Boolean(formData.companyId) || Boolean(formData.opposingCompanyId);
-  const pageSize = hasCompanyFilter ? 50 : 100;
+  const showPagination = entriesTotal > 0;
 
   return (
     <div className="flex flex-col h-full">
@@ -49,25 +46,15 @@ const AllocationLedger = ({
               <h4 className="font-bold text-slate-800 flex items-center gap-2 flex-wrap">
                 {formData.ledgerType === "Buyer"
                   ? allocationSource === "fresh"
-                    ? "Payment Received Ledger (Tally)"
+                    ? "Payment Received Ledger"
                     : "Advance Adjustment"
                   : allocationSource === "fresh"
-                    ? "Payment Sent Ledger (Tally)"
+                    ? "Payment Sent Ledger"
                     : "Advance Adjustment"}
-                {allocationSource === "fresh" && (
-                  <span className="flex items-center gap-1 px-2 py-0.5 bg-blue-50 text-blue-600 text-[10px] rounded-full border border-blue-100">
-                    {formData.ledgerType === "Seller"
-                      ? "Seller"
-                      : formData.ledgerType === "Buyer"
-                        ? "Buyer"
-                        : "All"}{" "}
-                    <FaArrowLeft className="rotate-180 size-2" /> Outstanding
-                  </span>
-                )}
               </h4>
               <p className="text-[11px] text-slate-500 font-medium uppercase tracking-wider">
                 {allocationSource === "fresh"
-                  ? "Company-wise outstanding · Debit = due · Credit = paid"
+                  ? "Allocate payment to lorry / sauda"
                   : `Using Rs. ${ledgerBalance.advanceBalance.toLocaleString()} credit`}
               </p>
             </div>
@@ -111,7 +98,7 @@ const AllocationLedger = ({
 
             <SearchBox
               placeholder="Search Sauda / Lorry..."
-              items={entries}
+              items={[]}
               onSearch={setTableSearch}
               returnQuery={true}
               className="!max-w-[300px]"
@@ -138,26 +125,12 @@ const AllocationLedger = ({
           <div className="py-32 flex flex-col items-center justify-center gap-4">
             <Loading size="lg" />
             <p className="text-xs font-bold text-slate-400 uppercase tracking-[0.2em]">
-              Syncing ledger...
+              Loading entries...
             </p>
           </div>
-        ) : filteredEntries.length > 0 ? (
+        ) : entries.length > 0 ? (
           <div>
-            <div className="px-4 sm:px-6 pt-4">
-              <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-2">
-                Outstanding book (Tally format)
-              </p>
-              <TallyLedgerBook
-                rows={tallyOutstandingRows}
-                showCompanyColumns
-                emptyMessage="No outstanding lines"
-              />
-            </div>
-
-            <div className="px-4 sm:px-6 py-6 border-t border-slate-200 mt-4">
-              <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-3">
-                Allocate payment to lorry / sauda
-              </p>
+            <div className="px-4 sm:px-6 py-6">
               <div className="overflow-x-auto rounded-xl border border-slate-200">
                 <table className="w-full border-collapse text-left min-w-[900px]">
                   <thead>
@@ -173,7 +146,7 @@ const AllocationLedger = ({
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredEntries.map((entry, index) => (
+                    {entries.map((entry, index) => (
                       <tr
                         key={entry.uiKey || entry._id}
                         className="border-b border-slate-100 hover:bg-slate-50/80"
@@ -191,21 +164,22 @@ const AllocationLedger = ({
                 </table>
               </div>
 
-              <div className="p-4 sm:p-6 bg-slate-50 border-t border-slate-100">
+              {showPagination && (
                 <Paginations
                   currentPage={entriesPage}
-                  totalItems={entriesTotalPages * pageSize}
-                  itemsPerPage={pageSize}
+                  totalItems={entriesTotal}
+                  itemsPerPage={entriesPageSize}
                   onPageChange={(page) => fetchEntries(page)}
+                  showPageSize={false}
                 />
-              </div>
+              )}
             </div>
 
             <div className="bg-slate-900 p-6 sm:p-8 flex flex-col md:flex-row items-center justify-between gap-6">
               <div className="flex flex-wrap items-center gap-8">
                 <div>
                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                    Total unpaid (Dr.)
+                    Page unpaid (Dr.)
                   </p>
                   <p className="text-xl font-black text-white tabular-nums">
                     {formatLedgerAmount(entryStats.totalDue)}
@@ -213,9 +187,9 @@ const AllocationLedger = ({
                 </div>
                 <div>
                   <p className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">
-                    {formData.ledgerType === "Buyer"
-                      ? "Received today"
-                      : "Sent today"}
+                    {formData.ledgerType === "Seller"
+                      ? "Sent today"
+                      : "Received today"}
                   </p>
                   <p className="text-xl font-black text-white tabular-nums">
                     {formatLedgerAmount(dateTotal)}
@@ -225,7 +199,7 @@ const AllocationLedger = ({
               <div className="flex items-center gap-4">
                 <div className="text-right">
                   <p className="text-[10px] font-black text-slate-400 uppercase">
-                    Pending
+                    Pending on page
                   </p>
                   <p className="text-2xl font-black text-rose-400">
                     {entryStats.pendingCount}
@@ -238,11 +212,11 @@ const AllocationLedger = ({
         ) : (
           <div className="py-32 flex flex-col items-center justify-center text-center px-8">
             <FaHistory size={32} className="text-slate-200 mb-4" />
-            <h4 className="text-lg font-bold text-slate-800">No pending records</h4>
+            <h4 className="text-lg font-bold text-slate-800">No records found</h4>
             <p className="text-sm text-slate-500 font-medium max-w-xs mx-auto mt-2">
-              No unloaded entries for this date
-              {hasCompanyFilter ? " and company filter" : ""}. Try another date
-              or clear optional filters.
+              {tableSearch
+                ? "No matches for your search. Try different keywords or clear filters."
+                : `No unloaded entries${hasCompanyFilter ? " for this filter" : ""}. Adjust filters or date range.`}
             </p>
           </div>
         )}
