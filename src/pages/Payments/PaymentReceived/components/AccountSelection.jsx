@@ -27,6 +27,8 @@ const AccountSelection = ({
   loading,
   handleRecordAdvance,
   hasResolvedLedger,
+  loadingSellerOptions,
+  hasBuyerCompany,
 }) => {
   const ledgerTypeOption =
     ledgerTypes.find((t) => t.value === formData.ledgerType) ||
@@ -158,8 +160,19 @@ const AccountSelection = ({
                       ? handleOpposingCompanyChange(opt)
                       : handleClearOpposingCompany()
                   }
-                  placeholder="All sellers"
+                  placeholder={
+                    hasBuyerCompany
+                      ? loadingSellerOptions
+                        ? "Loading sellers…"
+                        : "Select seller for this buyer"
+                      : "Select buyer first"
+                  }
                   isMulti={false}
+                  isDisabled={
+                    formData.ledgerType === "Seller"
+                      ? false
+                      : !hasBuyerCompany
+                  }
                   className="rounded-xl border-slate-200 hover:border-slate-300 transition-all"
                 />
                 {formData.opposingCompanyId && (

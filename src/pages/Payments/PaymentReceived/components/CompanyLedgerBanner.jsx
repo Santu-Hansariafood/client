@@ -6,7 +6,9 @@ const CompanyLedgerBanner = ({
   supplierCompany,
   subtitle,
   mappingActive = false,
-  unadjustedTotal,
+  buyerOnly = false,
+  entryAmount = 0,
+  unallocatedBalance = 0,
 }) => {
   return (
     <div
@@ -30,7 +32,8 @@ const CompanyLedgerBanner = ({
         <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-amber-500 text-white shadow-sm">
           <span className="text-[9px] font-black uppercase opacity-80">Seller</span>
           <span className="text-xs sm:text-sm font-black uppercase tracking-tight truncate max-w-[160px] sm:max-w-none">
-            {supplierCompany}
+            {supplierCompany ||
+              (buyerOnly ? "Select seller below" : "—")}
           </span>
         </div>
       </div>
@@ -39,17 +42,26 @@ const CompanyLedgerBanner = ({
           {subtitle}
         </p>
       )}
-      {mappingActive && unadjustedTotal != null && (
-        <div className="mt-3 inline-flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 px-3 py-2 rounded-lg bg-rose-50 border border-rose-200">
-          <span className="text-[9px] font-black text-rose-800 uppercase tracking-widest">
-            Total unadjusted (Dr.)
-          </span>
-          <span className="text-sm font-black text-rose-700 tabular-nums">
-            {formatLedgerAmount(unadjustedTotal)}
-          </span>
-          <span className="text-[9px] font-bold text-rose-600/80">
-            Pending lines for this mapping only
-          </span>
+      {(mappingActive || buyerOnly) && (
+        <div className="mt-3 flex flex-wrap gap-2 sm:gap-3">
+          <div className="inline-flex flex-col px-3 py-2 rounded-lg bg-emerald-50 border border-emerald-200 min-w-[140px]">
+            <span className="text-[9px] font-black text-emerald-800 uppercase tracking-widest">
+              Payment entry amount (Cr.)
+            </span>
+            <span className="text-sm font-black text-emerald-700 tabular-nums">
+              {formatLedgerAmount(entryAmount)}
+            </span>
+          </div>
+          {entryAmount > 0 && (
+            <div className="inline-flex flex-col px-3 py-2 rounded-lg bg-slate-100 border border-slate-200 min-w-[140px]">
+              <span className="text-[9px] font-black text-slate-600 uppercase tracking-widest">
+                Remaining to allocate
+              </span>
+              <span className="text-sm font-black text-slate-800 tabular-nums">
+                {formatLedgerAmount(unallocatedBalance)}
+              </span>
+            </div>
+          )}
         </div>
       )}
     </div>

@@ -30,10 +30,14 @@ const AllocationLedger = ({
   ledgerBalance,
   companyPair,
   fullCompanyMapping,
+  hasBuyerCompany,
+  buyerOnlyMapping,
+  loadingSellerOptions,
 }) => {
   const hasCompanyFilter =
     Boolean(formData.companyId) || Boolean(formData.opposingCompanyId);
   const showPagination = entriesTotal > 0 && !fullCompanyMapping;
+  const showMappingBanner = hasBuyerCompany;
 
   return (
     <div className="flex flex-col h-full">
@@ -107,19 +111,26 @@ const AllocationLedger = ({
           </div>
         </div>
 
-        {fullCompanyMapping ? (
+        {showMappingBanner ? (
           <CompanyLedgerBanner
             buyerCompany={companyPair.buyerCompany}
             supplierCompany={companyPair.supplierCompany}
-            mappingActive
-            unadjustedTotal={entryStats.totalDue}
-            subtitle="Only unadjusted (pending) lorry lines for this buyer → seller pair"
+            mappingActive={fullCompanyMapping}
+            buyerOnly={buyerOnlyMapping}
+            entryAmount={formData.amount || 0}
+            unallocatedBalance={unallocatedBalance}
+            subtitle={
+              fullCompanyMapping
+                ? "Allocate entry amount to pending lorries for this buyer → seller"
+                : loadingSellerOptions
+                  ? "Loading sellers linked to this buyer…"
+                  : "Choose seller company — list shows pending lorries for this buyer"
+            }
           />
         ) : (
           <p className="text-[11px] font-bold text-slate-500 bg-slate-50 border border-slate-200 rounded-xl px-4 py-3">
-            Select <span className="text-[#1e3a5f]">buyer</span> and{" "}
-            <span className="text-amber-700">seller</span> company to open Tally
-            mapping and list unadjusted amounts for that pair.
+            Select a <span className="text-[#1e3a5f]">buyer company</span> to load
+            linked sellers and allocate your payment entry amount.
           </p>
         )}
       </div>
@@ -178,8 +189,8 @@ const AllocationLedger = ({
                 />
               ) : fullCompanyMapping && entries.length > 0 ? (
                 <p className="mt-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest text-center">
-                  {entries.length} unadjusted line
-                  {entries.length !== 1 ? "s" : ""} for this mapping
+                  {entries.length} pending line
+                  {entries.length !== 1 ? "s" : ""} · adjust against entry amount
                 </p>
               ) : null}
             </div>
@@ -224,8 +235,10 @@ const AllocationLedger = ({
             <h4 className="text-lg font-bold text-slate-800">No records found</h4>
             <p className="text-sm text-slate-500 font-medium max-w-xs mx-auto mt-2">
               {fullCompanyMapping
-                ? "No unadjusted amounts for this buyer → seller mapping. All lorries may be fully paid."
-                : tableSearch
+                ? "No pending lorries for this buyer → seller. Try another seller or clear filters."
+                : hasBuyerCompany
+                  ? "No pending lorries for this buyer. Select a seller or check filters."
+                  : tableSearch
                   ? "No matches for your search. Try different keywords or clear filters."
                   : hasCompanyFilter
                     ? "Select both buyer and seller for mapping view, or adjust filters."

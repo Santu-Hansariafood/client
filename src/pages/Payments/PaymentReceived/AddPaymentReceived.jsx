@@ -52,6 +52,8 @@ const AddPaymentReceived = () => {
   const [summary, setSummary] = useState([]);
   const [summaryType, setSummaryType] = useState("month");
   const [tableSearch, setTableSearch] = useState("");
+  const [buyerSellerOptions, setBuyerSellerOptions] = useState([]);
+  const [loadingSellerOptions, setLoadingSellerOptions] = useState(false);
   const [dateTotal, setDateTotal] = useState(0);
   const [ledgerBalance, setLedgerBalance] = useState({
     advanceBalance: 0,
@@ -170,26 +172,6 @@ const AddPaymentReceived = () => {
       label: c.companyName,
     }));
   }, [formData.ledgerType, allCompanies, opposingLedgers]);
-
-  const opposingCompanyOptions = useMemo(() => {
-    const sellerNames = collectUniqueCompanyNames(opposingLedgers);
-    const buyerOptions = allCompanies.map((c) => ({
-      value: c._id,
-      label: c.companyName,
-    }));
-    if (formData.ledgerType === "Seller") {
-      return buyerOptions;
-    }
-    if (formData.ledgerType === "Buyer") {
-      return sellerNames;
-    }
-    const seen = new Set();
-    return [...sellerNames, ...buyerOptions].filter((opt) => {
-      if (seen.has(opt.label)) return false;
-      seen.add(opt.label);
-      return true;
-    });
-  }, [formData.ledgerType, opposingLedgers, allCompanies]);
 
   const selectedCompanyOption = useMemo(() => {
     if (!formData.companyId) return null;
@@ -314,6 +296,83 @@ const AddPaymentReceived = () => {
     () => hasFullCompanyMapping(companyPair),
     [companyPair],
   );
+
+  const hasBuyerCompany = Boolean(companyPair.buyerCompany);
+  const buyerOnlyMapping =
+    hasBuyerCompany && !companyPair.supplierCompany;
+
+  const opposingCompanyOptions = useMemo(() => {
+    const sellerNames = collectUniqueCompanyNames(opposingLedgers);
+    const buyerOptions = allCompanies.map((c) => ({
+      value: c._id,
+      label: c.companyName,
+    }));
+
+    if (
+      companyPair.buyerCompany &&
+      formData.ledgerType !== "Seller" &&
+      buyerSellerOptions.length > 0
+    ) {
+      return buyerSellerOptions;
+    }
+
+    if (formData.ledgerType === "Seller") {
+      return buyerOptions;
+    }
+    if (formData.ledgerType === "Buyer") {
+      return sellerNames;
+    }
+    const seen = new Set();
+    return [...sellerNames, ...buyerOptions].filter((opt) => {
+      if (seen.has(opt.label)) return false;
+      seen.add(opt.label);
+      return true;
+    });
+  }, [
+    formData.ledgerType,
+    opposingLedgers,
+    allCompanies,
+    companyPair.buyerCompany,
+    buyerSellerOptions,
+  ]);
+
+  useEffect(() => {
+    const buyerName = companyPair.buyerCompany;
+    if (!buyerName || formData.ledgerType === "Seller") {
+      setBuyerSellerOptions([]);
+      return;
+    }
+
+    const loadSellersForBuyer = async () => {
+      try {
+        setLoadingSellerOptions(true);
+        const response = await api.get("/loading-entries", {
+          params: {
+            buyerCompany: buyerName,
+            isUnloaded: true,
+            paymentStatus: "pending",
+            limit: 500,
+          },
+        });
+        const names = new Set();
+        (response.data.data || []).forEach((entry) => {
+          if (entry.supplierCompany) names.add(entry.supplierCompany.trim());
+        });
+        setBuyerSellerOptions(
+          Array.from(names)
+            .sort((a, b) => a.localeCompare(b))
+            .map((name) => ({ value: name, label: name })),
+        );
+      } catch (error) {
+        console.error("Error loading sellers for buyer:", error);
+        setBuyerSellerOptions([]);
+      } finally {
+        setLoadingSellerOptions(false);
+      }
+    };
+
+    loadSellersForBuyer();
+  }, [companyPair.buyerCompany, formData.ledgerType]);
 
   const fetchEntries = useCallback(
     async (page = 1) => {
@@ -583,15 +642,18 @@ const AddPaymentReceived = () => {
       ...prev,
       companyId,
       ledgerId: ledger?.value || "",
+      opposingCompanyId: "",
     }));
   };
 
   const handleClearCompany = () => {
     setSelectedLedger(null);
+    setBuyerSellerOptions([]);
     setFormData((prev) => ({
       ...prev,
       companyId: "",
       ledgerId: "",
+      opposingCompanyId: "",
     }));
   };
 
@@ -1282,6 +1344,8 @@ const AddPaymentReceived = () => {
           loading={loading}
           handleRecordAdvance={handleRecordAdvance}
           hasResolvedLedger={Boolean(formData.ledgerId)}
+          loadingSellerOptions={loadingSellerOptions}
+          hasBuyerCompany={hasBuyerCompany}
         />
 
         <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden min-h-[500px]">
@@ -1305,6 +1369,10 @@ const AddPaymentReceived = () => {
               ledgerBalance={ledgerBalance}
               companyPair={companyPair}
               fullCompanyMapping={fullCompanyMapping}
+              hasBuyerCompany={hasBuyerCompany}
+              buyerOnlyMapping={buyerOnlyMapping}
+              unallocatedBalance={unallocatedBalance}
+              loadingSellerOptions={loadingSellerOptions}
             />
           )}
 
