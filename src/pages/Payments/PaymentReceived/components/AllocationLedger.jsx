@@ -75,13 +75,15 @@ const AllocationLedger = ({
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
-            {allocationSource === "fresh" && formData.amount > 0 && (
+            {unallocatedBalance > 0 && (
               <div className="flex items-center gap-2 bg-emerald-900 text-white px-4 py-2 rounded-xl shadow-lg border border-emerald-700">
                 <div className="flex flex-col">
                   <span className="text-[9px] font-black uppercase tracking-[0.2em] text-emerald-400 leading-none mb-1">
-                    {formData.ledgerType === "Buyer"
-                      ? "Available to allocate"
-                      : "Available to send"}
+                    {allocationSource === "advance"
+                      ? "Credit left to allocate"
+                      : formData.ledgerType === "Buyer"
+                        ? "Available to allocate"
+                        : "Available to send"}
                   </span>
                   <span className="text-sm font-black italic tracking-tight tabular-nums">
                     Rs. {unallocatedBalance.toLocaleString("en-IN")}

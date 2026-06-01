@@ -82,17 +82,6 @@ const AddPaymentReceived = () => {
     filterEndDate: "",
   });
 
-  const unallocatedBalance = useMemo(() => {
-    if (allocationSource !== "fresh") return 0;
-    const totalAllocated = entries.reduce((sum, entry) => {
-      if (!entry.isSaved) {
-        return sum + (parseFloat(entry.allocatedAmount) || 0);
-      }
-      return sum;
-    }, 0);
-    return Math.max(0, (formData.amount || 0) - totalAllocated);
-  }, [formData.amount, entries, allocationSource]);
-
   const ledgerTypes = [
     { value: "", label: "All" },
     { value: "Buyer", label: "Buyer" },
@@ -296,6 +285,31 @@ const AddPaymentReceived = () => {
   const hasBuyerCompany = Boolean(companyPair.buyerCompany);
   const buyerOnlyMapping =
     hasBuyerCompany && !companyPair.supplierCompany;
+
+  const availableAllocationPool = useMemo(() => {
+    if (allocationSource === "advance") {
+      return fullCompanyMapping
+        ? ledgerBalance.advanceBalance ?? 0
+        : ledgerBalance.totalAdvanceBalance ?? 0;
+    }
+    return formData.amount || 0;
+  }, [
+    allocationSource,
+    formData.amount,
+    fullCompanyMapping,
+    ledgerBalance.advanceBalance,
+    ledgerBalance.totalAdvanceBalance,
+  ]);
+
+  const unallocatedBalance = useMemo(() => {
+    const totalAllocated = entries.reduce((sum, entry) => {
+      if (!entry.isSaved) {
+        return sum + (parseFloat(entry.allocatedAmount) || 0);
+      }
+      return sum;
+    }, 0);
+    return Math.max(0, availableAllocationPool - totalAllocated);
+  }, [availableAllocationPool, entries]);
 
   const opposingCompanyOptions = useMemo(() => {
     const sellerNames = collectUniqueCompanyNames(opposingLedgers);
@@ -688,6 +702,15 @@ const AddPaymentReceived = () => {
     }));
   };
 
+  const sumOpenAllocationsExcept = useCallback(
+    (uiKey) =>
+      entries.reduce((sum, entry) => {
+        if (entry.uiKey === uiKey || entry.isSaved) return sum;
+        return sum + (parseFloat(entry.allocatedAmount) || 0);
+      }, 0),
+    [entries],
+  );
+
   const handleAllocationChange = (uiKey, amount, netAmount, paidAmount) => {
     if (amount === "") {
       setEntries((prev) =>
@@ -699,30 +722,39 @@ const AddPaymentReceived = () => {
     }
 
     const numAmount = parseFloat(amount) || 0;
-    const dueAmount = netAmount - (paidAmount || 0);
+    if (numAmount < 0) return;
 
-    if (numAmount > dueAmount + 1) {
-      toast.warning(
-        `Allocation cannot exceed due amount (Rs. ${dueAmount.toFixed(2)})`,
-      );
+    const dueAmount = Math.max(0, (netAmount || 0) - (paidAmount || 0));
+    const otherAllocationsTotal = sumOpenAllocationsExcept(uiKey);
+    const remainingPool = availableAllocationPool - otherAllocationsTotal;
+
+    if (allocationSource === "fresh" && availableAllocationPool <= 0) {
+      toast.error("Enter payment amount in the form above before allocating");
       return;
     }
 
-    if (allocationSource === "fresh") {
-      const currentEntry = entries.find((e) => e.uiKey === uiKey);
-      const currentAllocatedForThisRow =
-        parseFloat(currentEntry?.allocatedAmount) || 0;
-      const otherAllocationsTotal =
-        (formData.amount || 0) -
-        unallocatedBalance -
-        currentAllocatedForThisRow;
+    if (allocationSource === "advance" && availableAllocationPool <= 0) {
+      toast.error("No advance credit available for this buyer → seller");
+      return;
+    }
 
-      if (numAmount + otherAllocationsTotal > (formData.amount || 0) + 1) {
-        toast.error(
-          `Total allocation cannot exceed Voucher Amount (Rs. ${formData.amount})`,
+    const maxFromPool = remainingPool;
+    const maxFromDue = dueAmount > 0.01 ? dueAmount : Number.POSITIVE_INFINITY;
+    const maxAllowed = Math.min(maxFromPool, maxFromDue);
+
+    if (numAmount > maxAllowed + 0.01) {
+      if (dueAmount > 0.01 && numAmount > dueAmount + 0.01) {
+        toast.warning(
+          `Allocation cannot exceed due amount (Rs. ${dueAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })})`,
         );
-        return;
+      } else {
+        toast.error(
+          allocationSource === "advance"
+            ? `Total allocation cannot exceed available credit (Rs. ${availableAllocationPool.toLocaleString("en-IN")})`
+            : `Total allocation cannot exceed voucher amount (Rs. ${availableAllocationPool.toLocaleString("en-IN")})`,
+        );
       }
+      return;
     }
 
     setEntries((prev) =>
@@ -792,16 +824,33 @@ const AddPaymentReceived = () => {
 
     const isAdmin = user?.role === "Admin";
     const isEditing = entry.isSaved && isAdmin;
+    const numAllocated = parseFloat(entry.allocatedAmount) || 0;
+    const { dueAmount } = calculateTallyDetails(entry);
 
-    const availableCredit = fullCompanyMapping
-      ? ledgerBalance.advanceBalance
-      : ledgerBalance.totalAdvanceBalance;
+    const otherAllocationsTotal = sumOpenAllocationsExcept(entry.uiKey);
+    const remainingPool = availableAllocationPool - otherAllocationsTotal;
+
+    if (dueAmount > 0.01 && numAllocated > dueAmount + 0.01) {
+      toast.warning(
+        `Allocation cannot exceed due amount (Rs. ${dueAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })})`,
+      );
+      return;
+    }
+
+    if (allocationSource === "advance" && numAllocated > remainingPool + 0.01) {
+      toast.error(
+        `Allocation exceeds available credit (Rs. ${remainingPool.toLocaleString("en-IN")} remaining)`,
+      );
+      return;
+    }
 
     if (
-      allocationSource === "advance" &&
-      entry.allocatedAmount > availableCredit
+      allocationSource === "fresh" &&
+      numAllocated > remainingPool + 0.01
     ) {
-      toast.error("Allocation exceeds available credit balance");
+      toast.error(
+        `Allocation exceeds voucher amount (Rs. ${remainingPool.toLocaleString("en-IN")} remaining)`,
+      );
       return;
     }
 
@@ -814,7 +863,6 @@ const AddPaymentReceived = () => {
 
     try {
       setLoading(true);
-      const numAllocated = parseFloat(entry.allocatedAmount) || 0;
 
       if (isEditing) {
         await api.patch(`/payment-received/adjust-lorry/${entry._id}`, {
@@ -1200,14 +1248,20 @@ const AddPaymentReceived = () => {
               />
               {!isLocked && (
                 <button
-                  onClick={() =>
+                  onClick={() => {
+                    const fillAmount = Math.min(
+                      details.dueAmount > 0.01
+                        ? details.dueAmount
+                        : unallocatedBalance,
+                      unallocatedBalance,
+                    );
                     handleAllocationChange(
                       row.uiKey,
-                      details.dueAmount.toString(),
+                      fillAmount > 0 ? String(fillAmount) : "",
                       details.netAmount,
                       row.paidAmount,
-                    )
-                  }
+                    );
+                  }}
                   className="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] font-black uppercase text-slate-900 bg-slate-100 hover:bg-slate-900 hover:text-white px-2 py-1 rounded-lg transition-all opacity-0 group-hover:opacity-100"
                 >
                   Full
