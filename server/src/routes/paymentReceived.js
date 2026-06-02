@@ -15,8 +15,8 @@ const escapeRegex = (value) =>
 const companyRegex = (name) =>
   new RegExp(`^${escapeRegex(String(name).trim())}$`, "i");
 
-const buildAdvanceMatch = (ledgerId, buyerCompany, supplierCompany) => {
-  const match = { unadjustedAmount: { $gt: 0 } };
+const buildCompanyPairMatch = (ledgerId, buyerCompany, supplierCompany) => {
+  const match = {};
   if (ledgerId && mongoose.Types.ObjectId.isValid(ledgerId)) {
     match.ledgerId = new mongoose.Types.ObjectId(ledgerId);
   }
@@ -27,6 +27,41 @@ const buildAdvanceMatch = (ledgerId, buyerCompany, supplierCompany) => {
     match.supplierCompany = companyRegex(supplierCompany);
   }
   return match;
+};
+
+const buildAdvanceMatch = (ledgerId, buyerCompany, supplierCompany) => ({
+  ...buildCompanyPairMatch(ledgerId, buyerCompany, supplierCompany),
+  unadjustedAmount: { $gt: 0 },
+});
+
+/** Total advance (Dr.) recorded from buyer for scope — before lorry Cr. */
+const sumAdvanceTotalDr = async (pairMatch) => {
+  const rows = await PaymentReceived.aggregate([
+    { $match: { ...pairMatch, paymentType: "Advance" } },
+    { $group: { _id: null, total: { $sum: "$amount" } } },
+  ]);
+  return rows.length > 0 ? rows[0].total : 0;
+};
+
+/** Cr. already posted to seller lorries (Adjustment + Sauda-wise) for scope */
+const sumCreditToSeller = async (pairMatch) => {
+  const rows = await PaymentReceived.aggregate([
+    {
+      $match: {
+        ...pairMatch,
+        paymentType: { $in: ["Adjustment", "Sauda-wise"] },
+        mappings: { $exists: true, $ne: [] },
+      },
+    },
+    { $unwind: "$mappings" },
+    {
+      $group: {
+        _id: null,
+        total: { $sum: { $ifNull: ["$mappings.allocatedAmount", 0] } },
+      },
+    },
+  ]);
+  return rows.length > 0 ? rows[0].total : 0;
 };
 
 /** Reduce unadjusted advance pool (FIFO) when allocating credit to lorries. */
@@ -241,14 +276,41 @@ const getCreditByPair = async (baseMatch) => {
 };
 
 const getBalancePayload = async (ledgerId, buyerCompany, supplierCompany) => {
-  const scopedMatch = buildAdvanceMatch(ledgerId, buyerCompany, supplierCompany);
-  const buyerScopeMatch = buildAdvanceMatch(ledgerId, buyerCompany, "");
-  const ledgerMatch = buildAdvanceMatch(ledgerId, "", "");
+  const scopedPoolMatch = buildAdvanceMatch(
+    ledgerId,
+    buyerCompany,
+    supplierCompany,
+  );
+  const buyerPoolMatch = buildAdvanceMatch(ledgerId, buyerCompany, "");
+  const ledgerPoolMatch = buildAdvanceMatch(ledgerId, "", "");
 
-  const [advanceBalance, totalAdvanceBalance, creditByPair] = await Promise.all([
-    sumAdvance(scopedMatch),
-    sumAdvance(buyerCompany ? buyerScopeMatch : ledgerMatch),
-    getCreditByPair(buyerCompany ? buyerScopeMatch : ledgerMatch),
+  const scopedPairMatch = buildCompanyPairMatch(
+    ledgerId,
+    buyerCompany,
+    supplierCompany,
+  );
+  const buyerPairMatch = buildCompanyPairMatch(ledgerId, buyerCompany, "");
+  const ledgerPairMatch = buildCompanyPairMatch(ledgerId, "", "");
+
+  const poolMatch = buyerCompany ? buyerPoolMatch : ledgerPoolMatch;
+  const pairMatch = buyerCompany ? buyerPairMatch : ledgerPairMatch;
+
+  const [
+    advanceBalance,
+    totalAdvanceBalance,
+    creditByPair,
+    advanceTotalDr,
+    totalAdvanceTotalDr,
+    creditToSeller,
+    totalCreditToSeller,
+  ] = await Promise.all([
+    sumAdvance(scopedPoolMatch),
+    sumAdvance(poolMatch),
+    getCreditByPair(poolMatch),
+    sumAdvanceTotalDr(scopedPairMatch),
+    sumAdvanceTotalDr(pairMatch),
+    sumCreditToSeller(scopedPairMatch),
+    sumCreditToSeller(pairMatch),
   ]);
 
   const entryQuery = {
@@ -270,6 +332,10 @@ const getBalancePayload = async (ledgerId, buyerCompany, supplierCompany) => {
       advanceBalance,
       totalAdvanceBalance,
       creditByPair,
+      advanceTotalDr,
+      totalAdvanceTotalDr,
+      creditToSeller,
+      totalCreditToSeller,
       outstandingBalance: 0,
     };
   }
@@ -301,6 +367,10 @@ const getBalancePayload = async (ledgerId, buyerCompany, supplierCompany) => {
     advanceBalance,
     totalAdvanceBalance,
     creditByPair,
+    advanceTotalDr,
+    totalAdvanceTotalDr,
+    creditToSeller,
+    totalCreditToSeller,
     outstandingBalance: Math.max(0, totalOutstanding),
   };
 };
@@ -316,6 +386,10 @@ const handleBalanceRequest = async (req, res) => {
         advanceBalance: 0,
         totalAdvanceBalance: 0,
         creditByPair: [],
+        advanceTotalDr: 0,
+        totalAdvanceTotalDr: 0,
+        creditToSeller: 0,
+        totalCreditToSeller: 0,
         outstandingBalance: 0,
       });
     }

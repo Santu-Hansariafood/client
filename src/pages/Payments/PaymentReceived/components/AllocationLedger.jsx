@@ -42,7 +42,15 @@ const AllocationLedger = ({
   onAutoAllocate,
   onSaveAll,
   loading,
+  ledgerTopSummary = {},
 }) => {
+  const {
+    debitEntryTotal = 0,
+    creditToSeller = 0,
+    creditPostedToSeller = 0,
+    creditPendingInForm = 0,
+    debitBalanceRemaining = 0,
+  } = ledgerTopSummary;
   const hasCompanyFilter =
     Boolean(formData.companyId) || Boolean(formData.opposingCompanyId);
   const showPagination =
@@ -102,21 +110,21 @@ const AllocationLedger = ({
               </button>
             </div>
 
-            {unallocatedBalance > 0 && (
-              <div className="flex items-center gap-2 bg-emerald-900 text-white px-4 py-2 rounded-xl shadow-lg border border-emerald-700">
+            {(unallocatedBalance > 0 || debitBalanceRemaining > 0) && (
+              <div className="flex items-center gap-2 bg-[#1e3a5f] text-white px-4 py-2 rounded-xl shadow-lg border border-[#1e3a5f]/80">
                 <div className="flex flex-col">
-                  <span className="text-[9px] font-black uppercase tracking-[0.2em] text-emerald-400 leading-none mb-1">
-                    {allocationSource === "advance"
-                      ? "Cr. left to post (Dr. pool)"
-                      : formData.ledgerType === "Buyer"
-                        ? "Cr. remaining"
-                        : "Available to send"}
+                  <span className="text-[9px] font-black uppercase tracking-[0.2em] text-blue-200 leading-none mb-1">
+                    Balance (Dr. − Cr.)
                   </span>
                   <span className="text-sm font-black italic tracking-tight tabular-nums">
-                    Rs. {unallocatedBalance.toLocaleString("en-IN")}
+                    Rs.{" "}
+                    {(allocationSource === "advance"
+                      ? unallocatedBalance
+                      : debitBalanceRemaining
+                    ).toLocaleString("en-IN")}
                   </span>
                 </div>
-                <FaMoneyBillWave className="text-emerald-400 animate-pulse" />
+                <FaMoneyBillWave className="text-blue-200 animate-pulse" />
               </div>
             )}
 
@@ -184,12 +192,16 @@ const AllocationLedger = ({
 
         {hasBuyerCompany && (
             <CreditBalancePanel
-              totalAdvanceBalance={ledgerBalance.totalAdvanceBalance}
-              advanceBalance={ledgerBalance.advanceBalance}
+              debitEntryTotal={debitEntryTotal}
+              creditToSeller={creditToSeller}
+              creditPostedToSeller={creditPostedToSeller}
+              creditPendingInForm={creditPendingInForm}
+              debitBalanceRemaining={debitBalanceRemaining}
               creditByPair={ledgerBalance.creditByPair}
               fullCompanyMapping={fullCompanyMapping}
               buyerCompany={companyPair.buyerCompany}
               supplierCompany={companyPair.supplierCompany}
+              allocationSource={allocationSource}
               onSelectCreditPair={onSelectCreditPair}
             />
           )}
@@ -200,14 +212,9 @@ const AllocationLedger = ({
             supplierCompany={companyPair.supplierCompany}
             mappingActive={fullCompanyMapping}
             buyerOnly={buyerOnlyMapping}
-            allocationSource={allocationSource}
-            debitAdvanceBalance={
-              fullCompanyMapping
-                ? ledgerBalance.advanceBalance ?? 0
-                : ledgerBalance.totalAdvanceBalance ?? 0
-            }
-            entryAmount={formData.amount || 0}
-            unallocatedBalance={unallocatedBalance}
+            debitEntryTotal={debitEntryTotal}
+            creditToSeller={creditToSeller}
+            debitBalanceRemaining={debitBalanceRemaining}
             subtitle={
               fullCompanyMapping
                 ? allocationSource === "advance"

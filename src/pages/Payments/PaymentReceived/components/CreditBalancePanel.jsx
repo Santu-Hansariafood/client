@@ -1,77 +1,102 @@
-import { FaCoins } from "react-icons/fa";
+import { FaCoins, FaMinus } from "react-icons/fa";
 import { formatLedgerAmount } from "../utils/paymentLedgerUtils";
 
 const CreditBalancePanel = ({
-  totalAdvanceBalance = 0,
-  advanceBalance = 0,
+  debitEntryTotal = 0,
+  creditToSeller = 0,
+  creditPostedToSeller = 0,
+  creditPendingInForm = 0,
+  debitBalanceRemaining = 0,
   creditByPair = [],
   fullCompanyMapping = false,
   buyerCompany = "",
   supplierCompany = "",
+  allocationSource = "fresh",
   onSelectCreditPair,
 }) => {
-  const hasDebit = totalAdvanceBalance > 0 || creditByPair.length > 0;
-  const pairDebit =
-    fullCompanyMapping && supplierCompany ? advanceBalance : null;
+  const showSummary = debitEntryTotal > 0 || creditToSeller > 0;
+  const hasPairTable = creditByPair.length > 0;
 
   return (
-    <div className="rounded-xl border border-rose-200 bg-gradient-to-br from-rose-50 via-white to-amber-50/80 p-4 shadow-sm">
-      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-3">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-rose-700 text-white flex items-center justify-center shadow-md">
-            <FaCoins size={16} />
-          </div>
-          <div>
-            <p className="text-[9px] font-black text-rose-800 uppercase tracking-[0.25em]">
-              Debit balance (Advance) · Dr.
-            </p>
-            <p className="text-xl font-black text-rose-900 tabular-nums">
-              {hasDebit
-                ? formatLedgerAmount(
-                    pairDebit != null ? pairDebit : totalAdvanceBalance,
-                  )
-                : formatLedgerAmount(0)}
-            </p>
-            <p className="text-[10px] font-bold text-rose-600/80 mt-0.5">
-              {fullCompanyMapping && supplierCompany
-                ? `From ${buyerCompany} (buyer) · spend lorry-wise on ${supplierCompany} (seller) — post Cr. below`
-                : buyerCompany
-                  ? `Advance received from ${buyerCompany} — select seller, then allocate per lorry`
-                  : "Buyer advance on account (Dr.) — mapped buyer → seller"}
-            </p>
-          </div>
+    <div className="rounded-xl border border-slate-200 bg-gradient-to-br from-slate-50 via-white to-slate-50/80 p-4 shadow-sm">
+      <div className="flex items-center gap-2 mb-3">
+        <div className="w-9 h-9 rounded-xl bg-[#1e3a5f] text-white flex items-center justify-center shadow-md">
+          <FaCoins size={14} />
         </div>
-        {fullCompanyMapping && supplierCompany && (
-          <div className="px-3 py-2 rounded-lg bg-amber-500 text-white shadow-sm text-right">
-            <p className="text-[9px] font-black uppercase tracking-widest opacity-90">
-              Seller
-            </p>
-            <p className="text-xs font-black uppercase truncate max-w-[160px]">
-              {supplierCompany}
-            </p>
-          </div>
-        )}
+        <p className="text-[9px] font-black text-[#1e3a5f] uppercase tracking-[0.25em]">
+          Buyer → seller · entry total (Dr. − Cr.)
+        </p>
       </div>
 
-      {!hasDebit && (
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
+        <div className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3">
+          <p className="text-[9px] font-black text-rose-800 uppercase tracking-widest">
+            Debit balance (Advance) · Dr.
+          </p>
+          <p className="text-lg font-black text-rose-900 tabular-nums mt-1">
+            {formatLedgerAmount(debitEntryTotal)}
+          </p>
+          <p className="text-[9px] font-bold text-rose-600/90 mt-1 normal-case">
+            {allocationSource === "advance"
+              ? "Total from buyer (entry / advance)"
+              : "Entry amount from buyer"}
+          </p>
+        </div>
+
+        <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3">
+          <p className="text-[9px] font-black text-emerald-800 uppercase tracking-widest">
+            Credit amount · Cr.
+          </p>
+          <p className="text-lg font-black text-emerald-900 tabular-nums mt-1">
+            {formatLedgerAmount(creditToSeller)}
+          </p>
+          <p className="text-[9px] font-bold text-emerald-600/90 mt-1 normal-case">
+            To seller
+            {creditPendingInForm > 0
+              ? ` · ${formatLedgerAmount(creditPostedToSeller)} saved + ${formatLedgerAmount(creditPendingInForm)} in table`
+              : fullCompanyMapping && supplierCompany
+                ? ` · ${supplierCompany} lorries`
+                : ""}
+          </p>
+        </div>
+
+        <div className="rounded-lg border border-[#1e3a5f]/25 bg-[#eef4ff] px-4 py-3 relative">
+          <FaMinus
+            className="hidden sm:block absolute -left-3 top-1/2 -translate-y-1/2 text-slate-300"
+            size={10}
+          />
+          <p className="text-[9px] font-black text-[#1e3a5f] uppercase tracking-widest">
+            Balance (Dr. − Cr.)
+          </p>
+          <p className="text-lg font-black text-[#1e3a5f] tabular-nums mt-1">
+            {formatLedgerAmount(debitBalanceRemaining)}
+          </p>
+          <p className="text-[9px] font-bold text-slate-500 mt-1 normal-case">
+            Remaining from buyer entry
+          </p>
+        </div>
+      </div>
+
+      {!showSummary && (
         <p className="text-[11px] font-bold text-slate-500">
-          No buyer advance (Dr.) on account. Record advance with buyer + seller,
-          then post Cr. against that seller&apos;s lorries in the table.
+          Enter payment or record buyer advance (Dr.), then post Cr. per lorry —
+          balance = Dr. − Cr.
         </p>
       )}
 
-      {hasDebit && !fullCompanyMapping && (
-        <p className="text-[11px] font-bold text-rose-700 mb-2">
-          Pick seller for this buyer, switch to{" "}
-          <span className="uppercase">From Advance</span>, then enter Cr. per
-          lorry (uses buyer Dr. for that seller only).
+      {showSummary && fullCompanyMapping && supplierCompany && (
+        <p className="text-[10px] font-bold text-slate-500 mb-2">
+          {buyerCompany} → {supplierCompany}:{" "}
+          {formatLedgerAmount(debitEntryTotal)} Dr. −{" "}
+          {formatLedgerAmount(creditToSeller)} Cr. ={" "}
+          {formatLedgerAmount(debitBalanceRemaining)} left
         </p>
       )}
 
-      {creditByPair.length > 0 && (
+      {hasPairTable && (
         <div>
           <p className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em] mb-2">
-            Buyer → seller · Dr. advance · click row to load lorries
+            Dr. advance by buyer → seller · click row
           </p>
           <div className="max-h-40 overflow-y-auto rounded-lg border border-rose-100 bg-white/90">
             <table className="w-full text-left text-xs">
@@ -84,7 +109,7 @@ const CreditBalancePanel = ({
                     Seller
                   </th>
                   <th className="px-3 py-2 font-black text-[9px] uppercase text-slate-500 text-right">
-                    Dr.
+                    Dr. left
                   </th>
                 </tr>
               </thead>

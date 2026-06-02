@@ -34,6 +34,7 @@ import {
   filterEntriesForCompanyScope,
   calculateEntryDueAmount,
   matchCompanyName,
+  computeBuyerSellerLedgerSummary,
 } from "./utils/paymentLedgerUtils";
 
 const ENTRIES_PAGE_SIZE = 20;
@@ -63,6 +64,10 @@ const AddPaymentReceived = () => {
     advanceBalance: 0,
     totalAdvanceBalance: 0,
     creditByPair: [],
+    advanceTotalDr: 0,
+    totalAdvanceTotalDr: 0,
+    creditToSeller: 0,
+    totalCreditToSeller: 0,
     outstandingBalance: 0,
   });
   const [activeTab, setActiveTab] = useState("allocation"); // allocation, history, summary
@@ -297,15 +302,39 @@ const AddPaymentReceived = () => {
     pairCreditFromList,
   ]);
 
-  const unallocatedBalance = useMemo(() => {
-    const totalAllocated = entries.reduce((sum, entry) => {
-      if (!entry.isSaved) {
-        return sum + (parseFloat(entry.allocatedAmount) || 0);
-      }
-      return sum;
-    }, 0);
-    return Math.max(0, availableAllocationPool - totalAllocated);
-  }, [availableAllocationPool, entries]);
+  const creditPendingInForm = useMemo(
+    () =>
+      entries.reduce((sum, entry) => {
+        if (!entry.isSaved) {
+          return sum + (parseFloat(entry.allocatedAmount) || 0);
+        }
+        return sum;
+      }, 0),
+    [entries],
+  );
+
+  const unallocatedBalance = useMemo(
+    () => Math.max(0, availableAllocationPool - creditPendingInForm),
+    [availableAllocationPool, creditPendingInForm],
+  );
+
+  const ledgerTopSummary = useMemo(
+    () =>
+      computeBuyerSellerLedgerSummary({
+        allocationSource,
+        formAmount: formData.amount,
+        ledgerBalance,
+        fullCompanyMapping,
+        creditPendingInForm,
+      }),
+    [
+      allocationSource,
+      formData.amount,
+      ledgerBalance,
+      fullCompanyMapping,
+      creditPendingInForm,
+    ],
+  );
 
   const opposingCompanyOptions = useMemo(() => {
     const sellerNames = collectUniqueCompanyNames(opposingLedgers);
@@ -596,6 +625,10 @@ const AddPaymentReceived = () => {
         advanceBalance: 0,
         totalAdvanceBalance: 0,
         creditByPair: [],
+        advanceTotalDr: 0,
+        totalAdvanceTotalDr: 0,
+        creditToSeller: 0,
+        totalCreditToSeller: 0,
         outstandingBalance: 0,
       });
       return;
@@ -620,6 +653,10 @@ const AddPaymentReceived = () => {
         advanceBalance: response.data.advanceBalance ?? 0,
         totalAdvanceBalance: response.data.totalAdvanceBalance ?? 0,
         creditByPair: response.data.creditByPair ?? [],
+        advanceTotalDr: response.data.advanceTotalDr ?? 0,
+        totalAdvanceTotalDr: response.data.totalAdvanceTotalDr ?? 0,
+        creditToSeller: response.data.creditToSeller ?? 0,
+        totalCreditToSeller: response.data.totalCreditToSeller ?? 0,
       });
     } catch (error) {
       console.error("Error fetching balance:", error);
@@ -1641,6 +1678,7 @@ const AddPaymentReceived = () => {
           entryStats={entryStats}
           companyPair={companyPair}
           fullCompanyMapping={fullCompanyMapping}
+          ledgerTopSummary={ledgerTopSummary}
         />
 
         <AccountSelection
@@ -1693,6 +1731,7 @@ const AddPaymentReceived = () => {
               onAutoAllocate={handleAutoAllocate}
               onSaveAll={handleSaveAllAllocations}
               loading={loading}
+              ledgerTopSummary={ledgerTopSummary}
             />
           )}
 

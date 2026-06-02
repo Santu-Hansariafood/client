@@ -192,6 +192,44 @@ export const buildTallyOutstandingRows = (entries, calculateTallyDetails) =>
 export const formatLedgerAmount = (n) =>
   `₹ ${Number(n || 0).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
+/**
+ * Top summary: Dr. from buyer (entry total) − Cr. to seller = balance.
+ */
+export const computeBuyerSellerLedgerSummary = ({
+  allocationSource = "fresh",
+  formAmount = 0,
+  ledgerBalance = {},
+  fullCompanyMapping = false,
+  creditPendingInForm = 0,
+}) => {
+  const pending = Number(creditPendingInForm) || 0;
+  const postedCr = fullCompanyMapping
+    ? Number(ledgerBalance.creditToSeller) || 0
+    : Number(ledgerBalance.totalCreditToSeller) || 0;
+
+  let debitEntryTotal = 0;
+  if (allocationSource === "advance") {
+    debitEntryTotal = fullCompanyMapping
+      ? Number(ledgerBalance.advanceTotalDr) ||
+        Number(ledgerBalance.advanceBalance) + postedCr
+      : Number(ledgerBalance.totalAdvanceTotalDr) ||
+        Number(ledgerBalance.totalAdvanceBalance) + postedCr;
+  } else {
+    debitEntryTotal = Number(formAmount) || 0;
+  }
+
+  const creditToSeller = postedCr + pending;
+  const debitBalanceRemaining = Math.max(0, debitEntryTotal - creditToSeller);
+
+  return {
+    debitEntryTotal,
+    creditPostedToSeller: postedCr,
+    creditPendingInForm: pending,
+    creditToSeller,
+    debitBalanceRemaining,
+  };
+};
+
 export const hasFullCompanyMapping = (companyPair) =>
   Boolean(companyPair?.buyerCompany && companyPair?.supplierCompany);
 
