@@ -76,7 +76,7 @@ const AccountSelection = ({
           </div>
           {allocationSource === "fresh" && (formData.amount || 0) <= 0 && (
             <p className="text-[9px] font-black text-blue-600 uppercase tracking-tighter animate-pulse">
-              Tip: Switch to "From Advance" to adjust existing Dr. balance
+              Tip: Use From Advance to spend buyer Dr. on seller lorries
             </p>
           )}
         </div>
@@ -262,10 +262,14 @@ const AccountSelection = ({
                 }`}
               >
                 <FaSave />
-                Record as Advance
+                Record buyer Dr. advance
               </button>
             </div>
           </div>
+          <p className="text-[10px] font-bold text-slate-500 mt-2">
+            Advance (Dr.) is money from the buyer on account for the selected
+            seller — allocate Cr. per lorry below (From Advance tab).
+          </p>
           {formData.amount > 0 && (
             <div className="mt-4 p-3 bg-blue-50 border border-blue-100 rounded-xl flex items-center gap-3 animate-pulse">
               <div className="w-2 h-2 rounded-full bg-blue-600"></div>

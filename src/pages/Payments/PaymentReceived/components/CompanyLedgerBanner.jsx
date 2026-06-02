@@ -47,27 +47,31 @@ const CompanyLedgerBanner = ({
       )}
       {(mappingActive || buyerOnly) && (
         <div className="mt-3 flex flex-wrap gap-2 sm:gap-3">
+          {debitAdvanceBalance > 0 && (
+            <div className="inline-flex flex-col px-3 py-2 rounded-lg bg-rose-50 border border-rose-200 min-w-[160px]">
+              <span className="text-[9px] font-black text-rose-800 uppercase tracking-widest">
+                Debit balance (Advance) · Dr.
+              </span>
+              <span className="text-sm font-black text-rose-700 tabular-nums">
+                {formatLedgerAmount(debitAdvanceBalance)}
+              </span>
+              <span className="text-[8px] font-bold text-rose-600/90 normal-case mt-0.5">
+                From buyer · spend on seller lorries
+                {!isAdvanceMode ? " · use From Advance" : ""}
+              </span>
+            </div>
+          )}
           {isAdvanceMode ? (
-            <>
-              <div className="inline-flex flex-col px-3 py-2 rounded-lg bg-rose-50 border border-rose-200 min-w-[140px]">
-                <span className="text-[9px] font-black text-rose-800 uppercase tracking-widest">
-                  Debit balance (Advance) · Dr.
+            debitAdvanceBalance > 0 && (
+              <div className="inline-flex flex-col px-3 py-2 rounded-lg bg-emerald-50 border border-emerald-200 min-w-[140px]">
+                <span className="text-[9px] font-black text-emerald-800 uppercase tracking-widest">
+                  Cr. left to post (lorries)
                 </span>
-                <span className="text-sm font-black text-rose-700 tabular-nums">
-                  {formatLedgerAmount(debitAdvanceBalance)}
+                <span className="text-sm font-black text-emerald-700 tabular-nums">
+                  {formatLedgerAmount(unallocatedBalance)}
                 </span>
               </div>
-              {debitAdvanceBalance > 0 && (
-                <div className="inline-flex flex-col px-3 py-2 rounded-lg bg-emerald-50 border border-emerald-200 min-w-[140px]">
-                  <span className="text-[9px] font-black text-emerald-800 uppercase tracking-widest">
-                    Cr. left to post
-                  </span>
-                  <span className="text-sm font-black text-emerald-700 tabular-nums">
-                    {formatLedgerAmount(unallocatedBalance)}
-                  </span>
-                </div>
-              )}
-            </>
+            )
           ) : (
             <>
               <div className="inline-flex flex-col px-3 py-2 rounded-lg bg-emerald-50 border border-emerald-200 min-w-[140px]">
@@ -77,11 +81,14 @@ const CompanyLedgerBanner = ({
                 <span className="text-sm font-black text-emerald-700 tabular-nums">
                   {formatLedgerAmount(entryAmount)}
                 </span>
+                <span className="text-[8px] font-bold text-emerald-600/80 normal-case mt-0.5">
+                  Fresh receipt from buyer
+                </span>
               </div>
               {entryAmount > 0 && (
                 <div className="inline-flex flex-col px-3 py-2 rounded-lg bg-slate-100 border border-slate-200 min-w-[140px]">
                   <span className="text-[9px] font-black text-slate-600 uppercase tracking-widest">
-                    Cr. remaining
+                    Cr. remaining (lorries)
                   </span>
                   <span className="text-sm font-black text-slate-800 tabular-nums">
                     {formatLedgerAmount(unallocatedBalance)}

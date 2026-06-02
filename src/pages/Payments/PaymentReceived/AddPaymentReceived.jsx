@@ -934,8 +934,12 @@ const AddPaymentReceived = () => {
       ...entry,
       uiKey: `${entry._id}-extra-${Date.now()}`,
       allocatedAmount: "",
-      debitNote: entry.debitNote || "Due against lorry",
-      creditNote: entry.creditNote || "Allocation posted",
+      debitNote: entry.debitNote || "Lorry freight due (Dr.)",
+      creditNote:
+        entry.creditNote ||
+        (allocationSource === "advance"
+          ? "Cr. from buyer advance · lorry"
+          : "Payment received (Cr.) · lorry"),
       rowRemarks: "",
       isSaved: false,
     };
@@ -1128,6 +1132,7 @@ const AddPaymentReceived = () => {
 
     try {
       setLoading(true);
+      const pairLabel = `${companyPair.buyerCompany} → ${companyPair.supplierCompany}`;
       const payload = {
         ...formData,
         date: formData.allocationDate || formData.date,
@@ -1136,6 +1141,9 @@ const AddPaymentReceived = () => {
         ...buildCompanyPayload(),
         paymentType: "Advance",
         mappings: [],
+        remarks:
+          formData.remarks?.trim() ||
+          `Advance (Dr.) from buyer for ${pairLabel} · lorry-wise Cr. later`,
       };
 
       await api.post("/payment-received", payload);

@@ -34,10 +34,10 @@ const CreditBalancePanel = ({
             </p>
             <p className="text-[10px] font-bold text-rose-600/80 mt-0.5">
               {fullCompanyMapping && supplierCompany
-                ? `${buyerCompany} → ${supplierCompany} · post Cr. in table below`
+                ? `From ${buyerCompany} (buyer) · spend lorry-wise on ${supplierCompany} (seller) — post Cr. below`
                 : buyerCompany
-                  ? `All unadjusted advance (Dr.) for ${buyerCompany} — select seller or click a row`
-                  : "Total advance on account (Dr.)"}
+                  ? `Advance received from ${buyerCompany} — select seller, then allocate per lorry`
+                  : "Buyer advance on account (Dr.) — mapped buyer → seller"}
             </p>
           </div>
         </div>
@@ -55,22 +55,23 @@ const CreditBalancePanel = ({
 
       {!hasDebit && (
         <p className="text-[11px] font-bold text-slate-500">
-          No advance on account (Dr.). Record an advance with buyer and seller,
-          then post credit (Cr.) against lorries in the table.
+          No buyer advance (Dr.) on account. Record advance with buyer + seller,
+          then post Cr. against that seller&apos;s lorries in the table.
         </p>
       )}
 
       {hasDebit && !fullCompanyMapping && (
         <p className="text-[11px] font-bold text-rose-700 mb-2">
-          Select seller, switch to <span className="uppercase">From Advance</span>,
-          then enter <span className="uppercase">Cr.</span> amounts in allocation.
+          Pick seller for this buyer, switch to{" "}
+          <span className="uppercase">From Advance</span>, then enter Cr. per
+          lorry (uses buyer Dr. for that seller only).
         </p>
       )}
 
       {creditByPair.length > 0 && (
         <div>
           <p className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em] mb-2">
-            Company mapping · advance (Dr.) · click row to load seller
+            Buyer → seller · Dr. advance · click row to load lorries
           </p>
           <div className="max-h-40 overflow-y-auto rounded-lg border border-rose-100 bg-white/90">
             <table className="w-full text-left text-xs">

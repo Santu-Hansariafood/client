@@ -66,10 +66,17 @@ export const buildPaymentParticulars = (payment) => {
 
   const mappings = payment.mappings || [];
   if (mappings.length === 0) {
+    const pairHint =
+      buyer && seller ? `${buyer} → ${seller}` : buyer || seller || "";
     const base = (
       payment.paymentType === "Advance"
-        ? payment.remarks || "Advance on account (Dr.)"
-        : payment.remarks || "On account"
+        ? payment.remarks ||
+          (pairHint
+            ? `Advance (Dr.) from buyer · ${pairHint} · for seller lorries`
+            : "Advance (Dr.) from buyer · for seller lorries")
+        : payment.paymentType === "Adjustment"
+          ? payment.remarks || "Cr. from Dr. advance · lorry allocation"
+          : payment.remarks || "On account"
     ).toUpperCase();
     return pairLabel ? `${pairLabel} | ${base}` : base;
   }

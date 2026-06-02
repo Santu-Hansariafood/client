@@ -72,12 +72,15 @@ const AllocationLedger = ({
               </h4>
               <p className="text-[11px] text-slate-500 font-medium uppercase tracking-wider">
                 {allocationSource === "fresh"
-                  ? "Allocate payment to lorry / sauda"
+                  ? fullCompanyMapping &&
+                    (ledgerBalance.advanceBalance ?? 0) > 0
+                    ? `New payment (Cr.) or Dr. advance Rs. ${(ledgerBalance.advanceBalance ?? 0).toLocaleString("en-IN")} from ${companyPair.buyerCompany} for ${companyPair.supplierCompany} lorries`
+                    : "Allocate buyer payment (Cr.) to seller lorries / sauda"
                   : fullCompanyMapping
-                    ? `Post Cr. against lorries from Dr. advance Rs. ${(ledgerBalance.advanceBalance ?? 0).toLocaleString("en-IN")} (${companyPair.buyerCompany} → ${companyPair.supplierCompany})`
+                    ? `Use Dr. advance Rs. ${(ledgerBalance.advanceBalance ?? 0).toLocaleString("en-IN")} from ${companyPair.buyerCompany} — post Cr. per lorry to ${companyPair.supplierCompany}`
                     : (ledgerBalance.totalAdvanceBalance ?? 0) > 0
-                      ? `Total Dr. advance Rs. ${ledgerBalance.totalAdvanceBalance.toLocaleString("en-IN")} — select seller`
-                      : "Record advance (Dr.) with buyer + seller first"}
+                      ? `Dr. Rs. ${ledgerBalance.totalAdvanceBalance.toLocaleString("en-IN")} from buyer — select seller, then Cr. per lorry`
+                      : "Record buyer advance (Dr.) with buyer + seller first"}
               </p>
             </div>
           </div>
@@ -207,10 +210,12 @@ const AllocationLedger = ({
             unallocatedBalance={unallocatedBalance}
             subtitle={
               fullCompanyMapping
-                ? "Allocate entry amount to pending lorries for this buyer → seller"
+                ? allocationSource === "advance"
+                  ? `Buyer Dr. advance for ${companyPair.supplierCompany} — post Cr. on each lorry line below`
+                  : `Buyer → seller lorries · new Cr. payment or switch to From Advance for existing Dr.`
                 : loadingSellerOptions
                   ? "Loading sellers linked to this buyer…"
-                  : "Choose seller company — list shows pending lorries for this buyer"
+                  : "Choose seller — table shows that buyer's pending lorries per seller"
             }
           />
         ) : (

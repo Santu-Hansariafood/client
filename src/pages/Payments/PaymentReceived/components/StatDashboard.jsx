@@ -44,15 +44,20 @@ const StatDashboard = ({
 
             <StatCard
                 icon={<FaHistory size={18} />}
-                label="DEBIT BALANCE (ADVANCE) · FROM"
-                value={`Dr. Rs. ${(ledgerBalance.totalAdvanceBalance ?? ledgerBalance.advanceBalance ?? 0).toLocaleString('en-IN')}`}
+                label="Debit balance (Advance) · Dr."
+                value={`Rs. ${(fullCompanyMapping
+                    ? (ledgerBalance.advanceBalance ?? 0)
+                    : (ledgerBalance.totalAdvanceBalance ?? ledgerBalance.advanceBalance ?? 0)
+                ).toLocaleString('en-IN')}`}
                 subValue={
                     fullCompanyMapping
-                        ? `Money coming FROM this Dr. pool`
-                        : "Select buyer + seller to see pair Dr."
+                        ? `From ${companyPair.buyerCompany} · spend on ${companyPair.supplierCompany} lorries`
+                        : companyPair?.buyerCompany
+                          ? `From ${companyPair.buyerCompany} — select seller for pair`
+                          : "Buyer advance · allocate seller-wise"
                 }
-                color="bg-blue-50"
-                iconColor="text-blue-600"
+                color="bg-rose-50"
+                iconColor="text-rose-600"
             />
 
             <StatCard
