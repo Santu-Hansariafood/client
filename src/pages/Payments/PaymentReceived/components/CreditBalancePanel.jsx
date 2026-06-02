@@ -38,8 +38,8 @@ const CreditBalancePanel = ({
           </p>
           <p className="text-[9px] font-bold text-rose-600/90 mt-1 normal-case">
             {allocationSource === "advance"
-              ? "Total from buyer (entry / advance)"
-              : "Entry amount from buyer"}
+              ? "From buyer (advance pool or entry above)"
+              : "Same as Amount to Allocate above"}
           </p>
         </div>
 
@@ -51,12 +51,10 @@ const CreditBalancePanel = ({
             {formatLedgerAmount(creditToSeller)}
           </p>
           <p className="text-[9px] font-bold text-emerald-600/90 mt-1 normal-case">
-            To seller
-            {creditPendingInForm > 0
-              ? ` · ${formatLedgerAmount(creditPostedToSeller)} saved + ${formatLedgerAmount(creditPendingInForm)} in table`
-              : fullCompanyMapping && supplierCompany
-                ? ` · ${supplierCompany} lorries`
-                : ""}
+            Total Cr. to seller lorries
+            {allocationSource === "advance" && creditPostedToSeller > 0
+              ? ` (${formatLedgerAmount(creditPostedToSeller)} saved + table)`
+              : ""}
           </p>
         </div>
 

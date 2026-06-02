@@ -7,6 +7,7 @@ import {
 } from "react-icons/fa";
 import DataDropdown from "../../../../common/DataDropdown/DataDropdown";
 import Buttons from "../../../../common/Buttons/Buttons";
+import CreditBalancePanel from "./CreditBalancePanel";
 
 const AccountSelection = ({
   allocationSource,
@@ -27,7 +28,14 @@ const AccountSelection = ({
   hasResolvedLedger,
   loadingSellerOptions,
   hasBuyerCompany,
+  companyPair = {},
+  fullCompanyMapping = false,
+  ledgerTopSummary = {},
+  creditByPair = [],
+  onSelectCreditPair,
 }) => {
+  const showEntryLedger =
+    (Number(formData.amount) || 0) > 0 || hasBuyerCompany;
   return (
     <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
       <div className="p-6 border-b border-slate-100 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
@@ -271,13 +279,30 @@ const AccountSelection = ({
             seller — allocate Cr. per lorry below (From Advance tab).
           </p>
           {formData.amount > 0 && (
-            <div className="mt-4 p-3 bg-blue-50 border border-blue-100 rounded-xl flex items-center gap-3 animate-pulse">
+            <div className="mt-4 p-3 bg-blue-50 border border-blue-100 rounded-xl flex items-center gap-3">
               <div className="w-2 h-2 rounded-full bg-blue-600"></div>
               <p className="text-[10px] font-bold text-blue-700 uppercase tracking-wider">
-                Amount set to ₹{Number(formData.amount).toLocaleString("en-IN")}
-                . Now use the <span className="underline">Auto-Allocate</span>{" "}
-                or manually adjust lorries below.
+                Entry ₹{Number(formData.amount).toLocaleString("en-IN")} → Dr.
+                below · allocate lorries for Cr.
               </p>
+            </div>
+          )}
+
+          {showEntryLedger && (
+            <div className="mt-4">
+              <CreditBalancePanel
+                debitEntryTotal={ledgerTopSummary.debitEntryTotal ?? 0}
+                creditToSeller={ledgerTopSummary.creditToSeller ?? 0}
+                creditPostedToSeller={ledgerTopSummary.creditPostedToSeller ?? 0}
+                creditPendingInForm={ledgerTopSummary.creditPendingInForm ?? 0}
+                debitBalanceRemaining={ledgerTopSummary.debitBalanceRemaining ?? 0}
+                creditByPair={creditByPair}
+                fullCompanyMapping={fullCompanyMapping}
+                buyerCompany={companyPair.buyerCompany || ""}
+                supplierCompany={companyPair.supplierCompany || ""}
+                allocationSource={allocationSource}
+                onSelectCreditPair={onSelectCreditPair}
+              />
             </div>
           )}
         </div>

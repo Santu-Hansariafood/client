@@ -12,7 +12,6 @@ import Loading from "../../../../common/Loading/Loading";
 import Paginations from "../../../../common/Paginations/Paginations";
 import DateRangeSelector from "../../../../common/DateSelector/DateRangeSelector";
 import CompanyLedgerBanner from "./CompanyLedgerBanner";
-import CreditBalancePanel from "./CreditBalancePanel";
 import { formatLedgerAmount } from "../utils/paymentLedgerUtils";
 
 const AllocationLedger = ({
@@ -47,8 +46,6 @@ const AllocationLedger = ({
   const {
     debitEntryTotal = 0,
     creditToSeller = 0,
-    creditPostedToSeller = 0,
-    creditPendingInForm = 0,
     debitBalanceRemaining = 0,
   } = ledgerTopSummary;
   const hasCompanyFilter =
@@ -189,22 +186,6 @@ const AllocationLedger = ({
             />
           </div>
         </div>
-
-        {hasBuyerCompany && (
-            <CreditBalancePanel
-              debitEntryTotal={debitEntryTotal}
-              creditToSeller={creditToSeller}
-              creditPostedToSeller={creditPostedToSeller}
-              creditPendingInForm={creditPendingInForm}
-              debitBalanceRemaining={debitBalanceRemaining}
-              creditByPair={ledgerBalance.creditByPair}
-              fullCompanyMapping={fullCompanyMapping}
-              buyerCompany={companyPair.buyerCompany}
-              supplierCompany={companyPair.supplierCompany}
-              allocationSource={allocationSource}
-              onSelectCreditPair={onSelectCreditPair}
-            />
-          )}
 
         {showMappingBanner ? (
           <CompanyLedgerBanner

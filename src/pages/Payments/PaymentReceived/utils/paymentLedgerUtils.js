@@ -201,11 +201,15 @@ export const computeBuyerSellerLedgerSummary = ({
   ledgerBalance = {},
   fullCompanyMapping = false,
   creditPendingInForm = 0,
+  creditTableTotal = 0,
 }) => {
   const pending = Number(creditPendingInForm) || 0;
+  const tableCr = Number(creditTableTotal) || 0;
   const postedCr = fullCompanyMapping
     ? Number(ledgerBalance.creditToSeller) || 0
     : Number(ledgerBalance.totalCreditToSeller) || 0;
+
+  const entryDr = Number(formAmount) || 0;
 
   let debitEntryTotal = 0;
   if (allocationSource === "advance") {
@@ -214,11 +218,20 @@ export const computeBuyerSellerLedgerSummary = ({
         Number(ledgerBalance.advanceBalance) + postedCr
       : Number(ledgerBalance.totalAdvanceTotalDr) ||
         Number(ledgerBalance.totalAdvanceBalance) + postedCr;
+    // Use entry amount when user typed a new advance in the form
+    if (entryDr > 0) {
+      debitEntryTotal = entryDr;
+    }
   } else {
-    debitEntryTotal = Number(formAmount) || 0;
+    // Payment Received: Dr. = entry amount from "Record new payment"
+    debitEntryTotal = entryDr;
   }
 
-  const creditToSeller = postedCr + pending;
+  // Fresh: Cr. = total credit in allocation table (this payment session)
+  // Advance: Cr. = saved Cr. to seller + table allocations
+  const creditToSeller =
+    allocationSource === "advance" ? postedCr + tableCr : tableCr;
+
   const debitBalanceRemaining = Math.max(0, debitEntryTotal - creditToSeller);
 
   return {

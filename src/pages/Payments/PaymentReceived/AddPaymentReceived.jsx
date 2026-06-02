@@ -313,6 +313,15 @@ const AddPaymentReceived = () => {
     [entries],
   );
 
+  const creditTableTotal = useMemo(
+    () =>
+      entries.reduce(
+        (sum, entry) => sum + (parseFloat(entry.allocatedAmount) || 0),
+        0,
+      ),
+    [entries],
+  );
+
   const unallocatedBalance = useMemo(
     () => Math.max(0, availableAllocationPool - creditPendingInForm),
     [availableAllocationPool, creditPendingInForm],
@@ -326,6 +335,7 @@ const AddPaymentReceived = () => {
         ledgerBalance,
         fullCompanyMapping,
         creditPendingInForm,
+        creditTableTotal,
       }),
     [
       allocationSource,
@@ -333,6 +343,7 @@ const AddPaymentReceived = () => {
       ledgerBalance,
       fullCompanyMapping,
       creditPendingInForm,
+      creditTableTotal,
     ],
   );
 
@@ -818,7 +829,10 @@ const AddPaymentReceived = () => {
       }));
       return;
     }
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({
+      ...prev,
+      [name]: name === "amount" ? (value === "" ? 0 : parseFloat(value) || 0) : value,
+    }));
   };
 
   const handleCompanyChange = (option) => {
@@ -1700,6 +1714,11 @@ const AddPaymentReceived = () => {
           hasResolvedLedger={Boolean(formData.ledgerId)}
           loadingSellerOptions={loadingSellerOptions}
           hasBuyerCompany={hasBuyerCompany}
+          companyPair={companyPair}
+          fullCompanyMapping={fullCompanyMapping}
+          ledgerTopSummary={ledgerTopSummary}
+          creditByPair={ledgerBalance.creditByPair}
+          onSelectCreditPair={handleSelectCreditPair}
         />
 
         <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden min-h-[500px]">
