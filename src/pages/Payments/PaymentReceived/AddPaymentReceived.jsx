@@ -480,6 +480,8 @@ const AddPaymentReceived = () => {
             uiKey: `${item._id}-${index}-${Date.now()}`,
             allocatedAmount:
               item.paymentStatus === "done" ? item.paidAmount : "",
+            debitNote: "Due against lorry",
+            creditNote: "Allocation posted",
             rowRemarks: "",
             isSaved: item.paymentStatus === "done",
           })),
@@ -939,11 +941,29 @@ const AddPaymentReceived = () => {
     );
   };
 
+  const handleDebitNoteChange = (uiKey, debitNote) => {
+    setEntries((prev) =>
+      prev.map((entry) =>
+        entry.uiKey === uiKey ? { ...entry, debitNote } : entry,
+      ),
+    );
+  };
+
+  const handleCreditNoteChange = (uiKey, creditNote) => {
+    setEntries((prev) =>
+      prev.map((entry) =>
+        entry.uiKey === uiKey ? { ...entry, creditNote } : entry,
+      ),
+    );
+  };
+
   const handleAddRow = (entry, index) => {
     const newRow = {
       ...entry,
       uiKey: `${entry._id}-extra-${Date.now()}`,
       allocatedAmount: "",
+      debitNote: entry.debitNote || "Due against lorry",
+      creditNote: entry.creditNote || "Allocation posted",
       rowRemarks: "",
       isSaved: false,
     };
@@ -1061,6 +1081,14 @@ const AddPaymentReceived = () => {
           formData.ledgerType ||
           inferLedgerTypeForCompany(formData.companyId, ledgers, opposingLedgers);
 
+        const lineRemark = [
+          entry.debitNote || "Due against lorry",
+          entry.creditNote || "Allocation posted",
+          entry.rowRemarks || "",
+        ]
+          .filter(Boolean)
+          .join(" | ");
+
         const payload = {
           date: formData.allocationDate || formData.date,
           ledgerType: recordLedgerType,
@@ -1077,10 +1105,10 @@ const AddPaymentReceived = () => {
               saudaNo: entry.saudaNo,
               loadingEntryId: entry._id,
               allocatedAmount: numAllocated,
-              remarks: entry.rowRemarks,
+              remarks: lineRemark,
             },
           ],
-          remarks: entry.rowRemarks,
+          remarks: lineRemark,
         };
 
         await api.post("/payment-received", payload);
@@ -1399,78 +1427,87 @@ const AddPaymentReceived = () => {
             : String(row.allocatedAmount);
 
         return (
-          <div className="flex flex-col gap-2 text-[9px] font-black min-w-[220px] uppercase">
-            <div className="text-[9px] font-black text-slate-600 normal-case bg-slate-50 border border-slate-200 rounded px-2 py-1">
-              Net: Rs. {details.netAmount.toFixed(0)} | Paid Cr.: Rs.{" "}
-              {(row.paidAmount || 0).toFixed(0)} | Due Dr.: Rs.{" "}
-              {details.dueAmount.toFixed(0)}
-            </div>
-            <div className="border-t border-emerald-200 pt-2 mt-0.5">
-              <label className="text-[9px] text-emerald-900 font-black tracking-widest block mb-1">
-                {allocationSource === "advance" ? "POST Cr. · TO THIS LORRY" : "POST Cr. (TYPE HERE)"}
-              </label>
-              <p className="text-[8px] font-black text-slate-500 normal-case mb-1">
-                Common posting date: {new Date(formData.allocationDate || formData.date).toLocaleDateString("en-GB")}
-              </p>
-              <div className="relative group">
+          <div className="flex flex-col gap-1.5 text-[9px] font-black min-w-[560px] uppercase">
+            <div className="grid grid-cols-5 gap-2 items-center bg-slate-50 border border-slate-200 rounded px-2 py-1.5">
+              <div className="flex flex-col">
+                <span className="text-[8px] text-slate-400">Date</span>
+                <span className="text-slate-700 normal-case">
+                  {new Date(formData.allocationDate || formData.date).toLocaleDateString("en-GB")}
+                </span>
+              </div>
+              <div className="flex flex-col">
+                <span className="text-[8px] text-slate-400">Debit note</span>
                 <input
                   type="text"
-                  inputMode="decimal"
-                  value={allocDisplay}
-                  onChange={(e) =>
-                    handleAllocationChange(
-                      row.uiKey,
-                      e.target.value,
-                      details.dueAmount,
-                    )
-                  }
+                  value={row.debitNote || ""}
+                  onChange={(e) => handleDebitNoteChange(row.uiKey, e.target.value)}
                   disabled={isLocked}
-                  className={`w-full px-3 py-2.5 rounded-lg border-2 text-sm font-black tabular-nums normal-case ${
+                  className={`h-7 px-2 rounded border text-[10px] font-bold normal-case ${
                     isLocked
-                      ? "bg-slate-50 text-slate-400 border-slate-100"
-                      : "border-emerald-300 bg-white focus:border-emerald-600 focus:ring-4 focus:ring-emerald-500/10 text-emerald-900 shadow-sm"
+                      ? "bg-slate-100 text-slate-400 border-slate-200"
+                      : "bg-white border-slate-300 focus:border-slate-700 outline-none"
                   }`}
-                  placeholder="0.00"
                 />
-                {!isLocked && rowMax > 0 && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      // Use precise rowMax to avoid rounding errors
+              </div>
+              <div className="flex flex-col">
+                <span className="text-[8px] text-slate-400">Debit amount</span>
+                <span className="h-7 px-2 rounded border border-rose-200 bg-rose-50 text-rose-700 text-[10px] font-black flex items-center tabular-nums normal-case">
+                  Rs. {details.dueAmount.toFixed(2)}
+                </span>
+              </div>
+              <div className="flex flex-col">
+                <span className="text-[8px] text-slate-400">Credit note</span>
+                <input
+                  type="text"
+                  value={row.creditNote || ""}
+                  onChange={(e) => handleCreditNoteChange(row.uiKey, e.target.value)}
+                  disabled={isLocked}
+                  className={`h-7 px-2 rounded border text-[10px] font-bold normal-case ${
+                    isLocked
+                      ? "bg-slate-100 text-slate-400 border-slate-200"
+                      : "bg-white border-slate-300 focus:border-slate-700 outline-none"
+                  }`}
+                />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-[8px] text-slate-400">Credit amount</span>
+                <div className="relative">
+                  <input
+                    type="text"
+                    inputMode="decimal"
+                    value={allocDisplay}
+                    onChange={(e) =>
                       handleAllocationChange(
                         row.uiKey,
-                        String(rowMax),
+                        e.target.value,
                         details.dueAmount,
-                      );
-                    }}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] font-black uppercase text-emerald-700 bg-emerald-50 hover:bg-emerald-600 hover:text-white px-2 py-1 rounded-md transition-all border border-emerald-200"
-                  >
-                    Settle Full
-                  </button>
-                )}
-              </div>
-              {!isLocked && (
-                <div className="flex flex-col gap-1 mt-1.5 px-1">
-                  <div className="flex items-center gap-1.5">
-                    <div className="w-1 h-1 rounded-full bg-slate-400" />
-                    <p className="text-[8px] font-black text-slate-500 normal-case tracking-tight">
-                      {allocationSource === "advance"
-                        ? `Amount going TO this row (Rs. ${rowMax.toLocaleString("en-IN")} max)`
-                        : rowMax > 0
-                          ? `Available to Allocate: Rs. ${rowMax.toLocaleString("en-IN")}`
-                          : "Set entry amount above first"}
-                    </p>
-                  </div>
-                  {allocationSource === "advance" && Number(availableAllocationPool) > 0 && (
-                    <div className="flex items-center gap-1.5">
-                      <div className="w-1 h-1 rounded-full bg-blue-400" />
-                      <p className="text-[8px] font-black text-blue-600 normal-case tracking-tight italic">
-                        Deducting FROM Dr. Pool Balance: Rs. {pool.toLocaleString("en-IN")}
-                      </p>
-                    </div>
+                      )
+                    }
+                    disabled={isLocked}
+                    className={`h-7 w-full px-2 rounded border text-[10px] font-black tabular-nums normal-case ${
+                      isLocked
+                        ? "bg-slate-100 text-slate-400 border-slate-200"
+                        : "bg-emerald-50 border-emerald-300 text-emerald-800 focus:border-emerald-600 outline-none"
+                    }`}
+                    placeholder="0.00"
+                  />
+                  {!isLocked && rowMax > 0 && (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        handleAllocationChange(
+                          row.uiKey,
+                          String(rowMax),
+                          details.dueAmount,
+                        )
+                      }
+                      className="absolute -top-6 right-0 text-[8px] font-black uppercase text-emerald-700"
+                    >
+                      Max
+                    </button>
                   )}
                 </div>
-              )}
+              </div>
             </div>
           </div>
         );
