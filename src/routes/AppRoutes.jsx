@@ -142,6 +142,11 @@ const privateRoutes = [
     roles: ["Admin", "Employee"],
   },
   {
+    path: "seller-company/edit/:id",
+    component: LazyPages.EditSellerCompany,
+    roles: ["Admin", "Employee"],
+  },
+  {
     path: "seller-details/add",
     component: LazyPages.AddSellerDetails,
     roles: ["Admin", "Employee"],

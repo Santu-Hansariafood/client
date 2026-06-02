@@ -1,4 +1,5 @@
 import { useState, useEffect, lazy, Suspense } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import Loading from "../../../common/Loading/Loading";
 import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
@@ -13,18 +14,15 @@ const Pagination = lazy(
 const PopupBox = lazy(() => import("../../../common/PopupBox/PopupBox"));
 const Actions = lazy(() => import("../../../common/Actions/Actions"));
 import generatePDF from "../../../common/GeneratePdf/GeneratePdf";
-const EditSellerCompany = lazy(
-  () => import("../EditSellerCompany/EditSellerCompany"),
-);
 
 const ListSellerCompany = () => {
+  const navigate = useNavigate();
   const [companies, setCompanies] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [totalItems, setTotalItems] = useState(0);
   const [selectedCompany, setSelectedCompany] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [editCompany, setEditCompany] = useState(null);
   const [searchText, setSearchText] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState(searchText);
   const [searchLoading, setSearchLoading] = useState(false);
@@ -181,7 +179,7 @@ const ListSellerCompany = () => {
     <Actions
       key={company._id}
       onView={() => setSelectedCompany(company)}
-      onEdit={() => setEditCompany(company)}
+      onEdit={() => navigate(`/seller-company/edit/${company._id}`)}
       onDelete={() => handleDelete(company._id)}
     />,
   ]);
@@ -313,28 +311,6 @@ const ListSellerCompany = () => {
                   Download KYC Documents (PDF)
                 </button>
               </div>
-            </PopupBox>
-          )}
-          {editCompany && (
-            <PopupBox
-              isOpen={true}
-              onClose={() => setEditCompany(null)}
-              title={`Edit ${editCompany.companyName}`}
-            >
-              <EditSellerCompany
-                company={editCompany}
-                onSave={(updatedCompany) => {
-                  setCompanies((prev) =>
-                    prev.map((company) =>
-                      company._id === updatedCompany._id
-                        ? updatedCompany
-                        : company,
-                    ),
-                  );
-                  setEditCompany(null);
-                }}
-                onCancel={() => setEditCompany(null)}
-              />
             </PopupBox>
           )}
         </div>

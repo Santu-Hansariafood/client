@@ -23,6 +23,8 @@ const AddSellerCompany = () => {
     aadhaarNo: "",
     address: "",
     pinNo: "",
+    mobileNo: "",
+    email: "",
   });
   const [bankDetails, setBankDetails] = useState([
     {
@@ -131,15 +133,20 @@ const AddSellerCompany = () => {
 
   const handleStateChange = (selected) => {
     setSelectedState(selected);
-    const stateData = stateCityData.find(
-      (state) => state.state === selected?.value,
-    );
-    setDistrictOptions(
-      stateData?.district.map((district) => ({
-        value: district,
-        label: district,
-      })) || [],
-    );
+    setSelectedDistrict(null);
+    if (selected) {
+      const stateData = stateCityData.find(
+        (state) => state.state === selected.value,
+      );
+      setDistrictOptions(
+        stateData?.district.map((district) => ({
+          value: district,
+          label: district,
+        })) || [],
+      );
+    } else {
+      setDistrictOptions([]);
+    }
   };
 
   const addBankDetail = () => {
@@ -189,25 +196,28 @@ const AddSellerCompany = () => {
       }
     }
 
-    if (
-      !companyInfo.companyName ||
-      !companyInfo.gstNo ||
-      !companyInfo.panNo ||
-      !companyInfo.address ||
-      !companyInfo.mobileNo ||
-      !companyInfo.email ||
-      !selectedState ||
-      !selectedDistrict ||
-      !bankDetails.every(
-        (bank) =>
-          bank.accountHolderName &&
-          bank.accountNumber &&
-          bank.ifscCode &&
-          bank.branchName &&
-          bank.bankName,
-      )
-    ) {
-      toast.error("Please complete all required fields.");
+    const missingFields = [];
+    if (!companyInfo.companyName) missingFields.push("Company Name");
+    if (!companyInfo.gstNo) missingFields.push("GST Number");
+    if (!companyInfo.panNo) missingFields.push("PAN Number");
+    if (!companyInfo.address) missingFields.push("Address");
+    if (!companyInfo.mobileNo) missingFields.push("Mobile Number");
+    if (!companyInfo.email) missingFields.push("Email Address");
+    if (!selectedState) missingFields.push("State");
+    if (!selectedDistrict) missingFields.push("District");
+
+    const bankIncomplete = bankDetails.some(
+      (bank) =>
+        !bank.accountHolderName ||
+        !bank.accountNumber ||
+        !bank.ifscCode ||
+        !bank.branchName ||
+        !bank.bankName,
+    );
+    if (bankIncomplete) missingFields.push("Complete Bank Details");
+
+    if (missingFields.length > 0) {
+      toast.error(`Please fill: ${missingFields.join(", ")}`);
       return;
     }
 
@@ -353,6 +363,7 @@ const AddSellerCompany = () => {
                     label: state.state,
                   }))}
                   placeholder="Select State"
+                  selectedOptions={selectedState}
                   onChange={handleStateChange}
                 />
               </div>
@@ -367,6 +378,7 @@ const AddSellerCompany = () => {
                   id="district"
                   options={districtOptions}
                   placeholder="Select District"
+                  selectedOptions={selectedDistrict}
                   onChange={(selected) => setSelectedDistrict(selected)}
                 />
               </div>

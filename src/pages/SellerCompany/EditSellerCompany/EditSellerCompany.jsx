@@ -1,15 +1,22 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import DataInput from "../../../common/DataInput/DataInput";
 import DataDropdown from "../../../common/DataDropdown/DataDropdown";
 import FileUpload from "../../../common/FileUpload/FileUpload";
 import Buttons from "../../../common/Buttons/Buttons";
+import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
+import Loading from "../../../common/Loading/Loading";
+import { FaBuilding, FaArrowLeft } from "react-icons/fa";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import stateCityData from "../../../data/state-city.json";
 import axios from "axios";
 import regexPatterns from "../../../utils/regexPatterns/regexPatterns";
 
-const EditSellerCompany = ({ company, onSave, onCancel }) => {
+const EditSellerCompany = () => {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
   const [companyInfo, setCompanyInfo] = useState({
     companyName: "",
     gstNo: "",
@@ -37,42 +44,61 @@ const EditSellerCompany = ({ company, onSave, onCancel }) => {
   const [msmeDetails, setMsmeDetails] = useState({ msmeNo: "" });
   const [fileUploads, setFileUploads] = useState({});
 
-  useEffect(() => {
-    setCompanyInfo({
-      companyName: company.companyName || "",
-      gstNo: company.gstNo || "",
-      panNo: company.panNo || "",
-      aadhaarNo: company.aadhaarNo || "",
-      address: company.address || "",
-      pinNo: company.pinNo || "",
-      mobileNo: company.mobileNo || "",
-      email: company.email || "",
-    });
-    setBankDetails(
-      (company.bankDetails || []).map((bank) => ({
-        ...bank,
-        id: bank.id || bank._id || Date.now() + Math.random(),
-      })),
-    );
-    setSelectedState(
-      stateCityData.find((state) => state.state === company.state) || null,
-    );
-    setSelectedDistrict({ value: company.district, label: company.district });
-    setMsme(!!company.msmeNo);
-    setMsmeDetails({ msmeNo: company.msmeNo || "" });
+  const fetchCompanyData = useCallback(async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get(`/seller-company/${id}`);
+      const company = response.data;
 
-    if (company.state) {
-      const stateData = stateCityData.find(
-        (state) => state.state === company.state,
+      setCompanyInfo({
+        companyName: company.companyName || "",
+        gstNo: company.gstNo || "",
+        panNo: company.panNo || "",
+        aadhaarNo: company.aadhaarNo || "",
+        address: company.address || "",
+        pinNo: company.pinNo || "",
+        mobileNo: company.mobileNo || "",
+        email: company.email || "",
+      });
+
+      setBankDetails(
+        (company.bankDetails || []).map((bank) => ({
+          ...bank,
+          id: bank.id || bank._id || Date.now() + Math.random(),
+        })),
       );
-      setDistrictOptions(
-        stateData?.district.map((district) => ({
+
+      const matchedState = stateCityData.find((state) => state.state === company.state);
+      if (matchedState) {
+        const stateOption = { value: matchedState.state, label: matchedState.state };
+        setSelectedState(stateOption);
+        
+        const districts = matchedState.district.map((district) => ({
           value: district,
           label: district,
-        })) || [],
-      );
+        }));
+        setDistrictOptions(districts);
+        
+        const matchedDistrict = districts.find(d => d.value === company.district);
+        setSelectedDistrict(matchedDistrict || null);
+      }
+
+      setMsme(!!company.msmeNo);
+      setMsmeDetails({ msmeNo: company.msmeNo || "" });
+    } catch (error) {
+      console.error("Error fetching company:", error);
+      toast.error("Failed to load company details");
+      navigate("/seller-company/list");
+    } finally {
+      setLoading(false);
     }
-  }, [company]);
+  }, [id, navigate]);
+
+  useEffect(() => {
+    if (id) {
+      fetchCompanyData();
+    }
+  }, [fetchCompanyData, id]);
 
   const handleCompanyInfoChange = (e) => {
     const { name, value } = e.target;
@@ -144,6 +170,7 @@ const EditSellerCompany = ({ company, onSave, onCancel }) => {
 
   const handleStateChange = (selected) => {
     setSelectedState(selected);
+    setSelectedDistrict(null);
     const stateData = stateCityData.find(
       (state) => state.state === selected?.value,
     );
@@ -184,25 +211,28 @@ const EditSellerCompany = ({ company, onSave, onCancel }) => {
       }
     }
 
-    if (
-      !companyInfo.companyName ||
-      !companyInfo.gstNo ||
-      !companyInfo.panNo ||
-      !companyInfo.address ||
-      !companyInfo.mobileNo ||
-      !companyInfo.email ||
-      !selectedState ||
-      !selectedDistrict ||
-      !bankDetails.every(
-        (bank) =>
-          bank.accountHolderName &&
-          bank.accountNumber &&
-          bank.ifscCode &&
-          bank.branchName &&
-          bank.bankName,
-      )
-    ) {
-      toast.error("Please complete all required fields.");
+    const missingFields = [];
+    if (!companyInfo.companyName) missingFields.push("Company Name");
+    if (!companyInfo.gstNo) missingFields.push("GST Number");
+    if (!companyInfo.panNo) missingFields.push("PAN Number");
+    if (!companyInfo.address) missingFields.push("Address");
+    if (!companyInfo.mobileNo) missingFields.push("Mobile Number");
+    if (!companyInfo.email) missingFields.push("Email Address");
+    if (!selectedState) missingFields.push("State");
+    if (!selectedDistrict) missingFields.push("District");
+    
+    const bankIncomplete = bankDetails.some(
+      (bank) =>
+        !bank.accountHolderName ||
+        !bank.accountNumber ||
+        !bank.ifscCode ||
+        !bank.branchName ||
+        !bank.bankName,
+    );
+    if (bankIncomplete) missingFields.push("Complete Bank Details");
+
+    if (missingFields.length > 0) {
+      toast.error(`Please fill: ${missingFields.join(", ")}`);
       return;
     }
 
@@ -216,12 +246,12 @@ const EditSellerCompany = ({ company, onSave, onCancel }) => {
     };
 
     try {
-      const response = await axios.put(
-        `/seller-company/${company._id}`,
+      await axios.put(
+        `/seller-company/${id}`,
         payload,
       );
       toast.success("Seller company updated successfully!");
-      onSave(response.data);
+      navigate("/seller-company/list");
     } catch (error) {
       toast.error(
         error.response?.data?.message ||
@@ -230,272 +260,287 @@ const EditSellerCompany = ({ company, onSave, onCancel }) => {
     }
   };
 
+  if (loading) return <Loading />;
+
   return (
-    <div className="bg-white p-2">
-      <h3 className="text-xl font-semibold text-gray-800 mb-4">
-        Company Information
-      </h3>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-        <DataInput
-          label="Company Name"
-          id="companyName"
-          name="companyName"
-          value={companyInfo.companyName}
-          onChange={handleCompanyInfoChange}
-          placeholder="Enter Company Name"
-        />
-        <DataInput
-          label="GST Number"
-          id="gstNo"
-          name="gstNo"
-          value={companyInfo.gstNo}
-          onChange={handleCompanyInfoChange}
-          placeholder="Enter GST Number"
-        />
-        <DataInput
-          label="PAN Number"
-          id="panNo"
-          name="panNo"
-          value={companyInfo.panNo}
-          onChange={handleCompanyInfoChange}
-          placeholder={
-            companyInfo.gstNo === "0" ? "Enter PAN Number" : "Auto-filled PAN"
-          }
-          disabled={companyInfo.gstNo !== "0"}
-        />
-        <DataInput
-          label="Aadhaar Number"
-          id="aadhaarNo"
-          name="aadhaarNo"
-          value={companyInfo.aadhaarNo}
-          onChange={handleCompanyInfoChange}
-          placeholder="Enter Aadhaar Number"
-        />
-        <DataInput
-          label="Address"
-          id="address"
-          name="address"
-          value={companyInfo.address}
-          onChange={handleCompanyInfoChange}
-          placeholder="Enter Address"
-        />
-        <DataInput
-          label="Mobile Number"
-          id="mobileNo"
-          name="mobileNo"
-          value={companyInfo.mobileNo}
-          onChange={handleCompanyInfoChange}
-          placeholder="Enter 10-digit Mobile Number"
-          maxLength="10"
-        />
-        <DataInput
-          label="Email Address"
-          id="email"
-          name="email"
-          value={companyInfo.email}
-          onChange={handleCompanyInfoChange}
-          placeholder="Enter Email Address"
-        />
-        <DataInput
-          label="PIN Code"
-          id="pinNo"
-          name="pinNo"
-          value={companyInfo.pinNo}
-          onChange={handleCompanyInfoChange}
-          placeholder="Enter PIN Code"
-        />
-      </div>
-
-      {/* State and District */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-        <DataDropdown
-          label="Select State"
-          id="state"
-          options={stateCityData.map((state) => ({
-            value: state.state,
-            label: state.state,
-          }))}
-          value={selectedState}
-          onChange={handleStateChange}
-          placeholder="Select State"
-        />
-        <DataDropdown
-          label="Select District"
-          id="district"
-          options={districtOptions}
-          value={selectedDistrict}
-          onChange={(selected) => setSelectedDistrict(selected)}
-          placeholder="Select District"
-        />
-      </div>
-
-      {/* Bank Details */}
-      <h3 className="text-xl font-semibold text-gray-800 mb-4">Bank Details</h3>
-      {bankDetails.map((bank, index) => (
-        <div
-          key={bank.id}
-          className="mb-6 bg-gray-100 p-4 rounded-lg shadow-md"
+    <AdminPageShell
+      title="Edit Seller Company"
+      subtitle={`Updating details for ${companyInfo.companyName}`}
+      icon={FaBuilding}
+    >
+      <div className="max-w-4xl mx-auto">
+        <button
+          onClick={() => navigate("/seller-company/list")}
+          className="flex items-center gap-2 text-slate-500 hover:text-emerald-600 font-bold mb-6 transition-colors"
         >
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <FaArrowLeft size={12} />
+          Back to List
+        </button>
+
+        <div className="bg-white rounded-3xl border border-slate-100 shadow-sm p-8">
+          <h3 className="text-xl font-black text-slate-800 mb-6 uppercase tracking-tight">
+            Company Information
+          </h3>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
             <DataInput
-              label="Account Holder Name"
-              id={`accountHolderName-${bank.id}`}
-              value={bank.accountHolderName}
-              onChange={(e) =>
-                handleBankDetailChange(
-                  bank.id,
-                  "accountHolderName",
-                  e.target.value,
-                )
+              label="Company Name"
+              id="companyName"
+              name="companyName"
+              value={companyInfo.companyName}
+              onChange={handleCompanyInfoChange}
+              placeholder="Enter Company Name"
+            />
+            <DataInput
+              label="GST Number"
+              id="gstNo"
+              name="gstNo"
+              value={companyInfo.gstNo}
+              onChange={handleCompanyInfoChange}
+              placeholder="Enter GST Number"
+            />
+            <DataInput
+              label="PAN Number"
+              id="panNo"
+              name="panNo"
+              value={companyInfo.panNo}
+              onChange={handleCompanyInfoChange}
+              placeholder={
+                companyInfo.gstNo === "0" ? "Enter PAN Number" : "Auto-filled PAN"
               }
-              placeholder="Enter Account Holder Name"
+              disabled={companyInfo.gstNo !== "0"}
             />
             <DataInput
-              label="Account Number"
-              id={`accountNumber-${bank.id}`}
-              value={bank.accountNumber}
-              onChange={(e) =>
-                handleBankDetailChange(bank.id, "accountNumber", e.target.value)
-              }
-              placeholder="Enter Account Number"
+              label="Aadhaar Number"
+              id="aadhaarNo"
+              name="aadhaarNo"
+              value={companyInfo.aadhaarNo}
+              onChange={handleCompanyInfoChange}
+              placeholder="Enter Aadhaar Number"
             />
             <DataInput
-              label="IFSC Code"
-              id={`ifscCode-${bank.id}`}
-              value={bank.ifscCode}
-              onChange={(e) =>
-                handleBankDetailChange(bank.id, "ifscCode", e.target.value)
-              }
-              placeholder="Enter IFSC Code"
+              label="Address"
+              id="address"
+              name="address"
+              value={companyInfo.address}
+              onChange={handleCompanyInfoChange}
+              placeholder="Enter Address"
             />
             <DataInput
-              label="Branch Name"
-              id={`branchName-${bank.id}`}
-              value={bank.branchName}
-              readOnly
-              placeholder="Auto-fetched Branch Name"
+              label="Mobile Number"
+              id="mobileNo"
+              name="mobileNo"
+              value={companyInfo.mobileNo}
+              onChange={handleCompanyInfoChange}
+              placeholder="Enter 10-digit Mobile Number"
+              maxLength="10"
             />
             <DataInput
-              label="Bank Name"
-              id={`bankName-${bank.id}`}
-              value={bank.bankName}
-              readOnly
-              placeholder="Auto-fetched Bank Name"
+              label="Email Address"
+              id="email"
+              name="email"
+              value={companyInfo.email}
+              onChange={handleCompanyInfoChange}
+              placeholder="Enter Email Address"
+            />
+            <DataInput
+              label="PIN Code"
+              id="pinNo"
+              name="pinNo"
+              value={companyInfo.pinNo}
+              onChange={handleCompanyInfoChange}
+              placeholder="Enter PIN Code"
             />
           </div>
-          <div className="flex justify-end mt-4">
-            {index > 0 && (
-              <Buttons
-                label="Remove Bank Detail"
-                onClick={() => removeBankDetail(bank.id)}
-                variant="danger"
-                size="sm"
-              />
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <DataDropdown
+              label="Select State"
+              id="state"
+              options={stateCityData.map((state) => ({
+                value: state.state,
+                label: state.state,
+              }))}
+              selectedOptions={selectedState}
+              onChange={handleStateChange}
+              placeholder="Select State"
+            />
+            <DataDropdown
+              label="Select District"
+              id="district"
+              options={districtOptions}
+              selectedOptions={selectedDistrict}
+              onChange={(selected) => setSelectedDistrict(selected)}
+              placeholder="Select District"
+            />
+          </div>
+
+          <h3 className="text-xl font-black text-slate-800 mb-6 uppercase tracking-tight">
+            Bank Details
+          </h3>
+          {bankDetails.map((bank, index) => (
+            <div
+              key={bank.id}
+              className="mb-6 bg-slate-50/50 border border-slate-100 p-6 rounded-2xl shadow-sm"
+            >
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <DataInput
+                  label="Account Holder Name"
+                  id={`accountHolderName-${bank.id}`}
+                  value={bank.accountHolderName}
+                  onChange={(e) =>
+                    handleBankDetailChange(
+                      bank.id,
+                      "accountHolderName",
+                      e.target.value,
+                    )
+                  }
+                  placeholder="Enter Account Holder Name"
+                />
+                <DataInput
+                  label="Account Number"
+                  id={`accountNumber-${bank.id}`}
+                  value={bank.accountNumber}
+                  onChange={(e) =>
+                    handleBankDetailChange(bank.id, "accountNumber", e.target.value)
+                  }
+                  placeholder="Enter Account Number"
+                />
+                <DataInput
+                  label="IFSC Code"
+                  id={`ifscCode-${bank.id}`}
+                  value={bank.ifscCode}
+                  onChange={(e) =>
+                    handleBankDetailChange(bank.id, "ifscCode", e.target.value)
+                  }
+                  placeholder="Enter IFSC Code"
+                />
+                <DataInput
+                  label="Branch Name"
+                  id={`branchName-${bank.id}`}
+                  value={bank.branchName}
+                  readOnly
+                  placeholder="Auto-fetched Branch Name"
+                />
+                <DataInput
+                  label="Bank Name"
+                  id={`bankName-${bank.id}`}
+                  value={bank.bankName}
+                  readOnly
+                  placeholder="Auto-fetched Bank Name"
+                />
+              </div>
+              <div className="flex justify-end mt-4">
+                {index > 0 && (
+                  <Buttons
+                    label="Remove Bank Detail"
+                    onClick={() => removeBankDetail(bank.id)}
+                    variant="danger"
+                    size="sm"
+                  />
+                )}
+              </div>
+            </div>
+          ))}
+          <div className="flex justify-end">
+            <Buttons
+              label="Add Bank Detail"
+              onClick={addBankDetail}
+              variant="success"
+              size="sm"
+            />
+          </div>
+
+          <h3 className="text-xl font-black text-slate-800 mt-12 mb-6 uppercase tracking-tight">
+            Upload Documents
+          </h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
+            <FileUpload
+              label="Upload Address Proof"
+              accept="image/*"
+              onFileChange={(file) => handleFileUpload("addressProof", file)}
+            />
+            <FileUpload
+              label="Upload GST Proof"
+              accept="image/*"
+              onFileChange={(file) => handleFileUpload("gstProof", file)}
+            />
+            <FileUpload
+              label="Upload PAN Proof"
+              accept="image/*"
+              onFileChange={(file) => handleFileUpload("panProof", file)}
+            />
+            <FileUpload
+              label="Upload Aadhaar Proof"
+              accept="image/*"
+              onFileChange={(file) => handleFileUpload("aadhaarProof", file)}
+            />
+          </div>
+
+          <div className="mb-8">
+            <label className="text-lg font-black text-slate-800 uppercase tracking-tight">
+              MSME Status
+            </label>
+            <div className="flex items-center space-x-4 mt-4">
+              <label className="flex items-center">
+                <input
+                  type="radio"
+                  name="msme"
+                  value="yes"
+                  onChange={() => setMsme(true)}
+                  checked={msme === true}
+                  className="form-radio text-emerald-600"
+                />
+                <span className="ml-2 font-bold text-slate-700">Yes</span>
+              </label>
+              <label className="flex items-center">
+                <input
+                  type="radio"
+                  name="msme"
+                  value="no"
+                  onChange={() => setMsme(false)}
+                  checked={msme === false}
+                  className="form-radio text-emerald-600"
+                />
+                <span className="ml-2 font-bold text-slate-700">No</span>
+              </label>
+            </div>
+            {msme && (
+              <div className="mt-4">
+                <DataInput
+                  label="MSME Number"
+                  placeholder="Enter MSME Number"
+                  name="msmeNo"
+                  value={msmeDetails.msmeNo}
+                  onChange={(e) =>
+                    setMsmeDetails((prev) => ({
+                      ...prev,
+                      msmeNo: e.target.value,
+                    }))
+                  }
+                />
+              </div>
             )}
           </div>
-        </div>
-      ))}
-      <div className="flex justify-end">
-        <Buttons
-          label="Add Bank Detail"
-          onClick={addBankDetail}
-          variant="success"
-          size="sm"
-        />
-      </div>
 
-      {/* File Upload Section */}
-      <h3 className="text-xl font-semibold text-gray-800 mt-8 mb-4">
-        Upload Documents
-      </h3>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
-        <FileUpload
-          label="Upload Address Proof"
-          accept="image/*"
-          onFileChange={(file) => handleFileUpload("addressProof", file)}
-        />
-        <FileUpload
-          label="Upload GST Proof"
-          accept="image/*"
-          onFileChange={(file) => handleFileUpload("gstProof", file)}
-        />
-        <FileUpload
-          label="Upload PAN Proof"
-          accept="image/*"
-          onFileChange={(file) => handleFileUpload("panProof", file)}
-        />
-        <FileUpload
-          label="Upload Aadhaar Proof"
-          accept="image/*"
-          onFileChange={(file) => handleFileUpload("aadhaarProof", file)}
-        />
-      </div>
-
-      {/* MSME Section */}
-      <div className="mb-8">
-        <label className="text-lg font-semibold text-gray-800">
-          MSME Status
-        </label>
-        <div className="flex items-center space-x-4 mt-4">
-          <label className="flex items-center">
-            <input
-              type="radio"
-              name="msme"
-              value="yes"
-              onChange={() => setMsme(true)}
-              checked={msme === true}
-              className="form-radio text-blue-600"
+          <div className="mt-12 flex justify-end gap-3 pt-6 border-t border-slate-100">
+            <Buttons
+              label="Cancel"
+              onClick={() => navigate("/seller-company/list")}
+              variant="secondary"
+              size="lg"
             />
-            <span className="ml-2">Yes</span>
-          </label>
-          <label className="flex items-center">
-            <input
-              type="radio"
-              name="msme"
-              value="no"
-              onChange={() => setMsme(false)}
-              checked={msme === false}
-              className="form-radio text-blue-600"
-            />
-            <span className="ml-2">No</span>
-          </label>
-        </div>
-        {msme && (
-          <div className="mt-4">
-            <DataInput
-              label="MSME Number"
-              placeholder="Enter MSME Number"
-              name="msmeNo"
-              value={msmeDetails.msmeNo}
-              onChange={(e) =>
-                setMsmeDetails((prev) => ({
-                  ...prev,
-                  msmeNo: e.target.value,
-                }))
-              }
+            <Buttons
+              label="Update Company Details"
+              onClick={handleSubmit}
+              type="submit"
+              variant="primary"
+              size="lg"
             />
           </div>
-        )}
+        </div>
       </div>
-
-      {/* Submit Button */}
-      <div className="mt-8 flex justify-end gap-3">
-        <Buttons
-          label="Cancel"
-          onClick={onCancel}
-          variant="secondary"
-          size="lg"
-        />
-        <Buttons
-          label="Update Company Details"
-          onClick={handleSubmit}
-          type="submit"
-          variant="primary"
-          size="lg"
-        />
-      </div>
-    </div>
+    </AdminPageShell>
   );
 };
 

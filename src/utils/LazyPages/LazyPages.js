@@ -31,6 +31,8 @@ const loaders = {
     import("../../pages/SellerCompany/AddSellerCompany/AddSellerCompany"),
   ListSellerCompany: () =>
     import("../../pages/SellerCompany/ListSellerCompany/ListSellerCompany"),
+  EditSellerCompany: () =>
+    import("../../pages/SellerCompany/EditSellerCompany/EditSellerCompany"),
   BuyerBid: () => import("../../pages/ManageBids/BuyerBid/BuyerBid"),
   BidLocation: () => import("../../pages/ManageBids/BidLocation/BidLocation"),
   AddSoudabook: () => import("../../pages/Soudabook/AddSoudabook/AddSoudabook"),
@@ -126,6 +128,7 @@ const pathToKey = {
   "/quality-parameter/list": "ListQualityParameter",
   "/seller-company/add": "AddSellerCompany",
   "/seller-company/list": "ListSellerCompany",
+  "/seller-company/edit/:id": "EditSellerCompany",
   "/seller-details/add": "AddSellerDetails",
   "/seller-details/edit/:sellerId": "EditSellerDetails",
   "/seller-details/list": "ListSellerDetails",
@@ -220,6 +223,7 @@ const LazyPages = {
   ListSellerDetails: lazy(loaders.ListSellerDetails),
   AddSellerCompany: lazy(loaders.AddSellerCompany),
   ListSellerCompany: lazy(loaders.ListSellerCompany),
+  EditSellerCompany: lazy(loaders.EditSellerCompany),
   BuyerBid: lazy(loaders.BuyerBid),
   BidLocation: lazy(loaders.BidLocation),
   AddSoudabook: lazy(loaders.AddSoudabook),
