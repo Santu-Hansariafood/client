@@ -5,6 +5,7 @@ import LoadingEntry from "../models/LoadingEntry.js";
 import SelfOrder from "../models/SelfOrder.js";
 import Buyer from "../models/Buyer.js";
 import Seller from "../models/Seller.js";
+import Company from "../models/Company.js";
 import { adminOnly } from "../middleware/roleMiddleware.js";
 
 const router = express.Router();
@@ -125,6 +126,42 @@ router.patch("/adjust-lorry/:loadingEntryId", adminOnly, async (req, res) => {
   }
 });
 
+const resolveLedgerIdForPayment = async (
+  ledgerId,
+  ledgerType,
+  buyerCompany,
+  supplierCompany,
+) => {
+  if (ledgerId && mongoose.Types.ObjectId.isValid(String(ledgerId))) {
+    return new mongoose.Types.ObjectId(String(ledgerId));
+  }
+
+  if (ledgerType === "Buyer" && buyerCompany) {
+    const company = await Company.findOne({
+      companyName: companyRegex(buyerCompany),
+    })
+      .select("_id")
+      .lean();
+    if (company?._id) {
+      const buyer = await Buyer.findOne({ companyIds: company._id })
+        .select("_id")
+        .lean();
+      if (buyer?._id) return buyer._id;
+    }
+  }
+
+  if (ledgerType === "Seller" && supplierCompany) {
+    const seller = await Seller.findOne({
+      sellerName: companyRegex(supplierCompany),
+    })
+      .select("_id")
+      .lean();
+    if (seller?._id) return seller._id;
+  }
+
+  return null;
+};
+
 router.post("/", async (req, res) => {
   try {
     const {
@@ -140,6 +177,19 @@ router.post("/", async (req, res) => {
       mappings,
       remarks,
     } = req.body;
+
+    const resolvedLedgerId = await resolveLedgerIdForPayment(
+      ledgerId,
+      ledgerType,
+      buyerCompany,
+      supplierCompany,
+    );
+    if (!resolvedLedgerId) {
+      return res.status(400).json({
+        message:
+          "Could not resolve ledger. Link buyer company to a Buyer account or select a valid ledger.",
+      });
+    }
 
     const totalMapped = (mappings || []).reduce(
       (sum, m) => sum + (Number(m.allocatedAmount) || 0),
@@ -158,7 +208,7 @@ router.post("/", async (req, res) => {
         });
       }
       await consumeAdvanceCredit(
-        ledgerId,
+        resolvedLedgerId,
         buyerCompany,
         supplierCompany,
         totalMapped,
@@ -183,7 +233,7 @@ router.post("/", async (req, res) => {
     const newPayment = new PaymentReceived({
       date,
       ledgerType,
-      ledgerId,
+      ledgerId: resolvedLedgerId,
       companyId,
       buyerCompany: buyerCompany || "",
       supplierCompany: supplierCompany || "",

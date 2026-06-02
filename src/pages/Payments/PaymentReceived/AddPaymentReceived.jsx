@@ -179,10 +179,7 @@ const AddPaymentReceived = () => {
     { value: "Cheque", label: "Cheque" },
     { value: "TDS", label: "TDS" },
     { value: "GST", label: "GST Adjustment" },
-    { value: "Loan", label: "Loan" },
     { value: "Adjustment", label: "General Adjustment" },
-    { value: "Claim", label: "Claim" },
-    { value: "Discount", label: "Discount" },
   ];
 
   useEffect(() => {
@@ -531,12 +528,93 @@ const AddPaymentReceived = () => {
   }, [fetchEntries]);
 
   const buildCompanyPayload = useCallback(
-    () => ({
-      buyerCompany: companyPair.buyerCompany,
-      supplierCompany: companyPair.supplierCompany,
+    (entry = null) => ({
+      buyerCompany:
+        companyPair.buyerCompany ||
+        entry?.buyerCompany ||
+        entry?.consignee ||
+        "",
+      supplierCompany:
+        companyPair.supplierCompany || entry?.supplierCompany || "",
     }),
     [companyPair],
   );
+
+  const resolveCompanyIdForSave = useCallback(
+    (entry = null) => {
+      if (formData.companyId) return formData.companyId;
+      const name =
+        companyPair.buyerCompany ||
+        entry?.buyerCompany ||
+        entry?.consignee ||
+        "";
+      if (!name) return "";
+      const co = allCompanies.find(
+        (c) =>
+          String(c.companyName || "").trim().toLowerCase() ===
+          String(name).trim().toLowerCase(),
+      );
+      return co?._id || "";
+    },
+    [formData.companyId, companyPair.buyerCompany, allCompanies],
+  );
+
+  const resolveLedgerIdForSave = useCallback(() => {
+    if (formData.ledgerId) return formData.ledgerId;
+
+    const companyId = formData.companyId;
+    if (companyId) {
+      const ledger = resolveLedgerForCompany(
+        companyId,
+        formData.ledgerType,
+        ledgers,
+        opposingLedgers,
+      );
+      if (ledger?.value) return ledger.value;
+    }
+
+    const buyerName = companyPair.buyerCompany || selectedCompanyOption?.label;
+    if (buyerName && formData.ledgerType === "Buyer") {
+      const byName = ledgers.find((ledger) =>
+        (ledger.companies || []).some(
+          (c) =>
+            String(getCompanyNameFromRef(c)).trim().toLowerCase() ===
+            String(buyerName).trim().toLowerCase(),
+        ),
+      );
+      if (byName?.value) return byName.value;
+    }
+
+    return "";
+  }, [
+    formData.ledgerId,
+    formData.companyId,
+    formData.ledgerType,
+    companyPair.buyerCompany,
+    selectedCompanyOption?.label,
+    ledgers,
+    opposingLedgers,
+    resolveLedgerForCompany,
+  ]);
+
+  useEffect(() => {
+    if (!formData.companyId || formData.ledgerId || ledgers.length === 0) {
+      return;
+    }
+    const resolvedId = resolveLedgerIdForSave();
+    if (resolvedId) {
+      const ledger = ledgers.find((l) => l.value === resolvedId);
+      if (ledger) setSelectedLedger(ledger);
+      setFormData((prev) =>
+        prev.ledgerId ? prev : { ...prev, ledgerId: resolvedId },
+      );
+    }
+  }, [
+    formData.companyId,
+    formData.ledgerId,
+    ledgers,
+    resolveLedgerIdForSave,
+  ]);
 
   const fetchHistory = useCallback(async () => {
     if (!formData.date) {
@@ -763,8 +841,20 @@ const AddPaymentReceived = () => {
       return;
     }
 
-    if (!formData.companyId || !formData.ledgerId) {
-      toast.error("Select a company linked to a ledger first");
+    const firstEntry = allocations[0];
+    const pairPayload = buildCompanyPayload(firstEntry);
+    const ledgerId = resolveLedgerIdForSave();
+    const saveCompanyId = resolveCompanyIdForSave(firstEntry);
+
+    if (!saveCompanyId && !pairPayload.buyerCompany) {
+      toast.error("Select buyer company, then save");
+      return;
+    }
+    if (
+      allocationSource === "advance" &&
+      !String(pairPayload.supplierCompany || "").trim()
+    ) {
+      toast.error("Select seller company or pick a lorry with supplier set");
       return;
     }
 
@@ -780,9 +870,9 @@ const AddPaymentReceived = () => {
       const payload = {
         date: formData.allocationDate || formData.date,
         ledgerType: recordLedgerType,
-        ledgerId: formData.ledgerId,
-        companyId: formData.companyId,
-        ...buildCompanyPayload(),
+        ledgerId: ledgerId || undefined,
+        companyId: saveCompanyId,
+        ...pairPayload,
         amount: totalAllocated,
         paymentType: allocationSource === "fresh" ? "Sauda-wise" : "Adjustment",
         paymentMode:
@@ -799,10 +889,18 @@ const AddPaymentReceived = () => {
       await api.post("/payment-received", payload);
       toast.success(`Recorded payment with ${allocations.length} allocations`);
 
+      setEntries((prev) =>
+        prev.map((e) => {
+          const saved = allocations.some((a) => a.uiKey === e.uiKey);
+          return saved ? { ...e, isSaved: true } : e;
+        }),
+      );
+
       if (allocationSource === "fresh") {
         setFormData((prev) => ({
           ...prev,
           amount: Math.max(0, prev.amount - totalAllocated),
+          ledgerId: prev.ledgerId || ledgerId,
         }));
       }
 
@@ -1043,11 +1141,7 @@ const AddPaymentReceived = () => {
 
     const remainingPool = getRemainingAllocationForRow(entry.uiKey);
     const debitPool = Number(availableAllocationPool) || 0;
-
-    if (allocationSource === "advance" && !companyPair.supplierCompany) {
-      toast.error("Select seller company to post Cr. against Dr. advance");
-      return;
-    }
+    const pairPayload = buildCompanyPayload(entry);
 
     if (allocationSource === "advance" && numAllocated > remainingPool + 1) {
       toast.error(
@@ -1056,38 +1150,68 @@ const AddPaymentReceived = () => {
       return;
     }
 
+    let saveAllocated = numAllocated;
     if (
       allocationSource === "fresh" &&
       dueAmount > 1 &&
-      numAllocated > dueAmount + 1
+      saveAllocated > dueAmount + 1
     ) {
       toast.warning(
-        `Allocation cannot exceed due amount (Rs. ${dueAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })})`,
+        `Capped to due Rs. ${dueAmount.toLocaleString("en-IN")} for ${entry.lorryNumber}`,
+      );
+      saveAllocated = dueAmount;
+    }
+
+    const effectiveDebitPool = Math.max(
+      Number(formData.amount) || 0,
+      Number(ledgerTopSummary.debitEntryTotal) || 0,
+    );
+    const rowDebitLeft = Math.max(
+      0,
+      effectiveDebitPool - sumOpenAllocationsExcept(entry.uiKey),
+    );
+
+    if (
+      allocationSource === "fresh" &&
+      effectiveDebitPool <= 0.01 &&
+      saveAllocated > 0.01
+    ) {
+      toast.error(
+        "Enter Amount to Allocate above (Dr.) before saving lorry payment",
       );
       return;
     }
 
-    if (
-      allocationSource === "fresh" &&
-      numAllocated > remainingPool + 1
-    ) {
-      if (remainingPool <= 0.01 && (ledgerBalance.totalAdvanceBalance || 0) > 0) {
+    if (allocationSource === "fresh" && saveAllocated > rowDebitLeft + 1) {
+      if (
+        effectiveDebitPool <= 0.01 &&
+        (ledgerBalance.totalAdvanceBalance || 0) > 0
+      ) {
         toast.info(
-          "Your entry amount is Rs. 0. If you want to use the Advance balance, please switch to 'From Advance' at the top.",
+          "Entry amount is Rs. 0. Switch to From Advance to use buyer Dr. balance.",
           { autoClose: 6000 },
         );
       } else {
         toast.error(
-          `Allocation exceeds voucher amount (Rs. ${remainingPool.toLocaleString("en-IN")} remaining)`,
+          `Exceeds entry total (Rs. ${rowDebitLeft.toLocaleString("en-IN")} left for this row)`,
         );
       }
       return;
     }
 
-    if (!isEditing && (!formData.companyId || !formData.ledgerId)) {
-      toast.error(
-        "Select a company linked to a ledger to record payment (filters are optional for viewing only)",
-      );
+    const ledgerId = resolveLedgerIdForSave();
+
+    const saveCompanyId = resolveCompanyIdForSave(entry);
+    if (!isEditing && !saveCompanyId && !pairPayload.buyerCompany) {
+      toast.error("Select buyer company filter, then save");
+      return;
+    }
+
+    if (
+      allocationSource === "advance" &&
+      !String(pairPayload.supplierCompany || "").trim()
+    ) {
+      toast.error("Select seller company or use a lorry row with supplier");
       return;
     }
 
@@ -1117,10 +1241,10 @@ const AddPaymentReceived = () => {
         const payload = {
           date: formData.allocationDate || formData.date,
           ledgerType: recordLedgerType,
-          ledgerId: formData.ledgerId,
-          companyId: formData.companyId,
-          ...buildCompanyPayload(),
-          amount: numAllocated,
+          ledgerId: ledgerId || undefined,
+          companyId: saveCompanyId,
+          ...pairPayload,
+          amount: saveAllocated,
           paymentType:
             allocationSource === "fresh" ? "Sauda-wise" : "Adjustment",
           paymentMode:
@@ -1129,7 +1253,7 @@ const AddPaymentReceived = () => {
             {
               saudaNo: entry.saudaNo,
               loadingEntryId: entry._id,
-              allocatedAmount: numAllocated,
+              allocatedAmount: saveAllocated,
               remarks: lineRemark,
             },
           ],
@@ -1139,14 +1263,21 @@ const AddPaymentReceived = () => {
         await api.post("/payment-received", payload);
         toast.success(
           allocationSource === "advance"
-            ? `Cr. Rs. ${numAllocated.toLocaleString("en-IN")} posted against ${entry.lorryNumber} (from Dr. advance)`
+            ? `Cr. Rs. ${saveAllocated.toLocaleString("en-IN")} posted against ${entry.lorryNumber} (from Dr. advance)`
             : `Payment recorded for ${entry.lorryNumber}`,
+        );
+
+        setEntries((prev) =>
+          prev.map((e) =>
+            e.uiKey === entry.uiKey ? { ...e, isSaved: true } : e,
+          ),
         );
 
         if (allocationSource === "fresh") {
           setFormData((prev) => ({
             ...prev,
-            amount: Math.max(0, prev.amount - numAllocated),
+            amount: Math.max(0, prev.amount - saveAllocated),
+            ledgerId: prev.ledgerId || ledgerId,
           }));
         }
       }
