@@ -10,7 +10,9 @@ const CompanyLedgerBanner = ({
   debitEntryTotal = 0,
   creditToSeller = 0,
   debitBalanceRemaining = 0,
+  allocationSource = "fresh",
 }) => {
+  const isAdvance = allocationSource === "advance";
   const showTotals = mappingActive || buyerOnly;
 
   return (
@@ -47,29 +49,37 @@ const CompanyLedgerBanner = ({
       )}
       {showTotals && (
         <div className="mt-3 flex flex-wrap items-center gap-2 sm:gap-3">
-          <div className="inline-flex flex-col px-3 py-2 rounded-lg bg-rose-50 border border-rose-200 min-w-[140px]">
-            <span className="text-[9px] font-black text-rose-800 uppercase tracking-widest">
-              Debit (Advance) · Dr.
+          <div
+            className={`inline-flex flex-col px-3 py-2 rounded-lg border min-w-[140px] ${
+              isAdvance
+                ? "bg-rose-50 border-rose-200"
+                : "bg-emerald-50 border-emerald-200"
+            }`}
+          >
+            <span
+              className={`text-[9px] font-black uppercase tracking-widest ${
+                isAdvance ? "text-rose-800" : "text-emerald-800"
+              }`}
+            >
+              {isAdvance ? "Advance · Dr." : "Payment Received"}
             </span>
-            <span className="text-sm font-black text-rose-700 tabular-nums">
+            <span
+              className={`text-sm font-black tabular-nums ${
+                isAdvance ? "text-rose-700" : "text-emerald-700"
+              }`}
+            >
               {formatLedgerAmount(debitEntryTotal)}
-            </span>
-            <span className="text-[8px] font-bold text-rose-600/90 normal-case">
-              From buyer
             </span>
           </div>
           <span className="text-slate-400 font-black text-xs hidden sm:inline">
             −
           </span>
-          <div className="inline-flex flex-col px-3 py-2 rounded-lg bg-emerald-50 border border-emerald-200 min-w-[140px]">
-            <span className="text-[9px] font-black text-emerald-800 uppercase tracking-widest">
-              Credit · Cr.
+          <div className="inline-flex flex-col px-3 py-2 rounded-lg bg-amber-50 border border-amber-200 min-w-[140px]">
+            <span className="text-[9px] font-black text-amber-800 uppercase tracking-widest">
+              Adjusted lorry-wise
             </span>
-            <span className="text-sm font-black text-emerald-700 tabular-nums">
+            <span className="text-sm font-black text-amber-700 tabular-nums">
               {formatLedgerAmount(creditToSeller)}
-            </span>
-            <span className="text-[8px] font-bold text-emerald-600/90 normal-case">
-              To seller lorries
             </span>
           </div>
           <span className="text-slate-400 font-black text-xs hidden sm:inline">
@@ -77,13 +87,10 @@ const CompanyLedgerBanner = ({
           </span>
           <div className="inline-flex flex-col px-3 py-2 rounded-lg bg-[#eef4ff] border border-[#1e3a5f]/20 min-w-[140px]">
             <span className="text-[9px] font-black text-[#1e3a5f] uppercase tracking-widest">
-              Balance
+              {isAdvance ? "Dr. left" : "Unallocated"}
             </span>
             <span className="text-sm font-black text-[#1e3a5f] tabular-nums">
               {formatLedgerAmount(debitBalanceRemaining)}
-            </span>
-            <span className="text-[8px] font-bold text-slate-500 normal-case">
-              Dr. − Cr.
             </span>
           </div>
         </div>

@@ -282,8 +282,8 @@ const AccountSelection = ({
             <div className="mt-4 p-3 bg-blue-50 border border-blue-100 rounded-xl flex items-center gap-3">
               <div className="w-2 h-2 rounded-full bg-blue-600"></div>
               <p className="text-[10px] font-bold text-blue-700 uppercase tracking-wider">
-                Entry ₹{Number(formData.amount).toLocaleString("en-IN")} → Dr.
-                below · allocate lorries for Cr.
+                Entry ₹{Number(formData.amount).toLocaleString("en-IN")} → Payment
+                Received below · adjust lorries below
               </p>
             </div>
           )}

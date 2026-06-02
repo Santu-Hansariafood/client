@@ -193,7 +193,9 @@ export const formatLedgerAmount = (n) =>
   `₹ ${Number(n || 0).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
 /**
- * Top summary: Dr. from buyer (entry total) − Cr. to seller = balance.
+ * Top summary by mode:
+ * - Payment Received: receipt − adjusted lorry-wise = unallocated
+ * - From Advance: Dr. advance − Cr. to seller = Dr. left
  */
 export const computeBuyerSellerLedgerSummary = ({
   allocationSource = "fresh",
@@ -223,12 +225,12 @@ export const computeBuyerSellerLedgerSummary = ({
       debitEntryTotal = entryDr;
     }
   } else {
-    // Payment Received: Dr. = entry amount from "Record new payment"
+    // Payment Received: entry = amount received from buyer
     debitEntryTotal = entryDr;
   }
 
-  // Fresh: Cr. = total credit in allocation table (this payment session)
-  // Advance: Cr. = saved Cr. to seller + table allocations
+  // Payment Received: adjusted = lorry-wise allocations in table only
+  // Advance: Cr. posted to seller + current table
   const creditToSeller =
     allocationSource === "advance" ? postedCr + tableCr : tableCr;
 

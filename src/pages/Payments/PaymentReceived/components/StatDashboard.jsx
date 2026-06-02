@@ -2,8 +2,8 @@ import React from "react";
 import {
   FaWallet,
   FaExclamationCircle,
-  FaArrowDown,
-  FaArrowUp,
+  FaMoneyBillWave,
+  FaTruck,
 } from "react-icons/fa";
 import StatCard from "./StatCard";
 
@@ -17,8 +17,10 @@ const StatDashboard = ({
   companyPair,
   fullCompanyMapping,
   ledgerTopSummary,
+  allocationSource = "fresh",
 }) => {
   const accountLabel = selectedCompanyOption?.label || selectedLedger?.label;
+  const isAdvance = allocationSource === "advance";
   const {
     debitEntryTotal = 0,
     creditToSeller = 0,
@@ -57,27 +59,31 @@ const StatDashboard = ({
       />
 
       <StatCard
-        icon={<FaArrowDown size={18} />}
-        label="Debit balance (Advance) · Dr."
+        icon={<FaMoneyBillWave size={18} />}
+        label={isAdvance ? "Advance (Dr.)" : "Payment Received"}
         value={`Rs. ${debitEntryTotal.toLocaleString("en-IN")}`}
         subValue={
-          fullCompanyMapping
-            ? `From ${companyPair.buyerCompany} (entry total)`
-            : companyPair?.buyerCompany
-              ? `From ${companyPair.buyerCompany}`
-              : "Buyer entry total"
+          isAdvance
+            ? fullCompanyMapping
+              ? `Buyer advance · ${companyPair.buyerCompany}`
+              : "On account from buyer"
+            : "Entry amount · received from buyer"
         }
-        color="bg-rose-50"
-        iconColor="text-rose-600"
+        color={isAdvance ? "bg-rose-50" : "bg-emerald-50"}
+        iconColor={isAdvance ? "text-rose-600" : "text-emerald-600"}
       />
 
       <StatCard
-        icon={<FaArrowUp size={18} />}
-        label="Credit · Cr. (seller)"
+        icon={<FaTruck size={18} />}
+        label="Adjusted lorry-wise"
         value={`Rs. ${creditToSeller.toLocaleString("en-IN")}`}
-        subValue={`Balance Dr.−Cr. Rs. ${debitBalanceRemaining.toLocaleString("en-IN")} · ${entryStats.pendingCount} pending`}
-        color="bg-emerald-50"
-        iconColor="text-emerald-600"
+        subValue={
+          isAdvance
+            ? `Dr. left Rs. ${debitBalanceRemaining.toLocaleString("en-IN")} · ${entryStats.pendingCount} pending`
+            : `Unallocated Rs. ${debitBalanceRemaining.toLocaleString("en-IN")} · ${entryStats.pendingCount} lorries`
+        }
+        color="bg-amber-50"
+        iconColor="text-amber-600"
       />
     </div>
   );

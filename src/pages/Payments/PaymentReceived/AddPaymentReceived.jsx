@@ -1024,7 +1024,7 @@ const AddPaymentReceived = () => {
             Math.round(Math.min(numAmount, Math.max(remaining, 0)) * 100) / 100,
           );
           toast.warning(
-            `Max Cr. Rs. ${remaining.toLocaleString("en-IN")} (Dr. advance Rs. ${pool.toLocaleString("en-IN")})`,
+            `Max Rs. ${remaining.toLocaleString("en-IN")} from advance (pool Rs. ${pool.toLocaleString("en-IN")})`,
           );
         }
       } else if (pool <= 0.01 && numAmount > 0) {
@@ -1087,8 +1087,8 @@ const AddPaymentReceived = () => {
       creditNote:
         entry.creditNote ||
         (allocationSource === "advance"
-          ? "Cr. from buyer advance · lorry"
-          : "Payment received (Cr.) · lorry"),
+          ? "Adjusted from advance · lorry"
+          : "Payment received · lorry adjustment"),
       rowRemarks: "",
       isSaved: false,
     };
@@ -1177,7 +1177,7 @@ const AddPaymentReceived = () => {
       saveAllocated > 0.01
     ) {
       toast.error(
-        "Enter Amount to Allocate above (Dr.) before saving lorry payment",
+        "Enter payment received amount above before adjusting lorries",
       );
       return;
     }
@@ -1824,6 +1824,7 @@ const AddPaymentReceived = () => {
           companyPair={companyPair}
           fullCompanyMapping={fullCompanyMapping}
           ledgerTopSummary={ledgerTopSummary}
+          allocationSource={allocationSource}
         />
 
         <AccountSelection

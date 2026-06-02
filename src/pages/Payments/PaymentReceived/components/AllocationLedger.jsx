@@ -77,15 +77,14 @@ const AllocationLedger = ({
               </h4>
               <p className="text-[11px] text-slate-500 font-medium uppercase tracking-wider">
                 {allocationSource === "fresh"
-                  ? fullCompanyMapping &&
-                    (ledgerBalance.advanceBalance ?? 0) > 0
-                    ? `New payment (Cr.) or Dr. advance Rs. ${(ledgerBalance.advanceBalance ?? 0).toLocaleString("en-IN")} from ${companyPair.buyerCompany} for ${companyPair.supplierCompany} lorries`
-                    : "Allocate buyer payment (Cr.) to seller lorries / sauda"
+                  ? fullCompanyMapping
+                    ? `Payment received from ${companyPair.buyerCompany} — adjust lorry-wise to ${companyPair.supplierCompany} below`
+                    : "Payment received — select seller, then adjust each lorry and Save"
                   : fullCompanyMapping
-                    ? `Use Dr. advance Rs. ${(ledgerBalance.advanceBalance ?? 0).toLocaleString("en-IN")} from ${companyPair.buyerCompany} — post Cr. per lorry to ${companyPair.supplierCompany}`
+                    ? `Use advance Rs. ${(ledgerBalance.advanceBalance ?? 0).toLocaleString("en-IN")} — adjust per lorry to ${companyPair.supplierCompany}`
                     : (ledgerBalance.totalAdvanceBalance ?? 0) > 0
-                      ? `Dr. Rs. ${ledgerBalance.totalAdvanceBalance.toLocaleString("en-IN")} from buyer — select seller, then Cr. per lorry`
-                      : "Record buyer advance (Dr.) with buyer + seller first"}
+                      ? `Advance Rs. ${ledgerBalance.totalAdvanceBalance.toLocaleString("en-IN")} — select seller, adjust lorries`
+                      : "Record advance with buyer + seller (From Advance tab)"}
               </p>
             </div>
           </div>
@@ -111,7 +110,9 @@ const AllocationLedger = ({
               <div className="flex items-center gap-2 bg-[#1e3a5f] text-white px-4 py-2 rounded-xl shadow-lg border border-[#1e3a5f]/80">
                 <div className="flex flex-col">
                   <span className="text-[9px] font-black uppercase tracking-[0.2em] text-blue-200 leading-none mb-1">
-                    Balance (Dr. − Cr.)
+                    {allocationSource === "advance"
+                      ? "Dr. left"
+                      : "Unallocated"}
                   </span>
                   <span className="text-sm font-black italic tracking-tight tabular-nums">
                     Rs.{" "}
@@ -196,11 +197,12 @@ const AllocationLedger = ({
             debitEntryTotal={debitEntryTotal}
             creditToSeller={creditToSeller}
             debitBalanceRemaining={debitBalanceRemaining}
+            allocationSource={allocationSource}
             subtitle={
               fullCompanyMapping
                 ? allocationSource === "advance"
-                  ? `Buyer Dr. advance for ${companyPair.supplierCompany} — post Cr. on each lorry line below`
-                  : `Buyer → seller lorries · new Cr. payment or switch to From Advance for existing Dr.`
+                  ? `Advance for ${companyPair.supplierCompany} — adjust each lorry below`
+                  : `Payment received — adjust lorry-wise to ${companyPair.supplierCompany} below`
                 : loadingSellerOptions
                   ? "Loading sellers linked to this buyer…"
                   : "Choose seller — table shows that buyer's pending lorries per seller"
@@ -347,8 +349,8 @@ const AllocationLedger = ({
             <p className="text-sm text-slate-500 font-medium max-w-xs mx-auto mt-2">
               {fullCompanyMapping
                 ? (ledgerBalance.advanceBalance ?? 0) > 0
-                  ? "Dr. advance exists for this pair — post Cr. in allocation when lorry lines appear. Check date/search filters."
-                  : "No open lorry lines. Record advance (Dr.) first, or pick another seller."
+                  ? "Advance on account — switch to From Advance to adjust lorries, or record new payment received."
+                  : "No open lorry lines for this pair. Record payment or pick another seller."
                 : hasBuyerCompany
                   ? "No open lorry lines for this buyer. Select a seller to narrow, or clear date/search filters."
                   : tableSearch
