@@ -72,6 +72,20 @@ router.get("/", async (req, res) => {
   }
 });
 
+router.get("/:id", async (req, res) => {
+  try {
+    const item = await SellerCompany.findById(req.params.id).lean();
+
+    if (!item) {
+      return res.status(404).json({ message: "Seller company not found" });
+    }
+
+    res.json(item);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 router.post("/", async (req, res) => {
   try {
     const body = req.body || {};
