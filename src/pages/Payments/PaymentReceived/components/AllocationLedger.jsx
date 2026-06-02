@@ -66,13 +66,9 @@ const AllocationLedger = ({
             </div>
             <div>
               <h4 className="font-bold text-slate-800 flex items-center gap-2 flex-wrap">
-                {formData.ledgerType === "Buyer"
-                  ? allocationSource === "fresh"
-                    ? "Payment Received Ledger"
-                    : "Advance Adjustment"
-                  : allocationSource === "fresh"
-                    ? "Payment Sent Ledger"
-                    : "Advance Adjustment"}
+                {allocationSource === "fresh"
+                  ? "Payment Received Ledger"
+                  : "Advance Adjustment"}
               </h4>
               <p className="text-[11px] text-slate-500 font-medium uppercase tracking-wider">
                 {allocationSource === "fresh"
@@ -331,9 +327,7 @@ const AllocationLedger = ({
                 </div>
                 <div>
                   <p className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">
-                    {formData.ledgerType === "Seller"
-                      ? "Sent today"
-                      : "Received today"}
+                    Received today
                   </p>
                   <p className="text-xl font-black text-white tabular-nums">
                     {formatLedgerAmount(dateTotal)}

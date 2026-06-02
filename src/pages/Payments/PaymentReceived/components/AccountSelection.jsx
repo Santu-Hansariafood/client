@@ -13,8 +13,6 @@ const AccountSelection = ({
   setAllocationSource,
   formData,
   handleInputChange,
-  ledgerTypes,
-  setFormData,
   primaryCompanyOptions,
   opposingCompanyOptions,
   selectedCompanyOption,
@@ -30,9 +28,6 @@ const AccountSelection = ({
   loadingSellerOptions,
   hasBuyerCompany,
 }) => {
-  const ledgerTypeOption =
-    ledgerTypes.find((t) => t.value === formData.ledgerType) || ledgerTypes[0];
-
   return (
     <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
       <div className="p-6 border-b border-slate-100 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
@@ -95,7 +90,7 @@ const AccountSelection = ({
               Optional filters
             </h4>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-2">
               <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">
                 Entry date (vouchers)
@@ -106,23 +101,6 @@ const AccountSelection = ({
                 value={formData.date}
                 onChange={handleInputChange}
                 className="w-full h-[42px] px-4 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-[#1e3a5f]/10 focus:border-[#1e3a5f] outline-none transition-all font-bold text-slate-900"
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">
-                Ledger type
-              </label>
-              <DataDropdown
-                options={ledgerTypes}
-                selectedOptions={ledgerTypeOption}
-                onChange={(opt) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    ledgerType: opt?.value ?? "",
-                  }))
-                }
-                isMulti={false}
-                className="rounded-xl border-slate-200 hover:border-slate-300 transition-all"
               />
             </div>
             <div className="space-y-2">

@@ -71,7 +71,7 @@ const AddPaymentReceived = () => {
   const [formData, setFormData] = useState({
     date: new Date().toISOString().split("T")[0],
     allocationDate: new Date().toISOString().split("T")[0],
-    ledgerType: "",
+    ledgerType: "Buyer",
     ledgerId: "",
     companyId: "",
     opposingCompanyId: "",
@@ -82,12 +82,6 @@ const AddPaymentReceived = () => {
     filterStartDate: "",
     filterEndDate: "",
   });
-
-  const ledgerTypes = [
-    { value: "", label: "All" },
-    { value: "Buyer", label: "Buyer" },
-    { value: "Seller", label: "Seller" },
-  ];
 
   const getCompanyIdFromRef = (companyRef) => {
     if (!companyRef) return "";
@@ -122,26 +116,6 @@ const AddPaymentReceived = () => {
       if (ledgerType === "Buyer") return findBuyer();
       if (ledgerType === "Seller") return findSeller();
       return findBuyer() || findSeller();
-    },
-    [],
-  );
-
-  const inferLedgerTypeForCompany = useCallback(
-    (companyId, buyerLedgerList, sellerLedgerList) => {
-      if (!companyId) return "Buyer";
-      const buyer = buyerLedgerList.find((ledger) =>
-        (ledger.companies || []).some(
-          (c) => getCompanyIdFromRef(c) === companyId,
-        ),
-      );
-      if (buyer) return "Buyer";
-      const seller = sellerLedgerList.find((ledger) =>
-        (ledger.companies || []).some(
-          (c) => getCompanyNameFromRef(c) === companyId,
-        ),
-      );
-      if (seller) return "Seller";
-      return "Buyer";
     },
     [],
   );
@@ -748,9 +722,7 @@ const AddPaymentReceived = () => {
 
     try {
       setLoading(true);
-      const recordLedgerType =
-        formData.ledgerType ||
-        inferLedgerTypeForCompany(formData.companyId, ledgers, opposingLedgers);
+      const recordLedgerType = "Buyer";
 
       const totalAllocated = allocations.reduce(
         (sum, e) => sum + parseFloat(e.allocatedAmount),
@@ -758,7 +730,7 @@ const AddPaymentReceived = () => {
       );
 
       const payload = {
-        date: formData.date,
+        date: formData.allocationDate || formData.date,
         ledgerType: recordLedgerType,
         ledgerId: formData.ledgerId,
         companyId: formData.companyId,
@@ -1077,9 +1049,7 @@ const AddPaymentReceived = () => {
         });
         toast.success(`Payment adjusted for ${entry.lorryNumber}`);
       } else {
-        const recordLedgerType =
-          formData.ledgerType ||
-          inferLedgerTypeForCompany(formData.companyId, ledgers, opposingLedgers);
+        const recordLedgerType = "Buyer";
 
         const lineRemark = [
           entry.debitNote || "Due against lorry",
@@ -1154,9 +1124,7 @@ const AddPaymentReceived = () => {
       return;
     }
 
-    const recordLedgerType =
-      formData.ledgerType ||
-      inferLedgerTypeForCompany(formData.companyId, ledgers, opposingLedgers);
+    const recordLedgerType = "Buyer";
 
     try {
       setLoading(true);
@@ -1671,9 +1639,7 @@ const AddPaymentReceived = () => {
           allocationSource={allocationSource}
           setAllocationSource={setAllocationSource}
           formData={formData}
-          setFormData={setFormData}
           handleInputChange={handleInputChange}
-          ledgerTypes={ledgerTypes}
           primaryCompanyOptions={primaryCompanyOptions}
           opposingCompanyOptions={opposingCompanyOptions}
           selectedCompanyOption={selectedCompanyOption}
