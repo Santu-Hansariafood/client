@@ -10,7 +10,7 @@ import { FaBuilding, FaArrowLeft } from "react-icons/fa";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import stateCityData from "../../../data/state-city.json";
-import axios from "axios";
+import api from "../../../utils/apiClient/apiClient";
 import regexPatterns from "../../../utils/regexPatterns/regexPatterns";
 
 const EditSellerCompany = () => {
@@ -47,8 +47,30 @@ const EditSellerCompany = () => {
   const fetchCompanyData = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`/seller-company/${id}`);
-      const company = response.data;
+      // Reset state to avoid showing stale data
+      setCompanyInfo({
+        companyName: "",
+        gstNo: "",
+        panNo: "",
+        aadhaarNo: "",
+        address: "",
+        pinNo: "",
+        mobileNo: "",
+        email: "",
+      });
+      setBankDetails([]);
+      setSelectedState(null);
+      setSelectedDistrict(null);
+      setDistrictOptions([]);
+      setMsme(false);
+      setMsmeDetails({ msmeNo: "" });
+
+      const response = await api.get(`/seller-company/${id}`);
+      const company = response.data?.data || response.data;
+
+      if (!company || Object.keys(company).length === 0) {
+        throw new Error("No company data found");
+      }
 
       setCompanyInfo({
         companyName: company.companyName || "",
@@ -81,13 +103,17 @@ const EditSellerCompany = () => {
         
         const matchedDistrict = districts.find(d => d.value === company.district);
         setSelectedDistrict(matchedDistrict || null);
+      } else {
+        setSelectedState(null);
+        setSelectedDistrict(null);
+        setDistrictOptions([]);
       }
 
       setMsme(!!company.msmeNo);
       setMsmeDetails({ msmeNo: company.msmeNo || "" });
     } catch (error) {
       console.error("Error fetching company:", error);
-      toast.error("Failed to load company details");
+      toast.error(error.message === "No company data found" ? "Company details not found" : "Failed to load company details");
       navigate("/seller-company/list");
     } finally {
       setLoading(false);
@@ -246,7 +272,7 @@ const EditSellerCompany = () => {
     };
 
     try {
-      await axios.put(
+      await api.put(
         `/seller-company/${id}`,
         payload,
       );

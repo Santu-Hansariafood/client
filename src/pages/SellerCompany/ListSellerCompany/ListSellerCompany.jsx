@@ -1,6 +1,6 @@
 import { useState, useEffect, lazy, Suspense } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from "../../../utils/apiClient/apiClient";
 import Loading from "../../../common/Loading/Loading";
 import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
 import { FaBuilding } from "react-icons/fa";
@@ -49,7 +49,7 @@ const ListSellerCompany = () => {
 
         setSearchLoading(true);
 
-        const response = await axios.get("/seller-company", {
+        const response = await api.get("/seller-company", {
           signal: controller.signal, // ✅ important
           params: {
             page: currentPage,
@@ -112,7 +112,7 @@ const ListSellerCompany = () => {
       window.confirm("Are you sure you want to delete this seller company?")
     ) {
       try {
-        await axios.delete(`/seller-company/${id}`);
+        await api.delete(`/seller-company/${id}`);
         setCompanies((prev) => prev.filter((company) => company._id !== id));
         // setSearchResults((prev) =>
         //   prev.filter((company) => company._id !== id),
