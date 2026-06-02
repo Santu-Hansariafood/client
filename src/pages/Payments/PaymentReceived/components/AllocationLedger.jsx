@@ -156,6 +156,23 @@ const AllocationLedger = ({
               className="!bg-white !px-3 !py-1.5 shadow-sm"
             />
 
+            <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-xl px-3 py-1.5 shadow-sm">
+              <span className="text-[9px] font-black uppercase tracking-wider text-slate-500 whitespace-nowrap">
+                Common date
+              </span>
+              <input
+                type="date"
+                value={formData.allocationDate || formData.date}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    allocationDate: e.target.value,
+                  }))
+                }
+                className="h-8 px-2 rounded-lg border border-slate-200 text-xs font-bold text-slate-700 outline-none focus:border-[#1e3a5f] focus:ring-2 focus:ring-[#1e3a5f]/10"
+              />
+            </div>
+
             <SearchBox
               placeholder="Search Sauda / Lorry..."
               items={[]}

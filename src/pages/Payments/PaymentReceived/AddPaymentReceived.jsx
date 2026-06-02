@@ -70,6 +70,7 @@ const AddPaymentReceived = () => {
 
   const [formData, setFormData] = useState({
     date: new Date().toISOString().split("T")[0],
+    allocationDate: new Date().toISOString().split("T")[0],
     ledgerType: "",
     ledgerId: "",
     companyId: "",
@@ -1061,7 +1062,7 @@ const AddPaymentReceived = () => {
           inferLedgerTypeForCompany(formData.companyId, ledgers, opposingLedgers);
 
         const payload = {
-          date: formData.date,
+          date: formData.allocationDate || formData.date,
           ledgerType: recordLedgerType,
           ledgerId: formData.ledgerId,
           companyId: formData.companyId,
@@ -1133,6 +1134,7 @@ const AddPaymentReceived = () => {
       setLoading(true);
       const payload = {
         ...formData,
+        date: formData.allocationDate || formData.date,
         ledgerType: recordLedgerType,
         companyId: formData.companyId,
         ...buildCompanyPayload(),
@@ -1397,27 +1399,19 @@ const AddPaymentReceived = () => {
             : String(row.allocatedAmount);
 
         return (
-          <div className="flex flex-col gap-2 text-[9px] font-black min-w-[180px] uppercase">
-            <div className="flex justify-between text-slate-400">
-              <span>Net:</span>
-              <span>Rs. {details.netAmount.toFixed(0)}</span>
-            </div>
-            <div className="flex justify-between text-slate-500">
-              <span>Already paid (Cr.):</span>
-              <span className="tabular-nums">
-                Rs. {(row.paidAmount || 0).toFixed(0)}
-              </span>
-            </div>
-            <div className="flex justify-between text-rose-600">
-              <span>Due (Dr.):</span>
-              <span className="bg-rose-50 px-1.5 rounded tabular-nums">
-                Rs. {details.dueAmount.toFixed(0)}
-              </span>
+          <div className="flex flex-col gap-2 text-[9px] font-black min-w-[220px] uppercase">
+            <div className="text-[9px] font-black text-slate-600 normal-case bg-slate-50 border border-slate-200 rounded px-2 py-1">
+              Net: Rs. {details.netAmount.toFixed(0)} | Paid Cr.: Rs.{" "}
+              {(row.paidAmount || 0).toFixed(0)} | Due Dr.: Rs.{" "}
+              {details.dueAmount.toFixed(0)}
             </div>
             <div className="border-t border-emerald-200 pt-2 mt-0.5">
               <label className="text-[9px] text-emerald-900 font-black tracking-widest block mb-1">
                 {allocationSource === "advance" ? "POST Cr. · TO THIS LORRY" : "POST Cr. (TYPE HERE)"}
               </label>
+              <p className="text-[8px] font-black text-slate-500 normal-case mb-1">
+                Common posting date: {new Date(formData.allocationDate || formData.date).toLocaleDateString("en-GB")}
+              </p>
               <div className="relative group">
                 <input
                   type="text"
