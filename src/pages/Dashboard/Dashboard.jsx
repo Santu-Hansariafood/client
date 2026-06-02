@@ -19,58 +19,21 @@ const Dashboard = () => {
 
   const fetchCounts = useCallback(async () => {
     try {
-      const today = new Date();
-      const todayStr = today.toISOString().split("T")[0];
+      const response = await api.get("/dashboard/stats");
+      const data = response.data;
 
-      const responses = await Promise.all([
-        api.get("/buyers"),
-        api.get("/sellers"),
-        api.get("/consignees"),
-        api.get("/self-order?limit=0"),
-        api.get(`/bids?date=${todayStr}`),
-      ]);
-
-      const getCount = (res) => {
-        const data = res?.data;
-        if (data && typeof data.total === "number") return data.total;
-        if (Array.isArray(data)) return data.length;
-        if (data && Array.isArray(data.data)) return data.data.length;
-        return 0;
-      };
-
-      const selfOrders = responses[3]?.data || [];
-      const saudaByAgent = selfOrders.reduce((acc, order) => {
-        const agent = order.agentName || "Direct / Unknown";
-        const tons = Number(order.quantity) || 0;
-        if (!acc[agent]) {
-          acc[agent] = 0;
-        }
-        acc[agent] += tons;
-        return acc;
-      }, {});
-
-      const agentSaudaList = Object.entries(saudaByAgent)
-        .map(([name, tons]) => ({ name, tons }))
-        .sort((a, b) => b.tons - a.tons);
-
-      const totalSaudaTons = agentSaudaList.reduce(
-        (sum, item) => sum + item.tons,
-        0,
-      );
-
-      setAgentSaudas(agentSaudaList);
-
+      setAgentSaudas(data.agentSaudas || []);
       setCounts({
-        buyers: getCount(responses[0]),
-        sellers: getCount(responses[1]),
-        consignees: getCount(responses[2]),
-        orders: getCount(responses[3]),
-        bids: getCount(responses[4]),
-        totalSaudaTons,
+        buyers: data.buyers || 0,
+        sellers: data.sellers || 0,
+        consignees: data.consignees || 0,
+        orders: data.orders || 0,
+        bids: data.bids || 0,
+        totalSaudaTons: data.totalSaudaTons || 0,
       });
     } catch (error) {
       toast.error(
-        error?.response?.data?.message || "Failed to fetch data counts",
+        error?.response?.data?.message || "Failed to fetch dashboard metrics",
       );
     }
   }, []);

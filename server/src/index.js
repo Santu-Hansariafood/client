@@ -43,6 +43,7 @@ import vendorCodeRoutes from "./routes/vendorCodes.js";
 import expenseCategoryRoutes from "./routes/expenseCategories.js";
 import expenseRequestRoutes from "./routes/expenseRequests.js";
 import uploadRoutes from "./routes/uploads.js";
+import dashboardRoutes from "./routes/dashboard.js";
 import { startNotificationCleanup } from "./lib/scheduler.js";
 import http from "http";
 import { initSocket } from "./lib/socket.js";
@@ -149,6 +150,7 @@ app.use("/api/vendor-codes", cache(5), authJwt, vendorCodeRoutes);
 app.use("/api/expense-categories", authJwt, expenseCategoryRoutes);
 app.use("/api/expense-requests", authJwt, expenseRequestRoutes);
 app.use("/api/uploads", authJwt, uploadRoutes);
+app.use("/api/dashboard", authJwt, dashboardRoutes);
 
 if (process.env.NODE_ENV === "production") {
   const distPath = path.join(__dirname, "../../dist");
