@@ -42,6 +42,7 @@ const SelfOrderList = () => {
 
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [lookupsLoading, setLookupsLoading] = useState(false);
   const [totalItems, setTotalItems] = useState(0);
 
   const [consigneeMap, setConsigneeMap] = useState(new Map());
@@ -58,6 +59,44 @@ const SelfOrderList = () => {
   const [searchInput, setSearchInput] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+
+  useEffect(() => {
+    const fetchLookups = async () => {
+      setLookupsLoading(true);
+      try {
+        const [
+          consignees,
+          allBuyers,
+          suppliers,
+          sellerProfiles,
+          companies,
+        ] = await Promise.all([
+          fetchAllPages("/consignees", { limit: 200 }).catch(() => []),
+          fetchAllPages("/buyers", { limit: 200 }).catch(() => []),
+          fetchAllPages("/seller-company", { limit: 200 }).catch(() => []),
+          fetchAllPages("/sellers", { limit: 200 }).catch(() => []),
+          fetchAllPages("/companies", { limit: 200 }).catch(() => []),
+        ]);
+
+        setConsigneeData(consignees);
+        setSupplierData(suppliers);
+        setBuyerData(allBuyers);
+        setSellerProfileData(sellerProfiles);
+        setCompanyData(companies);
+
+        const map = new Map();
+        consignees.forEach((c) => {
+          if (c?._id) map.set(String(c._id), c.name || c.label || "-");
+        });
+        setConsigneeMap(map);
+      } catch (error) {
+        console.error("Lookup fetch error:", error);
+      } finally {
+        setLookupsLoading(false);
+      }
+    };
+    fetchLookups();
+  }, []);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -77,21 +116,7 @@ const SelfOrderList = () => {
         endDate: endDate || "",
       }).toString();
 
-      const [
-        orderRes,
-        consignees,
-        allBuyers,
-        suppliers,
-        sellerProfiles,
-        companies,
-      ] = await Promise.all([
-        api.get(`${API_URL}?${queryParams}`),
-        fetchAllPages("/consignees", { limit: 200 }).catch(() => []),
-        fetchAllPages("/buyers", { limit: 200 }).catch(() => []),
-        fetchAllPages("/seller-company", { limit: 200 }).catch(() => []),
-        fetchAllPages("/sellers", { limit: 200 }).catch(() => []),
-        fetchAllPages("/companies", { limit: 200 }).catch(() => []),
-      ]);
+      const orderRes = await api.get(`${API_URL}?${queryParams}`);
 
       const orderData = orderRes.data || {};
       const items = Array.isArray(orderData.data)
@@ -103,17 +128,6 @@ const SelfOrderList = () => {
 
       setData(items);
       setTotalItems(total);
-      setConsigneeData(consignees);
-      setSupplierData(suppliers);
-      setBuyerData(allBuyers);
-      setSellerProfileData(sellerProfiles);
-      setCompanyData(companies);
-
-      const map = new Map();
-      consignees.forEach((c) => {
-        if (c?._id) map.set(String(c._id), c.name || c.label || "-");
-      });
-      setConsigneeMap(map);
     } catch (error) {
       console.error("Fetch error:", error);
       toast.error("Failed to fetch order data");
@@ -385,15 +399,16 @@ _${fileUrl || "PDF Link Not Available"}_
       "Sauda No",
       "PO Number",
       "Buyer Company",
-      userRole === "Admin" ? "Mobile" : null,
+      userRole === "Admin" ? "Buyer Mobile" : null,
+      userRole === "Admin" || userRole === "Employee" ? "Buyer Emails" : null,
       "Consignee",
       "Commodity",
       "Quantity",
       "Rate",
       "Seller",
-      "Agent Name",
-      userRole === "Admin" || userRole === "Employee" ? "Buyer Emails" : null,
+      userRole === "Admin" || userRole === "Employee" ? "Seller Mobile" : null,
       userRole === "Admin" || userRole === "Employee" ? "Seller Emails" : null,
+      "Agent Name",
       userRole === "Admin" || userRole === "Employee" ? "WhatsApp Sent" : null,
       userRole === "Admin" || userRole === "Employee" ? "Action" : null,
     ].filter(Boolean);
@@ -567,6 +582,15 @@ _${fileUrl || "PDF Link Not Available"}_
             </div>
           ) : null,
 
+          userRole === "Admin" || userRole === "Employee" ? (
+            <span
+              key={`bemails-${item._id}`}
+              className="text-xs text-slate-500 line-clamp-1"
+            >
+              {item.buyerEmails?.filter(Boolean).join(", ") || "N/A"}
+            </span>
+          ) : null,
+
           getConsigneeDisplay(item) || "N/A",
           <span key={`comm-${item._id}`} className="font-bold text-slate-700">
             {item.commodity || "N/A"}
@@ -585,38 +609,33 @@ _${fileUrl || "PDF Link Not Available"}_
             {item?.supplier?.sellerName || item.supplierCompany || "N/A"}
           </span>,
 
-          item.agentName || "N/A",
+          userRole === "Admin" || userRole === "Employee" ? (
+            <div className="flex items-center gap-2" key={`seller-mob-${item._id}`}>
+              <span className="font-bold text-slate-700 text-xs">
+                {item.sellerMobile || "N/A"}
+              </span>
+              {item.sellerMobile && userRole === "Admin" && (
+                <button
+                  onClick={() => handleSmartWhatsApp(item, "seller")}
+                  className="text-emerald-500 hover:scale-110 transition-transform"
+                  title="Share on WhatsApp"
+                >
+                  <FaWhatsapp size={16} />
+                </button>
+              )}
+            </div>
+          ) : null,
 
           userRole === "Admin" || userRole === "Employee" ? (
             <span
-              key={`bemails-${item._id}`}
-              className="text-xs text-slate-500 line-clamp-1"
+              key={`seller-emails-${item._id}`}
+              className="text-[10px] text-slate-400 font-bold uppercase truncate max-w-[120px]"
             >
-              {item.buyerEmails?.filter(Boolean).join(", ") || "N/A"}
+              {item.sellerEmails?.filter(Boolean).join(", ") || "N/A"}
             </span>
           ) : null,
 
-          userRole === "Admin" || userRole === "Employee" ? (
-            <div className="flex flex-col gap-1" key={`seller-dt-${item._id}`}>
-              <span className="text-[10px] text-slate-400 font-bold uppercase truncate max-w-[120px]">
-                {item.sellerEmails?.filter(Boolean).join(", ") || "N/A"}
-              </span>
-              <div className="flex items-center gap-2">
-                <span className="font-bold text-slate-700 text-xs">
-                  {item.sellerMobile || "N/A"}
-                </span>
-                {item.sellerMobile && userRole === "Admin" && (
-                  <button
-                    onClick={() => handleSmartWhatsApp(item, "seller")}
-                    className="text-emerald-500 hover:scale-110 transition-transform"
-                    title="Share on WhatsApp"
-                  >
-                    <FaWhatsapp size={16} />
-                  </button>
-                )}
-              </div>
-            </div>
-          ) : null,
+          item.agentName || "N/A",
 
           userRole === "Admin" || userRole === "Employee" ? (
             <div className="flex justify-center" key={`status-${item._id}`}>
@@ -737,7 +756,7 @@ _${fileUrl || "PDF Link Not Available"}_
             </div>
 
             <div className="bg-white/60 backdrop-blur-2xl rounded-[2.5rem] p-4 sm:p-8 border border-white/60 shadow-2xl shadow-slate-200/50">
-              {loading ? (
+              {loading || (data.length === 0 && lookupsLoading) ? (
                 <div className="py-24 flex flex-col items-center justify-center gap-4">
                   <div className="w-12 h-12 border-4 border-emerald-600 border-t-transparent rounded-full animate-spin" />
                   <p className="text-sm font-black text-slate-400 uppercase tracking-widest">
