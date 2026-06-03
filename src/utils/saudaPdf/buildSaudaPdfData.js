@@ -143,6 +143,11 @@ const findBestMatch = (dataList, key, nameField) => {
     findBestMatch(consigneeData, item?.consignee, 'name') || 
     findBestMatch(consigneeData, item?.consignee, 'label');
 
+  const supplierId = item?.supplier?._id || item?.supplier;
+  const matchingSellerProfile = sellerProfileData.find(
+    (seller) => String(seller._id) === String(supplierId),
+  );
+
   const normalizedSupplierKey = (() => {
     const s = item?.supplierCompany;
     if (!s) return "";
@@ -177,11 +182,6 @@ const findBestMatch = (dataList, key, nameField) => {
   }, null);
 
   const matchingCommodity = findBestMatch(commodityData, item?.commodity, 'name');
-
-  const supplierId = item?.supplier?._id || item?.supplier;
-  const matchingSellerProfile = sellerProfileData.find(
-    (seller) => String(seller._id) === String(supplierId),
-  );
 
   const rawBuyerKey = item?.buyerCompany ?? item?.buyer ?? "";
   
