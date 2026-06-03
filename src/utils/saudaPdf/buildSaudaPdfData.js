@@ -68,10 +68,13 @@ export const buildSaudaPdfData = ({
     return fuzzyMatch || null;
   };
 
-  const matchingConsignee = findBestMatch(consigneeData, normalizedConsigneeKey, 'name') || 
-                           findBestMatch(consigneeData, normalizedConsigneeKey, 'label');
+  const matchingConsignee = 
+    findBestMatch(consigneeData, normalizedConsigneeKey, 'name') || 
+    findBestMatch(consigneeData, normalizedConsigneeKey, 'label');
 
-  const matchingSupplier = findBestMatch(supplierData, item?.supplierCompany, 'companyName');
+  const matchingSupplier = 
+    findBestMatch(supplierData, item?.supplierCompany, 'companyName') ||
+    findBestMatch(supplierData, item?.supplierCompany, 'name');
 
   const matchingCommodity = findBestMatch(commodityData, item?.commodity, 'name');
 
@@ -83,7 +86,7 @@ export const buildSaudaPdfData = ({
   
   const matchingBuyer = 
     findBestMatch(companyData, rawBuyerKey, 'companyName') ||
-    findBestMatch(buyerData, rawBuyerKey, 'companyName') ||
+    findBestMatch(buyerData, rawBuyerKey, 'name') ||
     findBestMatch(supplierData, rawBuyerKey, 'companyName');
 
   const resolvedConsigneeName =

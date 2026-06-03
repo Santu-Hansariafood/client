@@ -545,6 +545,7 @@ _${fileUrl || "PDF Link Not Available"}_
               supplierData={supplierData}
               buyerData={buyerData}
               sellerProfileData={sellerProfileData}
+              companyData={companyData}
               button={
                 <button
                   className="flex items-center justify-center w-8 h-8 rounded-xl bg-emerald-50 text-emerald-700 hover:bg-emerald-600 hover:text-white transition-all shadow-sm border border-emerald-100"

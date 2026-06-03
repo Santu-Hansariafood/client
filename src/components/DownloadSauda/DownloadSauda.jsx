@@ -16,6 +16,7 @@ const DownloadSauda = ({
   supplierData: initialSupplierData,
   buyerData: initialBuyerData,
   sellerProfileData: initialSellerProfileData,
+  companyData: initialCompanyData,
   autoEmail = false,
 }) => {
   const [consigneeData, setConsigneeData] = useState(
@@ -26,12 +27,13 @@ const DownloadSauda = ({
   const [sellerProfileData, setSellerProfileData] = useState(
     initialSellerProfileData || [],
   );
-  const [companyData, setCompanyData] = useState([]);
+  const [companyData, setCompanyData] = useState(initialCompanyData || []);
   const [loading, setLoading] = useState(
     !initialConsigneeData ||
       !initialSupplierData ||
       !initialBuyerData ||
-      !initialSellerProfileData,
+      !initialSellerProfileData ||
+      !initialCompanyData,
   );
   const [sendingEmail, setSendingEmail] = useState(false);
 
@@ -46,7 +48,8 @@ const DownloadSauda = ({
       initialConsigneeData &&
       initialSupplierData &&
       initialBuyerData &&
-      initialSellerProfileData
+      initialSellerProfileData &&
+      initialCompanyData
     ) {
       setLoading(false);
       return;
@@ -55,11 +58,21 @@ const DownloadSauda = ({
     const fetchData = async () => {
       try {
         const [cData, sData, bData, spData, companyRows] = await Promise.all([
-          fetchAllPages(CONSIGNEE_API_URL, { limit: 200 }),
-          fetchAllPages(SUPPLIER_API_URL, { limit: 200 }),
-          fetchAllPages(BUYER_API_URL, { limit: 200 }),
-          fetchAllPages(SELLER_PROFILE_API_URL, { limit: 200 }),
-          fetchAllPages(COMPANY_API_URL, { limit: 200 }),
+          initialConsigneeData
+            ? Promise.resolve(initialConsigneeData)
+            : fetchAllPages(CONSIGNEE_API_URL, { limit: 200 }),
+          initialSupplierData
+            ? Promise.resolve(initialSupplierData)
+            : fetchAllPages(SUPPLIER_API_URL, { limit: 200 }),
+          initialBuyerData
+            ? Promise.resolve(initialBuyerData)
+            : fetchAllPages(BUYER_API_URL, { limit: 200 }),
+          initialSellerProfileData
+            ? Promise.resolve(initialSellerProfileData)
+            : fetchAllPages(SELLER_PROFILE_API_URL, { limit: 200 }),
+          initialCompanyData
+            ? Promise.resolve(initialCompanyData)
+            : fetchAllPages(COMPANY_API_URL, { limit: 200 }),
         ]);
 
         setConsigneeData(cData);
@@ -80,6 +93,7 @@ const DownloadSauda = ({
     initialSupplierData,
     initialBuyerData,
     initialSellerProfileData,
+    initialCompanyData,
   ]);
 
   const transformedData = buildSaudaPdfData({
