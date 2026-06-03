@@ -8,7 +8,7 @@ import authJwt from "../middleware/authJwt.js";
 
 const router = Router();
 
-router.get("/stats", authJwt, async (req, res) => {
+router.get("/stats", async (req, res) => {
   try {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -28,7 +28,7 @@ router.get("/stats", authJwt, async (req, res) => {
       Consignee.countDocuments(),
       SelfOrder.countDocuments(),
       Bid.countDocuments({
-        date: {
+        bidDate: {
           $gte: today,
           $lt: tomorrow
         }

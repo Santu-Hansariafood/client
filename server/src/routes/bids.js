@@ -301,7 +301,7 @@ router.get("/", async (req, res) => {
 
     const items = await Bid.find(query)
       .sort({ createdAt: -1 })
-      .limit(100)
+      .limit(1000)
       .lean();
     res.json(items);
   } catch (error) {
