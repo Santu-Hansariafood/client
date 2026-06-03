@@ -160,8 +160,8 @@ const SelfOrderList = () => {
 
   const handleSmartWhatsApp = useCallback(
     async (item, target = "buyer") => {
-      if (userRole !== "Admin") {
-        toast.error("Only Admin can send WhatsApp from list.");
+      if (userRole !== "Admin" && userRole !== "Employee") {
+        toast.error("Unauthorized to send WhatsApp from list.");
         return;
       }
       const mobileValue =
@@ -224,25 +224,6 @@ const SelfOrderList = () => {
           console.warn("PDF Upload failed, falling back to text only", err);
         }
 
-        const consigneeObj = consigneeData.find(
-          (c) =>
-            String(c._id) === String(item.consignee?._id || item.consignee) ||
-            c.name === item.consignee ||
-            c.label === item.consignee,
-        );
-
-        const consigneeAddress = consigneeObj
-          ? [
-              consigneeObj.location,
-              consigneeObj.district,
-              consigneeObj.state,
-              consigneeObj.pin,
-            ]
-              .filter(Boolean)
-              .join(", ")
-          : "";
-
-        const consigneeName = getConsigneeDisplay(item);
         const formattedSaudaDate = item.poDate
           ? new Date(item.poDate).toLocaleDateString("en-GB", {
               day: "2-digit",
@@ -256,6 +237,13 @@ const SelfOrderList = () => {
                 year: "numeric",
               })
             : "N/A";
+
+        const formattedDeliveryDate = item.deliveryDate
+          ? new Date(item.deliveryDate).toLocaleDateString("en-GB")
+          : "N/A";
+        const formattedLoadingDate = item.loadingDate
+          ? new Date(item.loadingDate).toLocaleDateString("en-GB")
+          : "N/A";
 
         const finalMessage = `*HANSARIA FOOD PRIVATE LIMITED*
 
@@ -274,7 +262,7 @@ const SelfOrderList = () => {
         }_
 ${
   item.cd && item.cd !== "0" && item.cd !== 0 && item.cd !== "N/A"
-    ? `*CD:* -  _${item.cd}_`
+    ? `*CD:* -  _${item.cd}%_`
     : ""
 }
 *Payment Terms:* -  _${item.paymentTerms || "N/A"} Days_
@@ -559,13 +547,13 @@ _${fileUrl || "PDF Link Not Available"}_
               <span className="font-medium text-slate-600">
                 {item.buyerMobile || "N/A"}
               </span>
-              {item.buyerMobile && userRole === "Admin" && (
+              {item.buyerMobile && (
                 <button
                   onClick={() => handleSmartWhatsApp(item, "buyer")}
-                  className="p-1.5 rounded-lg text-emerald-500 hover:bg-emerald-50 transition-colors"
+                  className="p-1.5 rounded-lg text-emerald-500 hover:bg-emerald-50 hover:scale-110 transition-all shadow-sm border border-transparent hover:border-emerald-100"
                   title="Share on WhatsApp"
                 >
-                  <FaWhatsapp size={20} />
+                  <FaWhatsapp size={18} />
                 </button>
               )}
             </div>
@@ -606,13 +594,13 @@ _${fileUrl || "PDF Link Not Available"}_
               <span className="font-bold text-slate-700 text-xs">
                 {item.sellerMobile || "N/A"}
               </span>
-              {item.sellerMobile && userRole === "Admin" && (
+              {item.sellerMobile && (
                 <button
                   onClick={() => handleSmartWhatsApp(item, "seller")}
-                  className="text-emerald-500 hover:scale-110 transition-transform"
+                  className="p-1.5 rounded-lg text-emerald-500 hover:bg-emerald-50 hover:scale-110 transition-all shadow-sm border border-transparent hover:border-emerald-100"
                   title="Share on WhatsApp"
                 >
-                  <FaWhatsapp size={16} />
+                  <FaWhatsapp size={18} />
                 </button>
               )}
             </div>
