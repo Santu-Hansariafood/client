@@ -34,7 +34,7 @@ const CHART_CARDS = [
     accent: "from-emerald-500 to-teal-600",
     ring: "ring-emerald-100/80",
     Component: PaymentAnalyticsChart,
-    props: (chartType) => ({ chartType }),
+    props: (chartType) => ({ apiUrl: "/dashboard/charts/payments", chartType }),
   },
   {
     id: "loading",
@@ -42,7 +42,7 @@ const CHART_CARDS = [
     accent: "from-blue-500 to-indigo-600",
     ring: "ring-blue-100/80",
     Component: LoadingChart,
-    props: (chartType) => ({ apiUrl: "/loading-entries", chartType }),
+    props: (chartType) => ({ apiUrl: "/dashboard/charts/loading", chartType }),
   },
   {
     id: "commodity",
@@ -50,7 +50,7 @@ const CHART_CARDS = [
     accent: "from-emerald-500 to-cyan-600",
     ring: "ring-emerald-100/80",
     Component: CommodityPieChart,
-    props: () => ({ apiUrl: "/loading-entries" }),
+    props: () => ({ apiUrl: "/dashboard/charts/loading" }),
   },
   {
     id: "sauda",
@@ -58,7 +58,7 @@ const CHART_CARDS = [
     accent: "from-emerald-500 to-green-600",
     ring: "ring-emerald-100/80",
     Component: SaudaChart,
-    props: (chartType) => ({ apiUrl: "/self-order", chartType }),
+    props: (chartType) => ({ apiUrl: "/dashboard/charts/sauda", chartType }),
   },
   {
     id: "sauda-pie",
@@ -66,7 +66,7 @@ const CHART_CARDS = [
     accent: "from-emerald-500 to-green-600",
     ring: "ring-emerald-100/80",
     Component: SaudaChart,
-    props: () => ({ apiUrl: "/self-order", chartType: "pie" }),
+    props: () => ({ apiUrl: "/dashboard/charts/sauda", chartType: "pie" }),
   },
   {
     id: "bids",
@@ -74,7 +74,7 @@ const CHART_CARDS = [
     accent: "from-amber-500 to-orange-600",
     ring: "ring-amber-100/80",
     Component: BidChart,
-    props: (chartType) => ({ apiUrl: "/bids", chartType }),
+    props: (chartType) => ({ apiUrl: "/dashboard/charts/bids", chartType }),
   },
   {
     id: "bids-pie",
@@ -82,7 +82,7 @@ const CHART_CARDS = [
     accent: "from-amber-500 to-orange-600",
     ring: "ring-amber-100/80",
     Component: BidChart,
-    props: () => ({ apiUrl: "/bids", chartType: "pie" }),
+    props: () => ({ apiUrl: "/dashboard/charts/bids", chartType: "pie" }),
   },
   {
     id: "agent",
@@ -90,7 +90,7 @@ const CHART_CARDS = [
     accent: "from-indigo-500 to-violet-600",
     ring: "ring-indigo-100/80",
     Component: AgentSaudaChart,
-    props: (chartType, agentSaudas) => ({ data: agentSaudas, chartType }),
+    props: (chartType) => ({ apiUrl: "/dashboard/charts/agent-distribution", chartType }),
   },
   {
     id: "agent-pie",
@@ -98,7 +98,7 @@ const CHART_CARDS = [
     accent: "from-indigo-500 to-violet-600",
     ring: "ring-indigo-100/80",
     Component: AgentSaudaChart,
-    props: (_, agentSaudas) => ({ data: agentSaudas, chartType: "pie" }),
+    props: () => ({ apiUrl: "/dashboard/charts/agent-distribution", chartType: "pie" }),
   },
 ];
 

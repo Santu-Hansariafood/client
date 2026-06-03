@@ -4,6 +4,8 @@ import Seller from "../models/Seller.js";
 import Consignee from "../models/Consignee.js";
 import SelfOrder from "../models/SelfOrder.js";
 import Bid from "../models/Bid.js";
+import LoadingEntry from "../models/LoadingEntry.js";
+import PaymentReceived from "../models/PaymentReceived.js";
 import authJwt from "../middleware/authJwt.js";
 
 const router = Router();
@@ -73,4 +75,72 @@ router.get("/stats", async (req, res) => {
   }
 });
 
+// Dedicated Chart APIs
+router.get("/charts/payments", async (req, res) => {
+  try {
+    const data = await PaymentReceived.find().select("date amount").lean();
+    res.json(data);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+router.get("/charts/loading", async (req, res) => {
+  try {
+    const data = await LoadingEntry.find().select("loadingDate unloadingWeight commodity").lean();
+    res.json(data);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+router.get("/charts/sauda", async (req, res) => {
+  try {
+    const data = await SelfOrder.find().select("createdAt quantity commodity agentName").lean();
+    res.json(data);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+router.get("/charts/bids", async (req, res) => {
+  try {
+    const data = await Bid.find().select("bidDate createdAt commodity").lean();
+    res.json(data);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+router.get("/charts/agent-distribution", async (req, res) => {
+  try {
+    const stats = await SelfOrder.aggregate([
+      {
+        $group: {
+          _id: {
+            agent: { $ifNull: ["$agentName", "Direct / Unknown"] },
+            location: { $ifNull: ["$state", "Unknown"] }
+          },
+          count: { $sum: 1 },
+          tons: { $sum: "$quantity" }
+        }
+      },
+      {
+        $project: {
+          agent: "$_id.agent",
+          location: "$_id.location",
+          count: 1,
+          tons: 1,
+          _id: 0
+        }
+      },
+      { $sort: { tons: -1 } }
+    ]);
+    res.json(stats);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 export default router;
+
