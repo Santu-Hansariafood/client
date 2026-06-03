@@ -39,6 +39,33 @@ import {
 
 const ENTRIES_PAGE_SIZE = 20;
 
+const calculateTallyDetails = (entry) => {
+  const weight =
+    (entry.unloadingWeight || 0) > 0
+      ? entry.unloadingWeight
+      : entry.loadingWeight || 0;
+  const rate = entry.actualRate || 0;
+  const cdPercent = entry.cd || 0;
+  const gstPercent = entry.gst || 0;
+
+  const grossAmount = weight * rate;
+  const cdAmount = grossAmount * (cdPercent / 100);
+  const taxableAmount = grossAmount - cdAmount;
+  const gstAmount = taxableAmount * (gstPercent / 100);
+  const netAmount = taxableAmount + gstAmount;
+
+  return {
+    grossAmount,
+    cdAmount,
+    taxableAmount,
+    gstAmount,
+    netAmount,
+    cdPercent,
+    gstPercent,
+    dueAmount: Math.max(0, netAmount - (entry.paidAmount || 0)),
+  };
+};
+
 const AddPaymentReceived = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -1111,33 +1138,6 @@ const AddPaymentReceived = () => {
 
   const handleRemoveRow = (uiKey) => {
     setEntries((prev) => prev.filter((entry) => entry.uiKey !== uiKey));
-  };
-
-  const calculateTallyDetails = (entry) => {
-    const weight =
-      (entry.unloadingWeight || 0) > 0
-        ? entry.unloadingWeight
-        : entry.loadingWeight || 0;
-    const rate = entry.actualRate || 0;
-    const cdPercent = entry.cd || 0;
-    const gstPercent = entry.gst || 0;
-
-    const grossAmount = weight * rate;
-    const cdAmount = grossAmount * (cdPercent / 100);
-    const taxableAmount = grossAmount - cdAmount;
-    const gstAmount = taxableAmount * (gstPercent / 100);
-    const netAmount = taxableAmount + gstAmount;
-
-    return {
-      grossAmount,
-      cdAmount,
-      taxableAmount,
-      gstAmount,
-      netAmount,
-      cdPercent,
-      gstPercent,
-      dueAmount: Math.max(0, netAmount - (entry.paidAmount || 0)),
-    };
   };
 
   const handleSaveRow = async (entry) => {
