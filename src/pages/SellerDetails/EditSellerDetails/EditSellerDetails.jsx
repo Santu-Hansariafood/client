@@ -54,36 +54,38 @@ const EditSellerDetails = ({ sellerId: propSellerId, onClose, onSave, isPopup = 
 
   useEffect(() => {
     const fetchData = async () => {
+      if (!sellerId) {
+        setLoading(false);
+        return;
+      }
+
       setLoading(true);
       try {
-        const [commoditiesRes, companiesRes, groupsRes, sellerRes] = await Promise.all([
-          api.get("/commodities", { params: { limit: 1000 } }),
-          api.get("/seller-company", { params: { limit: 1000 } }),
-          api.get("/groups", { params: { limit: 1000 } }),
+        const [commodities, companies, groups, sellerRes] = await Promise.all([
+          fetchAllPages("/commodities").catch(() => []),
+          fetchAllPages("/seller-company").catch(() => []),
+          fetchAllPages("/groups").catch(() => []),
           api.get(`/sellers/${sellerId}`),
         ]);
 
-        const commoditiesData = commoditiesRes.data?.data || commoditiesRes.data || [];
-        const companiesData = companiesRes.data?.data || companiesRes.data || [];
-        const groupsData = groupsRes.data?.data || groupsRes.data || [];
         const sellerData = sellerRes.data?.data || sellerRes.data || {};
 
         // 1. Set Options First
-        const commOpts = (commoditiesData || [])
+        const commOpts = (commodities || [])
           .map((item) => ({
             value: item.name || item,
             label: item.name || item,
           }))
           .sort((a, b) => a.label.localeCompare(b.label));
 
-        const compOpts = (companiesData || [])
+        const compOpts = (companies || [])
           .map((item) => ({
             value: item.companyName || item.name || item,
             label: item.companyName || item.name || item,
           }))
           .sort((a, b) => a.label.localeCompare(b.label));
 
-        const grpOpts = (groupsData || [])
+        const grpOpts = (groups || [])
           .map((item) => ({
             value: item._id || item.id || item,
             label: item.groupName || item.name || item,
@@ -98,20 +100,20 @@ const EditSellerDetails = ({ sellerId: propSellerId, onClose, onSave, isPopup = 
         setFullSellerData(sellerData);
         setSellerName(sellerData.sellerName || "");
         setPassword(sellerData.password || "");
-        setPhoneNumbers(
-          (sellerData.phoneNumbers || []).map((phone) => ({
-            id: Date.now() + Math.random(),
-            value: phone.value,
-          })),
-        );
-        setEmails(
-          (sellerData.emails || []).map((email) => ({
-            id: Date.now() + Math.random(),
-            value: email.value,
-          })),
-        );
+        
+        const fetchedPhones = (sellerData.phoneNumbers || []).map((phone) => ({
+          id: Math.random(),
+          value: phone.value || "",
+        }));
+        setPhoneNumbers(fetchedPhones.length > 0 ? fetchedPhones : [{ id: Date.now(), value: "" }]);
 
-        // Map selected values using prepared options
+        const fetchedEmails = (sellerData.emails || []).map((email) => ({
+          id: Math.random(),
+          value: email.value || "",
+        }));
+        setEmails(fetchedEmails.length > 0 ? fetchedEmails : [{ id: Date.now(), value: "" }]);
+
+        // Map selected values
         const selectedCommNames = (sellerData.commodities || []).map(
           (c) => c.name || c,
         );
@@ -143,7 +145,7 @@ const EditSellerDetails = ({ sellerId: propSellerId, onClose, onSave, isPopup = 
           .filter(Boolean);
         setSelectedGroups(selectedGroupIds);
 
-        setSelectedStatus(sellerData.status || null);
+        setSelectedStatus(sellerData.status || "active");
       } catch (error) {
         console.error("Fetch error:", error);
         toast.error("Failed to load seller data from the server.");
