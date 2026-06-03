@@ -64,10 +64,24 @@ const styles = StyleSheet.create({
 });
 
 const SaudaDetails = ({ data }) => {
-  const renderBuyerDetails = () => {
-    if (!data.buyerDetails) return null;
+  const renderAddressDetails = (details) => {
+    if (!details) return null;
 
-    const { address, location, district, state, pin, pinNo, pinCode, panNo, gstNo, msmeNo, mandiLicense } = data.buyerDetails;
+    const {
+      address,
+      location,
+      district,
+      state,
+      pin,
+      pinNo,
+      pinCode,
+      panNo,
+      pan,
+      gstNo,
+      gst,
+      msmeNo,
+      mandiLicense,
+    } = details;
 
     let parts = [];
     const addr = address || location || "";
@@ -75,6 +89,8 @@ const SaudaDetails = ({ data }) => {
     const st = state || "";
     const p = pinNo || pinCode || pin || "";
     const msme = msmeNo || mandiLicense || "";
+    const panVal = panNo || pan || "";
+    const gstVal = gstNo || gst || "";
 
     if (addr || dist || st || p) {
       parts.push(
@@ -83,9 +99,9 @@ const SaudaDetails = ({ data }) => {
         }${st}${st && p ? " - " : ""}${p}`,
       );
     }
-    
-    if (panNo) parts.push(`PAN No: ${panNo}`);
-    if (gstNo) parts.push(`GST: ${gstNo}`);
+
+    if (panVal) parts.push(`PAN No: ${panVal}`);
+    if (gstVal) parts.push(`GST: ${gstVal}`);
     if (msme) parts.push(`MSME No: ${msme}`);
 
     if (parts.length === 0) return null;
@@ -109,10 +125,14 @@ const SaudaDetails = ({ data }) => {
         <View style={styles.headerItem}>
           <Text style={styles.label}>DATE</Text>
           <Text style={styles.value}>
-            {data.poDate 
-              ? new Date(data.poDate).toLocaleDateString("en-GB").replace(/\//g, "-")
-              : data.createdAt 
-                ? new Date(data.createdAt).toLocaleDateString("en-GB").replace(/\//g, "-")
+            {data.poDate
+              ? new Date(data.poDate)
+                  .toLocaleDateString("en-GB")
+                  .replace(/\//g, "-")
+              : data.createdAt
+                ? new Date(data.createdAt)
+                    .toLocaleDateString("en-GB")
+                    .replace(/\//g, "-")
                 : "N/A"}
           </Text>
         </View>
@@ -121,28 +141,18 @@ const SaudaDetails = ({ data }) => {
       <View style={styles.grid}>
         <View style={styles.gridItem}>
           <Text style={styles.label}>Buyer Name</Text>
-          <Text style={styles.nameValue}>
-            {data.buyerCompany || data.buyer}
-          </Text>
-          {renderBuyerDetails()}
+          <Text style={styles.nameValue}>{data.buyerCompany || data.buyer}</Text>
+          {renderAddressDetails(data.buyerDetails)}
         </View>
         <View style={styles.gridItem}>
           <Text style={styles.label}>Supplier Company</Text>
           <Text style={styles.value}>{data.supplierCompany}</Text>
-          <Text style={styles.addressDetails}>
-            {data.supplierDetails ? (
-              `\n${data.supplierDetails.address || data.supplierDetails.location || ""}, ${data.supplierDetails.district || ""}, ${data.supplierDetails.state || ""} - ${data.supplierDetails.pinNo || data.supplierDetails.pin || data.supplierDetails.pinCode || ""}\nPAN No: ${data.supplierDetails.panNo || ""}\nGST: ${data.supplierDetails.gstNo || ""}${(data.supplierDetails.msmeNo || data.supplierDetails.mandiLicense) ? "\nMSME No: " + (data.supplierDetails.msmeNo || data.supplierDetails.mandiLicense) : ""}`
-            ) : null}
-          </Text>
+          {renderAddressDetails(data.supplierDetails)}
         </View>
         <View style={[styles.gridItem, { borderRight: "none" }]}>
           <Text style={styles.label}>Ship To (Consignee)</Text>
           <Text style={styles.nameValue}>{data.consignee}</Text>
-          {data.consigneeDetails && (
-            <Text style={styles.addressDetails}>
-              {`\n${data.consigneeDetails.address || data.consigneeDetails.location || ""}, ${data.consigneeDetails.district || ""}, ${data.consigneeDetails.state || ""} - ${data.consigneeDetails.pin || data.consigneeDetails.pinNo || data.consigneeDetails.pinCode || ""}\nPAN No : ${data.consigneeDetails.panNo || data.consigneeDetails.pan || ""}\nGST: ${data.consigneeDetails.gstNo || data.consigneeDetails.gst || ""}${(data.consigneeDetails.msmeNo || data.consigneeDetails.mandiLicense) ? "\nMSME No: " + (data.consigneeDetails.msmeNo || data.consigneeDetails.mandiLicense) : ""}`}
-            </Text>
-          )}
+          {renderAddressDetails(data.consigneeDetails)}
         </View>
       </View>
     </View>

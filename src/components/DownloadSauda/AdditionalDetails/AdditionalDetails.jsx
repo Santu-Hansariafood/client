@@ -187,11 +187,17 @@ const AdditionalDetails = ({ data }) => {
       <View style={styles.bankSection}>
         <Text style={styles.bankTitle}>BANK ACCOUNT DETAILS</Text>
         {bank.accountNumber ? (
-          <Text style={styles.bankText}>
-            {bank.accountHolderName || data.supplierCompany} | A/C:{" "}
-            {bank.accountNumber} | IFSC: {bank.ifscCode || "N/A"} | Bank:{" "}
-            {bank.bankName || "N/A"}
-          </Text>
+          <>
+            <Text style={styles.bankText}>
+              Account Holder Name: {bank.accountHolderName || data.supplierCompany}
+            </Text>
+            <Text style={styles.bankText}>
+              Account Number: {bank.accountNumber} | IFSC Code: {bank.ifscCode || "N/A"}
+            </Text>
+            <Text style={styles.bankText}>
+              Bank Name: {bank.bankName || "N/A"}
+            </Text>
+          </>
         ) : (
           <Text style={styles.bankText}>Bank details not available</Text>
         )}

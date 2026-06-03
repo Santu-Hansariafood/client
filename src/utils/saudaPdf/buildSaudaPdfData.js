@@ -5,11 +5,19 @@ const normalizeText = (value) =>
 
 const toUnifiedDetails = (entity) => {
   if (!entity) return null;
+  const gstNo = entity.gstNo || entity.gst || entity.gstNumber || "";
+  let panNo = entity.panNo || entity.pan || entity.panNumber || "";
+
+  // Extract PAN from GST if missing
+  if (!panNo && gstNo && gstNo.length >= 12 && gstNo !== "0") {
+    panNo = gstNo.substring(2, 12).toUpperCase();
+  }
+
   return {
     ...entity,
     address: entity.address || entity.location || "",
-    gstNo: entity.gstNo || entity.gst || entity.gstNumber || "",
-    panNo: entity.panNo || entity.pan || entity.panNumber || "",
+    gstNo,
+    panNo,
     pinNo: entity.pinNo || entity.pin || entity.pinCode || "",
     msmeNo: entity.msmeNo || entity.mandiLicense || "",
     district: entity.district || "",
@@ -20,11 +28,19 @@ const toUnifiedDetails = (entity) => {
 
 const toConsigneeDetails = (entity) => {
   if (!entity) return null;
+  const gstNo = entity.gstNo || entity.gst || entity.gstNumber || "";
+  let panNo = entity.panNo || entity.pan || entity.panNumber || "";
+
+  // Extract PAN from GST if missing
+  if (!panNo && gstNo && gstNo.length >= 12 && gstNo !== "0") {
+    panNo = gstNo.substring(2, 12).toUpperCase();
+  }
+
   return {
     ...entity,
     address: entity.address || entity.location || "",
-    gstNo: entity.gstNo || entity.gst || entity.gstNumber || "",
-    panNo: entity.panNo || entity.pan || entity.panNumber || "",
+    gstNo,
+    panNo,
     pin: entity.pin || entity.pinNo || entity.pinCode || "",
     msmeNo: entity.msmeNo || entity.mandiLicense || "",
     district: entity.district || "",
@@ -128,24 +144,36 @@ export const buildSaudaPdfData = ({
     sellerProfile: matchingSellerProfile,
   };
 
-  // Ensure bank details are present from profile if missing from company
-  if (matchingSellerProfile?.bankName || matchingSellerProfile?.ifscCode) {
+  // Ensure bank and GST details are present from profile if missing from company
+  if (matchingSellerProfile) {
     if (!transformed.supplierDetails) {
       transformed.supplierDetails = {
-        bankDetails: [{
-          bankName: matchingSellerProfile.bankName || "",
-          ifscCode: matchingSellerProfile.ifscCode || "",
-          accountNumber: "", // Seller model is missing accountNumber
-          accountHolderName: matchingSellerProfile.sellerName || ""
-        }]
+        gstNo: matchingSellerProfile.gstNumber || "",
+        bankDetails: [
+          {
+            bankName: matchingSellerProfile.bankName || "",
+            ifscCode: matchingSellerProfile.ifscCode || "",
+            accountNumber: "", // Seller model is missing accountNumber
+            accountHolderName: matchingSellerProfile.sellerName || "",
+          },
+        ],
       };
-    } else if (!transformed.supplierDetails.bankDetails?.length) {
-      transformed.supplierDetails.bankDetails = [{
-        bankName: matchingSellerProfile.bankName || "",
-        ifscCode: matchingSellerProfile.ifscCode || "",
-        accountNumber: "",
-        accountHolderName: matchingSellerProfile.sellerName || ""
-      }];
+    } else {
+      // Fallback for missing fields in existing supplierDetails
+      if (!transformed.supplierDetails.gstNo) {
+        transformed.supplierDetails.gstNo = matchingSellerProfile.gstNumber || "";
+      }
+
+      if (!transformed.supplierDetails.bankDetails?.length) {
+        transformed.supplierDetails.bankDetails = [
+          {
+            bankName: matchingSellerProfile.bankName || "",
+            ifscCode: matchingSellerProfile.ifscCode || "",
+            accountNumber: "",
+            accountHolderName: matchingSellerProfile.sellerName || "",
+          },
+        ];
+      }
     }
   }
 
