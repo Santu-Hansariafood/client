@@ -194,7 +194,7 @@ const AccountSelection = ({
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="space-y-2">
               <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">
-                Amount to Allocate
+                Coming Amount (Voucher)
               </label>
               <div className="relative">
                 <span className="absolute left-4 top-1/2 -translate-y-1/2 text-emerald-600 font-black">
@@ -270,13 +270,12 @@ const AccountSelection = ({
                 }`}
               >
                 <FaSave />
-                Record buyer Dr. advance
+                Record Receipt (Tally-wise)
               </button>
             </div>
           </div>
           <p className="text-[10px] font-bold text-slate-500 mt-2">
-            Advance (Dr.) is money from the buyer on account for the selected
-            seller — allocate Cr. per lorry below (From Advance tab).
+            Record the total amount received from the buyer. You can allocate it to lorries below. Any unallocated part will stay as an Advance balance.
           </p>
           {formData.amount > 0 && (
             <div className="mt-4 p-3 bg-blue-50 border border-blue-100 rounded-xl flex items-center gap-3">

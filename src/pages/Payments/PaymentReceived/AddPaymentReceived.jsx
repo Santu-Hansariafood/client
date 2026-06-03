@@ -832,6 +832,13 @@ const AddPaymentReceived = () => {
   }, [availableAllocationPool, entries]);
 
   const handleSaveAllAllocations = async () => {
+    // Tally-wise logic: 
+    // If Fresh, record the full voucher amount from formData.amount
+    // If Advance, record only the sum of allocations (as it's an adjustment)
+    if (allocationSource === "fresh") {
+      return handleRecordAdvance();
+    }
+
     const allocations = entries.filter(
       (e) => !e.isSaved && parseFloat(e.allocatedAmount) > 0.01,
     );
@@ -846,10 +853,6 @@ const AddPaymentReceived = () => {
     const ledgerId = resolveLedgerIdForSave();
     const saveCompanyId = resolveCompanyIdForSave(firstEntry);
 
-    if (!saveCompanyId && !pairPayload.buyerCompany) {
-      toast.error("Select buyer company, then save");
-      return;
-    }
     if (
       allocationSource === "advance" &&
       !String(pairPayload.supplierCompany || "").trim()
@@ -874,20 +877,19 @@ const AddPaymentReceived = () => {
         companyId: saveCompanyId,
         ...pairPayload,
         amount: totalAllocated,
-        paymentType: allocationSource === "fresh" ? "Sauda-wise" : "Adjustment",
-        paymentMode:
-          allocationSource === "fresh" ? formData.paymentMode : "Adjustment",
+        paymentType: "Adjustment",
+        paymentMode: "Adjustment",
         mappings: allocations.map((e) => ({
           saudaNo: e.saudaNo,
           loadingEntryId: e._id,
           allocatedAmount: parseFloat(e.allocatedAmount),
           remarks: e.rowRemarks,
         })),
-        remarks: formData.remarks || "Bulk Allocation",
+        remarks: formData.remarks || "Bulk Advance Adjustment",
       };
 
       await api.post("/payment-received", payload);
-      toast.success(`Recorded payment with ${allocations.length} allocations`);
+      toast.success(`Adjusted ₹${totalAllocated.toLocaleString()} from advance across ${allocations.length} lorries`);
 
       setEntries((prev) =>
         prev.map((e) => {
@@ -896,21 +898,13 @@ const AddPaymentReceived = () => {
         }),
       );
 
-      if (allocationSource === "fresh") {
-        setFormData((prev) => ({
-          ...prev,
-          amount: Math.max(0, prev.amount - totalAllocated),
-          ledgerId: prev.ledgerId || ledgerId,
-        }));
-      }
-
       fetchEntries(entriesPage);
       fetchHistory();
       fetchDateTotal();
       fetchSummary();
       fetchLedgerBalance();
     } catch (error) {
-      toast.error(error.response?.data?.message || "Error saving bulk payment");
+      toast.error(error.response?.data?.message || "Error saving bulk adjustment");
     } finally {
       setLoading(false);
     }
@@ -1295,47 +1289,71 @@ const AddPaymentReceived = () => {
   };
 
   const handleRecordAdvance = async () => {
+    if (!formData.companyId && !companyPair.buyerCompany) {
+      toast.error("Select buyer company first");
+      return;
+    }
     if (formData.amount <= 0) {
-      toast.error("Please enter an advance amount");
-      return;
-    }
-    if (!formData.companyId || !formData.ledgerId) {
-      toast.error("Select a company linked to a ledger account");
-      return;
-    }
-    if (!companyPair.supplierCompany) {
-      toast.error(
-        "Select seller company — advance is tracked buyer → seller only",
-      );
+      toast.error("Enter payment amount (Coming Amount)");
       return;
     }
 
-    const recordLedgerType = "Buyer";
+    const ledgerId = resolveLedgerIdForSave();
+    const saveCompanyId = resolveCompanyIdForSave();
 
     try {
       setLoading(true);
-      const pairLabel = `${companyPair.buyerCompany} → ${companyPair.supplierCompany}`;
+      // For Tally-wise: get all allocations from the table that are NOT saved yet
+      const allocations = entries.filter(
+        (e) => !e.isSaved && parseFloat(e.allocatedAmount) > 0.01,
+      );
+
       const payload = {
-        ...formData,
-        date: formData.allocationDate || formData.date,
-        ledgerType: recordLedgerType,
-        companyId: formData.companyId,
-        ...buildCompanyPayload(),
-        paymentType: "Advance",
-        mappings: [],
+        date: formData.date,
+        ledgerType: "Buyer",
+        ledgerId: ledgerId || undefined,
+        companyId: saveCompanyId,
+        buyerCompany: companyPair.buyerCompany || "",
+        supplierCompany: companyPair.supplierCompany || "",
+        amount: formData.amount,
+        // If there are allocations, it's Sauda-wise, otherwise it's pure Advance
+        paymentType: allocations.length > 0 ? "Sauda-wise" : "Advance",
+        paymentMode: formData.paymentMode,
+        mappings: allocations.map((e) => ({
+          saudaNo: e.saudaNo,
+          loadingEntryId: e._id,
+          allocatedAmount: parseFloat(e.allocatedAmount),
+          remarks: e.rowRemarks,
+        })),
         remarks:
           formData.remarks?.trim() ||
-          `Advance (Dr.) from buyer for ${pairLabel} · lorry-wise Cr. later`,
+          (allocations.length > 0
+            ? `Payment of ₹${formData.amount.toLocaleString()} with ${allocations.length} lorry adjustments`
+            : "Advance payment from buyer"),
       };
 
       await api.post("/payment-received", payload);
-      toast.success("Advance payment recorded");
-      setFormData((prev) => ({ ...prev, amount: 0, remarks: "" }));
+      toast.success(
+        allocations.length > 0
+          ? `Recorded payment of ₹${formData.amount.toLocaleString()} with ${allocations.length} allocations`
+          : `Recorded advance payment of ₹${formData.amount.toLocaleString()}`,
+      );
+
+      // Reset form amount
+      setFormData((prev) => ({
+        ...prev,
+        amount: 0,
+        remarks: "",
+      }));
+
+      // Refresh data
+      fetchEntries(entriesPage);
       fetchHistory();
       fetchDateTotal();
+      fetchSummary();
       fetchLedgerBalance();
     } catch (error) {
-      toast.error("Error recording advance");
+      toast.error(error.response?.data?.message || "Error recording payment");
     } finally {
       setLoading(false);
     }

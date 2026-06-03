@@ -215,24 +215,18 @@ export const computeBuyerSellerLedgerSummary = ({
 
   let debitEntryTotal = 0;
   if (allocationSource === "advance") {
+    // For advance source, the "Pool" is the existing advance balance + what was already adjusted from it
+    // but in "Tally-wise", we want to show the current available balance clearly.
     debitEntryTotal = fullCompanyMapping
-      ? Number(ledgerBalance.advanceTotalDr) ||
-        Number(ledgerBalance.advanceBalance) + postedCr
-      : Number(ledgerBalance.totalAdvanceTotalDr) ||
-        Number(ledgerBalance.totalAdvanceBalance) + postedCr;
-    // Use entry amount when user typed a new advance in the form
-    if (entryDr > 0) {
-      debitEntryTotal = entryDr;
-    }
+      ? Number(ledgerBalance.advanceBalance) || 0
+      : Number(ledgerBalance.totalAdvanceBalance) || 0;
   } else {
     // Payment Received: entry = amount received from buyer
     debitEntryTotal = entryDr;
   }
 
-  // Payment Received: adjusted = lorry-wise allocations in table only
-  // Advance: Cr. posted to seller + current table
-  const creditToSeller =
-    allocationSource === "advance" ? postedCr + tableCr : tableCr;
+  // Adjusted = lorry-wise allocations in table
+  const creditToSeller = tableCr;
 
   const debitBalanceRemaining = Math.max(0, debitEntryTotal - creditToSeller);
 
