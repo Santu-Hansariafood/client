@@ -3,6 +3,39 @@ const normalizeText = (value) =>
     .trim()
     .toLowerCase();
 
+const normalizeBankDetails = (entity) => {
+  const raw = entity?.bankDetails ?? entity?.bankDetail ?? entity?.bank ?? [];
+  let list = [];
+  if (typeof raw === "string") {
+    try {
+      const parsed = JSON.parse(raw);
+      list = Array.isArray(parsed) ? parsed : parsed ? [parsed] : [];
+    } catch {
+      list = [];
+    }
+  } else if (Array.isArray(raw)) {
+    list = raw;
+  } else if (raw && typeof raw === "object") {
+    list = [raw];
+  }
+
+  return list
+    .map((b) => ({
+      accountHolderName: b?.accountHolderName || b?.holderName || "",
+      accountNumber: b?.accountNumber || b?.accountNo || b?.accNo || "",
+      ifscCode: b?.ifscCode || b?.ifsc || "",
+      branchName: b?.branchName || b?.branch || "",
+      bankName: b?.bankName || b?.bank || "",
+    }))
+    .filter(
+      (b) =>
+        String(b.accountHolderName || "").trim() ||
+        String(b.accountNumber || "").trim() ||
+        String(b.ifscCode || "").trim() ||
+        String(b.bankName || "").trim(),
+    );
+};
+
 const toUnifiedDetails = (entity) => {
   if (!entity) return null;
   const gstNo = entity.gstNo || entity.gst || entity.gstNumber || "";
@@ -18,6 +51,7 @@ const toUnifiedDetails = (entity) => {
     address: entity.address || entity.location || "",
     gstNo,
     panNo,
+    bankDetails: normalizeBankDetails(entity),
     pinNo: entity.pinNo || entity.pin || entity.pinCode || "",
     msmeNo: entity.msmeNo || entity.mandiLicense || "",
     district: entity.district || "",
@@ -91,13 +125,56 @@ const findBestMatch = (dataList, key, nameField) => {
     return fuzzyMatch || null;
   };
 
+  const resolveId = (value) => {
+    if (!value) return "";
+    if (typeof value === "object" && value?._id) return String(value._id);
+    return String(value);
+  };
+
+  const isMongoId = (val) => /^[0-9a-fA-F]{24}$/.test(String(val || ""));
+
+  const findCompanyById = (id) => {
+    const resolved = resolveId(id);
+    if (!resolved) return null;
+    return companyData.find((c) => c?._id && String(c._id) === resolved) || null;
+  };
+
   const matchingConsignee = 
     findBestMatch(consigneeData, item?.consignee, 'name') || 
     findBestMatch(consigneeData, item?.consignee, 'label');
 
-  const matchingSupplier = 
-    findBestMatch(supplierData, item?.supplierCompany, 'companyName') ||
-    findBestMatch(supplierData, item?.supplierCompany, 'name');
+  const normalizedSupplierKey = (() => {
+    const s = item?.supplierCompany;
+    if (!s) return "";
+    if (typeof s === "object")
+      return (s.companyName || s.name || s.label || s.value || "").toString();
+    return String(s);
+  })();
+
+  const findSupplierByCandidate = (candidate) =>
+    findBestMatch(supplierData, candidate, "companyName") ||
+    findBestMatch(supplierData, candidate, "name");
+
+  const supplierCandidates = [
+    normalizedSupplierKey,
+    ...(Array.isArray(matchingSellerProfile?.companies)
+      ? matchingSellerProfile.companies
+      : []),
+  ].filter(Boolean);
+
+  const matchingSupplier = supplierCandidates.reduce((best, candidate) => {
+    const found = findSupplierByCandidate(candidate);
+    if (!found) return best;
+    const foundHasAccount = normalizeBankDetails(found).some(
+      (b) => String(b.accountNumber || "").trim(),
+    );
+    if (!best) return found;
+    const bestHasAccount = normalizeBankDetails(best).some(
+      (b) => String(b.accountNumber || "").trim(),
+    );
+    if (!bestHasAccount && foundHasAccount) return found;
+    return best;
+  }, null);
 
   const matchingCommodity = findBestMatch(commodityData, item?.commodity, 'name');
 
@@ -108,10 +185,29 @@ const findBestMatch = (dataList, key, nameField) => {
 
   const rawBuyerKey = item?.buyerCompany ?? item?.buyer ?? "";
   
-  const matchingBuyer = 
-    findBestMatch(companyData, rawBuyerKey, 'companyName') ||
-    findBestMatch(buyerData, rawBuyerKey, 'name') ||
-    findBestMatch(supplierData, rawBuyerKey, 'companyName');
+  const companyIdFromItem = item?.companyId || item?.company?._id || item?.company;
+  const companyFromCompanyId = findCompanyById(companyIdFromItem);
+  const companyFromBuyerKeyId = isMongoId(rawBuyerKey)
+    ? findCompanyById(rawBuyerKey)
+    : null;
+  const companyFromBuyerName = findBestMatch(companyData, rawBuyerKey, "companyName");
+
+  const matchingBuyerProfile =
+    findBestMatch(buyerData, rawBuyerKey, "name") || null;
+
+  const companyFromBuyerProfile = (() => {
+    const ids = matchingBuyerProfile?.companyIds;
+    if (!Array.isArray(ids) || ids.length === 0) return null;
+    if (companyFromCompanyId) return companyFromCompanyId;
+    return findCompanyById(ids[0]);
+  })();
+
+  const matchingBuyer =
+    companyFromCompanyId ||
+    companyFromBuyerKeyId ||
+    companyFromBuyerName ||
+    companyFromBuyerProfile ||
+    matchingBuyerProfile;
 
   const resolvedConsigneeName =
     typeof getConsigneeDisplay === "function"
@@ -122,15 +218,20 @@ const findBestMatch = (dataList, key, nameField) => {
     normalizeText(resolvedConsigneeName).includes("self order") || 
     normalizeText(resolvedConsigneeName).includes("purchase order");
 
-  const isId = (val) => /^[0-9a-fA-F]{24}$/.test(String(val));
-  const itemBuyerName = typeof item?.buyerCompany === "string" && !isId(item.buyerCompany) 
+  const itemBuyerName = typeof item?.buyerCompany === "string" && !isMongoId(item.buyerCompany) 
     ? item.buyerCompany 
-    : typeof item?.buyer === "string" && !isId(item.buyer)
+    : typeof item?.buyer === "string" && !isMongoId(item.buyer)
       ? item.buyer
       : "";
 
   const finalBuyerName = itemBuyerName || matchingBuyer?.companyName || matchingBuyer?.name || "N/A";
-  const finalBuyerDetails = toUnifiedDetails(matchingBuyer);
+  const finalBuyerDetails = toUnifiedDetails(
+    companyFromCompanyId ||
+      companyFromBuyerKeyId ||
+      companyFromBuyerName ||
+      companyFromBuyerProfile ||
+      matchingBuyer,
+  );
   
   const itemConsigneeDetails = item?.consigneeDetails ? toConsigneeDetails(item.consigneeDetails) : null;
   const finalConsigneeDetails = 
