@@ -12,24 +12,22 @@ const BuyerInformation = ({
   handleChange,
   buyers: propBuyers,
   consignees: propConsignees,
+  companies: propCompanies,
 }) => {
   const { userRole, mobile } = useAuth();
   const [buyers, setBuyers] = useState(propBuyers || []);
   const [consignees, setConsignees] = useState(propConsignees || []);
-  const [companies, setCompanies] = useState([]);
+  const [companies, setCompanies] = useState(propCompanies || []);
   const [selectedBuyerId, setSelectedBuyerId] = useState(null);
   const [selectedCompanyId, setSelectedCompanyId] = useState(null);
   const [selectedConsignee, setSelectedConsignee] = useState("");
   const [loading, setLoading] = useState(
-    !propBuyers || propBuyers.length === 0,
+    !propBuyers?.length || !propConsignees?.length || !propCompanies?.length,
   );
   const [hasManuallySelected, setHasManuallySelected] = useState(false);
 
   useEffect(() => {
-    if (propBuyers?.length > 0) {
-      setBuyers(propBuyers);
-      setLoading(false);
-    }
+    if (propBuyers?.length > 0) setBuyers(propBuyers);
   }, [propBuyers]);
 
   useEffect(() => {
@@ -37,38 +35,14 @@ const BuyerInformation = ({
   }, [propConsignees]);
 
   useEffect(() => {
-    const fetchData = async () => {
-      if (propBuyers?.length > 0 && propConsignees?.length > 0) {
-        try {
-          const companiesRows = await fetchAllPages("/companies", {
-            limit: 200,
-          });
-          setCompanies(companiesRows);
-        } catch (error) {
-          console.error("Error fetching companies:", error);
-        }
-        setLoading(false);
-        return;
-      }
+    if (propCompanies?.length > 0) setCompanies(propCompanies);
+  }, [propCompanies]);
 
-      setLoading(true);
-      try {
-        const [buyersRows, consigneesRows, companiesRows] = await Promise.all([
-          fetchAllPages("/buyers", { limit: 200 }),
-          fetchAllPages("/consignees", { limit: 200 }),
-          fetchAllPages("/companies", { limit: 200 }),
-        ]);
-        setBuyers(buyersRows);
-        setConsignees(consigneesRows);
-        setCompanies(companiesRows);
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
-  }, [propBuyers, propConsignees]);
+  useEffect(() => {
+    if (propBuyers?.length > 0 && propConsignees?.length > 0 && propCompanies?.length > 0) {
+      setLoading(false);
+    }
+  }, [propBuyers, propConsignees, propCompanies]);
 
   const selectedBuyer = useMemo(
     () =>
@@ -281,15 +255,32 @@ const BuyerInformation = ({
   const consigneeOptions = useMemo(() => {
     if (!selectedCompany) return [];
     const fromCompany =
-      selectedCompany?.consigneeIds?.map((id, idx) => {
+      (selectedCompany?.consigneeIds || []).map((id) => {
         const c = consignees.find((con) => String(con._id) === String(id));
         return {
           value: String(id),
           label: c?.name || "Consignee",
         };
       }) || [];
+
+    // Ensure currently selected consignee is in the list
+    if (selectedConsignee) {
+      const exists = fromCompany.some((opt) => opt.value === selectedConsignee);
+      if (!exists) {
+        const c = consignees.find(
+          (con) => String(con._id) === String(selectedConsignee),
+        );
+        if (c) {
+          fromCompany.push({
+            value: String(c._id),
+            label: c.name || "Consignee",
+          });
+        }
+      }
+    }
+
     return fromCompany.sort((a, b) => a.label.localeCompare(b.label));
-  }, [selectedCompany, consignees]);
+  }, [selectedCompany, consignees, selectedConsignee]);
 
   const onConsigneeChange = (option) => {
     setHasManuallySelected(true);

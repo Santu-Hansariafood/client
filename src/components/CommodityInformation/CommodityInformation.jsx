@@ -21,36 +21,17 @@ const CommodityInformation = ({
   selectedCompany,
   brokerageMap,
   formData,
+  buyerCommodity,
 }) => {
-  const [commodities, setCommodities] = useState([]);
+  const [commodities, setCommodities] = useState(buyerCommodity || []);
   const [parameters, setParameters] = useState([]);
   const [selectedCommodity, setSelectedCommodity] = useState(null);
 
   useEffect(() => {
-    const fetchCommodities = async () => {
-      try {
-        const items = await fetchAllPages("/companies");
-        const companyData = items.find(
-          (company) => company.companyName === selectedCompany,
-        );
-
-        if (companyData) {
-          setCommodities(companyData.commodities || []);
-        } else {
-          setCommodities([]);
-        }
-      } catch (error) {
-        console.error("Error fetching commodities:", error);
-        setCommodities([]);
-      }
-    };
-
-    if (selectedCompany) {
-      fetchCommodities();
-    } else {
-      setCommodities([]);
+    if (buyerCommodity) {
+      setCommodities(buyerCommodity);
     }
-  }, [selectedCompany]);
+  }, [buyerCommodity]);
 
   useEffect(() => {
     if (commodities.length > 0 && formData.commodity && !selectedCommodity) {
