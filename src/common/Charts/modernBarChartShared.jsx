@@ -1,10 +1,10 @@
 /** Shared styling primitives for dashboard bar charts (Recharts). */
 
-export const MODERN_CHART_MARGIN = { top: 16, right: 16, left: 4, bottom: 8 };
+export const MODERN_CHART_MARGIN = { top: 14, right: 10, left: 0, bottom: 2 };
 
 export const MODERN_AXIS_TICK = {
   fill: "#64748b",
-  fontSize: 11,
+  fontSize: 10,
   fontWeight: 700,
 };
 

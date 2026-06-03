@@ -182,7 +182,7 @@ const PaymentAnalyticsChart = ({ days = 30, chartType = "line" }) => {
               tickLine={false}
               tick={MODERN_AXIS_TICK}
               tickFormatter={(value) => `₹${(value / 1000).toFixed(0)}k`}
-              width={48}
+              width={44}
               domain={[0, (dataMax) => Math.ceil(dataMax * 1.1)]}
             />
             <Tooltip
@@ -243,7 +243,7 @@ const PaymentAnalyticsChart = ({ days = 30, chartType = "line" }) => {
               tickLine={false}
               tick={MODERN_AXIS_TICK}
               tickFormatter={(value) => `₹${(value / 1000).toFixed(0)}k`}
-              width={48}
+              width={44}
             />
             <Tooltip content={<CustomTooltip />} />
             <Area

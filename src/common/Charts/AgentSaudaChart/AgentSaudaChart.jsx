@@ -183,7 +183,7 @@ const AgentSaudaChart = ({ data, chartType = "bar" }) => {
             tickFormatter={(v) =>
               v >= 1000 ? `${(v / 1000).toFixed(1)}k` : v
             }
-            width={44}
+            width={40}
             domain={[0, (dataMax) => Math.ceil(dataMax * 1.12)]}
           />
           <Tooltip

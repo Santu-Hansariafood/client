@@ -212,7 +212,7 @@ const LoadingChart = ({ apiUrl, chartType = "line", data: externalData }) => {
             axisLine={false}
             tickLine={false}
             tick={MODERN_AXIS_TICK}
-            width={40}
+            width={36}
             domain={[0, (dataMax) => Math.ceil(dataMax * 1.12) || 1]}
           />
           <Tooltip
@@ -267,7 +267,7 @@ const LoadingChart = ({ apiUrl, chartType = "line", data: externalData }) => {
           axisLine={false}
           tickLine={false}
           tick={MODERN_AXIS_TICK}
-          width={40}
+          width={36}
         />
         <Tooltip content={<CustomTooltip />} />
         <Area

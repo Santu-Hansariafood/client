@@ -76,6 +76,6 @@ export const ChartPeriodToggle = ({ options, value, onChange, activeClass }) => 
 
 /** Recharts XAxis props that reduce label clutter on small screens. */
 export const RESPONSIVE_X_AXIS_PROPS = {
-  minTickGap: 12,
+  minTickGap: 20,
   interval: "preserveStartEnd",
 };
