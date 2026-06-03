@@ -78,7 +78,14 @@ router.get("/stats", async (req, res) => {
 // Dedicated Chart APIs
 router.get("/charts/payments", async (req, res) => {
   try {
-    const data = await PaymentReceived.find().select("date amount").lean();
+    const { month, year } = req.query;
+    let query = {};
+    if (month && year) {
+      const start = new Date(year, month - 1, 1);
+      const end = new Date(year, month, 0, 23, 59, 59, 999);
+      query.date = { $gte: start, $lte: end };
+    }
+    const data = await PaymentReceived.find(query).select("date amount").lean();
     res.json(data);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -87,7 +94,14 @@ router.get("/charts/payments", async (req, res) => {
 
 router.get("/charts/loading", async (req, res) => {
   try {
-    const data = await LoadingEntry.find().select("loadingDate unloadingWeight commodity").lean();
+    const { month, year } = req.query;
+    let query = {};
+    if (month && year) {
+      const start = new Date(year, month - 1, 1);
+      const end = new Date(year, month, 0, 23, 59, 59, 999);
+      query.loadingDate = { $gte: start, $lte: end };
+    }
+    const data = await LoadingEntry.find(query).select("loadingDate unloadingWeight commodity").lean();
     res.json(data);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -96,7 +110,14 @@ router.get("/charts/loading", async (req, res) => {
 
 router.get("/charts/sauda", async (req, res) => {
   try {
-    const data = await SelfOrder.find().select("createdAt quantity commodity agentName").lean();
+    const { month, year } = req.query;
+    let query = {};
+    if (month && year) {
+      const start = new Date(year, month - 1, 1);
+      const end = new Date(year, month, 0, 23, 59, 59, 999);
+      query.createdAt = { $gte: start, $lte: end };
+    }
+    const data = await SelfOrder.find(query).select("createdAt quantity commodity agentName").lean();
     res.json(data);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -105,7 +126,14 @@ router.get("/charts/sauda", async (req, res) => {
 
 router.get("/charts/bids", async (req, res) => {
   try {
-    const data = await Bid.find().select("bidDate createdAt commodity").lean();
+    const { month, year } = req.query;
+    let query = {};
+    if (month && year) {
+      const start = new Date(year, month - 1, 1);
+      const end = new Date(year, month, 0, 23, 59, 59, 999);
+      query.bidDate = { $gte: start, $lte: end };
+    }
+    const data = await Bid.find(query).select("bidDate createdAt commodity").lean();
     res.json(data);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -114,7 +142,15 @@ router.get("/charts/bids", async (req, res) => {
 
 router.get("/charts/agent-distribution", async (req, res) => {
   try {
+    const { month, year } = req.query;
+    let matchQuery = {};
+    if (month && year) {
+      const start = new Date(year, month - 1, 1);
+      const end = new Date(year, month, 0, 23, 59, 59, 999);
+      matchQuery.createdAt = { $gte: start, $lte: end };
+    }
     const stats = await SelfOrder.aggregate([
+      { $match: matchQuery },
       {
         $group: {
           _id: {
