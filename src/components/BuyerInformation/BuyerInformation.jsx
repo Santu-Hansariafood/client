@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo, lazy, Suspense } from "react";
+import { useEffect, useState, useMemo, lazy, Suspense, useRef } from "react";
 import PropTypes from "prop-types";
 import Loading from "../../common/Loading/Loading";
 import { fetchAllPages } from "../../utils/apiClient/fetchAllPages";
@@ -25,6 +25,7 @@ const BuyerInformation = ({
     !propBuyers?.length || !propConsignees?.length || !propCompanies?.length,
   );
   const [hasManuallySelected, setHasManuallySelected] = useState(false);
+  const isInitialMatchDone = useRef(false);
 
   useEffect(() => {
     if (propBuyers?.length > 0) setBuyers(propBuyers);
@@ -95,17 +96,20 @@ const BuyerInformation = ({
   }, [selectedBuyer, companies]);
 
   useEffect(() => {
-    if (loading || hasManuallySelected) return;
+    if (loading || hasManuallySelected || isInitialMatchDone.current) return;
 
     const hasEditHints =
       formData?.buyer ||
       formData?.buyerCompany ||
       formData?.companyId != null ||
       formData?.buyerMobile;
+    
     if (!hasEditHints) return;
 
     const buyerList = Array.isArray(buyers) ? buyers : [];
     const companyList = Array.isArray(companies) ? companies : [];
+
+    if (!buyerList.length || !companyList.length) return;
 
     const matchCompany =
       companyList.find(
@@ -137,6 +141,7 @@ const BuyerInformation = ({
     if (!matchBuyer) return;
 
     setSelectedBuyerId(matchBuyer._id);
+    isInitialMatchDone.current = true;
 
     if (matchCompany) {
       setSelectedCompanyId(matchCompany._id);
@@ -253,25 +258,26 @@ const BuyerInformation = ({
   };
 
   const consigneeOptions = useMemo(() => {
-    if (!selectedCompany) return [];
-    const fromCompany =
-      (selectedCompany?.consigneeIds || []).map((id) => {
+    let options = [];
+    if (selectedCompany) {
+      options = (selectedCompany?.consigneeIds || []).map((id) => {
         const c = consignees.find((con) => String(con._id) === String(id));
         return {
           value: String(id),
           label: c?.name || "Consignee",
         };
-      }) || [];
+      });
+    }
 
-    // Ensure currently selected consignee is in the list
+    // Ensure currently selected consignee is in the list even if company matching is slow or missing
     if (selectedConsignee) {
-      const exists = fromCompany.some((opt) => opt.value === selectedConsignee);
+      const exists = options.some((opt) => opt.value === selectedConsignee);
       if (!exists) {
         const c = consignees.find(
           (con) => String(con._id) === String(selectedConsignee),
         );
         if (c) {
-          fromCompany.push({
+          options.push({
             value: String(c._id),
             label: c.name || "Consignee",
           });
@@ -279,7 +285,7 @@ const BuyerInformation = ({
       }
     }
 
-    return fromCompany.sort((a, b) => a.label.localeCompare(b.label));
+    return options.sort((a, b) => a.label.localeCompare(b.label));
   }, [selectedCompany, consignees, selectedConsignee]);
 
   const onConsigneeChange = (option) => {
@@ -383,7 +389,7 @@ const BuyerInformation = ({
             }
             onChange={onConsigneeChange}
             value={selectedConsignee}
-            disabled={!selectedCompanyId}
+            disabled={!selectedCompanyId && !selectedConsignee}
           />
 
           {selectedConsigneeData && (

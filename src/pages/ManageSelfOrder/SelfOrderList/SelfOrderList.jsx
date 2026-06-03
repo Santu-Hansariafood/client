@@ -421,12 +421,21 @@ _${fileUrl || "PDF Link Not Available"}_
         state: {
           orderData: item,
           consigneeData,
-          supplierData,
+          supplierData: sellerProfileData,
+          sellerCompanyData: supplierData,
           buyerData,
+          companyData,
         },
       });
     },
-    [navigate, consigneeData, supplierData, buyerData],
+    [
+      navigate,
+      consigneeData,
+      supplierData,
+      buyerData,
+      companyData,
+      sellerProfileData,
+    ],
   );
 
   const handleDelete = useCallback(async (item) => {

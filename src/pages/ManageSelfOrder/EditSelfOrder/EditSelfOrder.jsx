@@ -101,7 +101,9 @@ const EditSelfOrder = () => {
   const [consignees, setConsignees] = useState(state?.consigneeData || []);
   const [buyers, setBuyers] = useState(state?.buyerData || []);
   const [suppliers, setSuppliers] = useState(state?.supplierData || []);
-  const [sellerCompanies, setSellerCompanies] = useState([]);
+  const [sellerCompanies, setSellerCompanies] = useState(
+    state?.sellerCompanyData || [],
+  );
   const [companies, setCompanies] = useState(state?.companyData || []);
   const [selectedEmails, setSelectedEmails] = useState({
     buyer: true,
@@ -164,9 +166,9 @@ const EditSelfOrder = () => {
               })
             : Promise.resolve({ data: orderFromState });
 
-        const needsConsignees = !state?.consigneeData?.length;
-        const needsBuyers = !state?.buyerData?.length;
-        const needsSuppliers = !state?.supplierData?.length;
+        const needsConsignees = !consignees.length;
+        const needsBuyers = !buyers.length;
+        const needsSuppliers = !suppliers.length;
         const needsSellerCompanies = !sellerCompanies.length;
         const needsCompanies = !companies.length;
 
@@ -181,13 +183,13 @@ const EditSelfOrder = () => {
           orderPromise,
           needsConsignees
             ? fetchAllPages("/consignees", { limit: 200 }).catch(() => [])
-            : Promise.resolve(state.consigneeData),
+            : Promise.resolve(consignees),
           needsBuyers
             ? fetchAllPages("/buyers", { limit: 200 }).catch(() => [])
-            : Promise.resolve(state.buyerData),
+            : Promise.resolve(buyers),
           needsSuppliers
             ? fetchAllPages("/sellers", { limit: 200 }).catch(() => [])
-            : Promise.resolve(state.supplierData),
+            : Promise.resolve(suppliers),
           needsSellerCompanies
             ? fetchAllPages("/seller-company", { limit: 200 }).catch(() => [])
             : Promise.resolve(sellerCompanies),

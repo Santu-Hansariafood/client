@@ -34,16 +34,48 @@ const CommodityInformation = ({
   }, [buyerCommodity]);
 
   useEffect(() => {
-    if (commodities.length > 0 && formData.commodity && !selectedCommodity) {
-      setSelectedCommodity(formData.commodity);
-      const commodity = commodities.find(
+    if (Array.isArray(commodities) && commodities.length > 0 && formData.commodity) {
+      const commodityTemplate = commodities.find(
         (item) => item.name === formData.commodity,
       );
-      if (commodity) {
-        setParameters(commodity.parameters || []);
+      
+      if (commodityTemplate) {
+        if (selectedCommodity !== formData.commodity) {
+          setSelectedCommodity(formData.commodity);
+        }
+        
+        // Merge template with saved values if they exist
+        const templateParams = Array.isArray(commodityTemplate.parameters) 
+          ? commodityTemplate.parameters 
+          : [];
+          
+        const savedParams = Array.isArray(formData.parameters) 
+          ? formData.parameters 
+          : [];
+
+        const mergedParams = templateParams.map((templateParam) => {
+          const savedParam = savedParams.find(
+            (p) => String(p.id || p._id) === String(templateParam._id),
+          );
+          return {
+            ...templateParam,
+            value: savedParam ? savedParam.value : (templateParam.value || ""),
+          };
+        });
+        
+        // Only update state if data has actually changed to prevent re-render loops
+        const currentParamsStr = JSON.stringify(parameters.map(p => ({ id: p._id, val: p.value })));
+        const nextParamsStr = JSON.stringify(mergedParams.map(p => ({ id: p._id, val: p.value })));
+        
+        if (currentParamsStr !== nextParamsStr) {
+          setParameters(mergedParams);
+        }
       }
+    } else if (!formData.commodity && parameters.length > 0) {
+      setParameters([]);
+      setSelectedCommodity(null);
     }
-  }, [commodities, formData.commodity, selectedCommodity]);
+  }, [commodities, formData.commodity, formData.parameters]);
 
   const onCommodityChange = (option) => {
     const commodityName = option?.value || null;
@@ -51,47 +83,41 @@ const CommodityInformation = ({
 
     if (commodityName) {
       const commodity = commodities.find((item) => item.name === commodityName);
-      const updatedParameters = commodity?.parameters || [];
-
-      const rawBrokerage = brokerageMap
-        ? brokerageMap[commodityName]
-        : undefined;
-      const updatedBrokerage =
-        typeof rawBrokerage === "number" && !Number.isNaN(rawBrokerage)
-          ? rawBrokerage
-          : 0;
-
-      const companyData = commodities.find(
-        (commodity) => commodity.companyName === selectedCompany,
-      );
-      const companyEmail = companyData?.companyEmail || "";
+      const updatedParameters = (commodity?.parameters || []).map(p => ({
+        ...p,
+        value: p.value || ""
+      }));
 
       setParameters(updatedParameters);
 
       handleChange("commodity", commodityName);
-      handleChange("parameters", updatedParameters);
-      handleChange("companyEmail", companyEmail);
-      handleChange("buyerEmails", [companyEmail]);
+      handleChange("parameters", updatedParameters.map(p => ({
+        id: p._id,
+        value: p.value
+      })));
+      
+      // Removed the buggy companyData lookup that was clearing emails
     } else {
       setParameters([]);
       handleChange("commodity", "");
       handleChange("parameters", []);
-      handleChange("companyEmail", "");
-      handleChange("buyerEmails", []);
     }
   };
 
   const onParameterChange = useCallback(
     (index, newValue) => {
       const updatedParameters = [...parameters];
-      updatedParameters[index].value = newValue;
+      if (updatedParameters[index]) {
+        updatedParameters[index] = { ...updatedParameters[index], value: newValue };
+        setParameters(updatedParameters);
 
-      const parametersWithIdAndValue = updatedParameters.map((param) => ({
-        id: param._id,
-        value: param.value,
-      }));
+        const parametersWithIdAndValue = updatedParameters.map((param) => ({
+          id: param._id,
+          value: param.value,
+        }));
 
-      handleChange("parameters", parametersWithIdAndValue);
+        handleChange("parameters", parametersWithIdAndValue);
+      }
     },
     [parameters, handleChange],
   );
