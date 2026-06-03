@@ -65,19 +65,9 @@ const styles = StyleSheet.create({
 
 const SaudaDetails = ({ data }) => {
   const renderBuyerDetails = () => {
-    if (!data.buyerDetails) {
-      // Fallback to top-level data if details object is missing
-      let fallbackParts = [];
-      if (data.buyerMobile) fallbackParts.push(`Mobile: ${data.buyerMobile}`);
-      if (Array.isArray(data.buyerEmails) && data.buyerEmails.length > 0) {
-        fallbackParts.push(`Email: ${data.buyerEmails.filter(Boolean).join(", ")}`);
-      }
-      return fallbackParts.length > 0 ? (
-        <Text style={styles.addressDetails}>{"\n" + fallbackParts.join("\n")}</Text>
-      ) : null;
-    }
+    if (!data.buyerDetails) return null;
 
-    const { address, district, state, pinNo, panNo, gstNo, phone, emails } = data.buyerDetails;
+    const { address, district, state, pinNo, panNo, gstNo } = data.buyerDetails;
 
     let parts = [];
     if (address || district || state || pinNo) {
@@ -90,14 +80,6 @@ const SaudaDetails = ({ data }) => {
       );
     }
     
-    // Prioritize specific order data for mobile/emails, fallback to profile data
-    const finalMobile = data.buyerMobile || phone || "";
-    const finalEmails = (Array.isArray(data.buyerEmails) && data.buyerEmails.length > 0) 
-      ? data.buyerEmails.filter(Boolean).join(", ") 
-      : (Array.isArray(emails) ? emails.map(e => e.value || e).join(", ") : "");
-
-    if (finalMobile) parts.push(`Mobile: ${finalMobile}`);
-    if (finalEmails) parts.push(`Email: ${finalEmails}`);
     if (panNo) parts.push(`PAN No: ${panNo}`);
     if (gstNo) parts.push(`GST: ${gstNo}`);
 
@@ -144,10 +126,8 @@ const SaudaDetails = ({ data }) => {
           <Text style={styles.value}>{data.supplierCompany}</Text>
           <Text style={styles.addressDetails}>
             {data.supplierDetails ? (
-              `\n${data.supplierDetails.address || ""}, ${data.supplierDetails.district || ""}, ${data.supplierDetails.state || ""} - ${data.supplierDetails.pinNo || ""}\nMobile: ${data.sellerMobile || data.supplierDetails.phone || ""}\nEmail: ${Array.isArray(data.sellerEmails) ? data.sellerEmails.filter(Boolean).join(", ") : (data.supplierDetails.emails ? data.supplierDetails.emails.map(e => e.value || e).join(", ") : "")}\nPAN No: ${data.supplierDetails.panNo || ""}\nGST: ${data.supplierDetails.gstNo || ""}`
-            ) : (
-              `\nMobile: ${data.sellerMobile || ""}\nEmail: ${Array.isArray(data.sellerEmails) ? data.sellerEmails.filter(Boolean).join(", ") : ""}`
-            )}
+              `\n${data.supplierDetails.address || ""}, ${data.supplierDetails.district || ""}, ${data.supplierDetails.state || ""} - ${data.supplierDetails.pinNo || ""}\nPAN No: ${data.supplierDetails.panNo || ""}\nGST: ${data.supplierDetails.gstNo || ""}`
+            ) : null}
           </Text>
         </View>
         <View style={[styles.gridItem, { borderRight: "none" }]}>
@@ -155,7 +135,7 @@ const SaudaDetails = ({ data }) => {
           <Text style={styles.nameValue}>{data.consignee}</Text>
           {data.consigneeDetails && (
             <Text style={styles.addressDetails}>
-              {`\n${data.consigneeDetails.address || data.consigneeDetails.location || ""}, ${data.consigneeDetails.district || ""}, ${data.consigneeDetails.state || ""} - ${data.consigneeDetails.pin || data.consigneeDetails.pinNo || ""}\nMobile: ${data.consigneeDetails.phone || data.consigneeDetails.mobile || ""}\nPAN No : ${data.consigneeDetails.panNo || data.consigneeDetails.pan || ""}\nGST: ${data.consigneeDetails.gstNo || data.consigneeDetails.gst || ""}`}
+              {`\n${data.consigneeDetails.address || data.consigneeDetails.location || ""}, ${data.consigneeDetails.district || ""}, ${data.consigneeDetails.state || ""} - ${data.consigneeDetails.pin || data.consigneeDetails.pinNo || ""}\nPAN No : ${data.consigneeDetails.panNo || data.consigneeDetails.pan || ""}\nGST: ${data.consigneeDetails.gstNo || data.consigneeDetails.gst || ""}`}
             </Text>
           )}
         </View>

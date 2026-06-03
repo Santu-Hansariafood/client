@@ -38,6 +38,7 @@ export const buildSaudaPdfData = ({
   buyerData = [],
   companyData = [],
   commodityData = [],
+  sellerProfileData = [],
   getConsigneeDisplay,
 }) => {
   const normalizedConsigneeKey = (() => {
@@ -71,6 +72,10 @@ export const buildSaudaPdfData = ({
   const matchingSupplier = findBestMatch(supplierData, item?.supplierCompany, 'companyName');
 
   const matchingCommodity = findBestMatch(commodityData, item?.commodity, 'name');
+
+  const matchingSellerProfile = sellerProfileData.find(
+    (seller) => String(seller._id) === String(item.supplier),
+  );
 
   const rawBuyerKey = item?.buyerCompany ?? item?.buyer ?? "";
   
@@ -115,7 +120,18 @@ export const buildSaudaPdfData = ({
     originalBuyerCompany: finalBuyerName,
     billTo: item?.billTo || "",
     hsnCode: matchingCommodity?.hsnCode || "",
+    sellerProfile: matchingSellerProfile,
   };
+
+  // Ensure bank details are present from profile if missing from company
+  if (transformed.supplierDetails && !transformed.supplierDetails.bankDetails?.length && matchingSellerProfile?.bankName) {
+    transformed.supplierDetails.bankDetails = [{
+      bankName: matchingSellerProfile.bankName,
+      ifscCode: matchingSellerProfile.ifscCode,
+      accountNumber: matchingSellerProfile.accountNumber || "N/A", // We might need to check if accountNumber exists in Seller model
+      accountHolderName: matchingSellerProfile.sellerName
+    }];
+  }
 
   if (billToConsignee) {
     transformed.buyer = resolvedConsigneeName;

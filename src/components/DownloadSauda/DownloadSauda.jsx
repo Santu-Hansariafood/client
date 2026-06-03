@@ -88,6 +88,7 @@ const DownloadSauda = ({
     supplierData,
     buyerData,
     companyData,
+    sellerProfileData,
     getConsigneeDisplay: (row) => {
       const c = row?.consignee;
       if (typeof c === "object" && c?.name) return c.name;

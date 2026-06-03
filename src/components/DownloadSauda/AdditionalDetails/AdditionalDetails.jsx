@@ -129,113 +129,116 @@ const styles = StyleSheet.create({
   },
 });
 
-const AdditionalDetails = ({ data }) => (
-  <View style={styles.section}>
-    <View style={styles.grid}>
-      <View style={styles.gridItem}>
-        <Text style={styles.label}>Weight</Text>
-        <Text style={styles.value}>{data.weight ?? "N/A"}</Text>
-      </View>
-      <View style={styles.gridItem}>
-        <Text style={styles.label}>Delivery Date</Text>
-        <Text style={styles.value}>
-          {data.deliveryDate
-            ? new Date(data.deliveryDate)
-                .toLocaleDateString("en-GB")
-                .replace(/\//g, "-")
-            : "N/A"}
-        </Text>
-      </View>
-      <View style={styles.gridItem}>
-        <Text style={styles.label}>Loading Date</Text>
-        <Text style={styles.value}>
-          {data.loadingDate
-            ? new Date(data.loadingDate)
-                .toLocaleDateString("en-GB")
-                .replace(/\//g, "-")
-            : "N/A"}
-        </Text>
-      </View>
-      <View style={styles.gridItem}>
-        <Text style={styles.label}>Payment Terms</Text>
-        <Text style={styles.value}>{data.paymentTerms ?? "N/A"} Days</Text>
-      </View>
-      <View style={styles.gridItem}>
-        <Text style={styles.label}>Loading Station</Text>
-        <Text style={styles.value}>{data.state ?? "N/A"}</Text>
-      </View>
-      <View style={styles.gridItem}>
-        <Text style={styles.label}>Agent Name</Text>
-        <Text style={styles.value}>{data.agentName ?? "N/A"}</Text>
-      </View>
-    </View>
+const AdditionalDetails = ({ data }) => {
+  const bank = data.supplierDetails?.bankDetails?.[0] || {};
 
-    {data.notes && data.notes.length > 0 && (
-      <View style={styles.notesSection}>
-        <Text style={styles.notesTitle}>Special Notes</Text>
-        {data.notes.map((note, index) => (
-          <Text key={index} style={styles.notesText}>
-            {index + 1}. {note}
+  return (
+    <View style={styles.section}>
+      <View style={styles.grid}>
+        <View style={styles.gridItem}>
+          <Text style={styles.label}>Weight</Text>
+          <Text style={styles.value}>{data.weight ?? "N/A"}</Text>
+        </View>
+        <View style={styles.gridItem}>
+          <Text style={styles.label}>Delivery Date</Text>
+          <Text style={styles.value}>
+            {data.deliveryDate
+              ? new Date(data.deliveryDate)
+                  .toLocaleDateString("en-GB")
+                  .replace(/\//g, "-")
+              : "N/A"}
           </Text>
-        ))}
+        </View>
+        <View style={styles.gridItem}>
+          <Text style={styles.label}>Loading Date</Text>
+          <Text style={styles.value}>
+            {data.loadingDate
+              ? new Date(data.loadingDate)
+                  .toLocaleDateString("en-GB")
+                  .replace(/\//g, "-")
+              : "N/A"}
+          </Text>
+        </View>
+        <View style={styles.gridItem}>
+          <Text style={styles.label}>Payment Terms</Text>
+          <Text style={styles.value}>{data.paymentTerms ?? "N/A"} Days</Text>
+        </View>
+        <View style={styles.gridItem}>
+          <Text style={styles.label}>Loading Station</Text>
+          <Text style={styles.value}>{data.state ?? "N/A"}</Text>
+        </View>
+        <View style={styles.gridItem}>
+          <Text style={styles.label}>Agent Name</Text>
+          <Text style={styles.value}>{data.agentName ?? "N/A"}</Text>
+        </View>
       </View>
-    )}
 
-    <View style={styles.bankSection}>
-      <Text style={styles.bankTitle}>Bank Account Details</Text>
-      {data.supplierDetails?.bankDetails?.[0] ? (
-        <Text style={styles.bankText}>
-          {data.supplierDetails.bankDetails[0].accountHolderName} | A/C:{" "}
-          {data.supplierDetails.bankDetails[0].accountNumber} | IFSC:{" "}
-          {data.supplierDetails.bankDetails[0].ifscCode} | Branch:{" "}
-          {data.supplierDetails.bankDetails[0].branchName}
-        </Text>
-      ) : (
-        <Text style={styles.bankText}>Bank details not available</Text>
+      {data.notes && data.notes.length > 0 && (
+        <View style={styles.notesSection}>
+          <Text style={styles.notesTitle}>Special Notes</Text>
+          {data.notes.map((note, index) => (
+            <Text key={index} style={styles.notesText}>
+              {index + 1}. {note}
+            </Text>
+          ))}
+        </View>
       )}
-    </View>
 
-    <View style={styles.brokerageSection}>
-      <View style={styles.brokerageHeader}>
-        <Text style={styles.brokerText}>
-          Broker: HANSARIA FOOD PRIVATE LIMITED
+      <View style={styles.bankSection}>
+        <Text style={styles.bankTitle}>BANK ACCOUNT DETAILS</Text>
+        {bank.accountNumber ? (
+          <Text style={styles.bankText}>
+            {bank.accountHolderName || data.supplierCompany} | A/C:{" "}
+            {bank.accountNumber} | IFSC: {bank.ifscCode || "N/A"} | Bank:{" "}
+            {bank.bankName || "N/A"}
+          </Text>
+        ) : (
+          <Text style={styles.bankText}>Bank details not available</Text>
+        )}
+      </View>
+
+      <View style={styles.brokerageSection}>
+        <View style={styles.brokerageHeader}>
+          <Text style={styles.brokerText}>
+            Broker: HANSARIA FOOD PRIVATE LIMITED
+          </Text>
+        </View>
+        <View style={styles.brokerageRow}>
+          <View style={styles.brokerageItem}>
+            <Text style={styles.label}>Buyer Brokerage</Text>
+            <Text style={styles.value}>
+              Rs. {data.buyerBrokerage?.brokerageBuyer ?? "N/A"} / TON
+            </Text>
+          </View>
+          <View style={[styles.brokerageItem, { borderRight: "none" }]}>
+            <Text style={styles.label}>Supplier Brokerage</Text>
+            <Text style={styles.value}>
+              Rs. {data.buyerBrokerage?.brokerageSupplier ?? "N/A"} / TON
+            </Text>
+          </View>
+        </View>
+      </View>
+
+      <View style={styles.signatureSection}>
+        <View style={styles.signatureBox}>
+          <Text style={styles.signatureLabel}>Seller Signature</Text>
+        </View>
+        <View style={styles.signatureBox}>
+          <Text style={styles.signatureLabel}>Buyer Signature</Text>
+        </View>
+        <View style={styles.signatureBox}>
+          <Text style={styles.signatureLabel}>Broker Signature</Text>
+        </View>
+      </View>
+
+      <View style={styles.footer}>
+        <Text style={styles.footerNote}>
+          * This is a computer-generated Sauda Agreement. No physical signature
+          is required.
         </Text>
       </View>
-      <View style={styles.brokerageRow}>
-        <View style={styles.brokerageItem}>
-          <Text style={styles.label}>Buyer Brokerage</Text>
-          <Text style={styles.value}>
-            Rs. {data.buyerBrokerage?.brokerageBuyer ?? "N/A"} / TON
-          </Text>
-        </View>
-        <View style={[styles.brokerageItem, { borderRight: "none" }]}>
-          <Text style={styles.label}>Supplier Brokerage</Text>
-          <Text style={styles.value}>
-            Rs. {data.buyerBrokerage?.brokerageSupplier ?? "N/A"} / TON
-          </Text>
-        </View>
-      </View>
     </View>
-
-    <View style={styles.signatureSection}>
-      <View style={styles.signatureBox}>
-        <Text style={styles.signatureLabel}>Seller Signature</Text>
-      </View>
-      <View style={styles.signatureBox}>
-        <Text style={styles.signatureLabel}>Buyer Signature</Text>
-      </View>
-      <View style={styles.signatureBox}>
-        <Text style={styles.signatureLabel}>Broker Signature</Text>
-      </View>
-    </View>
-
-    <View style={styles.footer}>
-      <Text style={styles.footerNote}>
-        * This is a computer-generated Sauda Agreement. No physical signature is
-        required.
-      </Text>
-    </View>
-  </View>
-);
+  );
+};
 
 export default AdditionalDetails;
