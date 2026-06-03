@@ -5,7 +5,7 @@ import { AiOutlinePlus, AiOutlineMinus } from "react-icons/ai";
 import Loading from "../../common/Loading/Loading";
 
 const AdditionalInformation = ({ formData, handleChange }) => {
-  const buyerEmailsSection = formData.buyerEmails.map((email, index) => (
+  const buyerEmailsSection = (formData?.buyerEmails || []).map((email, index) => (
     <div key={index} className="flex items-center gap-2 mb-2">
       <DataInput
         placeholder={`Buyer Email ${index + 1}`}
@@ -30,7 +30,7 @@ const AdditionalInformation = ({ formData, handleChange }) => {
           <AiOutlineMinus size={20} />
         </button>
       )}
-      {index === formData.buyerEmails.length - 1 && (
+      {index === (formData?.buyerEmails || []).length - 1 && (
         <button
           type="button"
           onClick={() => handleAddEmail("buyerEmails")}
@@ -43,7 +43,7 @@ const AdditionalInformation = ({ formData, handleChange }) => {
     </div>
   ));
 
-  const sellerEmailsSection = formData.sellerEmails.map((email, index) => (
+  const sellerEmailsSection = (formData?.sellerEmails || []).map((email, index) => (
     <div key={index} className="flex items-center gap-2 mb-2">
       <DataInput
         placeholder={`Seller Email ${index + 1}`}
@@ -66,7 +66,7 @@ const AdditionalInformation = ({ formData, handleChange }) => {
           <AiOutlineMinus size={20} />
         </button>
       )}
-      {index === formData.sellerEmails.length - 1 && (
+      {index === (formData?.sellerEmails || []).length - 1 && (
         <button
           type="button"
           onClick={() => handleAddEmail("sellerEmails")}

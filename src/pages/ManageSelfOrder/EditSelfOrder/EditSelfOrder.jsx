@@ -102,6 +102,7 @@ const EditSelfOrder = () => {
   const [buyers, setBuyers] = useState(state?.buyerData || []);
   const [suppliers, setSuppliers] = useState(state?.supplierData || []);
   const [sellerCompanies, setSellerCompanies] = useState([]);
+  const [companies, setCompanies] = useState([]);
   const [selectedEmails, setSelectedEmails] = useState({
     buyer: true,
     supplier: true,
@@ -169,12 +170,14 @@ const EditSelfOrder = () => {
           buyersRows,
           suppliersRows,
           sellerCompaniesRows,
+          companiesRows,
         ] = await Promise.all([
           orderPromise,
-          fetchAllPages("/consignees", { limit: 200 }).catch(() => []),
-          fetchAllPages("/buyers", { limit: 200 }).catch(() => []),
-          fetchAllPages("/sellers", { limit: 200 }).catch(() => []),
-          fetchAllPages("/seller-company", { limit: 200 }).catch(() => []),
+          api.get("/consignees", { params: { limit: 0 } }).then(res => res.data.data || res.data || []),
+          api.get("/buyers", { params: { limit: 0 } }).then(res => res.data.data || res.data || []),
+          api.get("/sellers", { params: { limit: 0 } }).then(res => res.data.data || res.data || []),
+          api.get("/seller-company", { params: { limit: 0 } }).then(res => res.data.data || res.data || []),
+          api.get("/companies", { params: { limit: 0 } }).then(res => res.data.data || res.data || []),
         ]);
 
         const data = orderRes.data;
@@ -190,6 +193,11 @@ const EditSelfOrder = () => {
             loadingDate: data.loadingDate
               ? new Date(data.loadingDate)
               : new Date(),
+            notes: Array.isArray(data.notes) ? data.notes : [""],
+            buyerEmails: Array.isArray(data.buyerEmails) ? data.buyerEmails : [""],
+            sellerEmails: Array.isArray(data.sellerEmails) ? data.sellerEmails : [""],
+            buyerCommodity: Array.isArray(data.buyerCommodity) ? data.buyerCommodity : [],
+            parameters: Array.isArray(data.parameters) ? data.parameters : [],
           };
           setFormData(processedData);
           setOriginalFormData(JSON.parse(JSON.stringify(processedData)));
@@ -203,6 +211,7 @@ const EditSelfOrder = () => {
         setBuyers(buyersRows);
         setSuppliers(suppliersRows);
         setSellerCompanies(sellerCompaniesRows);
+        setCompanies(companiesRows);
       } catch (error) {
         if (api.isCancel(error)) return;
         console.error("Error fetching data:", error);
@@ -409,6 +418,7 @@ const EditSelfOrder = () => {
               handleChange={handleChange}
               consignees={consignees}
               buyers={buyers}
+              companies={companies}
             />
           </div>
           <div className={sectionClass}>
@@ -418,6 +428,7 @@ const EditSelfOrder = () => {
               buyerCommodity={formData.buyerCommodity}
               brokerageMap={_buyerBrokerageMap}
               formData={formData}
+              companies={companies}
             />
           </div>
           <div className={sectionClass}>

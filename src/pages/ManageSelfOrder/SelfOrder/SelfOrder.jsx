@@ -90,13 +90,19 @@ const SelfOrder = () => {
   useEffect(() => {
     const fetchInitialData = async () => {
       try {
-        const [sellersData, companiesData, buyersData, sellerCompaniesData] =
+        const fetchConfig = { params: { limit: 0 } };
+        const [sellersRes, companiesRes, buyersRes, sellerCompaniesRes] =
           await Promise.all([
-            fetchAllPages("/sellers"),
-            fetchAllPages("/companies"),
-            fetchAllPages("/buyers"),
-            fetchAllPages("/seller-company"),
+            api.get("/sellers", fetchConfig),
+            api.get("/companies", fetchConfig),
+            api.get("/buyers", fetchConfig),
+            api.get("/seller-company", fetchConfig),
           ]);
+
+        const sellersData = sellersRes.data.data || sellersRes.data || [];
+        const companiesData = companiesRes.data.data || companiesRes.data || [];
+        const buyersData = buyersRes.data.data || buyersRes.data || [];
+        const sellerCompaniesData = sellerCompaniesRes.data.data || sellerCompaniesRes.data || [];
 
         setSellerOptions(
           sellersData
