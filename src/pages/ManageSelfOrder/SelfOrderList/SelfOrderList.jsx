@@ -701,6 +701,8 @@ _${fileUrl || "PDF Link Not Available"}_
           endDate instanceof Date ? endDate.toISOString() : endDate || "",
         userRole,
         mobile,
+        // Add missing filters
+        saudaNo: searchInput?.trim() || "", // The search input often maps to saudaNo too
       };
 
       const response = await api.get(`${API_URL}/export/excel`, {

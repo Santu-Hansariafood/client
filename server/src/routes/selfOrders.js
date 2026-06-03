@@ -1140,8 +1140,23 @@ router.get("/export/excel", async (req, res) => {
     const supplier = req.query.supplier;
     const startDate = req.query.startDate;
     const endDate = req.query.endDate;
+    const { buyerCompany, supplierCompany, saudaNo } = req.query;
 
     let query = {};
+
+    if (buyerCompany) {
+      query.buyerCompany = {
+        $regex: new RegExp(escapeRegex(buyerCompany), "i"),
+      };
+    }
+    if (supplierCompany) {
+      query.supplierCompany = {
+        $regex: new RegExp(escapeRegex(supplierCompany), "i"),
+      };
+    }
+    if (saudaNo) {
+      query.saudaNo = { $regex: new RegExp(escapeRegex(saudaNo), "i") };
+    }
 
     if (userRole === "Seller" && mobile) {
       const phoneRegex = /^(?:\+91|0)?([6-9]\d{9})$/;
@@ -1166,7 +1181,7 @@ router.get("/export/excel", async (req, res) => {
       const phoneMatch = String(mobile).match(phoneRegex);
       const normalizedMobile = phoneMatch ? phoneMatch[1] : mobile;
 
-      const buyer = await mongoose.model("Buyer").findOne({
+      const buyer = await Buyer.findOne({
         mobile: { $regex: new RegExp(normalizedMobile + "$") },
       });
 
@@ -1190,6 +1205,7 @@ router.get("/export/excel", async (req, res) => {
         { buyerCompany: { $regex: searchRegex } },
         { supplierCompany: { $regex: searchRegex } },
         { commodity: { $regex: searchRegex } },
+        { state: { $regex: searchRegex } },
       ];
 
       if (query.$or) {
@@ -1204,24 +1220,31 @@ router.get("/export/excel", async (req, res) => {
 
     if (startDate || endDate) {
       const dateFilter = {};
-      if (startDate) dateFilter.$gte = new Date(startDate);
-      if (endDate) {
-        const end = new Date(endDate);
-        end.setHours(23, 59, 59, 999);
-        dateFilter.$lte = end;
+      if (startDate) {
+        const d = new Date(startDate);
+        if (!isNaN(d.getTime())) dateFilter.$gte = d;
       }
-      const dateQuery = {
-        $or: [{ poDate: dateFilter }, { createdAt: dateFilter }],
-      };
-      if (query.$or || query.$and) {
-        query.$and = query.$and || [];
-        if (query.$or) {
-          query.$and.push({ $or: query.$or });
-          delete query.$or;
+      if (endDate) {
+        const d = new Date(endDate);
+        if (!isNaN(d.getTime())) {
+          d.setHours(23, 59, 59, 999);
+          dateFilter.$lte = d;
         }
-        query.$and.push(dateQuery);
-      } else {
-        Object.assign(query, dateQuery);
+      }
+      if (Object.keys(dateFilter).length > 0) {
+        const dateQuery = {
+          $or: [{ poDate: dateFilter }, { createdAt: dateFilter }],
+        };
+        if (query.$or || query.$and) {
+          query.$and = query.$and || [];
+          if (query.$or) {
+            query.$and.push({ $or: query.$or });
+            delete query.$or;
+          }
+          query.$and.push(dateQuery);
+        } else {
+          Object.assign(query, dateQuery);
+        }
       }
     }
 
@@ -1248,6 +1271,12 @@ router.get("/export/excel", async (req, res) => {
       return consigneeMap.get(String(c)) || "N/A";
     };
 
+    const formatDateSafe = (date) => {
+      if (!date) return "";
+      const d = new Date(date);
+      return isNaN(d.getTime()) ? "" : d.toLocaleDateString("en-GB");
+    };
+
     const columns = [
       { header: "Date", key: "Date", width: 15 },
       { header: "Sauda No", key: "Sauda No", width: 15 },
@@ -1260,7 +1289,7 @@ router.get("/export/excel", async (req, res) => {
       { header: "Commodity", key: "Commodity", width: 20 },
       { header: "Quantity", key: "Quantity", width: 15 },
       { header: "Rate", key: "Rate", width: 15 },
-      { header: "Tax", key: "Tax", width: 10 },
+      { header: "Tax (%)", key: "Tax", width: 10 },
       { header: "CD", key: "CD", width: 10 },
       { header: "Delivery Date", key: "Delivery Date", width: 15 },
       { header: "Payment Time", key: "Payment Time", width: 20 },
@@ -1270,11 +1299,7 @@ router.get("/export/excel", async (req, res) => {
 
     items.forEach((item) => {
       const rowData = {
-        Date: item.poDate
-          ? new Date(item.poDate).toLocaleDateString("en-GB")
-          : item.createdAt
-            ? new Date(item.createdAt).toLocaleDateString("en-GB")
-            : "",
+        Date: item.poDate ? formatDateSafe(item.poDate) : formatDateSafe(item.createdAt),
         "Sauda No": item.saudaNo || "",
         "PO Number": item.poNumber || "",
         Buyer: item.buyer || "",
@@ -1283,13 +1308,11 @@ router.get("/export/excel", async (req, res) => {
         "Seller Name": item.supplier?.sellerName || "",
         Consignee: getConsigneeDisplay(item) || "",
         Commodity: item.commodity || "",
-        Quantity: item.quantity || "",
-        Rate: item.rate || "",
-        Tax: item.tax || item.gst || "",
-        CD: item.cd || "",
-        "Delivery Date": item.deliveryDate
-          ? new Date(item.deliveryDate).toLocaleDateString("en-GB")
-          : "",
+        Quantity: item.quantity || 0,
+        Rate: item.rate || 0,
+        Tax: item.gst !== undefined ? item.gst : (item.tax || 0),
+        CD: item.cd || 0,
+        "Delivery Date": formatDateSafe(item.deliveryDate),
         "Payment Time": item.paymentTerms || "",
       };
 
@@ -1316,7 +1339,9 @@ router.get("/export/excel", async (req, res) => {
     res.end();
   } catch (error) {
     console.error("Export Excel Error:", error);
-    res.status(500).json({ message: error.message });
+    if (!res.headersSent) {
+      res.status(500).json({ message: error.message });
+    }
   }
 });
 
