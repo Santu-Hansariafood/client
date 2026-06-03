@@ -14,7 +14,7 @@ export const useAIAgentCore = () => {
     {
       role: "assistant",
       content:
-        "Hello! I am your Saria AI. I have full control over the system data and navigation. Ask me anything about Saudas, Loadings, Sellers, Buyers, or Payments. I can also open any page for you!",
+        "Hello! I am saria.ai. I have full control over the system data and navigation. Ask me anything about Saudas, Loadings, Sellers, Buyers, or Payments. I can also open any page for you!",
       suggestions: [
         "Show sidebar menu",
         "Total sauda today",
@@ -40,7 +40,7 @@ export const useAIAgentCore = () => {
     setMessages([
       {
         role: "assistant",
-        content: "System cache cleared. Saria AI is ready.",
+        content: "System cache cleared. saria.ai is ready.",
         suggestions: [
           "Total sauda today",
           "Active bids",

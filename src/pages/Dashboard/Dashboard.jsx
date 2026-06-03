@@ -73,11 +73,11 @@ const Dashboard = () => {
                       Analytics Dashboard
                     </div>
                     <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-slate-900 tracking-tight leading-tight">
-                      Agent Performance Metrics
+                      Market Intelligence
                     </h2>
                     <p className="text-sm sm:text-base text-slate-500 font-medium">
-                      Deep-dive distribution analysis by sauda volume and
-                      tonnage
+                      Graphical analytics by saria.ai — sauda, bids, payments
+                      & logistics
                     </p>
                   </div>
                   <div className="flex items-center gap-3 px-4 sm:px-5 py-2.5 sm:py-3 rounded-xl sm:rounded-2xl bg-white/50 border border-white/80 shadow-sm shrink-0 self-start sm:self-center">

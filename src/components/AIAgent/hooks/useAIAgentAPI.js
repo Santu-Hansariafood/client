@@ -541,7 +541,7 @@ export const useAIAgentAPI = (
 
       if (sauda) {
         let content =
-          `*Saria AI Profile:*\n\n` +
+          `*saria.ai Profile:*\n\n` +
           `• *Sauda No:* ${saudaNo}\n` +
           `• *Buyer:* ${sauda.buyerCompany || sauda.buyer}\n` +
           `• *Supplier:* ${sauda.supplierCompany || "N/A"}\n` +
@@ -599,7 +599,7 @@ export const useAIAgentAPI = (
       return {
         role: "assistant",
         content:
-          "Error in Saria AIsauda fetch. Please check if Sauda No is correct.",
+          "Error in saria.aisauda fetch. Please check if Sauda No is correct.",
       };
     } finally {
       setIsLoadingData(false);
@@ -1350,7 +1350,7 @@ export const useAIAgentAPI = (
       }
 
       if (entries.length > 0) {
-        let content = `*Full Lorry Saria AI Report: ${lorryNo.toUpperCase()}*\n\n`;
+        let content = `*Full Lorry saria.ai Report: ${lorryNo.toUpperCase()}*\n\n`;
 
         const saudaNos = [...new Set(entries.map((e) => e.saudaNo))];
         const saudaDetails = await Promise.all(
@@ -1518,7 +1518,7 @@ export const useAIAgentAPI = (
 
     return {
       role: "assistant",
-      content: `I've performed a Saria AI scan for "*${query}*" across all Saudas, Invoices, Vehicles, and Partners, but no direct match was found.`,
+      content: `I've performed a saria.ai scan for "*${query}*" across all Saudas, Invoices, Vehicles, and Partners, but no direct match was found.`,
       suggestions: ["Total sauda today", "Active bids", "Highest rate today"],
     };
   };

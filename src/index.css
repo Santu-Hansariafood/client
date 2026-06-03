@@ -105,3 +105,85 @@
 .animate-fade-in-up.delay-100 {
   animation-delay: 0.1s;
 }
+
+@keyframes miFloat3d {
+  0%,
+  100% {
+    transform: translateY(0) rotateX(8deg) rotateY(-4deg);
+  }
+  50% {
+    transform: translateY(-6px) rotateX(10deg) rotateY(4deg);
+  }
+}
+
+@keyframes miOrbPulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.55;
+  }
+  50% {
+    transform: scale(1.08);
+    opacity: 0.85;
+  }
+}
+
+@keyframes miShine {
+  0% {
+    transform: translateX(-120%) skewX(-12deg);
+  }
+  100% {
+    transform: translateX(220%) skewX(-12deg);
+  }
+}
+
+.mi-perspective {
+  perspective: 1400px;
+}
+
+.mi-card-3d {
+  transform-style: preserve-3d;
+  transition: transform 0.55s cubic-bezier(0.23, 1, 0.32, 1),
+    box-shadow 0.55s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+@media (hover: hover) {
+  .mi-card-3d:hover {
+    transform: translateY(-8px) rotateX(6deg) rotateY(-2deg) translateZ(12px);
+    box-shadow: 0 32px 64px -24px rgba(79, 70, 229, 0.35),
+      0 12px 24px -12px rgba(15, 23, 42, 0.12);
+  }
+}
+
+.mi-float-orb {
+  animation: miOrbPulse 5s ease-in-out infinite;
+}
+
+.mi-header-float {
+  animation: miFloat3d 8s ease-in-out infinite;
+}
+
+.mi-shine::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    105deg,
+    transparent 40%,
+    rgba(255, 255, 255, 0.35) 50%,
+    transparent 60%
+  );
+  animation: miShine 6s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mi-float-orb,
+  .mi-header-float,
+  .mi-shine::after {
+    animation: none !important;
+  }
+  .mi-card-3d:hover {
+    transform: none;
+  }
+}

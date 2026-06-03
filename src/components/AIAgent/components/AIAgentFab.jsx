@@ -7,7 +7,7 @@ const AIAgentFab = ({ isOpen, isMinimized, setIsMinimized, setIsOpen }) => {
         <div className="bg-white px-4 py-2 rounded-2xl shadow-xl border border-slate-100 animate-in fade-in slide-in-from-right-5 duration-300 mb-2">
           <p className="text-xs font-bold text-slate-600 flex items-center gap-2">
             <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
-            Saria AI is active
+            saria.ai is active
           </p>
         </div>
       )}
