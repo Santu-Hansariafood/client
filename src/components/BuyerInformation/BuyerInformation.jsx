@@ -190,15 +190,21 @@ const BuyerInformation = ({
 
       handleChange("companyId", companyData._id);
       handleChange("buyerCompany", companyData.companyName || "");
-      handleChange("location", companyData.location || "");
-      handleChange("state", companyData.state || "");
-      handleChange("district", companyData.district || "");
-      handleChange("pinCode", companyData.pinCode || "");
-      handleChange("gstNumber", companyData.gstNumber || "");
-      handleChange("panNumber", companyData.panNumber || "");
-      handleChange("buyerEmail", firstEmail);
-      handleChange("buyerMobile", firstMobile);
-      handleChange("buyerEmails", buyerEmails.length ? buyerEmails : [""]);
+      
+      // Only overwrite these fields if they are currently empty, 
+      // ensuring we don't destroy custom values saved in an existing order
+      if (!formData.location) handleChange("location", companyData.location || "");
+      if (!formData.state) handleChange("state", companyData.state || "");
+      if (!formData.district) handleChange("district", companyData.district || "");
+      if (!formData.pinCode) handleChange("pinCode", companyData.pinCode || "");
+      if (!formData.gstNumber) handleChange("gstNumber", companyData.gstNumber || "");
+      if (!formData.panNumber) handleChange("panNumber", companyData.panNumber || "");
+      if (!formData.buyerEmail) handleChange("buyerEmail", firstEmail);
+      if (!formData.buyerMobile) handleChange("buyerMobile", firstMobile);
+      if (!formData.buyerEmails || formData.buyerEmails.length <= 1) {
+        handleChange("buyerEmails", buyerEmails.length ? buyerEmails : [""]);
+      }
+      
       handleChange("buyerCommodity", companyData.commodities || []);
       handleChange(
         "buyerBrokerageMap",

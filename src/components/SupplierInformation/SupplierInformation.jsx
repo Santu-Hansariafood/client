@@ -51,10 +51,13 @@ const SupplierInformation = ({
                 )
                 .filter(Boolean)
             : [];
-          handleChange(
-            "sellerEmails",
-            sellerEmails.length ? sellerEmails : [""],
-          );
+          
+          if (!formData.sellerEmails || formData.sellerEmails.length <= 1) {
+            handleChange(
+              "sellerEmails",
+              sellerEmails.length ? sellerEmails : [""],
+            );
+          }
 
           const rawPhones = selected.phoneNumbers || [];
           const sellerPhones = Array.isArray(rawPhones)
@@ -65,7 +68,10 @@ const SupplierInformation = ({
                 .filter(Boolean)
             : [];
           const firstMobile = sellerPhones[0] || "";
-          handleChange("sellerMobile", firstMobile);
+          
+          if (!formData.sellerMobile) {
+            handleChange("sellerMobile", firstMobile);
+          }
 
           if (selected.commodities?.length) {
             handleChange(
