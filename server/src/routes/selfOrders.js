@@ -193,6 +193,7 @@ router.get("/", async (req, res) => {
       const items = await SelfOrder.find(query)
         .sort({ saudaNo: -1 })
         .populate("supplier", "sellerName")
+        .select("saudaNo poNumber poDate buyer buyerCompany supplierCompany commodity quantity rate gst cd deliveryDate paymentTerms createdAt status consignee")
         .lean();
       return res.json(items);
     }
@@ -203,6 +204,7 @@ router.get("/", async (req, res) => {
         .skip((page - 1) * limit)
         .limit(limit)
         .populate("supplier", "sellerName")
+        .select("saudaNo poNumber poDate buyer buyerCompany supplierCompany commodity quantity rate gst cd deliveryDate paymentTerms createdAt status consignee")
         .lean();
       const total = await SelfOrder.countDocuments(query);
       return res.json({ data: items, total });
@@ -212,6 +214,7 @@ router.get("/", async (req, res) => {
       .sort({ saudaNo: -1 })
       .limit(limit)
       .populate("supplier", "sellerName")
+      .select("saudaNo poNumber poDate buyer buyerCompany supplierCompany commodity quantity rate gst cd deliveryDate paymentTerms createdAt status consignee")
       .lean();
     res.json(items);
   } catch (error) {
@@ -1229,6 +1232,7 @@ router.get("/export/excel", async (req, res) => {
     let items = await SelfOrder.find(query)
       .sort({ saudaNo: -1 })
       .populate("supplier", "sellerName")
+      .select("saudaNo poNumber poDate buyer buyerCompany supplierCompany commodity quantity rate gst cd deliveryDate paymentTerms createdAt status consignee")
       .lean();
 
     const workbook = new ExcelJS.Workbook();
@@ -1241,12 +1245,20 @@ router.get("/export/excel", async (req, res) => {
     });
 
     const getConsigneeDisplay = (item) => {
-      const c = item.consignee;
-      if (typeof c === "object" && c?.name) return c.name;
-      if (typeof c === "object" && c?.label) return c.label;
-      if (c && typeof c === "string")
-        return consigneeMap.get(c) || consigneeMap.get(c.trim()) || c;
-      return consigneeMap.get(String(c)) || "N/A";
+      try {
+        const c = item.consignee;
+        if (!c) return "N/A";
+        if (typeof c === "object") {
+          return c.name || c.label || "N/A";
+        }
+        if (typeof c === "string") {
+          // If it's an ID, look it up in the map
+          return consigneeMap.get(c) || consigneeMap.get(c.trim()) || c;
+        }
+        return "N/A";
+      } catch (err) {
+        return "N/A";
+      }
     };
 
     const columns = [
