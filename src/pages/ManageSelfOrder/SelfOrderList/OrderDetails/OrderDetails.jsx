@@ -11,6 +11,13 @@ const OrderDetails = ({ item }) => {
           <strong>Buyer Company:</strong> {item.buyerCompany}
         </p>
         <p>
+          <strong>Buyer Mobile:</strong> {item.buyerMobile || "N/A"}
+        </p>
+        <p>
+          <strong>Buyer Emails:</strong>{" "}
+          {item.buyerEmails?.filter(Boolean).join(", ") || "N/A"}
+        </p>
+        <p>
           <strong>Consignee:</strong> {item.consignee}
         </p>
         <p>
@@ -35,6 +42,13 @@ const OrderDetails = ({ item }) => {
       <div>
         <p>
           <strong>Broker:</strong> Hansaria Food Private Limited
+        </p>
+        <p>
+          <strong>Seller Mobile:</strong> {item.sellerMobile || "N/A"}
+        </p>
+        <p>
+          <strong>Seller Emails:</strong>{" "}
+          {item.sellerEmails?.filter(Boolean).join(", ") || "N/A"}
         </p>
         <p>
           <strong>Agent Name:</strong> {item.agentName}
@@ -82,6 +96,10 @@ OrderDetails.propTypes = {
     state: PropTypes.string.isRequired,
     location: PropTypes.string.isRequired,
     agentName: PropTypes.string.isRequired,
+    buyerMobile: PropTypes.string,
+    buyerEmails: PropTypes.arrayOf(PropTypes.string),
+    sellerMobile: PropTypes.string,
+    sellerEmails: PropTypes.arrayOf(PropTypes.string),
     poDate: PropTypes.string.isRequired,
     deliveryDate: PropTypes.string.isRequired,
     loadingDate: PropTypes.string.isRequired,
