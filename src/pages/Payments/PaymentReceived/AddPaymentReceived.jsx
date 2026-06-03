@@ -825,8 +825,14 @@ const AddPaymentReceived = () => {
   }, [fetchDateTotal]);
 
   const handleAutoAllocate = useCallback(() => {
-    const pool = Number(availableAllocationPool) || 0;
-    if (pool <= 0) {
+    let pool = Number(availableAllocationPool) || 0;
+    const isZeroPool = pool <= 0.01;
+
+    if (isZeroPool && allocationSource === "fresh") {
+      // If pool is zero in Fresh mode, we'll allocate full due amounts
+      // and update the total amount automatically
+      pool = Infinity; 
+    } else if (isZeroPool) {
       toast.warning("Please enter a payment amount first");
       return;
     }
@@ -863,11 +869,15 @@ const AddPaymentReceived = () => {
       return entry;
     });
 
-    // Sync back to the original entries list maintaining their current UI order if possible, 
-    // but here we just update the state with the newly allocated values
     setEntries(newEntries);
-    toast.success(`Allocated ₹${totalAllocatedNow.toLocaleString()} across pending lorries (FIFO)`);
-  }, [availableAllocationPool, entries, calculateTallyDetails]);
+    
+    if (isZeroPool && allocationSource === "fresh") {
+      setFormData(prev => ({ ...prev, amount: totalAllocatedNow }));
+      toast.success(`Allocated full due (₹${totalAllocatedNow.toLocaleString()}) across pending lorries`);
+    } else {
+      toast.success(`Allocated ₹${totalAllocatedNow.toLocaleString()} across pending lorries (FIFO)`);
+    }
+  }, [availableAllocationPool, entries, allocationSource]);
 
   const handleSaveAllAllocations = async () => {
     // Tally-wise logic:
@@ -1065,9 +1075,7 @@ const AddPaymentReceived = () => {
             `Max Rs. ${remaining.toLocaleString("en-IN")} from advance (pool Rs. ${pool.toLocaleString("en-IN")})`,
           );
         }
-      } else if (pool <= 0.01 && numAmount > 0) {
-        toast.error("Enter payment amount in the form above first");
-      } else {
+      } else if (pool > 0.01) {
         const maxAllowed = Math.min(
           remaining,
           dueAmount > 1 ? dueAmount : remaining, // Increased tolerance
@@ -1081,6 +1089,10 @@ const AddPaymentReceived = () => {
             `Max Cr. Rs. ${maxAllowed.toLocaleString("en-IN")} on this row`,
           );
         }
+      } else if (numAmount > dueAmount + 1 && dueAmount > 0.01) {
+        // In direct mode (pool is 0), still cap to due amount for safety
+        valueToStore = String(Math.round(dueAmount * 100) / 100);
+        toast.warning(`Capped to due Rs. ${dueAmount.toLocaleString("en-IN")}`);
       }
     }
 
@@ -1185,29 +1197,12 @@ const AddPaymentReceived = () => {
 
     if (
       allocationSource === "fresh" &&
-      effectiveDebitPool <= 0.01 &&
-      saveAllocated > 0.01
+      effectiveDebitPool > 0.01 &&
+      saveAllocated > rowDebitLeft + 1
     ) {
       toast.error(
-        "Enter payment received amount above before adjusting lorries",
+        `Exceeds entry total (Rs. ${rowDebitLeft.toLocaleString("en-IN")} left for this row)`,
       );
-      return;
-    }
-
-    if (allocationSource === "fresh" && saveAllocated > rowDebitLeft + 1) {
-      if (
-        effectiveDebitPool <= 0.01 &&
-        (ledgerBalance.totalAdvanceBalance || 0) > 0
-      ) {
-        toast.info(
-          "Entry amount is Rs. 0. Switch to From Advance to use buyer Dr. balance.",
-          { autoClose: 6000 },
-        );
-      } else {
-        toast.error(
-          `Exceeds entry total (Rs. ${rowDebitLeft.toLocaleString("en-IN")} left for this row)`,
-        );
-      }
       return;
     }
 
@@ -1311,10 +1306,6 @@ const AddPaymentReceived = () => {
       toast.error("Select buyer company first");
       return;
     }
-    if (formData.amount <= 0) {
-      toast.error("Enter payment amount (Coming Amount)");
-      return;
-    }
 
     const ledgerId = resolveLedgerIdForSave();
     const saveCompanyId = resolveCompanyIdForSave();
@@ -1326,6 +1317,21 @@ const AddPaymentReceived = () => {
         (e) => !e.isSaved && parseFloat(e.allocatedAmount) > 0.01,
       );
 
+      const totalAllocated = allocations.reduce(
+        (sum, e) => sum + parseFloat(e.allocatedAmount),
+        0,
+      );
+
+      // If amount is 0, use totalAllocated. Otherwise use formData.amount
+      const finalAmount =
+        formData.amount > 0 ? formData.amount : totalAllocated;
+
+      if (finalAmount <= 0) {
+        toast.error("Enter payment amount or allocate lorries first");
+        setLoading(false);
+        return;
+      }
+
       const payload = {
         date: formData.date,
         ledgerType: "Buyer",
@@ -1333,7 +1339,7 @@ const AddPaymentReceived = () => {
         companyId: saveCompanyId,
         buyerCompany: companyPair.buyerCompany || "",
         supplierCompany: companyPair.supplierCompany || "",
-        amount: formData.amount,
+        amount: finalAmount,
         // If there are allocations, it's Sauda-wise, otherwise it's pure Advance
         paymentType: allocations.length > 0 ? "Sauda-wise" : "Advance",
         paymentMode: formData.paymentMode,
@@ -1346,15 +1352,15 @@ const AddPaymentReceived = () => {
         remarks:
           formData.remarks?.trim() ||
           (allocations.length > 0
-            ? `Payment of ₹${formData.amount.toLocaleString()} with ${allocations.length} lorry adjustments`
+            ? `Payment of ₹${finalAmount.toLocaleString()} with ${allocations.length} lorry adjustments`
             : "Advance payment from buyer"),
       };
 
       await api.post("/payment-received", payload);
       toast.success(
         allocations.length > 0
-          ? `Recorded payment of ₹${formData.amount.toLocaleString()} with ${allocations.length} allocations`
-          : `Recorded advance payment of ₹${formData.amount.toLocaleString()}`,
+          ? `Recorded payment of ₹${finalAmount.toLocaleString()} with ${allocations.length} allocations`
+          : `Recorded advance payment of ₹${finalAmount.toLocaleString()}`,
       );
 
       // Reset form amount
