@@ -28,7 +28,7 @@ router.get("/stats", authJwt, async (req, res) => {
       Consignee.countDocuments(),
       SelfOrder.countDocuments(),
       Bid.countDocuments({
-        date: {
+        bidDate: {
           $gte: today,
           $lt: tomorrow
         }
