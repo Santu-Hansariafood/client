@@ -76,6 +76,7 @@ const CommodityTable = ({ data }) => {
     <View style={styles.table}>
       <View style={styles.tableHeader}>
         <Text style={styles.headerCell}>Product Name</Text>
+        <Text style={styles.headerCell}>HSN Code</Text>
         <Text style={styles.headerCell}>Qty</Text>
         <Text style={styles.headerCell}>Rate</Text>
         <Text style={styles.headerCell}>GST (%)</Text>
@@ -84,6 +85,7 @@ const CommodityTable = ({ data }) => {
 
       <View style={styles.tableRow}>
         <Text style={styles.tableCell}>{data.commodity}</Text>
+        <Text style={styles.tableCell}>{data.hsnCode || "N/A"}</Text>
         <Text style={styles.tableCell}>{data.quantity} TON</Text>
         <Text style={styles.tableCell}>{data.rate} / TON</Text>
         <Text style={styles.tableCell}>{data.gst}%</Text>
