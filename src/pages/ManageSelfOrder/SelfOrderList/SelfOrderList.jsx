@@ -19,6 +19,7 @@ import { pdf } from "@react-pdf/renderer";
 import SaudaPDF from "../../../components/DownloadSauda/SaudaPDF/SaudaPDF";
 import { fetchAllPages } from "../../../utils/apiClient/fetchAllPages";
 import { buildSaudaPdfData } from "../../../utils/saudaPdf/buildSaudaPdfData";
+import { downloadFile } from "../../../utils/fileDownloader";
 
 const Tables = lazy(() => import("../../../common/Tables/Tables"));
 const Pagination = lazy(
@@ -694,8 +695,10 @@ _${fileUrl || "PDF Link Not Available"}_
 
       const params = {
         search: searchInput?.trim() || "",
-        startDate: startDate || "",
-        endDate: endDate || "",
+        startDate:
+          startDate instanceof Date ? startDate.toISOString() : startDate || "",
+        endDate:
+          endDate instanceof Date ? endDate.toISOString() : endDate || "",
         userRole,
         mobile,
       };
@@ -706,22 +709,16 @@ _${fileUrl || "PDF Link Not Available"}_
         timeout: 120000,
       });
 
-      const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement("a");
-      link.href = url;
-      link.setAttribute(
-        "download",
-        `SelfOrders_${new Date().toISOString().split("T")[0]}.xlsx`,
-      );
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      window.URL.revokeObjectURL(url);
+      const fileName = `SelfOrders_${
+        new Date().toISOString().split("T")[0]
+      }.xlsx`;
+      await downloadFile(response.data, fileName);
 
       toast.dismiss(toastId);
       toast.success("Excel downloaded successfully");
     } catch (error) {
       if (toastId) toast.dismiss(toastId);
+      console.error("Excel Export Error:", error);
       toast.error("Failed to download Excel file");
     }
   }, [userRole, mobile, searchInput, startDate, endDate]);
