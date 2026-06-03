@@ -191,7 +191,7 @@ router.get("/", async (req, res) => {
     if (exportAll) {
       const items = await SelfOrder.find(query)
         .sort({ saudaNo: -1 })
-        .populate("supplier", "sellerName")
+        .populate("supplier", "sellerName ifscCode bankName")
         .lean();
       return res.json(items);
     }
@@ -201,7 +201,7 @@ router.get("/", async (req, res) => {
         .sort({ saudaNo: -1 })
         .skip((page - 1) * limit)
         .limit(limit)
-        .populate("supplier", "sellerName")
+        .populate("supplier", "sellerName ifscCode bankName")
         .lean();
       const total = await SelfOrder.countDocuments(query);
       return res.json({ data: items, total });
@@ -210,7 +210,7 @@ router.get("/", async (req, res) => {
     const items = await SelfOrder.find(query)
       .sort({ saudaNo: -1 })
       .limit(limit)
-      .populate("supplier", "sellerName")
+      .populate("supplier", "sellerName ifscCode bankName")
       .lean();
     res.json(items);
   } catch (error) {

@@ -11,6 +11,7 @@ const toUnifiedDetails = (entity) => {
     gstNo: entity.gstNo || entity.gst || entity.gstNumber || "",
     panNo: entity.panNo || entity.pan || entity.panNumber || "",
     pinNo: entity.pinNo || entity.pin || entity.pinCode || "",
+    msmeNo: entity.msmeNo || entity.mandiLicense || "",
     district: entity.district || "",
     state: entity.state || "",
     phone: entity.phone || entity.mobile || entity.phoneNumber || "",
@@ -25,6 +26,7 @@ const toConsigneeDetails = (entity) => {
     gstNo: entity.gstNo || entity.gst || entity.gstNumber || "",
     panNo: entity.panNo || entity.pan || entity.panNumber || "",
     pin: entity.pin || entity.pinNo || entity.pinCode || "",
+    msmeNo: entity.msmeNo || entity.mandiLicense || "",
     district: entity.district || "",
     state: entity.state || "",
     phone: entity.phone || entity.mobile || entity.phoneNumber || "",
@@ -124,13 +126,30 @@ export const buildSaudaPdfData = ({
   };
 
   // Ensure bank details are present from profile if missing from company
-  if (transformed.supplierDetails && !transformed.supplierDetails.bankDetails?.length && matchingSellerProfile?.bankName) {
-    transformed.supplierDetails.bankDetails = [{
-      bankName: matchingSellerProfile.bankName,
-      ifscCode: matchingSellerProfile.ifscCode,
-      accountNumber: matchingSellerProfile.accountNumber || "N/A", // We might need to check if accountNumber exists in Seller model
-      accountHolderName: matchingSellerProfile.sellerName
-    }];
+  if (matchingSellerProfile?.bankName || matchingSellerProfile?.ifscCode) {
+    if (!transformed.supplierDetails) {
+      transformed.supplierDetails = {
+        bankDetails: [{
+          bankName: matchingSellerProfile.bankName || "",
+          ifscCode: matchingSellerProfile.ifscCode || "",
+          accountNumber: "", // Seller model is missing accountNumber
+          accountHolderName: matchingSellerProfile.sellerName || ""
+        }]
+      };
+    } else if (!transformed.supplierDetails.bankDetails?.length) {
+      transformed.supplierDetails.bankDetails = [{
+        bankName: matchingSellerProfile.bankName || "",
+        ifscCode: matchingSellerProfile.ifscCode || "",
+        accountNumber: "",
+        accountHolderName: matchingSellerProfile.sellerName || ""
+      }];
+    }
+  }
+
+  // Ensure fields are not "N/A" if we have partial info
+  if (transformed.supplierDetails?.bankDetails?.[0]) {
+    const b = transformed.supplierDetails.bankDetails[0];
+    if (b.accountNumber === "N/A") b.accountNumber = "";
   }
 
   if (billToConsignee) {

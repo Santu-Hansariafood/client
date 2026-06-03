@@ -67,21 +67,25 @@ const SaudaDetails = ({ data }) => {
   const renderBuyerDetails = () => {
     if (!data.buyerDetails) return null;
 
-    const { address, district, state, pinNo, panNo, gstNo } = data.buyerDetails;
+    const { address, location, district, state, pin, pinNo, pinCode, panNo, gstNo, msmeNo } = data.buyerDetails;
 
     let parts = [];
-    if (address || district || state || pinNo) {
+    const addr = address || location || "";
+    const dist = district || "";
+    const st = state || "";
+    const p = pinNo || pinCode || pin || "";
+
+    if (addr || dist || st || p) {
       parts.push(
-        `${address || ""}${address && (district || state || pinNo) ? ", " : ""}${
-          district || ""
-        }${district && (state || pinNo) ? ", " : ""}${state || ""}${
-          state && pinNo ? " - " : ""
-        }${pinNo || ""}`,
+        `${addr}${addr && (dist || st || p) ? ", " : ""}${dist}${
+          dist && (st || p) ? ", " : ""
+        }${st}${st && p ? " - " : ""}${p}`,
       );
     }
     
     if (panNo) parts.push(`PAN No: ${panNo}`);
     if (gstNo) parts.push(`GST: ${gstNo}`);
+    if (msmeNo) parts.push(`MSME No: ${msmeNo}`);
 
     if (parts.length === 0) return null;
 
@@ -126,7 +130,7 @@ const SaudaDetails = ({ data }) => {
           <Text style={styles.value}>{data.supplierCompany}</Text>
           <Text style={styles.addressDetails}>
             {data.supplierDetails ? (
-              `\n${data.supplierDetails.address || ""}, ${data.supplierDetails.district || ""}, ${data.supplierDetails.state || ""} - ${data.supplierDetails.pinNo || ""}\nPAN No: ${data.supplierDetails.panNo || ""}\nGST: ${data.supplierDetails.gstNo || ""}`
+              `\n${data.supplierDetails.address || ""}, ${data.supplierDetails.district || ""}, ${data.supplierDetails.state || ""} - ${data.supplierDetails.pinNo || data.supplierDetails.pin || ""}\nPAN No: ${data.supplierDetails.panNo || ""}\nGST: ${data.supplierDetails.gstNo || ""}${data.supplierDetails.msmeNo ? "\nMSME No: " + data.supplierDetails.msmeNo : ""}`
             ) : null}
           </Text>
         </View>
@@ -135,7 +139,7 @@ const SaudaDetails = ({ data }) => {
           <Text style={styles.nameValue}>{data.consignee}</Text>
           {data.consigneeDetails && (
             <Text style={styles.addressDetails}>
-              {`\n${data.consigneeDetails.address || data.consigneeDetails.location || ""}, ${data.consigneeDetails.district || ""}, ${data.consigneeDetails.state || ""} - ${data.consigneeDetails.pin || data.consigneeDetails.pinNo || ""}\nPAN No : ${data.consigneeDetails.panNo || data.consigneeDetails.pan || ""}\nGST: ${data.consigneeDetails.gstNo || data.consigneeDetails.gst || ""}`}
+              {`\n${data.consigneeDetails.address || data.consigneeDetails.location || ""}, ${data.consigneeDetails.district || ""}, ${data.consigneeDetails.state || ""} - ${data.consigneeDetails.pin || data.consigneeDetails.pinNo || ""}\nPAN No : ${data.consigneeDetails.panNo || data.consigneeDetails.pan || ""}\nGST: ${data.consigneeDetails.gstNo || data.consigneeDetails.gst || ""}${data.consigneeDetails.msmeNo ? "\nMSME No: " + data.consigneeDetails.msmeNo : ""}`}
             </Text>
           )}
         </View>
