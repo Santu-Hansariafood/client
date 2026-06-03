@@ -1,3 +1,4 @@
+import { useState, useEffect, useMemo, useCallback } from "react";
 import {
   FaFilter,
   FaMoneyBillWave,
@@ -61,6 +62,17 @@ const AllocationLedger = ({
     return sum;
   }, 0);
 
+  const saudaAllocations = useMemo(() => {
+    const map = {};
+    entries.forEach((e) => {
+      const amt = parseFloat(e.allocatedAmount) || 0;
+      if (amt > 0 && !e.isSaved) {
+        map[e.saudaNo] = (map[e.saudaNo] || 0) + amt;
+      }
+    });
+    return Object.entries(map).sort((a, b) => b[1] - a[1]);
+  }, [entries]);
+
   return (
     <div className="flex flex-col h-full">
       <div className="p-6 border-b border-slate-100 bg-slate-50/50 flex flex-col gap-4">
@@ -123,6 +135,24 @@ const AllocationLedger = ({
                   </span>
                 </div>
                 <FaMoneyBillWave className="text-blue-200 animate-pulse" />
+              </div>
+            )}
+
+            {totalAllocated > 0 && (
+              <div className="hidden xl:flex items-center gap-2 px-4 py-1.5 bg-white border border-slate-200 rounded-xl shadow-sm">
+                <div className="flex flex-col">
+                  <span className="text-[8px] font-black uppercase text-slate-400">Distributing among</span>
+                  <div className="flex gap-2">
+                    {saudaAllocations.slice(0, 3).map(([sauda, amt]) => (
+                      <span key={sauda} className="text-[10px] font-bold text-slate-700">
+                        {sauda}: <span className="text-emerald-600">₹{amt.toLocaleString()}</span>
+                      </span>
+                    ))}
+                    {saudaAllocations.length > 3 && (
+                      <span className="text-[10px] font-bold text-slate-400">+{saudaAllocations.length - 3} more</span>
+                    )}
+                  </div>
+                </div>
               </div>
             )}
 

@@ -260,8 +260,7 @@ const AddPaymentReceived = () => {
   );
 
   const hasBuyerCompany = Boolean(companyPair.buyerCompany);
-  const buyerOnlyMapping =
-    hasBuyerCompany && !companyPair.supplierCompany;
+  const buyerOnlyMapping = hasBuyerCompany && !companyPair.supplierCompany;
 
   const pairCreditFromList = useMemo(() => {
     if (!fullCompanyMapping || !ledgerBalance.creditByPair?.length) return 0;
@@ -281,11 +280,7 @@ const AddPaymentReceived = () => {
   const availableAllocationPool = useMemo(() => {
     if (allocationSource === "advance") {
       if (fullCompanyMapping) {
-        return (
-          Number(ledgerBalance.advanceBalance) ||
-          pairCreditFromList ||
-          0
-        );
+        return Number(ledgerBalance.advanceBalance) || pairCreditFromList || 0;
       }
       return Number(ledgerBalance.totalAdvanceBalance) || 0;
     }
@@ -482,7 +477,8 @@ const AddPaymentReceived = () => {
             return -1;
           if (a.paymentStatus === "done" && b.paymentStatus === "pending")
             return 1;
-          return new Date(b.loadingDate) - new Date(a.loadingDate);
+          // Sort by loadingDate ascending (FIFO) for standard payment distribution
+          return new Date(a.loadingDate) - new Date(b.loadingDate);
         });
 
         setEntries(
@@ -551,8 +547,9 @@ const AddPaymentReceived = () => {
       if (!name) return "";
       const co = allCompanies.find(
         (c) =>
-          String(c.companyName || "").trim().toLowerCase() ===
-          String(name).trim().toLowerCase(),
+          String(c.companyName || "")
+            .trim()
+            .toLowerCase() === String(name).trim().toLowerCase(),
       );
       return co?._id || "";
     },
@@ -609,12 +606,7 @@ const AddPaymentReceived = () => {
         prev.ledgerId ? prev : { ...prev, ledgerId: resolvedId },
       );
     }
-  }, [
-    formData.companyId,
-    formData.ledgerId,
-    ledgers,
-    resolveLedgerIdForSave,
-  ]);
+  }, [formData.companyId, formData.ledgerId, ledgers, resolveLedgerIdForSave]);
 
   const fetchHistory = useCallback(async () => {
     if (!formData.date) {
@@ -660,8 +652,9 @@ const AddPaymentReceived = () => {
 
       const buyerCo = allCompanies.find(
         (c) =>
-          String(c.companyName || "").trim().toLowerCase() ===
-          String(pair.buyerCompany).trim().toLowerCase(),
+          String(c.companyName || "")
+            .trim()
+            .toLowerCase() === String(pair.buyerCompany).trim().toLowerCase(),
       );
 
       const ledger = buyerCo
@@ -812,27 +805,45 @@ const AddPaymentReceived = () => {
     }
 
     let remainingPool = pool;
-    const newEntries = entries.map((entry) => {
+    let totalAllocatedNow = 0;
+    
+    // Explicitly sort entries by date (FIFO) and Sauda No for consistent distribution
+    const sortedForAllocation = [...entries].sort((a, b) => {
+      if (a.isSaved !== b.isSaved) return a.isSaved ? 1 : -1;
+      const dateA = new Date(a.loadingDate);
+      const dateB = new Date(b.loadingDate);
+      if (dateA - dateB !== 0) return dateA - dateB;
+      // If same date, sort by saudaNo if available
+      return String(a.saudaNo || "").localeCompare(String(b.saudaNo || ""));
+    });
+
+    const newEntries = sortedForAllocation.map((entry) => {
       if (entry.isSaved || remainingPool <= 0.01) {
         return entry;
       }
 
       const { dueAmount } = calculateTallyDetails(entry);
       const alloc = Math.min(remainingPool, dueAmount);
-      
+
       if (alloc > 0.01) {
         remainingPool -= alloc;
-        return { ...entry, allocatedAmount: String(Math.round(alloc * 100) / 100) };
+        totalAllocatedNow += alloc;
+        return {
+          ...entry,
+          allocatedAmount: String(Math.round(alloc * 100) / 100),
+        };
       }
       return entry;
     });
 
+    // Sync back to the original entries list maintaining their current UI order if possible, 
+    // but here we just update the state with the newly allocated values
     setEntries(newEntries);
-    toast.success("Amount allocated to pending lorries");
-  }, [availableAllocationPool, entries]);
+    toast.success(`Allocated ₹${totalAllocatedNow.toLocaleString()} across pending lorries (FIFO)`);
+  }, [availableAllocationPool, entries, calculateTallyDetails]);
 
   const handleSaveAllAllocations = async () => {
-    // Tally-wise logic: 
+    // Tally-wise logic:
     // If Fresh, record the full voucher amount from formData.amount
     // If Advance, record only the sum of allocations (as it's an adjustment)
     if (allocationSource === "fresh") {
@@ -889,7 +900,9 @@ const AddPaymentReceived = () => {
       };
 
       await api.post("/payment-received", payload);
-      toast.success(`Adjusted ₹${totalAllocated.toLocaleString()} from advance across ${allocations.length} lorries`);
+      toast.success(
+        `Adjusted ₹${totalAllocated.toLocaleString()} from advance across ${allocations.length} lorries`,
+      );
 
       setEntries((prev) =>
         prev.map((e) => {
@@ -904,7 +917,9 @@ const AddPaymentReceived = () => {
       fetchSummary();
       fetchLedgerBalance();
     } catch (error) {
-      toast.error(error.response?.data?.message || "Error saving bulk adjustment");
+      toast.error(
+        error.response?.data?.message || "Error saving bulk adjustment",
+      );
     } finally {
       setLoading(false);
     }
@@ -923,7 +938,8 @@ const AddPaymentReceived = () => {
     }
     setFormData((prev) => ({
       ...prev,
-      [name]: name === "amount" ? (value === "" ? 0 : parseFloat(value) || 0) : value,
+      [name]:
+        name === "amount" ? (value === "" ? 0 : parseFloat(value) || 0) : value,
     }));
   };
 
@@ -1013,7 +1029,8 @@ const AddPaymentReceived = () => {
               ? "No Dr. advance for this buyer → seller"
               : "Select seller and use From Advance",
           );
-        } else if (numAmount > remaining + 1) { // Increased tolerance to 1
+        } else if (numAmount > remaining + 1) {
+          // Increased tolerance to 1
           valueToStore = String(
             Math.round(Math.min(numAmount, Math.max(remaining, 0)) * 100) / 100,
           );
@@ -1028,7 +1045,8 @@ const AddPaymentReceived = () => {
           remaining,
           dueAmount > 1 ? dueAmount : remaining, // Increased tolerance
         );
-        if (numAmount > maxAllowed + 1) { // Increased tolerance
+        if (numAmount > maxAllowed + 1) {
+          // Increased tolerance
           valueToStore = String(
             Math.round(Math.min(numAmount, maxAllowed) * 100) / 100,
           );
@@ -1573,7 +1591,10 @@ const AddPaymentReceived = () => {
             </span>
             <span
               className={`text-[9px] font-black uppercase truncate ${
-                matchCompanyName(row.supplierCompany, companyPair.supplierCompany)
+                matchCompanyName(
+                  row.supplierCompany,
+                  companyPair.supplierCompany,
+                )
                   ? "text-amber-700"
                   : "text-slate-400"
               }`}
@@ -1608,7 +1629,9 @@ const AddPaymentReceived = () => {
               <div className="flex flex-col">
                 <span className="text-[8px] text-slate-400">Date</span>
                 <span className="text-slate-700 normal-case">
-                  {new Date(formData.allocationDate || formData.date).toLocaleDateString("en-GB")}
+                  {new Date(
+                    formData.allocationDate || formData.date,
+                  ).toLocaleDateString("en-GB")}
                 </span>
               </div>
               <div className="flex flex-col">
@@ -1616,7 +1639,9 @@ const AddPaymentReceived = () => {
                 <input
                   type="text"
                   value={row.debitNote || ""}
-                  onChange={(e) => handleDebitNoteChange(row.uiKey, e.target.value)}
+                  onChange={(e) =>
+                    handleDebitNoteChange(row.uiKey, e.target.value)
+                  }
                   disabled={isLocked}
                   className={`h-7 px-2 rounded border text-[10px] font-bold normal-case ${
                     isLocked
@@ -1636,7 +1661,9 @@ const AddPaymentReceived = () => {
                 <input
                   type="text"
                   value={row.creditNote || ""}
-                  onChange={(e) => handleCreditNoteChange(row.uiKey, e.target.value)}
+                  onChange={(e) =>
+                    handleCreditNoteChange(row.uiKey, e.target.value)
+                  }
                   disabled={isLocked}
                   className={`h-7 px-2 rounded border text-[10px] font-bold normal-case ${
                     isLocked
@@ -1699,7 +1726,9 @@ const AddPaymentReceived = () => {
           <div className="flex flex-col gap-2 min-w-[140px]">
             <textarea
               value={row.rowRemarks}
-              onChange={(e) => handleRowRemarksChange(row.uiKey, e.target.value)}
+              onChange={(e) =>
+                handleRowRemarksChange(row.uiKey, e.target.value)
+              }
               disabled={isLocked}
               rows={2}
               className={`w-full px-3 py-2 rounded-lg border text-[10px] font-bold ${
