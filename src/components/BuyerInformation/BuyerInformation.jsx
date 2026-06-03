@@ -12,23 +12,23 @@ const BuyerInformation = ({
   handleChange,
   buyers: propBuyers,
   consignees: propConsignees,
-  companies: propCompanies,
 }) => {
   const { userRole, mobile } = useAuth();
   const [buyers, setBuyers] = useState(propBuyers || []);
   const [consignees, setConsignees] = useState(propConsignees || []);
-  const [companies, setCompanies] = useState(propCompanies || []);
+  const [companies, setCompanies] = useState([]);
   const [selectedBuyerId, setSelectedBuyerId] = useState(null);
   const [selectedCompanyId, setSelectedCompanyId] = useState(null);
   const [selectedConsignee, setSelectedConsignee] = useState("");
   const [loading, setLoading] = useState(
-    (!propBuyers || propBuyers.length === 0) || (!propCompanies || propCompanies.length === 0),
+    !propBuyers || propBuyers.length === 0,
   );
   const [hasManuallySelected, setHasManuallySelected] = useState(false);
 
   useEffect(() => {
     if (propBuyers?.length > 0) {
       setBuyers(propBuyers);
+      setLoading(false);
     }
   }, [propBuyers]);
 
@@ -37,35 +37,30 @@ const BuyerInformation = ({
   }, [propConsignees]);
 
   useEffect(() => {
-    if (propCompanies?.length > 0) {
-      setCompanies(propCompanies);
-    }
-  }, [propCompanies]);
-
-  useEffect(() => {
     const fetchData = async () => {
-      // If everything is already provided, just mark as loaded
-      if (propBuyers?.length > 0 && propConsignees?.length > 0 && propCompanies?.length > 0) {
+      if (propBuyers?.length > 0 && propConsignees?.length > 0) {
+        try {
+          const companiesRows = await fetchAllPages("/companies", {
+            limit: 200,
+          });
+          setCompanies(companiesRows);
+        } catch (error) {
+          console.error("Error fetching companies:", error);
+        }
         setLoading(false);
         return;
       }
 
       setLoading(true);
       try {
-        const fetchConfig = { params: { limit: 0 } };
-        const [buyersRes, consigneesRes, companiesRes] = await Promise.all([
-          propBuyers?.length > 0 ? Promise.resolve({ data: propBuyers }) : api.get("/buyers", fetchConfig),
-          propConsignees?.length > 0 ? Promise.resolve({ data: propConsignees }) : api.get("/consignees", fetchConfig),
-          propCompanies?.length > 0 ? Promise.resolve({ data: propCompanies }) : api.get("/companies", fetchConfig),
+        const [buyersRows, consigneesRows, companiesRows] = await Promise.all([
+          fetchAllPages("/buyers", { limit: 200 }),
+          fetchAllPages("/consignees", { limit: 200 }),
+          fetchAllPages("/companies", { limit: 200 }),
         ]);
-
-        const buyersData = buyersRes.data.data || buyersRes.data || [];
-        const consigneesData = consigneesRes.data.data || consigneesRes.data || [];
-        const companiesData = companiesRes.data.data || companiesRes.data || [];
-
-        setBuyers(buyersData);
-        setConsignees(consigneesData);
-        setCompanies(companiesData);
+        setBuyers(buyersRows);
+        setConsignees(consigneesRows);
+        setCompanies(companiesRows);
       } catch (error) {
         console.error("Error fetching data:", error);
       } finally {
@@ -73,7 +68,7 @@ const BuyerInformation = ({
       }
     };
     fetchData();
-  }, [propBuyers, propConsignees, propCompanies]);
+  }, [propBuyers, propConsignees]);
 
   const selectedBuyer = useMemo(
     () =>

@@ -58,51 +58,6 @@ const SelfOrderList = () => {
   const [searchInput, setSearchInput] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
-  const [masterDataLoaded, setMasterDataLoaded] = useState(false);
-
-  const fetchMasterData = useCallback(async () => {
-    try {
-      const fetchConfig = { params: { limit: 0 } };
-      const [
-        consigneesRes,
-        allBuyersRes,
-        suppliersRes,
-        sellerProfilesRes,
-        companiesRes,
-      ] = await Promise.all([
-        api.get("/consignees", fetchConfig).catch(() => ({ data: [] })),
-        api.get("/buyers", fetchConfig).catch(() => ({ data: [] })),
-        api.get("/seller-company", fetchConfig).catch(() => ({ data: [] })),
-        api.get("/sellers", fetchConfig).catch(() => ({ data: [] })),
-        api.get("/companies", fetchConfig).catch(() => ({ data: [] })),
-      ]);
-
-      const consignees = consigneesRes.data.data || consigneesRes.data || [];
-      const allBuyers = allBuyersRes.data.data || allBuyersRes.data || [];
-      const suppliers = suppliersRes.data.data || suppliersRes.data || [];
-      const sellerProfiles = sellerProfilesRes.data.data || sellerProfilesRes.data || [];
-      const companies = companiesRes.data.data || companiesRes.data || [];
-
-      setConsigneeData(consignees);
-      setBuyerData(allBuyers);
-      setSellerProfileData(sellerProfiles);
-      setSupplierData(suppliers);
-      setCompanyData(companies);
-
-      const map = new Map();
-      consignees.forEach((c) => {
-        if (c?._id) map.set(String(c._id), c.name || c.label || "-");
-      });
-      setConsigneeMap(map);
-      setMasterDataLoaded(true);
-    } catch (error) {
-      console.error("Master data fetch error:", error);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchMasterData();
-  }, [fetchMasterData]);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -122,7 +77,21 @@ const SelfOrderList = () => {
         endDate: endDate || "",
       }).toString();
 
-      const orderRes = await api.get(`${API_URL}?${queryParams}`);
+      const [
+        orderRes,
+        consignees,
+        allBuyers,
+        suppliers,
+        sellerProfiles,
+        companies,
+      ] = await Promise.all([
+        api.get(`${API_URL}?${queryParams}`),
+        fetchAllPages("/consignees", { limit: 200 }).catch(() => []),
+        fetchAllPages("/buyers", { limit: 200 }).catch(() => []),
+        fetchAllPages("/seller-company", { limit: 200 }).catch(() => []),
+        fetchAllPages("/sellers", { limit: 200 }).catch(() => []),
+        fetchAllPages("/companies", { limit: 200 }).catch(() => []),
+      ]);
 
       const orderData = orderRes.data || {};
       const items = Array.isArray(orderData.data)
@@ -134,6 +103,17 @@ const SelfOrderList = () => {
 
       setData(items);
       setTotalItems(total);
+      setConsigneeData(consignees);
+      setSupplierData(suppliers);
+      setBuyerData(allBuyers);
+      setSellerProfileData(sellerProfiles);
+      setCompanyData(companies);
+
+      const map = new Map();
+      consignees.forEach((c) => {
+        if (c?._id) map.set(String(c._id), c.name || c.label || "-");
+      });
+      setConsigneeMap(map);
     } catch (error) {
       console.error("Fetch error:", error);
       toast.error("Failed to fetch order data");

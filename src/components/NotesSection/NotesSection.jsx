@@ -24,7 +24,7 @@ const NotesSection = ({ notes, setNotes }) => {
         Notes
       </label>
       <div className="space-y-4">
-        {(notes || []).map((note, index) => (
+        {notes.map((note, index) => (
           <div key={index} className="flex items-start gap-2">
             <textarea
               className="flex-1 min-h-[80px] px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-emerald-500"

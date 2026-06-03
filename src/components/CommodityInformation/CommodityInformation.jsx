@@ -21,7 +21,6 @@ const CommodityInformation = ({
   selectedCompany,
   brokerageMap,
   formData,
-  companies: propCompanies,
 }) => {
   const [commodities, setCommodities] = useState([]);
   const [parameters, setParameters] = useState([]);
@@ -30,14 +29,7 @@ const CommodityInformation = ({
   useEffect(() => {
     const fetchCommodities = async () => {
       try {
-        let items = [];
-        if (propCompanies && propCompanies.length > 0) {
-          items = propCompanies;
-        } else {
-          const response = await api.get("/companies", { params: { limit: 0 } });
-          items = response.data.data || response.data || [];
-        }
-
+        const items = await fetchAllPages("/companies");
         const companyData = items.find(
           (company) => company.companyName === selectedCompany,
         );
@@ -58,7 +50,7 @@ const CommodityInformation = ({
     } else {
       setCommodities([]);
     }
-  }, [selectedCompany, propCompanies]);
+  }, [selectedCompany]);
 
   useEffect(() => {
     if (commodities.length > 0 && formData.commodity && !selectedCommodity) {
