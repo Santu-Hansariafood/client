@@ -67,26 +67,33 @@ export const buildSaudaPdfData = ({
     return String(c);
   })();
 
-  const findBestMatch = (dataList, key, nameField) => {
+const findBestMatch = (dataList, key, nameField) => {
     if (!key) return null;
-    const normalizedKey = normalizeText(key);
     
-    const byId = dataList.find(d => d._id && String(d._id) === String(key));
+    // Handle if key is an object (like a populated Mongo ref)
+    const searchKey = (typeof key === 'object' && key?._id) ? String(key._id) : String(key);
+    const normalizedKey = normalizeText(searchKey);
+    
+    // 1. Match by ID
+    const byId = dataList.find(d => d._id && String(d._id) === searchKey);
     if (byId) return byId;
 
+    // 2. Match by exact name
     const exactName = dataList.find(d => normalizeText(d[nameField]) === normalizedKey);
     if (exactName) return exactName;
 
+    // 3. Fuzzy match: starts with or is contained within
     const fuzzyMatch = dataList.find(d => {
       const dName = normalizeText(d[nameField]);
-      return dName && (normalizedKey.startsWith(dName) || dName.startsWith(normalizedKey));
+      if (!dName) return false;
+      return normalizedKey.includes(dName) || dName.includes(normalizedKey);
     });
     return fuzzyMatch || null;
   };
 
   const matchingConsignee = 
-    findBestMatch(consigneeData, normalizedConsigneeKey, 'name') || 
-    findBestMatch(consigneeData, normalizedConsigneeKey, 'label');
+    findBestMatch(consigneeData, item?.consignee, 'name') || 
+    findBestMatch(consigneeData, item?.consignee, 'label');
 
   const matchingSupplier = 
     findBestMatch(supplierData, item?.supplierCompany, 'companyName') ||
@@ -94,8 +101,9 @@ export const buildSaudaPdfData = ({
 
   const matchingCommodity = findBestMatch(commodityData, item?.commodity, 'name');
 
+  const supplierId = item?.supplier?._id || item?.supplier;
   const matchingSellerProfile = sellerProfileData.find(
-    (seller) => String(seller._id) === String(item.supplier),
+    (seller) => String(seller._id) === String(supplierId),
   );
 
   const rawBuyerKey = item?.buyerCompany ?? item?.buyer ?? "";
@@ -121,13 +129,14 @@ export const buildSaudaPdfData = ({
       ? item.buyer
       : "";
 
-  const finalBuyerName = itemBuyerName || matchingBuyer?.companyName || "N/A";
+  const finalBuyerName = itemBuyerName || matchingBuyer?.companyName || matchingBuyer?.name || "N/A";
   const finalBuyerDetails = toUnifiedDetails(matchingBuyer);
   
   const itemConsigneeDetails = item?.consigneeDetails ? toConsigneeDetails(item.consigneeDetails) : null;
   const finalConsigneeDetails = 
     toConsigneeDetails(matchingConsignee) || 
-    (isSpecialConsignee ? toConsigneeDetails(matchingBuyer) : itemConsigneeDetails);
+    (isSpecialConsignee ? toConsigneeDetails(matchingBuyer) : null) ||
+    itemConsigneeDetails;
 
   const billToConsignee = String(item?.billTo || "").toLowerCase() === "consignee";
 
