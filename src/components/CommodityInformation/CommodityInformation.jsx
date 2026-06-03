@@ -63,36 +63,14 @@ const CommodityInformation = ({
   useEffect(() => {
     if (commodities.length > 0 && formData.commodity && !selectedCommodity) {
       setSelectedCommodity(formData.commodity);
-      
-      // If we have parameters in formData (from an existing order), use them.
-      // Otherwise, use the defaults from the company's commodity definition.
-      if (formData.parameters && formData.parameters.length > 0) {
-        const commodity = commodities.find(
-          (item) => item.name === formData.commodity,
-        );
-        
-        // Merge saved values with labels from the master commodity list if needed
-        const mergedParams = formData.parameters.map(savedParam => {
-          const masterParam = commodity?.parameters?.find(p => 
-            String(p.parameterId?._id || p.parameterId) === String(savedParam.id || savedParam.parameterId)
-          );
-          return {
-            ...savedParam,
-            parameter: savedParam.parameter || masterParam?.parameterId?.name || "Parameter",
-            _id: savedParam.id || savedParam.parameterId || savedParam._id
-          };
-        });
-        setParameters(mergedParams);
-      } else {
-        const commodity = commodities.find(
-          (item) => item.name === formData.commodity,
-        );
-        if (commodity) {
-          setParameters(commodity.parameters || []);
-        }
+      const commodity = commodities.find(
+        (item) => item.name === formData.commodity,
+      );
+      if (commodity) {
+        setParameters(commodity.parameters || []);
       }
     }
-  }, [commodities, formData.commodity, selectedCommodity, formData.parameters]);
+  }, [commodities, formData.commodity, selectedCommodity]);
 
   const onCommodityChange = (option) => {
     const commodityName = option?.value || null;
