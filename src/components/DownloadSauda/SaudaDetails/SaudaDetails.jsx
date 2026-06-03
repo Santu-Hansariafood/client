@@ -136,27 +136,6 @@ const SaudaDetails = ({ data }) => {
           )}
         </View>
       </View>
-
-      <View style={[styles.grid, { marginTop: 8 }]}>
-        <View style={styles.gridItem}>
-          <Text style={styles.label}>Buyer Contact</Text>
-          <Text style={styles.addressDetails}>
-            {`Mobile: ${data.buyerMobile || "N/A"}\nEmail: ${data.buyerEmails?.filter(Boolean).join(", ") || "N/A"}`}
-          </Text>
-        </View>
-        <View style={styles.gridItem}>
-          <Text style={styles.label}>Supplier Contact</Text>
-          <Text style={styles.addressDetails}>
-            {`Mobile: ${data.sellerMobile || "N/A"}\nEmail: ${data.sellerEmails?.filter(Boolean).join(", ") || "N/A"}`}
-          </Text>
-        </View>
-        <View style={[styles.gridItem, { borderRight: "none" }]}>
-          <Text style={styles.label}>Agent Details</Text>
-          <Text style={styles.addressDetails}>
-            {`Agent Name: ${data.agentName || "N/A"}`}
-          </Text>
-        </View>
-      </View>
     </View>
   );
 };

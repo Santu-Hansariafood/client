@@ -1,8 +1,8 @@
-/** Responsive layout primitives for Market Intelligence / saria.ai chart panels. */
+/** Responsive layout primitives for dashboard chart panels. */
 
-/** Chart plot area — mobile-first, capped on large screens. */
+/** Chart plot area — scales with viewport, capped for large screens. */
 export const CHART_AREA_CLASS =
-  "w-full min-h-[180px] h-[clamp(180px,42vw,360px)] sm:min-h-[220px] md:min-h-[240px]";
+  "w-full min-h-[200px] h-[clamp(200px,48vw,380px)] sm:min-h-[240px]";
 
 export const CHART_LOADING_CLASS = `${CHART_AREA_CLASS} flex items-center justify-center`;
 
@@ -24,12 +24,12 @@ export const ChartPanelHeader = ({
   subtitle,
   children,
 }) => (
-  <div className="flex flex-col gap-2 sm:gap-3 mb-3 sm:mb-5 min-w-0">
-    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 sm:gap-3 min-w-0">
+  <div className="flex flex-col gap-3 sm:gap-4 mb-4 sm:mb-6 min-w-0">
+    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 min-w-0">
       <div className="min-w-0 flex-1">
-        <h3 className="text-[10px] sm:text-xs font-black text-slate-800 uppercase tracking-widest flex items-center gap-2 min-w-0">
+        <h3 className="text-xs sm:text-sm font-black text-slate-800 uppercase tracking-widest flex items-center gap-2 min-w-0">
           <span
-            className={`w-1.5 sm:w-2 h-3 sm:h-3.5 shrink-0 ${accentClass} rounded-full shadow-sm`}
+            className={`w-1.5 sm:w-2 h-3.5 sm:h-4 shrink-0 ${accentClass} rounded-full`}
           />
           <span className="truncate">
             {title}
@@ -42,15 +42,13 @@ export const ChartPanelHeader = ({
           </span>
         </h3>
         {subtitle && (
-          <p className="text-[8px] sm:text-[9px] font-bold text-slate-400 mt-0.5 sm:mt-1 uppercase tracking-tighter line-clamp-2">
+          <p className="text-[9px] sm:text-[10px] font-bold text-slate-400 mt-1 uppercase tracking-tighter line-clamp-2">
             {subtitle}
           </p>
         )}
       </div>
       {children && (
-        <div className="shrink-0 w-full sm:w-auto min-w-0 overflow-x-auto">
-          {children}
-        </div>
+        <div className="shrink-0 w-full sm:w-auto min-w-0">{children}</div>
       )}
     </div>
   </div>

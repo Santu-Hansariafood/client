@@ -160,8 +160,8 @@ const SelfOrderList = () => {
 
   const handleSmartWhatsApp = useCallback(
     async (item, target = "buyer") => {
-      if (userRole !== "Admin" && userRole !== "Employee") {
-        toast.error("Unauthorized to send WhatsApp from list.");
+      if (userRole !== "Admin") {
+        toast.error("Only Admin can send WhatsApp from list.");
         return;
       }
       const mobileValue =
@@ -224,6 +224,25 @@ const SelfOrderList = () => {
           console.warn("PDF Upload failed, falling back to text only", err);
         }
 
+        const consigneeObj = consigneeData.find(
+          (c) =>
+            String(c._id) === String(item.consignee?._id || item.consignee) ||
+            c.name === item.consignee ||
+            c.label === item.consignee,
+        );
+
+        const consigneeAddress = consigneeObj
+          ? [
+              consigneeObj.location,
+              consigneeObj.district,
+              consigneeObj.state,
+              consigneeObj.pin,
+            ]
+              .filter(Boolean)
+              .join(", ")
+          : "";
+
+        const consigneeName = getConsigneeDisplay(item);
         const formattedSaudaDate = item.poDate
           ? new Date(item.poDate).toLocaleDateString("en-GB", {
               day: "2-digit",
@@ -237,13 +256,6 @@ const SelfOrderList = () => {
                 year: "numeric",
               })
             : "N/A";
-
-        const formattedDeliveryDate = item.deliveryDate
-          ? new Date(item.deliveryDate).toLocaleDateString("en-GB")
-          : "N/A";
-        const formattedLoadingDate = item.loadingDate
-          ? new Date(item.loadingDate).toLocaleDateString("en-GB")
-          : "N/A";
 
         const finalMessage = `*HANSARIA FOOD PRIVATE LIMITED*
 
@@ -262,7 +274,7 @@ const SelfOrderList = () => {
         }_
 ${
   item.cd && item.cd !== "0" && item.cd !== 0 && item.cd !== "N/A"
-    ? `*CD:* -  _${item.cd}%_`
+    ? `*CD:* -  _${item.cd}_`
     : ""
 }
 *Payment Terms:* -  _${item.paymentTerms || "N/A"} Days_
@@ -373,16 +385,15 @@ _${fileUrl || "PDF Link Not Available"}_
       "Sauda No",
       "PO Number",
       "Buyer Company",
-      userRole === "Admin" || userRole === "Employee" ? "Buyer Mobile" : null,
-      userRole === "Admin" || userRole === "Employee" ? "Buyer Emails" : null,
+      userRole === "Admin" ? "Mobile" : null,
       "Consignee",
       "Commodity",
       "Quantity",
       "Rate",
       "Seller",
-      userRole === "Admin" || userRole === "Employee" ? "Seller Mobile" : null,
-      userRole === "Admin" || userRole === "Employee" ? "Seller Emails" : null,
       "Agent Name",
+      userRole === "Admin" || userRole === "Employee" ? "Buyer Emails" : null,
+      userRole === "Admin" || userRole === "Employee" ? "Seller Emails" : null,
       userRole === "Admin" || userRole === "Employee" ? "WhatsApp Sent" : null,
       userRole === "Admin" || userRole === "Employee" ? "Action" : null,
     ].filter(Boolean);
@@ -539,33 +550,21 @@ _${fileUrl || "PDF Link Not Available"}_
             {item.buyerCompany || "N/A"}
           </span>,
 
-          userRole === "Admin" || userRole === "Employee" ? (
-            <div
-              className="flex items-center gap-2"
-              key={`buyer-mobile-${item._id}`}
-            >
+          userRole === "Admin" ? (
+            <div className="flex items-center gap-2" key={`mobile-${item._id}`}>
               <span className="font-medium text-slate-600">
                 {item.buyerMobile || "N/A"}
               </span>
               {item.buyerMobile && (
                 <button
                   onClick={() => handleSmartWhatsApp(item, "buyer")}
-                  className="p-1.5 rounded-lg text-emerald-500 hover:bg-emerald-50 hover:scale-110 transition-all shadow-sm border border-transparent hover:border-emerald-100"
+                  className="p-1.5 rounded-lg text-emerald-500 hover:bg-emerald-50 transition-colors"
                   title="Share on WhatsApp"
                 >
-                  <FaWhatsapp size={18} />
+                  <FaWhatsapp size={20} />
                 </button>
               )}
             </div>
-          ) : null,
-
-          userRole === "Admin" || userRole === "Employee" ? (
-            <span
-              key={`bemails-${item._id}`}
-              className="text-xs text-slate-500 line-clamp-1"
-            >
-              {item.buyerEmails?.filter(Boolean).join(", ") || "N/A"}
-            </span>
           ) : null,
 
           getConsigneeDisplay(item) || "N/A",
@@ -586,36 +585,38 @@ _${fileUrl || "PDF Link Not Available"}_
             {item?.supplier?.sellerName || item.supplierCompany || "N/A"}
           </span>,
 
-          userRole === "Admin" || userRole === "Employee" ? (
-            <div
-              className="flex items-center gap-2"
-              key={`seller-mobile-${item._id}`}
-            >
-              <span className="font-bold text-slate-700 text-xs">
-                {item.sellerMobile || "N/A"}
-              </span>
-              {item.sellerMobile && (
-                <button
-                  onClick={() => handleSmartWhatsApp(item, "seller")}
-                  className="p-1.5 rounded-lg text-emerald-500 hover:bg-emerald-50 hover:scale-110 transition-all shadow-sm border border-transparent hover:border-emerald-100"
-                  title="Share on WhatsApp"
-                >
-                  <FaWhatsapp size={18} />
-                </button>
-              )}
-            </div>
-          ) : null,
+          item.agentName || "N/A",
 
           userRole === "Admin" || userRole === "Employee" ? (
             <span
-              key={`seller-emails-${item._id}`}
-              className="text-[10px] text-slate-400 font-bold uppercase truncate max-w-[120px]"
+              key={`bemails-${item._id}`}
+              className="text-xs text-slate-500 line-clamp-1"
             >
-              {item.sellerEmails?.filter(Boolean).join(", ") || "N/A"}
+              {item.buyerEmails?.filter(Boolean).join(", ") || "N/A"}
             </span>
           ) : null,
 
-          item.agentName || "N/A",
+          userRole === "Admin" || userRole === "Employee" ? (
+            <div className="flex flex-col gap-1" key={`seller-dt-${item._id}`}>
+              <span className="text-[10px] text-slate-400 font-bold uppercase truncate max-w-[120px]">
+                {item.sellerEmails?.filter(Boolean).join(", ") || "N/A"}
+              </span>
+              <div className="flex items-center gap-2">
+                <span className="font-bold text-slate-700 text-xs">
+                  {item.sellerMobile || "N/A"}
+                </span>
+                {item.sellerMobile && userRole === "Admin" && (
+                  <button
+                    onClick={() => handleSmartWhatsApp(item, "seller")}
+                    className="text-emerald-500 hover:scale-110 transition-transform"
+                    title="Share on WhatsApp"
+                  >
+                    <FaWhatsapp size={16} />
+                  </button>
+                )}
+              </div>
+            </div>
+          ) : null,
 
           userRole === "Admin" || userRole === "Employee" ? (
             <div className="flex justify-center" key={`status-${item._id}`}>

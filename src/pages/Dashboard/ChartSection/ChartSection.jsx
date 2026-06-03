@@ -1,16 +1,12 @@
-import { useState, lazy, Suspense, memo, useMemo } from "react";
+import { useState, lazy, Suspense, memo } from "react";
 import {
   FaChartLine,
   FaChartBar,
+  FaThLarge,
+  FaStream,
   FaBolt,
-  FaCalendarAlt,
-  FaWallet,
-  FaTruckLoading,
-  FaGlobeAmericas,
 } from "react-icons/fa";
 import Loading from "../../../common/Loading/Loading";
-import SariaAiBrand from "../../../common/SariaAiBrand/SariaAiBrand";
-import AIInsights from "../AIInsights/AIInsights";
 
 const SaudaChart = lazy(
   () => import("../../../common/Charts/SaudaChart/SaudaChart"),
@@ -30,147 +26,116 @@ const CommodityPieChart = lazy(
   () => import("../../../common/Charts/CommodityPieChart/CommodityPieChart"),
 );
 
-const MONTHS = [
-  { value: 1, label: "Jan" },
-  { value: 2, label: "Feb" },
-  { value: 3, label: "Mar" },
-  { value: 4, label: "Apr" },
-  { value: 5, label: "May" },
-  { value: 6, label: "Jun" },
-  { value: 7, label: "Jul" },
-  { value: 8, label: "Aug" },
-  { value: 9, label: "Sep" },
-  { value: 10, label: "Oct" },
-  { value: 11, label: "Nov" },
-  { value: 12, label: "Dec" },
-];
-
-const CHART_PARTS = [
+const CHART_CARDS = [
   {
-    title: "Financial Intelligence",
-    icon: FaWallet,
-    color: "from-emerald-400 to-teal-500",
-    glow: "shadow-emerald-500/25",
-    description: "Revenue & payment flow",
-    cards: [
-      {
-        id: "payment",
-        featured: true,
-        label: "Payments",
-        accent: "from-emerald-500 to-teal-600",
-        Component: PaymentAnalyticsChart,
-        props: (chartType, filters) => ({
-          apiUrl: `/dashboard/charts/payments?month=${filters.month}&year=${filters.year}`,
-          chartType,
-        }),
-      },
-    ],
+    id: "payment",
+    featured: true,
+    label: "Payments",
+    accent: "from-emerald-500 to-teal-600",
+    ring: "ring-emerald-100/80",
+    Component: PaymentAnalyticsChart,
+    props: (chartType) => ({ chartType }),
   },
   {
-    title: "Logistics & Operations",
-    icon: FaTruckLoading,
-    color: "from-blue-400 to-indigo-500",
-    glow: "shadow-blue-500/25",
-    description: "Loading & commodity mix",
-    cards: [
-      {
-        id: "loading",
-        label: "Loading",
-        accent: "from-blue-500 to-indigo-600",
-        Component: LoadingChart,
-        props: (chartType, filters) => ({
-          apiUrl: `/dashboard/charts/loading?month=${filters.month}&year=${filters.year}`,
-          chartType,
-        }),
-      },
-      {
-        id: "commodity",
-        label: "Commodity",
-        accent: "from-cyan-500 to-blue-600",
-        Component: CommodityPieChart,
-        props: (_, filters) => ({
-          apiUrl: `/dashboard/charts/loading?month=${filters.month}&year=${filters.year}`,
-        }),
-      },
-    ],
+    id: "loading",
+    label: "Loading",
+    accent: "from-blue-500 to-indigo-600",
+    ring: "ring-blue-100/80",
+    Component: LoadingChart,
+    props: (chartType) => ({ apiUrl: "/loading-entries", chartType }),
   },
   {
-    title: "Market Dynamics",
-    icon: FaGlobeAmericas,
-    color: "from-amber-400 to-orange-500",
-    glow: "shadow-amber-500/25",
-    description: "Sauda, bids & agents",
-    cards: [
-      {
-        id: "sauda",
-        label: "Sauda",
-        accent: "from-emerald-500 to-green-600",
-        Component: SaudaChart,
-        props: (chartType, filters) => ({
-          apiUrl: `/dashboard/charts/sauda?month=${filters.month}&year=${filters.year}`,
-          chartType,
-        }),
-      },
-      {
-        id: "bids",
-        label: "Bids",
-        accent: "from-amber-500 to-orange-600",
-        Component: BidChart,
-        props: (chartType, filters) => ({
-          apiUrl: `/dashboard/charts/bids?month=${filters.month}&year=${filters.year}`,
-          chartType,
-        }),
-      },
-      {
-        id: "agent",
-        label: "Agents",
-        accent: "from-indigo-500 to-violet-600",
-        Component: AgentSaudaChart,
-        props: (chartType, filters) => ({
-          apiUrl: `/dashboard/charts/agent-distribution?month=${filters.month}&year=${filters.year}`,
-          chartType,
-        }),
-      },
-    ],
+    id: "commodity",
+    label: "Commodity",
+    accent: "from-emerald-500 to-cyan-600",
+    ring: "ring-emerald-100/80",
+    Component: CommodityPieChart,
+    props: () => ({ apiUrl: "/loading-entries" }),
+  },
+  {
+    id: "sauda",
+    label: "Sauda",
+    accent: "from-emerald-500 to-green-600",
+    ring: "ring-emerald-100/80",
+    Component: SaudaChart,
+    props: (chartType) => ({ apiUrl: "/self-order", chartType }),
+  },
+  {
+    id: "sauda-pie",
+    label: "Sauda mix",
+    accent: "from-emerald-500 to-green-600",
+    ring: "ring-emerald-100/80",
+    Component: SaudaChart,
+    props: () => ({ apiUrl: "/self-order", chartType: "pie" }),
+  },
+  {
+    id: "bids",
+    label: "Bids",
+    accent: "from-amber-500 to-orange-600",
+    ring: "ring-amber-100/80",
+    Component: BidChart,
+    props: (chartType) => ({ apiUrl: "/bids", chartType }),
+  },
+  {
+    id: "bids-pie",
+    label: "Bid mix",
+    accent: "from-amber-500 to-orange-600",
+    ring: "ring-amber-100/80",
+    Component: BidChart,
+    props: () => ({ apiUrl: "/bids", chartType: "pie" }),
+  },
+  {
+    id: "agent",
+    label: "Agents",
+    accent: "from-indigo-500 to-violet-600",
+    ring: "ring-indigo-100/80",
+    Component: AgentSaudaChart,
+    props: (chartType, agentSaudas) => ({ data: agentSaudas, chartType }),
+  },
+  {
+    id: "agent-pie",
+    label: "Agent mix",
+    accent: "from-indigo-500 to-violet-600",
+    ring: "ring-indigo-100/80",
+    Component: AgentSaudaChart,
+    props: (_, agentSaudas) => ({ data: agentSaudas, chartType: "pie" }),
   },
 ];
 
-const ChartCard = memo(({ featured, label, accent, children }) => (
+const ChartCard = memo(({ featured, label, accent, ring, children }) => (
   <article
     className={[
-      "mi-card-3d relative min-w-0 flex flex-col overflow-hidden",
-      "rounded-2xl sm:rounded-3xl lg:rounded-[2rem]",
-      "border border-white/60",
-      "bg-white/70 backdrop-blur-xl",
-      "shadow-[0_20px_50px_-24px_rgba(15,23,42,0.12)]",
+      "relative min-w-0 flex flex-col",
+      "rounded-2xl sm:rounded-[1.75rem] lg:rounded-[2rem]",
+      "border border-slate-200/70 bg-white/90 backdrop-blur-xl",
+      "shadow-[0_4px_24px_rgba(15,23,42,0.06)]",
       "p-4 sm:p-6 lg:p-8",
-      featured ? "md:col-span-2" : "",
+      "transition-all duration-500 ease-out",
+      "hover:shadow-[0_16px_48px_rgba(79,70,229,0.12)] hover:border-indigo-200/60",
+      "group overflow-hidden",
+      featured ? "lg:col-span-2" : "",
+      ring,
+      "ring-1",
     ].join(" ")}
-    style={{
-      boxShadow:
-        "0 24px 48px -20px rgba(79,70,229,0.12), inset 0 1px 0 rgba(255,255,255,0.9)",
-    }}
   >
     <div
-      className={`absolute top-0 left-0 right-0 h-1 sm:h-1.5 bg-gradient-to-r ${accent}`}
+      className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${accent} opacity-80`}
       aria-hidden
     />
     {label && (
-      <div className="flex flex-wrap items-center justify-between gap-2 mb-4 sm:mb-6">
-        <span className="text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
-          {label}
+      <span className="sr-only">{label} chart</span>
+    )}
+    {featured && (
+      <div className="absolute top-3 right-3 sm:top-4 sm:right-4 z-10">
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-100 text-[9px] sm:text-[10px] font-black uppercase tracking-widest">
+          <FaBolt className="text-[8px]" aria-hidden />
+          Primary
         </span>
-        {featured && (
-          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-indigo-500/10 text-indigo-600 border border-indigo-500/20 text-[8px] sm:text-[9px] font-black uppercase tracking-widest">
-            <FaBolt className="text-[7px]" aria-hidden />
-            Featured
-          </span>
-        )}
       </div>
     )}
-    <div className="relative z-[1] min-w-0 flex-1 -mx-1 sm:mx-0">{children}</div>
+    <div className="relative z-[1] min-w-0 flex-1">{children}</div>
     <div
-      className={`pointer-events-none absolute -bottom-8 -right-8 w-32 h-32 sm:w-40 sm:h-40 rounded-full bg-gradient-to-br ${accent} opacity-[0.07]`}
+      className={`pointer-events-none absolute -bottom-8 -right-8 w-28 h-28 sm:w-36 sm:h-36 rounded-full bg-gradient-to-br ${accent} opacity-[0.07] group-hover:scale-125 transition-transform duration-700`}
       aria-hidden
     />
   </article>
@@ -178,135 +143,103 @@ const ChartCard = memo(({ featured, label, accent, children }) => (
 
 ChartCard.displayName = "ChartCard";
 
-const ChartSection = memo(() => {
+const ChartSection = memo(({ agentSaudas = [] }) => {
   const [chartType, setChartType] = useState("line");
-  const [filters, setFilters] = useState({
-    month: new Date().getMonth() + 1,
-    year: new Date().getFullYear(),
-  });
-
-  const years = useMemo(() => {
-    const currentYear = new Date().getFullYear();
-    const list = [];
-    for (let y = currentYear; y >= 2024; y--) list.push(y);
-    return list;
-  }, []);
+  const [viewMode, setViewMode] = useState("grid");
 
   return (
     <Suspense fallback={<Loading />}>
-      <section className="mi-perspective w-full min-w-0 space-y-8 sm:space-y-12 lg:space-y-16">
-        {/* Ambient mesh */}
-        <div className="absolute inset-0 -z-10 pointer-events-none overflow-hidden rounded-[2rem]">
-          <div className="absolute top-0 right-0 w-[60%] h-[40%] bg-indigo-300/15 blur-[100px] rounded-full mi-float-orb" />
-          <div className="absolute bottom-0 left-0 w-[50%] h-[35%] bg-cyan-300/10 blur-[90px] rounded-full mi-float-orb" style={{ animationDelay: "2s" }} />
-        </div>
-
-        {/* Header — mobile stack, desktop row */}
-        <header
-          className="relative mi-header-float overflow-hidden rounded-2xl sm:rounded-3xl lg:rounded-[2.5rem] border border-white/50 p-4 sm:p-6 lg:p-8 mi-shine"
-          style={{
-            background:
-              "linear-gradient(135deg, rgba(255,255,255,0.92) 0%, rgba(238,242,255,0.85) 50%, rgba(255,255,255,0.9) 100%)",
-            boxShadow:
-              "0 24px 48px -16px rgba(79,70,229,0.2), inset 0 1px 0 rgba(255,255,255,1)",
-          }}
-        >
-          <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
-            <div className="flex items-start sm:items-center gap-3 sm:gap-5 min-w-0">
-              <div
-                className="shrink-0 p-3 sm:p-4 rounded-2xl sm:rounded-3xl text-white shadow-xl"
-                style={{
-                  background:
-                    "linear-gradient(145deg, #4f46e5 0%, #7c3aed 50%, #06b6d4 100%)",
-                  boxShadow: "0 16px 40px -8px rgba(79,70,229,0.55)",
-                  transform: "translateZ(24px)",
-                }}
-              >
-                <FaGlobeAmericas className="text-xl sm:text-2xl" />
+      <section
+        className="w-full min-w-0"
+        aria-labelledby="market-intelligence-heading"
+      >
+        {/* Header + controls */}
+        <header className="mb-6 sm:mb-8 lg:mb-10 space-y-5 sm:space-y-6">
+          <div className="flex flex-col gap-4 sm:gap-5">
+            <div className="flex items-start gap-3 sm:gap-4 min-w-0">
+              <div className="relative shrink-0">
+                <div
+                  className="absolute inset-0 bg-indigo-500 blur-xl opacity-25"
+                  aria-hidden
+                />
+                <div className="relative p-2.5 sm:p-3 bg-gradient-to-br from-indigo-600 via-violet-600 to-indigo-700 rounded-xl sm:rounded-2xl shadow-lg shadow-indigo-300/40">
+                  <FaChartLine
+                    className="text-white text-lg sm:text-xl"
+                    aria-hidden
+                  />
+                </div>
               </div>
-              <div className="min-w-0">
-                <h2 className="text-xl sm:text-2xl lg:text-3xl font-black text-slate-900 tracking-tight uppercase leading-tight">
+              <div className="min-w-0 flex-1">
+                <p className="text-[9px] sm:text-[10px] font-black text-indigo-600 uppercase tracking-[0.2em] mb-1">
+                  Live analytics
+                </p>
+                <h2
+                  id="market-intelligence-heading"
+                  className="text-xl sm:text-2xl md:text-3xl font-black text-slate-900 tracking-tight leading-tight"
+                >
                   Market{" "}
-                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 via-violet-600 to-cyan-500">
+                  <span className="bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent">
                     Intelligence
                   </span>
                 </h2>
-                <SariaAiBrand
-                  size="sm"
-                  subtitle="Powered by saria.ai · real-time charts"
-                  className="mt-2"
-                />
+                <div className="h-1 w-10 sm:w-12 bg-gradient-to-r from-indigo-600 to-violet-400 rounded-full mt-2" />
+                <p className="mt-2 text-xs sm:text-sm text-slate-500 font-medium max-w-xl">
+                  Real-time operational performance across payments, loading,
+                  sauda, and bids
+                </p>
               </div>
             </div>
 
-            <div className="flex flex-col xs:flex-row flex-wrap items-stretch xs:items-center gap-3 w-full lg:w-auto">
-              <div className="flex items-center gap-2 flex-1 xs:flex-none min-w-0 p-1.5 rounded-xl sm:rounded-2xl bg-white/90 border border-slate-200/80 shadow-inner">
-                <FaCalendarAlt className="text-slate-400 shrink-0 ml-2" size={12} />
-                <select
-                  value={filters.month}
-                  onChange={(e) =>
-                    setFilters((prev) => ({
-                      ...prev,
-                      month: parseInt(e.target.value, 10),
-                    }))
-                  }
-                  className="flex-1 min-w-0 bg-transparent border-none text-[10px] sm:text-xs font-black text-slate-700 uppercase tracking-wider py-2.5 focus:ring-0 cursor-pointer"
-                  aria-label="Month"
-                >
-                  {MONTHS.map((m) => (
-                    <option key={m.value} value={m.value}>
-                      {m.label}
-                    </option>
-                  ))}
-                </select>
-                <div className="w-px h-5 bg-slate-200 shrink-0" />
-                <select
-                  value={filters.year}
-                  onChange={(e) =>
-                    setFilters((prev) => ({
-                      ...prev,
-                      year: parseInt(e.target.value, 10),
-                    }))
-                  }
-                  className="bg-transparent border-none text-[10px] sm:text-xs font-black text-slate-700 uppercase tracking-wider py-2.5 px-2 focus:ring-0 cursor-pointer"
-                  aria-label="Year"
-                >
-                  {years.map((y) => (
-                    <option key={y} value={y}>
-                      {y}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
+            {/* Controls — full width on mobile */}
+            <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-3 sm:gap-4 w-full">
               <div
-                className="flex items-center justify-center gap-1 p-1.5 rounded-xl sm:rounded-2xl shrink-0"
-                style={{
-                  background:
-                    "linear-gradient(145deg, #0f172a, #1e1b4b)",
-                  boxShadow: "0 8px 24px -6px rgba(15,23,42,0.4)",
-                }}
+                className="grid grid-cols-2 gap-1.5 sm:inline-flex sm:gap-0 rounded-xl sm:rounded-2xl bg-slate-100/90 backdrop-blur-md p-1 sm:p-1.5 border border-slate-200/80 shadow-inner w-full sm:w-auto"
                 role="group"
-                aria-label="Chart type"
+                aria-label="Chart visualization type"
               >
                 {[
-                  { id: "line", icon: FaChartLine, label: "Line" },
-                  { id: "bar", icon: FaChartBar, label: "Bar" },
+                  { id: "line", label: "Trends", icon: FaChartLine },
+                  { id: "bar", label: "Volumes", icon: FaChartBar },
                 ].map((type) => (
                   <button
                     key={type.id}
                     type="button"
                     onClick={() => setChartType(type.id)}
                     aria-pressed={chartType === type.id}
-                    aria-label={type.label}
-                    className={`flex items-center gap-1.5 px-3 sm:px-4 py-2.5 rounded-lg sm:rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300 ${
+                    className={`justify-center px-3 sm:px-5 py-2.5 sm:py-2.5 rounded-lg sm:rounded-xl text-[10px] font-black transition-all duration-300 uppercase tracking-widest flex items-center gap-2 ${
                       chartType === type.id
-                        ? "bg-white text-indigo-600 shadow-md"
+                        ? "bg-white text-indigo-600 shadow-md ring-1 ring-slate-100"
+                        : "text-slate-500 hover:text-indigo-600 hover:bg-white/60"
+                    }`}
+                  >
+                    <type.icon size={12} aria-hidden />
+                    {type.label}
+                  </button>
+                ))}
+              </div>
+
+              <div
+                className="flex rounded-xl sm:rounded-2xl bg-slate-800/95 p-1 sm:p-1.5 shadow-lg border border-slate-700/80 w-full sm:w-auto"
+                role="group"
+                aria-label="Dashboard layout"
+              >
+                {[
+                  { id: "grid", label: "Grid", icon: FaThLarge },
+                  { id: "line", label: "Stack", icon: FaStream },
+                ].map((mode) => (
+                  <button
+                    key={mode.id}
+                    type="button"
+                    onClick={() => setViewMode(mode.id)}
+                    aria-pressed={viewMode === mode.id}
+                    className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg sm:rounded-xl transition-all duration-300 text-[10px] font-black uppercase tracking-widest ${
+                      viewMode === mode.id
+                        ? "bg-indigo-500 text-white shadow-md"
                         : "text-slate-400 hover:text-white"
                     }`}
                   >
-                    <type.icon size={14} />
-                    <span className="hidden sm:inline">{type.label}</span>
+                    <mode.icon size={14} aria-hidden />
+                    <span className="sm:hidden">{mode.label}</span>
                   </button>
                 ))}
               </div>
@@ -314,61 +247,28 @@ const ChartSection = memo(() => {
           </div>
         </header>
 
-        <div className="animate-fade-in-up">
-          <AIInsights month={filters.month} year={filters.year} />
-        </div>
-
-        <div className="space-y-10 sm:space-y-14 lg:space-y-20 pb-8 sm:pb-16">
-          {CHART_PARTS.map((part, pIdx) => (
-            <div
-              key={part.title}
-              className="space-y-5 sm:space-y-8 animate-fade-in-up min-w-0"
-              style={{ animationDelay: `${pIdx * 120}ms` }}
-            >
-              <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-slate-200/80 pb-5 sm:pb-6">
-                <div className="flex items-center gap-4 sm:gap-5 min-w-0">
-                  <div
-                    className={`shrink-0 p-3.5 sm:p-4 bg-gradient-to-br ${part.color} rounded-2xl sm:rounded-3xl text-white shadow-xl ${part.glow}`}
-                    style={{ transform: "rotate(-4deg) translateZ(8px)" }}
-                  >
-                    <part.icon size={22} className="sm:w-7 sm:h-7" />
-                  </div>
-                  <div className="min-w-0">
-                    <h3 className="text-lg sm:text-2xl lg:text-3xl font-black text-slate-900 tracking-tight uppercase leading-none truncate">
-                      {part.title}
-                    </h3>
-                    <p className="text-[10px] sm:text-xs font-bold text-slate-500 mt-1.5 uppercase tracking-[0.15em]">
-                      {part.description}
-                    </p>
-                  </div>
-                </div>
-                <span className="shrink-0 self-start sm:self-center px-3 py-1.5 rounded-xl bg-slate-900/5 border border-slate-200 text-[9px] font-black text-slate-500 uppercase tracking-widest">
-                  saria.ai · v3
-                </span>
-              </div>
-
-              <div
-                className={`grid gap-4 sm:gap-6 lg:gap-8 min-w-0 ${
-                  part.cards.length === 1
-                    ? "grid-cols-1"
-                    : part.cards.length === 2
-                      ? "grid-cols-1 md:grid-cols-2"
-                      : "grid-cols-1 md:grid-cols-2 xl:grid-cols-3"
-                }`}
+        {/* Chart grid */}
+        <div
+          className={[
+            "grid w-full min-w-0 transition-all duration-500",
+            viewMode === "grid"
+              ? "grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 lg:gap-8"
+              : "grid-cols-1 gap-4 sm:gap-6",
+          ].join(" ")}
+        >
+          {CHART_CARDS.map(
+            ({ id, featured, label, accent, ring, Component, props }) => (
+              <ChartCard
+                key={id}
+                featured={featured && viewMode === "grid"}
+                label={label}
+                accent={accent}
+                ring={ring}
               >
-                {part.cards.map((card) => (
-                  <ChartCard
-                    key={card.id}
-                    featured={card.featured}
-                    label={card.label}
-                    accent={card.accent}
-                  >
-                    <card.Component {...card.props(chartType, filters)} />
-                  </ChartCard>
-                ))}
-              </div>
-            </div>
-          ))}
+                <Component {...props(chartType, agentSaudas)} />
+              </ChartCard>
+            ),
+          )}
         </div>
       </section>
     </Suspense>

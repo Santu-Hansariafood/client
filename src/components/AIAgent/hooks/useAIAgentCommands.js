@@ -260,7 +260,7 @@ export const useAIAgentCommands = ({
       response = {
         role: "assistant",
         content:
-          `*saria.ai Contact Support*\n\n` +
+          `*Saria AI Contact Support*\n\n` +
           `• *Admin Hotline:* +91 98765 43210\n` +
           `• *Tech Support:* info@hSariafood.com\n` +
           `• *Operating Hours:* 10:00 AM - 07:00 PM` +

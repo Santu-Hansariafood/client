@@ -8,9 +8,7 @@ const AIAgentHeader = ({ setIsMinimized, clearHistory, setIsOpen }) => {
           <FaRobot className="text-xl animate-pulse" />
         </div>
         <div>
-          <h3 className="font-bold text-sm tracking-wide">
-            saria<span className="text-emerald-200">.ai</span>
-          </h3>
+          <h3 className="font-bold text-sm tracking-wide">Saria AI</h3>
           <div className="flex items-center gap-1.5">
             <span className="w-2 h-2 bg-emerald-400 rounded-full animate-ping" />
             <span className="text-[10px] text-emerald-100 font-medium uppercase tracking-wider">

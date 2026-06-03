@@ -153,12 +153,8 @@ const ListSellerCompany = () => {
     <span key={`qty-${company._id}`} className="font-bold text-indigo-600">
       {(company.totalUnloadingWeight || 0).toFixed(2)} T
     </span>,
-    <span
-      key={`brokerage-${company._id}`}
-      className="font-bold text-emerald-600"
-    >
-      ₹
-      {(company.totalBrokerage || 0).toLocaleString("en-IN", {
+    <span key={`brokerage-${company._id}`} className="font-bold text-emerald-600">
+      ₹{(company.totalBrokerage || 0).toLocaleString("en-IN", {
         minimumFractionDigits: 2,
       })}
     </span>,
@@ -267,8 +263,7 @@ const ListSellerCompany = () => {
                 <p>
                   <strong>Total Quantity:</strong>{" "}
                   <span className="text-indigo-600 font-bold">
-                    {(selectedCompany.totalUnloadingWeight || 0).toFixed(2)}{" "}
-                    Tons
+                    {(selectedCompany.totalUnloadingWeight || 0).toFixed(2)} Tons
                   </span>
                 </p>
                 <p>

@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from "react";
+import { useMemo } from "react";
 import {
   AreaChart,
   Area,
@@ -15,8 +15,6 @@ import {
   Legend,
   LabelList,
 } from "recharts";
-import api from "../../../utils/apiClient/apiClient";
-import Loading from "../../Loading/Loading";
 import {
   BarGradientDefs,
   MultiBarGradientDefs,
@@ -66,11 +64,6 @@ const CustomTooltip = ({ active, payload, label }) => {
               {payload[0].value.toLocaleString()} T
             </span>
           </p>
-          {data?.location && (
-            <p className="text-[10px] font-bold text-slate-500 mt-1 italic">
-              📍 {data.location}
-            </p>
-          )}
           {isPie && (
             <div className="pt-2 mt-2 border-t border-slate-50">
               <div className="flex items-center justify-between text-[10px] font-bold text-slate-500">
@@ -88,44 +81,19 @@ const CustomTooltip = ({ active, payload, label }) => {
   return null;
 };
 
-const AgentSaudaChart = ({ apiUrl, data: externalData, chartType = "bar" }) => {
-  const [internalData, setInternalData] = useState([]);
-  const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    if (apiUrl && !externalData) {
-      const fetchData = async () => {
-        setLoading(true);
-        try {
-          const response = await api.get(apiUrl);
-          setInternalData(response.data || []);
-        } catch (error) {
-          console.error("Failed to fetch agent distribution data", error);
-        } finally {
-          setLoading(false);
-        }
-      };
-      fetchData();
-    }
-  }, [apiUrl, externalData]);
-
-  const displayData = externalData || internalData;
-
+const AgentSaudaChart = ({ data, chartType = "bar" }) => {
   const { chartData, totalTons } = useMemo(() => {
-    const total = displayData.reduce((sum, item) => sum + (item.tons || item.value || 0), 0);
+    const total = data.reduce((sum, item) => sum + item.tons, 0);
     return {
-      chartData: displayData.map((item) => ({
-        name: item.name || item.agent || "Unknown",
-        location: item.location || "",
-        value: item.tons || item.value || 0,
-        tons: item.tons || item.value || 0,
+      chartData: data.map((item) => ({
+        name: item.name,
+        value: item.tons,
+        tons: item.tons,
         total,
       })),
       totalTons: total,
     };
-  }, [displayData]);
-
-  if (loading) return <Loading />;
+  }, [data]);
 
   const renderChart = () => {
     if (chartType === "pie") {

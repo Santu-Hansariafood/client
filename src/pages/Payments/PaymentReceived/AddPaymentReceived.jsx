@@ -39,33 +39,6 @@ import {
 
 const ENTRIES_PAGE_SIZE = 20;
 
-const calculateTallyDetails = (entry) => {
-  const weight =
-    (entry.unloadingWeight || 0) > 0
-      ? entry.unloadingWeight
-      : entry.loadingWeight || 0;
-  const rate = entry.actualRate || 0;
-  const cdPercent = entry.cd || 0;
-  const gstPercent = entry.gst || 0;
-
-  const grossAmount = weight * rate;
-  const cdAmount = grossAmount * (cdPercent / 100);
-  const taxableAmount = grossAmount - cdAmount;
-  const gstAmount = taxableAmount * (gstPercent / 100);
-  const netAmount = taxableAmount + gstAmount;
-
-  return {
-    grossAmount,
-    cdAmount,
-    taxableAmount,
-    gstAmount,
-    netAmount,
-    cdPercent,
-    gstPercent,
-    dueAmount: Math.max(0, netAmount - (entry.paidAmount || 0)),
-  };
-};
-
 const AddPaymentReceived = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -287,7 +260,8 @@ const AddPaymentReceived = () => {
   );
 
   const hasBuyerCompany = Boolean(companyPair.buyerCompany);
-  const buyerOnlyMapping = hasBuyerCompany && !companyPair.supplierCompany;
+  const buyerOnlyMapping =
+    hasBuyerCompany && !companyPair.supplierCompany;
 
   const pairCreditFromList = useMemo(() => {
     if (!fullCompanyMapping || !ledgerBalance.creditByPair?.length) return 0;
@@ -307,7 +281,11 @@ const AddPaymentReceived = () => {
   const availableAllocationPool = useMemo(() => {
     if (allocationSource === "advance") {
       if (fullCompanyMapping) {
-        return Number(ledgerBalance.advanceBalance) || pairCreditFromList || 0;
+        return (
+          Number(ledgerBalance.advanceBalance) ||
+          pairCreditFromList ||
+          0
+        );
       }
       return Number(ledgerBalance.totalAdvanceBalance) || 0;
     }
@@ -504,8 +482,7 @@ const AddPaymentReceived = () => {
             return -1;
           if (a.paymentStatus === "done" && b.paymentStatus === "pending")
             return 1;
-          // Sort by loadingDate ascending (FIFO) for standard payment distribution
-          return new Date(a.loadingDate) - new Date(b.loadingDate);
+          return new Date(b.loadingDate) - new Date(a.loadingDate);
         });
 
         setEntries(
@@ -574,9 +551,8 @@ const AddPaymentReceived = () => {
       if (!name) return "";
       const co = allCompanies.find(
         (c) =>
-          String(c.companyName || "")
-            .trim()
-            .toLowerCase() === String(name).trim().toLowerCase(),
+          String(c.companyName || "").trim().toLowerCase() ===
+          String(name).trim().toLowerCase(),
       );
       return co?._id || "";
     },
@@ -633,7 +609,12 @@ const AddPaymentReceived = () => {
         prev.ledgerId ? prev : { ...prev, ledgerId: resolvedId },
       );
     }
-  }, [formData.companyId, formData.ledgerId, ledgers, resolveLedgerIdForSave]);
+  }, [
+    formData.companyId,
+    formData.ledgerId,
+    ledgers,
+    resolveLedgerIdForSave,
+  ]);
 
   const fetchHistory = useCallback(async () => {
     if (!formData.date) {
@@ -679,9 +660,8 @@ const AddPaymentReceived = () => {
 
       const buyerCo = allCompanies.find(
         (c) =>
-          String(c.companyName || "")
-            .trim()
-            .toLowerCase() === String(pair.buyerCompany).trim().toLowerCase(),
+          String(c.companyName || "").trim().toLowerCase() ===
+          String(pair.buyerCompany).trim().toLowerCase(),
       );
 
       const ledger = buyerCo
@@ -825,68 +805,33 @@ const AddPaymentReceived = () => {
   }, [fetchDateTotal]);
 
   const handleAutoAllocate = useCallback(() => {
-    let pool = Number(availableAllocationPool) || 0;
-    const isZeroPool = pool <= 0.01;
-
-    if (isZeroPool && allocationSource === "fresh") {
-      // If pool is zero in Fresh mode, we'll allocate full due amounts
-      // and update the total amount automatically
-      pool = Infinity; 
-    } else if (isZeroPool) {
+    const pool = Number(availableAllocationPool) || 0;
+    if (pool <= 0) {
       toast.warning("Please enter a payment amount first");
       return;
     }
 
     let remainingPool = pool;
-    let totalAllocatedNow = 0;
-    
-    // Explicitly sort entries by date (FIFO) and Sauda No for consistent distribution
-    const sortedForAllocation = [...entries].sort((a, b) => {
-      if (a.isSaved !== b.isSaved) return a.isSaved ? 1 : -1;
-      const dateA = new Date(a.loadingDate);
-      const dateB = new Date(b.loadingDate);
-      if (dateA - dateB !== 0) return dateA - dateB;
-      // If same date, sort by saudaNo if available
-      return String(a.saudaNo || "").localeCompare(String(b.saudaNo || ""));
-    });
-
-    const newEntries = sortedForAllocation.map((entry) => {
+    const newEntries = entries.map((entry) => {
       if (entry.isSaved || remainingPool <= 0.01) {
         return entry;
       }
 
       const { dueAmount } = calculateTallyDetails(entry);
       const alloc = Math.min(remainingPool, dueAmount);
-
+      
       if (alloc > 0.01) {
         remainingPool -= alloc;
-        totalAllocatedNow += alloc;
-        return {
-          ...entry,
-          allocatedAmount: String(Math.round(alloc * 100) / 100),
-        };
+        return { ...entry, allocatedAmount: String(Math.round(alloc * 100) / 100) };
       }
       return entry;
     });
 
     setEntries(newEntries);
-    
-    if (isZeroPool && allocationSource === "fresh") {
-      setFormData(prev => ({ ...prev, amount: totalAllocatedNow }));
-      toast.success(`Allocated full due (₹${totalAllocatedNow.toLocaleString()}) across pending lorries`);
-    } else {
-      toast.success(`Allocated ₹${totalAllocatedNow.toLocaleString()} across pending lorries (FIFO)`);
-    }
-  }, [availableAllocationPool, entries, allocationSource]);
+    toast.success("Amount allocated to pending lorries");
+  }, [availableAllocationPool, entries]);
 
   const handleSaveAllAllocations = async () => {
-    // Tally-wise logic:
-    // If Fresh, record the full voucher amount from formData.amount
-    // If Advance, record only the sum of allocations (as it's an adjustment)
-    if (allocationSource === "fresh") {
-      return handleRecordAdvance();
-    }
-
     const allocations = entries.filter(
       (e) => !e.isSaved && parseFloat(e.allocatedAmount) > 0.01,
     );
@@ -901,6 +846,10 @@ const AddPaymentReceived = () => {
     const ledgerId = resolveLedgerIdForSave();
     const saveCompanyId = resolveCompanyIdForSave(firstEntry);
 
+    if (!saveCompanyId && !pairPayload.buyerCompany) {
+      toast.error("Select buyer company, then save");
+      return;
+    }
     if (
       allocationSource === "advance" &&
       !String(pairPayload.supplierCompany || "").trim()
@@ -925,21 +874,20 @@ const AddPaymentReceived = () => {
         companyId: saveCompanyId,
         ...pairPayload,
         amount: totalAllocated,
-        paymentType: "Adjustment",
-        paymentMode: "Adjustment",
+        paymentType: allocationSource === "fresh" ? "Sauda-wise" : "Adjustment",
+        paymentMode:
+          allocationSource === "fresh" ? formData.paymentMode : "Adjustment",
         mappings: allocations.map((e) => ({
           saudaNo: e.saudaNo,
           loadingEntryId: e._id,
           allocatedAmount: parseFloat(e.allocatedAmount),
           remarks: e.rowRemarks,
         })),
-        remarks: formData.remarks || "Bulk Advance Adjustment",
+        remarks: formData.remarks || "Bulk Allocation",
       };
 
       await api.post("/payment-received", payload);
-      toast.success(
-        `Adjusted ₹${totalAllocated.toLocaleString()} from advance across ${allocations.length} lorries`,
-      );
+      toast.success(`Recorded payment with ${allocations.length} allocations`);
 
       setEntries((prev) =>
         prev.map((e) => {
@@ -948,15 +896,21 @@ const AddPaymentReceived = () => {
         }),
       );
 
+      if (allocationSource === "fresh") {
+        setFormData((prev) => ({
+          ...prev,
+          amount: Math.max(0, prev.amount - totalAllocated),
+          ledgerId: prev.ledgerId || ledgerId,
+        }));
+      }
+
       fetchEntries(entriesPage);
       fetchHistory();
       fetchDateTotal();
       fetchSummary();
       fetchLedgerBalance();
     } catch (error) {
-      toast.error(
-        error.response?.data?.message || "Error saving bulk adjustment",
-      );
+      toast.error(error.response?.data?.message || "Error saving bulk payment");
     } finally {
       setLoading(false);
     }
@@ -975,8 +929,7 @@ const AddPaymentReceived = () => {
     }
     setFormData((prev) => ({
       ...prev,
-      [name]:
-        name === "amount" ? (value === "" ? 0 : parseFloat(value) || 0) : value,
+      [name]: name === "amount" ? (value === "" ? 0 : parseFloat(value) || 0) : value,
     }));
   };
 
@@ -1066,8 +1019,7 @@ const AddPaymentReceived = () => {
               ? "No Dr. advance for this buyer → seller"
               : "Select seller and use From Advance",
           );
-        } else if (numAmount > remaining + 1) {
-          // Increased tolerance to 1
+        } else if (numAmount > remaining + 1) { // Increased tolerance to 1
           valueToStore = String(
             Math.round(Math.min(numAmount, Math.max(remaining, 0)) * 100) / 100,
           );
@@ -1075,13 +1027,14 @@ const AddPaymentReceived = () => {
             `Max Rs. ${remaining.toLocaleString("en-IN")} from advance (pool Rs. ${pool.toLocaleString("en-IN")})`,
           );
         }
-      } else if (pool > 0.01) {
+      } else if (pool <= 0.01 && numAmount > 0) {
+        toast.error("Enter payment amount in the form above first");
+      } else {
         const maxAllowed = Math.min(
           remaining,
           dueAmount > 1 ? dueAmount : remaining, // Increased tolerance
         );
-        if (numAmount > maxAllowed + 1) {
-          // Increased tolerance
+        if (numAmount > maxAllowed + 1) { // Increased tolerance
           valueToStore = String(
             Math.round(Math.min(numAmount, maxAllowed) * 100) / 100,
           );
@@ -1089,10 +1042,6 @@ const AddPaymentReceived = () => {
             `Max Cr. Rs. ${maxAllowed.toLocaleString("en-IN")} on this row`,
           );
         }
-      } else if (numAmount > dueAmount + 1 && dueAmount > 0.01) {
-        // In direct mode (pool is 0), still cap to due amount for safety
-        valueToStore = String(Math.round(dueAmount * 100) / 100);
-        toast.warning(`Capped to due Rs. ${dueAmount.toLocaleString("en-IN")}`);
       }
     }
 
@@ -1152,6 +1101,33 @@ const AddPaymentReceived = () => {
     setEntries((prev) => prev.filter((entry) => entry.uiKey !== uiKey));
   };
 
+  const calculateTallyDetails = (entry) => {
+    const weight =
+      (entry.unloadingWeight || 0) > 0
+        ? entry.unloadingWeight
+        : entry.loadingWeight || 0;
+    const rate = entry.actualRate || 0;
+    const cdPercent = entry.cd || 0;
+    const gstPercent = entry.gst || 0;
+
+    const grossAmount = weight * rate;
+    const cdAmount = grossAmount * (cdPercent / 100);
+    const taxableAmount = grossAmount - cdAmount;
+    const gstAmount = taxableAmount * (gstPercent / 100);
+    const netAmount = taxableAmount + gstAmount;
+
+    return {
+      grossAmount,
+      cdAmount,
+      taxableAmount,
+      gstAmount,
+      netAmount,
+      cdPercent,
+      gstPercent,
+      dueAmount: Math.max(0, netAmount - (entry.paidAmount || 0)),
+    };
+  };
+
   const handleSaveRow = async (entry) => {
     if (entry.allocatedAmount === "" && !entry.isSaved) {
       toast.error("Please enter an allocation amount");
@@ -1197,12 +1173,29 @@ const AddPaymentReceived = () => {
 
     if (
       allocationSource === "fresh" &&
-      effectiveDebitPool > 0.01 &&
-      saveAllocated > rowDebitLeft + 1
+      effectiveDebitPool <= 0.01 &&
+      saveAllocated > 0.01
     ) {
       toast.error(
-        `Exceeds entry total (Rs. ${rowDebitLeft.toLocaleString("en-IN")} left for this row)`,
+        "Enter payment received amount above before adjusting lorries",
       );
+      return;
+    }
+
+    if (allocationSource === "fresh" && saveAllocated > rowDebitLeft + 1) {
+      if (
+        effectiveDebitPool <= 0.01 &&
+        (ledgerBalance.totalAdvanceBalance || 0) > 0
+      ) {
+        toast.info(
+          "Entry amount is Rs. 0. Switch to From Advance to use buyer Dr. balance.",
+          { autoClose: 6000 },
+        );
+      } else {
+        toast.error(
+          `Exceeds entry total (Rs. ${rowDebitLeft.toLocaleString("en-IN")} left for this row)`,
+        );
+      }
       return;
     }
 
@@ -1302,82 +1295,47 @@ const AddPaymentReceived = () => {
   };
 
   const handleRecordAdvance = async () => {
-    if (!formData.companyId && !companyPair.buyerCompany) {
-      toast.error("Select buyer company first");
+    if (formData.amount <= 0) {
+      toast.error("Please enter an advance amount");
+      return;
+    }
+    if (!formData.companyId || !formData.ledgerId) {
+      toast.error("Select a company linked to a ledger account");
+      return;
+    }
+    if (!companyPair.supplierCompany) {
+      toast.error(
+        "Select seller company — advance is tracked buyer → seller only",
+      );
       return;
     }
 
-    const ledgerId = resolveLedgerIdForSave();
-    const saveCompanyId = resolveCompanyIdForSave();
+    const recordLedgerType = "Buyer";
 
     try {
       setLoading(true);
-      // For Tally-wise: get all allocations from the table that are NOT saved yet
-      const allocations = entries.filter(
-        (e) => !e.isSaved && parseFloat(e.allocatedAmount) > 0.01,
-      );
-
-      const totalAllocated = allocations.reduce(
-        (sum, e) => sum + parseFloat(e.allocatedAmount),
-        0,
-      );
-
-      // If amount is 0, use totalAllocated. Otherwise use formData.amount
-      const finalAmount =
-        formData.amount > 0 ? formData.amount : totalAllocated;
-
-      if (finalAmount <= 0) {
-        toast.error("Enter payment amount or allocate lorries first");
-        setLoading(false);
-        return;
-      }
-
+      const pairLabel = `${companyPair.buyerCompany} → ${companyPair.supplierCompany}`;
       const payload = {
-        date: formData.date,
-        ledgerType: "Buyer",
-        ledgerId: ledgerId || undefined,
-        companyId: saveCompanyId,
-        buyerCompany: companyPair.buyerCompany || "",
-        supplierCompany: companyPair.supplierCompany || "",
-        amount: finalAmount,
-        // If there are allocations, it's Sauda-wise, otherwise it's pure Advance
-        paymentType: allocations.length > 0 ? "Sauda-wise" : "Advance",
-        paymentMode: formData.paymentMode,
-        mappings: allocations.map((e) => ({
-          saudaNo: e.saudaNo,
-          loadingEntryId: e._id,
-          allocatedAmount: parseFloat(e.allocatedAmount),
-          remarks: e.rowRemarks,
-        })),
+        ...formData,
+        date: formData.allocationDate || formData.date,
+        ledgerType: recordLedgerType,
+        companyId: formData.companyId,
+        ...buildCompanyPayload(),
+        paymentType: "Advance",
+        mappings: [],
         remarks:
           formData.remarks?.trim() ||
-          (allocations.length > 0
-            ? `Payment of ₹${finalAmount.toLocaleString()} with ${allocations.length} lorry adjustments`
-            : "Advance payment from buyer"),
+          `Advance (Dr.) from buyer for ${pairLabel} · lorry-wise Cr. later`,
       };
 
       await api.post("/payment-received", payload);
-      toast.success(
-        allocations.length > 0
-          ? `Recorded payment of ₹${finalAmount.toLocaleString()} with ${allocations.length} allocations`
-          : `Recorded advance payment of ₹${finalAmount.toLocaleString()}`,
-      );
-
-      // Reset form amount
-      setFormData((prev) => ({
-        ...prev,
-        amount: 0,
-        remarks: "",
-      }));
-
-      // Refresh data
-      fetchEntries(entriesPage);
+      toast.success("Advance payment recorded");
+      setFormData((prev) => ({ ...prev, amount: 0, remarks: "" }));
       fetchHistory();
       fetchDateTotal();
-      fetchSummary();
       fetchLedgerBalance();
     } catch (error) {
-      toast.error(error.response?.data?.message || "Error recording payment");
+      toast.error("Error recording advance");
     } finally {
       setLoading(false);
     }
@@ -1597,10 +1555,7 @@ const AddPaymentReceived = () => {
             </span>
             <span
               className={`text-[9px] font-black uppercase truncate ${
-                matchCompanyName(
-                  row.supplierCompany,
-                  companyPair.supplierCompany,
-                )
+                matchCompanyName(row.supplierCompany, companyPair.supplierCompany)
                   ? "text-amber-700"
                   : "text-slate-400"
               }`}
@@ -1635,9 +1590,7 @@ const AddPaymentReceived = () => {
               <div className="flex flex-col">
                 <span className="text-[8px] text-slate-400">Date</span>
                 <span className="text-slate-700 normal-case">
-                  {new Date(
-                    formData.allocationDate || formData.date,
-                  ).toLocaleDateString("en-GB")}
+                  {new Date(formData.allocationDate || formData.date).toLocaleDateString("en-GB")}
                 </span>
               </div>
               <div className="flex flex-col">
@@ -1645,9 +1598,7 @@ const AddPaymentReceived = () => {
                 <input
                   type="text"
                   value={row.debitNote || ""}
-                  onChange={(e) =>
-                    handleDebitNoteChange(row.uiKey, e.target.value)
-                  }
+                  onChange={(e) => handleDebitNoteChange(row.uiKey, e.target.value)}
                   disabled={isLocked}
                   className={`h-7 px-2 rounded border text-[10px] font-bold normal-case ${
                     isLocked
@@ -1667,9 +1618,7 @@ const AddPaymentReceived = () => {
                 <input
                   type="text"
                   value={row.creditNote || ""}
-                  onChange={(e) =>
-                    handleCreditNoteChange(row.uiKey, e.target.value)
-                  }
+                  onChange={(e) => handleCreditNoteChange(row.uiKey, e.target.value)}
                   disabled={isLocked}
                   className={`h-7 px-2 rounded border text-[10px] font-bold normal-case ${
                     isLocked
@@ -1732,9 +1681,7 @@ const AddPaymentReceived = () => {
           <div className="flex flex-col gap-2 min-w-[140px]">
             <textarea
               value={row.rowRemarks}
-              onChange={(e) =>
-                handleRowRemarksChange(row.uiKey, e.target.value)
-              }
+              onChange={(e) => handleRowRemarksChange(row.uiKey, e.target.value)}
               disabled={isLocked}
               rows={2}
               className={`w-full px-3 py-2 rounded-lg border text-[10px] font-bold ${

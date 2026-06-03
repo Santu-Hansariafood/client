@@ -19,23 +19,23 @@ const CreditBalancePanel = ({
   const showAdvanceTable = isAdvance && creditByPair.length > 0;
 
   const receiptLabel = isAdvance
-    ? "Available Advance (Dr. Pool)"
-    : "Voucher Amount (Coming)";
+    ? "Debit balance (Advance) · Dr."
+    : "Payment Received";
   const receiptHint = isAdvance
-    ? "Existing advance balance"
-    : "Total amount received from buyer";
+    ? "Buyer advance on account"
+    : "Amount received from buyer (entry above)";
   const adjustedLabel = isAdvance
-    ? "Adjusting from Advance"
-    : "Allocated to Lorries";
+    ? "Credit to seller · Cr."
+    : "Adjusted lorry-wise";
   const adjustedHint = isAdvance
-    ? "Cr. posting to lorries"
-    : "Total adjusted against lorry lines";
+    ? "Posted to seller lorries"
+    : "Total allocated to seller lorries in table";
   const remainingLabel = isAdvance
-    ? "Advance Balance Left"
-    : "New Advance (Unallocated)";
+    ? "Dr. balance left"
+    : "Unallocated (not yet on lorries)";
   const headerTitle = isAdvance
-    ? "Advance Adjustment · Dr. to Cr. Flow"
-    : "Payment Distribution · Tally-wise Adjustment";
+    ? "Buyer → seller · advance (Dr. − Cr.)"
+    : "Buyer → seller · payment received & lorry adjustment";
 
   return (
     <div className="rounded-xl border border-slate-200 bg-gradient-to-br from-slate-50 via-white to-slate-50/80 p-4 shadow-sm">

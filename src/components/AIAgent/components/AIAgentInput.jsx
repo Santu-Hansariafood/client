@@ -43,7 +43,7 @@ const AIAgentInput = ({
         </button>
       </div>
       <p className="mt-2 text-[10px] text-center text-slate-400 font-medium">
-        Powered by saria.ai • Minimal Commands Supported
+        Powered by Saria AI • Minimal Commands Supported
       </p>
     </div>
   );

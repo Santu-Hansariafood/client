@@ -11,7 +11,6 @@ import ParticipateBid from "../models/ParticipateBid.js";
 import Company from "../models/Company.js";
 import Group from "../models/Group.js";
 import Buyer from "../models/Buyer.js";
-import PaymentReceived from "../models/PaymentReceived.js";
 
 const router = Router();
 
@@ -123,7 +122,7 @@ router.get("/", async (req, res) => {
       const phoneMatch = String(mobile).match(phoneRegex);
       const normalizedMobile = phoneMatch ? phoneMatch[1] : mobile;
 
-      const buyer = await Buyer.findOne({
+      const buyer = await mongoose.model("Buyer").findOne({
         mobile: { $regex: new RegExp(normalizedMobile + "$") },
       });
 
@@ -193,7 +192,6 @@ router.get("/", async (req, res) => {
       const items = await SelfOrder.find(query)
         .sort({ saudaNo: -1 })
         .populate("supplier", "sellerName")
-        .select("saudaNo poNumber poDate buyer buyerCompany supplierCompany commodity quantity rate gst cd deliveryDate paymentTerms createdAt status consignee")
         .lean();
       return res.json(items);
     }
@@ -204,7 +202,6 @@ router.get("/", async (req, res) => {
         .skip((page - 1) * limit)
         .limit(limit)
         .populate("supplier", "sellerName")
-        .select("saudaNo poNumber poDate buyer buyerCompany supplierCompany commodity quantity rate gst cd deliveryDate paymentTerms createdAt status consignee")
         .lean();
       const total = await SelfOrder.countDocuments(query);
       return res.json({ data: items, total });
@@ -214,7 +211,6 @@ router.get("/", async (req, res) => {
       .sort({ saudaNo: -1 })
       .limit(limit)
       .populate("supplier", "sellerName")
-      .select("saudaNo poNumber poDate buyer buyerCompany supplierCompany commodity quantity rate gst cd deliveryDate paymentTerms createdAt status consignee")
       .lean();
     res.json(items);
   } catch (error) {
@@ -237,7 +233,7 @@ router.get("/details/:saudaNo", async (req, res) => {
 
     // 2. Get all Payments for this Sauda
     // A payment is linked to a sauda through its mappings
-    const payments = await PaymentReceived.find({
+    const payments = await mongoose.model("PaymentReceived").find({
       "mappings.saudaNo": saudaNo
     }).sort({ date: 1, createdAt: 1 }).lean();
 
@@ -432,7 +428,7 @@ router.get("/buyer/stats", async (req, res) => {
     const phoneMatch = String(mobile).match(phoneRegex);
     const normalizedMobile = phoneMatch ? phoneMatch[1] : mobile;
 
-    const buyer = await Buyer.findOne({
+    const buyer = await mongoose.model("Buyer").findOne({
       mobile: { $regex: new RegExp(normalizedMobile + "$") },
     });
 
@@ -1170,7 +1166,7 @@ router.get("/export/excel", async (req, res) => {
       const phoneMatch = String(mobile).match(phoneRegex);
       const normalizedMobile = phoneMatch ? phoneMatch[1] : mobile;
 
-      const buyer = await Buyer.findOne({
+      const buyer = await mongoose.model("Buyer").findOne({
         mobile: { $regex: new RegExp(normalizedMobile + "$") },
       });
 
@@ -1232,7 +1228,6 @@ router.get("/export/excel", async (req, res) => {
     let items = await SelfOrder.find(query)
       .sort({ saudaNo: -1 })
       .populate("supplier", "sellerName")
-      .select("saudaNo poNumber poDate buyer buyerCompany supplierCompany commodity quantity rate gst cd deliveryDate paymentTerms createdAt status consignee")
       .lean();
 
     const workbook = new ExcelJS.Workbook();
@@ -1245,20 +1240,12 @@ router.get("/export/excel", async (req, res) => {
     });
 
     const getConsigneeDisplay = (item) => {
-      try {
-        const c = item.consignee;
-        if (!c) return "N/A";
-        if (typeof c === "object") {
-          return c.name || c.label || "N/A";
-        }
-        if (typeof c === "string") {
-          // If it's an ID, look it up in the map
-          return consigneeMap.get(c) || consigneeMap.get(c.trim()) || c;
-        }
-        return "N/A";
-      } catch (err) {
-        return "N/A";
-      }
+      const c = item.consignee;
+      if (typeof c === "object" && c?.name) return c.name;
+      if (typeof c === "object" && c?.label) return c.label;
+      if (c && typeof c === "string")
+        return consigneeMap.get(c) || consigneeMap.get(c.trim()) || c;
+      return consigneeMap.get(String(c)) || "N/A";
     };
 
     const columns = [
@@ -1281,18 +1268,13 @@ router.get("/export/excel", async (req, res) => {
 
     worksheet.columns = columns;
 
-    const formatDate = (date) => {
-      if (!date) return "";
-      const d = new Date(date);
-      if (isNaN(d.getTime())) return "";
-      return d.toLocaleDateString("en-GB");
-    };
-
     items.forEach((item) => {
       const rowData = {
         Date: item.poDate
-          ? formatDate(item.poDate)
-          : formatDate(item.createdAt),
+          ? new Date(item.poDate).toLocaleDateString("en-GB")
+          : item.createdAt
+            ? new Date(item.createdAt).toLocaleDateString("en-GB")
+            : "",
         "Sauda No": item.saudaNo || "",
         "PO Number": item.poNumber || "",
         Buyer: item.buyer || "",
@@ -1305,7 +1287,9 @@ router.get("/export/excel", async (req, res) => {
         Rate: item.rate || "",
         Tax: item.tax || item.gst || "",
         CD: item.cd || "",
-        "Delivery Date": formatDate(item.deliveryDate),
+        "Delivery Date": item.deliveryDate
+          ? new Date(item.deliveryDate).toLocaleDateString("en-GB")
+          : "",
         "Payment Time": item.paymentTerms || "",
       };
 

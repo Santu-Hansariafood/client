@@ -297,7 +297,7 @@ const EmployeeDashboard = () => {
               Operational <br /> Excellence Tip
             </h3>
             <p className="text-slate-400 text-sm font-medium leading-relaxed">
-              Did you know? You can use **saria.ai** at the bottom right to quickly track any vehicle or find sauda details just by typing its number.
+              Did you know? You can use the **Saria AI Agent** at the bottom right to quickly track any vehicle or find sauda details just by typing its number.
             </p>
           </div>
 

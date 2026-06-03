@@ -115,7 +115,7 @@ const BidChart = ({ apiUrl, chartType = "line", data: externalData }) => {
         today.setHours(23, 59, 59, 999);
 
         rawData.forEach((item) => {
-          const date = new Date(item.bidDate || item.createdAt || item.date);
+          const date = new Date(item.createdAt || item.bidDate || item.date);
           let key;
           let sortKey;
 
