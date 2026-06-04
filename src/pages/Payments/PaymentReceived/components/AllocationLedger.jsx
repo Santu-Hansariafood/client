@@ -72,14 +72,14 @@ const AllocationLedger = ({
             <div>
               <h4 className="font-bold text-slate-800 flex items-center gap-2 flex-wrap">
                 {allocationSource === "fresh"
-                  ? "Payment Received Ledger"
+                  ? "credited balance Ledger"
                   : "Advance Adjustment"}
               </h4>
               <p className="text-[11px] text-slate-500 font-medium uppercase tracking-wider">
                 {allocationSource === "fresh"
                   ? fullCompanyMapping
-                    ? `Payment received from ${companyPair.buyerCompany} — adjust lorry-wise to ${companyPair.supplierCompany} below`
-                    : "Payment received — select seller, then adjust each lorry and Save"
+                    ? `credited balance from ${companyPair.buyerCompany} — adjust lorry-wise to ${companyPair.supplierCompany} below`
+                    : "credited balance — select seller, then adjust each lorry and Save"
                   : fullCompanyMapping
                     ? `Use advance Rs. ${(ledgerBalance.advanceBalance ?? 0).toLocaleString("en-IN")} — adjust per lorry to ${companyPair.supplierCompany}`
                     : (ledgerBalance.totalAdvanceBalance ?? 0) > 0
@@ -112,7 +112,7 @@ const AllocationLedger = ({
                   <span className="text-[9px] font-black uppercase tracking-[0.2em] text-blue-200 leading-none mb-1">
                     {allocationSource === "advance"
                       ? "Dr. left"
-                      : "Unallocated"}
+                      : "credited balance left"}
                   </span>
                   <span className="text-sm font-black italic tracking-tight tabular-nums">
                     Rs.{" "}
@@ -202,7 +202,7 @@ const AllocationLedger = ({
               fullCompanyMapping
                 ? allocationSource === "advance"
                   ? `Advance for ${companyPair.supplierCompany} — adjust each lorry below`
-                  : `Payment received — adjust lorry-wise to ${companyPair.supplierCompany} below`
+                  : `credited balance — adjust lorry-wise to ${companyPair.supplierCompany} below`
                 : loadingSellerOptions
                   ? "Loading sellers linked to this buyer…"
                   : "Choose seller — table shows that buyer's pending lorries per seller"

@@ -66,14 +66,14 @@ const StatDashboard = ({
 
       <StatCard
         icon={<FaMoneyBillWave size={18} />}
-        label={isAdvance ? "Advance (Dr.)" : "Payment Received"}
+        label={isAdvance ? "Advance (Dr.)" : "credited balance"}
         value={`Rs. ${debitEntryTotal.toLocaleString("en-IN")}`}
         subValue={
           isAdvance
             ? fullCompanyMapping
               ? `Buyer advance · ${companyPair.buyerCompany}`
               : "On account from buyer"
-            : "Entry amount · received from buyer"
+            : "Current entry amount"
         }
         color={isAdvance ? "bg-rose-50" : "bg-emerald-50"}
         iconColor={isAdvance ? "text-rose-600" : "text-emerald-600"}

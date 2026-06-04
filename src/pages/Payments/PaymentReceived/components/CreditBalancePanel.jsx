@@ -36,7 +36,7 @@ const CreditBalancePanel = ({
     : "Total allocated to seller lorries in table";
   const remainingLabel = isAdvance
     ? "Dr. balance left"
-    : "Unallocated (not yet on lorries)";
+    : "credited balance left";
   const headerTitle = fullCompanyMapping && buyerCompany && supplierCompany
     ? `credited balance from ${buyerCompany} to ${supplierCompany}`
     : isAdvance
@@ -117,7 +117,7 @@ const CreditBalancePanel = ({
           <p className="text-[9px] font-bold text-slate-500 mt-1 normal-case">
             {isAdvance
               ? "Dr. − Cr."
-              : "Received − adjusted on lorries"}
+              : "credited − adjusted on lorries"}
           </p>
         </div>
       </div>
@@ -126,7 +126,7 @@ const CreditBalancePanel = ({
         <p className="text-[11px] font-bold text-slate-500">
           {isAdvance
             ? "Record buyer advance (Dr.), then adjust Cr. per lorry."
-            : "Enter payment received, then adjust each lorry line below and Save."}
+            : "Enter credited balance, then adjust each lorry line below and Save."}
         </p>
       )}
 
@@ -134,11 +134,11 @@ const CreditBalancePanel = ({
         <p className="text-[10px] font-bold text-slate-500 mb-2">
           {buyerCompany} → {supplierCompany}:{" "}
           {formatLedgerAmount(debitEntryTotal)}{" "}
-          {isAdvance ? "Dr." : "received"} −{" "}
+          {isAdvance ? "Dr." : "credited"} −{" "}
           {formatLedgerAmount(creditToSeller)}{" "}
           {isAdvance ? "Cr." : "adjusted"} ={" "}
           {formatLedgerAmount(debitBalanceRemaining)}{" "}
-          {isAdvance ? "Dr. left" : "unallocated"}
+          {isAdvance ? "Dr. left" : "credited balance left"}
         </p>
       )}
 
