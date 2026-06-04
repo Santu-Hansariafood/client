@@ -255,6 +255,13 @@ const AllocationLedger = ({
                     {companyPair.supplierCompany}
                   </span>
                 )}
+                <div className="h-4 w-px bg-slate-200 mx-1 hidden sm:block" />
+                <span className="text-[9px] font-black uppercase tracking-[0.2em] text-emerald-600">
+                  Credited Balance:
+                </span>
+                <span className="px-2 py-1 rounded-lg bg-emerald-50 text-emerald-700 text-[10px] font-black tabular-nums border border-emerald-100">
+                  Rs. {debitEntryTotal.toLocaleString("en-IN")}
+                </span>
                 {buyerOnlyMapping && (
                   <span className="text-[10px] font-bold text-slate-500">
                     (all sellers for this buyer)

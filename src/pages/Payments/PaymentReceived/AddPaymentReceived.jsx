@@ -1585,7 +1585,7 @@ const AddPaymentReceived = () => {
             : String(row.allocatedAmount);
 
         return (
-          <div className="flex flex-col gap-1.5 text-[9px] font-black min-w-[600px] uppercase">
+          <div className="flex flex-col gap-1.5 text-[9px] font-black min-w-[750px] uppercase">
             <div className="mb-1 flex items-center gap-2">
               <span className="bg-[#1e3a5f] text-white px-2 py-0.5 rounded text-[8px]">
                 Sauda: {row.saudaNo}
@@ -1596,49 +1596,57 @@ const AddPaymentReceived = () => {
                 </span>
               )}
             </div>
-            <div className="grid grid-cols-5 gap-2 items-center bg-slate-50 border border-slate-200 rounded px-2 py-1.5">
-              <div className="flex flex-col">
+            <div className="grid grid-cols-6 gap-3 items-end bg-slate-50 border border-slate-200 rounded px-3 py-2">
+              <div className="flex flex-col gap-1">
                 <span className="text-[8px] text-slate-400">Date</span>
-                <span className="text-slate-700 normal-case">
-                  {new Date(formData.allocationDate || formData.date).toLocaleDateString("en-GB")}
-                </span>
+                <input
+                  type="date"
+                  value={formData.allocationDate || formData.date}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      allocationDate: e.target.value,
+                    }))
+                  }
+                  className="h-8 px-2 rounded border border-slate-200 text-[10px] font-bold text-slate-700 outline-none focus:border-[#1e3a5f] focus:ring-1 focus:ring-[#1e3a5f]/10"
+                />
               </div>
-              <div className="flex flex-col">
+              <div className="flex flex-col gap-1">
                 <span className="text-[8px] text-slate-400">Debit note</span>
                 <input
                   type="text"
                   value={row.debitNote || ""}
                   onChange={(e) => handleDebitNoteChange(row.uiKey, e.target.value)}
                   disabled={isLocked}
-                  className={`h-7 px-2 rounded border text-[10px] font-bold normal-case ${
+                  className={`h-8 px-2 rounded border text-[10px] font-bold normal-case ${
                     isLocked
                       ? "bg-slate-100 text-slate-400 border-slate-200"
                       : "bg-white border-slate-300 focus:border-slate-700 outline-none"
                   }`}
                 />
               </div>
-              <div className="flex flex-col">
-                <span className="text-[8px] text-slate-400">Debited payment</span>
-                <span className="h-7 px-2 rounded border border-rose-200 bg-rose-50 text-rose-700 text-[10px] font-black flex items-center tabular-nums normal-case">
-                  Rs. {details.dueAmount.toFixed(2)}
+              <div className="flex flex-col gap-1">
+                <span className="text-[8px] text-slate-400">Debited balance</span>
+                <span className="h-8 px-2 rounded border border-rose-200 bg-rose-50 text-rose-700 text-[10px] font-black flex items-center tabular-nums normal-case shadow-sm">
+                  Rs. {details.netAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
                 </span>
               </div>
-              <div className="flex flex-col">
+              <div className="flex flex-col gap-1">
                 <span className="text-[8px] text-slate-400">Credit note</span>
                 <input
                   type="text"
                   value={row.creditNote || ""}
                   onChange={(e) => handleCreditNoteChange(row.uiKey, e.target.value)}
                   disabled={isLocked}
-                  className={`h-7 px-2 rounded border text-[10px] font-bold normal-case ${
+                  className={`h-8 px-2 rounded border text-[10px] font-bold normal-case ${
                     isLocked
                       ? "bg-slate-100 text-slate-400 border-slate-200"
                       : "bg-white border-slate-300 focus:border-slate-700 outline-none"
                   }`}
                 />
               </div>
-              <div className="flex flex-col">
-                <span className="text-[8px] text-slate-400">Credit amount</span>
+              <div className="flex flex-col gap-1">
+                <span className="text-[8px] text-slate-400 text-emerald-600">Credited balance</span>
                 <div className="relative">
                   <input
                     type="text"
@@ -1652,7 +1660,7 @@ const AddPaymentReceived = () => {
                       )
                     }
                     disabled={isLocked}
-                    className={`h-7 w-full px-2 rounded border text-[10px] font-black tabular-nums normal-case ${
+                    className={`h-8 w-full px-2 rounded border text-[10px] font-black tabular-nums normal-case ${
                       isLocked
                         ? "bg-slate-100 text-slate-400 border-slate-200"
                         : "bg-emerald-50 border-emerald-300 text-emerald-800 focus:border-emerald-600 outline-none"
@@ -1669,12 +1677,22 @@ const AddPaymentReceived = () => {
                           details.dueAmount,
                         )
                       }
-                      className="absolute -top-6 right-0 text-[8px] font-black uppercase text-emerald-700"
+                      className="absolute -top-6 right-0 text-[8px] font-black uppercase text-emerald-700 hover:text-emerald-900 transition-colors"
                     >
                       Max
                     </button>
                   )}
                 </div>
+              </div>
+              <div className="flex flex-col gap-1">
+                <span className="text-[8px] text-slate-400">Balance</span>
+                <span className={`h-8 px-2 rounded border text-[10px] font-black flex items-center tabular-nums normal-case shadow-sm ${
+                  details.dueAmount - (parseFloat(row.allocatedAmount) || 0) > 0.01
+                    ? "bg-blue-50 border-blue-200 text-blue-700"
+                    : "bg-slate-100 border-slate-200 text-slate-400"
+                }`}>
+                  Rs. {(Math.max(0, details.dueAmount - (parseFloat(row.allocatedAmount) || 0))).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                </span>
               </div>
             </div>
           </div>
