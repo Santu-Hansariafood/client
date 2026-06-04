@@ -279,29 +279,24 @@ const SelfOrder = () => {
             Number(formData.buyerBrokerage?.brokerageSupplier ?? 0) || 0,
         },
       };
-      console.log(
-        "Final Payload being sent to API:",
-        JSON.stringify(payload, null, 2),
-      );
 
       const response = await api.post(API_BASE_URL, payload);
       const createdOrder = response?.data || payload;
 
-      try {
-        await sendSaudaOrderEmails(createdOrder);
-      } catch (emailError) {
-        console.error("Auto email error:", emailError);
-      }
+      Promise.resolve().then(async () => {
+        try {
+          await sendSaudaOrderEmails(createdOrder);
+        } catch (emailError) {
+          console.error("Auto email error:", emailError);
+        }
+      });
 
       resetForm();
 
-      setTimeout(() => {
-        toast.success("Order created successfully! Redirecting...", {
-          position: "top-right",
-        });
-      }, 500);
-
-      setTimeout(() => navigate("/manage-order/list-self-order"), 2000);
+      toast.success("Order created successfully!", {
+        position: "top-right",
+      });
+      navigate("/manage-order/list-self-order");
     } catch (error) {
       console.error(
         "Self Order API Error:",

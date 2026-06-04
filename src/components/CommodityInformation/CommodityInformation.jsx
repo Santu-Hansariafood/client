@@ -23,6 +23,36 @@ const CommodityInformation = ({
   formData,
   buyerCommodity,
 }) => {
+  const getCommodityName = useCallback((commodity) => {
+    if (typeof commodity === "string") return commodity;
+    if (!commodity || typeof commodity !== "object") return "";
+    return commodity.name || commodity.label || commodity.value || "";
+  }, []);
+
+  const getParameterId = useCallback((param) => {
+    if (!param || typeof param !== "object") return "";
+    return (
+      param._id ||
+      param.id ||
+      param.parameterId ||
+      param.parameter?._id ||
+      param.parameter?.value ||
+      ""
+    );
+  }, []);
+
+  const getParameterLabel = useCallback((param) => {
+    if (!param || typeof param !== "object") return "";
+    const rawLabel = param.parameter;
+
+    if (typeof rawLabel === "string") return rawLabel;
+    if (rawLabel && typeof rawLabel === "object") {
+      return rawLabel.label || rawLabel.name || rawLabel.value || "";
+    }
+
+    return param.label || param.name || "";
+  }, []);
+
   const [commodities, setCommodities] = useState(buyerCommodity || []);
   const [parameters, setParameters] = useState([]);
   const [selectedCommodity, setSelectedCommodity] = useState(null);
@@ -34,39 +64,58 @@ const CommodityInformation = ({
   }, [buyerCommodity]);
 
   useEffect(() => {
-    if (Array.isArray(commodities) && commodities.length > 0 && formData.commodity) {
+    const currentCommodityName = getCommodityName(formData.commodity);
+
+    if (
+      Array.isArray(commodities) &&
+      commodities.length > 0 &&
+      currentCommodityName
+    ) {
       const commodityTemplate = commodities.find(
-        (item) => item.name === formData.commodity,
+        (item) => getCommodityName(item) === currentCommodityName,
       );
-      
+
       if (commodityTemplate) {
-        if (selectedCommodity !== formData.commodity) {
-          setSelectedCommodity(formData.commodity);
+        if (selectedCommodity !== currentCommodityName) {
+          setSelectedCommodity(currentCommodityName);
         }
-        
+
         // Merge template with saved values if they exist
-        const templateParams = Array.isArray(commodityTemplate.parameters) 
-          ? commodityTemplate.parameters 
+        const templateParams = Array.isArray(commodityTemplate.parameters)
+          ? commodityTemplate.parameters
           : [];
-          
-        const savedParams = Array.isArray(formData.parameters) 
-          ? formData.parameters 
+
+        const savedParams = Array.isArray(formData.parameters)
+          ? formData.parameters
           : [];
 
         const mergedParams = templateParams.map((templateParam) => {
           const savedParam = savedParams.find(
-            (p) => String(p.id || p._id) === String(templateParam._id),
+            (p) => String(getParameterId(p)) === String(getParameterId(templateParam)),
           );
           return {
             ...templateParam,
+            parameter: getParameterLabel(templateParam),
             value: savedParam ? savedParam.value : (templateParam.value || ""),
           };
         });
-        
+
         // Only update state if data has actually changed to prevent re-render loops
-        const currentParamsStr = JSON.stringify(parameters.map(p => ({ id: p._id, val: p.value })));
-        const nextParamsStr = JSON.stringify(mergedParams.map(p => ({ id: p._id, val: p.value })));
-        
+        const currentParamsStr = JSON.stringify(
+          parameters.map((p) => ({
+            id: getParameterId(p),
+            label: getParameterLabel(p),
+            val: p.value,
+          })),
+        );
+        const nextParamsStr = JSON.stringify(
+          mergedParams.map((p) => ({
+            id: getParameterId(p),
+            label: getParameterLabel(p),
+            val: p.value,
+          })),
+        );
+
         if (currentParamsStr !== nextParamsStr) {
           setParameters(mergedParams);
         }
@@ -75,27 +124,42 @@ const CommodityInformation = ({
       setParameters([]);
       setSelectedCommodity(null);
     }
-  }, [commodities, formData.commodity, formData.parameters]);
+  }, [
+    commodities,
+    formData.commodity,
+    formData.parameters,
+    getCommodityName,
+    getParameterId,
+    getParameterLabel,
+    parameters,
+    selectedCommodity,
+  ]);
 
   const onCommodityChange = (option) => {
-    const commodityName = option?.value || null;
+    const commodityName = getCommodityName(option) || null;
     setSelectedCommodity(commodityName);
 
     if (commodityName) {
-      const commodity = commodities.find((item) => item.name === commodityName);
-      const updatedParameters = (commodity?.parameters || []).map(p => ({
+      const commodity = commodities.find(
+        (item) => getCommodityName(item) === commodityName,
+      );
+      const updatedParameters = (commodity?.parameters || []).map((p) => ({
         ...p,
-        value: p.value || ""
+        parameter: getParameterLabel(p),
+        value: p.value || "",
       }));
 
       setParameters(updatedParameters);
 
       handleChange("commodity", commodityName);
-      handleChange("parameters", updatedParameters.map(p => ({
-        id: p._id,
-        value: p.value
-      })));
-      
+      handleChange(
+        "parameters",
+        updatedParameters.map((p) => ({
+          id: getParameterId(p),
+          value: p.value,
+        })),
+      );
+
       // Removed the buggy companyData lookup that was clearing emails
     } else {
       setParameters([]);
@@ -112,23 +176,23 @@ const CommodityInformation = ({
         setParameters(updatedParameters);
 
         const parametersWithIdAndValue = updatedParameters.map((param) => ({
-          id: param._id,
+          id: getParameterId(param),
           value: param.value,
         }));
 
         handleChange("parameters", parametersWithIdAndValue);
       }
     },
-    [parameters, handleChange],
+    [getParameterId, parameters, handleChange],
   );
 
   const commodityOptions = useMemo(
     () =>
       commodities.map((commodity) => ({
-        value: commodity.name,
-        label: commodity.name,
+        value: getCommodityName(commodity),
+        label: getCommodityName(commodity),
       })),
-    [commodities],
+    [commodities, getCommodityName],
   );
 
   const headers = useMemo(() => ["Quality Parameter", "Value in %"], []);
@@ -136,15 +200,15 @@ const CommodityInformation = ({
   const rows = useMemo(
     () =>
       parameters.map((param, index) => [
-        param.parameter,
+        getParameterLabel(param),
         <DataInput
-          key={param._id}
+          key={getParameterId(param) || `${getParameterLabel(param)}-${index}`}
           value={param.value}
-          placeholder={`Enter value for ${param.parameter}`}
+          placeholder={`Enter value for ${getParameterLabel(param)}`}
           onChange={(e) => onParameterChange(index, e.target.value)}
         />,
       ]),
-    [parameters, onParameterChange],
+    [getParameterId, getParameterLabel, parameters, onParameterChange],
   );
 
   return (

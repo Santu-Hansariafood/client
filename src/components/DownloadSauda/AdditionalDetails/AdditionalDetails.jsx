@@ -131,6 +131,13 @@ const styles = StyleSheet.create({
 
 const AdditionalDetails = ({ data }) => {
   const bank = data.supplierDetails?.bankDetails?.[0] || {};
+  const hasBankDetails = Boolean(
+    bank.accountHolderName ||
+      bank.accountNumber ||
+      bank.ifscCode ||
+      bank.bankName ||
+      bank.branchName,
+  );
 
   return (
     <View style={styles.section}>
@@ -186,17 +193,28 @@ const AdditionalDetails = ({ data }) => {
 
       <View style={styles.bankSection}>
         <Text style={styles.bankTitle}>BANK ACCOUNT DETAILS</Text>
-        {bank.accountNumber ? (
+        {hasBankDetails ? (
           <>
-            <Text style={styles.bankText}>
-              Account Holder Name: {bank.accountHolderName || data.supplierCompany}
-            </Text>
-            <Text style={styles.bankText}>
-              Account Number: {bank.accountNumber} | IFSC Code: {bank.ifscCode || "N/A"}
-            </Text>
-            <Text style={styles.bankText}>
-              Bank Name: {bank.bankName || "N/A"}
-            </Text>
+            {(bank.accountHolderName || data.supplierCompany) && (
+              <Text style={styles.bankText}>
+                Account Holder Name:{" "}
+                {bank.accountHolderName || data.supplierCompany}
+              </Text>
+            )}
+            {(bank.accountNumber || bank.ifscCode) && (
+              <Text style={styles.bankText}>
+                {bank.accountNumber
+                  ? `Account Number: ${bank.accountNumber}`
+                  : "Account Number: N/A"}
+                {bank.ifscCode ? ` | IFSC Code: ${bank.ifscCode}` : ""}
+              </Text>
+            )}
+            {(bank.bankName || bank.branchName) && (
+              <Text style={styles.bankText}>
+                {bank.bankName ? `Bank Name: ${bank.bankName}` : "Bank Name: N/A"}
+                {bank.branchName ? ` | Branch: ${bank.branchName}` : ""}
+              </Text>
+            )}
           </>
         ) : (
           <Text style={styles.bankText}>Bank details not available</Text>

@@ -19,6 +19,7 @@ const DownloadSauda = ({
   companyData: initialCompanyData,
   autoEmail = false,
 }) => {
+  const hasLookupItems = (items) => Array.isArray(items) && items.length > 0;
   const [consigneeData, setConsigneeData] = useState(
     initialConsigneeData || [],
   );
@@ -29,11 +30,13 @@ const DownloadSauda = ({
   );
   const [companyData, setCompanyData] = useState(initialCompanyData || []);
   const [loading, setLoading] = useState(
-    !initialConsigneeData ||
-      !initialSupplierData ||
-      !initialBuyerData ||
-      !initialSellerProfileData ||
-      !initialCompanyData,
+    !(
+      hasLookupItems(initialConsigneeData) &&
+      hasLookupItems(initialSupplierData) &&
+      hasLookupItems(initialBuyerData) &&
+      hasLookupItems(initialSellerProfileData) &&
+      hasLookupItems(initialCompanyData)
+    ),
   );
   const [sendingEmail, setSendingEmail] = useState(false);
 
@@ -45,12 +48,17 @@ const DownloadSauda = ({
 
   useEffect(() => {
     if (
-      initialConsigneeData &&
-      initialSupplierData &&
-      initialBuyerData &&
-      initialSellerProfileData &&
-      initialCompanyData
+      hasLookupItems(initialConsigneeData) &&
+      hasLookupItems(initialSupplierData) &&
+      hasLookupItems(initialBuyerData) &&
+      hasLookupItems(initialSellerProfileData) &&
+      hasLookupItems(initialCompanyData)
     ) {
+      setConsigneeData(initialConsigneeData);
+      setSupplierData(initialSupplierData);
+      setBuyerData(initialBuyerData);
+      setSellerProfileData(initialSellerProfileData);
+      setCompanyData(initialCompanyData);
       setLoading(false);
       return;
     }
@@ -58,19 +66,19 @@ const DownloadSauda = ({
     const fetchData = async () => {
       try {
         const [cData, sData, bData, spData, companyRows] = await Promise.all([
-          initialConsigneeData
+          hasLookupItems(initialConsigneeData)
             ? Promise.resolve(initialConsigneeData)
             : fetchAllPages(CONSIGNEE_API_URL, { limit: 200 }),
-          initialSupplierData
+          hasLookupItems(initialSupplierData)
             ? Promise.resolve(initialSupplierData)
             : fetchAllPages(SUPPLIER_API_URL, { limit: 200 }),
-          initialBuyerData
+          hasLookupItems(initialBuyerData)
             ? Promise.resolve(initialBuyerData)
             : fetchAllPages(BUYER_API_URL, { limit: 200 }),
-          initialSellerProfileData
+          hasLookupItems(initialSellerProfileData)
             ? Promise.resolve(initialSellerProfileData)
             : fetchAllPages(SELLER_PROFILE_API_URL, { limit: 200 }),
-          initialCompanyData
+          hasLookupItems(initialCompanyData)
             ? Promise.resolve(initialCompanyData)
             : fetchAllPages(COMPANY_API_URL, { limit: 200 }),
         ]);

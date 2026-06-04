@@ -384,18 +384,19 @@ const EditSelfOrder = () => {
 
       await api.put(`${API_BASE_URL}/${id}`, payload);
 
-      try {
-        const updatedOrder = { ...formData, ...payload };
-        await sendSaudaOrderEmails(updatedOrder);
-      } catch (emailError) {
-        console.error("Auto email error:", emailError);
-      }
+      const updatedOrder = { ...formData, ...payload };
+      Promise.resolve().then(async () => {
+        try {
+          await sendSaudaOrderEmails(updatedOrder);
+        } catch (emailError) {
+          console.error("Auto email error:", emailError);
+        }
+      });
 
       toast.success("Order updated successfully! Redirecting...", {
         position: "top-right",
       });
-
-      setTimeout(() => navigate("/manage-order/list-self-order"), 2000);
+      navigate("/manage-order/list-self-order");
     } catch (error) {
       console.error(
         "Update Order API Error:",
