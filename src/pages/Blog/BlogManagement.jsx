@@ -78,18 +78,21 @@ const BlogManagement = () => {
 
     try {
       setSubmitting(true);
-      await api.post("/api/blogs", formData);
-      toast.success("Blog post created successfully");
-      setShowAddForm(false);
-      setFormData({
-        title: "",
-        heading: "",
-        content: [""],
-        imageUrl: "",
-        date: new Date().toISOString().split("T")[0],
-      });
-      fetchBlogs();
+      const res = await api.post("/blogs", formData);
+      if (res.status === 201 || res.status === 200) {
+        toast.success("Blog post created successfully");
+        setShowAddForm(false);
+        setFormData({
+          title: "",
+          heading: "",
+          content: [""],
+          imageUrl: "",
+          date: new Date().toISOString().split("T")[0],
+        });
+        fetchBlogs();
+      }
     } catch (error) {
+      console.error("Publish error:", error);
       toast.error(error.response?.data?.message || "Error creating blog post");
     } finally {
       setSubmitting(false);

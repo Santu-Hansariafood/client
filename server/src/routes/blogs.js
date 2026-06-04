@@ -48,21 +48,40 @@ router.get("/", async (req, res) => {
   }
 });
 
-// Protected: Admin/Employee can create/edit/delete
+// Public: Get single blog
+router.get("/:id", async (req, res) => {
+  try {
+    const blog = await Blog.findById(req.params.id).populate("author", "name role");
+    if (!blog) return res.status(404).json({ message: "Blog not found" });
+    res.json(blog);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Protected: Admin only can create/edit/delete
 router.post("/", authJwt, async (req, res) => {
   try {
-    if (!["Admin", "Employee"].includes(req.user.role)) {
-      return res.status(403).json({ message: "Access denied" });
+    if (req.user.role !== "Admin") {
+      return res.status(403).json({ message: "Access denied. Only Admin can publish news." });
     }
 
     const { title, heading, content, imageUrl, date } = req.body;
+    
+    // Extract author ID from token (handles both 'id' and 'sub' naming conventions)
+    const authorId = req.user.id || req.user.sub;
+
+    if (!authorId) {
+      return res.status(400).json({ message: "User identification failed. Please log in again." });
+    }
+
     const blog = new Blog({
       title,
       heading,
       content,
       imageUrl,
       date: date || new Date(),
-      author: req.user.id,
+      author: authorId,
     });
 
     await blog.save();
@@ -74,7 +93,7 @@ router.post("/", authJwt, async (req, res) => {
 
 router.patch("/:id", authJwt, async (req, res) => {
   try {
-    if (!["Admin", "Employee"].includes(req.user.role)) {
+    if (req.user.role !== "Admin") {
       return res.status(403).json({ message: "Access denied" });
     }
 
@@ -88,7 +107,7 @@ router.patch("/:id", authJwt, async (req, res) => {
 
 router.delete("/:id", authJwt, async (req, res) => {
   try {
-    if (!["Admin", "Employee"].includes(req.user.role)) {
+    if (req.user.role !== "Admin") {
       return res.status(403).json({ message: "Access denied" });
     }
 

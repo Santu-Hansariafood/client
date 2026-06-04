@@ -263,7 +263,7 @@
           "name": "Manage News",
           "link": "/news/manage",
           "icon": "FaEdit",
-          "roles": ["Admin", "Employee"]
+          "roles": ["Admin"]
         }
       ]
     },

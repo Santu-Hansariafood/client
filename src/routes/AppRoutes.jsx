@@ -254,7 +254,7 @@ const privateRoutes = [
   {
     path: "news/manage",
     component: LazyPages.BlogManagement,
-    roles: ["Admin", "Employee"],
+    roles: ["Admin"],
   },
   {
     path: "blog/:id",

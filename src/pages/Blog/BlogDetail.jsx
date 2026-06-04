@@ -14,11 +14,8 @@ const BlogDetail = () => {
   useEffect(() => {
     const fetchBlog = async () => {
       try {
-        const res = await api.get(`/blogs/latest?id=${id}`); // Reusing latest for single fetch if id provided
-        // Since my /latest doesn't take ID, let's fix the route later or fetch from list
-        const resList = await api.get(`/blogs`);
-        const found = resList.data.blogs.find(b => b._id === id);
-        setBlog(found);
+        const res = await api.get(`/blogs/${id}`);
+        setBlog(res.data);
       } catch (error) {
         console.error("Error fetching blog:", error);
       } finally {
@@ -63,11 +60,11 @@ const BlogDetail = () => {
         {/* Content */}
         <div className="p-8 md:p-12">
           <div className="mb-8 text-center">
-            <h2 className="text-3xl md:text-5xl font-serif font-black leading-tight text-slate-900 mb-4">
+            <h2 className="text-3xl md:text-5xl font-serif font-black leading-tight text-[#1e3a5f] mb-4 drop-shadow-sm">
               {blog.title}
             </h2>
-            <div className="w-24 h-1 bg-slate-900 mx-auto mb-6"></div>
-            <p className="text-xl font-bold italic text-slate-600 max-w-2xl mx-auto leading-relaxed">
+            <div className="w-24 h-1 bg-[#1e3a5f] mx-auto mb-6"></div>
+            <p className="text-xl font-bold italic text-[#059669] max-w-2xl mx-auto leading-relaxed">
               "{blog.heading}"
             </p>
           </div>
@@ -75,13 +72,13 @@ const BlogDetail = () => {
           <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
             <div className="md:col-span-8">
               {blog.imageUrl && (
-                <div className="mb-8 border-4 border-slate-100 p-2 shadow-sm">
+                <div className="mb-8 border-4 border-slate-100 p-2 shadow-sm bg-slate-50">
                   <img 
                     src={blog.imageUrl} 
                     alt={blog.title} 
-                    className="w-full h-auto grayscale hover:grayscale-0 transition-all duration-700"
+                    className="w-full h-auto grayscale hover:grayscale-0 transition-all duration-700 rounded shadow-inner"
                   />
-                  <p className="mt-2 text-[10px] italic font-medium text-slate-500 text-center border-t border-slate-100 pt-2">
+                  <p className="mt-2 text-[10px] italic font-bold text-slate-400 text-center border-t border-slate-200 pt-2 uppercase tracking-widest">
                     Official bulletin from Hansaria Food Pvt. Ltd.
                   </p>
                 </div>
@@ -89,7 +86,7 @@ const BlogDetail = () => {
 
               <div className="prose prose-slate max-w-none">
                 {blog.content.map((para, idx) => (
-                  <p key={idx} className="text-lg leading-relaxed text-slate-800 font-serif mb-6 first-letter:text-5xl first-letter:font-bold first-letter:float-left first-letter:mr-3 first-letter:mt-1 first-letter:text-slate-900">
+                  <p key={idx} className="text-lg leading-relaxed text-[#334155] font-serif mb-6 first-letter:text-5xl first-letter:font-bold first-letter:float-left first-letter:mr-3 first-letter:mt-1 first-letter:text-[#1e3a5f] text-justify">
                     {para}
                   </p>
                 ))}

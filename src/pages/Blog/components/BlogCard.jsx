@@ -39,16 +39,16 @@ const BlogCard = ({ blog }) => {
           })}
         </div>
         
-        <h3 className="text-lg font-bold text-slate-800 line-clamp-2 mb-2 group-hover:text-blue-600 transition-colors">
+        <h3 className="text-lg font-bold text-[#1e3a5f] line-clamp-2 mb-2 group-hover:text-blue-600 transition-colors">
           {blog.title}
         </h3>
         
-        <p className="text-sm text-slate-500 line-clamp-3 mb-4 font-medium leading-relaxed">
+        <p className="text-sm text-[#334155] line-clamp-3 mb-4 font-medium leading-relaxed">
           {blog.heading}
         </p>
         
         <div className="flex items-center justify-between pt-4 border-t border-slate-100">
-          <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+          <span className="text-[10px] font-black uppercase tracking-widest text-[#059669]">
             Hansaria Food News
           </span>
           <div className="flex items-center gap-1 text-blue-600 text-[10px] font-black uppercase tracking-widest group-hover:translate-x-1 transition-transform">
