@@ -30,6 +30,26 @@ const CommodityInformation = ({
     return commodity.name || commodity.label || commodity.value || "";
   }, []);
 
+  const getCommodityValue = useCallback(
+    (value) => {
+      const commodity =
+        typeof value === "object" && value !== null && !Array.isArray(value)
+          ? value
+          : null;
+
+      if (commodity) {
+        return getCommodityName(commodity);
+      }
+
+      const matchedCommodity = (buyerCommodity || []).find(
+        (item) => String(getCommodityId(item)) === String(value),
+      );
+
+      return getCommodityName(matchedCommodity) || String(value || "");
+    },
+    [buyerCommodity, getCommodityId, getCommodityName],
+  );
+
   const [commodities, setCommodities] = useState(buyerCommodity || []);
   const [parameters, setParameters] = useState([]);
   const [selectedCommodity, setSelectedCommodity] = useState(null);
@@ -96,11 +116,19 @@ const CommodityInformation = ({
       commodities.length > 0 &&
       commodityTemplate
     ) {
+      const selectedCommodityValue = getCommodityValue(formData.commodity);
       const selectedCommodityId =
         getCommodityId(commodityTemplate) || getCommodityName(commodityTemplate);
 
       if (selectedCommodity !== selectedCommodityId) {
         setSelectedCommodity(selectedCommodityId);
+      }
+
+      if (
+        selectedCommodityValue &&
+        selectedCommodityValue !== formData.commodity
+      ) {
+        handleChange("commodity", selectedCommodityValue);
       }
 
       // Merge template with saved values if they exist
@@ -153,8 +181,10 @@ const CommodityInformation = ({
     findCommodity,
     getCommodityId,
     getCommodityName,
+    getCommodityValue,
     getParameterId,
     getParameterLabel,
+    handleChange,
     parameters,
     selectedCommodity,
   ]);
