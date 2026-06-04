@@ -287,6 +287,36 @@ const AccountSelection = ({
             </div>
           )}
 
+          {dateTotal > 0 && (
+            <div className="mt-2 p-4 bg-emerald-50 border-2 border-emerald-200 rounded-2xl flex flex-col gap-2 shadow-sm animate-in fade-in slide-in-from-bottom-2 duration-500">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-full bg-emerald-600 flex items-center justify-center text-white shadow-md shadow-emerald-200">
+                    <FaMoneyBillWave size={12} />
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-black text-emerald-800 uppercase tracking-widest leading-none">
+                      Payments Recorded for Today
+                    </p>
+                    <p className="text-[8px] font-bold text-emerald-600 uppercase mt-1">
+                      {new Date(formData.date).toLocaleDateString("en-GB", { day: 'numeric', month: 'short', year: 'numeric' })}
+                      {hasBuyerCompany ? ` · ${companyPair.buyerCompany}` : ""}
+                      {fullCompanyMapping ? ` → ${companyPair.supplierCompany}` : ""}
+                    </p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="text-xs font-black text-emerald-600 uppercase tracking-tighter leading-none mb-1">
+                    Total
+                  </p>
+                  <p className="text-xl font-black text-emerald-900 tabular-nums tracking-tight">
+                    ₹{Number(dateTotal).toLocaleString("en-IN")}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
           {showEntryLedger && (
             <div className="mt-4">
               <CreditBalancePanel

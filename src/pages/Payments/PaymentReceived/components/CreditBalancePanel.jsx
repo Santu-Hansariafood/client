@@ -18,27 +18,27 @@ const CreditBalancePanel = ({
   const showSummary = debitEntryTotal > 0 || creditToSeller > 0;
   const showAdvanceTable = isAdvance && creditByPair.length > 0;
 
-  // Swapping Debit and Credit per user request:
-  // Payment Received (Entry) -> Debited balance
-  // Bill Amounts (Lorry) -> Credited balance
+  // Final terminology mapping:
+  // Payment Received (Entry) -> credited balance (Emerald)
+  // Bill Amounts (Lorry) -> debited balance (Rose)
   
-  const debitLabel = fullCompanyMapping && buyerCompany && supplierCompany
-    ? "debited balance"
+  const creditLabel = fullCompanyMapping && buyerCompany && supplierCompany
+    ? "credited balance"
     : isAdvance
       ? "Credit balance (Advance) · Cr."
       : "Payment Received";
 
-  const debitHint = fullCompanyMapping && buyerCompany && supplierCompany
-    ? `payment received from ${buyerCompany}`
+  const creditHint = fullCompanyMapping && buyerCompany && supplierCompany
+    ? `available payment from ${buyerCompany}`
     : isAdvance
       ? "Buyer advance on account"
       : "Amount received from buyer (entry above)";
 
-  const creditLabel = isAdvance
+  const debitLabel = isAdvance
     ? "Debit to seller · Dr."
-    : "credited balance";
+    : "debited balance";
 
-  const creditHint = isAdvance
+  const debitHint = isAdvance
     ? "Posted to seller lorries"
     : "Total bill amount for seller lorries";
 
@@ -64,45 +64,27 @@ const CreditBalancePanel = ({
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
-        <div
-          className={`rounded-lg border px-4 py-3 ${
-            isAdvance
-              ? "border-emerald-200 bg-emerald-50"
-              : "border-rose-200 bg-rose-50"
-          }`}
-        >
-          <p
-            className={`text-[9px] font-black uppercase tracking-widest ${
-              isAdvance ? "text-emerald-800" : "text-rose-800"
-            }`}
-          >
-            {debitLabel}
-          </p>
-          <p
-            className={`text-lg font-black tabular-nums mt-1 ${
-              isAdvance ? "text-emerald-900" : "text-rose-900"
-            }`}
-          >
-            {formatLedgerAmount(debitEntryTotal)}
-          </p>
-          <p
-            className={`text-[9px] font-bold mt-1 normal-case ${
-              isAdvance ? "text-emerald-600/90" : "text-rose-600/90"
-            }`}
-          >
-            {debitHint}
-          </p>
-        </div>
-
         <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3">
           <p className="text-[9px] font-black text-emerald-900 uppercase tracking-widest">
             {creditLabel}
           </p>
           <p className="text-lg font-black text-emerald-900 tabular-nums mt-1">
-            {formatLedgerAmount(creditToSeller)}
+            {formatLedgerAmount(debitEntryTotal)}
           </p>
           <p className="text-[9px] font-bold text-emerald-700/90 mt-1 normal-case">
             {creditHint}
+          </p>
+        </div>
+
+        <div className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3">
+          <p className="text-[9px] font-black text-rose-900 uppercase tracking-widest">
+            {debitLabel}
+          </p>
+          <p className="text-lg font-black text-rose-900 tabular-nums mt-1">
+            {formatLedgerAmount(creditToSeller)}
+          </p>
+          <p className="text-[9px] font-bold text-rose-700/90 mt-1 normal-case">
+            {debitHint}
             {isAdvance && creditPostedToSeller > 0
               ? ` · ${formatLedgerAmount(creditPostedToSeller)} saved`
               : ""}
