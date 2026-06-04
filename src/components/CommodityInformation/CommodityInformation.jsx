@@ -23,11 +23,40 @@ const CommodityInformation = ({
   formData,
   buyerCommodity,
 }) => {
+  const getCommodityId = useCallback((commodity) => {
+    if (!commodity || typeof commodity !== "object") return "";
+    return commodity._id || commodity.commodityId || commodity.value || "";
+  }, []);
+
   const getCommodityName = useCallback((commodity) => {
     if (typeof commodity === "string") return commodity;
     if (!commodity || typeof commodity !== "object") return "";
     return commodity.name || commodity.label || commodity.value || "";
   }, []);
+
+  const findCommodity = useCallback(
+    (value) => {
+      if (!value || !Array.isArray(commodities)) return null;
+
+      const rawValue =
+        typeof value === "object"
+          ? value._id || value.commodityId || value.value || value.name || value.label
+          : value;
+
+      const normalizedValue = String(rawValue);
+
+      return (
+        commodities.find(
+          (item) => String(getCommodityId(item)) === normalizedValue,
+        ) ||
+        commodities.find(
+          (item) => getCommodityName(item) === normalizedValue,
+        ) ||
+        null
+      );
+    },
+    [commodities, getCommodityId, getCommodityName],
+  );
 
   const getParameterId = useCallback((param) => {
     if (!param || typeof param !== "object") return "";
@@ -64,61 +93,58 @@ const CommodityInformation = ({
   }, [buyerCommodity]);
 
   useEffect(() => {
-    const currentCommodityName = getCommodityName(formData.commodity);
+    const commodityTemplate = findCommodity(formData.commodity);
 
     if (
       Array.isArray(commodities) &&
       commodities.length > 0 &&
-      currentCommodityName
+      commodityTemplate
     ) {
-      const commodityTemplate = commodities.find(
-        (item) => getCommodityName(item) === currentCommodityName,
+      const selectedCommodityId =
+        getCommodityId(commodityTemplate) || getCommodityName(commodityTemplate);
+
+      if (selectedCommodity !== selectedCommodityId) {
+        setSelectedCommodity(selectedCommodityId);
+      }
+
+      // Merge template with saved values if they exist
+      const templateParams = Array.isArray(commodityTemplate.parameters)
+        ? commodityTemplate.parameters
+        : [];
+
+      const savedParams = Array.isArray(formData.parameters)
+        ? formData.parameters
+        : [];
+
+      const mergedParams = templateParams.map((templateParam) => {
+        const savedParam = savedParams.find(
+          (p) => String(getParameterId(p)) === String(getParameterId(templateParam)),
+        );
+        return {
+          ...templateParam,
+          parameter: getParameterLabel(templateParam),
+          value: savedParam ? savedParam.value : (templateParam.value || ""),
+        };
+      });
+
+      // Only update state if data has actually changed to prevent re-render loops
+      const currentParamsStr = JSON.stringify(
+        parameters.map((p) => ({
+          id: getParameterId(p),
+          label: getParameterLabel(p),
+          val: p.value,
+        })),
+      );
+      const nextParamsStr = JSON.stringify(
+        mergedParams.map((p) => ({
+          id: getParameterId(p),
+          label: getParameterLabel(p),
+          val: p.value,
+        })),
       );
 
-      if (commodityTemplate) {
-        if (selectedCommodity !== currentCommodityName) {
-          setSelectedCommodity(currentCommodityName);
-        }
-
-        // Merge template with saved values if they exist
-        const templateParams = Array.isArray(commodityTemplate.parameters)
-          ? commodityTemplate.parameters
-          : [];
-
-        const savedParams = Array.isArray(formData.parameters)
-          ? formData.parameters
-          : [];
-
-        const mergedParams = templateParams.map((templateParam) => {
-          const savedParam = savedParams.find(
-            (p) => String(getParameterId(p)) === String(getParameterId(templateParam)),
-          );
-          return {
-            ...templateParam,
-            parameter: getParameterLabel(templateParam),
-            value: savedParam ? savedParam.value : (templateParam.value || ""),
-          };
-        });
-
-        // Only update state if data has actually changed to prevent re-render loops
-        const currentParamsStr = JSON.stringify(
-          parameters.map((p) => ({
-            id: getParameterId(p),
-            label: getParameterLabel(p),
-            val: p.value,
-          })),
-        );
-        const nextParamsStr = JSON.stringify(
-          mergedParams.map((p) => ({
-            id: getParameterId(p),
-            label: getParameterLabel(p),
-            val: p.value,
-          })),
-        );
-
-        if (currentParamsStr !== nextParamsStr) {
-          setParameters(mergedParams);
-        }
+      if (currentParamsStr !== nextParamsStr) {
+        setParameters(mergedParams);
       }
     } else if (!formData.commodity && parameters.length > 0) {
       setParameters([]);
@@ -128,6 +154,8 @@ const CommodityInformation = ({
     commodities,
     formData.commodity,
     formData.parameters,
+    findCommodity,
+    getCommodityId,
     getCommodityName,
     getParameterId,
     getParameterLabel,
@@ -136,13 +164,12 @@ const CommodityInformation = ({
   ]);
 
   const onCommodityChange = (option) => {
-    const commodityName = getCommodityName(option) || null;
-    setSelectedCommodity(commodityName);
+    const commodity = findCommodity(option);
+    const commodityName = getCommodityName(commodity) || null;
+    const commodityId = getCommodityId(commodity) || commodityName;
+    setSelectedCommodity(commodityId);
 
-    if (commodityName) {
-      const commodity = commodities.find(
-        (item) => getCommodityName(item) === commodityName,
-      );
+    if (commodityName && commodity) {
       const updatedParameters = (commodity?.parameters || []).map((p) => ({
         ...p,
         parameter: getParameterLabel(p),
@@ -189,10 +216,10 @@ const CommodityInformation = ({
   const commodityOptions = useMemo(
     () =>
       commodities.map((commodity) => ({
-        value: getCommodityName(commodity),
+        value: getCommodityId(commodity) || getCommodityName(commodity),
         label: getCommodityName(commodity),
       })),
-    [commodities, getCommodityName],
+    [commodities, getCommodityId, getCommodityName],
   );
 
   const headers = useMemo(() => ["Quality Parameter", "Value in %"], []);
