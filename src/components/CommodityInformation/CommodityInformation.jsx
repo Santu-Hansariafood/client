@@ -7,8 +7,6 @@ import {
   useCallback,
 } from "react";
 import PropTypes from "prop-types";
-import api from "../../utils/apiClient/apiClient";
-import { fetchAllPages } from "../../utils/apiClient/fetchAllPages";
 import Loading from "../../common/Loading/Loading";
 const DataDropdown = lazy(
   () => import("../../common/DataDropdown/DataDropdown"),
@@ -18,8 +16,6 @@ const Tables = lazy(() => import("../../common/Tables/Tables"));
 
 const CommodityInformation = ({
   handleChange,
-  selectedCompany,
-  brokerageMap,
   formData,
   buyerCommodity,
 }) => {
@@ -33,6 +29,10 @@ const CommodityInformation = ({
     if (!commodity || typeof commodity !== "object") return "";
     return commodity.name || commodity.label || commodity.value || "";
   }, []);
+
+  const [commodities, setCommodities] = useState(buyerCommodity || []);
+  const [parameters, setParameters] = useState([]);
+  const [selectedCommodity, setSelectedCommodity] = useState(null);
 
   const findCommodity = useCallback(
     (value) => {
@@ -81,10 +81,6 @@ const CommodityInformation = ({
 
     return param.label || param.name || "";
   }, []);
-
-  const [commodities, setCommodities] = useState(buyerCommodity || []);
-  const [parameters, setParameters] = useState([]);
-  const [selectedCommodity, setSelectedCommodity] = useState(null);
 
   useEffect(() => {
     if (buyerCommodity) {
@@ -187,7 +183,6 @@ const CommodityInformation = ({
         })),
       );
 
-      // Removed the buggy companyData lookup that was clearing emails
     } else {
       setParameters([]);
       handleChange("commodity", "");
