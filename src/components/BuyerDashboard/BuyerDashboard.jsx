@@ -37,6 +37,7 @@ import { downloadFile } from "../../utils/fileDownloader";
 import logo from "../../assets/Hans.png";
 import QRCode from "qrcode";
 import EmployeeIDCardPDF from "../EmployeeDashboard/EmployeeIDCardPDF";
+import DashboardBlogSection from "../../pages/Blog/components/DashboardBlogSection";
 
 const HeaderSection = memo(({ userName, totalBrokerage, companyName, onPrintIDCard, isPrinting }) => {
   const greeting = useMemo(() => {
@@ -610,6 +611,8 @@ const BuyerDashboard = () => {
               subtitle="Diverse Portfolio"
             />
           </div>
+
+          <DashboardBlogSection />
 
           <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 md:gap-8 sm:gap-12 items-start">
             <div className="xl:col-span-6 bg-white rounded-[1.5rem] md:rounded-[2.5rem] border border-blue-50 shadow-sm overflow-hidden flex flex-col hover:shadow-lg transition-all duration-500">

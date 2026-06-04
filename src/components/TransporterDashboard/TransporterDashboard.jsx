@@ -8,6 +8,7 @@ import {
 } from "react-icons/fa";
 import { useAuth } from "../../context/AuthContext/AuthContext";
 import UserProfileCard from "../UserProfileCard/UserProfileCard";
+import DashboardBlogSection from "../../pages/Blog/components/DashboardBlogSection";
 
 const TransporterDashboard = () => {
   const { user } = useAuth();
@@ -61,6 +62,8 @@ const TransporterDashboard = () => {
       </div>
 
       <UserProfileCard user={user} />
+      
+      <DashboardBlogSection />
     </div>
   );
 };

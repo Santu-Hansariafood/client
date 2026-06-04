@@ -36,6 +36,7 @@ import { downloadFile } from "../../utils/fileDownloader";
 import logo from "../../assets/Hans.png";
 import QRCode from "qrcode";
 import EmployeeIDCardPDF from "../EmployeeDashboard/EmployeeIDCardPDF";
+import DashboardBlogSection from "../../pages/Blog/components/DashboardBlogSection";
 
 const PopupBox = lazy(() => import("../../common/PopupBox/PopupBox"));
 
@@ -756,6 +757,8 @@ const SellerDashboard = () => {
               />
             </div>
           </section>
+
+          <DashboardBlogSection />
 
           <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 md:gap-8 sm:gap-12 items-start">
             {/* Material Intelligence */}

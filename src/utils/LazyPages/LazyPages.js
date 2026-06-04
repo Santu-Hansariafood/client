@@ -104,6 +104,8 @@ const loaders = {
   BuyerBrokerage: () => import("../../pages/Brokerage/BuyerBrokerage"),
   SellerBrokerage: () => import("../../pages/Brokerage/SellerBrokerage"),
   SaudaWiseDetails: () => import("../../pages/Reports/SaudaWiseDetails/SaudaWiseDetails"),
+  BlogManagement: () => import("../../pages/Blog/BlogManagement"),
+  BlogDetail: () => import("../../pages/Blog/BlogDetail"),
 };
 
 const pathToKey = {
@@ -172,6 +174,8 @@ const pathToKey = {
   "/data-safety": "DataSafety",
   "/brokerage/buyer": "BuyerBrokerage",
   "/brokerage/seller": "SellerBrokerage",
+  "/news/manage": "BlogManagement",
+  "/blog/:id": "BlogDetail",
 };
 
 const prefetched = new Set();
@@ -269,6 +273,9 @@ const LazyPages = {
   ListPaymentReceived: lazy(loaders.ListPaymentReceived),
   BuyerBrokerage: lazy(loaders.BuyerBrokerage),
   SellerBrokerage: lazy(loaders.SellerBrokerage),
+  SaudaWiseDetails: lazy(loaders.SaudaWiseDetails),
+  BlogManagement: lazy(loaders.BlogManagement),
+  BlogDetail: lazy(loaders.BlogDetail),
 };
 
 export default LazyPages;

@@ -4,6 +4,7 @@ import api from "../../utils/apiClient/apiClient";
 import Loading from "../../common/Loading/Loading";
 import AdminPageShell from "../../common/AdminPageShell/AdminPageShell";
 import { FaTachometerAlt } from "react-icons/fa";
+import DashboardBlogSection from "../Blog/components/DashboardBlogSection";
 const CardGrid = lazy(() => import("./CardGrid/CardGrid"));
 const ChartSection = lazy(() => import("./ChartSection/ChartSection"));
 
@@ -91,6 +92,8 @@ const Dashboard = () => {
                 <ChartSection agentSaudas={agentSaudas} />
               </div>
             </div>
+
+            <DashboardBlogSection />
           </div>
         </div>
       </AdminPageShell>

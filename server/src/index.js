@@ -44,6 +44,7 @@ import expenseCategoryRoutes from "./routes/expenseCategories.js";
 import expenseRequestRoutes from "./routes/expenseRequests.js";
 import uploadRoutes from "./routes/uploads.js";
 import dashboardRoutes from "./routes/dashboard.js";
+import blogRoutes from "./routes/blogs.js";
 import { startNotificationCleanup } from "./lib/scheduler.js";
 import http from "http";
 import { initSocket } from "./lib/socket.js";
@@ -151,6 +152,7 @@ app.use("/api/expense-categories", authJwt, expenseCategoryRoutes);
 app.use("/api/expense-requests", authJwt, expenseRequestRoutes);
 app.use("/api/uploads", authJwt, uploadRoutes);
 app.use("/api/dashboard", authJwt, dashboardRoutes);
+app.use("/api/blogs", authJwt, blogRoutes);
 
 if (process.env.NODE_ENV === "production") {
   const distPath = path.join(__dirname, "../../dist");

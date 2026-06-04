@@ -256,6 +256,18 @@
       ]
     },
     {
+      "section": "News Bulletin",
+      "icon": "FaNewspaper",
+      "actions": [
+        {
+          "name": "Manage News",
+          "link": "/news/manage",
+          "icon": "FaEdit",
+          "roles": ["Admin", "Employee"]
+        }
+      ]
+    },
+    {
       "section": "Employee Management",
       "icon": "FaUserTie",
       "actions": [

@@ -21,6 +21,7 @@ import QRCode from "qrcode";
 import EmployeeIDCardPDF from "./EmployeeIDCardPDF";
 import logo from "../../assets/Hans.png";
 import { toast } from "react-toastify";
+import DashboardBlogSection from "../../pages/Blog/components/DashboardBlogSection";
 
 const EmployeeDashboard = () => {
   const { user } = useAuth();
@@ -314,6 +315,8 @@ const EmployeeDashboard = () => {
           </div>
         </div>
       </div>
+
+      <DashboardBlogSection />
     </div>
   );
 };
