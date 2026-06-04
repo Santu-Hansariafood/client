@@ -105,6 +105,7 @@ const EditSelfOrder = () => {
     state?.sellerCompanyData || [],
   );
   const [companies, setCompanies] = useState(state?.companyData || []);
+  const [allCommodities, setAllCommodities] = useState([]);
   const [selectedEmails, setSelectedEmails] = useState({
     buyer: true,
     supplier: true,
@@ -171,6 +172,7 @@ const EditSelfOrder = () => {
         const needsSuppliers = !suppliers.length;
         const needsSellerCompanies = !sellerCompanies.length;
         const needsCompanies = !companies.length;
+        const needsCommodities = !allCommodities.length;
 
         const [
           orderRes,
@@ -179,6 +181,7 @@ const EditSelfOrder = () => {
           suppliersRows,
           sellerCompaniesRows,
           companiesRows,
+          commoditiesRows,
         ] = await Promise.all([
           orderPromise,
           needsConsignees
@@ -196,6 +199,9 @@ const EditSelfOrder = () => {
           needsCompanies
             ? fetchAllPages("/companies", { limit: 200 }).catch(() => [])
             : Promise.resolve(companies),
+          needsCommodities
+            ? fetchAllPages("/commodities", { limit: 500 }).catch(() => [])
+            : Promise.resolve(allCommodities),
         ]);
 
         const data = orderRes.data;
@@ -221,10 +227,11 @@ const EditSelfOrder = () => {
         }
 
         if (needsConsignees) setConsignees(consigneesRows);
-         if (needsBuyers) setBuyers(buyersRows);
-         if (needsSuppliers) setSuppliers(suppliersRows);
-         if (needsSellerCompanies) setSellerCompanies(sellerCompaniesRows);
-         if (needsCompanies) setCompanies(companiesRows);
+        if (needsBuyers) setBuyers(buyersRows);
+        if (needsSuppliers) setSuppliers(suppliersRows);
+        if (needsSellerCompanies) setSellerCompanies(sellerCompaniesRows);
+        if (needsCompanies) setCompanies(companiesRows);
+        if (needsCommodities) setAllCommodities(commoditiesRows);
       } catch (error) {
         if (api.isCancel(error)) return;
         console.error("Error fetching data:", error);
@@ -433,6 +440,7 @@ const EditSelfOrder = () => {
               consignees={consignees}
               buyers={buyers}
               companies={companies}
+              allCommodities={allCommodities}
             />
           </div>
           <div className={sectionClass}>

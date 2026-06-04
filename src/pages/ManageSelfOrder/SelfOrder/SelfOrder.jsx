@@ -86,6 +86,7 @@ const SelfOrder = () => {
   const [sellerOptions, setSellerOptions] = useState([]);
   const [consigneeOptions, setConsigneeOptions] = useState([]);
   const [sellerCompanies, setSellerCompanies] = useState([]);
+  const [allCommodities, setAllCommodities] = useState([]);
   const [_buyerBrokerageMap, setBuyerBrokerageMap] = useState({});
 
   useEffect(() => {
@@ -97,12 +98,14 @@ const SelfOrder = () => {
           buyersData,
           sellerCompaniesData,
           consigneesData,
+          commoditiesData,
         ] = await Promise.all([
           fetchAllPages("/sellers"),
           fetchAllPages("/companies"),
           fetchAllPages("/buyers"),
           fetchAllPages("/seller-company"),
           fetchAllPages("/consignees"),
+          fetchAllPages("/commodities", { limit: 500 }),
         ]);
 
         setSellerOptions(
@@ -135,6 +138,7 @@ const SelfOrder = () => {
 
         setSellerCompanies(sellerCompaniesData);
         setConsigneeOptions(consigneesData);
+        setAllCommodities(commoditiesData);
       } catch (error) {
         toast.error("Failed to fetch initial data.");
       }
@@ -328,6 +332,7 @@ const SelfOrder = () => {
               buyers={buyerOptions}
               consignees={consigneeOptions}
               companies={companyOptions}
+              allCommodities={allCommodities}
             />
           </div>
 

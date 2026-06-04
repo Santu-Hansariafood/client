@@ -16,6 +16,17 @@ const OrderDetails = ({ item }) => {
         <p>
           <strong>Commodity:</strong> {item.commodity}
         </p>
+        {Array.isArray(item.parameters) && item.parameters.length > 0 && (
+          <div className="mt-2 space-y-1 bg-slate-50 p-3 rounded-lg border border-slate-100">
+            <p className="text-xs font-black uppercase text-slate-400 mb-2">Quality Parameters</p>
+            {item.parameters.map((p, idx) => (
+              <p key={idx} className="text-sm">
+                <span className="font-bold text-slate-700">{p.parameter || p.id || "Parameter"}:</span>{" "}
+                <span className="text-emerald-600 font-black">{p.value}%</span>
+              </p>
+            ))}
+          </div>
+        )}
         <p>
           <strong>Quantity:</strong> {item.quantity} Tons
         </p>

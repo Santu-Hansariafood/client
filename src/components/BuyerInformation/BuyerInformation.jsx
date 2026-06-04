@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo, lazy, Suspense, useRef } from "react";
+import { useEffect, useState, useCallback, useMemo, lazy, Suspense, useRef } from "react";
 import PropTypes from "prop-types";
 import Loading from "../../common/Loading/Loading";
 import { fetchAllPages } from "../../utils/apiClient/fetchAllPages";
@@ -13,6 +13,7 @@ const BuyerInformation = ({
   buyers: propBuyers,
   consignees: propConsignees,
   companies: propCompanies,
+  allCommodities = [],
 }) => {
   const { userRole, mobile } = useAuth();
   const [buyers, setBuyers] = useState(propBuyers || []);
@@ -24,6 +25,40 @@ const BuyerInformation = ({
   const [loading, setLoading] = useState(
     !propBuyers?.length || !propConsignees?.length || !propCompanies?.length,
   );
+
+  const enrichCommodities = useCallback(
+    (companyCommodities) => {
+      if (!Array.isArray(companyCommodities) || !allCommodities.length) {
+        return companyCommodities || [];
+      }
+
+      return companyCommodities.map((cc) => {
+        const matched = allCommodities.find(
+          (c) => String(c._id) === String(cc.commodityId),
+        );
+        if (matched) {
+          return {
+            ...cc,
+            name: matched.name,
+            hsnCode: matched.hsnCode,
+            // Ensure parameters from company are merged with parameter names from commodity
+            parameters: (cc.parameters || []).map((cp) => {
+              const matchedParam = (matched.parameters || []).find(
+                (mp) => String(mp._id) === String(cp.parameterId),
+              );
+              return {
+                ...cp,
+                parameter: matchedParam?.parameter || "",
+              };
+            }),
+          };
+        }
+        return cc;
+      });
+    },
+    [allCommodities],
+  );
+
   const [hasManuallySelected, setHasManuallySelected] = useState(false);
   const isInitialMatchDone = useRef(false);
 
@@ -173,7 +208,10 @@ const BuyerInformation = ({
       handleChange("buyerEmail", firstEmail);
       handleChange("buyerMobile", firstMobile);
       handleChange("buyerEmails", buyerEmails.length ? buyerEmails : [""]);
-      handleChange("buyerCommodity", companyData.commodities || []);
+      handleChange(
+        "buyerCommodity",
+        enrichCommodities(companyData.commodities || []),
+      );
       handleChange(
         "buyerBrokerageMap",
         buyerData.brokerageByName || buyerData.brokerage || {},
@@ -248,7 +286,10 @@ const BuyerInformation = ({
     handleChange("buyerEmail", firstEmail);
     handleChange("buyerMobile", firstMobile);
     handleChange("buyerEmails", buyerEmails.length ? buyerEmails : [""]);
-    handleChange("buyerCommodity", companyData.commodities || []);
+    handleChange(
+      "buyerCommodity",
+      enrichCommodities(companyData.commodities || []),
+    );
     handleChange(
       "buyerBrokerageMap",
       buyerData.brokerageByName || buyerData.brokerage || {},
