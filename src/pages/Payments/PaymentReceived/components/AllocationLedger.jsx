@@ -38,7 +38,6 @@ const AllocationLedger = ({
   buyerOnlyMapping,
   loadingSellerOptions,
   onSelectCreditPair,
-  onAutoAllocate,
   onSaveAll,
   loading,
   ledgerTopSummary = {},
@@ -90,33 +89,17 @@ const AllocationLedger = ({
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
-            <div className="flex items-center bg-white border border-slate-200 rounded-xl p-1 shadow-sm">
-               <button
-                type="button"
-                onClick={onAutoAllocate}
-                disabled={unallocatedBalance <= 0 || loading}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${
-                  unallocatedBalance > 0 && !loading
-                    ? "bg-amber-500 text-white hover:bg-amber-600 shadow-md shadow-amber-100"
-                    : "bg-slate-50 text-slate-400 cursor-not-allowed"
-                }`}
-              >
-                <FaMagic />
-                Auto-Allocate
-              </button>
-            </div>
-
             {(unallocatedBalance > 0 || debitBalanceRemaining > 0) && (
               <div className="flex items-center gap-2 bg-[#1e3a5f] text-white px-4 py-2 rounded-xl shadow-lg border border-[#1e3a5f]/80">
                 <div className="flex flex-col">
                   <span className="text-[9px] font-black uppercase tracking-[0.2em] text-blue-200 leading-none mb-1">
                     {allocationSource === "advance"
-                      ? "Dr. left"
-                      : "credited balance left"}
+                      ? "Cr. left"
+                      : "Balance Difference"}
                   </span>
                   <span className="text-sm font-black italic tracking-tight tabular-nums">
                     Rs.{" "}
-                    {(allocationSource === "advance"
+                    {Math.abs(allocationSource === "advance"
                       ? unallocatedBalance
                       : debitBalanceRemaining
                     ).toLocaleString("en-IN")}
@@ -256,11 +239,11 @@ const AllocationLedger = ({
                   </span>
                 )}
                 <div className="h-4 w-px bg-slate-200 mx-1 hidden sm:block" />
-                <span className="text-[9px] font-black uppercase tracking-[0.2em] text-emerald-600">
-                  Credited Balance:
+                <span className="text-[9px] font-black uppercase tracking-[0.2em] text-[#1e3a5f]">
+                  Balance Difference:
                 </span>
-                <span className="px-2 py-1 rounded-lg bg-emerald-50 text-emerald-700 text-[10px] font-black tabular-nums border border-emerald-100">
-                  Rs. {debitEntryTotal.toLocaleString("en-IN")}
+                <span className="px-2 py-1 rounded-lg bg-blue-50 text-[#1e3a5f] text-[10px] font-black tabular-nums border border-blue-100">
+                  Rs. {Math.abs(debitEntryTotal - creditToSeller).toLocaleString("en-IN")}
                 </span>
                 {buyerOnlyMapping && (
                   <span className="text-[10px] font-bold text-slate-500">

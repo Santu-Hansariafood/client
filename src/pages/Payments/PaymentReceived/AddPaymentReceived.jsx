@@ -804,33 +804,6 @@ const AddPaymentReceived = () => {
     fetchDateTotal();
   }, [fetchDateTotal]);
 
-  const handleAutoAllocate = useCallback(() => {
-    const pool = Number(availableAllocationPool) || 0;
-    if (pool <= 0) {
-      toast.warning("Please enter a payment amount first");
-      return;
-    }
-
-    let remainingPool = pool;
-    const newEntries = entries.map((entry) => {
-      if (entry.isSaved || remainingPool <= 0.01) {
-        return entry;
-      }
-
-      const { dueAmount } = calculateTallyDetails(entry);
-      const alloc = Math.min(remainingPool, dueAmount);
-      
-      if (alloc > 0.01) {
-        remainingPool -= alloc;
-        return { ...entry, allocatedAmount: String(Math.round(alloc * 100) / 100) };
-      }
-      return entry;
-    });
-
-    setEntries(newEntries);
-    toast.success("Amount allocated to pending lorries");
-  }, [availableAllocationPool, entries]);
-
   const handleSaveAllAllocations = async () => {
     const allocations = entries.filter(
       (e) => !e.isSaved && parseFloat(e.allocatedAmount) > 0.01,
@@ -1626,8 +1599,8 @@ const AddPaymentReceived = () => {
                 />
               </div>
               <div className="flex flex-col gap-1">
-                <span className="text-[8px] text-slate-400">Debited balance</span>
-                <span className="h-8 px-2 rounded border border-rose-200 bg-rose-50 text-rose-700 text-[10px] font-black flex items-center tabular-nums normal-case shadow-sm">
+                <span className="text-[8px] text-slate-400 text-emerald-600">Credited balance</span>
+                <span className="h-8 px-2 rounded border border-emerald-200 bg-emerald-50 text-emerald-700 text-[10px] font-black flex items-center tabular-nums normal-case shadow-sm">
                   Rs. {details.netAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
                 </span>
               </div>
@@ -1646,7 +1619,7 @@ const AddPaymentReceived = () => {
                 />
               </div>
               <div className="flex flex-col gap-1">
-                <span className="text-[8px] text-slate-400 text-emerald-600">Credited balance</span>
+                <span className="text-[8px] text-slate-400 text-rose-600">Debited balance</span>
                 <div className="relative">
                   <input
                     type="text"
@@ -1663,7 +1636,7 @@ const AddPaymentReceived = () => {
                     className={`h-8 w-full px-2 rounded border text-[10px] font-black tabular-nums normal-case ${
                       isLocked
                         ? "bg-slate-100 text-slate-400 border-slate-200"
-                        : "bg-emerald-50 border-emerald-300 text-emerald-800 focus:border-emerald-600 outline-none"
+                        : "bg-rose-50 border-rose-300 text-rose-800 focus:border-rose-600 outline-none"
                     }`}
                     placeholder="0.00"
                   />
@@ -1677,7 +1650,7 @@ const AddPaymentReceived = () => {
                           details.dueAmount,
                         )
                       }
-                      className="absolute -top-6 right-0 text-[8px] font-black uppercase text-emerald-700 hover:text-emerald-900 transition-colors"
+                      className="absolute -top-6 right-0 text-[8px] font-black uppercase text-rose-700 hover:text-rose-900 transition-colors"
                     >
                       Max
                     </button>
@@ -1907,7 +1880,6 @@ const AddPaymentReceived = () => {
               buyerOnlyMapping={buyerOnlyMapping}
               loadingSellerOptions={loadingSellerOptions}
               onSelectCreditPair={handleSelectCreditPair}
-              onAutoAllocate={handleAutoAllocate}
               onSaveAll={handleSaveAllAllocations}
               loading={loading}
               ledgerTopSummary={ledgerTopSummary}

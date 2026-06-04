@@ -65,7 +65,7 @@ const BlogDetail = () => {
             </h2>
             <div className="w-24 h-1 bg-[#1e3a5f] mx-auto mb-6"></div>
             <p className="text-xl font-bold italic text-[#059669] max-w-2xl mx-auto leading-relaxed">
-              "{blog.heading}"
+              &quot;{blog.heading}&quot;
             </p>
           </div>
 
@@ -123,7 +123,7 @@ const BlogDetail = () => {
                 <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
                   <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3">Notice</h4>
                   <p className="text-[11px] font-bold text-slate-600 leading-relaxed italic">
-                    "This news bulletin is intended for internal communication between Hansaria Food and its valued partners including Transporters, Sellers, and Buyers."
+                    &quot;This news bulletin is intended for internal communication between Hansaria Food and its valued partners including Transporters, Sellers, and Buyers.&quot;
                   </p>
                 </div>
               </div>

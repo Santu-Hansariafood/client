@@ -2,8 +2,8 @@ import { FaCoins, FaMinus } from "react-icons/fa";
 import { formatLedgerAmount } from "../utils/paymentLedgerUtils";
 
 const CreditBalancePanel = ({
-  debitEntryTotal = 0,
-  creditToSeller = 0,
+  debitEntryTotal = 0, // This is the payment amount from the buyer
+  creditToSeller = 0, // This is the sum of lorry amounts (bill amounts)
   creditPostedToSeller = 0,
   creditPendingInForm = 0,
   debitBalanceRemaining = 0,
@@ -18,29 +18,38 @@ const CreditBalancePanel = ({
   const showSummary = debitEntryTotal > 0 || creditToSeller > 0;
   const showAdvanceTable = isAdvance && creditByPair.length > 0;
 
-  const receiptLabel = fullCompanyMapping && buyerCompany && supplierCompany
-    ? "credited balance"
+  // Swapping Debit and Credit per user request:
+  // Payment Received (Entry) -> Debited balance
+  // Bill Amounts (Lorry) -> Credited balance
+  
+  const debitLabel = fullCompanyMapping && buyerCompany && supplierCompany
+    ? "debited balance"
     : isAdvance
-      ? "Debit balance (Advance) · Dr."
+      ? "Credit balance (Advance) · Cr."
       : "Payment Received";
-  const receiptHint = fullCompanyMapping && buyerCompany && supplierCompany
-    ? `available balance from ${buyerCompany}`
+
+  const debitHint = fullCompanyMapping && buyerCompany && supplierCompany
+    ? `payment received from ${buyerCompany}`
     : isAdvance
       ? "Buyer advance on account"
       : "Amount received from buyer (entry above)";
-  const adjustedLabel = isAdvance
-    ? "Credit to seller · Cr."
-    : "Adjusted lorry-wise";
-  const adjustedHint = isAdvance
+
+  const creditLabel = isAdvance
+    ? "Debit to seller · Dr."
+    : "credited balance";
+
+  const creditHint = isAdvance
     ? "Posted to seller lorries"
-    : "Total allocated to seller lorries in table";
+    : "Total bill amount for seller lorries";
+
   const remainingLabel = isAdvance
-    ? "Dr. balance left"
-    : "credited balance left";
+    ? "Cr. balance left"
+    : "Balance (Difference)";
+
   const headerTitle = fullCompanyMapping && buyerCompany && supplierCompany
     ? `credited balance from ${buyerCompany} to ${supplierCompany}`
     : isAdvance
-      ? "Buyer → seller · advance (Dr. − Cr.)"
+      ? "Buyer → seller · advance (Cr. − Dr.)"
       : "Buyer → seller · payment received & lorry adjustment";
 
   return (
@@ -58,42 +67,42 @@ const CreditBalancePanel = ({
         <div
           className={`rounded-lg border px-4 py-3 ${
             isAdvance
-              ? "border-rose-200 bg-rose-50"
-              : "border-emerald-200 bg-emerald-50"
+              ? "border-emerald-200 bg-emerald-50"
+              : "border-rose-200 bg-rose-50"
           }`}
         >
           <p
             className={`text-[9px] font-black uppercase tracking-widest ${
-              isAdvance ? "text-rose-800" : "text-emerald-800"
+              isAdvance ? "text-emerald-800" : "text-rose-800"
             }`}
           >
-            {receiptLabel}
+            {debitLabel}
           </p>
           <p
             className={`text-lg font-black tabular-nums mt-1 ${
-              isAdvance ? "text-rose-900" : "text-emerald-900"
+              isAdvance ? "text-emerald-900" : "text-rose-900"
             }`}
           >
             {formatLedgerAmount(debitEntryTotal)}
           </p>
           <p
             className={`text-[9px] font-bold mt-1 normal-case ${
-              isAdvance ? "text-rose-600/90" : "text-emerald-600/90"
+              isAdvance ? "text-emerald-600/90" : "text-rose-600/90"
             }`}
           >
-            {receiptHint}
+            {debitHint}
           </p>
         </div>
 
-        <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3">
-          <p className="text-[9px] font-black text-amber-900 uppercase tracking-widest">
-            {adjustedLabel}
+        <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3">
+          <p className="text-[9px] font-black text-emerald-900 uppercase tracking-widest">
+            {creditLabel}
           </p>
-          <p className="text-lg font-black text-amber-900 tabular-nums mt-1">
+          <p className="text-lg font-black text-emerald-900 tabular-nums mt-1">
             {formatLedgerAmount(creditToSeller)}
           </p>
-          <p className="text-[9px] font-bold text-amber-700/90 mt-1 normal-case">
-            {adjustedHint}
+          <p className="text-[9px] font-bold text-emerald-700/90 mt-1 normal-case">
+            {creditHint}
             {isAdvance && creditPostedToSeller > 0
               ? ` · ${formatLedgerAmount(creditPostedToSeller)} saved`
               : ""}
@@ -106,18 +115,18 @@ const CreditBalancePanel = ({
         <div className="rounded-lg border border-[#1e3a5f]/25 bg-[#eef4ff] px-4 py-3 relative">
           <FaMinus
             className="hidden sm:block absolute -left-3 top-1/2 -translate-y-1/2 text-slate-300"
-            size={10}
+            size={10} 
           />
           <p className="text-[9px] font-black text-[#1e3a5f] uppercase tracking-widest">
             {remainingLabel}
           </p>
           <p className="text-lg font-black text-[#1e3a5f] tabular-nums mt-1">
-            {formatLedgerAmount(debitBalanceRemaining)}
+            {formatLedgerAmount(Math.abs(debitEntryTotal - creditToSeller))}
           </p>
           <p className="text-[9px] font-bold text-slate-500 mt-1 normal-case">
             {isAdvance
-              ? "Dr. − Cr."
-              : "credited − adjusted on lorries"}
+              ? "Cr. − Dr."
+              : "Difference (Credit − Debit)"}
           </p>
         </div>
       </div>
@@ -125,20 +134,20 @@ const CreditBalancePanel = ({
       {!showSummary && (
         <p className="text-[11px] font-bold text-slate-500">
           {isAdvance
-            ? "Record buyer advance (Dr.), then adjust Cr. per lorry."
-            : "Enter credited balance, then adjust each lorry line below and Save."}
+            ? "Record buyer advance (Cr.), then adjust Dr. per lorry."
+            : "Enter debited payment, then adjust each credited lorry below and Save."}
         </p>
       )}
 
       {showSummary && fullCompanyMapping && supplierCompany && (
         <p className="text-[10px] font-bold text-slate-500 mb-2">
           {buyerCompany} → {supplierCompany}:{" "}
-          {formatLedgerAmount(debitEntryTotal)}{" "}
-          {isAdvance ? "Dr." : "credited"} −{" "}
           {formatLedgerAmount(creditToSeller)}{" "}
-          {isAdvance ? "Cr." : "adjusted"} ={" "}
-          {formatLedgerAmount(debitBalanceRemaining)}{" "}
-          {isAdvance ? "Dr. left" : "credited balance left"}
+          {isAdvance ? "Dr." : "credited"} −{" "}
+          {formatLedgerAmount(debitEntryTotal)}{" "}
+          {isAdvance ? "Cr." : "debited"} ={" "}
+          {formatLedgerAmount(Math.abs(creditToSeller - debitEntryTotal))}{" "}
+          {isAdvance ? "Cr. left" : "balance difference"}
         </p>
       )}
 
