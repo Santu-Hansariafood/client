@@ -1585,7 +1585,17 @@ const AddPaymentReceived = () => {
             : String(row.allocatedAmount);
 
         return (
-          <div className="flex flex-col gap-1.5 text-[9px] font-black min-w-[560px] uppercase">
+          <div className="flex flex-col gap-1.5 text-[9px] font-black min-w-[600px] uppercase">
+            <div className="mb-1 flex items-center gap-2">
+              <span className="bg-[#1e3a5f] text-white px-2 py-0.5 rounded text-[8px]">
+                Sauda: {row.saudaNo}
+              </span>
+              {row.billNumber && (
+                <span className="bg-slate-800 text-white px-2 py-0.5 rounded text-[8px]">
+                  Bill: {row.billNumber}
+                </span>
+              )}
+            </div>
             <div className="grid grid-cols-5 gap-2 items-center bg-slate-50 border border-slate-200 rounded px-2 py-1.5">
               <div className="flex flex-col">
                 <span className="text-[8px] text-slate-400">Date</span>
@@ -1608,7 +1618,7 @@ const AddPaymentReceived = () => {
                 />
               </div>
               <div className="flex flex-col">
-                <span className="text-[8px] text-slate-400">Debit amount</span>
+                <span className="text-[8px] text-slate-400">Debited payment</span>
                 <span className="h-7 px-2 rounded border border-rose-200 bg-rose-50 text-rose-700 text-[10px] font-black flex items-center tabular-nums normal-case">
                   Rs. {details.dueAmount.toFixed(2)}
                 </span>

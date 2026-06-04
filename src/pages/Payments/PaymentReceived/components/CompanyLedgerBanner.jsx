@@ -61,7 +61,11 @@ const CompanyLedgerBanner = ({
                 isAdvance ? "text-rose-800" : "text-emerald-800"
               }`}
             >
-              {isAdvance ? "Advance · Dr." : "Payment Received"}
+              {mappingActive && buyerCompany && supplierCompany
+                ? "credited balance"
+                : isAdvance
+                  ? "Advance · Dr."
+                  : "Payment Received"}
             </span>
             <span
               className={`text-sm font-black tabular-nums ${

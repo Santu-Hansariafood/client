@@ -32,15 +32,21 @@ const StatDashboard = ({
       <StatCard
         icon={<FaWallet size={18} />}
         label={
-          accountLabel
-            ? `${accountLabel} ${formData.ledgerType === "Seller" ? "Sent" : "Received"}`
-            : `Total ${formData.ledgerType === "Seller" ? "Sent" : formData.ledgerType === "Buyer" ? "Received" : "Payments"}`
+          fullCompanyMapping && companyPair?.buyerCompany && companyPair?.supplierCompany
+            ? "credited balance"
+            : accountLabel
+              ? `${accountLabel} ${formData.ledgerType === "Seller" ? "Sent" : "Received"}`
+              : `Total ${formData.ledgerType === "Seller" ? "Sent" : formData.ledgerType === "Buyer" ? "Received" : "Payments"}`
         }
         value={`Rs. ${dateTotal.toLocaleString("en-IN")}`}
-        subValue={new Date(formData.date).toLocaleDateString("en-GB", {
-          day: "2-digit",
-          month: "short",
-        })}
+        subValue={
+          fullCompanyMapping && companyPair?.buyerCompany && companyPair?.supplierCompany
+            ? `from ${companyPair.buyerCompany}`
+            : new Date(formData.date).toLocaleDateString("en-GB", {
+                day: "2-digit",
+                month: "short",
+              })
+        }
         color="bg-emerald-50"
         iconColor="text-emerald-600"
       />

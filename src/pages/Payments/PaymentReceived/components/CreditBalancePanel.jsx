@@ -18,12 +18,16 @@ const CreditBalancePanel = ({
   const showSummary = debitEntryTotal > 0 || creditToSeller > 0;
   const showAdvanceTable = isAdvance && creditByPair.length > 0;
 
-  const receiptLabel = isAdvance
-    ? "Debit balance (Advance) · Dr."
-    : "Payment Received";
-  const receiptHint = isAdvance
-    ? "Buyer advance on account"
-    : "Amount received from buyer (entry above)";
+  const receiptLabel = fullCompanyMapping && buyerCompany && supplierCompany
+    ? "credited balance"
+    : isAdvance
+      ? "Debit balance (Advance) · Dr."
+      : "Payment Received";
+  const receiptHint = fullCompanyMapping && buyerCompany && supplierCompany
+    ? `available balance from ${buyerCompany}`
+    : isAdvance
+      ? "Buyer advance on account"
+      : "Amount received from buyer (entry above)";
   const adjustedLabel = isAdvance
     ? "Credit to seller · Cr."
     : "Adjusted lorry-wise";
@@ -33,9 +37,11 @@ const CreditBalancePanel = ({
   const remainingLabel = isAdvance
     ? "Dr. balance left"
     : "Unallocated (not yet on lorries)";
-  const headerTitle = isAdvance
-    ? "Buyer → seller · advance (Dr. − Cr.)"
-    : "Buyer → seller · payment received & lorry adjustment";
+  const headerTitle = fullCompanyMapping && buyerCompany && supplierCompany
+    ? `credited balance from ${buyerCompany} to ${supplierCompany}`
+    : isAdvance
+      ? "Buyer → seller · advance (Dr. − Cr.)"
+      : "Buyer → seller · payment received & lorry adjustment";
 
   return (
     <div className="rounded-xl border border-slate-200 bg-gradient-to-br from-slate-50 via-white to-slate-50/80 p-4 shadow-sm">
