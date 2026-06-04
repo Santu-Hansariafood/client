@@ -15,7 +15,7 @@ const BlogManagement = () => {
   const [formData, setFormData] = useState({
     title: "",
     heading: "",
-    content: [""],
+    content: [{ type: "paragraph", text: "", bold: false, italic: false, underline: false }],
     imageUrl: "",
     date: new Date().toISOString().split("T")[0],
   });
@@ -36,19 +36,22 @@ const BlogManagement = () => {
     }
   };
 
-  const handleAddParagraph = () => {
-    setFormData(prev => ({ ...prev, content: [...prev.content, ""] }));
+  const handleAddBlock = (type) => {
+    setFormData(prev => ({ 
+      ...prev, 
+      content: [...prev.content, { type, text: "", bold: false, italic: false, underline: false }] 
+    }));
   };
 
-  const handleRemoveParagraph = (index) => {
+  const handleRemoveBlock = (index) => {
     const newContent = [...formData.content];
     newContent.splice(index, 1);
     setFormData(prev => ({ ...prev, content: newContent }));
   };
 
-  const handleParagraphChange = (index, value) => {
+  const handleBlockChange = (index, field, value) => {
     const newContent = [...formData.content];
-    newContent[index] = value;
+    newContent[index] = { ...newContent[index], [field]: value };
     setFormData(prev => ({ ...prev, content: newContent }));
   };
 
@@ -71,7 +74,7 @@ const BlogManagement = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.title || !formData.heading || formData.content.some(c => !c)) {
+    if (!formData.title || !formData.heading || formData.content.some(c => !c.text)) {
       toast.warning("Please fill all required fields");
       return;
     }
@@ -85,7 +88,7 @@ const BlogManagement = () => {
         setFormData({
           title: "",
           heading: "",
-          content: [""],
+          content: [{ type: "paragraph", text: "", bold: false, italic: false, underline: false }],
           imageUrl: "",
           date: new Date().toISOString().split("T")[0],
         });
@@ -168,33 +171,71 @@ const BlogManagement = () => {
 
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">News Content (Paragraphs)</label>
-                  <button 
-                    type="button" 
-                    onClick={handleAddParagraph}
-                    className="text-blue-600 text-[10px] font-black uppercase tracking-widest hover:underline"
-                  >
-                    + Add Paragraph
-                  </button>
+                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">News Content</label>
+                  <div className="flex gap-4">
+                    <button 
+                      type="button" 
+                      onClick={() => handleAddBlock("paragraph")}
+                      className="text-blue-600 text-[10px] font-black uppercase tracking-widest hover:underline"
+                    >
+                      + Add Paragraph
+                    </button>
+                    <button 
+                      type="button" 
+                      onClick={() => handleAddBlock("subheading")}
+                      className="text-emerald-600 text-[10px] font-black uppercase tracking-widest hover:underline"
+                    >
+                      + Add Heading
+                    </button>
+                  </div>
                 </div>
-                {formData.content.map((para, index) => (
-                  <div key={index} className="relative group">
+                {formData.content.map((block, index) => (
+                  <div key={index} className="relative group bg-slate-50 p-6 rounded-2xl border border-slate-200">
+                    <div className="flex items-center gap-4 mb-4">
+                      <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded ${block.type === 'subheading' ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-100 text-blue-700'}`}>
+                        {block.type}
+                      </span>
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => handleBlockChange(index, "bold", !block.bold)}
+                          className={`w-8 h-8 rounded flex items-center justify-center font-bold border ${block.bold ? 'bg-slate-800 text-white border-slate-800' : 'bg-white text-slate-400 border-slate-200'}`}
+                          title="Bold"
+                        >
+                          B
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleBlockChange(index, "italic", !block.italic)}
+                          className={`w-8 h-8 rounded flex items-center justify-center italic border ${block.italic ? 'bg-slate-800 text-white border-slate-800' : 'bg-white text-slate-400 border-slate-200'}`}
+                          title="Italic"
+                        >
+                          I
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleBlockChange(index, "underline", !block.underline)}
+                          className={`w-8 h-8 rounded flex items-center justify-center underline border ${block.underline ? 'bg-slate-800 text-white border-slate-800' : 'bg-white text-slate-400 border-slate-200'}`}
+                          title="Underline"
+                        >
+                          U
+                        </button>
+                      </div>
+                    </div>
                     <textarea 
-                      value={para}
-                      onChange={(e) => handleParagraphChange(index, e.target.value)}
-                      placeholder={`Paragraph ${index + 1}...`}
-                      rows={4}
-                      className="w-full p-4 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all font-medium text-slate-800"
+                      value={block.text}
+                      onChange={(e) => handleBlockChange(index, "text", e.target.value)}
+                      placeholder={block.type === 'subheading' ? "Enter subheading..." : "Enter paragraph content..."}
+                      rows={block.type === 'subheading' ? 2 : 4}
+                      className={`w-full p-4 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all text-slate-800 ${block.bold ? 'font-bold' : 'font-medium'} ${block.italic ? 'italic' : ''} ${block.underline ? 'underline' : ''}`}
                     />
-                    {formData.content.length > 1 && (
-                      <button 
-                        type="button" 
-                        onClick={() => handleRemoveParagraph(index)}
-                        className="absolute -right-2 -top-2 w-6 h-6 bg-rose-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
-                      >
-                        <FaTrash size={10} />
-                      </button>
-                    )}
+                    <button 
+                      type="button" 
+                      onClick={() => handleRemoveBlock(index)}
+                      className="absolute -right-2 -top-2 w-6 h-6 bg-rose-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
+                    >
+                      <FaTrash size={10} />
+                    </button>
                   </div>
                 ))}
               </div>

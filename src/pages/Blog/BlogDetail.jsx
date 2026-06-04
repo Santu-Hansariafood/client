@@ -76,7 +76,7 @@ const BlogDetail = () => {
                   <img 
                     src={blog.imageUrl} 
                     alt={blog.title} 
-                    className="w-full h-auto grayscale hover:grayscale-0 transition-all duration-700 rounded shadow-inner"
+                    className="w-full h-auto transition-all duration-700 rounded shadow-inner"
                   />
                   <p className="mt-2 text-[10px] italic font-bold text-slate-400 text-center border-t border-slate-200 pt-2 uppercase tracking-widest">
                     Official bulletin from Hansaria Food Pvt. Ltd.
@@ -85,11 +85,23 @@ const BlogDetail = () => {
               )}
 
               <div className="prose prose-slate max-w-none">
-                {blog.content.map((para, idx) => (
-                  <p key={idx} className="text-lg leading-relaxed text-[#334155] font-serif mb-6 first-letter:text-5xl first-letter:font-bold first-letter:float-left first-letter:mr-3 first-letter:mt-1 first-letter:text-[#1e3a5f] text-justify">
-                    {para}
-                  </p>
-                ))}
+                {blog.content.map((block, idx) => {
+                  const style = `${block.bold ? 'font-bold' : ''} ${block.italic ? 'italic' : ''} ${block.underline ? 'underline' : ''}`;
+                  
+                  if (block.type === 'subheading') {
+                    return (
+                      <h3 key={idx} className={`text-xl font-serif font-black text-[#1e3a5f] mt-8 mb-4 border-b border-slate-100 pb-2 ${style}`}>
+                        {block.text}
+                      </h3>
+                    );
+                  }
+
+                  return (
+                    <p key={idx} className={`text-lg leading-relaxed text-[#334155] font-serif mb-6 text-justify ${idx === 0 ? 'first-letter:text-5xl first-letter:font-bold first-letter:float-left first-letter:mr-3 first-letter:mt-1 first-letter:text-[#1e3a5f]' : ''} ${style}`}>
+                      {block.text}
+                    </p>
+                  );
+                })}
               </div>
             </div>
 
