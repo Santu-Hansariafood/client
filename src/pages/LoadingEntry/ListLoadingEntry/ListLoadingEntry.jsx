@@ -844,7 +844,7 @@ const ListLoadingEntry = () => {
         }
         subtitle={
           userRole === "Seller"
-            ? "View and download your loading documents"
+            ? "Enter the Bill Number for bills; otherwise, a challan will be generated."
             : "Search, view, edit, and download loading entry documents"
         }
         icon={FaClipboardList}

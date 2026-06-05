@@ -131,14 +131,20 @@ export const buildTallyVoucherRows = (payments, openingBalance = 0) => {
     let debit = 0;
     let credit = 0;
     if (isBuyer) {
+      // Payment Received logic (Buyer Ledger):
+      // Payment Entry (Advance/Fresh) = Credit (reduces receivable)
+      // Lorry Adjustment/Bill = Debit (increases/records debt)
       if (paymentType === "Advance") {
-        debit = amount;
-      } else if (paymentType === "Adjustment") {
         credit = amount;
+      } else if (paymentType === "Adjustment") {
+        debit = amount;
       } else {
+        // Default to Credit for standard receipts
         credit = amount;
       }
     } else {
+      // Seller logic (Payment Sent):
+      // Payment Sent = Debit (reduces payable)
       debit = amount;
     }
     balance = balance + debit - credit;

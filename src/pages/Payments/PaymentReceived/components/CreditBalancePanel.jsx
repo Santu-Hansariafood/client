@@ -64,18 +64,6 @@ const CreditBalancePanel = ({
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
-        <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3">
-          <p className="text-[9px] font-black text-emerald-900 uppercase tracking-widest">
-            {creditLabel}
-          </p>
-          <p className="text-lg font-black text-emerald-900 tabular-nums mt-1">
-            {formatLedgerAmount(debitEntryTotal)}
-          </p>
-          <p className="text-[9px] font-bold text-emerald-700/90 mt-1 normal-case">
-            {creditHint}
-          </p>
-        </div>
-
         <div className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3">
           <p className="text-[9px] font-black text-rose-900 uppercase tracking-widest">
             {debitLabel}
@@ -91,6 +79,18 @@ const CreditBalancePanel = ({
             {!isAdvance && creditPendingInForm > 0
               ? ` · ${formatLedgerAmount(creditPendingInForm)} in table now`
               : ""}
+          </p>
+        </div>
+
+        <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3">
+          <p className="text-[9px] font-black text-emerald-900 uppercase tracking-widest">
+            {creditLabel}
+          </p>
+          <p className="text-lg font-black text-emerald-900 tabular-nums mt-1">
+            {formatLedgerAmount(debitEntryTotal)}
+          </p>
+          <p className="text-[9px] font-bold text-emerald-700/90 mt-1 normal-case">
+            {creditHint}
           </p>
         </div>
 
