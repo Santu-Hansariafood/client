@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { FaNewspaper } from "react-icons/fa";
 import api from "../../../utils/apiClient/apiClient";
 import BlogCard from "./BlogCard";
@@ -22,7 +22,12 @@ const DashboardBlogSection = () => {
     fetchLatest();
   }, []);
 
-  if (loading) return <div className="h-48 flex items-center justify-center"><Loading size="sm" /></div>;
+  if (loading)
+    return (
+      <div className="h-48 flex items-center justify-center">
+        <Loading size="sm" />
+      </div>
+    );
 
   return (
     <div className="mt-8">
@@ -31,11 +36,15 @@ const DashboardBlogSection = () => {
           <FaNewspaper size={14} />
         </div>
         <div>
-          <h4 className="font-black text-[#1e3a5f] uppercase tracking-tight">Hansaria Food News</h4>
-          <p className="text-[10px] font-bold text-[#059669] uppercase tracking-widest mt-0.5">Latest updates & announcements</p>
+          <h4 className="font-black text-[#1e3a5f] uppercase tracking-tight">
+            Hansaria Food News
+          </h4>
+          <p className="text-[10px] font-bold text-[#059669] uppercase tracking-widest mt-0.5">
+            Latest updates & announcements
+          </p>
         </div>
       </div>
-      
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {latestBlog ? (
           <BlogCard blog={latestBlog} />
@@ -44,15 +53,21 @@ const DashboardBlogSection = () => {
             <div className="w-12 h-12 rounded-full bg-slate-50 flex items-center justify-center text-slate-300 mb-4">
               <FaNewspaper size={20} />
             </div>
-            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">No news published yet</p>
+            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+              No news published yet
+            </p>
           </div>
         )}
         <div className="hidden md:flex bg-slate-50 rounded-3xl border border-dashed border-slate-200 p-8 flex-col items-center justify-center text-center group hover:bg-slate-100/50 transition-all">
           <div className="w-16 h-16 rounded-full bg-white border border-slate-100 flex items-center justify-center text-slate-300 mb-4 group-hover:scale-110 transition-transform">
             <FaNewspaper size={24} />
           </div>
-          <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">More news coming soon</p>
-          <p className="text-[10px] font-medium text-slate-400 mt-2">Stay tuned for the latest updates from Hansaria Food.</p>
+          <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">
+            More news coming soon
+          </p>
+          <p className="text-[10px] font-medium text-slate-400 mt-2">
+            Stay tuned for the latest updates from Hansaria Food.
+          </p>
         </div>
       </div>
     </div>
