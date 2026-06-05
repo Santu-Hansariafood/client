@@ -1,19 +1,6 @@
 import { Router } from "express";
 import multer from "multer";
-import path from "node:path";
-import fs from "node:fs/promises";
-import { fileURLToPath } from "node:url";
 import imagekit from "../lib/imagekit.js";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const UPLOAD_DIR = path.join(__dirname, "../../uploads");
-
-try {
-  await fs.access(UPLOAD_DIR);
-} catch {
-  await fs.mkdir(UPLOAD_DIR, { recursive: true });
-}
 
 const router = Router();
 
@@ -57,29 +44,17 @@ router.post("/", upload.single("file"), async (req, res) => {
     const fileName = `${Date.now()}-${req.file.originalname}`;
     const folder = req.body.folder || "/";
 
-    const localPath = path.join(UPLOAD_DIR, fileName);
-    await fs.writeFile(localPath, req.file.buffer);
-    console.log("File saved locally to:", localPath);
-
-    let cloudUrl = null;
-    try {
-      cloudUrl = await imagekit.uploadFile(req.file, fileName, folder);
-    } catch (ikError) {
-      console.error("Cloud upload failed, using local only:", ikError.message);
-    }
-
-    const baseUrl = `${req.protocol}://${req.get("host")}`;
-    const localUrl = `${baseUrl}/uploads/${fileName}`;
+    // Directly upload to ImageKit without local storage
+    const cloudUrl = await imagekit.uploadFile(req.file, fileName, folder);
 
     res.json({
-      url: cloudUrl || localUrl,
+      url: cloudUrl,
       cloudUrl,
-      localUrl,
       fileName,
     });
   } catch (error) {
     console.error("Upload error:", error);
-    res.status(500).json({ message: error.message || "Failed to upload file" });
+    res.status(500).json({ message: error.message || "Failed to upload file to ImageKit" });
   }
 });
 
@@ -90,6 +65,7 @@ router.delete("/", async (req, res) => {
       return res.status(400).json({ message: "File URL is required" });
     }
 
+    // Only delete from ImageKit as local files are no longer stored
     await imagekit.deleteFile(url);
     res.json({ message: "File deleted successfully" });
   } catch (error) {
