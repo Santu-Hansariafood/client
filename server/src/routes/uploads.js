@@ -55,6 +55,7 @@ router.post("/", upload.single("file"), async (req, res) => {
     }
 
     const fileName = `${Date.now()}-${req.file.originalname}`;
+    const folder = req.body.folder || "/";
 
     const localPath = path.join(UPLOAD_DIR, fileName);
     await fs.writeFile(localPath, req.file.buffer);
@@ -62,7 +63,7 @@ router.post("/", upload.single("file"), async (req, res) => {
 
     let cloudUrl = null;
     try {
-      cloudUrl = await imagekit.uploadFile(req.file, fileName);
+      cloudUrl = await imagekit.uploadFile(req.file, fileName, folder);
     } catch (ikError) {
       console.error("Cloud upload failed, using local only:", ikError.message);
     }

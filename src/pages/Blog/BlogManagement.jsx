@@ -78,6 +78,7 @@ const BlogManagement = () => {
 
     const uploadData = new FormData();
     uploadData.append("file", file);
+    uploadData.append("folder", "news");
 
     try {
       toast.info("Uploading image...");
