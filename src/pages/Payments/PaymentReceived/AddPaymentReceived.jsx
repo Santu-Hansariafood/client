@@ -1851,6 +1851,7 @@ const AddPaymentReceived = () => {
           fullCompanyMapping={fullCompanyMapping}
           ledgerTopSummary={ledgerTopSummary}
           creditByPair={ledgerBalance.creditByPair}
+          dateTotal={dateTotal}
           onSelectCreditPair={handleSelectCreditPair}
         />
 

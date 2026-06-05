@@ -32,6 +32,7 @@ const AccountSelection = ({
   fullCompanyMapping = false,
   ledgerTopSummary = {},
   creditByPair = [],
+  dateTotal = 0,
   onSelectCreditPair,
 }) => {
   if (!formData) return null;
