@@ -72,10 +72,10 @@ export const buildPaymentParticulars = (payment) => {
       payment.paymentType === "Advance"
         ? payment.remarks ||
           (pairHint
-            ? `Advance (Dr.) from buyer · ${pairHint} · for seller lorries`
-            : "Advance (Dr.) from buyer · for seller lorries")
+            ? `Advance (Cr.) from buyer · ${pairHint} · for seller lorries`
+            : "Advance (Cr.) from buyer · for seller lorries")
         : payment.paymentType === "Adjustment"
-          ? payment.remarks || "Cr. from Dr. advance · lorry allocation"
+          ? payment.remarks || "Dr. from Cr. advance · lorry allocation"
           : payment.remarks || "On account"
     ).toUpperCase();
     return pairLabel ? `${pairLabel} | ${base}` : base;
@@ -200,8 +200,8 @@ export const formatLedgerAmount = (n) =>
 
 /**
  * Top summary by mode:
- * - Payment Received: receipt − adjusted lorry-wise = unallocated
- * - From Advance: Dr. advance − Cr. to seller = Dr. left
+ * - Payment Received: receipt (Cr.) − adjusted lorry-wise (Dr.) = unallocated (Cr.)
+ * - From Advance: Cr. advance − Dr. to seller = Cr. left
  */
 export const computeBuyerSellerLedgerSummary = ({
   allocationSource = "fresh",
@@ -211,43 +211,43 @@ export const computeBuyerSellerLedgerSummary = ({
   creditPendingInForm = 0,
   creditTableTotal = 0,
 }) => {
-  const pending = Number(creditPendingInForm) || 0;
-  const tableCr = Number(creditTableTotal) || 0;
-  const postedCr = fullCompanyMapping
+  const pendingDr = Number(creditPendingInForm) || 0;
+  const tableDr = Number(creditTableTotal) || 0;
+  const postedDr = fullCompanyMapping
     ? Number(ledgerBalance.creditToSeller) || 0
     : Number(ledgerBalance.totalCreditToSeller) || 0;
 
-  const entryDr = Number(formAmount) || 0;
+  const entryCr = Number(formAmount) || 0;
 
-  let debitEntryTotal = 0;
+  let creditEntryTotal = 0;
   if (allocationSource === "advance") {
-    debitEntryTotal = fullCompanyMapping
+    creditEntryTotal = fullCompanyMapping
       ? Number(ledgerBalance.advanceTotalDr) ||
-        Number(ledgerBalance.advanceBalance) + postedCr
+        Number(ledgerBalance.advanceBalance) + postedDr
       : Number(ledgerBalance.totalAdvanceTotalDr) ||
-        Number(ledgerBalance.totalAdvanceBalance) + postedCr;
+        Number(ledgerBalance.totalAdvanceBalance) + postedDr;
     // Use entry amount when user typed a new advance in the form
-    if (entryDr > 0) {
-      debitEntryTotal = entryDr;
+    if (entryCr > 0) {
+      creditEntryTotal = entryCr;
     }
   } else {
-    // Payment Received: entry = amount received from buyer
-    debitEntryTotal = entryDr;
+    // Payment Received: entry = amount received from buyer (Credit)
+    creditEntryTotal = entryCr;
   }
 
-  // Payment Received: adjusted = lorry-wise allocations in table only
-  // Advance: Cr. posted to seller + current table
-  const creditToSeller =
-    allocationSource === "advance" ? postedCr + tableCr : tableCr;
+  // Payment Received: adjusted = lorry-wise allocations (Debit)
+  // Advance: Dr. posted to seller + current table
+  const debitToSeller =
+    allocationSource === "advance" ? postedDr + tableDr : tableDr;
 
-  const debitBalanceRemaining = Math.max(0, debitEntryTotal - creditToSeller);
+  const creditBalanceRemaining = Math.max(0, creditEntryTotal - debitToSeller);
 
   return {
-    debitEntryTotal,
-    creditPostedToSeller: postedCr,
-    creditPendingInForm: pending,
-    creditToSeller,
-    debitBalanceRemaining,
+    creditEntryTotal,
+    debitPostedToSeller: postedDr,
+    debitPendingInForm: pendingDr,
+    debitToSeller,
+    creditBalanceRemaining,
   };
 };
 

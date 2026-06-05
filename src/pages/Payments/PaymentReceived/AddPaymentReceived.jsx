@@ -989,7 +989,7 @@ const AddPaymentReceived = () => {
         if (pool <= 0.01 && numAmount > 0) {
           toast.error(
             fullCompanyMapping
-              ? "No Dr. advance for this buyer → seller"
+              ? "No Credit (Advance) balance for this buyer → seller"
               : "Select seller and use From Advance",
           );
         } else if (numAmount > remaining + 1) { // Increased tolerance to 1
@@ -1113,12 +1113,12 @@ const AddPaymentReceived = () => {
     const { dueAmount } = calculateTallyDetails(entry);
 
     const remainingPool = getRemainingAllocationForRow(entry.uiKey);
-    const debitPool = Number(availableAllocationPool) || 0;
+    const creditPool = Number(availableAllocationPool) || 0;
     const pairPayload = buildCompanyPayload(entry);
 
     if (allocationSource === "advance" && numAllocated > remainingPool + 1) {
       toast.error(
-        `Cr. allocation cannot exceed Dr. advance (Rs. ${debitPool.toLocaleString("en-IN")} Dr., Rs. ${remainingPool.toLocaleString("en-IN")} Cr. left)`,
+        `Cr. allocation cannot exceed Cr. advance (Rs. ${creditPool.toLocaleString("en-IN")} Cr., Rs. ${remainingPool.toLocaleString("en-IN")} Cr. left)`,
       );
       return;
     }
@@ -1135,18 +1135,18 @@ const AddPaymentReceived = () => {
       saveAllocated = dueAmount;
     }
 
-    const effectiveDebitPool = Math.max(
+    const effectiveCreditPool = Math.max(
       Number(formData.amount) || 0,
-      Number(ledgerTopSummary.debitEntryTotal) || 0,
+      Number(ledgerTopSummary.creditEntryTotal) || 0,
     );
-    const rowDebitLeft = Math.max(
+    const rowCreditLeft = Math.max(
       0,
-      effectiveDebitPool - sumOpenAllocationsExcept(entry.uiKey),
+      effectiveCreditPool - sumOpenAllocationsExcept(entry.uiKey),
     );
 
     if (
       allocationSource === "fresh" &&
-      effectiveDebitPool <= 0.01 &&
+      effectiveCreditPool <= 0.01 &&
       saveAllocated > 0.01
     ) {
       toast.error(
@@ -1155,18 +1155,18 @@ const AddPaymentReceived = () => {
       return;
     }
 
-    if (allocationSource === "fresh" && saveAllocated > rowDebitLeft + 1) {
+    if (allocationSource === "fresh" && saveAllocated > rowCreditLeft + 1) {
       if (
-        effectiveDebitPool <= 0.01 &&
+        effectiveCreditPool <= 0.01 &&
         (ledgerBalance.totalAdvanceBalance || 0) > 0
       ) {
         toast.info(
-          "Entry amount is Rs. 0. Switch to From Advance to use buyer Dr. balance.",
+          "Entry amount is Rs. 0. Switch to From Advance to use buyer Cr. balance.",
           { autoClose: 6000 },
         );
       } else {
         toast.error(
-          `Exceeds entry total (Rs. ${rowDebitLeft.toLocaleString("en-IN")} left for this row)`,
+          `Exceeds entry total (Rs. ${rowCreditLeft.toLocaleString("en-IN")} left for this row)`,
         );
       }
       return;
@@ -1236,7 +1236,7 @@ const AddPaymentReceived = () => {
         await api.post("/payment-received", payload);
         toast.success(
           allocationSource === "advance"
-            ? `Cr. Rs. ${saveAllocated.toLocaleString("en-IN")} posted against ${entry.lorryNumber} (from Dr. advance)`
+            ? `Cr. Rs. ${saveAllocated.toLocaleString("en-IN")} posted against ${entry.lorryNumber} (from Cr. advance)`
             : `Payment recorded for ${entry.lorryNumber}`,
         );
 
@@ -1298,7 +1298,7 @@ const AddPaymentReceived = () => {
         mappings: [],
         remarks:
           formData.remarks?.trim() ||
-          `Advance (Dr.) from buyer for ${pairLabel} · lorry-wise Cr. later`,
+          `Advance (Cr.) from buyer for ${pairLabel} · lorry-wise Cr. later`,
       };
 
       await api.post("/payment-received", payload);
@@ -1599,7 +1599,7 @@ const AddPaymentReceived = () => {
                 />
               </div>
               <div className="flex flex-col gap-1">
-                <span className="text-[8px] text-slate-400 text-rose-600">Debited balance</span>
+                <span className="text-[8px] text-slate-400 text-rose-600">Lorry due (Dr.)</span>
                 <span className="h-8 px-2 rounded border border-rose-200 bg-rose-50 text-rose-700 text-[10px] font-black flex items-center tabular-nums normal-case shadow-sm">
                   Rs. {details.netAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
                 </span>
@@ -1619,7 +1619,7 @@ const AddPaymentReceived = () => {
                 />
               </div>
               <div className="flex flex-col gap-1">
-                <span className="text-[8px] text-slate-400 text-emerald-600">Credited balance</span>
+                <span className="text-[8px] text-slate-400 text-emerald-600">Allocation (Cr.)</span>
                 <div className="relative">
                   <input
                     type="text"

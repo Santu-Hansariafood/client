@@ -43,9 +43,9 @@ const AllocationLedger = ({
   ledgerTopSummary = {},
 }) => {
   const {
-    debitEntryTotal = 0,
-    creditToSeller = 0,
-    debitBalanceRemaining = 0,
+    creditEntryTotal = 0,
+    debitToSeller = 0,
+    creditBalanceRemaining = 0,
   } = ledgerTopSummary;
   const hasCompanyFilter =
     Boolean(formData.companyId) || Boolean(formData.opposingCompanyId);
@@ -73,37 +73,37 @@ const AllocationLedger = ({
             <div>
               <h4 className="font-bold text-slate-800 flex items-center gap-2 flex-wrap">
                 {allocationSource === "fresh"
-                  ? "credited balance Ledger"
-                  : "Advance Adjustment"}
+                  ? "Payment Received (Cr.) Ledger"
+                  : "Advance Adjustment (Dr.)"}
               </h4>
               <p className="text-[11px] text-slate-500 font-medium uppercase tracking-wider">
                 {allocationSource === "fresh"
                   ? fullCompanyMapping
-                    ? `credited balance from ${companyPair.buyerCompany} — adjust lorry-wise to ${companyPair.supplierCompany} below`
-                    : "credited balance — select seller, then adjust each lorry and Save"
+                    ? `credited balance from ${companyPair.buyerCompany} — adjust each lorry (Dr.) to ${companyPair.supplierCompany} below`
+                    : "credited balance — select seller, then adjust each lorry (Dr.) and Save"
                   : fullCompanyMapping
-                    ? `Use advance Rs. ${(ledgerBalance.advanceBalance ?? 0).toLocaleString("en-IN")} — adjust per lorry to ${companyPair.supplierCompany}`
+                    ? `Use advance (Cr.) Rs. ${(ledgerBalance.advanceBalance ?? 0).toLocaleString("en-IN")} — adjust per lorry (Dr.) to ${companyPair.supplierCompany}`
                     : (ledgerBalance.totalAdvanceBalance ?? 0) > 0
-                      ? `Advance Rs. ${ledgerBalance.totalAdvanceBalance.toLocaleString("en-IN")} — select seller, adjust lorries`
-                      : "Record advance with buyer + seller (From Advance tab)"}
+                      ? `Advance (Cr.) Rs. ${ledgerBalance.totalAdvanceBalance.toLocaleString("en-IN")} — select seller, adjust lorries (Dr.)`
+                      : "Record advance (Cr.) with buyer + seller (From Advance tab)"}
               </p>
             </div>
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
-            {(unallocatedBalance > 0 || debitBalanceRemaining > 0) && (
+            {(unallocatedBalance > 0 || creditBalanceRemaining > 0) && (
               <div className="flex items-center gap-2 bg-[#1e3a5f] text-white px-4 py-2 rounded-xl shadow-lg border border-[#1e3a5f]/80">
                 <div className="flex flex-col">
                   <span className="text-[9px] font-black uppercase tracking-[0.2em] text-blue-200 leading-none mb-1">
                     {allocationSource === "advance"
                       ? "Cr. left"
-                      : "Balance Difference"}
+                      : "Cr. Remaining"}
                   </span>
                   <span className="text-sm font-black italic tracking-tight tabular-nums">
                     Rs.{" "}
                     {Math.abs(allocationSource === "advance"
                       ? unallocatedBalance
-                      : debitBalanceRemaining
+                      : creditBalanceRemaining
                     ).toLocaleString("en-IN")}
                   </span>
                 </div>
@@ -123,7 +123,7 @@ const AllocationLedger = ({
                 ) : (
                   <FaCloudUploadAlt size={16} />
                 )}
-                {loading ? "Saving..." : `Save All (${totalAllocated.toLocaleString("en-IN")})`}
+                {loading ? "Saving..." : `Save All (Rs. ${totalAllocated.toLocaleString("en-IN")})`}
               </button>
             )}
 
@@ -179,15 +179,15 @@ const AllocationLedger = ({
             supplierCompany={companyPair.supplierCompany}
             mappingActive={fullCompanyMapping}
             buyerOnly={buyerOnlyMapping}
-            debitEntryTotal={debitEntryTotal}
-            creditToSeller={creditToSeller}
-            debitBalanceRemaining={debitBalanceRemaining}
+            creditEntryTotal={creditEntryTotal}
+            debitToSeller={debitToSeller}
+            creditBalanceRemaining={creditBalanceRemaining}
             allocationSource={allocationSource}
             subtitle={
               fullCompanyMapping
                 ? allocationSource === "advance"
-                  ? `Advance for ${companyPair.supplierCompany} — adjust each lorry below`
-                  : `credited balance — adjust lorry-wise to ${companyPair.supplierCompany} below`
+                  ? `Advance for ${companyPair.supplierCompany} — adjust each lorry (Dr.) below`
+                  : `credited balance (Cr.) — adjust each lorry (Dr.) to ${companyPair.supplierCompany} below`
                 : loadingSellerOptions
                   ? "Loading sellers linked to this buyer…"
                   : "Choose seller — table shows that buyer's pending lorries per seller"
@@ -242,10 +242,10 @@ const AllocationLedger = ({
                 )}
                 <div className="h-4 w-px bg-slate-200 mx-1 hidden sm:block" />
                 <span className="text-[9px] font-black uppercase tracking-[0.2em] text-[#1e3a5f]">
-                  Balance Difference:
+                  Cr. Remaining:
                 </span>
                 <span className="px-2 py-1 rounded-lg bg-blue-50 text-[#1e3a5f] text-[10px] font-black tabular-nums border border-blue-100">
-                  Rs. {Math.abs(debitEntryTotal - creditToSeller).toLocaleString("en-IN")}
+                  Rs. {Math.abs(creditEntryTotal - debitToSeller).toLocaleString("en-IN")}
                 </span>
                 {buyerOnlyMapping && (
                   <span className="text-[10px] font-bold text-slate-500">

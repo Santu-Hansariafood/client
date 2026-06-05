@@ -23,9 +23,9 @@ const StatDashboard = ({
   const accountLabel = selectedCompanyOption?.label || selectedLedger?.label;
   const isAdvance = allocationSource === "advance";
   const {
-    debitEntryTotal = 0,
-    creditToSeller = 0,
-    debitBalanceRemaining = 0,
+    creditEntryTotal = 0,
+    debitToSeller = 0,
+    creditBalanceRemaining = 0,
   } = ledgerTopSummary || {};
 
   return (
@@ -34,7 +34,7 @@ const StatDashboard = ({
         icon={<FaWallet size={18} />}
         label={
           fullCompanyMapping && companyPair?.buyerCompany && companyPair?.supplierCompany
-            ? "credited balance"
+            ? "Credit balance (Cr.)"
             : accountLabel
               ? `${accountLabel} ${formData.ledgerType === "Seller" ? "Sent" : "Received"}`
               : `Total ${formData.ledgerType === "Seller" ? "Sent" : formData.ledgerType === "Buyer" ? "Received" : "Payments"}`
@@ -67,8 +67,8 @@ const StatDashboard = ({
 
       <StatCard
         icon={<FaMoneyBillWave size={18} />}
-        label={isAdvance ? "Advance (Dr.)" : "credited balance"}
-        value={`Rs. ${debitEntryTotal.toLocaleString("en-IN")}`}
+        label={isAdvance ? "Advance (Cr.)" : "Payment Received (Cr.)"}
+        value={`Rs. ${creditEntryTotal.toLocaleString("en-IN")}`}
         subValue={
           isAdvance
             ? fullCompanyMapping
@@ -76,21 +76,21 @@ const StatDashboard = ({
               : "On account from buyer"
             : "Current entry amount"
         }
-        color={isAdvance ? "bg-rose-50" : "bg-emerald-50"}
-        iconColor={isAdvance ? "text-rose-600" : "text-emerald-600"}
+        color={isAdvance ? "bg-emerald-50" : "bg-emerald-50"}
+        iconColor={isAdvance ? "text-emerald-600" : "text-emerald-600"}
       />
 
       <StatCard
         icon={<FaTruck size={18} />}
-        label="Adjusted lorry-wise"
-        value={`Rs. ${creditToSeller.toLocaleString("en-IN")}`}
+        label="Lorry Bill (Dr.)"
+        value={`Rs. ${debitToSeller.toLocaleString("en-IN")}`}
         subValue={
           isAdvance
-            ? `Dr. left Rs. ${debitBalanceRemaining.toLocaleString("en-IN")} · ${entryStats.pendingCount} pending`
-            : `Unallocated Rs. ${debitBalanceRemaining.toLocaleString("en-IN")} · ${entryStats.pendingCount} lorries`
+            ? `Cr. left Rs. ${creditBalanceRemaining.toLocaleString("en-IN")} · ${entryStats.pendingCount} pending`
+            : `Unallocated Rs. ${creditBalanceRemaining.toLocaleString("en-IN")} · ${entryStats.pendingCount} lorries`
         }
-        color="bg-amber-50"
-        iconColor="text-amber-600"
+        color="bg-rose-50"
+        iconColor="text-rose-600"
       />
     </div>
   );

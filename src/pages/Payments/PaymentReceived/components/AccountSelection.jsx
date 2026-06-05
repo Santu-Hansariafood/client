@@ -86,7 +86,7 @@ const AccountSelection = ({
           </div>
           {allocationSource === "fresh" && (formData.amount || 0) <= 0 && (
             <p className="text-[9px] font-black text-blue-600 uppercase tracking-tighter animate-pulse">
-              Tip: Use From Advance to spend buyer Dr. on seller lorries
+              Tip: Use From Advance to spend buyer Cr. advance on seller lorries
             </p>
           )}
         </div>
@@ -190,13 +190,13 @@ const AccountSelection = ({
           <div className="flex items-center gap-2 mb-4">
             <div className="w-1.5 h-4 bg-emerald-600 rounded-full" />
             <h4 className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-900">
-              Record new payment (credited balance)
+              Record new payment (Credit balance)
             </h4>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="space-y-2">
               <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">
-                credited balance
+                Credit amount
               </label>
               <div className="relative">
                 <span className="absolute left-4 top-1/2 -translate-y-1/2 text-emerald-600 font-black">
@@ -272,19 +272,19 @@ const AccountSelection = ({
                 }`}
               >
                 <FaSave />
-                Record buyer Dr. advance
+                Record buyer Cr. advance
               </button>
             </div>
           </div>
           <p className="text-[10px] font-bold text-slate-500 mt-2">
-            Advance (Dr.) is money from the buyer on account for the selected
-            seller — allocate Cr. per lorry below (From Advance tab).
+            Advance (Cr.) is money from the buyer on account for the selected
+            seller — allocate against lorries (Dr.) below (From Advance tab).
           </p>
           {formData.amount > 0 && (
             <div className="mt-4 p-3 bg-blue-50 border border-blue-100 rounded-xl flex items-center gap-3">
               <div className="w-2 h-2 rounded-full bg-blue-600"></div>
               <p className="text-[10px] font-bold text-blue-700 uppercase tracking-wider">
-                credited balance ₹{Number(formData.amount).toLocaleString("en-IN")} → adjusting on lorries below
+                credited amount ₹{Number(formData.amount).toLocaleString("en-IN")} → adjusting on lorries below
               </p>
             </div>
           )}
@@ -322,11 +322,11 @@ const AccountSelection = ({
           {showEntryLedger && (
             <div className="mt-4">
               <CreditBalancePanel
-                debitEntryTotal={ledgerTopSummary.debitEntryTotal ?? 0}
-                creditToSeller={ledgerTopSummary.creditToSeller ?? 0}
-                creditPostedToSeller={ledgerTopSummary.creditPostedToSeller ?? 0}
-                creditPendingInForm={ledgerTopSummary.creditPendingInForm ?? 0}
-                debitBalanceRemaining={ledgerTopSummary.debitBalanceRemaining ?? 0}
+                creditEntryTotal={ledgerTopSummary.creditEntryTotal ?? 0}
+                debitToSeller={ledgerTopSummary.debitToSeller ?? 0}
+                debitPostedToSeller={ledgerTopSummary.debitPostedToSeller ?? 0}
+                debitPendingInForm={ledgerTopSummary.debitPendingInForm ?? 0}
+                creditBalanceRemaining={ledgerTopSummary.creditBalanceRemaining ?? 0}
                 creditByPair={creditByPair}
                 fullCompanyMapping={fullCompanyMapping}
                 buyerCompany={companyPair.buyerCompany || ""}
