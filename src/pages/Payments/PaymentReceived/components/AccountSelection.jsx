@@ -34,6 +34,7 @@ const AccountSelection = ({
   creditByPair = [],
   onSelectCreditPair,
 }) => {
+  if (!formData) return null;
   const showEntryLedger =
     (Number(formData.amount) || 0) > 0 || hasBuyerCompany;
   return (

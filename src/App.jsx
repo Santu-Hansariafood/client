@@ -6,7 +6,6 @@ import Loading from "./common/Loading/Loading";
 import CacheHandler from "./utils/CacheHandler/CacheHandler";
 import RouteSEO from "./common/SEO/RouteSEO";
 import AppRoutes from "./routes/AppRoutes";
-import SecurityWrapper from "./common/Security/SecurityWrapper";
 import { Suspense } from "react";
 import { ToastContainer } from "react-toastify";
 import "./App.css";
@@ -26,24 +25,22 @@ const App = () => {
         </Helmet>
 
         <BrowserRouter>
-          <SecurityWrapper>
-            <Suspense fallback={<Loading />}>
-              <RouteSEO />
-              <ToastContainer
-                position={window.innerWidth < 640 ? "top-center" : "top-right"}
-                autoClose={3000}
-                hideProgressBar={false}
-                newestOnTop={false}
-                closeOnClick
-                rtl={false}
-                pauseOnFocusLoss
-                draggable
-                pauseOnHover
-                theme="colored"
-              />
-              <AppRoutes hydrated={hydrated} />
-            </Suspense>
-          </SecurityWrapper>
+          <Suspense fallback={<Loading />}>
+            <RouteSEO />
+            <ToastContainer
+              position={window.innerWidth < 640 ? "top-center" : "top-right"}
+              autoClose={3000}
+              hideProgressBar={false}
+              newestOnTop={false}
+              closeOnClick
+              rtl={false}
+              pauseOnFocusLoss
+              draggable
+              pauseOnHover
+              theme="colored"
+            />
+            <AppRoutes hydrated={hydrated} />
+          </Suspense>
         </BrowserRouter>
       </NotificationProvider>
     </AuthProvider>

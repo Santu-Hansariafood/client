@@ -55,10 +55,12 @@ const AllocationLedger = ({
     !buyerOnlyMapping;
   const showMappingBanner = hasBuyerCompany;
 
-  const totalAllocated = entries.reduce((sum, e) => {
+  const totalAllocated = (entries || []).reduce((sum, e) => {
     if (!e.isSaved) return sum + (parseFloat(e.allocatedAmount) || 0);
     return sum;
   }, 0);
+
+  if (!formData) return null;
 
   return (
     <div className="flex flex-col h-full">

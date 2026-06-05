@@ -19,6 +19,7 @@ const StatDashboard = ({
   ledgerTopSummary,
   allocationSource = "fresh",
 }) => {
+  if (!formData || !companyPair) return null;
   const accountLabel = selectedCompanyOption?.label || selectedLedger?.label;
   const isAdvance = allocationSource === "advance";
   const {
