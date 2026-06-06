@@ -264,6 +264,12 @@
           "link": "/news/manage",
           "icon": "FaEdit",
           "roles": ["Admin"]
+        },
+        {
+          "name": "News Archive",
+          "link": "/news/archive",
+          "icon": "FaArchive",
+          "roles": ["Admin", "Employee", "Buyer", "Seller", "Transporter"]
         }
       ]
     },

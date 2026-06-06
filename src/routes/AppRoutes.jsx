@@ -257,6 +257,11 @@ const privateRoutes = [
     roles: ["Admin"],
   },
   {
+    path: "news/archive",
+    component: LazyPages.NewsArchive,
+    roles: ["Admin", "Employee", "Buyer", "Seller", "Transporter"],
+  },
+  {
     path: "blog/:id",
     component: LazyPages.BlogDetail,
     roles: ["Admin", "Employee", "Buyer", "Seller", "Transporter"],

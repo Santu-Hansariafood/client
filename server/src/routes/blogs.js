@@ -1,5 +1,6 @@
 import { Router } from "express";
 import Blog from "../models/Blog.js";
+import User from "../models/User.js";
 import authJwt from "../middleware/authJwt.js";
 
 const router = Router();
@@ -19,7 +20,7 @@ router.get("/latest", async (req, res) => {
 // Public: Get blogs by date/page
 router.get("/", async (req, res) => {
   try {
-    const { date, page = 1, limit = 10 } = req.query;
+    const { date, page = 1, limit = 10, category } = req.query;
     const query = { isPublished: true };
     
     if (date) {
@@ -28,6 +29,10 @@ router.get("/", async (req, res) => {
       const end = new Date(date);
       end.setHours(23, 59, 59, 999);
       query.date = { $gte: start, $lte: end };
+    }
+
+    if (category) {
+      query.category = category;
     }
 
     const blogs = await Blog.find(query)
@@ -48,12 +53,56 @@ router.get("/", async (req, res) => {
   }
 });
 
-// Public: Get single blog
+// Public: Get single blog and increment views
 router.get("/:id", async (req, res) => {
   try {
-    const blog = await Blog.findById(req.params.id).populate("author", "name role");
+    const blog = await Blog.findByIdAndUpdate(
+      req.params.id,
+      { $inc: { views: 1 } },
+      { new: true }
+    ).populate("author", "name role");
+    
     if (!blog) return res.status(404).json({ message: "Blog not found" });
     res.json(blog);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Protected: Bookmark/Unbookmark news
+router.post("/:id/bookmark", authJwt, async (req, res) => {
+  try {
+    const userId = req.user.id || req.user.sub;
+    const blogId = req.params.id;
+
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    const isBookmarked = user.bookmarks.includes(blogId);
+    if (isBookmarked) {
+      user.bookmarks = user.bookmarks.filter((id) => id.toString() !== blogId);
+    } else {
+      user.bookmarks.push(blogId);
+    }
+
+    await user.save();
+    res.json({ bookmarked: !isBookmarked });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Protected: Get user bookmarks
+router.get("/user/bookmarks", authJwt, async (req, res) => {
+  try {
+    const userId = req.user.id || req.user.sub;
+    const user = await User.findById(userId).populate({
+      path: "bookmarks",
+      populate: { path: "author", select: "name role" }
+    });
+    
+    if (!user) return res.status(404).json({ message: "User not found" });
+    res.json(user.bookmarks);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -66,7 +115,7 @@ router.post("/", authJwt, async (req, res) => {
       return res.status(403).json({ message: "Access denied. Only Admin can publish news." });
     }
 
-    const { title, heading, content, imageUrl, date } = req.body;
+    const { title, heading, content, imageUrl, images, date, category } = req.body;
     
     // Extract author ID from token (handles both 'id' and 'sub' naming conventions)
     const authorId = req.user.id || req.user.sub;
@@ -80,8 +129,10 @@ router.post("/", authJwt, async (req, res) => {
       heading,
       content,
       imageUrl,
+      images: images || [],
       date: date || new Date(),
       author: authorId,
+      category: category || "General",
     });
 
     await blog.save();

@@ -106,6 +106,7 @@ const loaders = {
   SaudaWiseDetails: () => import("../../pages/Reports/SaudaWiseDetails/SaudaWiseDetails"),
   BlogManagement: () => import("../../pages/Blog/BlogManagement"),
   BlogDetail: () => import("../../pages/Blog/BlogDetail"),
+  NewsArchive: () => import("../../pages/Blog/NewsArchive"),
 };
 
 const pathToKey = {
@@ -175,6 +176,7 @@ const pathToKey = {
   "/brokerage/buyer": "BuyerBrokerage",
   "/brokerage/seller": "SellerBrokerage",
   "/news/manage": "BlogManagement",
+  "/news/archive": "NewsArchive",
   "/blog/:id": "BlogDetail",
 };
 

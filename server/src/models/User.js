@@ -14,6 +14,7 @@ const userSchema = new mongoose.Schema(
     password: { type: String, required: true },
     otp: { type: String },
     otpExpires: { type: Date },
+    bookmarks: [{ type: mongoose.Schema.Types.ObjectId, ref: "Blog" }],
   },
   { timestamps: true },
 );
