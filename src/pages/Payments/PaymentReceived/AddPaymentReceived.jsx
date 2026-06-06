@@ -854,13 +854,18 @@ const AddPaymentReceived = () => {
         0,
       );
 
+      const recordAmount =
+        allocationSource === "fresh"
+          ? Math.max(totalAllocated, formData.amount)
+          : totalAllocated;
+
       const payload = {
         date: formData.allocationDate || formData.date,
         ledgerType: recordLedgerType,
         ledgerId: ledgerId || undefined,
         companyId: saveCompanyId,
         ...pairPayload,
-        amount: totalAllocated,
+        amount: recordAmount,
         paymentType: allocationSource === "fresh" ? "Sauda-wise" : "Adjustment",
         paymentMode:
           allocationSource === "fresh" ? formData.paymentMode : "Adjustment",
@@ -870,11 +875,16 @@ const AddPaymentReceived = () => {
           allocatedAmount: parseFloat(e.allocatedAmount),
           remarks: e.rowRemarks,
         })),
-        remarks: formData.remarks || "Bulk Allocation",
+        remarks:
+          allocationSource === "fresh" && recordAmount > totalAllocated
+            ? `${formData.remarks || "Bulk Allocation"} | Unallocated: Rs. ${(recordAmount - totalAllocated).toLocaleString("en-IN")}`
+            : formData.remarks || "Bulk Allocation",
       };
 
       await api.post("/payment-received", payload);
-      toast.success(`Recorded payment with ${allocations.length} allocations`);
+      toast.success(
+        `Recorded payment of Rs. ${recordAmount.toLocaleString("en-IN")} with ${allocations.length} allocations${recordAmount > totalAllocated ? ` (plus Rs. ${(recordAmount - totalAllocated).toLocaleString("en-IN")} unallocated)` : ""}`,
+      );
 
       setEntries((prev) =>
         prev.map((e) => {
@@ -886,7 +896,7 @@ const AddPaymentReceived = () => {
       if (allocationSource === "fresh") {
         setFormData((prev) => ({
           ...prev,
-          amount: Math.max(0, prev.amount - totalAllocated),
+          amount: 0,
           ledgerId: prev.ledgerId || ledgerId,
         }));
       }
@@ -1225,13 +1235,18 @@ const AddPaymentReceived = () => {
           .filter(Boolean)
           .join(" | ");
 
+        const recordAmount =
+          allocationSource === "fresh"
+            ? Math.max(saveAllocated, formData.amount)
+            : saveAllocated;
+
         const payload = {
           date: formData.allocationDate || formData.date,
           ledgerType: recordLedgerType,
           ledgerId: ledgerId || undefined,
           companyId: saveCompanyId,
           ...pairPayload,
-          amount: saveAllocated,
+          amount: recordAmount,
           paymentType:
             allocationSource === "fresh" ? "Sauda-wise" : "Adjustment",
           paymentMode:
@@ -1244,14 +1259,17 @@ const AddPaymentReceived = () => {
               remarks: lineRemark,
             },
           ],
-          remarks: lineRemark,
+          remarks:
+            allocationSource === "fresh" && recordAmount > saveAllocated
+              ? `${lineRemark} | Unallocated: Rs. ${(recordAmount - saveAllocated).toLocaleString("en-IN")}`
+              : lineRemark,
         };
 
         await api.post("/payment-received", payload);
         toast.success(
           allocationSource === "advance"
             ? `Cr. Rs. ${saveAllocated.toLocaleString("en-IN")} posted against ${entry.lorryNumber} (from Cr. advance)`
-            : `Payment recorded for ${entry.lorryNumber}`,
+            : `Payment recorded for ${entry.lorryNumber}${recordAmount > saveAllocated ? ` (plus Rs. ${(recordAmount - saveAllocated).toLocaleString("en-IN")} unallocated)` : ""}`,
         );
 
         setEntries((prev) =>
@@ -1263,7 +1281,7 @@ const AddPaymentReceived = () => {
         if (allocationSource === "fresh") {
           setFormData((prev) => ({
             ...prev,
-            amount: Math.max(0, prev.amount - saveAllocated),
+            amount: 0,
             ledgerId: prev.ledgerId || ledgerId,
           }));
         }
@@ -1573,19 +1591,41 @@ const AddPaymentReceived = () => {
 
         return (
           <div className="flex flex-col gap-1.5 text-[9px] font-black min-w-[750px] uppercase">
-            <div className="mb-1 flex items-center gap-2">
-              <span className="bg-[#1e3a5f] text-white px-2 py-0.5 rounded text-[8px]">
-                Sauda: {row.saudaNo}
-              </span>
-              {row.billNumber && (
-                <span className="bg-slate-800 text-white px-2 py-0.5 rounded text-[8px]">
-                  Bill: {row.billNumber}
+            <div className="mb-1 flex items-center justify-between px-1">
+              <div className="flex items-center gap-2">
+                <span className="bg-[#1e3a5f] text-white px-2 py-0.5 rounded text-[8px]">
+                  Sauda: {row.saudaNo}
                 </span>
-              )}
+                {row.billNumber && (
+                  <span className="bg-slate-800 text-white px-2 py-0.5 rounded text-[8px]">
+                    Bill: {row.billNumber}
+                  </span>
+                )}
+              </div>
+              <div className="flex items-center gap-2">
+                {allocationSource === "fresh" && formData.amount > 0 && (
+                  <div className="flex items-center gap-1.5 text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100 shadow-sm">
+                    <div className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse"></div>
+                    <span className="text-[7.5px]">
+                      Entry Pool: ₹{Number(formData.amount).toLocaleString("en-IN")}
+                    </span>
+                  </div>
+                )}
+                {allocationSource === "advance" && (ledgerBalance.advanceBalance > 0 || ledgerBalance.totalAdvanceBalance > 0) && (
+                  <div className="flex items-center gap-1.5 text-blue-600 bg-blue-50 px-2 py-0.5 rounded border border-blue-100 shadow-sm">
+                    <div className="w-1 h-1 rounded-full bg-blue-500"></div>
+                    <span className="text-[7.5px]">
+                      Cr. Advance: ₹{(ledgerBalance.advanceBalance || ledgerBalance.totalAdvanceBalance).toLocaleString("en-IN")}
+                    </span>
+                  </div>
+                )}
+              </div>
             </div>
-            <div className="grid grid-cols-6 gap-3 items-end bg-slate-50 border border-slate-200 rounded px-3 py-2">
+            <div className="grid grid-cols-6 gap-3 items-end bg-slate-50 border border-slate-200 rounded px-3 py-2 shadow-inner">
               <div className="flex flex-col gap-1">
-                <span className="text-[8px] text-slate-400">Date</span>
+                <span className="text-[7px] font-black text-slate-400 uppercase tracking-widest">
+                  Posting Date
+                </span>
                 <input
                   type="date"
                   value={formData.allocationDate || formData.date}
@@ -1595,45 +1635,55 @@ const AddPaymentReceived = () => {
                       allocationDate: e.target.value,
                     }))
                   }
-                  className="h-8 px-2 rounded border border-slate-200 text-[10px] font-bold text-slate-700 outline-none focus:border-[#1e3a5f] focus:ring-1 focus:ring-[#1e3a5f]/10"
+                  className="h-8 px-2 rounded border border-slate-200 text-[10px] font-bold text-slate-700 outline-none focus:border-[#1e3a5f] focus:ring-1 focus:ring-[#1e3a5f]/10 transition-all"
                 />
               </div>
               <div className="flex flex-col gap-1">
-                <span className="text-[8px] text-slate-400">Debit note</span>
+                <span className="text-[7px] font-black text-slate-400 uppercase tracking-widest">
+                  Debit note
+                </span>
                 <input
                   type="text"
                   value={row.debitNote || ""}
                   onChange={(e) => handleDebitNoteChange(row.uiKey, e.target.value)}
                   disabled={isLocked}
-                  className={`h-8 px-2 rounded border text-[10px] font-bold normal-case ${
+                  className={`h-8 px-2 rounded border text-[10px] font-bold normal-case transition-all ${
                     isLocked
                       ? "bg-slate-100 text-slate-400 border-slate-200"
                       : "bg-white border-slate-300 focus:border-slate-700 outline-none"
                   }`}
+                  placeholder="Dr. note"
                 />
               </div>
               <div className="flex flex-col gap-1">
-                <span className="text-[8px] text-slate-400 text-rose-600">Pending Due (Dr.)</span>
+                <span className="text-[7px] font-black text-rose-600 uppercase tracking-widest">
+                  Due Amount (Dr.)
+                </span>
                 <span className="h-8 px-2 rounded border border-rose-200 bg-rose-50 text-rose-700 text-[10px] font-black flex items-center tabular-nums normal-case shadow-sm">
-                  Rs. {details.dueAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                  ₹{details.dueAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
                 </span>
               </div>
               <div className="flex flex-col gap-1">
-                <span className="text-[8px] text-slate-400">Credit note</span>
+                <span className="text-[7px] font-black text-slate-400 uppercase tracking-widest">
+                  Credit note
+                </span>
                 <input
                   type="text"
                   value={row.creditNote || ""}
                   onChange={(e) => handleCreditNoteChange(row.uiKey, e.target.value)}
                   disabled={isLocked}
-                  className={`h-8 px-2 rounded border text-[10px] font-bold normal-case ${
+                  className={`h-8 px-2 rounded border text-[10px] font-bold normal-case transition-all ${
                     isLocked
                       ? "bg-slate-100 text-slate-400 border-slate-200"
                       : "bg-white border-slate-300 focus:border-slate-700 outline-none"
                   }`}
+                  placeholder="Cr. note"
                 />
               </div>
               <div className="flex flex-col gap-1">
-                <span className="text-[8px] text-slate-400 text-emerald-600">Allocation (Cr.)</span>
+                <span className="text-[7px] font-black text-emerald-600 uppercase tracking-widest">
+                  Allocation (Cr.)
+                </span>
                 <div className="relative">
                   <input
                     type="text"
@@ -1647,10 +1697,10 @@ const AddPaymentReceived = () => {
                       )
                     }
                     disabled={isLocked}
-                    className={`h-8 w-full px-2 rounded border text-[10px] font-black tabular-nums normal-case ${
+                    className={`h-8 w-full px-2 rounded border text-[10px] font-black tabular-nums normal-case transition-all ${
                       isLocked
                         ? "bg-slate-100 text-slate-400 border-slate-200"
-                        : "bg-emerald-50 border-emerald-300 text-emerald-800 focus:border-emerald-600 outline-none"
+                        : "bg-emerald-50 border-emerald-300 text-emerald-800 focus:border-emerald-600 outline-none shadow-sm"
                     }`}
                     placeholder="0.00"
                   />
@@ -1664,7 +1714,7 @@ const AddPaymentReceived = () => {
                           details.dueAmount,
                         )
                       }
-                      className="absolute -top-6 right-0 text-[8px] font-black uppercase text-emerald-700 hover:text-emerald-900 transition-colors"
+                      className="absolute -top-6 right-0 text-[8px] font-black uppercase text-emerald-700 hover:text-emerald-900 transition-colors bg-emerald-100/50 px-1.5 rounded"
                     >
                       Max
                     </button>
@@ -1672,13 +1722,15 @@ const AddPaymentReceived = () => {
                 </div>
               </div>
               <div className="flex flex-col gap-1">
-                <span className="text-[8px] text-slate-400">Balance</span>
-                <span className={`h-8 px-2 rounded border text-[10px] font-black flex items-center tabular-nums normal-case shadow-sm ${
+                <span className="text-[7px] font-black text-slate-400 uppercase tracking-widest">
+                  Lorry Balance
+                </span>
+                <span className={`h-8 px-2 rounded border text-[10px] font-black flex items-center tabular-nums normal-case shadow-sm transition-all ${
                   details.dueAmount - (parseFloat(row.allocatedAmount) || 0) > 0.01
                     ? "bg-blue-50 border-blue-200 text-blue-700"
                     : "bg-slate-100 border-slate-200 text-slate-400"
                 }`}>
-                  Rs. {(Math.max(0, details.dueAmount - (parseFloat(row.allocatedAmount) || 0))).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                  ₹{(Math.max(0, details.dueAmount - (parseFloat(row.allocatedAmount) || 0))).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
                 </span>
               </div>
             </div>
