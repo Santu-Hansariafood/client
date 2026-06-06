@@ -186,164 +186,38 @@ const AccountSelection = ({
           </div>
         </div>
 
-        <div className="pt-6 border-t border-slate-100 bg-emerald-50/30 -mx-6 px-6 pb-6 rounded-b-3xl">
-          <div className="flex items-center gap-2 mb-4">
-            <div className="w-1.5 h-4 bg-emerald-600 rounded-full" />
-            <h4 className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-900">
-              Record new payment (Credit balance)
-            </h4>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="space-y-2">
-              <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">
-                Credit amount
-              </label>
-              <div className="relative">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-emerald-600 font-black">
-                  ₹
-                </span>
-                <input
-                  type="number"
-                  name="amount"
-                  value={formData.amount === 0 ? "" : formData.amount}
-                  onChange={handleInputChange}
-                  onWheel={(e) => e.target.blur()}
-                  placeholder="0.00"
-                  className="w-full h-[48px] pl-8 pr-4 rounded-xl border-2 border-emerald-100 bg-white focus:ring-4 focus:ring-emerald-600/10 focus:border-emerald-600 outline-none transition-all font-black text-lg text-emerald-900 shadow-sm"
-                />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">
-                Payment mode
-              </label>
-              <div className="relative">
-                <select
-                  name="paymentMode"
-                  value={formData.paymentMode}
-                  onChange={handleInputChange}
-                  className="w-full h-[48px] px-4 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-emerald-600/10 focus:border-emerald-600 outline-none transition-all font-bold text-slate-900 appearance-none cursor-pointer shadow-sm"
-                >
-                  {paymentModes.map((mode) => (
-                    <option key={mode.value} value={mode.value}>
-                      {mode.label}
-                    </option>
-                  ))}
-                </select>
-                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
-                  <svg
-                    className="w-4 h-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M19 9l-7 7-7-7"
-                    ></path>
-                  </svg>
+        {dateTotal > 0 && (
+          <div className="mt-4 p-4 bg-emerald-50/50 border border-emerald-100 rounded-2xl flex flex-col gap-2 shadow-sm">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full bg-emerald-600 flex items-center justify-center text-white">
+                  <FaMoneyBillWave size={12} />
                 </div>
-              </div>
-            </div>
-            <div className="lg:col-span-1 space-y-2">
-              <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">
-                Narration / Remarks
-              </label>
-              <input
-                type="text"
-                name="remarks"
-                value={formData.remarks}
-                onChange={handleInputChange}
-                placeholder="Payment details..."
-                className="w-full h-[48px] px-4 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-emerald-600/10 focus:border-emerald-600 outline-none transition-all font-bold text-slate-900 shadow-sm"
-              />
-            </div>
-            <div className="flex items-end">
-              <button
-                type="button"
-                onClick={handleRecordAdvance}
-                disabled={loading || formData.amount <= 0 || !hasResolvedLedger}
-                className={`w-full h-[48px] flex items-center justify-center gap-2 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all ${
-                  formData.amount > 0 && !loading && hasResolvedLedger
-                    ? "bg-emerald-600 text-white hover:bg-emerald-700 shadow-lg shadow-emerald-200"
-                    : "bg-slate-100 text-slate-400 cursor-not-allowed"
-                }`}
-              >
-                <FaSave />
-                {loading ? "Saving..." : "Record Payment (Cr.)"}
-              </button>
-            </div>
-          </div>
-          <div className="flex items-center justify-between mt-3">
-            <p className="text-[10px] font-bold text-slate-500">
-              Advance (Cr.) is money from the buyer on account for the selected
-              seller — allocate against lorries (Dr.) below (From Advance tab).
-            </p>
-            {formData.amount > 0 && (
-              <div className="flex items-center gap-2 px-3 py-1 bg-emerald-50 border border-emerald-100 rounded-lg animate-pulse">
-                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500"></div>
-                <span className="text-[10px] font-black text-emerald-700 uppercase tracking-wider">
-                  Ready to post: ₹{Number(formData.amount).toLocaleString("en-IN")}
-                </span>
-              </div>
-            )}
-          </div>
-
-          {dateTotal > 0 && (
-            <div className="mt-4 p-4 bg-emerald-50/50 border border-emerald-100 rounded-2xl flex flex-col gap-2 shadow-sm">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-full bg-emerald-600 flex items-center justify-center text-white">
-                    <FaMoneyBillWave size={12} />
-                  </div>
-                  <div>
-                    <p className="text-[10px] font-black text-emerald-800 uppercase tracking-widest leading-none">
-                      Payments Recorded for Today
-                    </p>
-                    <p className="text-[8px] font-bold text-emerald-600 uppercase mt-1">
-                      {new Date(formData.date).toLocaleDateString("en-GB", {
-                        day: "numeric",
-                        month: "short",
-                        year: "numeric",
-                      })}
-                      {hasBuyerCompany ? ` · ${companyPair.buyerCompany}` : ""}
-                      {fullCompanyMapping
-                        ? ` → ${companyPair.supplierCompany}`
-                        : ""}
-                    </p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <p className="text-xs font-black text-emerald-900 tabular-nums tracking-tight">
-                    ₹{Number(dateTotal).toLocaleString("en-IN")}
+                <div>
+                  <p className="text-[10px] font-black text-emerald-800 uppercase tracking-widest leading-none">
+                    Payments Recorded for Today
+                  </p>
+                  <p className="text-[8px] font-bold text-emerald-600 uppercase mt-1">
+                    {new Date(formData.date).toLocaleDateString("en-GB", {
+                      day: "numeric",
+                      month: "short",
+                      year: "numeric",
+                    })}
+                    {hasBuyerCompany ? ` · ${companyPair.buyerCompany}` : ""}
+                    {fullCompanyMapping
+                      ? ` → ${companyPair.supplierCompany}`
+                      : ""}
                   </p>
                 </div>
               </div>
+              <div className="text-right">
+                <p className="text-xs font-black text-emerald-900 tabular-nums tracking-tight">
+                  ₹{Number(dateTotal).toLocaleString("en-IN")}
+                </p>
+              </div>
             </div>
-          )}
-
-          {showEntryLedger && (
-            <div className="mt-4 pt-4 border-t border-slate-100">
-              <CreditBalancePanel
-                creditEntryTotal={ledgerTopSummary.creditEntryTotal ?? 0}
-                debitToSeller={ledgerTopSummary.debitToSeller ?? 0}
-                debitPostedToSeller={ledgerTopSummary.debitPostedToSeller ?? 0}
-                debitPendingInForm={ledgerTopSummary.debitPendingInForm ?? 0}
-                creditBalanceRemaining={
-                  ledgerTopSummary.creditBalanceRemaining ?? 0
-                }
-                creditByPair={creditByPair}
-                fullCompanyMapping={fullCompanyMapping}
-                buyerCompany={companyPair.buyerCompany || ""}
-                supplierCompany={companyPair.supplierCompany || ""}
-                allocationSource={allocationSource}
-                onSelectCreditPair={onSelectCreditPair}
-              />
-            </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </div>
   );

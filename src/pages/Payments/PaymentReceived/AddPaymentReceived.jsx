@@ -23,6 +23,8 @@ import {
 import TabButton from "./components/TabButton";
 import StatDashboard from "./components/StatDashboard";
 import AccountSelection from "./components/AccountSelection";
+import PaymentRecordingPanel from "./components/PaymentRecordingPanel";
+import CreditBalancePanel from "./components/CreditBalancePanel";
 import AllocationLedger from "./components/AllocationLedger";
 import PaymentHistory from "./components/PaymentHistory";
 import AnalyticalSummary from "./components/AnalyticalSummary";
@@ -1921,6 +1923,37 @@ const AddPaymentReceived = () => {
           dateTotal={dateTotal}
           onSelectCreditPair={handleSelectCreditPair}
         />
+
+        <PaymentRecordingPanel
+          formData={formData}
+          handleInputChange={handleInputChange}
+          paymentModes={paymentModes}
+          loading={loading}
+          handleRecordAdvance={handleRecordAdvance}
+          hasResolvedLedger={Boolean(formData.ledgerId)}
+          ledgerBalance={ledgerBalance}
+          ledgerTopSummary={ledgerTopSummary}
+          allocationSource={allocationSource}
+          companyPair={companyPair}
+          fullCompanyMapping={fullCompanyMapping}
+        />
+
+        {(formData.amount > 0 ||
+          (fullCompanyMapping && companyPair.buyerCompany)) && (
+          <CreditBalancePanel
+            creditEntryTotal={ledgerTopSummary.creditEntryTotal ?? 0}
+            debitToSeller={ledgerTopSummary.debitToSeller ?? 0}
+            debitPostedToSeller={ledgerTopSummary.debitPostedToSeller ?? 0}
+            debitPendingInForm={ledgerTopSummary.debitPendingInForm ?? 0}
+            creditBalanceRemaining={ledgerTopSummary.creditBalanceRemaining ?? 0}
+            creditByPair={ledgerBalance.creditByPair}
+            fullCompanyMapping={fullCompanyMapping}
+            buyerCompany={companyPair.buyerCompany || ""}
+            supplierCompany={companyPair.supplierCompany || ""}
+            allocationSource={allocationSource}
+            onSelectCreditPair={handleSelectCreditPair}
+          />
+        )}
 
         <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden min-h-[500px]">
           {activeTab === "allocation" && (
