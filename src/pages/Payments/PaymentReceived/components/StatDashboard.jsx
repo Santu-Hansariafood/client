@@ -11,6 +11,7 @@ const StatDashboard = ({
   selectedLedger,
   selectedCompanyOption,
   dateTotal,
+  dayTotal = 0,
   formData,
   ledgerBalance,
   entryStats,
@@ -28,25 +29,24 @@ const StatDashboard = ({
     creditBalanceRemaining = 0,
   } = ledgerTopSummary || {};
 
+  const extraAmount = Math.max(0, dayTotal - dateTotal);
+
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
       <StatCard
         icon={<FaWallet size={18} />}
         label={
           fullCompanyMapping && companyPair?.buyerCompany && companyPair?.supplierCompany
-            ? "Credit balance (Cr.)"
+            ? "Pair Received Today"
             : accountLabel
-              ? `${accountLabel} ${formData.ledgerType === "Seller" ? "Sent" : "Received"}`
-              : `Total ${formData.ledgerType === "Seller" ? "Sent" : formData.ledgerType === "Buyer" ? "Received" : "Payments"}`
+              ? `${accountLabel} Received`
+              : "Total Received Today"
         }
         value={`Rs. ${dateTotal.toLocaleString("en-IN")}`}
         subValue={
-          fullCompanyMapping && companyPair?.buyerCompany && companyPair?.supplierCompany
-            ? `from ${companyPair.buyerCompany}`
-            : new Date(formData.date).toLocaleDateString("en-GB", {
-                day: "2-digit",
-                month: "short",
-              })
+          extraAmount > 0
+            ? `+ Rs. ${extraAmount.toLocaleString("en-IN")} extra today`
+            : "Total for selected"
         }
         color="bg-emerald-50"
         iconColor="text-emerald-600"
@@ -54,11 +54,11 @@ const StatDashboard = ({
 
       <StatCard
         icon={<FaExclamationCircle size={18} />}
-        label={formData.ledgerType === "Seller" ? "Seller Due" : "Buyer Due"}
+        label={formData.ledgerType === "Seller" ? "Seller Due" : "Buyer Due (Dr.)"}
         value={`Rs. ${(ledgerBalance.outstandingBalance ?? 0).toLocaleString("en-IN")}`}
         subValue={
           companyPair?.buyerCompany
-            ? "Outstanding · company scope"
+            ? "Outstanding balance"
             : "Select companies"
         }
         color="bg-rose-50"
@@ -67,27 +67,25 @@ const StatDashboard = ({
 
       <StatCard
         icon={<FaMoneyBillWave size={18} />}
-        label={isAdvance ? "Advance (Cr.)" : "Payment Received (Cr.)"}
+        label={isAdvance ? "From Advance (Cr.)" : "Payment Entry (Cr.)"}
         value={`Rs. ${creditEntryTotal.toLocaleString("en-IN")}`}
         subValue={
           isAdvance
-            ? fullCompanyMapping
-              ? `Buyer advance · ${companyPair.buyerCompany}`
-              : "On account from buyer"
-            : "Current entry amount"
+            ? "Available credit"
+            : "Current receipt amount"
         }
-        color={isAdvance ? "bg-emerald-50" : "bg-emerald-50"}
-        iconColor={isAdvance ? "text-emerald-600" : "text-emerald-600"}
+        color="bg-emerald-50"
+        iconColor="text-emerald-600"
       />
 
       <StatCard
         icon={<FaTruck size={18} />}
-        label="Lorry Bill (Dr.)"
+        label="Lorry Allocation (Dr.)"
         value={`Rs. ${debitToSeller.toLocaleString("en-IN")}`}
         subValue={
           isAdvance
-            ? `Cr. left Rs. ${creditBalanceRemaining.toLocaleString("en-IN")} · ${entryStats.pendingCount} pending`
-            : `Unallocated Rs. ${creditBalanceRemaining.toLocaleString("en-IN")} · ${entryStats.pendingCount} lorries`
+            ? `Cr. left Rs. ${creditBalanceRemaining.toLocaleString("en-IN")}`
+            : `Unallocated Rs. ${creditBalanceRemaining.toLocaleString("en-IN")}`
         }
         color="bg-rose-50"
         iconColor="text-rose-600"

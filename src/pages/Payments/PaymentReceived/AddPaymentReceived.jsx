@@ -60,6 +60,7 @@ const AddPaymentReceived = () => {
   const [buyerSellerOptions, setBuyerSellerOptions] = useState([]);
   const [loadingSellerOptions, setLoadingSellerOptions] = useState(false);
   const [dateTotal, setDateTotal] = useState(0);
+  const [dayTotal, setDayTotal] = useState(0);
   const [ledgerBalance, setLedgerBalance] = useState({
     advanceBalance: 0,
     totalAdvanceBalance: 0,
@@ -765,6 +766,19 @@ const AddPaymentReceived = () => {
   const fetchDateTotal = useCallback(async () => {
     try {
       const selectedDate = formData.date;
+      
+      // 1. Fetch Day Total (All payments for the date, regardless of company/ledger)
+      const dayParams = {
+        startDate: selectedDate,
+        endDate: selectedDate,
+        limit: 1000,
+      };
+      const dayResponse = await api.get("/payment-received", { params: dayParams });
+      const allPayments = dayResponse.data.data || [];
+      const dTotal = allPayments.reduce((sum, p) => sum + (p.amount || 0), 0);
+      setDayTotal(dTotal);
+
+      // 2. Fetch Filtered Total (Based on current company filters)
       const params = {
         startDate: selectedDate,
         endDate: selectedDate,
@@ -1599,9 +1613,9 @@ const AddPaymentReceived = () => {
                 />
               </div>
               <div className="flex flex-col gap-1">
-                <span className="text-[8px] text-slate-400 text-rose-600">Lorry due (Dr.)</span>
+                <span className="text-[8px] text-slate-400 text-rose-600">Pending Due (Dr.)</span>
                 <span className="h-8 px-2 rounded border border-rose-200 bg-rose-50 text-rose-700 text-[10px] font-black flex items-center tabular-nums normal-case shadow-sm">
-                  Rs. {details.netAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                  Rs. {details.dueAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
                 </span>
               </div>
               <div className="flex flex-col gap-1">
@@ -1819,6 +1833,7 @@ const AddPaymentReceived = () => {
           selectedLedger={selectedLedger}
           selectedCompanyOption={selectedCompanyOption}
           dateTotal={dateTotal}
+          dayTotal={dayTotal}
           formData={formData}
           ledgerBalance={ledgerBalance}
           entryStats={entryStats}

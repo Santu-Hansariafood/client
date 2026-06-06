@@ -11,11 +11,9 @@ export const downloadFile = async (source, filename, mimeType = "application/pdf
     const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
     const isAndroid = /Android/i.test(navigator.userAgent);
     
-    // 1. Handle jsPDF instance first
     if (source && typeof source.output === 'function') {
       if (isMobile) {
         try {
-          // Strategy 1: Try jsPDF's native save() method first
           console.log("Trying jsPDF native save()");
           source.save(filename);
           return;
@@ -23,7 +21,6 @@ export const downloadFile = async (source, filename, mimeType = "application/pdf
           console.warn("jsPDF native save() failed:", e1);
           
           try {
-            // Strategy 2: Try blob + URL.createObjectURL + anchor
             console.log("Trying blob + anchor download");
             const blob = source.output('blob');
             const url = URL.createObjectURL(blob);
@@ -34,7 +31,6 @@ export const downloadFile = async (source, filename, mimeType = "application/pdf
             console.warn("Blob + anchor failed:", e2);
             
             try {
-              // Strategy 3: Try data URI direct navigation
               console.log("Trying data URI navigation");
               const dataUri = source.output('datauristring');
               window.location.href = dataUri;
@@ -50,7 +46,6 @@ export const downloadFile = async (source, filename, mimeType = "application/pdf
       return;
     }
 
-    // 2. Handle Blob
     if (source instanceof Blob) {
       const url = URL.createObjectURL(source);
       try {
@@ -61,11 +56,9 @@ export const downloadFile = async (source, filename, mimeType = "application/pdf
       return;
     }
 
-    // 3. Handle Data URI or URL
     if (typeof source === 'string') {
       if (isMobile && source.startsWith('data:')) {
         try {
-          // Convert data URI to blob first for better compatibility
           const response = await fetch(source);
           const blob = await response.blob();
           const url = URL.createObjectURL(blob);
@@ -88,11 +81,7 @@ export const downloadFile = async (source, filename, mimeType = "application/pdf
   }
 };
 
-/**
- * Helper with multiple fallback strategies to trigger download
- */
 async function triggerDownloadWithFallback(url, filename, isMobile, isAndroid) {
-  // Strategy 1: Standard anchor tag click
   console.log("Strategy 1: Anchor tag download");
   try {
     const link = document.createElement("a");
@@ -116,7 +105,6 @@ async function triggerDownloadWithFallback(url, filename, isMobile, isAndroid) {
     console.warn("Anchor click failed:", e);
   }
   
-  // Strategy 2: Hidden iframe (good for WebViews)
   if (isMobile) {
     console.log("Strategy 2: Hidden iframe");
     try {
@@ -136,7 +124,6 @@ async function triggerDownloadWithFallback(url, filename, isMobile, isAndroid) {
     }
   }
   
-  // Strategy 3: For Android WebView specifically - try direct navigation
   if (isAndroid) {
     console.log("Strategy 3: Android WebView direct navigation");
     try {
@@ -147,7 +134,6 @@ async function triggerDownloadWithFallback(url, filename, isMobile, isAndroid) {
     }
   }
   
-  // Strategy 4: Window open
   if (isMobile) {
     console.log("Strategy 4: Window open");
     try {

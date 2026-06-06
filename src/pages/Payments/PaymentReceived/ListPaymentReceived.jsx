@@ -24,6 +24,7 @@ const ListPaymentReceived = () => {
   const [loading, setLoading] = useState(false);
   const [printing, setPrinting] = useState(false);
   const [payments, setPayments] = useState([]);
+  const [listEntries, setListEntries] = useState([]);
   const [total, setTotal] = useState(0);
   const [totalAmount, setTotalAmount] = useState(0);
   const [openingBalance, setOpeningBalance] = useState(0);
@@ -288,6 +289,8 @@ const ListPaymentReceived = () => {
   const fetchPayments = async () => {
     try {
       setLoading(true);
+      
+      // 1. Fetch Payments
       const response = await api.get("/payment-received", {
         params: {
           ...filters,
@@ -299,8 +302,24 @@ const ListPaymentReceived = () => {
       setTotal(response.data.total || 0);
       setTotalAmount(response.data.totalAmount || 0);
       setOpeningBalance(response.data.openingBalance || 0);
+
+      // 2. Fetch Loading Entries (Bills) for the same period and company
+      if (filters.ledgerType && (filters.buyerCompany || filters.supplierCompany)) {
+        const entryParams = {
+          startDate: filters.startDate,
+          endDate: filters.endDate,
+          limit: 1000,
+        };
+        if (filters.buyerCompany) entryParams.buyerCompany = filters.buyerCompany;
+        if (filters.supplierCompany) entryParams.supplierCompany = filters.supplierCompany;
+
+        const entriesRes = await api.get("/loading-entries", { params: entryParams });
+        setListEntries(entriesRes.data.data || []);
+      } else {
+        setListEntries([]);
+      }
     } catch (error) {
-      toast.error("Error fetching payments");
+      toast.error("Error fetching ledger data");
     } finally {
       setLoading(false);
     }
@@ -311,13 +330,18 @@ const ListPaymentReceived = () => {
   }, [page, filters]);
 
   const stats = useMemo(() => {
+    const totalDr = tallyListRows.reduce((s, r) => s + (r.debit || 0), 0);
+    const totalCr = tallyListRows.reduce((s, r) => s + (r.credit || 0), 0);
+    const closing = openingBalance + totalDr - totalCr;
+
     return {
-      openingBalance: openingBalance,
-      totalReceived: totalAmount,
-      closingBalance: openingBalance + totalAmount,
-      count: total,
+      openingBalance,
+      totalReceived: totalCr,
+      totalBilled: totalDr,
+      closingBalance: closing,
+      count: tallyListRows.filter((r) => !r.isOpening).length,
     };
-  }, [openingBalance, totalAmount, total]);
+  }, [openingBalance, tallyListRows]);
 
   const listCompanyPair = useMemo(
     () => ({
@@ -334,8 +358,8 @@ const ListPaymentReceived = () => {
   );
 
   const tallyListRows = useMemo(
-    () => buildTallyVoucherRows(payments, openingBalance),
-    [payments, openingBalance],
+    () => buildTallyVoucherRows(payments, openingBalance, listEntries),
+    [payments, openingBalance, listEntries],
   );
 
   const periodCredit = useMemo(
@@ -423,9 +447,24 @@ const ListPaymentReceived = () => {
         params,
       });
 
-      const allPayments = response.data.data || [];
+      // 2. Fetch Loading Entries (Bills) if needed for the report
+      let allEntries = [];
+      if (filters.ledgerType && (filters.buyerCompany || filters.supplierCompany)) {
+        const entryParams = {
+          startDate: filters.startDate,
+          endDate: filters.endDate,
+          limit: 1000,
+        };
+        if (filters.buyerCompany) entryParams.buyerCompany = filters.buyerCompany;
+        if (filters.supplierCompany) entryParams.supplierCompany = filters.supplierCompany;
 
-      if (allPayments.length === 0) {
+        const entriesRes = await api.get("/loading-entries", { params: entryParams });
+        allEntries = entriesRes.data.data || [];
+      }
+
+      const reportRows = buildTallyVoucherRows(allPayments, openingBalance, allEntries);
+
+      if (reportRows.length === 0) {
         toast.warning("No records found");
         return;
       }
@@ -498,31 +537,17 @@ const ListPaymentReceived = () => {
         currentY += 10;
       }
 
-      const tableData = allPayments.map((p, idx) => {
-        const buyerNames = [
-          ...new Set(
-            p.mappings
-              ?.map((m) => m.loadingEntryId?.buyerCompany)
-              .filter(Boolean),
-          ),
-        ].join(", ");
-
-        const sellerNames = [
-          ...new Set(
-            p.mappings
-              ?.map((m) => m.loadingEntryId?.supplierCompany)
-              .filter(Boolean),
-          ),
-        ].join(", ");
-
+      const tableData = reportRows.filter(r => !r.isOpening).map((row, idx) => {
         return [
           idx + 1,
-          new Date(p.date).toLocaleDateString("en-GB"),
-          (p.ledgerId?.name || p.ledgerId?.sellerName || "N/A").toUpperCase(),
-          (buyerNames || "-").toUpperCase(),
-          (sellerNames || "-").toUpperCase(),
-          p.paymentMode.toUpperCase(),
-          `Rs. ${Number(p.amount || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}`,
+          row.date ? new Date(row.date).toLocaleDateString("en-GB") : "—",
+          row.particulars.toUpperCase(),
+          (row.buyerCompany || "-").toUpperCase(),
+          (row.supplierCompany || "-").toUpperCase(),
+          row.vchType.toUpperCase(),
+          row.debit > 0 ? `Rs. ${Number(row.debit).toLocaleString("en-IN", { minimumFractionDigits: 2 })}` : "",
+          row.credit > 0 ? `Rs. ${Number(row.credit).toLocaleString("en-IN", { minimumFractionDigits: 2 })}` : "",
+          `Rs. ${Number(row.balance).toLocaleString("en-IN", { minimumFractionDigits: 2 })}`,
         ];
       });
 
@@ -532,11 +557,13 @@ const ListPaymentReceived = () => {
           [
             "NO",
             "DATE",
-            "LEDGER NAME",
-            "BUYER COMPANY",
-            "SELLER COMPANY",
-            "MODE",
-            "AMOUNT",
+            "PARTICULARS",
+            "BUYER",
+            "SELLER",
+            "VCH",
+            "DEBIT",
+            "CREDIT",
+            "BALANCE",
           ],
         ],
         body: tableData,
@@ -544,27 +571,29 @@ const ListPaymentReceived = () => {
         headStyles: {
           fillColor: [255, 255, 255],
           textColor: [0, 0, 0],
-          fontSize: 8,
+          fontSize: 7,
           fontStyle: "bold",
           halign: "center",
           lineWidth: 0.1,
           lineColor: [0, 0, 0],
         },
         styles: {
-          fontSize: 7,
-          cellPadding: 2,
+          fontSize: 6,
+          cellPadding: 1.5,
           valign: "middle",
           textColor: [0, 0, 0],
           lineColor: [0, 0, 0],
         },
         columnStyles: {
-          0: { halign: "center", cellWidth: 10 },
-          1: { halign: "center", cellWidth: 20 },
+          0: { halign: "center", cellWidth: 8 },
+          1: { halign: "center", cellWidth: 15 },
           2: { cellWidth: "auto" },
-          3: { cellWidth: 35 },
-          4: { cellWidth: 35 },
-          5: { halign: "center", cellWidth: 20 },
-          6: { halign: "right", fontStyle: "bold", cellWidth: 25 },
+          3: { cellWidth: 20 },
+          4: { cellWidth: 20 },
+          5: { halign: "center", cellWidth: 12 },
+          6: { halign: "right", cellWidth: 18 },
+          7: { halign: "right", cellWidth: 18 },
+          8: { halign: "right", fontStyle: "bold", cellWidth: 20 },
         },
         margin: { left: margin, right: margin },
         didDrawPage: (data) => {
@@ -598,18 +627,29 @@ const ListPaymentReceived = () => {
       doc.setFontSize(10);
       doc.setFont("helvetica", "bold");
 
+      const periodDr = reportRows.reduce((s, r) => s + (r.debit || 0), 0);
+      const periodCr = reportRows.reduce((s, r) => s + (r.credit || 0), 0);
+      const closing = openingBalance + periodDr - periodCr;
+
       doc.text(
-        `Period Total : Rs. ${totalAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`,
+        `Period Debit : Rs. ${periodDr.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`,
         pageWidth - margin,
         summaryY,
         { align: "right" },
       );
 
+      doc.text(
+        `Period Credit : Rs. ${periodCr.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`,
+        pageWidth - margin,
+        summaryY + 7,
+        { align: "right" },
+      );
+
       if (filters.ledgerId) {
         doc.text(
-          `Closing Balance : Rs. ${(openingBalance + totalAmount).toLocaleString("en-IN", { minimumFractionDigits: 2 })}`,
+          `Closing Balance : Rs. ${closing.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`,
           pageWidth - margin,
-          summaryY + 7,
+          summaryY + 14,
           { align: "right" },
         );
       }
@@ -674,7 +714,7 @@ const ListPaymentReceived = () => {
 
           {activeTab === "vouchers" ? (
             <>
-              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-3 sm:gap-4">
                 <MisStatCard
                   icon={<FaChartLine size={18} />}
                   label="Opening balance"
@@ -684,7 +724,14 @@ const ListPaymentReceived = () => {
                 />
                 <MisStatCard
                   icon={<FaMoneyBillWave size={18} />}
-                  label="Period receipts"
+                  label="Period Bills (Dr.)"
+                  value={`₹ ${stats.totalBilled.toLocaleString("en-IN")}`}
+                  subValue="Debit total"
+                  accent="rose"
+                />
+                <MisStatCard
+                  icon={<FaMoneyBillWave size={18} />}
+                  label="Period receipts (Cr.)"
                   value={`₹ ${stats.totalReceived.toLocaleString("en-IN")}`}
                   subValue="Credit total"
                   accent="emerald"
