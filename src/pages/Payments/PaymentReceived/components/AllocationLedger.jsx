@@ -302,35 +302,74 @@ const AllocationLedger = ({
               ) : null}
             </div>
 
-            <div className="bg-slate-900 p-6 sm:p-8 flex flex-col md:flex-row items-center justify-between gap-6">
-              <div className="flex flex-wrap items-center gap-8">
-                <div>
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                    Page unpaid (Dr.)
+            <div className="bg-[#1e3a5f] p-6 sm:p-8 flex flex-col md:flex-row items-center justify-between gap-8 border-t border-white/10 shadow-2xl">
+              <div className="flex flex-wrap items-center gap-8 lg:gap-16">
+                <div className="flex flex-col gap-1">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.5)]"></div>
+                    <p className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">
+                      Total Credit (Cr.)
+                    </p>
+                  </div>
+                  <p className="text-2xl font-black text-white tabular-nums tracking-tight">
+                    {formatLedgerAmount(creditEntryTotal)}
                   </p>
-                  <p className="text-xl font-black text-white tabular-nums">
-                    {formatLedgerAmount(entryStats.totalDue)}
+                  <p className="text-[8px] font-bold text-white/40 uppercase tracking-tighter">
+                    Incoming Payment Pool
                   </p>
                 </div>
-                <div>
-                  <p className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">
-                    Received today
+
+                <div className="text-white/20 text-3xl font-thin hidden lg:block">/</div>
+
+                <div className="flex flex-col gap-1">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-rose-400 shadow-[0_0_8px_rgba(248,113,113,0.5)]"></div>
+                    <p className="text-[10px] font-black text-rose-400 uppercase tracking-widest">
+                      Total Debit (Dr.)
+                    </p>
+                  </div>
+                  <p className="text-2xl font-black text-white tabular-nums tracking-tight">
+                    {formatLedgerAmount(debitToSeller)}
                   </p>
-                  <p className="text-xl font-black text-white tabular-nums">
-                    {formatLedgerAmount(dateTotal)}
+                  <p className="text-[8px] font-bold text-white/40 uppercase tracking-tighter">
+                    Lorry Bill Allocations
+                  </p>
+                </div>
+
+                <div className="h-12 w-px bg-white/10 hidden md:block"></div>
+
+                <div className="flex flex-col gap-1">
+                  <p className="text-[10px] font-black text-blue-300 uppercase tracking-widest">
+                    Closing Balance
+                  </p>
+                  <div className="flex items-baseline gap-2">
+                    <p className={`text-2xl font-black tabular-nums tracking-tight ${
+                      creditBalanceRemaining > 0.01 ? "text-emerald-400" : "text-white/60"
+                    }`}>
+                      {formatLedgerAmount(creditBalanceRemaining)}
+                    </p>
+                    <span className="text-[10px] font-black text-blue-300/60 uppercase">
+                      {creditBalanceRemaining > 0.01 ? "Cr." : "Balanced"}
+                    </span>
+                  </div>
+                  <p className="text-[8px] font-bold text-white/40 uppercase tracking-tighter">
+                    Unallocated Credit Remaining
                   </p>
                 </div>
               </div>
-              <div className="flex items-center gap-4">
+
+              <div className="flex items-center gap-6 bg-white/5 p-4 rounded-2xl border border-white/10 backdrop-blur-sm">
                 <div className="text-right">
-                  <p className="text-[10px] font-black text-slate-400 uppercase">
-                    Pending on page
+                  <p className="text-[9px] font-black text-white/50 uppercase tracking-widest mb-1">
+                    Pending Lines
                   </p>
-                  <p className="text-2xl font-black text-rose-400">
+                  <p className="text-3xl font-black text-rose-400 tabular-nums">
                     {entryStats.pendingCount}
                   </p>
                 </div>
-                <FaFileInvoiceDollar className="text-slate-500" size={28} />
+                <div className="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center text-white/60">
+                  <FaFileInvoiceDollar size={24} />
+                </div>
               </div>
             </div>
           </div>
