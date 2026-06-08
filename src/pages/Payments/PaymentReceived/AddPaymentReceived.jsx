@@ -1936,6 +1936,7 @@ const AddPaymentReceived = () => {
           allocationSource={allocationSource}
           companyPair={companyPair}
           fullCompanyMapping={fullCompanyMapping}
+          history={history}
         />
 
         {(formData.amount > 0 ||
