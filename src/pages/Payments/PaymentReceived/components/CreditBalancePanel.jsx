@@ -117,7 +117,7 @@ const CreditBalancePanel = ({
         <p className="text-[11px] font-bold text-slate-500">
           {isAdvance
             ? "Record buyer advance (Cr.), then adjust Dr. per lorry."
-            : "Enter payment received (Cr.), then adjust each lorry (Dr.) below and Save."}
+            : ""}
         </p>
       )}
 

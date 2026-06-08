@@ -23,10 +23,7 @@ const CompanyLedgerBanner = ({
           : "border-[#1e3a5f]/25 bg-gradient-to-r from-[#f8fafc] via-white to-[#f0f9ff]"
       }`}
     >
-      <p className="text-[9px] font-black text-[#1e3a5f] uppercase tracking-[0.25em] mb-2">
-        Tally ledger · Company mapping
-      </p>
-      <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+      <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-4">
         <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-blue-600 text-white shadow-sm">
           <span className="text-[9px] font-black uppercase opacity-80">Buyer</span>
           <span className="text-xs sm:text-sm font-black uppercase tracking-tight truncate max-w-[160px] sm:max-w-none">
@@ -48,52 +45,40 @@ const CompanyLedgerBanner = ({
         </p>
       )}
       {showTotals && (
-        <div className="mt-3 flex flex-wrap items-center gap-2 sm:gap-3">
-          <div
-            className={`inline-flex flex-col px-3 py-2 rounded-lg border min-w-[140px] ${
-              isAdvance
-                ? "bg-emerald-50 border-emerald-200"
-                : "bg-emerald-50 border-emerald-200"
-            }`}
-          >
-            <span
-              className={`text-[9px] font-black uppercase tracking-widest ${
-                isAdvance ? "text-emerald-800" : "text-emerald-800"
-              }`}
-            >
+        <div className="mt-4 flex flex-wrap items-center gap-3 sm:gap-6 bg-white/50 p-4 rounded-2xl border border-slate-100 shadow-inner">
+          <div className="flex flex-col gap-1 min-w-[150px]">
+            <span className="text-[10px] font-black text-emerald-600 uppercase tracking-widest flex items-center gap-2">
+              <div className="w-1.5 h-1.5 rounded-full bg-emerald-500"></div>
               {mappingActive && buyerCompany && supplierCompany
                 ? "Credit balance (Cr.)"
                 : isAdvance
                   ? "Advance · Cr."
                   : "Payment Received (Cr.)"}
             </span>
-            <span
-              className={`text-sm font-black tabular-nums ${
-                isAdvance ? "text-emerald-700" : "text-emerald-700"
-              }`}
-            >
+            <span className="text-xl font-black text-emerald-700 tabular-nums tracking-tight">
               {formatLedgerAmount(creditEntryTotal)}
             </span>
           </div>
-          <span className="text-slate-400 font-black text-xs hidden sm:inline">
-            −
-          </span>
-          <div className="inline-flex flex-col px-3 py-2 rounded-lg bg-rose-50 border border-rose-200 min-w-[140px]">
-            <span className="text-[9px] font-black text-rose-800 uppercase tracking-widest">
+
+          <div className="h-10 w-px bg-slate-200 hidden md:block"></div>
+
+          <div className="flex flex-col gap-1 min-w-[150px]">
+            <span className="text-[10px] font-black text-rose-600 uppercase tracking-widest flex items-center gap-2">
+              <div className="w-1.5 h-1.5 rounded-full bg-rose-500"></div>
               Lorry Bill (Dr.)
             </span>
-            <span className="text-sm font-black text-rose-700 tabular-nums">
+            <span className="text-xl font-black text-rose-700 tabular-nums tracking-tight">
               {formatLedgerAmount(debitToSeller)}
             </span>
           </div>
-          <span className="text-slate-400 font-black text-xs hidden sm:inline">
-            =
-          </span>
-          <div className="inline-flex flex-col px-3 py-2 rounded-lg bg-[#eef4ff] border border-[#1e3a5f]/20 min-w-[140px]">
-            <span className="text-[9px] font-black text-[#1e3a5f] uppercase tracking-widest">
-              {isAdvance ? "Cr. left" : "Cr. Remaining"}
+
+          <div className="h-10 w-px bg-slate-200 hidden md:block"></div>
+
+          <div className="flex flex-col gap-1 min-w-[150px] bg-[#1e3a5f] p-3 rounded-xl shadow-lg shadow-blue-100">
+            <span className="text-[9px] font-black text-blue-200 uppercase tracking-widest">
+              {isAdvance ? "Cr. Balance Left" : "Net Cr. Remaining"}
             </span>
-            <span className="text-sm font-black text-[#1e3a5f] tabular-nums">
+            <span className="text-xl font-black text-white tabular-nums tracking-tight">
               {formatLedgerAmount(creditBalanceRemaining)}
             </span>
           </div>
