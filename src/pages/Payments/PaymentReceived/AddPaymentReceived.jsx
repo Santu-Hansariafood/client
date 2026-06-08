@@ -336,6 +336,7 @@ const AddPaymentReceived = () => {
         fullCompanyMapping,
         creditPendingInForm,
         creditTableTotal,
+        totalDueFromTable: entryStats.totalDue,
       }),
     [
       allocationSource,
@@ -344,6 +345,7 @@ const AddPaymentReceived = () => {
       fullCompanyMapping,
       creditPendingInForm,
       creditTableTotal,
+      entryStats.totalDue,
     ],
   );
 

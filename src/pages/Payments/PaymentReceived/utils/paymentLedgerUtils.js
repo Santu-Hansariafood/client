@@ -248,6 +248,7 @@ export const computeBuyerSellerLedgerSummary = ({
   fullCompanyMapping = false,
   creditPendingInForm = 0,
   creditTableTotal = 0,
+  totalDueFromTable = 0,
 }) => {
   const pendingDr = Number(creditPendingInForm) || 0;
   const tableDr = Number(creditTableTotal) || 0;
@@ -257,28 +258,18 @@ export const computeBuyerSellerLedgerSummary = ({
 
   const entryCr = Number(formAmount) || 0;
 
-  let creditEntryTotal = 0;
-  if (allocationSource === "advance") {
-    creditEntryTotal = fullCompanyMapping
-      ? Number(ledgerBalance.advanceTotalDr) ||
-        Number(ledgerBalance.advanceBalance) + postedDr
-      : Number(ledgerBalance.totalAdvanceTotalDr) ||
-        Number(ledgerBalance.totalAdvanceBalance) + postedDr;
-    // Use entry amount when user typed a new advance in the form
-    if (entryCr > 0) {
-      creditEntryTotal = entryCr;
-    }
-  } else {
-    // Payment Received: entry = amount received from buyer (Credit)
-    creditEntryTotal = entryCr;
-  }
+  // Total Credit (Cr.) = All advance balance + today's entry
+  const existingAdvance = fullCompanyMapping
+    ? Number(ledgerBalance.advanceBalance) || 0
+    : Number(ledgerBalance.totalAdvanceBalance) || 0;
 
-  // Payment Received: adjusted = lorry-wise allocations (Debit)
-  // Advance: Dr. posted to seller + current table
-  const debitToSeller =
-    allocationSource === "advance" ? postedDr + tableDr : tableDr;
+  // In Tally style, Total Credit is what we have to spend
+  const creditEntryTotal = existingAdvance + entryCr;
 
-  const creditBalanceRemaining = Math.max(0, creditEntryTotal - debitToSeller);
+  // In Tally style, Total Debit is the liability (Lorry Bills)
+  const debitToSeller = Number(totalDueFromTable) || 0;
+
+  const creditBalanceRemaining = creditEntryTotal - tableDr - postedDr;
 
   return {
     creditEntryTotal,

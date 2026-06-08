@@ -315,7 +315,7 @@ const AllocationLedger = ({
                     {formatLedgerAmount(creditEntryTotal)}
                   </p>
                   <p className="text-[8px] font-bold text-white/40 uppercase tracking-tighter">
-                    Incoming Payment Pool
+                    Available Credit Pool
                   </p>
                 </div>
 
@@ -325,14 +325,14 @@ const AllocationLedger = ({
                   <div className="flex items-center gap-2">
                     <div className="w-2 h-2 rounded-full bg-rose-400 shadow-[0_0_8px_rgba(248,113,113,0.5)]"></div>
                     <p className="text-[10px] font-black text-rose-400 uppercase tracking-widest">
-                      Total Debit (Dr.)
+                      Lorry Bill (Dr.)
                     </p>
                   </div>
                   <p className="text-2xl font-black text-white tabular-nums tracking-tight">
                     {formatLedgerAmount(debitToSeller)}
                   </p>
                   <p className="text-[8px] font-bold text-white/40 uppercase tracking-tighter">
-                    Lorry Bill Allocations
+                    Total Due Amount (Dr.)
                   </p>
                 </div>
 
