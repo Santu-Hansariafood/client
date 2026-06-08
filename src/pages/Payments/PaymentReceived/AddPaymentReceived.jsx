@@ -103,6 +103,33 @@ const AddPaymentReceived = () => {
     return companyRef.companyName || companyRef.label || "";
   };
 
+  const calculateTallyDetails = (entry) => {
+    const weight =
+      (entry.unloadingWeight || 0) > 0
+        ? entry.unloadingWeight
+        : entry.loadingWeight || 0;
+    const rate = entry.actualRate || 0;
+    const cdPercent = entry.cd || 0;
+    const gstPercent = entry.gst || 0;
+
+    const grossAmount = weight * rate;
+    const cdAmount = grossAmount * (cdPercent / 100);
+    const taxableAmount = grossAmount - cdAmount;
+    const gstAmount = taxableAmount * (gstPercent / 100);
+    const netAmount = taxableAmount + gstAmount;
+
+    return {
+      grossAmount,
+      cdAmount,
+      taxableAmount,
+      gstAmount,
+      netAmount,
+      cdPercent,
+      gstPercent,
+      dueAmount: Math.max(0, netAmount - (entry.paidAmount || 0)),
+    };
+  };
+
   const resolveLedgerForCompany = useCallback(
     (companyId, ledgerType, buyerLedgerList, sellerLedgerList) => {
       if (!companyId) return null;
@@ -326,6 +353,24 @@ const AddPaymentReceived = () => {
     () => Math.max(0, availableAllocationPool - creditPendingInForm),
     [availableAllocationPool, creditPendingInForm],
   );
+
+  const entryStats = useMemo(() => {
+    let totalDue = 0;
+    let pendingCount = 0;
+
+    entries.forEach((entry) => {
+      const details = calculateTallyDetails(entry);
+      if (details.dueAmount <= 0.01) return;
+      // User request: Due Amount (Dr.) total = Lorry Bill (Dr.)
+      // So we sum the netAmount (total bill) instead of the remaining dueAmount
+      totalDue += details.netAmount;
+      if (entry.paymentStatus !== "done") {
+        pendingCount++;
+      }
+    });
+
+    return { totalDue, pendingCount };
+  }, [entries]);
 
   const ledgerTopSummary = useMemo(
     () =>
@@ -1102,33 +1147,6 @@ const AddPaymentReceived = () => {
     setEntries((prev) => prev.filter((entry) => entry.uiKey !== uiKey));
   };
 
-  const calculateTallyDetails = (entry) => {
-    const weight =
-      (entry.unloadingWeight || 0) > 0
-        ? entry.unloadingWeight
-        : entry.loadingWeight || 0;
-    const rate = entry.actualRate || 0;
-    const cdPercent = entry.cd || 0;
-    const gstPercent = entry.gst || 0;
-
-    const grossAmount = weight * rate;
-    const cdAmount = grossAmount * (cdPercent / 100);
-    const taxableAmount = grossAmount - cdAmount;
-    const gstAmount = taxableAmount * (gstPercent / 100);
-    const netAmount = taxableAmount + gstAmount;
-
-    return {
-      grossAmount,
-      cdAmount,
-      taxableAmount,
-      gstAmount,
-      netAmount,
-      cdPercent,
-      gstPercent,
-      dueAmount: Math.max(0, netAmount - (entry.paidAmount || 0)),
-    };
-  };
-
   const handleSaveRow = async (entry) => {
     if (entry.allocatedAmount === "" && !entry.isSaved) {
       toast.error("Please enter an allocation amount");
@@ -1479,24 +1497,6 @@ const AddPaymentReceived = () => {
 
     doc.save(`Voucher_${payment._id.substring(payment._id.length - 8)}.pdf`);
   };
-
-  const entryStats = useMemo(() => {
-    let totalDue = 0;
-    let pendingCount = 0;
-
-    entries.forEach((entry) => {
-      const details = calculateTallyDetails(entry);
-      if (details.dueAmount <= 0.01) return;
-      // User request: Due Amount (Dr.) total = Lorry Bill (Dr.)
-      // So we sum the netAmount (total bill) instead of the remaining dueAmount
-      totalDue += details.netAmount;
-      if (entry.paymentStatus !== "done") {
-        pendingCount++;
-      }
-    });
-
-    return { totalDue, pendingCount };
-  }, [entries]);
 
   const columns = [
     {
