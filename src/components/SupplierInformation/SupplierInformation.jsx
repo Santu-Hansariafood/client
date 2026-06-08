@@ -5,9 +5,9 @@ import {
   useCallback,
   lazy,
   Suspense,
+  useRef,
 } from "react";
 import PropTypes from "prop-types";
-import axios from "axios";
 import Loading from "../../common/Loading/Loading";
 const DataDropdown = lazy(
   () => import("../../common/DataDropdown/DataDropdown"),
@@ -23,98 +23,46 @@ const SupplierInformation = ({
   supplierOptions,
   sellerOptions,
   sellerCompanies,
+  allCommodities = [],
 }) => {
-  const [selectedSupplier, setSelectedSupplier] = useState(null);
+  const [selectedSupplierId, setSelectedSupplierId] = useState(null);
+  const [selectedCompany, setSelectedCompany] = useState("");
+  const isInitialMatchDone = useRef(false);
+
+  const getBrokerageList = useCallback((sellerData) => {
+    if (!sellerData || !Array.isArray(sellerData.commodities)) return [];
+
+    return sellerData.commodities.map((c) => ({
+      name: c.name,
+      brokerage: c.brokerage,
+    }));
+  }, []);
 
   useEffect(() => {
-    if (formData.supplier && sellerOptions.length > 0) {
-      const supplierId =
-        typeof formData.supplier === "object"
-          ? formData.supplier._id
-          : formData.supplier;
+    if (isInitialMatchDone.current || !sellerOptions.length) return;
 
-      if (supplierId !== selectedSupplier) {
-        setSelectedSupplier(supplierId);
-
-        const selected = sellerOptions.find(
-          (seller) => String(seller.value) === String(supplierId),
-        );
-        if (selected) {
-          handleChange("supplierBrokerage", selected.commodities || []);
-          handleChange("supplierName", selected.label || "");
-
-          const rawEmails = selected.emails || [];
-          const sellerEmails = Array.isArray(rawEmails)
-            ? rawEmails
-                .map((e) =>
-                  typeof e === "string" ? e : (e?.value ?? e?.email ?? ""),
-                )
-                .filter(Boolean)
-            : [];
-          handleChange(
-            "sellerEmails",
-            sellerEmails.length ? sellerEmails : [""],
-          );
-
-          const rawPhones = selected.phoneNumbers || [];
-          const sellerPhones = Array.isArray(rawPhones)
-            ? rawPhones
-                .map((p) =>
-                  typeof p === "string" ? p : (p?.value ?? p?.phone ?? ""),
-                )
-                .filter(Boolean)
-            : [];
-          const firstMobile = sellerPhones[0] || "";
-          handleChange("sellerMobile", firstMobile);
-
-          if (selected.commodities?.length) {
-            handleChange(
-              "supplierBrokerageDetails",
-              selected.commodities.map((c) => ({
-                name: c.name,
-                brokerage: c.brokerage,
-              })),
-            );
-          }
-        }
+    const supplierId = formData.supplier?._id || formData.supplier;
+    if (supplierId) {
+      setSelectedSupplierId(supplierId);
+      const supplierCompany = formData.supplierCompany;
+      if (supplierCompany) {
+        setSelectedCompany(supplierCompany);
       }
+      isInitialMatchDone.current = true;
     }
-  }, [
-    formData.supplier,
-    formData.sellerMobile,
-    formData.supplierBrokerage,
-    selectedSupplier,
-    sellerOptions,
-    handleChange,
-  ]);
+  }, [formData.supplier, formData.supplierCompany, sellerOptions]);
 
-  const companies = useMemo(() => {
-    if (selectedSupplier) {
-      const supplier = sellerOptions.find(
-        (seller) => seller.value === selectedSupplier,
-      );
-      if (supplier && Array.isArray(supplier.companies)) {
-        return supplier.companies.map((company) => ({
-          value: company,
-          label: company,
-        }));
-      }
-    }
-    return [];
-  }, [selectedSupplier, sellerOptions]);
+  const onSupplierChange = (option) => {
+    const supplierId = option?.value || null;
+    setSelectedSupplierId(supplierId);
+    handleChange("supplier", supplierId);
 
-  const handleSupplierChange = useCallback(
-    (supplierId) => {
-      const selected = sellerOptions.find(
-        (seller) => seller.value === supplierId,
-      );
+    const selected = sellerOptions.find((s) => s.value === supplierId);
+    if (selected) {
+      handleChange("supplierBrokerage", getBrokerageList(selected));
+      handleChange("supplierName", selected.label || "");
 
-      setSelectedSupplier(supplierId);
-      handleChange("supplier", supplierId);
-      handleChange("supplierBrokerage", selected?.commodities || []);
-      handleChange("supplierName", selected?.label || "");
-
-      const rawEmails = selected?.emails || [];
+      const rawEmails = selected.emails || [];
       const sellerEmails = Array.isArray(rawEmails)
         ? rawEmails
             .map((e) =>
@@ -124,7 +72,7 @@ const SupplierInformation = ({
         : [];
       handleChange("sellerEmails", sellerEmails.length ? sellerEmails : [""]);
 
-      const rawPhones = selected?.phoneNumbers || [];
+      const rawPhones = selected.phoneNumbers || [];
       const sellerPhones = Array.isArray(rawPhones)
         ? rawPhones
             .map((p) =>
@@ -135,7 +83,7 @@ const SupplierInformation = ({
       const firstMobile = sellerPhones[0] || "";
       handleChange("sellerMobile", firstMobile);
 
-      if (selected?.commodities?.length) {
+      if (selected.commodities?.length) {
         handleChange(
           "supplierBrokerageDetails",
           selected.commodities.map((c) => ({
@@ -144,9 +92,43 @@ const SupplierInformation = ({
           })),
         );
       }
-    },
-    [sellerOptions, handleChange],
-  );
+    } else {
+      handleChange("supplierBrokerage", []);
+      handleChange("supplierName", "");
+      handleChange("sellerEmails", [""]);
+      handleChange("sellerMobile", "");
+      handleChange("supplierBrokerageDetails", []);
+    }
+
+    handleChange("supplierCompany", "");
+    setSelectedCompany("");
+  };
+
+  const onCompanyChange = (option) => {
+    const companyName = option?.label || "";
+    setSelectedCompany(companyName);
+    handleChange("supplierCompany", companyName);
+
+    const selected = sellerOptions.find((s) => s.value === selectedSupplierId);
+    if (selected) {
+      handleChange("supplierBrokerage", getBrokerageList(selected));
+    }
+  };
+
+  const companies = useMemo(() => {
+    if (selectedSupplierId) {
+      const supplier = sellerOptions.find(
+        (seller) => seller.value === selectedSupplierId,
+      );
+      if (supplier && Array.isArray(supplier.companies)) {
+        return supplier.companies.map((company) => ({
+          value: company,
+          label: company,
+        }));
+      }
+    }
+    return [];
+  }, [selectedSupplierId, sellerOptions]);
 
   return (
     <Suspense fallback={<Loading />}>
@@ -162,10 +144,10 @@ const SupplierInformation = ({
             placeholder="Select Supplier"
             options={sellerOptions}
             selectedOptions={
-              sellerOptions.find((s) => s.value === selectedSupplier) || null
+              sellerOptions.find((s) => s.value === selectedSupplierId) || null
             }
-            onChange={(opt) => handleSupplierChange(opt?.value)}
-            value={selectedSupplier}
+            onChange={onSupplierChange}
+            value={selectedSupplierId}
           />
         </div>
         <div>
@@ -176,13 +158,11 @@ const SupplierInformation = ({
             placeholder="Select Supplier Company"
             options={companies}
             selectedOptions={
-              companies.find((c) => c.value === formData.supplierCompany) ||
-              null
+              companies.find((c) => c.value === selectedCompany) || null
             }
-            onChange={(opt) =>
-              handleChange("supplierCompany", opt?.value || "")
-            }
-            value={formData.supplierCompany}
+            onChange={onCompanyChange}
+            value={selectedCompany}
+            disabled={!selectedSupplierId}
           />
         </div>
         <div>

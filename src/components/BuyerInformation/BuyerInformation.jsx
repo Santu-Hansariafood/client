@@ -1,7 +1,14 @@
-import { useEffect, useState, useCallback, useMemo, lazy, Suspense, useRef } from "react";
+import {
+  useEffect,
+  useState,
+  useCallback,
+  useMemo,
+  lazy,
+  Suspense,
+  useRef,
+} from "react";
 import PropTypes from "prop-types";
 import Loading from "../../common/Loading/Loading";
-import { fetchAllPages } from "../../utils/apiClient/fetchAllPages";
 import { useAuth } from "../../context/AuthContext/AuthContext";
 const DataDropdown = lazy(
   () => import("../../common/DataDropdown/DataDropdown"),
@@ -41,7 +48,6 @@ const BuyerInformation = ({
             ...cc,
             name: matched.name,
             hsnCode: matched.hsnCode,
-            // Ensure parameters from company are merged with parameter names from commodity
             parameters: (cc.parameters || []).map((cp) => {
               const matchedParam = (matched.parameters || []).find(
                 (mp) => String(mp._id) === String(cp.parameterId),
@@ -55,6 +61,26 @@ const BuyerInformation = ({
         }
         return cc;
       });
+    },
+    [allCommodities],
+  );
+
+  const getBrokerageMap = useCallback(
+    (buyerData) => {
+      if (!buyerData) return {};
+      const map = { ...(buyerData.brokerageByName || {}) };
+
+      if (buyerData.brokerage && allCommodities?.length > 0) {
+        Object.entries(buyerData.brokerage).forEach(([id, val]) => {
+          const commodity = allCommodities.find(
+            (c) => String(c._id) === String(id),
+          );
+          if (commodity && !map[commodity.name]) {
+            map[commodity.name] = val;
+          }
+        });
+      }
+      return map;
     },
     [allCommodities],
   );
@@ -75,7 +101,11 @@ const BuyerInformation = ({
   }, [propCompanies]);
 
   useEffect(() => {
-    if (propBuyers?.length > 0 && propConsignees?.length > 0 && propCompanies?.length > 0) {
+    if (
+      propBuyers?.length > 0 &&
+      propConsignees?.length > 0 &&
+      propCompanies?.length > 0
+    ) {
       setLoading(false);
     }
   }, [propBuyers, propConsignees, propCompanies]);
@@ -138,7 +168,7 @@ const BuyerInformation = ({
       formData?.buyerCompany ||
       formData?.companyId != null ||
       formData?.buyerMobile;
-    
+
     if (!hasEditHints) return;
 
     const buyerList = Array.isArray(buyers) ? buyers : [];
@@ -212,10 +242,7 @@ const BuyerInformation = ({
         "buyerCommodity",
         enrichCommodities(companyData.commodities || []),
       );
-      handleChange(
-        "buyerBrokerageMap",
-        buyerData.brokerageByName || buyerData.brokerage || {},
-      );
+      handleChange("buyerBrokerageMap", getBrokerageMap(buyerData));
     }
 
     const consigneeValue =
@@ -242,6 +269,8 @@ const BuyerInformation = ({
     formData,
     handleChange,
     hasManuallySelected,
+    allCommodities,
+    getBrokerageMap,
   ]);
 
   const onBuyerChange = (option) => {
@@ -252,6 +281,11 @@ const BuyerInformation = ({
     handleChange("buyer", option?.label || "");
     handleChange("buyerCompany", "");
     handleChange("companyId", null);
+
+    const buyerData = (Array.isArray(buyers) ? buyers : []).find(
+      (b) => b._id === buyerId,
+    );
+    handleChange("buyerBrokerageMap", getBrokerageMap(buyerData));
   };
 
   const onCompanyChange = (option) => {
@@ -290,10 +324,7 @@ const BuyerInformation = ({
       "buyerCommodity",
       enrichCommodities(companyData.commodities || []),
     );
-    handleChange(
-      "buyerBrokerageMap",
-      buyerData.brokerageByName || buyerData.brokerage || {},
-    );
+    handleChange("buyerBrokerageMap", getBrokerageMap(buyerData));
     setSelectedConsignee("");
     handleChange("consignee", "");
   };
@@ -310,7 +341,6 @@ const BuyerInformation = ({
       });
     }
 
-    // Ensure currently selected consignee is in the list even if company matching is slow or missing
     if (selectedConsignee) {
       const exists = options.some((opt) => opt.value === selectedConsignee);
       if (!exists) {

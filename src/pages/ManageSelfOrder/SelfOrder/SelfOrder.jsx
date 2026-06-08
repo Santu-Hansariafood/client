@@ -368,6 +368,7 @@ const SelfOrder = () => {
               supplierOptions={supplierOptions}
               sellerOptions={sellerOptions}
               sellerCompanies={sellerCompanies}
+              allCommodities={allCommodities}
             />
           </div>
 
