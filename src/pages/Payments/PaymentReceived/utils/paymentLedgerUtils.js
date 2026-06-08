@@ -264,9 +264,11 @@ export const computeBuyerSellerLedgerSummary = ({
     : Number(ledgerBalance.totalAdvanceBalance) || 0;
 
   // In Tally style, Total Credit is what we have to spend
-  const creditEntryTotal = existingAdvance + entryCr;
+  // User request: Credit amount = total credit amount from all credits
+  const creditEntryTotal = existingAdvance + postedDr + entryCr;
 
   // In Tally style, Total Debit is the liability (Lorry Bills)
+  // User request: Due Amount (Dr.) total = Lorry Bill (Dr.)
   const debitToSeller = Number(totalDueFromTable) || 0;
 
   const creditBalanceRemaining = creditEntryTotal - tableDr - postedDr;

@@ -23,10 +23,10 @@ const CreditBalancePanel = ({
   // Bill Amounts (Lorry) -> Debit balance (Rose)
   
   const creditLabel = fullCompanyMapping && buyerCompany && supplierCompany
-    ? "Credit balance (Cr.)"
+    ? "Total Credit (Cr.)"
     : isAdvance
-      ? "Credit balance (Advance) · Cr."
-      : "Payment Received (Cr.)";
+      ? "Total Credit (Advance) · Cr."
+      : "Total Credit Received (Cr.)";
 
   const creditHint = fullCompanyMapping && buyerCompany && supplierCompany
     ? `available payment from ${buyerCompany}`

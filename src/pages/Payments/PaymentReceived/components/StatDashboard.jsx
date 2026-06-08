@@ -67,12 +67,12 @@ const StatDashboard = ({
 
       <StatCard
         icon={<FaMoneyBillWave size={18} />}
-        label={isAdvance ? "From Advance (Cr.)" : "Payment Entry (Cr.)"}
+        label={isAdvance ? "Total Advance (Cr.)" : "Total Credit (Cr.)"}
         value={`Rs. ${creditEntryTotal.toLocaleString("en-IN")}`}
         subValue={
           isAdvance
-            ? "Available credit"
-            : "Current receipt amount"
+            ? "Total available credit"
+            : "Total receipt amount"
         }
         color="bg-emerald-50"
         iconColor="text-emerald-600"
@@ -80,7 +80,7 @@ const StatDashboard = ({
 
       <StatCard
         icon={<FaTruck size={18} />}
-        label="Lorry Allocation (Dr.)"
+        label="Lorry Bill (Dr.)"
         value={`Rs. ${debitToSeller.toLocaleString("en-IN")}`}
         subValue={
           isAdvance

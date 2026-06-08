@@ -1487,7 +1487,9 @@ const AddPaymentReceived = () => {
     entries.forEach((entry) => {
       const details = calculateTallyDetails(entry);
       if (details.dueAmount <= 0.01) return;
-      totalDue += details.dueAmount;
+      // User request: Due Amount (Dr.) total = Lorry Bill (Dr.)
+      // So we sum the netAmount (total bill) instead of the remaining dueAmount
+      totalDue += details.netAmount;
       if (entry.paymentStatus !== "done") {
         pendingCount++;
       }
@@ -1661,10 +1663,10 @@ const AddPaymentReceived = () => {
               </div>
               <div className="flex flex-col gap-1">
                 <span className="text-[7px] font-black text-rose-600 uppercase tracking-widest">
-                  Due Amount (Dr.)
+                  Lorry Bill (Dr.)
                 </span>
                 <span className="h-8 px-2 rounded border border-rose-200 bg-rose-50 text-rose-700 text-[10px] font-black flex items-center tabular-nums normal-case shadow-sm">
-                  ₹{details.dueAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                  ₹{details.netAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
                 </span>
               </div>
               <div className="flex flex-col gap-1">
