@@ -924,9 +924,9 @@ const AddPaymentReceived = () => {
         ledgerId: ledgerId || undefined,
         companyId: saveCompanyId,
         ...pairPayload,
-        amount: recordAmount,
-        claim: formData.claim || 0,
-        tds: formData.tds || 0,
+        amount: formData.paymentMode === "Claim" || formData.paymentMode === "TDS" ? 0 : recordAmount,
+        claim: formData.paymentMode === "Claim" ? recordAmount : 0,
+        tds: formData.paymentMode === "TDS" ? recordAmount : 0,
         paymentType: allocationSource === "fresh" ? "Sauda-wise" : "Adjustment",
         paymentMode:
           allocationSource === "fresh" ? formData.paymentMode : "Adjustment",
@@ -1287,9 +1287,9 @@ const AddPaymentReceived = () => {
           ledgerId: ledgerId || undefined,
           companyId: saveCompanyId,
           ...pairPayload,
-          amount: recordAmount,
-          claim: formData.claim || 0,
-          tds: formData.tds || 0,
+          amount: formData.paymentMode === "Claim" || formData.paymentMode === "TDS" ? 0 : recordAmount,
+          claim: formData.paymentMode === "Claim" ? recordAmount : 0,
+          tds: formData.paymentMode === "TDS" ? recordAmount : 0,
           paymentType:
             allocationSource === "fresh" ? "Sauda-wise" : "Adjustment",
           paymentMode:
@@ -1368,6 +1368,9 @@ const AddPaymentReceived = () => {
       const payload = {
         ...formData,
         date: formData.allocationDate || formData.date,
+        amount: formData.paymentMode === "Claim" || formData.paymentMode === "TDS" ? 0 : formData.amount,
+        claim: formData.paymentMode === "Claim" ? formData.amount : 0,
+        tds: formData.paymentMode === "TDS" ? formData.amount : 0,
         ledgerType: recordLedgerType,
         companyId: formData.companyId,
         ...buildCompanyPayload(),

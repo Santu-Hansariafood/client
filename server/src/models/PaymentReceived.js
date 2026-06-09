@@ -16,7 +16,7 @@ const paymentReceivedSchema = new mongoose.Schema(
     companyId: { type: String }, // Buyer's company ID (ObjectId) or Seller's company name
     buyerCompany: { type: String, default: "" },
     supplierCompany: { type: String, default: "" },
-    amount: { type: Number, required: true },
+    amount: { type: Number, default: 0 },
     claim: { type: Number, default: 0 },
     tds: { type: Number, default: 0 },
     unadjustedAmount: { type: Number, default: 0 },
