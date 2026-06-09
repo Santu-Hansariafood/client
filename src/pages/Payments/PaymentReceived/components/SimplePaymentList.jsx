@@ -1,5 +1,8 @@
 import React from "react";
-import { formatLedgerAmount } from "../utils/paymentLedgerUtils";
+import {
+  formatLedgerAmount,
+  buildPaymentParticulars,
+} from "../utils/paymentLedgerUtils";
 
 const SimplePaymentList = ({
   payments = [],
@@ -108,8 +111,8 @@ const SimplePaymentList = ({
                     {payment.paymentMode}
                   </span>
                 </td>
-                <td className="px-4 py-4 text-[11px] text-slate-600 font-medium max-w-xs truncate">
-                  {payment.remarks || "—"}
+                <td className="px-4 py-4 text-[11px] text-slate-600 font-medium max-w-xs truncate" title={buildPaymentParticulars(payment)}>
+                  {buildPaymentParticulars(payment) || "—"}
                 </td>
               </tr>
             ))}

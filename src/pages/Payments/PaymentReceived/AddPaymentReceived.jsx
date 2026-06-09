@@ -57,6 +57,7 @@ const AddPaymentReceived = () => {
   const [entriesPage, setEntriesPage] = useState(1);
   const [entriesTotal, setEntriesTotal] = useState(0);
   const [history, setHistory] = useState([]);
+  const [historyEntries, setHistoryEntries] = useState([]);
   const [summary, setSummary] = useState([]);
   const [summaryType, setSummaryType] = useState("month");
   const [tableSearch, setTableSearch] = useState("");
@@ -446,7 +447,6 @@ const AddPaymentReceived = () => {
         const response = await api.get("/loading-entries", {
           params: {
             buyerCompany: buyerName,
-            isUnloaded: true,
             paymentStatus: "pending",
             limit: 500,
           },
@@ -494,7 +494,6 @@ const AddPaymentReceived = () => {
         const params = {
           page: useWideFetch ? 1 : page,
           limit: useWideFetch ? 500 : ENTRIES_PAGE_SIZE,
-          isUnloaded: true,
           paymentStatus: "pending",
         };
 
@@ -673,6 +672,7 @@ const AddPaymentReceived = () => {
   const fetchHistory = useCallback(async () => {
     if (!formData.date) {
       setHistory([]);
+      setHistoryEntries([]);
       return;
     }
 
@@ -682,22 +682,38 @@ const AddPaymentReceived = () => {
         limit: 1000,
       };
 
+      const entryParams = {
+        limit: 1000,
+      };
+
       if (companyPair.buyerCompany || companyPair.supplierCompany) {
         // When companies are selected, show all their payments (not just today)
-        if (companyPair.buyerCompany)
+        if (companyPair.buyerCompany) {
           params.buyerCompany = companyPair.buyerCompany;
-        if (companyPair.supplierCompany)
+          entryParams.buyerCompany = companyPair.buyerCompany;
+        }
+        if (companyPair.supplierCompany) {
           params.supplierCompany = companyPair.supplierCompany;
+          entryParams.supplierCompany = companyPair.supplierCompany;
+        }
       } else {
         // No company selected, show all payments for the selected date
         params.startDate = formData.date;
         params.endDate = formData.date;
         if (formData.ledgerType) params.ledgerType = formData.ledgerType;
         if (formData.ledgerId) params.ledgerId = formData.ledgerId;
+
+        entryParams.startDate = formData.date;
+        entryParams.endDate = formData.date;
       }
 
-      const response = await api.get("/payment-received", { params });
-      setHistory(response.data.data || []);
+      const [paymentsRes, entriesRes] = await Promise.all([
+        api.get("/payment-received", { params }),
+        api.get("/loading-entries", { params: entryParams }),
+      ]);
+
+      setHistory(paymentsRes.data.data || []);
+      setHistoryEntries(entriesRes.data.data || []);
     } catch (error) {
       console.error("Error fetching history:", error);
     } finally {
@@ -749,8 +765,8 @@ const AddPaymentReceived = () => {
   );
 
   const tallyHistoryRows = useMemo(
-    () => buildTallyVoucherRows(history, 0),
-    [history],
+    () => buildTallyVoucherRows(history, 0, historyEntries),
+    [history, historyEntries],
   );
 
   const fetchSummary = useCallback(async () => {
@@ -2001,7 +2017,11 @@ const AddPaymentReceived = () => {
             <SimplePaymentList
               payments={history}
               loading={fetchingHistory}
-              emptyMessage="No payments found for the selected date and filters."
+              emptyMessage={
+                companyPair.buyerCompany || companyPair.supplierCompany
+                  ? `No payments recorded for ${[companyPair.buyerCompany, companyPair.supplierCompany].filter(Boolean).join(" → ")}. Switch to Allocation tab to record one.`
+                  : "No payments found for the selected date. Select a company to view their full history or switch to Allocation tab."
+              }
             />
           )}
 
