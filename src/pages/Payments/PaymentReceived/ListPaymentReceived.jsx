@@ -329,6 +329,11 @@ const ListPaymentReceived = () => {
     fetchPayments();
   }, [page, filters]);
 
+  const tallyListRows = useMemo(
+    () => buildTallyVoucherRows(payments, openingBalance, listEntries),
+    [payments, openingBalance, listEntries],
+  );
+
   const stats = useMemo(() => {
     const totalDr = tallyListRows.reduce((s, r) => s + (r.debit || 0), 0);
     const totalCr = tallyListRows.reduce((s, r) => s + (r.credit || 0), 0);
@@ -355,11 +360,6 @@ const ListPaymentReceived = () => {
           : selectedCompany?.label || "",
     }),
     [filters.ledgerType, selectedCompany, selectedOpposingCompany],
-  );
-
-  const tallyListRows = useMemo(
-    () => buildTallyVoucherRows(payments, openingBalance, listEntries),
-    [payments, openingBalance, listEntries],
   );
 
   const periodCredit = useMemo(
@@ -462,7 +462,7 @@ const ListPaymentReceived = () => {
         allEntries = entriesRes.data.data || [];
       }
 
-      const reportRows = buildTallyVoucherRows(allPayments, openingBalance, allEntries);
+      const reportRows = buildTallyVoucherRows(response.data.data || [], openingBalance, allEntries);
 
       if (reportRows.length === 0) {
         toast.warning("No records found");
