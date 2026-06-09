@@ -35,21 +35,17 @@ const StatDashboard = ({
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
       <StatCard
         icon={<FaWallet size={18} />}
-        label={
-          fullCompanyMapping && companyPair?.buyerCompany && companyPair?.supplierCompany
-            ? "Pair Received Today"
-            : accountLabel
-              ? `${accountLabel} Received`
-              : "Total Received Today"
-        }
+        label="Total Payment Received"
         value={`Rs. ${dateTotal.toLocaleString("en-IN")}`}
         subValue={
-          extraAmount > 0
-            ? `+ Rs. ${extraAmount.toLocaleString("en-IN")} extra today`
-            : "Total for selected"
+          fullCompanyMapping && companyPair?.buyerCompany && companyPair?.supplierCompany
+            ? `${companyPair.buyerCompany} → ${companyPair.supplierCompany}`
+            : accountLabel
+              ? `${accountLabel} Ledger`
+              : "Across all companies"
         }
-        color="bg-emerald-50"
-        iconColor="text-emerald-600"
+        color="bg-emerald-100"
+        iconColor="text-emerald-700"
       />
 
       <StatCard

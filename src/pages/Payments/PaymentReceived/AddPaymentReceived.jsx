@@ -12,12 +12,12 @@ import {
   FaArrowLeft,
   FaExchangeAlt,
   FaHistory,
-  FaPrint,
   FaChartBar,
   FaRegCalendarAlt,
   FaCheckCircle,
   FaPlus,
   FaTrash,
+  FaMoneyBillWave
 } from "react-icons/fa";
 
 import TabButton from "./components/TabButton";
@@ -28,6 +28,7 @@ import CreditBalancePanel from "./components/CreditBalancePanel";
 import AllocationLedger from "./components/AllocationLedger";
 import PaymentHistory from "./components/PaymentHistory";
 import AnalyticalSummary from "./components/AnalyticalSummary";
+import SimplePaymentList from "./components/SimplePaymentList";
 import {
   resolveCompanyPair,
   buildTallyVoucherRows,
@@ -73,8 +74,8 @@ const AddPaymentReceived = () => {
     totalCreditToSeller: 0,
     outstandingBalance: 0,
   });
-  const [activeTab, setActiveTab] = useState("allocation"); // allocation, history, summary
-  const [allocationSource, setAllocationSource] = useState("fresh"); // fresh, advance
+  const [activeTab, setActiveTab] = useState("payment_list");
+  const [allocationSource, setAllocationSource] = useState("fresh");
 
   const [formData, setFormData] = useState({
     date: new Date().toISOString().split("T")[0],
@@ -84,6 +85,8 @@ const AddPaymentReceived = () => {
     companyId: "",
     opposingCompanyId: "",
     amount: 0,
+    claim: 0,
+    tds: 0,
     paymentType: "Sauda-wise",
     paymentMode: "Bank",
     remarks: "",
@@ -824,7 +827,10 @@ const AddPaymentReceived = () => {
       };
       const dayResponse = await api.get("/payment-received", { params: dayParams });
       const allPayments = dayResponse.data.data || [];
-      const dTotal = allPayments.reduce((sum, p) => sum + (p.amount || 0), 0);
+      const dTotal = allPayments.reduce(
+        (sum, p) => sum + (p.amount || 0) + (p.claim || 0) + (p.tds || 0),
+        0,
+      );
       setDayTotal(dTotal);
 
       // 2. Fetch Filtered Total (Based on current company filters)
@@ -849,7 +855,10 @@ const AddPaymentReceived = () => {
 
       const response = await api.get("/payment-received", { params });
       const payments = response.data.data || [];
-      const total = payments.reduce((sum, p) => sum + (p.amount || 0), 0);
+      const total = payments.reduce(
+        (sum, p) => sum + (p.amount || 0) + (p.claim || 0) + (p.tds || 0),
+        0,
+      );
       setDateTotal(total);
     } catch (error) {
       console.error("Error fetching date total:", error);
@@ -915,6 +924,8 @@ const AddPaymentReceived = () => {
         companyId: saveCompanyId,
         ...pairPayload,
         amount: recordAmount,
+        claim: formData.claim || 0,
+        tds: formData.tds || 0,
         paymentType: allocationSource === "fresh" ? "Sauda-wise" : "Adjustment",
         paymentMode:
           allocationSource === "fresh" ? formData.paymentMode : "Adjustment",
@@ -946,6 +957,8 @@ const AddPaymentReceived = () => {
         setFormData((prev) => ({
           ...prev,
           amount: 0,
+          claim: 0,
+          tds: 0,
           ledgerId: prev.ledgerId || ledgerId,
         }));
       }
@@ -975,7 +988,12 @@ const AddPaymentReceived = () => {
     }
     setFormData((prev) => ({
       ...prev,
-      [name]: name === "amount" ? (value === "" ? 0 : parseFloat(value) || 0) : value,
+      [name]:
+        name === "amount" || name === "claim" || name === "tds"
+          ? value === ""
+            ? 0
+            : parseFloat(value) || 0
+          : value,
     }));
   };
 
@@ -1269,6 +1287,8 @@ const AddPaymentReceived = () => {
           companyId: saveCompanyId,
           ...pairPayload,
           amount: recordAmount,
+          claim: formData.claim || 0,
+          tds: formData.tds || 0,
           paymentType:
             allocationSource === "fresh" ? "Sauda-wise" : "Adjustment",
           paymentMode:
@@ -1304,6 +1324,8 @@ const AddPaymentReceived = () => {
           setFormData((prev) => ({
             ...prev,
             amount: 0,
+            claim: 0,
+            tds: 0,
             ledgerId: prev.ledgerId || ledgerId,
           }));
         }
@@ -1357,7 +1379,13 @@ const AddPaymentReceived = () => {
 
       await api.post("/payment-received", payload);
       toast.success("Advance payment recorded");
-      setFormData((prev) => ({ ...prev, amount: 0, remarks: "" }));
+      setFormData((prev) => ({
+        ...prev,
+        amount: 0,
+        claim: 0,
+        tds: 0,
+        remarks: "",
+      }));
       fetchHistory();
       fetchDateTotal();
       fetchLedgerBalance();
@@ -1854,6 +1882,12 @@ const AddPaymentReceived = () => {
             <div className="h-6 w-px bg-slate-200 hidden md:block"></div>
             <div className="flex bg-white rounded-xl border border-slate-200 p-1 shadow-sm">
               <TabButton
+                active={activeTab === "payment_list"}
+                label="Payment List"
+                icon={FaMoneyBillWave}
+                onClick={() => setActiveTab("payment_list")}
+              />
+              <TabButton
                 active={activeTab === "allocation"}
                 label="Allocation"
                 icon={FaExchangeAlt}
@@ -1961,6 +1995,14 @@ const AddPaymentReceived = () => {
         )}
 
         <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden min-h-[500px]">
+          {activeTab === "payment_list" && (
+            <SimplePaymentList
+              payments={history}
+              loading={fetchingHistory}
+              emptyMessage="No payments found for the selected date and filters."
+            />
+          )}
+
           {activeTab === "allocation" && (
             <AllocationLedger
               allocationSource={allocationSource}

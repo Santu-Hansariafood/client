@@ -17,6 +17,8 @@ const paymentReceivedSchema = new mongoose.Schema(
     buyerCompany: { type: String, default: "" },
     supplierCompany: { type: String, default: "" },
     amount: { type: Number, required: true },
+    claim: { type: Number, default: 0 },
+    tds: { type: Number, default: 0 },
     unadjustedAmount: { type: Number, default: 0 },
     paymentType: { 
       type: String, 
