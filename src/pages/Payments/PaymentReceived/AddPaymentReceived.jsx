@@ -1567,29 +1567,45 @@ const AddPaymentReceived = () => {
       ),
     },
     {
-      header: "LORRY & ITEM",
+      header: "LORRY & BILL",
       accessor: (row) => (
-        <div className="flex flex-col gap-0.5">
-          <span className="font-black text-slate-900 uppercase tracking-tighter text-xs">
-            {row.lorryNumber}
-          </span>
+        <div className="flex flex-col gap-1">
+          <div className="flex items-center gap-2">
+            <span className="font-black text-slate-900 uppercase tracking-tighter text-xs">
+              {row.lorryNumber}
+            </span>
+            {row.billNumber && (
+              <span className="text-[9px] font-black bg-slate-900 text-white px-2 py-0.5 rounded uppercase tracking-tighter">
+                {row.billNumber}
+              </span>
+            )}
+          </div>
           <div className="flex items-center gap-1.5">
             <span className="text-[9px] text-slate-500 font-black uppercase tracking-widest leading-none">
               {row.commodity}
             </span>
-            {row.billNumber && (
-              <span className="text-[8px] font-black bg-slate-900 text-white px-1.5 py-0.5 rounded uppercase tracking-tighter">
-                Bill: {row.billNumber}
-              </span>
-            )}
-          </div>
-          <div className="mt-1 flex items-center gap-1">
             <span className="text-[8px] font-black bg-blue-50 text-blue-600 px-1 py-0.5 rounded border border-blue-100 uppercase">
-              Unloading: {row.unloadingWeight || 0} MT
+              {row.unloadingWeight || 0} MT
             </span>
           </div>
         </div>
       ),
+    },
+    {
+      header: "BILL AMOUNT",
+      accessor: (row) => {
+        const details = calculateTallyDetails(row);
+        return (
+          <div className="flex flex-col gap-0.5">
+            <span className="font-black text-rose-600 text-xs tabular-nums">
+              ₹{details.netAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+            </span>
+            <span className="text-[8px] text-slate-400 font-black uppercase tracking-widest">
+              Total Lorry Bill
+            </span>
+          </div>
+        );
+      },
     },
     {
       header: "PARTIES",
