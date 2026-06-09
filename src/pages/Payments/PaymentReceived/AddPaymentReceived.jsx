@@ -681,18 +681,18 @@ const AddPaymentReceived = () => {
       const params = {
         startDate: formData.date,
         endDate: formData.date,
-        limit: 500,
+        limit: 1000,
       };
-      if (formData.ledgerType) {
-        params.ledgerType = formData.ledgerType;
+      
+      // If we have specific companies, prioritize them over ledger filters for history view
+      if (companyPair.buyerCompany || companyPair.supplierCompany) {
+        if (companyPair.buyerCompany) params.buyerCompany = companyPair.buyerCompany;
+        if (companyPair.supplierCompany) params.supplierCompany = companyPair.supplierCompany;
+      } else {
+        if (formData.ledgerType) params.ledgerType = formData.ledgerType;
+        if (formData.ledgerId) params.ledgerId = formData.ledgerId;
       }
-      if (formData.ledgerId) params.ledgerId = formData.ledgerId;
-      if (companyPair.buyerCompany) {
-        params.buyerCompany = companyPair.buyerCompany;
-      }
-      if (companyPair.supplierCompany) {
-        params.supplierCompany = companyPair.supplierCompany;
-      }
+      
       const response = await api.get("/payment-received", { params });
       setHistory(response.data.data || []);
     } catch (error) {
@@ -841,17 +841,12 @@ const AddPaymentReceived = () => {
         limit: 1000,
       };
 
-      if (formData.ledgerId && formData.companyId) {
-        params.ledgerId = formData.ledgerId;
-      }
-      if (formData.ledgerType) {
-        params.ledgerType = formData.ledgerType;
-      }
-      if (companyPair.buyerCompany) {
-        params.buyerCompany = companyPair.buyerCompany;
-      }
-      if (companyPair.supplierCompany) {
-        params.supplierCompany = companyPair.supplierCompany;
+      if (companyPair.buyerCompany || companyPair.supplierCompany) {
+        if (companyPair.buyerCompany) params.buyerCompany = companyPair.buyerCompany;
+        if (companyPair.supplierCompany) params.supplierCompany = companyPair.supplierCompany;
+      } else {
+        if (formData.ledgerType) params.ledgerType = formData.ledgerType;
+        if (formData.ledgerId) params.ledgerId = formData.ledgerId;
       }
 
       const response = await api.get("/payment-received", { params });

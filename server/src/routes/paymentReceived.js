@@ -478,14 +478,20 @@ router.get("/", async (req, res) => {
     const query = {};
 
     if (ledgerType) query.ledgerType = ledgerType;
-    if (ledgerId) query.ledgerId = ledgerId;
+    if (ledgerId) {
+      try {
+        query.ledgerId = new mongoose.Types.ObjectId(ledgerId);
+      } catch (e) {
+        query.ledgerId = ledgerId;
+      }
+    }
     if (companyId && companyId !== "null" && companyId !== "undefined") {
       query.companyId = companyId;
     }
     if (buyerCompany) {
       query.buyerCompany = {
         $regex: new RegExp(
-          `^${String(buyerCompany).replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`,
+          `^${String(buyerCompany).trim().replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`,
           "i",
         ),
       };
@@ -493,7 +499,7 @@ router.get("/", async (req, res) => {
     if (supplierCompany) {
       query.supplierCompany = {
         $regex: new RegExp(
-          `^${String(supplierCompany).replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`,
+          `^${String(supplierCompany).trim().replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`,
           "i",
         ),
       };
@@ -514,7 +520,7 @@ router.get("/", async (req, res) => {
         .skip((page - 1) * limit)
         .limit(parseInt(limit))
         .select(
-          "date ledgerType ledgerId companyId buyerCompany supplierCompany amount paymentMode paymentType mappings remarks createdAt",
+          "date ledgerType ledgerId companyId buyerCompany supplierCompany amount claim tds paymentMode paymentType mappings remarks createdAt",
         )
         .populate("ledgerId", "name sellerName")
         .populate("mappings.loadingEntryId", "saudaNo lorryNumber billNumber loadingDate buyerCompany supplierCompany")
@@ -522,17 +528,45 @@ router.get("/", async (req, res) => {
       PaymentReceived.countDocuments(query),
       PaymentReceived.aggregate([
         { $match: query },
-        { $group: { _id: null, total: { $sum: "$amount" } } }
-      ]),
-      ledgerId && startDate ? PaymentReceived.aggregate([
-        { 
-          $match: { 
-            ledgerId: new mongoose.Types.ObjectId(ledgerId),
-            date: { $lt: new Date(startDate) }
-          } 
+        {
+          $group: {
+            _id: null,
+            total: {
+              $sum: {
+                $add: [
+                  { $ifNull: ["$amount", 0] },
+                  { $ifNull: ["$claim", 0] },
+                  { $ifNull: ["$tds", 0] },
+                ],
+              },
+            },
+          },
         },
-        { $group: { _id: null, total: { $sum: "$amount" } } }
-      ]) : Promise.resolve([])
+      ]),
+      ledgerId && startDate
+        ? PaymentReceived.aggregate([
+            {
+              $match: {
+                ledgerId: new mongoose.Types.ObjectId(ledgerId),
+                date: { $lt: new Date(startDate) },
+              },
+            },
+            {
+              $group: {
+                _id: null,
+                total: {
+                  $sum: {
+                    $add: [
+                      { $ifNull: ["$amount", 0] },
+                      { $ifNull: ["$claim", 0] },
+                      { $ifNull: ["$tds", 0] },
+                    ],
+                  },
+                },
+              },
+            },
+          ])
+        : Promise.resolve([]),
     ]);
 
     res.json({

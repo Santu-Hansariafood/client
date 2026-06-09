@@ -25,9 +25,9 @@ const SimplePaymentList = ({
     );
   }
 
-  const totalAmount = payments.reduce((sum, p) => sum + (p.amount || 0), 0);
-  const totalClaim = payments.reduce((sum, p) => sum + (p.claim || 0), 0);
-  const totalTds = payments.reduce((sum, p) => sum + (p.tds || 0), 0);
+  const totalAmount = payments.reduce((sum, p) => sum + Number(p.amount || 0), 0);
+  const totalClaim = payments.reduce((sum, p) => sum + Number(p.claim || 0), 0);
+  const totalTds = payments.reduce((sum, p) => sum + Number(p.tds || 0), 0);
   const grandTotal = totalAmount + totalClaim + totalTds;
 
   return (
