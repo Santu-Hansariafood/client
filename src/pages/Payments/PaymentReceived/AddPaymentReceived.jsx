@@ -679,20 +679,23 @@ const AddPaymentReceived = () => {
     try {
       setFetchingHistory(true);
       const params = {
-        startDate: formData.date,
-        endDate: formData.date,
         limit: 1000,
       };
-      
-      // If we have specific companies, prioritize them over ledger filters for history view
+
       if (companyPair.buyerCompany || companyPair.supplierCompany) {
-        if (companyPair.buyerCompany) params.buyerCompany = companyPair.buyerCompany;
-        if (companyPair.supplierCompany) params.supplierCompany = companyPair.supplierCompany;
+        // When companies are selected, show all their payments (not just today)
+        if (companyPair.buyerCompany)
+          params.buyerCompany = companyPair.buyerCompany;
+        if (companyPair.supplierCompany)
+          params.supplierCompany = companyPair.supplierCompany;
       } else {
+        // No company selected, show all payments for the selected date
+        params.startDate = formData.date;
+        params.endDate = formData.date;
         if (formData.ledgerType) params.ledgerType = formData.ledgerType;
         if (formData.ledgerId) params.ledgerId = formData.ledgerId;
       }
-      
+
       const response = await api.get("/payment-received", { params });
       setHistory(response.data.data || []);
     } catch (error) {
@@ -701,9 +704,9 @@ const AddPaymentReceived = () => {
       setFetchingHistory(false);
     }
   }, [
+    formData.date,
     formData.ledgerId,
     formData.ledgerType,
-    formData.date,
     companyPair.buyerCompany,
     companyPair.supplierCompany,
   ]);

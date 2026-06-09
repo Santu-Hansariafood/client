@@ -232,8 +232,11 @@ router.post("/", async (req, res) => {
         unadjustedAmount > 0 && totalMapped === 0 ? "Advance" : "Sauda-wise";
     }
 
+    let paymentDate = date ? new Date(date) : new Date();
+    paymentDate.setUTCHours(0, 0, 0, 0);
+
     const newPayment = new PaymentReceived({
-      date,
+      date: paymentDate,
       ledgerType,
       ledgerId: resolvedLedgerId,
       companyId,
@@ -506,10 +509,14 @@ router.get("/", async (req, res) => {
     }
     if (startDate || endDate) {
       query.date = {};
-      if (startDate) query.date.$gte = new Date(startDate);
+      if (startDate) {
+        const start = new Date(startDate);
+        start.setUTCHours(0, 0, 0, 0);
+        query.date.$gte = start;
+      }
       if (endDate) {
         const end = new Date(endDate);
-        end.setHours(23, 59, 59, 999);
+        end.setUTCHours(23, 59, 59, 999);
         query.date.$lte = end;
       }
     }
