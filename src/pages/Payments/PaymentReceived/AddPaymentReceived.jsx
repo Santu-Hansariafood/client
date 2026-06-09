@@ -211,6 +211,7 @@ const AddPaymentReceived = () => {
     { value: "By Cash", label: "Cash" },
     { value: "Cheque", label: "Cheque" },
     { value: "TDS", label: "TDS" },
+    { value: "Claim", label: "Claim" },
     { value: "GST", label: "GST Adjustment" },
     { value: "Adjustment", label: "General Adjustment" },
   ];

@@ -27,7 +27,7 @@ const paymentReceivedSchema = new mongoose.Schema(
     },
     paymentMode: { 
       type: String, 
-      enum: ["By Cash", "Bank", "Cheque", "TDS", "GST", "Adjustment"], 
+      enum: ["By Cash", "Bank", "Cheque", "TDS", "GST", "Adjustment", "Claim"], 
       required: true 
     },
     mappings: [
