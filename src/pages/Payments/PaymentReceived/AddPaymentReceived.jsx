@@ -1001,15 +1001,23 @@ const AddPaymentReceived = () => {
       }));
       return;
     }
-    setFormData((prev) => ({
-      ...prev,
-      [name]:
+    setFormData((prev) => {
+      const newVal =
         name === "amount" || name === "claim" || name === "tds"
           ? value === ""
             ? 0
             : parseFloat(value) || 0
-          : value,
-    }));
+          : value;
+
+      if (name === "amount" && parseFloat(value) > 0) {
+        setActiveTab("allocation");
+      }
+
+      return {
+        ...prev,
+        [name]: newVal,
+      };
+    });
   };
 
   const handleCompanyChange = (option) => {
@@ -1642,7 +1650,7 @@ const AddPaymentReceived = () => {
             : String(row.allocatedAmount);
 
         return (
-          <div className="flex flex-col gap-1.5 text-[9px] font-black min-w-[750px] uppercase">
+          <div className="flex flex-col gap-1.5 text-[9px] font-black min-w-[850px] uppercase">
             <div className="mb-1 flex items-center justify-between px-1">
               <div className="flex items-center gap-2">
                 <span className="bg-[#1e3a5f] text-white px-2 py-0.5 rounded text-[8px]">

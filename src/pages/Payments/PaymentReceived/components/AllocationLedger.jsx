@@ -91,25 +91,23 @@ const AllocationLedger = ({
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
-            {(unallocatedBalance > 0 || creditBalanceRemaining > 0) && (
-              <div className="flex items-center gap-2 bg-[#1e3a5f] text-white px-4 py-2 rounded-xl shadow-lg border border-[#1e3a5f]/80">
-                <div className="flex flex-col">
-                  <span className="text-[9px] font-black uppercase tracking-[0.2em] text-blue-200 leading-none mb-1">
-                    {allocationSource === "advance"
-                      ? "Cr. left"
-                      : "Cr. Remaining"}
-                  </span>
-                  <span className="text-sm font-black italic tracking-tight tabular-nums">
-                    Rs.{" "}
-                    {Math.abs(allocationSource === "advance"
-                      ? unallocatedBalance
-                      : creditBalanceRemaining
-                    ).toLocaleString("en-IN")}
-                  </span>
-                </div>
-                <FaMoneyBillWave className="text-blue-200 animate-pulse" />
+            <div className="flex items-center gap-2 bg-[#1e3a5f] text-white px-4 py-2 rounded-xl shadow-lg border border-[#1e3a5f]/80">
+              <div className="flex flex-col">
+                <span className="text-[9px] font-black uppercase tracking-[0.2em] text-blue-200 leading-none mb-1">
+                  {allocationSource === "advance"
+                    ? "Cr. left"
+                    : "Cr. Remaining"}
+                </span>
+                <span className="text-sm font-black italic tracking-tight tabular-nums">
+                  Rs.{" "}
+                  {Math.abs(allocationSource === "advance"
+                    ? unallocatedBalance
+                    : creditBalanceRemaining
+                  ).toLocaleString("en-IN")}
+                </span>
               </div>
-            )}
+              <FaMoneyBillWave className="text-blue-200" />
+            </div>
 
             {totalAllocated > 0 && (
               <button
@@ -359,6 +357,21 @@ const AllocationLedger = ({
               </div>
 
               <div className="flex items-center gap-6 bg-white/5 p-4 rounded-2xl border border-white/10 backdrop-blur-sm">
+                {totalAllocated > 0 && (
+                  <button
+                    type="button"
+                    onClick={onSaveAll}
+                    disabled={loading}
+                    className="flex items-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-xl shadow-xl shadow-blue-900/50 border border-blue-500 hover:bg-blue-700 transition-all text-[11px] font-black uppercase tracking-widest"
+                  >
+                    {loading ? (
+                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    ) : (
+                      <FaCloudUploadAlt size={16} />
+                    )}
+                    {loading ? "Saving..." : `Save All (Rs. ${totalAllocated.toLocaleString("en-IN")})`}
+                  </button>
+                )}
                 <div className="text-right">
                   <p className="text-[9px] font-black text-white/50 uppercase tracking-widest mb-1">
                     Pending Lines

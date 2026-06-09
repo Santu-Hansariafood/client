@@ -91,7 +91,7 @@ const PaymentRecordingPanel = ({
       <div className="p-6">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           <div className="lg:col-span-8 space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
               <div className="space-y-2">
                 <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">
                   Credit amount
@@ -108,6 +108,46 @@ const PaymentRecordingPanel = ({
                     onWheel={(e) => e.target.blur()}
                     placeholder="0.00"
                     className="w-full h-[48px] pl-8 pr-4 rounded-xl border-2 border-emerald-100 bg-white focus:ring-4 focus:ring-emerald-600/10 focus:border-emerald-600 outline-none transition-all font-black text-lg text-emerald-900 shadow-sm"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[11px] font-black uppercase tracking-widest text-rose-400 ml-1">
+                  Claim amount
+                </label>
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-rose-600 font-black">
+                    ₹
+                  </span>
+                  <input
+                    type="number"
+                    name="claim"
+                    value={formData.claim === 0 ? "" : formData.claim}
+                    onChange={handleInputChange}
+                    onWheel={(e) => e.target.blur()}
+                    placeholder="0.00"
+                    className="w-full h-[48px] pl-8 pr-4 rounded-xl border-2 border-rose-100 bg-white focus:ring-4 focus:ring-rose-600/10 focus:border-rose-600 outline-none transition-all font-black text-lg text-rose-900 shadow-sm"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[11px] font-black uppercase tracking-widest text-amber-400 ml-1">
+                  TDS amount
+                </label>
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-amber-600 font-black">
+                    ₹
+                  </span>
+                  <input
+                    type="number"
+                    name="tds"
+                    value={formData.tds === 0 ? "" : formData.tds}
+                    onChange={handleInputChange}
+                    onWheel={(e) => e.target.blur()}
+                    placeholder="0.00"
+                    className="w-full h-[48px] pl-8 pr-4 rounded-xl border-2 border-amber-100 bg-white focus:ring-4 focus:ring-amber-600/10 focus:border-amber-600 outline-none transition-all font-black text-lg text-amber-900 shadow-sm"
                   />
                 </div>
               </div>
