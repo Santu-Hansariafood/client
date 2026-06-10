@@ -47,6 +47,16 @@ const loadingEntrySchema = new mongoose.Schema(
       unloadingChallan: { type: String, default: "" },
       partyBillCopy: { type: String, default: "" },
     },
+    qualityClaims: [
+      {
+        parameterId: { type: String },
+        parameterName: { type: String },
+        standardValue: { type: Number },
+        actualValue: { type: Number },
+        claimAmount: { type: Number },
+        notes: { type: String },
+      },
+    ],
     paymentStatus: {
       type: String,
       enum: ["pending", "done"],

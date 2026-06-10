@@ -455,6 +455,7 @@ const ListLoadingEntry = () => {
         unloadingChallan: null,
         partyBillCopy: null,
       },
+      qualityClaims: entry.qualityClaims || [],
     });
 
     // Fetch self-order by saudaNo to get quality parameters
@@ -466,6 +467,24 @@ const ListLoadingEntry = () => {
         const orders = response.data.data || response.data || [];
         const selfOrder = orders.find((o) => o.saudaNo === entry.saudaNo);
         setCurrentSelfOrder(selfOrder || null);
+
+        // Initialize quality claims from sauda if not already present in entry
+        if (selfOrder?.parameters && (!entry.qualityClaims || entry.qualityClaims.length === 0)) {
+          const initialClaims = selfOrder.parameters
+            .filter(p => p.value || p.parameterValue) // Only show parameters with values
+            .map(p => ({
+              parameterName: p.name || p.parameterName,
+              standardValue: parseFloat(p.value || p.parameterValue || 0),
+              actualValue: "",
+              claimAmount: 0,
+              notes: ""
+            }));
+          
+          setEditEntry(prev => ({
+            ...prev,
+            qualityClaims: initialClaims
+          }));
+        }
       } catch (error) {
         console.error("Error fetching self-order:", error);
         setCurrentSelfOrder(null);
@@ -502,6 +521,28 @@ const ListLoadingEntry = () => {
       return updated;
     });
   }, []);
+
+  const handleQualityChange = (index, field, value) => {
+    setEditEntry((prev) => {
+      const newClaims = [...prev.qualityClaims];
+      newClaims[index][field] = value;
+
+      if (field === "actualValue") {
+        const standard = parseFloat(newClaims[index].standardValue || 0);
+        const actual = parseFloat(value || 0);
+        const saudaRate = parseFloat(currentSelfOrder?.rate || 0);
+        
+        // Claim Amount = (Actual - Standard) * Rate
+        // The user said: actual - value with the multiply with rate value
+        // We'll calculate the difference and multiply by rate.
+        const diff = actual - standard;
+        const claim = diff * saudaRate;
+        newClaims[index].claimAmount = Math.abs(claim).toFixed(2);
+      }
+
+      return { ...prev, qualityClaims: newClaims };
+    });
+  };
 
   const handleUpdateEntry = useCallback(async () => {
     if (!editEntry?._id) {
@@ -1457,37 +1498,72 @@ const ListLoadingEntry = () => {
                       </div>
                     </div>
 
-                    {/* Quality Parameters from Sauda */}
-                    {currentSelfOrder?.parameters && currentSelfOrder.parameters.length > 0 && (
-                      <div className="border-t border-slate-200 pt-6 mt-6">
-                        <h4 className="text-base font-bold text-slate-800 mb-4">
-                          Quality Parameters
+                    {/* Quality Parameters Table */}
+                    {editEntry.qualityClaims && editEntry.qualityClaims.length > 0 && (
+                      <div className="border-t border-slate-200 pt-6 mt-6 overflow-x-auto">
+                        <h4 className="text-base font-bold text-slate-800 mb-4 flex items-center gap-2">
+                          <span className="w-2 h-2 rounded-full bg-indigo-500"></span>
+                          Quality Parameters & Claims
                         </h4>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                          {currentSelfOrder.parameters.map((param, idx) => (
-                            <div
-                              key={idx}
-                              className="bg-slate-50 border border-slate-200 rounded-lg p-3"
-                            >
-                              <label className="block text-sm font-semibold text-slate-700 mb-1">
-                                {param.name || param.parameterName || `Parameter ${idx + 1}`}
-                              </label>
-                              {typeof param === 'object' ? (
-                                <div className="text-sm text-slate-600">
-                                  {Object.entries(param)
-                                    .filter(([key]) => !['name', 'parameterName', '_id'].includes(key))
-                                    .map(([key, val]) => (
-                                      <div key={key}>
-                                        <span className="font-medium">{key}:</span> {val}
-                                      </div>
-                                    ))}
-                                </div>
-                              ) : (
-                                <p className="text-sm text-slate-600">{param}</p>
-                              )}
-                            </div>
-                          ))}
-                        </div>
+                        <table className="w-full text-sm text-left border-collapse">
+                          <thead>
+                            <tr className="bg-slate-50 border-b border-slate-200">
+                              <th className="px-4 py-3 font-bold text-slate-700">Quality Parameter</th>
+                              <th className="px-4 py-3 font-bold text-slate-700">Standard Value</th>
+                              <th className="px-4 py-3 font-bold text-slate-700">Claim Ratio</th>
+                              <th className="px-4 py-3 font-bold text-slate-700">Actual Value</th>
+                              <th className="px-4 py-3 font-bold text-slate-700">Claim Amount</th>
+                              <th className="px-4 py-3 font-bold text-slate-700">Notes</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {editEntry.qualityClaims.map((claim, idx) => (
+                              <tr key={idx} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
+                                <td className="px-4 py-3 font-medium text-slate-800">
+                                  {claim.parameterName}
+                                </td>
+                                <td className="px-4 py-3 text-slate-600 font-bold">
+                                  {claim.standardValue}
+                                </td>
+                                <td className="px-4 py-3 text-indigo-600 font-black italic">
+                                  1:1
+                                </td>
+                                <td className="px-4 py-3">
+                                  <input
+                                    type="number"
+                                    value={claim.actualValue}
+                                    onChange={(e) => handleQualityChange(idx, "actualValue", e.target.value)}
+                                    placeholder="Actual"
+                                    className="w-24 px-3 py-1.5 bg-white border border-slate-300 rounded-lg text-sm font-bold focus:ring-2 focus:ring-indigo-500/20 outline-none"
+                                  />
+                                </td>
+                                <td className="px-4 py-3">
+                                  <div className="flex items-center gap-1">
+                                    <span className="text-slate-400 font-bold">₹</span>
+                                    <input
+                                      type="number"
+                                      value={claim.claimAmount}
+                                      readOnly
+                                      className="w-24 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-black text-orange-600 outline-none"
+                                    />
+                                  </div>
+                                </td>
+                                <td className="px-4 py-3">
+                                  <input
+                                    type="text"
+                                    value={claim.notes}
+                                    onChange={(e) => handleQualityChange(idx, "notes", e.target.value)}
+                                    placeholder="Remarks..."
+                                    className="w-full min-w-[150px] px-3 py-1.5 bg-white border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500/20 outline-none"
+                                  />
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                        <p className="mt-3 text-[11px] text-slate-500 italic">
+                          * Claim Amount is automatically calculated based on (Actual - Standard) × Sauda Rate (₹{currentSelfOrder?.rate || 0})
+                        </p>
                       </div>
                     )}
 
