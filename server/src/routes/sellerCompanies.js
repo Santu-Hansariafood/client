@@ -10,6 +10,7 @@ router.get("/", async (req, res) => {
     const search = req.query.search || "";
 
     const dropdown = req.query.dropdown === "true";
+    const includeStats = req.query.stats === "true";
 
     let query = {};
     if (search) {
@@ -29,6 +30,21 @@ router.get("/", async (req, res) => {
       return res.json({ data: items, total: items.length });
     }
 
+    // Default fast path for basic details (needed for Sauda PDF, Add/Edit forms, etc)
+    if (!includeStats) {
+      if (page > 0 && limit > 0) {
+        const skip = (page - 1) * limit;
+        const [items, total] = await Promise.all([
+          SellerCompany.find(query).sort({ companyName: 1 }).skip(skip).limit(limit).lean(),
+          SellerCompany.countDocuments(query),
+        ]);
+        return res.json({ data: items, total });
+      }
+      const items = await SellerCompany.find(query).sort({ companyName: 1 }).lean();
+      return res.json({ data: items, total: items.length });
+    }
+
+    // Expensive path for List page with brokerage/weight stats
     const pipeline = [
       { $match: query },
       {

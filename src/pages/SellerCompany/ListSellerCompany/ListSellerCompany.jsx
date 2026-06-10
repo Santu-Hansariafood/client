@@ -55,6 +55,7 @@ const ListSellerCompany = () => {
             page: currentPage,
             limit: itemsPerPage,
             search: debouncedSearch || undefined,
+            stats: "true",
           },
         });
 
