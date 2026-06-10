@@ -95,25 +95,37 @@ const BuyerList = () => {
   };
 
   const rows = useMemo(() => {
-    const startIndex = (currentPage - 1) * itemsPerPage;
     return filteredData.map((buyer, index) => {
-      const slNo = startIndex + index + 1;
+      const slNo = (currentPage - 1) * itemsPerPage + index + 1;
       return [
-        slNo,
+        <span key={`sl-${buyer._id || index}`} className="font-black text-slate-400">
+          {slNo}
+        </span>,
         toTitleCase(buyer.name || "N/A"),
         buyer.mobile?.join(", ") || "N/A",
         buyer.email?.join(", ").toLowerCase() || "N/A",
         (buyer.companyNames || []).join(", ") || "N/A",
         toTitleCase(buyer.group || "N/A"),
         toTitleCase(buyer.commodity?.join(", ") || "N/A"),
-        buyer.consignee?.map((c) => (
-          <ol key={c.value}>
-            <li>{toTitleCase(c.label)}</li>
-          </ol>
-        )) || "N/A",
-        toTitleCase(buyer.status || "N/A"),
+        <div key={`consignee-${buyer._id || index}`} className="space-y-1">
+          {buyer.consignee?.map((c) => (
+            <div key={c.value} className="text-xs">
+              {toTitleCase(c.label)}
+            </div>
+          )) || "N/A"}
+        </div>,
+        <span
+          key={`status-${buyer._id || index}`}
+          className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${
+            String(buyer.status).toLowerCase() === "active"
+              ? "bg-emerald-100 text-emerald-700 border border-emerald-200"
+              : "bg-amber-100 text-amber-700 border border-amber-200"
+          }`}
+        >
+          {toTitleCase(buyer.status || "N/A")}
+        </span>,
         <Actions
-          key={buyer._id || index}
+          key={`actions-${buyer._id || index}`}
           onView={() => {
             setSelectedBuyer(buyer);
             setIsPopupOpen(true);

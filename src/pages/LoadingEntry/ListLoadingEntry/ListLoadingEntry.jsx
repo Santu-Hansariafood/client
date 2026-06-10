@@ -634,13 +634,14 @@ const ListLoadingEntry = () => {
     ];
 
     const tableRows = loadingEntries.map((entry, index) => {
+      const slNo = (currentPage - 1) * itemsPerPage + index + 1;
       const brokerageRate = brokerageMap[entry.saudaNo] || 0;
       const totalBrokerage = (
         (entry.unloadingWeight || 0) * brokerageRate
       ).toFixed(2);
 
       return [
-        entry.slNo || index + 1,
+        slNo,
         entry.loadingNo || "-",
         formatDate(entry.loadingDate),
         entry.saudaNo,
@@ -711,15 +712,17 @@ const ListLoadingEntry = () => {
   );
 
   const rows = useMemo(() => {
-    const start = (currentPage - 1) * itemsPerPage;
     return loadingEntries.map((entry, index) => {
+      const slNo = (currentPage - 1) * itemsPerPage + index + 1;
       const brokerageRate = brokerageMap[entry.saudaNo] || 0;
       const totalBrokerage = (
         (entry.unloadingWeight || 0) * brokerageRate
       ).toFixed(2);
 
       return [
-        entry.slNo || "-",
+        <span key={`sl-${entry._id}`} className="font-black text-slate-400">
+          {slNo}
+        </span>,
         entry.loadingNo || "-",
         formatDate(entry.loadingDate),
         entry.saudaNo || "N/A",
