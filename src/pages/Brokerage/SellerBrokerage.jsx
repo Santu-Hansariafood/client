@@ -35,6 +35,7 @@ const SellerBrokerage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
   const [searchInput, setSearchInput] = useState("");
+  const [debouncedSearchInput, setDebouncedSearchInput] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [exporting, setExporting] = useState(false);
@@ -43,12 +44,25 @@ const SellerBrokerage = () => {
   const [selectedSeller, setSelectedSeller] = useState(null);
 
   useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearchInput(searchInput);
+    }, 500);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [searchInput]);
+
+  useEffect(() => {
     const fetchFilters = async () => {
       try {
         const response = await api.get("/loading-entries/filters");
-        const sellers = (response.data?.suppliers || []).map(s => ({
-          value: s,
-          label: s
+        // The backend returns 'sellers', and each seller has 'sellerName'
+        // We also want to include all unique supplierCompany names from the sellers' companies if needed,
+        // but for now let's fix the property name and mapping.
+        const sellers = (response.data?.sellers || []).map(s => ({
+          value: s.sellerName,
+          label: s.sellerName
         })).sort((a, b) => a.label.localeCompare(b.label));
         setSellerOptions(sellers);
       } catch (error) {
@@ -65,7 +79,7 @@ const SellerBrokerage = () => {
         type: "seller",
         page: currentPage,
         limit: itemsPerPage,
-        search: searchInput?.trim() || undefined,
+        search: debouncedSearchInput?.trim() || undefined,
         startDate: startDate || undefined,
         endDate: endDate || undefined,
         supplierCompany: selectedSeller?.value || undefined,
@@ -82,7 +96,7 @@ const SellerBrokerage = () => {
     } finally {
       setLoading(false);
     }
-  }, [currentPage, itemsPerPage, searchInput, startDate, endDate, selectedSeller]);
+  }, [currentPage, itemsPerPage, debouncedSearchInput, startDate, endDate, selectedSeller]);
 
   useEffect(() => {
     fetchData();

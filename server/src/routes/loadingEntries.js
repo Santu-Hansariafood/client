@@ -324,74 +324,76 @@ router.get("/brokerage-report", async (req, res) => {
       }
     }
 
-    const pipeline = [
+    const results = await LoadingEntry.aggregate([
       { $match: match },
       {
-        $lookup: {
-          from: "selforders",
-          localField: "saudaNo",
-          foreignField: "saudaNo",
-          as: "sauda",
-        },
-      },
-      { $unwind: { path: "$sauda", preserveNullAndEmptyArrays: true } },
-      {
-        $lookup: {
-          from: "sellers",
-          localField: "supplier",
-          foreignField: "_id",
-          as: "sellerInfo",
-        },
-      },
-      { $unwind: { path: "$sellerInfo", preserveNullAndEmptyArrays: true } },
-      {
-        $addFields: {
-          brokerageRate: {
-            $cond: {
-              if: { $eq: [type, "buyer"] },
-              then: { $ifNull: ["$sauda.buyerBrokerage.brokerageBuyer", 0] },
-              else: {
-                $let: {
-                  vars: {
-                    saudaRate: { $ifNull: ["$sauda.buyerBrokerage.brokerageSupplier", 0] },
-                    sellerCommodity: {
-                      $filter: {
-                        input: { $ifNull: ["$sellerInfo.commodities", []] },
-                        as: "c",
-                        cond: { $eq: [{ $toLower: "$$c.name" }, { $toLower: "$commodity" }] },
+        $facet: {
+          metadata: [{ $count: "total" }],
+          data: [
+            {
+              $lookup: {
+                from: "selforders",
+                localField: "saudaNo",
+                foreignField: "saudaNo",
+                as: "sauda",
+              },
+            },
+            { $unwind: { path: "$sauda", preserveNullAndEmptyArrays: true } },
+            {
+              $lookup: {
+                from: "sellers",
+                localField: "supplier",
+                foreignField: "_id",
+                as: "sellerInfo",
+              },
+            },
+            { $unwind: { path: "$sellerInfo", preserveNullAndEmptyArrays: true } },
+            {
+              $addFields: {
+                brokerageRate: {
+                  $cond: {
+                    if: { $eq: [type, "buyer"] },
+                    then: { $ifNull: ["$sauda.buyerBrokerage.brokerageBuyer", 0] },
+                    else: {
+                      $let: {
+                        vars: {
+                          saudaRate: { $ifNull: ["$sauda.buyerBrokerage.brokerageSupplier", 0] },
+                          sellerCommodity: {
+                            $filter: {
+                              input: { $ifNull: ["$sellerInfo.commodities", []] },
+                              as: "c",
+                              cond: { $eq: [{ $toLower: "$$c.name" }, { $toLower: "$commodity" }] },
+                            },
+                          },
+                        },
+                        in: {
+                          $cond: {
+                            if: { $gt: ["$$saudaRate", 0] },
+                            then: "$$saudaRate",
+                            else: { $ifNull: [{ $arrayElemAt: ["$$sellerCommodity.brokerage", 0] }, 0] },
+                          },
+                        },
                       },
-                    },
-                  },
-                  in: {
-                    $cond: {
-                      if: { $gt: ["$$saudaRate", 0] },
-                      then: "$$saudaRate",
-                      else: { $ifNull: [{ $arrayElemAt: ["$$sellerCommodity.brokerage", 0] }, 0] },
                     },
                   },
                 },
               },
             },
-          },
+            {
+              $addFields: {
+                totalBrokerage: {
+                  $multiply: [{ $ifNull: ["$unloadingWeight", 0] }, "$brokerageRate"],
+                },
+              },
+            },
+            { $sort: { loadingDate: -1, createdAt: -1 } },
+            { $skip: skip },
+            { $limit: pageSize },
+          ],
         },
       },
-      {
-        $addFields: {
-          totalBrokerage: {
-            $multiply: [{ $ifNull: ["$unloadingWeight", 0] }, "$brokerageRate"],
-          },
-        },
-      },
-      { $sort: { loadingDate: -1, createdAt: -1 } },
-      {
-        $facet: {
-          metadata: [{ $count: "total" }],
-          data: [{ $skip: skip }, { $limit: pageSize }],
-        },
-      },
-    ];
+    ]);
 
-    const results = await LoadingEntry.aggregate(pipeline);
     const data = results[0]?.data || [];
     const total = results[0]?.metadata[0]?.total || 0;
 

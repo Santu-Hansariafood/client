@@ -39,6 +39,7 @@ const BuyerBrokerage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
   const [searchInput, setSearchInput] = useState("");
+  const [debouncedSearchInput, setDebouncedSearchInput] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [exporting, setExporting] = useState(false);
@@ -47,14 +48,29 @@ const BuyerBrokerage = () => {
   const [selectedBuyer, setSelectedBuyer] = useState(null);
 
   useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearchInput(searchInput);
+    }, 500);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [searchInput]);
+
+  useEffect(() => {
     const fetchFilters = async () => {
       try {
-        const response = await api.get("/loading-entries/filters");
-        const buyers = (response.data?.buyers || []).map(b => ({
-          value: b,
-          label: b
+        const response = await api.get("/buyers");
+        const buyers = (response.data || []).map(b => ({
+          value: b.companyName || b.name,
+          label: b.companyName || b.name
         })).sort((a, b) => a.label.localeCompare(b.label));
-        setBuyerOptions(buyers);
+        
+        // Remove duplicates if any
+        const uniqueBuyers = Array.from(new Set(buyers.map(b => b.value)))
+          .map(value => buyers.find(b => b.value === value));
+          
+        setBuyerOptions(uniqueBuyers);
       } catch (error) {
         console.error("Error fetching filters:", error);
       }
@@ -69,7 +85,7 @@ const BuyerBrokerage = () => {
         type: "buyer",
         page: currentPage,
         limit: itemsPerPage,
-        search: searchInput?.trim() || undefined,
+        search: debouncedSearchInput?.trim() || undefined,
         startDate: startDate || undefined,
         endDate: endDate || undefined,
         buyerCompany: selectedBuyer?.value || undefined,
@@ -86,7 +102,7 @@ const BuyerBrokerage = () => {
     } finally {
       setLoading(false);
     }
-  }, [currentPage, itemsPerPage, searchInput, startDate, endDate, selectedBuyer]);
+  }, [currentPage, itemsPerPage, debouncedSearchInput, startDate, endDate, selectedBuyer]);
 
   useEffect(() => {
     fetchData();

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import api from "../../../utils/apiClient/apiClient";
 import PopupBox from "../../../common/PopupBox/PopupBox";
 import Loading from "../../../common/Loading/Loading";
@@ -54,7 +54,7 @@ const SaudaDetailPopup = ({ sauda, onClose }) => {
     fetchData();
   }, [fetchData]);
 
-  const calculateNetAmount = (lorry) => {
+  const calculateNetAmount = useCallback((lorry) => {
     const weight =
       (lorry.unloadingWeight || 0) > 0
         ? lorry.unloadingWeight
@@ -70,13 +70,42 @@ const SaudaDetailPopup = ({ sauda, onClose }) => {
     const netAmount = taxableAmount + gstAmount;
 
     return Math.round(netAmount);
-  };
+  }, []);
 
-  const getPaymentsForLorry = (lorryId) => {
-    return payments.filter((p) =>
-      p.mappings?.some((m) => m.loadingEntryId === lorryId),
-    );
-  };
+  const paymentsByLorry = useMemo(() => {
+    const map = {};
+    payments.forEach((p) => {
+      p.mappings?.forEach((m) => {
+        if (m.loadingEntryId) {
+          if (!map[m.loadingEntryId]) map[m.loadingEntryId] = [];
+          // Avoid duplicates if a payment has multiple mappings to the same lorry
+          if (!map[m.loadingEntryId].some(existing => existing._id === p._id)) {
+            map[m.loadingEntryId].push(p);
+          }
+        }
+      });
+    });
+    return map;
+  }, [payments]);
+
+  const getPaymentsForLorry = useCallback((lorryId) => {
+    return paymentsByLorry[lorryId] || [];
+  }, [paymentsByLorry]);
+
+  const lorryDataWithCalculations = useMemo(() => {
+    return lorries.map((lorry) => {
+      const netAmount = calculateNetAmount(lorry);
+      const lorryPayments = getPaymentsForLorry(lorry._id);
+      const paidAmount = lorryPayments.reduce((sum, p) => {
+        const mapping = p.mappings?.find(
+          (m) => m.loadingEntryId === lorry._id,
+        );
+        return sum + (mapping?.allocatedAmount || 0);
+      }, 0);
+      const balance = netAmount - paidAmount;
+      return { ...lorry, netAmount, lorryPayments, paidAmount, balance };
+    });
+  }, [lorries, calculateNetAmount, getPaymentsForLorry]);
 
   const generatePDF = () => {
     const doc = new jsPDF();
@@ -110,14 +139,8 @@ const SaudaDetailPopup = ({ sauda, onClose }) => {
 
     let currentY = 60;
 
-    lorries.forEach((lorry, index) => {
-      const netAmount = calculateNetAmount(lorry);
-      const lorryPayments = getPaymentsForLorry(lorry._id);
-      const paidAmount = lorryPayments.reduce((sum, p) => {
-        const mapping = p.mappings?.find((m) => m.loadingEntryId === lorry._id);
-        return sum + (mapping?.allocatedAmount || 0);
-      }, 0);
-      const balance = netAmount - paidAmount;
+    lorryDataWithCalculations.forEach((lorry, index) => {
+      const { netAmount, balance, lorryPayments } = lorry;
 
       doc.autoTable({
         startY: currentY,
@@ -272,17 +295,9 @@ const SaudaDetailPopup = ({ sauda, onClose }) => {
           </div>
 
           <div className="space-y-8">
-            {lorries.length > 0 ? (
-              lorries.map((lorry, idx) => {
-                const netAmount = calculateNetAmount(lorry);
-                const lorryPayments = getPaymentsForLorry(lorry._id);
-                const paidAmount = lorryPayments.reduce((sum, p) => {
-                  const mapping = p.mappings?.find(
-                    (m) => m.loadingEntryId === lorry._id,
-                  );
-                  return sum + (mapping?.allocatedAmount || 0);
-                }, 0);
-                const balance = netAmount - paidAmount;
+            {lorryDataWithCalculations.length > 0 ? (
+              lorryDataWithCalculations.map((lorry, idx) => {
+                const { netAmount, balance, lorryPayments } = lorry;
 
                 return (
                   <div
@@ -399,7 +414,7 @@ const SaudaDetailPopup = ({ sauda, onClose }) => {
                                       Payment made:{" "}
                                       <span className="text-emerald-600">
                                         Rs.{" "}
-                                        {mapping.allocatedAmount.toLocaleString()}
+                                        {mapping?.allocatedAmount?.toLocaleString() || 0}
                                         /-
                                       </span>
                                     </p>
