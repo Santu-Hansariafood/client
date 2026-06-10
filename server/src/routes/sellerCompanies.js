@@ -9,6 +9,8 @@ router.get("/", async (req, res) => {
     const limit = parseInt(req.query.limit || "0", 10);
     const search = req.query.search || "";
 
+    const dropdown = req.query.dropdown === "true";
+
     let query = {};
     if (search) {
       query = {
@@ -20,6 +22,11 @@ router.get("/", async (req, res) => {
           { "bankDetails.accountNumber": { $regex: search, $options: "i" } },
         ],
       };
+    }
+
+    if (dropdown) {
+      const items = await SellerCompany.find(query, "companyName").sort({ companyName: 1 }).lean();
+      return res.json({ data: items, total: items.length });
     }
 
     const pipeline = [

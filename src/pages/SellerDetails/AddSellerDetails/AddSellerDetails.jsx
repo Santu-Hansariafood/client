@@ -56,7 +56,7 @@ const AddSellerDetails = () => {
       try {
         const [commodities, companies, groups] = await Promise.all([
           fetchAllPages("/commodities").catch(() => []),
-          fetchAllPages("/seller-company").catch(() => []),
+          fetchAllPages("/seller-company", { params: { dropdown: "true" } }).catch(() => []),
           fetchAllPages("/groups").catch(() => []),
         ]);
 

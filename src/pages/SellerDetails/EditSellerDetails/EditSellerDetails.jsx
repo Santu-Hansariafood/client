@@ -63,7 +63,7 @@ const EditSellerDetails = ({ sellerId: propSellerId, onClose, onSave, isPopup = 
       try {
         const [commodities, companies, groups, sellerRes] = await Promise.all([
           fetchAllPages("/commodities").catch(() => []),
-          fetchAllPages("/seller-company").catch(() => []),
+          fetchAllPages("/seller-company", { params: { dropdown: "true" } }).catch(() => []),
           fetchAllPages("/groups").catch(() => []),
           api.get(`/sellers/${sellerId}`),
         ]);
