@@ -137,6 +137,7 @@ const ListLoadingEntry = () => {
   const [selectedEntry, setSelectedEntry] = useState(null);
   const [popupType, setPopupType] = useState("");
   const [editEntry, setEditEntry] = useState(null);
+  const [currentSelfOrder, setCurrentSelfOrder] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
   const [totalItems, setTotalItems] = useState(0);
   const [filters, setFilters] = useState({
@@ -433,7 +434,7 @@ const ListLoadingEntry = () => {
     setPopupType("view");
   }, []);
 
-  const handleEdit = useCallback((entry) => {
+  const handleEdit = useCallback(async (entry) => {
     setSelectedEntry(entry);
     setEditEntry({
       ...entry,
@@ -455,6 +456,24 @@ const ListLoadingEntry = () => {
         partyBillCopy: null,
       },
     });
+
+    // Fetch self-order by saudaNo to get quality parameters
+    if (entry.saudaNo) {
+      try {
+        const response = await api.get("/self-order", {
+          params: { search: entry.saudaNo, limit: 1 },
+        });
+        const orders = response.data.data || response.data || [];
+        const selfOrder = orders.find((o) => o.saudaNo === entry.saudaNo);
+        setCurrentSelfOrder(selfOrder || null);
+      } catch (error) {
+        console.error("Error fetching self-order:", error);
+        setCurrentSelfOrder(null);
+      }
+    } else {
+      setCurrentSelfOrder(null);
+    }
+
     setPopupType("edit");
   }, []);
 
@@ -519,6 +538,7 @@ const ListLoadingEntry = () => {
       setPopupType("");
       setSelectedEntry(null);
       setEditEntry(null);
+      setCurrentSelfOrder(null);
       await fetchData();
     } catch (error) {
       const message = error.response?.data?.message || "Failed to update entry";
@@ -1102,6 +1122,7 @@ const ListLoadingEntry = () => {
                       onClick={() => {
                         setPopupType("");
                         setSelectedEntry(null);
+                        setCurrentSelfOrder(null);
                       }}
                       className="px-6 py-2 bg-slate-800 text-white rounded-xl font-bold hover:bg-slate-900 transition"
                     >
@@ -1436,6 +1457,40 @@ const ListLoadingEntry = () => {
                       </div>
                     </div>
 
+                    {/* Quality Parameters from Sauda */}
+                    {currentSelfOrder?.parameters && currentSelfOrder.parameters.length > 0 && (
+                      <div className="border-t border-slate-200 pt-6 mt-6">
+                        <h4 className="text-base font-bold text-slate-800 mb-4">
+                          Quality Parameters
+                        </h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                          {currentSelfOrder.parameters.map((param, idx) => (
+                            <div
+                              key={idx}
+                              className="bg-slate-50 border border-slate-200 rounded-lg p-3"
+                            >
+                              <label className="block text-sm font-semibold text-slate-700 mb-1">
+                                {param.name || param.parameterName || `Parameter ${idx + 1}`}
+                              </label>
+                              {typeof param === 'object' ? (
+                                <div className="text-sm text-slate-600">
+                                  {Object.entries(param)
+                                    .filter(([key]) => !['name', 'parameterName', '_id'].includes(key))
+                                    .map(([key, val]) => (
+                                      <div key={key}>
+                                        <span className="font-medium">{key}:</span> {val}
+                                      </div>
+                                    ))}
+                                </div>
+                              ) : (
+                                <p className="text-sm text-slate-600">{param}</p>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
                     {(editEntry.unloadingWeight && editEntry.unloadingDate) ||
                     editEntry.documents?.kantaSlip ||
                     editEntry.documents?.unloadingChallan ||
@@ -1538,6 +1593,7 @@ const ListLoadingEntry = () => {
                           setPopupType("");
                           setSelectedEntry(null);
                           setEditEntry(null);
+                          setCurrentSelfOrder(null);
                         }}
                         className="px-4 py-2 rounded-lg border border-slate-300 text-slate-700 text-sm font-medium hover:bg-slate-50 transition-colors"
                       >
