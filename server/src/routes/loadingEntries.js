@@ -27,6 +27,75 @@ const toObjectId = (value) =>
     ? new mongoose.Types.ObjectId(value)
     : null;
 
+const numberToWords = (num) => {
+  const a = [
+    "",
+    "One ",
+    "Two ",
+    "Three ",
+    "Four ",
+    "Five ",
+    "Six ",
+    "Seven ",
+    "Eight ",
+    "Nine ",
+    "Ten ",
+    "Eleven ",
+    "Twelve ",
+    "Thirteen ",
+    "Fourteen ",
+    "Fifteen ",
+    "Sixteen ",
+    "Seventeen ",
+    "Eighteen ",
+    "Nineteen ",
+  ];
+  const b = [
+    "",
+    "",
+    "Twenty",
+    "Thirty",
+    "Forty",
+    "Fifty",
+    "Sixty",
+    "Seventy",
+    "Eighty",
+    "Ninety",
+  ];
+
+  const n = ("0000000" + Math.floor(num))
+    .substr(-7)
+    .match(/^(\d{2})(\d{2})(\d{2})(\d{1})$/);
+  if (!n) return "";
+  let str = "";
+  str +=
+    n[1] != 0
+      ? (a[Number(n[1])] || b[n[1][0]] + " " + a[n[1][1]]) + "Lakh "
+      : "";
+  str +=
+    n[2] != 0
+      ? (a[Number(n[2])] || b[n[2][0]] + " " + a[n[2][1]]) + "Thousand "
+      : "";
+  str +=
+    n[3] != 0
+      ? (a[Number(n[3])] || b[n[3][0]] + " " + a[n[3][1]]) + "Hundred "
+      : "";
+  str +=
+    n[4] != 0
+      ? (str != "" ? "and " : "") +
+        (a[Number(n[4])] || b[n[4][0]] + " " + a[n[4][1]])
+      : "";
+
+  const fractional = Math.round((num % 1) * 100);
+  if (fractional > 0) {
+    str +=
+      "and " +
+      (a[fractional] || b[Math.floor(fractional / 10)] + " " + a[fractional % 10]) +
+      "Paise ";
+  }
+  return str + "Only";
+};
+
 const getNextLoadingNo = async (loadingDate) => {
   const date = new Date(loadingDate);
   const year = date.getFullYear();
@@ -554,13 +623,17 @@ router.get("/brokerage-report/excel", async (req, res) => {
 
 router.get("/brokerage-report/pdf", async (req, res) => {
   try {
-    const { ids } = req.query;
+    const { ids, type } = req.query;
     const queryParams = { ...req.query };
     if (ids && typeof ids === "string") {
       queryParams.ids = ids.split(",");
     }
 
     const data = await getBrokerageReportData(queryParams);
+
+    if (data.length === 0) {
+      return res.status(404).json({ message: "No data found for the report" });
+    }
 
     const doc = new jsPDF({
       orientation: "portrait",
@@ -575,29 +648,38 @@ router.get("/brokerage-report/pdf", async (req, res) => {
     }
 
     const pageWidth = doc.internal.pageSize.getWidth();
-    const margin = 15;
+    const pageHeight = doc.internal.pageSize.getHeight();
+    const margin = 10;
+
+    // Hansaria Bank Details (Fixed as requested)
+    const hansariaBankDetails = {
+      accountHolderName: "HANSARIA FOOD PRIVATE LIMITED",
+      bankName: "HDFC BANK",
+      accountNumber: "50200062400035",
+      ifscCode: "HDFC0000014",
+      branch: "Salt Lake Sector 1, Kolkata",
+    };
+
+    // Calculate Total Brokerage
+    const totalBrokerageAmount = data.reduce(
+      (sum, item) => sum + (item.totalBrokerage || 0),
+      0,
+    );
+
+    // Generate QR Code (e.g., pointing to the website or containing payment info)
+    const qrCodeData = `Hansaria Food Private Limited\nBrokerage Amount: Rs. ${totalBrokerageAmount.toFixed(2)}\nBank: ${hansariaBankDetails.bankName}\nA/C: ${hansariaBankDetails.accountNumber}`;
+    const qrCodeBase64 = await QRCode.toDataURL(qrCodeData);
 
     // Header Helper
-    const drawHeader = (doc, pageNum) => {
-      // Background for header
-      doc.setFillColor(31, 122, 62); // Hansaria Green
-      doc.rect(0, 0, pageWidth, 40, "F");
+    const drawTallyHeader = (doc) => {
+      // Outer Box
+      doc.setLineWidth(0.5);
+      doc.rect(margin, margin, pageWidth - 2 * margin, pageHeight - 2 * margin);
 
-      if (logoBase64) {
-        doc.addImage(
-          `data:image/png;base64,${logoBase64}`,
-          "PNG",
-          margin,
-          5,
-          25,
-          25,
-        );
-      }
-
-      doc.setTextColor(255, 255, 255);
-      doc.setFontSize(20);
+      // Top Section
       doc.setFont("helvetica", "bold");
-      doc.text("HANSARIA FOOD PRIVATE LIMITED", pageWidth / 2 + 10, 15, {
+      doc.setFontSize(14);
+      doc.text("HANSARIA FOOD PRIVATE LIMITED", pageWidth / 2, margin + 10, {
         align: "center",
       });
 
@@ -605,38 +687,56 @@ router.get("/brokerage-report/pdf", async (req, res) => {
       doc.setFont("helvetica", "normal");
       doc.text(
         "207, Maharshi Debendra Road, 6th Floor, Room No. 111, Kolkata - 700007",
-        pageWidth / 2 + 10,
-        22,
+        pageWidth / 2,
+        margin + 15,
         { align: "center" },
       );
       doc.text(
         "Contact: +91 98304 33535 | Email: info@hansariafood.com",
-        pageWidth / 2 + 10,
-        27,
+        pageWidth / 2,
+        margin + 19,
         { align: "center" },
       );
 
-      doc.setFontSize(14);
-      doc.setFont("helvetica", "bold");
-      doc.text("BROKERAGE REPORT", pageWidth / 2 + 10, 35, { align: "center" });
+      doc.setLineWidth(0.2);
+      doc.line(margin, margin + 22, pageWidth - margin, margin + 22);
 
-      doc.setTextColor(0, 0, 0);
+      doc.setFontSize(12);
+      doc.setFont("helvetica", "bold");
+      doc.text("BROKERAGE ADVICE / REPORT", pageWidth / 2, margin + 28, {
+        align: "center",
+      });
+
+      doc.line(margin, margin + 32, pageWidth - margin, margin + 32);
+
+      // Party Info
+      doc.setFontSize(9);
+      const partyName =
+        type === "buyer"
+          ? data[0].buyerCompany || "N/A"
+          : data[0].sellerAccount || "N/A";
+      doc.text(`Party Name: ${partyName.toUpperCase()}`, margin + 5, margin + 38);
+      doc.text(
+        `Date: ${new Date().toLocaleDateString("en-GB")}`,
+        pageWidth - margin - 5,
+        margin + 38,
+        { align: "right" },
+      );
+
+      doc.line(margin, margin + 42, pageWidth - margin, margin + 42);
     };
 
-    drawHeader(doc, 1);
+    drawTallyHeader(doc);
 
     const tableColumn = [
       "SL No",
-      "Order Date",
-      "Seller Company",
-      "Seller Name",
-      "Buyer Name",
-      "PLACE",
+      "Date",
+      "Sauda No",
+      "Lorry No",
       "Item",
       "Weight",
       "Rate",
-      "Loading",
-      "Unloading",
+      "Amount",
     ];
 
     const tableRows = data.map((item, index) => [
@@ -644,57 +744,126 @@ router.get("/brokerage-report/pdf", async (req, res) => {
       item.orderDate
         ? new Date(item.orderDate).toLocaleDateString("en-GB")
         : "N/A",
-      item.supplierCompany || "N/A",
-      item.sellerAccount || "N/A", // This is now Seller Name from sellerInfo
-      item.buyerCompany || "N/A",
-      item.place || "N/A",
+      item.saudaNo || "N/A",
+      item.lorryNumber || "N/A",
       item.commodity || "N/A",
       Number(item.unloadingWeight || 0).toFixed(2),
       Number(item.brokerageRate || 0).toFixed(2),
-      Number(item.loadingWeight || 0).toFixed(2),
-      Number(item.unloadingWeight || 0).toFixed(2),
+      Number(item.totalBrokerage || 0).toFixed(2),
     ]);
 
     autoTable(doc, {
       head: [tableColumn],
       body: tableRows,
-      startY: 45,
+      startY: margin + 45,
       theme: "grid",
+      margin: { left: margin + 2, right: margin + 2 },
       styles: {
-        fontSize: 7,
+        fontSize: 8,
         cellPadding: 2,
         valign: "middle",
         halign: "center",
+        lineColor: [0, 0, 0],
+        lineWidth: 0.1,
       },
       headStyles: {
-        fillColor: [31, 122, 62],
-        textColor: [255, 255, 255],
+        fillColor: [240, 240, 240],
+        textColor: [0, 0, 0],
         fontStyle: "bold",
       },
       columnStyles: {
-        2: { halign: "left", cellWidth: 25 }, // Seller Company
-        3: { halign: "left", cellWidth: 25 }, // Seller Name
-        4: { halign: "left", cellWidth: 25 }, // Buyer Name
-        5: { cellWidth: 15 }, // PLACE
-        6: { cellWidth: 15 }, // Item
+        0: { cellWidth: 10 },
+        2: { halign: "center" },
+        4: { halign: "left" },
+        7: { halign: "right" },
       },
-      didDrawPage: (data) => {
-        // Add footer on each page
-        const str = "Page " + doc.internal.getNumberOfPages();
-        doc.setFontSize(8);
-        doc.setTextColor(100);
-        doc.text(
-          str,
-          pageWidth - margin,
-          doc.internal.pageSize.getHeight() - 10,
-          { align: "right" },
-        );
-        doc.text(
-          "Generated on: " + new Date().toLocaleString(),
-          margin,
-          doc.internal.pageSize.getHeight() - 10,
-        );
+      didDrawPage: (d) => {
+        // Only draw on subsequent pages if needed
+        if (d.pageNumber > 1) {
+          doc.setLineWidth(0.5);
+          doc.rect(
+            margin,
+            margin,
+            pageWidth - 2 * margin,
+            pageHeight - 2 * margin,
+          );
+        }
       },
+    });
+
+    let finalY = doc.lastAutoTable.finalY || 150;
+
+    // Check if enough space for summary, otherwise add new page
+    if (finalY > pageHeight - 80) {
+      doc.addPage();
+      doc.setLineWidth(0.5);
+      doc.rect(margin, margin, pageWidth - 2 * margin, pageHeight - 2 * margin);
+      finalY = margin + 10;
+    }
+
+    // Summary Section
+    doc.line(margin, finalY, pageWidth - margin, finalY);
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(10);
+    doc.text("Total Amount (Brokerage):", pageWidth - margin - 50, finalY + 8, {
+      align: "right",
+    });
+    doc.text(
+      `Rs. ${totalBrokerageAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}`,
+      pageWidth - margin - 5,
+      finalY + 8,
+      { align: "right" },
+    );
+
+    doc.line(margin, finalY + 12, pageWidth - margin, finalY + 12);
+
+    // Amount in Words
+    doc.setFontSize(9);
+    doc.text("Amount in Words:", margin + 5, finalY + 18);
+    doc.setFont("helvetica", "normal");
+    const words = numberToWords(totalBrokerageAmount);
+    doc.text(words, margin + 5, finalY + 23, { maxWidth: pageWidth - 2 * margin - 10 });
+
+    doc.line(margin, finalY + 30, pageWidth - margin, finalY + 30);
+
+    // Bank Details Section
+    doc.setFont("helvetica", "bold");
+    doc.text("Hansaria Food Private Limited Bank Details:", margin + 5, finalY + 36);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8);
+    doc.text(`Bank Name: ${hansariaBankDetails.bankName}`, margin + 5, finalY + 41);
+    doc.text(`A/C No: ${hansariaBankDetails.accountNumber}`, margin + 5, finalY + 45);
+    doc.text(`IFSC Code: ${hansariaBankDetails.ifscCode}`, margin + 5, finalY + 49);
+    doc.text(`Branch: ${hansariaBankDetails.branch}`, margin + 5, finalY + 53);
+
+    // QR Code
+    if (qrCodeBase64) {
+      doc.addImage(
+        qrCodeBase64,
+        "PNG",
+        pageWidth - margin - 40,
+        finalY + 33,
+        25,
+        25,
+      );
+      doc.setFontSize(7);
+      doc.text("Scan for Details", pageWidth - margin - 40 + 12.5, finalY + 60, {
+        align: "center",
+      });
+    }
+
+    doc.line(margin, finalY + 65, pageWidth - margin, finalY + 65);
+
+    // Footer Signatures
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "bold");
+    doc.text("For HANSARIA FOOD PRIVATE LIMITED", pageWidth - margin - 10, finalY + 75, {
+      align: "right",
+    });
+    doc.setFont("helvetica", "normal");
+    doc.text("Authorised Signatory", pageWidth - margin - 10, finalY + 90, {
+      align: "right",
     });
 
     const pdfBuffer = doc.output("arraybuffer");
