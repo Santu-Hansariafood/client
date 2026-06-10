@@ -663,9 +663,9 @@ router.get("/brokerage-report/pdf", async (req, res) => {
     // Hansaria Bank Details
     const hansariaBankDetails = {
       accountHolderName: "HANSARIA FOOD PRIVATE LIMITED",
-      bankName: "HDFC BANK",
-      accountNumber: "50200062400035",
-      ifscCode: "HDFC0000014",
+      bankName: "ICIC BANK",
+      accountNumber: "627905015689",
+      ifscCode: "ICIC0006279",
       branch: "BURRA BAZAR Branch",
     };
 
