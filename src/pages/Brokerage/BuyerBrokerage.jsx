@@ -245,7 +245,7 @@ const BuyerBrokerage = () => {
     "Bill No",
     "Lorry No",
     "Buyer Company",
-    "Seller Company",
+    "Seller Name",
     "Commodity",
     "Loading Wt",
     "Unloading Wt",
@@ -306,7 +306,7 @@ const BuyerBrokerage = () => {
             key={`seller-${item._id}`}
             className="font-medium text-slate-600 text-[11px]"
           >
-            {item.supplierCompany || "N/A"}
+            {item.sellerAccount || "N/A"}
           </span>,
           <span
             key={`comm-${item._id}`}

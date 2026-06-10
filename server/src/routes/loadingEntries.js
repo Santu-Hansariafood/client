@@ -277,7 +277,7 @@ router.get("/company-report", async (req, res) => {
   }
 });
 
-const getBrokerageReportData = async (query) => {
+const getBrokerageReportData = async (query, skip = null, limit = null) => {
   const {
     type,
     search,
@@ -327,6 +327,13 @@ const getBrokerageReportData = async (query) => {
 
   const pipeline = [
     { $match: match },
+    { $sort: { loadingDate: -1, createdAt: -1 } },
+  ];
+
+  if (skip !== null) pipeline.push({ $skip: skip });
+  if (limit !== null) pipeline.push({ $limit: limit });
+
+  pipeline.push(
     {
       $lookup: {
         from: "selforders",
@@ -353,15 +360,15 @@ const getBrokerageReportData = async (query) => {
         as: "sellerCompanyInfo",
       },
     },
-    { $unwind: { path: "$sellerCompanyInfo", preserveNullAndEmptyArrays: true } },
+    {
+      $unwind: {
+        path: "$sellerCompanyInfo",
+        preserveNullAndEmptyArrays: true,
+      },
+    },
     {
       $addFields: {
-        sellerAccount: {
-          $ifNull: [
-            { $arrayElemAt: ["$sellerCompanyInfo.bankDetails.accountNumber", 0] },
-            "N/A",
-          ],
-        },
+        sellerAccount: { $ifNull: ["$sellerInfo.sellerName", "N/A"] },
         place: { $ifNull: ["$loadingFrom", "$consignee"] },
         orderDate: { $ifNull: ["$sauda.poDate", "$loadingDate"] },
         brokerageRate: {
@@ -412,21 +419,62 @@ const getBrokerageReportData = async (query) => {
         },
       },
     },
-    { $sort: { loadingDate: -1, createdAt: -1 } },
-  ];
+  );
 
   return await LoadingEntry.aggregate(pipeline);
 };
 
 router.get("/brokerage-report", async (req, res) => {
   try {
-    const { page = 1, limit = 10 } = req.query;
+    const {
+      page = 1,
+      limit = 10,
+      search,
+      buyerCompany,
+      supplierCompany,
+      startDate,
+      endDate,
+    } = req.query;
     const skip = (parseInt(page) - 1) * parseInt(limit);
     const pageSize = parseInt(limit);
 
-    const allData = await getBrokerageReportData(req.query);
-    const total = allData.length;
-    const data = allData.slice(skip, skip + pageSize);
+    // Optimized: Count only the documents that match the filters first
+    const match = {};
+    if (search) {
+      const searchRegex = new RegExp(escapeRegex(search), "i");
+      match.$or = [
+        { lorryNumber: searchRegex },
+        { saudaNo: searchRegex },
+        { billNumber: searchRegex },
+        { buyerCompany: searchRegex },
+        { supplierCompany: searchRegex },
+        { commodity: searchRegex },
+      ];
+    }
+    if (buyerCompany) {
+      match.buyerCompany = {
+        $regex: new RegExp(escapeRegex(buyerCompany), "i"),
+      };
+    }
+    if (supplierCompany) {
+      match.supplierCompany = {
+        $regex: new RegExp(escapeRegex(supplierCompany), "i"),
+      };
+    }
+    if (startDate || endDate) {
+      match.loadingDate = {};
+      if (startDate) match.loadingDate.$gte = new Date(startDate);
+      if (endDate) {
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+        match.loadingDate.$lte = end;
+      }
+    }
+
+    const [total, data] = await Promise.all([
+      LoadingEntry.countDocuments(match),
+      getBrokerageReportData(req.query, skip, pageSize),
+    ]);
 
     res.json({
       data,
@@ -456,8 +504,8 @@ router.get("/brokerage-report/excel", async (req, res) => {
     worksheet.columns = [
       { header: "SL No", key: "slNo", width: 10 },
       { header: "Order Date", key: "orderDate", width: 15 },
+      { header: "Seller Company", key: "sellerCompany", width: 30 },
       { header: "Seller Name", key: "sellerName", width: 30 },
-      { header: "Seller A/C", key: "sellerAccount", width: 20 },
       { header: "Buyer Name", key: "buyerName", width: 30 },
       { header: "PLACE", key: "place", width: 20 },
       { header: "Item", key: "item", width: 20 },
@@ -473,8 +521,8 @@ router.get("/brokerage-report/excel", async (req, res) => {
         orderDate: item.orderDate
           ? new Date(item.orderDate).toLocaleDateString("en-GB")
           : "N/A",
-        sellerName: item.supplierCompany || "N/A",
-        sellerAccount: item.sellerAccount || "N/A",
+        sellerCompany: item.supplierCompany || "N/A",
+        sellerName: item.sellerAccount || "N/A",
         buyerName: item.buyerCompany || "N/A",
         place: item.place || "N/A",
         item: item.commodity || "N/A",
@@ -514,14 +562,74 @@ router.get("/brokerage-report/pdf", async (req, res) => {
 
     const data = await getBrokerageReportData(queryParams);
 
-    const doc = new jsPDF();
-    doc.text("Brokerage Report", 14, 15);
+    const doc = new jsPDF({
+      orientation: "portrait",
+      unit: "mm",
+      format: "a4",
+    });
+
+    const logoPath = path.join(__dirname, "../assets/Hans.png");
+    let logoBase64 = null;
+    if (fs.existsSync(logoPath)) {
+      logoBase64 = fs.readFileSync(logoPath, { encoding: "base64" });
+    }
+
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const margin = 15;
+
+    // Header Helper
+    const drawHeader = (doc, pageNum) => {
+      // Background for header
+      doc.setFillColor(31, 122, 62); // Hansaria Green
+      doc.rect(0, 0, pageWidth, 40, "F");
+
+      if (logoBase64) {
+        doc.addImage(
+          `data:image/png;base64,${logoBase64}`,
+          "PNG",
+          margin,
+          5,
+          25,
+          25,
+        );
+      }
+
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(20);
+      doc.setFont("helvetica", "bold");
+      doc.text("HANSARIA FOOD PRIVATE LIMITED", pageWidth / 2 + 10, 15, {
+        align: "center",
+      });
+
+      doc.setFontSize(8);
+      doc.setFont("helvetica", "normal");
+      doc.text(
+        "207, Maharshi Debendra Road, 6th Floor, Room No. 111, Kolkata - 700007",
+        pageWidth / 2 + 10,
+        22,
+        { align: "center" },
+      );
+      doc.text(
+        "Contact: +91 98304 33535 | Email: info@hansariafood.com",
+        pageWidth / 2 + 10,
+        27,
+        { align: "center" },
+      );
+
+      doc.setFontSize(14);
+      doc.setFont("helvetica", "bold");
+      doc.text("BROKERAGE REPORT", pageWidth / 2 + 10, 35, { align: "center" });
+
+      doc.setTextColor(0, 0, 0);
+    };
+
+    drawHeader(doc, 1);
 
     const tableColumn = [
       "SL No",
       "Order Date",
+      "Seller Company",
       "Seller Name",
-      "Seller A/C",
       "Buyer Name",
       "PLACE",
       "Item",
@@ -537,22 +645,56 @@ router.get("/brokerage-report/pdf", async (req, res) => {
         ? new Date(item.orderDate).toLocaleDateString("en-GB")
         : "N/A",
       item.supplierCompany || "N/A",
-      item.sellerAccount || "N/A",
+      item.sellerAccount || "N/A", // This is now Seller Name from sellerInfo
       item.buyerCompany || "N/A",
       item.place || "N/A",
       item.commodity || "N/A",
-      item.unloadingWeight || 0,
-      item.brokerageRate || 0,
-      item.loadingWeight || 0,
-      item.unloadingWeight || 0,
+      Number(item.unloadingWeight || 0).toFixed(2),
+      Number(item.brokerageRate || 0).toFixed(2),
+      Number(item.loadingWeight || 0).toFixed(2),
+      Number(item.unloadingWeight || 0).toFixed(2),
     ]);
 
     autoTable(doc, {
       head: [tableColumn],
       body: tableRows,
-      startY: 20,
-      styles: { fontSize: 8 },
-      headStyles: { fillColor: [0, 128, 0] },
+      startY: 45,
+      theme: "grid",
+      styles: {
+        fontSize: 7,
+        cellPadding: 2,
+        valign: "middle",
+        halign: "center",
+      },
+      headStyles: {
+        fillColor: [31, 122, 62],
+        textColor: [255, 255, 255],
+        fontStyle: "bold",
+      },
+      columnStyles: {
+        2: { halign: "left", cellWidth: 25 }, // Seller Company
+        3: { halign: "left", cellWidth: 25 }, // Seller Name
+        4: { halign: "left", cellWidth: 25 }, // Buyer Name
+        5: { cellWidth: 15 }, // PLACE
+        6: { cellWidth: 15 }, // Item
+      },
+      didDrawPage: (data) => {
+        // Add footer on each page
+        const str = "Page " + doc.internal.getNumberOfPages();
+        doc.setFontSize(8);
+        doc.setTextColor(100);
+        doc.text(
+          str,
+          pageWidth - margin,
+          doc.internal.pageSize.getHeight() - 10,
+          { align: "right" },
+        );
+        doc.text(
+          "Generated on: " + new Date().toLocaleString(),
+          margin,
+          doc.internal.pageSize.getHeight() - 10,
+        );
+      },
     });
 
     const pdfBuffer = doc.output("arraybuffer");
