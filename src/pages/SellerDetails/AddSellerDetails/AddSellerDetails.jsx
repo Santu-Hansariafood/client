@@ -1,22 +1,30 @@
-import { useState, useEffect, lazy, Suspense } from "react";
+import { useState, useEffect } from "react";
 import api from "../../../utils/apiClient/apiClient";
 import { fetchAllPages } from "../../../utils/apiClient/fetchAllPages";
 import { ToastContainer, toast } from "react-toastify";
-import { FaPlusCircle, FaMinusCircle } from "react-icons/fa";
+import {
+  FaPlusCircle,
+  FaMinusCircle,
+  FaUserTie,
+  FaPhone,
+  FaEnvelope,
+  FaBox,
+  FaBuilding,
+  FaLayerGroup,
+  FaSave,
+  FaTimes,
+} from "react-icons/fa";
 import "react-toastify/dist/ReactToastify.css";
 
 import Loading from "../../../common/Loading/Loading";
 import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
-import { FaUserTie } from "react-icons/fa";
 import regexPatterns from "../../../utils/regexPatterns/regexPatterns";
-
-const DataInput = lazy(() => import("../../../common/DataInput/DataInput"));
-const DataDropdown = lazy(
-  () => import("../../../common/DataDropdown/DataDropdown"),
-);
-const Buttons = lazy(() => import("../../../common/Buttons/Buttons"));
+import DataInput from "../../../common/DataInput/DataInput";
+import DataDropdown from "../../../common/DataDropdown/DataDropdown";
+import Buttons from "../../../common/Buttons/Buttons";
 
 const AddSellerDetails = () => {
+  const [loading, setLoading] = useState(false);
   const [sellerName, setSellerName] = useState("");
   const [password, setPassword] = useState("");
 
@@ -33,11 +41,9 @@ const AddSellerDetails = () => {
   const [selectedCommodity, setSelectedCommodity] = useState([]);
   const [selectedCompany, setSelectedCompany] = useState([]);
   const [selectedGroups, setSelectedGroups] = useState([]);
-  const [selectedStatus, setSelectedStatus] = useState(null);
+  const [selectedStatus, setSelectedStatus] = useState("active");
 
   const [brokerageAmounts, setBrokerageAmounts] = useState({});
-
-  const apiBaseURL = "";
 
   const statusOptions = [
     { value: "active", label: "Active" },
@@ -46,39 +52,37 @@ const AddSellerDetails = () => {
 
   useEffect(() => {
     const fetchData = async () => {
+      setLoading(true);
       try {
         const [commodities, companies, groups] = await Promise.all([
-          fetchAllPages("/commodities"),
-          fetchAllPages("/seller-company"),
-          fetchAllPages("/groups"),
+          fetchAllPages("/commodities").catch(() => []),
+          fetchAllPages("/seller-company").catch(() => []),
+          fetchAllPages("/groups").catch(() => []),
         ]);
 
         const commodityOpts = commodities.map((item) => ({
-          value: item.name,
-          label: item.name,
+          value: item.name || item,
+          label: item.name || item,
         }));
 
         const companyOpts = companies.map((item) => ({
-          value: item.companyName,
-          label: item.companyName,
+          value: item.companyName || item.name || item,
+          label: item.companyName || item.name || item,
         }));
 
         const groupOpts = groups.map((item) => ({
-          value: item._id,
-          label: item.groupName,
+          value: item._id || item.id || item,
+          label: item.groupName || item.name || item,
         }));
 
-        setCommodityOptions(
-          commodityOpts.sort((a, b) => a.label.localeCompare(b.label)),
-        );
-
-        setCompanyOptions(
-          companyOpts.sort((a, b) => a.label.localeCompare(b.label)),
-        );
-
-        setGroupOptions(groupOpts.sort((a, b) => a.label.localeCompare(b.label)));
+        setCommodityOptions(commodityOpts);
+        setCompanyOptions(companyOpts);
+        setGroupOptions(groupOpts);
       } catch (error) {
-        toast.error("Failed to load data from server.");
+        console.error("Fetch error:", error);
+        toast.error("Failed to load some data from server.");
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -86,7 +90,7 @@ const AddSellerDetails = () => {
   }, []);
 
   const handleCommodityChange = (selected) => {
-    setSelectedCommodity(selected || []);
+    setSelectedCommodity(selected ? selected.map((s) => s.value) : []);
   };
 
   const handleBrokerageChange = (commodity, value) => {
@@ -125,7 +129,7 @@ const AddSellerDetails = () => {
   };
 
   const handleCompanyChange = (selected) => {
-    setSelectedCompany(selected || []);
+    setSelectedCompany(selected ? selected.map((s) => s.value) : []);
   };
 
   const handleSubmit = async () => {
@@ -160,192 +164,266 @@ const AddSellerDetails = () => {
       emails: emails.map((email) => ({
         value: email.value,
       })),
-      commodities: selectedCommodity.map((c) => ({
-        name: c.value,
-        brokerage: brokerageAmounts[c.value] || 0,
+      commodities: selectedCommodity.map((commodityName) => ({
+        name: commodityName,
+        brokerage: brokerageAmounts[commodityName] || 0,
       })),
-      companies: selectedCompany.map((c) => c.value),
-      status: selectedStatus?.value,
-      groups: selectedGroups.map((g) => ({
-        name: g.label,
-      })),
+      companies: selectedCompany,
+      status: typeof selectedStatus === "string" ? selectedStatus : selectedStatus?.value,
+      groups: selectedGroups.map((groupId) => {
+        const group = groupOptions.find((g) => g.value === groupId);
+        return { name: group?.label || groupId };
+      }),
     };
 
     try {
+      setLoading(true);
       await api.post("/sellers", payload);
-
       toast.success("Seller added successfully");
-
       resetForm();
     } catch (error) {
       toast.error(error.response?.data?.message || "Error submitting form");
+    } finally {
+      setLoading(false);
     }
   };
 
   const resetForm = () => {
     setSellerName("");
     setPassword("");
-
     setPhoneNumbers([{ id: Date.now(), value: "" }]);
     setEmails([{ id: Date.now(), value: "" }]);
-
     setSelectedCommodity([]);
     setSelectedCompany([]);
     setSelectedGroups([]);
-
     setBrokerageAmounts({});
-    setSelectedStatus(null);
+    setSelectedStatus("active");
   };
 
+  if (loading && commodityOptions.length === 0) return <Loading />;
+
   return (
-    <Suspense fallback={<Loading />}>
-      <AdminPageShell
-        title="Add Seller Details"
-        subtitle="Create a seller user with contact details, commodities, and buyer access"
-        icon={FaUserTie}
-        noContentCard
-      >
-        <div className="max-w-5xl mx-auto">
-          <div className="w-full bg-white rounded-2xl border border-amber-200/60 shadow-lg p-4 sm:p-6 md:p-8">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+    <AdminPageShell
+      title="Add Seller Details"
+      subtitle="Create a seller user with contact details, commodities, and buyer access"
+      icon={FaUserTie}
+      noContentCard
+    >
+      <div className="max-w-5xl mx-auto space-y-6">
+        <div className="w-full bg-white rounded-3xl border border-slate-200 shadow-xl overflow-hidden transition-all hover:shadow-2xl">
+          {/* Header Section */}
+          <div className="bg-slate-900 p-6 sm:p-8">
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 bg-amber-500 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-amber-500/20">
+                <FaUserTie size={24} />
+              </div>
               <div>
-                <label className="block mb-1 text-sm font-semibold text-slate-700">
-                  Seller name
-                </label>
-                <DataInput
-                  placeholder="Enter seller name"
-                  value={sellerName}
-                  onChange={(e) => setSellerName(e.target.value)}
-                />
+                <h3 className="text-xl font-bold text-white">Seller Registration</h3>
+                <p className="text-slate-400 text-sm">Fill in the details below to create a new seller account</p>
               </div>
-
-              <div>
-                <label className="block mb-1 text-sm font-semibold text-slate-700">
-                  Password
-                </label>
-                <DataInput
-                  placeholder="Enter password"
-                  inputType="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
-              </div>
-            </div>
-
-            {phoneNumbers.map((phone, index) => (
-              <div key={phone.id} className="flex items-center gap-3 mt-4">
-                <DataInput
-                  placeholder={`Phone ${index + 1}`}
-                  value={phone.value}
-                  inputType="number"
-                  onChange={(e) => handlePhoneChange(phone.id, e.target.value)}
-                />
-
-                {index === phoneNumbers.length - 1 && (
-                  <FaPlusCircle
-                    onClick={addPhoneNumber}
-                    className="text-green-500 cursor-pointer"
-                  />
-                )}
-
-                {index > 0 && (
-                  <FaMinusCircle
-                    onClick={() => removePhoneNumber(phone.id)}
-                    className="text-red-500 cursor-pointer"
-                  />
-                )}
-              </div>
-            ))}
-
-            {emails.map((email, index) => (
-              <div key={email.id} className="flex items-center gap-3 mt-3">
-                <DataInput
-                  placeholder={`Email ${index + 1}`}
-                  value={email.value}
-                  onChange={(e) => handleEmailChange(email.id, e.target.value)}
-                />
-
-                {index === emails.length - 1 && (
-                  <FaPlusCircle
-                    onClick={addEmail}
-                    className="text-green-500 cursor-pointer"
-                  />
-                )}
-
-                {index > 0 && (
-                  <FaMinusCircle
-                    onClick={() => removeEmail(email.id)}
-                    className="text-red-500 cursor-pointer"
-                  />
-                )}
-              </div>
-            ))}
-
-            <div className="mt-4">
-              <DataDropdown
-                options={commodityOptions}
-                selectedOptions={selectedCommodity}
-                isMulti
-                placeholder="Select Commodities"
-                onChange={handleCommodityChange}
-              />
-            </div>
-
-            {selectedCommodity.map((c) => (
-              <div key={c.value} className="mt-3">
-                <DataInput
-                  placeholder={`Brokerage for ${c.label}`}
-                  value={brokerageAmounts[c.value] || ""}
-                  onChange={(e) =>
-                    handleBrokerageChange(c.value, e.target.value)
-                  }
-                />
-              </div>
-            ))}
-
-            <div className="mt-4">
-              <DataDropdown
-                options={companyOptions}
-                selectedOptions={selectedCompany}
-                isMulti
-                placeholder="Select Companies"
-                onChange={handleCompanyChange}
-              />
-            </div>
-
-            <div className="mt-4">
-              <DataDropdown
-                options={groupOptions}
-                selectedOptions={selectedGroups}
-                isMulti
-                placeholder="Select Groups"
-                onChange={(selected) => setSelectedGroups(selected || [])}
-              />
-            </div>
-
-            <div className="mt-4">
-              <DataDropdown
-                options={statusOptions}
-                selectedOptions={selectedStatus}
-                placeholder="Select Status"
-                onChange={(selected) => setSelectedStatus(selected)}
-              />
-            </div>
-
-            <div className="mt-6 flex justify-end">
-              <Buttons
-                label="Submit"
-                onClick={handleSubmit}
-                variant="primary"
-                size="lg"
-              />
             </div>
           </div>
 
-          <ToastContainer />
+          <div className="p-6 sm:p-10 space-y-10">
+            {/* Basic Info Section */}
+            <section className="space-y-6">
+              <div className="flex items-center gap-3 pb-2 border-b border-slate-100">
+                <div className="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center text-amber-600 font-bold text-sm">1</div>
+                <h4 className="text-sm font-black uppercase tracking-widest text-slate-800">Basic Information</h4>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <DataInput
+                  label="Seller Name"
+                  placeholder="Enter full name"
+                  value={sellerName}
+                  onChange={(e) => setSellerName(e.target.value)}
+                  required
+                />
+                <DataInput
+                  label="Password"
+                  placeholder="Create secure password"
+                  inputType="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+              </div>
+            </section>
+
+            {/* Contact Details Section */}
+            <section className="space-y-6">
+              <div className="flex items-center gap-3 pb-2 border-b border-slate-100">
+                <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600 font-bold text-sm">2</div>
+                <h4 className="text-sm font-black uppercase tracking-widest text-slate-800">Contact Details</h4>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="space-y-4">
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest">Phone Numbers</label>
+                  {phoneNumbers.map((phone, index) => (
+                    <div key={phone.id} className="flex items-center gap-3 group">
+                      <div className="flex-1">
+                        <DataInput
+                          placeholder={`Phone ${index + 1}`}
+                          value={phone.value}
+                          inputType="number"
+                          onChange={(e) => handlePhoneChange(phone.id, e.target.value)}
+                        />
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {index === phoneNumbers.length - 1 && (
+                          <button
+                            type="button"
+                            onClick={addPhoneNumber}
+                            className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center hover:bg-emerald-600 hover:text-white transition-all shadow-sm"
+                          >
+                            <FaPlusCircle />
+                          </button>
+                        )}
+                        {index > 0 && (
+                          <button
+                            type="button"
+                            onClick={() => removePhoneNumber(phone.id)}
+                            className="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center hover:bg-rose-600 hover:text-white transition-all shadow-sm"
+                          >
+                            <FaMinusCircle />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="space-y-4">
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest">Email Addresses</label>
+                  {emails.map((email, index) => (
+                    <div key={email.id} className="flex items-center gap-3 group">
+                      <div className="flex-1">
+                        <DataInput
+                          placeholder={`Email ${index + 1}`}
+                          value={email.value}
+                          onChange={(e) => handleEmailChange(email.id, e.target.value)}
+                        />
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {index === emails.length - 1 && (
+                          <button
+                            type="button"
+                            onClick={addEmail}
+                            className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center hover:bg-emerald-600 hover:text-white transition-all shadow-sm"
+                          >
+                            <FaPlusCircle />
+                          </button>
+                        )}
+                        {index > 0 && (
+                          <button
+                            type="button"
+                            onClick={() => removeEmail(email.id)}
+                            className="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center hover:bg-rose-600 hover:text-white transition-all shadow-sm"
+                          >
+                            <FaMinusCircle />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </section>
+
+            {/* Commodities Section */}
+            <section className="space-y-6">
+              <div className="flex items-center gap-3 pb-2 border-b border-slate-100">
+                <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600 font-bold text-sm">3</div>
+                <h4 className="text-sm font-black uppercase tracking-widest text-slate-800">Commodities & Brokerage</h4>
+              </div>
+              <div className="space-y-6">
+                <DataDropdown
+                  label="Select Commodities"
+                  options={commodityOptions}
+                  selectedOptions={selectedCommodity}
+                  isMulti
+                  placeholder="Search and select commodities"
+                  onChange={handleCommodityChange}
+                />
+
+                {selectedCommodity.length > 0 && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-6 bg-slate-50 rounded-2xl border border-slate-100">
+                    {selectedCommodity.map((commodityValue) => {
+                      const commodityLabel = commodityOptions.find(o => o.value === commodityValue)?.label || commodityValue;
+                      return (
+                        <div key={commodityValue} className="space-y-2">
+                          <label className="block text-[10px] font-black text-slate-400 uppercase tracking-wider">
+                            Brokerage for {commodityLabel}
+                          </label>
+                          <DataInput
+                            placeholder="0.00"
+                            inputType="number"
+                            value={brokerageAmounts[commodityValue] || ""}
+                            onChange={(e) => handleBrokerageChange(commodityValue, e.target.value)}
+                          />
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </section>
+
+            {/* Business Associations Section */}
+            <section className="space-y-6">
+              <div className="flex items-center gap-3 pb-2 border-b border-slate-100">
+                <div className="w-8 h-8 rounded-lg bg-purple-50 flex items-center justify-center text-purple-600 font-bold text-sm">4</div>
+                <h4 className="text-sm font-black uppercase tracking-widest text-slate-800">Business Associations & Status</h4>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <DataDropdown
+                  label="Seller Companies"
+                  options={companyOptions}
+                  selectedOptions={selectedCompany}
+                  isMulti
+                  placeholder="Select associated companies"
+                  onChange={handleCompanyChange}
+                />
+                <DataDropdown
+                  label="Groups"
+                  options={groupOptions}
+                  selectedOptions={selectedGroups}
+                  isMulti
+                  placeholder="Select group associations"
+                  onChange={(selected) => setSelectedGroups(selected ? selected.map(s => s.value) : [])}
+                />
+                <DataDropdown
+                  label="Account Status"
+                  options={statusOptions}
+                  selectedOptions={selectedStatus}
+                  placeholder="Select initial status"
+                  onChange={(selected) => setSelectedStatus(selected?.value || selected)}
+                />
+              </div>
+            </section>
+
+            {/* Submit Section */}
+            <div className="pt-10 border-t border-slate-100 flex justify-end gap-4">
+              <Buttons
+                label="Reset Form"
+                onClick={resetForm}
+                variant="ghost"
+                icon={<FaTimes />}
+              />
+              <Buttons
+                label={loading ? "Saving..." : "Create Seller Account"}
+                onClick={handleSubmit}
+                variant="primary"
+                size="lg"
+                icon={<FaSave />}
+                disabled={loading}
+              />
+            </div>
+          </div>
         </div>
-      </AdminPageShell>
-    </Suspense>
+      </div>
+      <ToastContainer position="bottom-right" theme="colored" />
+    </AdminPageShell>
   );
 };
 

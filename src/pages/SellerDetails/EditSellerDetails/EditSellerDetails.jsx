@@ -1,9 +1,9 @@
-import { useState, useEffect, useCallback, lazy, Suspense } from "react";
+import { useState, useEffect, useCallback } from "react";
 import PropTypes from "prop-types";
 import { useParams, useNavigate } from "react-router-dom";
 import api from "../../../utils/apiClient/apiClient";
 import { fetchAllPages } from "../../../utils/apiClient/fetchAllPages";
-import { toast } from "react-toastify";
+import { ToastContainer, toast } from "react-toastify";
 import {
   FaPlusCircle,
   FaMinusCircle,
@@ -14,16 +14,15 @@ import {
   FaBuilding,
   FaLayerGroup,
   FaInfoCircle,
+  FaSave,
+  FaTimes,
 } from "react-icons/fa";
 import Loading from "../../../common/Loading/Loading";
 import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
 import regexPatterns from "../../../utils/regexPatterns/regexPatterns";
-
-const DataInput = lazy(() => import("../../../common/DataInput/DataInput"));
-const DataDropdown = lazy(
-  () => import("../../../common/DataDropdown/DataDropdown"),
-);
-const Buttons = lazy(() => import("../../../common/Buttons/Buttons"));
+import DataInput from "../../../common/DataInput/DataInput";
+import DataDropdown from "../../../common/DataDropdown/DataDropdown";
+import Buttons from "../../../common/Buttons/Buttons";
 
 const statusOptions = [
   { value: "active", label: "Active" },
@@ -46,11 +45,12 @@ const EditSellerDetails = ({ sellerId: propSellerId, onClose, onSave, isPopup = 
   const [selectedCommodity, setSelectedCommodity] = useState([]);
   const [brokerageAmounts, setBrokerageAmounts] = useState({});
   const [selectedCompany, setSelectedCompany] = useState([]);
-  const [selectedStatus, setSelectedStatus] = useState(null);
+  const [selectedStatus, setSelectedStatus] = useState("active");
   const [selectedGroups, setSelectedGroups] = useState([]);
   const [groupOptions, setGroupOptions] = useState([]);
   const [fullSellerData, setFullSellerData] = useState({});
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -70,27 +70,20 @@ const EditSellerDetails = ({ sellerId: propSellerId, onClose, onSave, isPopup = 
 
         const sellerData = sellerRes.data?.data || sellerRes.data || {};
 
-        // 1. Set Options First
-        const commOpts = (commodities || [])
-          .map((item) => ({
-            value: item.name || item,
-            label: item.name || item,
-          }))
-          .sort((a, b) => a.label.localeCompare(b.label));
+        const commOpts = commodities.map((item) => ({
+          value: item.name || item,
+          label: item.name || item,
+        }));
 
-        const compOpts = (companies || [])
-          .map((item) => ({
-            value: item.companyName || item.name || item,
-            label: item.companyName || item.name || item,
-          }))
-          .sort((a, b) => a.label.localeCompare(b.label));
+        const compOpts = companies.map((item) => ({
+          value: item.companyName || item.name || item,
+          label: item.companyName || item.name || item,
+        }));
 
-        const grpOpts = (groups || [])
-          .map((item) => ({
-            value: item._id || item.id || item,
-            label: item.groupName || item.name || item,
-          }))
-          .sort((a, b) => a.label.localeCompare(b.label));
+        const grpOpts = groups.map((item) => ({
+          value: item._id || item.id || item,
+          label: item.groupName || item.name || item,
+        }));
 
         setCommodityOptions(commOpts);
         setCompanyOptions(compOpts);
@@ -113,7 +106,6 @@ const EditSellerDetails = ({ sellerId: propSellerId, onClose, onSave, isPopup = 
         }));
         setEmails(fetchedEmails.length > 0 ? fetchedEmails : [{ id: Date.now(), value: "" }]);
 
-        // Map selected values
         const selectedCommNames = (sellerData.commodities || []).map(
           (c) => c.name || c,
         );
@@ -255,221 +247,249 @@ const EditSellerDetails = ({ sellerId: propSellerId, onClose, onSave, isPopup = 
     };
 
     try {
+      setSaving(true);
       const response = await api.put(`/sellers/${sellerId}`, payload);
       toast.success("Seller details updated successfully!");
       if (onSave) {
         onSave(response.data);
       }
-      if (onClose) {
-        onClose();
-      } else {
-        navigate("/seller-details/list");
-      }
+      setTimeout(() => {
+        if (onClose) {
+          onClose();
+        } else {
+          navigate("/seller-details/list");
+        }
+      }, 1000);
     } catch (error) {
       toast.error(
         error.response?.data?.message ||
           "An error occurred while updating the form.",
       );
+    } finally {
+      setSaving(false);
     }
   };
 
   if (loading) return <Loading />;
 
   const formContent = (
-    <div className={`${isPopup ? "" : "max-w-5xl mx-auto"}`}>
-      <div className={`w-full bg-white rounded-2xl ${isPopup ? "" : "border border-amber-200/60 shadow-lg p-4 sm:p-6 md:p-8"}`}>
-        {/* Basic Info */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-8">
-          <div>
-            <label className="block mb-1 text-sm font-semibold text-slate-700">
-              Seller Name
-            </label>
-            <DataInput
-              placeholder="Enter seller name"
-              value={sellerName}
-              onChange={(e) => setSellerName(e.target.value)}
-              required
-              maxLength="50"
-              icon={FaUserTie}
-            />
-          </div>
-          <div>
-            <label className="block mb-1 text-sm font-semibold text-slate-700">
-              Password
-            </label>
-            <DataInput
-              placeholder="Enter password"
-              inputType="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              icon={FaInfoCircle}
-            />
+    <div className={`${isPopup ? "" : "max-w-5xl mx-auto space-y-6"}`}>
+      <div className={`w-full bg-white rounded-3xl border border-slate-200 shadow-xl overflow-hidden transition-all hover:shadow-2xl`}>
+        {/* Header Section */}
+        <div className="bg-slate-900 p-6 sm:p-8">
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 bg-amber-500 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-amber-500/20">
+              <FaUserTie size={24} />
+            </div>
+            <div>
+              <h3 className="text-xl font-bold text-white">Edit Seller Account</h3>
+              <p className="text-slate-400 text-sm">Update profile, contact, and business associations</p>
+            </div>
           </div>
         </div>
 
-        {/* Contact Details */}
-        <div className="mb-8">
-          <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
-            <FaPhone className="text-amber-500" /> Contact Details
-          </h3>
+        <div className="p-6 sm:p-10 space-y-10">
+          {/* Basic Info Section */}
+          <section className="space-y-6">
+            <div className="flex items-center gap-3 pb-2 border-b border-slate-100">
+              <div className="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center text-amber-600 font-bold text-sm">1</div>
+              <h4 className="text-sm font-black uppercase tracking-widest text-slate-800">Basic Information</h4>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <DataInput
+                label="Seller Name"
+                placeholder="Enter full name"
+                value={sellerName}
+                onChange={(e) => setSellerName(e.target.value)}
+                required
+              />
+              <DataInput
+                label="Password"
+                placeholder="Update password (optional)"
+                inputType="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+            </div>
+          </section>
 
-          <div className="space-y-4">
-            {phoneNumbers.map((phone, index) => (
-              <div key={phone.id} className="flex items-center gap-3">
-                <DataInput
-                  placeholder={`Phone Number ${index + 1}`}
-                  value={phone.value}
-                  inputType="number"
-                  onChange={(e) => handlePhoneChange(phone.id, e.target.value)}
-                />
-                <div className="flex items-center gap-2">
-                  {index === phoneNumbers.length - 1 && (
-                    <FaPlusCircle
-                      onClick={addPhoneNumber}
-                      className="text-green-500 cursor-pointer text-xl hover:scale-110 transition-transform"
-                    />
-                  )}
-                  {index > 0 && (
-                    <FaMinusCircle
-                      onClick={() => removePhoneNumber(phone.id)}
-                      className="text-red-500 cursor-pointer text-xl hover:scale-110 transition-transform"
-                    />
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="space-y-4 mt-4">
-            {emails.map((email, index) => (
-              <div key={email.id} className="flex items-center gap-3">
-                <DataInput
-                  placeholder={`Email ${index + 1}`}
-                  value={email.value}
-                  onChange={(e) => handleEmailChange(email.id, e.target.value)}
-                  icon={FaEnvelope}
-                />
-                <div className="flex items-center gap-2">
-                  {index === emails.length - 1 && (
-                    <FaPlusCircle
-                      onClick={addEmail}
-                      className="text-green-500 cursor-pointer text-xl hover:scale-110 transition-transform"
-                    />
-                  )}
-                  {index > 0 && (
-                    <FaMinusCircle
-                      onClick={() => removeEmail(email.id)}
-                      className="text-red-500 cursor-pointer text-xl hover:scale-110 transition-transform"
-                    />
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Commodities */}
-        <div className="mb-8">
-          <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
-            <FaBox className="text-amber-500" /> Commodities & Brokerage
-          </h3>
-          <DataDropdown
-            options={commodityOptions}
-            placeholder="Select commodities"
-            selectedOptions={selectedCommodity}
-            onChange={handleCommodityChange}
-            isMulti={true}
-            label="Assigned Commodities"
-          />
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-            {(Array.isArray(selectedCommodity)
-              ? selectedCommodity
-              : [selectedCommodity]
-            )
-              .filter(Boolean)
-              .map((commodityValue) => {
-                const commodityLabel =
-                  commodityOptions.find((o) => o.value === commodityValue)
-                    ?.label || commodityValue;
-                return (
-                  <div key={commodityValue} className="p-4 bg-slate-50 rounded-xl border border-slate-100">
-                    <label className="block mb-2 text-xs font-bold text-slate-500 uppercase">
-                      Brokerage (Tons) - {commodityLabel}
-                    </label>
-                    <DataInput
-                      placeholder="0.00"
-                      inputType="number"
-                      value={brokerageAmounts[commodityValue] || ""}
-                      onChange={(e) =>
-                        handleBrokerageChange(commodityValue, e.target.value)
-                      }
-                    />
+          {/* Contact Details Section */}
+          <section className="space-y-6">
+            <div className="flex items-center gap-3 pb-2 border-b border-slate-100">
+              <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600 font-bold text-sm">2</div>
+              <h4 className="text-sm font-black uppercase tracking-widest text-slate-800">Contact Details</h4>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="space-y-4">
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest">Phone Numbers</label>
+                {phoneNumbers.map((phone, index) => (
+                  <div key={phone.id} className="flex items-center gap-3 group">
+                    <div className="flex-1">
+                      <DataInput
+                        placeholder={`Phone ${index + 1}`}
+                        value={phone.value}
+                        inputType="number"
+                        onChange={(e) => handlePhoneChange(phone.id, e.target.value)}
+                      />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {index === phoneNumbers.length - 1 && (
+                        <button
+                          type="button"
+                          onClick={addPhoneNumber}
+                          className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center hover:bg-emerald-600 hover:text-white transition-all shadow-sm"
+                        >
+                          <FaPlusCircle />
+                        </button>
+                      )}
+                      {index > 0 && (
+                        <button
+                          type="button"
+                          onClick={() => removePhoneNumber(phone.id)}
+                          className="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center hover:bg-rose-600 hover:text-white transition-all shadow-sm"
+                        >
+                          <FaMinusCircle />
+                        </button>
+                      )}
+                    </div>
                   </div>
-                );
-              })}
-          </div>
-        </div>
+                ))}
+              </div>
 
-        {/* Associations */}
-        <div className="mb-8">
-          <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
-            <FaBuilding className="text-amber-500" /> Associations & Status
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            <DataDropdown
-              options={companyOptions}
-              placeholder="Select companies"
-              selectedOptions={selectedCompany}
-              onChange={handleCompanyChange}
-              isMulti={true}
-              label="Seller Company"
-            />
-            <DataDropdown
-              options={statusOptions}
-              placeholder="Select status"
-              selectedOptions={selectedStatus}
-              onChange={(selected) =>
-                setSelectedStatus(selected?.value || selected)
-              }
-              label="Account Status"
-            />
-          </div>
-          <div className="mt-5">
-            <DataDropdown
-              options={groupOptions}
-              placeholder="Select groups"
-              isMulti={true}
-              selectedOptions={selectedGroups}
-              onChange={(selected) =>
-                setSelectedGroups(selected ? selected.map((s) => s.value) : [])
-              }
-              label="Assigned Groups"
-            />
-          </div>
-        </div>
+              <div className="space-y-4">
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest">Email Addresses</label>
+                {emails.map((email, index) => (
+                  <div key={email.id} className="flex items-center gap-3 group">
+                    <div className="flex-1">
+                      <DataInput
+                        placeholder={`Email ${index + 1}`}
+                        value={email.value}
+                        onChange={(e) => handleEmailChange(email.id, e.target.value)}
+                      />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {index === emails.length - 1 && (
+                        <button
+                          type="button"
+                          onClick={addEmail}
+                          className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center hover:bg-emerald-600 hover:text-white transition-all shadow-sm"
+                        >
+                          <FaPlusCircle />
+                        </button>
+                      )}
+                      {index > 0 && (
+                        <button
+                          type="button"
+                          onClick={() => removeEmail(email.id)}
+                          className="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center hover:bg-rose-600 hover:text-white transition-all shadow-sm"
+                        >
+                          <FaMinusCircle />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
 
-        <div className={`mt-10 flex justify-end gap-3 ${isPopup ? "" : "border-t pt-8"}`}>
-          <Buttons
-            label="Cancel"
-            onClick={onClose || (() => navigate("/seller-details/list"))}
-            variant="secondary"
-            size="lg"
-          />
-          <Buttons
-            label="Update Seller"
-            onClick={handleSubmit}
-            type="submit"
-            variant="primary"
-            size="lg"
-          />
+          {/* Commodities Section */}
+          <section className="space-y-6">
+            <div className="flex items-center gap-3 pb-2 border-b border-slate-100">
+              <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600 font-bold text-sm">3</div>
+              <h4 className="text-sm font-black uppercase tracking-widest text-slate-800">Commodities & Brokerage</h4>
+            </div>
+            <div className="space-y-6">
+              <DataDropdown
+                label="Select Commodities"
+                options={commodityOptions}
+                selectedOptions={selectedCommodity}
+                isMulti
+                placeholder="Search and select commodities"
+                onChange={handleCommodityChange}
+              />
+
+              {selectedCommodity.length > 0 && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-6 bg-slate-50 rounded-2xl border border-slate-100">
+                  {selectedCommodity.map((commodityValue) => {
+                    const commodityLabel = commodityOptions.find(o => o.value === commodityValue)?.label || commodityValue;
+                    return (
+                      <div key={commodityValue} className="space-y-2">
+                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-wider">
+                          Brokerage for {commodityLabel}
+                        </label>
+                        <DataInput
+                          placeholder="0.00"
+                          inputType="number"
+                          value={brokerageAmounts[commodityValue] || ""}
+                          onChange={(e) => handleBrokerageChange(commodityValue, e.target.value)}
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </section>
+
+          {/* Business Associations Section */}
+          <section className="space-y-6">
+            <div className="flex items-center gap-3 pb-2 border-b border-slate-100">
+              <div className="w-8 h-8 rounded-lg bg-purple-50 flex items-center justify-center text-purple-600 font-bold text-sm">4</div>
+              <h4 className="text-sm font-black uppercase tracking-widest text-slate-800">Business Associations & Status</h4>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <DataDropdown
+                label="Seller Companies"
+                options={companyOptions}
+                selectedOptions={selectedCompany}
+                isMulti
+                placeholder="Select associated companies"
+                onChange={handleCompanyChange}
+              />
+              <DataDropdown
+                label="Groups"
+                options={groupOptions}
+                selectedOptions={selectedGroups}
+                isMulti
+                placeholder="Select group associations"
+                onChange={(selected) => setSelectedGroups(selected ? selected.map(s => s.value) : [])}
+              />
+              <DataDropdown
+                label="Account Status"
+                options={statusOptions}
+                selectedOptions={selectedStatus}
+                placeholder="Select status"
+                onChange={(selected) => setSelectedStatus(selected?.value || selected)}
+              />
+            </div>
+          </section>
+
+          {/* Submit Section */}
+          <div className="pt-10 border-t border-slate-100 flex justify-end gap-4">
+            <Buttons
+              label="Cancel"
+              onClick={onClose || (() => navigate("/seller-details/list"))}
+              variant="secondary"
+              icon={<FaTimes />}
+            />
+            <Buttons
+              label={saving ? "Saving Changes..." : "Update Seller Account"}
+              onClick={handleSubmit}
+              variant="primary"
+              size="lg"
+              icon={<FaSave />}
+              disabled={saving}
+            />
+          </div>
         </div>
       </div>
+      <ToastContainer position="bottom-right" theme="colored" />
     </div>
   );
 
   return (
-    <Suspense fallback={<Loading />}>
+    <>
       {isPopup ? (
         formContent
       ) : (
@@ -482,7 +502,7 @@ const EditSellerDetails = ({ sellerId: propSellerId, onClose, onSave, isPopup = 
           {formContent}
         </AdminPageShell>
       )}
-    </Suspense>
+    </>
   );
 };
 
