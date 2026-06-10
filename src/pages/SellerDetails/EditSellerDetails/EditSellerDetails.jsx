@@ -75,10 +75,13 @@ const EditSellerDetails = ({ sellerId: propSellerId, onClose, onSave, isPopup = 
           label: item.name || item,
         }));
 
-        const compOpts = companies.map((item) => ({
-          value: item.companyName || item.name || item,
-          label: item.companyName || item.name || item,
-        }));
+        const compOpts = companies.map((item) => {
+          const name = item.companyName || item.name || (typeof item === 'string' ? item : '');
+          return {
+            value: name,
+            label: name,
+          };
+        }).filter(opt => opt.value);
 
         const grpOpts = groups.map((item) => ({
           value: item._id || item.id || item,
@@ -275,19 +278,6 @@ const EditSellerDetails = ({ sellerId: propSellerId, onClose, onSave, isPopup = 
   const formContent = (
     <div className={`${isPopup ? "" : "max-w-5xl mx-auto space-y-6"}`}>
       <div className={`w-full bg-white rounded-3xl border border-slate-200 shadow-xl overflow-hidden transition-all hover:shadow-2xl`}>
-        {/* Header Section */}
-        <div className="bg-slate-900 p-6 sm:p-8">
-          <div className="flex items-center gap-4">
-            <div className="w-14 h-14 bg-amber-500 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-amber-500/20">
-              <FaUserTie size={24} />
-            </div>
-            <div>
-              <h3 className="text-xl font-bold text-white">Edit Seller Account</h3>
-              <p className="text-slate-400 text-sm">Update profile, contact, and business associations</p>
-            </div>
-          </div>
-        </div>
-
         <div className="p-6 sm:p-10 space-y-10">
           {/* Basic Info Section */}
           <section className="space-y-6">
