@@ -90,7 +90,8 @@ const numberToWords = (num) => {
   if (fractional > 0) {
     str +=
       "and " +
-      (a[fractional] || b[Math.floor(fractional / 10)] + " " + a[fractional % 10]) +
+      (a[fractional] ||
+        b[Math.floor(fractional / 10)] + " " + a[fractional % 10]) +
       "Paise ";
   }
   return str + "Only";
@@ -660,7 +661,6 @@ router.get("/brokerage-report/pdf", async (req, res) => {
     const margin = 10;
     const isBuyerReport = type === "buyer";
 
-    // Hansaria Bank Details
     const hansariaBankDetails = {
       accountHolderName: "HANSARIA FOOD PRIVATE LIMITED",
       bankName: "ICIC BANK",
@@ -669,23 +669,18 @@ router.get("/brokerage-report/pdf", async (req, res) => {
       branch: "BURRA BAZAR Branch",
     };
 
-    // Calculate Total Brokerage
     const totalBrokerageAmount = data.reduce(
       (sum, item) => sum + (item.totalBrokerage || 0),
       0,
     );
 
-    // Generate QR Code
     const qrCodeData = `Hansaria Food Private Limited\nBrokerage Amount: Rs. ${totalBrokerageAmount.toFixed(2)}\nBank: ${hansariaBankDetails.bankName}\nA/C: ${hansariaBankDetails.accountNumber}`;
     const qrCodeBase64 = await QRCode.toDataURL(qrCodeData);
 
-    // Tally Header
     const drawTallyHeader = (doc) => {
-      // Outer Box
       doc.setLineWidth(0.4);
       doc.rect(margin, margin, pageWidth - 2 * margin, pageHeight - 2 * margin);
 
-      // Top Section
       doc.setFont("helvetica", "bold");
       doc.setFontSize(14);
       doc.text("HANSARIA FOOD PRIVATE LIMITED", pageWidth / 2, margin + 10, {
@@ -723,13 +718,16 @@ router.get("/brokerage-report/pdf", async (req, res) => {
 
       doc.line(margin, margin + 32, pageWidth - margin, margin + 32);
 
-      // Party Info
       doc.setFontSize(9);
       const partyName = isBuyerReport
         ? data[0].buyerCompany || "N/A"
         : data[0].supplierCompany || "N/A";
 
-      doc.text(`Party Name: ${partyName.toUpperCase()}`, margin + 5, margin + 38);
+      doc.text(
+        `Party Name: ${partyName.toUpperCase()}`,
+        margin + 5,
+        margin + 38,
+      );
       doc.text(
         `Date: ${new Date().toLocaleDateString("en-GB")}`,
         pageWidth - margin - 5,
@@ -758,7 +756,9 @@ router.get("/brokerage-report/pdf", async (req, res) => {
       item.orderDate
         ? new Date(item.orderDate).toLocaleDateString("en-GB")
         : "N/A",
-      isBuyerReport ? item.supplierCompany || "N/A" : item.buyerCompany || "N/A",
+      isBuyerReport
+        ? item.supplierCompany || "N/A"
+        : item.buyerCompany || "N/A",
       item.place || "N/A",
       item.commodity || "N/A",
       Number(item.unloadingWeight || 0).toFixed(2),
@@ -829,7 +829,6 @@ router.get("/brokerage-report/pdf", async (req, res) => {
 
     doc.line(margin, finalY + 12, pageWidth - margin, finalY + 12);
 
-    // Amount in Words
     doc.setFontSize(9);
     doc.text("Amount in Words:", margin + 5, finalY + 18);
     doc.setFont("helvetica", "normal");
@@ -840,7 +839,6 @@ router.get("/brokerage-report/pdf", async (req, res) => {
 
     doc.line(margin, finalY + 30, pageWidth - margin, finalY + 30);
 
-    // Bank Details
     doc.setFont("helvetica", "bold");
     doc.text(
       "Hansaria Food Private Limited Bank Details:",
@@ -866,7 +864,6 @@ router.get("/brokerage-report/pdf", async (req, res) => {
     );
     doc.text(`Branch: ${hansariaBankDetails.branch}`, margin + 5, finalY + 53);
 
-    // QR Code
     if (qrCodeBase64) {
       doc.addImage(
         qrCodeBase64,
@@ -877,14 +874,18 @@ router.get("/brokerage-report/pdf", async (req, res) => {
         25,
       );
       doc.setFontSize(7);
-      doc.text("Scan for Details", pageWidth - margin - 40 + 12.5, finalY + 60, {
-        align: "center",
-      });
+      doc.text(
+        "Scan for Details",
+        pageWidth - margin - 40 + 12.5,
+        finalY + 60,
+        {
+          align: "center",
+        },
+      );
     }
 
     doc.line(margin, finalY + 65, pageWidth - margin, finalY + 65);
 
-    // Signatures
     doc.setFontSize(9);
     doc.setFont("helvetica", "bold");
     doc.text(
@@ -1346,7 +1347,10 @@ router.get("/", async (req, res) => {
 
     if (buyerCompany) {
       const companyRegex = {
-        $regex: new RegExp(`^${escapeRegex(String(buyerCompany).trim())}$`, "i"),
+        $regex: new RegExp(
+          `^${escapeRegex(String(buyerCompany).trim())}$`,
+          "i",
+        ),
       };
       const buyerCompanyOr = [
         { buyerCompany: companyRegex },
@@ -1366,10 +1370,7 @@ router.get("/", async (req, res) => {
 
     if (isUnloaded) {
       andParts.push({
-        $or: [
-          { unloadingWeight: { $gt: 0 } },
-          { loadingWeight: { $gt: 0 } },
-        ],
+        $or: [{ unloadingWeight: { $gt: 0 } }, { loadingWeight: { $gt: 0 } }],
       });
     }
 

@@ -1472,8 +1472,67 @@ export const useAIAgentAPI = (
 
   const universalDeepSearch = async (query) => {
     setIsLoadingData(true);
-    setThinkingPath("Initiating System-Wide Scan...");
+    setThinkingPath("Initiating Smart Saria Scan...");
 
+    // First try smart search for quality → company → commodity
+    try {
+      const smartSearchRes = await api.get("/commodities/search/smart", {
+        params: { q: query },
+        signal: getApiSignal(),
+      });
+
+      const { qualityParameters, companies, commodities } =
+        smartSearchRes.data || {};
+
+      // If we found quality parameters first
+      if (qualityParameters && qualityParameters.length > 0) {
+        let content = `*Quality Parameters Found:*\n\n`;
+        qualityParameters.forEach((qp, i) => {
+          content += `${i + 1}. *${qp.name}*${qp.description ? ` - ${qp.description}` : ""}\n`;
+        });
+        setIsLoadingData(false);
+        setThinkingPath("");
+        return {
+          role: "assistant",
+          content,
+          suggestions: ["Total sauda today", "Active bids"],
+        };
+      }
+
+      // If we found companies
+      if (companies && companies.length > 0) {
+        let content = `*Companies Found:*\n\n`;
+        companies.forEach((c, i) => {
+          content += `${i + 1}. *${c.companyName}*${c.gstNo ? ` (GST: ${c.gstNo})` : ""}\n`;
+        });
+        setIsLoadingData(false);
+        setThinkingPath("");
+        return {
+          role: "assistant",
+          content,
+          suggestions: [`${companies[0].companyName} saudas`, "Active bids"],
+        };
+      }
+
+      // If we found commodities
+      if (commodities && commodities.length > 0) {
+        let content = `*Commodities Found:*\n\n`;
+        commodities.forEach((c, i) => {
+          content += `${i + 1}. *${c.name}* (HSN: ${c.hsnCode})\n`;
+        });
+        setIsLoadingData(false);
+        setThinkingPath("");
+        return {
+          role: "assistant",
+          content,
+          suggestions: ["Today's market rate", "Active bids"],
+        };
+      }
+    } catch (error) {
+      console.error("Smart search error:", error);
+    }
+
+    // Fallback to original search logic
     if (/^\d{3,5}$/.test(query) || /(\d{3,5})\s*(?:sauda|order)/i.test(query)) {
       setThinkingPath("Checking Sauda Records...");
       const sNum = query.match(/(\d{3,5})/)[1];
