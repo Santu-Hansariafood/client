@@ -14,6 +14,7 @@ import Group from "../models/Group.js";
 import Seller from "../models/Seller.js";
 import SelfOrder from "../models/SelfOrder.js";
 import Transporter from "../models/Transporter.js";
+import SellerCompany from "../models/SellerCompany.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -276,126 +277,156 @@ router.get("/company-report", async (req, res) => {
   }
 });
 
-router.get("/brokerage-report", async (req, res) => {
-  try {
-    const {
-      type, // 'buyer' or 'seller'
-      search,
-      buyerCompany,
-      supplierCompany,
-      startDate,
-      endDate,
-      page = 1,
-      limit = 10,
-    } = req.query;
+const getBrokerageReportData = async (query) => {
+  const {
+    type,
+    search,
+    buyerCompany,
+    supplierCompany,
+    startDate,
+    endDate,
+    ids,
+  } = query;
 
-    const skip = (parseInt(page) - 1) * parseInt(limit);
-    const pageSize = parseInt(limit);
+  const match = {};
 
-    const match = {};
+  if (ids && Array.isArray(ids) && ids.length > 0) {
+    match._id = { $in: ids.map((id) => new mongoose.Types.ObjectId(id)) };
+  }
 
-    // Base filters
-    if (search) {
-      const searchRegex = new RegExp(escapeRegex(search), "i");
-      match.$or = [
-        { lorryNumber: searchRegex },
-        { saudaNo: searchRegex },
-        { billNumber: searchRegex },
-        { buyerCompany: searchRegex },
-        { supplierCompany: searchRegex },
-        { commodity: searchRegex },
-      ];
+  if (search) {
+    const searchRegex = new RegExp(escapeRegex(search), "i");
+    match.$or = [
+      { lorryNumber: searchRegex },
+      { saudaNo: searchRegex },
+      { billNumber: searchRegex },
+      { buyerCompany: searchRegex },
+      { supplierCompany: searchRegex },
+      { commodity: searchRegex },
+    ];
+  }
+
+  if (buyerCompany) {
+    match.buyerCompany = { $regex: new RegExp(escapeRegex(buyerCompany), "i") };
+  }
+  if (supplierCompany) {
+    match.supplierCompany = {
+      $regex: new RegExp(escapeRegex(supplierCompany), "i"),
+    };
+  }
+
+  if (startDate || endDate) {
+    match.loadingDate = {};
+    if (startDate) match.loadingDate.$gte = new Date(startDate);
+    if (endDate) {
+      const end = new Date(endDate);
+      end.setHours(23, 59, 59, 999);
+      match.loadingDate.$lte = end;
     }
+  }
 
-    if (buyerCompany) {
-      match.buyerCompany = { $regex: new RegExp(escapeRegex(buyerCompany), "i") };
-    }
-    if (supplierCompany) {
-      match.supplierCompany = { $regex: new RegExp(escapeRegex(supplierCompany), "i") };
-    }
-
-    if (startDate || endDate) {
-      match.loadingDate = {};
-      if (startDate) match.loadingDate.$gte = new Date(startDate);
-      if (endDate) {
-        const end = new Date(endDate);
-        end.setHours(23, 59, 59, 999);
-        match.loadingDate.$lte = end;
-      }
-    }
-
-    const results = await LoadingEntry.aggregate([
-      { $match: match },
-      {
-        $facet: {
-          metadata: [{ $count: "total" }],
-          data: [
-            {
-              $lookup: {
-                from: "selforders",
-                localField: "saudaNo",
-                foreignField: "saudaNo",
-                as: "sauda",
-              },
-            },
-            { $unwind: { path: "$sauda", preserveNullAndEmptyArrays: true } },
-            {
-              $lookup: {
-                from: "sellers",
-                localField: "supplier",
-                foreignField: "_id",
-                as: "sellerInfo",
-              },
-            },
-            { $unwind: { path: "$sellerInfo", preserveNullAndEmptyArrays: true } },
-            {
-              $addFields: {
-                brokerageRate: {
-                  $cond: {
-                    if: { $eq: [type, "buyer"] },
-                    then: { $ifNull: ["$sauda.buyerBrokerage.brokerageBuyer", 0] },
-                    else: {
-                      $let: {
-                        vars: {
-                          saudaRate: { $ifNull: ["$sauda.buyerBrokerage.brokerageSupplier", 0] },
-                          sellerCommodity: {
-                            $filter: {
-                              input: { $ifNull: ["$sellerInfo.commodities", []] },
-                              as: "c",
-                              cond: { $eq: [{ $toLower: "$$c.name" }, { $toLower: "$commodity" }] },
-                            },
-                          },
-                        },
-                        in: {
-                          $cond: {
-                            if: { $gt: ["$$saudaRate", 0] },
-                            then: "$$saudaRate",
-                            else: { $ifNull: [{ $arrayElemAt: ["$$sellerCommodity.brokerage", 0] }, 0] },
-                          },
-                        },
+  const pipeline = [
+    { $match: match },
+    {
+      $lookup: {
+        from: "selforders",
+        localField: "saudaNo",
+        foreignField: "saudaNo",
+        as: "sauda",
+      },
+    },
+    { $unwind: { path: "$sauda", preserveNullAndEmptyArrays: true } },
+    {
+      $lookup: {
+        from: "sellers",
+        localField: "supplier",
+        foreignField: "_id",
+        as: "sellerInfo",
+      },
+    },
+    { $unwind: { path: "$sellerInfo", preserveNullAndEmptyArrays: true } },
+    {
+      $lookup: {
+        from: "sellercompanies",
+        localField: "supplierCompany",
+        foreignField: "companyName",
+        as: "sellerCompanyInfo",
+      },
+    },
+    { $unwind: { path: "$sellerCompanyInfo", preserveNullAndEmptyArrays: true } },
+    {
+      $addFields: {
+        sellerAccount: {
+          $ifNull: [
+            { $arrayElemAt: ["$sellerCompanyInfo.bankDetails.accountNumber", 0] },
+            "N/A",
+          ],
+        },
+        place: { $ifNull: ["$loadingFrom", "$consignee"] },
+        orderDate: { $ifNull: ["$sauda.poDate", "$loadingDate"] },
+        brokerageRate: {
+          $cond: {
+            if: { $eq: [type, "buyer"] },
+            then: { $ifNull: ["$sauda.buyerBrokerage.brokerageBuyer", 0] },
+            else: {
+              $let: {
+                vars: {
+                  saudaRate: {
+                    $ifNull: ["$sauda.buyerBrokerage.brokerageSupplier", 0],
+                  },
+                  sellerCommodity: {
+                    $filter: {
+                      input: { $ifNull: ["$sellerInfo.commodities", []] },
+                      as: "c",
+                      cond: {
+                        $eq: [
+                          { $toLower: "$$c.name" },
+                          { $toLower: "$commodity" },
+                        ],
                       },
+                    },
+                  },
+                },
+                in: {
+                  $cond: {
+                    if: { $gt: ["$$saudaRate", 0] },
+                    then: "$$saudaRate",
+                    else: {
+                      $ifNull: [
+                        { $arrayElemAt: ["$$sellerCommodity.brokerage", 0] },
+                        0,
+                      ],
                     },
                   },
                 },
               },
             },
-            {
-              $addFields: {
-                totalBrokerage: {
-                  $multiply: [{ $ifNull: ["$unloadingWeight", 0] }, "$brokerageRate"],
-                },
-              },
-            },
-            { $sort: { loadingDate: -1, createdAt: -1 } },
-            { $skip: skip },
-            { $limit: pageSize },
-          ],
+          },
         },
       },
-    ]);
+    },
+    {
+      $addFields: {
+        totalBrokerage: {
+          $multiply: [{ $ifNull: ["$unloadingWeight", 0] }, "$brokerageRate"],
+        },
+      },
+    },
+    { $sort: { loadingDate: -1, createdAt: -1 } },
+  ];
 
-    const data = results[0]?.data || [];
-    const total = results[0]?.metadata[0]?.total || 0;
+  return await LoadingEntry.aggregate(pipeline);
+};
+
+router.get("/brokerage-report", async (req, res) => {
+  try {
+    const { page = 1, limit = 10 } = req.query;
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+    const pageSize = parseInt(limit);
+
+    const allData = await getBrokerageReportData(req.query);
+    const total = allData.length;
+    const data = allData.slice(skip, skip + pageSize);
 
     res.json({
       data,
@@ -405,6 +436,134 @@ router.get("/brokerage-report", async (req, res) => {
     });
   } catch (error) {
     console.error("Brokerage report error:", error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+router.get("/brokerage-report/excel", async (req, res) => {
+  try {
+    const { ids } = req.query;
+    const queryParams = { ...req.query };
+    if (ids && typeof ids === "string") {
+      queryParams.ids = ids.split(",");
+    }
+
+    const data = await getBrokerageReportData(queryParams);
+
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet("Brokerage Report");
+
+    worksheet.columns = [
+      { header: "SL No", key: "slNo", width: 10 },
+      { header: "Order Date", key: "orderDate", width: 15 },
+      { header: "Seller Name", key: "sellerName", width: 30 },
+      { header: "Seller A/C", key: "sellerAccount", width: 20 },
+      { header: "Buyer Name", key: "buyerName", width: 30 },
+      { header: "PLACE", key: "place", width: 20 },
+      { header: "Item", key: "item", width: 20 },
+      { header: "Weight", key: "weight", width: 15 },
+      { header: "Rate", key: "rate", width: 15 },
+      { header: "Loading", key: "loading", width: 15 },
+      { header: "Unloading", key: "unloading", width: 15 },
+    ];
+
+    data.forEach((item, index) => {
+      worksheet.addRow({
+        slNo: index + 1,
+        orderDate: item.orderDate
+          ? new Date(item.orderDate).toLocaleDateString("en-GB")
+          : "N/A",
+        sellerName: item.supplierCompany || "N/A",
+        sellerAccount: item.sellerAccount || "N/A",
+        buyerName: item.buyerCompany || "N/A",
+        place: item.place || "N/A",
+        item: item.commodity || "N/A",
+        weight: item.unloadingWeight || 0,
+        rate: item.brokerageRate || 0,
+        loading: item.loadingWeight || 0,
+        unloading: item.unloadingWeight || 0,
+      });
+    });
+
+    worksheet.getRow(1).font = { bold: true };
+
+    res.setHeader(
+      "Content-Type",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    );
+    res.setHeader(
+      "Content-Disposition",
+      "attachment; filename=" + "Brokerage_Report.xlsx",
+    );
+
+    await workbook.xlsx.write(res);
+    res.end();
+  } catch (error) {
+    console.error("Brokerage excel export error:", error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+router.get("/brokerage-report/pdf", async (req, res) => {
+  try {
+    const { ids } = req.query;
+    const queryParams = { ...req.query };
+    if (ids && typeof ids === "string") {
+      queryParams.ids = ids.split(",");
+    }
+
+    const data = await getBrokerageReportData(queryParams);
+
+    const doc = new jsPDF();
+    doc.text("Brokerage Report", 14, 15);
+
+    const tableColumn = [
+      "SL No",
+      "Order Date",
+      "Seller Name",
+      "Seller A/C",
+      "Buyer Name",
+      "PLACE",
+      "Item",
+      "Weight",
+      "Rate",
+      "Loading",
+      "Unloading",
+    ];
+
+    const tableRows = data.map((item, index) => [
+      index + 1,
+      item.orderDate
+        ? new Date(item.orderDate).toLocaleDateString("en-GB")
+        : "N/A",
+      item.supplierCompany || "N/A",
+      item.sellerAccount || "N/A",
+      item.buyerCompany || "N/A",
+      item.place || "N/A",
+      item.commodity || "N/A",
+      item.unloadingWeight || 0,
+      item.brokerageRate || 0,
+      item.loadingWeight || 0,
+      item.unloadingWeight || 0,
+    ]);
+
+    autoTable(doc, {
+      head: [tableColumn],
+      body: tableRows,
+      startY: 20,
+      styles: { fontSize: 8 },
+      headStyles: { fillColor: [0, 128, 0] },
+    });
+
+    const pdfBuffer = doc.output("arraybuffer");
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader(
+      "Content-Disposition",
+      "attachment; filename=Brokerage_Report.pdf",
+    );
+    res.send(Buffer.from(pdfBuffer));
+  } catch (error) {
+    console.error("Brokerage pdf export error:", error);
     res.status(500).json({ message: error.message });
   }
 });

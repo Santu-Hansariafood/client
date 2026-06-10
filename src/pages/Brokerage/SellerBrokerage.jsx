@@ -9,7 +9,7 @@ import {
 import api from "../../utils/apiClient/apiClient";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import { FaDownload, FaTimes, FaHandshake } from "react-icons/fa";
+import { FaDownload, FaTimes, FaHandshake, FaFilePdf } from "react-icons/fa";
 import { AiOutlineSearch } from "react-icons/ai";
 import Loading from "../../common/Loading/Loading";
 import AdminPageShell from "../../common/AdminPageShell/AdminPageShell";
@@ -42,6 +42,7 @@ const SellerBrokerage = () => {
 
   const [sellerOptions, setSellerOptions] = useState([]);
   const [selectedSeller, setSelectedSeller] = useState(null);
+  const [selectedIds, setSelectedIds] = useState([]);
 
   useEffect(() => {
     const handler = setTimeout(() => {
@@ -114,6 +115,20 @@ const SellerBrokerage = () => {
     setCurrentPage(pageNumber);
   }, []);
 
+  const handleSelect = (id) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id],
+    );
+  };
+
+  const handleSelectAll = () => {
+    if (selectedIds.length === data.length) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(data.map((item) => item._id));
+    }
+  };
+
   const handleDownloadExcel = useCallback(async () => {
     if (exporting) return;
     let toastId;
@@ -127,10 +142,10 @@ const SellerBrokerage = () => {
         startDate: startDate || undefined,
         endDate: endDate || undefined,
         supplierCompany: selectedSeller?.value || undefined,
-        export: "excel"
+        ids: selectedIds.length > 0 ? selectedIds.join(",") : undefined,
       };
 
-      const response = await api.get(`${API_URL}/export`, {
+      const response = await api.get(`${API_URL}/excel`, {
         params,
         responseType: "blob",
         timeout: 120000,
@@ -156,9 +171,68 @@ const SellerBrokerage = () => {
     } finally {
       setExporting(false);
     }
-  }, [searchInput, startDate, endDate, selectedSeller, exporting]);
+  }, [searchInput, startDate, endDate, selectedSeller, selectedIds, exporting]);
+
+  const handleDownloadPDF = useCallback(async () => {
+    if (exporting) return;
+    const toastId = toast.loading("Preparing Seller Brokerage PDF...");
+    try {
+      setExporting(true);
+
+      const params = {
+        type: "seller",
+        search: searchInput?.trim() || undefined,
+        startDate: startDate || undefined,
+        endDate: endDate || undefined,
+        supplierCompany: selectedSeller?.value || undefined,
+        ids: selectedIds.length > 0 ? selectedIds.join(",") : undefined,
+      };
+
+      const response = await api.get(`${API_URL}/pdf`, {
+        params,
+        responseType: "blob",
+        timeout: 120000,
+      });
+
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute(
+        "download",
+        `SellerBrokerage_${new Date().toISOString().split("T")[0]}.pdf`,
+      );
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+
+      toast.update(toastId, {
+        render: "PDF downloaded successfully",
+        type: "success",
+        isLoading: false,
+        autoClose: 3000,
+      });
+    } catch (error) {
+      console.error("PDF Export Error:", error);
+      toast.update(toastId, {
+        render: "Failed to download PDF",
+        type: "error",
+        isLoading: false,
+        autoClose: 3000,
+      });
+    } finally {
+      setExporting(false);
+    }
+  }, [searchInput, startDate, endDate, selectedSeller, selectedIds, exporting]);
 
   const headers = [
+    <input
+      key="select-all"
+      type="checkbox"
+      className="rounded border-slate-300 text-orange-600 focus:ring-orange-500"
+      checked={data.length > 0 && selectedIds.length === data.length}
+      onChange={handleSelectAll}
+    />,
     "Sl No",
     "Loading Date",
     "Sauda No",
@@ -182,10 +256,20 @@ const SellerBrokerage = () => {
           : "N/A";
 
         return [
+          <input
+            key={`select-${item._id}`}
+            type="checkbox"
+            className="rounded border-slate-300 text-orange-600 focus:ring-orange-500"
+            checked={selectedIds.includes(item._id)}
+            onChange={() => handleSelect(item._id)}
+          />,
           <span key={`sl-${item._id}`} className="font-black text-slate-400">
             {slNo}
           </span>,
-          <span key={`date-${item._id}`} className="font-bold text-slate-600 text-[11px]">
+          <span
+            key={`date-${item._id}`}
+            className="font-bold text-slate-600 text-[11px]"
+          >
             {formattedDate}
           </span>,
           <span
@@ -194,28 +278,52 @@ const SellerBrokerage = () => {
           >
             {item.saudaNo || "N/A"}
           </span>,
-          <span key={`bill-${item._id}`} className="font-black text-slate-900 text-[11px] uppercase tracking-tighter">
+          <span
+            key={`bill-${item._id}`}
+            className="font-black text-slate-900 text-[11px] uppercase tracking-tighter"
+          >
             {item.billNumber || "---"}
           </span>,
-          <span key={`lorry-${item._id}`} className="font-bold text-slate-700 text-[11px]">
+          <span
+            key={`lorry-${item._id}`}
+            className="font-bold text-slate-700 text-[11px]"
+          >
             {item.lorryNumber || "N/A"}
           </span>,
-          <span key={`seller-${item._id}`} className="font-bold text-slate-800 text-[11px]">
+          <span
+            key={`seller-${item._id}`}
+            className="font-bold text-slate-800 text-[11px]"
+          >
             {item.supplierCompany || item?.sellerInfo?.sellerName || "N/A"}
           </span>,
-          <span key={`buyer-${item._id}`} className="font-medium text-slate-600 text-[11px]">
+          <span
+            key={`buyer-${item._id}`}
+            className="font-medium text-slate-600 text-[11px]"
+          >
             {item.buyerCompany || "N/A"}
           </span>,
-          <span key={`comm-${item._id}`} className="font-bold text-slate-700 text-[11px]">
+          <span
+            key={`comm-${item._id}`}
+            className="font-bold text-slate-700 text-[11px]"
+          >
             {item.commodity || "N/A"}
           </span>,
-          <span key={`lwt-${item._id}`} className="font-medium text-slate-600 text-[11px]">
+          <span
+            key={`lwt-${item._id}`}
+            className="font-medium text-slate-600 text-[11px]"
+          >
             {item.loadingWeight || 0} T
           </span>,
-          <span key={`uwt-${item._id}`} className="font-black text-slate-900 text-[11px]">
+          <span
+            key={`uwt-${item._id}`}
+            className="font-black text-slate-900 text-[11px]"
+          >
             {item.unloadingWeight || 0} T
           </span>,
-          <span key={`brk-${item._id}`} className="font-bold text-orange-600 text-[11px]">
+          <span
+            key={`brk-${item._id}`}
+            className="font-bold text-orange-600 text-[11px]"
+          >
             ₹{item.brokerageRate || 0} / T
           </span>,
           <span
@@ -226,7 +334,7 @@ const SellerBrokerage = () => {
           </span>,
         ];
       }),
-    [data, currentPage, itemsPerPage],
+    [data, currentPage, itemsPerPage, selectedIds],
   );
 
   return (
@@ -259,7 +367,15 @@ const SellerBrokerage = () => {
                     className="flex items-center gap-2 px-6 py-2.5 rounded-2xl bg-orange-600 text-white text-xs font-black uppercase tracking-widest hover:bg-orange-700 transition-all shadow-lg shadow-orange-200 active:scale-95 disabled:opacity-50"
                   >
                     <FaDownload size={14} />
-                    <span>{exporting ? "Exporting..." : "Export Excel"}</span>
+                    <span>{exporting ? "Exporting..." : "Excel"}</span>
+                  </button>
+                  <button
+                    onClick={handleDownloadPDF}
+                    disabled={exporting}
+                    className="flex items-center gap-2 px-6 py-2.5 rounded-2xl bg-slate-800 text-white text-xs font-black uppercase tracking-widest hover:bg-slate-900 transition-all shadow-lg shadow-slate-200 active:scale-95 disabled:opacity-50"
+                  >
+                    <FaFilePdf size={14} />
+                    <span>{exporting ? "Exporting..." : "PDF"}</span>
                   </button>
                   <div className="h-10 w-[1px] bg-slate-100 hidden sm:block mx-2" />
                   <div className="flex items-center gap-3">

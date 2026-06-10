@@ -46,6 +46,7 @@ const BuyerBrokerage = () => {
 
   const [buyerOptions, setBuyerOptions] = useState([]);
   const [selectedBuyer, setSelectedBuyer] = useState(null);
+  const [selectedIds, setSelectedIds] = useState([]);
 
   useEffect(() => {
     const handler = setTimeout(() => {
@@ -120,6 +121,20 @@ const BuyerBrokerage = () => {
     setCurrentPage(pageNumber);
   }, []);
 
+  const handleSelect = (id) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id],
+    );
+  };
+
+  const handleSelectAll = () => {
+    if (selectedIds.length === data.length) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(data.map((item) => item._id));
+    }
+  };
+
   const handleDownloadExcel = useCallback(async () => {
     if (exporting) return;
     let toastId;
@@ -133,10 +148,10 @@ const BuyerBrokerage = () => {
         startDate: startDate || undefined,
         endDate: endDate || undefined,
         buyerCompany: selectedBuyer?.value || undefined,
-        export: "excel"
+        ids: selectedIds.length > 0 ? selectedIds.join(",") : undefined,
       };
 
-      const response = await api.get(`${API_URL}/export`, {
+      const response = await api.get(`${API_URL}/excel`, {
         params,
         responseType: "blob",
         timeout: 120000,
@@ -162,56 +177,68 @@ const BuyerBrokerage = () => {
     } finally {
       setExporting(false);
     }
-  }, [searchInput, startDate, endDate, selectedBuyer, exporting]);
+  }, [searchInput, startDate, endDate, selectedBuyer, selectedIds, exporting]);
 
   const handleDownloadPDF = useCallback(async () => {
     if (exporting) return;
     const toastId = toast.loading("Preparing Buyer Brokerage PDF...");
     try {
       setExporting(true);
-      
+
       const params = {
         type: "buyer",
-        page: 1,
-        limit: 1000,
         search: searchInput?.trim() || undefined,
         startDate: startDate || undefined,
         endDate: endDate || undefined,
         buyerCompany: selectedBuyer?.value || undefined,
+        ids: selectedIds.length > 0 ? selectedIds.join(",") : undefined,
       };
 
-      const { data: resData } = await api.get(API_URL, { params });
-      const items = resData.data || [];
+      const response = await api.get(`${API_URL}/pdf`, {
+        params,
+        responseType: "blob",
+        timeout: 120000,
+      });
 
-      if (!items.length) {
-        toast.update(toastId, { render: "No data found to export", type: "info", isLoading: false, autoClose: 3000 });
-        return;
-      }
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute(
+        "download",
+        `BuyerBrokerage_${new Date().toISOString().split("T")[0]}.pdf`,
+      );
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
 
-      const entries = items.map(item => ({
-        ...item,
-        buyerBrokerage: item.totalBrokerage || 0
-      }));
-
-      const blob = await pdf(
-        <BuyerProformaInvoicePDF 
-          entries={entries} 
-          company={{ companyName: "Consolidated Buyer Report" }} 
-        />
-      ).toBlob();
-
-      downloadFile(blob, `BuyerBrokerage_${new Date().toISOString().split("T")[0]}.pdf`);
-      
-      toast.update(toastId, { render: "PDF downloaded successfully", type: "success", isLoading: false, autoClose: 3000 });
+      toast.update(toastId, {
+        render: "PDF downloaded successfully",
+        type: "success",
+        isLoading: false,
+        autoClose: 3000,
+      });
     } catch (error) {
       console.error("PDF Export Error:", error);
-      toast.update(toastId, { render: "Failed to download PDF", type: "error", isLoading: false, autoClose: 3000 });
+      toast.update(toastId, {
+        render: "Failed to download PDF",
+        type: "error",
+        isLoading: false,
+        autoClose: 3000,
+      });
     } finally {
       setExporting(false);
     }
-  }, [searchInput, startDate, endDate, selectedBuyer, exporting]);
+  }, [searchInput, startDate, endDate, selectedBuyer, selectedIds, exporting]);
 
   const headers = [
+    <input
+      key="select-all"
+      type="checkbox"
+      className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+      checked={data.length > 0 && selectedIds.length === data.length}
+      onChange={handleSelectAll}
+    />,
     "Sl No",
     "Loading Date",
     "Sauda No",
@@ -235,10 +262,20 @@ const BuyerBrokerage = () => {
           : "N/A";
 
         return [
+          <input
+            key={`select-${item._id}`}
+            type="checkbox"
+            className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+            checked={selectedIds.includes(item._id)}
+            onChange={() => handleSelect(item._id)}
+          />,
           <span key={`sl-${item._id}`} className="font-black text-slate-400">
             {slNo}
           </span>,
-          <span key={`date-${item._id}`} className="font-bold text-slate-600 text-[11px]">
+          <span
+            key={`date-${item._id}`}
+            className="font-bold text-slate-600 text-[11px]"
+          >
             {formattedDate}
           </span>,
           <span
@@ -247,28 +284,52 @@ const BuyerBrokerage = () => {
           >
             {item.saudaNo || "N/A"}
           </span>,
-          <span key={`bill-${item._id}`} className="font-black text-slate-900 text-[11px] uppercase tracking-tighter">
+          <span
+            key={`bill-${item._id}`}
+            className="font-black text-slate-900 text-[11px] uppercase tracking-tighter"
+          >
             {item.billNumber || "---"}
           </span>,
-          <span key={`lorry-${item._id}`} className="font-bold text-slate-700 text-[11px]">
+          <span
+            key={`lorry-${item._id}`}
+            className="font-bold text-slate-700 text-[11px]"
+          >
             {item.lorryNumber || "N/A"}
           </span>,
-          <span key={`buyer-${item._id}`} className="font-bold text-slate-800 text-[11px]">
+          <span
+            key={`buyer-${item._id}`}
+            className="font-bold text-slate-800 text-[11px]"
+          >
             {item.buyerCompany || "N/A"}
           </span>,
-          <span key={`seller-${item._id}`} className="font-medium text-slate-600 text-[11px]">
+          <span
+            key={`seller-${item._id}`}
+            className="font-medium text-slate-600 text-[11px]"
+          >
             {item.supplierCompany || "N/A"}
           </span>,
-          <span key={`comm-${item._id}`} className="font-bold text-slate-700 text-[11px]">
+          <span
+            key={`comm-${item._id}`}
+            className="font-bold text-slate-700 text-[11px]"
+          >
             {item.commodity || "N/A"}
           </span>,
-          <span key={`lwt-${item._id}`} className="font-medium text-slate-600 text-[11px]">
+          <span
+            key={`lwt-${item._id}`}
+            className="font-medium text-slate-600 text-[11px]"
+          >
             {item.loadingWeight || 0} T
           </span>,
-          <span key={`uwt-${item._id}`} className="font-black text-slate-900 text-[11px]">
+          <span
+            key={`uwt-${item._id}`}
+            className="font-black text-slate-900 text-[11px]"
+          >
             {item.unloadingWeight || 0} T
           </span>,
-          <span key={`brk-${item._id}`} className="font-bold text-indigo-600 text-[11px]">
+          <span
+            key={`brk-${item._id}`}
+            className="font-bold text-indigo-600 text-[11px]"
+          >
             ₹{item.brokerageRate || 0} / T
           </span>,
           <span
@@ -279,7 +340,7 @@ const BuyerBrokerage = () => {
           </span>,
         ];
       }),
-    [data, currentPage, itemsPerPage],
+    [data, currentPage, itemsPerPage, selectedIds],
   );
 
   return (
