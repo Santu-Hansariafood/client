@@ -655,9 +655,9 @@ router.get("/brokerage-report/pdf", async (req, res) => {
     const hansariaBankDetails = {
       accountHolderName: "HANSARIA FOOD PRIVATE LIMITED",
       bankName: "HDFC BANK",
-      accountNumber: "50200062400035",
-      ifscCode: "HDFC0000014",
-      branch: "Salt Lake Sector 1, Kolkata",
+      accountNumber: "627905015689",
+      ifscCode: "ICIC0006279",
+      branch: "BURRA BAZAR Branch",
     };
 
     // Calculate Total Brokerage
