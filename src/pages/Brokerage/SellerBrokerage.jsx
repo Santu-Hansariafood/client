@@ -13,6 +13,7 @@ import { FaDownload, FaTimes, FaHandshake } from "react-icons/fa";
 import { AiOutlineSearch } from "react-icons/ai";
 import Loading from "../../common/Loading/Loading";
 import AdminPageShell from "../../common/AdminPageShell/AdminPageShell";
+import DataDropdown from "../../common/DataDropdown/DataDropdown";
 
 const Tables = lazy(() => import("../../common/Tables/Tables"));
 const Pagination = lazy(
@@ -22,7 +23,7 @@ const DateSelector = lazy(
   () => import("../../common/DateSelector/DateSelector"),
 );
 
-const API_URL = "/loading-entries";
+const API_URL = "/loading-entries/brokerage-report";
 
 const SellerBrokerage = () => {
   const navigate = useNavigate();
@@ -30,71 +31,69 @@ const SellerBrokerage = () => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [totalItems, setTotalItems] = useState(0);
-  const [saudaRateMap, setSaudaRateMap] = useState({});
 
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
-  const [reloadFlag, setReloadFlag] = useState(0);
   const [searchInput, setSearchInput] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [exporting, setExporting] = useState(false);
 
+  const [sellerOptions, setSellerOptions] = useState([]);
+  const [selectedSeller, setSelectedSeller] = useState(null);
+
+  useEffect(() => {
+    const fetchFilters = async () => {
+      try {
+        const response = await api.get("/loading-entries/filters");
+        const sellers = (response.data?.suppliers || []).map(s => ({
+          value: s,
+          label: s
+        })).sort((a, b) => a.label.localeCompare(b.label));
+        setSellerOptions(sellers);
+      } catch (error) {
+        console.error("Error fetching filters:", error);
+      }
+    };
+    fetchFilters();
+  }, []);
+
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const page = currentPage || 1;
-      const search = searchInput?.trim() || "";
-
-      const queryParams = new URLSearchParams({
-        page,
+      const params = {
+        type: "seller",
+        page: currentPage,
         limit: itemsPerPage,
-        search,
-        sortBy: "loadingDate",
-        sortOrder: "desc",
-        startDate: startDate || "",
-        endDate: endDate || "",
-      }).toString();
+        search: searchInput?.trim() || undefined,
+        startDate: startDate || undefined,
+        endDate: endDate || undefined,
+        supplierCompany: selectedSeller?.value || undefined,
+      };
 
-      const [response, ordersRes] = await Promise.all([
-        api.get(`${API_URL}?${queryParams}`),
-        api.get("/self-order", { params: { limit: 0 } })
-      ]);
+      const response = await api.get(API_URL, { params });
+      const resData = response.data || {};
 
-      const orderData = response.data || {};
-      const items = Array.isArray(orderData.data)
-        ? orderData.data
-        : Array.isArray(orderData)
-          ? orderData
-          : [];
-      const total = orderData.total || orderData.totalItems || items.length;
-
-      const rates = {};
-      (ordersRes.data?.data || ordersRes.data || []).forEach(o => {
-        rates[o.saudaNo] = o.buyerBrokerage?.brokerageSupplier || 0;
-      });
-
-      setSaudaRateMap(rates);
-      setData(items);
-      setTotalItems(total);
+      setData(resData.data || []);
+      setTotalItems(resData.total || 0);
     } catch (error) {
       console.error("Fetch error:", error);
       toast.error("Failed to fetch brokerage data");
     } finally {
       setLoading(false);
     }
-  }, [currentPage, itemsPerPage, searchInput, startDate, endDate]);
+  }, [currentPage, itemsPerPage, searchInput, startDate, endDate, selectedSeller]);
 
   useEffect(() => {
     fetchData();
-  }, [fetchData, reloadFlag]);
+  }, [fetchData]);
 
   const handleClearFilters = () => {
     setSearchInput("");
     setStartDate("");
     setEndDate("");
+    setSelectedSeller(null);
     setCurrentPage(1);
-    setReloadFlag((prev) => prev + 1);
   };
 
   const handlePageChange = useCallback((pageNumber) => {
@@ -109,12 +108,15 @@ const SellerBrokerage = () => {
       toastId = toast.loading("Preparing Seller Brokerage Excel...");
 
       const params = {
-        search: searchInput?.trim() || "",
-        startDate: startDate || "",
-        endDate: endDate || "",
+        type: "seller",
+        search: searchInput?.trim() || undefined,
+        startDate: startDate || undefined,
+        endDate: endDate || undefined,
+        supplierCompany: selectedSeller?.value || undefined,
+        export: "excel"
       };
 
-      const response = await api.get(`${API_URL}/export/excel`, {
+      const response = await api.get(`${API_URL}/export`, {
         params,
         responseType: "blob",
         timeout: 120000,
@@ -140,12 +142,13 @@ const SellerBrokerage = () => {
     } finally {
       setExporting(false);
     }
-  }, [searchInput, startDate, endDate, exporting]);
+  }, [searchInput, startDate, endDate, selectedSeller, exporting]);
 
   const headers = [
     "Sl No",
     "Loading Date",
     "Sauda No",
+    "Bill No",
     "Lorry No",
     "Seller Company",
     "Buyer Company",
@@ -164,53 +167,52 @@ const SellerBrokerage = () => {
           ? new Date(item.loadingDate).toLocaleDateString("en-GB")
           : "N/A";
 
-        const sellerBrokeragePerTon = saudaRateMap[item.saudaNo] || 0;
-        const unloadingWeight = item.unloadingWeight || 0;
-        const totalSellerBrokerage = (sellerBrokeragePerTon * unloadingWeight).toFixed(2);
-
         return [
           <span key={`sl-${item._id}`} className="font-black text-slate-400">
             {slNo}
           </span>,
-          <span key={`date-${item._id}`} className="font-bold text-slate-600">
+          <span key={`date-${item._id}`} className="font-bold text-slate-600 text-[11px]">
             {formattedDate}
           </span>,
           <span
             key={`sauda-${item._id}`}
-            className="font-black text-emerald-600 bg-emerald-50 px-2 py-1 rounded-lg border border-emerald-100"
+            className="font-black text-emerald-600 bg-emerald-50 px-2 py-1 rounded-lg border border-emerald-100 text-[11px]"
           >
             {item.saudaNo || "N/A"}
           </span>,
-          <span key={`lorry-${item._id}`} className="font-bold text-slate-700">
+          <span key={`bill-${item._id}`} className="font-black text-slate-900 text-[11px] uppercase tracking-tighter">
+            {item.billNumber || "---"}
+          </span>,
+          <span key={`lorry-${item._id}`} className="font-bold text-slate-700 text-[11px]">
             {item.lorryNumber || "N/A"}
           </span>,
-          <span key={`seller-${item._id}`} className="font-bold text-slate-800">
-            {item.supplierCompany || item?.supplier?.sellerName || "N/A"}
+          <span key={`seller-${item._id}`} className="font-bold text-slate-800 text-[11px]">
+            {item.supplierCompany || item?.sellerInfo?.sellerName || "N/A"}
           </span>,
-          <span key={`buyer-${item._id}`} className="font-medium text-slate-600">
+          <span key={`buyer-${item._id}`} className="font-medium text-slate-600 text-[11px]">
             {item.buyerCompany || "N/A"}
           </span>,
-          <span key={`comm-${item._id}`} className="font-bold text-slate-700">
+          <span key={`comm-${item._id}`} className="font-bold text-slate-700 text-[11px]">
             {item.commodity || "N/A"}
           </span>,
-          <span key={`lwt-${item._id}`} className="font-medium text-slate-600">
+          <span key={`lwt-${item._id}`} className="font-medium text-slate-600 text-[11px]">
             {item.loadingWeight || 0} T
           </span>,
-          <span key={`uwt-${item._id}`} className="font-black text-slate-900">
-            {unloadingWeight} T
+          <span key={`uwt-${item._id}`} className="font-black text-slate-900 text-[11px]">
+            {item.unloadingWeight || 0} T
           </span>,
-          <span key={`brk-${item._id}`} className="font-bold text-orange-600">
-            ₹{sellerBrokeragePerTon} / Ton
+          <span key={`brk-${item._id}`} className="font-bold text-orange-600 text-[11px]">
+            ₹{item.brokerageRate || 0} / T
           </span>,
           <span
             key={`total-${item._id}`}
-            className="font-black text-orange-700 bg-orange-50 px-2 py-1 rounded-lg border border-orange-100"
+            className="font-black text-orange-700 bg-orange-50 px-2 py-1 rounded-lg border border-orange-100 text-[11px]"
           >
-            ₹{totalSellerBrokerage}
+            ₹{item.totalBrokerage?.toFixed(2) || "0.00"}
           </span>,
         ];
       }),
-    [data, currentPage, itemsPerPage, saudaRateMap],
+    [data, currentPage, itemsPerPage],
   );
 
   return (
@@ -247,6 +249,17 @@ const SellerBrokerage = () => {
                   </button>
                   <div className="h-10 w-[1px] bg-slate-100 hidden sm:block mx-2" />
                   <div className="flex items-center gap-3">
+                    <div className="flex flex-col min-w-[200px]">
+                      <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1 ml-1">
+                        Select Seller
+                      </span>
+                      <DataDropdown
+                        options={sellerOptions}
+                        selectedOptions={selectedSeller}
+                        onChange={setSelectedSeller}
+                        placeholder="All Sellers"
+                      />
+                    </div>
                     <div className="flex flex-col">
                       <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1 ml-1">
                         Start Date
@@ -262,7 +275,7 @@ const SellerBrokerage = () => {
                       </span>
                       <DateSelector selectedDate={endDate} onChange={setEndDate} />
                     </div>
-                    {(startDate || endDate || searchInput) && (
+                    {(startDate || endDate || searchInput || selectedSeller) && (
                       <button
                         onClick={handleClearFilters}
                         className="mt-5 p-2 rounded-xl bg-red-50 text-red-500 hover:bg-red-100 transition-all shadow-sm"

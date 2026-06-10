@@ -276,6 +276,137 @@ router.get("/company-report", async (req, res) => {
   }
 });
 
+router.get("/brokerage-report", async (req, res) => {
+  try {
+    const {
+      type, // 'buyer' or 'seller'
+      search,
+      buyerCompany,
+      supplierCompany,
+      startDate,
+      endDate,
+      page = 1,
+      limit = 10,
+    } = req.query;
+
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+    const pageSize = parseInt(limit);
+
+    const match = {};
+
+    // Base filters
+    if (search) {
+      const searchRegex = new RegExp(escapeRegex(search), "i");
+      match.$or = [
+        { lorryNumber: searchRegex },
+        { saudaNo: searchRegex },
+        { billNumber: searchRegex },
+        { buyerCompany: searchRegex },
+        { supplierCompany: searchRegex },
+        { commodity: searchRegex },
+      ];
+    }
+
+    if (buyerCompany) {
+      match.buyerCompany = { $regex: new RegExp(escapeRegex(buyerCompany), "i") };
+    }
+    if (supplierCompany) {
+      match.supplierCompany = { $regex: new RegExp(escapeRegex(supplierCompany), "i") };
+    }
+
+    if (startDate || endDate) {
+      match.loadingDate = {};
+      if (startDate) match.loadingDate.$gte = new Date(startDate);
+      if (endDate) {
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+        match.loadingDate.$lte = end;
+      }
+    }
+
+    const pipeline = [
+      { $match: match },
+      {
+        $lookup: {
+          from: "selforders",
+          localField: "saudaNo",
+          foreignField: "saudaNo",
+          as: "sauda",
+        },
+      },
+      { $unwind: { path: "$sauda", preserveNullAndEmptyArrays: true } },
+      {
+        $lookup: {
+          from: "sellers",
+          localField: "supplier",
+          foreignField: "_id",
+          as: "sellerInfo",
+        },
+      },
+      { $unwind: { path: "$sellerInfo", preserveNullAndEmptyArrays: true } },
+      {
+        $addFields: {
+          brokerageRate: {
+            $cond: {
+              if: { $eq: [type, "buyer"] },
+              then: { $ifNull: ["$sauda.buyerBrokerage.brokerageBuyer", 0] },
+              else: {
+                $let: {
+                  vars: {
+                    saudaRate: { $ifNull: ["$sauda.buyerBrokerage.brokerageSupplier", 0] },
+                    sellerCommodity: {
+                      $filter: {
+                        input: { $ifNull: ["$sellerInfo.commodities", []] },
+                        as: "c",
+                        cond: { $eq: [{ $toLower: "$$c.name" }, { $toLower: "$commodity" }] },
+                      },
+                    },
+                  },
+                  in: {
+                    $cond: {
+                      if: { $gt: ["$$saudaRate", 0] },
+                      then: "$$saudaRate",
+                      else: { $ifNull: [{ $arrayElemAt: ["$$sellerCommodity.brokerage", 0] }, 0] },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+      {
+        $addFields: {
+          totalBrokerage: {
+            $multiply: [{ $ifNull: ["$unloadingWeight", 0] }, "$brokerageRate"],
+          },
+        },
+      },
+      { $sort: { loadingDate: -1, createdAt: -1 } },
+      {
+        $facet: {
+          metadata: [{ $count: "total" }],
+          data: [{ $skip: skip }, { $limit: pageSize }],
+        },
+      },
+    ];
+
+    const results = await LoadingEntry.aggregate(pipeline);
+    const data = results[0]?.data || [];
+    const total = results[0]?.metadata[0]?.total || 0;
+
+    res.json({
+      data,
+      total,
+      page: parseInt(page),
+      totalPages: Math.ceil(total / pageSize),
+    });
+  } catch (error) {
+    console.error("Brokerage report error:", error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
 router.get("/filters", async (req, res) => {
   try {
     const role = req.user?.role;

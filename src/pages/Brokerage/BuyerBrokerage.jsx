@@ -17,6 +17,7 @@ import { fetchAllPages } from "../../utils/apiClient/fetchAllPages";
 import { pdf } from "@react-pdf/renderer";
 import BuyerProformaInvoicePDF from "../../components/BuyerDashboard/BuyerProformaInvoicePDF";
 import { downloadFile } from "../../utils/fileDownloader";
+import DataDropdown from "../../common/DataDropdown/DataDropdown";
 
 const Tables = lazy(() => import("../../common/Tables/Tables"));
 const Pagination = lazy(
@@ -26,7 +27,7 @@ const DateSelector = lazy(
   () => import("../../common/DateSelector/DateSelector"),
 );
 
-const API_URL = "/loading-entries";
+const API_URL = "/loading-entries/brokerage-report";
 
 const BuyerBrokerage = () => {
   const navigate = useNavigate();
@@ -34,71 +35,69 @@ const BuyerBrokerage = () => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [totalItems, setTotalItems] = useState(0);
-  const [saudaRateMap, setSaudaRateMap] = useState({});
 
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
-  const [reloadFlag, setReloadFlag] = useState(0);
   const [searchInput, setSearchInput] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [exporting, setExporting] = useState(false);
 
+  const [buyerOptions, setBuyerOptions] = useState([]);
+  const [selectedBuyer, setSelectedBuyer] = useState(null);
+
+  useEffect(() => {
+    const fetchFilters = async () => {
+      try {
+        const response = await api.get("/loading-entries/filters");
+        const buyers = (response.data?.buyers || []).map(b => ({
+          value: b,
+          label: b
+        })).sort((a, b) => a.label.localeCompare(b.label));
+        setBuyerOptions(buyers);
+      } catch (error) {
+        console.error("Error fetching filters:", error);
+      }
+    };
+    fetchFilters();
+  }, []);
+
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const page = currentPage || 1;
-      const search = searchInput?.trim() || "";
-
-      const queryParams = new URLSearchParams({
-        page,
+      const params = {
+        type: "buyer",
+        page: currentPage,
         limit: itemsPerPage,
-        search,
-        sortBy: "loadingDate",
-        sortOrder: "desc",
-        startDate: startDate || "",
-        endDate: endDate || "",
-      }).toString();
+        search: searchInput?.trim() || undefined,
+        startDate: startDate || undefined,
+        endDate: endDate || undefined,
+        buyerCompany: selectedBuyer?.value || undefined,
+      };
 
-      const [response, ordersRes] = await Promise.all([
-        api.get(`${API_URL}?${queryParams}`),
-        api.get("/self-order", { params: { limit: 0 } })
-      ]);
-
-      const orderData = response.data || {};
-      const items = Array.isArray(orderData.data)
-        ? orderData.data
-        : Array.isArray(orderData)
-          ? orderData
-          : [];
-      const total = orderData.total || orderData.totalItems || items.length;
-
-      const rates = {};
-      (ordersRes.data?.data || ordersRes.data || []).forEach(o => {
-        rates[o.saudaNo] = o.buyerBrokerage?.brokerageBuyer || 0;
-      });
-
-      setSaudaRateMap(rates);
-      setData(items);
-      setTotalItems(total);
+      const response = await api.get(API_URL, { params });
+      const resData = response.data || {};
+      
+      setData(resData.data || []);
+      setTotalItems(resData.total || 0);
     } catch (error) {
       console.error("Fetch error:", error);
       toast.error("Failed to fetch brokerage data");
     } finally {
       setLoading(false);
     }
-  }, [currentPage, itemsPerPage, searchInput, startDate, endDate]);
+  }, [currentPage, itemsPerPage, searchInput, startDate, endDate, selectedBuyer]);
 
   useEffect(() => {
     fetchData();
-  }, [fetchData, reloadFlag]);
+  }, [fetchData]);
 
   const handleClearFilters = () => {
     setSearchInput("");
     setStartDate("");
     setEndDate("");
+    setSelectedBuyer(null);
     setCurrentPage(1);
-    setReloadFlag((prev) => prev + 1);
   };
 
   const handlePageChange = useCallback((pageNumber) => {
@@ -113,12 +112,15 @@ const BuyerBrokerage = () => {
       toastId = toast.loading("Preparing Buyer Brokerage Excel...");
 
       const params = {
-        search: searchInput?.trim() || "",
-        startDate: startDate || "",
-        endDate: endDate || "",
+        type: "buyer",
+        search: searchInput?.trim() || undefined,
+        startDate: startDate || undefined,
+        endDate: endDate || undefined,
+        buyerCompany: selectedBuyer?.value || undefined,
+        export: "excel"
       };
 
-      const response = await api.get(`${API_URL}/export/excel`, {
+      const response = await api.get(`${API_URL}/export`, {
         params,
         responseType: "blob",
         timeout: 120000,
@@ -144,7 +146,7 @@ const BuyerBrokerage = () => {
     } finally {
       setExporting(false);
     }
-  }, [searchInput, startDate, endDate, exporting]);
+  }, [searchInput, startDate, endDate, selectedBuyer, exporting]);
 
   const handleDownloadPDF = useCallback(async () => {
     if (exporting) return;
@@ -153,25 +155,26 @@ const BuyerBrokerage = () => {
       setExporting(true);
       
       const params = {
+        type: "buyer",
         page: 1,
-        limit: 1000, // Get more for the PDF
-        search: searchInput?.trim() || "",
-        startDate: startDate || "",
-        endDate: endDate || "",
+        limit: 1000,
+        search: searchInput?.trim() || undefined,
+        startDate: startDate || undefined,
+        endDate: endDate || undefined,
+        buyerCompany: selectedBuyer?.value || undefined,
       };
 
       const { data: resData } = await api.get(API_URL, { params });
-      const items = resData.data || resData || [];
+      const items = resData.data || [];
 
       if (!items.length) {
         toast.update(toastId, { render: "No data found to export", type: "info", isLoading: false, autoClose: 3000 });
         return;
       }
 
-      // Prepare entries with brokerage calculated
       const entries = items.map(item => ({
         ...item,
-        buyerBrokerage: (saudaRateMap[item.saudaNo] || 0) * (item.unloadingWeight || 0)
+        buyerBrokerage: item.totalBrokerage || 0
       }));
 
       const blob = await pdf(
@@ -190,12 +193,13 @@ const BuyerBrokerage = () => {
     } finally {
       setExporting(false);
     }
-  }, [searchInput, startDate, endDate, exporting, saudaRateMap]);
+  }, [searchInput, startDate, endDate, selectedBuyer, exporting]);
 
   const headers = [
     "Sl No",
     "Loading Date",
     "Sauda No",
+    "Bill No",
     "Lorry No",
     "Buyer Company",
     "Seller Company",
@@ -214,53 +218,52 @@ const BuyerBrokerage = () => {
           ? new Date(item.loadingDate).toLocaleDateString("en-GB")
           : "N/A";
 
-        const buyerBrokeragePerTon = saudaRateMap[item.saudaNo] || 0;
-        const unloadingWeight = item.unloadingWeight || 0;
-        const totalBuyerBrokerage = (buyerBrokeragePerTon * unloadingWeight).toFixed(2);
-
         return [
           <span key={`sl-${item._id}`} className="font-black text-slate-400">
             {slNo}
           </span>,
-          <span key={`date-${item._id}`} className="font-bold text-slate-600">
+          <span key={`date-${item._id}`} className="font-bold text-slate-600 text-[11px]">
             {formattedDate}
           </span>,
           <span
             key={`sauda-${item._id}`}
-            className="font-black text-emerald-600 bg-emerald-50 px-2 py-1 rounded-lg border border-emerald-100"
+            className="font-black text-emerald-600 bg-emerald-50 px-2 py-1 rounded-lg border border-emerald-100 text-[11px]"
           >
             {item.saudaNo || "N/A"}
           </span>,
-          <span key={`lorry-${item._id}`} className="font-bold text-slate-700">
+          <span key={`bill-${item._id}`} className="font-black text-slate-900 text-[11px] uppercase tracking-tighter">
+            {item.billNumber || "---"}
+          </span>,
+          <span key={`lorry-${item._id}`} className="font-bold text-slate-700 text-[11px]">
             {item.lorryNumber || "N/A"}
           </span>,
-          <span key={`buyer-${item._id}`} className="font-bold text-slate-800">
+          <span key={`buyer-${item._id}`} className="font-bold text-slate-800 text-[11px]">
             {item.buyerCompany || "N/A"}
           </span>,
-          <span key={`seller-${item._id}`} className="font-medium text-slate-600">
+          <span key={`seller-${item._id}`} className="font-medium text-slate-600 text-[11px]">
             {item.supplierCompany || "N/A"}
           </span>,
-          <span key={`comm-${item._id}`} className="font-bold text-slate-700">
+          <span key={`comm-${item._id}`} className="font-bold text-slate-700 text-[11px]">
             {item.commodity || "N/A"}
           </span>,
-          <span key={`lwt-${item._id}`} className="font-medium text-slate-600">
+          <span key={`lwt-${item._id}`} className="font-medium text-slate-600 text-[11px]">
             {item.loadingWeight || 0} T
           </span>,
-          <span key={`uwt-${item._id}`} className="font-black text-slate-900">
-            {unloadingWeight} T
+          <span key={`uwt-${item._id}`} className="font-black text-slate-900 text-[11px]">
+            {item.unloadingWeight || 0} T
           </span>,
-          <span key={`brk-${item._id}`} className="font-bold text-indigo-600">
-            ₹{buyerBrokeragePerTon} / Ton
+          <span key={`brk-${item._id}`} className="font-bold text-indigo-600 text-[11px]">
+            ₹{item.brokerageRate || 0} / T
           </span>,
           <span
             key={`total-${item._id}`}
-            className="font-black text-indigo-700 bg-indigo-50 px-2 py-1 rounded-lg border border-indigo-100"
+            className="font-black text-indigo-700 bg-indigo-50 px-2 py-1 rounded-lg border border-indigo-100 text-[11px]"
           >
-            ₹{totalBuyerBrokerage}
+            ₹{item.totalBrokerage?.toFixed(2) || "0.00"}
           </span>,
         ];
       }),
-    [data, currentPage, itemsPerPage, saudaRateMap],
+    [data, currentPage, itemsPerPage],
   );
 
   return (
@@ -305,6 +308,17 @@ const BuyerBrokerage = () => {
                   </button>
                   <div className="h-10 w-[1px] bg-slate-100 hidden sm:block mx-2" />
                   <div className="flex items-center gap-3">
+                    <div className="flex flex-col min-w-[200px]">
+                      <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1 ml-1">
+                        Select Buyer
+                      </span>
+                      <DataDropdown
+                        options={buyerOptions}
+                        selectedOptions={selectedBuyer}
+                        onChange={setSelectedBuyer}
+                        placeholder="All Buyers"
+                      />
+                    </div>
                     <div className="flex flex-col">
                       <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1 ml-1">
                         Start Date
@@ -320,7 +334,7 @@ const BuyerBrokerage = () => {
                       </span>
                       <DateSelector selectedDate={endDate} onChange={setEndDate} />
                     </div>
-                    {(startDate || endDate || searchInput) && (
+                    {(startDate || endDate || searchInput || selectedBuyer) && (
                       <button
                         onClick={handleClearFilters}
                         className="mt-5 p-2 rounded-xl bg-red-50 text-red-500 hover:bg-red-100 transition-all shadow-sm"
