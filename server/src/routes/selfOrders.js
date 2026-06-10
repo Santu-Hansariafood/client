@@ -871,18 +871,19 @@ router.get("/pending/list", async (req, res) => {
     const startDate = req.query.startDate;
     const endDate = req.query.endDate;
     const buyerCompany = req.query.buyerCompany;
-    const sellerCompany = req.query.sellerCompany;
+    const supplierCompany = req.query.sellerCompany;
     const mobile = req.query.mobile;
     const userRole = req.query.userRole;
-    const all = req.query.all === "true";
+    const isComplete = req.query.all === "true" || req.query.status === "closed";
 
     let query = {};
-    if (!all) {
+    if (isComplete) {
+      query.status = "closed";
+    } else {
       query.status = "active";
       query.$or = [
         { pendingQuantity: { $gt: 0 } },
         { pendingQuantity: { $exists: false } },
-        { pendingQuantity: 0 },
       ];
     }
 
@@ -903,7 +904,9 @@ router.get("/pending/list", async (req, res) => {
       if (seller) {
         mobileConditions.push({ supplier: seller._id });
       }
-      query.$and = [{ $or: mobileConditions }];
+      
+      if (!query.$and) query.$and = [];
+      query.$and.push({ $or: mobileConditions });
     }
 
     if (search) {
@@ -916,25 +919,18 @@ router.get("/pending/list", async (req, res) => {
           { commodity: { $regex: searchRegex } },
         ],
       };
-      if (!query.$and) {
-        query.$and = [searchOr];
-      } else {
-        query.$and.push(searchOr);
-      }
+      if (!query.$and) query.$and = [];
+      query.$and.push(searchOr);
     }
 
     if (buyerCompany) {
-      if (!query.$and) {
-        query.$and = [];
-      }
-      query.$and.push({ buyerCompany: buyerCompany });
+      if (!query.$and) query.$and = [];
+      query.$and.push({ buyerCompany: { $regex: new RegExp(escapeRegex(buyerCompany), "i") } });
     }
 
-    if (sellerCompany) {
-      if (!query.$and) {
-        query.$and = [];
-      }
-      query.$and.push({ supplierCompany: sellerCompany });
+    if (supplierCompany) {
+      if (!query.$and) query.$and = [];
+      query.$and.push({ supplierCompany: { $regex: new RegExp(escapeRegex(supplierCompany), "i") } });
     }
 
     if (startDate || endDate) {
@@ -952,16 +948,8 @@ router.get("/pending/list", async (req, res) => {
         $or: [{ poDate: dateFilter }, { createdAt: dateFilter }],
       };
 
-      if (query.$or || query.$and) {
-        query.$and = query.$and || [];
-        if (query.$or) {
-          query.$and.push({ $or: query.$or });
-          delete query.$or;
-        }
-        query.$and.push(dateQuery);
-      } else {
-        Object.assign(query, dateQuery);
-      }
+      if (!query.$and) query.$and = [];
+      query.$and.push(dateQuery);
     }
 
     const pipeline = [
@@ -1005,8 +993,10 @@ router.get("/pending/list", async (req, res) => {
       },
     ];
 
-    const items = await SelfOrder.aggregate(pipeline);
-    const total = await SelfOrder.countDocuments(query);
+    const [items, total] = await Promise.all([
+      SelfOrder.aggregate(pipeline),
+      SelfOrder.countDocuments(query)
+    ]);
 
     res.json({
       data: items,
@@ -1015,6 +1005,7 @@ router.get("/pending/list", async (req, res) => {
       totalPages: Math.ceil(total / limit),
     });
   } catch (error) {
+    console.error("Pending list error:", error);
     res.status(500).json({ message: error.message });
   }
 });

@@ -90,11 +90,10 @@ const PendingLoadingList = () => {
   const mobile = location.state?.mobile || authMobile;
 
   const [data, setData] = useState([]);
-  const [allData, setAllData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [totalItems, setTotalItems] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(10);
+  const itemsPerPage = 10;
   const [searchInput, setSearchInput] = useState("");
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
@@ -103,170 +102,69 @@ const PendingLoadingList = () => {
   const [selectedSellerName, setSelectedSellerName] = useState(null);
   const [selectedConsignee, setSelectedConsignee] = useState(null);
 
-  useEffect(() => {
-    if (location.state?.sellerCompany) {
-      setSelectedSellerCompany({
-        value: location.state.sellerCompany,
-        label: location.state.sellerCompany,
-      });
-    }
-    if (location.state?.consignee) {
-      setSelectedConsignee({
-        value: location.state.consignee,
-        label: location.state.consignee,
-      });
-    }
-  }, [location.state]);
-
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await api.get("/self-order/pending/list", {
-        params: {
-          page: 1,
-          limit: 1000,
-          userRole,
-          mobile,
-        },
-      });
-      const fetchedData = response.data.data || [];
-      setAllData(fetchedData);
+      const params = {
+        page: currentPage,
+        limit: itemsPerPage,
+        userRole,
+        mobile,
+        search: searchInput || undefined,
+        startDate: startDate || undefined,
+        endDate: endDate || undefined,
+        buyerCompany: selectedBuyerCompany?.value || undefined,
+        sellerCompany: selectedSellerCompany?.value || undefined,
+        status: "active",
+      };
+
+      const response = await api.get("/self-order/pending/list", { params });
+      setData(response.data.data || []);
+      setTotalItems(response.data.total || 0);
     } catch (error) {
       console.error("Error fetching pending loading entries:", error);
       toast.error("Failed to fetch pending entries");
     } finally {
       setLoading(false);
     }
-  }, [userRole, mobile]);
-
-  const buyerCompanyOptions = useCallback(
-    () => buildDropdownOptions(allData.map((item) => item.buyerCompany)),
-    [allData],
-  );
-
-  const sellerCompanyOptions = useCallback(
-    () => buildDropdownOptions(allData.map((item) => item.supplierCompany)),
-    [allData],
-  );
-
-  const sellerNameOptions = useCallback(
-    () => buildDropdownOptions(allData.map((item) => getSellerName(item))),
-    [allData],
-  );
-
-  const consigneeOptions = useCallback(
-    () =>
-      buildDropdownOptions(allData.map((item) => getConsigneeDisplay(item))),
-    [allData],
-  );
-
-  const filteredData = useCallback(() => {
-    let result = [...allData];
-
-    if (searchInput) {
-      const searchLower = normalizeText(searchInput);
-      result = result.filter((item) => {
-        const fields = [
-          item.supplierCompany,
-          item.buyerCompany,
-          item.saudaNo,
-          item.commodity,
-          item.paymentTerms,
-          getSellerName(item),
-          getConsigneeDisplay(item),
-        ];
-
-        return fields.some((field) =>
-          normalizeText(field).includes(searchLower),
-        );
-      });
-    }
-
-    if (selectedSellerCompany?.value) {
-      result = result.filter(
-        (item) =>
-          normalizeText(item.supplierCompany) ===
-          normalizeText(selectedSellerCompany.value),
-      );
-    }
-
-    if (selectedBuyerCompany?.value) {
-      result = result.filter(
-        (item) =>
-          normalizeText(item.buyerCompany) ===
-          normalizeText(selectedBuyerCompany.value),
-      );
-    }
-
-    if (selectedSellerName?.value) {
-      result = result.filter(
-        (item) =>
-          normalizeText(getSellerName(item)) ===
-          normalizeText(selectedSellerName.value),
-      );
-    }
-
-    if (selectedConsignee?.value) {
-      result = result.filter(
-        (item) =>
-          normalizeText(getConsigneeDisplay(item)) ===
-          normalizeText(selectedConsignee.value),
-      );
-    }
-
-    if (startDate) {
-      const filterDate = new Date(startDate);
-      filterDate.setHours(0, 0, 0, 0);
-      result = result.filter((item) => {
-        const itemDate = new Date(item.poDate || item.createdAt);
-        return itemDate >= filterDate;
-      });
-    }
-
-    if (endDate) {
-      const filterDate = new Date(endDate);
-      filterDate.setHours(23, 59, 59, 999);
-      result = result.filter((item) => {
-        const itemDate = new Date(item.poDate || item.createdAt);
-        return itemDate <= filterDate;
-      });
-    }
-
-    result = result.filter((item) => {
-      const quantity = item.quantity || 0;
-      let pendingQuantity = item.pendingQuantity;
-      if (pendingQuantity === undefined || pendingQuantity === null) {
-        pendingQuantity = quantity;
-      }
-      const isWithinTolerance = pendingQuantity <= 0 && pendingQuantity >= -quantity * 0.05;
-      const isClosed = item.status === "closed" || isWithinTolerance;
-      return !isClosed;
-    });
-
-    return result;
   }, [
-    allData,
+    userRole,
+    mobile,
+    currentPage,
+    itemsPerPage,
     searchInput,
-    selectedSellerCompany,
-    selectedBuyerCompany,
-    selectedSellerName,
-    selectedConsignee,
     startDate,
     endDate,
+    selectedBuyerCompany,
+    selectedSellerCompany,
   ]);
-
-  useEffect(() => {
-    const filtered = filteredData();
-    setTotalItems(filtered.length);
-
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    const endIndex = startIndex + itemsPerPage;
-    setData(filtered.slice(startIndex, endIndex));
-  }, [filteredData, currentPage, itemsPerPage]);
 
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  const [buyerCompanyOptions, setBuyerCompanyOptions] = useState([]);
+  const [sellerCompanyOptions, setSellerCompanyOptions] = useState([]);
+
+  useEffect(() => {
+    const fetchOptions = async () => {
+      try {
+        const [buyersRes, sellersRes] = await Promise.all([
+          api.get("/buyer/all"),
+          api.get("/seller/all"),
+        ]);
+        setBuyerCompanyOptions(
+          buildDropdownOptions(buyersRes.data.map((b) => b.companyName)),
+        );
+        setSellerCompanyOptions(
+          buildDropdownOptions(sellersRes.data.map((s) => s.companyName)),
+        );
+      } catch (error) {
+        console.error("Error fetching options:", error);
+      }
+    };
+    fetchOptions();
+  }, []);
 
   const handleClearFilters = () => {
     setSearchInput("");
@@ -294,7 +192,20 @@ const PendingLoadingList = () => {
   const handleDownloadExcel = async () => {
     try {
       const toastId = toast.loading("Preparing Excel...");
-      const exportData = filteredData();
+      // For Excel, we might want to fetch all filtered data without pagination
+      const params = {
+        limit: 5000, // Fetch a large enough number for export
+        userRole,
+        mobile,
+        search: searchInput || undefined,
+        startDate: startDate || undefined,
+        endDate: endDate || undefined,
+        buyerCompany: selectedBuyerCompany?.value || undefined,
+        sellerCompany: selectedSellerCompany?.value || undefined,
+        status: "active",
+      };
+      const response = await api.get("/self-order/pending/list", { params });
+      const exportData = response.data.data || [];
 
       const excelRows = exportData.map((item, index) => {
         const quantity = item.quantity || 0;
@@ -727,25 +638,11 @@ const PendingLoadingList = () => {
                   <>
                     <div>
                       <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">
-                        <span className="w-2 h-2 rounded-full bg-blue-500"></span>
-                        Seller Name
-                      </label>
-                      <DataDropdown
-                        options={sellerNameOptions()}
-                        selectedOptions={selectedSellerName}
-                        onChange={setSelectedSellerName}
-                        placeholder="Select Seller Name"
-                        isMulti={false}
-                        isClearable
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">
                         <span className="w-2 h-2 rounded-full bg-purple-500"></span>
                         Seller Company
                       </label>
                       <DataDropdown
-                        options={sellerCompanyOptions()}
+                        options={sellerCompanyOptions}
                         selectedOptions={selectedSellerCompany}
                         onChange={setSelectedSellerCompany}
                         placeholder="Select Seller Company"
@@ -765,7 +662,7 @@ const PendingLoadingList = () => {
                     Buyer Company
                   </label>
                   <DataDropdown
-                    options={buyerCompanyOptions()}
+                    options={buyerCompanyOptions}
                     selectedOptions={selectedBuyerCompany}
                     onChange={setSelectedBuyerCompany}
                     placeholder="Select Buyer Company"
@@ -776,20 +673,6 @@ const PendingLoadingList = () => {
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-sky-500"></span>
-                    Consignee
-                  </label>
-                  <DataDropdown
-                    options={consigneeOptions()}
-                    selectedOptions={selectedConsignee}
-                    onChange={setSelectedConsignee}
-                    placeholder="Select Consignee"
-                    isMulti={false}
-                    isClearable
-                  />
-                </div>
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full bg-fuchsia-500"></span>
