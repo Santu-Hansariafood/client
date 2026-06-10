@@ -559,7 +559,7 @@ router.get("/brokerage-report", async (req, res) => {
 
 router.get("/brokerage-report/excel", async (req, res) => {
   try {
-    const { ids } = req.query;
+    const { ids, type } = req.query;
     const queryParams = { ...req.query };
     if (ids && typeof ids === "string") {
       queryParams.ids = ids.split(",");
@@ -570,18 +570,23 @@ router.get("/brokerage-report/excel", async (req, res) => {
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet("Brokerage Report");
 
+    const isBuyerReport = type === "buyer";
+
     worksheet.columns = [
-      { header: "SL No", key: "slNo", width: 10 },
-      { header: "Order Date", key: "orderDate", width: 15 },
-      { header: "Seller Company", key: "sellerCompany", width: 30 },
-      { header: "Seller Name", key: "sellerName", width: 30 },
-      { header: "Buyer Name", key: "buyerName", width: 30 },
-      { header: "PLACE", key: "place", width: 20 },
-      { header: "Item", key: "item", width: 20 },
-      { header: "Weight", key: "weight", width: 15 },
-      { header: "Rate", key: "rate", width: 15 },
-      { header: "Loading", key: "loading", width: 15 },
-      { header: "Unloading", key: "unloading", width: 15 },
+      { header: "SL No", key: "slNo", width: 8 },
+      { header: "Order Date", key: "orderDate", width: 12 },
+      {
+        header: isBuyerReport ? "Seller Company" : "Buyer Company",
+        key: "counterParty",
+        width: 30,
+      },
+      { header: "PLACE", key: "place", width: 15 },
+      { header: "Item", key: "item", width: 15 },
+      { header: "Weight", key: "weight", width: 12 },
+      { header: "Rate", key: "rate", width: 10 },
+      { header: "Loading", key: "loading", width: 12 },
+      { header: "Unloading", key: "unloading", width: 12 },
+      { header: "Total Amount", key: "totalAmount", width: 15 },
     ];
 
     data.forEach((item, index) => {
@@ -590,19 +595,21 @@ router.get("/brokerage-report/excel", async (req, res) => {
         orderDate: item.orderDate
           ? new Date(item.orderDate).toLocaleDateString("en-GB")
           : "N/A",
-        sellerCompany: item.supplierCompany || "N/A",
-        sellerName: item.sellerAccount || "N/A",
-        buyerName: item.buyerCompany || "N/A",
+        counterParty: isBuyerReport
+          ? item.supplierCompany || "N/A"
+          : item.buyerCompany || "N/A",
         place: item.place || "N/A",
         item: item.commodity || "N/A",
         weight: item.unloadingWeight || 0,
         rate: item.brokerageRate || 0,
         loading: item.loadingWeight || 0,
         unloading: item.unloadingWeight || 0,
+        totalAmount: item.totalBrokerage || 0,
       });
     });
 
     worksheet.getRow(1).font = { bold: true };
+    worksheet.getRow(1).alignment = { horizontal: "center" };
 
     res.setHeader(
       "Content-Type",
@@ -610,7 +617,8 @@ router.get("/brokerage-report/excel", async (req, res) => {
     );
     res.setHeader(
       "Content-Disposition",
-      "attachment; filename=" + "Brokerage_Report.xlsx",
+      "attachment; filename=" +
+        `${isBuyerReport ? "Buyer" : "Seller"}_Brokerage_Report.xlsx`,
     );
 
     await workbook.xlsx.write(res);
@@ -650,13 +658,14 @@ router.get("/brokerage-report/pdf", async (req, res) => {
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
     const margin = 10;
+    const isBuyerReport = type === "buyer";
 
-    // Hansaria Bank Details (Fixed as requested)
+    // Hansaria Bank Details
     const hansariaBankDetails = {
       accountHolderName: "HANSARIA FOOD PRIVATE LIMITED",
       bankName: "HDFC BANK",
-      accountNumber: "627905015689",
-      ifscCode: "ICIC0006279",
+      accountNumber: "50200062400035",
+      ifscCode: "HDFC0000014",
       branch: "BURRA BAZAR Branch",
     };
 
@@ -666,14 +675,14 @@ router.get("/brokerage-report/pdf", async (req, res) => {
       0,
     );
 
-    // Generate QR Code (e.g., pointing to the website or containing payment info)
+    // Generate QR Code
     const qrCodeData = `Hansaria Food Private Limited\nBrokerage Amount: Rs. ${totalBrokerageAmount.toFixed(2)}\nBank: ${hansariaBankDetails.bankName}\nA/C: ${hansariaBankDetails.accountNumber}`;
     const qrCodeBase64 = await QRCode.toDataURL(qrCodeData);
 
-    // Header Helper
+    // Tally Header
     const drawTallyHeader = (doc) => {
       // Outer Box
-      doc.setLineWidth(0.5);
+      doc.setLineWidth(0.4);
       doc.rect(margin, margin, pageWidth - 2 * margin, pageHeight - 2 * margin);
 
       // Top Section
@@ -703,18 +712,23 @@ router.get("/brokerage-report/pdf", async (req, res) => {
 
       doc.setFontSize(12);
       doc.setFont("helvetica", "bold");
-      doc.text("BROKERAGE ADVICE / REPORT", pageWidth / 2, margin + 28, {
-        align: "center",
-      });
+      doc.text(
+        `${type.toUpperCase()} BROKERAGE ADVICE`,
+        pageWidth / 2,
+        margin + 28,
+        {
+          align: "center",
+        },
+      );
 
       doc.line(margin, margin + 32, pageWidth - margin, margin + 32);
 
       // Party Info
       doc.setFontSize(9);
-      const partyName =
-        type === "buyer"
-          ? data[0].buyerCompany || "N/A"
-          : data[0].sellerAccount || "N/A";
+      const partyName = isBuyerReport
+        ? data[0].buyerCompany || "N/A"
+        : data[0].supplierCompany || "N/A";
+
       doc.text(`Party Name: ${partyName.toUpperCase()}`, margin + 5, margin + 38);
       doc.text(
         `Date: ${new Date().toLocaleDateString("en-GB")}`,
@@ -731,8 +745,8 @@ router.get("/brokerage-report/pdf", async (req, res) => {
     const tableColumn = [
       "SL No",
       "Date",
-      "Sauda No",
-      "Lorry No",
+      isBuyerReport ? "Seller Company" : "Buyer Company",
+      "PLACE",
       "Item",
       "Weight",
       "Rate",
@@ -744,8 +758,8 @@ router.get("/brokerage-report/pdf", async (req, res) => {
       item.orderDate
         ? new Date(item.orderDate).toLocaleDateString("en-GB")
         : "N/A",
-      item.saudaNo || "N/A",
-      item.lorryNumber || "N/A",
+      isBuyerReport ? item.supplierCompany || "N/A" : item.buyerCompany || "N/A",
+      item.place || "N/A",
       item.commodity || "N/A",
       Number(item.unloadingWeight || 0).toFixed(2),
       Number(item.brokerageRate || 0).toFixed(2),
@@ -773,14 +787,13 @@ router.get("/brokerage-report/pdf", async (req, res) => {
       },
       columnStyles: {
         0: { cellWidth: 10 },
-        2: { halign: "center" },
-        4: { halign: "left" },
+        2: { halign: "left", cellWidth: 40 },
+        3: { cellWidth: 20 },
         7: { halign: "right" },
       },
       didDrawPage: (d) => {
-        // Only draw on subsequent pages if needed
         if (d.pageNumber > 1) {
-          doc.setLineWidth(0.5);
+          doc.setLineWidth(0.4);
           doc.rect(
             margin,
             margin,
@@ -793,15 +806,13 @@ router.get("/brokerage-report/pdf", async (req, res) => {
 
     let finalY = doc.lastAutoTable.finalY || 150;
 
-    // Check if enough space for summary, otherwise add new page
     if (finalY > pageHeight - 80) {
       doc.addPage();
-      doc.setLineWidth(0.5);
+      doc.setLineWidth(0.4);
       doc.rect(margin, margin, pageWidth - 2 * margin, pageHeight - 2 * margin);
       finalY = margin + 10;
     }
 
-    // Summary Section
     doc.line(margin, finalY, pageWidth - margin, finalY);
 
     doc.setFont("helvetica", "bold");
@@ -823,18 +834,36 @@ router.get("/brokerage-report/pdf", async (req, res) => {
     doc.text("Amount in Words:", margin + 5, finalY + 18);
     doc.setFont("helvetica", "normal");
     const words = numberToWords(totalBrokerageAmount);
-    doc.text(words, margin + 5, finalY + 23, { maxWidth: pageWidth - 2 * margin - 10 });
+    doc.text(words, margin + 5, finalY + 23, {
+      maxWidth: pageWidth - 2 * margin - 10,
+    });
 
     doc.line(margin, finalY + 30, pageWidth - margin, finalY + 30);
 
-    // Bank Details Section
+    // Bank Details
     doc.setFont("helvetica", "bold");
-    doc.text("Hansaria Food Private Limited Bank Details:", margin + 5, finalY + 36);
+    doc.text(
+      "Hansaria Food Private Limited Bank Details:",
+      margin + 5,
+      finalY + 36,
+    );
     doc.setFont("helvetica", "normal");
     doc.setFontSize(8);
-    doc.text(`Bank Name: ${hansariaBankDetails.bankName}`, margin + 5, finalY + 41);
-    doc.text(`A/C No: ${hansariaBankDetails.accountNumber}`, margin + 5, finalY + 45);
-    doc.text(`IFSC Code: ${hansariaBankDetails.ifscCode}`, margin + 5, finalY + 49);
+    doc.text(
+      `Bank Name: ${hansariaBankDetails.bankName}`,
+      margin + 5,
+      finalY + 41,
+    );
+    doc.text(
+      `A/C No: ${hansariaBankDetails.accountNumber}`,
+      margin + 5,
+      finalY + 45,
+    );
+    doc.text(
+      `IFSC Code: ${hansariaBankDetails.ifscCode}`,
+      margin + 5,
+      finalY + 49,
+    );
     doc.text(`Branch: ${hansariaBankDetails.branch}`, margin + 5, finalY + 53);
 
     // QR Code
@@ -855,12 +884,17 @@ router.get("/brokerage-report/pdf", async (req, res) => {
 
     doc.line(margin, finalY + 65, pageWidth - margin, finalY + 65);
 
-    // Footer Signatures
+    // Signatures
     doc.setFontSize(9);
     doc.setFont("helvetica", "bold");
-    doc.text("For HANSARIA FOOD PRIVATE LIMITED", pageWidth - margin - 10, finalY + 75, {
-      align: "right",
-    });
+    doc.text(
+      "For HANSARIA FOOD PRIVATE LIMITED",
+      pageWidth - margin - 10,
+      finalY + 75,
+      {
+        align: "right",
+      },
+    );
     doc.setFont("helvetica", "normal");
     doc.text("Authorised Signatory", pageWidth - margin - 10, finalY + 90, {
       align: "right",
