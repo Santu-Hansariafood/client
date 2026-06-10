@@ -168,13 +168,11 @@ const AddSellerCompany = () => {
   };
 
   const handleSubmit = async () => {
-    // Mobile Validation
     if (companyInfo.mobileNo && !validateMobile(companyInfo.mobileNo)) {
       toast.error("Please enter a valid 10-digit mobile number.");
       return;
     }
 
-    // Email Validation
     if (companyInfo.email && !validateEmail(companyInfo.email)) {
       toast.error("Please enter a valid email address.");
       return;

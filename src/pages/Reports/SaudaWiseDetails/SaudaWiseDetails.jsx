@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import api from "../../../utils/apiClient/apiClient";
 import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
@@ -56,8 +55,12 @@ const SaudaWiseDetails = () => {
       if (filters.sellerId) params.sellerId = filters.sellerId;
       if (filters.saudaNo) params.saudaNo = filters.saudaNo;
 
-      const response = await api.get("/self-order", { params: { ...params, limit: 0 } });
-      const data = Array.isArray(response.data) ? response.data : response.data?.data || [];
+      const response = await api.get("/self-order", {
+        params: { ...params, limit: 0 },
+      });
+      const data = Array.isArray(response.data)
+        ? response.data
+        : response.data?.data || [];
       setSaudaList(data);
       if (data.length === 0) {
         toast.info("No Saudas found matching criteria");
@@ -93,7 +96,9 @@ const SaudaWiseDetails = () => {
                 options={buyers}
                 isClearable
                 placeholder="Select Buyer..."
-                onChange={(opt) => setFilters((p) => ({ ...p, buyerId: opt?.value || "" }))}
+                onChange={(opt) =>
+                  setFilters((p) => ({ ...p, buyerId: opt?.value || "" }))
+                }
                 styles={{
                   control: (base) => ({
                     ...base,
@@ -113,7 +118,9 @@ const SaudaWiseDetails = () => {
                 options={sellers}
                 isClearable
                 placeholder="Select Seller..."
-                onChange={(opt) => setFilters((p) => ({ ...p, sellerId: opt?.value || "" }))}
+                onChange={(opt) =>
+                  setFilters((p) => ({ ...p, sellerId: opt?.value || "" }))
+                }
                 styles={{
                   control: (base) => ({
                     ...base,
@@ -135,7 +142,9 @@ const SaudaWiseDetails = () => {
                   placeholder="Type Sauda No..."
                   className="flex-1 h-[45px] px-4 rounded-xl border border-slate-200 focus:ring-2 focus:ring-emerald-600/10 focus:border-emerald-600 outline-none transition-all font-bold text-slate-900"
                   value={filters.saudaNo}
-                  onChange={(e) => setFilters((p) => ({ ...p, saudaNo: e.target.value }))}
+                  onChange={(e) =>
+                    setFilters((p) => ({ ...p, saudaNo: e.target.value }))
+                  }
                 />
                 <button
                   onClick={handleSearch}
@@ -150,7 +159,6 @@ const SaudaWiseDetails = () => {
           </div>
         </div>
 
-        {/* Sauda List */}
         {saudaList.length > 0 && (
           <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
             <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">

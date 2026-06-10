@@ -47,7 +47,6 @@ const EditSellerCompany = () => {
   const fetchCompanyData = useCallback(async () => {
     try {
       setLoading(true);
-      // Reset state to avoid showing stale data
       setCompanyInfo({
         companyName: "",
         gstNo: "",
@@ -90,18 +89,25 @@ const EditSellerCompany = () => {
         })),
       );
 
-      const matchedState = stateCityData.find((state) => state.state === company.state);
+      const matchedState = stateCityData.find(
+        (state) => state.state === company.state,
+      );
       if (matchedState) {
-        const stateOption = { value: matchedState.state, label: matchedState.state };
+        const stateOption = {
+          value: matchedState.state,
+          label: matchedState.state,
+        };
         setSelectedState(stateOption);
-        
+
         const districts = matchedState.district.map((district) => ({
           value: district,
           label: district,
         }));
         setDistrictOptions(districts);
-        
-        const matchedDistrict = districts.find(d => d.value === company.district);
+
+        const matchedDistrict = districts.find(
+          (d) => d.value === company.district,
+        );
         setSelectedDistrict(matchedDistrict || null);
       } else {
         setSelectedState(null);
@@ -113,7 +119,11 @@ const EditSellerCompany = () => {
       setMsmeDetails({ msmeNo: company.msmeNo || "" });
     } catch (error) {
       console.error("Error fetching company:", error);
-      toast.error(error.message === "No company data found" ? "Company details not found" : "Failed to load company details");
+      toast.error(
+        error.message === "No company data found"
+          ? "Company details not found"
+          : "Failed to load company details",
+      );
       navigate("/seller-company/list");
     } finally {
       setLoading(false);
@@ -209,13 +219,11 @@ const EditSellerCompany = () => {
   };
 
   const handleSubmit = async () => {
-    // Mobile Validation
     if (companyInfo.mobileNo && !validateMobile(companyInfo.mobileNo)) {
       toast.error("Please enter a valid 10-digit mobile number.");
       return;
     }
 
-    // Email Validation
     if (companyInfo.email && !validateEmail(companyInfo.email)) {
       toast.error("Please enter a valid email address.");
       return;
@@ -246,7 +254,7 @@ const EditSellerCompany = () => {
     if (!companyInfo.email) missingFields.push("Email Address");
     if (!selectedState) missingFields.push("State");
     if (!selectedDistrict) missingFields.push("District");
-    
+
     const bankIncomplete = bankDetails.some(
       (bank) =>
         !bank.accountHolderName ||
@@ -272,10 +280,7 @@ const EditSellerCompany = () => {
     };
 
     try {
-      await api.put(
-        `/seller-company/${id}`,
-        payload,
-      );
+      await api.put(`/seller-company/${id}`, payload);
       toast.success("Seller company updated successfully!");
       navigate("/seller-company/list");
     } catch (error) {
@@ -332,7 +337,9 @@ const EditSellerCompany = () => {
               value={companyInfo.panNo}
               onChange={handleCompanyInfoChange}
               placeholder={
-                companyInfo.gstNo === "0" ? "Enter PAN Number" : "Auto-filled PAN"
+                companyInfo.gstNo === "0"
+                  ? "Enter PAN Number"
+                  : "Auto-filled PAN"
               }
               disabled={companyInfo.gstNo !== "0"}
             />
@@ -428,7 +435,11 @@ const EditSellerCompany = () => {
                   id={`accountNumber-${bank.id}`}
                   value={bank.accountNumber}
                   onChange={(e) =>
-                    handleBankDetailChange(bank.id, "accountNumber", e.target.value)
+                    handleBankDetailChange(
+                      bank.id,
+                      "accountNumber",
+                      e.target.value,
+                    )
                   }
                   placeholder="Enter Account Number"
                 />
