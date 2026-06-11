@@ -436,7 +436,7 @@ const ListLoadingEntry = () => {
 
   const handleEdit = useCallback(async (entry) => {
     setSelectedEntry(entry);
-    setEditEntry({
+    let newEditEntry = {
       ...entry,
       loadingDate: entry.loadingDate
         ? new Date(entry.loadingDate).toISOString().slice(0, 10)
@@ -456,7 +456,7 @@ const ListLoadingEntry = () => {
         partyBillCopy: null,
       },
       qualityClaims: entry.qualityClaims || [],
-    });
+    };
 
     // Fetch self-order by saudaNo to get quality parameters
     if (entry.saudaNo) {
@@ -468,22 +468,36 @@ const ListLoadingEntry = () => {
         const selfOrder = orders.find((o) => o.saudaNo === entry.saudaNo);
         setCurrentSelfOrder(selfOrder || null);
 
-        // Initialize quality claims from sauda if not already present in entry
-        if (selfOrder?.parameters && (!entry.qualityClaims || entry.qualityClaims.length === 0)) {
+        // Initialize/Update quality claims from sauda
+        if (selfOrder?.parameters) {
           const initialClaims = selfOrder.parameters
-            .filter(p => p.value || p.parameterValue) // Only show parameters with values
-            .map(p => ({
-              parameterName: p.name || p.parameterName,
-              standardValue: parseFloat(p.value || p.parameterValue || 0),
-              actualValue: "",
-              claimAmount: 0,
-              notes: ""
-            }));
+            .map((p) => {
+              // Check if entry already has this claim
+              const existingClaim = entry.qualityClaims?.find(
+                (c) =>
+                  c.parameterName === (p.name || p.parameterName) ||
+                  c.parameterId === (p._id || p.id)
+              );
+              return {
+                parameterId: p._id || p.id || "",
+                parameterName: p.name || p.parameterName || "",
+                standardValue: parseFloat(p.value || p.parameterValue || 0),
+                actualValue: existingClaim?.actualValue || "",
+                claimAmount: existingClaim?.claimAmount || 0,
+                notes: existingClaim?.notes || "",
+              };
+            });
           
-          setEditEntry(prev => ({
-            ...prev,
-            qualityClaims: initialClaims
-          }));
+          newEditEntry.qualityClaims = initialClaims;
+        }
+
+        // Set buyerBrokerage and sellerBrokerage from selfOrder
+        if (selfOrder?.buyerBrokerage) {
+          const buyerRate = selfOrder.buyerBrokerage.brokerageBuyer || 0;
+          const sellerRate = selfOrder.buyerBrokerage.brokerageSupplier || 0;
+          const uWeight = parseFloat(entry.unloadingWeight) || 0;
+          newEditEntry.buyerBrokerage = +(uWeight * buyerRate).toFixed(2);
+          newEditEntry.sellerBrokerage = +(uWeight * sellerRate).toFixed(2);
         }
       } catch (error) {
         console.error("Error fetching self-order:", error);
@@ -493,6 +507,7 @@ const ListLoadingEntry = () => {
       setCurrentSelfOrder(null);
     }
 
+    setEditEntry(newEditEntry);
     setPopupType("edit");
   }, []);
 
@@ -518,9 +533,18 @@ const ListLoadingEntry = () => {
         updated.balance = balance;
       }
 
+      // Recalculate buyer and seller brokerage when unloadingWeight changes
+      if (name === "unloadingWeight" && currentSelfOrder?.buyerBrokerage) {
+        const buyerRate = currentSelfOrder.buyerBrokerage.brokerageBuyer || 0;
+        const sellerRate = currentSelfOrder.buyerBrokerage.brokerageSupplier || 0;
+        const uWeight = parseFloat(value) || 0;
+        updated.buyerBrokerage = +(uWeight * buyerRate).toFixed(2);
+        updated.sellerBrokerage = +(uWeight * sellerRate).toFixed(2);
+      }
+
       return updated;
     });
-  }, []);
+  }, [currentSelfOrder]);
 
   const handleQualityChange = (index, field, value) => {
     setEditEntry((prev) => {
