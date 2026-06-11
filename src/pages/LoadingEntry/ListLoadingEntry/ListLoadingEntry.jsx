@@ -458,13 +458,16 @@ const ListLoadingEntry = () => {
       qualityClaims: entry.qualityClaims || [],
     };
 
-    // Fetch self-order by saudaNo to get quality parameters
+    // Fetch both self-order and quality parameters
     if (entry.saudaNo) {
       try {
-        const response = await api.get("/self-order", {
-          params: { search: entry.saudaNo, limit: 1 },
-        });
-        const orders = response.data.data || response.data || [];
+        // Fetch self-order and quality parameters in parallel
+        const [selfOrderResponse, qualityParamsResponse] = await Promise.all([
+          api.get("/self-order", { params: { search: entry.saudaNo, limit: 1 } }),
+          api.get("/quality-parameters")
+        ]);
+
+        const orders = selfOrderResponse.data.data || selfOrderResponse.data || [];
         const selfOrder = orders.find(
           (o) =>
             String(o.saudaNo).toLowerCase().trim() ===
@@ -472,29 +475,52 @@ const ListLoadingEntry = () => {
         );
         setCurrentSelfOrder(selfOrder || null);
 
+        // Create a map: parameter ID -> parameter name
+        const qualityParams = qualityParamsResponse.data?.data || qualityParamsResponse.data || [];
+        const paramIdToNameMap = new Map();
+        qualityParams.forEach((qp) => {
+          if (qp._id && qp.name) {
+            paramIdToNameMap.set(String(qp._id), qp.name);
+            // Also map by name itself for reverse lookup
+            paramIdToNameMap.set(qp.name.toLowerCase(), qp.name);
+          }
+        });
+
         // Initialize/Update quality claims from sauda
         if (selfOrder?.parameters) {
           const initialClaims = selfOrder.parameters.map((p) => {
-            // Extract parameter name robustly
-            let pName = "";
-            if (typeof p.parameter === "string") {
-              pName = p.parameter;
-            } else if (p.parameter && typeof p.parameter === "object") {
-              pName = p.parameter.label || p.parameter.name || p.parameter.value || "";
-            }
-            
-            if (!pName) {
-              pName = p.name || p.parameterName || p.label || "";
-            }
-
             // Extract parameter ID robustly
-            const pId = p._id || p.id || p.parameterId || p.parameter?._id || p.parameter?.value || "";
+            const pId = String(
+              p._id || p.id || p.parameterId || 
+              p.parameter?._id || p.parameter?.value || ""
+            );
+
+            // Extract parameter name - first check our map
+            let pName = paramIdToNameMap.get(pId);
+
+            // Fallback: try to get name from p object if map fails
+            if (!pName) {
+              if (typeof p.parameter === "string") {
+                pName = p.parameter;
+              } else if (p.parameter && typeof p.parameter === "object") {
+                pName = p.parameter.label || p.parameter.name || p.parameter.value || "";
+              }
+              
+              if (!pName) {
+                pName = p.name || p.parameterName || p.label || "";
+              }
+
+              // Last resort: check map by name
+              if (pName) {
+                pName = paramIdToNameMap.get(pName.toLowerCase()) || pName;
+              }
+            }
 
             // Check if entry already has this claim
             const existingClaim = entry.qualityClaims?.find(
               (c) =>
                 (c.parameterName && pName && c.parameterName === pName) ||
-                (c.parameterId && pId && c.parameterId === pId)
+                (c.parameterId && pId && String(c.parameterId) === pId)
             );
             return {
               parameterId: pId,
@@ -507,6 +533,24 @@ const ListLoadingEntry = () => {
           });
 
           newEditEntry.qualityClaims = initialClaims;
+        } else if (entry.qualityClaims && entry.qualityClaims.length > 0) {
+          // If no self-order parameters but entry has qualityClaims, try to populate names from map
+          const claimsWithNames = entry.qualityClaims.map((claim) => {
+            let pName = claim.parameterName;
+            const pId = String(claim.parameterId || "");
+
+            if (pId && !pName) {
+              pName = paramIdToNameMap.get(pId);
+            } else if (pName && !pId) {
+              // Try to find ID by name if needed
+            }
+
+            return {
+              ...claim,
+              parameterName: pName || claim.parameterName
+            };
+          });
+          newEditEntry.qualityClaims = claimsWithNames;
         }
 
         // Set buyerBrokerage and sellerBrokerage from selfOrder
@@ -518,7 +562,7 @@ const ListLoadingEntry = () => {
           newEditEntry.sellerBrokerage = +(uWeight * sellerRate).toFixed(2);
         }
       } catch (error) {
-        console.error("Error fetching self-order:", error);
+        console.error("Error fetching data:", error);
         setCurrentSelfOrder(null);
       }
     } else {
