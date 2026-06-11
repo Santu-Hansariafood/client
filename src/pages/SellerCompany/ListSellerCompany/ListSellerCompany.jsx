@@ -115,9 +115,6 @@ const ListSellerCompany = () => {
       try {
         await api.delete(`/seller-company/${id}`);
         setCompanies((prev) => prev.filter((company) => company._id !== id));
-        // setSearchResults((prev) =>
-        //   prev.filter((company) => company._id !== id),
-        // );
         setTotalItems((prev) => prev - 1);
         toast.success("Seller company deleted successfully!");
       } catch (err) {

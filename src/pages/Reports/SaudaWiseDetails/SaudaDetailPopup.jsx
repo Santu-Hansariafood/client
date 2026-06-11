@@ -1,9 +1,8 @@
-import React, { useState, useEffect, useCallback, useRef, useMemo } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import api from "../../../utils/apiClient/apiClient";
 import PopupBox from "../../../common/PopupBox/PopupBox";
 import Loading from "../../../common/Loading/Loading";
 import {
-  FaDownload,
   FaFilePdf,
   FaPrint,
   FaHistory,
@@ -78,8 +77,9 @@ const SaudaDetailPopup = ({ sauda, onClose }) => {
       p.mappings?.forEach((m) => {
         if (m.loadingEntryId) {
           if (!map[m.loadingEntryId]) map[m.loadingEntryId] = [];
-          // Avoid duplicates if a payment has multiple mappings to the same lorry
-          if (!map[m.loadingEntryId].some(existing => existing._id === p._id)) {
+          if (
+            !map[m.loadingEntryId].some((existing) => existing._id === p._id)
+          ) {
             map[m.loadingEntryId].push(p);
           }
         }
@@ -88,18 +88,19 @@ const SaudaDetailPopup = ({ sauda, onClose }) => {
     return map;
   }, [payments]);
 
-  const getPaymentsForLorry = useCallback((lorryId) => {
-    return paymentsByLorry[lorryId] || [];
-  }, [paymentsByLorry]);
+  const getPaymentsForLorry = useCallback(
+    (lorryId) => {
+      return paymentsByLorry[lorryId] || [];
+    },
+    [paymentsByLorry],
+  );
 
   const lorryDataWithCalculations = useMemo(() => {
     return lorries.map((lorry) => {
       const netAmount = calculateNetAmount(lorry);
       const lorryPayments = getPaymentsForLorry(lorry._id);
       const paidAmount = lorryPayments.reduce((sum, p) => {
-        const mapping = p.mappings?.find(
-          (m) => m.loadingEntryId === lorry._id,
-        );
+        const mapping = p.mappings?.find((m) => m.loadingEntryId === lorry._id);
         return sum + (mapping?.allocatedAmount || 0);
       }, 0);
       const balance = netAmount - paidAmount;
@@ -414,7 +415,8 @@ const SaudaDetailPopup = ({ sauda, onClose }) => {
                                       Payment made:{" "}
                                       <span className="text-emerald-600">
                                         Rs.{" "}
-                                        {mapping?.allocatedAmount?.toLocaleString() || 0}
+                                        {mapping?.allocatedAmount?.toLocaleString() ||
+                                          0}
                                         /-
                                       </span>
                                     </p>

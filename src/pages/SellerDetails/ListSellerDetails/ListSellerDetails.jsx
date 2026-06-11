@@ -1,4 +1,11 @@
-import { lazy, Suspense, useEffect, useState, useCallback, useMemo } from "react";
+import {
+  lazy,
+  Suspense,
+  useEffect,
+  useState,
+  useCallback,
+  useMemo,
+} from "react";
 import api from "../../../utils/apiClient/apiClient";
 import { fetchAllPages } from "../../../utils/apiClient/fetchAllPages";
 import { ToastContainer, toast } from "react-toastify";
@@ -15,7 +22,9 @@ const Pagination = lazy(
   () => import("../../../common/Paginations/Paginations"),
 );
 const PopupBox = lazy(() => import("../../../common/PopupBox/PopupBox"));
-const DataDropdown = lazy(() => import("../../../common/DataDropdown/DataDropdown"));
+const DataDropdown = lazy(
+  () => import("../../../common/DataDropdown/DataDropdown"),
+);
 const EditSellerDetails = lazy(
   () => import("../EditSellerDetails/EditSellerDetails"),
 );
@@ -37,16 +46,14 @@ const ListSellerDetails = () => {
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [totalItems, setTotalItems] = useState(0);
   const [searchTerm, setSearchTerm] = useState("");
-  
-  // Filter states
+
   const [selectedCommodity, setSelectedCommodity] = useState(null);
   const [selectedCompany, setSelectedCompany] = useState(null);
   const [selectedStatus, setSelectedStatus] = useState(null);
-  
-  // Options states
+
   const [commodityOptions, setCommodityOptions] = useState([]);
   const [companyOptions, setCompanyOptions] = useState([]);
-  
+
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [selectedSeller, setSelectedSeller] = useState(null);
 
@@ -62,60 +69,70 @@ const ListSellerDetails = () => {
         api.get("/seller-company", { params: { limit: 1000 } }),
       ]);
 
-      const commodities = commoditiesRes.data?.data || commoditiesRes.data || [];
+      const commodities =
+        commoditiesRes.data?.data || commoditiesRes.data || [];
       const companies = companiesRes.data?.data || companiesRes.data || [];
 
       setCommodityOptions(
-        commodities.map(c => ({ value: c.name, label: c.name }))
-          .sort((a, b) => a.label.localeCompare(b.label))
+        commodities
+          .map((c) => ({ value: c.name, label: c.name }))
+          .sort((a, b) => a.label.localeCompare(b.label)),
       );
       setCompanyOptions(
-        companies.map(c => ({ value: c.companyName, label: c.companyName }))
-          .sort((a, b) => a.label.localeCompare(b.label))
+        companies
+          .map((c) => ({ value: c.companyName, label: c.companyName }))
+          .sort((a, b) => a.label.localeCompare(b.label)),
       );
     } catch (error) {
       console.error("Error fetching filter options:", error);
     }
   }, []);
 
-  const fetchSellers = useCallback(async (page = 1, search = "", filters = {}) => {
-    setLoading(true);
-    try {
-      const params = {
-        page,
-        limit: itemsPerPage,
-        search,
-        ...filters
-      };
-      
-      const response = await api.get("/sellers", { params });
+  const fetchSellers = useCallback(
+    async (page = 1, search = "", filters = {}) => {
+      setLoading(true);
+      try {
+        const params = {
+          page,
+          limit: itemsPerPage,
+          search,
+          ...filters,
+        };
 
-      let sellersList = [];
-      let total = 0;
+        const response = await api.get("/sellers", { params });
 
-      if (response.data && response.data.data) {
-        sellersList = response.data.data;
-        total = response.data.total;
-      } else {
-        sellersList = response.data;
-        total = response.data.length;
+        let sellersList = [];
+        let total = 0;
+
+        if (response.data && response.data.data) {
+          sellersList = response.data.data;
+          total = response.data.total;
+        } else {
+          sellersList = response.data;
+          total = response.data.length;
+        }
+
+        const formattedData = sellersList.map((seller) => ({
+          ...seller,
+          sellerName: toTitleCase(seller.sellerName),
+          companies: (seller.companies || []).map((company) =>
+            toTitleCase(company),
+          ),
+          emails: (seller.emails || []).map((email) =>
+            email.value.toLowerCase(),
+          ),
+        }));
+
+        setData(formattedData);
+        setTotalItems(total);
+      } catch (error) {
+        toast.error("Failed to fetch seller data");
+      } finally {
+        setLoading(false);
       }
-
-      const formattedData = sellersList.map((seller) => ({
-        ...seller,
-        sellerName: toTitleCase(seller.sellerName),
-        companies: (seller.companies || []).map((company) => toTitleCase(company)),
-        emails: (seller.emails || []).map((email) => email.value.toLowerCase()),
-      }));
-
-      setData(formattedData);
-      setTotalItems(total);
-    } catch (error) {
-      toast.error("Failed to fetch seller data");
-    } finally {
-      setLoading(false);
-    }
-  }, [itemsPerPage]);
+    },
+    [itemsPerPage],
+  );
 
   useEffect(() => {
     fetchOptions();
@@ -126,9 +143,16 @@ const ListSellerDetails = () => {
     if (selectedCommodity) filters.commodity = selectedCommodity.value;
     if (selectedCompany) filters.company = selectedCompany.value;
     if (selectedStatus) filters.status = selectedStatus.value;
-    
+
     fetchSellers(currentPage, searchTerm, filters);
-  }, [currentPage, searchTerm, selectedCommodity, selectedCompany, selectedStatus, fetchSellers]);
+  }, [
+    currentPage,
+    searchTerm,
+    selectedCommodity,
+    selectedCompany,
+    selectedStatus,
+    fetchSellers,
+  ]);
 
   const handleEditSeller = (seller) => {
     navigate(`/seller-details/edit/${seller._id}`);
@@ -161,58 +185,73 @@ const ListSellerDetails = () => {
     "Actions",
   ];
 
-  const rows = useMemo(() => data.map((item, index) => [
-    (currentPage - 1) * itemsPerPage + index + 1,
-    <div key={item._id} className="font-bold text-slate-700">{item.sellerName}</div>,
-    <div key={`${item._id}-emails`} className="flex flex-col gap-1">
-      {(item.emails || []).map((email) => (
-        <a
-          key={email}
-          href={`mailto:${email}`}
-          className="text-emerald-600 hover:text-emerald-700 hover:underline text-xs"
+  const rows = useMemo(
+    () =>
+      data.map((item, index) => [
+        (currentPage - 1) * itemsPerPage + index + 1,
+        <div key={item._id} className="font-bold text-slate-700">
+          {item.sellerName}
+        </div>,
+        <div key={`${item._id}-emails`} className="flex flex-col gap-1">
+          {(item.emails || []).map((email) => (
+            <a
+              key={email}
+              href={`mailto:${email}`}
+              className="text-emerald-600 hover:text-emerald-700 hover:underline text-xs"
+            >
+              {email}
+            </a>
+          ))}
+        </div>,
+        <div key={`${item._id}-phones`} className="flex flex-col gap-1">
+          {(item.phoneNumbers || []).map((phone) => (
+            <a
+              key={phone.value}
+              href={`tel:${phone.value}`}
+              className="text-slate-600 hover:text-emerald-600 text-xs"
+            >
+              {phone.value}
+            </a>
+          ))}
+        </div>,
+        <div key={`${item._id}-commodities`} className="max-w-[200px]">
+          {(item.commodities || []).map((commodity) => (
+            <div key={commodity.name} className="text-[11px] mb-1">
+              <span className="font-semibold text-slate-700">
+                {toTitleCase(commodity.name)}
+              </span>
+              <span className="text-slate-500 ml-1">
+                (₹{commodity.brokerage})
+              </span>
+            </div>
+          ))}
+        </div>,
+        <div key={`${item._id}-companies`} className="text-xs text-slate-600">
+          {(item.companies || []).join(", ")}
+        </div>,
+        <span
+          key={`${item._id}-status`}
+          className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+            item.status === "active"
+              ? "bg-emerald-50 text-emerald-600 border border-emerald-100"
+              : "bg-red-50 text-red-600 border border-red-100"
+          }`}
         >
-          {email}
-        </a>
-      ))}
-    </div>,
-    <div key={`${item._id}-phones`} className="flex flex-col gap-1">
-      {(item.phoneNumbers || []).map((phone) => (
-        <a
-          key={phone.value}
-          href={`tel:${phone.value}`}
-          className="text-slate-600 hover:text-emerald-600 text-xs"
-        >
-          {phone.value}
-        </a>
-      ))}
-    </div>,
-    <div key={`${item._id}-commodities`} className="max-w-[200px]">
-      {(item.commodities || []).map((commodity) => (
-        <div key={commodity.name} className="text-[11px] mb-1">
-          <span className="font-semibold text-slate-700">{toTitleCase(commodity.name)}</span>
-          <span className="text-slate-500 ml-1">(₹{commodity.brokerage})</span>
-        </div>
-      ))}
-    </div>,
-    <div key={`${item._id}-companies`} className="text-xs text-slate-600">
-      {(item.companies || []).join(", ")}
-    </div>,
-    <span key={`${item._id}-status`} className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-      item.status === 'active' ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-red-50 text-red-600 border border-red-100'
-    }`}>
-      {item.status}
-    </span>,
-    <Actions
-      key={item._id}
-      onView={() => {
-        setSelectedSeller(item);
-        setPopupMode("view");
-        setIsPopupOpen(true);
-      }}
-      onEdit={() => handleEditSeller(item)}
-      onDelete={() => handleDeleteSeller(item._id)}
-    />,
-  ]), [data, currentPage, itemsPerPage]);
+          {item.status}
+        </span>,
+        <Actions
+          key={item._id}
+          onView={() => {
+            setSelectedSeller(item);
+            setPopupMode("view");
+            setIsPopupOpen(true);
+          }}
+          onEdit={() => handleEditSeller(item)}
+          onDelete={() => handleDeleteSeller(item._id)}
+        />,
+      ]),
+    [data, currentPage, itemsPerPage],
+  );
 
   return (
     <Suspense fallback={<Loading />}>
@@ -223,7 +262,6 @@ const ListSellerDetails = () => {
         noContentCard
       >
         <div className="max-w-full mx-auto space-y-6">
-          {/* Header Actions */}
           <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
             <div className="w-full lg:max-w-md">
               <SearchBox
@@ -243,7 +281,6 @@ const ListSellerDetails = () => {
             </button>
           </div>
 
-          {/* Filters Bar */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 bg-slate-50/50 p-4 rounded-2xl border border-slate-100">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-slate-400 shadow-sm">
@@ -251,7 +288,7 @@ const ListSellerDetails = () => {
               </div>
               <span className="text-sm font-bold text-slate-700">Filters</span>
             </div>
-            
+
             <DataDropdown
               options={commodityOptions}
               placeholder="All Commodities"
@@ -259,7 +296,7 @@ const ListSellerDetails = () => {
               onChange={setSelectedCommodity}
               isClearable
             />
-            
+
             <DataDropdown
               options={companyOptions}
               placeholder="All Companies"
@@ -267,7 +304,7 @@ const ListSellerDetails = () => {
               onChange={setSelectedCompany}
               isClearable
             />
-            
+
             <DataDropdown
               options={statusOptions}
               placeholder="All Status"
@@ -277,7 +314,6 @@ const ListSellerDetails = () => {
             />
           </div>
 
-          {/* Table Container */}
           <div className="rounded-2xl border border-slate-200 bg-white shadow-xl shadow-slate-900/5 overflow-hidden">
             {loading ? (
               <div className="h-64 flex items-center justify-center">
@@ -287,7 +323,7 @@ const ListSellerDetails = () => {
               <div className="h-64 flex flex-col items-center justify-center text-slate-400 gap-3">
                 <FaSearch size={40} className="text-slate-200" />
                 <p className="font-medium text-lg">No sellers found</p>
-                <button 
+                <button
                   onClick={() => {
                     setSearchTerm("");
                     setSelectedCommodity(null);
@@ -330,9 +366,13 @@ const ListSellerDetails = () => {
                       <h2 className="text-3xl font-black text-slate-900 tracking-tight uppercase">
                         {selectedSeller.sellerName}
                       </h2>
-                      <div className={`mt-1 inline-flex px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${
-                        selectedSeller.status === 'active' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'
-                      }`}>
+                      <div
+                        className={`mt-1 inline-flex px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${
+                          selectedSeller.status === "active"
+                            ? "bg-emerald-100 text-emerald-700"
+                            : "bg-red-100 text-red-700"
+                        }`}
+                      >
                         {selectedSeller.status} Account
                       </div>
                     </div>
@@ -341,24 +381,44 @@ const ListSellerDetails = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <div className="space-y-6">
                       <Section title="Security & Access">
-                        <Field label="Login Password" value={selectedSeller.password} isSensitive />
+                        <Field
+                          label="Login Password"
+                          value={selectedSeller.password}
+                          isSensitive
+                        />
                       </Section>
-                      
+
                       <Section title="Contact Information">
                         <div className="space-y-4">
                           <div>
-                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Emails</p>
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">
+                              Emails
+                            </p>
                             <div className="flex flex-col gap-1">
-                              {selectedSeller.emails.map(email => (
-                                <a key={email} href={`mailto:${email}`} className="text-emerald-600 font-bold hover:underline">{email}</a>
+                              {selectedSeller.emails.map((email) => (
+                                <a
+                                  key={email}
+                                  href={`mailto:${email}`}
+                                  className="text-emerald-600 font-bold hover:underline"
+                                >
+                                  {email}
+                                </a>
                               ))}
                             </div>
                           </div>
                           <div>
-                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Phone Numbers</p>
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">
+                              Phone Numbers
+                            </p>
                             <div className="flex flex-col gap-1">
-                              {selectedSeller.phoneNumbers.map(phone => (
-                                <a key={phone.value} href={`tel:${phone.value}`} className="text-slate-700 font-bold hover:text-emerald-600 transition-colors">{phone.value}</a>
+                              {selectedSeller.phoneNumbers.map((phone) => (
+                                <a
+                                  key={phone.value}
+                                  href={`tel:${phone.value}`}
+                                  className="text-slate-700 font-bold hover:text-emerald-600 transition-colors"
+                                >
+                                  {phone.value}
+                                </a>
                               ))}
                             </div>
                           </div>
@@ -370,22 +430,38 @@ const ListSellerDetails = () => {
                       <Section title="Market Exposure">
                         <div className="space-y-4">
                           <div>
-                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Commodities & Brokerage</p>
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">
+                              Commodities & Brokerage
+                            </p>
                             <div className="grid grid-cols-1 gap-2">
-                              {selectedSeller.commodities.map(c => (
-                                <div key={c.name} className="flex justify-between items-center p-3 rounded-xl bg-slate-50 border border-slate-100">
-                                  <span className="font-bold text-slate-700">{toTitleCase(c.name)}</span>
-                                  <span className="text-xs font-black text-emerald-600 bg-emerald-50 px-2 py-1 rounded-lg">₹{c.brokerage}/Ton</span>
+                              {selectedSeller.commodities.map((c) => (
+                                <div
+                                  key={c.name}
+                                  className="flex justify-between items-center p-3 rounded-xl bg-slate-50 border border-slate-100"
+                                >
+                                  <span className="font-bold text-slate-700">
+                                    {toTitleCase(c.name)}
+                                  </span>
+                                  <span className="text-xs font-black text-emerald-600 bg-emerald-50 px-2 py-1 rounded-lg">
+                                    ₹{c.brokerage}/Ton
+                                  </span>
                                 </div>
                               ))}
                             </div>
                           </div>
                           <div>
-                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Affiliated Companies</p>
-                            <p className="text-slate-700 font-bold">{selectedSeller.companies.join(", ") || "None assigned"}</p>
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">
+                              Affiliated Companies
+                            </p>
+                            <p className="text-slate-700 font-bold">
+                              {selectedSeller.companies.join(", ") ||
+                                "None assigned"}
+                            </p>
                           </div>
                           <div>
-                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Assigned Groups</p>
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">
+                              Assigned Groups
+                            </p>
                             <p className="text-slate-700 font-bold">
                               {(selectedSeller.groups || [])
                                 .map((group) => toTitleCase(group.name))
@@ -420,9 +496,13 @@ const Section = ({ title, children }) => (
 
 const Field = ({ label, value, isSensitive = false }) => (
   <div className="space-y-1">
-    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{label}</p>
-    <p className={`font-bold ${isSensitive ? 'text-slate-300 select-none' : 'text-slate-700'}`}>
-      {isSensitive ? '••••••••' : (value || "N/A")}
+    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+      {label}
+    </p>
+    <p
+      className={`font-bold ${isSensitive ? "text-slate-300 select-none" : "text-slate-700"}`}
+    >
+      {isSensitive ? "••••••••" : value || "N/A"}
     </p>
   </div>
 );

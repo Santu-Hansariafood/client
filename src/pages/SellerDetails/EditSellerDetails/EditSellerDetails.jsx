@@ -8,12 +8,6 @@ import {
   FaPlusCircle,
   FaMinusCircle,
   FaUserTie,
-  FaPhone,
-  FaEnvelope,
-  FaBox,
-  FaBuilding,
-  FaLayerGroup,
-  FaInfoCircle,
   FaSave,
   FaTimes,
 } from "react-icons/fa";
@@ -29,7 +23,12 @@ const statusOptions = [
   { value: "inactive", label: "Inactive" },
 ];
 
-const EditSellerDetails = ({ sellerId: propSellerId, onClose, onSave, isPopup = false }) => {
+const EditSellerDetails = ({
+  sellerId: propSellerId,
+  onClose,
+  onSave,
+  isPopup = false,
+}) => {
   const { sellerId: paramSellerId } = useParams();
   const navigate = useNavigate();
   const sellerId = propSellerId || paramSellerId;
@@ -63,7 +62,9 @@ const EditSellerDetails = ({ sellerId: propSellerId, onClose, onSave, isPopup = 
       try {
         const [commodities, companies, groups, sellerRes] = await Promise.all([
           fetchAllPages("/commodities").catch(() => []),
-          fetchAllPages("/seller-company", { params: { dropdown: "true" } }).catch(() => []),
+          fetchAllPages("/seller-company", {
+            params: { dropdown: "true" },
+          }).catch(() => []),
           fetchAllPages("/groups").catch(() => []),
           api.get(`/sellers/${sellerId}`),
         ]);
@@ -75,13 +76,18 @@ const EditSellerDetails = ({ sellerId: propSellerId, onClose, onSave, isPopup = 
           label: item.name || item,
         }));
 
-        const compOpts = companies.map((item) => {
-          const name = item.companyName || item.name || (typeof item === 'string' ? item : '');
-          return {
-            value: name,
-            label: name,
-          };
-        }).filter(opt => opt.value);
+        const compOpts = companies
+          .map((item) => {
+            const name =
+              item.companyName ||
+              item.name ||
+              (typeof item === "string" ? item : "");
+            return {
+              value: name,
+              label: name,
+            };
+          })
+          .filter((opt) => opt.value);
 
         const grpOpts = groups.map((item) => ({
           value: item._id || item.id || item,
@@ -92,22 +98,29 @@ const EditSellerDetails = ({ sellerId: propSellerId, onClose, onSave, isPopup = 
         setCompanyOptions(compOpts);
         setGroupOptions(grpOpts);
 
-        // 2. Set Seller Data
         setFullSellerData(sellerData);
         setSellerName(sellerData.sellerName || "");
         setPassword(sellerData.password || "");
-        
+
         const fetchedPhones = (sellerData.phoneNumbers || []).map((phone) => ({
           id: Math.random(),
           value: phone.value || "",
         }));
-        setPhoneNumbers(fetchedPhones.length > 0 ? fetchedPhones : [{ id: Date.now(), value: "" }]);
+        setPhoneNumbers(
+          fetchedPhones.length > 0
+            ? fetchedPhones
+            : [{ id: Date.now(), value: "" }],
+        );
 
         const fetchedEmails = (sellerData.emails || []).map((email) => ({
           id: Math.random(),
           value: email.value || "",
         }));
-        setEmails(fetchedEmails.length > 0 ? fetchedEmails : [{ id: Date.now(), value: "" }]);
+        setEmails(
+          fetchedEmails.length > 0
+            ? fetchedEmails
+            : [{ id: Date.now(), value: "" }],
+        );
 
         const selectedCommNames = (sellerData.commodities || []).map(
           (c) => c.name || c,
@@ -241,7 +254,10 @@ const EditSellerDetails = ({ sellerId: propSellerId, onClose, onSave, isPopup = 
         typeof selectedStatus === "string"
           ? selectedStatus
           : selectedStatus?.value,
-      groups: (Array.isArray(selectedGroups) ? selectedGroups : [selectedGroups])
+      groups: (Array.isArray(selectedGroups)
+        ? selectedGroups
+        : [selectedGroups]
+      )
         .filter(Boolean)
         .map((groupId) => {
           const group = groupOptions.find((g) => g.value === groupId);
@@ -277,13 +293,19 @@ const EditSellerDetails = ({ sellerId: propSellerId, onClose, onSave, isPopup = 
 
   const formContent = (
     <div className={`${isPopup ? "" : "max-w-5xl mx-auto space-y-6"}`}>
-      <div className={`w-full bg-white rounded-3xl border border-slate-200 shadow-xl overflow-hidden transition-all hover:shadow-2xl`}>
+      <div
+        className={`w-full bg-white rounded-3xl border border-slate-200 shadow-xl overflow-hidden transition-all hover:shadow-2xl`}
+      >
         <div className="p-6 sm:p-10 space-y-10">
           {/* Basic Info Section */}
           <section className="space-y-6">
             <div className="flex items-center gap-3 pb-2 border-b border-slate-100">
-              <div className="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center text-amber-600 font-bold text-sm">1</div>
-              <h4 className="text-sm font-black uppercase tracking-widest text-slate-800">Basic Information</h4>
+              <div className="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center text-amber-600 font-bold text-sm">
+                1
+              </div>
+              <h4 className="text-sm font-black uppercase tracking-widest text-slate-800">
+                Basic Information
+              </h4>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <DataInput
@@ -303,15 +325,20 @@ const EditSellerDetails = ({ sellerId: propSellerId, onClose, onSave, isPopup = 
             </div>
           </section>
 
-          {/* Contact Details Section */}
           <section className="space-y-6">
             <div className="flex items-center gap-3 pb-2 border-b border-slate-100">
-              <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600 font-bold text-sm">2</div>
-              <h4 className="text-sm font-black uppercase tracking-widest text-slate-800">Contact Details</h4>
+              <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600 font-bold text-sm">
+                2
+              </div>
+              <h4 className="text-sm font-black uppercase tracking-widest text-slate-800">
+                Contact Details
+              </h4>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div className="space-y-4">
-                <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest">Phone Numbers</label>
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest">
+                  Phone Numbers
+                </label>
                 {phoneNumbers.map((phone, index) => (
                   <div key={phone.id} className="flex items-center gap-3 group">
                     <div className="flex-1">
@@ -319,7 +346,9 @@ const EditSellerDetails = ({ sellerId: propSellerId, onClose, onSave, isPopup = 
                         placeholder={`Phone ${index + 1}`}
                         value={phone.value}
                         inputType="number"
-                        onChange={(e) => handlePhoneChange(phone.id, e.target.value)}
+                        onChange={(e) =>
+                          handlePhoneChange(phone.id, e.target.value)
+                        }
                       />
                     </div>
                     <div className="flex items-center gap-2">
@@ -347,14 +376,18 @@ const EditSellerDetails = ({ sellerId: propSellerId, onClose, onSave, isPopup = 
               </div>
 
               <div className="space-y-4">
-                <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest">Email Addresses</label>
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest">
+                  Email Addresses
+                </label>
                 {emails.map((email, index) => (
                   <div key={email.id} className="flex items-center gap-3 group">
                     <div className="flex-1">
                       <DataInput
                         placeholder={`Email ${index + 1}`}
                         value={email.value}
-                        onChange={(e) => handleEmailChange(email.id, e.target.value)}
+                        onChange={(e) =>
+                          handleEmailChange(email.id, e.target.value)
+                        }
                       />
                     </div>
                     <div className="flex items-center gap-2">
@@ -383,11 +416,14 @@ const EditSellerDetails = ({ sellerId: propSellerId, onClose, onSave, isPopup = 
             </div>
           </section>
 
-          {/* Commodities Section */}
           <section className="space-y-6">
             <div className="flex items-center gap-3 pb-2 border-b border-slate-100">
-              <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600 font-bold text-sm">3</div>
-              <h4 className="text-sm font-black uppercase tracking-widest text-slate-800">Commodities & Brokerage</h4>
+              <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600 font-bold text-sm">
+                3
+              </div>
+              <h4 className="text-sm font-black uppercase tracking-widest text-slate-800">
+                Commodities & Brokerage
+              </h4>
             </div>
             <div className="space-y-6">
               <DataDropdown
@@ -402,7 +438,9 @@ const EditSellerDetails = ({ sellerId: propSellerId, onClose, onSave, isPopup = 
               {selectedCommodity.length > 0 && (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-6 bg-slate-50 rounded-2xl border border-slate-100">
                   {selectedCommodity.map((commodityValue) => {
-                    const commodityLabel = commodityOptions.find(o => o.value === commodityValue)?.label || commodityValue;
+                    const commodityLabel =
+                      commodityOptions.find((o) => o.value === commodityValue)
+                        ?.label || commodityValue;
                     return (
                       <div key={commodityValue} className="space-y-2">
                         <label className="block text-[10px] font-black text-slate-400 uppercase tracking-wider">
@@ -412,7 +450,12 @@ const EditSellerDetails = ({ sellerId: propSellerId, onClose, onSave, isPopup = 
                           placeholder="0.00"
                           inputType="number"
                           value={brokerageAmounts[commodityValue] || ""}
-                          onChange={(e) => handleBrokerageChange(commodityValue, e.target.value)}
+                          onChange={(e) =>
+                            handleBrokerageChange(
+                              commodityValue,
+                              e.target.value,
+                            )
+                          }
                         />
                       </div>
                     );
@@ -422,11 +465,14 @@ const EditSellerDetails = ({ sellerId: propSellerId, onClose, onSave, isPopup = 
             </div>
           </section>
 
-          {/* Business Associations Section */}
           <section className="space-y-6">
             <div className="flex items-center gap-3 pb-2 border-b border-slate-100">
-              <div className="w-8 h-8 rounded-lg bg-purple-50 flex items-center justify-center text-purple-600 font-bold text-sm">4</div>
-              <h4 className="text-sm font-black uppercase tracking-widest text-slate-800">Business Associations & Status</h4>
+              <div className="w-8 h-8 rounded-lg bg-purple-50 flex items-center justify-center text-purple-600 font-bold text-sm">
+                4
+              </div>
+              <h4 className="text-sm font-black uppercase tracking-widest text-slate-800">
+                Business Associations & Status
+              </h4>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <DataDropdown
@@ -443,19 +489,24 @@ const EditSellerDetails = ({ sellerId: propSellerId, onClose, onSave, isPopup = 
                 selectedOptions={selectedGroups}
                 isMulti
                 placeholder="Select group associations"
-                onChange={(selected) => setSelectedGroups(selected ? selected.map(s => s.value) : [])}
+                onChange={(selected) =>
+                  setSelectedGroups(
+                    selected ? selected.map((s) => s.value) : [],
+                  )
+                }
               />
               <DataDropdown
                 label="Account Status"
                 options={statusOptions}
                 selectedOptions={selectedStatus}
                 placeholder="Select status"
-                onChange={(selected) => setSelectedStatus(selected?.value || selected)}
+                onChange={(selected) =>
+                  setSelectedStatus(selected?.value || selected)
+                }
               />
             </div>
           </section>
 
-          {/* Submit Section */}
           <div className="pt-10 border-t border-slate-100 flex justify-end gap-4">
             <Buttons
               label="Cancel"
