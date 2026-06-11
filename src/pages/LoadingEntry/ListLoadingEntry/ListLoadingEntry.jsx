@@ -465,29 +465,47 @@ const ListLoadingEntry = () => {
           params: { search: entry.saudaNo, limit: 1 },
         });
         const orders = response.data.data || response.data || [];
-        const selfOrder = orders.find((o) => o.saudaNo === entry.saudaNo);
+        const selfOrder = orders.find(
+          (o) =>
+            String(o.saudaNo).toLowerCase().trim() ===
+            String(entry.saudaNo).toLowerCase().trim()
+        );
         setCurrentSelfOrder(selfOrder || null);
 
         // Initialize/Update quality claims from sauda
         if (selfOrder?.parameters) {
-          const initialClaims = selfOrder.parameters
-            .map((p) => {
-              // Check if entry already has this claim
-              const existingClaim = entry.qualityClaims?.find(
-                (c) =>
-                  c.parameterName === (p.name || p.parameterName) ||
-                  c.parameterId === (p._id || p.id)
-              );
-              return {
-                parameterId: p._id || p.id || "",
-                parameterName: p.name || p.parameterName || "",
-                standardValue: parseFloat(p.value || p.parameterValue || 0),
-                actualValue: existingClaim?.actualValue || "",
-                claimAmount: existingClaim?.claimAmount || 0,
-                notes: existingClaim?.notes || "",
-              };
-            });
-          
+          const initialClaims = selfOrder.parameters.map((p) => {
+            // Extract parameter name robustly
+            let pName = "";
+            if (typeof p.parameter === "string") {
+              pName = p.parameter;
+            } else if (p.parameter && typeof p.parameter === "object") {
+              pName = p.parameter.label || p.parameter.name || p.parameter.value || "";
+            }
+            
+            if (!pName) {
+              pName = p.name || p.parameterName || p.label || "";
+            }
+
+            // Extract parameter ID robustly
+            const pId = p._id || p.id || p.parameterId || p.parameter?._id || p.parameter?.value || "";
+
+            // Check if entry already has this claim
+            const existingClaim = entry.qualityClaims?.find(
+              (c) =>
+                (c.parameterName && pName && c.parameterName === pName) ||
+                (c.parameterId && pId && c.parameterId === pId)
+            );
+            return {
+              parameterId: pId,
+              parameterName: pName,
+              standardValue: parseFloat(p.value || p.parameterValue || p.standardValue || 0),
+              actualValue: existingClaim?.actualValue || "",
+              claimAmount: existingClaim?.claimAmount || 0,
+              notes: existingClaim?.notes || "",
+            };
+          });
+
           newEditEntry.qualityClaims = initialClaims;
         }
 
