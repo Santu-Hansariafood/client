@@ -2,19 +2,23 @@ import mongoose from "mongoose";
 
 const expenseRequestSchema = new mongoose.Schema(
   {
-    category: { type: mongoose.Schema.Types.ObjectId, ref: "ExpenseCategory", required: true },
+    category: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "ExpenseCategory",
+      required: true,
+    },
     amount: { type: Number, required: true },
     description: { type: String, trim: true },
     employee: {
       type: mongoose.Schema.Types.ObjectId,
       refPath: "employeeModel",
-      required: true
+      required: true,
     },
     employeeModel: {
       type: String,
       required: true,
       enum: ["User", "Employee"],
-      default: "User"
+      default: "User",
     },
     status: {
       type: String,
@@ -24,7 +28,7 @@ const expenseRequestSchema = new mongoose.Schema(
     approvedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     rejectionReason: { type: String },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 export default mongoose.model("ExpenseRequest", expenseRequestSchema);
