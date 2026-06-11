@@ -456,6 +456,8 @@ const ListLoadingEntry = () => {
         partyBillCopy: null,
       },
       qualityClaims: entry.qualityClaims || [],
+      manualClaim: entry.manualClaim || false,
+      manualClaimAmount: entry.manualClaimAmount || 0,
     };
 
     // Fetch both self-order and quality parameters
@@ -1620,7 +1622,8 @@ const ListLoadingEntry = () => {
                                     value={claim.actualValue}
                                     onChange={(e) => handleQualityChange(idx, "actualValue", e.target.value)}
                                     placeholder="Actual"
-                                    className="w-24 px-3 py-1.5 bg-white border border-slate-300 rounded-lg text-sm font-bold focus:ring-2 focus:ring-indigo-500/20 outline-none"
+                                    disabled={editEntry.manualClaim}
+                                    className={`w-24 px-3 py-1.5 border rounded-lg text-sm font-bold focus:outline-none focus:ring-2 focus:ring-indigo-500/20 ${editEntry.manualClaim ? 'bg-slate-100 border-slate-200 cursor-not-allowed' : 'bg-white border-slate-300'}`}
                                   />
                                 </td>
                                 <td className="px-4 py-3">
@@ -1640,13 +1643,65 @@ const ListLoadingEntry = () => {
                                     value={claim.notes}
                                     onChange={(e) => handleQualityChange(idx, "notes", e.target.value)}
                                     placeholder="Remarks..."
-                                    className="w-full min-w-[150px] px-3 py-1.5 bg-white border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500/20 outline-none"
+                                    disabled={editEntry.manualClaim}
+                                    className={`w-full min-w-[150px] px-3 py-1.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 ${editEntry.manualClaim ? 'bg-slate-100 border-slate-200 cursor-not-allowed' : 'bg-white border-slate-300'}`}
                                   />
                                 </td>
                               </tr>
                             ))}
                           </tbody>
                         </table>
+
+                        {/* Total Claim */}
+                        <div className="mt-4 flex items-center justify-between bg-indigo-50 px-4 py-3 rounded-lg border border-indigo-100">
+                          <span className="text-sm font-bold text-indigo-800">Total Claim:</span>
+                          <span className="text-lg font-black text-indigo-600">
+                            ₹{editEntry.manualClaim 
+                              ? (editEntry.manualClaimAmount || 0) 
+                              : editEntry.qualityClaims.reduce((total, claim) => total + (Number(claim.claimAmount) || 0), 0).toFixed(2)}
+                          </span>
+                        </div>
+
+                        {/* Manual Claim Checkbox */}
+                        <div className="mt-4">
+                          <label className="flex items-center gap-3 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={editEntry.manualClaim}
+                              onChange={(e) => {
+                                setEditEntry(prev => ({
+                                  ...prev,
+                                  manualClaim: e.target.checked
+                                }));
+                              }}
+                              className="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500 cursor-pointer"
+                            />
+                            <span className="text-sm font-semibold text-slate-700">
+                              Report not received, enter manual claim
+                            </span>
+                          </label>
+
+                          {/* Manual Claim Input */}
+                          {editEntry.manualClaim && (
+                            <div className="mt-3 flex items-center gap-3">
+                              <span className="text-slate-400 font-bold text-lg">₹</span>
+                              <input
+                                type="number"
+                                value={editEntry.manualClaimAmount}
+                                onChange={(e) => {
+                                  setEditEntry(prev => ({
+                                    ...prev,
+                                    manualClaimAmount: e.target.value
+                                  }));
+                                }}
+                                placeholder="Enter manual claim amount"
+                                className="flex-1 max-w-xs px-4 py-2 bg-white border border-indigo-300 rounded-lg text-base font-bold text-indigo-800 focus:ring-2 focus:ring-indigo-500/20 outline-none"
+                                step="0.01"
+                              />
+                            </div>
+                          )}
+                        </div>
+
                         <p className="mt-3 text-[11px] text-slate-500 italic">
                           * Claim Amount is automatically calculated based on (Actual - Standard) × Sauda Rate (₹{currentSelfOrder?.rate || 0})
                         </p>
