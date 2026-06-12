@@ -138,15 +138,11 @@ const ListCompany = () => {
       .map((commodity) =>
         (commodity?.parameters || [])
           .filter((param) => param.value !== "0")
-          .map((param) => `${param.parameter}: ${param.value}`)
+          .map((param) => `${param.parameter}: ${param.value} (${param.claimRatioLeft}:${param.claimRatioRight})`)
           .join(", "),
       )
       .filter(Boolean)
       .join(" | "),
-
-    (company.commodities || [])
-      .map((commodity) => commodity?.claimRatio || "N/A")
-      .join(", "),
 
     company.mandiLicense || "N/A",
     company.activeStatus ? "Active" : "Inactive",
@@ -194,7 +190,6 @@ const ListCompany = () => {
                     "Group",
                     "Commodity",
                     "Quality Parameter",
-                    "Claim Ratio",
                     "Mandi License",
                     "Status",
                     "Actions",
@@ -254,9 +249,8 @@ const ListCompany = () => {
                     <li key={commodity._id}>
                       <strong>{commodity.name}</strong>:{" "}
                       {(commodity.parameters || [])
-                        .map((param) => `${param.parameter}: ${param.value}%`)
+                        .map((param) => `${param.parameter}: ${param.value} (Claim: ${param.claimRatioLeft}:${param.claimRatioRight})`)
                         .join(", ")}
-                      {commodity.claimRatio && ` | Claim Ratio: ${commodity.claimRatio}`}
                     </li>
                   ))}
                 </ul>

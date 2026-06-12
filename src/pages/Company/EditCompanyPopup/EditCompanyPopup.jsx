@@ -137,14 +137,11 @@ const EditCompanyPopup = ({ company, isOpen, onClose, onUpdate }) => {
               const commodityDef = mappedCommodityOptions.find(
                 (c) => String(c.value) === String(entry.commodityId),
               );
-              const [claimRatioLeft = "1", claimRatioRight = ""] = (entry.claimRatio || "").split(":");
 
               return {
                 _id: entry._id || null,
                 commodityId: String(entry.commodityId || ""),
                 brokerage: entry.brokerage ?? 0,
-                claimRatioLeft,
-                claimRatioRight,
                 parameters: Array.isArray(entry.parameters)
                   ? entry.parameters.map((p) => {
                       const paramDef = commodityDef?.parameters?.find(
@@ -154,6 +151,8 @@ const EditCompanyPopup = ({ company, isOpen, onClose, onUpdate }) => {
                         parameterId: String(p.parameterId),
                         label: paramDef?.label || p.label || "Parameter",
                         value: p.value ?? "",
+                        claimRatioLeft: p.claimRatioLeft ?? "1",
+                        claimRatioRight: p.claimRatioRight ?? "",
                       };
                     })
                   : [],
@@ -228,12 +227,12 @@ const EditCompanyPopup = ({ company, isOpen, onClose, onUpdate }) => {
         _id: null,
         commodityId,
         brokerage: 0,
-        claimRatioLeft: "1",
-        claimRatioRight: "",
         parameters: getCommodityParameterOptions(commodityId).map((p) => ({
           parameterId: p.value,
           label: p.label,
           value: "",
+          claimRatioLeft: "1",
+          claimRatioRight: "",
         })),
       },
     ]);
@@ -318,10 +317,11 @@ const EditCompanyPopup = ({ company, isOpen, onClose, onUpdate }) => {
           _id: entry._id || undefined,
           commodityId: entry.commodityId,
           brokerage: Number(entry.brokerage || 0),
-          claimRatio: `${entry.claimRatioLeft}:${entry.claimRatioRight}`,
           parameters: (entry.parameters || []).map((p) => ({
             parameterId: p.parameterId,
             value: p.value,
+            claimRatioLeft: p.claimRatioLeft,
+            claimRatioRight: p.claimRatioRight,
           })),
         })),
       };
@@ -471,47 +471,50 @@ const EditCompanyPopup = ({ company, isOpen, onClose, onUpdate }) => {
                       }
                     />
 
-                    <div className="flex items-center gap-2 mt-2">
-                      <DataInput
-                        placeholder="1"
-                        value={entry.claimRatioLeft}
-                        onChange={(e) => {
-                          setCommodityEntries((prev) => {
-                            const updated = [...prev];
-                            updated[commodityIndex].claimRatioLeft = e.target.value;
-                            return updated;
-                          });
-                        }}
-                      />
-                      <span className="text-lg font-bold">:</span>
-                      <DataInput
-                        placeholder="20"
-                        value={entry.claimRatioRight}
-                        onChange={(e) => {
-                          setCommodityEntries((prev) => {
-                            const updated = [...prev];
-                            updated[commodityIndex].claimRatioRight = e.target.value;
-                            return updated;
-                          });
-                        }}
-                      />
-                    </div>
-
                     {(entry.parameters || []).map((param, paramIndex) => (
-                      <div key={paramIndex} className="flex gap-2 mt-2">
-                        <p className="flex-1">{param.label}</p>
+                      <div key={paramIndex} className="mt-2">
+                        <div className="flex gap-2">
+                          <p className="flex-1">{param.label}</p>
 
-                        <DataInput
-                          placeholder="Value"
-                          value={param.value}
-                          onChange={(e) =>
-                            handleParameterValueChange(
-                              commodityIndex,
-                              paramIndex,
-                              e.target.value,
-                            )
-                          }
-                        />
+                          <DataInput
+                            placeholder="Value"
+                            value={param.value}
+                            onChange={(e) =>
+                              handleParameterValueChange(
+                                commodityIndex,
+                                paramIndex,
+                                e.target.value,
+                              )
+                            }
+                          />
+                        </div>
+
+                        <div className="mt-2 flex items-center gap-2">
+                          <label className="text-xs">Claim Ratio</label>
+                          <DataInput
+                            placeholder="1"
+                            value={param.claimRatioLeft}
+                            onChange={(e) => {
+                              setCommodityEntries((prev) => {
+                                const updated = [...prev];
+                                updated[commodityIndex].parameters[paramIndex].claimRatioLeft = e.target.value;
+                                return updated;
+                              });
+                            }}
+                          />
+                          <span className="text-lg font-bold">:</span>
+                          <DataInput
+                            placeholder="20"
+                            value={param.claimRatioRight}
+                            onChange={(e) => {
+                              setCommodityEntries((prev) => {
+                                const updated = [...prev];
+                                updated[commodityIndex].parameters[paramIndex].claimRatioRight = e.target.value;
+                                return updated;
+                              });
+                            }}
+                          />
+                        </div>
                       </div>
                     ))}
                   </div>

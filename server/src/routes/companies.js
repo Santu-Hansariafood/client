@@ -30,24 +30,35 @@ const mapCompanyForClient = (company) => {
     const storedParamsMap = new Map(
       (entry.parameters || []).map((p) => [
         String(p.parameterId?._id || p.parameterId),
-        p.value ?? "",
+        {
+          value: p.value ?? "",
+          claimRatioLeft: p.claimRatioLeft ?? "1",
+          claimRatioRight: p.claimRatioRight ?? "",
+        },
       ]),
     );
 
-    const commodityParams = (commodityRef?.parameters || []).map((p) => ({
-      _id: p.parameterId?._id || p.parameterId,
-      parameterId: p.parameterId?._id || p.parameterId,
-      parameter: p.parameterId?.name || "",
-      value:
-        storedParamsMap.get(String(p.parameterId?._id || p.parameterId)) ?? "",
-    }));
+    const commodityParams = (commodityRef?.parameters || []).map((p) => {
+      const storedData = storedParamsMap.get(String(p.parameterId?._id || p.parameterId)) || {
+        value: "",
+        claimRatioLeft: "1",
+        claimRatioRight: "",
+      };
+      return {
+        _id: p.parameterId?._id || p.parameterId,
+        parameterId: p.parameterId?._id || p.parameterId,
+        parameter: p.parameterId?.name || "",
+        value: storedData.value,
+        claimRatioLeft: storedData.claimRatioLeft,
+        claimRatioRight: storedData.claimRatioRight,
+      };
+    });
 
     return {
       _id: commodityId,
       commodityId,
       name: commodityRef?.name || entry.name || "",
       brokerage: entry.brokerage ?? 0,
-      claimRatio: entry.claimRatio ?? "",
       parameters: commodityParams,
     };
   });
@@ -220,12 +231,13 @@ router.post("/", async (req, res) => {
           .map((entry) => ({
             commodityId: toObjectId(entry.commodityId),
             brokerage: Number(entry.brokerage || 0),
-            claimRatio: entry.claimRatio || "",
             parameters: Array.isArray(entry.parameters)
               ? entry.parameters
                   .map((p) => ({
                     parameterId: toObjectId(p.parameterId || p._id),
                     value: p.value ?? "",
+                    claimRatioLeft: p.claimRatioLeft ?? "1",
+                    claimRatioRight: p.claimRatioRight ?? "",
                   }))
                   .filter((p) => p.parameterId)
               : [],
@@ -331,22 +343,23 @@ router.put("/:id", async (req, res) => {
       consigneeIds,
       groupId,
       commodities: Array.isArray(body.commodities)
-        ? body.commodities
-            .map((entry) => ({
-              commodityId: toObjectId(entry.commodityId || entry._id),
-              brokerage: Number(entry.brokerage || 0),
-              claimRatio: entry.claimRatio || "",
-              parameters: Array.isArray(entry.parameters)
-                ? entry.parameters
-                    .map((p) => ({
-                      parameterId: toObjectId(p.parameterId || p._id),
-                      value: p.value ?? "",
-                    }))
-                    .filter((p) => p.parameterId)
-                : [],
-            }))
-            .filter((entry) => entry.commodityId)
-        : [],
+          ? body.commodities
+              .map((entry) => ({
+                commodityId: toObjectId(entry.commodityId || entry._id),
+                brokerage: Number(entry.brokerage || 0),
+                parameters: Array.isArray(entry.parameters)
+                  ? entry.parameters
+                      .map((p) => ({
+                        parameterId: toObjectId(p.parameterId || p._id),
+                        value: p.value ?? "",
+                        claimRatioLeft: p.claimRatioLeft ?? "1",
+                        claimRatioRight: p.claimRatioRight ?? "",
+                      }))
+                      .filter((p) => p.parameterId)
+                  : [],
+              }))
+              .filter((entry) => entry.commodityId)
+          : [],
       mandiLicense: body.mandiLicense || "",
       activeStatus:
         typeof body.activeStatus === "boolean" ? body.activeStatus : true,

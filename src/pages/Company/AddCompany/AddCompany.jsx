@@ -114,8 +114,6 @@ const AddCompany = () => {
         commodity: null,
         parameters: [],
         brokerage: "",
-        claimRatioLeft: "1",
-        claimRatioRight: "",
       },
     ]);
   }, []);
@@ -132,11 +130,11 @@ const AddCompany = () => {
         updated[index] = {
           commodity: selectedCommodity,
           brokerage: "",
-          claimRatioLeft: "1",
-          claimRatioRight: "",
           parameters: (commodity?.parameters || []).map((param) => ({
             ...param,
             value: "",
+            claimRatioLeft: "1",
+            claimRatioRight: "",
           })),
         };
 
@@ -254,11 +252,12 @@ const AddCompany = () => {
       commodities: selectedCommodities.map((entry) => ({
         commodityId: entry.commodity?.value,
         brokerage: parseFloat(entry.brokerage) || 0,
-        claimRatio: `${entry.claimRatioLeft}:${entry.claimRatioRight}`,
         parameters: entry.parameters
           .map((param) => ({
             parameterId: param.parameterId || param._id,
             value: param.value,
+            claimRatioLeft: param.claimRatioLeft,
+            claimRatioRight: param.claimRatioRight,
           }))
           .filter((p) => p.parameterId),
       })),
@@ -446,6 +445,33 @@ const AddCompany = () => {
                           handleParameterChange(index, pIndex, e.target.value)
                         }
                       />
+
+                      <div className="mt-2 flex items-center gap-2">
+                        <label className="text-xs">Claim Ratio</label>
+                        <DataInput
+                          placeholder="1"
+                          value={param.claimRatioLeft}
+                          onChange={(e) => {
+                            setSelectedCommodities((prev) => {
+                              const updated = [...prev];
+                              updated[index].parameters[pIndex].claimRatioLeft = e.target.value;
+                              return updated;
+                            });
+                          }}
+                        />
+                        <span className="text-lg font-bold">:</span>
+                        <DataInput
+                          placeholder="20"
+                          value={param.claimRatioRight}
+                          onChange={(e) => {
+                            setSelectedCommodities((prev) => {
+                              const updated = [...prev];
+                              updated[index].parameters[pIndex].claimRatioRight = e.target.value;
+                              return updated;
+                            });
+                          }}
+                        />
+                      </div>
                     </div>
                   ))}
 
@@ -463,37 +489,6 @@ const AddCompany = () => {
                         });
                       }}
                     />
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <div className="flex-1">
-                      <label className="text-xs">Claim Ratio</label>
-                      <div className="flex items-center gap-2">
-                        <DataInput
-                          placeholder="1"
-                          value={entry.claimRatioLeft}
-                          onChange={(e) => {
-                            setSelectedCommodities((prev) => {
-                              const updated = [...prev];
-                              updated[index].claimRatioLeft = e.target.value;
-                              return updated;
-                            });
-                          }}
-                        />
-                        <span className="text-lg font-bold">:</span>
-                        <DataInput
-                          placeholder="20"
-                          value={entry.claimRatioRight}
-                          onChange={(e) => {
-                            setSelectedCommodities((prev) => {
-                              const updated = [...prev];
-                              updated[index].claimRatioRight = e.target.value;
-                              return updated;
-                            });
-                          }}
-                        />
-                      </div>
-                    </div>
                   </div>
                 </div>
               </div>
