@@ -132,9 +132,13 @@ const AddCompany = () => {
           brokerage: "",
           parameters: (commodity?.parameters || []).map((param) => ({
             ...param,
-            value: "",
-            claimRatioLeft: "1",
-            claimRatioRight: "",
+            values: [
+              {
+                value: "",
+                claimRatioLeft: "1",
+                claimRatioRight: "",
+              },
+            ],
           })),
         };
 
@@ -255,9 +259,7 @@ const AddCompany = () => {
         parameters: entry.parameters
           .map((param) => ({
             parameterId: param.parameterId || param._id,
-            value: param.value,
-            claimRatioLeft: param.claimRatioLeft,
-            claimRatioRight: param.claimRatioRight,
+            values: param.values,
           }))
           .filter((p) => p.parameterId),
       })),
@@ -435,43 +437,92 @@ const AddCompany = () => {
 
                 <div className="grid grid-cols-2 gap-4 mt-4">
                   {entry.parameters.map((param, pIndex) => (
-                    <div key={param.parameter}>
-                      <label className="text-xs">{param.parameter}</label>
+                    <div key={param.parameter} className="space-y-2">
+                      <label className="text-xs font-semibold">{param.parameter}</label>
+                      
+                      {param.values.map((val, vIndex) => (
+                        <div key={vIndex} className="border p-3 rounded-md bg-gray-50 space-y-2">
+                          <div className="flex gap-2 items-center">
+                            <div className="flex-1">
+                              <DataInput
+                                placeholder={`Enter ${param.parameter}`}
+                                value={val.value}
+                                onChange={(e) => {
+                                  setSelectedCommodities((prev) => {
+                                    const updated = [...prev];
+                                    updated[index].parameters[pIndex].values[vIndex].value = e.target.value;
+                                    return updated;
+                                  });
+                                }}
+                              />
+                            </div>
+                            
+                            {param.values.length > 1 && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setSelectedCommodities((prev) => {
+                                    const updated = [...prev];
+                                    updated[index].parameters[pIndex].values = updated[index].parameters[pIndex].values.filter((_, i) => i !== vIndex);
+                                    return updated;
+                                  });
+                                }}
+                                className="text-red-500 hover:text-red-700 text-sm"
+                              >
+                                ✕
+                              </button>
+                            )}
+                          </div>
 
-                      <DataInput
-                        placeholder={`Enter ${param.parameter}`}
-                        value={param.value}
-                        onChange={(e) =>
-                          handleParameterChange(index, pIndex, e.target.value)
-                        }
-                      />
+                          <div className="flex items-center gap-2">
+                            <label className="text-xs">Claim Ratio</label>
+                            <DataInput
+                              placeholder="1"
+                              value={val.claimRatioLeft}
+                              onChange={(e) => {
+                                setSelectedCommodities((prev) => {
+                                  const updated = [...prev];
+                                  updated[index].parameters[pIndex].values[vIndex].claimRatioLeft = e.target.value;
+                                  return updated;
+                                });
+                              }}
+                            />
+                            <span className="text-lg font-bold">:</span>
+                            <DataInput
+                              placeholder="20"
+                              value={val.claimRatioRight}
+                              onChange={(e) => {
+                                setSelectedCommodities((prev) => {
+                                  const updated = [...prev];
+                                  updated[index].parameters[pIndex].values[vIndex].claimRatioRight = e.target.value;
+                                  return updated;
+                                });
+                              }}
+                            />
+                          </div>
+                        </div>
+                      ))}
 
-                      <div className="mt-2 flex items-center gap-2">
-                        <label className="text-xs">Claim Ratio</label>
-                        <DataInput
-                          placeholder="1"
-                          value={param.claimRatioLeft}
-                          onChange={(e) => {
-                            setSelectedCommodities((prev) => {
-                              const updated = [...prev];
-                              updated[index].parameters[pIndex].claimRatioLeft = e.target.value;
-                              return updated;
-                            });
-                          }}
-                        />
-                        <span className="text-lg font-bold">:</span>
-                        <DataInput
-                          placeholder="20"
-                          value={param.claimRatioRight}
-                          onChange={(e) => {
-                            setSelectedCommodities((prev) => {
-                              const updated = [...prev];
-                              updated[index].parameters[pIndex].claimRatioRight = e.target.value;
-                              return updated;
-                            });
-                          }}
-                        />
-                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedCommodities((prev) => {
+                            const updated = [...prev];
+                            updated[index].parameters[pIndex].values = [
+                              ...updated[index].parameters[pIndex].values,
+                              {
+                                value: "",
+                                claimRatioLeft: "1",
+                                claimRatioRight: "",
+                              },
+                            ];
+                            return updated;
+                          });
+                        }}
+                        className="flex items-center gap-1 text-blue-600 hover:text-blue-800 text-sm"
+                      >
+                        <span className="text-lg">+</span> Add More
+                      </button>
                     </div>
                   ))}
 

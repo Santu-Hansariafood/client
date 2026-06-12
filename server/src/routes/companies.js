@@ -30,27 +30,17 @@ const mapCompanyForClient = (company) => {
     const storedParamsMap = new Map(
       (entry.parameters || []).map((p) => [
         String(p.parameterId?._id || p.parameterId),
-        {
-          value: p.value ?? "",
-          claimRatioLeft: p.claimRatioLeft ?? "1",
-          claimRatioRight: p.claimRatioRight ?? "",
-        },
+        p.values ?? [],
       ]),
     );
 
     const commodityParams = (commodityRef?.parameters || []).map((p) => {
-      const storedData = storedParamsMap.get(String(p.parameterId?._id || p.parameterId)) || {
-        value: "",
-        claimRatioLeft: "1",
-        claimRatioRight: "",
-      };
+      const storedValues = storedParamsMap.get(String(p.parameterId?._id || p.parameterId)) || [];
       return {
         _id: p.parameterId?._id || p.parameterId,
         parameterId: p.parameterId?._id || p.parameterId,
         parameter: p.parameterId?.name || "",
-        value: storedData.value,
-        claimRatioLeft: storedData.claimRatioLeft,
-        claimRatioRight: storedData.claimRatioRight,
+        values: storedValues,
       };
     });
 
@@ -235,9 +225,7 @@ router.post("/", async (req, res) => {
               ? entry.parameters
                   .map((p) => ({
                     parameterId: toObjectId(p.parameterId || p._id),
-                    value: p.value ?? "",
-                    claimRatioLeft: p.claimRatioLeft ?? "1",
-                    claimRatioRight: p.claimRatioRight ?? "",
+                    values: Array.isArray(p.values) ? p.values : [],
                   }))
                   .filter((p) => p.parameterId)
               : [],
@@ -351,9 +339,7 @@ router.put("/:id", async (req, res) => {
                   ? entry.parameters
                       .map((p) => ({
                         parameterId: toObjectId(p.parameterId || p._id),
-                        value: p.value ?? "",
-                        claimRatioLeft: p.claimRatioLeft ?? "1",
-                        claimRatioRight: p.claimRatioRight ?? "",
+                        values: Array.isArray(p.values) ? p.values : [],
                       }))
                       .filter((p) => p.parameterId)
                   : [],

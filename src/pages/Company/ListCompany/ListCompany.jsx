@@ -137,8 +137,13 @@ const ListCompany = () => {
     (company.commodities || [])
       .map((commodity) =>
         (commodity?.parameters || [])
-          .filter((param) => param.value !== "0")
-          .map((param) => `${param.parameter}: ${param.value} (${param.claimRatioLeft}:${param.claimRatioRight})`)
+          .map((param) =>
+            (param.values || [])
+              .filter((val) => val.value && val.value !== "0")
+              .map((val) => `${param.parameter}: ${val.value} (${val.claimRatioLeft}:${val.claimRatioRight})`)
+              .join(", "),
+          )
+          .filter(Boolean)
           .join(", "),
       )
       .filter(Boolean)
@@ -246,11 +251,22 @@ const ListCompany = () => {
 
                 <ul>
                   {(selectedCompany.commodities || []).map((commodity) => (
-                    <li key={commodity._id}>
-                      <strong>{commodity.name}</strong>:{" "}
-                      {(commodity.parameters || [])
-                        .map((param) => `${param.parameter}: ${param.value} (Claim: ${param.claimRatioLeft}:${param.claimRatioRight})`)
-                        .join(", ")}
+                    <li key={commodity._id} className="mb-2">
+                      <strong>{commodity.name}</strong>
+                      <ul className="ml-4 mt-1">
+                        {(commodity.parameters || []).map((param, pIndex) => (
+                          <li key={pIndex} className="mb-1">
+                            <strong>{param.parameter}:</strong>
+                            <ul className="ml-4">
+                              {(param.values || []).map((val, vIndex) => (
+                                <li key={vIndex}>
+                                  {val.value} (Claim: {val.claimRatioLeft}:{val.claimRatioRight})
+                                </li>
+                              ))}
+                            </ul>
+                          </li>
+                        ))}
+                      </ul>
                     </li>
                   ))}
                 </ul>

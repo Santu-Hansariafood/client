@@ -150,9 +150,13 @@ const EditCompanyPopup = ({ company, isOpen, onClose, onUpdate }) => {
                       return {
                         parameterId: String(p.parameterId),
                         label: paramDef?.label || p.label || "Parameter",
-                        value: p.value ?? "",
-                        claimRatioLeft: p.claimRatioLeft ?? "1",
-                        claimRatioRight: p.claimRatioRight ?? "",
+                        values: Array.isArray(p.values) ? p.values : [
+                          {
+                            value: "",
+                            claimRatioLeft: "1",
+                            claimRatioRight: "",
+                          },
+                        ],
                       };
                     })
                   : [],
@@ -230,9 +234,13 @@ const EditCompanyPopup = ({ company, isOpen, onClose, onUpdate }) => {
         parameters: getCommodityParameterOptions(commodityId).map((p) => ({
           parameterId: p.value,
           label: p.label,
-          value: "",
-          claimRatioLeft: "1",
-          claimRatioRight: "",
+          values: [
+            {
+              value: "",
+              claimRatioLeft: "1",
+              claimRatioRight: "",
+            },
+          ],
         })),
       },
     ]);
@@ -319,9 +327,7 @@ const EditCompanyPopup = ({ company, isOpen, onClose, onUpdate }) => {
           brokerage: Number(entry.brokerage || 0),
           parameters: (entry.parameters || []).map((p) => ({
             parameterId: p.parameterId,
-            value: p.value,
-            claimRatioLeft: p.claimRatioLeft,
-            claimRatioRight: p.claimRatioRight,
+            values: p.values,
           })),
         })),
       };
@@ -473,48 +479,91 @@ const EditCompanyPopup = ({ company, isOpen, onClose, onUpdate }) => {
 
                     {(entry.parameters || []).map((param, paramIndex) => (
                       <div key={paramIndex} className="mt-2">
-                        <div className="flex gap-2">
-                          <p className="flex-1">{param.label}</p>
+                        <p className="font-medium text-sm">{param.label}</p>
+                        
+                        {param.values.map((val, vIndex) => (
+                          <div key={vIndex} className="border p-3 mt-2 rounded-md bg-gray-50 space-y-2">
+                            <div className="flex gap-2 items-center">
+                              <div className="flex-1">
+                                <DataInput
+                                  placeholder="Value"
+                                  value={val.value}
+                                  onChange={(e) => {
+                                    setCommodityEntries((prev) => {
+                                      const updated = [...prev];
+                                      updated[commodityIndex].parameters[paramIndex].values[vIndex].value = e.target.value;
+                                      return updated;
+                                    });
+                                  }}
+                                />
+                              </div>
+                              
+                              {param.values.length > 1 && (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setCommodityEntries((prev) => {
+                                      const updated = [...prev];
+                                      updated[commodityIndex].parameters[paramIndex].values = updated[commodityIndex].parameters[paramIndex].values.filter((_, i) => i !== vIndex);
+                                      return updated;
+                                    });
+                                  }}
+                                  className="text-red-500 hover:text-red-700 text-sm"
+                                >
+                                  ✕
+                                </button>
+                              )}
+                            </div>
 
-                          <DataInput
-                            placeholder="Value"
-                            value={param.value}
-                            onChange={(e) =>
-                              handleParameterValueChange(
-                                commodityIndex,
-                                paramIndex,
-                                e.target.value,
-                              )
-                            }
-                          />
-                        </div>
+                            <div className="flex items-center gap-2">
+                              <label className="text-xs">Claim Ratio</label>
+                              <DataInput
+                                placeholder="1"
+                                value={val.claimRatioLeft}
+                                onChange={(e) => {
+                                  setCommodityEntries((prev) => {
+                                    const updated = [...prev];
+                                    updated[commodityIndex].parameters[paramIndex].values[vIndex].claimRatioLeft = e.target.value;
+                                    return updated;
+                                  });
+                                }}
+                              />
+                              <span className="text-lg font-bold">:</span>
+                              <DataInput
+                                placeholder="20"
+                                value={val.claimRatioRight}
+                                onChange={(e) => {
+                                  setCommodityEntries((prev) => {
+                                    const updated = [...prev];
+                                    updated[commodityIndex].parameters[paramIndex].values[vIndex].claimRatioRight = e.target.value;
+                                    return updated;
+                                  });
+                                }}
+                              />
+                            </div>
+                          </div>
+                        ))}
 
-                        <div className="mt-2 flex items-center gap-2">
-                          <label className="text-xs">Claim Ratio</label>
-                          <DataInput
-                            placeholder="1"
-                            value={param.claimRatioLeft}
-                            onChange={(e) => {
-                              setCommodityEntries((prev) => {
-                                const updated = [...prev];
-                                updated[commodityIndex].parameters[paramIndex].claimRatioLeft = e.target.value;
-                                return updated;
-                              });
-                            }}
-                          />
-                          <span className="text-lg font-bold">:</span>
-                          <DataInput
-                            placeholder="20"
-                            value={param.claimRatioRight}
-                            onChange={(e) => {
-                              setCommodityEntries((prev) => {
-                                const updated = [...prev];
-                                updated[commodityIndex].parameters[paramIndex].claimRatioRight = e.target.value;
-                                return updated;
-                              });
-                            }}
-                          />
-                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setCommodityEntries((prev) => {
+                              const updated = [...prev];
+                              updated[commodityIndex].parameters[paramIndex].values = [
+                                ...updated[commodityIndex].parameters[paramIndex].values,
+                                {
+                                  value: "",
+                                  claimRatioLeft: "1",
+                                  claimRatioRight: "",
+                                },
+                              ];
+                              return updated;
+                            });
+                          }}
+                          className="flex items-center gap-1 text-blue-600 hover:text-blue-800 text-sm mt-2"
+                        >
+                          <span className="text-lg">+</span> Add More
+                        </button>
                       </div>
                     ))}
                   </div>

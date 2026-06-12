@@ -10,6 +10,15 @@ const formatName = (name) => {
     .join(" ");
 };
 
+const parameterValueSchema = new mongoose.Schema(
+  {
+    value: { type: String, default: "" },
+    claimRatioLeft: { type: String, default: "1" },
+    claimRatioRight: { type: String, default: "" },
+  },
+  { _id: false },
+);
+
 const companyCommodityParameterSchema = new mongoose.Schema(
   {
     parameterId: {
@@ -17,9 +26,7 @@ const companyCommodityParameterSchema = new mongoose.Schema(
       ref: "QualityParameter",
       required: true,
     },
-    value: { type: String, default: "" },
-    claimRatioLeft: { type: String, default: "1" },
-    claimRatioRight: { type: String, default: "" },
+    values: { type: [parameterValueSchema], default: [] },
   },
   { _id: false },
 );
