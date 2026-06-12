@@ -30,6 +30,7 @@ const companyCommoditySchema = new mongoose.Schema(
       required: true,
     },
     brokerage: { type: Number, default: 0 },
+    claimRatio: { type: String, default: "" },
     parameters: { type: [companyCommodityParameterSchema], default: [] },
   },
   { _id: false },

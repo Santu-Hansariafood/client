@@ -132,32 +132,33 @@ const EditCompanyPopup = ({ company, isOpen, onClose, onUpdate }) => {
           }
 
           setCommodityEntries(
-            Array.isArray(company.commodities)
-              ? company.commodities.map((entry) => {
-                  const commodityDef = mappedCommodityOptions.find(
-                    (c) => String(c.value) === String(entry.commodityId),
-                  );
+        Array.isArray(company.commodities)
+          ? company.commodities.map((entry) => {
+              const commodityDef = mappedCommodityOptions.find(
+                (c) => String(c.value) === String(entry.commodityId),
+              );
 
-                  return {
-                    _id: entry._id || null,
-                    commodityId: String(entry.commodityId || ""),
-                    brokerage: entry.brokerage ?? 0,
-                    parameters: Array.isArray(entry.parameters)
-                      ? entry.parameters.map((p) => {
-                          const paramDef = commodityDef?.parameters?.find(
-                            (pd) => String(pd.value) === String(p.parameterId),
-                          );
-                          return {
-                            parameterId: String(p.parameterId),
-                            label: paramDef?.label || p.label || "Parameter",
-                            value: p.value ?? "",
-                          };
-                        })
-                      : [],
-                  };
-                })
-              : [],
-          );
+              return {
+                _id: entry._id || null,
+                commodityId: String(entry.commodityId || ""),
+                brokerage: entry.brokerage ?? 0,
+                claimRatio: entry.claimRatio ?? "",
+                parameters: Array.isArray(entry.parameters)
+                  ? entry.parameters.map((p) => {
+                      const paramDef = commodityDef?.parameters?.find(
+                        (pd) => String(pd.value) === String(p.parameterId),
+                      );
+                      return {
+                        parameterId: String(p.parameterId),
+                        label: paramDef?.label || p.label || "Parameter",
+                        value: p.value ?? "",
+                      };
+                    })
+                  : [],
+              };
+            })
+          : [],
+      );
         }
       } catch (error) {
         toast.error(
@@ -225,6 +226,7 @@ const EditCompanyPopup = ({ company, isOpen, onClose, onUpdate }) => {
         _id: null,
         commodityId,
         brokerage: 0,
+        claimRatio: "",
         parameters: getCommodityParameterOptions(commodityId).map((p) => ({
           parameterId: p.value,
           label: p.label,
@@ -313,6 +315,7 @@ const EditCompanyPopup = ({ company, isOpen, onClose, onUpdate }) => {
           _id: entry._id || undefined,
           commodityId: entry.commodityId,
           brokerage: Number(entry.brokerage || 0),
+          claimRatio: entry.claimRatio || "",
           parameters: (entry.parameters || []).map((p) => ({
             parameterId: p.parameterId,
             value: p.value,
@@ -463,6 +466,18 @@ const EditCompanyPopup = ({ company, isOpen, onClose, onUpdate }) => {
                       onChange={(e) =>
                         handleBrokerageChange(commodityIndex, e.target.value)
                       }
+                    />
+
+                    <DataInput
+                      placeholder="Claim Ratio (e.g., 10:20)"
+                      value={entry.claimRatio}
+                      onChange={(e) => {
+                        setCommodityEntries((prev) => {
+                          const updated = [...prev];
+                          updated[commodityIndex].claimRatio = e.target.value;
+                          return updated;
+                        });
+                      }}
                     />
 
                     {(entry.parameters || []).map((param, paramIndex) => (

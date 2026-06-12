@@ -114,6 +114,7 @@ const AddCompany = () => {
         commodity: null,
         parameters: [],
         brokerage: "",
+        claimRatio: "",
       },
     ]);
   }, []);
@@ -130,6 +131,7 @@ const AddCompany = () => {
         updated[index] = {
           commodity: selectedCommodity,
           brokerage: "",
+          claimRatio: "",
           parameters: (commodity?.parameters || []).map((param) => ({
             ...param,
             value: "",
@@ -250,6 +252,7 @@ const AddCompany = () => {
       commodities: selectedCommodities.map((entry) => ({
         commodityId: entry.commodity?.value,
         brokerage: parseFloat(entry.brokerage) || 0,
+        claimRatio: entry.claimRatio || "",
         parameters: entry.parameters
           .map((param) => ({
             parameterId: param.parameterId || param._id,
@@ -454,6 +457,22 @@ const AddCompany = () => {
                         setSelectedCommodities((prev) => {
                           const updated = [...prev];
                           updated[index].brokerage = e.target.value;
+                          return updated;
+                        });
+                      }}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-xs">Claim Ratio</label>
+
+                    <DataInput
+                      placeholder="e.g., 10:20"
+                      value={entry.claimRatio}
+                      onChange={(e) => {
+                        setSelectedCommodities((prev) => {
+                          const updated = [...prev];
+                          updated[index].claimRatio = e.target.value;
                           return updated;
                         });
                       }}

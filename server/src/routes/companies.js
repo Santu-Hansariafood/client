@@ -47,6 +47,7 @@ const mapCompanyForClient = (company) => {
       commodityId,
       name: commodityRef?.name || entry.name || "",
       brokerage: entry.brokerage ?? 0,
+      claimRatio: entry.claimRatio ?? "",
       parameters: commodityParams,
     };
   });
@@ -219,6 +220,7 @@ router.post("/", async (req, res) => {
           .map((entry) => ({
             commodityId: toObjectId(entry.commodityId),
             brokerage: Number(entry.brokerage || 0),
+            claimRatio: entry.claimRatio || "",
             parameters: Array.isArray(entry.parameters)
               ? entry.parameters
                   .map((p) => ({
@@ -333,6 +335,7 @@ router.put("/:id", async (req, res) => {
             .map((entry) => ({
               commodityId: toObjectId(entry.commodityId || entry._id),
               brokerage: Number(entry.brokerage || 0),
+              claimRatio: entry.claimRatio || "",
               parameters: Array.isArray(entry.parameters)
                 ? entry.parameters
                     .map((p) => ({

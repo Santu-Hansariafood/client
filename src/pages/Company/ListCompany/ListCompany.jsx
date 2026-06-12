@@ -144,6 +144,10 @@ const ListCompany = () => {
       .filter(Boolean)
       .join(" | "),
 
+    (company.commodities || [])
+      .map((commodity) => commodity?.claimRatio || "N/A")
+      .join(", "),
+
     company.mandiLicense || "N/A",
     company.activeStatus ? "Active" : "Inactive",
 
@@ -190,6 +194,7 @@ const ListCompany = () => {
                     "Group",
                     "Commodity",
                     "Quality Parameter",
+                    "Claim Ratio",
                     "Mandi License",
                     "Status",
                     "Actions",
@@ -251,6 +256,7 @@ const ListCompany = () => {
                       {(commodity.parameters || [])
                         .map((param) => `${param.parameter}: ${param.value}%`)
                         .join(", ")}
+                      {commodity.claimRatio && ` | Claim Ratio: ${commodity.claimRatio}`}
                     </li>
                   ))}
                 </ul>
