@@ -138,6 +138,7 @@ const ListLoadingEntry = () => {
   const [popupType, setPopupType] = useState("");
   const [editEntry, setEditEntry] = useState(null);
   const [currentSelfOrder, setCurrentSelfOrder] = useState(null);
+  const [currentCompany, setCurrentCompany] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
   const [totalItems, setTotalItems] = useState(0);
   const [filters, setFilters] = useState({
@@ -463,7 +464,7 @@ const ListLoadingEntry = () => {
     // Fetch both self-order and quality parameters
     if (entry.saudaNo) {
       try {
-        // Fetch self-order and quality parameters in parallel
+        // Fetch self-order, quality parameters, and company in parallel
         const [selfOrderResponse, qualityParamsResponse] = await Promise.all([
           api.get("/self-order", {
             params: { search: entry.saudaNo, limit: 1 },
@@ -479,6 +480,25 @@ const ListLoadingEntry = () => {
             String(entry.saudaNo).toLowerCase().trim(),
         );
         setCurrentSelfOrder(selfOrder || null);
+
+        // Fetch company data
+        if (selfOrder?.buyerCompany) {
+          try {
+            const companyResponse = await api.get("/companies", {
+              params: { search: selfOrder.buyerCompany, limit: 1 },
+            });
+            const companies = companyResponse.data.data || companyResponse.data || [];
+            const company = companies.find(
+              (c) => c.companyName.toLowerCase() === selfOrder.buyerCompany.toLowerCase()
+            );
+            setCurrentCompany(company || null);
+          } catch (error) {
+            console.error("Error fetching company:", error);
+            setCurrentCompany(null);
+          }
+        } else {
+          setCurrentCompany(null);
+        }
 
         // Create a map: parameter ID -> parameter name
         const qualityParams =
@@ -637,12 +657,37 @@ const ListLoadingEntry = () => {
         const standard = parseFloat(newClaims[index].standardValue || 0);
         const actual = parseFloat(value || 0);
         const saudaRate = parseFloat(currentSelfOrder?.rate || 0);
-
-        // Claim Amount = (Actual - Standard) * Rate
-        // The user said: actual - value with the multiply with rate value
-        // We'll calculate the difference and multiply by rate.
         const diff = actual - standard;
-        const claim = diff * saudaRate;
+
+        let claim = diff * saudaRate; // Default fallback (1:1)
+        
+        // If we have company data, try to find the claim ratio
+        if (currentCompany && currentSelfOrder?.commodity) {
+          // Find the commodity in the company's commodities
+          const commodity = currentCompany.commodities?.find(
+            (c) => c.name.toLowerCase() === currentSelfOrder.commodity.toLowerCase()
+          );
+          
+          if (commodity) {
+            // Find the parameter in the commodity's parameters
+            const param = commodity.parameters?.find(
+              (p) => String(p.parameterId) === String(newClaims[index].parameterId) || 
+                     p.parameter?.toLowerCase() === newClaims[index].parameterName?.toLowerCase()
+            );
+            
+            if (param && param.values?.length > 0) {
+              // For now, we'll use the first value's ratio, or you might want to find the matching value
+              const ratioValue = param.values[0];
+              const left = parseFloat(ratioValue.claimRatioLeft || 1);
+              const right = parseFloat(ratioValue.claimRatioRight || 1);
+              
+              if (right > 0) {
+                claim = diff * saudaRate * (left / right);
+              }
+            }
+          }
+        }
+
         newClaims[index].claimAmount = Math.abs(claim).toFixed(2);
       }
 
