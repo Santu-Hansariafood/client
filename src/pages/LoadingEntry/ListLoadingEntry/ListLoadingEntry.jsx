@@ -482,14 +482,20 @@ const ListLoadingEntry = () => {
         setCurrentSelfOrder(selfOrder || null);
 
         // Fetch company data
+        console.log("=== Starting company fetch ===");
+        console.log("selfOrder.buyerCompany:", selfOrder?.buyerCompany);
         if (selfOrder?.buyerCompany) {
           try {
+            console.log("Calling api.get('/companies') with search:", selfOrder.buyerCompany);
             const companyResponse = await api.get("/companies", {
               params: { search: selfOrder.buyerCompany, limit: 1 },
             });
-            const companies =
-              companyResponse.data.data || companyResponse.data || [];
-            console.log("Fetched companies:", companies);
+            console.log("companyResponse:", companyResponse);
+            console.log("companyResponse.data:", companyResponse.data);
+            const companies = Array.isArray(companyResponse.data) 
+              ? companyResponse.data 
+              : (companyResponse.data?.data || []);
+            console.log("Processed companies array:", companies);
             const company = companies.find(
               (c) =>
                 c.companyName.toLowerCase() ===
@@ -500,9 +506,11 @@ const ListLoadingEntry = () => {
             setCurrentCompany(company || null);
           } catch (error) {
             console.error("Error fetching company:", error);
+            console.error("Error details:", error.response?.data);
             setCurrentCompany(null);
           }
         } else {
+          console.log("No selfOrder.buyerCompany, setting currentCompany to null");
           setCurrentCompany(null);
         }
 
