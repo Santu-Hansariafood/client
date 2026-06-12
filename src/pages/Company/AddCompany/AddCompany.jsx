@@ -114,7 +114,8 @@ const AddCompany = () => {
         commodity: null,
         parameters: [],
         brokerage: "",
-        claimRatio: "",
+        claimRatioLeft: "1",
+        claimRatioRight: "",
       },
     ]);
   }, []);
@@ -131,7 +132,8 @@ const AddCompany = () => {
         updated[index] = {
           commodity: selectedCommodity,
           brokerage: "",
-          claimRatio: "",
+          claimRatioLeft: "1",
+          claimRatioRight: "",
           parameters: (commodity?.parameters || []).map((param) => ({
             ...param,
             value: "",
@@ -252,7 +254,7 @@ const AddCompany = () => {
       commodities: selectedCommodities.map((entry) => ({
         commodityId: entry.commodity?.value,
         brokerage: parseFloat(entry.brokerage) || 0,
-        claimRatio: entry.claimRatio || "",
+        claimRatio: `${entry.claimRatioLeft}:${entry.claimRatioRight}`,
         parameters: entry.parameters
           .map((param) => ({
             parameterId: param.parameterId || param._id,
@@ -463,20 +465,35 @@ const AddCompany = () => {
                     />
                   </div>
 
-                  <div>
-                    <label className="text-xs">Claim Ratio</label>
-
-                    <DataInput
-                      placeholder="e.g., 10:20"
-                      value={entry.claimRatio}
-                      onChange={(e) => {
-                        setSelectedCommodities((prev) => {
-                          const updated = [...prev];
-                          updated[index].claimRatio = e.target.value;
-                          return updated;
-                        });
-                      }}
-                    />
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1">
+                      <label className="text-xs">Claim Ratio</label>
+                      <div className="flex items-center gap-2">
+                        <DataInput
+                          placeholder="1"
+                          value={entry.claimRatioLeft}
+                          onChange={(e) => {
+                            setSelectedCommodities((prev) => {
+                              const updated = [...prev];
+                              updated[index].claimRatioLeft = e.target.value;
+                              return updated;
+                            });
+                          }}
+                        />
+                        <span className="text-lg font-bold">:</span>
+                        <DataInput
+                          placeholder="20"
+                          value={entry.claimRatioRight}
+                          onChange={(e) => {
+                            setSelectedCommodities((prev) => {
+                              const updated = [...prev];
+                              updated[index].claimRatioRight = e.target.value;
+                              return updated;
+                            });
+                          }}
+                        />
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>

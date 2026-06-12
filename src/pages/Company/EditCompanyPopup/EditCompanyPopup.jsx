@@ -137,12 +137,14 @@ const EditCompanyPopup = ({ company, isOpen, onClose, onUpdate }) => {
               const commodityDef = mappedCommodityOptions.find(
                 (c) => String(c.value) === String(entry.commodityId),
               );
+              const [claimRatioLeft = "1", claimRatioRight = ""] = (entry.claimRatio || "").split(":");
 
               return {
                 _id: entry._id || null,
                 commodityId: String(entry.commodityId || ""),
                 brokerage: entry.brokerage ?? 0,
-                claimRatio: entry.claimRatio ?? "",
+                claimRatioLeft,
+                claimRatioRight,
                 parameters: Array.isArray(entry.parameters)
                   ? entry.parameters.map((p) => {
                       const paramDef = commodityDef?.parameters?.find(
@@ -226,7 +228,8 @@ const EditCompanyPopup = ({ company, isOpen, onClose, onUpdate }) => {
         _id: null,
         commodityId,
         brokerage: 0,
-        claimRatio: "",
+        claimRatioLeft: "1",
+        claimRatioRight: "",
         parameters: getCommodityParameterOptions(commodityId).map((p) => ({
           parameterId: p.value,
           label: p.label,
@@ -315,7 +318,7 @@ const EditCompanyPopup = ({ company, isOpen, onClose, onUpdate }) => {
           _id: entry._id || undefined,
           commodityId: entry.commodityId,
           brokerage: Number(entry.brokerage || 0),
-          claimRatio: entry.claimRatio || "",
+          claimRatio: `${entry.claimRatioLeft}:${entry.claimRatioRight}`,
           parameters: (entry.parameters || []).map((p) => ({
             parameterId: p.parameterId,
             value: p.value,
@@ -468,17 +471,31 @@ const EditCompanyPopup = ({ company, isOpen, onClose, onUpdate }) => {
                       }
                     />
 
-                    <DataInput
-                      placeholder="Claim Ratio (e.g., 10:20)"
-                      value={entry.claimRatio}
-                      onChange={(e) => {
-                        setCommodityEntries((prev) => {
-                          const updated = [...prev];
-                          updated[commodityIndex].claimRatio = e.target.value;
-                          return updated;
-                        });
-                      }}
-                    />
+                    <div className="flex items-center gap-2 mt-2">
+                      <DataInput
+                        placeholder="1"
+                        value={entry.claimRatioLeft}
+                        onChange={(e) => {
+                          setCommodityEntries((prev) => {
+                            const updated = [...prev];
+                            updated[commodityIndex].claimRatioLeft = e.target.value;
+                            return updated;
+                          });
+                        }}
+                      />
+                      <span className="text-lg font-bold">:</span>
+                      <DataInput
+                        placeholder="20"
+                        value={entry.claimRatioRight}
+                        onChange={(e) => {
+                          setCommodityEntries((prev) => {
+                            const updated = [...prev];
+                            updated[commodityIndex].claimRatioRight = e.target.value;
+                            return updated;
+                          });
+                        }}
+                      />
+                    </div>
 
                     {(entry.parameters || []).map((param, paramIndex) => (
                       <div key={paramIndex} className="flex gap-2 mt-2">
