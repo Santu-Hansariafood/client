@@ -648,6 +648,40 @@ const ListLoadingEntry = () => {
     [currentSelfOrder],
   );
 
+  const getClaimRatio = (claim) => {
+    if (!currentCompany || !currentSelfOrder?.commodity) {
+      return { left: 1, right: 1, display: "1:1" };
+    }
+    
+    const commodity = currentCompany.commodities?.find(
+      (c) => c.name.toLowerCase() === currentSelfOrder.commodity.toLowerCase()
+    );
+    
+    if (!commodity) {
+      return { left: 1, right: 1, display: "1:1" };
+    }
+    
+    const param = commodity.parameters?.find(
+      (p) => String(p.parameterId) === String(claim.parameterId) || 
+             p.parameter?.toLowerCase() === claim.parameterName?.toLowerCase()
+    );
+    
+    if (!param || !param.values?.length) {
+      return { left: 1, right: 1, display: "1:1" };
+    }
+    
+    // For now, use first value, or we could match actual/standard to value
+    const ratioValue = param.values[0];
+    const left = parseFloat(ratioValue.claimRatioLeft || 1);
+    const right = parseFloat(ratioValue.claimRatioRight || 1);
+    
+    return { 
+      left, 
+      right, 
+      display: `${left}:${right}` 
+    };
+  };
+
   const handleQualityChange = (index, field, value) => {
     setEditEntry((prev) => {
       const newClaims = [...prev.qualityClaims];
@@ -659,33 +693,11 @@ const ListLoadingEntry = () => {
         const saudaRate = parseFloat(currentSelfOrder?.rate || 0);
         const diff = actual - standard;
 
-        let claim = diff * saudaRate; // Default fallback (1:1)
+        const ratio = getClaimRatio(newClaims[index]);
+        let claim = diff * saudaRate; // Default fallback
         
-        // If we have company data, try to find the claim ratio
-        if (currentCompany && currentSelfOrder?.commodity) {
-          // Find the commodity in the company's commodities
-          const commodity = currentCompany.commodities?.find(
-            (c) => c.name.toLowerCase() === currentSelfOrder.commodity.toLowerCase()
-          );
-          
-          if (commodity) {
-            // Find the parameter in the commodity's parameters
-            const param = commodity.parameters?.find(
-              (p) => String(p.parameterId) === String(newClaims[index].parameterId) || 
-                     p.parameter?.toLowerCase() === newClaims[index].parameterName?.toLowerCase()
-            );
-            
-            if (param && param.values?.length > 0) {
-              // For now, we'll use the first value's ratio, or you might want to find the matching value
-              const ratioValue = param.values[0];
-              const left = parseFloat(ratioValue.claimRatioLeft || 1);
-              const right = parseFloat(ratioValue.claimRatioRight || 1);
-              
-              if (right > 0) {
-                claim = diff * saudaRate * (left / right);
-              }
-            }
-          }
+        if (ratio.right > 0) {
+          claim = diff * saudaRate * (ratio.left / ratio.right);
         }
 
         newClaims[index].claimAmount = Math.abs(claim).toFixed(2);
@@ -1664,16 +1676,16 @@ const ListLoadingEntry = () => {
                                   Standard Value
                                 </th>
                                 <th className="px-4 py-3 font-bold text-slate-700">
-                                  Claim Ratio
-                                </th>
-                                <th className="px-4 py-3 font-bold text-slate-700">
                                   Actual Value
                                 </th>
                                 <th className="px-4 py-3 font-bold text-slate-700">
-                                  Claim Amount
+                                  Claim Ratio
                                 </th>
                                 <th className="px-4 py-3 font-bold text-slate-700">
                                   Claim %
+                                </th>
+                                <th className="px-4 py-3 font-bold text-slate-700">
+                                  Claim Amount
                                 </th>
                                 <th className="px-4 py-3 font-bold text-slate-700">
                                   Notes
@@ -1682,7 +1694,8 @@ const ListLoadingEntry = () => {
                             </thead>
                             <tbody>
                               {editEntry.qualityClaims.map((claim, idx) => {
-                                // Calculate claim percentage
+                                const ratio = getClaimRatio(claim);
+                                // Calculate claim percentage first
                                 let claimPercent = 0;
                                 const standard = Number(claim.standardValue) || 0;
                                 const actual = Number(claim.actualValue) || 0;
@@ -1709,9 +1722,6 @@ const ListLoadingEntry = () => {
                                   <td className="px-4 py-3 text-slate-600 font-bold">
                                     {claim.standardValue}
                                   </td>
-                                  <td className="px-4 py-3 text-indigo-600 font-black italic">
-                                    1:1
-                                  </td>
                                   <td className="px-4 py-3">
                                     <input
                                       type="number"
@@ -1728,6 +1738,12 @@ const ListLoadingEntry = () => {
                                       className={`w-24 px-3 py-1.5 border rounded-lg text-sm font-bold focus:outline-none focus:ring-2 focus:ring-indigo-500/20 ${editEntry.manualClaim ? "bg-slate-100 border-slate-200 cursor-not-allowed" : "bg-white border-slate-300"}`}
                                     />
                                   </td>
+                                  <td className="px-4 py-3 text-indigo-600 font-black italic">
+                                    {ratio.display}
+                                  </td>
+                                  <td className="px-4 py-3 text-slate-700 font-bold">
+                                    {claimPercent.toFixed(2)}%
+                                  </td>
                                   <td className="px-4 py-3">
                                     <div className="flex items-center gap-1">
                                       <span className="text-slate-400 font-bold">
@@ -1740,9 +1756,6 @@ const ListLoadingEntry = () => {
                                         className="w-24 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-black text-orange-600 outline-none"
                                       />
                                     </div>
-                                  </td>
-                                  <td className="px-4 py-3 text-slate-700 font-bold">
-                                    {claimPercent.toFixed(2)}%
                                   </td>
                                   <td className="px-4 py-3">
                                     <input
