@@ -488,9 +488,12 @@ const ListLoadingEntry = () => {
               params: { search: selfOrder.buyerCompany, limit: 1 },
             });
             const companies = companyResponse.data.data || companyResponse.data || [];
+            console.log("Fetched companies:", companies);
             const company = companies.find(
               (c) => c.companyName.toLowerCase() === selfOrder.buyerCompany.toLowerCase()
             );
+            console.log("Selected company:", company);
+            console.log("Company commodities:", company?.commodities);
             setCurrentCompany(company || null);
           } catch (error) {
             console.error("Error fetching company:", error);
