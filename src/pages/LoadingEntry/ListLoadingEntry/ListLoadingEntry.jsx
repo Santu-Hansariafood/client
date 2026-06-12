@@ -483,34 +483,68 @@ const ListLoadingEntry = () => {
 
         // Fetch company data
         console.log("=== Starting company fetch ===");
+        console.log("selfOrder.companyId:", selfOrder?.companyId);
         console.log("selfOrder.buyerCompany:", selfOrder?.buyerCompany);
-        if (selfOrder?.buyerCompany) {
+        if (selfOrder?.companyId) {
           try {
-            console.log("Calling api.get('/companies') with search:", selfOrder.buyerCompany);
+            console.log("Calling api.get(`/companies/${selfOrder.companyId}`)");
+            const companyResponse = await api.get(`/companies/${selfOrder.companyId}`);
+            console.log("companyResponse:", companyResponse);
+            console.log("companyResponse.data:", companyResponse.data);
+            const company = companyResponse.data?.data || companyResponse.data;
+            console.log("Selected company:", company);
+            console.log("Company commodities:", company?.commodities);
+            setCurrentCompany(company || null);
+          } catch (error) {
+            console.error("Error fetching company by ID:", error);
+            console.error("Error details:", error.response?.data);
+            // Fallback: try searching by name if ID fetch fails
+            if (selfOrder?.buyerCompany) {
+              try {
+                const companySearchResponse = await api.get("/companies", {
+                  params: { search: selfOrder.buyerCompany, limit: 1 },
+                });
+                const companies = Array.isArray(companySearchResponse.data)
+                  ? companySearchResponse.data
+                  : (companySearchResponse.data?.data || []);
+                const company = companies.find(
+                  (c) =>
+                    c.companyName.toLowerCase() ===
+                    selfOrder.buyerCompany.toLowerCase(),
+                );
+                console.log("Fallback company found:", company);
+                setCurrentCompany(company || null);
+              } catch (searchError) {
+                console.error("Error fetching company by name:", searchError);
+                setCurrentCompany(null);
+              }
+            } else {
+              setCurrentCompany(null);
+            }
+          }
+        } else if (selfOrder?.buyerCompany) {
+          try {
+            console.log("No companyId, calling api.get('/companies') with search:", selfOrder.buyerCompany);
             const companyResponse = await api.get("/companies", {
               params: { search: selfOrder.buyerCompany, limit: 1 },
             });
-            console.log("companyResponse:", companyResponse);
-            console.log("companyResponse.data:", companyResponse.data);
             const companies = Array.isArray(companyResponse.data) 
               ? companyResponse.data 
               : (companyResponse.data?.data || []);
-            console.log("Processed companies array:", companies);
             const company = companies.find(
               (c) =>
                 c.companyName.toLowerCase() ===
                 selfOrder.buyerCompany.toLowerCase(),
             );
-            console.log("Selected company:", company);
+            console.log("Company found by name:", company);
             console.log("Company commodities:", company?.commodities);
             setCurrentCompany(company || null);
           } catch (error) {
-            console.error("Error fetching company:", error);
-            console.error("Error details:", error.response?.data);
+            console.error("Error fetching company by name:", error);
             setCurrentCompany(null);
           }
         } else {
-          console.log("No selfOrder.buyerCompany, setting currentCompany to null");
+          console.log("No companyId or buyerCompany, setting currentCompany to null");
           setCurrentCompany(null);
         }
 
@@ -676,9 +710,11 @@ const ListLoadingEntry = () => {
   );
 
   const getClaimRatio = (claim) => {
-    console.log("getClaimRatio called with claim:", claim);
+    console.log("=== getClaimRatio called ===");
+    console.log("claim:", claim);
     console.log("currentCompany:", currentCompany);
     console.log("currentSelfOrder.commodity:", currentSelfOrder?.commodity);
+    console.log("currentCompany.commodities:", currentCompany?.commodities);
 
     if (!currentCompany || !currentSelfOrder?.commodity) {
       console.log("Missing company or commodity, returning 1:1");
@@ -701,6 +737,7 @@ const ListLoadingEntry = () => {
         p.parameter?.toLowerCase() === claim.parameterName?.toLowerCase(),
     );
     console.log("Found param:", param);
+    console.log("param.values:", param?.values);
 
     if (!param || !param.values?.length) {
       console.log("No param or values, returning 1:1");
@@ -709,6 +746,8 @@ const ListLoadingEntry = () => {
 
     const ratioValue = param.values[0];
     console.log("ratioValue:", ratioValue);
+    console.log("ratioValue.claimRatioLeft:", ratioValue.claimRatioLeft);
+    console.log("ratioValue.claimRatioRight:", ratioValue.claimRatioRight);
     const left = parseFloat(ratioValue.claimRatioLeft || 1);
     const right = parseFloat(ratioValue.claimRatioRight || 1);
     const display = `${left}:${right}`;
