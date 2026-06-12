@@ -506,30 +506,24 @@ const ListLoadingEntry = () => {
           setCurrentCompany(null);
         }
 
-        // Create a map: parameter ID -> parameter name
         const qualityParams =
           qualityParamsResponse.data?.data || qualityParamsResponse.data || [];
         const paramIdToNameMap = new Map();
         qualityParams.forEach((qp) => {
           if (qp._id && qp.name) {
             paramIdToNameMap.set(String(qp._id), qp.name);
-            // Also map by name itself for reverse lookup
             paramIdToNameMap.set(qp.name.toLowerCase(), qp.name);
           }
         });
 
-        // Initialize/Update quality claims from company's commodity parameters
         let initialClaims = [];
         if (currentCompany && currentSelfOrder?.commodity) {
-          // Find the commodity in company's commodities
           const commodity = currentCompany.commodities?.find(
             (c) => c.name.toLowerCase() === currentSelfOrder.commodity.toLowerCase()
           );
           
           if (commodity && commodity.parameters) {
-            // Use company's parameters
             initialClaims = commodity.parameters.map((param) => {
-              // Check if entry already has this claim
               const existingClaim = entry.qualityClaims?.find(
                 (c) =>
                   (c.parameterName && param.parameter && c.parameterName.toLowerCase() === param.parameter.toLowerCase()) ||
@@ -674,15 +668,22 @@ const ListLoadingEntry = () => {
   );
 
   const getClaimRatio = (claim) => {
+    console.log("getClaimRatio called with claim:", claim);
+    console.log("currentCompany:", currentCompany);
+    console.log("currentSelfOrder.commodity:", currentSelfOrder?.commodity);
+
     if (!currentCompany || !currentSelfOrder?.commodity) {
+      console.log("Missing company or commodity, returning 1:1");
       return { left: 1, right: 1, display: "1:1" };
     }
 
     const commodity = currentCompany.commodities?.find(
       (c) => c.name.toLowerCase() === currentSelfOrder.commodity.toLowerCase(),
     );
+    console.log("Found commodity:", commodity);
 
     if (!commodity) {
+      console.log("No commodity found, returning 1:1");
       return { left: 1, right: 1, display: "1:1" };
     }
 
@@ -691,21 +692,21 @@ const ListLoadingEntry = () => {
         String(p.parameterId) === String(claim.parameterId) ||
         p.parameter?.toLowerCase() === claim.parameterName?.toLowerCase(),
     );
+    console.log("Found param:", param);
 
     if (!param || !param.values?.length) {
+      console.log("No param or values, returning 1:1");
       return { left: 1, right: 1, display: "1:1" };
     }
 
-    // For now, use first value, or we could match actual/standard to value
     const ratioValue = param.values[0];
+    console.log("ratioValue:", ratioValue);
     const left = parseFloat(ratioValue.claimRatioLeft || 1);
     const right = parseFloat(ratioValue.claimRatioRight || 1);
+    const display = `${left}:${right}`;
+    console.log("Returning ratio:", display);
 
-    return {
-      left,
-      right,
-      display: `${left}:${right}`,
-    };
+    return { left, right, display };
   };
 
   const handleQualityChange = (index, field, value) => {
@@ -1721,6 +1722,7 @@ const ListLoadingEntry = () => {
                             <tbody>
                               {editEntry.qualityClaims.map((claim, idx) => {
                                 const ratio = getClaimRatio(claim);
+                                console.log("Row ratio for claim", claim, ":", ratio);
                                 let claimPercent = 0;
                                 const standard =
                                   Number(claim.standardValue) || 0;
