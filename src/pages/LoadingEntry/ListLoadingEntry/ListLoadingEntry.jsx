@@ -482,22 +482,13 @@ const ListLoadingEntry = () => {
         setCurrentSelfOrder(selfOrder || null);
 
         // Fetch company data
-        console.log("=== Starting company fetch ===");
-        console.log("selfOrder.companyId:", selfOrder?.companyId);
-        console.log("selfOrder.buyerCompany:", selfOrder?.buyerCompany);
         if (selfOrder?.companyId) {
           try {
-            console.log("Calling api.get(`/companies/${selfOrder.companyId}`)");
             const companyResponse = await api.get(`/companies/${selfOrder.companyId}`);
-            console.log("companyResponse:", companyResponse);
-            console.log("companyResponse.data:", companyResponse.data);
             const company = companyResponse.data?.data || companyResponse.data;
-            console.log("Selected company:", company);
-            console.log("Company commodities:", company?.commodities);
             setCurrentCompany(company || null);
           } catch (error) {
             console.error("Error fetching company by ID:", error);
-            console.error("Error details:", error.response?.data);
             // Fallback: try searching by name if ID fetch fails
             if (selfOrder?.buyerCompany) {
               try {
@@ -512,7 +503,6 @@ const ListLoadingEntry = () => {
                     c.companyName.toLowerCase() ===
                     selfOrder.buyerCompany.toLowerCase(),
                 );
-                console.log("Fallback company found:", company);
                 setCurrentCompany(company || null);
               } catch (searchError) {
                 console.error("Error fetching company by name:", searchError);
@@ -524,7 +514,6 @@ const ListLoadingEntry = () => {
           }
         } else if (selfOrder?.buyerCompany) {
           try {
-            console.log("No companyId, calling api.get('/companies') with search:", selfOrder.buyerCompany);
             const companyResponse = await api.get("/companies", {
               params: { search: selfOrder.buyerCompany, limit: 1 },
             });
@@ -536,15 +525,12 @@ const ListLoadingEntry = () => {
                 c.companyName.toLowerCase() ===
                 selfOrder.buyerCompany.toLowerCase(),
             );
-            console.log("Company found by name:", company);
-            console.log("Company commodities:", company?.commodities);
             setCurrentCompany(company || null);
           } catch (error) {
             console.error("Error fetching company by name:", error);
             setCurrentCompany(null);
           }
         } else {
-          console.log("No companyId or buyerCompany, setting currentCompany to null");
           setCurrentCompany(null);
         }
 
@@ -572,10 +558,17 @@ const ListLoadingEntry = () => {
                   (c.parameterId && param.parameterId && String(c.parameterId) === String(param.parameterId)),
               );
               
+              // Use existing standardValue if present, else default to first value
+              const defaultStandardValue = param.values?.[0]?.value 
+                ? parseFloat(param.values[0].value) 
+                : 0;
+              const selectedStandardValue = existingClaim?.standardValue ?? defaultStandardValue;
+              
               return {
                 parameterId: String(param.parameterId || ""),
                 parameterName: param.parameter || "",
-                standardValue: parseFloat(param.values?.[0]?.value || 0),
+                standardValue: selectedStandardValue,
+                paramValues: param.values || [], // Store all param values for dropdown and ratio lookup
                 actualValue: existingClaim?.actualValue || "",
                 claimAmount: existingClaim?.claimAmount || 0,
                 notes: existingClaim?.notes || "",
@@ -710,24 +703,15 @@ const ListLoadingEntry = () => {
   );
 
   const getClaimRatio = (claim) => {
-    console.log("=== getClaimRatio called ===");
-    console.log("claim:", claim);
-    console.log("currentCompany:", currentCompany);
-    console.log("currentSelfOrder.commodity:", currentSelfOrder?.commodity);
-    console.log("currentCompany.commodities:", currentCompany?.commodities);
-
     if (!currentCompany || !currentSelfOrder?.commodity) {
-      console.log("Missing company or commodity, returning 1:1");
       return { left: 1, right: 1, display: "1:1" };
     }
 
     const commodity = currentCompany.commodities?.find(
       (c) => c.name.toLowerCase() === currentSelfOrder.commodity.toLowerCase(),
     );
-    console.log("Found commodity:", commodity);
 
     if (!commodity) {
-      console.log("No commodity found, returning 1:1");
       return { left: 1, right: 1, display: "1:1" };
     }
 
@@ -736,22 +720,36 @@ const ListLoadingEntry = () => {
         String(p.parameterId) === String(claim.parameterId) ||
         p.parameter?.toLowerCase() === claim.parameterName?.toLowerCase(),
     );
-    console.log("Found param:", param);
-    console.log("param.values:", param?.values);
 
     if (!param || !param.values?.length) {
-      console.log("No param or values, returning 1:1");
+      // If no param, check claim.paramValues (from initialClaims)
+      if (claim.paramValues && claim.paramValues.length) {
+        // Find ratio that matches current standardValue
+        const matchingValue = claim.paramValues.find(
+          (v) => parseFloat(v.value) === parseFloat(claim.standardValue)
+        );
+        if (matchingValue) {
+          const left = parseFloat(matchingValue.claimRatioLeft || 1);
+          const right = parseFloat(matchingValue.claimRatioRight || 1);
+          return { left, right, display: `${left}:${right}` };
+        }
+        // Fallback to first value
+        const firstValue = claim.paramValues[0];
+        const left = parseFloat(firstValue.claimRatioLeft || 1);
+        const right = parseFloat(firstValue.claimRatioRight || 1);
+        return { left, right, display: `${left}:${right}` };
+      }
       return { left: 1, right: 1, display: "1:1" };
     }
 
-    const ratioValue = param.values[0];
-    console.log("ratioValue:", ratioValue);
-    console.log("ratioValue.claimRatioLeft:", ratioValue.claimRatioLeft);
-    console.log("ratioValue.claimRatioRight:", ratioValue.claimRatioRight);
+    // Find ratioValue that matches the current standardValue
+    const ratioValue = param.values.find(
+      (v) => parseFloat(v.value) === parseFloat(claim.standardValue)
+    ) || param.values[0]; // Fallback to first if no match
+
     const left = parseFloat(ratioValue.claimRatioLeft || 1);
     const right = parseFloat(ratioValue.claimRatioRight || 1);
     const display = `${left}:${right}`;
-    console.log("Returning ratio:", display);
 
     return { left, right, display };
   };
@@ -761,9 +759,10 @@ const ListLoadingEntry = () => {
       const newClaims = [...prev.qualityClaims];
       newClaims[index][field] = value;
 
-      if (field === "actualValue") {
+      // Recalculate claim amount if actualValue or standardValue changes
+      if (field === "actualValue" || field === "standardValue") {
         const standard = parseFloat(newClaims[index].standardValue || 0);
-        const actual = parseFloat(value || 0);
+        const actual = parseFloat(newClaims[index].actualValue || 0);
         const saudaRate = parseFloat(currentSelfOrder?.rate || 0);
         const diff = actual - standard;
 
@@ -1769,7 +1768,6 @@ const ListLoadingEntry = () => {
                             <tbody>
                               {editEntry.qualityClaims.map((claim, idx) => {
                                 const ratio = getClaimRatio(claim);
-                                console.log("Row ratio for claim", claim, ":", ratio);
                                 let claimPercent = 0;
                                 const standard =
                                   Number(claim.standardValue) || 0;
@@ -1790,6 +1788,12 @@ const ListLoadingEntry = () => {
                                     100;
                                 }
 
+                                // Prepare dropdown options
+                                const standardOptions = (claim.paramValues || []).map((v) => ({
+                                  value: v.value,
+                                  label: v.value,
+                                }));
+
                                 return (
                                   <tr
                                     key={idx}
@@ -1798,8 +1802,31 @@ const ListLoadingEntry = () => {
                                     <td className="px-4 py-3 font-medium text-slate-800">
                                       {claim.parameterName}
                                     </td>
-                                    <td className="px-4 py-3 text-slate-600 font-bold">
-                                      {claim.standardValue}
+                                    <td className="px-4 py-3">
+                                      {standardOptions.length > 1 ? (
+                                        <select
+                                          value={claim.standardValue}
+                                          onChange={(e) =>
+                                            handleQualityChange(
+                                              idx,
+                                              "standardValue",
+                                              e.target.value,
+                                            )
+                                          }
+                                          disabled={editEntry.manualClaim}
+                                          className={`px-3 py-1.5 border rounded-lg text-sm font-bold focus:outline-none focus:ring-2 focus:ring-indigo-500/20 ${editEntry.manualClaim ? "bg-slate-100 border-slate-200 cursor-not-allowed" : "bg-white border-slate-300"}`}
+                                        >
+                                          {standardOptions.map((opt, optIdx) => (
+                                            <option key={optIdx} value={opt.value}>
+                                              {opt.label}
+                                            </option>
+                                          ))}
+                                        </select>
+                                      ) : (
+                                        <span className="text-slate-600 font-bold">
+                                          {claim.standardValue}
+                                        </span>
+                                      )}
                                     </td>
                                     <td className="px-4 py-3">
                                       <input
