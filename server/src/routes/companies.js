@@ -30,19 +30,31 @@ const mapCompanyForClient = (company) => {
     const storedParamsMap = new Map(
       (entry.parameters || []).map((p) => [
         String(p.parameterId?._id || p.parameterId),
-        p.values ?? [],
+        p,
       ]),
     );
 
-    const commodityParams = (commodityRef?.parameters || []).map((p) => {
-      const storedValues = storedParamsMap.get(String(p.parameterId?._id || p.parameterId)) || [];
-      return {
+    let commodityParams = [];
+    if (commodityRef?.parameters?.length) {
+      commodityParams = commodityRef.parameters.map((p) => {
+        const storedParam = storedParamsMap.get(String(p.parameterId?._id || p.parameterId));
+        const storedValues = storedParam?.values ?? [];
+        return {
+          _id: p.parameterId?._id || p.parameterId,
+          parameterId: p.parameterId?._id || p.parameterId,
+          parameter: p.parameterId?.name || "",
+          values: storedValues,
+        };
+      });
+    } else {
+      // If no commodityRef parameters, use entry.parameters directly
+      commodityParams = (entry.parameters || []).map((p) => ({
         _id: p.parameterId?._id || p.parameterId,
         parameterId: p.parameterId?._id || p.parameterId,
         parameter: p.parameterId?.name || "",
-        values: storedValues,
-      };
-    });
+        values: p.values ?? [],
+      }));
+    }
 
     return {
       _id: commodityId,
