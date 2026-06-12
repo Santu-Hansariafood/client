@@ -485,7 +485,9 @@ const ListLoadingEntry = () => {
         if (selfOrder?.companyId) {
           try {
             const companyResponse = await api.get(`/companies/${selfOrder.companyId}`);
+            console.log("[DEBUG company fetch by ID] companyResponse:", companyResponse);
             const company = companyResponse.data?.data || companyResponse.data;
+            console.log("[DEBUG company fetch by ID] company:", company);
             setCurrentCompany(company || null);
           } catch (error) {
             console.error("Error fetching company by ID:", error);
@@ -495,6 +497,7 @@ const ListLoadingEntry = () => {
                 const companySearchResponse = await api.get("/companies", {
                   params: { search: selfOrder.buyerCompany, limit: 1 },
                 });
+                console.log("[DEBUG company fallback search] companySearchResponse:", companySearchResponse);
                 const companies = Array.isArray(companySearchResponse.data)
                   ? companySearchResponse.data
                   : (companySearchResponse.data?.data || []);
@@ -503,6 +506,7 @@ const ListLoadingEntry = () => {
                     c.companyName.toLowerCase() ===
                     selfOrder.buyerCompany.toLowerCase(),
                 );
+                console.log("[DEBUG company fallback search] company:", company);
                 setCurrentCompany(company || null);
               } catch (searchError) {
                 console.error("Error fetching company by name:", searchError);
@@ -517,6 +521,7 @@ const ListLoadingEntry = () => {
             const companyResponse = await api.get("/companies", {
               params: { search: selfOrder.buyerCompany, limit: 1 },
             });
+            console.log("[DEBUG company fetch by name] companyResponse:", companyResponse);
             const companies = Array.isArray(companyResponse.data) 
               ? companyResponse.data 
               : (companyResponse.data?.data || []);
@@ -525,6 +530,7 @@ const ListLoadingEntry = () => {
                 c.companyName.toLowerCase() ===
                 selfOrder.buyerCompany.toLowerCase(),
             );
+            console.log("[DEBUG company fetch by name] company:", company);
             setCurrentCompany(company || null);
           } catch (error) {
             console.error("Error fetching company by name:", error);
@@ -703,15 +709,22 @@ const ListLoadingEntry = () => {
   );
 
   const getClaimRatio = (claim) => {
+    console.log("[DEBUG getClaimRatio] claim:", claim);
+    console.log("[DEBUG getClaimRatio] currentCompany:", currentCompany);
+    console.log("[DEBUG getClaimRatio] currentSelfOrder?.commodity:", currentSelfOrder?.commodity);
+    
     if (!currentCompany || !currentSelfOrder?.commodity) {
+      console.log("[DEBUG getClaimRatio] Missing company or commodity");
       return { left: 1, right: 1, display: "1:1" };
     }
 
     const commodity = currentCompany.commodities?.find(
       (c) => c.name.toLowerCase() === currentSelfOrder.commodity.toLowerCase(),
     );
+    console.log("[DEBUG getClaimRatio] found commodity:", commodity);
 
     if (!commodity) {
+      console.log("[DEBUG getClaimRatio] No commodity found");
       return { left: 1, right: 1, display: "1:1" };
     }
 
@@ -720,25 +733,31 @@ const ListLoadingEntry = () => {
         String(p.parameterId) === String(claim.parameterId) ||
         p.parameter?.toLowerCase() === claim.parameterName?.toLowerCase(),
     );
+    console.log("[DEBUG getClaimRatio] found param:", param);
 
     if (!param || !param.values?.length) {
+      console.log("[DEBUG getClaimRatio] No param or values, checking claim.paramValues:", claim.paramValues);
       // If no param, check claim.paramValues (from initialClaims)
       if (claim.paramValues && claim.paramValues.length) {
         // Find ratio that matches current standardValue
         const matchingValue = claim.paramValues.find(
           (v) => parseFloat(v.value) === parseFloat(claim.standardValue)
         );
+        console.log("[DEBUG getClaimRatio] matchingValue from claim.paramValues:", matchingValue);
         if (matchingValue) {
           const left = parseFloat(matchingValue.claimRatioLeft || 1);
           const right = parseFloat(matchingValue.claimRatioRight || 1);
+          console.log("[DEBUG getClaimRatio] returning ratio from claim.paramValues:", `${left}:${right}`);
           return { left, right, display: `${left}:${right}` };
         }
         // Fallback to first value
         const firstValue = claim.paramValues[0];
         const left = parseFloat(firstValue.claimRatioLeft || 1);
         const right = parseFloat(firstValue.claimRatioRight || 1);
+        console.log("[DEBUG getClaimRatio] returning fallback ratio from claim.paramValues:", `${left}:${right}`);
         return { left, right, display: `${left}:${right}` };
       }
+      console.log("[DEBUG getClaimRatio] No claim.paramValues, returning 1:1");
       return { left: 1, right: 1, display: "1:1" };
     }
 
@@ -746,10 +765,12 @@ const ListLoadingEntry = () => {
     const ratioValue = param.values.find(
       (v) => parseFloat(v.value) === parseFloat(claim.standardValue)
     ) || param.values[0]; // Fallback to first if no match
+    console.log("[DEBUG getClaimRatio] ratioValue from param.values:", ratioValue);
 
     const left = parseFloat(ratioValue.claimRatioLeft || 1);
     const right = parseFloat(ratioValue.claimRatioRight || 1);
     const display = `${left}:${right}`;
+    console.log("[DEBUG getClaimRatio] returning ratio from param.values:", display);
 
     return { left, right, display };
   };
