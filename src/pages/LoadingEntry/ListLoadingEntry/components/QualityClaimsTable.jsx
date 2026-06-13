@@ -79,7 +79,7 @@ const calculateClaimAmount = (
 
     if (amountInRange > 0 && ratioRight > 0) {
       totalClaim +=
-        amountInRange * effectiveRate * (ratioLeft / ratioRight) * (weight / 100);
+        (amountInRange / 100) * effectiveRate * (ratioLeft / ratioRight) * weight;
       remainingActual -= amountInRange;
     }
 
@@ -96,7 +96,7 @@ const calculateClaimAmount = (
     const excessAmount = remainingActual - lastMax;
     if (excessAmount > 0 && lastRatioRight > 0) {
       totalClaim +=
-        excessAmount * effectiveRate * (lastRatioLeft / lastRatioRight) * (weight / 100);
+        (excessAmount / 100) * effectiveRate * (lastRatioLeft / lastRatioRight) * weight;
     }
   }
 
@@ -149,6 +149,7 @@ const QualityClaimsTable = ({
             <th className="px-4 py-3 font-bold text-slate-700">Quality Parameter</th>
             <th className="px-4 py-3 font-bold text-slate-700">Standard Value</th>
             <th className="px-4 py-3 font-bold text-slate-700">Actual Value</th>
+            <th className="px-4 py-3 font-bold text-slate-700">Difference</th>
             <th className="px-4 py-3 font-bold text-slate-700">Claim Ratio</th>
             <th className="px-4 py-3 font-bold text-slate-700">Claim %</th>
             <th className="px-4 py-3 font-bold text-slate-700">Claim Amount</th>
@@ -166,6 +167,7 @@ const QualityClaimsTable = ({
               0;
             const standard = Number(baseValue);
             const actual = Number(claim.actualValue) || 0;
+            const difference = actual - standard;
             const claimAmt = Number(claim.claimAmount) || 0;
             const totalValue = effectiveRate * weight;
 
@@ -229,6 +231,11 @@ const QualityClaimsTable = ({
                         : "bg-white border-slate-300"
                     }`}
                   />
+                </td>
+                <td className="px-4 py-3">
+                  <span className={`font-bold ${difference >= 0 ? "text-red-600" : "text-green-600"}`}>
+                    {difference.toFixed(2)}%
+                  </span>
                 </td>
                 <td className="px-4 py-3 text-indigo-600 font-black italic">
                   {ratio.display}
