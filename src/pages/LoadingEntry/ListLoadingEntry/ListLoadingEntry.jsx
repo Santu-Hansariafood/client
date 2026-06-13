@@ -728,7 +728,6 @@ const ListLoadingEntry = () => {
           });
           updated.qualityClaims = newClaims;
         }
-        }
 
         return updated;
       });
