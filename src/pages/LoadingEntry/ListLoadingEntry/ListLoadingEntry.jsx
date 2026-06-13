@@ -204,23 +204,38 @@ const ListLoadingEntry = () => {
     if (staticDataLoadedRef.current) return;
 
     try {
-      const [sellersRes, transportersRes, ordersRes] = await Promise.all([
-        api.get("/sellers"),
-        api.get("/transporters", { params: { limit: 0 } }),
-        api.get("/self-order", { params: { limit: 0 } }),
-      ]);
+      let sellersData = [];
+      let transportersData = [];
+      let ordersData = [];
+
+      try {
+        const sellersRes = await api.get("/sellers");
+        sellersData = Array.isArray(sellersRes.data)
+          ? sellersRes.data
+          : sellersRes.data?.data || [];
+      } catch (error) {
+        console.error("Error fetching sellers:", error);
+      }
+
+      try {
+        const transportersRes = await api.get("/transporters", { params: { limit: 0 } });
+        transportersData = Array.isArray(transportersRes.data)
+          ? transportersRes.data
+          : transportersRes.data?.data || [];
+      } catch (error) {
+        console.error("Error fetching transporters:", error);
+      }
+
+      try {
+        const ordersRes = await api.get("/self-order", { params: { limit: 0 } });
+        ordersData = Array.isArray(ordersRes.data)
+          ? ordersRes.data
+          : ordersRes.data?.data || [];
+      } catch (error) {
+        console.error("Error fetching orders:", error);
+      }
 
       if (!isMountedRef.current) return;
-
-      const sellersData = Array.isArray(sellersRes.data)
-        ? sellersRes.data
-        : sellersRes.data?.data || [];
-      const transportersData = Array.isArray(transportersRes.data)
-        ? transportersRes.data
-        : transportersRes.data?.data || [];
-      const ordersData = Array.isArray(ordersRes.data)
-        ? ordersRes.data
-        : ordersRes.data?.data || [];
 
       setSellerMap(
         Object.fromEntries(sellersData.map((s) => [s._id, s.sellerName])),
