@@ -649,12 +649,74 @@ const ListLoadingEntry = () => {
           initialClaims = claimsWithNames;
         }
         
-        newEditEntry.qualityClaims = initialClaims;
+        // Recalculate claim amounts for initial claims
+        const saudaRate = parseFloat(selfOrder?.rate || 0);
+        const manualRate = parseFloat(newEditEntry.manualCalculationRate || 0);
+        const weight = parseFloat(entry.unloadingWeight || 0);
+        newEditEntry.qualityClaims = initialClaims.map((claim) => {
+          const actual = parseFloat(claim.actualValue || 0);
+          let claimAmount = 0;
+          if (weight > 0 && (saudaRate > 0 || manualRate > 0)) {
+            // Need to calculate claim amount based on ranges
+            let totalClaim = 0;
+            let remainingActual = actual;
+            const effectiveRate = manualRate || saudaRate;
+            const paramValues = claim.paramValues;
+            
+            if (paramValues && paramValues.length > 0) {
+              // Sort param values by baseValue
+              const sortedRanges = [...paramValues].sort((a, b) => {
+                const aBase = parseFloat(a.baseValue) || 0;
+                const bBase = parseFloat(b.baseValue) || 0;
+                return aBase - bBase;
+              });
+              
+              // Calculate claim in ranges
+              for (let i = 0; i < sortedRanges.length; i++) {
+                const range = sortedRanges[i];
+                const base = parseFloat(range.baseValue) || 0;
+                const max = parseFloat(range.maxValue) || Infinity;
+                const ratioLeft = parseFloat(range.claimRatioLeft) || 1;
+                const ratioRight = parseFloat(range.claimRatioRight) || 1;
+                
+                if (remainingActual <= base) break;
+                
+                const rangeStart = i === 0 ? base : parseFloat(sortedRanges[i-1].maxValue || sortedRanges[i-1].baseValue);
+                const rangeEnd = max;
+                const amountInRange = Math.min(remainingActual, rangeEnd) - rangeStart;
+                
+                if (amountInRange > 0 && ratioRight > 0) {
+                  totalClaim += amountInRange * effectiveRate * (ratioLeft / ratioRight) * (weight / 100);
+                  remainingActual -= amountInRange;
+                }
+                
+                if (remainingActual <= rangeEnd) break;
+              }
+              
+              // If there's remaining actual above last max, use last range's ratio
+              if (remainingActual > 0 && sortedRanges.length > 0) {
+                const lastRange = sortedRanges[sortedRanges.length - 1];
+                const lastRatioLeft = parseFloat(lastRange.claimRatioLeft) || 1;
+                const lastRatioRight = parseFloat(lastRange.claimRatioRight) || 1;
+                const lastMax = parseFloat(lastRange.maxValue) || parseFloat(lastRange.baseValue);
+                
+                const excessAmount = remainingActual - lastMax;
+                if (excessAmount > 0 && lastRatioRight > 0) {
+                  totalClaim += excessAmount * effectiveRate * (lastRatioLeft / lastRatioRight) * (weight / 100);
+                }
+              }
+            }
+            
+            claimAmount = Math.abs(totalClaim).toFixed(2);
+          }
+          return { ...claim, claimAmount };
+        });
 
         // Set buyerBrokerage and sellerBrokerage from selfOrder
         if (selfOrder?.buyerBrokerage) {
           const buyerRate = selfOrder.buyerBrokerage.brokerageBuyer || 0;
-          const sellerRate = selfOrder.buyerBrokerage.brokerageSupplier || 0;
+          const sellerRate =
+            selfOrder.buyerBrokerage.brokerageSupplier || 0;
           const uWeight = parseFloat(entry.unloadingWeight) || 0;
           newEditEntry.buyerBrokerage = +(uWeight * buyerRate).toFixed(2);
           newEditEntry.sellerBrokerage = +(uWeight * sellerRate).toFixed(2);
