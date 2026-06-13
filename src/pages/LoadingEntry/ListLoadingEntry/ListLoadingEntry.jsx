@@ -775,32 +775,35 @@ const ListLoadingEntry = () => {
                         newClaims[index].paramValues?.[0]?.baseValue || 
                         newClaims[index].standardValue || 0;
       
+      let isValid = true;
       if (field === "actualValue") {
         // Ensure actual value > base value
         const actualNum = parseFloat(value);
         const baseNum = parseFloat(baseValue);
-        if (actualNum < baseNum) {
+        if (!isNaN(actualNum) && !isNaN(baseNum) && actualNum < baseNum) {
           toast.error(`Actual value must be greater than base value (${baseNum})`);
-          return prev; // Don't update if invalid
+          isValid = false;
         }
       }
       
-      newClaims[index][field] = value;
+      if (isValid) {
+        newClaims[index][field] = value;
 
-      // Recalculate claim amount and percentage
-      const standard = parseFloat(baseValue); // Always use base value for calculation
-      const actual = parseFloat(newClaims[index].actualValue || 0);
-      const saudaRate = parseFloat(currentSelfOrder?.rate || 0);
-      const weight = parseFloat(prev.unloadingWeight || 0);
-      const diff = actual - standard; // Actual - Base
+        // Recalculate claim amount and percentage
+        const standard = parseFloat(baseValue); // Always use base value for calculation
+        const actual = parseFloat(newClaims[index].actualValue || 0);
+        const saudaRate = parseFloat(currentSelfOrder?.rate || 0);
+        const weight = parseFloat(prev.unloadingWeight || 0);
+        const diff = actual - standard; // Actual - Base
 
-      const ratio = getClaimRatio(newClaims[index]);
-      let claim = 0;
-      if (ratio.right > 0 && weight > 0 && saudaRate > 0) {
-        claim = diff * saudaRate * (ratio.left / ratio.right) * (weight / 100);
+        const ratio = getClaimRatio(newClaims[index]);
+        let claim = 0;
+        if (ratio.right > 0 && weight > 0 && saudaRate > 0) {
+          claim = diff * saudaRate * (ratio.left / ratio.right) * (weight / 100);
+        }
+
+        newClaims[index].claimAmount = Math.abs(claim).toFixed(2);
       }
-
-      newClaims[index].claimAmount = Math.abs(claim).toFixed(2);
 
       return { ...prev, qualityClaims: newClaims };
     });
@@ -1761,9 +1764,21 @@ const ListLoadingEntry = () => {
                     {editEntry.qualityClaims &&
                       editEntry.qualityClaims.length > 0 && (
                         <div className="border-t border-slate-200 pt-6 mt-6 overflow-x-auto">
-                          <h4 className="text-base font-bold text-slate-800 mb-4 flex items-center gap-2">
-                            <span className="w-2 h-2 rounded-full bg-indigo-500"></span>
-                            Quality Parameters & Claims
+                          <h4 className="text-base font-bold text-slate-800 mb-4 flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <span className="w-2 h-2 rounded-full bg-indigo-500"></span>
+                              Quality Parameters & Claims
+                            </div>
+                            <div className="flex gap-6 text-sm">
+                              <div className="text-slate-600">
+                                <span className="font-medium">Rate: </span>
+                                <span className="font-bold">₹{currentSelfOrder?.rate || 0}/-</span>
+                              </div>
+                              <div className="text-slate-600">
+                                <span className="font-medium">Unloading Amount: </span>
+                                <span className="font-bold">₹{(currentSelfOrder?.rate || 0) * (editEntry?.unloadingWeight || 0)}</span>
+                              </div>
+                            </div>
                           </h4>
                           <table className="w-full text-sm text-left border-collapse">
                             <thead>
