@@ -1850,6 +1850,16 @@ const ListLoadingEntry = () => {
                                             e.target.value,
                                           )
                                         }
+                                        onBlur={() => {
+                                          // Ensure calculations are done when leaving the input
+                                          if (claim.actualValue) {
+                                            handleQualityChange(
+                                              idx,
+                                              "actualValue",
+                                              claim.actualValue,
+                                            );
+                                          }
+                                        }}
                                         placeholder="Actual"
                                         disabled={editEntry.manualClaim}
                                         className={`w-24 px-3 py-1.5 border rounded-lg text-sm font-bold focus:outline-none focus:ring-2 focus:ring-indigo-500/20 ${editEntry.manualClaim ? "bg-slate-100 border-slate-200 cursor-not-allowed" : "bg-white border-slate-300"}`}
