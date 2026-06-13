@@ -485,12 +485,13 @@ const ListLoadingEntry = () => {
         );
         setCurrentSelfOrder(selfOrder || null);
 
+        let fetchedCompany = null;
         // Fetch company data
         if (selfOrder?.companyId) {
           try {
             const companyRes = await api.get(`/companies/${selfOrder.companyId}`);
-            const company = companyRes.data?.data || companyRes.data;
-            setCurrentCompany(company || null);
+            fetchedCompany = companyRes.data?.data || companyRes.data;
+            setCurrentCompany(fetchedCompany || null);
           } catch (err) {
             console.error("Error fetching company by ID:", err);
             // Fallback to fetching by name if ID fails
@@ -502,12 +503,12 @@ const ListLoadingEntry = () => {
                 const companies = Array.isArray(companySearchRes.data)
                   ? companySearchRes.data
                   : (companySearchRes.data?.data || []);
-                const company = companies.find(
+                fetchedCompany = companies.find(
                   (c) =>
                     c.companyName.toLowerCase() ===
                     selfOrder.buyerCompany.toLowerCase(),
                 );
-                setCurrentCompany(company || null);
+                setCurrentCompany(fetchedCompany || null);
               } catch (searchErr) {
                 console.error("Error fetching company by name:", searchErr);
                 setCurrentCompany(null);
@@ -524,12 +525,12 @@ const ListLoadingEntry = () => {
             const companies = Array.isArray(companyRes.data)
               ? companyRes.data
               : (companyRes.data?.data || []);
-            const company = companies.find(
+            fetchedCompany = companies.find(
               (c) =>
                 c.companyName.toLowerCase() ===
                 selfOrder.buyerCompany.toLowerCase(),
             );
-            setCurrentCompany(company || null);
+            setCurrentCompany(fetchedCompany || null);
           } catch (err) {
             console.error("Error fetching company by name:", err);
             setCurrentCompany(null);
@@ -549,8 +550,8 @@ const ListLoadingEntry = () => {
         });
 
         let initialClaims = [];
-        if (currentCompany && selfOrder?.commodity) {
-          const commodity = currentCompany.commodities?.find(
+        if (fetchedCompany && selfOrder?.commodity) {
+          const commodity = fetchedCompany.commodities?.find(
             (c) => c.name.toLowerCase() === selfOrder.commodity.toLowerCase()
           );
           
