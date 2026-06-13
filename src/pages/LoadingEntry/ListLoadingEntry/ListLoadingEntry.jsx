@@ -564,11 +564,12 @@ const ListLoadingEntry = () => {
                   (c.parameterId && param.parameterId && String(c.parameterId) === String(param.parameterId)),
               );
               
-              // Use existing standardValue if present, else default to first baseValue
+              // Always use base value as standard value
               const defaultStandardValue = param.values?.[0]?.baseValue 
                 ? parseFloat(param.values[0].baseValue) 
                 : 0;
-              const selectedStandardValue = existingClaim?.standardValue ?? defaultStandardValue;
+              // Even if there's an existing claim, use base value as standard
+              const selectedStandardValue = defaultStandardValue;
               
               return {
                 parameterId: String(param.parameterId || ""),
@@ -737,38 +738,24 @@ const ListLoadingEntry = () => {
 
     if (!param || !param.values?.length) {
       console.log("[DEBUG getClaimRatio] No param or values, checking claim.paramValues:", claim.paramValues);
-      // If no param, check claim.paramValues (from initialClaims)
+      // If no param, check claim.paramValues (from initialClaims) - use first value with baseValue
       if (claim.paramValues && claim.paramValues.length) {
-        // Find ratio that matches current standardValue (check baseValue and maxValue)
-        const matchingValue = claim.paramValues.find(
-          (v) => 
-            parseFloat(v.baseValue) === parseFloat(claim.standardValue) || 
-            parseFloat(v.maxValue) === parseFloat(claim.standardValue)
-        );
-        console.log("[DEBUG getClaimRatio] matchingValue from claim.paramValues:", matchingValue);
-        if (matchingValue) {
-          const left = parseFloat(matchingValue.claimRatioLeft || 1);
-          const right = parseFloat(matchingValue.claimRatioRight || 1);
+        // Find first value with baseValue or fallback to first
+        const ratioValue = claim.paramValues.find(v => v.baseValue) || claim.paramValues[0];
+        console.log("[DEBUG getClaimRatio] ratioValue from claim.paramValues:", ratioValue);
+        if (ratioValue) {
+          const left = parseFloat(ratioValue.claimRatioLeft || 1);
+          const right = parseFloat(ratioValue.claimRatioRight || 1);
           console.log("[DEBUG getClaimRatio] returning ratio from claim.paramValues:", `${left}:${right}`);
           return { left, right, display: `${left}:${right}` };
         }
-        // Fallback to first value
-        const firstValue = claim.paramValues[0];
-        const left = parseFloat(firstValue.claimRatioLeft || 1);
-        const right = parseFloat(firstValue.claimRatioRight || 1);
-        console.log("[DEBUG getClaimRatio] returning fallback ratio from claim.paramValues:", `${left}:${right}`);
-        return { left, right, display: `${left}:${right}` };
       }
       console.log("[DEBUG getClaimRatio] No claim.paramValues, returning 1:1");
       return { left: 1, right: 1, display: "1:1" };
     }
 
-    // Find ratioValue that matches the current standardValue (check baseValue and maxValue)
-    const ratioValue = param.values.find(
-      (v) => 
-        parseFloat(v.baseValue) === parseFloat(claim.standardValue) || 
-        parseFloat(v.maxValue) === parseFloat(claim.standardValue)
-    ) || param.values[0]; // Fallback to first if no match
+    // Always use ratio from first value's baseValue
+    const ratioValue = param.values[0];
     console.log("[DEBUG getClaimRatio] ratioValue from param.values:", ratioValue);
 
     const left = parseFloat(ratioValue.claimRatioLeft || 1);
@@ -782,24 +769,38 @@ const ListLoadingEntry = () => {
   const handleQualityChange = (index, field, value) => {
     setEditEntry((prev) => {
       const newClaims = [...prev.qualityClaims];
+      
+      // Get base value from paramValues (first baseValue)
+      const baseValue = newClaims[index].paramValues?.find(v => v.baseValue)?.baseValue || 
+                        newClaims[index].paramValues?.[0]?.baseValue || 
+                        newClaims[index].standardValue || 0;
+      
+      if (field === "actualValue") {
+        // Ensure actual value > base value
+        const actualNum = parseFloat(value);
+        const baseNum = parseFloat(baseValue);
+        if (actualNum < baseNum) {
+          toast.error(`Actual value must be greater than base value (${baseNum})`);
+          return prev; // Don't update if invalid
+        }
+      }
+      
       newClaims[index][field] = value;
 
-      // Recalculate claim amount if actualValue or standardValue changes
-      if (field === "actualValue" || field === "standardValue") {
-        const standard = parseFloat(newClaims[index].standardValue || 0);
-        const actual = parseFloat(newClaims[index].actualValue || 0);
-        const saudaRate = parseFloat(currentSelfOrder?.rate || 0);
-        const diff = actual - standard;
+      // Recalculate claim amount and percentage
+      const standard = parseFloat(baseValue); // Always use base value for calculation
+      const actual = parseFloat(newClaims[index].actualValue || 0);
+      const saudaRate = parseFloat(currentSelfOrder?.rate || 0);
+      const weight = parseFloat(prev.unloadingWeight || 0);
+      const diff = actual - standard; // Actual - Base
 
-        const ratio = getClaimRatio(newClaims[index]);
-        let claim = diff * saudaRate; // Default fallback
-
-        if (ratio.right > 0) {
-          claim = diff * saudaRate * (ratio.left / ratio.right);
-        }
-
-        newClaims[index].claimAmount = Math.abs(claim).toFixed(2);
+      const ratio = getClaimRatio(newClaims[index]);
+      let claim = 0;
+      if (ratio.right > 0 && weight > 0 && saudaRate > 0) {
+        claim = diff * saudaRate * (ratio.left / ratio.right) * (weight / 100);
       }
+
+      newClaims[index].claimAmount = Math.abs(claim).toFixed(2);
 
       return { ...prev, qualityClaims: newClaims };
     });
@@ -1794,8 +1795,11 @@ const ListLoadingEntry = () => {
                               {editEntry.qualityClaims.map((claim, idx) => {
                                 const ratio = getClaimRatio(claim);
                                 let claimPercent = 0;
-                                const standard =
-                                  Number(claim.standardValue) || 0;
+                                // Get base value from paramValues
+                                const baseValue = claim.paramValues?.find(v => v.baseValue)?.baseValue || 
+                                                  claim.paramValues?.[0]?.baseValue || 
+                                                  claim.standardValue || 0;
+                                const standard = Number(baseValue);
                                 const actual = Number(claim.actualValue) || 0;
                                 const claimAmt = Number(claim.claimAmount) || 0;
                                 const rate =
@@ -1804,32 +1808,17 @@ const ListLoadingEntry = () => {
                                   Number(editEntry.unloadingWeight) || 0;
                                 const totalValue = rate * weight;
 
-                                if (totalValue > 0) {
+                                // Always calculate claim % as (Actual % - Base %)
+                                if (standard > 0) {
+                                  claimPercent = Math.abs(actual - standard);
+                                } else if (totalValue > 0) {
                                   claimPercent = (claimAmt / totalValue) * 100;
-                                } else if (standard > 0) {
-                                  // Fallback if no total value
-                                  claimPercent =
-                                    (Math.abs(actual - standard) / standard) *
-                                    100;
                                 }
 
-                                // Prepare dropdown options (use baseValue and maxValue)
-                                const standardOptions = [];
-                                (claim.paramValues || []).forEach((v) => {
-                                  if (v.baseValue) {
-                                    standardOptions.push({
-                                      value: v.baseValue,
-                                      label: `Base: ${v.baseValue}`,
-                                    });
-                                  }
-                                  if (v.maxValue) {
-                                    standardOptions.push({
-                                      value: v.maxValue,
-                                      label: `Max: ${v.maxValue}`,
-                                    });
-                                  }
-                                  // If both baseValue and maxValue are same, avoid duplicates
-                                });
+                                // Prepare standard display - always show base value
+                                const displayStandardValue = claim.paramValues?.find(v => v.baseValue)?.baseValue || 
+                                                             claim.paramValues?.[0]?.baseValue || 
+                                                             claim.standardValue || 0;
 
                                 return (
                                   <tr
@@ -1840,28 +1829,13 @@ const ListLoadingEntry = () => {
                                       {claim.parameterName}
                                     </td>
                                     <td className="px-4 py-3">
-                                      {standardOptions.length > 1 ? (
-                                        <select
-                                          value={claim.standardValue}
-                                          onChange={(e) =>
-                                            handleQualityChange(
-                                              idx,
-                                              "standardValue",
-                                              e.target.value,
-                                            )
-                                          }
-                                          disabled={editEntry.manualClaim}
-                                          className={`px-3 py-1.5 border rounded-lg text-sm font-bold focus:outline-none focus:ring-2 focus:ring-indigo-500/20 ${editEntry.manualClaim ? "bg-slate-100 border-slate-200 cursor-not-allowed" : "bg-white border-slate-300"}`}
-                                        >
-                                          {standardOptions.map((opt, optIdx) => (
-                                            <option key={optIdx} value={opt.value}>
-                                              {opt.label}
-                                            </option>
-                                          ))}
-                                        </select>
-                                      ) : (
-                                        <span className="text-slate-600 font-bold">
-                                          {claim.standardValue}
+                                      <span className="text-slate-600 font-bold">
+                                        {displayStandardValue}%
+                                      </span>
+                                      {/* If there's a max value, show it as a secondary label */}
+                                      {claim.paramValues?.some(v => v.maxValue) && (
+                                        <span className="ml-2 text-xs text-slate-400">
+                                          (Max: {claim.paramValues?.find(v => v.maxValue)?.maxValue || claim.paramValues?.[0]?.maxValue}%)
                                         </span>
                                       )}
                                     </td>
