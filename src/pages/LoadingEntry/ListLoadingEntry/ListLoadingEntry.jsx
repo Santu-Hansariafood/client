@@ -26,6 +26,9 @@ import "jspdf-autotable";
 import PrintLoadingEntry from "../PrintLoadingEntry/PrintLoadingEntry";
 import { downloadFile } from "../../../utils/fileDownloader";
 import stateCityData from "../../../data/state-city.json";
+import ViewLoadingEntryPopup from "./components/ViewLoadingEntryPopup";
+import EditLoadingEntryPopup from "./components/EditLoadingEntryPopup";
+import QualityClaimsTable, { calculateClaimAmount } from "./components/QualityClaimsTable";
 
 const PopupBox = lazy(() => import("../../../common/PopupBox/PopupBox"));
 const Tables = lazy(() => import("../../../common/Tables/Tables"));
@@ -466,7 +469,7 @@ const ListLoadingEntry = () => {
     if (entry.saudaNo) {
       try {
         // Fetch self-order, quality parameters, and company in parallel
-        const [selfOrderResponse, qualityParamsResponse] = await Promise.all([
+        const [selfOrderRes, qualityParamsRes] = await Promise.all([
           api.get("/self-order", {
             params: { search: entry.saudaNo, limit: 1 },
           }),
@@ -474,7 +477,7 @@ const ListLoadingEntry = () => {
         ]);
 
         const orders =
-          selfOrderResponse.data.data || selfOrderResponse.data || [];
+          selfOrderRes.data.data || selfOrderRes.data || [];
         const selfOrder = orders.find(
           (o) =>
             String(o.saudaNo).toLowerCase().trim() ===
@@ -485,32 +488,28 @@ const ListLoadingEntry = () => {
         // Fetch company data
         if (selfOrder?.companyId) {
           try {
-            const companyResponse = await api.get(`/companies/${selfOrder.companyId}`);
-            console.log("[DEBUG company fetch by ID] companyResponse:", companyResponse);
-            const company = companyResponse.data?.data || companyResponse.data;
-            console.log("[DEBUG company fetch by ID] company:", company);
+            const companyRes = await api.get(`/companies/${selfOrder.companyId}`);
+            const company = companyRes.data?.data || companyRes.data;
             setCurrentCompany(company || null);
-          } catch (error) {
-            console.error("Error fetching company by ID:", error);
-            // Fallback: try searching by name if ID fetch fails
+          } catch (err) {
+            console.error("Error fetching company by ID:", err);
+            // Fallback to fetching by name if ID fails
             if (selfOrder?.buyerCompany) {
               try {
-                const companySearchResponse = await api.get("/companies", {
+                const companySearchRes = await api.get("/companies", {
                   params: { search: selfOrder.buyerCompany, limit: 1 },
                 });
-                console.log("[DEBUG company fallback search] companySearchResponse:", companySearchResponse);
-                const companies = Array.isArray(companySearchResponse.data)
-                  ? companySearchResponse.data
-                  : (companySearchResponse.data?.data || []);
+                const companies = Array.isArray(companySearchRes.data)
+                  ? companySearchRes.data
+                  : (companySearchRes.data?.data || []);
                 const company = companies.find(
                   (c) =>
                     c.companyName.toLowerCase() ===
                     selfOrder.buyerCompany.toLowerCase(),
                 );
-                console.log("[DEBUG company fallback search] company:", company);
                 setCurrentCompany(company || null);
-              } catch (searchError) {
-                console.error("Error fetching company by name:", searchError);
+              } catch (searchErr) {
+                console.error("Error fetching company by name:", searchErr);
                 setCurrentCompany(null);
               }
             } else {
@@ -519,22 +518,20 @@ const ListLoadingEntry = () => {
           }
         } else if (selfOrder?.buyerCompany) {
           try {
-            const companyResponse = await api.get("/companies", {
+            const companyRes = await api.get("/companies", {
               params: { search: selfOrder.buyerCompany, limit: 1 },
             });
-            console.log("[DEBUG company fetch by name] companyResponse:", companyResponse);
-            const companies = Array.isArray(companyResponse.data) 
-              ? companyResponse.data 
-              : (companyResponse.data?.data || []);
+            const companies = Array.isArray(companyRes.data)
+              ? companyRes.data
+              : (companyRes.data?.data || []);
             const company = companies.find(
               (c) =>
                 c.companyName.toLowerCase() ===
                 selfOrder.buyerCompany.toLowerCase(),
             );
-            console.log("[DEBUG company fetch by name] company:", company);
             setCurrentCompany(company || null);
-          } catch (error) {
-            console.error("Error fetching company by name:", error);
+          } catch (err) {
+            console.error("Error fetching company by name:", err);
             setCurrentCompany(null);
           }
         } else {
@@ -542,7 +539,7 @@ const ListLoadingEntry = () => {
         }
 
         const qualityParams =
-          qualityParamsResponse.data?.data || qualityParamsResponse.data || [];
+          qualityParamsRes.data?.data || qualityParamsRes.data || [];
         const paramIdToNameMap = new Map();
         qualityParams.forEach((qp) => {
           if (qp._id && qp.name) {
@@ -552,9 +549,9 @@ const ListLoadingEntry = () => {
         });
 
         let initialClaims = [];
-        if (currentCompany && currentSelfOrder?.commodity) {
+        if (currentCompany && selfOrder?.commodity) {
           const commodity = currentCompany.commodities?.find(
-            (c) => c.name.toLowerCase() === currentSelfOrder.commodity.toLowerCase()
+            (c) => c.name.toLowerCase() === selfOrder.commodity.toLowerCase()
           );
           
           if (commodity && commodity.parameters) {
@@ -658,58 +655,15 @@ const ListLoadingEntry = () => {
           let claimAmount = 0;
           if (weight > 0 && (saudaRate > 0 || manualRate > 0)) {
             // Need to calculate claim amount based on ranges
-            let totalClaim = 0;
-            let remainingActual = actual;
-            const effectiveRate = manualRate || saudaRate;
-            const paramValues = claim.paramValues;
-            
-            if (paramValues && paramValues.length > 0) {
-              // Sort param values by baseValue
-              const sortedRanges = [...paramValues].sort((a, b) => {
-                const aBase = parseFloat(a.baseValue) || 0;
-                const bBase = parseFloat(b.baseValue) || 0;
-                return aBase - bBase;
-              });
-              
-              // Calculate claim in ranges
-              for (let i = 0; i < sortedRanges.length; i++) {
-                const range = sortedRanges[i];
-                const base = parseFloat(range.baseValue) || 0;
-                const max = parseFloat(range.maxValue) || Infinity;
-                const ratioLeft = parseFloat(range.claimRatioLeft) || 1;
-                const ratioRight = parseFloat(range.claimRatioRight) || 1;
-                
-                if (remainingActual <= base) break;
-                
-                const rangeStart = i === 0 ? base : parseFloat(sortedRanges[i-1].maxValue || sortedRanges[i-1].baseValue);
-                const rangeEnd = max;
-                const amountInRange = Math.min(remainingActual, rangeEnd) - rangeStart;
-                
-                if (amountInRange > 0 && ratioRight > 0) {
-                  totalClaim += amountInRange * effectiveRate * (ratioLeft / ratioRight) * (weight / 100);
-                  remainingActual -= amountInRange;
-                }
-                
-                if (remainingActual <= rangeEnd) break;
-              }
-              
-              // If there's remaining actual above last max, use last range's ratio
-              if (remainingActual > 0 && sortedRanges.length > 0) {
-                const lastRange = sortedRanges[sortedRanges.length - 1];
-                const lastRatioLeft = parseFloat(lastRange.claimRatioLeft) || 1;
-                const lastRatioRight = parseFloat(lastRange.claimRatioRight) || 1;
-                const lastMax = parseFloat(lastRange.maxValue) || parseFloat(lastRange.baseValue);
-                
-                const excessAmount = remainingActual - lastMax;
-                if (excessAmount > 0 && lastRatioRight > 0) {
-                  totalClaim += excessAmount * effectiveRate * (lastRatioLeft / lastRatioRight) * (weight / 100);
-                }
-              }
-            }
-            
-            claimAmount = Math.abs(totalClaim).toFixed(2);
+            claimAmount = calculateClaimAmount(
+              claim.paramValues,
+              actual,
+              saudaRate,
+              manualRate,
+              weight
+            );
           }
-          return { ...claim, claimAmount };
+          return { ...claim, claimAmount: Math.abs(claimAmount).toFixed(2) };
         });
 
         // Set buyerBrokerage and sellerBrokerage from selfOrder
@@ -731,7 +685,7 @@ const ListLoadingEntry = () => {
 
     setEditEntry(newEditEntry);
     setPopupType("edit");
-  }, []);
+  }, [currentCompany, currentSelfOrder]);
 
   const handleEditFieldChange = useCallback(
     (e) => {
@@ -797,23 +751,24 @@ const ListLoadingEntry = () => {
     [currentSelfOrder],
   );
 
-  const getClaimRatio = (claim) => {
-    console.log("[DEBUG getClaimRatio] claim:", claim);
-    console.log("[DEBUG getClaimRatio] currentCompany:", currentCompany);
-    console.log("[DEBUG getClaimRatio] currentSelfOrder?.commodity:", currentSelfOrder?.commodity);
-    
+  const getClaimRatio = useCallback((claim) => {
     if (!currentCompany || !currentSelfOrder?.commodity) {
-      console.log("[DEBUG getClaimRatio] Missing company or commodity");
       return { left: 1, right: 1, display: "1:1" };
     }
 
     const commodity = currentCompany.commodities?.find(
       (c) => c.name.toLowerCase() === currentSelfOrder.commodity.toLowerCase(),
     );
-    console.log("[DEBUG getClaimRatio] found commodity:", commodity);
 
     if (!commodity) {
-      console.log("[DEBUG getClaimRatio] No commodity found");
+      if (claim.paramValues && claim.paramValues.length) {
+        const ratioValue = claim.paramValues.find(v => v.baseValue) || claim.paramValues[0];
+        if (ratioValue) {
+          const left = parseFloat(ratioValue.claimRatioLeft || 1);
+          const right = parseFloat(ratioValue.claimRatioRight || 1);
+          return { left, right, display: `${left}:${right}` };
+        }
+      }
       return { left: 1, right: 1, display: "1:1" };
     }
 
@@ -822,39 +777,27 @@ const ListLoadingEntry = () => {
         String(p.parameterId) === String(claim.parameterId) ||
         p.parameter?.toLowerCase() === claim.parameterName?.toLowerCase(),
     );
-    console.log("[DEBUG getClaimRatio] found param:", param);
 
     if (!param || !param.values?.length) {
-      console.log("[DEBUG getClaimRatio] No param or values, checking claim.paramValues:", claim.paramValues);
-      // If no param, check claim.paramValues (from initialClaims) - use first value with baseValue
       if (claim.paramValues && claim.paramValues.length) {
-        // Find first value with baseValue or fallback to first
         const ratioValue = claim.paramValues.find(v => v.baseValue) || claim.paramValues[0];
-        console.log("[DEBUG getClaimRatio] ratioValue from claim.paramValues:", ratioValue);
         if (ratioValue) {
           const left = parseFloat(ratioValue.claimRatioLeft || 1);
           const right = parseFloat(ratioValue.claimRatioRight || 1);
-          console.log("[DEBUG getClaimRatio] returning ratio from claim.paramValues:", `${left}:${right}`);
           return { left, right, display: `${left}:${right}` };
         }
       }
-      console.log("[DEBUG getClaimRatio] No claim.paramValues, returning 1:1");
       return { left: 1, right: 1, display: "1:1" };
     }
 
-    // Always use ratio from first value's baseValue
     const ratioValue = param.values[0];
-    console.log("[DEBUG getClaimRatio] ratioValue from param.values:", ratioValue);
-
     const left = parseFloat(ratioValue.claimRatioLeft || 1);
     const right = parseFloat(ratioValue.claimRatioRight || 1);
     const display = `${left}:${right}`;
-    console.log("[DEBUG getClaimRatio] returning ratio from param.values:", display);
-
     return { left, right, display };
-  };
+  }, [currentCompany, currentSelfOrder]);
 
-  const handleQualityChange = (index, field, value) => {
+  const handleQualityChange = useCallback((index, field, value) => {
     setEditEntry((prev) => {
       const newClaims = [...prev.qualityClaims];
       
@@ -880,63 +823,7 @@ const ListLoadingEntry = () => {
 
       return { ...prev, qualityClaims: newClaims };
     });
-  };
-
-  // Helper function to calculate claim amount based on ranges
-  const calculateClaimAmount = (paramValues, actualValue, saudaRate, manualRate, weight) => {
-    if (!paramValues || paramValues.length === 0) return 0;
-
-    let totalClaim = 0;
-    let remainingActual = actualValue;
-    const effectiveRate = parseFloat(manualRate) || saudaRate;
-
-    // Sort param values by baseValue
-    const sortedRanges = [...paramValues].sort((a, b) => {
-      const aBase = parseFloat(a.baseValue) || 0;
-      const bBase = parseFloat(b.baseValue) || 0;
-      return aBase - bBase;
-    });
-
-    // Calculate claim in ranges
-    for (let i = 0; i < sortedRanges.length; i++) {
-      const range = sortedRanges[i];
-      const base = parseFloat(range.baseValue) || 0;
-      const max = parseFloat(range.maxValue) || Infinity;
-      const ratioLeft = parseFloat(range.claimRatioLeft) || 1;
-      const ratioRight = parseFloat(range.claimRatioRight) || 1;
-
-      // If actual is below base, skip (no claim)
-      if (remainingActual <= base) break;
-
-      // Determine how much of actual falls into this range
-      const rangeStart = i === 0 ? base : parseFloat(sortedRanges[i-1].maxValue || sortedRanges[i-1].baseValue);
-      const rangeEnd = max;
-      const amountInRange = Math.min(remainingActual, rangeEnd) - rangeStart;
-
-      if (amountInRange > 0 && ratioRight > 0) {
-        totalClaim += amountInRange * effectiveRate * (ratioLeft / ratioRight) * (weight / 100);
-        remainingActual -= amountInRange;
-      }
-
-      if (remainingActual <= rangeEnd) break;
-    }
-
-    // If there's remaining actual above last max, use last range's ratio
-    if (remainingActual > 0 && sortedRanges.length > 0) {
-      const lastRange = sortedRanges[sortedRanges.length - 1];
-      const lastRatioLeft = parseFloat(lastRange.claimRatioLeft) || 1;
-      const lastRatioRight = parseFloat(lastRange.claimRatioRight) || 1;
-      const lastBase = parseFloat(lastRange.baseValue) || 0;
-      const lastMax = parseFloat(lastRange.maxValue) || lastBase;
-      
-      const excessAmount = remainingActual - lastMax;
-      if (excessAmount > 0 && lastRatioRight > 0) {
-        totalClaim += excessAmount * effectiveRate * (lastRatioLeft / lastRatioRight) * (weight / 100);
-      }
-    }
-
-    return totalClaim;
-  };
+  }, [currentSelfOrder]);
 
   const handleUpdateEntry = useCallback(async () => {
     if (!editEntry?._id) {
@@ -1130,7 +1017,7 @@ const ListLoadingEntry = () => {
     });
 
     doc.save(`LoadingEntries_${new Date().toISOString().split("T")[0]}.pdf`);
-  }, [loadingEntries, totalItems, currentPage, itemsPerPage, buyerMap]);
+  }, [loadingEntries, totalItems, currentPage, itemsPerPage, buyerMap, brokerageMap]);
 
   const headers = useMemo(
     () => [
@@ -1437,971 +1324,39 @@ const ListLoadingEntry = () => {
               maxWidth="max-w-7xl"
             >
               {popupType === "view" ? (
-                <div className="space-y-6 p-2">
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    <div className="space-y-4">
-                      <h4 className="text-sm font-bold text-slate-400 uppercase tracking-wider border-b pb-1">
-                        Basic Info
-                      </h4>
-                      <div className="grid grid-cols-2 gap-2 text-sm">
-                        <span className="text-slate-500">Loading Date:</span>
-                        <span className="font-semibold text-slate-800">
-                          {formatDate(selectedEntry.loadingDate)}
-                        </span>
-                        <span className="text-slate-500">Sauda No:</span>
-                        <span className="font-semibold text-slate-800">
-                          {selectedEntry.saudaNo}
-                        </span>
-                        <span className="text-slate-500">Seller:</span>
-                        <span className="font-semibold text-slate-800">
-                          {sellerMap[selectedEntry.supplier] || "N/A"}
-                        </span>
-                        <span className="text-slate-500">Payment Terms:</span>
-                        <span className="font-semibold text-slate-800">
-                          {paymentTermsMap[selectedEntry.saudaNo] || "N/A"}
-                        </span>
-                        <span className="text-slate-500">Commodity:</span>
-                        <span className="font-semibold text-slate-800">
-                          {selectedEntry.commodity || "N/A"}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="space-y-4">
-                      <h4 className="text-sm font-bold text-slate-400 uppercase tracking-wider border-b pb-1">
-                        Transport Details
-                      </h4>
-                      <div className="grid grid-cols-2 gap-2 text-sm">
-                        <span className="text-slate-500">Lorry No:</span>
-                        <span className="font-semibold text-slate-800">
-                          {selectedEntry.lorryNumber}
-                        </span>
-                        <span className="text-slate-500">Transporter:</span>
-                        <span className="font-semibold text-slate-800">
-                          {transporterMap[selectedEntry.transporterId] ||
-                            selectedEntry.addedTransport ||
-                            "N/A"}
-                        </span>
-                        <span className="text-slate-500">Driver Name:</span>
-                        <span className="font-semibold text-slate-800">
-                          {selectedEntry.driverName || "N/A"}
-                        </span>
-                        <span className="text-slate-500">Driver Phone:</span>
-                        <span className="font-semibold text-slate-800">
-                          {selectedEntry.driverPhoneNumber || "N/A"}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="space-y-4">
-                      <h4 className="text-sm font-bold text-slate-400 uppercase tracking-wider border-b pb-1">
-                        Weight & Billing
-                      </h4>
-                      <div className="grid grid-cols-2 gap-2 text-sm">
-                        <span className="text-slate-500">Weight:</span>
-                        <span className="font-semibold text-slate-800">
-                          {selectedEntry.loadingWeight} Tons
-                        </span>
-                        <span className="text-slate-500">Unloading Wt:</span>
-                        <span className="font-semibold text-slate-800">
-                          {selectedEntry.unloadingWeight || 0} Tons
-                        </span>
-                        <span className="text-slate-500">Bill No:</span>
-                        <span className="font-semibold text-slate-800">
-                          {selectedEntry.billNumber || "N/A"}
-                        </span>
-                        <span className="text-slate-500">Bill Date:</span>
-                        <span className="font-semibold text-slate-800">
-                          {formatDate(selectedEntry.dateOfIssue)}
-                        </span>
-                        <span className="text-slate-500">Entered By:</span>
-                        <span className="font-semibold text-slate-800 flex flex-col">
-                          <span>{selectedEntry.creatorMobile || "N/A"}</span>
-                          <span className="text-[10px] text-slate-400 uppercase">
-                            ({selectedEntry.entryByRole || "Admin"})
-                          </span>
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="space-y-4">
-                      <h4 className="text-sm font-bold text-slate-400 uppercase tracking-wider border-b pb-1">
-                        Financial Summary
-                      </h4>
-                      <div className="grid grid-cols-2 gap-2 text-sm p-3 bg-slate-50 rounded-xl border border-slate-100">
-                        <span className="text-slate-500">Freight Rate:</span>
-                        <span className="font-bold text-slate-800">
-                          ₹ {selectedEntry.freightRate}
-                        </span>
-                        <span className="text-slate-500">Total Freight:</span>
-                        <span className="font-bold text-slate-800">
-                          ₹ {selectedEntry.totalFreight}
-                        </span>
-                        <span className="text-slate-500">Advance:</span>
-                        <span className="font-bold text-emerald-600">
-                          ₹ {selectedEntry.advance}
-                        </span>
-                        <span className="text-slate-500">Balance Due:</span>
-                        <span className="font-bold text-amber-600">
-                          ₹ {selectedEntry.balance}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex justify-end pt-4 border-t">
-                    <button
-                      onClick={() => {
-                        setPopupType("");
-                        setSelectedEntry(null);
-                        setCurrentSelfOrder(null);
-                      }}
-                      className="px-6 py-2 bg-slate-800 text-white rounded-xl font-bold hover:bg-slate-900 transition"
-                    >
-                      Close
-                    </button>
-                  </div>
-                </div>
+                <ViewLoadingEntryPopup
+                  selectedEntry={selectedEntry}
+                  sellerMap={sellerMap}
+                  paymentTermsMap={paymentTermsMap}
+                  transporterMap={transporterMap}
+                  onClose={() => {
+                    setPopupType("");
+                    setSelectedEntry(null);
+                    setCurrentSelfOrder(null);
+                  }}
+                />
               ) : (
                 editEntry && (
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                      <div>
-                        <label className="block text-sm font-semibold text-slate-700 mb-1">
-                          Loading Date *
-                        </label>
-                        <input
-                          type="date"
-                          name="loadingDate"
-                          value={editEntry.loadingDate || ""}
-                          onChange={handleEditFieldChange}
-                          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                          aria-label="Loading Date"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-semibold text-slate-700 mb-1">
-                          Delivery Date
-                        </label>
-                        <input
-                          type="date"
-                          name="deliveryDate"
-                          value={editEntry.deliveryDate || ""}
-                          onChange={handleEditFieldChange}
-                          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                          aria-label="Delivery Date"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-semibold text-slate-700 mb-1">
-                          Sauda No *
-                        </label>
-                        <input
-                          type="text"
-                          name="saudaNo"
-                          value={editEntry.saudaNo || ""}
-                          onChange={handleEditFieldChange}
-                          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                          aria-label="Sauda Number"
-                          required
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-semibold text-slate-700 mb-1">
-                          Payment Terms
-                        </label>
-                        <input
-                          type="text"
-                          value={paymentTermsMap[editEntry.saudaNo] || "N/A"}
-                          disabled
-                          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm bg-slate-50 text-slate-700 cursor-not-allowed"
-                          aria-label="Payment Terms (read-only)"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-semibold text-slate-700 mb-1">
-                          Bill No
-                        </label>
-                        <input
-                          type="text"
-                          name="billNumber"
-                          value={editEntry.billNumber || ""}
-                          onChange={handleEditFieldChange}
-                          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                          aria-label="Bill Number"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-semibold text-slate-700 mb-1">
-                          Date of Issue
-                        </label>
-                        <input
-                          type="date"
-                          name="dateOfIssue"
-                          value={editEntry.dateOfIssue || ""}
-                          onChange={handleEditFieldChange}
-                          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                          aria-label="Date of Issue"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-semibold text-slate-700 mb-1">
-                          Lorry Number *
-                        </label>
-                        <input
-                          type="text"
-                          name="lorryNumber"
-                          value={editEntry.lorryNumber || ""}
-                          onChange={handleEditFieldChange}
-                          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                          aria-label="Lorry Number"
-                          required
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-semibold text-slate-700 mb-1">
-                          Transporter
-                        </label>
-                        <DataDropdown
-                          options={transporters}
-                          selectedOptions={
-                            editEntry.transporterId
-                              ? [
-                                  transporters.find(
-                                    (t) => t.value === editEntry.transporterId,
-                                  ),
-                                ].filter(Boolean)
-                              : []
-                          }
-                          onChange={(option) => {
-                            setEditEntry((prev) => ({
-                              ...prev,
-                              transporterId: option?.value || "",
-                              addedTransport: option?.label || "",
-                            }));
-                          }}
-                          placeholder="Select Transporter"
-                          isMulti={false}
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-semibold text-slate-700 mb-1">
-                          Driver Name
-                        </label>
-                        <input
-                          type="text"
-                          name="driverName"
-                          value={editEntry.driverName || ""}
-                          onChange={handleEditFieldChange}
-                          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                          aria-label="Driver Name"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-semibold text-slate-700 mb-1">
-                          Driver Phone
-                        </label>
-                        <input
-                          type="tel"
-                          name="driverPhoneNumber"
-                          value={editEntry.driverPhoneNumber || ""}
-                          onChange={handleEditFieldChange}
-                          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                          aria-label="Driver Phone"
-                          pattern="[0-9]{10}"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-semibold text-slate-700 mb-1">
-                          Commodity
-                        </label>
-                        <input
-                          type="text"
-                          name="commodity"
-                          value={editEntry.commodity || ""}
-                          onChange={handleEditFieldChange}
-                          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                          aria-label="Commodity"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-semibold text-slate-700 mb-1">
-                          Loading From
-                        </label>
-                        <DataDropdown
-                          options={stateOptions}
-                          selectedOptions={
-                            editEntry.loadingFrom
-                              ? [
-                                  stateOptions.find(
-                                    (s) => s.value === editEntry.loadingFrom,
-                                  ),
-                                ].filter(Boolean)
-                              : []
-                          }
-                          onChange={(option) => {
-                            setEditEntry((prev) => ({
-                              ...prev,
-                              loadingFrom: option?.value || "",
-                            }));
-                          }}
-                          placeholder="Select State"
-                          isMulti={false}
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-semibold text-slate-700 mb-1">
-                          Loading Weight
-                        </label>
-                        <input
-                          type="number"
-                          name="loadingWeight"
-                          value={editEntry.loadingWeight || ""}
-                          onChange={handleEditFieldChange}
-                          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                          aria-label="Loading Weight"
-                          step="0.01"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-semibold text-slate-700 mb-1">
-                          Bags
-                        </label>
-                        <input
-                          type="number"
-                          name="bags"
-                          value={editEntry.bags || ""}
-                          onChange={handleEditFieldChange}
-                          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                          aria-label="Bags"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-semibold text-slate-700 mb-1">
-                          Unloading Weight
-                        </label>
-                        <input
-                          type="number"
-                          name="unloadingWeight"
-                          value={editEntry.unloadingWeight || ""}
-                          onChange={handleEditFieldChange}
-                          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                          aria-label="Unloading Weight"
-                          step="0.01"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-semibold text-slate-700 mb-1">
-                          Unloading Date
-                        </label>
-                        <input
-                          type="date"
-                          name="unloadingDate"
-                          value={editEntry.unloadingDate || ""}
-                          onChange={handleEditFieldChange}
-                          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                          aria-label="Unloading Date"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-semibold text-slate-700 mb-1">
-                          Freight Rate
-                        </label>
-                        <input
-                          type="number"
-                          name="freightRate"
-                          value={editEntry.freightRate || ""}
-                          onChange={handleEditFieldChange}
-                          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                          aria-label="Freight Rate"
-                          step="0.01"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-semibold text-slate-700 mb-1">
-                          Manual Calculation Rate
-                        </label>
-                        <input
-                          type="number"
-                          name="manualCalculationRate"
-                          value={editEntry.manualCalculationRate || ""}
-                          onChange={(e) => {
-                            setEditEntry((prev) => ({
-                              ...prev,
-                              manualCalculationRate: e.target.value,
-                            }));
-                            // Recalculate quality claims when manual rate changes
-                            if (editEntry?.qualityClaims?.length > 0) {
-                              setEditEntry((prev) => {
-                                const newClaims = prev.qualityClaims.map((claim, idx) => {
-                                  const actual = parseFloat(claim.actualValue || 0);
-                                  const saudaRate = parseFloat(currentSelfOrder?.rate || 0);
-                                  const manualRate = parseFloat(e.target.value || 0);
-                                  const weight = parseFloat(prev.unloadingWeight || 0);
-                                  let claimAmount = 0;
-                                  if (weight > 0 && (saudaRate > 0 || manualRate > 0)) {
-                                    claimAmount = calculateClaimAmount(
-                                      claim.paramValues,
-                                      actual,
-                                      saudaRate,
-                                      manualRate,
-                                      weight
-                                    );
-                                  }
-                                  return {
-                                    ...claim,
-                                    claimAmount: Math.abs(claimAmount).toFixed(2),
-                                  };
-                                });
-                                return { ...prev, qualityClaims: newClaims };
-                              });
-                            }
-                          }}
-                          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                          aria-label="Manual Calculation Rate"
-                          step="0.01"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-semibold text-slate-700 mb-1">
-                          Total Freight
-                        </label>
-                        <input
-                          type="number"
-                          name="totalFreight"
-                          value={editEntry.totalFreight || ""}
-                          onChange={handleEditFieldChange}
-                          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                          aria-label="Total Freight"
-                          step="0.01"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-semibold text-slate-700 mb-1">
-                          Advance
-                        </label>
-                        <input
-                          type="number"
-                          name="advance"
-                          value={editEntry.advance || ""}
-                          onChange={handleEditFieldChange}
-                          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                          aria-label="Advance"
-                          step="0.01"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-semibold text-slate-700 mb-1">
-                          Balance
-                        </label>
-                        <input
-                          type="number"
-                          name="balance"
-                          value={editEntry.balance || ""}
-                          onChange={handleEditFieldChange}
-                          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                          aria-label="Balance"
-                          step="0.01"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-semibold text-slate-700 mb-1">
-                          Buyer Brokerage
-                        </label>
-                        <input
-                          type="number"
-                          name="buyerBrokerage"
-                          value={editEntry.buyerBrokerage || ""}
-                          onChange={handleEditFieldChange}
-                          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                          aria-label="Buyer Brokerage"
-                          step="0.01"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-semibold text-slate-700 mb-1">
-                          Seller Brokerage
-                        </label>
-                        <input
-                          type="number"
-                          name="sellerBrokerage"
-                          value={editEntry.sellerBrokerage || ""}
-                          onChange={handleEditFieldChange}
-                          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                          aria-label="Seller Brokerage"
-                          step="0.01"
-                        />
-                      </div>
-                    </div>
-
-                    {/* Quality Parameters Table */}
-                    {editEntry.qualityClaims &&
-                      editEntry.qualityClaims.length > 0 && (
-                        <div className="border-t border-slate-200 pt-6 mt-6 overflow-x-auto">
-                          <h4 className="text-base font-bold text-slate-800 mb-4 flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                              <span className="w-2 h-2 rounded-full bg-indigo-500"></span>
-                              Quality Parameters & Claims
-                            </div>
-                            <div className="flex gap-6 text-sm">
-                              <div className="text-slate-600">
-                                <span className="font-medium">Actual Rate: </span>
-                                <span className="font-bold">₹{currentSelfOrder?.rate || 0}/-</span>
-                              </div>
-                              {editEntry.manualCalculationRate && (
-                                <div className="text-slate-600">
-                                  <span className="font-medium">Manual Calculation Rate: </span>
-                                  <span className="font-bold">₹{editEntry.manualCalculationRate}/-</span>
-                                </div>
-                              )}
-                              <div className="text-slate-600">
-                                <span className="font-medium">Unloading Amount (for calculation): </span>
-                                <span className="font-bold">₹{(Number(editEntry.manualCalculationRate) || Number(currentSelfOrder?.rate || 0)) * (Number(editEntry?.unloadingWeight || 0))}</span>
-                              </div>
-                            </div>
-                          </h4>
-                          <table className="w-full text-sm text-left border-collapse">
-                            <thead>
-                              <tr className="bg-slate-50 border-b border-slate-200">
-                                <th className="px-4 py-3 font-bold text-slate-700">
-                                  Quality Parameter
-                                </th>
-                                <th className="px-4 py-3 font-bold text-slate-700">
-                                  Standard Value
-                                </th>
-                                <th className="px-4 py-3 font-bold text-slate-700">
-                                  Actual Value
-                                </th>
-                                <th className="px-4 py-3 font-bold text-slate-700">
-                                  Claim Ratio
-                                </th>
-                                <th className="px-4 py-3 font-bold text-slate-700">
-                                  Claim %
-                                </th>
-                                <th className="px-4 py-3 font-bold text-slate-700">
-                                  Claim Amount
-                                </th>
-                                <th className="px-4 py-3 font-bold text-slate-700">
-                                  Notes
-                                </th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {editEntry.qualityClaims.map((claim, idx) => {
-                                const ratio = getClaimRatio(claim);
-                                let claimPercent = 0;
-                                // Get base value from paramValues
-                                const baseValue = claim.paramValues?.find(v => v.baseValue)?.baseValue || 
-                                                  claim.paramValues?.[0]?.baseValue || 
-                                                  claim.standardValue || 0;
-                                const standard = Number(baseValue);
-                                const actual = Number(claim.actualValue) || 0;
-                                const claimAmt = Number(claim.claimAmount) || 0;
-                                const rate =
-                                  Number(currentSelfOrder?.rate) || 0;
-                                const manualRate = Number(editEntry.manualCalculationRate) || 0;
-                                const effectiveRate = manualRate || rate;
-                                const weight =
-                                  Number(editEntry.unloadingWeight) || 0;
-                                const totalValue = effectiveRate * weight;
-
-                                // Calculate claim % only from total bills
-                                if (totalValue > 0) {
-                                  claimPercent = (claimAmt / totalValue) * 100;
-                                }
-
-                                // Prepare standard display - always show base value
-                                const displayStandardValue = claim.paramValues?.find(v => v.baseValue)?.baseValue || 
-                                                             claim.paramValues?.[0]?.baseValue || 
-                                                             claim.standardValue || 0;
-
-                                return (
-                                  <tr
-                                    key={idx}
-                                    className="border-b border-slate-100 hover:bg-slate-50 transition-colors"
-                                  >
-                                    <td className="px-4 py-3 font-medium text-slate-800">
-                                      {claim.parameterName}
-                                    </td>
-                                    <td className="px-4 py-3">
-                                      <span className="text-slate-600 font-bold">
-                                        {displayStandardValue}%
-                                      </span>
-                                      {/* If there's a max value, show it as a secondary label */}
-                                      {claim.paramValues?.some(v => v.maxValue) && (
-                                        <span className="ml-2 text-xs text-slate-400">
-                                          (Max: {claim.paramValues?.find(v => v.maxValue)?.maxValue || claim.paramValues?.[0]?.maxValue}%)
-                                        </span>
-                                      )}
-                                    </td>
-                                    <td className="px-4 py-3">
-                                      <input
-                                        type="number"
-                                        value={claim.actualValue}
-                                        onChange={(e) =>
-                                          handleQualityChange(
-                                            idx,
-                                            "actualValue",
-                                            e.target.value,
-                                          )
-                                        }
-                                        onBlur={() => {
-                                          // Validate only on blur
-                                          const baseValue = claim.paramValues?.find(v => v.baseValue)?.baseValue || 
-                                                            claim.paramValues?.[0]?.baseValue || 
-                                                            claim.standardValue || 0;
-                                          const actualNum = parseFloat(claim.actualValue);
-                                          const baseNum = parseFloat(baseValue);
-                                          if (!isNaN(actualNum) && !isNaN(baseNum) && actualNum < baseNum) {
-                                            toast.error(`Actual value must be greater than base value (${baseNum})`);
-                                          }
-                                        }}
-                                        placeholder="Actual"
-                                        disabled={editEntry.manualClaim}
-                                        className={`w-24 px-3 py-1.5 border rounded-lg text-sm font-bold focus:outline-none focus:ring-2 focus:ring-indigo-500/20 ${editEntry.manualClaim ? "bg-slate-100 border-slate-200 cursor-not-allowed" : "bg-white border-slate-300"}`}
-                                      />
-                                    </td>
-                                    <td className="px-4 py-3 text-indigo-600 font-black italic">
-                                      {ratio.display}
-                                    </td>
-                                    <td className="px-4 py-3 text-slate-700 font-bold">
-                                      {claimPercent.toFixed(2)}%
-                                    </td>
-                                    <td className="px-4 py-3">
-                                      <div className="flex items-center gap-1">
-                                        <span className="text-slate-400 font-bold">
-                                          ₹
-                                        </span>
-                                        <input
-                                          type="number"
-                                          value={claim.claimAmount}
-                                          readOnly
-                                          className="w-24 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-black text-orange-600 outline-none"
-                                        />
-                                      </div>
-                                    </td>
-                                    <td className="px-4 py-3">
-                                      <input
-                                        type="text"
-                                        value={claim.notes}
-                                        onChange={(e) =>
-                                          handleQualityChange(
-                                            idx,
-                                            "notes",
-                                            e.target.value,
-                                          )
-                                        }
-                                        placeholder="Remarks..."
-                                        disabled={editEntry.manualClaim}
-                                        className={`w-full min-w-[150px] px-3 py-1.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 ${editEntry.manualClaim ? "bg-slate-100 border-slate-200 cursor-not-allowed" : "bg-white border-slate-300"}`}
-                                      />
-                                    </td>
-                                  </tr>
-                                );
-                              })}
-                            </tbody>
-                          </table>
-
-                          <div className="mt-4 flex items-center justify-between bg-indigo-50 px-4 py-3 rounded-lg border border-indigo-100">
-                            <span className="text-sm font-bold text-indigo-800">
-                              Total Claim:
-                            </span>
-                            <span className="text-lg font-black text-indigo-600">
-                              ₹
-                              {editEntry.manualClaim
-                                ? editEntry.manualClaimAmount || 0
-                                : editEntry.qualityClaims
-                                    .reduce(
-                                      (total, claim) =>
-                                        total +
-                                        (Number(claim.claimAmount) || 0),
-                                      0,
-                                    )
-                                    .toFixed(2)}
-                            </span>
-                          </div>
-
-                          <div className="mt-6 bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-100 rounded-xl p-5 shadow-sm">
-                            <h4 className="text-base font-bold text-emerald-900 mb-4 flex items-center gap-2">
-                              <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-                              Bill & Payable Calculation
-                            </h4>
-
-                            <div className="space-y-3">
-                              <div className="flex justify-between items-center p-3 bg-white rounded-lg shadow-xs border border-emerald-100">
-                                <span className="font-semibold text-slate-700">
-                                  Total Bill Value:
-                                </span>
-                                <span className="text-xl font-black text-emerald-700">
-                                  ₹{" "}
-                                  {(
-                                    Number(editEntry.unloadingWeight || 0) *
-                                    Number(currentSelfOrder?.rate || 0)
-                                  ).toFixed(2)}
-                                </span>
-                              </div>
-
-                              {(currentSelfOrder?.cd || 0) > 0 && (
-                                <div className="flex justify-between items-center p-3 bg-white rounded-lg shadow-xs border border-emerald-100">
-                                  <span className="font-semibold text-slate-700">
-                                    Add CD (
-                                    {Number(currentSelfOrder.cd).toFixed(2)}%):
-                                  </span>
-                                  <span className="text-lg font-bold text-emerald-600">
-                                    + ₹{" "}
-                                    {(
-                                      Number(editEntry.unloadingWeight || 0) *
-                                      Number(currentSelfOrder?.rate || 0) *
-                                      (Number(currentSelfOrder.cd) / 100)
-                                    ).toFixed(2)}
-                                  </span>
-                                </div>
-                              )}
-
-                              {(currentSelfOrder?.gst || 0) > 0 && (
-                                <div className="flex justify-between items-center p-3 bg-white rounded-lg shadow-xs border border-emerald-100">
-                                  <span className="font-semibold text-slate-700">
-                                    Add GST (
-                                    {Number(currentSelfOrder.gst).toFixed(2)}%):
-                                  </span>
-                                  <span className="text-lg font-bold text-emerald-600">
-                                    + ₹{" "}
-                                    {(
-                                      Number(editEntry.unloadingWeight || 0) *
-                                      Number(currentSelfOrder?.rate || 0) *
-                                      (Number(currentSelfOrder.gst) / 100)
-                                    ).toFixed(2)}
-                                  </span>
-                                </div>
-                              )}
-
-                              <div className="flex justify-between items-center p-3 bg-white rounded-lg shadow-xs border border-amber-100">
-                                <span className="font-semibold text-slate-700">
-                                  Less Total Claim:
-                                </span>
-                                <span className="text-lg font-bold text-red-600">
-                                  - ₹{" "}
-                                  {editEntry.manualClaim
-                                    ? editEntry.manualClaimAmount || 0
-                                    : editEntry.qualityClaims
-                                        .reduce(
-                                          (total, claim) =>
-                                            total +
-                                            (Number(claim.claimAmount) || 0),
-                                          0,
-                                        )
-                                        .toFixed(2)}
-                                </span>
-                              </div>
-
-                              <div className="flex justify-between items-center p-4 bg-gradient-to-r from-emerald-600 to-teal-600 rounded-lg shadow-md text-white">
-                                <span className="text-base font-bold">
-                                  Payable Amount:
-                                </span>
-                                <span className="text-2xl font-black">
-                                  ₹{" "}
-                                  {(() => {
-                                    const rate = Number(
-                                      currentSelfOrder?.rate || 0,
-                                    );
-                                    const weight = Number(
-                                      editEntry.unloadingWeight || 0,
-                                    );
-                                    const totalBill = rate * weight;
-                                    const cdAmount =
-                                      totalBill *
-                                      ((Number(currentSelfOrder?.cd) || 0) /
-                                        100);
-                                    const gstAmount =
-                                      totalBill *
-                                      ((Number(currentSelfOrder?.gst) || 0) /
-                                        100);
-                                    const totalClaim = editEntry.manualClaim
-                                      ? Number(editEntry.manualClaimAmount || 0)
-                                      : editEntry.qualityClaims.reduce(
-                                          (total, claim) =>
-                                            total +
-                                            (Number(claim.claimAmount) || 0),
-                                          0,
-                                        );
-                                    return (
-                                      totalBill +
-                                      cdAmount +
-                                      gstAmount -
-                                      totalClaim
-                                    ).toFixed(2);
-                                  })()}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-
-                          <div className="mt-4">
-                            <label className="flex items-center gap-3 cursor-pointer">
-                              <input
-                                type="checkbox"
-                                checked={editEntry.manualClaim}
-                                onChange={(e) => {
-                                  setEditEntry((prev) => ({
-                                    ...prev,
-                                    manualClaim: e.target.checked,
-                                  }));
-                                }}
-                                className="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500 cursor-pointer"
-                              />
-                              <span className="text-sm font-semibold text-slate-700">
-                                Report not Received, Enter Manual claim Amount
-                              </span>
-                            </label>
-
-                            {editEntry.manualClaim && (
-                              <div className="mt-3 flex items-center gap-3">
-                                <span className="text-slate-400 font-bold text-lg">
-                                  ₹
-                                </span>
-                                <input
-                                  type="number"
-                                  value={editEntry.manualClaimAmount}
-                                  onChange={(e) => {
-                                    setEditEntry((prev) => ({
-                                      ...prev,
-                                      manualClaimAmount: e.target.value,
-                                    }));
-                                  }}
-                                  placeholder="Enter manual claim amount"
-                                  className="flex-1 max-w-xs px-4 py-2 bg-white border border-indigo-300 rounded-lg text-base font-bold text-indigo-800 focus:ring-2 focus:ring-indigo-500/20 outline-none"
-                                  step="0.01"
-                                />
-                              </div>
-                            )}
-                          </div>
-
-                          <p className="mt-3 text-[11px] text-slate-500 italic">
-                            * Claim Amount is automatically calculated based on
-                            (Actual - Standard) × Sauda Rate (₹
-                            {currentSelfOrder?.rate || 0})
-                          </p>
-                        </div>
-                      )}
-
-                    {(editEntry.unloadingWeight && editEntry.unloadingDate) ||
-                    editEntry.documents?.kantaSlip ||
-                    editEntry.documents?.unloadingChallan ||
-                    editEntry.documents?.partyBillCopy ? (
-                      <div className="border-t border-slate-200 pt-6">
-                        <h4 className="text-base font-bold text-slate-800 mb-4">
-                          Document Upload
-                        </h4>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                          <FileUpload
-                            label="1. Kanta Slip"
-                            accept="image/*,.pdf"
-                            minWidth={800}
-                            minHeight={600}
-                            currentUrl={editEntry.documents?.kantaSlip}
-                            onFileChange={(url) => {
-                              setEditEntry((prev) => ({
-                                ...prev,
-                                documents: {
-                                  ...prev.documents,
-                                  kantaSlip: url,
-                                },
-                              }));
-                            }}
-                            onFileRemove={() => {
-                              setEditEntry((prev) => ({
-                                ...prev,
-                                documents: {
-                                  ...prev.documents,
-                                  kantaSlip: "",
-                                },
-                              }));
-                            }}
-                          />
-                          <FileUpload
-                            label="2. Unloading Challan"
-                            accept="image/*,.pdf"
-                            minWidth={800}
-                            minHeight={600}
-                            currentUrl={editEntry.documents?.unloadingChallan}
-                            onFileChange={(url) => {
-                              setEditEntry((prev) => ({
-                                ...prev,
-                                documents: {
-                                  ...prev.documents,
-                                  unloadingChallan: url,
-                                },
-                              }));
-                            }}
-                            onFileRemove={() => {
-                              setEditEntry((prev) => ({
-                                ...prev,
-                                documents: {
-                                  ...prev.documents,
-                                  unloadingChallan: "",
-                                },
-                              }));
-                            }}
-                          />
-                          <FileUpload
-                            label="3. Party Bill Copy"
-                            accept="image/*,.pdf"
-                            minWidth={800}
-                            minHeight={600}
-                            currentUrl={editEntry.documents?.partyBillCopy}
-                            onFileChange={(url) => {
-                              setEditEntry((prev) => ({
-                                ...prev,
-                                documents: {
-                                  ...prev.documents,
-                                  partyBillCopy: url,
-                                },
-                              }));
-                            }}
-                            onFileRemove={() => {
-                              setEditEntry((prev) => ({
-                                ...prev,
-                                documents: {
-                                  ...prev.documents,
-                                  partyBillCopy: "",
-                                },
-                              }));
-                            }}
-                          />
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="border-t border-slate-200 pt-6">
-                        <p className="text-sm text-slate-500 text-center py-4">
-                          Please fill in both Unloading Weight and Unloading
-                          Date to enable document upload.
-                        </p>
-                      </div>
-                    )}
-
-                    <div className="flex justify-end gap-3 pt-4">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setPopupType("");
-                          setSelectedEntry(null);
-                          setEditEntry(null);
-                          setCurrentSelfOrder(null);
-                        }}
-                        className="px-4 py-2 rounded-lg border border-slate-300 text-slate-700 text-sm font-medium hover:bg-slate-50 transition-colors"
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        type="button"
-                        onClick={handleUpdateEntry}
-                        disabled={isSaving}
-                        className="px-5 py-2 rounded-lg bg-emerald-600 text-white text-sm font-semibold shadow-sm hover:bg-emerald-700 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
-                      >
-                        {isSaving ? "Saving..." : "Update Entry"}
-                      </button>
-                    </div>
-                  </div>
+                  <EditLoadingEntryPopup
+                    editEntry={editEntry}
+                    setEditEntry={setEditEntry}
+                    currentSelfOrder={currentSelfOrder}
+                    currentCompany={currentCompany}
+                    handleEditFieldChange={handleEditFieldChange}
+                    handleQualityChange={handleQualityChange}
+                    handleUpdateEntry={handleUpdateEntry}
+                    transporters={transporters}
+                    stateOptions={stateOptions}
+                    paymentTermsMap={paymentTermsMap}
+                    getClaimRatio={getClaimRatio}
+                    onClose={() => {
+                      setPopupType("");
+                      setSelectedEntry(null);
+                      setEditEntry(null);
+                      setCurrentSelfOrder(null);
+                    }}
+                    isSaving={isSaving}
+                  />
                 )
               )}
             </PopupBox>
