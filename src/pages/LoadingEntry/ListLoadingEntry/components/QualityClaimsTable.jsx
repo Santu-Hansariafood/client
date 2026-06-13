@@ -151,7 +151,7 @@ const QualityClaimsTable = ({
             <th className="px-4 py-3 font-bold text-slate-700">Actual Value</th>
             <th className="px-4 py-3 font-bold text-slate-700">Difference</th>
             <th className="px-4 py-3 font-bold text-slate-700">Claim Ratio</th>
-            <th className="px-4 py-3 font-bold text-slate-700">Claim %</th>
+            {/* <th className="px-4 py-3 font-bold text-slate-700">Claim %</th> */}
             <th className="px-4 py-3 font-bold text-slate-700">Claim Amount</th>
             <th className="px-4 py-3 font-bold text-slate-700">Notes</th>
           </tr>
@@ -240,9 +240,9 @@ const QualityClaimsTable = ({
                 <td className="px-4 py-3 text-indigo-600 font-black italic">
                   {ratio.display}
                 </td>
-                <td className="px-4 py-3 text-slate-700 font-bold">
+                {/* <td className="px-4 py-3 text-slate-700 font-bold">
                   {claimPercent.toFixed(2)}%
-                </td>
+                </td> */}
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-1">
                     <span className="text-slate-400 font-bold">₹</span>

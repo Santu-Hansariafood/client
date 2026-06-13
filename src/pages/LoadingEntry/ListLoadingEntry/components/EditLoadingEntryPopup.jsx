@@ -32,15 +32,15 @@ const EditLoadingEntryPopup = ({
     const rate = Number(currentSelfOrder?.rate || 0);
     const weight = Number(editEntry.unloadingWeight || 0);
     const totalBill = rate * weight;
-    const cdAmount = totalBill * ((Number(currentSelfOrder?.cd) || 0) / 100);
-    const gstAmount = totalBill * ((Number(currentSelfOrder?.gst) || 0) / 100);
+    // const cdAmount = totalBill * ((Number(currentSelfOrder?.cd) || 0) / 100);
+    // const gstAmount = totalBill * ((Number(currentSelfOrder?.gst) || 0) / 100);
     const totalClaim = editEntry.manualClaim
       ? Number(editEntry.manualClaimAmount || 0)
       : editEntry.qualityClaims.reduce(
           (total, claim) => total + (Number(claim.claimAmount) || 0),
           0
         );
-    return (totalBill + cdAmount + gstAmount - totalClaim).toFixed(2);
+    return (totalBill - totalClaim).toFixed(2);
   };
 
   const handleManualRateChange = (e) => {
@@ -448,7 +448,18 @@ const EditLoadingEntryPopup = ({
                 </span>
               </div>
 
-              {(currentSelfOrder?.cd || 0) > 0 && (
+              {editEntry.manualCalculationRate && (
+                <div className="flex justify-between items-center p-3 bg-white rounded-lg shadow-xs border border-emerald-100">
+                  <span className="font-semibold text-slate-700">
+                    Manual Calculation Rate:
+                  </span>
+                  <span className="text-lg font-bold text-emerald-600">
+                    ₹ {Number(editEntry.manualCalculationRate).toFixed(2)}
+                  </span>
+                </div>
+              )}
+
+              {/* {(currentSelfOrder?.cd || 0) > 0 && (
                 <div className="flex justify-between items-center p-3 bg-white rounded-lg shadow-xs border border-emerald-100">
                   <span className="font-semibold text-slate-700">
                     Add CD (
@@ -480,7 +491,7 @@ const EditLoadingEntryPopup = ({
                     ).toFixed(2)}
                   </span>
                 </div>
-              )}
+              )} */}
 
               <div className="flex justify-between items-center p-3 bg-white rounded-lg shadow-xs border border-amber-100">
                 <span className="font-semibold text-slate-700">
