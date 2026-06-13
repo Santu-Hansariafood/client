@@ -108,7 +108,7 @@ const CompleteLoadingList = () => {
       const params = {
         page: currentPage,
         limit: itemsPerPage,
-        userRole,
+        role: userRole,
         mobile,
         search: searchInput || undefined,
         startDate: startDate || undefined,
@@ -194,7 +194,7 @@ const CompleteLoadingList = () => {
       const toastId = toast.loading("Preparing Excel...");
       const params = {
         limit: 5000,
-        userRole,
+        role: userRole,
         mobile,
         search: searchInput || undefined,
         startDate: startDate || undefined,

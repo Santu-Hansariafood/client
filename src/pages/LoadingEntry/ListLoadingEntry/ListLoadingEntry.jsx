@@ -137,6 +137,7 @@ const ListLoadingEntry = () => {
   const [pendingQuantityMap, setPendingQuantityMap] = useState({});
   const [transporters, setTransporters] = useState([]);
   const [transporterMap, setTransporterMap] = useState({});
+  const [orderQuantityMap, setOrderQuantityMap] = useState({});
   const [selectedEntry, setSelectedEntry] = useState(null);
   const [popupType, setPopupType] = useState("");
   const [editEntry, setEditEntry] = useState(null);
@@ -245,6 +246,11 @@ const ListLoadingEntry = () => {
           ordersData.map((o) => [o.saudaNo, o.status || "active"]),
         ),
       );
+      setOrderQuantityMap(
+        Object.fromEntries(
+          ordersData.map((o) => [o.saudaNo, o.quantity || 0]),
+        ),
+      );
       setTransporterMap(
         Object.fromEntries(transportersData.map((t) => [t._id, t.name])),
       );
@@ -347,9 +353,10 @@ const ListLoadingEntry = () => {
         searchParams.lorryNumber = filters.lorryNumber;
       }
 
-      const response = await fetchWithAbort("/loading-entries", {
-        params: searchParams,
-      });
+      const [response, allEntriesRes] = await Promise.all([
+        fetchWithAbort("/loading-entries", { params: searchParams }),
+        api.get("/loading-entries", { params: { limit: 0, role: userRole, mobile } }),
+      ]);
 
       if (!response || !isMountedRef.current) return;
 
@@ -366,6 +373,44 @@ const ListLoadingEntry = () => {
         entriesData = response.data.items;
         total = response.data.total || entriesData.length;
       }
+
+      // Calculate total unloaded weight per saudaNo from all entries
+      const allEntries = Array.isArray(allEntriesRes.data)
+        ? allEntriesRes.data
+        : allEntriesRes.data?.data || allEntriesRes.data?.items || [];
+      
+      const unloadingWeightMap = allEntries.reduce((acc, entry) => {
+        if (entry.saudaNo) {
+          const weight = parseFloat(entry.unloadingWeight) || 0;
+          acc[entry.saudaNo] = (acc[entry.saudaNo] || 0) + weight;
+        }
+        return acc;
+      }, {});
+
+      // Update alreadyLoadedMap and pendingQuantityMap based on actual unloading weights
+      setAlreadyLoadedMap((prev) => ({ ...prev, ...unloadingWeightMap }));
+      setPendingQuantityMap((prev) => {
+        const newMap = { ...prev };
+        for (const saudaNo in unloadingWeightMap) {
+          const orderQuantity = orderQuantityMap[saudaNo] || 0;
+          if (orderQuantity > 0) {
+            newMap[saudaNo] = Math.max(0, orderQuantity - unloadingWeightMap[saudaNo]);
+          }
+        }
+        return newMap;
+      });
+      
+      // Update statusMap based on pending quantity
+      setStatusMap((prev) => {
+        const newMap = { ...prev };
+        for (const saudaNo in unloadingWeightMap) {
+          const orderQuantity = orderQuantityMap[saudaNo] || 0;
+          const pending = Math.max(0, orderQuantity - unloadingWeightMap[saudaNo]);
+          const isWithinTolerance = pending <= 0 && pending >= -orderQuantity * 0.05;
+          newMap[saudaNo] = pending <= 0 || isWithinTolerance ? "closed" : "active";
+        }
+        return newMap;
+      });
 
       setLoadingEntries(entriesData);
       setTotalItems(total);

@@ -108,7 +108,7 @@ const PendingLoadingList = () => {
       const params = {
         page: currentPage,
         limit: itemsPerPage,
-        userRole,
+        role: userRole,
         mobile,
         search: searchInput || undefined,
         startDate: startDate || undefined,
@@ -195,7 +195,7 @@ const PendingLoadingList = () => {
       // For Excel, we might want to fetch all filtered data without pagination
       const params = {
         limit: 5000, // Fetch a large enough number for export
-        userRole,
+        role: userRole,
         mobile,
         search: searchInput || undefined,
         startDate: startDate || undefined,
