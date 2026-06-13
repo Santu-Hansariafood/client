@@ -459,6 +459,7 @@ const ListLoadingEntry = () => {
       qualityClaims: entry.qualityClaims || [],
       manualClaim: entry.manualClaim || false,
       manualClaimAmount: entry.manualClaimAmount || 0,
+      manualCalculationRate: entry.manualCalculationRate || "", // Add manual rate field
     };
 
     // Fetch both self-order and quality parameters
@@ -703,6 +704,32 @@ const ListLoadingEntry = () => {
           updated.sellerBrokerage = +(uWeight * sellerRate).toFixed(2);
         }
 
+        // Recalculate quality claims when unloadingWeight changes
+        if (name === "unloadingWeight" && prev.qualityClaims?.length > 0) {
+          const newClaims = prev.qualityClaims.map((claim) => {
+            const actual = parseFloat(claim.actualValue || 0);
+            const saudaRate = parseFloat(currentSelfOrder?.rate || 0);
+            const manualRate = parseFloat(prev.manualCalculationRate || 0);
+            const weight = parseFloat(value || 0);
+            let claimAmount = 0;
+            if (weight > 0 && (saudaRate > 0 || manualRate > 0)) {
+              claimAmount = calculateClaimAmount(
+                claim.paramValues,
+                actual,
+                saudaRate,
+                manualRate,
+                weight
+              );
+            }
+            return {
+              ...claim,
+              claimAmount: Math.abs(claimAmount).toFixed(2),
+            };
+          });
+          updated.qualityClaims = newClaims;
+        }
+        }
+
         return updated;
       });
     },
@@ -780,11 +807,12 @@ const ListLoadingEntry = () => {
       // Recalculate claim amount and percentage
       const actual = parseFloat(newClaims[index].actualValue || 0);
       const saudaRate = parseFloat(currentSelfOrder?.rate || 0);
+      const manualRate = parseFloat(prev.manualCalculationRate || 0);
       const weight = parseFloat(prev.unloadingWeight || 0);
 
       let claim = 0;
-      if (weight > 0 && saudaRate > 0) {
-        claim = calculateClaimAmount(newClaims[index].paramValues, actual, saudaRate, weight);
+      if (weight > 0 && (saudaRate > 0 || manualRate > 0)) {
+        claim = calculateClaimAmount(newClaims[index].paramValues, actual, saudaRate, manualRate, weight);
       }
 
       newClaims[index].claimAmount = Math.abs(claim).toFixed(2);
@@ -794,11 +822,12 @@ const ListLoadingEntry = () => {
   };
 
   // Helper function to calculate claim amount based on ranges
-  const calculateClaimAmount = (paramValues, actualValue, saudaRate, weight) => {
+  const calculateClaimAmount = (paramValues, actualValue, saudaRate, manualRate, weight) => {
     if (!paramValues || paramValues.length === 0) return 0;
 
     let totalClaim = 0;
     let remainingActual = actualValue;
+    const effectiveRate = parseFloat(manualRate) || saudaRate;
 
     // Sort param values by baseValue
     const sortedRanges = [...paramValues].sort((a, b) => {
@@ -824,7 +853,7 @@ const ListLoadingEntry = () => {
       const amountInRange = Math.min(remainingActual, rangeEnd) - rangeStart;
 
       if (amountInRange > 0 && ratioRight > 0) {
-        totalClaim += amountInRange * saudaRate * (ratioLeft / ratioRight) * (weight / 100);
+        totalClaim += amountInRange * effectiveRate * (ratioLeft / ratioRight) * (weight / 100);
         remainingActual -= amountInRange;
       }
 
@@ -841,7 +870,7 @@ const ListLoadingEntry = () => {
       
       const excessAmount = remainingActual - lastMax;
       if (excessAmount > 0 && lastRatioRight > 0) {
-        totalClaim += excessAmount * saudaRate * (lastRatioLeft / lastRatioRight) * (weight / 100);
+        totalClaim += excessAmount * effectiveRate * (lastRatioLeft / lastRatioRight) * (weight / 100);
       }
     }
 
@@ -1729,6 +1758,51 @@ const ListLoadingEntry = () => {
                       </div>
                       <div>
                         <label className="block text-sm font-semibold text-slate-700 mb-1">
+                          Manual Calculation Rate
+                        </label>
+                        <input
+                          type="number"
+                          name="manualCalculationRate"
+                          value={editEntry.manualCalculationRate || ""}
+                          onChange={(e) => {
+                            setEditEntry((prev) => ({
+                              ...prev,
+                              manualCalculationRate: e.target.value,
+                            }));
+                            // Recalculate quality claims when manual rate changes
+                            if (editEntry?.qualityClaims?.length > 0) {
+                              setEditEntry((prev) => {
+                                const newClaims = prev.qualityClaims.map((claim, idx) => {
+                                  const actual = parseFloat(claim.actualValue || 0);
+                                  const saudaRate = parseFloat(currentSelfOrder?.rate || 0);
+                                  const manualRate = parseFloat(e.target.value || 0);
+                                  const weight = parseFloat(prev.unloadingWeight || 0);
+                                  let claimAmount = 0;
+                                  if (weight > 0 && (saudaRate > 0 || manualRate > 0)) {
+                                    claimAmount = calculateClaimAmount(
+                                      claim.paramValues,
+                                      actual,
+                                      saudaRate,
+                                      manualRate,
+                                      weight
+                                    );
+                                  }
+                                  return {
+                                    ...claim,
+                                    claimAmount: Math.abs(claimAmount).toFixed(2),
+                                  };
+                                });
+                                return { ...prev, qualityClaims: newClaims };
+                              });
+                            }
+                          }}
+                          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                          aria-label="Manual Calculation Rate"
+                          step="0.01"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-slate-700 mb-1">
                           Total Freight
                         </label>
                         <input
@@ -1810,12 +1884,18 @@ const ListLoadingEntry = () => {
                             </div>
                             <div className="flex gap-6 text-sm">
                               <div className="text-slate-600">
-                                <span className="font-medium">Rate: </span>
+                                <span className="font-medium">Actual Rate: </span>
                                 <span className="font-bold">₹{currentSelfOrder?.rate || 0}/-</span>
                               </div>
+                              {editEntry.manualCalculationRate && (
+                                <div className="text-slate-600">
+                                  <span className="font-medium">Manual Calculation Rate: </span>
+                                  <span className="font-bold">₹{editEntry.manualCalculationRate}/-</span>
+                                </div>
+                              )}
                               <div className="text-slate-600">
-                                <span className="font-medium">Unloading Amount: </span>
-                                <span className="font-bold">₹{(currentSelfOrder?.rate || 0) * (editEntry?.unloadingWeight || 0)}</span>
+                                <span className="font-medium">Unloading Amount (for calculation): </span>
+                                <span className="font-bold">₹{(Number(editEntry.manualCalculationRate) || Number(currentSelfOrder?.rate || 0)) * (Number(editEntry?.unloadingWeight || 0))}</span>
                               </div>
                             </div>
                           </h4>
@@ -1858,14 +1938,14 @@ const ListLoadingEntry = () => {
                                 const claimAmt = Number(claim.claimAmount) || 0;
                                 const rate =
                                   Number(currentSelfOrder?.rate) || 0;
+                                const manualRate = Number(editEntry.manualCalculationRate) || 0;
+                                const effectiveRate = manualRate || rate;
                                 const weight =
                                   Number(editEntry.unloadingWeight) || 0;
-                                const totalValue = rate * weight;
+                                const totalValue = effectiveRate * weight;
 
-                                // Always calculate claim % as (Actual % - Base %)
-                                if (standard > 0) {
-                                  claimPercent = Math.abs(actual - standard);
-                                } else if (totalValue > 0) {
+                                // Calculate claim % only from total bills
+                                if (totalValue > 0) {
                                   claimPercent = (claimAmt / totalValue) * 100;
                                 }
 
