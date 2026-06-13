@@ -775,38 +775,77 @@ const ListLoadingEntry = () => {
                         newClaims[index].paramValues?.[0]?.baseValue || 
                         newClaims[index].standardValue || 0;
       
-      let isValid = true;
-      if (field === "actualValue") {
-        // Ensure actual value > base value
-        const actualNum = parseFloat(value);
-        const baseNum = parseFloat(baseValue);
-        if (!isNaN(actualNum) && !isNaN(baseNum) && actualNum < baseNum) {
-          toast.error(`Actual value must be greater than base value (${baseNum})`);
-          isValid = false;
-        }
+      newClaims[index][field] = value;
+
+      // Recalculate claim amount and percentage
+      const actual = parseFloat(newClaims[index].actualValue || 0);
+      const saudaRate = parseFloat(currentSelfOrder?.rate || 0);
+      const weight = parseFloat(prev.unloadingWeight || 0);
+
+      let claim = 0;
+      if (weight > 0 && saudaRate > 0) {
+        claim = calculateClaimAmount(newClaims[index].paramValues, actual, saudaRate, weight);
       }
-      
-      if (isValid) {
-        newClaims[index][field] = value;
 
-        // Recalculate claim amount and percentage
-        const standard = parseFloat(baseValue); // Always use base value for calculation
-        const actual = parseFloat(newClaims[index].actualValue || 0);
-        const saudaRate = parseFloat(currentSelfOrder?.rate || 0);
-        const weight = parseFloat(prev.unloadingWeight || 0);
-        const diff = actual - standard; // Actual - Base
-
-        const ratio = getClaimRatio(newClaims[index]);
-        let claim = 0;
-        if (ratio.right > 0 && weight > 0 && saudaRate > 0) {
-          claim = diff * saudaRate * (ratio.left / ratio.right) * (weight / 100);
-        }
-
-        newClaims[index].claimAmount = Math.abs(claim).toFixed(2);
-      }
+      newClaims[index].claimAmount = Math.abs(claim).toFixed(2);
 
       return { ...prev, qualityClaims: newClaims };
     });
+  };
+
+  // Helper function to calculate claim amount based on ranges
+  const calculateClaimAmount = (paramValues, actualValue, saudaRate, weight) => {
+    if (!paramValues || paramValues.length === 0) return 0;
+
+    let totalClaim = 0;
+    let remainingActual = actualValue;
+
+    // Sort param values by baseValue
+    const sortedRanges = [...paramValues].sort((a, b) => {
+      const aBase = parseFloat(a.baseValue) || 0;
+      const bBase = parseFloat(b.baseValue) || 0;
+      return aBase - bBase;
+    });
+
+    // Calculate claim in ranges
+    for (let i = 0; i < sortedRanges.length; i++) {
+      const range = sortedRanges[i];
+      const base = parseFloat(range.baseValue) || 0;
+      const max = parseFloat(range.maxValue) || Infinity;
+      const ratioLeft = parseFloat(range.claimRatioLeft) || 1;
+      const ratioRight = parseFloat(range.claimRatioRight) || 1;
+
+      // If actual is below base, skip (no claim)
+      if (remainingActual <= base) break;
+
+      // Determine how much of actual falls into this range
+      const rangeStart = i === 0 ? base : parseFloat(sortedRanges[i-1].maxValue || sortedRanges[i-1].baseValue);
+      const rangeEnd = max;
+      const amountInRange = Math.min(remainingActual, rangeEnd) - rangeStart;
+
+      if (amountInRange > 0 && ratioRight > 0) {
+        totalClaim += amountInRange * saudaRate * (ratioLeft / ratioRight) * (weight / 100);
+        remainingActual -= amountInRange;
+      }
+
+      if (remainingActual <= rangeEnd) break;
+    }
+
+    // If there's remaining actual above last max, use last range's ratio
+    if (remainingActual > 0 && sortedRanges.length > 0) {
+      const lastRange = sortedRanges[sortedRanges.length - 1];
+      const lastRatioLeft = parseFloat(lastRange.claimRatioLeft) || 1;
+      const lastRatioRight = parseFloat(lastRange.claimRatioRight) || 1;
+      const lastBase = parseFloat(lastRange.baseValue) || 0;
+      const lastMax = parseFloat(lastRange.maxValue) || lastBase;
+      
+      const excessAmount = remainingActual - lastMax;
+      if (excessAmount > 0 && lastRatioRight > 0) {
+        totalClaim += excessAmount * saudaRate * (lastRatioLeft / lastRatioRight) * (weight / 100);
+      }
+    }
+
+    return totalClaim;
   };
 
   const handleUpdateEntry = useCallback(async () => {
@@ -1866,13 +1905,14 @@ const ListLoadingEntry = () => {
                                           )
                                         }
                                         onBlur={() => {
-                                          // Ensure calculations are done when leaving the input
-                                          if (claim.actualValue) {
-                                            handleQualityChange(
-                                              idx,
-                                              "actualValue",
-                                              claim.actualValue,
-                                            );
+                                          // Validate only on blur
+                                          const baseValue = claim.paramValues?.find(v => v.baseValue)?.baseValue || 
+                                                            claim.paramValues?.[0]?.baseValue || 
+                                                            claim.standardValue || 0;
+                                          const actualNum = parseFloat(claim.actualValue);
+                                          const baseNum = parseFloat(baseValue);
+                                          if (!isNaN(actualNum) && !isNaN(baseNum) && actualNum < baseNum) {
+                                            toast.error(`Actual value must be greater than base value (${baseNum})`);
                                           }
                                         }}
                                         placeholder="Actual"
