@@ -152,7 +152,8 @@ const EditCompanyPopup = ({ company, isOpen, onClose, onUpdate }) => {
                         label: paramDef?.label || p.label || "Parameter",
                         values: Array.isArray(p.values) ? p.values : [
                           {
-                            value: "",
+                            baseValue: "",
+                            maxValue: "",
                             claimRatioLeft: "1",
                             claimRatioRight: "",
                           },
@@ -236,7 +237,8 @@ const EditCompanyPopup = ({ company, isOpen, onClose, onUpdate }) => {
           label: p.label,
           values: [
             {
-              value: "",
+              baseValue: "",
+              maxValue: "",
               claimRatioLeft: "1",
               claimRatioRight: "",
             },
@@ -486,12 +488,25 @@ const EditCompanyPopup = ({ company, isOpen, onClose, onUpdate }) => {
                             <div className="flex gap-2 items-center">
                               <div className="flex-1">
                                 <DataInput
-                                  placeholder="Value"
-                                  value={val.value}
+                                  placeholder="Base Value"
+                                  value={val.baseValue}
                                   onChange={(e) => {
                                     setCommodityEntries((prev) => {
                                       const updated = [...prev];
-                                      updated[commodityIndex].parameters[paramIndex].values[vIndex].value = e.target.value;
+                                      updated[commodityIndex].parameters[paramIndex].values[vIndex].baseValue = e.target.value;
+                                      return updated;
+                                    });
+                                  }}
+                                />
+                              </div>
+                              <div className="flex-1">
+                                <DataInput
+                                  placeholder="Max Value"
+                                  value={val.maxValue}
+                                  onChange={(e) => {
+                                    setCommodityEntries((prev) => {
+                                      const updated = [...prev];
+                                      updated[commodityIndex].parameters[paramIndex].values[vIndex].maxValue = e.target.value;
                                       return updated;
                                     });
                                   }}
@@ -552,7 +567,8 @@ const EditCompanyPopup = ({ company, isOpen, onClose, onUpdate }) => {
                               updated[commodityIndex].parameters[paramIndex].values = [
                                 ...updated[commodityIndex].parameters[paramIndex].values,
                                 {
-                                  value: "",
+                                  baseValue: "",
+                                  maxValue: "",
                                   claimRatioLeft: "1",
                                   claimRatioRight: "",
                                 },

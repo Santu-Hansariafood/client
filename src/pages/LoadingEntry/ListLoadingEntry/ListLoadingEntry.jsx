@@ -564,9 +564,9 @@ const ListLoadingEntry = () => {
                   (c.parameterId && param.parameterId && String(c.parameterId) === String(param.parameterId)),
               );
               
-              // Use existing standardValue if present, else default to first value
-              const defaultStandardValue = param.values?.[0]?.value 
-                ? parseFloat(param.values[0].value) 
+              // Use existing standardValue if present, else default to first baseValue
+              const defaultStandardValue = param.values?.[0]?.baseValue 
+                ? parseFloat(param.values[0].baseValue) 
                 : 0;
               const selectedStandardValue = existingClaim?.standardValue ?? defaultStandardValue;
               
@@ -739,9 +739,11 @@ const ListLoadingEntry = () => {
       console.log("[DEBUG getClaimRatio] No param or values, checking claim.paramValues:", claim.paramValues);
       // If no param, check claim.paramValues (from initialClaims)
       if (claim.paramValues && claim.paramValues.length) {
-        // Find ratio that matches current standardValue
+        // Find ratio that matches current standardValue (check baseValue and maxValue)
         const matchingValue = claim.paramValues.find(
-          (v) => parseFloat(v.value) === parseFloat(claim.standardValue)
+          (v) => 
+            parseFloat(v.baseValue) === parseFloat(claim.standardValue) || 
+            parseFloat(v.maxValue) === parseFloat(claim.standardValue)
         );
         console.log("[DEBUG getClaimRatio] matchingValue from claim.paramValues:", matchingValue);
         if (matchingValue) {
@@ -761,9 +763,11 @@ const ListLoadingEntry = () => {
       return { left: 1, right: 1, display: "1:1" };
     }
 
-    // Find ratioValue that matches the current standardValue
+    // Find ratioValue that matches the current standardValue (check baseValue and maxValue)
     const ratioValue = param.values.find(
-      (v) => parseFloat(v.value) === parseFloat(claim.standardValue)
+      (v) => 
+        parseFloat(v.baseValue) === parseFloat(claim.standardValue) || 
+        parseFloat(v.maxValue) === parseFloat(claim.standardValue)
     ) || param.values[0]; // Fallback to first if no match
     console.log("[DEBUG getClaimRatio] ratioValue from param.values:", ratioValue);
 
@@ -1809,11 +1813,23 @@ const ListLoadingEntry = () => {
                                     100;
                                 }
 
-                                // Prepare dropdown options
-                                const standardOptions = (claim.paramValues || []).map((v) => ({
-                                  value: v.value,
-                                  label: v.value,
-                                }));
+                                // Prepare dropdown options (use baseValue and maxValue)
+                                const standardOptions = [];
+                                (claim.paramValues || []).forEach((v) => {
+                                  if (v.baseValue) {
+                                    standardOptions.push({
+                                      value: v.baseValue,
+                                      label: `Base: ${v.baseValue}`,
+                                    });
+                                  }
+                                  if (v.maxValue) {
+                                    standardOptions.push({
+                                      value: v.maxValue,
+                                      label: `Max: ${v.maxValue}`,
+                                    });
+                                  }
+                                  // If both baseValue and maxValue are same, avoid duplicates
+                                });
 
                                 return (
                                   <tr

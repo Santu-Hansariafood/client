@@ -134,7 +134,8 @@ const AddCompany = () => {
             ...param,
             values: [
               {
-                value: "",
+                baseValue: "",
+                maxValue: "",
                 claimRatioLeft: "1",
                 claimRatioRight: "",
               },
@@ -445,12 +446,25 @@ const AddCompany = () => {
                           <div className="flex gap-2 items-center">
                             <div className="flex-1">
                               <DataInput
-                                placeholder={`Enter ${param.parameter}`}
-                                value={val.value}
+                                placeholder={`Base Value`}
+                                value={val.baseValue}
                                 onChange={(e) => {
                                   setSelectedCommodities((prev) => {
                                     const updated = [...prev];
-                                    updated[index].parameters[pIndex].values[vIndex].value = e.target.value;
+                                    updated[index].parameters[pIndex].values[vIndex].baseValue = e.target.value;
+                                    return updated;
+                                  });
+                                }}
+                              />
+                            </div>
+                            <div className="flex-1">
+                              <DataInput
+                                placeholder={`Max Value`}
+                                value={val.maxValue}
+                                onChange={(e) => {
+                                  setSelectedCommodities((prev) => {
+                                    const updated = [...prev];
+                                    updated[index].parameters[pIndex].values[vIndex].maxValue = e.target.value;
                                     return updated;
                                   });
                                 }}
@@ -511,7 +525,8 @@ const AddCompany = () => {
                             updated[index].parameters[pIndex].values = [
                               ...updated[index].parameters[pIndex].values,
                               {
-                                value: "",
+                                baseValue: "",
+                                maxValue: "",
                                 claimRatioLeft: "1",
                                 claimRatioRight: "",
                               },

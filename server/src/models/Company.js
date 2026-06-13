@@ -12,7 +12,8 @@ const formatName = (name) => {
 
 const parameterValueSchema = new mongoose.Schema(
   {
-    value: { type: String, default: "" },
+    baseValue: { type: String, default: "" },
+    maxValue: { type: String, default: "" },
     claimRatioLeft: { type: String, default: "1" },
     claimRatioRight: { type: String, default: "" },
   },
