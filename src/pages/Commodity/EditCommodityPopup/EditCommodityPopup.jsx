@@ -1,14 +1,22 @@
 import PropTypes from "prop-types";
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect, lazy, Suspense } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
+import { AiOutlinePlus, AiOutlineMinus } from "react-icons/ai";
 import Loading from "../../../common/Loading/Loading";
 
+const DataInput = lazy(() => import("../../../common/DataInput/DataInput"));
+const DataDropdown = lazy(
+  () => import("../../../common/DataDropdown/DataDropdown"),
+);
+const Buttons = lazy(() => import("../../../common/Buttons/Buttons"));
+
 const EditCommodityPopup = ({ isOpen, onClose, commodityId, onUpdate }) => {
-  const [commodity, setCommodity] = useState(null);
+  const [commodityName, setCommodityName] = useState("");
+  const [hsnCode, setHsnCode] = useState("");
+  const [extraFields, setExtraFields] = useState([{ parameter: "" }]);
+  const [parametersOptions, setParametersOptions] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [qualityOptions, setQualityOptions] = useState([]);
-  const [newQuality, setNewQuality] = useState("");
 
   useEffect(() => {
     const fetchCommodity = async () => {
@@ -16,7 +24,13 @@ const EditCommodityPopup = ({ isOpen, onClose, commodityId, onUpdate }) => {
       setIsLoading(true);
       try {
         const response = await axios.get(`/commodities/${commodityId}`);
-        setCommodity(response.data);
+        const data = response.data;
+        setCommodityName(data.name);
+        setHsnCode(data.hsnCode || "");
+        const fields = (data.parameters || []).map((p) => ({
+          parameter: { value: p.parameterId || p._id, label: p.parameter },
+        }));
+        setExtraFields(fields.length > 0 ? fields : [{ parameter: "" }]);
       } catch (error) {
         toast.error(
           error?.response?.data?.message || "Error fetching commodity",
@@ -30,7 +44,10 @@ const EditCommodityPopup = ({ isOpen, onClose, commodityId, onUpdate }) => {
       try {
         const response = await axios.get("/quality-parameters");
         const items = response.data?.data || response.data || [];
-        setQualityOptions(items);
+        const options = items
+          .map((param) => ({ value: param._id, label: param.name }))
+          .sort((a, b) => a.label.localeCompare(b.label));
+        setParametersOptions(options);
       } catch (error) {
         toast.error(
           error?.response?.data?.message || "Error fetching quality parameters",
@@ -44,53 +61,56 @@ const EditCommodityPopup = ({ isOpen, onClose, commodityId, onUpdate }) => {
     }
   }, [isOpen, commodityId]);
 
-  const handleChange = (e) => {
+  const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setCommodity((prev) => ({ ...prev, [name]: value }));
+    if (name === "commodityName") setCommodityName(value);
+    if (name === "hsnCode") setHsnCode(value);
   };
 
-  const handleAddParameter = () => {
-    if (!newQuality) {
-      toast.error("Please select a quality parameter to add.");
-      return;
-    }
+  const handleAddField = () => {
+    setExtraFields([...extraFields, { parameter: "" }]);
+  };
 
-    const selectedQuality = qualityOptions.find(
-      (option) => option._id === newQuality,
+  const handleRemoveField = (index) => {
+    if (extraFields.length === 1) {
+      setExtraFields([{ parameter: "" }]);
+    } else {
+      setExtraFields(extraFields.filter((_, i) => i !== index));
+    }
+  };
+
+  const handleExtraFieldChange = (index, name, value) => {
+    const newFields = [...extraFields];
+    newFields[index][name] = value;
+    setExtraFields(newFields);
+  };
+
+  const getFilteredOptions = (index) => {
+    const selectedParameters = extraFields
+      .map((field) => field.parameter?.value)
+      .filter(Boolean);
+    return parametersOptions.filter(
+      (option) =>
+        !selectedParameters.includes(option.value) ||
+        option.value === extraFields[index]?.parameter?.value,
     );
-
-    const updatedParameters = [
-      ...(commodity.parameters || []),
-      {
-        parameter: selectedQuality.name,
-        parameterId: newQuality,
-        _id: newQuality,
-      },
-    ];
-
-    setCommodity((prev) => ({ ...prev, parameters: updatedParameters }));
-    setNewQuality("");
-  };
-
-  const handleRemoveParameter = (index) => {
-    if (
-      window.confirm("Are you sure you want to remove this quality parameter?")
-    ) {
-      const updatedParameters = commodity.parameters.filter(
-        (_, i) => i !== index,
-      );
-      setCommodity((prev) => ({ ...prev, parameters: updatedParameters }));
-    }
   };
 
   const handleSave = async () => {
+    if (!commodityName || !hsnCode) {
+      toast.error("Please fill in all required fields");
+      return;
+    }
+
     setIsLoading(true);
     try {
       const payload = {
-        name: commodity.name,
-        hsnCode: commodity.hsnCode,
-        parameters: (commodity.parameters || [])
-          .map((p) => ({ parameterId: p.parameterId || p._id }))
+        name: commodityName,
+        hsnCode,
+        parameters: extraFields
+          .map((field) => ({
+            parameterId: field.parameter?.value,
+          }))
           .filter((p) => p.parameterId),
       };
       await axios.put(`/commodities/${commodityId}`, payload);
@@ -109,105 +129,85 @@ const EditCommodityPopup = ({ isOpen, onClose, commodityId, onUpdate }) => {
 
   if (!isOpen) return null;
 
-  const availableOptions = qualityOptions.filter(
-    (option) =>
-      !commodity?.parameters?.some(
-        (param) => (param.parameterId || param._id) === option._id,
-      ),
-  );
-
   return (
     <Suspense fallback={<Loading />}>
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div className="bg-white w-full max-w-lg p-6 rounded-lg shadow-lg">
-          <h3 className="text-xl font-semibold mb-4">Edit Commodity</h3>
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="bg-white w-full max-w-2xl p-6 sm:p-8 rounded-2xl shadow-xl border border-amber-200/80">
+          <h3 className="text-2xl font-bold mb-8 text-center text-slate-800">
+            Edit Commodity
+          </h3>
           {isLoading ? (
-            <p>Loading...</p>
+            <div className="flex justify-center py-8">
+              <Loading />
+            </div>
           ) : (
-            commodity && (
-              <>
-                <div className="mb-4">
-                  <label className="block font-medium">Name:</label>
-                  <input
-                    type="text"
-                    name="name"
-                    value={commodity.name || ""}
-                    onChange={handleChange}
-                    className="w-full border px-2 py-1 rounded"
-                    placeholder="Enter commodity name"
-                    required
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <DataInput
+                  placeholder="Enter commodity name"
+                  value={commodityName}
+                  onChange={handleInputChange}
+                  name="commodityName"
+                  required
+                />
+                <DataInput
+                  placeholder="Enter HSN code"
+                  value={hsnCode}
+                  onChange={handleInputChange}
+                  name="hsnCode"
+                  required
+                />
+              </div>
+
+              <button
+                onClick={handleAddField}
+                className="mt-4 text-green-700 flex items-center space-x-2"
+              >
+                <AiOutlinePlus size={20} />
+                <span className="font-medium">Add Quality Parameter</span>
+              </button>
+
+              {extraFields.map((field, index) => (
+                <div
+                  key={index}
+                  className="mt-4 grid grid-cols-3 gap-4 items-center bg-gray-50 p-4 rounded-lg shadow-sm"
+                >
+                  <DataDropdown
+                    options={getFilteredOptions(index)}
+                    selectedOptions={field.parameter}
+                    onChange={(option) =>
+                      handleExtraFieldChange(index, "parameter", option)
+                    }
+                    placeholder="Select Parameter"
                   />
-                </div>
-                <div className="mb-4">
-                  <label className="block font-medium">HSN Code:</label>
-                  <input
-                    type="text"
-                    name="hsnCode"
-                    value={commodity.hsnCode || ""}
-                    onChange={handleChange}
-                    className="w-full border px-2 py-1 rounded"
-                    placeholder="Enter HSN Code"
-                  />
-                </div>
-                <div className="mb-4">
-                  <label className="block font-medium">
-                    Quality Parameters:
-                  </label>
-                  <ul className="list-disc pl-5">
-                    {commodity.parameters?.map((param, index) => (
-                      <li key={index} className="mb-2 flex items-center">
-                        <div className="border px-2 py-1 rounded w-full bg-gray-50">
-                          {param.parameter}
-                        </div>
-                        <button
-                          onClick={() => handleRemoveParameter(index)}
-                          className="ml-2 text-red-500 hover:text-red-700"
-                        >
-                          Remove
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                  <div className="flex mt-2 items-center">
-                    <select
-                      value={newQuality}
-                      onChange={(e) => setNewQuality(e.target.value)}
-                      className="border px-2 py-1 rounded w-full"
-                    >
-                      <option value="">Select Quality</option>
-                      {availableOptions.map((option) => (
-                        <option key={option._id} value={option._id}>
-                          {option.name}
-                        </option>
-                      ))}
-                    </select>
+                  <div className="col-span-2 flex justify-end">
                     <button
-                      onClick={handleAddParameter}
-                      className="ml-2 bg-green-500 text-white px-4 py-1 rounded"
+                      onClick={() => handleRemoveField(index)}
+                      className="text-red-500 flex items-center space-x-2"
                     >
-                      Add
+                      <AiOutlineMinus size={20} />
+                      <span>Remove</span>
                     </button>
                   </div>
                 </div>
-                <div className="flex justify-end">
-                  <button
-                    onClick={handleSave}
-                    className={`bg-blue-500 text-white px-4 py-2 rounded ${
-                      isLoading ? "opacity-50 cursor-not-allowed" : ""
-                    }`}
-                    disabled={isLoading}
-                  >
-                    {isLoading ? "Saving..." : "Save"}
-                  </button>
-                  <button
-                    onClick={onClose}
-                    className="ml-4 text-gray-500 hover:text-gray-700"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </>
-            )
+              ))}
+
+              <div className="flex justify-end gap-4 mt-8">
+                <Buttons
+                  label="Cancel"
+                  onClick={onClose}
+                  variant="secondary"
+                  size="md"
+                />
+                <Buttons
+                  label={isLoading ? "Saving..." : "Save"}
+                  onClick={handleSave}
+                  variant="primary"
+                  size="md"
+                  disabled={isLoading}
+                />
+              </div>
+            </>
           )}
         </div>
       </div>

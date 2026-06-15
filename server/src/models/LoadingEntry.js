@@ -91,6 +91,7 @@ const loadingEntrySchema = new mongoose.Schema(
 
 loadingEntrySchema.index({ saudaNo: 1 });
 loadingEntrySchema.index({ supplier: 1 });
+loadingEntrySchema.index({ loadingNo: -1 });
 loadingEntrySchema.index({ loadingDate: -1 });
 loadingEntrySchema.index({ billNumber: 1 });
 loadingEntrySchema.index({ lorryNumber: 1 });

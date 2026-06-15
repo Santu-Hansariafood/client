@@ -1708,11 +1708,11 @@ router.get("/", async (req, res) => {
       andParts.length > 1 ? { $and: andParts } : andParts[0] || {};
 
     const items = await LoadingEntry.find(finalQuery)
-      .sort({ paymentStatus: -1, loadingDate: -1, createdAt: -1 })
+      .sort({ paymentStatus: -1, loadingNo: -1, loadingDate: -1, createdAt: -1 })
       .skip((page - 1) * limit)
       .limit(limit)
       .select(
-        "loadingDate saudaNo lorryNumber supplier supplierCompany consignee buyerCompany commodity loadingWeight unloadingWeight unloadingDate paymentStatus paidAmount billNumber transporterId addedTransport driverName driverPhoneNumber freightRate totalFreight advance balance dateOfIssue documents bags deliveryDate buyerBrokerage sellerBrokerage loadingFrom createdAt creatorName creatorMobile entryByRole",
+        "loadingNo loadingDate saudaNo lorryNumber supplier supplierCompany consignee buyerCompany commodity loadingWeight unloadingWeight unloadingDate paymentStatus paidAmount billNumber transporterId addedTransport driverName driverPhoneNumber freightRate totalFreight advance balance dateOfIssue documents bags deliveryDate buyerBrokerage sellerBrokerage loadingFrom createdAt creatorName creatorMobile entryByRole",
       )
       .populate("supplier", "sellerName")
       .lean();
@@ -1747,22 +1747,9 @@ router.get("/", async (req, res) => {
     }
     const baseQuery = baseAndParts.length > 0 ? { $and: baseAndParts } : {};
 
-    const itemsWithSlNo = await Promise.all(
-      itemsWithDetails.map(async (item) => {
-        const slNo =
-          (await LoadingEntry.countDocuments({
-            ...baseQuery,
-            $or: [
-              { loadingDate: { $lt: item.loadingDate } },
-              {
-                loadingDate: item.loadingDate,
-                createdAt: { $lt: item.createdAt },
-              },
-            ],
-          })) + 1;
-        return { ...item, slNo };
-      }),
-    );
+    const itemsWithSlNo = itemsWithDetails.map((item) => {
+      return { ...item, slNo: item.loadingNo };
+    });
 
     res.json({
       data: itemsWithSlNo,

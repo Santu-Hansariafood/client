@@ -1,4 +1,4 @@
-import { useState, useEffect, lazy, Suspense } from "react";
+import { useState, useEffect, lazy, Suspense, useMemo } from "react";
 import axios from "axios";
 import PropTypes from "prop-types";
 import { toast } from "react-toastify";
@@ -111,16 +111,20 @@ const ListQualityParameter = () => {
     }
   };
 
-  const rows = filteredData.map((item, index) => [
-    (currentPage - 1) * itemsPerPage + index + 1,
-    item.name,
-    <Actions
-      key={item._id}
-      onView={() => handleView(item)}
-      onEdit={() => handleEdit(item)}
-      onDelete={() => handleDelete(item)}
-    />,
-  ]);
+  const rows = useMemo(
+    () =>
+      filteredData.map((item, index) => [
+        (Number(currentPage) - 1) * itemsPerPage + index + 1,
+        item.name,
+        <Actions
+          key={item._id}
+          onView={() => handleView(item)}
+          onEdit={() => handleEdit(item)}
+          onDelete={() => handleDelete(item)}
+        />,
+      ]),
+    [filteredData, currentPage]
+  );
 
   const handlePageChange = (pageNumber) => {
     setCurrentPage(pageNumber);
@@ -167,10 +171,10 @@ const ListQualityParameter = () => {
           <Tables headers={headers} rows={rows} />
 
           <Pagination
-            currentPage={currentPage}
-            totalItems={total}
+            currentPage={Number(currentPage)}
+            totalItems={Number(total)}
             itemsPerPage={itemsPerPage}
-            onPageChange={handlePageChange}
+            onPageChange={(page) => setCurrentPage(Number(page))}
           />
         </AdminPageShell>
       </div>

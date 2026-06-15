@@ -998,8 +998,8 @@ const ListLoadingEntry = () => {
       "Entered By",
     ];
 
-    const tableRows = loadingEntries.map((entry, index) => {
-      const slNo = (currentPage - 1) * itemsPerPage + index + 1;
+    const tableRows = loadingEntries.map((entry) => {
+      const slNo = entry.loadingNo;
       const brokerageRate = brokerageMap[entry.saudaNo] || 0;
       const totalBrokerage = (
         (entry.unloadingWeight || 0) * brokerageRate
@@ -1077,8 +1077,8 @@ const ListLoadingEntry = () => {
   );
 
   const rows = useMemo(() => {
-    return loadingEntries.map((entry, index) => {
-      const slNo = (currentPage - 1) * itemsPerPage + index + 1;
+    return loadingEntries.map((entry) => {
+      const slNo = entry.slNo;
       const brokerageRate = brokerageMap[entry.saudaNo] || 0;
       const totalBrokerage = (
         (entry.unloadingWeight || 0) * brokerageRate
