@@ -101,11 +101,11 @@ app.use(cors(corsOptions));
 app.use(express.json({ limit: "5mb" }));
 app.use(express.urlencoded({ extended: true, limit: "5mb" }));
 
-app.use("/logo", express.static(path.join(__dirname, "../../public/logo")));
-app.use("/icons", express.static(path.join(__dirname, "../../public/icons")));
-app.use("/images", express.static(path.join(__dirname, "../../public/images")));
-app.use("/teams", express.static(path.join(__dirname, "../../public/teams")));
-app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
+app.use("/logo", express.static(path.join(__dirname, "../../public/logo"), { maxAge: "30d" }));
+app.use("/icons", express.static(path.join(__dirname, "../../public/icons"), { maxAge: "30d" }));
+app.use("/images", express.static(path.join(__dirname, "../../public/images"), { maxAge: "30d" }));
+app.use("/teams", express.static(path.join(__dirname, "../../public/teams"), { maxAge: "30d" }));
+app.use("/uploads", express.static(path.join(__dirname, "../uploads"), { maxAge: "1d" }));
 
 app.use((req, res, next) => {
   const start = Date.now();

@@ -110,14 +110,29 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: {
-          react: ["react", "react-dom", "react-router-dom"],
-          utils: ["axios", "moment"],
-          ui: ["react-toastify", "react-helmet-async"],
+          // Split React & Router
+          'vendor-react': ['react', 'react-dom'],
+          'vendor-router': ['react-router-dom'],
+          
+          // Split heavy utility libraries
+          'vendor-pdf': ['jspdf', 'jspdf-autotable', '@react-pdf/renderer'],
+          'vendor-xlsx': ['xlsx'],
+          'vendor-charts': ['recharts'],
+          'vendor-qrcode': ['qrcode'],
+          'vendor-datepicker': ['react-datepicker'],
+          'vendor-crop': ['react-easy-crop'],
+          'vendor-carousel': ['react-slick', 'slick-carousel'],
+          
+          // Split UI components
+          'vendor-ui': ['react-select', 'react-toastify', 'react-helmet-async'],
+          
+          // Split utils
+          'vendor-utils': ['axios', 'moment', 'socket.io-client'],
         },
         chunkFileNames: "assets/[name]-[hash].js",
       },
     },
-    chunkSizeWarningLimit: 1600,
+    chunkSizeWarningLimit: 1000,
   },
   server: {
     host: true,
