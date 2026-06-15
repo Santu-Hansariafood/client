@@ -98,12 +98,15 @@ const loaders = {
   AddExpense: () => import("../../pages/Expense/AddExpense/AddExpense"),
   ListExpense: () => import("../../pages/Expense/ListExpense/ListExpense"),
   ListPayment: () => import("../../pages/Payments/PaymentList/PaymentList"),
-  AddPaymentReceived: () => import("../../pages/Payments/PaymentReceived/AddPaymentReceived"),
-  ListPaymentReceived: () => import("../../pages/Payments/PaymentReceived/ListPaymentReceived"),
+  AddPaymentReceived: () =>
+    import("../../pages/Payments/PaymentReceived/AddPaymentReceived"),
+  ListPaymentReceived: () =>
+    import("../../pages/Payments/PaymentReceived/ListPaymentReceived"),
   DataSafety: () => import("../../pages/DataSafety/DataSafety"),
   BuyerBrokerage: () => import("../../pages/Brokerage/BuyerBrokerage"),
   SellerBrokerage: () => import("../../pages/Brokerage/SellerBrokerage"),
-  SaudaWiseDetails: () => import("../../pages/Reports/SaudaWiseDetails/SaudaWiseDetails"),
+  SaudaWiseDetails: () =>
+    import("../../pages/Reports/SaudaWiseDetails/SaudaWiseDetails"),
   BlogManagement: () => import("../../pages/Blog/BlogManagement"),
   BlogDetail: () => import("../../pages/Blog/BlogDetail"),
   NewsArchive: () => import("../../pages/Blog/NewsArchive"),

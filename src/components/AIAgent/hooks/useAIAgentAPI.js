@@ -1514,7 +1514,6 @@ export const useAIAgentAPI = (
         };
       }
 
-      // If we found commodities
       if (commodities && commodities.length > 0) {
         let content = `*Commodities Found:*\n\n`;
         commodities.forEach((c, i) => {

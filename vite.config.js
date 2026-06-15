@@ -79,7 +79,6 @@ export default defineConfig({
       },
       workbox: {
         navigateFallback: "/index.html",
-        // Increase max file size to cache to 5MB
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
         runtimeCaching: [
           {
@@ -112,54 +111,65 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: (id) => {
-          // Group React and React DOM
-          if (id.includes("node_modules/react/") || id.includes("node_modules/react-dom/")) {
+          if (
+            id.includes("node_modules/react/") ||
+            id.includes("node_modules/react-dom/")
+          ) {
             return "vendor-react";
           }
-          // Group heavy PDF libraries
-          if (id.includes("node_modules/jspdf/") || id.includes("node_modules/jspdf-autotable/") || id.includes("node_modules/@react-pdf/")) {
+          if (
+            id.includes("node_modules/jspdf/") ||
+            id.includes("node_modules/jspdf-autotable/") ||
+            id.includes("node_modules/@react-pdf/")
+          ) {
             return "vendor-pdf";
           }
-          // Group charts
           if (id.includes("node_modules/recharts/")) {
             return "vendor-charts";
           }
-          // Group XLSX
           if (id.includes("node_modules/xlsx/")) {
             return "vendor-xlsx";
           }
-          // Group router
           if (id.includes("node_modules/react-router-dom/")) {
             return "vendor-router";
           }
-          // Group UI components
-          if (id.includes("node_modules/react-select/") || id.includes("node_modules/react-toastify/") || id.includes("node_modules/react-helmet-async/")) {
+          if (
+            id.includes("node_modules/react-select/") ||
+            id.includes("node_modules/react-toastify/") ||
+            id.includes("node_modules/react-helmet-async/")
+          ) {
             return "vendor-ui";
           }
-          // Group Datepicker
           if (id.includes("node_modules/react-datepicker/")) {
             return "vendor-datepicker";
           }
-          // Group Crop
           if (id.includes("node_modules/react-easy-crop/")) {
             return "vendor-crop";
           }
-          // Group Carousel
-          if (id.includes("node_modules/react-slick/") || id.includes("node_modules/slick-carousel/")) {
+          if (
+            id.includes("node_modules/react-slick/") ||
+            id.includes("node_modules/slick-carousel/")
+          ) {
             return "vendor-carousel";
           }
-          // Group QR Code
           if (id.includes("node_modules/qrcode/")) {
             return "vendor-qrcode";
           }
-          // Split other node_modules into chunks
           if (id.includes("node_modules/")) {
-            // Split into smaller chunks by package name
             const match = id.match(/node_modules\/([^/]+)/);
             if (match) {
               const pkg = match[1];
-              // Group small packages together
-              if (['axios', 'moment', 'socket.io-client', 'prop-types', 'web-vitals', 'react-error-boundary', 'react-icons'].includes(pkg)) {
+              if (
+                [
+                  "axios",
+                  "moment",
+                  "socket.io-client",
+                  "prop-types",
+                  "web-vitals",
+                  "react-error-boundary",
+                  "react-icons",
+                ].includes(pkg)
+              ) {
                 return "vendor-utils";
               }
               return `vendor-${pkg}`;
