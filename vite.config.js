@@ -79,6 +79,8 @@ export default defineConfig({
       },
       workbox: {
         navigateFallback: "/index.html",
+        // Increase max file size to cache to 5MB
+        maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
         runtimeCaching: [
           {
             urlPattern: ({ request }) => request.destination === "document",
@@ -130,15 +132,45 @@ export default defineConfig({
           if (id.includes("node_modules/react-router-dom/")) {
             return "vendor-router";
           }
-          // All other vendors
+          // Group UI components
+          if (id.includes("node_modules/react-select/") || id.includes("node_modules/react-toastify/") || id.includes("node_modules/react-helmet-async/")) {
+            return "vendor-ui";
+          }
+          // Group Datepicker
+          if (id.includes("node_modules/react-datepicker/")) {
+            return "vendor-datepicker";
+          }
+          // Group Crop
+          if (id.includes("node_modules/react-easy-crop/")) {
+            return "vendor-crop";
+          }
+          // Group Carousel
+          if (id.includes("node_modules/react-slick/") || id.includes("node_modules/slick-carousel/")) {
+            return "vendor-carousel";
+          }
+          // Group QR Code
+          if (id.includes("node_modules/qrcode/")) {
+            return "vendor-qrcode";
+          }
+          // Split other node_modules into chunks
           if (id.includes("node_modules/")) {
-            return "vendor";
+            // Split into smaller chunks by package name
+            const match = id.match(/node_modules\/([^/]+)/);
+            if (match) {
+              const pkg = match[1];
+              // Group small packages together
+              if (['axios', 'moment', 'socket.io-client', 'prop-types', 'web-vitals', 'react-error-boundary', 'react-icons'].includes(pkg)) {
+                return "vendor-utils";
+              }
+              return `vendor-${pkg}`;
+            }
+            return "vendor-misc";
           }
         },
         chunkFileNames: "assets/[name]-[hash].js",
       },
     },
-    chunkSizeWarningLimit: 1600,
+    chunkSizeWarningLimit: 1000,
   },
   server: {
     host: true,
