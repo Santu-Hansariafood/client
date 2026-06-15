@@ -208,31 +208,34 @@ const ListLoadingEntry = () => {
       let transportersData = [];
       let ordersData = [];
 
-      try {
-        const sellersRes = await api.get("/sellers");
-        sellersData = Array.isArray(sellersRes.data)
-          ? sellersRes.data
-          : sellersRes.data?.data || [];
-      } catch (error) {
-        console.error("Error fetching sellers:", error);
+      const [sellersRes, transportersRes, ordersRes] = await Promise.allSettled([
+        api.get("/sellers"),
+        api.get("/transporters", { params: { limit: 0 } }),
+        api.get("/self-order", { params: { limit: 0 } }),
+      ]);
+
+      if (sellersRes.status === "fulfilled") {
+        sellersData = Array.isArray(sellersRes.value.data)
+          ? sellersRes.value.data
+          : sellersRes.value.data?.data || [];
+      } else {
+        console.error("Error fetching sellers:", sellersRes.reason);
       }
 
-      try {
-        const transportersRes = await api.get("/transporters", { params: { limit: 0 } });
-        transportersData = Array.isArray(transportersRes.data)
-          ? transportersRes.data
-          : transportersRes.data?.data || [];
-      } catch (error) {
-        console.error("Error fetching transporters:", error);
+      if (transportersRes.status === "fulfilled") {
+        transportersData = Array.isArray(transportersRes.value.data)
+          ? transportersRes.value.data
+          : transportersRes.value.data?.data || [];
+      } else {
+        console.error("Error fetching transporters:", transportersRes.reason);
       }
 
-      try {
-        const ordersRes = await api.get("/self-order", { params: { limit: 0 } });
-        ordersData = Array.isArray(ordersRes.data)
-          ? ordersRes.data
-          : ordersRes.data?.data || [];
-      } catch (error) {
-        console.error("Error fetching orders:", error);
+      if (ordersRes.status === "fulfilled") {
+        ordersData = Array.isArray(ordersRes.value.data)
+          ? ordersRes.value.data
+          : ordersRes.value.data?.data || [];
+      } else {
+        console.error("Error fetching orders:", ordersRes.reason);
       }
 
       if (!isMountedRef.current) return;
@@ -368,10 +371,7 @@ const ListLoadingEntry = () => {
         searchParams.lorryNumber = filters.lorryNumber;
       }
 
-      const [response, allEntriesRes] = await Promise.all([
-        fetchWithAbort("/loading-entries", { params: searchParams }),
-        api.get("/loading-entries", { params: { limit: 0, role: userRole, mobile } }),
-      ]);
+      const response = await fetchWithAbort("/loading-entries", { params: searchParams });
 
       if (!response || !isMountedRef.current) return;
 
@@ -388,44 +388,6 @@ const ListLoadingEntry = () => {
         entriesData = response.data.items;
         total = response.data.total || entriesData.length;
       }
-
-      // Calculate total unloaded weight per saudaNo from all entries
-      const allEntries = Array.isArray(allEntriesRes.data)
-        ? allEntriesRes.data
-        : allEntriesRes.data?.data || allEntriesRes.data?.items || [];
-      
-      const unloadingWeightMap = allEntries.reduce((acc, entry) => {
-        if (entry.saudaNo) {
-          const weight = parseFloat(entry.unloadingWeight) || 0;
-          acc[entry.saudaNo] = (acc[entry.saudaNo] || 0) + weight;
-        }
-        return acc;
-      }, {});
-
-      // Update alreadyLoadedMap and pendingQuantityMap based on actual unloading weights
-      setAlreadyLoadedMap((prev) => ({ ...prev, ...unloadingWeightMap }));
-      setPendingQuantityMap((prev) => {
-        const newMap = { ...prev };
-        for (const saudaNo in unloadingWeightMap) {
-          const orderQuantity = orderQuantityMap[saudaNo] || 0;
-          if (orderQuantity > 0) {
-            newMap[saudaNo] = Math.max(0, orderQuantity - unloadingWeightMap[saudaNo]);
-          }
-        }
-        return newMap;
-      });
-      
-      // Update statusMap based on pending quantity
-      setStatusMap((prev) => {
-        const newMap = { ...prev };
-        for (const saudaNo in unloadingWeightMap) {
-          const orderQuantity = orderQuantityMap[saudaNo] || 0;
-          const pending = Math.max(0, orderQuantity - unloadingWeightMap[saudaNo]);
-          const isWithinTolerance = pending <= 0 && pending >= -orderQuantity * 0.05;
-          newMap[saudaNo] = pending <= 0 || isWithinTolerance ? "closed" : "active";
-        }
-        return newMap;
-      });
 
       setLoadingEntries(entriesData);
       setTotalItems(total);
