@@ -18,7 +18,7 @@ const EditCommodityPopup = lazy(
 
 const ListCommodity = () => {
   const [commodities, setCommodities] = useState([]);
-
+  const [filteredData, setFilteredData] = useState([]);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [isEditPopupOpen, setIsEditPopupOpen] = useState(false);
   const [selectedCommodity, setSelectedCommodity] = useState(null);
@@ -31,7 +31,6 @@ const ListCommodity = () => {
   const fetchCommodities = async () => {
     try {
       setIsLoading(true);
-
       const response = await axios.get("/commodities", {
         params: {
           page: currentPage,
@@ -39,16 +38,10 @@ const ListCommodity = () => {
           search: searchQuery,
         },
       });
-
-      const items = response.data?.data || response.data || [];
-
-      const sortedCommodities = [...items].sort((a, b) =>
-        (a.name || "").localeCompare(b.name || ""),
-      );
-
-      setCommodities(sortedCommodities);
-
-      setTotal(response.data?.total || sortedCommodities.length);
+      const data = response.data?.data || response.data || [];
+      setCommodities(data);
+      setFilteredData(data);
+      setTotal(response.data?.total ?? data.length);
     } catch (error) {
       toast.error(
         error?.response?.data?.message || "Error fetching commodities",
@@ -70,9 +63,7 @@ const ListCommodity = () => {
   const handleView = async (id) => {
     try {
       const response = await axios.get(`/commodities/${id}`);
-
       setSelectedCommodity(response.data);
-
       setIsPopupOpen(true);
     } catch (error) {
       toast.error("Error fetching commodity details");
@@ -82,7 +73,6 @@ const ListCommodity = () => {
 
   const handleEdit = (id) => {
     setSelectedCommodity({ _id: id });
-
     setIsEditPopupOpen(true);
   };
 
@@ -91,24 +81,10 @@ const ListCommodity = () => {
       const confirmDelete = window.confirm(
         "Are you sure you want to delete this commodity?",
       );
-
       if (!confirmDelete) return;
-
       await axios.delete(`/commodities/${id}`);
-
-      const updatedCommodities = commodities.filter(
-        (commodity) => commodity._id !== id,
-      );
-
-      setCommodities(updatedCommodities);
-
-      setTotal((prev) => Math.max(prev - 1, 0));
-
       toast.success("Commodity deleted successfully!");
-
-      if (updatedCommodities.length === 0 && currentPage > 1) {
-        setCurrentPage((prev) => prev - 1);
-      }
+      fetchCommodities();
     } catch (error) {
       toast.error(error?.response?.data?.message || "Error deleting commodity");
     }
@@ -116,8 +92,8 @@ const ListCommodity = () => {
 
   const tableRows = useMemo(
     () =>
-      commodities.map((commodity, index) => [
-        ((Number(currentPage) || 1) - 1) * itemsPerPage + index + 1,
+      filteredData.map((commodity, index) => [
+        (Number(currentPage) - 1) * itemsPerPage + index + 1,
         commodity.name || "N/A",
         commodity.hsnCode || "N/A",
         <div
@@ -140,7 +116,7 @@ const ListCommodity = () => {
           onDelete={() => handleDelete(commodity._id)}
         />,
       ]),
-    [commodities, currentPage],
+    [filteredData, currentPage]
   );
 
   const tableHeaders = [
@@ -161,13 +137,15 @@ const ListCommodity = () => {
       >
         <div className="max-w-6xl mx-auto">
           <div className="bg-white border border-amber-200/80 rounded-2xl shadow-lg p-4 sm:p-6">
-            <div className="mb-6 flex justify-between items-center">
-              <SearchBox
-                placeholder="Search Commodities"
-                items={commodities.map((commodity) => commodity.name || "")}
-                onSearch={handleSearch}
-                returnQuery
-              />
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+              <div className="w-full md:w-1/2">
+                <SearchBox
+                  placeholder="Search Commodities"
+                  items={commodities.map((commodity) => commodity.name || "")}
+                  onSearch={handleSearch}
+                  returnQuery
+                />
+              </div>
             </div>
 
             {isLoading ? (
