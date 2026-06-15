@@ -1207,6 +1207,176 @@ router.get("/saudas", async (req, res) => {
   }
 });
 
+// New efficient endpoints to get unique sellers/seller companies directly via aggregation
+router.get("/unique-sellers", async (req, res) => {
+  try {
+    const role = req.user?.role;
+    const mobile = req.user?.mobile;
+
+    if (role !== "Admin" && role !== "Employee" && role !== "Seller") {
+      return res.status(403).json({ message: "Forbidden" });
+    }
+
+    const groupIdRaw = req.query.groupId;
+    const buyerCompany = String(req.query.buyerCompany || "").trim();
+
+    const andParts = [];
+
+    // Build query for selfOrders based on filters
+    if (groupIdRaw) {
+      const groupIds = groupIdRaw.split(",").map(toObjectId).filter(Boolean);
+      const buyers = await Buyer.find({ groupId: { $in: groupIds } })
+        .select("_id companyIds name")
+        .populate({ path: "companyIds", select: "companyName" })
+        .lean();
+
+      if (buyers.length) {
+        const allCompanyIds = [];
+        const allCompanyNames = [];
+        const allBuyerNames = [];
+
+        buyers.forEach((b) => {
+          if (b.name) allBuyerNames.push(b.name);
+          (b.companyIds || []).forEach((c) => {
+            if (c?._id) allCompanyIds.push(c._id);
+            if (c?.companyName) allCompanyNames.push(c.companyName);
+          });
+        });
+
+        const groupOr = [];
+        if (allCompanyIds.length) groupOr.push({ companyId: { $in: allCompanyIds } });
+        if (allCompanyNames.length) groupOr.push({ buyerCompany: { $in: allCompanyNames } });
+        if (allBuyerNames.length) groupOr.push({ buyer: { $in: allBuyerNames } });
+        if (groupOr.length) andParts.push({ $or: groupOr });
+      }
+    }
+
+    if (buyerCompany) {
+      andParts.push({
+        buyerCompany: { $regex: new RegExp(`^${escapeRegex(buyerCompany)}$`, "i") },
+      });
+    }
+
+    if (role === "Seller" && mobile) {
+      const seller = await Seller.findOne({ "phoneNumbers.value": { $regex: new RegExp(mobile + "$") } }).lean();
+      if (seller) {
+        andParts.push({ supplier: seller._id });
+      }
+    }
+
+    const query = andParts.length ? { $and: andParts } : {};
+
+    // Aggregate to get unique suppliers and their names
+    const uniqueSellers = await SelfOrder.aggregate([
+      { $match: { ...query, supplier: { $exists: true, $ne: null } } },
+      { $group: { _id: "$supplier" } },
+      {
+        $lookup: {
+          from: "sellers",
+          localField: "_id",
+          foreignField: "_id",
+          as: "sellerInfo"
+        }
+      },
+      { $unwind: { path: "$sellerInfo", preserveNullAndEmptyArrays: false } },
+      { $project: { _id: 1, sellerName: "$sellerInfo.sellerName" } },
+      { $sort: { sellerName: 1 } }
+    ]);
+
+    const formatted = uniqueSellers.map((s) => ({
+      value: s._id.toString(),
+      label: s.sellerName || "N/A"
+    }));
+
+    res.json({ data: formatted });
+  } catch (error) {
+    console.error("Error getting unique sellers:", error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+router.get("/unique-seller-companies", async (req, res) => {
+  try {
+    const role = req.user?.role;
+    const mobile = req.user?.mobile;
+
+    if (role !== "Admin" && role !== "Employee" && role !== "Seller") {
+      return res.status(403).json({ message: "Forbidden" });
+    }
+
+    const groupIdRaw = req.query.groupId;
+    const buyerCompany = String(req.query.buyerCompany || "").trim();
+    const sellerId = toObjectId(req.query.sellerId);
+
+    const andParts = [];
+
+    // Build query for selfOrders based on filters
+    if (groupIdRaw) {
+      const groupIds = groupIdRaw.split(",").map(toObjectId).filter(Boolean);
+      const buyers = await Buyer.find({ groupId: { $in: groupIds } })
+        .select("_id companyIds name")
+        .populate({ path: "companyIds", select: "companyName" })
+        .lean();
+
+      if (buyers.length) {
+        const allCompanyIds = [];
+        const allCompanyNames = [];
+        const allBuyerNames = [];
+
+        buyers.forEach((b) => {
+          if (b.name) allBuyerNames.push(b.name);
+          (b.companyIds || []).forEach((c) => {
+            if (c?._id) allCompanyIds.push(c._id);
+            if (c?.companyName) allCompanyNames.push(c.companyName);
+          });
+        });
+
+        const groupOr = [];
+        if (allCompanyIds.length) groupOr.push({ companyId: { $in: allCompanyIds } });
+        if (allCompanyNames.length) groupOr.push({ buyerCompany: { $in: allCompanyNames } });
+        if (allBuyerNames.length) groupOr.push({ buyer: { $in: allBuyerNames } });
+        if (groupOr.length) andParts.push({ $or: groupOr });
+      }
+    }
+
+    if (buyerCompany) {
+      andParts.push({
+        buyerCompany: { $regex: new RegExp(`^${escapeRegex(buyerCompany)}$`, "i") },
+      });
+    }
+
+    if (sellerId) {
+      andParts.push({ supplier: sellerId });
+    }
+
+    if (role === "Seller" && mobile && !sellerId) {
+      const seller = await Seller.findOne({ "phoneNumbers.value": { $regex: new RegExp(mobile + "$") } }).lean();
+      if (seller) {
+        andParts.push({ supplier: seller._id });
+      }
+    }
+
+    const query = andParts.length ? { $and: andParts } : {};
+
+    // Aggregate to get unique supplier companies
+    const uniqueCompanies = await SelfOrder.aggregate([
+      { $match: { ...query, supplierCompany: { $exists: true, $ne: null, $ne: "" } } },
+      { $group: { _id: { $toLower: "$supplierCompany" }, name: { $first: "$supplierCompany" } } },
+      { $sort: { name: 1 } }
+    ]);
+
+    const formatted = uniqueCompanies.map((c) => ({
+      value: c.name,
+      label: c.name
+    }));
+
+    res.json({ data: formatted });
+  } catch (error) {
+    console.error("Error getting unique seller companies:", error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
 router.get("/", async (req, res) => {
   try {
     const page = parseInt(req.query.page || "1", 10);

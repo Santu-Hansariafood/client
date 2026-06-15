@@ -239,6 +239,7 @@ const useLoadingEntryData = (api, userRole, user) => {
     if (!selectedBuyer) {
       setSellers(allSellers);
       setSelectedSellerName(null);
+      setSellerCompanies([]);
       setSelectedSellerCompany(null);
       return;
     }
@@ -246,11 +247,10 @@ const useLoadingEntryData = (api, userRole, user) => {
     let ignore = false;
     (async () => {
       try {
-        const response = await api.get("/loading-entries/saudas", {
+        const response = await api.get("/loading-entries/unique-sellers", {
           params: {
             groupId: selectedGroup?.value,
             buyerCompany: selectedBuyer.value,
-            limit: 2000,
           },
         });
 
@@ -258,34 +258,12 @@ const useLoadingEntryData = (api, userRole, user) => {
 
         const data = Array.isArray(response?.data?.data)
           ? response.data.data
-          : Array.isArray(response?.data)
-            ? response.data
-            : [];
-        const uniqSellers = new Map();
-        data.forEach((row) => {
-          const supplierId =
-            row.supplierId ||
-            row.supplier?._id ||
-            row.supplier?.id ||
-            null;
+          : [];
 
-          if (supplierId) {
-            const safeName = row.supplier?.sellerName || row.supplier || "N/A";
-            const name = capitalizeWords(String(safeName));
-            const key = String(supplierId);
-
-            if (!uniqSellers.has(key)) {
-              uniqSellers.set(key, {
-                value: key,
-                label: name,
-              });
-            }
-          }
-        });
-
-        let list = Array.from(uniqSellers.values()).sort((a, b) =>
-          a.label.localeCompare(b.label),
-        );
+        let list = data.map(s => ({
+          value: s.value,
+          label: capitalizeWords(s.label)
+        })).sort((a, b) => a.label.localeCompare(b.label));
 
         if (list.length === 0) {
           list = allSellers;
@@ -320,12 +298,11 @@ const useLoadingEntryData = (api, userRole, user) => {
     let ignore = false;
     (async () => {
       try {
-        const response = await api.get("/loading-entries/saudas", {
+        const response = await api.get("/loading-entries/unique-seller-companies", {
           params: {
             groupId: selectedGroup?.value,
             buyerCompany: selectedBuyer?.value,
-            sellerId: selectedSellerName.value,
-            limit: 2000,
+            sellerId: selectedSellerName.value
           },
         });
 
@@ -333,26 +310,13 @@ const useLoadingEntryData = (api, userRole, user) => {
 
         const data = Array.isArray(response?.data?.data)
           ? response.data.data
-          : Array.isArray(response?.data)
-            ? response.data
-            : [];
-        const uniqCompanies = new Map();
-        data.forEach((row) => {
-          if (row.supplierCompany) {
-            const name = row.supplierCompany.trim();
-            if (!uniqCompanies.has(name.toLowerCase())) {
-              uniqCompanies.set(name.toLowerCase(), {
-                value: name,
-                label: capitalizeWords(name),
-                name,
-              });
-            }
-          }
-        });
+          : [];
 
-        let list = Array.from(uniqCompanies.values()).sort((a, b) =>
-          a.label.localeCompare(b.label),
-        );
+        let list = data.map(c => ({
+          value: c.value,
+          label: capitalizeWords(c.label),
+          name: c.name
+        })).sort((a, b) => a.label.localeCompare(b.label));
 
         if (list.length === 0) {
           const fullSeller = allSellers.find(
