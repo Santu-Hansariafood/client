@@ -109,30 +109,36 @@ export default defineConfig({
   build: {
     rollupOptions: {
       output: {
-        manualChunks: {
-          // Split React & Router
-          'vendor-react': ['react', 'react-dom'],
-          'vendor-router': ['react-router-dom'],
-          
-          // Split heavy utility libraries
-          'vendor-pdf': ['jspdf', 'jspdf-autotable', '@react-pdf/renderer'],
-          'vendor-xlsx': ['xlsx'],
-          'vendor-charts': ['recharts'],
-          'vendor-qrcode': ['qrcode'],
-          'vendor-datepicker': ['react-datepicker'],
-          'vendor-crop': ['react-easy-crop'],
-          'vendor-carousel': ['react-slick', 'slick-carousel'],
-          
-          // Split UI components
-          'vendor-ui': ['react-select', 'react-toastify', 'react-helmet-async'],
-          
-          // Split utils
-          'vendor-utils': ['axios', 'moment', 'socket.io-client'],
+        manualChunks: (id) => {
+          // Group React and React DOM
+          if (id.includes("node_modules/react/") || id.includes("node_modules/react-dom/")) {
+            return "vendor-react";
+          }
+          // Group heavy PDF libraries
+          if (id.includes("node_modules/jspdf/") || id.includes("node_modules/jspdf-autotable/") || id.includes("node_modules/@react-pdf/")) {
+            return "vendor-pdf";
+          }
+          // Group charts
+          if (id.includes("node_modules/recharts/")) {
+            return "vendor-charts";
+          }
+          // Group XLSX
+          if (id.includes("node_modules/xlsx/")) {
+            return "vendor-xlsx";
+          }
+          // Group router
+          if (id.includes("node_modules/react-router-dom/")) {
+            return "vendor-router";
+          }
+          // All other vendors
+          if (id.includes("node_modules/")) {
+            return "vendor";
+          }
         },
         chunkFileNames: "assets/[name]-[hash].js",
       },
     },
-    chunkSizeWarningLimit: 1000,
+    chunkSizeWarningLimit: 1600,
   },
   server: {
     host: true,
