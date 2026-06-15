@@ -61,7 +61,7 @@ const Tables = ({ headers, rows }) => {
                   {row.map((cell, cellIndex) => (
                     <td
                       key={cellIndex}
-                      className="px-5 py-3.5 text-sm text-slate-800 whitespace-nowrap border-x border-slate-100"
+                      className="px-5 py-3.5 text-sm text-slate-800 border-x border-slate-100 align-top"
                     >
                       {cell}
                     </td>

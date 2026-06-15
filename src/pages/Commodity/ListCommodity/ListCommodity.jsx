@@ -118,15 +118,21 @@ const ListCommodity = () => {
     () =>
       commodities.map((commodity, index) => [
         ((Number(currentPage) || 1) - 1) * itemsPerPage + index + 1,
-
         commodity.name || "N/A",
-
         commodity.hsnCode || "N/A",
-
-        Array.isArray(commodity.parameters)
-          ? commodity.parameters.map((param) => param.parameter).join(", ")
-          : "N/A",
-
+        <div
+          key="params"
+          className="max-w-xs whitespace-normal break-words text-xs leading-relaxed"
+        >
+          {Array.isArray(commodity.parameters) && commodity.parameters.length > 0
+            ? commodity.parameters.map((param, i) => (
+                <span key={i}>
+                  {param.parameter}
+                  {i < commodity.parameters.length - 1 ? ", " : ""}
+                </span>
+              ))
+            : "N/A"}
+        </div>,
         <Actions
           key={commodity._id}
           onView={() => handleView(commodity._id)}
@@ -214,14 +220,12 @@ const ListCommodity = () => {
                 </div>
               )}
             </PopupBox>
-            {isEditPopupOpen && (
-              <EditCommodityPopup
-                isOpen={isEditPopupOpen}
-                onClose={() => setIsEditPopupOpen(false)}
-                commodityId={selectedCommodity?._id || null}
-                onUpdate={fetchCommodities}
-              />
-            )}
+            <EditCommodityPopup
+              isOpen={isEditPopupOpen}
+              onClose={() => setIsEditPopupOpen(false)}
+              commodityId={selectedCommodity?._id || null}
+              onUpdate={fetchCommodities}
+            />
           </div>
         </div>
       </AdminPageShell>

@@ -4,6 +4,7 @@ import axios from "axios";
 import { toast } from "react-toastify";
 import { AiOutlinePlus, AiOutlineMinus } from "react-icons/ai";
 import Loading from "../../../common/Loading/Loading";
+import PopupBox from "../../../common/PopupBox/PopupBox";
 
 const DataInput = lazy(() => import("../../../common/DataInput/DataInput"));
 const DataDropdown = lazy(
@@ -19,45 +20,43 @@ const EditCommodityPopup = ({ isOpen, onClose, commodityId, onUpdate }) => {
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    const fetchCommodity = async () => {
+    const fetchData = async () => {
       if (!commodityId) return;
       setIsLoading(true);
       try {
-        const response = await axios.get(`/commodities/${commodityId}`);
-        const data = response.data;
-        setCommodityName(data.name);
-        setHsnCode(data.hsnCode || "");
-        const fields = (data.parameters || []).map((p) => ({
-          parameter: { value: p.parameterId || p._id, label: p.parameter },
+        const [commodityRes, paramsRes] = await Promise.all([
+          axios.get(`/commodities/${commodityId}`),
+          axios.get("/quality-parameters"),
+        ]);
+
+        const commodity = commodityRes.data;
+        setCommodityName(commodity.name);
+        setHsnCode(commodity.hsnCode || "");
+
+        const params = paramsRes.data?.data || paramsRes.data || [];
+        const options = params
+          .map((param) => ({ value: param._id, label: param.name }))
+          .sort((a, b) => a.label.localeCompare(b.label));
+        setParametersOptions(options);
+
+        const existingParams = (commodity.parameters || []).map((p) => ({
+          parameter: options.find((opt) => opt.value === p.parameterId) || null,
         }));
-        setExtraFields(fields.length > 0 ? fields : [{ parameter: "" }]);
+
+        setExtraFields(
+          existingParams.length > 0 ? existingParams : [{ parameter: "" }],
+        );
       } catch (error) {
         toast.error(
-          error?.response?.data?.message || "Error fetching commodity",
+          error?.response?.data?.message || "Error fetching commodity details",
         );
       } finally {
         setIsLoading(false);
       }
     };
 
-    const fetchQualityParameters = async () => {
-      try {
-        const response = await axios.get("/quality-parameters");
-        const items = response.data?.data || response.data || [];
-        const options = items
-          .map((param) => ({ value: param._id, label: param.name }))
-          .sort((a, b) => a.label.localeCompare(b.label));
-        setParametersOptions(options);
-      } catch (error) {
-        toast.error(
-          error?.response?.data?.message || "Error fetching quality parameters",
-        );
-      }
-    };
-
     if (isOpen) {
-      fetchCommodity();
-      fetchQualityParameters();
+      fetchData();
     }
   }, [isOpen, commodityId]);
 
@@ -104,7 +103,7 @@ const EditCommodityPopup = ({ isOpen, onClose, commodityId, onUpdate }) => {
 
     setIsLoading(true);
     try {
-      const payload = {
+      const formData = {
         name: commodityName,
         hsnCode,
         parameters: extraFields
@@ -113,35 +112,29 @@ const EditCommodityPopup = ({ isOpen, onClose, commodityId, onUpdate }) => {
           }))
           .filter((p) => p.parameterId),
       };
-      await axios.put(`/commodities/${commodityId}`, payload);
-      onUpdate();
+      await axios.put(`/commodities/${commodityId}`, formData);
       toast.success("Commodity updated successfully!");
+      onUpdate();
       onClose();
     } catch (error) {
       toast.error(
-        error?.response?.data?.message ||
-          "Failed to update commodity. Please try again.",
+        error?.response?.data?.message || "Failed to update commodity",
       );
     } finally {
       setIsLoading(false);
     }
   };
 
-  if (!isOpen) return null;
-
   return (
-    <Suspense fallback={<Loading />}>
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div className="bg-white w-full max-w-2xl p-6 sm:p-8 rounded-2xl shadow-xl border border-amber-200/80">
-          <h3 className="text-2xl font-bold mb-8 text-center text-slate-800">
-            Edit Commodity
-          </h3>
-          {isLoading ? (
-            <div className="flex justify-center py-8">
-              <Loading />
-            </div>
-          ) : (
-            <>
+    <PopupBox isOpen={isOpen} onClose={onClose} title="Edit Commodity">
+      <Suspense fallback={<Loading />}>
+        {isLoading ? (
+          <div className="py-20 flex justify-center">
+            <Loading />
+          </div>
+        ) : (
+          <div className="max-w-4xl mx-auto">
+            <div className="bg-white shadow-lg rounded-2xl p-4 sm:p-8 border border-amber-200/80">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <DataInput
                   placeholder="Enter commodity name"
@@ -207,11 +200,11 @@ const EditCommodityPopup = ({ isOpen, onClose, commodityId, onUpdate }) => {
                   disabled={isLoading}
                 />
               </div>
-            </>
-          )}
-        </div>
-      </div>
-    </Suspense>
+            </div>
+          </div>
+        )}
+      </Suspense>
+    </PopupBox>
   );
 };
 
