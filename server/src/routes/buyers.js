@@ -143,7 +143,7 @@ router.get("/", async (req, res) => {
 
     const items = await Buyer.find(query)
       .sort({ name: 1, _id: 1 })
-      .limit(limit)
+      .limit(limit > 0 ? limit : 200)
       .populate(buyerPopulate)
       .lean();
     res.json(items.map(mapBuyerForClient));

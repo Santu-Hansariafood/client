@@ -151,8 +151,8 @@ app.use("/api/vendor-codes", cache(5), authJwt, vendorCodeRoutes);
 app.use("/api/expense-categories", authJwt, expenseCategoryRoutes);
 app.use("/api/expense-requests", authJwt, expenseRequestRoutes);
 app.use("/api/uploads", authJwt, uploadRoutes);
-app.use("/api/dashboard", authJwt, dashboardRoutes);
-app.use("/api/blogs", authJwt, blogRoutes);
+app.use("/api/dashboard", cache(60), authJwt, dashboardRoutes);
+app.use("/api/blogs", cache(120), authJwt, blogRoutes);
 
 if (process.env.NODE_ENV === "production") {
   const distPath = path.join(__dirname, "../../dist");

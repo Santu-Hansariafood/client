@@ -6,6 +6,8 @@ import Company from "../models/Company.js";
 
 const router = Router();
 
+const escapeRegex = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
 const toObjectId = (value) =>
   mongoose.Types.ObjectId.isValid(value)
     ? new mongoose.Types.ObjectId(value)
@@ -71,10 +73,11 @@ router.get("/search/smart", async (req, res) => {
       });
     }
 
+    const regex = new RegExp(escapeRegex(query), "i");
     const [allQualityParams, allCompanies, allCommodities] = await Promise.all([
-      QualityParameter.find({ isActive: true }).lean(),
-      Company.find().lean(),
-      Commodity.find().populate(commodityPopulate).lean(),
+      QualityParameter.find({ name: regex, isActive: true }).limit(100).lean(),
+      Company.find({ companyName: regex }).limit(100).lean(),
+      Commodity.find({ name: regex }).limit(100).populate(commodityPopulate).lean(),
     ]);
 
     const scoreItem = (item, fieldName, weight) => {
@@ -180,7 +183,7 @@ router.get("/", async (req, res) => {
 
     const items = await Commodity.find()
       .sort({ name: 1 })
-      .limit(limit)
+      .limit(limit > 0 ? limit : 200)
       .populate(commodityPopulate)
       .lean();
     res.json(items.map(mapCommodityForClient));

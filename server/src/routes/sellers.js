@@ -51,7 +51,7 @@ router.get("/", async (req, res) => {
       });
     }
 
-    const limitVal = limit > 0 ? limit : 0;
+    const limitVal = limit > 0 ? limit : 200;
     const items = await Seller.find(query)
       .sort({ sellerName: 1 })
       .limit(limitVal)

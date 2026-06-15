@@ -1,4 +1,5 @@
 const store = new Map();
+const MAX_CACHE_SIZE = 500;
 
 function makeKey(req) {
   return `${req.method}:${req.originalUrl}`;
@@ -17,6 +18,10 @@ export function cache(ttlSeconds = 30) {
     const json = res.json.bind(res);
     res.json = (body) => {
       try {
+        if (store.size >= MAX_CACHE_SIZE) {
+          const firstKey = store.keys().next().value;
+          store.delete(firstKey);
+        }
         store.set(key, { payload: body, expireAt: now + ttlSeconds * 1000 });
       } catch {
         // ignore cache errors
