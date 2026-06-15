@@ -63,6 +63,7 @@ const selfOrderSchema = new mongoose.Schema(
 selfOrderSchema.index({ agentName: 1 });
 selfOrderSchema.index({ sellerMobile: 1 });
 selfOrderSchema.index({ buyerMobile: 1 });
+selfOrderSchema.index({ buyer: 1 });
 selfOrderSchema.index({ supplier: 1 });
 selfOrderSchema.index({ consignee: 1 });
 selfOrderSchema.index({ createdAt: -1 });

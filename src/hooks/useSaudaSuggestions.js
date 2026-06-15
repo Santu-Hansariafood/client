@@ -20,27 +20,19 @@ const useSaudaSuggestions = (api, selectedGroup, selectedBuyer, filteredBuyers, 
           groupId: selectedGroup?.value,
           buyerCompany: selectedBuyer?.value,
           saudaNo: trimmed,
-          limit: 500,
+          limit: 20,
         };
 
-        const res = await api.get("/loading-entries/saudas", { params });
+        const res = await api.get("/loading-entries/sauda-suggestions", { params });
         const data = Array.isArray(res.data?.data)
           ? res.data.data
-          : Array.isArray(res.data)
-            ? res.data
-            : [];
+          : [];
 
-        const uniq = new Map();
-        data.forEach((o) => {
-          if (!uniq.has(o.saudaNo)) {
-            uniq.set(o.saudaNo, {
-              ...o,
-              label: `Sauda: ${o.saudaNo} | Buyer: ${o.buyerCompany || "N/A"} | Supplier: ${o.supplier || "N/A"}`,
-            });
-          }
-        });
+        const list = data.map((o) => ({
+          ...o,
+          label: `Sauda: ${o.saudaNo} | Buyer: ${o.buyerCompany || "N/A"} | Supplier: ${o.supplier?.sellerName || o.supplierCompany || "N/A"}`,
+        }));
 
-        const list = Array.from(uniq.values());
         setSaudaSuggestions(list);
       } catch (err) {
         console.error("Sauda suggestions error:", err);

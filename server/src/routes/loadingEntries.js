@@ -986,83 +986,97 @@ router.get("/buyers", async (req, res) => {
       .sort({ name: 1, _id: 1 })
       .lean();
 
-    const buyersWithCompanies = await Promise.all(
-      (buyers || []).map(async (b) => {
-        const populatedCompanyNames = (b.companyIds || [])
-          .map((c) => c?.companyName || "")
-          .filter(Boolean);
+    // Fetch all distinct buyerCompany and consignee values in 2 single queries instead of N+1
+    const buyerNames = (buyers || []).map(b => b.name).filter(Boolean);
+    let allFallbackCompanies = {};
+    let allFallbackConsignees = {};
 
-        let companyNames = populatedCompanyNames;
+    if (buyerNames.length > 0) {
+      // Get all fallback company names for all buyers in one query
+      const companyResults = await SelfOrder.aggregate([
+        { $match: { buyer: { $in: buyerNames }, buyerCompany: { $exists: true, $ne: "" } } },
+        { $group: { _id: "$buyer", companies: { $addToSet: "$buyerCompany" } } }
+      ]);
 
-        const consigneeMap = new Map();
+      // Get all fallback consignees for all buyers in one query
+      const consigneeResults = await SelfOrder.aggregate([
+        { $match: { buyer: { $in: buyerNames } } },
+        { $group: { _id: "$buyer", consignees: { $addToSet: "$consignee" } } }
+      ]);
 
-        (b.consigneeIds || []).forEach((c) => {
+      // Convert arrays to maps for quick lookups
+      companyResults.forEach(r => { allFallbackCompanies[r._id] = r.companies || []; });
+      consigneeResults.forEach(r => { allFallbackConsignees[r._id] = r.consignees || []; });
+    }
+
+    const buyersWithCompanies = (buyers || []).map((b) => {
+      const populatedCompanyNames = (b.companyIds || [])
+        .map((c) => c?.companyName || "")
+        .filter(Boolean);
+
+      let companyNames = populatedCompanyNames;
+
+      const consigneeMap = new Map();
+
+      (b.consigneeIds || []).forEach((c) => {
+        if (c && c.name) {
+          const label = `${c.name || "N/A"} - ${c.location || "N/A"}, ${c.district || "N/A"}, ${c.state || "N/A"}`;
+          consigneeMap.set(c.name.trim().toLowerCase(), {
+            _id: c._id,
+            name: c.name,
+            label: label,
+          });
+        }
+      });
+
+      (b.companyIds || []).forEach((comp) => {
+        (comp.consigneeIds || []).forEach((c) => {
           if (c && c.name) {
-            const label = `${c.name || "N/A"} - ${c.location || "N/A"}, ${c.district || "N/A"}, ${c.state || "N/A"}`;
-            consigneeMap.set(c.name.trim().toLowerCase(), {
-              _id: c._id,
-              name: c.name,
-              label: label,
-            });
+            const key = c.name.trim().toLowerCase();
+            if (!consigneeMap.has(key)) {
+              const label = `${c.name || "N/A"} - ${c.location || "N/A"}, ${c.district || "N/A"}, ${c.state || "N/A"}`;
+              consigneeMap.set(key, {
+                _id: c._id,
+                name: c.name,
+                label: label,
+              });
+            }
           }
         });
+      });
 
-        (b.companyIds || []).forEach((comp) => {
-          (comp.consigneeIds || []).forEach((c) => {
-            if (c && c.name) {
-              const key = c.name.trim().toLowerCase();
-              if (!consigneeMap.has(key)) {
-                const label = `${c.name || "N/A"} - ${c.location || "N/A"}, ${c.district || "N/A"}, ${c.state || "N/A"}`;
-                consigneeMap.set(key, {
-                  _id: c._id,
-                  name: c.name,
-                  label: label,
-                });
-              }
+      if (companyNames.length === 0 && b.name) {
+        const fallbackCompanyNames = allFallbackCompanies[b.name] || [];
+        companyNames = fallbackCompanyNames.filter(Boolean);
+      }
+
+      if (b.name) {
+        const selfOrderConsignees = allFallbackConsignees[b.name] || [];
+        selfOrderConsignees.forEach((name) => {
+          if (name) {
+            const key = name.trim().toLowerCase();
+            if (!consigneeMap.has(key)) {
+              consigneeMap.set(key, {
+                _id: name,
+                name: name,
+                label: name,
+              });
             }
-          });
+          }
         });
+      }
 
-        if (companyNames.length === 0 && b.name) {
-          const fallbackCompanyNames = await SelfOrder.distinct(
-            "buyerCompany",
-            {
-              buyer: b.name,
-              buyerCompany: { $exists: true, $ne: "" },
-            },
-          );
-          companyNames = (fallbackCompanyNames || []).filter(Boolean);
-        }
-
-        if (b.name) {
-          const selfOrderConsignees = await SelfOrder.distinct("consignee", {
-            buyer: b.name,
-          });
-          selfOrderConsignees.forEach((name) => {
-            if (name) {
-              const key = name.trim().toLowerCase();
-              if (!consigneeMap.has(key)) {
-                consigneeMap.set(key, {
-                  _id: name,
-                  name: name,
-                  label: name,
-                });
-              }
-            }
-          });
-        }
-
-        return {
-          _id: b._id,
-          name: b.name || "",
-          companyNames,
-          consignees: Array.from(consigneeMap.values()),
-        };
-      }),
-    );
+      return {
+        _id: b._id,
+        name: b.name || "",
+        companyNames,
+        consignees: Array.from(consigneeMap.values()),
+      };
+    });
 
     res.json(buyersWithCompanies);
   } catch (error) {
+    console.error("Buyers endpoint error:", error);
     res.status(500).json({ message: error.message });
   }
 });
@@ -1373,6 +1387,102 @@ router.get("/unique-seller-companies", async (req, res) => {
     res.json({ data: formatted });
   } catch (error) {
     console.error("Error getting unique seller companies:", error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// New fast endpoint for sauda number suggestions
+router.get("/sauda-suggestions", async (req, res) => {
+  try {
+    const role = req.user?.role;
+    const mobile = req.user?.mobile;
+
+    if (role !== "Admin" && role !== "Employee" && role !== "Seller") {
+      return res.status(403).json({ message: "Forbidden" });
+    }
+
+    const saudaNo = String(req.query.saudaNo || "").trim();
+    const groupIdRaw = req.query.groupId;
+    const buyerCompany = String(req.query.buyerCompany || "").trim();
+    const limit = Math.min(Math.max(Number(req.query.limit || 20), 1), 100);
+
+    if (!saudaNo) {
+      return res.json({ data: [] });
+    }
+
+    const andParts = [];
+    andParts.push({
+      saudaNo: { $regex: new RegExp(escapeRegex(saudaNo), "i") }
+    });
+
+    // Build query filters
+    if (groupIdRaw) {
+      const groupIds = groupIdRaw.split(",").map(toObjectId).filter(Boolean);
+      const buyers = await Buyer.find({ groupId: { $in: groupIds } })
+        .select("_id companyIds name")
+        .populate({ path: "companyIds", select: "companyName" })
+        .lean();
+
+      if (buyers.length) {
+        const allCompanyIds = [];
+        const allCompanyNames = [];
+        const allBuyerNames = [];
+
+        buyers.forEach((b) => {
+          if (b.name) allBuyerNames.push(b.name);
+          (b.companyIds || []).forEach((c) => {
+            if (c?._id) allCompanyIds.push(c._id);
+            if (c?.companyName) allCompanyNames.push(c.companyName);
+          });
+        });
+
+        const groupOr = [];
+        if (allCompanyIds.length) groupOr.push({ companyId: { $in: allCompanyIds } });
+        if (allCompanyNames.length) groupOr.push({ buyerCompany: { $in: allCompanyNames } });
+        if (allBuyerNames.length) groupOr.push({ buyer: { $in: allBuyerNames } });
+        if (groupOr.length) andParts.push({ $or: groupOr });
+      }
+    }
+
+    if (buyerCompany) {
+      andParts.push({
+        buyerCompany: { $regex: new RegExp(`^${escapeRegex(buyerCompany)}$`, "i") },
+      });
+    }
+
+    if (role === "Seller" && mobile) {
+      const seller = await Seller.findOne({ "phoneNumbers.value": { $regex: new RegExp(mobile + "$") } }).lean();
+      if (seller) {
+        andParts.push({ supplier: seller._id });
+      }
+    }
+
+    const query = andParts.length ? { $and: andParts } : {};
+
+    // Get only the fields we need for suggestions
+    const suggestions = await SelfOrder.find(query)
+      .select("saudaNo buyerCompany supplierCompany consignee supplier")
+      .populate("supplier", "sellerName")
+      .sort({ saudaNo: -1 })
+      .limit(limit)
+      .lean();
+
+    // Deduplicate by saudaNo
+    const uniqMap = new Map();
+    suggestions.forEach(s => {
+      if (!uniqMap.has(s.saudaNo)) {
+        uniqMap.set(s.saudaNo, s);
+      }
+    });
+
+    const formatted = Array.from(uniqMap.values()).map(s => ({
+      ...s,
+      _count: 1
+    }));
+
+    res.json({ data: formatted });
+  } catch (error) {
+    console.error("Sauda suggestions error:", error);
     res.status(500).json({ message: error.message });
   }
 });
