@@ -167,21 +167,31 @@ router.get("/", async (req, res) => {
   try {
     const page = parseInt(req.query.page || "0", 10);
     const limit = parseInt(req.query.limit || "0", 10);
+    const search = req.query.search || "";
+
+    const query = {};
+    if (search) {
+      const regex = new RegExp(escapeRegex(search), "i");
+      query.$or = [
+        { name: regex },
+        { hsnCode: regex },
+      ];
+    }
 
     if (page > 0 && limit > 0) {
-      const items = await Commodity.find()
+      const items = await Commodity.find(query)
         .sort({ name: 1 })
         .skip((page - 1) * limit)
         .limit(limit)
         .populate(commodityPopulate)
         .lean();
 
-      const total = await Commodity.countDocuments();
+      const total = await Commodity.countDocuments(query);
 
       return res.json({ data: items.map(mapCommodityForClient), total });
     }
 
-    const items = await Commodity.find()
+    const items = await Commodity.find(query)
       .sort({ name: 1 })
       .limit(limit > 0 ? limit : 200)
       .populate(commodityPopulate)
