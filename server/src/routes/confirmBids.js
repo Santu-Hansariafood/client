@@ -114,7 +114,24 @@ router.post("/", async (req, res) => {
     }
 
     if (bid && status === "Confirmed") {
-      const sellerMsg = `Bid accepted for ${bid.commodity} at rate ₹${item.acceptanceRate ?? "N/A"}, qty ${item.acceptanceQuantity ?? "N/A"}. ${item.acceptedAt ? new Date(item.acceptedAt).toLocaleString() : ""}`;
+      // Format quality parameters
+      const formatQualityParams = (params) => {
+        if (!params || Object.keys(params).length === 0) return "";
+        const paramParts = [];
+        Object.entries(params).forEach(([key, vals]) => {
+          if (vals?.baseValue || vals?.maxValue) {
+            const parts = [];
+            if (vals.baseValue) parts.push(`Base: ${vals.baseValue}`);
+            if (vals.maxValue) parts.push(`Max: ${vals.maxValue}`);
+            paramParts.push(`${key} (${parts.join(", ")})`);
+          }
+        });
+        return paramParts.length > 0 ? ` • Quality: ${paramParts.join(", ")}` : "";
+      };
+
+      const qualityText = formatQualityParams(bid.parameters);
+
+      const sellerMsg = `Bid accepted for ${bid.commodity} at rate ₹${item.acceptanceRate ?? "N/A"}, qty ${item.acceptanceQuantity ?? "N/A"}.${qualityText} ${item.acceptedAt ? new Date(item.acceptedAt).toLocaleString() : ""}`;
       await Notification.create({
         recipient: phone,
         recipientRole: "Seller",
@@ -124,7 +141,7 @@ router.post("/", async (req, res) => {
         relatedId: item._id,
       });
 
-      const buyerMsg = `Seller ${phone} accepted for ${bid.commodity} at rate ₹${item.acceptanceRate ?? "N/A"}, qty ${item.acceptanceQuantity ?? "N/A"}.`;
+      const buyerMsg = `Seller ${phone} accepted for ${bid.commodity} at rate ₹${item.acceptanceRate ?? "N/A"}, qty ${item.acceptanceQuantity ?? "N/A"}.${qualityText}`;
       await Notification.create({
         recipient: bid.createdByMobile || "all",
         recipientRole: "Buyer",

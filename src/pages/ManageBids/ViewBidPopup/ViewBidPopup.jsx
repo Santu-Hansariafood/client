@@ -87,20 +87,30 @@ const ViewBidPopup = ({ bidId, onClose }) => {
         doc.text("Quality Parameters", 15, finalY);
         doc.setFont("helvetica", "normal");
 
-        const parameterRows = Object.entries(bidDetails.parameters).map(
-          ([key, value]) => [key, `${value}%`],
+        const parameterRows = Object.entries(bidDetails.parameters).flatMap(
+          ([key, vals]) => {
+            const rows = [];
+            if (vals?.baseValue) {
+              rows.push([`${key} (Base)`, vals.baseValue]);
+            }
+            if (vals?.maxValue) {
+              rows.push([`${key} (Max)`, vals.maxValue]);
+            }
+            return rows;
+          },
         );
 
-        doc.autoTable({
-          startY: finalY + 5,
-          head: [["Parameter", "Value"]],
-          body: parameterRows,
-          theme: "grid",
-          styles: { fontSize: 10, cellPadding: 2 },
-          columnStyles: { 0: { fontStyle: "bold" } },
-        });
-
-        finalY = doc.lastAutoTable.finalY + 10;
+        if (parameterRows.length > 0) {
+          doc.autoTable({
+            startY: finalY + 5,
+            head: [["Parameter", "Value"]],
+            body: parameterRows,
+            theme: "grid",
+            styles: { fontSize: 10, cellPadding: 2 },
+            columnStyles: { 0: { fontStyle: "bold" } },
+          });
+          finalY = doc.lastAutoTable.finalY + 10;
+        }
       }
 
       doc.setFont("helvetica", "bold");
@@ -219,11 +229,24 @@ const ViewBidPopup = ({ bidId, onClose }) => {
                   <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">
                     Quality Parameters
                   </h3>
-                  <div className="grid grid-cols-2 gap-3">
-                    {Object.entries(bidDetails.parameters).map(([key, value]) => (
-                      <div key={key} className="flex justify-between items-center bg-white p-2 rounded-lg border border-gray-200">
-                        <span className="text-gray-600 text-xs">{key}</span>
-                        <span className="font-bold text-gray-900 text-xs">{value}%</span>
+                  <div className="space-y-3">
+                    {Object.entries(bidDetails.parameters).map(([key, vals]) => (
+                      <div key={key} className="bg-white p-3 rounded-lg border border-gray-200">
+                        <span className="text-gray-600 text-xs font-semibold block mb-2">{key}</span>
+                        <div className="grid grid-cols-2 gap-2">
+                          {vals?.baseValue && (
+                            <div className="flex justify-between items-center">
+                              <span className="text-gray-500 text-xs">Base</span>
+                              <span className="font-bold text-gray-900 text-xs">{vals.baseValue}</span>
+                            </div>
+                          )}
+                          {vals?.maxValue && (
+                            <div className="flex justify-between items-center">
+                              <span className="text-gray-500 text-xs">Max</span>
+                              <span className="font-bold text-gray-900 text-xs">{vals.maxValue}</span>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     ))}
                   </div>

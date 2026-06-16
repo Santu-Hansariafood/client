@@ -213,7 +213,12 @@ const BaseBid = ({ type }) => {
     }
 
     const parameterValues = commodity.parameters.reduce((acc, param) => {
-      acc[param._id] = param.value || "";
+      // Get first values entry if available
+      const paramValues = param.values?.[0] || {};
+      acc[param._id] = {
+        baseValue: paramValues.baseValue || "",
+        maxValue: paramValues.maxValue || "",
+      };
       return acc;
     }, {});
 
@@ -230,7 +235,11 @@ const BaseBid = ({ type }) => {
 
     try {
       const formattedParameters = state.parameters.reduce((acc, param) => {
-        acc[param.parameter] = state.parameterValues[param._id] || "";
+        const vals = state.parameterValues[param._id] || {};
+        acc[param.parameter] = {
+          baseValue: vals.baseValue || "",
+          maxValue: vals.maxValue || "",
+        };
         return acc;
       }, {});
 

@@ -147,13 +147,30 @@ router.post("/", async (req, res) => {
       { upsert: true, new: true, runValidators: true },
     );
 
+    // Format quality parameters
+    const formatQualityParams = (params) => {
+      if (!params || Object.keys(params).length === 0) return "";
+      const paramParts = [];
+      Object.entries(params).forEach(([key, vals]) => {
+        if (vals?.baseValue || vals?.maxValue) {
+          const parts = [];
+          if (vals.baseValue) parts.push(`Base: ${vals.baseValue}`);
+          if (vals.maxValue) parts.push(`Max: ${vals.maxValue}`);
+          paramParts.push(`${key} (${parts.join(", ")})`);
+        }
+      });
+      return paramParts.length > 0 ? ` • Quality: ${paramParts.join(", ")}` : "";
+    };
+
+    const qualityText = formatQualityParams(bid.parameters);
+
     const bidGroup = bid?.group || "N/A";
     const bidConsignee = bid?.consignee || "N/A";
     const bidOrigin = bid?.origin || "N/A";
     const bidCommodity = bid?.commodity || "N/A";
     const companyLabel = resolvedCompany || "N/A";
 
-    const message = `Bid: ${bidCommodity} (${bidOrigin} → ${bidConsignee}) • Group: ${bidGroup} • Seller: ${sellerName} (${mobile}) • Company: ${companyLabel} • Rate: ₹${rate} • Qty: ${quantity} Tons • Loading From: ${loadingFrom || "N/A"} • Remarks: ${remarks || "N/A"} • ID: ${item._id}`;
+    const message = `Bid: ${bidCommodity} (${bidOrigin} → ${bidConsignee}) • Group: ${bidGroup} • Seller: ${sellerName} (${mobile}) • Company: ${companyLabel} • Rate: ₹${rate} • Qty: ${quantity} Tons • Loading From: ${loadingFrom || "N/A"} • Remarks: ${remarks || "N/A"}${qualityText} • ID: ${item._id}`;
 
     await Promise.all([
       Notification.create({
@@ -231,6 +248,23 @@ router.patch("/:id/status", async (req, res) => {
     await participation.save();
 
     const bid = await Bid.findById(participation.bidId);
+    // Format quality parameters
+    const formatQualityParams = (params) => {
+      if (!params || Object.keys(params).length === 0) return "";
+      const paramParts = [];
+      Object.entries(params).forEach(([key, vals]) => {
+        if (vals?.baseValue || vals?.maxValue) {
+          const parts = [];
+          if (vals.baseValue) parts.push(`Base: ${vals.baseValue}`);
+          if (vals.maxValue) parts.push(`Max: ${vals.maxValue}`);
+          paramParts.push(`${key} (${parts.join(", ")})`);
+        }
+      });
+      return paramParts.length > 0 ? ` • Quality: ${paramParts.join(", ")}` : "";
+    };
+
+    const qualityText = formatQualityParams(bid.parameters);
+
     const bidGroup = bid?.group || "N/A";
     const bidConsignee = bid?.consignee || "N/A";
     const bidOrigin = bid?.origin || "N/A";
@@ -255,9 +289,9 @@ router.patch("/:id/status", async (req, res) => {
         ? new Date(participation.acceptedAt).toLocaleString()
         : new Date().toLocaleString();
 
-      const sellerMsg = `Bid accepted • ${bidCommodity} (${bidOrigin} → ${bidConsignee}) • Group: ${bidGroup} • Company: ${companyLabel} • Accepted Rate: ₹${participation.acceptedRate} • Accepted Qty: ${participation.acceptedQuantity} • On: ${acceptedAtText} • Participation: ${participation._id}`;
+      const sellerMsg = `Bid accepted • ${bidCommodity} (${bidOrigin} → ${bidConsignee}) • Group: ${bidGroup} • Company: ${companyLabel} • Accepted Rate: ₹${participation.acceptedRate} • Accepted Qty: ${participation.acceptedQuantity} • On: ${acceptedAtText}${qualityText} • Participation: ${participation._id}`;
 
-      const buyerMsg = `Seller accepted • ${bidCommodity} (${bidOrigin} → ${bidConsignee}) • Group: ${bidGroup} • Seller: ${participation.mobile} • Company: ${companyLabel} • Accepted Rate: ₹${participation.acceptedRate} • Accepted Qty: ${participation.acceptedQuantity} • On: ${acceptedAtText} • Participation: ${participation._id}`;
+      const buyerMsg = `Seller accepted • ${bidCommodity} (${bidOrigin} → ${bidConsignee}) • Group: ${bidGroup} • Seller: ${participation.mobile} • Company: ${companyLabel} • Accepted Rate: ₹${participation.acceptedRate} • Accepted Qty: ${participation.acceptedQuantity} • On: ${acceptedAtText}${qualityText} • Participation: ${participation._id}`;
 
       const notifyBuyerMobile = bid?.createdByMobile || null;
 
@@ -285,7 +319,7 @@ router.patch("/:id/status", async (req, res) => {
           recipient: "all",
           recipientRole: "Admin",
           title: "Bid Accepted",
-          message: `Accepted • ${bidCommodity} (${bidOrigin} → ${bidConsignee}) • Group: ${bidGroup} • Seller: ${participation.mobile} • Company: ${companyLabel} • ₹${participation.acceptedRate} / ${participation.acceptedQuantity} • Participation: ${participation._id}`,
+          message: `Accepted • ${bidCommodity} (${bidOrigin} → ${bidConsignee}) • Group: ${bidGroup} • Seller: ${participation.mobile} • Company: ${companyLabel} • ₹${participation.acceptedRate} / ${participation.acceptedQuantity}${qualityText} • Participation: ${participation._id}`,
           type: "BidConfirmation",
           relatedId: confirmDoc._id,
         }),
@@ -293,7 +327,7 @@ router.patch("/:id/status", async (req, res) => {
           recipient: "all",
           recipientRole: "Employee",
           title: "Bid Accepted",
-          message: `Accepted • ${bidCommodity} (${bidOrigin} → ${bidConsignee}) • Group: ${bidGroup} • Seller: ${participation.mobile} • Company: ${companyLabel} • ₹${participation.acceptedRate} / ${participation.acceptedQuantity} • Participation: ${participation._id}`,
+          message: `Accepted • ${bidCommodity} (${bidOrigin} → ${bidConsignee}) • Group: ${bidGroup} • Seller: ${participation.mobile} • Company: ${companyLabel} • ₹${participation.acceptedRate} / ${participation.acceptedQuantity}${qualityText} • Participation: ${participation._id}`,
           type: "BidConfirmation",
           relatedId: confirmDoc._id,
         }),
@@ -301,10 +335,10 @@ router.patch("/:id/status", async (req, res) => {
 
       await Promise.all(notifications);
     } else if (status === "rejected") {
-      const sellerMsg = `Bid rejected • ${bidCommodity} (${bidOrigin} → ${bidConsignee}) • Group: ${bidGroup} • Company: ${companyLabel} • Participation: ${participation._id}${adminNotes ? ` • Notes: ${adminNotes}` : ""}`;
+      const sellerMsg = `Bid rejected • ${bidCommodity} (${bidOrigin} → ${bidConsignee}) • Group: ${bidGroup} • Company: ${companyLabel} • Participation: ${participation._id}${qualityText}${adminNotes ? ` • Notes: ${adminNotes}` : ""}`;
 
       const notifyBuyerMobile = bid?.createdByMobile || null;
-      const buyerMsg = `Participation rejected • Seller: ${participation.mobile} • ${bidCommodity} (${bidOrigin} → ${bidConsignee}) • Group: ${bidGroup} • Company: ${companyLabel}${adminNotes ? ` • Notes: ${adminNotes}` : ""}`;
+      const buyerMsg = `Participation rejected • Seller: ${participation.mobile} • ${bidCommodity} (${bidOrigin} → ${bidConsignee}) • Group: ${bidGroup} • Company: ${companyLabel}${qualityText}${adminNotes ? ` • Notes: ${adminNotes}` : ""}`;
 
       const notifications = [
         Notification.create({
@@ -327,7 +361,7 @@ router.patch("/:id/status", async (req, res) => {
           recipient: "all",
           recipientRole: "Admin",
           title: "Participation Rejected",
-          message: `Rejected • ${bidCommodity} (${bidOrigin} → ${bidConsignee}) • Seller: ${participation.mobile} • Company: ${companyLabel}`,
+          message: `Rejected • ${bidCommodity} (${bidOrigin} → ${bidConsignee}) • Seller: ${participation.mobile} • Company: ${companyLabel}${qualityText}`,
           type: "BidRejection",
           relatedId: participation._id,
         }),
@@ -335,7 +369,7 @@ router.patch("/:id/status", async (req, res) => {
           recipient: "all",
           recipientRole: "Employee",
           title: "Participation Rejected",
-          message: `Rejected • ${bidCommodity} (${bidOrigin} → ${bidConsignee}) • Seller: ${participation.mobile} • Company: ${companyLabel}`,
+          message: `Rejected • ${bidCommodity} (${bidOrigin} → ${bidConsignee}) • Seller: ${participation.mobile} • Company: ${companyLabel}${qualityText}`,
           type: "BidRejection",
           relatedId: participation._id,
         }),

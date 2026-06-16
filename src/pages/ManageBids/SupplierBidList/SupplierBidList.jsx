@@ -446,11 +446,17 @@ const SupplierBidList = () => {
     const participantCount = participantCounts[String(bid._id)] || 0;
     const hasNoParticipants = participantCount === 0;
     const qualityText = Object.entries(bid.parameters || {})
-      .filter(
-        ([, value]) =>
-          String(value ?? "").trim() !== "" && String(value) !== "0",
-      )
-      .map(([key, value]) => `${key}: ${value}%`)
+      .filter(([, vals]) => {
+        const base = String(vals?.baseValue ?? "").trim();
+        const max = String(vals?.maxValue ?? "").trim();
+        return base !== "" || max !== "";
+      })
+      .flatMap(([key, vals]) => {
+        const parts = [];
+        if (vals?.baseValue) parts.push(`${key} (Base: ${vals.baseValue})`);
+        if (vals?.maxValue) parts.push(`${key} (Max: ${vals.maxValue})`);
+        return parts;
+      })
       .join(", ");
 
     return (

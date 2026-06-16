@@ -129,10 +129,14 @@ const BuyerBidsList = () => {
   };
 
   const getParametersDisplay = (parameters, commodityId) => {
-    const commodity = commodities.find((item) => item._id === commodityId);
-    if (!commodity) return "N/A";
-    return commodity.parameters
-      .map((param) => `${param.parameter}: ${parameters[param._id] || "N/A"}`)
+    if (!parameters || Object.keys(parameters).length === 0) return "N/A";
+    return Object.entries(parameters)
+      .map(([paramName, vals]) => {
+        const valDisplay = [];
+        if (vals?.baseValue) valDisplay.push(`Base: ${vals.baseValue}`);
+        if (vals?.maxValue) valDisplay.push(`Max: ${vals.maxValue}`);
+        return `${paramName} (${valDisplay.join(", ")})`;
+      })
       .join(", ");
   };
 

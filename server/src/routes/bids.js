@@ -343,6 +343,23 @@ router.post("/", async (req, res) => {
     });
 
     try {
+      // Format quality parameters for notification
+      const formatQualityParams = (params) => {
+        if (!params || Object.keys(params).length === 0) return "";
+        const paramParts = [];
+        Object.entries(params).forEach(([key, vals]) => {
+          if (vals?.baseValue || vals?.maxValue) {
+            const parts = [];
+            if (vals.baseValue) parts.push(`Base: ${vals.baseValue}`);
+            if (vals.maxValue) parts.push(`Max: ${vals.maxValue}`);
+            paramParts.push(`${key} (${parts.join(", ")})`);
+          }
+        });
+        return paramParts.length > 0 ? ` • Quality: ${paramParts.join(", ")}` : "";
+      };
+
+      const qualityText = formatQualityParams(item.parameters);
+
       const sellers = await Seller.find({
         "commodities.name": item.commodity,
       }).lean();
@@ -356,7 +373,7 @@ router.post("/", async (req, res) => {
             recipient: phone,
             recipientRole: "Seller",
             title: "New Bid Available",
-            message: `New bid for ${item.commodity} (${item.origin} → ${item.consignee}) is now active. Check details and participate!`,
+            message: `New bid for ${item.commodity} (${item.origin} → ${item.consignee})${qualityText} is now active. Check details and participate!`,
             type: "BidParticipation",
             relatedId: item._id,
           }));
@@ -372,7 +389,7 @@ router.post("/", async (req, res) => {
         recipient: "all",
         recipientRole: role,
         title: "New Bid Created",
-        message: `A new bid for ${item.commodity} (${item.origin} → ${item.consignee}) has been created and is now ${finalStatus}.`,
+        message: `A new bid for ${item.commodity} (${item.origin} → ${item.consignee})${qualityText} has been created and is now ${finalStatus}.`,
         type: "BidParticipation",
         relatedId: item._id,
       }));

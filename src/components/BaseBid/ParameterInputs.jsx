@@ -12,23 +12,48 @@ const ParameterInputs = ({
         Quality Parameters
       </h3>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+      <div className="grid grid-cols-1 gap-5">
         {parameters.map((param) => (
-          <div key={param._id} className="flex flex-col gap-1">
+          <div key={param._id} className="space-y-3">
             <label className="text-sm font-medium text-gray-600">
               {param.parameter}
             </label>
 
-            <DataInput
-              placeholder={`Enter ${param.parameter}`}
-              value={parameterValues[param._id] || ""}
-              onChange={(e) =>
-                handleChange("parameterValues", {
-                  ...parameterValues,
-                  [param._id]: e.target.value,
-                })
-              }
-            />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="flex flex-col gap-1">
+                <span className="text-xs text-gray-500">Base Value</span>
+                <DataInput
+                  placeholder={`Enter ${param.parameter} Base Value`}
+                  value={parameterValues[param._id]?.baseValue || ""}
+                  onChange={(e) =>
+                    handleChange("parameterValues", {
+                      ...parameterValues,
+                      [param._id]: {
+                        ...parameterValues[param._id],
+                        baseValue: e.target.value,
+                      },
+                    })
+                  }
+                />
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <span className="text-xs text-gray-500">Max Value</span>
+                <DataInput
+                  placeholder={`Enter ${param.parameter} Max Value`}
+                  value={parameterValues[param._id]?.maxValue || ""}
+                  onChange={(e) =>
+                    handleChange("parameterValues", {
+                      ...parameterValues,
+                      [param._id]: {
+                        ...parameterValues[param._id],
+                        maxValue: e.target.value,
+                      },
+                    })
+                  }
+                />
+              </div>
+            </div>
           </div>
         ))}
       </div>
