@@ -7,7 +7,7 @@ const bidSchema = new mongoose.Schema(
     consignee: { type: String, required: true },
     origin: { type: String, required: true },
     commodity: { type: String, required: true },
-    parameters: { type: Map, of: String, default: {} },
+    parameters: { type: Map, of: mongoose.Schema.Types.Mixed, default: {} },
     notes: { type: String, default: "" },
     quantity: { type: Number, required: true },
     rate: { type: Number, required: true },
