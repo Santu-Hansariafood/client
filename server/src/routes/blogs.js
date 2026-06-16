@@ -1,9 +1,25 @@
 import { Router } from "express";
+import jwt from "jsonwebtoken";
 import Blog from "../models/Blog.js";
 import User from "../models/User.js";
 import authJwt from "../middleware/authJwt.js";
 
 const router = Router();
+
+// Helper function to check if user is admin
+const isAdminUser = (req) => {
+  try {
+    const auth = req.header("authorization") || req.header("Authorization");
+    if (!auth || !auth.toLowerCase().startsWith("bearer ")) {
+      return false;
+    }
+    const token = auth.slice(7);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    return decoded.role === "Admin";
+  } catch (err) {
+    return false;
+  }
+};
 
 // Public: Get latest blog
 router.get("/latest", async (req, res) => {
@@ -21,7 +37,10 @@ router.get("/latest", async (req, res) => {
 router.get("/", async (req, res) => {
   try {
     const { date, page = 1, limit = 10, category } = req.query;
-    const query = { isPublished: true };
+    
+    // Check if user is admin
+    const isAdmin = isAdminUser(req);
+    const query = isAdmin ? {} : { isPublished: true };
     
     if (date) {
       const start = new Date(date);
@@ -115,7 +134,7 @@ router.post("/", authJwt, async (req, res) => {
       return res.status(403).json({ message: "Access denied. Only Admin can publish news." });
     }
 
-    const { title, heading, content, imageUrl, images, date, category } = req.body;
+    const { title, heading, content, imageUrl, images, date, category, isPublished } = req.body;
     
     // Extract author ID from token (handles both 'id' and 'sub' naming conventions)
     const authorId = req.user.id || req.user.sub;
@@ -133,6 +152,7 @@ router.post("/", authJwt, async (req, res) => {
       date: date || new Date(),
       author: authorId,
       category: category || "General",
+      isPublished: isPublished !== undefined ? isPublished : true,
     });
 
     await blog.save();

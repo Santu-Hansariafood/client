@@ -189,12 +189,14 @@ const BlogDetail = () => {
               <div className="prose prose-slate max-w-none">
                 {blog.content.map((block, idx) => {
                   const style = `${block.bold ? "font-bold" : ""} ${block.italic ? "italic" : ""} ${block.underline ? "underline" : ""}`;
+                  const colorStyle = { color: block.color || (block.type === "subheading" ? "#1e3a5f" : "#334155") };
 
                   if (block.type === "subheading") {
                     return (
                       <h3
                         key={idx}
-                        className={`text-xl font-serif font-black text-[#1e3a5f] mt-8 mb-4 border-b border-slate-100 pb-2 ${style}`}
+                        className={`text-xl font-serif font-black mt-8 mb-4 border-b border-slate-100 pb-2 ${style}`}
+                        style={colorStyle}
                       >
                         {block.text}
                       </h3>
@@ -205,13 +207,13 @@ const BlogDetail = () => {
                     return (
                       <div key={idx} className="mb-6">
                         {block.text && (
-                          <p className={`text-lg font-bold text-slate-800 mb-2 ${style}`}>
+                          <p className={`text-lg font-bold mb-2 ${style}`} style={colorStyle}>
                             {block.text}
                           </p>
                         )}
                         <ul className={`space-y-2 ml-6 ${block.listType === "number" ? "list-decimal" : "list-disc"}`}>
                           {block.listItems?.map((item, itemIdx) => (
-                            <li key={itemIdx} className={`text-lg text-[#334155] font-serif ${style}`}>
+                            <li key={itemIdx} className={`text-lg font-serif ${style}`} style={colorStyle}>
                               {item}
                             </li>
                           ))}
@@ -223,7 +225,8 @@ const BlogDetail = () => {
                   return (
                     <p
                       key={idx}
-                      className={`text-lg leading-relaxed text-[#334155] font-serif mb-6 text-justify ${idx === 0 ? "first-letter:text-5xl first-letter:font-bold first-letter:float-left first-letter:mr-3 first-letter:mt-1 first-letter:text-[#1e3a5f]" : ""} ${style}`}
+                      className={`text-lg leading-relaxed font-serif mb-6 text-justify ${idx === 0 ? "first-letter:text-5xl first-letter:font-bold first-letter:float-left first-letter:mr-3 first-letter:mt-1" : ""} ${style}`}
+                      style={colorStyle}
                     >
                       {block.text}
                     </p>

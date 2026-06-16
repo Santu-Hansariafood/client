@@ -36,6 +36,7 @@ const BlogManagement = () => {
         bold: false,
         italic: false,
         underline: false,
+        color: "#334155",
         listType: "none",
         listItems: [],
       },
@@ -43,6 +44,7 @@ const BlogManagement = () => {
     imageUrl: "",
     images: [],
     date: new Date().toISOString().split("T")[0],
+    isPublished: true,
   });
 
   useEffect(() => {
@@ -177,6 +179,7 @@ const BlogManagement = () => {
               bold: false,
               italic: false,
               underline: false,
+              color: "#334155",
               listType: "none",
               listItems: [],
             },
@@ -184,6 +187,7 @@ const BlogManagement = () => {
           imageUrl: "",
           images: [],
           date: new Date().toISOString().split("T")[0],
+          isPublished: true,
         });
         fetchBlogs();
       }
@@ -256,17 +260,28 @@ const BlogManagement = () => {
               <h4 className="font-black text-slate-800 uppercase tracking-widest text-[11px]">
                 New Publication
               </h4>
-              <div className="flex items-center gap-2">
-                <FaTags className="text-slate-400" size={12} />
-                <select
-                  value={formData.category}
-                  onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                  className="text-[10px] font-black uppercase bg-white border border-slate-200 rounded-lg px-3 py-1.5 outline-none focus:ring-2 focus:ring-blue-500/10"
-                >
-                  {CATEGORIES.map(cat => (
-                    <option key={cat} value={cat}>{cat}</option>
-                  ))}
-                </select>
+              <div className="flex items-center gap-4">
+                <label className="flex items-center gap-2 text-[10px] font-black uppercase text-slate-600">
+                  <input
+                    type="checkbox"
+                    checked={formData.isPublished}
+                    onChange={(e) => setFormData({ ...formData, isPublished: e.target.checked })}
+                    className="w-4 h-4"
+                  />
+                  Published
+                </label>
+                <div className="flex items-center gap-2">
+                  <FaTags className="text-slate-400" size={12} />
+                  <select
+                    value={formData.category}
+                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                    className="text-[10px] font-black uppercase bg-white border border-slate-200 rounded-lg px-3 py-1.5 outline-none focus:ring-2 focus:ring-blue-500/10"
+                  >
+                    {CATEGORIES.map(cat => (
+                      <option key={cat} value={cat}>{cat}</option>
+                    ))}
+                  </select>
+                </div>
               </div>
             </div>
             <form onSubmit={handleSubmit} className="p-8 space-y-6">
@@ -389,6 +404,13 @@ const BlogManagement = () => {
                         >
                           I
                         </button>
+                        <input
+                          type="color"
+                          value={block.color || "#334155"}
+                          onChange={(e) => handleBlockChange(index, "color", e.target.value)}
+                          className="w-8 h-8 rounded cursor-pointer border border-slate-200"
+                          title="Text Color"
+                        />
                       </div>
                     </div>
 
@@ -399,7 +421,8 @@ const BlogManagement = () => {
                           value={block.text}
                           onChange={(e) => handleBlockChange(index, "text", e.target.value)}
                           placeholder="List title (optional)..."
-                          className="w-full h-10 px-4 rounded-xl border border-slate-200 text-xs font-bold text-slate-700"
+                          className="w-full h-10 px-4 rounded-xl border border-slate-200 text-xs font-bold"
+                          style={{ color: block.color || "#334155" }}
                         />
                         <div className="space-y-2 ml-4">
                           {block.listItems.map((item, itemIdx) => (
@@ -413,6 +436,7 @@ const BlogManagement = () => {
                                 onChange={(e) => handleListItemChange(index, itemIdx, e.target.value)}
                                 className="flex-1 h-9 px-3 rounded-lg border border-slate-200 text-xs font-medium"
                                 placeholder={`Item ${itemIdx + 1}...`}
+                                style={{ color: block.color || "#334155" }}
                               />
                               <button
                                 type="button"
@@ -444,7 +468,8 @@ const BlogManagement = () => {
                             : "Enter paragraph content..."
                         }
                         rows={block.type === "subheading" ? 2 : 4}
-                        className={`w-full p-4 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all text-slate-800 ${block.bold ? "font-bold" : "font-medium"} ${block.italic ? "italic" : ""} ${block.underline ? "underline" : ""}`}
+                        className={`w-full p-4 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all ${block.bold ? "font-bold" : "font-medium"} ${block.italic ? "italic" : ""} ${block.underline ? "underline" : ""}`}
+                        style={{ color: block.color || "#334155" }}
                       />
                     )}
 
@@ -551,10 +576,17 @@ const BlogManagement = () => {
                       alt=""
                     />
                   )}
-                  <div className="absolute top-3 left-3 bg-white/90 backdrop-blur px-2 py-1 rounded-lg shadow-sm">
-                    <span className="text-[9px] font-black uppercase text-blue-600 tracking-tighter">
-                      {blog.category || "General"}
-                    </span>
+                  <div className="absolute top-3 left-3 flex flex-col gap-2">
+                    <div className="bg-white/90 backdrop-blur px-2 py-1 rounded-lg shadow-sm">
+                      <span className="text-[9px] font-black uppercase text-blue-600 tracking-tighter">
+                        {blog.category || "General"}
+                      </span>
+                    </div>
+                    {!blog.isPublished && (
+                      <div className="bg-amber-500 text-white px-2 py-1 rounded-lg shadow-sm">
+                        <span className="text-[9px] font-black uppercase">Draft</span>
+                      </div>
+                    )}
                   </div>
                   <button
                     onClick={() => handleDelete(blog._id)}
