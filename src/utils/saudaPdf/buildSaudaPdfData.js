@@ -90,6 +90,7 @@ export const buildSaudaPdfData = ({
   buyerData = [],
   companyData = [],
   commodityData = [],
+  qualityParameterData = [],
   sellerProfileData = [],
   getConsigneeDisplay,
 }) => {
@@ -241,6 +242,37 @@ const findBestMatch = (dataList, key, nameField) => {
 
   const billToConsignee = String(item?.billTo || "").toLowerCase() === "consignee";
 
+  // Find matching commodity to get _id
+  const commodityMatch = findBestMatch(commodityData, item?.commodity, 'name');
+  const commodityId = commodityMatch?._id;
+
+  // Build parameters from company data
+  let parameters = [];
+  if (matchingBuyer && commodityId) {
+    const companyCommodity = matchingBuyer.commodities?.find(cc => 
+      String(cc.commodityId) === String(commodityId)
+    );
+    
+    if (companyCommodity?.parameters) {
+      parameters = companyCommodity.parameters.map(cp => {
+        const qualityParam = qualityParameterData.find(qp => 
+          String(qp._id) === String(cp.parameterId)
+        );
+        // Get first values entry (since values is array per companyCommodityParameter)
+        const value = cp.values?.[0] || {};
+        
+        return {
+          _id: cp.parameterId,
+          parameter: qualityParam?.name || 'Unknown Parameter',
+          baseValue: value.baseValue,
+          maxValue: value.maxValue,
+          // Keep original value for backwards compatibility
+          value: value.baseValue
+        };
+      });
+    }
+  }
+
   let transformed = {
     ...item,
     consignee: resolvedConsigneeName,
@@ -252,6 +284,7 @@ const findBestMatch = (dataList, key, nameField) => {
     billTo: item?.billTo || "",
     hsnCode: matchingCommodity?.hsnCode || "",
     sellerProfile: matchingSellerProfile,
+    parameters: parameters.length > 0 ? parameters : item.parameters, // Fallback to item parameters if no company parameters
   };
 
   // Ensure bank and GST details are present from profile if missing from company

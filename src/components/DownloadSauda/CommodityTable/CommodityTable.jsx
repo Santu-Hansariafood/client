@@ -66,10 +66,9 @@ const styles = StyleSheet.create({
 const CommodityTable = ({ data }) => {
   const filteredParameters = data.parameters.filter(
     (param) =>
-      param.value !== "0" &&
-      param.value !== "" &&
-      param.value !== null &&
-      param.value !== undefined,
+      (param.baseValue !== "0" && param.baseValue !== "" && param.baseValue !== null && param.baseValue !== undefined) ||
+      (param.maxValue !== "0" && param.maxValue !== "" && param.maxValue !== null && param.maxValue !== undefined) ||
+      (param.value !== "0" && param.value !== "" && param.value !== null && param.value !== undefined),
   );
 
   return (
@@ -97,11 +96,20 @@ const CommodityTable = ({ data }) => {
           <Text style={styles.qualityTitle}>Quality Parameters</Text>
           <View style={styles.parameterGrid}>
             {filteredParameters.map((param) => (
-              <Text key={param._id} style={styles.parameterCell}>
-                <Text style={styles.bold}>{param.parameter}:</Text>{" "}
-                {param.value}%
-              </Text>
-            ))}
+          <Text key={param._id} style={styles.parameterCell}>
+            <Text style={styles.bold}>{param.parameter}:</Text>{" "}
+            {param.baseValue && param.maxValue 
+              ? `${param.baseValue}% - ${param.maxValue}%`
+              : param.baseValue 
+                ? `${param.baseValue}%`
+                : param.maxValue 
+                  ? `${param.maxValue}%`
+                  : param.value 
+                    ? `${param.value}%`
+                    : ''
+            }
+          </Text>
+        ))}
           </View>
         </View>
       )}

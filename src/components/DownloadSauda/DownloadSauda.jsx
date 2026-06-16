@@ -17,6 +17,8 @@ const DownloadSauda = ({
   buyerData: initialBuyerData,
   sellerProfileData: initialSellerProfileData,
   companyData: initialCompanyData,
+  commodityData: initialCommodityData,
+  qualityParameterData: initialQualityParameterData,
   autoEmail = false,
 }) => {
   const hasLookupItems = (items) => Array.isArray(items) && items.length > 0;
@@ -29,13 +31,17 @@ const DownloadSauda = ({
     initialSellerProfileData || [],
   );
   const [companyData, setCompanyData] = useState(initialCompanyData || []);
+  const [commodityData, setCommodityData] = useState(initialCommodityData || []);
+  const [qualityParameterData, setQualityParameterData] = useState(initialQualityParameterData || []);
   const [loading, setLoading] = useState(
     !(
       hasLookupItems(initialConsigneeData) &&
       hasLookupItems(initialSupplierData) &&
       hasLookupItems(initialBuyerData) &&
       hasLookupItems(initialSellerProfileData) &&
-      hasLookupItems(initialCompanyData)
+      hasLookupItems(initialCompanyData) &&
+      hasLookupItems(initialCommodityData) &&
+      hasLookupItems(initialQualityParameterData)
     ),
   );
   const [sendingEmail, setSendingEmail] = useState(false);
@@ -45,6 +51,8 @@ const DownloadSauda = ({
   const BUYER_API_URL = "/buyers";
   const COMPANY_API_URL = "/companies";
   const SELLER_PROFILE_API_URL = "/sellers";
+  const COMMODITY_API_URL = "/commodities";
+  const QUALITY_PARAMETER_API_URL = "/quality-parameters";
 
   useEffect(() => {
     if (
@@ -52,20 +60,24 @@ const DownloadSauda = ({
       hasLookupItems(initialSupplierData) &&
       hasLookupItems(initialBuyerData) &&
       hasLookupItems(initialSellerProfileData) &&
-      hasLookupItems(initialCompanyData)
+      hasLookupItems(initialCompanyData) &&
+      hasLookupItems(initialCommodityData) &&
+      hasLookupItems(initialQualityParameterData)
     ) {
       setConsigneeData(initialConsigneeData);
       setSupplierData(initialSupplierData);
       setBuyerData(initialBuyerData);
       setSellerProfileData(initialSellerProfileData);
       setCompanyData(initialCompanyData);
+      setCommodityData(initialCommodityData);
+      setQualityParameterData(initialQualityParameterData);
       setLoading(false);
       return;
     }
 
     const fetchData = async () => {
       try {
-        const [cData, sData, bData, spData, companyRows] = await Promise.all([
+        const [cData, sData, bData, spData, companyRows, commodityRows, qpData] = await Promise.all([
           hasLookupItems(initialConsigneeData)
             ? Promise.resolve(initialConsigneeData)
             : fetchAllPages(CONSIGNEE_API_URL, { limit: 200 }),
@@ -81,6 +93,12 @@ const DownloadSauda = ({
           hasLookupItems(initialCompanyData)
             ? Promise.resolve(initialCompanyData)
             : fetchAllPages(COMPANY_API_URL, { limit: 200 }),
+          hasLookupItems(initialCommodityData)
+            ? Promise.resolve(initialCommodityData)
+            : fetchAllPages(COMMODITY_API_URL, { limit: 200 }),
+          hasLookupItems(initialQualityParameterData)
+            ? Promise.resolve(initialQualityParameterData)
+            : fetchAllPages(QUALITY_PARAMETER_API_URL, { limit: 200 }),
         ]);
 
         setConsigneeData(cData);
@@ -88,6 +106,8 @@ const DownloadSauda = ({
         setBuyerData(bData);
         setSellerProfileData(spData);
         setCompanyData(companyRows);
+        setCommodityData(commodityRows);
+        setQualityParameterData(qpData);
       } catch (error) {
         console.error("Error fetching data:", error);
       } finally {
@@ -102,6 +122,8 @@ const DownloadSauda = ({
     initialBuyerData,
     initialSellerProfileData,
     initialCompanyData,
+    initialCommodityData,
+    initialQualityParameterData,
   ]);
 
   const transformedData = buildSaudaPdfData({
@@ -110,6 +132,8 @@ const DownloadSauda = ({
     supplierData,
     buyerData,
     companyData,
+    commodityData,
+    qualityParameterData,
     sellerProfileData,
     getConsigneeDisplay: (row) => {
       const c = row?.consignee;
@@ -378,6 +402,9 @@ DownloadSauda.propTypes = {
   supplierData: PropTypes.array,
   buyerData: PropTypes.array,
   sellerProfileData: PropTypes.array,
+  companyData: PropTypes.array,
+  commodityData: PropTypes.array,
+  qualityParameterData: PropTypes.array,
   autoEmail: PropTypes.bool,
 };
 
