@@ -9,6 +9,7 @@ export const useAIAgentCommands = ({
   navigate,
   apiMethods,
   learningMethods,
+  userName
 }) => {
   const debounceTimerRef = useRef(null);
   const sidebarModules = dashboardData.sections;
@@ -109,7 +110,7 @@ export const useAIAgentCommands = ({
   };
 
   const processCommand = async (cmd) => {
-    const { trackInteraction, checkSafety } = learningMethods;
+    const { trackInteraction, checkSafety, learningData, trainCustomIntent } = learningMethods;
 
     // Safety Check for harmful content or profanity
     if (checkSafety(cmd)) {
@@ -125,6 +126,84 @@ export const useAIAgentCommands = ({
     const rawCmd = cmd.trim().toLowerCase();
     const cleanCmd = rectifyTypo(rawCmd); // Auto-rectify typos
     let response = null;
+
+    // Check for custom intents first!
+    if (learningData && learningData.customIntents) {
+      const matchingCustomIntent = learningData.customIntents.find(intent => 
+        cleanCmd.includes(intent.query));
+      if (matchingCustomIntent) {
+        // If we have a matching custom intent, try to execute the expected action
+        response = {
+          role: "assistant",
+          content: `Performing: ${matchingCustomIntent.expectedAction}...`,
+          suggestions: ["Total sauda today", "Active bids"],
+        };
+        // Check if expected action is a navigation or known command
+        if (matchingCustomIntent.expectedAction.includes("Open")) {
+          const sidebarLink = findSidebarLink(matchingCustomIntent.expectedAction);
+          if (sidebarLink && sidebarLink.link) {
+            setTimeout(() => navigate(sidebarLink.link), 1500);
+          }
+        }
+        setMessages((prev) => [...prev, response]);
+        trackInteraction(cmd, response.content);
+        return;
+      }
+    }
+
+    // Handle "Hi" / "Hello" commands
+    if (
+      cleanCmd === "hi" ||
+      cleanCmd === "hello" ||
+      cleanCmd === "hey" ||
+      cleanCmd.includes("hi there") ||
+      cleanCmd.includes("hello there")
+    ) {
+      response = {
+        role: "assistant",
+        content: userName 
+          ? `Welcome Mr ${userName}! I am your Saria AI. How can I help you today?` 
+          : "Hello! I am your Saria AI. How can I help you today?",
+        suggestions: [
+          "Show sidebar menu",
+          "Total sauda today",
+          "Open Buyer List",
+          "Active bids",
+          "Train AI",
+        ],
+      };
+    }
+
+    // Handle "Train AI" / "Train" commands
+    if (cleanCmd.includes("train") || cleanCmd.includes("teach")) {
+      response = {
+        role: "assistant",
+        content: "Great! You can train me in two ways: \n1. By giving feedback on my responses, or \n2. By teaching custom commands! For example, you can say: 'When I ask X, do Y'",
+        suggestions: ["Total sauda today", "Active bids", "Train custom command"],
+      };
+    }
+
+    // Handle "Train custom command" / "Custom command" commands
+    if (cleanCmd.includes("custom command") || cleanCmd.includes("train custom")) {
+      response = {
+        role: "assistant",
+        content: "Okay! To train a custom command, say something like: 'When I ask about rate, show highest rate today' or 'When I say go to buyers, open Buyer List'.",
+        suggestions: ["Total sauda today", "Active bids"],
+      };
+    }
+
+    // Handle "When I say X, do Y" pattern for training custom intents
+    const trainingMatch = rawCmd.match(/when i say (.+), (?:do|show|open|go to) (.+)/i);
+    if (trainingMatch) {
+      const trigger = trainingMatch[1].trim().toLowerCase();
+      const action = trainingMatch[2].trim();
+      trainCustomIntent(trigger, action);
+      response = {
+        role: "assistant",
+        content: `Okay! I've learned that when you say '${trigger}', you want me to '${action}'. I'll remember that! 📝`,
+        suggestions: ["Total sauda today", "Active bids"],
+      };
+    }
 
     if (cleanCmd !== rawCmd) {
       console.log(`Auto-corrected: "${rawCmd}" -> "${cleanCmd}"`);

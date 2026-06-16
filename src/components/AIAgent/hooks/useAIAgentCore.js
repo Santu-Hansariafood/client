@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 
-export const useAIAgentCore = () => {
+export const useAIAgentCore = (userName) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
   const [input, setInput] = useState("");
@@ -13,8 +13,9 @@ export const useAIAgentCore = () => {
   const [messages, setMessages] = useState([
     {
       role: "assistant",
-      content:
-        "Hello! I am your Saria AI. I have full control over the system data and navigation. Ask me anything about Saudas, Loadings, Sellers, Buyers, or Payments. I can also open any page for you!",
+      content: userName 
+        ? `Welcome Mr ${userName}! I am your Saria AI. How can I help you today?` 
+        : "Hello! I am your Saria AI. I have full control over the system data and navigation. Ask me anything about Saudas, Loadings, Sellers, Buyers, or Payments. I can also open any page for you!",
       suggestions: [
         "Show sidebar menu",
         "Total sauda today",

@@ -12,7 +12,8 @@ import AIAgentFab from "./components/AIAgentFab";
 
 const AIAgent = () => {
   const navigate = useNavigate();
-  const { userRole } = useAuth();
+  const { userRole, user } = useAuth();
+  const userName = user?.name || user?.username || '';
 
   const {
     isOpen,
@@ -32,7 +33,7 @@ const AIAgent = () => {
     scrollRef,
     getApiSignal,
     clearHistory,
-  } = useAIAgentCore();
+  } = useAIAgentCore(userName);
 
   const { trackInteraction, getDynamicSuggestions, checkSafety } = useAIAgentLearning();
 
@@ -52,7 +53,8 @@ const AIAgent = () => {
     isLoadingData,
     navigate,
     apiMethods,
-    learningMethods: { trackInteraction, getDynamicSuggestions, checkSafety }
+    learningMethods: { trackInteraction, getDynamicSuggestions, checkSafety },
+    userName
   });
 
   const { startListening } = useAIAgentVoice(

@@ -997,10 +997,40 @@ export const useAIAgentAPI = (
 
         let content =
           `*Full Company Intelligence: ${cName}*\n\n` +
+          `*Company Details:*\n` +
           `• *GST:* ${comp.gstNumber || comp.gstNo || "N/A"}\n` +
           `• *Location:* ${comp.location || "N/A"}, ${comp.district || "N/A"}, ${comp.state || "N/A"}\n` +
           `• *Group:* ${comp.groupId?.groupName || "N/A"}\n` +
           `• *Status:* VERIFIED\n\n`;
+
+        // Show commodity configuration
+        if (comp.commodities && comp.commodities.length > 0) {
+          content += `*Company Commodity Configuration:*\n`;
+          comp.commodities.forEach((cc, idx) => {
+            const commodityName = cc.commodityName || cc.commodityId?.name || "N/A";
+            content += `${idx + 1}. *${commodityName}*\n`;
+            if (cc.brokerage) {
+              content += `   • Brokerage: ₹${cc.brokerage}/Ton\n`;
+            }
+            if (cc.parameters && cc.parameters.length > 0) {
+              cc.parameters.forEach((param) => {
+                const paramValues = param.values?.[0] || {};
+                let paramLine = `   • ${param.parameterName || param.parameterId?.name || "Quality Parameter"}: `;
+                if (paramValues.baseValue && paramValues.maxValue) {
+                  paramLine += `${paramValues.baseValue}% - ${paramValues.maxValue}%`;
+                } else if (paramValues.baseValue) {
+                  paramLine += `${paramValues.baseValue}%`;
+                } else if (paramValues.maxValue) {
+                  paramLine += `${paramValues.maxValue}%`;
+                }
+                if (paramLine !== `   • ${param.parameterName || param.parameterId?.name || "Quality Parameter"}: `) {
+                  content += `${paramLine}\n`;
+                }
+              });
+            }
+            content += `\n`;
+          });
+        }
 
         if (saudas.length > 0) {
           content += `*Trade Summary (as Buyer):*\n`;
@@ -1472,77 +1502,22 @@ export const useAIAgentAPI = (
 
   const universalDeepSearch = async (query) => {
     setIsLoadingData(true);
-    setThinkingPath("Initiating Smart Saria Scan...");
+    setThinkingPath("Initiating Deep Research Scan...");
 
-    // First try smart search for quality → company → commodity
-    try {
-      const smartSearchRes = await api.get("/commodities/search/smart", {
-        params: { q: query },
-        signal: getApiSignal(),
-      });
+    const results = [];
+    let suggestions = [];
 
-      const { qualityParameters, companies, commodities } =
-        smartSearchRes.data || {};
-
-      // If we found quality parameters first
-      if (qualityParameters && qualityParameters.length > 0) {
-        let content = `*Quality Parameters Found:*\n\n`;
-        qualityParameters.forEach((qp, i) => {
-          content += `${i + 1}. *${qp.name}*${qp.description ? ` - ${qp.description}` : ""}\n`;
-        });
-        setIsLoadingData(false);
-        setThinkingPath("");
-        return {
-          role: "assistant",
-          content,
-          suggestions: ["Total sauda today", "Active bids"],
-        };
-      }
-
-      // If we found companies
-      if (companies && companies.length > 0) {
-        let content = `*Companies Found:*\n\n`;
-        companies.forEach((c, i) => {
-          content += `${i + 1}. *${c.companyName}*${c.gstNo ? ` (GST: ${c.gstNo})` : ""}\n`;
-        });
-        setIsLoadingData(false);
-        setThinkingPath("");
-        return {
-          role: "assistant",
-          content,
-          suggestions: [`${companies[0].companyName} saudas`, "Active bids"],
-        };
-      }
-
-      if (commodities && commodities.length > 0) {
-        let content = `*Commodities Found:*\n\n`;
-        commodities.forEach((c, i) => {
-          content += `${i + 1}. *${c.name}* (HSN: ${c.hsnCode})\n`;
-        });
-        setIsLoadingData(false);
-        setThinkingPath("");
-        return {
-          role: "assistant",
-          content,
-          suggestions: ["Today's market rate", "Active bids"],
-        };
-      }
-    } catch (error) {
-      console.error("Smart search error:", error);
-    }
-
-    // Fallback to original search logic
+    // First check for number-based queries (sauda, lorry, bill)
     if (/^\d{3,5}$/.test(query) || /(\d{3,5})\s*(?:sauda|order)/i.test(query)) {
       setThinkingPath("Checking Sauda Records...");
       const sNum = query.match(/(\d{3,5})/)[1];
       const saudaRes = await fetchSaudaDetails(sNum);
       if (saudaRes && !saudaRes.content.includes("I couldn't find")) {
-        setIsLoadingData(false);
-        setThinkingPath("");
-        return saudaRes;
+        results.push({ type: "Sauda", response: saudaRes });
       }
     }
 
+    // Check lorry and bill in parallel
     setThinkingPath("Scanning Vehicles and Invoices...");
     const [lorryRes, billRes] = await Promise.all([
       /\d{2}/.test(query) ? fetchLorryDetails(query) : Promise.resolve(null),
@@ -1550,16 +1525,13 @@ export const useAIAgentAPI = (
     ]);
 
     if (lorryRes && !lorryRes.content.includes("No records found")) {
-      setIsLoadingData(false);
-      setThinkingPath("");
-      return lorryRes;
+      results.push({ type: "Lorry", response: lorryRes });
     }
     if (billRes && !billRes.content.includes("not found in system")) {
-      setIsLoadingData(false);
-      setThinkingPath("");
-      return billRes;
+      results.push({ type: "Bill", response: billRes });
     }
 
+    // Now search for partners and companies in parallel
     setThinkingPath("Searching Partners and Companies...");
     const [seller, buyer, company] = await Promise.all([
       fetchFullPartnerDetails(query, "Seller"),
@@ -1567,18 +1539,98 @@ export const useAIAgentAPI = (
       fetchFullCompanyDetails(query),
     ]);
 
+    if (seller) results.push({ type: "Seller", response: seller });
+    if (buyer) results.push({ type: "Buyer", response: buyer });
+    if (company) results.push({ type: "Company", response: company });
+
+    // Also check for commodities via smart search
+    setThinkingPath("Checking Commodities and Quality Parameters...");
+    try {
+      const smartSearchRes = await api.get("/commodities/search/smart", {
+        params: { q: query },
+        signal: getApiSignal(),
+      });
+
+      const { qualityParameters, companies, commodities } = smartSearchRes.data || {};
+      
+      if (qualityParameters && qualityParameters.length > 0) {
+        let content = `*Quality Parameters Found:*\n\n`;
+        qualityParameters.forEach((qp, i) => {
+          content += `${i + 1}. *${qp.name}*${qp.description ? ` - ${qp.description}` : ""}\n`;
+        });
+        results.push({
+          type: "Quality Parameter",
+          response: {
+            role: "assistant",
+            content,
+          },
+        });
+      }
+
+      if (commodities && commodities.length > 0) {
+        let content = `*Commodities Found:*\n\n`;
+        commodities.forEach((c, i) => {
+          content += `${i + 1}. *${c.name}* (HSN: ${c.hsnCode})\n`;
+        });
+        results.push({
+          type: "Commodity",
+          response: {
+            role: "assistant",
+            content,
+          },
+        });
+        suggestions.push("Today's market rate");
+      }
+    } catch (error) {
+      console.error("Smart search error:", error);
+    }
+
     setIsLoadingData(false);
     setThinkingPath("");
 
-    if (seller) return seller;
-    if (buyer) return buyer;
-    if (company) return company;
-
-    return {
-      role: "assistant",
-      content: `I've performed a Saria AI scan for "*${query}*" across all Saudas, Invoices, Vehicles, and Partners, but no direct match was found.`,
-      suggestions: ["Total sauda today", "Active bids", "Highest rate today"],
-    };
+    // Determine what to return
+    if (results.length === 0) {
+      return {
+        role: "assistant",
+        content: `I've performed a Saria AI deep research for "*${query}*" across all Saudas, Invoices, Vehicles, Partners, and Commodities, but no direct match was found.`,
+        suggestions: ["Total sauda today", "Active bids", "Highest rate today"],
+      };
+    } else if (results.length === 1) {
+      // Single result, return it directly
+      const result = results[0];
+      if (result.response.suggestions) {
+        suggestions = result.response.suggestions;
+      }
+      return {
+        ...result.response,
+        suggestions: suggestions.length > 0 ? suggestions : ["Total sauda today", "Active bids"],
+      };
+    } else {
+      // Multiple results, show a summary and let user pick
+      let content = `*Deep Research Results for "${query}":*\n\n`;
+      results.forEach((res, i) => {
+        content += `${i + 1}. *${res.type}* Found\n`;
+      });
+      content += `\nShowing first result: \n---\n`;
+      
+      // Show first result's content
+      const firstResult = results[0];
+      content += firstResult.response.content;
+      
+      // Combine suggestions
+      const allSuggestions = [];
+      results.forEach(res => {
+        if (res.response.suggestions) {
+          allSuggestions.push(...res.response.suggestions);
+        }
+      });
+      
+      return {
+        role: "assistant",
+        content,
+        suggestions: [...new Set(allSuggestions)].slice(0, 4), // Deduplicate and limit to 4
+      };
+    }
   };
 
   return {

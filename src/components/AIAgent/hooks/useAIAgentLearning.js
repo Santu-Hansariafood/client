@@ -2,15 +2,17 @@ import { useState } from "react";
 
 export const useAIAgentLearning = () => {
   const [learningData, setLearningData] = useState(() => {
-    const saved = localStorage.getItem("saria_ai_learning_v2");
+    const saved = localStorage.getItem("saria_ai_learning_v3");
     return saved
       ? JSON.parse(saved)
       : {
           recentQueries: [],
           frequentTopics: {},
           intentPatterns: {},
-          entityMemory: { saudaNo: null, partner: null, commodity: null },
-          workflowScores: { sauda: 0, loading: 0, payment: 0, bid: 0 },
+          entityMemory: { saudaNo: null, partner: null, commodity: null, lorryNo: null, companyName: null },
+          workflowScores: { sauda: 0, loading: 0, payment: 0, bid: 0, company: 0 },
+          userFeedback: [], // New field for user feedback on responses
+          customIntents: [], // New field for user-trained intents
         };
   });
 
@@ -25,6 +27,7 @@ export const useAIAgentLearning = () => {
       "brokerage",
       "cd",
       "gst",
+      "broker",
     ],
     logistics: [
       "lorry",
@@ -35,6 +38,7 @@ export const useAIAgentLearning = () => {
       "transit",
       "bill",
       "invoice",
+      "truck",
     ],
     participation: [
       "bid",
@@ -45,13 +49,16 @@ export const useAIAgentLearning = () => {
       "tender",
     ],
     relationship: ["buyer", "seller", "partner", "company", "trade", "profile"],
+    selfOrder: ["self order", "add order", "create order", "add self order"],
+    greeting: ["hi", "hello", "hey", "good morning", "good afternoon", "good evening"],
   };
 
   const WORKFLOWS = {
     sauda: ["Add Loading Entry", "Payment List"],
     loading: ["Payment List", "Track Lorry"],
     bid: ["Active Bids", "Total Sauda Today"],
-    participation: ["Bid Interactions", "Sauda Profile"]
+    participation: ["Bid Interactions", "Sauda Profile"],
+    company: ["Saudas for {company}", "Company Details"],
   };
 
   const HARMFUL_CONTENT_LIST = [
@@ -64,20 +71,42 @@ export const useAIAgentLearning = () => {
     return HARMFUL_CONTENT_LIST.some(harm => lowerText.includes(harm));
   };
 
+  // New function: Extract entities from query
+  const extractEntities = (query) => {
+    const lowerQuery = query.toLowerCase();
+    const entities = {
+      saudaNo: null,
+      lorryNo: null,
+      commodity: null,
+      companyName: null,
+    };
+
+    // Extract sauda numbers (3-5 digits)
+    const saudaMatch = query.match(/\b(\d{3,5})\b/);
+    if (saudaMatch) entities.saudaNo = saudaMatch[1];
+
+    // Extract lorry numbers (basic pattern like HR26AB1234)
+    const lorryMatch = query.match(/\b([A-Z]{2}\s?\d{1,2}\s?[A-Z]{1,2}\s?\d{3,4})\b/i);
+    if (lorryMatch) entities.lorryNo = lorryMatch[1].toUpperCase();
+
+    return entities;
+  };
+
   const trackInteraction = (text, responseContent = "") => {
     if (!text || text.length < 3) return;
 
     const query = text.toLowerCase();
+    const entities = extractEntities(query);
 
     setLearningData((prev) => {
       const newRecent = [
         text,
         ...prev.recentQueries.filter((q) => q !== text),
-      ].slice(0, 10);
+      ].slice(0, 15); // Increased to 15
 
-      const saudaMatch = query.match(/(\d{3,5})/);
       const newEntityMemory = { ...prev.entityMemory };
-      if (saudaMatch) newEntityMemory.saudaNo = saudaMatch[0];
+      if (entities.saudaNo) newEntityMemory.saudaNo = entities.saudaNo;
+      if (entities.lorryNo) newEntityMemory.lorryNo = entities.lorryNo;
 
       let detectedCluster = "general";
       for (const [cluster, keywords] of Object.entries(INTENT_CLUSTERS)) {
@@ -94,10 +123,11 @@ export const useAIAgentLearning = () => {
       }
 
       const newWorkflowScores = { ...prev.workflowScores };
-      if (query.includes("sauda")) newWorkflowScores.sauda += 1;
-      if (query.includes("loading")) newWorkflowScores.loading += 1;
-      if (query.includes("payment")) newWorkflowScores.payment += 1;
+      if (query.includes("sauda") || query.includes("self order")) newWorkflowScores.sauda += 1;
+      if (query.includes("loading") || query.includes("lorry")) newWorkflowScores.loading += 1;
+      if (query.includes("payment") || query.includes("due")) newWorkflowScores.payment += 1;
       if (query.includes("bid")) newWorkflowScores.bid += 1;
+      if (query.includes("company")) newWorkflowScores.company += 1;
 
       const lastTopic = prev.recentQueries[0];
       const newPatterns = { ...prev.intentPatterns };
@@ -107,6 +137,7 @@ export const useAIAgentLearning = () => {
       }
 
       const newState = {
+        ...prev,
         recentQueries: newRecent,
         frequentTopics: newFreq,
         intentPatterns: newPatterns,
@@ -114,9 +145,69 @@ export const useAIAgentLearning = () => {
         workflowScores: newWorkflowScores,
       };
 
-      localStorage.setItem("saria_ai_learning_v2", JSON.stringify(newState));
+      localStorage.setItem("saria_ai_learning_v3", JSON.stringify(newState));
       return newState;
     });
+  };
+
+  // New function: Record user feedback
+  const recordFeedback = (query, response, isHelpful, correction = "") => {
+    setLearningData((prev) => {
+      const newFeedback = [
+        {
+          query,
+          response,
+          isHelpful,
+          correction,
+          timestamp: new Date().toISOString(),
+        },
+        ...prev.userFeedback,
+      ].slice(0, 100); // Keep last 100 feedbacks
+
+      const newState = {
+        ...prev,
+        userFeedback: newFeedback,
+      };
+
+      localStorage.setItem("saria_ai_learning_v3", JSON.stringify(newState));
+      return newState;
+    });
+  };
+
+  // New function: Train custom intent
+  const trainCustomIntent = (query, expectedAction) => {
+    setLearningData((prev) => {
+      const newCustomIntents = [
+        ...prev.customIntents,
+        {
+          query: query.toLowerCase(),
+          expectedAction,
+          timestamp: new Date().toISOString(),
+        }
+      ];
+      
+      const newState = {
+        ...prev,
+        customIntents: newCustomIntents,
+      };
+
+      localStorage.setItem("saria_ai_learning_v3", JSON.stringify(newState));
+      return newState;
+    });
+  };
+
+  // New function: Clear all learning data
+  const clearLearningData = () => {
+    setLearningData({
+      recentQueries: [],
+      frequentTopics: {},
+      intentPatterns: {},
+      entityMemory: { saudaNo: null, partner: null, commodity: null, lorryNo: null, companyName: null },
+      workflowScores: { sauda: 0, loading: 0, payment: 0, bid: 0, company: 0 },
+      userFeedback: [],
+      customIntents: [],
+    });
+    localStorage.removeItem("saria_ai_learning_v3");
   };
 
   const getDynamicSuggestions = (
@@ -143,6 +234,12 @@ export const useAIAgentLearning = () => {
       }
     }
 
+    if (entityMemory.lorryNo) {
+      if (!suggestions.some((s) => s.includes("Lorry"))) {
+        suggestions.push(`Lorry details for ${entityMemory.lorryNo}`);
+      }
+    }
+
     if (workflowScores.sauda > workflowScores.loading) {
       if (!suggestions.some((s) => s.includes("loading")))
         suggestions.push("Add Loading Entry");
@@ -150,6 +247,9 @@ export const useAIAgentLearning = () => {
     if (workflowScores.loading > workflowScores.payment) {
       if (!suggestions.some((s) => s.includes("payment")))
         suggestions.push("Payment List");
+    }
+    if (workflowScores.company > 2 && !suggestions.some((s) => s.includes("Company"))) {
+      suggestions.push("Company List");
     }
 
     if (responseText) {
@@ -208,6 +308,15 @@ export const useAIAgentLearning = () => {
       }
     });
 
+    // Also add suggestions from custom intents if applicable
+    if (learningData.customIntents.length > 0) {
+      learningData.customIntents.slice(0, 2).forEach(intent => {
+        if (!suggestions.includes(intent.expectedAction)) {
+          suggestions.push(intent.expectedAction);
+        }
+      });
+    }
+
     return [...new Set(suggestions)].slice(0, 5);
   };
 
@@ -215,6 +324,10 @@ export const useAIAgentLearning = () => {
     learningData, 
     trackInteraction, 
     getDynamicSuggestions,
-    checkSafety
+    checkSafety,
+    recordFeedback,
+    trainCustomIntent,
+    clearLearningData,
+    extractEntities
   };
 };
