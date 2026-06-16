@@ -144,10 +144,14 @@ const CommodityInformation = ({
         const savedParam = savedParams.find(
           (p) => String(getParameterId(p)) === String(getParameterId(templateParam)),
         );
+        // Get baseValue and maxValue from template values (first element of values array)
+        const templateValues = templateParam.values?.[0] || {};
         return {
           ...templateParam,
           parameter: getParameterLabel(templateParam),
-          value: savedParam ? savedParam.value : (templateParam.value || ""),
+          baseValue: savedParam?.baseValue ?? templateValues.baseValue ?? templateParam.value ?? "",
+          maxValue: savedParam?.maxValue ?? templateValues.maxValue ?? "",
+          value: savedParam?.value ?? templateParam.value ?? "",
         };
       });
 
@@ -156,14 +160,16 @@ const CommodityInformation = ({
         parameters.map((p) => ({
           id: getParameterId(p),
           label: getParameterLabel(p),
-          val: p.value,
+          baseVal: p.baseValue,
+          maxVal: p.maxValue,
         })),
       );
       const nextParamsStr = JSON.stringify(
         mergedParams.map((p) => ({
           id: getParameterId(p),
           label: getParameterLabel(p),
-          val: p.value,
+          baseVal: p.baseValue,
+          maxVal: p.maxValue,
         })),
       );
 
@@ -196,11 +202,16 @@ const CommodityInformation = ({
     setSelectedCommodity(commodityId);
 
     if (commodityName && commodity) {
-      const updatedParameters = (commodity?.parameters || []).map((p) => ({
-        ...p,
-        parameter: getParameterLabel(p),
-        value: p.value || "",
-      }));
+      const updatedParameters = (commodity?.parameters || []).map((p) => {
+        const templateValues = p.values?.[0] || {};
+        return {
+          ...p,
+          parameter: getParameterLabel(p),
+          baseValue: templateValues.baseValue ?? p.value ?? "",
+          maxValue: templateValues.maxValue ?? "",
+          value: p.value ?? "",
+        };
+      });
 
       setParameters(updatedParameters);
 
@@ -209,6 +220,9 @@ const CommodityInformation = ({
         "parameters",
         updatedParameters.map((p) => ({
           id: getParameterId(p),
+          parameterId: getParameterId(p),
+          baseValue: p.baseValue,
+          maxValue: p.maxValue,
           value: p.value,
         })),
       );
@@ -221,18 +235,21 @@ const CommodityInformation = ({
   };
 
   const onParameterChange = useCallback(
-    (index, newValue) => {
+    (index, field, newValue) => {
       const updatedParameters = [...parameters];
       if (updatedParameters[index]) {
-        updatedParameters[index] = { ...updatedParameters[index], value: newValue };
+        updatedParameters[index] = { ...updatedParameters[index], [field]: newValue };
         setParameters(updatedParameters);
 
-        const parametersWithIdAndValue = updatedParameters.map((param) => ({
+        const parametersToSave = updatedParameters.map((param) => ({
           id: getParameterId(param),
+          parameterId: getParameterId(param),
           value: param.value,
+          baseValue: param.baseValue,
+          maxValue: param.maxValue,
         }));
 
-        handleChange("parameters", parametersWithIdAndValue);
+        handleChange("parameters", parametersToSave);
       }
     },
     [getParameterId, parameters, handleChange],
@@ -247,17 +264,23 @@ const CommodityInformation = ({
     [commodities, getCommodityId, getCommodityName],
   );
 
-  const headers = useMemo(() => ["Quality Parameter", "Value in %"], []);
+  const headers = useMemo(() => ["Quality Parameter", "Base Value (%)", "Max Value (%)"], []);
 
   const rows = useMemo(
     () =>
       parameters.map((param, index) => [
         getParameterLabel(param),
         <DataInput
-          key={getParameterId(param) || `${getParameterLabel(param)}-${index}`}
-          value={param.value}
-          placeholder={`Enter value for ${getParameterLabel(param)}`}
-          onChange={(e) => onParameterChange(index, e.target.value)}
+          key={`${getParameterId(param)}-baseValue`}
+          value={param.baseValue || param.value || ""}
+          placeholder={`Enter base value for ${getParameterLabel(param)}`}
+          onChange={(e) => onParameterChange(index, 'baseValue', e.target.value)}
+        />,
+        <DataInput
+          key={`${getParameterId(param)}-maxValue`}
+          value={param.maxValue || ""}
+          placeholder={`Enter max value for ${getParameterLabel(param)}`}
+          onChange={(e) => onParameterChange(index, 'maxValue', e.target.value)}
         />,
       ]),
     [getParameterId, getParameterLabel, parameters, onParameterChange],

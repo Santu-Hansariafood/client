@@ -246,7 +246,7 @@ const findBestMatch = (dataList, key, nameField) => {
   const commodityMatch = findBestMatch(commodityData, item?.commodity, 'name');
   const commodityId = commodityMatch?._id;
 
-  // Build parameters from company data
+  // Build parameters from company data if available
   let parameters = [];
   if (matchingBuyer && commodityId) {
     const companyCommodity = matchingBuyer.commodities?.find(cc => 
@@ -271,6 +271,22 @@ const findBestMatch = (dataList, key, nameField) => {
         };
       });
     }
+  }
+  
+  // If no company parameters found, use item parameters (for self order or existing data)
+  if (parameters.length === 0 && item.parameters) {
+    parameters = item.parameters.map(param => {
+      const qualityParam = qualityParameterData.find(qp => 
+        String(qp._id) === String(param.id || param._id || param.parameterId)
+      );
+      return {
+        ...param,
+        _id: param.id || param._id || param.parameterId,
+        parameter: qualityParam?.name || param.parameter || 'Unknown Parameter',
+        baseValue: param.baseValue ?? param.value,
+        maxValue: param.maxValue ?? '',
+      };
+    });
   }
 
   let transformed = {

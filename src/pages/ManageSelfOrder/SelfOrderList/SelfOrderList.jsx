@@ -52,6 +52,8 @@ const SelfOrderList = () => {
   const [buyerData, setBuyerData] = useState([]);
   const [sellerProfileData, setSellerProfileData] = useState([]);
   const [companyData, setCompanyData] = useState([]);
+  const [commodityData, setCommodityData] = useState([]);
+  const [qualityParameterData, setQualityParameterData] = useState([]);
 
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
@@ -71,12 +73,16 @@ const SelfOrderList = () => {
           suppliers,
           sellerProfiles,
           companies,
+          commodities,
+          qualityParams,
         ] = await Promise.all([
           fetchAllPages("/consignees", { limit: 200 }).catch(() => []),
           fetchAllPages("/buyers", { limit: 200 }).catch(() => []),
           fetchAllPages("/seller-company", { limit: 200 }).catch(() => []),
           fetchAllPages("/sellers", { limit: 200 }).catch(() => []),
           fetchAllPages("/companies", { limit: 200 }).catch(() => []),
+          fetchAllPages("/commodities", { limit: 200 }).catch(() => []),
+          fetchAllPages("/quality-parameters", { limit: 200 }).catch(() => []),
         ]);
 
         setConsigneeData(consignees);
@@ -84,6 +90,8 @@ const SelfOrderList = () => {
         setBuyerData(allBuyers);
         setSellerProfileData(sellerProfiles);
         setCompanyData(companies);
+        setCommodityData(commodities);
+        setQualityParameterData(qualityParams);
 
         const map = new Map();
         consignees.forEach((c) => {
@@ -216,6 +224,8 @@ const SelfOrderList = () => {
           supplierData,
           buyerData,
           companyData,
+          commodityData,
+          qualityParameterData,
           sellerProfileData,
           getConsigneeDisplay,
         });
@@ -525,6 +535,8 @@ _${fileUrl || "PDF Link Not Available"}_
                 buyerData={buyerData}
                 sellerProfileData={sellerProfileData}
                 companyData={companyData}
+                commodityData={commodityData}
+                qualityParameterData={qualityParameterData}
                 button={
                   <button
                     className="p-2 rounded-xl bg-emerald-50 text-emerald-700 hover:bg-emerald-600 hover:text-white transition-all shadow-sm border border-emerald-100"
@@ -548,6 +560,8 @@ _${fileUrl || "PDF Link Not Available"}_
               buyerData={buyerData}
               sellerProfileData={sellerProfileData}
               companyData={companyData}
+              commodityData={commodityData}
+              qualityParameterData={qualityParameterData}
               button={
                 <button
                   className="flex items-center justify-center w-8 h-8 rounded-xl bg-emerald-50 text-emerald-700 hover:bg-emerald-600 hover:text-white transition-all shadow-sm border border-emerald-100"

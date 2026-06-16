@@ -66,20 +66,42 @@ const BuyerInformation = ({
   );
 
   const getBrokerageMap = useCallback(
-    (buyerData) => {
-      if (!buyerData) return {};
-      const map = { ...(buyerData.brokerageByName || {}) };
-
-      if (buyerData.brokerage && allCommodities?.length > 0) {
-        Object.entries(buyerData.brokerage).forEach(([id, val]) => {
+    (buyerData, companyData) => {
+      const map = {};
+      
+      // First priority: use company's commodity brokerage
+      if (companyData?.commodities && allCommodities?.length > 0) {
+        companyData.commodities.forEach((cc) => {
           const commodity = allCommodities.find(
-            (c) => String(c._id) === String(id),
+            (c) => String(c._id) === String(cc.commodityId),
           );
-          if (commodity && !map[commodity.name]) {
-            map[commodity.name] = val;
+          if (commodity && cc.brokerage != null) {
+            map[commodity.name] = cc.brokerage;
           }
         });
       }
+      
+      // Fallback to buyer's brokerage
+      if (buyerData) {
+        const buyerBrokerage = { ...(buyerData.brokerageByName || {}) };
+        if (buyerData.brokerage && allCommodities?.length > 0) {
+          Object.entries(buyerData.brokerage).forEach(([id, val]) => {
+            const commodity = allCommodities.find(
+              (c) => String(c._id) === String(id),
+            );
+            if (commodity && !map[commodity.name]) {
+              map[commodity.name] = val;
+            }
+          });
+        }
+        // Merge buyer brokerage into map if not already set
+        Object.entries(buyerBrokerage).forEach(([name, val]) => {
+          if (map[name] == null) {
+            map[name] = val;
+          }
+        });
+      }
+      
       return map;
     },
     [allCommodities],
@@ -242,7 +264,7 @@ const BuyerInformation = ({
         "buyerCommodity",
         enrichCommodities(companyData.commodities || []),
       );
-      handleChange("buyerBrokerageMap", getBrokerageMap(buyerData));
+      handleChange("buyerBrokerageMap", getBrokerageMap(buyerData, companyData));
     }
 
     const consigneeValue =
@@ -285,7 +307,8 @@ const BuyerInformation = ({
     const buyerData = (Array.isArray(buyers) ? buyers : []).find(
       (b) => b._id === buyerId,
     );
-    handleChange("buyerBrokerageMap", getBrokerageMap(buyerData));
+    // When buyer changes but no company selected yet, pass null as companyData
+    handleChange("buyerBrokerageMap", getBrokerageMap(buyerData, null));
   };
 
   const onCompanyChange = (option) => {
@@ -324,7 +347,7 @@ const BuyerInformation = ({
       "buyerCommodity",
       enrichCommodities(companyData.commodities || []),
     );
-    handleChange("buyerBrokerageMap", getBrokerageMap(buyerData));
+    handleChange("buyerBrokerageMap", getBrokerageMap(buyerData, companyData));
     setSelectedConsignee("");
     handleChange("consignee", "");
   };
