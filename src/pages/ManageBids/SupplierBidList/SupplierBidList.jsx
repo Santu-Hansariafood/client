@@ -7,7 +7,7 @@ import {
   useCallback,
 } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import axios from "axios";
+import api from "../../../utils/apiClient/apiClient";
 import {
   FaRegHandPointer,
   FaGavel,
@@ -73,7 +73,7 @@ const SupplierBidList = () => {
     setLoading(true);
     setError(null);
     try {
-      const res = await axios.get(
+      const res = await api.get(
         `/bids/supplier-today?mobile=${encodeURIComponent(mobile)}`,
       );
       const payload = res.data?.data || res.data || {};
@@ -217,7 +217,7 @@ const SupplierBidList = () => {
         paymentTerms,
         sellerCompany: String(sellerCompany || "").trim(),
       };
-      await axios.post("/participatebids", participationData);
+      await api.post("/participatebids", participationData);
       toast.success("Participation successful!");
       setIsPopupOpen(false);
       fetchBids();
