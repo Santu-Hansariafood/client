@@ -11,6 +11,7 @@ const employeeSchema = new mongoose.Schema(
     role: { type: String, default: "Employee" },
     status: { type: String, enum: ["Active", "Inactive"], default: "Active" },
     allowedPermissions: { type: [String], default: [] },
+    profileImage: { type: String, default: "" },
     otp: { type: String },
     otpExpires: { type: Date },
   },

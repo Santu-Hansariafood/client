@@ -254,7 +254,11 @@ const EmployeeIDCardPDF = ({
           <View style={styles.content}>
             <View style={styles.photoSection}>
               <View style={styles.photoPlaceholder}>
-                <PersonIcon />
+                {user?.profileImage ? (
+                  <Image src={user.profileImage} style={{ width: 60, height: 70, borderRadius: 8 }} />
+                ) : (
+                  <PersonIcon />
+                )}
               </View>
               <Text style={styles.idBadge}>{partnerId}</Text>
             </View>

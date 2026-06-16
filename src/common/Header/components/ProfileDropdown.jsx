@@ -11,7 +11,7 @@ const ProfileDropdown = ({
   onLogoutClick,
   setChangePasswordOpen,
 }) => {
-  const { userRole, mobile } = useAuth();
+  const { userRole, mobile, user } = useAuth();
 
   const toggleDropdown = () => {
     setProfileDropdownOpen((prev) => !prev);
@@ -25,8 +25,16 @@ const ProfileDropdown = ({
         onClick={toggleDropdown}
         className="flex items-center gap-2 px-2 py-1.5 rounded-2xl hover:bg-white/10 transition-all duration-200"
       >
-        <div className="w-10 h-10 rounded-full bg-emerald-700 border-2 border-amber-300 flex items-center justify-center shadow-md">
-          <AiOutlineUser size={20} className="text-white" />
+        <div className="w-10 h-10 rounded-full bg-emerald-700 border-2 border-amber-300 flex items-center justify-center shadow-md overflow-hidden">
+          {user?.profileImage ? (
+            <img
+              src={user.profileImage}
+              alt="Profile"
+              className="w-full h-full object-cover rounded-full"
+            />
+          ) : (
+            <AiOutlineUser size={20} className="text-white" />
+          )}
         </div>
 
         <div className="hidden md:flex flex-col items-start">

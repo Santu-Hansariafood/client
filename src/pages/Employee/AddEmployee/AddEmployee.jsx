@@ -6,6 +6,7 @@ import { FaUserPlus } from "react-icons/fa";
 import DataInput from "../../../common/DataInput/DataInput";
 import DataDropdown from "../../../common/DataDropdown/DataDropdown";
 import Buttons from "../../../common/Buttons/Buttons";
+import FileUpload from "../../../common/FileUpload/FileUpload";
 import regexPatterns from "../../../utils/regexPatterns/regexPatterns";
 
 const AddEmployee = () => {
@@ -16,6 +17,7 @@ const AddEmployee = () => {
     sex: "",
     password: "",
     status: "Active",
+    profileImage: "",
   });
 
   const sexOptions = [
@@ -39,6 +41,14 @@ const AddEmployee = () => {
       ...prev,
       [actionMeta.name]: selectedOption ? selectedOption.value : "",
     }));
+  };
+
+  const handleProfileImageChange = (url) => {
+    setFormData((prev) => ({ ...prev, profileImage: url }));
+  };
+
+  const handleProfileImageRemove = () => {
+    setFormData((prev) => ({ ...prev, profileImage: "" }));
   };
 
   const handleSubmit = async (e) => {
@@ -88,6 +98,7 @@ const AddEmployee = () => {
         sex: "",
         password: "",
         status: "Active",
+        profileImage: "",
       });
     } catch (error) {
       toast.error(
@@ -152,6 +163,15 @@ const AddEmployee = () => {
             required
           />
         </div>
+        
+        <FileUpload
+          label="Profile Image"
+          accept="image/*"
+          onFileChange={handleProfileImageChange}
+          onFileRemove={handleProfileImageRemove}
+          currentUrl={formData.profileImage}
+        />
+        
         <div className="flex justify-end pt-4">
           <Buttons type="submit" label="Register Employee" variant="primary" />
         </div>

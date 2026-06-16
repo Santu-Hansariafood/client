@@ -4,6 +4,7 @@ import { toast } from "react-toastify";
 import DataInput from "../../../common/DataInput/DataInput";
 import DataDropdown from "../../../common/DataDropdown/DataDropdown";
 import Buttons from "../../../common/Buttons/Buttons";
+import FileUpload from "../../../common/FileUpload/FileUpload";
 
 const EditEmployeePopup = ({ employee, isOpen, onClose, onUpdate }) => {
   const [formData, setFormData] = useState(null);
@@ -49,6 +50,14 @@ const EditEmployeePopup = ({ employee, isOpen, onClose, onUpdate }) => {
       ...prev,
       [actionMeta.name]: selectedOption ? selectedOption.value : "",
     }));
+  };
+
+  const handleProfileImageChange = (url) => {
+    setFormData((prev) => ({ ...prev, profileImage: url }));
+  };
+
+  const handleProfileImageRemove = () => {
+    setFormData((prev) => ({ ...prev, profileImage: "" }));
   };
 
   const handleSubmit = async (e) => {
@@ -134,6 +143,14 @@ const EditEmployeePopup = ({ employee, isOpen, onClose, onUpdate }) => {
                 required
               />
             </div>
+
+            <FileUpload
+              label="Profile Image"
+              accept="image/*"
+              onFileChange={handleProfileImageChange}
+              onFileRemove={handleProfileImageRemove}
+              currentUrl={formData.profileImage}
+            />
 
             <div className="flex justify-end gap-3 pt-4 border-t border-slate-50">
               <Buttons

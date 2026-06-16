@@ -160,11 +160,33 @@ export const useAIAgentAPI = (
           `• *Status:* ${p.status?.toUpperCase() || "ACTIVE"}\n\n`;
 
         if (type === "Buyer" && p.companyIds && p.companyIds.length > 0) {
-          content += `*Registered Companies:*\n`;
-          p.companyIds.forEach((c) => {
-            content += `• ${c.companyName || c.name || "N/A"}\n`;
+          content += `*Registered Companies & Brokerage Config:*\n`;
+          p.companyIds.forEach((company) => {
+            const companyName = company.companyName || company.name || "N/A";
+            content += `• *${companyName}:*\n`;
+            
+            // Add company's commodity-wise brokerage
+            if (company.commodities && company.commodities.length > 0) {
+              company.commodities.forEach((cc) => {
+                const commodityName = cc.commodityId?.name || cc.commodityName || "N/A";
+                if (cc.brokerage) {
+                  content += `  - *${commodityName}:* ₹${cc.brokerage}/Tons\n`;
+                }
+              });
+            }
+            content += "\n";
           });
-          content += "\n";
+          // Also show buyer's own brokerage as fallback
+          const validBrokerage = Object.entries(p.brokerageByName || {}).filter(
+            ([comm, rate]) => comm && rate,
+          );
+          if (validBrokerage.length > 0) {
+            content += `*Buyer Default Brokerage Config:*\n`;
+            validBrokerage.forEach(([comm, rate]) => {
+              content += `• *${comm}:* ₹${rate}/Tons\n`;
+            });
+            content += "\n";
+          }
         } else if (type === "Seller" && p.companies && p.companies.length > 0) {
           content += `*Registered Companies:*\n`;
           p.companies.forEach((c) => {
@@ -187,17 +209,6 @@ export const useAIAgentAPI = (
             content += `*Brokerage Config:*\n`;
             validCommodities.forEach((c) => {
               content += `• *${c.name}:* ₹${c.brokerage}/Tons\n`;
-            });
-            content += "\n";
-          }
-        } else {
-          const validBrokerage = Object.entries(p.brokerage || {}).filter(
-            ([comm, rate]) => comm && rate,
-          );
-          if (validBrokerage.length > 0) {
-            content += `*Brokerage Config:*\n`;
-            validBrokerage.forEach(([comm, rate]) => {
-              content += `• *${comm}:* ₹${rate}/Tons\n`;
             });
             content += "\n";
           }
@@ -225,6 +236,7 @@ export const useAIAgentAPI = (
       }
       return null;
     } catch (e) {
+      console.error("fetchFullPartnerDetails error:", e);
       return null;
     } finally {
       setIsLoadingData(false);
