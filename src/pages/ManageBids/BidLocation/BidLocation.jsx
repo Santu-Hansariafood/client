@@ -1,5 +1,5 @@
 import { useState, useEffect, lazy, Suspense } from "react";
-import axios from "axios";
+import api from "../../../utils/apiClient/apiClient";
 import { toast, ToastContainer } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import "react-toastify/dist/ReactToastify.css";
@@ -30,7 +30,7 @@ const BidLocation = () => {
 
   const fetchBidLocations = async () => {
     try {
-      const response = await axios.get(
+      const response = await api.get(
         `${API_URL}?page=${currentPage}&limit=${itemsPerPage}`,
       );
       if (response.data && Array.isArray(response.data.data)) {
@@ -56,7 +56,7 @@ const BidLocation = () => {
 
     try {
       if (isEditing !== null) {
-        const response = await axios.put(`${API_URL}/${isEditing}`, {
+        const response = await api.put(`${API_URL}/${isEditing}`, {
           name: inputValue,
         });
 
@@ -66,7 +66,7 @@ const BidLocation = () => {
           throw new Error("Failed to update bid location");
         }
       } else {
-        const response = await axios.post(API_URL, { name: inputValue });
+        const response = await api.post(API_URL, { name: inputValue });
 
         if (response.status === 201) {
           toast.success("Bid location added successfully");
@@ -88,7 +88,7 @@ const BidLocation = () => {
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this entry?")) {
       try {
-        const response = await axios.delete(`${API_URL}/${id}`);
+        const response = await api.delete(`${API_URL}/${id}`);
 
         if (response.status === 200) {
           toast.success("Bid location deleted successfully");

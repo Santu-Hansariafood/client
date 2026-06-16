@@ -1,6 +1,6 @@
 import { lazy, useEffect, useState } from "react";
 import PropTypes from "prop-types";
-import axios from "axios";
+import api from "../../utils/apiClient/apiClient";
 import { toast } from "react-toastify";
 const DataInput = lazy(() => import("../../common/DataInput/DataInput"));
 const DataDropdown = lazy(
@@ -17,7 +17,7 @@ const BrokerInformation = ({ formData, handleChange }) => {
     const fetchAgents = async () => {
       setLoading(true);
       try {
-        const { data } = await axios.get(API_URL);
+        const { data } = await api.get(API_URL);
         const options = data
           .map(({ name }) => ({
             value: name.toUpperCase(),

@@ -1,5 +1,5 @@
 import { useState, useEffect, lazy, Suspense, useMemo } from "react";
-import axios from "axios";
+import api from "../../../utils/apiClient/apiClient";
 import PropTypes from "prop-types";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -38,7 +38,7 @@ const ListQualityParameter = () => {
 
   const fetchQualityParameters = async () => {
     try {
-      const response = await axios.get("/quality-parameters", {
+      const response = await api.get("/quality-parameters", {
         params: {
           page: currentPage,
           limit: itemsPerPage,
@@ -82,7 +82,7 @@ const ListQualityParameter = () => {
 
   const handleUpdateQualityParameter = async (updatedData) => {
     try {
-      const response = await axios.put(
+      const response = await api.put(
         `/quality-parameters/${updatedData._id}`,
         updatedData,
       );
@@ -99,7 +99,7 @@ const ListQualityParameter = () => {
   const handleDelete = async (item) => {
     try {
       console.log("Deleting ID:", item._id);
-      await axios.delete(`/quality-parameters/${item._id}`);
+      await api.delete(`/quality-parameters/${item._id}`);
       setQualityParameters((prev) =>
         prev.filter((param) => param._id !== item._id),
       );

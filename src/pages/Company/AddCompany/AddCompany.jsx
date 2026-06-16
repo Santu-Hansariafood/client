@@ -6,7 +6,7 @@ import {
   useMemo,
   useCallback,
 } from "react";
-import axios from "axios";
+import api from "../../../utils/apiClient/apiClient";
 import { toast } from "react-toastify";
 import { FaPlus } from "react-icons/fa";
 import Loading from "../../../common/Loading/Loading";
@@ -51,8 +51,8 @@ const AddCompany = () => {
       try {
         const [consignees, groupsRes, commoditiesRes] = await Promise.all([
           fetchAllPages("/consignees"),
-          axios.get("/groups"),
-          axios.get("/commodities"),
+          api.get("/groups"),
+          api.get("/commodities"),
         ]);
 
         const groups = groupsRes.data?.data || groupsRes.data || [];
@@ -266,7 +266,7 @@ const AddCompany = () => {
       })),
     };
     try {
-      const res = await axios.post("/companies", payload);
+      const res = await api.post("/companies", payload);
 
       if (res.status === 201) {
         toast.success("Company added successfully");

@@ -6,7 +6,7 @@ import {
   useMemo,
   useCallback,
 } from "react";
-import axios from "axios";
+import api from "../../../utils/apiClient/apiClient";
 import { toast } from "react-toastify";
 import { FaBuilding } from "react-icons/fa";
 import Loading from "../../../common/Loading/Loading";
@@ -43,7 +43,7 @@ const ListGroupOfCompany = () => {
   useEffect(() => {
     const fetchGroups = async () => {
       try {
-        const response = await axios.get("/groups", {
+        const response = await api.get("/groups", {
           params: {
             page: currentPage,
             limit: itemsPerPage,
@@ -87,7 +87,7 @@ const ListGroupOfCompany = () => {
 
   const handleDelete = useCallback(async (groupToDelete) => {
     try {
-      await axios.delete(`/groups/${groupToDelete._id}`);
+      await api.delete(`/groups/${groupToDelete._id}`);
       setGroupsData((prevData) =>
         prevData.filter((group) => group._id !== groupToDelete._id),
       );

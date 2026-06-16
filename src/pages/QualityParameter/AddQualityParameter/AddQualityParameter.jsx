@@ -1,6 +1,6 @@
 import { useState, lazy, Suspense } from "react";
 import PropTypes from "prop-types";
-import axios from "axios";
+import api from "../../../utils/apiClient/apiClient";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Loading from "../../../common/Loading/Loading";
@@ -32,7 +32,7 @@ const AddQualityParameter = () => {
     };
 
     try {
-      await axios.post("/quality-parameters", payload);
+      await api.post("/quality-parameters", payload);
       toast.success("Quality parameter added successfully!");
       setFormData({
         name: "",

@@ -1,4 +1,4 @@
-import axios from "axios";
+import api from "../apiClient/apiClient";
 import { pdf } from "@react-pdf/renderer";
 import { createElement } from "react";
 import SaudaPDF from "../../components/DownloadSauda/SaudaPDF/SaudaPDF";
@@ -83,7 +83,7 @@ export const sendSaudaOrderEmails = async (order) => {
     reader.onerror = reject;
   });
 
-  await axios.post("/api/email/send-pdf", {
+  await api.post("/email/send-pdf", {
     email: recipients.join(", "),
     pdf: base64data,
     saudaNo: order?.saudaNo || "",

@@ -1,6 +1,6 @@
 import PropTypes from "prop-types";
 import { useState, useEffect, lazy, Suspense } from "react";
-import axios from "axios";
+import api from "../../../utils/apiClient/apiClient";
 import { toast } from "react-toastify";
 import Loading from "../../../common/Loading/Loading";
 import regexPatterns from "../../../utils/regexPatterns/regexPatterns";
@@ -38,8 +38,8 @@ const EditCompanyPopup = ({ company, isOpen, onClose, onUpdate }) => {
       try {
         const [consignees, commodityRes, groupRes] = await Promise.all([
           fetchAllPages("/consignees"),
-          axios.get("/commodities"),
-          axios.get("/groups"),
+          api.get("/commodities"),
+          api.get("/groups"),
         ]);
 
         const commoditiesData =
@@ -334,7 +334,7 @@ const EditCompanyPopup = ({ company, isOpen, onClose, onUpdate }) => {
         })),
       };
 
-      const response = await axios.put(`/companies/${company._id}`, payload);
+      const response = await api.put(`/companies/${company._id}`, payload);
 
       const updated = response.data?.data || response.data;
 

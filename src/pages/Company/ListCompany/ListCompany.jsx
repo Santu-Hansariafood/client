@@ -1,5 +1,5 @@
 import { useState, useEffect, lazy, Suspense } from "react";
-import axios from "axios";
+import api from "../../../utils/apiClient/apiClient";
 import { toast } from "react-toastify";
 import Loading from "../../../common/Loading/Loading";
 import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
@@ -37,7 +37,7 @@ const ListCompany = () => {
     try {
       setLoading(true);
 
-      const response = await axios.get("/companies", {
+      const response = await api.get("/companies", {
         params: {
           page: currentPage,
           limit: itemsPerPage,
@@ -91,7 +91,7 @@ const ListCompany = () => {
     const companyId = companyData[index]?._id;
 
     try {
-      await axios.delete(`/companies/${companyId}`);
+      await api.delete(`/companies/${companyId}`);
 
       toast.success("Company deleted successfully");
 

@@ -4,7 +4,7 @@ import { pdf } from "@react-pdf/renderer";
 import { downloadFile } from "../../utils/fileDownloader";
 import SaudaPDF from "./SaudaPDF/SaudaPDF";
 import { FaDownload, FaEnvelope } from "react-icons/fa";
-import axios from "axios";
+import api from "../../utils/apiClient/apiClient";
 import { toast } from "react-toastify";
 import { fetchAllPages } from "../../utils/apiClient/fetchAllPages";
 import { buildSaudaPdfData } from "../../utils/saudaPdf/buildSaudaPdfData";
@@ -215,7 +215,7 @@ const DownloadSauda = ({
         const base64data = reader.result.split(",")[1];
 
         try {
-          await axios.post("/api/email/send-pdf", {
+          await api.post("/email/send-pdf", {
             email: emailString,
             pdf: base64data,
             saudaNo: data.saudaNo,

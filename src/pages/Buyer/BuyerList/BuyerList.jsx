@@ -1,5 +1,5 @@
 import { useState, useEffect, lazy, Suspense, useMemo } from "react";
-import axios from "axios";
+import api from "../../../utils/apiClient/apiClient";
 import { toast } from "react-toastify";
 import Loading from "../../../common/Loading/Loading";
 import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
@@ -38,7 +38,7 @@ const BuyerList = () => {
     const fetchBuyersData = async () => {
       setIsLoading(true);
       try {
-        const response = await axios.get("/buyers", {
+        const response = await api.get("/buyers", {
           params: {
             page: currentPage,
             limit: itemsPerPage,
@@ -70,10 +70,10 @@ const BuyerList = () => {
     if (!window.confirm(`Are you sure you want to delete ${buyerToDelete.name}?`)) return;
 
     try {
-      await axios.delete(`/buyers/${buyerToDelete._id}`);
+      await api.delete(`/buyers/${buyerToDelete._id}`);
       toast.success("Buyer deleted successfully");
       // Re-fetch current page
-      const response = await axios.get(`/buyers?page=${currentPage}&limit=${itemsPerPage}`);
+      const response = await api.get(`/buyers?page=${currentPage}&limit=${itemsPerPage}`);
       setBuyersData(response.data?.data || []);
       setFilteredData(response.data?.data || []);
       setTotalItems(response.data?.total || 0);

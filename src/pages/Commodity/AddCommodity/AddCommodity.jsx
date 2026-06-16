@@ -1,5 +1,5 @@
 import { useState, useEffect, lazy, Suspense } from "react";
-import axios from "axios";
+import api from "../../../utils/apiClient/apiClient";
 import { toast } from "react-toastify";
 import Loading from "../../../common/Loading/Loading";
 import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
@@ -20,7 +20,7 @@ const AddCommodity = () => {
   useEffect(() => {
     const fetchParametersOptions = async () => {
       try {
-        const response = await axios.get("/quality-parameters");
+        const response = await api.get("/quality-parameters");
         const items = response.data?.data || response.data || [];
         const options = items
           .map((param) => ({ value: param._id, label: param.name }))
@@ -74,7 +74,7 @@ const AddCommodity = () => {
     };
 
     try {
-      await axios.post("/commodities", formData);
+      await api.post("/commodities", formData);
       toast.success("Commodity added successfully");
       setCommodityName("");
       setHsnCode("");

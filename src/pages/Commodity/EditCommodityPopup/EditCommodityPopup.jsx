@@ -1,6 +1,6 @@
 import PropTypes from "prop-types";
 import { useState, useEffect, lazy, Suspense } from "react";
-import axios from "axios";
+import api from "../../../utils/apiClient/apiClient";
 import { toast } from "react-toastify";
 import { AiOutlinePlus, AiOutlineMinus } from "react-icons/ai";
 import Loading from "../../../common/Loading/Loading";
@@ -25,8 +25,8 @@ const EditCommodityPopup = ({ isOpen, onClose, commodityId, onUpdate }) => {
       setIsLoading(true);
       try {
         const [commodityRes, paramsRes] = await Promise.all([
-          axios.get(`/commodities/${commodityId}`),
-          axios.get("/quality-parameters"),
+          api.get(`/commodities/${commodityId}`),
+          api.get("/quality-parameters"),
         ]);
 
         const commodity = commodityRes.data;
@@ -112,7 +112,7 @@ const EditCommodityPopup = ({ isOpen, onClose, commodityId, onUpdate }) => {
           }))
           .filter((p) => p.parameterId),
       };
-      await axios.put(`/commodities/${commodityId}`, formData);
+      await api.put(`/commodities/${commodityId}`, formData);
       toast.success("Commodity updated successfully!");
       onUpdate();
       onClose();

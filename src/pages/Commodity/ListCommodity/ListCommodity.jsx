@@ -1,5 +1,5 @@
 import { useState, useEffect, lazy, Suspense, useMemo } from "react";
-import axios from "axios";
+import api from "../../../utils/apiClient/apiClient";
 import Loading from "../../../common/Loading/Loading";
 import { toast } from "react-toastify";
 import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
@@ -31,7 +31,7 @@ const ListCommodity = () => {
   const fetchCommodities = async () => {
     try {
       setIsLoading(true);
-      const response = await axios.get("/commodities", {
+      const response = await api.get("/commodities", {
         params: {
           page: currentPage,
           limit: itemsPerPage,
@@ -62,7 +62,7 @@ const ListCommodity = () => {
 
   const handleView = async (id) => {
     try {
-      const response = await axios.get(`/commodities/${id}`);
+      const response = await api.get(`/commodities/${id}`);
       setSelectedCommodity(response.data);
       setIsPopupOpen(true);
     } catch (error) {
@@ -82,7 +82,7 @@ const ListCommodity = () => {
         "Are you sure you want to delete this commodity?",
       );
       if (!confirmDelete) return;
-      await axios.delete(`/commodities/${id}`);
+      await api.delete(`/commodities/${id}`);
       toast.success("Commodity deleted successfully!");
       fetchCommodities();
     } catch (error) {

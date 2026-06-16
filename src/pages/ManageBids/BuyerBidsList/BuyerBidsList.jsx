@@ -1,7 +1,7 @@
 import { useState, useEffect, lazy, Suspense } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import axios from "axios";
+import api from "../../../utils/apiClient/apiClient";
 import Loading from "../../../common/Loading/Loading";
 import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
 import { FaGavel, FaArrowLeft } from "react-icons/fa";
@@ -38,10 +38,10 @@ const BuyerBidsList = () => {
       try {
         const [bidsRes, commoditiesRes, originsRes, buyersRes] =
           await Promise.all([
-            axios.get("/bids"),
-            axios.get("/commodities"),
-            axios.get("/bid-locations"),
-            axios.get(`/buyers?mobile=${user.mobile}`),
+            api.get("/bids"),
+            api.get("/commodities"),
+            api.get("/bid-locations"),
+            api.get(`/buyers?mobile=${user.mobile}`),
           ]);
 
         const items = bidsRes.data?.data || bidsRes.data || [];
