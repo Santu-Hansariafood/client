@@ -8,7 +8,7 @@ import {
   FaDownload,
   FaFileExcel,
   FaPlus,
-  FaFilter
+  FaFilter,
 } from "react-icons/fa";
 import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
 import Loading from "../../../common/Loading/Loading";
@@ -17,7 +17,9 @@ import { fetchAllPages } from "../../../utils/apiClient/fetchAllPages";
 import { useAuth } from "../../../context/AuthContext/AuthContext";
 
 const Tables = lazy(() => import("../../../common/Tables/Tables"));
-const Pagination = lazy(() => import("../../../common/Paginations/Paginations"));
+const Pagination = lazy(
+  () => import("../../../common/Paginations/Paginations"),
+);
 
 const formatDate = (date) => {
   if (!date) return "N/A";
@@ -27,7 +29,7 @@ const formatDate = (date) => {
 const ListPaymentRelease = () => {
   const navigate = useNavigate();
   const { userRole, user } = useAuth();
-  
+
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [totalItems, setTotalItems] = useState(0);
@@ -49,9 +51,9 @@ const ListPaymentRelease = () => {
         limit: itemsPerPage,
         search: searchInput,
         startDate: startDate ? startDate.toISOString() : undefined,
-        endDate: endDate ? endDate.toISOString() : undefined
+        endDate: endDate ? endDate.toISOString() : undefined,
       };
-      
+
       // Auto-filter for seller users
       if (userRole === "Seller" && user?.sellerName) {
         params.sellerName = user.sellerName;
@@ -60,7 +62,7 @@ const ListPaymentRelease = () => {
         if (sellerCompanyFilter) params.sellerCompany = sellerCompanyFilter;
         if (sellerNameFilter) params.sellerName = sellerNameFilter;
       }
-      
+
       const response = await api.get("/payment-releases", { params });
       setData(response.data.data || []);
       setTotalItems(response.data.total || 0);
@@ -70,14 +72,24 @@ const ListPaymentRelease = () => {
     } finally {
       setLoading(false);
     }
-  }, [currentPage, itemsPerPage, searchInput, startDate, endDate, sellerCompanyFilter, sellerNameFilter, userRole, user]);
+  }, [
+    currentPage,
+    itemsPerPage,
+    searchInput,
+    startDate,
+    endDate,
+    sellerCompanyFilter,
+    sellerNameFilter,
+    userRole,
+    user,
+  ]);
 
   useEffect(() => {
     const fetchFilters = async () => {
       try {
         const [sellerCompaniesData, sellersData] = await Promise.all([
           fetchAllPages("/seller-companies"),
-          fetchAllPages("/sellers")
+          fetchAllPages("/sellers"),
         ]);
         setSellerCompanies(sellerCompaniesData || []);
         setSellers(sellersData || []);
@@ -106,7 +118,7 @@ const ListPaymentRelease = () => {
     "Lorry No",
     "Payment Amount",
     "Payment Date",
-    "Remarks"
+    "Remarks",
   ];
 
   const rows = data.map((item, index) => [
@@ -119,10 +131,14 @@ const ListPaymentRelease = () => {
     item.billNumber,
     item.lorryNumber,
     <span key={`amt-${item._id}`} className="font-black text-emerald-700">
-      ₹ {Number(item.paymentAmount || 0).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+      ₹{" "}
+      {Number(item.paymentAmount || 0).toLocaleString("en-IN", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      })}
     </span>,
     formatDate(item.paymentDate),
-    item.remarks
+    item.remarks,
   ]);
 
   const handleDownloadExcel = async () => {
@@ -130,9 +146,9 @@ const ListPaymentRelease = () => {
       const params = {
         search: searchInput,
         startDate: startDate ? startDate.toISOString() : undefined,
-        endDate: endDate ? endDate.toISOString() : undefined
+        endDate: endDate ? endDate.toISOString() : undefined,
       };
-      
+
       // Auto-filter for seller users
       if (userRole === "Seller" && user?.sellerName) {
         params.sellerName = user.sellerName;
@@ -140,16 +156,19 @@ const ListPaymentRelease = () => {
         if (sellerCompanyFilter) params.sellerCompany = sellerCompanyFilter;
         if (sellerNameFilter) params.sellerName = sellerNameFilter;
       }
-      
+
       const response = await api.get("/payment-releases/export/excel", {
         params,
-        responseType: "blob"
+        responseType: "blob",
       });
-      
+
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement("a");
       link.href = url;
-      link.setAttribute("download", `payment-releases-${new Date().toISOString().split("T")[0]}.xlsx`);
+      link.setAttribute(
+        "download",
+        `payment-releases-${new Date().toISOString().split("T")[0]}.xlsx`,
+      );
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);

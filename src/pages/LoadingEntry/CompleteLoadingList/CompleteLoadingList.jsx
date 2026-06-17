@@ -155,24 +155,22 @@ const CompleteLoadingList = () => {
           fetchAllPages("/sellers"),
         ]);
 
-        // Collect all unique buyer company names
         const buyerCompanies = new Set();
-        buyers.forEach(buyer => {
+        buyers.forEach((buyer) => {
           if (buyer.companyName) {
             buyerCompanies.add(buyer.companyName);
           }
           if (buyer.companyNames) {
-            buyer.companyNames.forEach(name => {
+            buyer.companyNames.forEach((name) => {
               if (name) buyerCompanies.add(name);
             });
           }
         });
 
-        // Collect all unique seller company names
         const sellerCompanies = new Set();
-        sellers.forEach(seller => {
+        sellers.forEach((seller) => {
           if (seller.companies) {
-            seller.companies.forEach(company => {
+            seller.companies.forEach((company) => {
               if (company) sellerCompanies.add(company);
             });
           }
@@ -277,7 +275,6 @@ const CompleteLoadingList = () => {
         return;
       }
 
-      // Add total row
       const totals = exportData.reduce(
         (acc, item) => {
           const quantity = item.quantity || 0;
@@ -554,7 +551,8 @@ const CompleteLoadingList = () => {
     }
 
     const loadedQuantity = quantity - pendingQuantity;
-    const isWithinTolerance = pendingQuantity <= 0 && pendingQuantity >= -quantity * 0.05;
+    const isWithinTolerance =
+      pendingQuantity <= 0 && pendingQuantity >= -quantity * 0.05;
     const isClosed = item.status === "closed" || isWithinTolerance;
 
     const brokerageRate = item.buyerBrokerage?.brokerageSupplier || 0;

@@ -27,16 +27,26 @@ const RoleBasedRoute = ({ children, allowedRoles, path }) => {
     return <Navigate to={roleDashboards[userRole] || "/login"} replace />;
   }
 
-  if (userRole === "Employee" && user?.allowedPermissions && user.allowedPermissions.length > 0) {
+  if (
+    userRole === "Employee" &&
+    user?.allowedPermissions &&
+    user.allowedPermissions.length > 0
+  ) {
     const normalizedPath = path.startsWith("/") ? path : `/${path}`;
-    
-    if (normalizedPath === "/dashboard" || normalizedPath === "/employee/dashboard") {
+
+    if (
+      normalizedPath === "/dashboard" ||
+      normalizedPath === "/employee/dashboard"
+    ) {
       return children;
     }
 
-    const hasPermission = user.allowedPermissions.some(p => {
+    const hasPermission = user.allowedPermissions.some((p) => {
       const normalizedP = p.startsWith("/") ? p : `/${p}`;
-      return normalizedPath === normalizedP || normalizedPath.startsWith(`${normalizedP}/`);
+      return (
+        normalizedPath === normalizedP ||
+        normalizedPath.startsWith(`${normalizedP}/`)
+      );
     });
 
     if (!hasPermission) {

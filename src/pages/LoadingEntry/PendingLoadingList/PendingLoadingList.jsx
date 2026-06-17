@@ -155,24 +155,22 @@ const PendingLoadingList = () => {
           fetchAllPages("/sellers"),
         ]);
 
-        // Collect all unique buyer company names
         const buyerCompanies = new Set();
-        buyers.forEach(buyer => {
+        buyers.forEach((buyer) => {
           if (buyer.companyName) {
             buyerCompanies.add(buyer.companyName);
           }
           if (buyer.companyNames) {
-            buyer.companyNames.forEach(name => {
+            buyer.companyNames.forEach((name) => {
               if (name) buyerCompanies.add(name);
             });
           }
         });
 
-        // Collect all unique seller company names
         const sellerCompanies = new Set();
-        sellers.forEach(seller => {
+        sellers.forEach((seller) => {
           if (seller.companies) {
-            seller.companies.forEach(company => {
+            seller.companies.forEach((company) => {
               if (company) sellerCompanies.add(company);
             });
           }
@@ -222,7 +220,7 @@ const PendingLoadingList = () => {
         buyerCompany: selectedBuyerCompany?.value || undefined,
         sellerCompany: selectedSellerCompany?.value || undefined,
       };
-      
+
       const response = await api.get("/self-order/pending/export/excel", {
         params,
         responseType: "blob",
@@ -230,15 +228,21 @@ const PendingLoadingList = () => {
 
       const contentDisposition = response.headers["content-disposition"];
       let filename = `PendingSaudaReport_${new Date().toISOString().split("T")[0]}.xlsx`;
-      
+
       if (contentDisposition) {
-        const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+        const filenameMatch = contentDisposition.match(
+          /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/,
+        );
         if (filenameMatch && filenameMatch[1]) {
           filename = filenameMatch[1].replace(/['"]/g, "");
         }
       }
 
-      await downloadFile(response.data, filename, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+      await downloadFile(
+        response.data,
+        filename,
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      );
       toast.dismiss(toastId);
       toast.success("Excel downloaded successfully");
     } catch (error) {
@@ -454,7 +458,8 @@ const PendingLoadingList = () => {
     }
 
     const loadedQuantity = quantity - pendingQuantity;
-    const isWithinTolerance = pendingQuantity <= 0 && pendingQuantity >= -quantity * 0.05;
+    const isWithinTolerance =
+      pendingQuantity <= 0 && pendingQuantity >= -quantity * 0.05;
     const isClosed = item.status === "closed" || isWithinTolerance;
 
     const brokerageRate = item.buyerBrokerage?.brokerageSupplier || 0;

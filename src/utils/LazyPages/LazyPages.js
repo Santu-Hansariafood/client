@@ -110,9 +110,12 @@ const loaders = {
   BlogManagement: () => import("../../pages/Blog/BlogManagement"),
   BlogDetail: () => import("../../pages/Blog/BlogDetail"),
   NewsArchive: () => import("../../pages/Blog/NewsArchive"),
-  UnderDevelopment: () => import("../../pages/UnderDevelopment/UnderDevelopment"),
-  AddPaymentRelease: () => import("../../pages/Payments/PaymentRelease/AddPaymentRelease"),
-  ListPaymentRelease: () => import("../../pages/Payments/PaymentRelease/ListPaymentRelease"),
+  UnderDevelopment: () =>
+    import("../../pages/UnderDevelopment/UnderDevelopment"),
+  AddPaymentRelease: () =>
+    import("../../pages/Payments/PaymentRelease/AddPaymentRelease"),
+  ListPaymentRelease: () =>
+    import("../../pages/Payments/PaymentRelease/ListPaymentRelease"),
 };
 
 const pathToKey = {

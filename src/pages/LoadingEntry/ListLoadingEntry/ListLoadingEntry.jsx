@@ -28,7 +28,9 @@ import { downloadFile } from "../../../utils/fileDownloader";
 import stateCityData from "../../../data/state-city.json";
 import ViewLoadingEntryPopup from "./components/ViewLoadingEntryPopup";
 import EditLoadingEntryPopup from "./components/EditLoadingEntryPopup";
-import QualityClaimsTable, { calculateClaimAmount } from "./components/QualityClaimsTable";
+import QualityClaimsTable, {
+  calculateClaimAmount,
+} from "./components/QualityClaimsTable";
 
 const PopupBox = lazy(() => import("../../../common/PopupBox/PopupBox"));
 const Tables = lazy(() => import("../../../common/Tables/Tables"));
@@ -208,11 +210,13 @@ const ListLoadingEntry = () => {
       let transportersData = [];
       let ordersData = [];
 
-      const [sellersRes, transportersRes, ordersRes] = await Promise.allSettled([
-        api.get("/sellers"),
-        api.get("/transporters", { params: { limit: 0 } }),
-        api.get("/self-order", { params: { limit: 0 } }),
-      ]);
+      const [sellersRes, transportersRes, ordersRes] = await Promise.allSettled(
+        [
+          api.get("/sellers"),
+          api.get("/transporters", { params: { limit: 0 } }),
+          api.get("/self-order", { params: { limit: 0 } }),
+        ],
+      );
 
       if (sellersRes.status === "fulfilled") {
         sellersData = Array.isArray(sellersRes.value.data)
@@ -265,9 +269,7 @@ const ListLoadingEntry = () => {
         ),
       );
       setOrderQuantityMap(
-        Object.fromEntries(
-          ordersData.map((o) => [o.saudaNo, o.quantity || 0]),
-        ),
+        Object.fromEntries(ordersData.map((o) => [o.saudaNo, o.quantity || 0])),
       );
       setTransporterMap(
         Object.fromEntries(transportersData.map((t) => [t._id, t.name])),
@@ -371,7 +373,9 @@ const ListLoadingEntry = () => {
         searchParams.lorryNumber = filters.lorryNumber;
       }
 
-      const response = await fetchWithAbort("/loading-entries", { params: searchParams });
+      const response = await fetchWithAbort("/loading-entries", {
+        params: searchParams,
+      });
 
       if (!response || !isMountedRef.current) return;
 
@@ -460,278 +464,280 @@ const ListLoadingEntry = () => {
     setPopupType("view");
   }, []);
 
-  const handleEdit = useCallback(async (entry) => {
-    setSelectedEntry(entry);
-    let newEditEntry = {
-      ...entry,
-      loadingDate: entry.loadingDate
-        ? new Date(entry.loadingDate).toISOString().slice(0, 10)
-        : "",
-      dateOfIssue: entry.dateOfIssue
-        ? new Date(entry.dateOfIssue).toISOString().slice(0, 10)
-        : "",
-      unloadingDate: entry.unloadingDate
-        ? new Date(entry.unloadingDate).toISOString().slice(0, 10)
-        : "",
-      deliveryDate: entry.deliveryDate
-        ? new Date(entry.deliveryDate).toISOString().slice(0, 10)
-        : "",
-      documents: entry.documents || {
-        kantaSlip: null,
-        unloadingChallan: null,
-        partyBillCopy: null,
-      },
-      qualityClaims: entry.qualityClaims || [],
-      manualClaim: entry.manualClaim || false,
-      manualClaimAmount: entry.manualClaimAmount || 0,
-      manualCalculationRate: entry.manualCalculationRate || "", // Add manual rate field
-      secondClaim: entry.secondClaim || 0,
-      secondClaimRemarks: entry.secondClaimRemarks || "",
-      otherCharges: entry.otherCharges || 0,
-      otherChargesRemarks: entry.otherChargesRemarks || "",
-      bankCharges: entry.bankCharges || "", // No more default, manual entry
-      bankChargesRemarks: entry.bankChargesRemarks || "",
-      tds: entry.tds || 0,
-      tdsRemarks: entry.tdsRemarks || "",
-      generalRemarks: entry.generalRemarks || "",
-      showAllQualityParameters: entry.showAllQualityParameters || false,
-    };
+  const handleEdit = useCallback(
+    async (entry) => {
+      setSelectedEntry(entry);
+      let newEditEntry = {
+        ...entry,
+        loadingDate: entry.loadingDate
+          ? new Date(entry.loadingDate).toISOString().slice(0, 10)
+          : "",
+        dateOfIssue: entry.dateOfIssue
+          ? new Date(entry.dateOfIssue).toISOString().slice(0, 10)
+          : "",
+        unloadingDate: entry.unloadingDate
+          ? new Date(entry.unloadingDate).toISOString().slice(0, 10)
+          : "",
+        deliveryDate: entry.deliveryDate
+          ? new Date(entry.deliveryDate).toISOString().slice(0, 10)
+          : "",
+        documents: entry.documents || {
+          kantaSlip: null,
+          unloadingChallan: null,
+          partyBillCopy: null,
+        },
+        qualityClaims: entry.qualityClaims || [],
+        manualClaim: entry.manualClaim || false,
+        manualClaimAmount: entry.manualClaimAmount || 0,
+        manualCalculationRate: entry.manualCalculationRate || "", // Add manual rate field
+        secondClaim: entry.secondClaim || 0,
+        secondClaimRemarks: entry.secondClaimRemarks || "",
+        otherCharges: entry.otherCharges || 0,
+        otherChargesRemarks: entry.otherChargesRemarks || "",
+        bankCharges: entry.bankCharges || "", // No more default, manual entry
+        bankChargesRemarks: entry.bankChargesRemarks || "",
+        tds: entry.tds || 0,
+        tdsRemarks: entry.tdsRemarks || "",
+        generalRemarks: entry.generalRemarks || "",
+        showAllQualityParameters: entry.showAllQualityParameters || false,
+      };
 
-    // Fetch both self-order and quality parameters
-    if (entry.saudaNo) {
-      try {
-        // Fetch self-order, quality parameters, and company in parallel
-        const [selfOrderRes, qualityParamsRes] = await Promise.all([
-          api.get("/self-order", {
-            params: { search: entry.saudaNo, limit: 1 },
-          }),
-          api.get("/quality-parameters"),
-        ]);
+      if (entry.saudaNo) {
+        try {
+          const [selfOrderRes, qualityParamsRes] = await Promise.all([
+            api.get("/self-order", {
+              params: { search: entry.saudaNo, limit: 1 },
+            }),
+            api.get("/quality-parameters"),
+          ]);
 
-        const orders =
-          selfOrderRes.data.data || selfOrderRes.data || [];
-        const selfOrder = orders.find(
-          (o) =>
-            String(o.saudaNo).toLowerCase().trim() ===
-            String(entry.saudaNo).toLowerCase().trim(),
-        );
-        setCurrentSelfOrder(selfOrder || null);
+          const orders = selfOrderRes.data.data || selfOrderRes.data || [];
+          const selfOrder = orders.find(
+            (o) =>
+              String(o.saudaNo).toLowerCase().trim() ===
+              String(entry.saudaNo).toLowerCase().trim(),
+          );
+          setCurrentSelfOrder(selfOrder || null);
 
-        let fetchedCompany = null;
-        // Fetch company data
-        if (selfOrder?.companyId) {
-          try {
-            const companyRes = await api.get(`/companies/${selfOrder.companyId}`);
-            fetchedCompany = companyRes.data?.data || companyRes.data;
-            setCurrentCompany(fetchedCompany || null);
-          } catch (err) {
-            console.error("Error fetching company by ID:", err);
-            // Fallback to fetching by name if ID fails
-            if (selfOrder?.buyerCompany) {
-              try {
-                const companySearchRes = await api.get("/companies", {
-                  params: { search: selfOrder.buyerCompany, limit: 1 },
-                });
-                const companies = Array.isArray(companySearchRes.data)
-                  ? companySearchRes.data
-                  : (companySearchRes.data?.data || []);
-                fetchedCompany = companies.find(
-                  (c) =>
-                    c.companyName.toLowerCase() ===
-                    selfOrder.buyerCompany.toLowerCase(),
-                );
-                setCurrentCompany(fetchedCompany || null);
-              } catch (searchErr) {
-                console.error("Error fetching company by name:", searchErr);
+          let fetchedCompany = null;
+          if (selfOrder?.companyId) {
+            try {
+              const companyRes = await api.get(
+                `/companies/${selfOrder.companyId}`,
+              );
+              fetchedCompany = companyRes.data?.data || companyRes.data;
+              setCurrentCompany(fetchedCompany || null);
+            } catch (err) {
+              console.error("Error fetching company by ID:", err);
+              if (selfOrder?.buyerCompany) {
+                try {
+                  const companySearchRes = await api.get("/companies", {
+                    params: { search: selfOrder.buyerCompany, limit: 1 },
+                  });
+                  const companies = Array.isArray(companySearchRes.data)
+                    ? companySearchRes.data
+                    : companySearchRes.data?.data || [];
+                  fetchedCompany = companies.find(
+                    (c) =>
+                      c.companyName.toLowerCase() ===
+                      selfOrder.buyerCompany.toLowerCase(),
+                  );
+                  setCurrentCompany(fetchedCompany || null);
+                } catch (searchErr) {
+                  console.error("Error fetching company by name:", searchErr);
+                  setCurrentCompany(null);
+                }
+              } else {
                 setCurrentCompany(null);
               }
-            } else {
+            }
+          } else if (selfOrder?.buyerCompany) {
+            try {
+              const companyRes = await api.get("/companies", {
+                params: { search: selfOrder.buyerCompany, limit: 1 },
+              });
+              const companies = Array.isArray(companyRes.data)
+                ? companyRes.data
+                : companyRes.data?.data || [];
+              fetchedCompany = companies.find(
+                (c) =>
+                  c.companyName.toLowerCase() ===
+                  selfOrder.buyerCompany.toLowerCase(),
+              );
+              setCurrentCompany(fetchedCompany || null);
+            } catch (err) {
+              console.error("Error fetching company by name:", err);
               setCurrentCompany(null);
             }
-          }
-        } else if (selfOrder?.buyerCompany) {
-          try {
-            const companyRes = await api.get("/companies", {
-              params: { search: selfOrder.buyerCompany, limit: 1 },
-            });
-            const companies = Array.isArray(companyRes.data)
-              ? companyRes.data
-              : (companyRes.data?.data || []);
-            fetchedCompany = companies.find(
-              (c) =>
-                c.companyName.toLowerCase() ===
-                selfOrder.buyerCompany.toLowerCase(),
-            );
-            setCurrentCompany(fetchedCompany || null);
-          } catch (err) {
-            console.error("Error fetching company by name:", err);
+          } else {
             setCurrentCompany(null);
           }
-        } else {
-          setCurrentCompany(null);
-        }
 
-        const qualityParams =
-          qualityParamsRes.data?.data || qualityParamsRes.data || [];
-        const paramIdToNameMap = new Map();
-        qualityParams.forEach((qp) => {
-          if (qp._id && qp.name) {
-            paramIdToNameMap.set(String(qp._id), qp.name);
-            paramIdToNameMap.set(qp.name.toLowerCase(), qp.name);
-          }
-        });
+          const qualityParams =
+            qualityParamsRes.data?.data || qualityParamsRes.data || [];
+          const paramIdToNameMap = new Map();
+          qualityParams.forEach((qp) => {
+            if (qp._id && qp.name) {
+              paramIdToNameMap.set(String(qp._id), qp.name);
+              paramIdToNameMap.set(qp.name.toLowerCase(), qp.name);
+            }
+          });
 
-        let initialClaims = [];
-        if (fetchedCompany && selfOrder?.commodity) {
-          const commodity = fetchedCompany.commodities?.find(
-            (c) => c.name.toLowerCase() === selfOrder.commodity.toLowerCase()
-          );
-          
-          if (commodity && commodity.parameters) {
-            initialClaims = commodity.parameters
-              .filter(param => {
-                // Show all parameters if showAllQualityParameters is true, else filter
-                if (newEditEntry.showAllQualityParameters) return true;
-                const defaultStandardValue = param.values?.[0]?.baseValue 
-                  ? parseFloat(param.values[0].baseValue) 
-                  : 0;
-                return defaultStandardValue > 0;
-              })
-              .map((param) => {
-                const existingClaim = entry.qualityClaims?.find(
-                  (c) =>
-                    (c.parameterName && param.parameter && c.parameterName.toLowerCase() === param.parameter.toLowerCase()) ||
-                    (c.parameterId && param.parameterId && String(c.parameterId) === String(param.parameterId)),
-                );
-                
-                // Use existing standard value if available, otherwise use base value
-                const defaultStandardValue = param.values?.[0]?.baseValue 
-                  ? parseFloat(param.values[0].baseValue) 
-                  : 0;
-                const selectedStandardValue = existingClaim?.standardValue || defaultStandardValue;
-                
-                return {
-                  parameterId: String(param.parameterId || ""),
-                  parameterName: param.parameter || "",
-                  standardValue: selectedStandardValue,
-                  paramValues: param.values || [], // Store all param values for dropdown and ratio lookup
-                  actualValue: existingClaim?.actualValue || "",
-                  claimAmount: existingClaim?.claimAmount || 0,
-                  notes: existingClaim?.notes || "",
-                };
-              });
-          }
-        }
-        
-        // Fallback to self-order parameters if company has none
-        if (initialClaims.length === 0 && selfOrder?.parameters) {
-          initialClaims = selfOrder.parameters.map((p) => {
-            const pId = String(
-              p._id ||
-                p.id ||
-                p.parameterId ||
-                p.parameter?._id ||
-                p.parameter?.value ||
-                "",
+          let initialClaims = [];
+          if (fetchedCompany && selfOrder?.commodity) {
+            const commodity = fetchedCompany.commodities?.find(
+              (c) => c.name.toLowerCase() === selfOrder.commodity.toLowerCase(),
             );
-            
-            let pName = paramIdToNameMap.get(pId);
-            if (!pName) {
-              if (typeof p.parameter === "string") {
-                pName = p.parameter;
-              } else if (p.parameter && typeof p.parameter === "object") {
-                pName =
-                  p.parameter.label ||
-                  p.parameter.name ||
-                  p.parameter.value ||
-                  "";
-              }
+
+            if (commodity && commodity.parameters) {
+              initialClaims = commodity.parameters
+                .filter((param) => {
+                  if (newEditEntry.showAllQualityParameters) return true;
+                  const defaultStandardValue = param.values?.[0]?.baseValue
+                    ? parseFloat(param.values[0].baseValue)
+                    : 0;
+                  return defaultStandardValue > 0;
+                })
+                .map((param) => {
+                  const existingClaim = entry.qualityClaims?.find(
+                    (c) =>
+                      (c.parameterName &&
+                        param.parameter &&
+                        c.parameterName.toLowerCase() ===
+                          param.parameter.toLowerCase()) ||
+                      (c.parameterId &&
+                        param.parameterId &&
+                        String(c.parameterId) === String(param.parameterId)),
+                  );
+
+                  const defaultStandardValue = param.values?.[0]?.baseValue
+                    ? parseFloat(param.values[0].baseValue)
+                    : 0;
+                  const selectedStandardValue =
+                    existingClaim?.standardValue || defaultStandardValue;
+
+                  return {
+                    parameterId: String(param.parameterId || ""),
+                    parameterName: param.parameter || "",
+                    standardValue: selectedStandardValue,
+                    paramValues: param.values || [], // Store all param values for dropdown and ratio lookup
+                    actualValue: existingClaim?.actualValue || "",
+                    claimAmount: existingClaim?.claimAmount || 0,
+                    notes: existingClaim?.notes || "",
+                  };
+                });
+            }
+          }
+
+          if (initialClaims.length === 0 && selfOrder?.parameters) {
+            initialClaims = selfOrder.parameters.map((p) => {
+              const pId = String(
+                p._id ||
+                  p.id ||
+                  p.parameterId ||
+                  p.parameter?._id ||
+                  p.parameter?.value ||
+                  "",
+              );
+
+              let pName = paramIdToNameMap.get(pId);
               if (!pName) {
-                pName = p.name || p.parameterName || p.label || "";
+                if (typeof p.parameter === "string") {
+                  pName = p.parameter;
+                } else if (p.parameter && typeof p.parameter === "object") {
+                  pName =
+                    p.parameter.label ||
+                    p.parameter.name ||
+                    p.parameter.value ||
+                    "";
+                }
+                if (!pName) {
+                  pName = p.name || p.parameterName || p.label || "";
+                }
+                if (pName) {
+                  pName = paramIdToNameMap.get(pName.toLowerCase()) || pName;
+                }
               }
-              if (pName) {
-                pName = paramIdToNameMap.get(pName.toLowerCase()) || pName;
+
+              const existingClaim = entry.qualityClaims?.find(
+                (c) =>
+                  (c.parameterName && pName && c.parameterName === pName) ||
+                  (c.parameterId && pId && String(c.parameterId) === pId),
+              );
+
+              return {
+                parameterId: pId,
+                parameterName: pName,
+                standardValue: parseFloat(
+                  p.value || p.parameterValue || p.standardValue || 0,
+                ),
+                actualValue: existingClaim?.actualValue || "",
+                claimAmount: existingClaim?.claimAmount || 0,
+                notes: existingClaim?.notes || "",
+              };
+            });
+          } else if (
+            initialClaims.length === 0 &&
+            entry.qualityClaims?.length > 0
+          ) {
+            const claimsWithNames = entry.qualityClaims.map((claim) => {
+              let pName = claim.parameterName;
+              const pId = String(claim.parameterId || "");
+              if (pId && !pName) {
+                pName = paramIdToNameMap.get(pId);
               }
-            }
-            
-            const existingClaim = entry.qualityClaims?.find(
-              (c) =>
-                (c.parameterName && pName && c.parameterName === pName) ||
-                (c.parameterId && pId && String(c.parameterId) === pId),
-            );
-            
-            return {
-              parameterId: pId,
-              parameterName: pName,
-              standardValue: parseFloat(
-                p.value || p.parameterValue || p.standardValue || 0,
-              ),
-              actualValue: existingClaim?.actualValue || "",
-              claimAmount: existingClaim?.claimAmount || 0,
-              notes: existingClaim?.notes || "",
-            };
-          });
-        } else if (initialClaims.length === 0 && entry.qualityClaims?.length > 0) {
-          // If no parameters found but entry has claims, use those
-          const claimsWithNames = entry.qualityClaims.map((claim) => {
-            let pName = claim.parameterName;
-            const pId = String(claim.parameterId || "");
-            if (pId && !pName) {
-              pName = paramIdToNameMap.get(pId);
-            }
-            return {
-              ...claim,
-              parameterName: pName || claim.parameterName,
-            };
-          });
-          initialClaims = claimsWithNames;
-        }
-        
-        // Recalculate claim amounts for initial claims only if they don't exist
-        const saudaRate = parseFloat(selfOrder?.rate || 0);
-        const manualRate = parseFloat(newEditEntry.manualCalculationRate || 0);
-        const weight = parseFloat(entry.unloadingWeight || 0);
-        newEditEntry.qualityClaims = initialClaims.map((claim) => {
-          // If claim already has an amount and actual value, preserve it
-          if (claim.actualValue && claim.claimAmount) {
-            return claim;
+              return {
+                ...claim,
+                parameterName: pName || claim.parameterName,
+              };
+            });
+            initialClaims = claimsWithNames;
           }
 
-          // Otherwise, calculate a new one
-          const actual = parseFloat(claim.actualValue || 0);
-          let claimAmount = 0;
-          if (weight > 0 && (saudaRate > 0 || manualRate > 0)) {
-            claimAmount = calculateClaimAmount(
-              claim.paramValues,
-              actual,
-              saudaRate,
-              manualRate,
-              weight
-            );
-          }
-          return { ...claim, claimAmount: Math.abs(claimAmount).toFixed(2) };
-        });
+          const saudaRate = parseFloat(selfOrder?.rate || 0);
+          const manualRate = parseFloat(
+            newEditEntry.manualCalculationRate || 0,
+          );
+          const weight = parseFloat(entry.unloadingWeight || 0);
+          newEditEntry.qualityClaims = initialClaims.map((claim) => {
+            if (claim.actualValue && claim.claimAmount) {
+              return claim;
+            }
 
-        // Set buyerBrokerage and sellerBrokerage from selfOrder
-        if (selfOrder?.buyerBrokerage) {
-          const buyerRate = selfOrder.buyerBrokerage.brokerageBuyer || 0;
-          const sellerRate =
-            selfOrder.buyerBrokerage.brokerageSupplier || 0;
-          const uWeight = parseFloat(entry.unloadingWeight) || 0;
-          newEditEntry.buyerBrokerage = +(uWeight * buyerRate).toFixed(2);
-          newEditEntry.sellerBrokerage = +(uWeight * sellerRate).toFixed(2);
+            const actual = parseFloat(claim.actualValue || 0);
+            let claimAmount = 0;
+            if (weight > 0 && (saudaRate > 0 || manualRate > 0)) {
+              claimAmount = calculateClaimAmount(
+                claim.paramValues,
+                actual,
+                saudaRate,
+                manualRate,
+                weight,
+              );
+            }
+            return { ...claim, claimAmount: Math.abs(claimAmount).toFixed(2) };
+          });
+
+          if (selfOrder?.buyerBrokerage) {
+            const buyerRate = selfOrder.buyerBrokerage.brokerageBuyer || 0;
+            const sellerRate = selfOrder.buyerBrokerage.brokerageSupplier || 0;
+            const uWeight = parseFloat(entry.unloadingWeight) || 0;
+            newEditEntry.buyerBrokerage = +(uWeight * buyerRate).toFixed(2);
+            newEditEntry.sellerBrokerage = +(uWeight * sellerRate).toFixed(2);
+          }
+        } catch (error) {
+          console.error("Error fetching data:", error);
+          setCurrentSelfOrder(null);
         }
-      } catch (error) {
-        console.error("Error fetching data:", error);
+      } else {
         setCurrentSelfOrder(null);
       }
-    } else {
-      setCurrentSelfOrder(null);
-    }
 
-    setEditEntry(newEditEntry);
-    setPopupType("edit");
-  }, [currentCompany, currentSelfOrder]);
+      setEditEntry(newEditEntry);
+      setPopupType("edit");
+    },
+    [currentCompany, currentSelfOrder],
+  );
 
   const handleEditFieldChange = useCallback(
     (e) => {
@@ -739,7 +745,6 @@ const ListLoadingEntry = () => {
       setEditEntry((prev) => {
         const updated = { ...prev, [name]: value };
 
-        // Re-calculate financial totals if relevant fields change
         if (
           name === "loadingWeight" ||
           name === "freightRate" ||
@@ -756,7 +761,6 @@ const ListLoadingEntry = () => {
           updated.balance = balance;
         }
 
-        // Recalculate buyer and seller brokerage when unloadingWeight changes
         if (name === "unloadingWeight" && currentSelfOrder?.buyerBrokerage) {
           const buyerRate = currentSelfOrder.buyerBrokerage.brokerageBuyer || 0;
           const sellerRate =
@@ -766,7 +770,6 @@ const ListLoadingEntry = () => {
           updated.sellerBrokerage = +(uWeight * sellerRate).toFixed(2);
         }
 
-        // Recalculate quality claims when unloadingWeight changes
         if (name === "unloadingWeight" && prev.qualityClaims?.length > 0) {
           const newClaims = prev.qualityClaims.map((claim) => {
             const actual = parseFloat(claim.actualValue || 0);
@@ -780,7 +783,7 @@ const ListLoadingEntry = () => {
                 actual,
                 saudaRate,
                 manualRate,
-                weight
+                weight,
               );
             }
             return {
@@ -797,85 +800,92 @@ const ListLoadingEntry = () => {
     [currentSelfOrder],
   );
 
-  const getClaimRatio = useCallback((claim) => {
-    if (!currentCompany || !currentSelfOrder?.commodity) {
-      return { left: 1, right: 1, display: "1:1" };
-    }
-
-    const commodity = currentCompany.commodities?.find(
-      (c) => c.name.toLowerCase() === currentSelfOrder.commodity.toLowerCase(),
-    );
-
-    if (!commodity) {
-      if (claim.paramValues && claim.paramValues.length) {
-        const ratioValue = claim.paramValues.find(v => v.baseValue) || claim.paramValues[0];
-        if (ratioValue) {
-          const left = parseFloat(ratioValue.claimRatioLeft || 1);
-          const right = parseFloat(ratioValue.claimRatioRight || 1);
-          return { left, right, display: `${left}:${right}` };
-        }
-      }
-      return { left: 1, right: 1, display: "1:1" };
-    }
-
-    const param = commodity.parameters?.find(
-      (p) =>
-        String(p.parameterId) === String(claim.parameterId) ||
-        p.parameter?.toLowerCase() === claim.parameterName?.toLowerCase(),
-    );
-
-    if (!param || !param.values?.length) {
-      if (claim.paramValues && claim.paramValues.length) {
-        const ratioValue = claim.paramValues.find(v => v.baseValue) || claim.paramValues[0];
-        if (ratioValue) {
-          const left = parseFloat(ratioValue.claimRatioLeft || 1);
-          const right = parseFloat(ratioValue.claimRatioRight || 1);
-          return { left, right, display: `${left}:${right}` };
-        }
-      }
-      return { left: 1, right: 1, display: "1:1" };
-    }
-
-    const ratioValue = param.values[0];
-    const left = parseFloat(ratioValue.claimRatioLeft || 1);
-    const right = parseFloat(ratioValue.claimRatioRight || 1);
-    const display = `${left}:${right}`;
-    return { left, right, display };
-  }, [currentCompany, currentSelfOrder]);
-
-  const handleQualityChange = useCallback((index, field, value) => {
-    setEditEntry((prev) => {
-      const newClaims = [...prev.qualityClaims];
-      
-      // Update the field
-      newClaims[index][field] = value;
-
-      // Recalculate claim amount if actualValue or standardValue changed
-      if (field === "actualValue" || field === "standardValue") {
-        const actual = newClaims[index].actualValue;
-        const standard = newClaims[index].standardValue;
-        const saudaRate = parseFloat(currentSelfOrder?.rate || 0);
-        const manualRate = parseFloat(prev.manualCalculationRate || 0);
-        const weight = parseFloat(prev.unloadingWeight || 0);
-
-        let claim = 0;
-        if (weight > 0 && (saudaRate > 0 || manualRate > 0)) {
-          claim = calculateClaimAmount(
-            newClaims[index].paramValues,
-            actual,
-            standard,
-            saudaRate,
-            manualRate,
-            weight
-          );
-        }
-
-        newClaims[index].claimAmount = Math.abs(claim).toFixed(2);
+  const getClaimRatio = useCallback(
+    (claim) => {
+      if (!currentCompany || !currentSelfOrder?.commodity) {
+        return { left: 1, right: 1, display: "1:1" };
       }
 
-      return { ...prev, qualityClaims: newClaims };
-    });
-  }, [currentSelfOrder]);
+      const commodity = currentCompany.commodities?.find(
+        (c) =>
+          c.name.toLowerCase() === currentSelfOrder.commodity.toLowerCase(),
+      );
+
+      if (!commodity) {
+        if (claim.paramValues && claim.paramValues.length) {
+          const ratioValue =
+            claim.paramValues.find((v) => v.baseValue) || claim.paramValues[0];
+          if (ratioValue) {
+            const left = parseFloat(ratioValue.claimRatioLeft || 1);
+            const right = parseFloat(ratioValue.claimRatioRight || 1);
+            return { left, right, display: `${left}:${right}` };
+          }
+        }
+        return { left: 1, right: 1, display: "1:1" };
+      }
+
+      const param = commodity.parameters?.find(
+        (p) =>
+          String(p.parameterId) === String(claim.parameterId) ||
+          p.parameter?.toLowerCase() === claim.parameterName?.toLowerCase(),
+      );
+
+      if (!param || !param.values?.length) {
+        if (claim.paramValues && claim.paramValues.length) {
+          const ratioValue =
+            claim.paramValues.find((v) => v.baseValue) || claim.paramValues[0];
+          if (ratioValue) {
+            const left = parseFloat(ratioValue.claimRatioLeft || 1);
+            const right = parseFloat(ratioValue.claimRatioRight || 1);
+            return { left, right, display: `${left}:${right}` };
+          }
+        }
+        return { left: 1, right: 1, display: "1:1" };
+      }
+
+      const ratioValue = param.values[0];
+      const left = parseFloat(ratioValue.claimRatioLeft || 1);
+      const right = parseFloat(ratioValue.claimRatioRight || 1);
+      const display = `${left}:${right}`;
+      return { left, right, display };
+    },
+    [currentCompany, currentSelfOrder],
+  );
+
+  const handleQualityChange = useCallback(
+    (index, field, value) => {
+      setEditEntry((prev) => {
+        const newClaims = [...prev.qualityClaims];
+
+        newClaims[index][field] = value;
+
+        if (field === "actualValue" || field === "standardValue") {
+          const actual = newClaims[index].actualValue;
+          const standard = newClaims[index].standardValue;
+          const saudaRate = parseFloat(currentSelfOrder?.rate || 0);
+          const manualRate = parseFloat(prev.manualCalculationRate || 0);
+          const weight = parseFloat(prev.unloadingWeight || 0);
+
+          let claim = 0;
+          if (weight > 0 && (saudaRate > 0 || manualRate > 0)) {
+            claim = calculateClaimAmount(
+              newClaims[index].paramValues,
+              actual,
+              standard,
+              saudaRate,
+              manualRate,
+              weight,
+            );
+          }
+
+          newClaims[index].claimAmount = Math.abs(claim).toFixed(2);
+        }
+
+        return { ...prev, qualityClaims: newClaims };
+      });
+    },
+    [currentSelfOrder],
+  );
 
   const handleUpdateEntry = useCallback(async () => {
     if (!editEntry?._id) {
@@ -1069,7 +1079,14 @@ const ListLoadingEntry = () => {
     });
 
     doc.save(`LoadingEntries_${new Date().toISOString().split("T")[0]}.pdf`);
-  }, [loadingEntries, totalItems, currentPage, itemsPerPage, buyerMap, brokerageMap]);
+  }, [
+    loadingEntries,
+    totalItems,
+    currentPage,
+    itemsPerPage,
+    buyerMap,
+    brokerageMap,
+  ]);
 
   const headers = useMemo(
     () => [

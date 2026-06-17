@@ -1,4 +1,3 @@
-import React from "react";
 import { toast } from "react-toastify";
 
 const getClaimRatio = (claim, currentCompany, currentSelfOrder) => {
@@ -6,15 +5,14 @@ const getClaimRatio = (claim, currentCompany, currentSelfOrder) => {
     return { left: 1, right: 1, display: "1:1" };
   }
 
-  // Find first value with baseValue
-  const ratioValue = claim.paramValues.find((v) => v.baseValue) || claim.paramValues[0];
+  const ratioValue =
+    claim.paramValues.find((v) => v.baseValue) || claim.paramValues[0];
   if (ratioValue) {
     const left = parseFloat(ratioValue.claimRatioLeft) || 1;
     const right = parseFloat(ratioValue.claimRatioRight) || 1;
     return { left, right, display: `${left}:${right}` };
   }
 
-  // Fallback to company commodity params
   if (
     currentCompany &&
     currentCompany.commodities &&
@@ -56,13 +54,13 @@ const calculateClaimAmount = (
   const actual = parseFloat(actualValue);
   const standard = parseFloat(standardValue);
   const difference = actual - standard;
-  
+
   if (difference > 0) {
     const effectiveRate = parseFloat(manualRate) || saudaRate;
-    
+
     let ratioLeft = 1;
     let ratioRight = 1;
-    
+
     if (paramValues && paramValues.length > 0) {
       const ratioValue = paramValues.find((v) => v.baseValue) || paramValues[0];
       if (ratioValue) {
@@ -70,9 +68,10 @@ const calculateClaimAmount = (
         ratioRight = parseFloat(ratioValue.claimRatioRight) || 1;
       }
     }
-    
+
     if (ratioRight > 0 && effectiveRate > 0 && weight > 0) {
-      totalClaim = (difference / 100) * effectiveRate * (ratioLeft / ratioRight) * weight;
+      totalClaim =
+        (difference / 100) * effectiveRate * (ratioLeft / ratioRight) * weight;
     }
   }
 
@@ -89,10 +88,12 @@ const QualityClaimsTable = ({
     return null;
   }
 
-  // Filter out claims with empty or zero standard values only if showAllQualityParameters is false
-  const validClaims = editEntry.qualityClaims.filter(claim => {
+  const validClaims = editEntry.qualityClaims.filter((claim) => {
     if (editEntry.showAllQualityParameters) return true;
-    const standardValue = claim.standardValue || claim.paramValues?.find(v => v.baseValue)?.baseValue || 0;
+    const standardValue =
+      claim.standardValue ||
+      claim.paramValues?.find((v) => v.baseValue)?.baseValue ||
+      0;
     return parseFloat(standardValue) > 0;
   });
 
@@ -121,11 +122,15 @@ const QualityClaimsTable = ({
           {editEntry.manualCalculationRate && (
             <div className="text-slate-600">
               <span className="font-medium">Manual Calculation Rate: </span>
-              <span className="font-bold">₹{editEntry.manualCalculationRate}/-</span>
+              <span className="font-bold">
+                ₹{editEntry.manualCalculationRate}/-
+              </span>
             </div>
           )}
           <div className="text-slate-600">
-            <span className="font-medium">Unloading Amount (for calculation): </span>
+            <span className="font-medium">
+              Unloading Amount (for calculation):{" "}
+            </span>
             <span className="font-bold">₹{unloadingAmountForCalculation}</span>
           </div>
         </div>
@@ -133,8 +138,12 @@ const QualityClaimsTable = ({
       <table className="w-full text-sm text-left border-collapse">
         <thead>
           <tr className="bg-slate-50 border-b border-slate-200">
-            <th className="px-4 py-3 font-bold text-slate-700">Quality Parameter</th>
-            <th className="px-4 py-3 font-bold text-slate-700">Standard Value</th>
+            <th className="px-4 py-3 font-bold text-slate-700">
+              Quality Parameter
+            </th>
+            <th className="px-4 py-3 font-bold text-slate-700">
+              Standard Value
+            </th>
             <th className="px-4 py-3 font-bold text-slate-700">Actual Value</th>
             <th className="px-4 py-3 font-bold text-slate-700">Difference</th>
             <th className="px-4 py-3 font-bold text-slate-700">Claim Ratio</th>
@@ -146,7 +155,11 @@ const QualityClaimsTable = ({
         <tbody>
           {validClaims.map((claim, idx) => {
             const originalIndex = editEntry.qualityClaims.indexOf(claim);
-            const ratio = getClaimRatio(claim, currentCompany, currentSelfOrder);
+            const ratio = getClaimRatio(
+              claim,
+              currentCompany,
+              currentSelfOrder,
+            );
             let claimPercent = 0;
             const baseValue =
               claim.paramValues?.find((v) => v.baseValue)?.baseValue ||
@@ -183,7 +196,11 @@ const QualityClaimsTable = ({
                       type="number"
                       value={claim.standardValue}
                       onChange={(e) =>
-                        handleQualityChange(originalIndex, "standardValue", e.target.value)
+                        handleQualityChange(
+                          originalIndex,
+                          "standardValue",
+                          e.target.value,
+                        )
                       }
                       placeholder="Standard"
                       disabled={editEntry.manualClaim}
@@ -202,17 +219,26 @@ const QualityClaimsTable = ({
                     type="number"
                     value={claim.actualValue}
                     onChange={(e) =>
-                      handleQualityChange(originalIndex, "actualValue", e.target.value)
+                      handleQualityChange(
+                        originalIndex,
+                        "actualValue",
+                        e.target.value,
+                      )
                     }
                     onBlur={() => {
                       const baseValue =
-                        claim.paramValues?.find((v) => v.baseValue)?.baseValue ||
+                        claim.paramValues?.find((v) => v.baseValue)
+                          ?.baseValue ||
                         claim.paramValues?.[0]?.baseValue ||
                         claim.standardValue ||
                         0;
                       const actualNum = parseFloat(claim.actualValue);
                       const baseNum = parseFloat(baseValue);
-                      if (!isNaN(actualNum) && !isNaN(baseNum) && actualNum < baseNum) {
+                      if (
+                        !isNaN(actualNum) &&
+                        !isNaN(baseNum) &&
+                        actualNum < baseNum
+                      ) {
                         toast.error(
                           `Actual value must be greater than base value (${baseNum})`,
                         );
@@ -228,7 +254,9 @@ const QualityClaimsTable = ({
                   />
                 </td>
                 <td className="px-4 py-3">
-                  <span className={`font-bold ${difference >= 0 ? "text-red-600" : "text-green-600"}`}>
+                  <span
+                    className={`font-bold ${difference >= 0 ? "text-red-600" : "text-green-600"}`}
+                  >
                     {difference.toFixed(2)}%
                   </span>
                 </td>
@@ -253,7 +281,13 @@ const QualityClaimsTable = ({
                   <input
                     type="text"
                     value={claim.notes}
-                    onChange={(e) => handleQualityChange(originalIndex, "notes", e.target.value)}
+                    onChange={(e) =>
+                      handleQualityChange(
+                        originalIndex,
+                        "notes",
+                        e.target.value,
+                      )
+                    }
                     placeholder="Remarks..."
                     disabled={editEntry.manualClaim}
                     className={`w-full min-w-[150px] px-3 py-1.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 ${

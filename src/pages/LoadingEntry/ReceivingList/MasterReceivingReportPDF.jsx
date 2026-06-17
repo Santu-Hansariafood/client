@@ -367,7 +367,6 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#000000",
   },
-  // Updated summary page styles
   summaryPage: {
     padding: 20,
     fontFamily: "Helvetica",
@@ -437,7 +436,7 @@ const styles = StyleSheet.create({
     color: "#000000",
     fontWeight: "bold",
   },
-  // Quality Claims Section
+
   qualitySection: {
     marginTop: 8,
     borderWidth: 1,
@@ -656,322 +655,520 @@ const MasterReceivingReportPDF = ({ entries = [], logoUrl }) => {
         return (
           <React.Fragment key={index}>
             <Page style={styles.summaryPage} size="A4">
-        <View style={styles.summaryHeader}>
-          <View>
-            <Text style={styles.summaryTitle}>Receiving Entry</Text>
-          </View>
-          {logoUrl && (
-            <Image src={logoUrl} style={{ width: 60, height: 60 }} />
-          )}
-        </View>
-
-        <View style={styles.summaryGrid}>
-          {/* First 8 items - 4 in a row */}
-          <View style={styles.summaryItemQuarter}>
-            <Text style={styles.summaryLabel}>Sauda Number</Text>
-            <Text style={styles.summaryValue}>
-              {data.saudaNo || "N/A"}
-            </Text>
-          </View>
-          <View style={styles.summaryItemQuarter}>
-            <Text style={styles.summaryLabel}>Invoice No.</Text>
-            <Text style={styles.summaryValue}>
-              {data.billNumber || "N/A"}
-            </Text>
-          </View>
-          <View style={styles.summaryItemQuarter}>
-            <Text style={styles.summaryLabel}>Lorry Number</Text>
-            <Text
-              style={[
-                styles.summaryValue,
-                { textTransform: "uppercase" },
-              ]}
-            >
-              {data.lorryNumber || "N/A"}
-            </Text>
-          </View>
-          <View style={[styles.summaryItemQuarter, { borderRightWidth: 0 }]}>
-            <Text style={styles.summaryLabel}>Commodity</Text>
-            <Text style={styles.summaryValue}>
-              {data.commodity || "N/A"}
-            </Text>
-          </View>
-          
-          <View style={styles.summaryItemQuarter}>
-            <Text style={styles.summaryLabel}>Loading Weight</Text>
-            <Text style={styles.summaryValue}>
-              {data.loadingWeight || 0} Tons
-            </Text>
-          </View>
-          <View style={styles.summaryItemQuarter}>
-            <Text style={styles.summaryLabel}>Unloading Weight</Text>
-            <Text style={styles.summaryValue}>
-              {data.unloadingWeight || 0} Tons
-            </Text>
-          </View>
-          <View style={styles.summaryItemQuarter}>
-            <Text style={styles.summaryLabel}>Loading Date</Text>
-            <Text style={styles.summaryValue}>
-              {formatDate(data.loadingDate)}
-            </Text>
-          </View>
-          <View style={[styles.summaryItemQuarter, { borderRightWidth: 0 }]}>
-            <Text style={styles.summaryLabel}>Unloading Date</Text>
-            <Text style={styles.summaryValue}>
-              {formatDate(data.unloadingDate)}
-            </Text>
-          </View>
-
-          {/* Next 2 items - 2 in a row */}
-          <View style={styles.summaryItemHalf}>
-            <Text style={styles.summaryLabel}>Rate</Text>
-            <Text style={styles.summaryValue}>
-              Rs. {formatAmount(rate)}
-            </Text>
-          </View>
-          <View style={[styles.summaryItemHalf, { borderRightWidth: 0 }]}>
-            <Text style={styles.summaryLabel}>Gross Amount</Text>
-            <Text style={styles.summaryValue}>
-              Rs. {formatAmount(receivingBaseAmount)}
-            </Text>
-          </View>
-
-          {/* Seller and Buyer Company */}
-          <View style={styles.summaryItemHalf}>
-            <Text style={styles.summaryLabel}>Seller Company</Text>
-            <Text style={styles.summaryValue}>
-              {data.supplierCompany || "N/A"}
-            </Text>
-          </View>
-          <View style={[styles.summaryItemHalf, { borderRightWidth: 0 }]}>
-            <Text style={styles.summaryLabel}>Buyer Company</Text>
-            <Text style={styles.summaryValue}>
-              {data.buyerCompany || "N/A"}
-            </Text>
-          </View>
-          
-          {/* Next 2 items - 2 in a row */}
-          {data.manualCalculationRate && (
-            <View style={styles.summaryItemHalf}>
-              <Text style={styles.summaryLabel}>Manual Calc Rate</Text>
-              <Text style={styles.summaryValue}>
-                Rs. {formatAmount(data.manualCalculationRate)}
-              </Text>
-            </View>
-          )}
-          {/* General Remarks (if present) */}
-          {data.generalRemarks && (
-            <View
-              style={[
-                data.manualCalculationRate ? styles.summaryItemHalf : styles.summaryItemFull,
-                { borderRightWidth: 0 },
-              ]}
-            >
-              <Text style={styles.summaryLabel}>General Remarks</Text>
-              <Text style={styles.summaryValue}>
-                {data.generalRemarks}
-              </Text>
-            </View>
-          )}
-        </View>
-
-        {/* Quality Parameters & Claims Section */}
-        <View style={styles.qualitySection}>
-          <Text style={styles.qualitySectionTitle}>Quality Parameters & Claims</Text>
-          <View style={styles.qualityTableHeader}>
-            <Text style={[styles.qualityTableCol1, styles.qualityTableCellText, { fontWeight: 'bold' }]}>Sl</Text>
-            <Text style={[styles.qualityTableCol2, styles.qualityTableCellText, { fontWeight: 'bold' }]}>Parameter</Text>
-            <Text style={[styles.qualityTableCol3, styles.qualityTableCellText, { fontWeight: 'bold' }]}>Standard</Text>
-            <Text style={[styles.qualityTableCol4, styles.qualityTableCellText, { fontWeight: 'bold' }]}>Actual</Text>
-            <Text style={[styles.qualityTableCol5, styles.qualityTableCellText, { fontWeight: 'bold' }]}>Notes</Text>
-            <Text style={[styles.qualityTableCol6, styles.qualityTableCellText, { fontWeight: 'bold' }]}>Claim Amount</Text>
-          </View>
-          
-          {(data.qualityClaims || []).map((claim, idx) => (
-            <View key={idx} style={styles.qualityTableRow}>
-              <Text style={[styles.qualityTableCol1, styles.qualityTableCellText]}>{idx + 1}</Text>
-              <Text style={[styles.qualityTableCol2, styles.qualityTableCellText]}>{claim.parameterName || "-"}</Text>
-              <Text style={[styles.qualityTableCol3, styles.qualityTableCellText]}>{claim.standardValue || "-"}</Text>
-              <Text style={[styles.qualityTableCol4, styles.qualityTableCellText]}>{claim.actualValue || "-"}</Text>
-              <Text style={[styles.qualityTableCol5, styles.qualityTableCellText]}>{claim.notes || "-"}</Text>
-              <Text style={[styles.qualityTableCol6, styles.qualityTableCellText]}>
-                {claim.claimAmount ? formatAmount(claim.claimAmount) : "0.00"}
-              </Text>
-            </View>
-          ))}
-          
-          {data.manualClaim && (
-            <View style={styles.qualityTableRow}>
-              <Text style={[styles.qualityTableCol1, styles.qualityTableCellText]}>{(data.qualityClaims || []).length + 1}</Text>
-              <Text style={[styles.qualityTableCol2, styles.qualityTableCellText]}>Manual Claim</Text>
-              <Text style={[styles.qualityTableCol3, styles.qualityTableCellText]}>-</Text>
-              <Text style={[styles.qualityTableCol4, styles.qualityTableCellText]}>-</Text>
-              <Text style={[styles.qualityTableCol5, styles.qualityTableCellText]}>-</Text>
-              <Text style={[styles.qualityTableCol6, styles.qualityTableCellText]}>
-                {data.manualClaimAmount ? formatAmount(data.manualClaimAmount) : "0.00"}
-              </Text>
-            </View>
-          )}
-
-          {/* Total Claim Row */}
-          <View style={styles.qualityTotalRow}>
-            <Text style={[styles.qualityTableCol1, styles.qualityTableCellText]}></Text>
-            <Text style={[styles.qualityTableCol2, styles.qualityTableCellText, { fontWeight: 'bold' }]}>Total Claims</Text>
-            <Text style={[styles.qualityTableCol3, styles.qualityTableCellText]}></Text>
-            <Text style={[styles.qualityTableCol4, styles.qualityTableCellText]}></Text>
-            <Text style={[styles.qualityTableCol5, styles.qualityTableCellText]}></Text>
-            <Text style={[styles.qualityTableCol6, styles.qualityTableCellText, { fontWeight: 'bold' }]}>
-              {formatAmount(
-                (data.qualityClaims || []).reduce((sum, claim) => sum + (Number(claim.claimAmount) || 0), 0) +
-                (data.manualClaim ? (Number(data.manualClaimAmount) || 0) : 0)
-              )}
-            </Text>
-          </View>
-        </View>
-
-        {/* Quality & Deductions Summary */}
-        <View style={[styles.qualitySection, { marginTop: 10 }]}>
-          <Text style={styles.qualitySectionTitle}>Deductions & Net Payable</Text>
-          
-          {/* Quality Claims */}
-          {((data.qualityClaims || []).length > 0 || data.manualClaim) && (
-            <View style={styles.summaryRow}>
-              <Text style={styles.summaryLabel}>Less: Total Quality Claims</Text>
-              <Text style={styles.summaryValue}>
-                - Rs. {formatAmount(
-                  (data.qualityClaims || []).reduce((sum, claim) => sum + (Number(claim.claimAmount) || 0), 0) +
-                  (data.manualClaim ? (Number(data.manualClaimAmount) || 0) : 0)
+              <View style={styles.summaryHeader}>
+                <View>
+                  <Text style={styles.summaryTitle}>Receiving Entry</Text>
+                </View>
+                {logoUrl && (
+                  <Image src={logoUrl} style={{ width: 60, height: 60 }} />
                 )}
-              </Text>
-            </View>
-          )}
-          
-          {/* 2nd Claim */}
-          {data.secondClaim && Number(data.secondClaim) > 0 && (
-            <View style={styles.summaryRow}>
-              <Text style={styles.summaryLabel}>Less: 2nd Claim</Text>
-              <Text style={styles.summaryValue}>
-                - Rs. {formatAmount(data.secondClaim)}
-              </Text>
-            </View>
-          )}
-          {/* 2nd Claim Remarks */}
-          {data.secondClaimRemarks && (
-            <View style={styles.summaryRow}>
-              <Text style={styles.summaryLabel}>  Remarks:</Text>
-              <Text style={styles.summaryValue}>{data.secondClaimRemarks}</Text>
-            </View>
-          )}
-          
-          {/* Other Charges */}
-          {data.otherCharges && Number(data.otherCharges) > 0 && (
-            <View style={styles.summaryRow}>
-              <Text style={styles.summaryLabel}>Less: Other Charges</Text>
-              <Text style={styles.summaryValue}>
-                - Rs. {formatAmount(data.otherCharges)}
-              </Text>
-            </View>
-          )}
-          {/* Other Charges Remarks */}
-          {data.otherChargesRemarks && (
-            <View style={styles.summaryRow}>
-              <Text style={styles.summaryLabel}>  Remarks:</Text>
-              <Text style={styles.summaryValue}>{data.otherChargesRemarks}</Text>
-            </View>
-          )}
-          
-          {/* Bank Charges (show if present) */}
-          {data.bankCharges && Number(data.bankCharges) > 0 && (
-            <View style={styles.summaryRow}>
-              <Text style={styles.summaryLabel}>Less: Bank Charges</Text>
-              <Text style={styles.summaryValue}>
-                - Rs. {formatAmount(data.bankCharges)}
-              </Text>
-            </View>
-          )}
-          {/* Bank Charges Remarks */}
-          {data.bankChargesRemarks && (
-            <View style={styles.summaryRow}>
-              <Text style={styles.summaryLabel}>  Remarks:</Text>
-              <Text style={styles.summaryValue}>{data.bankChargesRemarks}</Text>
-            </View>
-          )}
-          
-          {/* TDS */}
-          {data.tds && Number(data.tds) > 0 && (
-            <View style={styles.summaryRow}>
-              <Text style={styles.summaryLabel}>Less: TDS</Text>
-              <Text style={styles.summaryValue}>
-                - Rs. {formatAmount(data.tds)}
-              </Text>
-            </View>
-          )}
-          {/* TDS Remarks */}
-          {data.tdsRemarks && (
-            <View style={styles.summaryRow}>
-              <Text style={styles.summaryLabel}>  Remarks:</Text>
-              <Text style={styles.summaryValue}>{data.tdsRemarks}</Text>
-            </View>
-          )}
-          
-          {/* Total Deductions */}
-          <View style={styles.summaryRow}>
-            <Text style={[styles.summaryLabel, { fontWeight: "bold" }]}>Total Deductions</Text>
-            <Text style={[styles.summaryValue, { fontWeight: "bold" }]}>
-              Rs. {formatAmount(
-                ((data.qualityClaims || []).reduce((sum, claim) => sum + (Number(claim.claimAmount) || 0), 0) +
-                (data.manualClaim ? (Number(data.manualClaimAmount) || 0) : 0) +
-                (Number(data.secondClaim) || 0) +
-                (Number(data.otherCharges) || 0) +
-                (Number(data.bankCharges) || 0) +
-                (Number(data.tds) || 0))
-              )}
-            </Text>
-          </View>
-          
-          {/* Net Payable */}
-          <View style={styles.grandTotalRow}>
-            <Text style={styles.grandTotalLabel}>Net Payable Amount</Text>
-            <Text style={styles.grandTotalValue}>
-              Rs. {formatAmount(
-                totalAmount - (
-                  (data.qualityClaims || []).reduce((sum, claim) => sum + (Number(claim.claimAmount) || 0), 0) +
-                  (data.manualClaim ? (Number(data.manualClaimAmount) || 0) : 0) +
-                  (Number(data.secondClaim) || 0) +
-                  (Number(data.otherCharges) || 0) +
-                  (Number(data.bankCharges) || 0) +
-                  (Number(data.tds) || 0)
-                )
-              )}
-            </Text>
-          </View>
-          
-          {/* Amount in Words */}
-          <View style={styles.amountInWordsRow}>
-            <Text style={styles.amountInWordsLabel}>Amount in Words</Text>
-            <Text style={styles.amountInWordsValue}>
-              {numberToWords(
-                totalAmount - (
-                  (data.qualityClaims || []).reduce((sum, claim) => sum + (Number(claim.claimAmount) || 0), 0) +
-                  (data.manualClaim ? (Number(data.manualClaimAmount) || 0) : 0) +
-                  (Number(data.secondClaim) || 0) +
-                  (Number(data.otherCharges) || 0) +
-                  (Number(data.bankCharges) || 0) +
-                  (Number(data.tds) || 0)
-                )
-              )}
-            </Text>
-          </View>
-        </View>
+              </View>
 
-        <View style={styles.footer} fixed>
-          <Text style={styles.disclaimerText}>System generated file</Text>
-          <Text style={styles.officialRecordText}>
-            Official Receiving Record & Documentation as per information
-            only
-          </Text>
-        </View>
-      </Page>
+              <View style={styles.summaryGrid}>
+                {/* First 8 items - 4 in a row */}
+                <View style={styles.summaryItemQuarter}>
+                  <Text style={styles.summaryLabel}>Sauda Number</Text>
+                  <Text style={styles.summaryValue}>
+                    {data.saudaNo || "N/A"}
+                  </Text>
+                </View>
+                <View style={styles.summaryItemQuarter}>
+                  <Text style={styles.summaryLabel}>Invoice No.</Text>
+                  <Text style={styles.summaryValue}>
+                    {data.billNumber || "N/A"}
+                  </Text>
+                </View>
+                <View style={styles.summaryItemQuarter}>
+                  <Text style={styles.summaryLabel}>Lorry Number</Text>
+                  <Text
+                    style={[
+                      styles.summaryValue,
+                      { textTransform: "uppercase" },
+                    ]}
+                  >
+                    {data.lorryNumber || "N/A"}
+                  </Text>
+                </View>
+                <View
+                  style={[styles.summaryItemQuarter, { borderRightWidth: 0 }]}
+                >
+                  <Text style={styles.summaryLabel}>Commodity</Text>
+                  <Text style={styles.summaryValue}>
+                    {data.commodity || "N/A"}
+                  </Text>
+                </View>
+
+                <View style={styles.summaryItemQuarter}>
+                  <Text style={styles.summaryLabel}>Loading Weight</Text>
+                  <Text style={styles.summaryValue}>
+                    {data.loadingWeight || 0} Tons
+                  </Text>
+                </View>
+                <View style={styles.summaryItemQuarter}>
+                  <Text style={styles.summaryLabel}>Unloading Weight</Text>
+                  <Text style={styles.summaryValue}>
+                    {data.unloadingWeight || 0} Tons
+                  </Text>
+                </View>
+                <View style={styles.summaryItemQuarter}>
+                  <Text style={styles.summaryLabel}>Loading Date</Text>
+                  <Text style={styles.summaryValue}>
+                    {formatDate(data.loadingDate)}
+                  </Text>
+                </View>
+                <View
+                  style={[styles.summaryItemQuarter, { borderRightWidth: 0 }]}
+                >
+                  <Text style={styles.summaryLabel}>Unloading Date</Text>
+                  <Text style={styles.summaryValue}>
+                    {formatDate(data.unloadingDate)}
+                  </Text>
+                </View>
+
+                {/* Next 2 items - 2 in a row */}
+                <View style={styles.summaryItemHalf}>
+                  <Text style={styles.summaryLabel}>Rate</Text>
+                  <Text style={styles.summaryValue}>
+                    Rs. {formatAmount(rate)}
+                  </Text>
+                </View>
+                <View style={[styles.summaryItemHalf, { borderRightWidth: 0 }]}>
+                  <Text style={styles.summaryLabel}>Gross Amount</Text>
+                  <Text style={styles.summaryValue}>
+                    Rs. {formatAmount(receivingBaseAmount)}
+                  </Text>
+                </View>
+
+                <View style={styles.summaryItemHalf}>
+                  <Text style={styles.summaryLabel}>Seller Company</Text>
+                  <Text style={styles.summaryValue}>
+                    {data.supplierCompany || "N/A"}
+                  </Text>
+                </View>
+                <View style={[styles.summaryItemHalf, { borderRightWidth: 0 }]}>
+                  <Text style={styles.summaryLabel}>Buyer Company</Text>
+                  <Text style={styles.summaryValue}>
+                    {data.buyerCompany || "N/A"}
+                  </Text>
+                </View>
+
+                {data.manualCalculationRate && (
+                  <View style={styles.summaryItemHalf}>
+                    <Text style={styles.summaryLabel}>Manual Calc Rate</Text>
+                    <Text style={styles.summaryValue}>
+                      Rs. {formatAmount(data.manualCalculationRate)}
+                    </Text>
+                  </View>
+                )}
+                {data.generalRemarks && (
+                  <View
+                    style={[
+                      data.manualCalculationRate
+                        ? styles.summaryItemHalf
+                        : styles.summaryItemFull,
+                      { borderRightWidth: 0 },
+                    ]}
+                  >
+                    <Text style={styles.summaryLabel}>General Remarks</Text>
+                    <Text style={styles.summaryValue}>
+                      {data.generalRemarks}
+                    </Text>
+                  </View>
+                )}
+              </View>
+
+              <View style={styles.qualitySection}>
+                <Text style={styles.qualitySectionTitle}>
+                  Quality Parameters & Claims
+                </Text>
+                <View style={styles.qualityTableHeader}>
+                  <Text
+                    style={[
+                      styles.qualityTableCol1,
+                      styles.qualityTableCellText,
+                      { fontWeight: "bold" },
+                    ]}
+                  >
+                    Sl
+                  </Text>
+                  <Text
+                    style={[
+                      styles.qualityTableCol2,
+                      styles.qualityTableCellText,
+                      { fontWeight: "bold" },
+                    ]}
+                  >
+                    Parameter
+                  </Text>
+                  <Text
+                    style={[
+                      styles.qualityTableCol3,
+                      styles.qualityTableCellText,
+                      { fontWeight: "bold" },
+                    ]}
+                  >
+                    Standard
+                  </Text>
+                  <Text
+                    style={[
+                      styles.qualityTableCol4,
+                      styles.qualityTableCellText,
+                      { fontWeight: "bold" },
+                    ]}
+                  >
+                    Actual
+                  </Text>
+                  <Text
+                    style={[
+                      styles.qualityTableCol5,
+                      styles.qualityTableCellText,
+                      { fontWeight: "bold" },
+                    ]}
+                  >
+                    Notes
+                  </Text>
+                  <Text
+                    style={[
+                      styles.qualityTableCol6,
+                      styles.qualityTableCellText,
+                      { fontWeight: "bold" },
+                    ]}
+                  >
+                    Claim Amount
+                  </Text>
+                </View>
+
+                {(data.qualityClaims || []).map((claim, idx) => (
+                  <View key={idx} style={styles.qualityTableRow}>
+                    <Text
+                      style={[
+                        styles.qualityTableCol1,
+                        styles.qualityTableCellText,
+                      ]}
+                    >
+                      {idx + 1}
+                    </Text>
+                    <Text
+                      style={[
+                        styles.qualityTableCol2,
+                        styles.qualityTableCellText,
+                      ]}
+                    >
+                      {claim.parameterName || "-"}
+                    </Text>
+                    <Text
+                      style={[
+                        styles.qualityTableCol3,
+                        styles.qualityTableCellText,
+                      ]}
+                    >
+                      {claim.standardValue || "-"}
+                    </Text>
+                    <Text
+                      style={[
+                        styles.qualityTableCol4,
+                        styles.qualityTableCellText,
+                      ]}
+                    >
+                      {claim.actualValue || "-"}
+                    </Text>
+                    <Text
+                      style={[
+                        styles.qualityTableCol5,
+                        styles.qualityTableCellText,
+                      ]}
+                    >
+                      {claim.notes || "-"}
+                    </Text>
+                    <Text
+                      style={[
+                        styles.qualityTableCol6,
+                        styles.qualityTableCellText,
+                      ]}
+                    >
+                      {claim.claimAmount
+                        ? formatAmount(claim.claimAmount)
+                        : "0.00"}
+                    </Text>
+                  </View>
+                ))}
+
+                {data.manualClaim && (
+                  <View style={styles.qualityTableRow}>
+                    <Text
+                      style={[
+                        styles.qualityTableCol1,
+                        styles.qualityTableCellText,
+                      ]}
+                    >
+                      {(data.qualityClaims || []).length + 1}
+                    </Text>
+                    <Text
+                      style={[
+                        styles.qualityTableCol2,
+                        styles.qualityTableCellText,
+                      ]}
+                    >
+                      Manual Claim
+                    </Text>
+                    <Text
+                      style={[
+                        styles.qualityTableCol3,
+                        styles.qualityTableCellText,
+                      ]}
+                    >
+                      -
+                    </Text>
+                    <Text
+                      style={[
+                        styles.qualityTableCol4,
+                        styles.qualityTableCellText,
+                      ]}
+                    >
+                      -
+                    </Text>
+                    <Text
+                      style={[
+                        styles.qualityTableCol5,
+                        styles.qualityTableCellText,
+                      ]}
+                    >
+                      -
+                    </Text>
+                    <Text
+                      style={[
+                        styles.qualityTableCol6,
+                        styles.qualityTableCellText,
+                      ]}
+                    >
+                      {data.manualClaimAmount
+                        ? formatAmount(data.manualClaimAmount)
+                        : "0.00"}
+                    </Text>
+                  </View>
+                )}
+
+                <View style={styles.qualityTotalRow}>
+                  <Text
+                    style={[
+                      styles.qualityTableCol1,
+                      styles.qualityTableCellText,
+                    ]}
+                  ></Text>
+                  <Text
+                    style={[
+                      styles.qualityTableCol2,
+                      styles.qualityTableCellText,
+                      { fontWeight: "bold" },
+                    ]}
+                  >
+                    Total Claims
+                  </Text>
+                  <Text
+                    style={[
+                      styles.qualityTableCol3,
+                      styles.qualityTableCellText,
+                    ]}
+                  ></Text>
+                  <Text
+                    style={[
+                      styles.qualityTableCol4,
+                      styles.qualityTableCellText,
+                    ]}
+                  ></Text>
+                  <Text
+                    style={[
+                      styles.qualityTableCol5,
+                      styles.qualityTableCellText,
+                    ]}
+                  ></Text>
+                  <Text
+                    style={[
+                      styles.qualityTableCol6,
+                      styles.qualityTableCellText,
+                      { fontWeight: "bold" },
+                    ]}
+                  >
+                    {formatAmount(
+                      (data.qualityClaims || []).reduce(
+                        (sum, claim) => sum + (Number(claim.claimAmount) || 0),
+                        0,
+                      ) +
+                        (data.manualClaim
+                          ? Number(data.manualClaimAmount) || 0
+                          : 0),
+                    )}
+                  </Text>
+                </View>
+              </View>
+
+              <View style={[styles.qualitySection, { marginTop: 10 }]}>
+                <Text style={styles.qualitySectionTitle}>
+                  Deductions & Net Payable
+                </Text>
+
+                {((data.qualityClaims || []).length > 0 ||
+                  data.manualClaim) && (
+                  <View style={styles.summaryRow}>
+                    <Text style={styles.summaryLabel}>
+                      Less: Total Quality Claims
+                    </Text>
+                    <Text style={styles.summaryValue}>
+                      - Rs.{" "}
+                      {formatAmount(
+                        (data.qualityClaims || []).reduce(
+                          (sum, claim) =>
+                            sum + (Number(claim.claimAmount) || 0),
+                          0,
+                        ) +
+                          (data.manualClaim
+                            ? Number(data.manualClaimAmount) || 0
+                            : 0),
+                      )}
+                    </Text>
+                  </View>
+                )}
+
+                {data.secondClaim && Number(data.secondClaim) > 0 && (
+                  <View style={styles.summaryRow}>
+                    <Text style={styles.summaryLabel}>Less: 2nd Claim</Text>
+                    <Text style={styles.summaryValue}>
+                      - Rs. {formatAmount(data.secondClaim)}
+                    </Text>
+                  </View>
+                )}
+                {data.secondClaimRemarks && (
+                  <View style={styles.summaryRow}>
+                    <Text style={styles.summaryLabel}> Remarks:</Text>
+                    <Text style={styles.summaryValue}>
+                      {data.secondClaimRemarks}
+                    </Text>
+                  </View>
+                )}
+
+                {data.otherCharges && Number(data.otherCharges) > 0 && (
+                  <View style={styles.summaryRow}>
+                    <Text style={styles.summaryLabel}>Less: Other Charges</Text>
+                    <Text style={styles.summaryValue}>
+                      - Rs. {formatAmount(data.otherCharges)}
+                    </Text>
+                  </View>
+                )}
+                {data.otherChargesRemarks && (
+                  <View style={styles.summaryRow}>
+                    <Text style={styles.summaryLabel}> Remarks:</Text>
+                    <Text style={styles.summaryValue}>
+                      {data.otherChargesRemarks}
+                    </Text>
+                  </View>
+                )}
+
+                {data.bankCharges && Number(data.bankCharges) > 0 && (
+                  <View style={styles.summaryRow}>
+                    <Text style={styles.summaryLabel}>Less: Bank Charges</Text>
+                    <Text style={styles.summaryValue}>
+                      - Rs. {formatAmount(data.bankCharges)}
+                    </Text>
+                  </View>
+                )}
+                {data.bankChargesRemarks && (
+                  <View style={styles.summaryRow}>
+                    <Text style={styles.summaryLabel}> Remarks:</Text>
+                    <Text style={styles.summaryValue}>
+                      {data.bankChargesRemarks}
+                    </Text>
+                  </View>
+                )}
+
+                {data.tds && Number(data.tds) > 0 && (
+                  <View style={styles.summaryRow}>
+                    <Text style={styles.summaryLabel}>Less: TDS</Text>
+                    <Text style={styles.summaryValue}>
+                      - Rs. {formatAmount(data.tds)}
+                    </Text>
+                  </View>
+                )}
+                {data.tdsRemarks && (
+                  <View style={styles.summaryRow}>
+                    <Text style={styles.summaryLabel}> Remarks:</Text>
+                    <Text style={styles.summaryValue}>{data.tdsRemarks}</Text>
+                  </View>
+                )}
+
+                <View style={styles.summaryRow}>
+                  <Text style={[styles.summaryLabel, { fontWeight: "bold" }]}>
+                    Total Deductions
+                  </Text>
+                  <Text style={[styles.summaryValue, { fontWeight: "bold" }]}>
+                    Rs.{" "}
+                    {formatAmount(
+                      (data.qualityClaims || []).reduce(
+                        (sum, claim) => sum + (Number(claim.claimAmount) || 0),
+                        0,
+                      ) +
+                        (data.manualClaim
+                          ? Number(data.manualClaimAmount) || 0
+                          : 0) +
+                        (Number(data.secondClaim) || 0) +
+                        (Number(data.otherCharges) || 0) +
+                        (Number(data.bankCharges) || 0) +
+                        (Number(data.tds) || 0),
+                    )}
+                  </Text>
+                </View>
+
+                <View style={styles.grandTotalRow}>
+                  <Text style={styles.grandTotalLabel}>Net Payable Amount</Text>
+                  <Text style={styles.grandTotalValue}>
+                    Rs.{" "}
+                    {formatAmount(
+                      totalAmount -
+                        ((data.qualityClaims || []).reduce(
+                          (sum, claim) =>
+                            sum + (Number(claim.claimAmount) || 0),
+                          0,
+                        ) +
+                          (data.manualClaim
+                            ? Number(data.manualClaimAmount) || 0
+                            : 0) +
+                          (Number(data.secondClaim) || 0) +
+                          (Number(data.otherCharges) || 0) +
+                          (Number(data.bankCharges) || 0) +
+                          (Number(data.tds) || 0)),
+                    )}
+                  </Text>
+                </View>
+
+                <View style={styles.amountInWordsRow}>
+                  <Text style={styles.amountInWordsLabel}>Amount in Words</Text>
+                  <Text style={styles.amountInWordsValue}>
+                    {numberToWords(
+                      totalAmount -
+                        ((data.qualityClaims || []).reduce(
+                          (sum, claim) =>
+                            sum + (Number(claim.claimAmount) || 0),
+                          0,
+                        ) +
+                          (data.manualClaim
+                            ? Number(data.manualClaimAmount) || 0
+                            : 0) +
+                          (Number(data.secondClaim) || 0) +
+                          (Number(data.otherCharges) || 0) +
+                          (Number(data.bankCharges) || 0) +
+                          (Number(data.tds) || 0)),
+                    )}
+                  </Text>
+                </View>
+              </View>
+
+              <View style={styles.footer} fixed>
+                <Text style={styles.disclaimerText}>System generated file</Text>
+                <Text style={styles.officialRecordText}>
+                  Official Receiving Record & Documentation as per information
+                  only
+                </Text>
+              </View>
+            </Page>
 
             {docUrls.map((doc, docIdx) => (
               <Page

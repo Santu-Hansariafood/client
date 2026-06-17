@@ -2,8 +2,12 @@ import React, { lazy } from "react";
 import { toast } from "react-toastify";
 import QualityClaimsTable, { calculateClaimAmount } from "./QualityClaimsTable";
 
-const DataDropdown = lazy(() => import("../../../../common/DataDropdown/DataDropdown"));
-const FileUpload = lazy(() => import("../../../../common/FileUpload/FileUpload"));
+const DataDropdown = lazy(
+  () => import("../../../../common/DataDropdown/DataDropdown"),
+);
+const FileUpload = lazy(
+  () => import("../../../../common/FileUpload/FileUpload"),
+);
 
 const EditLoadingEntryPopup = ({
   editEntry,
@@ -22,10 +26,7 @@ const EditLoadingEntryPopup = ({
   const totalClaimAmount = editEntry.manualClaim
     ? editEntry.manualClaimAmount || 0
     : editEntry.qualityClaims
-        .reduce(
-          (total, claim) => total + (Number(claim.claimAmount) || 0),
-          0
-        )
+        .reduce((total, claim) => total + (Number(claim.claimAmount) || 0), 0)
         .toFixed(2);
 
   const calculatePayableAmount = () => {
@@ -36,16 +37,22 @@ const EditLoadingEntryPopup = ({
     // const gstAmount = totalBill * ((Number(currentSelfOrder?.gst) || 0) / 100);
     const totalClaim = editEntry.manualClaim
       ? Number(editEntry.manualClaimAmount || 0)
-      : editEntry.qualityClaims
-          .reduce(
-            (total, claim) => total + (Number(claim.claimAmount) || 0),
-            0
-          );
+      : editEntry.qualityClaims.reduce(
+          (total, claim) => total + (Number(claim.claimAmount) || 0),
+          0,
+        );
     const secondClaim = Number(editEntry.secondClaim || 0);
     const otherCharges = Number(editEntry.otherCharges || 0);
     const bankCharges = Number(editEntry.bankCharges || 0);
     const tds = Number(editEntry.tds || 0);
-    return (totalBill - totalClaim - secondClaim - otherCharges - bankCharges - tds).toFixed(2);
+    return (
+      totalBill -
+      totalClaim -
+      secondClaim -
+      otherCharges -
+      bankCharges -
+      tds
+    ).toFixed(2);
   };
 
   const handleManualRateChange = (e) => {
@@ -66,12 +73,16 @@ const EditLoadingEntryPopup = ({
               standard,
               saudaRate,
               manualRate,
-              weight
+              weight,
             );
           }
           return { ...claim, claimAmount: Math.abs(claimAmount).toFixed(2) };
         });
-        return { ...prev, manualCalculationRate: newRate, qualityClaims: newClaims };
+        return {
+          ...prev,
+          manualCalculationRate: newRate,
+          qualityClaims: newClaims,
+        };
       });
     } else {
       setEditEntry((prev) => ({ ...prev, manualCalculationRate: newRate }));
@@ -183,7 +194,7 @@ const EditLoadingEntryPopup = ({
               editEntry.transporterId
                 ? [
                     transporters.find(
-                      (t) => t.value === editEntry.transporterId
+                      (t) => t.value === editEntry.transporterId,
                     ),
                   ].filter(Boolean)
                 : []
@@ -248,9 +259,7 @@ const EditLoadingEntryPopup = ({
             selectedOptions={
               editEntry.loadingFrom
                 ? [
-                    stateOptions.find(
-                      (s) => s.value === editEntry.loadingFrom
-                    ),
+                    stateOptions.find((s) => s.value === editEntry.loadingFrom),
                   ].filter(Boolean)
                 : []
             }
@@ -419,7 +428,10 @@ const EditLoadingEntryPopup = ({
             }}
             className="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500 cursor-pointer"
           />
-          <label htmlFor="showAllQualityParameters" className="text-sm font-semibold text-slate-700 cursor-pointer">
+          <label
+            htmlFor="showAllQualityParameters"
+            className="text-sm font-semibold text-slate-700 cursor-pointer"
+          >
             Show All Quality Parameters
           </label>
         </div>
@@ -469,7 +481,8 @@ const EditLoadingEntryPopup = ({
                   Total Bill Value:
                 </span>
                 <span className="text-xl font-black text-emerald-700">
-                  ₹ {(
+                  ₹{" "}
+                  {(
                     Number(editEntry.unloadingWeight || 0) *
                     Number(currentSelfOrder?.rate || 0)
                   ).toFixed(2)}
@@ -670,9 +683,7 @@ const EditLoadingEntryPopup = ({
 
               {/* Payable Amount */}
               <div className="flex justify-between items-center p-5 bg-gradient-to-r from-emerald-600 via-green-600 to-teal-600 rounded-xl shadow-lg text-white">
-                <span className="text-lg font-bold">
-                  Payable Amount:
-                </span>
+                <span className="text-lg font-bold">Payable Amount:</span>
                 <span className="text-3xl font-black">
                   ₹ {calculatePayableAmount()}
                 </span>
@@ -700,9 +711,7 @@ const EditLoadingEntryPopup = ({
 
             {editEntry.manualClaim && (
               <div className="mt-3 flex items-center gap-3">
-                <span className="text-slate-400 font-bold text-lg">
-                  ₹
-                </span>
+                <span className="text-slate-400 font-bold text-lg">₹</span>
                 <input
                   type="number"
                   value={editEntry.manualClaimAmount}
@@ -721,14 +730,14 @@ const EditLoadingEntryPopup = ({
           </div>
 
           <p className="mt-3 text-[11px] text-slate-500 italic">
-            * Claim Amount is automatically calculated based on
-            (Actual - Standard) × Sauda Rate (₹
+            * Claim Amount is automatically calculated based on (Actual -
+            Standard) × Sauda Rate (₹
             {currentSelfOrder?.rate || 0})
           </p>
         </>
       )}
 
-      {(editEntry.unloadingWeight && editEntry.unloadingDate) ? (
+      {editEntry.unloadingWeight && editEntry.unloadingDate ? (
         <div className="mt-6 pt-6 border-t border-slate-200">
           <h4 className="text-base font-bold text-slate-800 mb-4 flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-indigo-500"></span>
@@ -815,8 +824,8 @@ const EditLoadingEntryPopup = ({
       ) : (
         <div className="border-t border-slate-200 pt-6">
           <p className="text-sm text-slate-500 text-center py-4">
-            Please fill in both Unloading Weight and Unloading
-            Date to enable document upload.
+            Please fill in both Unloading Weight and Unloading Date to enable
+            document upload.
           </p>
         </div>
       )}
@@ -839,6 +848,5 @@ const EditLoadingEntryPopup = ({
     </div>
   );
 };
-
 
 export default EditLoadingEntryPopup;
