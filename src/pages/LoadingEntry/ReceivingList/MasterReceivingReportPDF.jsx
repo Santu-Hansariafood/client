@@ -647,8 +647,7 @@ const MasterReceivingReportPDF = ({ entries = [], logoUrl }) => {
 
         const receivingBaseAmount =
           (data.unloadingWeight || 0) * (data.actualRate || 0);
-        const receivingCDAmount = receivingBaseAmount * (cdPercent / 100);
-        const totalAmount = receivingBaseAmount - receivingCDAmount;
+        const totalAmount = receivingBaseAmount;
         const amountInWords = numberToWords(totalAmount);
 
         const billNo = String(data.billNumber || "").trim();
@@ -751,47 +750,18 @@ const MasterReceivingReportPDF = ({ entries = [], logoUrl }) => {
             </Text>
           </View>
           
-          {/* Next 3 items - 3 in a row */}
+          {/* Next 2 items - 2 in a row */}
           {data.manualCalculationRate && (
-            <View style={styles.summaryItemThird}>
+            <View style={styles.summaryItemHalf}>
               <Text style={styles.summaryLabel}>Manual Calc Rate</Text>
               <Text style={styles.summaryValue}>
                 Rs. {formatAmount(data.manualCalculationRate)}
               </Text>
             </View>
           )}
-          {cdPercent > 0 && (
-            <View
-              style={[
-                data.manualCalculationRate ? styles.summaryItemThird : styles.summaryItemHalf,
-                { backgroundColor: "#f5f5f5" },
-              ]}
-            >
-              <Text
-                style={[
-                  styles.summaryLabel,
-                  {
-                    color: "#000000",
-                  },
-                ]}
-              >
-                Cash Discount ({cdPercent}%)
-              </Text>
-              <Text
-                style={[
-                  styles.summaryValue,
-                  {
-                    color: "#000000",
-                  },
-                ]}
-              >
-                - Rs. {formatAmount(receivingCDAmount)}
-              </Text>
-            </View>
-          )}
           <View
             style={[
-              styles.summaryItemThird,
+              styles.summaryItemHalf,
               { borderRightWidth: 0, backgroundColor: "#f1f5f9" },
             ]}
           >
