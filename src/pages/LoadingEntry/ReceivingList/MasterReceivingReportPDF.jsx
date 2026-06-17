@@ -759,22 +759,20 @@ const MasterReceivingReportPDF = ({ entries = [], logoUrl }) => {
               </Text>
             </View>
           )}
-          <View
-            style={[
-              styles.summaryItemHalf,
-              { borderRightWidth: 0, backgroundColor: "#f1f5f9" },
-            ]}
-          >
-            <Text style={styles.summaryLabel}>Total Payable</Text>
-            <Text
+          {/* General Remarks (if present) */}
+          {data.generalRemarks && (
+            <View
               style={[
-                styles.summaryValue,
-                { fontSize: 10, color: "#1e293b" },
+                data.manualCalculationRate ? styles.summaryItemHalf : styles.summaryItemFull,
+                { borderRightWidth: 0 },
               ]}
             >
-              Rs. {formatAmount(totalAmount)}
-            </Text>
-          </View>
+              <Text style={styles.summaryLabel}>General Remarks</Text>
+              <Text style={styles.summaryValue}>
+                {data.generalRemarks}
+              </Text>
+            </View>
+          )}
         </View>
 
         {/* Quality Parameters & Claims Section */}
@@ -831,29 +829,92 @@ const MasterReceivingReportPDF = ({ entries = [], logoUrl }) => {
           </View>
         </View>
 
-        {/* Net Payable Section */}
-        <View style={[styles.summaryGrid, { marginTop: 10 }]}>
-          <View style={[styles.summaryItemFull, { backgroundColor: "#e8f5e9" }]}>
-            <Text style={[styles.summaryLabel, { fontSize: 8 }]}>Net Payable (Total Payable - Claims)</Text>
-            <Text
-              style={[
-                styles.summaryValue,
-                { fontSize: 12, color: "#2e7d32", fontWeight: "bold" },
-              ]}
-            >
+        {/* Quality & Deductions Summary */}
+        <View style={[styles.qualitySection, { marginTop: 10 }]}>
+          <Text style={styles.qualitySectionTitle}>Deductions & Net Payable</Text>
+          
+          {/* Quality Claims */}
+          {((data.qualityClaims || []).length > 0 || data.manualClaim) && (
+            <View style={styles.summaryRow}>
+              <Text style={styles.summaryLabel}>Less: Total Quality Claims</Text>
+              <Text style={styles.summaryValue}>
+                - Rs. {formatAmount(
+                  (data.qualityClaims || []).reduce((sum, claim) => sum + (Number(claim.claimAmount) || 0), 0) +
+                  (data.manualClaim ? (Number(data.manualClaimAmount) || 0) : 0)
+                )}
+              </Text>
+            </View>
+          )}
+          
+          {/* Second Claim */}
+          {data.secondClaim && Number(data.secondClaim) > 0 && (
+            <View style={styles.summaryRow}>
+              <Text style={styles.summaryLabel}>Less: Second Claim</Text>
+              <Text style={styles.summaryValue}>
+                - Rs. {formatAmount(data.secondClaim)}
+              </Text>
+            </View>
+          )}
+          
+          {/* Other Charges */}
+          {data.otherCharges && Number(data.otherCharges) > 0 && (
+            <View style={styles.summaryRow}>
+              <Text style={styles.summaryLabel}>Less: Other Charges</Text>
+              <Text style={styles.summaryValue}>
+                - Rs. {formatAmount(data.otherCharges)}
+              </Text>
+            </View>
+          )}
+          
+          {/* Bank Charges (always show as it's fixed) */}
+          <View style={styles.summaryRow}>
+            <Text style={styles.summaryLabel}>Less: Bank Charges</Text>
+            <Text style={styles.summaryValue}>
+              - Rs. {formatAmount(data.bankCharges || 200)}
+            </Text>
+          </View>
+          
+          {/* Total Deductions */}
+          <View style={styles.summaryRow}>
+            <Text style={[styles.summaryLabel, { fontWeight: "bold" }]}>Total Deductions</Text>
+            <Text style={[styles.summaryValue, { fontWeight: "bold" }]}>
+              Rs. {formatAmount(
+                ((data.qualityClaims || []).reduce((sum, claim) => sum + (Number(claim.claimAmount) || 0), 0) +
+                (data.manualClaim ? (Number(data.manualClaimAmount) || 0) : 0) +
+                (Number(data.secondClaim) || 0) +
+                (Number(data.otherCharges) || 0) +
+                (Number(data.bankCharges) || 200))
+              )}
+            </Text>
+          </View>
+          
+          {/* Net Payable */}
+          <View style={styles.grandTotalRow}>
+            <Text style={styles.grandTotalLabel}>Net Payable Amount</Text>
+            <Text style={styles.grandTotalValue}>
               Rs. {formatAmount(
                 totalAmount - (
                   (data.qualityClaims || []).reduce((sum, claim) => sum + (Number(claim.claimAmount) || 0), 0) +
-                  (data.manualClaim ? (Number(data.manualClaimAmount) || 0) : 0)
+                  (data.manualClaim ? (Number(data.manualClaimAmount) || 0) : 0) +
+                  (Number(data.secondClaim) || 0) +
+                  (Number(data.otherCharges) || 0) +
+                  (Number(data.bankCharges) || 200)
                 )
               )}
             </Text>
-            <Text style={[styles.summaryLabel, { marginTop: 4, fontSize: 7 }]}>Amount in Words</Text>
-            <Text style={[styles.summaryValue, { fontSize: 8, color: "#2e7d32" }]}>
+          </View>
+          
+          {/* Amount in Words */}
+          <View style={styles.amountInWordsRow}>
+            <Text style={styles.amountInWordsLabel}>Amount in Words</Text>
+            <Text style={styles.amountInWordsValue}>
               {numberToWords(
                 totalAmount - (
                   (data.qualityClaims || []).reduce((sum, claim) => sum + (Number(claim.claimAmount) || 0), 0) +
-                  (data.manualClaim ? (Number(data.manualClaimAmount) || 0) : 0)
+                  (data.manualClaim ? (Number(data.manualClaimAmount) || 0) : 0) +
+                  (Number(data.secondClaim) || 0) +
+                  (Number(data.otherCharges) || 0) +
+                  (Number(data.bankCharges) || 200)
                 )
               )}
             </Text>
