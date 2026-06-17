@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, lazy, Suspense } from "react";
 import { useLocation } from "react-router-dom";
 import api from "../../../utils/apiClient/apiClient";
+import { fetchAllPages } from "../../../utils/apiClient/fetchAllPages";
 import { toast } from "react-toastify";
 import {
   FaTruckLoading,
@@ -149,16 +150,36 @@ const CompleteLoadingList = () => {
   useEffect(() => {
     const fetchOptions = async () => {
       try {
-        const [buyersRes, sellersRes] = await Promise.all([
-          api.get("/buyer/all"),
-          api.get("/seller/all"),
+        const [buyers, sellers] = await Promise.all([
+          fetchAllPages("/buyers"),
+          fetchAllPages("/sellers"),
         ]);
-        setBuyerCompanyOptions(
-          buildDropdownOptions(buyersRes.data.map((b) => b.companyName)),
-        );
-        setSellerCompanyOptions(
-          buildDropdownOptions(sellersRes.data.map((s) => s.companyName)),
-        );
+
+        // Collect all unique buyer company names
+        const buyerCompanies = new Set();
+        buyers.forEach(buyer => {
+          if (buyer.companyName) {
+            buyerCompanies.add(buyer.companyName);
+          }
+          if (buyer.companyNames) {
+            buyer.companyNames.forEach(name => {
+              if (name) buyerCompanies.add(name);
+            });
+          }
+        });
+
+        // Collect all unique seller company names
+        const sellerCompanies = new Set();
+        sellers.forEach(seller => {
+          if (seller.companies) {
+            seller.companies.forEach(company => {
+              if (company) sellerCompanies.add(company);
+            });
+          }
+        });
+
+        setBuyerCompanyOptions(buildDropdownOptions([...buyerCompanies]));
+        setSellerCompanyOptions(buildDropdownOptions([...sellerCompanies]));
       } catch (error) {
         console.error("Error fetching options:", error);
       }
