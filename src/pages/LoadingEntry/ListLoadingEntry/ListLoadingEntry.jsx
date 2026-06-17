@@ -578,30 +578,37 @@ const ListLoadingEntry = () => {
           );
           
           if (commodity && commodity.parameters) {
-            initialClaims = commodity.parameters.map((param) => {
-              const existingClaim = entry.qualityClaims?.find(
-                (c) =>
-                  (c.parameterName && param.parameter && c.parameterName.toLowerCase() === param.parameter.toLowerCase()) ||
-                  (c.parameterId && param.parameterId && String(c.parameterId) === String(param.parameterId)),
-              );
-              
-              // Always use base value as standard value
-              const defaultStandardValue = param.values?.[0]?.baseValue 
-                ? parseFloat(param.values[0].baseValue) 
-                : 0;
-              // Even if there's an existing claim, use base value as standard
-              const selectedStandardValue = defaultStandardValue;
-              
-              return {
-                parameterId: String(param.parameterId || ""),
-                parameterName: param.parameter || "",
-                standardValue: selectedStandardValue,
-                paramValues: param.values || [], // Store all param values for dropdown and ratio lookup
-                actualValue: existingClaim?.actualValue || "",
-                claimAmount: existingClaim?.claimAmount || 0,
-                notes: existingClaim?.notes || "",
-              };
-            });
+            initialClaims = commodity.parameters
+              .filter(param => {
+                // Filter out parameters with empty/zero standard value
+                const defaultStandardValue = param.values?.[0]?.baseValue 
+                  ? parseFloat(param.values[0].baseValue) 
+                  : 0;
+                return defaultStandardValue > 0;
+              })
+              .map((param) => {
+                const existingClaim = entry.qualityClaims?.find(
+                  (c) =>
+                    (c.parameterName && param.parameter && c.parameterName.toLowerCase() === param.parameter.toLowerCase()) ||
+                    (c.parameterId && param.parameterId && String(c.parameterId) === String(param.parameterId)),
+                );
+                
+                // Use existing standard value if available, otherwise use base value
+                const defaultStandardValue = param.values?.[0]?.baseValue 
+                  ? parseFloat(param.values[0].baseValue) 
+                  : 0;
+                const selectedStandardValue = existingClaim?.standardValue || defaultStandardValue;
+                
+                return {
+                  parameterId: String(param.parameterId || ""),
+                  parameterName: param.parameter || "",
+                  standardValue: selectedStandardValue,
+                  paramValues: param.values || [], // Store all param values for dropdown and ratio lookup
+                  actualValue: existingClaim?.actualValue || "",
+                  claimAmount: existingClaim?.claimAmount || 0,
+                  notes: existingClaim?.notes || "",
+                };
+              });
           }
         }
         
@@ -669,15 +676,20 @@ const ListLoadingEntry = () => {
           initialClaims = claimsWithNames;
         }
         
-        // Recalculate claim amounts for initial claims
+        // Recalculate claim amounts for initial claims only if they don't exist
         const saudaRate = parseFloat(selfOrder?.rate || 0);
         const manualRate = parseFloat(newEditEntry.manualCalculationRate || 0);
         const weight = parseFloat(entry.unloadingWeight || 0);
         newEditEntry.qualityClaims = initialClaims.map((claim) => {
+          // If claim already has an amount and actual value, preserve it
+          if (claim.actualValue && claim.claimAmount) {
+            return claim;
+          }
+
+          // Otherwise, calculate a new one
           const actual = parseFloat(claim.actualValue || 0);
           let claimAmount = 0;
           if (weight > 0 && (saudaRate > 0 || manualRate > 0)) {
-            // Need to calculate claim amount based on ranges
             claimAmount = calculateClaimAmount(
               claim.paramValues,
               actual,
@@ -824,25 +836,23 @@ const ListLoadingEntry = () => {
     setEditEntry((prev) => {
       const newClaims = [...prev.qualityClaims];
       
-      // Get base value from paramValues (first baseValue)
-      const baseValue = newClaims[index].paramValues?.find(v => v.baseValue)?.baseValue || 
-                        newClaims[index].paramValues?.[0]?.baseValue || 
-                        newClaims[index].standardValue || 0;
-      
+      // Update the field
       newClaims[index][field] = value;
 
-      // Recalculate claim amount and percentage
-      const actual = parseFloat(newClaims[index].actualValue || 0);
-      const saudaRate = parseFloat(currentSelfOrder?.rate || 0);
-      const manualRate = parseFloat(prev.manualCalculationRate || 0);
-      const weight = parseFloat(prev.unloadingWeight || 0);
+      // Only recalculate claim amount if actualValue changed
+      if (field === "actualValue") {
+        const actual = parseFloat(value || 0);
+        const saudaRate = parseFloat(currentSelfOrder?.rate || 0);
+        const manualRate = parseFloat(prev.manualCalculationRate || 0);
+        const weight = parseFloat(prev.unloadingWeight || 0);
 
-      let claim = 0;
-      if (weight > 0 && (saudaRate > 0 || manualRate > 0)) {
-        claim = calculateClaimAmount(newClaims[index].paramValues, actual, saudaRate, manualRate, weight);
+        let claim = 0;
+        if (weight > 0 && (saudaRate > 0 || manualRate > 0)) {
+          claim = calculateClaimAmount(newClaims[index].paramValues, actual, saudaRate, manualRate, weight);
+        }
+
+        newClaims[index].claimAmount = Math.abs(claim).toFixed(2);
       }
-
-      newClaims[index].claimAmount = Math.abs(claim).toFixed(2);
 
       return { ...prev, qualityClaims: newClaims };
     });

@@ -113,6 +113,16 @@ const QualityClaimsTable = ({
     return null;
   }
 
+  // Filter out claims with empty or zero standard values
+  const validClaims = editEntry.qualityClaims.filter(claim => {
+    const standardValue = claim.standardValue || claim.paramValues?.find(v => v.baseValue)?.baseValue || 0;
+    return parseFloat(standardValue) > 0;
+  });
+
+  if (validClaims.length === 0) {
+    return null;
+  }
+
   const effectiveRate =
     parseFloat(editEntry.manualCalculationRate) ||
     parseFloat(currentSelfOrder?.rate || 0);
@@ -157,7 +167,8 @@ const QualityClaimsTable = ({
           </tr>
         </thead>
         <tbody>
-          {editEntry.qualityClaims.map((claim, idx) => {
+          {validClaims.map((claim, idx) => {
+            const originalIndex = editEntry.qualityClaims.indexOf(claim);
             const ratio = getClaimRatio(claim, currentCompany, currentSelfOrder);
             let claimPercent = 0;
             const baseValue =
@@ -183,7 +194,7 @@ const QualityClaimsTable = ({
 
             return (
               <tr
-                key={idx}
+                key={originalIndex}
                 className="border-b border-slate-100 hover:bg-slate-50 transition-colors"
               >
                 <td className="px-4 py-3 font-medium text-slate-800">
@@ -207,7 +218,7 @@ const QualityClaimsTable = ({
                     type="number"
                     value={claim.actualValue}
                     onChange={(e) =>
-                      handleQualityChange(idx, "actualValue", e.target.value)
+                      handleQualityChange(originalIndex, "actualValue", e.target.value)
                     }
                     onBlur={() => {
                       const baseValue =
@@ -258,7 +269,7 @@ const QualityClaimsTable = ({
                   <input
                     type="text"
                     value={claim.notes}
-                    onChange={(e) => handleQualityChange(idx, "notes", e.target.value)}
+                    onChange={(e) => handleQualityChange(originalIndex, "notes", e.target.value)}
                     placeholder="Remarks..."
                     disabled={editEntry.manualClaim}
                     className={`w-full min-w-[150px] px-3 py-1.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 ${
