@@ -852,19 +852,22 @@ const ListLoadingEntry = () => {
 
       // Recalculate claim amount if actualValue or standardValue changed
       if (field === "actualValue" || field === "standardValue") {
-        const actual = parseFloat(newClaims[index].actualValue || 0);
+        const actual = newClaims[index].actualValue;
+        const standard = newClaims[index].standardValue;
         const saudaRate = parseFloat(currentSelfOrder?.rate || 0);
         const manualRate = parseFloat(prev.manualCalculationRate || 0);
         const weight = parseFloat(prev.unloadingWeight || 0);
 
         let claim = 0;
         if (weight > 0 && (saudaRate > 0 || manualRate > 0)) {
-          // Since standardValue is now editable, but calculateClaimAmount uses paramValues, let's adjust?
-          // Wait, calculateClaimAmount uses paramValues, but paramValues are from company commodity params. But standardValue is now editable - so maybe we need to recalculate based on standardValue?
-          // Let's assume we use the actual and standard values to calculate difference, then apply ratio?
-          // Wait, let's keep using paramValues for ratio, but use the actual and standard from the claim.
-          // Or, maybe just use the existing calculateClaimAmount, but let's proceed for now.
-          claim = calculateClaimAmount(newClaims[index].paramValues, actual, saudaRate, manualRate, weight);
+          claim = calculateClaimAmount(
+            newClaims[index].paramValues,
+            actual,
+            standard,
+            saudaRate,
+            manualRate,
+            weight
+          );
         }
 
         newClaims[index].claimAmount = Math.abs(claim).toFixed(2);

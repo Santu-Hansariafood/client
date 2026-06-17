@@ -50,11 +50,11 @@ const EditLoadingEntryPopup = ({
 
   const handleManualRateChange = (e) => {
     const newRate = e.target.value;
-    setEditEntry((prev) => ({ ...prev, manualCalculationRate: newRate }));
     if (editEntry?.qualityClaims?.length > 0) {
       setEditEntry((prev) => {
         const newClaims = prev.qualityClaims.map((claim) => {
-          const actual = parseFloat(claim.actualValue || 0);
+          const actual = claim.actualValue;
+          const standard = claim.standardValue;
           const saudaRate = parseFloat(currentSelfOrder?.rate || 0);
           const manualRate = parseFloat(newRate || 0);
           const weight = parseFloat(prev.unloadingWeight || 0);
@@ -63,6 +63,7 @@ const EditLoadingEntryPopup = ({
             claimAmount = calculateClaimAmount(
               claim.paramValues,
               actual,
+              standard,
               saudaRate,
               manualRate,
               weight
@@ -70,8 +71,10 @@ const EditLoadingEntryPopup = ({
           }
           return { ...claim, claimAmount: Math.abs(claimAmount).toFixed(2) };
         });
-        return { ...prev, qualityClaims: newClaims };
+        return { ...prev, manualCalculationRate: newRate, qualityClaims: newClaims };
       });
+    } else {
+      setEditEntry((prev) => ({ ...prev, manualCalculationRate: newRate }));
     }
   };
 
@@ -329,20 +332,7 @@ const EditLoadingEntryPopup = ({
             step="0.01"
           />
         </div>
-        <div>
-          <label className="block text-sm font-semibold text-slate-700 mb-1">
-            Manual Calculation Rate
-          </label>
-          <input
-            type="number"
-            name="manualCalculationRate"
-            value={editEntry.manualCalculationRate || ""}
-            onChange={handleManualRateChange}
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
-            aria-label="Manual Calculation Rate"
-            step="0.01"
-          />
-        </div>
+
         <div>
           <label className="block text-sm font-semibold text-slate-700 mb-1">
             Total Freight
@@ -415,23 +405,38 @@ const EditLoadingEntryPopup = ({
         </div>
       </div>
 
-      <div className="mt-4 flex items-center gap-3">
-        <input
-          type="checkbox"
-          id="showAllQualityParameters"
-          checked={editEntry.showAllQualityParameters}
-          onChange={(e) => {
-            setEditEntry((prev) => ({
-              ...prev,
-              showAllQualityParameters: e.target.checked,
-            }));
-            // We need to re-fetch or re-initialize quality claims when this changes - but maybe just a note to reload? Wait, let's add a useEffect in ListLoadingEntry.jsx for this.
-          }}
-          className="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500 cursor-pointer"
-        />
-        <label htmlFor="showAllQualityParameters" className="text-sm font-semibold text-slate-700 cursor-pointer">
-          Show All Quality Parameters
-        </label>
+      <div className="mt-4 flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <input
+            type="checkbox"
+            id="showAllQualityParameters"
+            checked={editEntry.showAllQualityParameters}
+            onChange={(e) => {
+              setEditEntry((prev) => ({
+                ...prev,
+                showAllQualityParameters: e.target.checked,
+              }));
+            }}
+            className="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500 cursor-pointer"
+          />
+          <label htmlFor="showAllQualityParameters" className="text-sm font-semibold text-slate-700 cursor-pointer">
+            Show All Quality Parameters
+          </label>
+        </div>
+        <div className="flex items-center gap-2">
+          <label className="text-sm font-semibold text-slate-700">
+            Manual Calculation Rate
+          </label>
+          <input
+            type="number"
+            name="manualCalculationRate"
+            value={editEntry.manualCalculationRate || ""}
+            onChange={handleManualRateChange}
+            className="w-32 rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            aria-label="Manual Calculation Rate"
+            step="0.01"
+          />
+        </div>
       </div>
       <QualityClaimsTable
         editEntry={editEntry}
@@ -879,5 +884,6 @@ const EditLoadingEntryPopup = ({
     </div>
   );
 };
+
 
 export default EditLoadingEntryPopup;

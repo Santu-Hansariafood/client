@@ -45,62 +45,38 @@ const getClaimRatio = (claim, currentCompany, currentSelfOrder) => {
 const calculateClaimAmount = (
   paramValues,
   actualValue,
+  standardValue,
   saudaRate,
   manualRate,
   weight,
 ) => {
-  if (!paramValues || paramValues.length === 0) return 0;
+  if (!actualValue || !standardValue) return 0;
 
   let totalClaim = 0;
-  let remainingActual = actualValue;
-  const effectiveRate = parseFloat(manualRate) || saudaRate;
-
-  const sortedRanges = [...paramValues].sort((a, b) => {
-    const aBase = parseFloat(a.baseValue) || 0;
-    const bBase = parseFloat(b.baseValue) || 0;
-    return aBase - bBase;
-  });
-
-  for (let i = 0; i < sortedRanges.length; i++) {
-    const range = sortedRanges[i];
-    const base = parseFloat(range.baseValue) || 0;
-    const max = parseFloat(range.maxValue) || Infinity;
-    const ratioLeft = parseFloat(range.claimRatioLeft) || 1;
-    const ratioRight = parseFloat(range.claimRatioRight) || 1;
-
-    if (remainingActual <= base) break;
-
-    const rangeStart =
-      i === 0
-        ? base
-        : parseFloat(sortedRanges[i - 1].maxValue || sortedRanges[i - 1].baseValue);
-    const rangeEnd = max;
-    const amountInRange = Math.min(remainingActual, rangeEnd) - rangeStart;
-
-    if (amountInRange > 0 && ratioRight > 0) {
-      totalClaim +=
-        (amountInRange / 100) * effectiveRate * (ratioLeft / ratioRight) * weight;
-      remainingActual -= amountInRange;
+  const actual = parseFloat(actualValue);
+  const standard = parseFloat(standardValue);
+  const difference = actual - standard;
+  
+  if (difference > 0) {
+    const effectiveRate = parseFloat(manualRate) || saudaRate;
+    
+    let ratioLeft = 1;
+    let ratioRight = 1;
+    
+    if (paramValues && paramValues.length > 0) {
+      const ratioValue = paramValues.find((v) => v.baseValue) || paramValues[0];
+      if (ratioValue) {
+        ratioLeft = parseFloat(ratioValue.claimRatioLeft) || 1;
+        ratioRight = parseFloat(ratioValue.claimRatioRight) || 1;
+      }
     }
-
-    if (remainingActual <= rangeEnd) break;
-  }
-
-  if (remainingActual > 0 && sortedRanges.length > 0) {
-    const lastRange = sortedRanges[sortedRanges.length - 1];
-    const lastRatioLeft = parseFloat(lastRange.claimRatioLeft) || 1;
-    const lastRatioRight = parseFloat(lastRange.claimRatioRight) || 1;
-    const lastMax =
-      parseFloat(lastRange.maxValue) || parseFloat(lastRange.baseValue);
-
-    const excessAmount = remainingActual - lastMax;
-    if (excessAmount > 0 && lastRatioRight > 0) {
-      totalClaim +=
-        (excessAmount / 100) * effectiveRate * (lastRatioLeft / lastRatioRight) * weight;
+    
+    if (ratioRight > 0 && effectiveRate > 0 && weight > 0) {
+      totalClaim = (difference / 100) * effectiveRate * (ratioLeft / ratioRight) * weight;
     }
   }
 
-  return totalClaim;
+  return Math.abs(totalClaim);
 };
 
 const QualityClaimsTable = ({
