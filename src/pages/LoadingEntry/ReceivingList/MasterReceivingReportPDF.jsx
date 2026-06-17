@@ -846,16 +846,16 @@ const MasterReceivingReportPDF = ({ entries = [], logoUrl }) => {
             </View>
           )}
           
-          {/* Second Claim */}
+          {/* 2nd Claim */}
           {data.secondClaim && Number(data.secondClaim) > 0 && (
             <View style={styles.summaryRow}>
-              <Text style={styles.summaryLabel}>Less: Second Claim</Text>
+              <Text style={styles.summaryLabel}>Less: 2nd Claim</Text>
               <Text style={styles.summaryValue}>
                 - Rs. {formatAmount(data.secondClaim)}
               </Text>
             </View>
           )}
-          {/* Second Claim Remarks */}
+          {/* 2nd Claim Remarks */}
           {data.secondClaimRemarks && (
             <View style={styles.summaryRow}>
               <Text style={styles.summaryLabel}>  Remarks:</Text>
