@@ -737,6 +737,20 @@ const MasterReceivingReportPDF = ({ entries = [], logoUrl }) => {
             </Text>
           </View>
 
+          {/* Seller and Buyer Company */}
+          <View style={styles.summaryItemHalf}>
+            <Text style={styles.summaryLabel}>Seller Company</Text>
+            <Text style={styles.summaryValue}>
+              {data.supplierCompany || "N/A"}
+            </Text>
+          </View>
+          <View style={[styles.summaryItemHalf, { borderRightWidth: 0 }]}>
+            <Text style={styles.summaryLabel}>Buyer Company</Text>
+            <Text style={styles.summaryValue}>
+              {data.buyerCompany || "N/A"}
+            </Text>
+          </View>
+          
           {/* Next 3 items - 3 in a row */}
           {data.manualCalculationRate && (
             <View style={styles.summaryItemThird}>
@@ -791,20 +805,6 @@ const MasterReceivingReportPDF = ({ entries = [], logoUrl }) => {
               Rs. {formatAmount(totalAmount)}
             </Text>
           </View>
-
-          {/* Seller and Buyer Company */}
-          <View style={styles.summaryItemHalf}>
-            <Text style={styles.summaryLabel}>Seller Company</Text>
-            <Text style={styles.summaryValue}>
-              {data.supplierCompany || "N/A"}
-            </Text>
-          </View>
-          <View style={[styles.summaryItemHalf, { borderRightWidth: 0, borderBottomWidth: 0 }]}>
-            <Text style={styles.summaryLabel}>Buyer Company</Text>
-            <Text style={styles.summaryValue}>
-              {data.buyerCompany || "N/A"}
-            </Text>
-          </View>
         </View>
 
         {/* Quality Parameters & Claims Section */}
@@ -856,6 +856,35 @@ const MasterReceivingReportPDF = ({ entries = [], logoUrl }) => {
               {formatAmount(
                 (data.qualityClaims || []).reduce((sum, claim) => sum + (Number(claim.claimAmount) || 0), 0) +
                 (data.manualClaim ? (Number(data.manualClaimAmount) || 0) : 0)
+              )}
+            </Text>
+          </View>
+        </View>
+
+        {/* Net Payable Section */}
+        <View style={[styles.summaryGrid, { marginTop: 10 }]}>
+          <View style={[styles.summaryItemFull, { backgroundColor: "#e8f5e9" }]}>
+            <Text style={[styles.summaryLabel, { fontSize: 8 }]}>Net Payable (Total Payable - Claims)</Text>
+            <Text
+              style={[
+                styles.summaryValue,
+                { fontSize: 12, color: "#2e7d32", fontWeight: "bold" },
+              ]}
+            >
+              Rs. {formatAmount(
+                totalAmount - (
+                  (data.qualityClaims || []).reduce((sum, claim) => sum + (Number(claim.claimAmount) || 0), 0) +
+                  (data.manualClaim ? (Number(data.manualClaimAmount) || 0) : 0)
+                )
+              )}
+            </Text>
+            <Text style={[styles.summaryLabel, { marginTop: 4, fontSize: 7 }]}>Amount in Words</Text>
+            <Text style={[styles.summaryValue, { fontSize: 8, color: "#2e7d32" }]}>
+              {numberToWords(
+                totalAmount - (
+                  (data.qualityClaims || []).reduce((sum, claim) => sum + (Number(claim.claimAmount) || 0), 0) +
+                  (data.manualClaim ? (Number(data.manualClaimAmount) || 0) : 0)
+                )
               )}
             </Text>
           </View>
