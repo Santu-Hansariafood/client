@@ -367,18 +367,88 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#000000",
   },
+  // Updated summary page styles
+  summaryPage: {
+    padding: 20,
+    fontFamily: "Helvetica",
+    backgroundColor: "#ffffff",
+  },
+  summaryHeader: {
+    borderBottomWidth: 1,
+    borderBottomColor: "#000000",
+    paddingBottom: 8,
+    marginBottom: 10,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  summaryTitle: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#000000",
+    textTransform: "uppercase",
+  },
+  summaryGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    borderWidth: 1,
+    borderColor: "#000000",
+    marginBottom: 10,
+  },
+  summaryItemQuarter: {
+    width: "25%",
+    padding: 5,
+    borderBottomWidth: 1,
+    borderBottomColor: "#000000",
+    borderRightWidth: 1,
+    borderRightColor: "#000000",
+  },
+  summaryItemHalf: {
+    width: "50%",
+    padding: 5,
+    borderBottomWidth: 1,
+    borderBottomColor: "#000000",
+    borderRightWidth: 1,
+    borderRightColor: "#000000",
+  },
+  summaryItemThird: {
+    width: "33.33%",
+    padding: 5,
+    borderBottomWidth: 1,
+    borderBottomColor: "#000000",
+    borderRightWidth: 1,
+    borderRightColor: "#000000",
+  },
+  summaryItemFull: {
+    width: "100%",
+    padding: 5,
+    borderBottomWidth: 1,
+    borderBottomColor: "#000000",
+  },
+  summaryLabel: {
+    fontSize: 6.5,
+    color: "#4b5563",
+    fontWeight: "bold",
+    marginBottom: 2,
+    textTransform: "uppercase",
+  },
+  summaryValue: {
+    fontSize: 8,
+    color: "#000000",
+    fontWeight: "bold",
+  },
   // Quality Claims Section
   qualitySection: {
-    marginTop: 10,
+    marginTop: 8,
     borderWidth: 1,
     borderColor: "#000000",
   },
   qualitySectionTitle: {
-    fontSize: 12,
+    fontSize: 10,
     fontWeight: "bold",
     textTransform: "uppercase",
     textAlign: "center",
-    padding: 6,
+    padding: 5,
     backgroundColor: "#f0f0f0",
     borderBottomWidth: 1,
     borderBottomColor: "#000000",
@@ -389,78 +459,25 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: "#000000",
   },
-  qualityTableCol1: { width: "5%", padding: 4, textAlign: "center" },
-  qualityTableCol2: { width: "30%", padding: 4 },
-  qualityTableCol3: { width: "15%", padding: 4, textAlign: "center" },
-  qualityTableCol4: { width: "15%", padding: 4, textAlign: "center" },
-  qualityTableCol5: { width: "20%", padding: 4, textAlign: "center" },
-  qualityTableCol6: { width: "15%", padding: 4, textAlign: "center" },
+  qualityTableCol1: { width: "5%", padding: 3, textAlign: "center" },
+  qualityTableCol2: { width: "28%", padding: 3 },
+  qualityTableCol3: { width: "14%", padding: 3, textAlign: "center" },
+  qualityTableCol4: { width: "14%", padding: 3, textAlign: "center" },
+  qualityTableCol5: { width: "25%", padding: 3, textAlign: "center" },
+  qualityTableCol6: { width: "14%", padding: 3, textAlign: "center" },
   qualityTableRow: {
     flexDirection: "row",
     borderBottomWidth: 0.5,
-    borderBottomColor: "#999999",
+    borderBottomColor: "#e0e0e0",
   },
   qualityTableCellText: {
-    fontSize: 7,
+    fontSize: 6.5,
   },
   qualityTotalRow: {
     flexDirection: "row",
     backgroundColor: "#f5f5f5",
     borderTopWidth: 1,
     borderTopColor: "#000000",
-  },
-  // Updated summary page styles
-  summaryPage: {
-    padding: 25,
-    fontFamily: "Helvetica",
-    backgroundColor: "#ffffff",
-  },
-  summaryHeader: {
-    borderBottomWidth: 1,
-    borderBottomColor: "#000000",
-    paddingBottom: 10,
-    marginBottom: 15,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  summaryTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#000000",
-    textTransform: "uppercase",
-  },
-  summaryGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    borderWidth: 1,
-    borderColor: "#000000",
-    marginBottom: 15,
-  },
-  summaryItem: {
-    width: "50%",
-    padding: 6,
-    borderBottomWidth: 1,
-    borderBottomColor: "#000000",
-    borderRightWidth: 1,
-    borderRightColor: "#000000",
-  },
-  summaryItemFull: {
-    width: "100%",
-    padding: 6,
-    borderBottomWidth: 1,
-    borderBottomColor: "#000000",
-  },
-  summaryLabel: {
-    fontSize: 7,
-    color: "#4b5563",
-    fontWeight: "bold",
-    marginBottom: 2,
-  },
-  summaryValue: {
-    fontSize: 9,
-    color: "#000000",
-    fontWeight: "bold",
   },
 });
 
@@ -650,19 +667,20 @@ const MasterReceivingReportPDF = ({ entries = [], logoUrl }) => {
         </View>
 
         <View style={styles.summaryGrid}>
-          <View style={styles.summaryItem}>
+          {/* First 8 items - 4 in a row */}
+          <View style={styles.summaryItemQuarter}>
             <Text style={styles.summaryLabel}>Sauda Number</Text>
             <Text style={styles.summaryValue}>
               {data.saudaNo || "N/A"}
             </Text>
           </View>
-          <View style={[styles.summaryItem, { borderRightWidth: 0 }]}>
-            <Text style={styles.summaryLabel}>INVOICE NO.</Text>
+          <View style={styles.summaryItemQuarter}>
+            <Text style={styles.summaryLabel}>Invoice No.</Text>
             <Text style={styles.summaryValue}>
               {data.billNumber || "N/A"}
             </Text>
           </View>
-          <View style={styles.summaryItem}>
+          <View style={styles.summaryItemQuarter}>
             <Text style={styles.summaryLabel}>Lorry Number</Text>
             <Text
               style={[
@@ -673,56 +691,66 @@ const MasterReceivingReportPDF = ({ entries = [], logoUrl }) => {
               {data.lorryNumber || "N/A"}
             </Text>
           </View>
-          <View style={[styles.summaryItem, { borderRightWidth: 0 }]}>
+          <View style={[styles.summaryItemQuarter, { borderRightWidth: 0 }]}>
             <Text style={styles.summaryLabel}>Commodity</Text>
             <Text style={styles.summaryValue}>
               {data.commodity || "N/A"}
             </Text>
           </View>
-          <View style={styles.summaryItem}>
+          
+          <View style={styles.summaryItemQuarter}>
             <Text style={styles.summaryLabel}>Loading Weight</Text>
             <Text style={styles.summaryValue}>
               {data.loadingWeight || 0} Tons
             </Text>
           </View>
-          <View style={[styles.summaryItem, { borderRightWidth: 0 }]}>
+          <View style={styles.summaryItemQuarter}>
             <Text style={styles.summaryLabel}>Unloading Weight</Text>
             <Text style={styles.summaryValue}>
               {data.unloadingWeight || 0} Tons
             </Text>
           </View>
-          <View style={styles.summaryItem}>
+          <View style={styles.summaryItemQuarter}>
             <Text style={styles.summaryLabel}>Loading Date</Text>
             <Text style={styles.summaryValue}>
               {formatDate(data.loadingDate)}
             </Text>
           </View>
-          <View style={[styles.summaryItem, { borderRightWidth: 0 }]}>
+          <View style={[styles.summaryItemQuarter, { borderRightWidth: 0 }]}>
             <Text style={styles.summaryLabel}>Unloading Date</Text>
             <Text style={styles.summaryValue}>
               {formatDate(data.unloadingDate)}
             </Text>
           </View>
-          <View style={[styles.summaryItem, { borderRightWidth: 0 }]}>
+
+          {/* Next 2 items - 2 in a row */}
+          <View style={styles.summaryItemHalf}>
             <Text style={styles.summaryLabel}>Rate</Text>
             <Text style={styles.summaryValue}>
               Rs. {formatAmount(rate)}
             </Text>
           </View>
-          <View style={styles.summaryItem}>
+          <View style={[styles.summaryItemHalf, { borderRightWidth: 0 }]}>
             <Text style={styles.summaryLabel}>Gross Amount</Text>
             <Text style={styles.summaryValue}>
               Rs. {formatAmount(receivingBaseAmount)}
             </Text>
           </View>
+
+          {/* Next 3 items - 3 in a row */}
+          {data.manualCalculationRate && (
+            <View style={styles.summaryItemThird}>
+              <Text style={styles.summaryLabel}>Manual Calc Rate</Text>
+              <Text style={styles.summaryValue}>
+                Rs. {formatAmount(data.manualCalculationRate)}
+              </Text>
+            </View>
+          )}
           {cdPercent > 0 && (
             <View
               style={[
-                styles.summaryItem,
-                {
-                  borderRightWidth: 0,
-                  backgroundColor: "#f5f5f5",
-                },
+                data.manualCalculationRate ? styles.summaryItemThird : styles.summaryItemHalf,
+                { backgroundColor: "#f5f5f5" },
               ]}
             >
               <Text
@@ -735,7 +763,6 @@ const MasterReceivingReportPDF = ({ entries = [], logoUrl }) => {
               >
                 Cash Discount ({cdPercent}%)
               </Text>
-
               <Text
                 style={[
                   styles.summaryValue,
@@ -750,29 +777,29 @@ const MasterReceivingReportPDF = ({ entries = [], logoUrl }) => {
           )}
           <View
             style={[
-              styles.summaryItemFull,
-              { backgroundColor: "#f1f5f9" },
+              styles.summaryItemThird,
+              { borderRightWidth: 0, backgroundColor: "#f1f5f9" },
             ]}
           >
-            <Text style={styles.summaryLabel}>Total Payable Amount</Text>
+            <Text style={styles.summaryLabel}>Total Payable</Text>
             <Text
               style={[
                 styles.summaryValue,
-                { fontSize: 12, color: "#1e293b" },
+                { fontSize: 10, color: "#1e293b" },
               ]}
             >
               Rs. {formatAmount(totalAmount)}
             </Text>
           </View>
-          <View style={styles.summaryItemFull}>
+
+          {/* Seller and Buyer Company */}
+          <View style={styles.summaryItemHalf}>
             <Text style={styles.summaryLabel}>Seller Company</Text>
             <Text style={styles.summaryValue}>
               {data.supplierCompany || "N/A"}
             </Text>
           </View>
-          <View
-            style={[styles.summaryItemFull, { borderBottomWidth: 0 }]}
-          >
+          <View style={[styles.summaryItemHalf, { borderRightWidth: 0, borderBottomWidth: 0 }]}>
             <Text style={styles.summaryLabel}>Buyer Company</Text>
             <Text style={styles.summaryValue}>
               {data.buyerCompany || "N/A"}
