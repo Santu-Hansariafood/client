@@ -40,7 +40,10 @@ const EditLoadingEntryPopup = ({
           (total, claim) => total + (Number(claim.claimAmount) || 0),
           0
         );
-    return (totalBill - totalClaim).toFixed(2);
+    const secondClaim = Number(editEntry.secondClaim || 0);
+    const otherCharges = Number(editEntry.otherCharges || 0);
+    const bankCharges = Number(editEntry.bankCharges || 200);
+    return (totalBill - totalClaim - secondClaim - otherCharges - bankCharges).toFixed(2);
   };
 
   const handleManualRateChange = (e) => {
@@ -500,6 +503,82 @@ const EditLoadingEntryPopup = ({
                 <span className="text-lg font-bold text-red-600">
                   - ₹ {totalClaimAmount}
                 </span>
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex justify-between items-center p-3 bg-white rounded-lg shadow-xs border border-purple-100">
+                  <span className="font-semibold text-slate-700">
+                    Less Second Claim:
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-slate-400 font-bold">₹</span>
+                    <input
+                      type="number"
+                      value={editEntry.secondClaim || ""}
+                      onChange={(e) => {
+                        setEditEntry((prev) => ({
+                          ...prev,
+                          secondClaim: e.target.value,
+                        }));
+                      }}
+                      placeholder="Add second claim"
+                      className="w-24 px-2 py-1 border border-slate-300 rounded-lg text-sm font-bold focus:outline-none focus:ring-2 focus:ring-purple-500/20"
+                      step="0.01"
+                    />
+                  </div>
+                </div>
+                <div className="flex justify-between items-center p-3 bg-white rounded-lg shadow-xs border border-teal-100">
+                  <span className="font-semibold text-slate-700">
+                    Less Other Charges:
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-slate-400 font-bold">₹</span>
+                    <input
+                      type="number"
+                      value={editEntry.otherCharges || ""}
+                      onChange={(e) => {
+                        setEditEntry((prev) => ({
+                          ...prev,
+                          otherCharges: e.target.value,
+                        }));
+                      }}
+                      placeholder="Add other charges"
+                      className="w-24 px-2 py-1 border border-slate-300 rounded-lg text-sm font-bold focus:outline-none focus:ring-2 focus:ring-teal-500/20"
+                      step="0.01"
+                    />
+                  </div>
+                </div>
+                <div className="flex justify-between items-center p-3 bg-white rounded-lg shadow-xs border border-orange-100">
+                  <span className="font-semibold text-slate-700">
+                    Less Bank Charges:
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-slate-400 font-bold">₹</span>
+                    <input
+                      type="number"
+                      value={editEntry.bankCharges || 200}
+                      readOnly
+                      className="w-24 px-2 py-1 bg-slate-50 border border-slate-200 rounded-lg text-sm font-bold text-orange-600 outline-none"
+                    />
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 p-2 bg-white rounded-lg shadow-xs border border-slate-100">
+                  <span className="text-sm font-semibold text-slate-700 w-24">
+                    Remarks:
+                  </span>
+                  <input
+                    type="text"
+                    value={editEntry.generalRemarks || ""}
+                    onChange={(e) => {
+                      setEditEntry((prev) => ({
+                        ...prev,
+                        generalRemarks: e.target.value,
+                      }));
+                    }}
+                    placeholder="Add general remarks"
+                    className="flex-1 px-2 py-1 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-slate-500/20"
+                  />
+                </div>
               </div>
 
               <div className="flex justify-between items-center p-4 bg-gradient-to-r from-emerald-600 to-teal-600 rounded-lg shadow-md text-white">

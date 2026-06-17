@@ -485,6 +485,10 @@ const ListLoadingEntry = () => {
       manualClaim: entry.manualClaim || false,
       manualClaimAmount: entry.manualClaimAmount || 0,
       manualCalculationRate: entry.manualCalculationRate || "", // Add manual rate field
+      secondClaim: entry.secondClaim || 0,
+      otherCharges: entry.otherCharges || 0,
+      bankCharges: entry.bankCharges || 200,
+      generalRemarks: entry.generalRemarks || "",
     };
 
     // Fetch both self-order and quality parameters
@@ -600,14 +604,14 @@ const ListLoadingEntry = () => {
                 const selectedStandardValue = existingClaim?.standardValue || defaultStandardValue;
                 
                 return {
-                  parameterId: String(param.parameterId || ""),
-                  parameterName: param.parameter || "",
-                  standardValue: selectedStandardValue,
-                  paramValues: param.values || [], // Store all param values for dropdown and ratio lookup
-                  actualValue: existingClaim?.actualValue || "",
-                  claimAmount: existingClaim?.claimAmount || 0,
-                  notes: existingClaim?.notes || "",
-                };
+                parameterId: String(param.parameterId || ""),
+                parameterName: param.parameter || "",
+                standardValue: selectedStandardValue,
+                paramValues: param.values || [], // Store all param values for dropdown and ratio lookup
+                actualValue: existingClaim?.actualValue || "",
+                claimAmount: existingClaim?.claimAmount || 0,
+                notes: existingClaim?.notes || "",
+              };
               });
           }
         }
