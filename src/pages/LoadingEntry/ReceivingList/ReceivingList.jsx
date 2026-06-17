@@ -771,8 +771,8 @@ _*Hansaria Food Private Limited*_`;
                 setShowPopup(false);
                 setSelectedEntry(null);
               }}
-              title="Document Attachments"
-              maxWidth="max-w-6xl"
+              title="Document Attachments & Quality Reports"
+              maxWidth="max-w-7xl"
               headerActions={
                 <button
                   onClick={handlePrint}
@@ -851,9 +851,126 @@ _*Hansaria Food Private Limited*_`;
                   })}
                 </div>
 
+                {/* Quality Claims Section */}
+                {selectedEntry.qualityClaims && selectedEntry.qualityClaims.length > 0 && (
+                  <div className="bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-100 rounded-[2rem] p-6 shadow-sm">
+                    <h4 className="text-base font-black text-indigo-900 mb-6 flex items-center gap-3">
+                      <span className="w-2 h-2 rounded-full bg-indigo-500" />
+                      Quality Parameters & Claims
+                    </h4>
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="bg-indigo-100/50 border border-indigo-200 rounded-t-2xl">
+                            <th className="px-4 py-3 font-bold text-indigo-800 text-left rounded-tl-2xl">Quality Parameter</th>
+                            <th className="px-4 py-3 font-bold text-indigo-800 text-left">Standard Value</th>
+                            <th className="px-4 py-3 font-bold text-indigo-800 text-left">Actual Value</th>
+                            <th className="px-4 py-3 font-bold text-indigo-800 text-left">Difference</th>
+                            <th className="px-4 py-3 font-bold text-indigo-800 text-left">Claim Amount</th>
+                            <th className="px-4 py-3 font-bold text-indigo-800 text-left rounded-tr-2xl">Notes</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {selectedEntry.qualityClaims.map((claim, index) => {
+                            const standard = Number(claim.standardValue || 0);
+                            const actual = Number(claim.actualValue || 0);
+                            const difference = actual - standard;
+                            
+                            return (
+                              <tr key={index} className="border border-indigo-100 bg-white hover:bg-indigo-50/50 transition-colors">
+                                <td className="px-4 py-3 font-semibold text-slate-700">{claim.parameterName || "-"}</td>
+                                <td className="px-4 py-3 text-slate-600 font-mono">{standard.toFixed(2)}%</td>
+                                <td className="px-4 py-3 text-slate-800 font-bold">{actual.toFixed(2)}%</td>
+                                <td className={`px-4 py-3 font-mono font-bold ${difference >= 0 ? "text-red-600" : "text-green-600"}`}>
+                                  {difference >= 0 ? "+" : ""}{difference.toFixed(2)}%
+                                </td>
+                                <td className="px-4 py-3">
+                                  <span className="font-bold text-indigo-700">
+                                    ₹ {Number(claim.claimAmount || 0).toFixed(2)}
+                                  </span>
+                                </td>
+                                <td className="px-4 py-3 text-slate-600 italic">{claim.notes || "-"}</td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+
+                {/* Bill & Payable Calculation Section */}
+                <div className="bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-100 rounded-[2rem] p-6 shadow-sm">
+                  <h4 className="text-base font-black text-emerald-900 mb-6 flex items-center gap-3">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                    Bill & Payable Calculation
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between p-3 bg-white rounded-xl border border-emerald-100">
+                        <span className="font-semibold text-slate-700">Total Bill Value</span>
+                        <span className="text-lg font-black text-emerald-700">
+                          ₹ {((selectedEntry.unloadingWeight || 0) * (selectedEntry.actualRate || 0)).toFixed(2)}
+                        </span>
+                      </div>
+                      {selectedEntry.qualityClaims && selectedEntry.qualityClaims.length > 0 && (
+                        <div className="flex items-center justify-between p-3 bg-white rounded-xl border border-amber-100">
+                          <span className="font-semibold text-slate-700">Less Total Quality Claim</span>
+                          <span className="text-lg font-bold text-amber-600">
+                            - ₹ {selectedEntry.qualityClaims.reduce((sum, c) => sum + (Number(c.claimAmount) || 0), 0).toFixed(2)}
+                          </span>
+                        </div>
+                      )}
+                      {selectedEntry.secondClaim && Number(selectedEntry.secondClaim) > 0 && (
+                        <div className="flex items-center justify-between p-3 bg-white rounded-xl border border-purple-100">
+                          <span className="font-semibold text-slate-700">Less Second Claim</span>
+                          <span className="text-lg font-bold text-purple-600">
+                            - ₹ {Number(selectedEntry.secondClaim).toFixed(2)}
+                          </span>
+                        </div>
+                      )}
+                      {selectedEntry.otherCharges && Number(selectedEntry.otherCharges) > 0 && (
+                        <div className="flex items-center justify-between p-3 bg-white rounded-xl border border-teal-100">
+                          <span className="font-semibold text-slate-700">Less Other Charges</span>
+                          <span className="text-lg font-bold text-teal-600">
+                            - ₹ {Number(selectedEntry.otherCharges).toFixed(2)}
+                          </span>
+                        </div>
+                      )}
+                      <div className="flex items-center justify-between p-3 bg-white rounded-xl border border-orange-100">
+                        <span className="font-semibold text-slate-700">Less Bank Charges</span>
+                        <span className="text-lg font-bold text-orange-600">
+                          - ₹ {Number(selectedEntry.bankCharges || 200).toFixed(2)}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-center">
+                      <div className="bg-gradient-to-r from-emerald-600 to-teal-600 rounded-2xl p-6 shadow-lg w-full">
+                        <span className="text-base font-bold text-white block mb-2">Payable Amount</span>
+                        <span className="text-3xl font-black text-white">
+                          ₹ {(() => {
+                            const totalBill = (selectedEntry.unloadingWeight || 0) * (selectedEntry.actualRate || 0);
+                            const qualityClaims = selectedEntry.qualityClaims?.reduce((sum, c) => sum + (Number(c.claimAmount) || 0), 0) || 0;
+                            const secondClaim = Number(selectedEntry.secondClaim || 0);
+                            const otherCharges = Number(selectedEntry.otherCharges || 0);
+                            const bankCharges = Number(selectedEntry.bankCharges || 200);
+                            return (totalBill - qualityClaims - secondClaim - otherCharges - bankCharges).toFixed(2);
+                          })()}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  {selectedEntry.generalRemarks && (
+                    <div className="mt-4 p-3 bg-white rounded-xl border border-slate-100">
+                      <span className="text-xs font-bold uppercase tracking-widest text-slate-400 block mb-1">Remarks</span>
+                      <p className="text-slate-700">{selectedEntry.generalRemarks}</p>
+                    </div>
+                  )}
+                </div>
+
                 {Object.values(selectedEntry.documents || {}).every(
                   (v) => !v,
-                ) && (
+                ) && !selectedEntry.qualityClaims?.length && (
                   <div className="py-20 text-center bg-slate-50 rounded-[2.5rem] border border-dashed border-slate-200">
                     <FaClipboardList className="text-6xl text-slate-200 mx-auto mb-6" />
                     <p className="text-sm font-black text-slate-400 uppercase tracking-[0.2em]">
