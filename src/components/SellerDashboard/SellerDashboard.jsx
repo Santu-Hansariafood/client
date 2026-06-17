@@ -24,6 +24,7 @@ import {
   FaTruckLoading,
   FaArrowLeft,
   FaSyncAlt,
+  FaCreditCard,
 } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext/AuthContext";
@@ -646,6 +647,14 @@ const SellerDashboard = () => {
         color: "bg-purple-600",
         isNotif: true,
         action: () => togglePopup(true),
+      },
+      {
+        label: "Payment Release",
+        icon: <FaCreditCard />,
+        color: "bg-rose-600",
+        count: "Under Development",
+        subtitle: "Will live soon",
+        link: "/payment-release",
       },
     ],
     [mobile, togglePopup, sellerBidCount, orderCount, pendingSaudaCount],
