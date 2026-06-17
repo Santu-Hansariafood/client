@@ -111,6 +111,8 @@ const loaders = {
   BlogDetail: () => import("../../pages/Blog/BlogDetail"),
   NewsArchive: () => import("../../pages/Blog/NewsArchive"),
   UnderDevelopment: () => import("../../pages/UnderDevelopment/UnderDevelopment"),
+  AddPaymentRelease: () => import("../../pages/Payments/PaymentRelease/AddPaymentRelease"),
+  ListPaymentRelease: () => import("../../pages/Payments/PaymentRelease/ListPaymentRelease"),
 };
 
 const pathToKey = {
@@ -183,6 +185,8 @@ const pathToKey = {
   "/news/archive": "NewsArchive",
   "/blog/:id": "BlogDetail",
   "/payment-release": "UnderDevelopment",
+  "/payments/payment-release/add": "AddPaymentRelease",
+  "/payments/payment-release/list": "ListPaymentRelease",
 };
 
 const prefetched = new Set();
@@ -285,6 +289,8 @@ const LazyPages = {
   BlogDetail: lazy(loaders.BlogDetail),
   NewsArchive: lazy(loaders.NewsArchive),
   UnderDevelopment: lazy(loaders.UnderDevelopment),
+  AddPaymentRelease: lazy(loaders.AddPaymentRelease),
+  ListPaymentRelease: lazy(loaders.ListPaymentRelease),
 };
 
 export default LazyPages;

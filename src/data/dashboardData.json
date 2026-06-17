@@ -252,6 +252,18 @@
           "link": "/payments/received/list",
           "icon": "FaList",
           "roles": ["Admin", "Employee"]
+        },
+        {
+          "name": "Add Payment Release",
+          "link": "/payments/payment-release/add",
+          "icon": "FaPlus",
+          "roles": ["Admin", "Employee"]
+        },
+        {
+          "name": "Payment Release List",
+          "link": "/payments/payment-release/list",
+          "icon": "FaList",
+          "roles": ["Admin", "Employee", "Seller"]
         }
       ]
     },

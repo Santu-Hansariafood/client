@@ -379,6 +379,16 @@ const privateRoutes = [
     roles: ["Admin", "Employee"],
   },
   {
+    path: "payments/payment-release/add",
+    component: LazyPages.AddPaymentRelease,
+    roles: ["Admin", "Employee"],
+  },
+  {
+    path: "payments/payment-release/list",
+    component: LazyPages.ListPaymentRelease,
+    roles: ["Admin", "Employee", "Seller"],
+  },
+  {
     path: "/payment-release",
     component: LazyPages.UnderDevelopment,
     roles: ["Admin", "Employee", "Buyer", "Seller", "Transporter"],
