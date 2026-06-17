@@ -551,9 +551,7 @@ const SellerDashboard = () => {
         width: 200,
         color: { dark: "#000000", light: "#ffffff" },
       });
-      console.log("QR Code generated successfully");
 
-      console.log("Creating PDF document...");
       const doc = (
         <EmployeeIDCardPDF
           user={{
@@ -567,9 +565,7 @@ const SellerDashboard = () => {
          />
        );
 
-      console.log("Converting PDF to blob...");
       const blob = await pdf(doc).toBlob();
-      console.log("Blob created successfully", { size: blob.size });
 
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");

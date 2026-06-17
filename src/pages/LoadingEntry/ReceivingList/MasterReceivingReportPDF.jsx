@@ -327,59 +327,6 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     textTransform: "uppercase",
   },
-  summaryPage: {
-    padding: 40,
-    fontFamily: "Helvetica",
-    backgroundColor: "#ffffff",
-  },
-  summaryHeader: {
-    borderBottomWidth: 1,
-    borderBottomColor: "#000000",
-    paddingBottom: 15,
-    marginBottom: 25,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  summaryTitle: {
-    fontSize: 22,
-    fontWeight: "bold",
-    color: "#000000",
-    textTransform: "uppercase",
-  },
-  summaryGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    borderWidth: 1,
-    borderColor: "#000000",
-    marginBottom: 20,
-  },
-  summaryItem: {
-    width: "50%",
-    padding: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: "#000000",
-    borderRightWidth: 1,
-    borderRightColor: "#000000",
-  },
-  summaryItemFull: {
-    width: "100%",
-    padding: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: "#000000",
-  },
-  summaryLabel: {
-    fontSize: 9,
-    color: "#4b5563",
-    fontWeight: "bold",
-    marginBottom: 4,
-  },
-  summaryValue: {
-    fontSize: 11,
-    color: "#000000",
-    fontWeight: "bold",
-  },
-  
   challanPage: {
     fontFamily: "Helvetica",
     fontSize: 9,
@@ -419,6 +366,101 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: "bold",
     color: "#000000",
+  },
+  // Quality Claims Section
+  qualitySection: {
+    marginTop: 10,
+    borderWidth: 1,
+    borderColor: "#000000",
+  },
+  qualitySectionTitle: {
+    fontSize: 12,
+    fontWeight: "bold",
+    textTransform: "uppercase",
+    textAlign: "center",
+    padding: 6,
+    backgroundColor: "#f0f0f0",
+    borderBottomWidth: 1,
+    borderBottomColor: "#000000",
+  },
+  qualityTableHeader: {
+    flexDirection: "row",
+    backgroundColor: "#e0e0e0",
+    borderBottomWidth: 1,
+    borderBottomColor: "#000000",
+  },
+  qualityTableCol1: { width: "5%", padding: 4, textAlign: "center" },
+  qualityTableCol2: { width: "30%", padding: 4 },
+  qualityTableCol3: { width: "15%", padding: 4, textAlign: "center" },
+  qualityTableCol4: { width: "15%", padding: 4, textAlign: "center" },
+  qualityTableCol5: { width: "20%", padding: 4, textAlign: "center" },
+  qualityTableCol6: { width: "15%", padding: 4, textAlign: "center" },
+  qualityTableRow: {
+    flexDirection: "row",
+    borderBottomWidth: 0.5,
+    borderBottomColor: "#999999",
+  },
+  qualityTableCellText: {
+    fontSize: 7,
+  },
+  qualityTotalRow: {
+    flexDirection: "row",
+    backgroundColor: "#f5f5f5",
+    borderTopWidth: 1,
+    borderTopColor: "#000000",
+  },
+  // Updated summary page styles
+  summaryPage: {
+    padding: 25,
+    fontFamily: "Helvetica",
+    backgroundColor: "#ffffff",
+  },
+  summaryHeader: {
+    borderBottomWidth: 1,
+    borderBottomColor: "#000000",
+    paddingBottom: 10,
+    marginBottom: 15,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  summaryTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#000000",
+    textTransform: "uppercase",
+  },
+  summaryGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    borderWidth: 1,
+    borderColor: "#000000",
+    marginBottom: 15,
+  },
+  summaryItem: {
+    width: "50%",
+    padding: 6,
+    borderBottomWidth: 1,
+    borderBottomColor: "#000000",
+    borderRightWidth: 1,
+    borderRightColor: "#000000",
+  },
+  summaryItemFull: {
+    width: "100%",
+    padding: 6,
+    borderBottomWidth: 1,
+    borderBottomColor: "#000000",
+  },
+  summaryLabel: {
+    fontSize: 7,
+    color: "#4b5563",
+    fontWeight: "bold",
+    marginBottom: 2,
+  },
+  summaryValue: {
+    fontSize: 9,
+    color: "#000000",
+    fontWeight: "bold",
   },
 });
 
@@ -598,154 +640,208 @@ const MasterReceivingReportPDF = ({ entries = [], logoUrl }) => {
         return (
           <React.Fragment key={index}>
             <Page style={styles.summaryPage} size="A4">
-              <View style={styles.summaryHeader}>
-                <View>
-                  <Text style={styles.summaryTitle}>Receiving Entry</Text>
-                </View>
-                {logoUrl && (
-                  <Image src={logoUrl} style={{ width: 60, height: 60 }} />
-                )}
-              </View>
+        <View style={styles.summaryHeader}>
+          <View>
+            <Text style={styles.summaryTitle}>Receiving Entry</Text>
+          </View>
+          {logoUrl && (
+            <Image src={logoUrl} style={{ width: 60, height: 60 }} />
+          )}
+        </View>
 
-              <View style={styles.summaryGrid}>
-                <View style={styles.summaryItem}>
-                  <Text style={styles.summaryLabel}>Sauda Number</Text>
-                  <Text style={styles.summaryValue}>
-                    {data.saudaNo || "N/A"}
-                  </Text>
-                </View>
-                <View style={[styles.summaryItem, { borderRightWidth: 0 }]}>
-                  <Text style={styles.summaryLabel}>INVOICE NO.</Text>
-                  <Text style={styles.summaryValue}>
-                    {data.billNumber || "N/A"}
-                  </Text>
-                </View>
-                <View style={styles.summaryItem}>
-                  <Text style={styles.summaryLabel}>Lorry Number</Text>
-                  <Text
-                    style={[
-                      styles.summaryValue,
-                      { textTransform: "uppercase" },
-                    ]}
-                  >
-                    {data.lorryNumber || "N/A"}
-                  </Text>
-                </View>
-                <View style={[styles.summaryItem, { borderRightWidth: 0 }]}>
-                  <Text style={styles.summaryLabel}>Commodity</Text>
-                  <Text style={styles.summaryValue}>
-                    {data.commodity || "N/A"}
-                  </Text>
-                </View>
-                <View style={styles.summaryItem}>
-                  <Text style={styles.summaryLabel}>Loading Weight</Text>
-                  <Text style={styles.summaryValue}>
-                    {data.loadingWeight || 0} Tons
-                  </Text>
-                </View>
-                <View style={[styles.summaryItem, { borderRightWidth: 0 }]}>
-                  <Text style={styles.summaryLabel}>Unloading Weight</Text>
-                  <Text style={styles.summaryValue}>
-                    {data.unloadingWeight || 0} Tons
-                  </Text>
-                </View>
-                <View style={styles.summaryItem}>
-                  <Text style={styles.summaryLabel}>Loading Date</Text>
-                  <Text style={styles.summaryValue}>
-                    {formatDate(data.loadingDate)}
-                  </Text>
-                </View>
-                <View style={[styles.summaryItem, { borderRightWidth: 0 }]}>
-                  <Text style={styles.summaryLabel}>Unloading Date</Text>
-                  <Text style={styles.summaryValue}>
-                    {formatDate(data.unloadingDate)}
-                  </Text>
-                </View>
-                <View style={[styles.summaryItem, { borderRightWidth: 0 }]}>
-                  <Text style={styles.summaryLabel}>Rate</Text>
-                  <Text style={styles.summaryValue}>
-                    Rs. {formatAmount(rate)}
-                  </Text>
-                </View>
-                <View style={styles.summaryItem}>
-                  <Text style={styles.summaryLabel}>Gross Amount</Text>
-                  <Text style={styles.summaryValue}>
-                    Rs. {formatAmount(receivingBaseAmount)}
-                  </Text>
-                </View>
-                {cdPercent > 0 && (
-                  <View
-                    style={[
-                      styles.summaryItem,
-                      {
-                        borderRightWidth: 0,
-                        backgroundColor: "#f5f5f5",
-                      },
-                    ]}
-                  >
-                    <Text
-                      style={[
-                        styles.summaryLabel,
-                        {
-                          color: "#000000",
-                        },
-                      ]}
-                    >
-                      Cash Discount ({cdPercent}%)
-                    </Text>
+        <View style={styles.summaryGrid}>
+          <View style={styles.summaryItem}>
+            <Text style={styles.summaryLabel}>Sauda Number</Text>
+            <Text style={styles.summaryValue}>
+              {data.saudaNo || "N/A"}
+            </Text>
+          </View>
+          <View style={[styles.summaryItem, { borderRightWidth: 0 }]}>
+            <Text style={styles.summaryLabel}>INVOICE NO.</Text>
+            <Text style={styles.summaryValue}>
+              {data.billNumber || "N/A"}
+            </Text>
+          </View>
+          <View style={styles.summaryItem}>
+            <Text style={styles.summaryLabel}>Lorry Number</Text>
+            <Text
+              style={[
+                styles.summaryValue,
+                { textTransform: "uppercase" },
+              ]}
+            >
+              {data.lorryNumber || "N/A"}
+            </Text>
+          </View>
+          <View style={[styles.summaryItem, { borderRightWidth: 0 }]}>
+            <Text style={styles.summaryLabel}>Commodity</Text>
+            <Text style={styles.summaryValue}>
+              {data.commodity || "N/A"}
+            </Text>
+          </View>
+          <View style={styles.summaryItem}>
+            <Text style={styles.summaryLabel}>Loading Weight</Text>
+            <Text style={styles.summaryValue}>
+              {data.loadingWeight || 0} Tons
+            </Text>
+          </View>
+          <View style={[styles.summaryItem, { borderRightWidth: 0 }]}>
+            <Text style={styles.summaryLabel}>Unloading Weight</Text>
+            <Text style={styles.summaryValue}>
+              {data.unloadingWeight || 0} Tons
+            </Text>
+          </View>
+          <View style={styles.summaryItem}>
+            <Text style={styles.summaryLabel}>Loading Date</Text>
+            <Text style={styles.summaryValue}>
+              {formatDate(data.loadingDate)}
+            </Text>
+          </View>
+          <View style={[styles.summaryItem, { borderRightWidth: 0 }]}>
+            <Text style={styles.summaryLabel}>Unloading Date</Text>
+            <Text style={styles.summaryValue}>
+              {formatDate(data.unloadingDate)}
+            </Text>
+          </View>
+          <View style={[styles.summaryItem, { borderRightWidth: 0 }]}>
+            <Text style={styles.summaryLabel}>Rate</Text>
+            <Text style={styles.summaryValue}>
+              Rs. {formatAmount(rate)}
+            </Text>
+          </View>
+          <View style={styles.summaryItem}>
+            <Text style={styles.summaryLabel}>Gross Amount</Text>
+            <Text style={styles.summaryValue}>
+              Rs. {formatAmount(receivingBaseAmount)}
+            </Text>
+          </View>
+          {cdPercent > 0 && (
+            <View
+              style={[
+                styles.summaryItem,
+                {
+                  borderRightWidth: 0,
+                  backgroundColor: "#f5f5f5",
+                },
+              ]}
+            >
+              <Text
+                style={[
+                  styles.summaryLabel,
+                  {
+                    color: "#000000",
+                  },
+                ]}
+              >
+                Cash Discount ({cdPercent}%)
+              </Text>
 
-                    <Text
-                      style={[
-                        styles.summaryValue,
-                        {
-                          color: "#000000",
-                        },
-                      ]}
-                    >
-                      - Rs. {formatAmount(receivingCDAmount)}
-                    </Text>
-                  </View>
-                )}
-                <View
-                  style={[
-                    styles.summaryItemFull,
-                    { backgroundColor: "#f1f5f9" },
-                  ]}
-                >
-                  <Text style={styles.summaryLabel}>Total Payable Amount</Text>
-                  <Text
-                    style={[
-                      styles.summaryValue,
-                      { fontSize: 14, color: "#1e293b" },
-                    ]}
-                  >
-                    Rs. {formatAmount(totalAmount)}
-                  </Text>
-                </View>
-                <View style={styles.summaryItemFull}>
-                  <Text style={styles.summaryLabel}>Seller Company</Text>
-                  <Text style={styles.summaryValue}>
-                    {data.supplierCompany || "N/A"}
-                  </Text>
-                </View>
-                <View
-                  style={[styles.summaryItemFull, { borderBottomWidth: 0 }]}
-                >
-                  <Text style={styles.summaryLabel}>Buyer Company</Text>
-                  <Text style={styles.summaryValue}>
-                    {data.buyerCompany || "N/A"}
-                  </Text>
-                </View>
-              </View>
+              <Text
+                style={[
+                  styles.summaryValue,
+                  {
+                    color: "#000000",
+                  },
+                ]}
+              >
+                - Rs. {formatAmount(receivingCDAmount)}
+              </Text>
+            </View>
+          )}
+          <View
+            style={[
+              styles.summaryItemFull,
+              { backgroundColor: "#f1f5f9" },
+            ]}
+          >
+            <Text style={styles.summaryLabel}>Total Payable Amount</Text>
+            <Text
+              style={[
+                styles.summaryValue,
+                { fontSize: 12, color: "#1e293b" },
+              ]}
+            >
+              Rs. {formatAmount(totalAmount)}
+            </Text>
+          </View>
+          <View style={styles.summaryItemFull}>
+            <Text style={styles.summaryLabel}>Seller Company</Text>
+            <Text style={styles.summaryValue}>
+              {data.supplierCompany || "N/A"}
+            </Text>
+          </View>
+          <View
+            style={[styles.summaryItemFull, { borderBottomWidth: 0 }]}
+          >
+            <Text style={styles.summaryLabel}>Buyer Company</Text>
+            <Text style={styles.summaryValue}>
+              {data.buyerCompany || "N/A"}
+            </Text>
+          </View>
+        </View>
 
-              <View style={styles.footer} fixed>
-                <Text style={styles.disclaimerText}>System generated file</Text>
-                <Text style={styles.officialRecordText}>
-                  Official Receiving Record & Documentation as per information
-                  only
-                </Text>
-              </View>
-            </Page>
+        {/* Quality Parameters & Claims Section */}
+        <View style={styles.qualitySection}>
+          <Text style={styles.qualitySectionTitle}>Quality Parameters & Claims</Text>
+          <View style={styles.qualityTableHeader}>
+            <Text style={[styles.qualityTableCol1, styles.qualityTableCellText, { fontWeight: 'bold' }]}>Sl</Text>
+            <Text style={[styles.qualityTableCol2, styles.qualityTableCellText, { fontWeight: 'bold' }]}>Parameter</Text>
+            <Text style={[styles.qualityTableCol3, styles.qualityTableCellText, { fontWeight: 'bold' }]}>Standard</Text>
+            <Text style={[styles.qualityTableCol4, styles.qualityTableCellText, { fontWeight: 'bold' }]}>Actual</Text>
+            <Text style={[styles.qualityTableCol5, styles.qualityTableCellText, { fontWeight: 'bold' }]}>Notes</Text>
+            <Text style={[styles.qualityTableCol6, styles.qualityTableCellText, { fontWeight: 'bold' }]}>Claim Amount</Text>
+          </View>
+          
+          {(data.qualityClaims || []).map((claim, idx) => (
+            <View key={idx} style={styles.qualityTableRow}>
+              <Text style={[styles.qualityTableCol1, styles.qualityTableCellText]}>{idx + 1}</Text>
+              <Text style={[styles.qualityTableCol2, styles.qualityTableCellText]}>{claim.parameterName || "-"}</Text>
+              <Text style={[styles.qualityTableCol3, styles.qualityTableCellText]}>{claim.standardValue || "-"}</Text>
+              <Text style={[styles.qualityTableCol4, styles.qualityTableCellText]}>{claim.actualValue || "-"}</Text>
+              <Text style={[styles.qualityTableCol5, styles.qualityTableCellText]}>{claim.notes || "-"}</Text>
+              <Text style={[styles.qualityTableCol6, styles.qualityTableCellText]}>
+                {claim.claimAmount ? formatAmount(claim.claimAmount) : "0.00"}
+              </Text>
+            </View>
+          ))}
+          
+          {data.manualClaim && (
+            <View style={styles.qualityTableRow}>
+              <Text style={[styles.qualityTableCol1, styles.qualityTableCellText]}>{(data.qualityClaims || []).length + 1}</Text>
+              <Text style={[styles.qualityTableCol2, styles.qualityTableCellText]}>Manual Claim</Text>
+              <Text style={[styles.qualityTableCol3, styles.qualityTableCellText]}>-</Text>
+              <Text style={[styles.qualityTableCol4, styles.qualityTableCellText]}>-</Text>
+              <Text style={[styles.qualityTableCol5, styles.qualityTableCellText]}>-</Text>
+              <Text style={[styles.qualityTableCol6, styles.qualityTableCellText]}>
+                {data.manualClaimAmount ? formatAmount(data.manualClaimAmount) : "0.00"}
+              </Text>
+            </View>
+          )}
+
+          {/* Total Claim Row */}
+          <View style={styles.qualityTotalRow}>
+            <Text style={[styles.qualityTableCol1, styles.qualityTableCellText]}></Text>
+            <Text style={[styles.qualityTableCol2, styles.qualityTableCellText, { fontWeight: 'bold' }]}>Total Claims</Text>
+            <Text style={[styles.qualityTableCol3, styles.qualityTableCellText]}></Text>
+            <Text style={[styles.qualityTableCol4, styles.qualityTableCellText]}></Text>
+            <Text style={[styles.qualityTableCol5, styles.qualityTableCellText]}></Text>
+            <Text style={[styles.qualityTableCol6, styles.qualityTableCellText, { fontWeight: 'bold' }]}>
+              {formatAmount(
+                (data.qualityClaims || []).reduce((sum, claim) => sum + (Number(claim.claimAmount) || 0), 0) +
+                (data.manualClaim ? (Number(data.manualClaimAmount) || 0) : 0)
+              )}
+            </Text>
+          </View>
+        </View>
+
+        <View style={styles.footer} fixed>
+          <Text style={styles.disclaimerText}>System generated file</Text>
+          <Text style={styles.officialRecordText}>
+            Official Receiving Record & Documentation as per information
+            only
+          </Text>
+        </View>
+      </Page>
 
             {docUrls.map((doc, docIdx) => (
               <Page
