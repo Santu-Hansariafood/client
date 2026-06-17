@@ -113,8 +113,9 @@ const QualityClaimsTable = ({
     return null;
   }
 
-  // Filter out claims with empty or zero standard values
+  // Filter out claims with empty or zero standard values only if showAllQualityParameters is false
   const validClaims = editEntry.qualityClaims.filter(claim => {
+    if (editEntry.showAllQualityParameters) return true;
     const standardValue = claim.standardValue || claim.paramValues?.find(v => v.baseValue)?.baseValue || 0;
     return parseFloat(standardValue) > 0;
   });
@@ -201,17 +202,24 @@ const QualityClaimsTable = ({
                   {claim.parameterName}
                 </td>
                 <td className="px-4 py-3">
-                  <span className="text-slate-600 font-bold">
-                    {displayStandardValue}%
-                  </span>
-                  {claim.paramValues?.some((v) => v.maxValue) && (
-                    <span className="ml-2 text-xs text-slate-400">
-                      (Max:{" "}
-                      {claim.paramValues?.find((v) => v.maxValue)?.maxValue ||
-                        claim.paramValues?.[0]?.maxValue}
-                      %)
-                    </span>
-                  )}
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      value={claim.standardValue}
+                      onChange={(e) =>
+                        handleQualityChange(originalIndex, "standardValue", e.target.value)
+                      }
+                      placeholder="Standard"
+                      disabled={editEntry.manualClaim}
+                      className={`w-24 px-3 py-1.5 border rounded-lg text-sm font-bold focus:outline-none focus:ring-2 focus:ring-indigo-500/20 ${
+                        editEntry.manualClaim
+                          ? "bg-slate-100 border-slate-200 cursor-not-allowed"
+                          : "bg-white border-slate-300"
+                      }`}
+                      step="0.01"
+                    />
+                    <span className="text-slate-600 font-bold">%</span>
+                  </div>
                 </td>
                 <td className="px-4 py-3">
                   <input

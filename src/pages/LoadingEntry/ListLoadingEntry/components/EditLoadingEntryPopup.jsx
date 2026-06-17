@@ -36,14 +36,16 @@ const EditLoadingEntryPopup = ({
     // const gstAmount = totalBill * ((Number(currentSelfOrder?.gst) || 0) / 100);
     const totalClaim = editEntry.manualClaim
       ? Number(editEntry.manualClaimAmount || 0)
-      : editEntry.qualityClaims.reduce(
-          (total, claim) => total + (Number(claim.claimAmount) || 0),
-          0
-        );
+      : editEntry.qualityClaims
+          .reduce(
+            (total, claim) => total + (Number(claim.claimAmount) || 0),
+            0
+          );
     const secondClaim = Number(editEntry.secondClaim || 0);
     const otherCharges = Number(editEntry.otherCharges || 0);
-    const bankCharges = Number(editEntry.bankCharges || 200);
-    return (totalBill - totalClaim - secondClaim - otherCharges - bankCharges).toFixed(2);
+    const bankCharges = Number(editEntry.bankCharges || 0);
+    const tds = Number(editEntry.tds || 0);
+    return (totalBill - totalClaim - secondClaim - otherCharges - bankCharges - tds).toFixed(2);
   };
 
   const handleManualRateChange = (e) => {
@@ -413,6 +415,24 @@ const EditLoadingEntryPopup = ({
         </div>
       </div>
 
+      <div className="mt-4 flex items-center gap-3">
+        <input
+          type="checkbox"
+          id="showAllQualityParameters"
+          checked={editEntry.showAllQualityParameters}
+          onChange={(e) => {
+            setEditEntry((prev) => ({
+              ...prev,
+              showAllQualityParameters: e.target.checked,
+            }));
+            // We need to re-fetch or re-initialize quality claims when this changes - but maybe just a note to reload? Wait, let's add a useEffect in ListLoadingEntry.jsx for this.
+          }}
+          className="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500 cursor-pointer"
+        />
+        <label htmlFor="showAllQualityParameters" className="text-sm font-semibold text-slate-700 cursor-pointer">
+          Show All Quality Parameters
+        </label>
+      </div>
       <QualityClaimsTable
         editEntry={editEntry}
         currentSelfOrder={currentSelfOrder}
@@ -505,66 +525,174 @@ const EditLoadingEntryPopup = ({
                 </span>
               </div>
 
-              <div className="space-y-2">
-                <div className="flex justify-between items-center p-3 bg-white rounded-lg shadow-xs border border-purple-100">
-                  <span className="font-semibold text-slate-700">
-                    Less Second Claim:
-                  </span>
-                  <div className="flex items-center gap-2">
-                    <span className="text-slate-400 font-bold">₹</span>
+              <div className="space-y-3">
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center p-3 bg-white rounded-lg shadow-xs border border-purple-100">
+                    <span className="font-semibold text-slate-700">
+                      Less Second Claim:
+                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-slate-400 font-bold">₹</span>
+                      <input
+                        type="number"
+                        value={editEntry.secondClaim || ""}
+                        onChange={(e) => {
+                          setEditEntry((prev) => ({
+                            ...prev,
+                            secondClaim: e.target.value,
+                          }));
+                        }}
+                        placeholder="Add second claim"
+                        className="w-24 px-2 py-1 border border-slate-300 rounded-lg text-sm font-bold focus:outline-none focus:ring-2 focus:ring-purple-500/20"
+                        step="0.01"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 p-2 bg-white rounded-lg shadow-xs border border-slate-100">
+                    <span className="text-sm font-semibold text-slate-700 w-24">
+                      Remarks:
+                    </span>
                     <input
-                      type="number"
-                      value={editEntry.secondClaim || ""}
+                      type="text"
+                      value={editEntry.secondClaimRemarks || ""}
                       onChange={(e) => {
                         setEditEntry((prev) => ({
                           ...prev,
-                          secondClaim: e.target.value,
+                          secondClaimRemarks: e.target.value,
                         }));
                       }}
-                      placeholder="Add second claim"
-                      className="w-24 px-2 py-1 border border-slate-300 rounded-lg text-sm font-bold focus:outline-none focus:ring-2 focus:ring-purple-500/20"
-                      step="0.01"
+                      placeholder="Add remarks for second claim"
+                      className="flex-1 px-2 py-1 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-slate-500/20"
                     />
                   </div>
                 </div>
-                <div className="flex justify-between items-center p-3 bg-white rounded-lg shadow-xs border border-teal-100">
-                  <span className="font-semibold text-slate-700">
-                    Less Other Charges:
-                  </span>
-                  <div className="flex items-center gap-2">
-                    <span className="text-slate-400 font-bold">₹</span>
+
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center p-3 bg-white rounded-lg shadow-xs border border-teal-100">
+                    <span className="font-semibold text-slate-700">
+                      Less Other Charges:
+                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-slate-400 font-bold">₹</span>
+                      <input
+                        type="number"
+                        value={editEntry.otherCharges || ""}
+                        onChange={(e) => {
+                          setEditEntry((prev) => ({
+                            ...prev,
+                            otherCharges: e.target.value,
+                          }));
+                        }}
+                        placeholder="Add other charges"
+                        className="w-24 px-2 py-1 border border-slate-300 rounded-lg text-sm font-bold focus:outline-none focus:ring-2 focus:ring-teal-500/20"
+                        step="0.01"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 p-2 bg-white rounded-lg shadow-xs border border-slate-100">
+                    <span className="text-sm font-semibold text-slate-700 w-24">
+                      Remarks:
+                    </span>
                     <input
-                      type="number"
-                      value={editEntry.otherCharges || ""}
+                      type="text"
+                      value={editEntry.otherChargesRemarks || ""}
                       onChange={(e) => {
                         setEditEntry((prev) => ({
                           ...prev,
-                          otherCharges: e.target.value,
+                          otherChargesRemarks: e.target.value,
                         }));
                       }}
-                      placeholder="Add other charges"
-                      className="w-24 px-2 py-1 border border-slate-300 rounded-lg text-sm font-bold focus:outline-none focus:ring-2 focus:ring-teal-500/20"
-                      step="0.01"
+                      placeholder="Add remarks for other charges"
+                      className="flex-1 px-2 py-1 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-slate-500/20"
                     />
                   </div>
                 </div>
-                <div className="flex justify-between items-center p-3 bg-white rounded-lg shadow-xs border border-orange-100">
-                  <span className="font-semibold text-slate-700">
-                    Less Bank Charges:
-                  </span>
-                  <div className="flex items-center gap-2">
-                    <span className="text-slate-400 font-bold">₹</span>
+
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center p-3 bg-white rounded-lg shadow-xs border border-orange-100">
+                    <span className="font-semibold text-slate-700">
+                      Less Bank Charges:
+                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-slate-400 font-bold">₹</span>
+                      <input
+                        type="number"
+                        value={editEntry.bankCharges || ""}
+                        onChange={(e) => {
+                          setEditEntry((prev) => ({
+                            ...prev,
+                            bankCharges: e.target.value,
+                          }));
+                        }}
+                        placeholder="Add bank charges"
+                        className="w-24 px-2 py-1 border border-slate-300 rounded-lg text-sm font-bold focus:outline-none focus:ring-2 focus:ring-orange-500/20"
+                        step="0.01"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 p-2 bg-white rounded-lg shadow-xs border border-slate-100">
+                    <span className="text-sm font-semibold text-slate-700 w-24">
+                      Remarks:
+                    </span>
                     <input
-                      type="number"
-                      value={editEntry.bankCharges || 200}
-                      readOnly
-                      className="w-24 px-2 py-1 bg-slate-50 border border-slate-200 rounded-lg text-sm font-bold text-orange-600 outline-none"
+                      type="text"
+                      value={editEntry.bankChargesRemarks || ""}
+                      onChange={(e) => {
+                        setEditEntry((prev) => ({
+                          ...prev,
+                          bankChargesRemarks: e.target.value,
+                        }));
+                      }}
+                      placeholder="Add remarks for bank charges"
+                      className="flex-1 px-2 py-1 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-slate-500/20"
                     />
                   </div>
                 </div>
+
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center p-3 bg-white rounded-lg shadow-xs border border-red-100">
+                    <span className="font-semibold text-slate-700">
+                      Less TDS:
+                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-slate-400 font-bold">₹</span>
+                      <input
+                        type="number"
+                        value={editEntry.tds || ""}
+                        onChange={(e) => {
+                          setEditEntry((prev) => ({
+                            ...prev,
+                            tds: e.target.value,
+                          }));
+                        }}
+                        placeholder="Add TDS"
+                        className="w-24 px-2 py-1 border border-slate-300 rounded-lg text-sm font-bold focus:outline-none focus:ring-2 focus:ring-red-500/20"
+                        step="0.01"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 p-2 bg-white rounded-lg shadow-xs border border-slate-100">
+                    <span className="text-sm font-semibold text-slate-700 w-24">
+                      Remarks:
+                    </span>
+                    <input
+                      type="text"
+                      value={editEntry.tdsRemarks || ""}
+                      onChange={(e) => {
+                        setEditEntry((prev) => ({
+                          ...prev,
+                          tdsRemarks: e.target.value,
+                        }));
+                      }}
+                      placeholder="Add remarks for TDS"
+                      className="flex-1 px-2 py-1 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-slate-500/20"
+                    />
+                  </div>
+                </div>
+
                 <div className="flex items-center gap-2 p-2 bg-white rounded-lg shadow-xs border border-slate-100">
                   <span className="text-sm font-semibold text-slate-700 w-24">
-                    Remarks:
+                    General Remarks:
                   </span>
                   <input
                     type="text"

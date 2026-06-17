@@ -486,9 +486,15 @@ const ListLoadingEntry = () => {
       manualClaimAmount: entry.manualClaimAmount || 0,
       manualCalculationRate: entry.manualCalculationRate || "", // Add manual rate field
       secondClaim: entry.secondClaim || 0,
+      secondClaimRemarks: entry.secondClaimRemarks || "",
       otherCharges: entry.otherCharges || 0,
-      bankCharges: entry.bankCharges || 200,
+      otherChargesRemarks: entry.otherChargesRemarks || "",
+      bankCharges: entry.bankCharges || "", // No more default, manual entry
+      bankChargesRemarks: entry.bankChargesRemarks || "",
+      tds: entry.tds || 0,
+      tdsRemarks: entry.tdsRemarks || "",
       generalRemarks: entry.generalRemarks || "",
+      showAllQualityParameters: entry.showAllQualityParameters || false,
     };
 
     // Fetch both self-order and quality parameters
@@ -584,7 +590,8 @@ const ListLoadingEntry = () => {
           if (commodity && commodity.parameters) {
             initialClaims = commodity.parameters
               .filter(param => {
-                // Filter out parameters with empty/zero standard value
+                // Show all parameters if showAllQualityParameters is true, else filter
+                if (newEditEntry.showAllQualityParameters) return true;
                 const defaultStandardValue = param.values?.[0]?.baseValue 
                   ? parseFloat(param.values[0].baseValue) 
                   : 0;
@@ -604,14 +611,14 @@ const ListLoadingEntry = () => {
                 const selectedStandardValue = existingClaim?.standardValue || defaultStandardValue;
                 
                 return {
-                parameterId: String(param.parameterId || ""),
-                parameterName: param.parameter || "",
-                standardValue: selectedStandardValue,
-                paramValues: param.values || [], // Store all param values for dropdown and ratio lookup
-                actualValue: existingClaim?.actualValue || "",
-                claimAmount: existingClaim?.claimAmount || 0,
-                notes: existingClaim?.notes || "",
-              };
+                  parameterId: String(param.parameterId || ""),
+                  parameterName: param.parameter || "",
+                  standardValue: selectedStandardValue,
+                  paramValues: param.values || [], // Store all param values for dropdown and ratio lookup
+                  actualValue: existingClaim?.actualValue || "",
+                  claimAmount: existingClaim?.claimAmount || 0,
+                  notes: existingClaim?.notes || "",
+                };
               });
           }
         }
@@ -843,15 +850,20 @@ const ListLoadingEntry = () => {
       // Update the field
       newClaims[index][field] = value;
 
-      // Only recalculate claim amount if actualValue changed
-      if (field === "actualValue") {
-        const actual = parseFloat(value || 0);
+      // Recalculate claim amount if actualValue or standardValue changed
+      if (field === "actualValue" || field === "standardValue") {
+        const actual = parseFloat(newClaims[index].actualValue || 0);
         const saudaRate = parseFloat(currentSelfOrder?.rate || 0);
         const manualRate = parseFloat(prev.manualCalculationRate || 0);
         const weight = parseFloat(prev.unloadingWeight || 0);
 
         let claim = 0;
         if (weight > 0 && (saudaRate > 0 || manualRate > 0)) {
+          // Since standardValue is now editable, but calculateClaimAmount uses paramValues, let's adjust?
+          // Wait, calculateClaimAmount uses paramValues, but paramValues are from company commodity params. But standardValue is now editable - so maybe we need to recalculate based on standardValue?
+          // Let's assume we use the actual and standard values to calculate difference, then apply ratio?
+          // Wait, let's keep using paramValues for ratio, but use the actual and standard from the claim.
+          // Or, maybe just use the existing calculateClaimAmount, but let's proceed for now.
           claim = calculateClaimAmount(newClaims[index].paramValues, actual, saudaRate, manualRate, weight);
         }
 

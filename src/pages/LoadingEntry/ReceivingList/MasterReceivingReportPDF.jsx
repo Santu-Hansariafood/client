@@ -855,6 +855,13 @@ const MasterReceivingReportPDF = ({ entries = [], logoUrl }) => {
               </Text>
             </View>
           )}
+          {/* Second Claim Remarks */}
+          {data.secondClaimRemarks && (
+            <View style={styles.summaryRow}>
+              <Text style={styles.summaryLabel}>  Remarks:</Text>
+              <Text style={styles.summaryValue}>{data.secondClaimRemarks}</Text>
+            </View>
+          )}
           
           {/* Other Charges */}
           {data.otherCharges && Number(data.otherCharges) > 0 && (
@@ -865,14 +872,47 @@ const MasterReceivingReportPDF = ({ entries = [], logoUrl }) => {
               </Text>
             </View>
           )}
+          {/* Other Charges Remarks */}
+          {data.otherChargesRemarks && (
+            <View style={styles.summaryRow}>
+              <Text style={styles.summaryLabel}>  Remarks:</Text>
+              <Text style={styles.summaryValue}>{data.otherChargesRemarks}</Text>
+            </View>
+          )}
           
-          {/* Bank Charges (always show as it's fixed) */}
-          <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>Less: Bank Charges</Text>
-            <Text style={styles.summaryValue}>
-              - Rs. {formatAmount(data.bankCharges || 200)}
-            </Text>
-          </View>
+          {/* Bank Charges (show if present) */}
+          {data.bankCharges && Number(data.bankCharges) > 0 && (
+            <View style={styles.summaryRow}>
+              <Text style={styles.summaryLabel}>Less: Bank Charges</Text>
+              <Text style={styles.summaryValue}>
+                - Rs. {formatAmount(data.bankCharges)}
+              </Text>
+            </View>
+          )}
+          {/* Bank Charges Remarks */}
+          {data.bankChargesRemarks && (
+            <View style={styles.summaryRow}>
+              <Text style={styles.summaryLabel}>  Remarks:</Text>
+              <Text style={styles.summaryValue}>{data.bankChargesRemarks}</Text>
+            </View>
+          )}
+          
+          {/* TDS */}
+          {data.tds && Number(data.tds) > 0 && (
+            <View style={styles.summaryRow}>
+              <Text style={styles.summaryLabel}>Less: TDS</Text>
+              <Text style={styles.summaryValue}>
+                - Rs. {formatAmount(data.tds)}
+              </Text>
+            </View>
+          )}
+          {/* TDS Remarks */}
+          {data.tdsRemarks && (
+            <View style={styles.summaryRow}>
+              <Text style={styles.summaryLabel}>  Remarks:</Text>
+              <Text style={styles.summaryValue}>{data.tdsRemarks}</Text>
+            </View>
+          )}
           
           {/* Total Deductions */}
           <View style={styles.summaryRow}>
@@ -883,7 +923,8 @@ const MasterReceivingReportPDF = ({ entries = [], logoUrl }) => {
                 (data.manualClaim ? (Number(data.manualClaimAmount) || 0) : 0) +
                 (Number(data.secondClaim) || 0) +
                 (Number(data.otherCharges) || 0) +
-                (Number(data.bankCharges) || 200))
+                (Number(data.bankCharges) || 0) +
+                (Number(data.tds) || 0))
               )}
             </Text>
           </View>
@@ -898,7 +939,8 @@ const MasterReceivingReportPDF = ({ entries = [], logoUrl }) => {
                   (data.manualClaim ? (Number(data.manualClaimAmount) || 0) : 0) +
                   (Number(data.secondClaim) || 0) +
                   (Number(data.otherCharges) || 0) +
-                  (Number(data.bankCharges) || 200)
+                  (Number(data.bankCharges) || 0) +
+                  (Number(data.tds) || 0)
                 )
               )}
             </Text>
@@ -914,7 +956,8 @@ const MasterReceivingReportPDF = ({ entries = [], logoUrl }) => {
                   (data.manualClaim ? (Number(data.manualClaimAmount) || 0) : 0) +
                   (Number(data.secondClaim) || 0) +
                   (Number(data.otherCharges) || 0) +
-                  (Number(data.bankCharges) || 200)
+                  (Number(data.bankCharges) || 0) +
+                  (Number(data.tds) || 0)
                 )
               )}
             </Text>
