@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, lazy, Suspense } from "react";
 import { useLocation } from "react-router-dom";
 import api from "../../../utils/apiClient/apiClient";
+import { downloadFile } from "../../../utils/fileDownloader";
 import { toast } from "react-toastify";
 import {
   FaTruckLoading,
@@ -11,7 +12,6 @@ import {
 import { useAuth } from "../../../context/AuthContext/AuthContext";
 import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
 import Loading from "../../../common/Loading/Loading";
-import generateExcel from "../../../common/GenerateExcel/GenerateExcel";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import logoUrl from "../../../assets/Hans.png";
@@ -108,7 +108,7 @@ const PendingLoadingList = () => {
       const params = {
         page: currentPage,
         limit: itemsPerPage,
-        role: userRole,
+        userRole,
         mobile,
         search: searchInput || undefined,
         startDate: startDate || undefined,
@@ -192,125 +192,32 @@ const PendingLoadingList = () => {
   const handleDownloadExcel = async () => {
     try {
       const toastId = toast.loading("Preparing Excel...");
-      // For Excel, we might want to fetch all filtered data without pagination
       const params = {
-        limit: 5000, // Fetch a large enough number for export
-        role: userRole,
+        userRole,
         mobile,
         search: searchInput || undefined,
         startDate: startDate || undefined,
         endDate: endDate || undefined,
         buyerCompany: selectedBuyerCompany?.value || undefined,
         sellerCompany: selectedSellerCompany?.value || undefined,
-        status: "active",
       };
-      const response = await api.get("/self-order/pending/list", { params });
-      const exportData = response.data.data || [];
-
-      const excelRows = exportData.map((item, index) => {
-        const quantity = item.quantity || 0;
-        let pendingQuantity = item.pendingQuantity;
-        if (
-          (pendingQuantity === undefined ||
-            pendingQuantity === null ||
-            (pendingQuantity === 0 && item.status === "active")) &&
-          item.status !== "closed"
-        ) {
-          pendingQuantity = quantity;
-        } else {
-          pendingQuantity = Number(pendingQuantity || 0);
-        }
-
-        return {
-          "Sl No": index + 1,
-          Date: formatDate(item.poDate || item.createdAt),
-          "Sauda No": item.saudaNo || "N/A",
-          "Seller Company": item.supplierCompany || "N/A",
-          "Seller Name": getSellerName(item) || "N/A",
-          "Buyer Company": item.buyerCompany || "N/A",
-          Consignee: getConsigneeDisplay(item),
-          Commodity: item.commodity || "N/A",
-          "Total Quantity": quantity.toFixed(2),
-          "Pending Quantity": pendingQuantity.toFixed(2),
-          "Loaded Quantity": (item.totalUnloadingWeight || 0).toFixed(2),
-          Rate: item.rate || 0,
-          "Loaded Brokerage": (
-            (item.totalUnloadingWeight || 0) *
-            (item.buyerBrokerage?.brokerageSupplier || 0)
-          ).toFixed(2),
-          "Pending Brokerage": (
-            pendingQuantity * (item.buyerBrokerage?.brokerageSupplier || 0)
-          ).toFixed(2),
-          "Total Brokerage": (
-            ((item.totalUnloadingWeight || 0) + pendingQuantity) *
-            (item.buyerBrokerage?.brokerageSupplier || 0)
-          ).toFixed(2),
-          "Payment Terms": item.paymentTerms || "N/A",
-        };
+      
+      const response = await api.get("/self-order/pending/export/excel", {
+        params,
+        responseType: "blob",
       });
 
-      if (excelRows.length === 0) {
-        toast.dismiss(toastId);
-        toast.info("No data available to download.");
-        return;
+      const contentDisposition = response.headers["content-disposition"];
+      let filename = `PendingSaudaReport_${new Date().toISOString().split("T")[0]}.xlsx`;
+      
+      if (contentDisposition) {
+        const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+        if (filenameMatch && filenameMatch[1]) {
+          filename = filenameMatch[1].replace(/['"]/g, "");
+        }
       }
 
-      // Add total row
-      const totals = exportData.reduce(
-        (acc, item) => {
-          const quantity = item.quantity || 0;
-          let pendingQuantity = item.pendingQuantity;
-          if (
-            (pendingQuantity === undefined ||
-              pendingQuantity === null ||
-              (pendingQuantity === 0 && item.status === "active")) &&
-            item.status !== "closed"
-          ) {
-            pendingQuantity = quantity;
-          } else {
-            pendingQuantity = Number(pendingQuantity || 0);
-          }
-          const loadedWeight = item.totalUnloadingWeight || 0;
-          const brokerageRate = item.buyerBrokerage?.brokerageSupplier || 0;
-
-          acc.totalQty += quantity;
-          acc.totalPendingQty += pendingQuantity;
-          acc.totalLoadedQty += loadedWeight;
-          acc.totalLoadedBrokerage += loadedWeight * brokerageRate;
-          acc.totalPendingBrokerage += pendingQuantity * brokerageRate;
-          return acc;
-        },
-        {
-          totalQty: 0,
-          totalPendingQty: 0,
-          totalLoadedQty: 0,
-          totalLoadedBrokerage: 0,
-          totalPendingBrokerage: 0,
-        },
-      );
-
-      excelRows.push({
-        "Sl No": "TOTAL",
-        Date: "",
-        "Sauda No": "",
-        "Seller Company": "",
-        "Seller Name": "",
-        "Buyer Company": "",
-        Consignee: "",
-        Commodity: "",
-        "Total Quantity": totals.totalQty.toFixed(2),
-        "Pending Quantity": totals.totalPendingQty.toFixed(2),
-        "Loaded Quantity": totals.totalLoadedQty.toFixed(2),
-        Rate: "",
-        "Loaded Brokerage": totals.totalLoadedBrokerage.toFixed(2),
-        "Pending Brokerage": totals.totalPendingBrokerage.toFixed(2),
-        "Total Brokerage": (
-          totals.totalLoadedBrokerage + totals.totalPendingBrokerage
-        ).toFixed(2),
-        "Payment Terms": "",
-      });
-
-      await generateExcel(excelRows, `PendingSaudaReport_${new Date().toISOString().split("T")[0]}.xlsx`);
+      await downloadFile(response.data, filename, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
       toast.dismiss(toastId);
       toast.success("Excel downloaded successfully");
     } catch (error) {

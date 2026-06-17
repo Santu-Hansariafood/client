@@ -610,6 +610,24 @@ router.get("/pending/summary", async (req, res) => {
         mobileConditions.push({ supplier: seller._id });
       }
       matchQuery.$and = [{ $or: mobileConditions }];
+    } else if (userRole === "Buyer" && mobile) {
+      const phoneRegex = /^(?:\+91|0)?([6-9]\d{9})$/;
+      const phoneMatch = String(mobile).match(phoneRegex);
+      const normalizedMobile = phoneMatch ? phoneMatch[1] : mobile;
+
+      const buyer = await Buyer.findOne({
+        mobile: { $regex: new RegExp(normalizedMobile + "$") },
+      });
+
+      const buyerConditions = [
+        { buyerMobile: normalizedMobile },
+        { buyerMobile: { $regex: new RegExp(normalizedMobile + "$") } },
+      ];
+
+      if (buyer && buyer.companyIds && buyer.companyIds.length > 0) {
+        buyerConditions.push({ companyId: { $in: buyer.companyIds } });
+      }
+      matchQuery.$and = [{ $or: buyerConditions }];
     }
 
     const pipeline = [
@@ -826,6 +844,14 @@ router.get("/pending/summary", async (req, res) => {
     ];
 
     if (search) {
+      // First get seller names in a lookup to filter
+      statsPipeline.splice(5, 0, {
+        $addFields: {
+          sellerName: {
+            $ifNull: ["$sellerDetails.sellerName", "$supplierCompany"],
+          },
+        },
+      });
       const searchRegex = new RegExp(escapeRegex(search), "i");
       statsPipeline.push({
         $match: {
@@ -907,6 +933,26 @@ router.get("/pending/list", async (req, res) => {
       
       if (!query.$and) query.$and = [];
       query.$and.push({ $or: mobileConditions });
+    } else if (userRole === "Buyer" && mobile) {
+      const phoneRegex = /^(?:\+91|0)?([6-9]\d{9})$/;
+      const phoneMatch = String(mobile).match(phoneRegex);
+      const normalizedMobile = phoneMatch ? phoneMatch[1] : mobile;
+
+      const buyer = await Buyer.findOne({
+        mobile: { $regex: new RegExp(normalizedMobile + "$") },
+      });
+
+      const buyerConditions = [
+        { buyerMobile: normalizedMobile },
+        { buyerMobile: { $regex: new RegExp(normalizedMobile + "$") } },
+      ];
+
+      if (buyer && buyer.companyIds && buyer.companyIds.length > 0) {
+        buyerConditions.push({ companyId: { $in: buyer.companyIds } });
+      }
+
+      if (!query.$and) query.$and = [];
+      query.$and.push({ $or: buyerConditions });
     }
 
     if (search) {
@@ -1007,6 +1053,305 @@ router.get("/pending/list", async (req, res) => {
   } catch (error) {
     console.error("Pending list error:", error);
     res.status(500).json({ message: error.message });
+  }
+});
+
+router.get("/pending/export/excel", async (req, res) => {
+  try {
+    const search = (req.query.search || "").trim();
+    const startDate = req.query.startDate;
+    const endDate = req.query.endDate;
+    const buyerCompany = req.query.buyerCompany;
+    const supplierCompany = req.query.sellerCompany;
+    const mobile = req.query.mobile;
+    const userRole = req.query.userRole;
+
+    let query = {};
+    query.status = "active";
+    query.$or = [
+      { pendingQuantity: { $gt: 0 } },
+      { pendingQuantity: { $exists: false } },
+    ];
+
+    if (userRole === "Seller" && mobile) {
+      const phoneRegex = /^(?:\+91|0)?([6-9]\d{9})$/;
+      const phoneMatch = String(mobile).match(phoneRegex);
+      const normalizedMobile = phoneMatch ? phoneMatch[1] : mobile;
+
+      const seller = await Seller.findOne({
+        "phoneNumbers.value": { $regex: new RegExp(normalizedMobile + "$") },
+      });
+
+      const mobileConditions = [
+        { sellerMobile: normalizedMobile },
+        { sellerMobile: { $regex: new RegExp(normalizedMobile + "$") } },
+      ];
+
+      if (seller) {
+        mobileConditions.push({ supplier: seller._id });
+      }
+      
+      if (!query.$and) query.$and = [];
+      query.$and.push({ $or: mobileConditions });
+    } else if (userRole === "Buyer" && mobile) {
+      const phoneRegex = /^(?:\+91|0)?([6-9]\d{9})$/;
+      const phoneMatch = String(mobile).match(phoneRegex);
+      const normalizedMobile = phoneMatch ? phoneMatch[1] : mobile;
+
+      const buyer = await Buyer.findOne({
+        mobile: { $regex: new RegExp(normalizedMobile + "$") },
+      });
+
+      const buyerConditions = [
+        { buyerMobile: normalizedMobile },
+        { buyerMobile: { $regex: new RegExp(normalizedMobile + "$") } },
+      ];
+
+      if (buyer && buyer.companyIds && buyer.companyIds.length > 0) {
+        buyerConditions.push({ companyId: { $in: buyer.companyIds } });
+      }
+
+      if (!query.$and) query.$and = [];
+      query.$and.push({ $or: buyerConditions });
+    }
+
+    if (search) {
+      const searchRegex = new RegExp(escapeRegex(search), "i");
+      const searchOr = {
+        $or: [
+          { supplierCompany: { $regex: searchRegex } },
+          { saudaNo: { $regex: searchRegex } },
+          { buyerCompany: { $regex: searchRegex } },
+          { commodity: { $regex: searchRegex } },
+        ],
+      };
+      if (!query.$and) query.$and = [];
+      query.$and.push(searchOr);
+    }
+
+    if (buyerCompany) {
+      if (!query.$and) query.$and = [];
+      query.$and.push({ buyerCompany: { $regex: new RegExp(escapeRegex(buyerCompany), "i") } });
+    }
+
+    if (supplierCompany) {
+      if (!query.$and) query.$and = [];
+      query.$and.push({ supplierCompany: { $regex: new RegExp(escapeRegex(supplierCompany), "i") } });
+    }
+
+    if (startDate || endDate) {
+      const dateFilter = {};
+      if (startDate) {
+        dateFilter.$gte = new Date(startDate);
+      }
+      if (endDate) {
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+        dateFilter.$lte = end;
+      }
+
+      const dateQuery = {
+        $or: [{ poDate: dateFilter }, { createdAt: dateFilter }],
+      };
+
+      if (!query.$and) query.$and = [];
+      query.$and.push(dateQuery);
+    }
+
+    const pipeline = [
+      { $match: query },
+      { $sort: { poDate: -1, createdAt: -1 } },
+      {
+        $lookup: {
+          from: "sellers",
+          localField: "supplier",
+          foreignField: "_id",
+          as: "supplierDetails",
+        },
+      },
+      {
+        $unwind: {
+          path: "$supplierDetails",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $lookup: {
+          from: "loadingentries",
+          localField: "saudaNo",
+          foreignField: "saudaNo",
+          as: "loadingEntries",
+        },
+      },
+      {
+        $addFields: {
+          totalUnloadingWeight: { $sum: "$loadingEntries.unloadingWeight" },
+          supplier: "$supplierDetails",
+        },
+      },
+      {
+        $lookup: {
+          from: "consignees",
+          localField: "consignee",
+          foreignField: "_id",
+          as: "consigneeDetails",
+        },
+      },
+      {
+        $unwind: {
+          path: "$consigneeDetails",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+    ];
+
+    const items = await SelfOrder.aggregate(pipeline);
+
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet("Pending Sauda");
+
+    const formatDate = (date) => {
+      if (!date) return "";
+      const d = new Date(date);
+      return isNaN(d.getTime()) ? "" : d.toLocaleDateString("en-GB");
+    };
+
+    const getSellerName = (item) => {
+      return item?.supplier?.sellerName || item?.supplierCompany || "";
+    };
+
+    const getConsigneeDisplay = (item) => {
+      if (item?.consigneeDetails?.name) return item.consigneeDetails.name;
+      if (item?.consigneeDetails?.label) return item.consigneeDetails.label;
+      if (item?.consignee?.name) return item.consignee.name;
+      if (item?.consignee?.label) return item.consignee.label;
+      if (typeof item?.consignee === "string") return item.consignee;
+      return "N/A";
+    };
+
+    const columns = [
+      { header: "Sl No", key: "slNo", width: 10 },
+      { header: "Date", key: "date", width: 15 },
+      { header: "Sauda No", key: "saudaNo", width: 15 },
+      { header: "Seller Company", key: "sellerCompany", width: 30 },
+      { header: "Seller Name", key: "sellerName", width: 30 },
+      { header: "Buyer Company", key: "buyerCompany", width: 30 },
+      { header: "Consignee", key: "consignee", width: 30 },
+      { header: "Commodity", key: "commodity", width: 20 },
+      { header: "Total Quantity", key: "totalQuantity", width: 15 },
+      { header: "Pending Quantity", key: "pendingQuantity", width: 15 },
+      { header: "Loaded Quantity", key: "loadedQuantity", width: 15 },
+      { header: "Rate", key: "rate", width: 15 },
+      { header: "Loaded Brokerage", key: "loadedBrokerage", width: 18 },
+      { header: "Pending Brokerage", key: "pendingBrokerage", width: 18 },
+      { header: "Total Brokerage", key: "totalBrokerage", width: 18 },
+      { header: "Payment Terms", key: "paymentTerms", width: 20 },
+    ];
+
+    worksheet.columns = columns;
+
+    let totals = {
+      totalQuantity: 0,
+      pendingQuantity: 0,
+      loadedQuantity: 0,
+      loadedBrokerage: 0,
+      pendingBrokerage: 0,
+    };
+
+    items.forEach((item, index) => {
+      const quantity = item.quantity || 0;
+      let pendingQuantity = item.pendingQuantity;
+      if (
+        (pendingQuantity === undefined ||
+          pendingQuantity === null ||
+          (pendingQuantity === 0 && item.status === "active")) &&
+        item.status !== "closed"
+      ) {
+        pendingQuantity = quantity;
+      } else {
+        pendingQuantity = Number(pendingQuantity || 0);
+      }
+      const loadedQuantity = item.totalUnloadingWeight || 0;
+      const brokerageRate = item.buyerBrokerage?.brokerageSupplier || 0;
+      const loadedBrokerage = loadedQuantity * brokerageRate;
+      const pendingBrokerage = pendingQuantity * brokerageRate;
+
+      totals.totalQuantity += quantity;
+      totals.pendingQuantity += pendingQuantity;
+      totals.loadedQuantity += loadedQuantity;
+      totals.loadedBrokerage += loadedBrokerage;
+      totals.pendingBrokerage += pendingBrokerage;
+
+      worksheet.addRow({
+        slNo: index + 1,
+        date: formatDate(item.poDate || item.createdAt),
+        saudaNo: item.saudaNo || "N/A",
+        sellerCompany: item.supplierCompany || "N/A",
+        sellerName: getSellerName(item) || "N/A",
+        buyerCompany: item.buyerCompany || "N/A",
+        consignee: getConsigneeDisplay(item),
+        commodity: item.commodity || "N/A",
+        totalQuantity: quantity.toFixed(2),
+        pendingQuantity: pendingQuantity.toFixed(2),
+        loadedQuantity: loadedQuantity.toFixed(2),
+        rate: item.rate || 0,
+        loadedBrokerage: loadedBrokerage.toFixed(2),
+        pendingBrokerage: pendingBrokerage.toFixed(2),
+        totalBrokerage: (loadedBrokerage + pendingBrokerage).toFixed(2),
+        paymentTerms: item.paymentTerms || "N/A",
+      });
+    });
+
+    if (items.length > 0) {
+      worksheet.addRow({
+        slNo: "TOTAL",
+        date: "",
+        saudaNo: "",
+        sellerCompany: "",
+        sellerName: "",
+        buyerCompany: "",
+        consignee: "",
+        commodity: "",
+        totalQuantity: totals.totalQuantity.toFixed(2),
+        pendingQuantity: totals.pendingQuantity.toFixed(2),
+        loadedQuantity: totals.loadedQuantity.toFixed(2),
+        rate: "",
+        loadedBrokerage: totals.loadedBrokerage.toFixed(2),
+        pendingBrokerage: totals.pendingBrokerage.toFixed(2),
+        totalBrokerage: (totals.loadedBrokerage + totals.pendingBrokerage).toFixed(2),
+        paymentTerms: "",
+      });
+    }
+
+    worksheet.getRow(1).font = { bold: true };
+    worksheet.getRow(1).fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: "FFE0E0E0" },
+    };
+
+    if (items.length > 0) {
+      const lastRow = worksheet.getRow(items.length + 2);
+      lastRow.font = { bold: true };
+    }
+
+    const today = new Date().toISOString().split("T")[0];
+    res.setHeader(
+      "Content-Type",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    );
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="PendingSaudaReport_${today}.xlsx"`,
+    );
+
+    await workbook.xlsx.write(res);
+    res.end();
+  } catch (error) {
+    console.error("Pending export excel error:", error);
+    if (!res.headersSent) {
+      res.status(500).json({ message: error.message });
+    }
   }
 });
 
