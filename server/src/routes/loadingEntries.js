@@ -2178,6 +2178,33 @@ router.get("/sauda/:saudaNo", async (req, res) => {
   }
 });
 
+router.get("/:id", async (req, res) => {
+  try {
+    const data = await LoadingEntry.findById(req.params.id)
+      .populate("supplier")
+      .populate("transporterId")
+      .lean();
+
+    if (!data) {
+      return res.status(404).json({ message: "Loading entry not found" });
+    }
+
+    const order = await SelfOrder.findOne({ saudaNo: data.saudaNo }).lean();
+
+    const result = {
+      ...data,
+      actualRate: order?.rate || 0,
+      gst: order?.gst || 0,
+      cd: order?.cd || 0,
+      commodity: data.commodity || order?.commodity || "",
+    };
+
+    res.json({ data: result });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 router.get("/:id/pdf", async (req, res) => {
   try {
     const data = await LoadingEntry.findById(req.params.id)
