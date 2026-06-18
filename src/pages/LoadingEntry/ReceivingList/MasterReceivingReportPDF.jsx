@@ -459,11 +459,12 @@ const styles = StyleSheet.create({
     borderBottomColor: "#000000",
   },
   qualityTableCol1: { width: "5%", padding: 3, textAlign: "center" },
-  qualityTableCol2: { width: "28%", padding: 3 },
-  qualityTableCol3: { width: "14%", padding: 3, textAlign: "center" },
-  qualityTableCol4: { width: "14%", padding: 3, textAlign: "center" },
-  qualityTableCol5: { width: "25%", padding: 3, textAlign: "center" },
-  qualityTableCol6: { width: "14%", padding: 3, textAlign: "center" },
+  qualityTableCol2: { width: "25%", padding: 3 },
+  qualityTableCol3: { width: "12%", padding: 3, textAlign: "center" },
+  qualityTableCol4: { width: "12%", padding: 3, textAlign: "center" },
+  qualityTableCol5: { width: "12%", padding: 3, textAlign: "center" },
+  qualityTableCol6: { width: "22%", padding: 3, textAlign: "center" },
+  qualityTableCol7: { width: "12%", padding: 3, textAlign: "center" },
   qualityTableRow: {
     flexDirection: "row",
     borderBottomWidth: 0.5,
@@ -825,6 +826,15 @@ const MasterReceivingReportPDF = ({ entries = [], logoUrl }) => {
                       { fontWeight: "bold" },
                     ]}
                   >
+                    Claim %
+                  </Text>
+                  <Text
+                    style={[
+                      styles.qualityTableCol6,
+                      styles.qualityTableCellText,
+                      { fontWeight: "bold" },
+                    ]}
+                  >
                     Notes
                   </Text>
                   <Text
@@ -846,60 +856,74 @@ const MasterReceivingReportPDF = ({ entries = [], logoUrl }) => {
                       claim.notes ||
                       claim.claimAmount
                   )
-                  .map((claim, idx) => (
-                    <View key={idx} style={styles.qualityTableRow}>
-                      <Text
-                        style={[
-                          styles.qualityTableCol1,
-                          styles.qualityTableCellText,
-                        ]}
-                      >
-                        {idx + 1}
-                      </Text>
-                      <Text
-                        style={[
-                          styles.qualityTableCol2,
-                          styles.qualityTableCellText,
-                        ]}
-                      >
-                        {claim.parameterName || "-"}
-                      </Text>
-                      <Text
-                        style={[
-                          styles.qualityTableCol3,
-                          styles.qualityTableCellText,
-                        ]}
-                      >
-                        {claim.standardValue || "-"}
-                      </Text>
-                      <Text
-                        style={[
-                          styles.qualityTableCol4,
-                          styles.qualityTableCellText,
-                        ]}
-                      >
-                        {claim.actualValue || "-"}
-                      </Text>
-                      <Text
-                        style={[
-                          styles.qualityTableCol5,
-                          styles.qualityTableCellText,
-                        ]}
-                      >
-                        {claim.notes || "-"}
-                      </Text>
-                      <Text
-                        style={[
-                          styles.qualityTableCol6,
-                          styles.qualityTableCellText,
-                        ]}
-                      >
-                        {claim.claimAmount
-                          ? formatAmount(claim.claimAmount)
-                          : "0.00"}
-                      </Text>
-                    </View>
-                  ))}
+                  .map((claim, idx) => {
+                    const standard = parseFloat(claim.standardValue) || 0;
+                    const actual = parseFloat(claim.actualValue) || 0;
+                    const claimPercent = Math.max(0, actual - standard);
+                    
+                    return (
+                      <View key={idx} style={styles.qualityTableRow}>
+                        <Text
+                          style={[
+                            styles.qualityTableCol1,
+                            styles.qualityTableCellText,
+                          ]}
+                        >
+                          {idx + 1}
+                        </Text>
+                        <Text
+                          style={[
+                            styles.qualityTableCol2,
+                            styles.qualityTableCellText,
+                          ]}
+                        >
+                          {claim.parameterName || "-"}
+                        </Text>
+                        <Text
+                          style={[
+                            styles.qualityTableCol3,
+                            styles.qualityTableCellText,
+                          ]}
+                        >
+                          {claim.standardValue || "-"}
+                        </Text>
+                        <Text
+                          style={[
+                            styles.qualityTableCol4,
+                            styles.qualityTableCellText,
+                          ]}
+                        >
+                          {claim.actualValue || "-"}
+                        </Text>
+                        <Text
+                          style={[
+                            styles.qualityTableCol5,
+                            styles.qualityTableCellText,
+                          ]}
+                        >
+                          {claimPercent.toFixed(2)}
+                        </Text>
+                        <Text
+                          style={[
+                            styles.qualityTableCol6,
+                            styles.qualityTableCellText,
+                          ]}
+                        >
+                          {claim.notes || "-"}
+                        </Text>
+                        <Text
+                          style={[
+                            styles.qualityTableCol7,
+                            styles.qualityTableCellText,
+                          ]}
+                        >
+                          {claim.claimAmount
+                            ? formatAmount(claim.claimAmount)
+                            : "0.00"}
+                        </Text>
+                      </View>
+                    );
+                  })}
 
                 {data.manualClaim && (
                   <View style={styles.qualityTableRow}>
@@ -909,7 +933,13 @@ const MasterReceivingReportPDF = ({ entries = [], logoUrl }) => {
                         styles.qualityTableCellText,
                       ]}
                     >
-                      {(data.qualityClaims || []).length + 1}
+                      {(data.qualityClaims || []).filter(
+                        (claim) =>
+                          claim.standardValue ||
+                          claim.actualValue ||
+                          claim.notes ||
+                          claim.claimAmount
+                      ).length + 1}
                     </Text>
                     <Text
                       style={[
@@ -946,6 +976,14 @@ const MasterReceivingReportPDF = ({ entries = [], logoUrl }) => {
                     <Text
                       style={[
                         styles.qualityTableCol6,
+                        styles.qualityTableCellText,
+                      ]}
+                    >
+                      -
+                    </Text>
+                    <Text
+                      style={[
+                        styles.qualityTableCol7,
                         styles.qualityTableCellText,
                       ]}
                     >
@@ -993,6 +1031,12 @@ const MasterReceivingReportPDF = ({ entries = [], logoUrl }) => {
                   <Text
                     style={[
                       styles.qualityTableCol6,
+                      styles.qualityTableCellText,
+                    ]}
+                  ></Text>
+                  <Text
+                    style={[
+                      styles.qualityTableCol7,
                       styles.qualityTableCellText,
                       { fontWeight: "bold" },
                     ]}
