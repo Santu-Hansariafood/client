@@ -110,5 +110,6 @@ loadingEntrySchema.index({ loadingDate: -1 });
 loadingEntrySchema.index({ billNumber: 1 });
 loadingEntrySchema.index({ lorryNumber: 1 });
 loadingEntrySchema.index({ createdAt: -1 });
+loadingEntrySchema.index({ supplierCompany: 1 });
 
 export default mongoose.model("LoadingEntry", loadingEntrySchema);

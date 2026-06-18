@@ -1,5 +1,7 @@
 import { Router } from "express";
 import SellerCompany from "../models/SellerCompany.js";
+import mongoose from "mongoose";
+const LoadingEntry = mongoose.model("LoadingEntry");
 
 const router = Router();
 
@@ -51,52 +53,58 @@ router.get("/", async (req, res) => {
       return res.json({ data: items, total: items.length });
     }
 
-    const pipeline = [
-      { $match: query },
-      {
-        $lookup: {
-          from: "loadingentries",
-          let: { compName: "$companyName" },
-          pipeline: [
-            {
-              $match: {
-                $expr: {
-                  $eq: [
-                    { $trim: { input: { $toLower: "$supplierCompany" } } },
-                    { $trim: { input: { $toLower: "$$compName" } } },
-                  ],
-                },
-              },
-            },
-          ],
-          as: "loadingEntries",
+    // Optimized approach: first get all stats from loading entries by grouping, then join
+    const [statsResult, companiesResult, total] = await Promise.all([
+      // Step 1: Calculate all stats by grouping loading entries (FAST!)
+      LoadingEntry.aggregate([
+        {
+          $group: {
+            _id: "$supplierCompany",
+            totalBrokerage: { $sum: "$sellerBrokerage" },
+            totalUnloadingWeight: { $sum: "$unloadingWeight" },
+          },
         },
-      },
-      {
-        $addFields: {
-          totalBrokerage: { $sum: "$loadingEntries.sellerBrokerage" },
-          totalUnloadingWeight: { $sum: "$loadingEntries.unloadingWeight" },
-        },
-      },
-      { $sort: { companyName: 1 } },
-    ];
+      ]),
+      // Step 2: Get the companies with pagination
+      page > 0 && limit > 0
+        ? SellerCompany.find(query)
+            .sort({ companyName: 1 })
+            .skip((page - 1) * limit)
+            .limit(limit)
+            .lean()
+        : SellerCompany.find(query).sort({ companyName: 1 }).lean(),
+      // Step 3: Get total count
+      SellerCompany.countDocuments(query),
+    ]);
 
-    if (page > 0 && limit > 0) {
-      const skip = (page - 1) * limit;
-      const [items, total] = await Promise.all([
-        SellerCompany.aggregate([
-          ...pipeline,
-          { $skip: skip },
-          { $limit: limit },
-        ]),
-        SellerCompany.countDocuments(query),
-      ]);
-      return res.json({ data: items, total });
-    }
+    // Create a map of stats for quick lookup by company name (case-insensitive)
+    const statsMap = new Map();
+    statsResult.forEach((stat) => {
+      if (stat._id) {
+        statsMap.set(stat._id.toLowerCase().trim(), {
+          totalBrokerage: stat.totalBrokerage || 0,
+          totalUnloadingWeight: stat.totalUnloadingWeight || 0,
+        });
+      }
+    });
 
-    const items = await SellerCompany.aggregate(pipeline);
-    res.json({ data: items, total: items.length });
+    // Merge stats with companies
+    const items = companiesResult.map((company) => {
+      const key = company.companyName.toLowerCase().trim();
+      const stats = statsMap.get(key) || {
+        totalBrokerage: 0,
+        totalUnloadingWeight: 0,
+      };
+      return {
+        ...company,
+        totalBrokerage: stats.totalBrokerage,
+        totalUnloadingWeight: stats.totalUnloadingWeight,
+      };
+    });
+
+    res.json({ data: items, total });
   } catch (error) {
+    console.error("Seller companies error:", error);
     res.status(500).json({ message: error.message });
   }
 });
