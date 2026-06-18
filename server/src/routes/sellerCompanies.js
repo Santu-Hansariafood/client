@@ -1,7 +1,6 @@
 import { Router } from "express";
 import SellerCompany from "../models/SellerCompany.js";
-import mongoose from "mongoose";
-const LoadingEntry = mongoose.model("LoadingEntry");
+import LoadingEntry from "../models/LoadingEntry.js";
 
 const router = Router();
 
