@@ -676,10 +676,34 @@ const ListLoadingEntry = () => {
                 notes: existingClaim?.notes || "",
               };
             });
-          } else if (
-            initialClaims.length === 0 &&
-            entry.qualityClaims?.length > 0
-          ) {
+          }
+
+          // Now, add any existing claims from entry that aren't already in initialClaims
+          if (entry.qualityClaims?.length > 0) {
+            const existingClaimIds = new Set(
+              initialClaims.map((c) => c.parameterId || c.parameterName),
+            );
+            const extraClaims = entry.qualityClaims
+              .filter((claim) => {
+                const key = claim.parameterId || claim.parameterName;
+                return !existingClaimIds.has(key);
+              })
+              .map((claim) => {
+                let pName = claim.parameterName;
+                const pId = String(claim.parameterId || "");
+                if (pId && !pName) {
+                  pName = paramIdToNameMap.get(pId);
+                }
+                return {
+                  ...claim,
+                  parameterName: pName || claim.parameterName,
+                };
+              });
+            initialClaims = [...initialClaims, ...extraClaims];
+          }
+
+          // If still no claims, just use entry's quality claims
+          if (initialClaims.length === 0 && entry.qualityClaims?.length > 0) {
             const claimsWithNames = entry.qualityClaims.map((claim) => {
               let pName = claim.parameterName;
               const pId = String(claim.parameterId || "");
