@@ -467,39 +467,51 @@ const ListLoadingEntry = () => {
   const handleEdit = useCallback(
     async (entry) => {
       setSelectedEntry(entry);
+      
+      // Fetch the latest entry data from API to ensure we have up-to-date info
+      let latestEntry = entry;
+      if (entry._id) {
+        try {
+          const entryRes = await api.get(`/loading-entries/${entry._id}`);
+          latestEntry = entryRes.data?.data || entryRes.data || entry;
+        } catch (error) {
+          console.error("Error fetching latest entry data:", error);
+        }
+      }
+
       let newEditEntry = {
-        ...entry,
-        loadingDate: entry.loadingDate
-          ? new Date(entry.loadingDate).toISOString().slice(0, 10)
+        ...latestEntry,
+        loadingDate: latestEntry.loadingDate
+          ? new Date(latestEntry.loadingDate).toISOString().slice(0, 10)
           : "",
-        dateOfIssue: entry.dateOfIssue
-          ? new Date(entry.dateOfIssue).toISOString().slice(0, 10)
+        dateOfIssue: latestEntry.dateOfIssue
+          ? new Date(latestEntry.dateOfIssue).toISOString().slice(0, 10)
           : "",
-        unloadingDate: entry.unloadingDate
-          ? new Date(entry.unloadingDate).toISOString().slice(0, 10)
+        unloadingDate: latestEntry.unloadingDate
+          ? new Date(latestEntry.unloadingDate).toISOString().slice(0, 10)
           : "",
-        deliveryDate: entry.deliveryDate
-          ? new Date(entry.deliveryDate).toISOString().slice(0, 10)
+        deliveryDate: latestEntry.deliveryDate
+          ? new Date(latestEntry.deliveryDate).toISOString().slice(0, 10)
           : "",
-        documents: entry.documents || {
+        documents: latestEntry.documents || {
           kantaSlip: null,
           unloadingChallan: null,
           partyBillCopy: null,
         },
-        qualityClaims: entry.qualityClaims || [],
-        manualClaim: entry.manualClaim || false,
-        manualClaimAmount: entry.manualClaimAmount || 0,
-        manualCalculationRate: entry.manualCalculationRate || "", // Add manual rate field
-        secondClaim: entry.secondClaim || 0,
-        secondClaimRemarks: entry.secondClaimRemarks || "",
-        otherCharges: entry.otherCharges || 0,
-        otherChargesRemarks: entry.otherChargesRemarks || "",
-        bankCharges: entry.bankCharges || "", // No more default, manual entry
-        bankChargesRemarks: entry.bankChargesRemarks || "",
-        tds: entry.tds || 0,
-        tdsRemarks: entry.tdsRemarks || "",
-        generalRemarks: entry.generalRemarks || "",
-        showAllQualityParameters: entry.showAllQualityParameters || false,
+        qualityClaims: latestEntry.qualityClaims || [],
+        manualClaim: latestEntry.manualClaim || false,
+        manualClaimAmount: latestEntry.manualClaimAmount || 0,
+        manualCalculationRate: latestEntry.manualCalculationRate || "", // Add manual rate field
+        secondClaim: latestEntry.secondClaim || 0,
+        secondClaimRemarks: latestEntry.secondClaimRemarks || "",
+        otherCharges: latestEntry.otherCharges || 0,
+        otherChargesRemarks: latestEntry.otherChargesRemarks || "",
+        bankCharges: latestEntry.bankCharges || "", // No more default, manual entry
+        bankChargesRemarks: latestEntry.bankChargesRemarks || "",
+        tds: latestEntry.tds || 0,
+        tdsRemarks: latestEntry.tdsRemarks || "",
+        generalRemarks: latestEntry.generalRemarks || "",
+        showAllQualityParameters: latestEntry.showAllQualityParameters || false,
       };
 
       if (entry.saudaNo) {
@@ -599,7 +611,7 @@ const ListLoadingEntry = () => {
                   return defaultStandardValue > 0;
                 })
                 .map((param) => {
-                  const existingClaim = entry.qualityClaims?.find(
+                  const existingClaim = latestEntry.qualityClaims?.find(
                     (c) =>
                       (c.parameterName &&
                         param.parameter &&
@@ -659,7 +671,7 @@ const ListLoadingEntry = () => {
                 }
               }
 
-              const existingClaim = entry.qualityClaims?.find(
+              const existingClaim = latestEntry.qualityClaims?.find(
                 (c) =>
                   (c.parameterName && pName && c.parameterName === pName) ||
                   (c.parameterId && pId && String(c.parameterId) === pId),
@@ -678,12 +690,12 @@ const ListLoadingEntry = () => {
             });
           }
 
-          // Now, add any existing claims from entry that aren't already in initialClaims
-          if (entry.qualityClaims?.length > 0) {
+          // Now, add any existing claims from latestEntry that aren't already in initialClaims
+          if (latestEntry.qualityClaims?.length > 0) {
             const existingClaimIds = new Set(
               initialClaims.map((c) => c.parameterId || c.parameterName),
             );
-            const extraClaims = entry.qualityClaims
+            const extraClaims = latestEntry.qualityClaims
               .filter((claim) => {
                 const key = claim.parameterId || claim.parameterName;
                 return !existingClaimIds.has(key);
@@ -702,9 +714,9 @@ const ListLoadingEntry = () => {
             initialClaims = [...initialClaims, ...extraClaims];
           }
 
-          // If still no claims, just use entry's quality claims
-          if (initialClaims.length === 0 && entry.qualityClaims?.length > 0) {
-            const claimsWithNames = entry.qualityClaims.map((claim) => {
+          // If still no claims, just use latestEntry's quality claims
+          if (initialClaims.length === 0 && latestEntry.qualityClaims?.length > 0) {
+            const claimsWithNames = latestEntry.qualityClaims.map((claim) => {
               let pName = claim.parameterName;
               const pId = String(claim.parameterId || "");
               if (pId && !pName) {
@@ -722,7 +734,7 @@ const ListLoadingEntry = () => {
           const manualRate = parseFloat(
             newEditEntry.manualCalculationRate || 0,
           );
-          const weight = parseFloat(entry.unloadingWeight || 0);
+          const weight = parseFloat(latestEntry.unloadingWeight || 0);
           newEditEntry.qualityClaims = initialClaims.map((claim) => {
             if (claim.actualValue && claim.claimAmount) {
               return claim;
@@ -745,7 +757,7 @@ const ListLoadingEntry = () => {
           if (selfOrder?.buyerBrokerage) {
             const buyerRate = selfOrder.buyerBrokerage.brokerageBuyer || 0;
             const sellerRate = selfOrder.buyerBrokerage.brokerageSupplier || 0;
-            const uWeight = parseFloat(entry.unloadingWeight) || 0;
+            const uWeight = parseFloat(latestEntry.unloadingWeight) || 0;
             newEditEntry.buyerBrokerage = +(uWeight * buyerRate).toFixed(2);
             newEditEntry.sellerBrokerage = +(uWeight * sellerRate).toFixed(2);
           }
