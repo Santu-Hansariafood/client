@@ -642,6 +642,7 @@ const SellerDashboard = () => {
         icon: <FaBell />,
         color: "bg-purple-600",
         isNotif: true,
+        count: "Notifications",
         action: () => togglePopup(true),
       },
       {
