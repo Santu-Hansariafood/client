@@ -611,7 +611,7 @@ const SellerDashboard = () => {
         color: "bg-emerald-500",
         link: "/Loading-Entry/add-loading-entry",
         state: { mobile },
-        count: "Create",
+        count: "Make Bill & Challan",
       },
       {
         label: "Order History",
@@ -619,7 +619,7 @@ const SellerDashboard = () => {
         color: "bg-indigo-600",
         link: "/manage-order/list-self-order",
         state: { mobile },
-        count: orderCount,
+        count: "Open Sauda",
       },
       {
         label: "Pending Sauda",
@@ -635,7 +635,7 @@ const SellerDashboard = () => {
         color: "bg-blue-600",
         link: "/Loading-Entry/list-loading-entry",
         state: { mobile },
-        count: "Access",
+        count: "Loading List",
       },
       {
         label: "Alerts",
