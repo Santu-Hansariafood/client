@@ -459,12 +459,12 @@ const styles = StyleSheet.create({
     borderBottomColor: "#000000",
   },
   qualityTableCol1: { width: "5%", padding: 3, textAlign: "center" },
-  qualityTableCol2: { width: "25%", padding: 3 },
-  qualityTableCol3: { width: "12%", padding: 3, textAlign: "center" },
-  qualityTableCol4: { width: "12%", padding: 3, textAlign: "center" },
-  qualityTableCol5: { width: "12%", padding: 3, textAlign: "center" },
-  qualityTableCol6: { width: "22%", padding: 3, textAlign: "center" },
-  qualityTableCol7: { width: "12%", padding: 3, textAlign: "center" },
+  qualityTableCol2: { width: "32%", padding: 3 },
+  qualityTableCol3: { width: "15%", padding: 3, textAlign: "center" },
+  qualityTableCol4: { width: "15%", padding: 3, textAlign: "center" },
+  qualityTableCol5: { width: "15%", padding: 3, textAlign: "center" },
+  qualityTableCol6: { width: "18%", padding: 3, textAlign: "center" },
+  // qualityTableCol7: { width: "12%", padding: 3, textAlign: "center" },
   qualityTableRow: {
     flexDirection: "row",
     borderBottomWidth: 0.5,
@@ -658,7 +658,7 @@ const MasterReceivingReportPDF = ({ entries = [], logoUrl }) => {
             <Page style={styles.summaryPage} size="A4">
               <View style={styles.summaryHeader}>
                 <View>
-                  <Text style={styles.summaryTitle}>Receiving Entry</Text>
+                  <Text style={styles.summaryTitle}>Unloading & Quality Claim</Text>
                 </View>
                 {logoUrl && (
                   <Image src={logoUrl} style={{ width: 60, height: 60 }} />
@@ -828,7 +828,7 @@ const MasterReceivingReportPDF = ({ entries = [], logoUrl }) => {
                   >
                     Claim %
                   </Text>
-                  <Text
+                  {/* <Text
                     style={[
                       styles.qualityTableCol6,
                       styles.qualityTableCellText,
@@ -836,7 +836,7 @@ const MasterReceivingReportPDF = ({ entries = [], logoUrl }) => {
                     ]}
                   >
                     Notes
-                  </Text>
+                  </Text> */}
                   <Text
                     style={[
                       styles.qualityTableCol6,
@@ -903,17 +903,17 @@ const MasterReceivingReportPDF = ({ entries = [], logoUrl }) => {
                         >
                           {claimPercent.toFixed(2)}
                         </Text>
-                        <Text
+                        {/* <Text
                           style={[
                             styles.qualityTableCol6,
                             styles.qualityTableCellText,
                           ]}
                         >
                           {claim.notes || "-"}
-                        </Text>
+                        </Text> */}
                         <Text
                           style={[
-                            styles.qualityTableCol7,
+                            styles.qualityTableCol6,
                             styles.qualityTableCellText,
                           ]}
                         >
@@ -973,17 +973,17 @@ const MasterReceivingReportPDF = ({ entries = [], logoUrl }) => {
                     >
                       -
                     </Text>
-                    <Text
+                    {/* <Text
                       style={[
                         styles.qualityTableCol6,
                         styles.qualityTableCellText,
                       ]}
                     >
                       -
-                    </Text>
+                    </Text> */}
                     <Text
                       style={[
-                        styles.qualityTableCol7,
+                        styles.qualityTableCol6,
                         styles.qualityTableCellText,
                       ]}
                     >
@@ -1028,15 +1028,15 @@ const MasterReceivingReportPDF = ({ entries = [], logoUrl }) => {
                       styles.qualityTableCellText,
                     ]}
                   ></Text>
-                  <Text
+                  {/* <Text
                     style={[
                       styles.qualityTableCol6,
                       styles.qualityTableCellText,
                     ]}
-                  ></Text>
+                  ></Text> */}
                   <Text
                     style={[
-                      styles.qualityTableCol7,
+                      styles.qualityTableCol6,
                       styles.qualityTableCellText,
                       { fontWeight: "bold" },
                     ]}
