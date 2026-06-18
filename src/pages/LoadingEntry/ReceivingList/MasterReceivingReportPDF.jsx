@@ -838,60 +838,68 @@ const MasterReceivingReportPDF = ({ entries = [], logoUrl }) => {
                   </Text>
                 </View>
 
-                {(data.qualityClaims || []).map((claim, idx) => (
-                  <View key={idx} style={styles.qualityTableRow}>
-                    <Text
-                      style={[
-                        styles.qualityTableCol1,
-                        styles.qualityTableCellText,
-                      ]}
-                    >
-                      {idx + 1}
-                    </Text>
-                    <Text
-                      style={[
-                        styles.qualityTableCol2,
-                        styles.qualityTableCellText,
-                      ]}
-                    >
-                      {claim.parameterName || "-"}
-                    </Text>
-                    <Text
-                      style={[
-                        styles.qualityTableCol3,
-                        styles.qualityTableCellText,
-                      ]}
-                    >
-                      {claim.standardValue || "-"}
-                    </Text>
-                    <Text
-                      style={[
-                        styles.qualityTableCol4,
-                        styles.qualityTableCellText,
-                      ]}
-                    >
-                      {claim.actualValue || "-"}
-                    </Text>
-                    <Text
-                      style={[
-                        styles.qualityTableCol5,
-                        styles.qualityTableCellText,
-                      ]}
-                    >
-                      {claim.notes || "-"}
-                    </Text>
-                    <Text
-                      style={[
-                        styles.qualityTableCol6,
-                        styles.qualityTableCellText,
-                      ]}
-                    >
-                      {claim.claimAmount
-                        ? formatAmount(claim.claimAmount)
-                        : "0.00"}
-                    </Text>
-                  </View>
-                ))}
+                {(data.qualityClaims || [])
+                  .filter(
+                    (claim) =>
+                      claim.standardValue ||
+                      claim.actualValue ||
+                      claim.notes ||
+                      claim.claimAmount
+                  )
+                  .map((claim, idx) => (
+                    <View key={idx} style={styles.qualityTableRow}>
+                      <Text
+                        style={[
+                          styles.qualityTableCol1,
+                          styles.qualityTableCellText,
+                        ]}
+                      >
+                        {idx + 1}
+                      </Text>
+                      <Text
+                        style={[
+                          styles.qualityTableCol2,
+                          styles.qualityTableCellText,
+                        ]}
+                      >
+                        {claim.parameterName || "-"}
+                      </Text>
+                      <Text
+                        style={[
+                          styles.qualityTableCol3,
+                          styles.qualityTableCellText,
+                        ]}
+                      >
+                        {claim.standardValue || "-"}
+                      </Text>
+                      <Text
+                        style={[
+                          styles.qualityTableCol4,
+                          styles.qualityTableCellText,
+                        ]}
+                      >
+                        {claim.actualValue || "-"}
+                      </Text>
+                      <Text
+                        style={[
+                          styles.qualityTableCol5,
+                          styles.qualityTableCellText,
+                        ]}
+                      >
+                        {claim.notes || "-"}
+                      </Text>
+                      <Text
+                        style={[
+                          styles.qualityTableCol6,
+                          styles.qualityTableCellText,
+                        ]}
+                      >
+                        {claim.claimAmount
+                          ? formatAmount(claim.claimAmount)
+                          : "0.00"}
+                      </Text>
+                    </View>
+                  ))}
 
                 {data.manualClaim && (
                   <View style={styles.qualityTableRow}>
@@ -990,10 +998,18 @@ const MasterReceivingReportPDF = ({ entries = [], logoUrl }) => {
                     ]}
                   >
                     {formatAmount(
-                      (data.qualityClaims || []).reduce(
-                        (sum, claim) => sum + (Number(claim.claimAmount) || 0),
-                        0,
-                      ) +
+                      (data.qualityClaims || [])
+                        .filter(
+                          (claim) =>
+                            claim.standardValue ||
+                            claim.actualValue ||
+                            claim.notes ||
+                            claim.claimAmount
+                        )
+                        .reduce(
+                          (sum, claim) => sum + (Number(claim.claimAmount) || 0),
+                          0,
+                        ) +
                         (data.manualClaim
                           ? Number(data.manualClaimAmount) || 0
                           : 0),
@@ -1007,7 +1023,13 @@ const MasterReceivingReportPDF = ({ entries = [], logoUrl }) => {
                   Deductions & Net Payable
                 </Text>
 
-                {((data.qualityClaims || []).length > 0 ||
+                {((data.qualityClaims || []).filter(
+                  (claim) =>
+                    claim.standardValue ||
+                    claim.actualValue ||
+                    claim.notes ||
+                    claim.claimAmount
+                ).length > 0 ||
                   data.manualClaim) && (
                   <View style={styles.summaryRow}>
                     <Text style={styles.summaryLabel}>
@@ -1016,11 +1038,19 @@ const MasterReceivingReportPDF = ({ entries = [], logoUrl }) => {
                     <Text style={styles.summaryValue}>
                       - Rs.{" "}
                       {formatAmount(
-                        (data.qualityClaims || []).reduce(
-                          (sum, claim) =>
-                            sum + (Number(claim.claimAmount) || 0),
-                          0,
-                        ) +
+                        (data.qualityClaims || [])
+                          .filter(
+                            (claim) =>
+                              claim.standardValue ||
+                              claim.actualValue ||
+                              claim.notes ||
+                              claim.claimAmount
+                          )
+                          .reduce(
+                            (sum, claim) =>
+                              sum + (Number(claim.claimAmount) || 0),
+                            0,
+                          ) +
                           (data.manualClaim
                             ? Number(data.manualClaimAmount) || 0
                             : 0),
@@ -1102,10 +1132,18 @@ const MasterReceivingReportPDF = ({ entries = [], logoUrl }) => {
                   <Text style={[styles.summaryValue, { fontWeight: "bold" }]}>
                     Rs.{" "}
                     {formatAmount(
-                      (data.qualityClaims || []).reduce(
-                        (sum, claim) => sum + (Number(claim.claimAmount) || 0),
-                        0,
-                      ) +
+                      (data.qualityClaims || [])
+                        .filter(
+                          (claim) =>
+                            claim.standardValue ||
+                            claim.actualValue ||
+                            claim.notes ||
+                            claim.claimAmount
+                        )
+                        .reduce(
+                          (sum, claim) => sum + (Number(claim.claimAmount) || 0),
+                          0,
+                        ) +
                         (data.manualClaim
                           ? Number(data.manualClaimAmount) || 0
                           : 0) +
@@ -1123,11 +1161,19 @@ const MasterReceivingReportPDF = ({ entries = [], logoUrl }) => {
                     Rs.{" "}
                     {formatAmount(
                       totalAmount -
-                        ((data.qualityClaims || []).reduce(
-                          (sum, claim) =>
-                            sum + (Number(claim.claimAmount) || 0),
-                          0,
-                        ) +
+                        ((data.qualityClaims || [])
+                          .filter(
+                            (claim) =>
+                              claim.standardValue ||
+                              claim.actualValue ||
+                              claim.notes ||
+                              claim.claimAmount
+                          )
+                          .reduce(
+                            (sum, claim) =>
+                              sum + (Number(claim.claimAmount) || 0),
+                            0,
+                          ) +
                           (data.manualClaim
                             ? Number(data.manualClaimAmount) || 0
                             : 0) +
@@ -1144,11 +1190,19 @@ const MasterReceivingReportPDF = ({ entries = [], logoUrl }) => {
                   <Text style={styles.amountInWordsValue}>
                     {numberToWords(
                       totalAmount -
-                        ((data.qualityClaims || []).reduce(
-                          (sum, claim) =>
-                            sum + (Number(claim.claimAmount) || 0),
-                          0,
-                        ) +
+                        ((data.qualityClaims || [])
+                          .filter(
+                            (claim) =>
+                              claim.standardValue ||
+                              claim.actualValue ||
+                              claim.notes ||
+                              claim.claimAmount
+                          )
+                          .reduce(
+                            (sum, claim) =>
+                              sum + (Number(claim.claimAmount) || 0),
+                            0,
+                          ) +
                           (data.manualClaim
                             ? Number(data.manualClaimAmount) || 0
                             : 0) +
