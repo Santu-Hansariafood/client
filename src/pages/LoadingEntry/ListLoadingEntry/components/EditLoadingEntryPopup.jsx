@@ -523,7 +523,7 @@ const EditLoadingEntryPopup = ({
                       <span className="text-slate-400 font-bold">₹</span>
                       <input
                         type="number"
-                        value={editEntry.secondClaim || ""}
+                        value={editEntry.secondClaim != null ? editEntry.secondClaim : ""}
                         onChange={(e) => {
                           setEditEntry((prev) => ({
                             ...prev,
@@ -560,7 +560,7 @@ const EditLoadingEntryPopup = ({
                       <span className="text-slate-400 font-bold">₹</span>
                       <input
                         type="number"
-                        value={editEntry.otherCharges || ""}
+                        value={editEntry.otherCharges != null ? editEntry.otherCharges : ""}
                         onChange={(e) => {
                           setEditEntry((prev) => ({
                             ...prev,
@@ -597,7 +597,7 @@ const EditLoadingEntryPopup = ({
                       <span className="text-slate-400 font-bold">₹</span>
                       <input
                         type="number"
-                        value={editEntry.bankCharges || ""}
+                        value={editEntry.bankCharges != null ? editEntry.bankCharges : ""}
                         onChange={(e) => {
                           setEditEntry((prev) => ({
                             ...prev,
@@ -634,7 +634,7 @@ const EditLoadingEntryPopup = ({
                       <span className="text-slate-400 font-bold">₹</span>
                       <input
                         type="number"
-                        value={editEntry.tds || ""}
+                        value={editEntry.tds != null ? editEntry.tds : ""}
                         onChange={(e) => {
                           setEditEntry((prev) => ({
                             ...prev,
@@ -714,7 +714,7 @@ const EditLoadingEntryPopup = ({
                 <span className="text-slate-400 font-bold text-lg">₹</span>
                 <input
                   type="number"
-                  value={editEntry.manualClaimAmount}
+                  value={editEntry.manualClaimAmount != null ? editEntry.manualClaimAmount : ""}
                   onChange={(e) => {
                     setEditEntry((prev) => ({
                       ...prev,

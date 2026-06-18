@@ -194,7 +194,7 @@ const QualityClaimsTable = ({
                   <div className="flex items-center gap-2">
                     <input
                       type="number"
-                      value={claim.standardValue}
+                      value={claim.standardValue != null ? claim.standardValue : ""}
                       onChange={(e) =>
                         handleQualityChange(
                           originalIndex,
@@ -217,7 +217,7 @@ const QualityClaimsTable = ({
                 <td className="px-4 py-3">
                   <input
                     type="number"
-                    value={claim.actualValue}
+                    value={claim.actualValue != null ? claim.actualValue : ""}
                     onChange={(e) =>
                       handleQualityChange(
                         originalIndex,
@@ -271,7 +271,7 @@ const QualityClaimsTable = ({
                     <span className="text-slate-400 font-bold">₹</span>
                     <input
                       type="number"
-                      value={claim.claimAmount}
+                      value={claim.claimAmount != null ? claim.claimAmount : ""}
                       readOnly
                       className="w-24 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-black text-orange-600 outline-none"
                     />

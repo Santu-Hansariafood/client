@@ -474,6 +474,19 @@ const ListLoadingEntry = () => {
         try {
           const entryRes = await api.get(`/loading-entries/${entry._id}`);
           latestEntry = entryRes.data?.data || entryRes.data || entry;
+          console.log("🔍 [DEBUG] Latest Entry from API:", latestEntry);
+          console.log("🔍 [DEBUG] Quality Claims from API:", latestEntry.qualityClaims);
+          console.log("🔍 [DEBUG] Bill & Payable Fields:", {
+            secondClaim: latestEntry.secondClaim,
+            secondClaimRemarks: latestEntry.secondClaimRemarks,
+            otherCharges: latestEntry.otherCharges,
+            otherChargesRemarks: latestEntry.otherChargesRemarks,
+            bankCharges: latestEntry.bankCharges,
+            bankChargesRemarks: latestEntry.bankChargesRemarks,
+            tds: latestEntry.tds,
+            tdsRemarks: latestEntry.tdsRemarks,
+            generalRemarks: latestEntry.generalRemarks,
+          });
         } catch (error) {
           console.error("Error fetching latest entry data:", error);
         }
@@ -706,9 +719,27 @@ const ListLoadingEntry = () => {
                 if (pId && !pName) {
                   pName = paramIdToNameMap.get(pId);
                 }
+                // Preserve all existing fields, including paramValues
                 return {
                   ...claim,
                   parameterName: pName || claim.parameterName,
+                  // If paramValues are missing, try to get them from commodity parameters if possible
+                  paramValues: claim.paramValues || (() => {
+                    if (fetchedCompany && selfOrder?.commodity) {
+                      const commodity = fetchedCompany.commodities?.find(
+                        (c) => c.name.toLowerCase() === selfOrder.commodity.toLowerCase(),
+                      );
+                      if (commodity && commodity.parameters) {
+                        const param = commodity.parameters.find(
+                          (p) =>
+                            (p.parameterId && String(p.parameterId) === pId) ||
+                            (p.parameter && pName && p.parameter.toLowerCase() === pName.toLowerCase())
+                        );
+                        return param?.values || [];
+                      }
+                    }
+                    return [];
+                  })(),
                 };
               });
             initialClaims = [...initialClaims, ...extraClaims];
@@ -722,9 +753,27 @@ const ListLoadingEntry = () => {
               if (pId && !pName) {
                 pName = paramIdToNameMap.get(pId);
               }
+              // Preserve all existing fields, including paramValues
               return {
                 ...claim,
                 parameterName: pName || claim.parameterName,
+                // If paramValues are missing, try to get them from commodity parameters if possible
+                paramValues: claim.paramValues || (() => {
+                  if (fetchedCompany && selfOrder?.commodity) {
+                    const commodity = fetchedCompany.commodities?.find(
+                      (c) => c.name.toLowerCase() === selfOrder.commodity.toLowerCase(),
+                    );
+                    if (commodity && commodity.parameters) {
+                      const param = commodity.parameters.find(
+                        (p) =>
+                          (p.parameterId && String(p.parameterId) === pId) ||
+                          (p.parameter && pName && p.parameter.toLowerCase() === pName.toLowerCase())
+                      );
+                      return param?.values || [];
+                    }
+                  }
+                  return [];
+                })(),
               };
             });
             initialClaims = claimsWithNames;
@@ -769,6 +818,19 @@ const ListLoadingEntry = () => {
         setCurrentSelfOrder(null);
       }
 
+      console.log("🔍 [DEBUG] Final newEditEntry:", newEditEntry);
+      console.log("🔍 [DEBUG] Final newEditEntry qualityClaims:", newEditEntry.qualityClaims);
+      console.log("🔍 [DEBUG] Final newEditEntry Bill & Payable:", {
+        secondClaim: newEditEntry.secondClaim,
+        secondClaimRemarks: newEditEntry.secondClaimRemarks,
+        otherCharges: newEditEntry.otherCharges,
+        otherChargesRemarks: newEditEntry.otherChargesRemarks,
+        bankCharges: newEditEntry.bankCharges,
+        bankChargesRemarks: newEditEntry.bankChargesRemarks,
+        tds: newEditEntry.tds,
+        tdsRemarks: newEditEntry.tdsRemarks,
+        generalRemarks: newEditEntry.generalRemarks,
+      });
       setEditEntry(newEditEntry);
       setPopupType("edit");
     },
