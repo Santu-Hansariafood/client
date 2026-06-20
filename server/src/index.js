@@ -9,6 +9,9 @@ dotenv.config({ path: path.resolve(__dirname, "../../.env") });
 import express from "express";
 import cors from "cors";
 import compression from "compression";
+import helmet from "helmet";
+import { rateLimit } from "express-rate-limit";
+import mongoSanitize from "express-mongo-sanitize";
 import connect from "./lib/db.js";
 import cluster from "node:cluster";
 import os from "node:os";
@@ -52,7 +55,22 @@ import { initSocket } from "./lib/socket.js";
 const app = express();
 app.set("trust proxy", 1);
 
-app.use(compression({ level: 6 }));
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net"],
+      imgSrc: ["'self'", "data:", "https://ik.imagekit.io"],
+      fontSrc: ["'self'", "data:"],
+    },
+  },
+}));
+
+app.use(compression({ 
+  level: 6,
+  threshold: 1024, // Only compress responses larger than 1KB
+}));
 
 const corsOrigin = (process.env.CORS_ORIGIN || "*").trim();
 const corsOrigins =
@@ -101,11 +119,38 @@ app.use(cors(corsOptions));
 app.use(express.json({ limit: "5mb" }));
 app.use(express.urlencoded({ extended: true, limit: "5mb" }));
 
-app.use("/logo", express.static(path.join(__dirname, "../../public/logo"), { maxAge: "30d" }));
-app.use("/icons", express.static(path.join(__dirname, "../../public/icons"), { maxAge: "30d" }));
-app.use("/images", express.static(path.join(__dirname, "../../public/images"), { maxAge: "30d" }));
-app.use("/teams", express.static(path.join(__dirname, "../../public/teams"), { maxAge: "30d" }));
-app.use("/uploads", express.static(path.join(__dirname, "../uploads"), { maxAge: "1d" }));
+app.use(mongoSanitize());
+
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: "Too many login attempts, please try again later.",
+});
+
+const otpLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 3,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: "Too many OTP requests, please try again later.",
+});
+
+const staticOptions = {
+  maxAge: "30d",
+  immutable: true,
+  etag: false,
+  lastModified: true,
+};
+app.use("/logo", express.static(path.join(__dirname, "../../public/logo"), staticOptions));
+app.use("/icons", express.static(path.join(__dirname, "../../public/icons"), staticOptions));
+app.use("/images", express.static(path.join(__dirname, "../../public/images"), staticOptions));
+app.use("/teams", express.static(path.join(__dirname, "../../public/teams"), staticOptions));
+app.use("/uploads", express.static(path.join(__dirname, "../uploads"), { 
+  maxAge: "1d",
+  lastModified: true,
+}));
 
 app.use((req, res, next) => {
   const start = Date.now();
@@ -123,6 +168,15 @@ app.get("/api/keep-alive", (_, res) => {
 });
 
 app.use("/api", apiKey);
+app.use("/api/forgot-password", otpLimiter);
+app.use("/api/verify-otp", loginLimiter);
+app.use("/api/change-password-otp", otpLimiter);
+app.use("/api/reset-password", loginLimiter);
+app.use("/api/admin/login", loginLimiter);
+app.use("/api/employees/login", loginLimiter);
+app.use("/api/transporters/login", loginLimiter);
+app.use("/api/buyers/login", loginLimiter);
+app.use("/api/sellers/login", loginLimiter);
 app.use("/api", authRoutes);
 app.use("/api/sellers", cache(30), authJwt, sellerRoutes);
 app.use("/api/buyers", cache(30), authJwt, buyerRoutes);
@@ -156,7 +210,12 @@ app.use("/api/blogs", cache(120), authJwt, blogRoutes);
 
 if (process.env.NODE_ENV === "production") {
   const distPath = path.join(__dirname, "../../dist");
-  app.use(express.static(distPath));
+  app.use(express.static(distPath, {
+    maxAge: "1y",
+    immutable: true,
+    etag: true,
+    lastModified: true,
+  }));
   app.get("*", (req, res) => {
     if (!req.path.startsWith("/api/")) {
       res.sendFile(path.join(distPath, "index.html"));
@@ -182,11 +241,15 @@ const start = async () => {
   });
 };
 
-if (process.env.CLUSTER_MODE === "1" && process.env.NODE_ENV === "production") {
+// Enable cluster mode by default in production
+const isClusterMode = process.env.CLUSTER_MODE !== "0" && process.env.NODE_ENV === "production";
+if (isClusterMode) {
   if (cluster.isPrimary) {
     const count = os.cpus().length;
+    console.log(`Starting ${count} worker processes (cluster mode)`);
     for (let i = 0; i < count; i++) cluster.fork();
-    cluster.on("exit", () => {
+    cluster.on("exit", (worker, code, signal) => {
+      console.warn(`Worker ${worker.process.pid} died. Restarting...`);
       cluster.fork();
     });
   } else {

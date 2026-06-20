@@ -288,17 +288,22 @@ router.post("/admin/login", async (req, res) => {
     const user = await User.findOne({
       role: "Admin",
       mobile: normalizedMobile,
-      password,
     });
     if (!user) {
       console.log(`Admin login failed: mobile=${normalizedMobile}`);
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
+    const isPasswordValid = await user.comparePassword(password);
+    if (!isPasswordValid) {
+      console.log(`Admin login failed: mobile=${normalizedMobile} - invalid password`);
+      return res.status(401).json({ message: "Invalid credentials" });
+    }
+
     const token = jwt.sign(
       { sub: user._id.toString(), role: "Admin", mobile: normalizedMobile, name: user.name },
       process.env.JWT_SECRET,
-      { expiresIn: "365d" },
+      { expiresIn: "7d" },
     );
 
     console.log(`Admin login successful: ${user.name}`);
@@ -338,7 +343,6 @@ router.post("/employees/login", async (req, res) => {
     }
     const employee = await Employee.findOne({
       mobile: normalizedMobile,
-      password,
     });
     if (!employee) {
       console.log(`Employee login failed: mobile=${normalizedMobile}`);
@@ -346,6 +350,12 @@ router.post("/employees/login", async (req, res) => {
     }
     if (employee.status === "Inactive") {
       return res.status(403).json({ message: "Your account is inactive." });
+    }
+
+    const isPasswordValid = await employee.comparePassword(password);
+    if (!isPasswordValid) {
+      console.log(`Employee login failed: mobile=${normalizedMobile} - invalid password`);
+      return res.status(401).json({ message: "Invalid credentials" });
     }
 
     const token = jwt.sign(
@@ -356,7 +366,7 @@ router.post("/employees/login", async (req, res) => {
         name: employee.name,
       },
       process.env.JWT_SECRET,
-      { expiresIn: "365d" },
+      { expiresIn: "7d" },
     );
 
     console.log(`Employee login successful: ${employee.name}`);
@@ -401,7 +411,6 @@ router.post("/transporters/login", async (req, res) => {
     }
     const transporter = await Transporter.findOne({
       mobile: normalizedMobile,
-      password,
     });
     if (!transporter) {
       console.log(`Transporter login failed: mobile=${normalizedMobile}`);
@@ -409,6 +418,12 @@ router.post("/transporters/login", async (req, res) => {
     }
     if (transporter.status === "Inactive") {
       return res.status(403).json({ message: "Your account is inactive." });
+    }
+
+    const isPasswordValid = await transporter.comparePassword(password);
+    if (!isPasswordValid) {
+      console.log(`Transporter login failed: mobile=${normalizedMobile} - invalid password`);
+      return res.status(401).json({ message: "Invalid credentials" });
     }
 
     const token = jwt.sign(
@@ -419,7 +434,7 @@ router.post("/transporters/login", async (req, res) => {
         name: transporter.name,
       },
       process.env.JWT_SECRET,
-      { expiresIn: "365d" },
+      { expiresIn: "7d" },
     );
 
     console.log(`Transporter login successful: ${transporter.name}`);
@@ -469,11 +484,16 @@ router.post("/buyers/login", async (req, res) => {
 
     const buyer = await Buyer.findOne({
       mobile: normalizedMobile,
-      password: password,
     }).populate("companyIds", "companyName");
 
     if (!buyer) {
       console.warn(`Invalid buyer credentials for mobile: ${normalizedMobile}`);
+      return res.status(401).json({ message: "Invalid credentials" });
+    }
+
+    const isPasswordValid = await buyer.comparePassword(password);
+    if (!isPasswordValid) {
+      console.warn(`Invalid buyer credentials for mobile: ${normalizedMobile} - invalid password`);
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
@@ -486,7 +506,7 @@ router.post("/buyers/login", async (req, res) => {
     const token = jwt.sign(
       { sub: buyer._id.toString(), role: "Buyer", mobile: normalizedMobile, name: buyer.name },
       process.env.JWT_SECRET,
-      { expiresIn: "365d" },
+      { expiresIn: "7d" },
     );
 
     console.log(`Buyer login successful: ${buyer.name}`);
@@ -537,11 +557,16 @@ router.post("/sellers/login", async (req, res) => {
 
     const seller = await Seller.findOne({
       "phoneNumbers.value": normalizedPhone,
-      password: password,
     });
 
     if (!seller) {
       console.warn(`Invalid seller credentials for phone: ${normalizedPhone}`);
+      return res.status(401).json({ message: "Invalid credentials" });
+    }
+
+    const isPasswordValid = await seller.comparePassword(password);
+    if (!isPasswordValid) {
+      console.warn(`Invalid seller credentials for phone: ${normalizedPhone} - invalid password`);
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
@@ -552,7 +577,7 @@ router.post("/sellers/login", async (req, res) => {
     const token = jwt.sign(
       { sub: seller._id.toString(), role: "Seller", mobile: normalizedPhone, name: seller.sellerName },
       process.env.JWT_SECRET,
-      { expiresIn: "365d" },
+      { expiresIn: "7d" },
     );
 
     console.log(`Seller login successful: ${seller.sellerName}`);

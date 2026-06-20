@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import bcrypt from "bcrypt";
 
 const buyerSchema = new mongoose.Schema(
   {
@@ -34,7 +35,7 @@ const buyerSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
-buyerSchema.pre("save", function (next) {
+buyerSchema.pre("save", async function (next) {
   if (this.mobile && Array.isArray(this.mobile)) {
     this.mobile = this.mobile.map((phone) => {
       const match = String(phone)
@@ -43,8 +44,20 @@ buyerSchema.pre("save", function (next) {
       return match ? match[1] : phone;
     });
   }
+  if (!this.isModified("password")) {
+    return next();
+  }
+  if (this.password) {
+    const salt = await bcrypt.genSalt(12);
+    this.password = await bcrypt.hash(this.password, salt);
+  }
   next();
 });
+
+buyerSchema.methods.comparePassword = async function (candidatePassword) {
+  if (!this.password) return false;
+  return await bcrypt.compare(candidatePassword, this.password);
+};
 
 buyerSchema.index({ name: 1 });
 buyerSchema.index({ companyIds: 1 });

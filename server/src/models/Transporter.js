@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import bcrypt from "bcrypt";
 
 const transporterSchema = new mongoose.Schema(
   {
@@ -31,7 +32,7 @@ const transporterSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
-transporterSchema.pre("save", function (next) {
+transporterSchema.pre("save", async function (next) {
   if (this.mobile) {
     const match = String(this.mobile)
       .trim()
@@ -40,8 +41,17 @@ transporterSchema.pre("save", function (next) {
       this.mobile = match[1];
     }
   }
+  if (!this.isModified("password")) {
+    return next();
+  }
+  const salt = await bcrypt.genSalt(12);
+  this.password = await bcrypt.hash(this.password, salt);
   next();
 });
+
+transporterSchema.methods.comparePassword = async function (candidatePassword) {
+  return await bcrypt.compare(candidatePassword, this.password);
+};
 
 transporterSchema.index({ email: 1 });
 transporterSchema.index({ mobile: 1 });
