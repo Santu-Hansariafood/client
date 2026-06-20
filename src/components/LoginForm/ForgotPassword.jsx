@@ -8,7 +8,7 @@ import {
 } from "react-icons/ai";
 import DataInput from "../../common/DataInput/DataInput";
 
-const ForgotPassword = ({ onBack, userRole }) => {
+const ForgotPassword = ({ onBack, userRole: initialRole }) => {
   const [step, setStep] = useState(1);
   const [mobile, setMobile] = useState("");
   const [otp, setOtp] = useState("");
@@ -16,6 +16,9 @@ const ForgotPassword = ({ onBack, userRole }) => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [userRole, setUserRole] = useState(initialRole);
+
+  const roles = ["Buyer", "Seller", "Transporter", "Employee", "Admin"];
 
   const handleSendOTP = async () => {
     if (!mobile || mobile.length !== 10) {
@@ -110,6 +113,24 @@ const ForgotPassword = ({ onBack, userRole }) => {
             maxLength="10"
             required
           />
+          <div>
+            <p className="text-sm font-semibold text-gray-700 mb-3">Select Role</p>
+            <div className="flex flex-wrap gap-2 justify-center">
+              {roles.map((role) => (
+                <button
+                  key={role}
+                  onClick={() => setUserRole(role)}
+                  className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
+                    userRole === role
+                      ? "bg-emerald-600 text-white shadow-lg scale-105"
+                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  }`}
+                >
+                  {role}
+                </button>
+              ))}
+            </div>
+          </div>
           <button
             onClick={handleSendOTP}
             disabled={loading}
