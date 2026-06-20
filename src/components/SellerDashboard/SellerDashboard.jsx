@@ -611,7 +611,7 @@ const SellerDashboard = () => {
         color: "bg-emerald-500",
         link: "/Loading-Entry/add-loading-entry",
         state: { mobile },
-        count: "Make Bill & Challan",
+        count: "Bill & Challan",
       },
       {
         label: "Order History",
