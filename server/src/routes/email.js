@@ -70,8 +70,8 @@ router.post("/send-receiving-report", async (req, res) => {
     const transporter = nodemailer.createTransport({
       service: process.env.EMAIL_SERVICE,
       auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
+        user: process.env.CLAIMS_EMAIL,
+        pass: process.env.CLAIMS_PASS,
       },
     });
 
@@ -91,7 +91,7 @@ router.post("/send-receiving-report", async (req, res) => {
     }
 
     const mailOptions = {
-      from: process.env.EMAIL_USER,
+      from: process.env.CLAIMS_EMAIL,
       to: [sellerEmail, process.env.CLAIMS_EMAIL || "claim@hansariafood.com"],
       subject: `Receiving Report - Sauda No. ${saudaNo}`,
 
