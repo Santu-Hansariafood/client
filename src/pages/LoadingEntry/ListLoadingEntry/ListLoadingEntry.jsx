@@ -137,6 +137,7 @@ const ListLoadingEntry = () => {
   const [statusMap, setStatusMap] = useState({});
   const [alreadyLoadedMap, setAlreadyLoadedMap] = useState({});
   const [pendingQuantityMap, setPendingQuantityMap] = useState({});
+  const [rateMap, setRateMap] = useState({});
   const [transporters, setTransporters] = useState([]);
   const [transporterMap, setTransporterMap] = useState({});
   const [orderQuantityMap, setOrderQuantityMap] = useState({});
@@ -270,6 +271,9 @@ const ListLoadingEntry = () => {
       );
       setOrderQuantityMap(
         Object.fromEntries(ordersData.map((o) => [o.saudaNo, o.quantity || 0])),
+      );
+      setRateMap(
+        Object.fromEntries(ordersData.map((o) => [o.saudaNo, o.rate || 0])),
       );
       setTransporterMap(
         Object.fromEntries(transportersData.map((t) => [t._id, t.name])),
@@ -1212,6 +1216,8 @@ const ListLoadingEntry = () => {
       "Advance",
       "Balance",
       "Bill No",
+      "Rate",
+      "Manual Calc Rate",
       "Date of Issue",
       "Entered By",
       "Actions",
@@ -1271,6 +1277,8 @@ const ListLoadingEntry = () => {
         entry.advance ? `₹ ${entry.advance}` : "N/A",
         entry.balance ? `₹ ${entry.balance}` : "N/A",
         entry.billNumber || "N/A",
+        rateMap[entry.saudaNo] ? `₹ ${rateMap[entry.saudaNo]}` : "N/A",
+        entry.manualCalculationRate ? `₹ ${entry.manualCalculationRate}` : "N/A",
         formatDate(entry.dateOfIssue),
         <div key={`enteredBy-${entry._id}`} className="flex flex-col">
           <span className="font-semibold text-slate-700">
@@ -1332,6 +1340,7 @@ const ListLoadingEntry = () => {
     paymentTermsMap,
     buyerMap,
     brokerageMap,
+    rateMap,
     handleView,
     handleEdit,
     handleDelete,
