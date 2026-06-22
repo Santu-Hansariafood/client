@@ -294,7 +294,22 @@ router.post("/admin/login", async (req, res) => {
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
-    const isPasswordValid = await user.comparePassword(password);
+    // Check if password is plain text and matches, then hash it for next time!
+    let isPasswordValid = false;
+    // Check if password is bcrypt hash (starts with $2b$, $2a$, or $2y$)
+    if (user.password.startsWith('$2')) {
+      isPasswordValid = await user.comparePassword(password);
+    } else {
+      // Check plain text match
+      if (user.password === password) {
+        isPasswordValid = true;
+        // Hash and save password
+        user.password = password;
+        await user.save();
+        console.log("Updated admin password to hashed version!");
+      }
+    }
+    
     if (!isPasswordValid) {
       console.log(`Admin login failed: mobile=${normalizedMobile} - invalid password`);
       return res.status(401).json({ message: "Invalid credentials" });
@@ -352,7 +367,19 @@ router.post("/employees/login", async (req, res) => {
       return res.status(403).json({ message: "Your account is inactive." });
     }
 
-    const isPasswordValid = await employee.comparePassword(password);
+    // Check if password is plain text and matches, then hash it for next time!
+    let isPasswordValid = false;
+    if (employee.password.startsWith('$2')) {
+      isPasswordValid = await employee.comparePassword(password);
+    } else {
+      if (employee.password === password) {
+        isPasswordValid = true;
+        employee.password = password;
+        await employee.save();
+        console.log("Updated employee password to hashed version!");
+      }
+    }
+
     if (!isPasswordValid) {
       console.log(`Employee login failed: mobile=${normalizedMobile} - invalid password`);
       return res.status(401).json({ message: "Invalid credentials" });
@@ -420,7 +447,19 @@ router.post("/transporters/login", async (req, res) => {
       return res.status(403).json({ message: "Your account is inactive." });
     }
 
-    const isPasswordValid = await transporter.comparePassword(password);
+    // Check if password is plain text and matches, then hash it for next time!
+    let isPasswordValid = false;
+    if (transporter.password.startsWith('$2')) {
+      isPasswordValid = await transporter.comparePassword(password);
+    } else {
+      if (transporter.password === password) {
+        isPasswordValid = true;
+        transporter.password = password;
+        await transporter.save();
+        console.log("Updated transporter password to hashed version!");
+      }
+    }
+
     if (!isPasswordValid) {
       console.log(`Transporter login failed: mobile=${normalizedMobile} - invalid password`);
       return res.status(401).json({ message: "Invalid credentials" });
@@ -491,7 +530,19 @@ router.post("/buyers/login", async (req, res) => {
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
-    const isPasswordValid = await buyer.comparePassword(password);
+    // Check if password is plain text and matches, then hash it for next time!
+    let isPasswordValid = false;
+    if (buyer.password.startsWith('$2')) {
+      isPasswordValid = await buyer.comparePassword(password);
+    } else {
+      if (buyer.password === password) {
+        isPasswordValid = true;
+        buyer.password = password;
+        await buyer.save();
+        console.log("Updated buyer password to hashed version!");
+      }
+    }
+
     if (!isPasswordValid) {
       console.warn(`Invalid buyer credentials for mobile: ${normalizedMobile} - invalid password`);
       return res.status(401).json({ message: "Invalid credentials" });
@@ -564,7 +615,19 @@ router.post("/sellers/login", async (req, res) => {
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
-    const isPasswordValid = await seller.comparePassword(password);
+    // Check if password is plain text and matches, then hash it for next time!
+    let isPasswordValid = false;
+    if (seller.password.startsWith('$2')) {
+      isPasswordValid = await seller.comparePassword(password);
+    } else {
+      if (seller.password === password) {
+        isPasswordValid = true;
+        seller.password = password;
+        await seller.save();
+        console.log("Updated seller password to hashed version!");
+      }
+    }
+
     if (!isPasswordValid) {
       console.warn(`Invalid seller credentials for phone: ${normalizedPhone} - invalid password`);
       return res.status(401).json({ message: "Invalid credentials" });
