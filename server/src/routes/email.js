@@ -56,7 +56,8 @@ router.post("/send-receiving-report", async (req, res) => {
   const { 
     pdf, 
     sellerEmail, 
-    saudaNo, 
+    saudaNo,
+    billNo,
     claimParameters, 
     sentByMobile, 
     sentByName 
@@ -75,13 +76,16 @@ router.post("/send-receiving-report", async (req, res) => {
       },
     });
 
-    // Prepare claim parameters text
+    // Prepare claim parameters text (filter out claims with 0 amount)
     let claimText = "";
     if (claimParameters && claimParameters.length > 0) {
-      claimText = `\n\nQUALITY CLAIMS:\n` + 
-        claimParameters.map(c => 
-          `• ${c.parameterName || "Unnamed Parameter"}: Standard ${c.standardValue || 0}%, Actual ${c.actualValue || 0}%, Claim Amount ₹${Number(c.claimAmount || 0).toFixed(2)}`
-        ).join("\n");
+      const validClaims = claimParameters.filter(c => Number(c.claimAmount || 0) > 0);
+      if (validClaims.length > 0) {
+        claimText = `\n\nQUALITY CLAIMS:\n` + 
+          validClaims.map(c => 
+            `• ${c.parameterName || "Unnamed Parameter"}: Standard ${c.standardValue || 0}%, Actual ${c.actualValue || 0}%, Claim Amount ₹${Number(c.claimAmount || 0).toFixed(2)}`
+          ).join("\n");
+      }
     }
 
     // Prepare sent by verification text
@@ -92,12 +96,12 @@ router.post("/send-receiving-report", async (req, res) => {
 
     const mailOptions = {
       from: process.env.CLAIMS_EMAIL,
-      to: [sellerEmail, process.env.CLAIMS_EMAIL || "claim@hansariafood.com"],
-      subject: `Receiving Report - Sauda No. ${saudaNo}`,
+      to: sellerEmail,
+      subject: `Receiving Report - Sauda No. ${saudaNo}${billNo ? ` | Bill No. ${billNo}` : ""}`,
 
       text: `Dear Sir/Madam,
 
-Please find attached the receiving report for Sauda No. ${saudaNo}.
+Please find attached the receiving report for Sauda No. ${saudaNo}${billNo ? ` and Bill No. ${billNo}` : ""}.
 
 ${claimText}
 
@@ -110,7 +114,7 @@ Hansaria Food Private Limited
 Contact: +91-8336924066 | +91-9330433535`,
       attachments: [
         {
-          filename: `Receiving_Report_${saudaNo}.pdf`,
+          filename: `Receiving_Report_${saudaNo}${billNo ? `_Bill_${billNo}` : ""}.pdf`,
           content: pdf,
           encoding: "base64",
         },

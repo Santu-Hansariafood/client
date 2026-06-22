@@ -167,8 +167,18 @@ const ReceivingList = () => {
   const handleViewDocuments = useCallback((entry) => {
     setSelectedEntry(entry);
     setShowPopup(true);
-    setSelectedSellerEmail("");
-  }, []);
+    // Auto-select first matching seller email if only one
+    const matchingSellers = sellerCompanies.filter(
+      (sc) =>
+        entry?.supplierCompany?.toLowerCase() ===
+        sc.companyName?.toLowerCase()
+    );
+    if (matchingSellers.length === 1) {
+      setSelectedSellerEmail(matchingSellers[0].email);
+    } else {
+      setSelectedSellerEmail("");
+    }
+  }, [sellerCompanies]);
 
   const handleSearch = useCallback((q) => {
     setSearchInput(q);
@@ -522,6 +532,7 @@ _*Hansaria Food Private Limited*_`;
         pdf: base64,
         sellerEmail: selectedSellerEmail,
         saudaNo: selectedEntry.saudaNo,
+        billNo: selectedEntry.billNumber,
         claimParameters: selectedEntry.qualityClaims || [],
         sentByMobile,
         sentByName,
