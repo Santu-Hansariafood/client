@@ -753,14 +753,14 @@ const MasterReceivingReportPDF = ({ entries = [], logoUrl }) => {
                   </Text>
                 </View>
 
-                {data.manualCalculationRate && (
+                {/* {data.manualCalculationRate && (
                   <View style={styles.summaryItemHalf}>
                     <Text style={styles.summaryLabel}>Manual Calc Rate</Text>
                     <Text style={styles.summaryValue}>
                       Rs. {formatAmount(data.manualCalculationRate)}
                     </Text>
                   </View>
-                )}
+                )} */}
                 {data.generalRemarks && (
                   <View
                     style={[
