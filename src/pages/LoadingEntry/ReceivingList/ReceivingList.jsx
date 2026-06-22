@@ -16,6 +16,7 @@ import {
   FaExclamationTriangle,
   FaSync,
   FaFileAlt,
+  FaEnvelope,
 } from "react-icons/fa";
 import { toast } from "react-toastify";
 import { useAuth } from "../../../context/AuthContext/AuthContext";
@@ -61,7 +62,7 @@ AttachmentBadge.propTypes = {
 };
 
 const ReceivingList = () => {
-  const { userRole, mobile } = useAuth();
+  const { userRole, mobile, user } = useAuth();
   const [loadingEntries, setLoadingEntries] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -73,6 +74,9 @@ const ReceivingList = () => {
   const [selectedEntry, setSelectedEntry] = useState(null);
   const [showPopup, setShowPopup] = useState(false);
   const [masterDataCache, setMasterDataCache] = useState(null);
+  const [sellerCompanies, setSellerCompanies] = useState([]);
+  const [selectedSellerEmail, setSelectedSellerEmail] = useState("");
+  const [sendingEmail, setSendingEmail] = useState(false);
 
   const getMasterData = useCallback(async () => {
     if (masterDataCache) return masterDataCache;
@@ -135,9 +139,20 @@ const ReceivingList = () => {
     getMasterData,
   ]);
 
+  const fetchSellerCompanies = useCallback(async () => {
+    try {
+      const res = await api.get("/seller-company");
+      const sellers = Array.isArray(res.data) ? res.data : res.data?.data || [];
+      setSellerCompanies(sellers);
+    } catch (err) {
+      console.error("Error fetching seller companies:", err);
+    }
+  }, []);
+
   useEffect(() => {
     fetchData();
-  }, [fetchData]);
+    fetchSellerCompanies();
+  }, [fetchData, fetchSellerCompanies]);
 
   const handlePageChange = useCallback((page) => {
     setCurrentPage(page);
@@ -152,6 +167,7 @@ const ReceivingList = () => {
   const handleViewDocuments = useCallback((entry) => {
     setSelectedEntry(entry);
     setShowPopup(true);
+    setSelectedSellerEmail("");
   }, []);
 
   const handleSearch = useCallback((q) => {
@@ -315,8 +331,8 @@ _*Hansaria Food Private Limited*_`;
         const selfOrders = Array.isArray(selfOrderRes?.data?.data)
           ? selfOrderRes.data.data
           : Array.isArray(selfOrderRes?.data)
-            ? selfOrderRes.data
-            : [];
+          ? selfOrderRes.data
+          : [];
 
         const normalize = (v) =>
           String(v || "")
@@ -395,6 +411,149 @@ _*Hansaria Food Private Limited*_`;
         isLoading: false,
         autoClose: 3000,
       });
+    }
+  };
+
+  const handleSendEmail = async () => {
+    if (!selectedEntry || !selectedSellerEmail) {
+      toast.error("Please select a seller email");
+      return;
+    }
+
+    const toastId = toast.loading("Preparing and sending report...");
+    setSendingEmail(true);
+
+    try {
+      // First generate the PDF blob
+      const {
+        consigneeData,
+        supplierData,
+        buyerData,
+        companyData,
+        commodityData,
+      } = await getMasterData();
+
+      let cdValue = 0;
+      try {
+        const selfOrderRes = await api.get("/self-order", {
+          params: {
+            search: selectedEntry.saudaNo,
+            limit: 1,
+          },
+        });
+        const selfOrders = Array.isArray(selfOrderRes?.data?.data)
+          ? selfOrderRes.data.data
+          : Array.isArray(selfOrderRes?.data)
+          ? selfOrderRes.data
+          : [];
+
+        const normalize = (v) =>
+          String(v || "")
+            .trim()
+            .toLowerCase();
+        const selfOrder = selfOrders.find(
+          (order) =>
+            normalize(order?.saudaNo) === normalize(selectedEntry?.saudaNo),
+        );
+        if (selfOrder) {
+          cdValue = Number(selfOrder.cd || 0);
+        }
+      } catch (e) {
+        console.error("Error fetching self-order for CD:", e);
+      }
+
+      const pdfData = buildSaudaPdfData({
+        item: { ...selectedEntry, cd: cdValue },
+        consigneeData,
+        supplierData,
+        buyerData,
+        companyData,
+        commodityData,
+        getConsigneeDisplay: (row) => {
+          const consignee = row?.consignee;
+          if (typeof consignee === "object" && consignee?.name)
+            return consignee.name;
+          if (typeof consignee === "object" && consignee?.label)
+            return consignee.label;
+          return String(consignee || "N/A");
+        },
+      });
+
+      const qrData = JSON.stringify({
+        saudaNo: selectedEntry.saudaNo,
+        billNo: selectedEntry.billNumber,
+        lorry: selectedEntry.lorryNumber,
+        weight: selectedEntry.loadingWeight,
+      });
+      let qrCodeUrl = null;
+      try {
+        qrCodeUrl = await QRCode.toDataURL(qrData);
+      } catch (e) {
+        console.error("QR Error", e);
+      }
+
+      const preparedEntry = { ...pdfData, qrCodeUrl };
+
+      const document = (
+        <MasterReceivingReportPDF
+          entries={[preparedEntry]}
+          logoUrl={logoUrl?.default || logoUrl}
+        />
+      );
+
+      const blob = await pdf(document).toBlob();
+      
+      // Convert blob to base64
+      const base64 = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(blob);
+        reader.onloadend = () => {
+          const base64data = reader.result.split(",")[1];
+          resolve(base64data);
+        };
+        reader.onerror = reject;
+      });
+
+      // Get sent by info from auth
+      let sentByName = user?.name || "";
+      let sentByMobile = mobile || "";
+
+      await api.post("/email/send-receiving-report", {
+        pdf: base64,
+        sellerEmail: selectedSellerEmail,
+        saudaNo: selectedEntry.saudaNo,
+        claimParameters: selectedEntry.qualityClaims || [],
+        sentByMobile,
+        sentByName,
+      });
+
+      toast.update(toastId, {
+        render: "Report sent successfully!",
+        type: "success",
+        isLoading: false,
+        autoClose: 3000,
+      });
+
+      // Update sent status
+      try {
+        await api.put(`/loading-entries/${selectedEntry._id}`, {
+          sentStatus: "Sent",
+        });
+        fetchData();
+      } catch (err) {
+        console.error("Error updating sent status:", err);
+      }
+
+    } catch (error) {
+      console.error("Error sending email:", error);
+      toast.update(toastId, {
+        render: "Failed to send report",
+        type: "error",
+        isLoading: false,
+        autoClose: 3000,
+      });
+    } finally {
+      setSendingEmail(false);
     }
   };
 
@@ -785,6 +944,54 @@ _*Hansaria Food Private Limited*_`;
               }
             >
               <div className="p-4 sm:p-8 space-y-10">
+                {(userRole === "Admin" || userRole === "Employee") && (
+                  <div className="bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-100 rounded-[2rem] p-6 shadow-sm">
+                    <h4 className="text-base font-black text-emerald-900 mb-4 flex items-center gap-3">
+                      <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                      Send Report to Seller
+                    </h4>
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                      <select
+                        value={selectedSellerEmail}
+                        onChange={(e) => setSelectedSellerEmail(e.target.value)}
+                        className="flex-1 px-4 py-3 rounded-xl border border-emerald-200 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent font-medium"
+                      >
+                        <option value="">Select Seller Email</option>
+                        {sellerCompanies
+                          .filter(
+                            (sc) =>
+                              selectedEntry?.supplierCompany?.toLowerCase() ===
+                              sc.companyName?.toLowerCase()
+                          )
+                          .length > 0
+                          ? sellerCompanies
+                              .filter(
+                                (sc) =>
+                                  selectedEntry?.supplierCompany?.toLowerCase() ===
+                                  sc.companyName?.toLowerCase()
+                              )
+                              .map((sc) => (
+                                <option key={sc._id} value={sc.email}>
+                                  {sc.companyName} - {sc.email}
+                                </option>
+                              ))
+                          : sellerCompanies.map((sc) => (
+                              <option key={sc._id} value={sc.email}>
+                                {sc.companyName} - {sc.email}
+                              </option>
+                            ))}
+                      </select>
+                      <button
+                        onClick={handleSendEmail}
+                        disabled={!selectedSellerEmail || sendingEmail}
+                        className="flex items-center gap-2 px-6 py-3 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-emerald-200"
+                      >
+                        <FaEnvelope size={18} />
+                        {sendingEmail ? "Sending..." : "Send Report"}
+                      </button>
+                    </div>
+                  </div>
+                )}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                   {[
                     { key: "kantaSlip", label: "Kanta Slip", color: "blue" },
