@@ -1200,6 +1200,7 @@ const ListLoadingEntry = () => {
       "Buyer Company",
       "Consignee",
       "Payment Terms",
+      "Rate",
       "Commodity",
       "Loading Weight",
       "Unloading Weight",
@@ -1216,8 +1217,6 @@ const ListLoadingEntry = () => {
       "Advance",
       "Balance",
       "Bill No",
-      "Rate",
-      "Manual Calc Rate",
       "Date of Issue",
       "Entered By",
       "Actions",
@@ -1245,6 +1244,7 @@ const ListLoadingEntry = () => {
         buyerMap[entry.saudaNo] || entry.buyerCompany || "N/A",
         entry.consignee || "N/A",
         paymentTermsMap[entry.saudaNo] || "N/A",
+        rateMap[entry.saudaNo] ? `₹ ${rateMap[entry.saudaNo]}` : "N/A",
         entry.commodity || "N/A",
         entry.loadingWeight ? entry.loadingWeight.toFixed(2) : "0.00",
         entry.unloadingWeight ? entry.unloadingWeight.toFixed(2) : "0.00",
@@ -1277,8 +1277,6 @@ const ListLoadingEntry = () => {
         entry.advance ? `₹ ${entry.advance}` : "N/A",
         entry.balance ? `₹ ${entry.balance}` : "N/A",
         entry.billNumber || "N/A",
-        rateMap[entry.saudaNo] ? `₹ ${rateMap[entry.saudaNo]}` : "N/A",
-        entry.manualCalculationRate ? `₹ ${entry.manualCalculationRate}` : "N/A",
         formatDate(entry.dateOfIssue),
         <div key={`enteredBy-${entry._id}`} className="flex flex-col">
           <span className="font-semibold text-slate-700">
