@@ -10,6 +10,7 @@ import {
   FaChartLine,
   FaCheckCircle,
   FaExclamationCircle,
+  FaFilePdf,
 } from "react-icons/fa";
 import SaudaMISSection from "./components/SaudaMISSection";
 import MisStatCard from "./components/MisStatCard";
@@ -679,6 +680,226 @@ const ListPaymentReceived = () => {
     }
   };
 
+  const handleDownloadPaymentAdvice = async () => {
+    try {
+      setPrinting(true);
+
+      const params = {
+        ...filters,
+        limit: 5000,
+      };
+
+      const response = await api.get("/payment-received", {
+        params,
+      });
+
+      // Fetch Loading Entries with quality claims
+      let allEntries = [];
+      if (filters.ledgerType && (filters.buyerCompany || filters.supplierCompany)) {
+        const entryParams = {
+          startDate: filters.startDate,
+          endDate: filters.endDate,
+          limit: 1000,
+        };
+        if (filters.buyerCompany) entryParams.buyerCompany = filters.buyerCompany;
+        if (filters.supplierCompany) entryParams.supplierCompany = filters.supplierCompany;
+
+        const entriesRes = await api.get("/loading-entries", { params: entryParams });
+        allEntries = entriesRes.data.data || [];
+      }
+
+      const reportRows = buildTallyVoucherRows(response.data.data || [], openingBalance, allEntries);
+
+      if (reportRows.length === 0) {
+        toast.warning("No records found");
+        return;
+      }
+
+      const doc = new jsPDF({
+        orientation: "portrait",
+        unit: "mm",
+        format: "a4",
+      });
+
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const margin = 15;
+
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(16);
+      doc.setTextColor(0, 0, 0);
+      doc.text("HANSARIA FOOD PVT. LTD.", pageWidth / 2, 15, {
+        align: "center",
+      });
+
+      doc.setFontSize(7);
+      doc.setFont("helvetica", "normal");
+      doc.text(
+        "Primarc Square, Plot No.1, Salt Lake Bypass, LA Block, Sector: 3, Bidhannagar, Kolkata, West Bengal 700106",
+        pageWidth / 2,
+        20,
+        { align: "center" },
+      );
+
+      doc.setLineWidth(0.5);
+      doc.line(margin, 25, pageWidth - margin, 25);
+
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(12);
+      doc.text("PAYMENT ADVICE", margin, 32);
+
+      if (selectedCompany) {
+        doc.setFontSize(10);
+        doc.text(`COMPANY: ${selectedCompany.label.toUpperCase()}`, margin, 38);
+      }
+
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(9);
+      const dateRange =
+        filters.startDate && filters.endDate
+          ? `Period: ${new Date(filters.startDate).toLocaleDateString("en-GB")} to ${new Date(filters.endDate).toLocaleDateString("en-GB")}`
+          : "Period: Consolidated (All Time)";
+      doc.text(dateRange, pageWidth - margin, 32, { align: "right" });
+
+      doc.line(
+        margin,
+        selectedCompany ? 41 : 35,
+        pageWidth - margin,
+        selectedCompany ? 41 : 35,
+      );
+
+      let currentY = selectedCompany ? 45 : 40;
+
+      // First, process all payments and entries
+      const payments = response.data.data || [];
+
+      // Payment Table
+      const paymentTableData = payments.map((p, idx) => [
+        idx + 1,
+        p.date ? new Date(p.date).toLocaleDateString("en-GB") : "—",
+        p.voucherNo || "N/A",
+        (p.paymentMode || "").toUpperCase(),
+        `Rs. ${Number(p.amount || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}`,
+      ]);
+
+      if (payments.length > 0) {
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(10);
+        doc.text("PAYMENTS MADE/RECEIVED", margin, currentY);
+        currentY += 8;
+
+        autoTable(doc, {
+          startY: currentY,
+          head: [
+            ["NO", "DATE", "VOUCHER NO", "MODE", "AMOUNT"],
+          ],
+          body: paymentTableData,
+          theme: "grid",
+          headStyles: {
+            fillColor: [255, 255, 255],
+            textColor: [0, 0, 0],
+            fontSize: 7,
+            fontStyle: "bold",
+            halign: "center",
+            lineWidth: 0.1,
+            lineColor: [0, 0, 0],
+          },
+          styles: {
+            fontSize: 6,
+            cellPadding: 1.5,
+            valign: "middle",
+            textColor: [0, 0, 0],
+            lineColor: [0, 0, 0],
+          },
+          margin: { left: margin, right: margin },
+        });
+
+        currentY = doc.lastAutoTable?.finalY + 10 || currentY + 20;
+      }
+
+      // Quality Claims Table
+      const entriesWithClaims = allEntries.filter(e => 
+        e.qualityClaims && e.qualityClaims.length > 0 && 
+        e.qualityClaims.some(c => Number(c.claimAmount) > 0)
+      );
+
+      if (entriesWithClaims.length > 0) {
+        const claimTableData = [];
+        let claimIdx = 1;
+        entriesWithClaims.forEach(entry => {
+          const validClaims = entry.qualityClaims.filter(c => Number(c.claimAmount) > 0);
+          validClaims.forEach(claim => {
+            claimTableData.push([
+              claimIdx++,
+              entry.saudaNo || "N/A",
+              entry.lorryNumber || "N/A",
+              entry.billNumber || "N/A",
+              claim.parameterName || "Unnamed",
+              `Rs. ${Number(claim.claimAmount).toLocaleString("en-IN", { minimumFractionDigits: 2 })}`,
+            ]);
+          });
+        });
+
+        if (claimTableData.length > 0) {
+          doc.setFont("helvetica", "bold");
+          doc.setFontSize(10);
+          doc.text("QUALITY CLAIMS REPORT", margin, currentY);
+          currentY += 8;
+
+          autoTable(doc, {
+            startY: currentY,
+            head: [
+              ["NO", "SAUDA NO", "LORRY NO", "BILL NO", "PARAMETER", "CLAIM AMOUNT"],
+            ],
+            body: claimTableData,
+            theme: "grid",
+            headStyles: {
+              fillColor: [255, 255, 255],
+              textColor: [0, 0, 0],
+              fontSize: 7,
+              fontStyle: "bold",
+              halign: "center",
+              lineWidth: 0.1,
+              lineColor: [0, 0, 0],
+            },
+            styles: {
+              fontSize: 6,
+              cellPadding: 1.5,
+              valign: "middle",
+              textColor: [0, 0, 0],
+              lineColor: [0, 0, 0],
+            },
+            margin: { left: margin, right: margin },
+          });
+        }
+      }
+
+      const finalY = doc.lastAutoTable?.finalY || 70;
+
+      // Footer
+      doc.setFontSize(9);
+      doc.text("Authorised Signatory", pageWidth - margin, finalY + 20, {
+        align: "right",
+      });
+      doc.line(
+        pageWidth - 60,
+        finalY + 17,
+        pageWidth - margin,
+        finalY + 17,
+      );
+
+      doc.save(
+        `Payment_Advice_${filters.startDate || "All"}_to_${filters.endDate || "All"}.pdf`,
+      );
+
+      toast.success("Payment Advice generated successfully");
+    } catch (error) {
+      console.error("Payment Advice Error:", error);
+      toast.error("Failed to generate Payment Advice");
+    } finally {
+      setPrinting(false);
+    }
+  };
+
   const handleLedgerTypeChange = (value) => {
     setPage(1);
     setSelectedLedger(null);
@@ -769,6 +990,7 @@ const ListPaymentReceived = () => {
                 onOpposingCompanyChange={handleOpposingSelect}
                 onSaudaChange={setSelectedSauda}
                 onPrint={handlePrintReport}
+                onDownloadPaymentAdvice={handleDownloadPaymentAdvice}
                 onRecordPayment={() => navigate("/payments/received/add")}
                 printing={printing}
                 printDisabled={loading || printing || payments.length === 0}
