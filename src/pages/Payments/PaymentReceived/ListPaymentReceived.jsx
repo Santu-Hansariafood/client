@@ -34,6 +34,8 @@ const ListPaymentReceived = () => {
   const [activeTab, setActiveTab] = useState("vouchers"); // vouchers, sauda
   const [ledgers, setLedgers] = useState([]);
   const [allCompanies, setAllCompanies] = useState([]);
+  const [sellerCompanies, setSellerCompanies] = useState([]);
+  const [buyerCompanies, setBuyerCompanies] = useState([]);
   const [selectedLedger, setSelectedLedger] = useState(null);
   const [selectedCompany, setSelectedCompany] = useState(null);
   const [fetchingLedgers, setFetchingLedgers] = useState(false);
@@ -63,6 +65,16 @@ const ListPaymentReceived = () => {
           params: { limit: 0 },
         });
         setAllCompanies(companiesRes.data.data || companiesRes.data || []);
+        
+        const sellerCompaniesRes = await api.get("/seller-company", {
+          params: { limit: 0 },
+        });
+        setSellerCompanies(sellerCompaniesRes.data.data || sellerCompaniesRes.data || []);
+        
+        const buyerCompaniesRes = await api.get("/buyers", {
+          params: { limit: 0 },
+        });
+        setBuyerCompanies(buyerCompaniesRes.data.data || buyerCompaniesRes.data || []);
       } catch (error) {
         console.error("Error fetching initial data:", error);
       }
@@ -1073,6 +1085,8 @@ const ListPaymentReceived = () => {
                       ? "Select a company to view the Tally voucher register."
                       : "No vouchers match your filters and date range."
                   }
+                  sellerCompanies={sellerCompanies}
+                  buyerCompanies={buyerCompanies}
                 />
               )}
             </>

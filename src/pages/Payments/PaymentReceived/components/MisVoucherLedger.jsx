@@ -19,6 +19,8 @@ const MisVoucherLedger = ({
   limit,
   onPageChange,
   emptyMessage,
+  sellerCompanies = [],
+  buyerCompanies = [],
 }) => {
   return (
     <div className="rounded-2xl sm:rounded-3xl border border-slate-200/80 bg-white shadow-[0_8px_30px_rgba(15,23,42,0.06)] overflow-hidden min-h-[360px]">
@@ -57,6 +59,8 @@ const MisVoucherLedger = ({
           loading={loading}
           showCompanyColumns
           emptyMessage={emptyMessage}
+          sellerCompanies={sellerCompanies}
+          buyerCompanies={buyerCompanies}
         />
 
         {!loading && tallyRows.length > 0 && (
