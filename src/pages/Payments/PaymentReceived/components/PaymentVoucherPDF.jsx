@@ -292,9 +292,9 @@ const styles = StyleSheet.create({
 });
 
 const formatDate = (date) => {
-  if (!date) return "N/A";
+  if (!date) return "-";
   const d = new Date(date);
-  if (isNaN(d.getTime())) return "N/A";
+  if (isNaN(d.getTime())) return "-";
   const day = String(d.getDate()).padStart(2, "0");
   const month = String(d.getMonth() + 1).padStart(2, "0");
   const year = d.getFullYear();
@@ -381,7 +381,7 @@ const renderAddressDetails = (details, type = "buyer") => {
   return <Text style={styles.addressDetails}>{parts.join("\n")}</Text>;
 };
 
-const PaymentVoucherPDF = ({ row, buyerCompany, sellerCompany, qrCodeUrl }) => {
+const PaymentVoucherPDF = ({ row, buyerCompany, sellerCompany, qrCodeUrl, voucherNumber }) => {
   const hasClaims =
     row.raw?.qualityClaims &&
     row.raw.qualityClaims.filter((c) => Number(c.claimAmount) > 0).length > 0;
@@ -396,6 +396,20 @@ const PaymentVoucherPDF = ({ row, buyerCompany, sellerCompany, qrCodeUrl }) => {
   const finalAmount = hasClaims && totalAmount > 0 ? totalAmount - totalClaims : totalAmount;
 
   const bankDetails = sellerCompany?.bankDetails?.[0] || {};
+
+  // Helper to get non-N/A values
+  const getValue = (...candidates) => {
+    for (const value of candidates) {
+      if (value && String(value).trim() !== "" && String(value).trim() !== "N/A") {
+        return String(value).trim();
+      }
+    }
+    return "-";
+  };
+
+  const billNo = getValue(row.raw?.billNo, row.raw?.billNumber, row.billNo);
+  const saudaNo = getValue(row.raw?.saudaNo, row.saudaNo);
+  const lorryNo = getValue(row.raw?.lorryNumber, row.lorryNo);
 
   return (
     <Document>
@@ -423,13 +437,13 @@ const PaymentVoucherPDF = ({ row, buyerCompany, sellerCompany, qrCodeUrl }) => {
 
         <View style={styles.partiesContainer}>
           <View style={styles.partyBox}>
-            <Text style={styles.partyLabel}>To (Buyer)</Text>
-            <Text style={styles.partyName}>{row.buyerCompany || "N/A"}</Text>
+            <Text style={styles.partyLabel}>TO (BUYER)</Text>
+            <Text style={styles.partyName}>{row.buyerCompany || "-"}</Text>
             {renderAddressDetails(buyerCompany, "buyer")}
           </View>
           <View style={styles.partyBox}>
-            <Text style={styles.partyLabel}>From (Seller)</Text>
-            <Text style={styles.partyName}>{row.supplierCompany || "N/A"}</Text>
+            <Text style={styles.partyLabel}>FROM (SELLER)</Text>
+            <Text style={styles.partyName}>{row.supplierCompany || "-"}</Text>
             {renderAddressDetails(sellerCompany, "seller")}
           </View>
         </View>
@@ -441,27 +455,19 @@ const PaymentVoucherPDF = ({ row, buyerCompany, sellerCompany, qrCodeUrl }) => {
           </View>
           <View style={styles.metaItem}>
             <Text style={styles.metaLabel}>Voucher No</Text>
-            <Text style={styles.metaValue}>
-              {String(row.raw?.voucherNo || row.id || "N/A")}
-            </Text>
+            <Text style={styles.metaValue}>{voucherNumber || "-"}</Text>
           </View>
           <View style={styles.metaItem}>
             <Text style={styles.metaLabel}>Bill No</Text>
-            <Text style={styles.metaValue}>
-              {String(row.raw?.billNo || row.raw?.billNumber || "N/A")}
-            </Text>
+            <Text style={styles.metaValue}>{billNo}</Text>
           </View>
           <View style={styles.metaItem}>
             <Text style={styles.metaLabel}>Sauda No</Text>
-            <Text style={styles.metaValue}>
-              {String(row.raw?.saudaNo || row.saudaNo || "N/A")}
-            </Text>
+            <Text style={styles.metaValue}>{saudaNo}</Text>
           </View>
           <View style={styles.metaItemLast}>
             <Text style={styles.metaLabel}>Lorry No</Text>
-            <Text style={styles.metaValue}>
-              {String(row.raw?.lorryNumber || row.lorryNo || "N/A")}
-            </Text>
+            <Text style={styles.metaValue}>{lorryNo}</Text>
           </View>
         </View>
 
@@ -513,7 +519,7 @@ const PaymentVoucherPDF = ({ row, buyerCompany, sellerCompany, qrCodeUrl }) => {
               <Image src={qrCodeUrl} style={{ width: 55, height: 55 }} />
             )}
             <Text style={styles.qrLabel}>
-              Voucher: {String(row.raw?.voucherNo || row.id || "")}
+              Voucher: {voucherNumber || "-"}
             </Text>
           </View>
           <View style={styles.totalSection}>
@@ -566,31 +572,31 @@ const PaymentVoucherPDF = ({ row, buyerCompany, sellerCompany, qrCodeUrl }) => {
                   <Text style={styles.bankValue}>
                     {bankDetails.accountHolderName ||
                       row.supplierCompany ||
-                      ""}
+                      "-"}
                   </Text>
                 </View>
                 <View style={styles.bankItem}>
                   <Text style={styles.bankLabel}>Bank Name</Text>
                   <Text style={styles.bankValue}>
-                    {bankDetails.bankName || ""}
+                    {bankDetails.bankName || "-"}
                   </Text>
                 </View>
                 <View style={styles.bankItem}>
                   <Text style={styles.bankLabel}>Account Number</Text>
                   <Text style={styles.bankValue}>
-                    {bankDetails.accountNumber || ""}
+                    {bankDetails.accountNumber || "-"}
                   </Text>
                 </View>
                 <View style={styles.bankItem}>
                   <Text style={styles.bankLabel}>IFSC Code</Text>
                   <Text style={styles.bankValue}>
-                    {bankDetails.ifscCode || ""}
+                    {bankDetails.ifscCode || "-"}
                   </Text>
                 </View>
                 <View style={styles.bankItem}>
                   <Text style={styles.bankLabel}>Branch</Text>
                   <Text style={styles.bankValue}>
-                    {bankDetails.branchName || ""}
+                    {bankDetails.branchName || "-"}
                   </Text>
                 </View>
               </View>

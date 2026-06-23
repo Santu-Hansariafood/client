@@ -15,6 +15,7 @@ const TallyLedgerBook = ({
 }) => {
   const [qrCache, setQrCache] = useState({});
   const [qrLoading, setQrLoading] = useState({});
+  const [voucherCounter, setVoucherCounter] = useState({});
 
   const generateQRCode = async (row) => {
     const totalAmount = Math.max(Number(row.debit || 0), Number(row.credit || 0));
@@ -42,6 +43,29 @@ const TallyLedgerBook = ({
         console.error("Error generating QR code:", error);
       } finally {
         setQrLoading((prev) => ({ ...prev, [row.id]: false }));
+      }
+    }
+
+    // Assign voucher number if not already assigned
+    if (!voucherCounter[row.id]) {
+      const nonOpeningRows = rows.filter(r => !r.isOpening);
+      const currentIndex = nonOpeningRows.findIndex(r => r.id === row.id);
+      
+      if (currentIndex >= 0) {
+        // Check which numbers are already assigned
+        const usedNumbers = new Set();
+        Object.values(voucherCounter).forEach(num => usedNumbers.add(num));
+        
+        // Find the next available number
+        let nextNumber = 1;
+        while (usedNumbers.has(nextNumber)) {
+          nextNumber++;
+        }
+        
+        setVoucherCounter((prev) => ({
+          ...prev,
+          [row.id]: nextNumber
+        }));
       }
     }
   };
@@ -302,14 +326,15 @@ const TallyLedgerBook = ({
                       )}
                       {qrCache[row.id] && !qrLoading[row.id] && (
                         <PDFDownloadLink
-                          document={
-                            <PaymentVoucherPDF
-                              row={row}
-                              buyerCompany={buyerCompany}
-                              sellerCompany={sellerCompany}
-                              qrCodeUrl={qrCache[row.id]}
-                            />
-                          }
+              document={
+                <PaymentVoucherPDF
+                  row={row}
+                  buyerCompany={buyerCompany}
+                  sellerCompany={sellerCompany}
+                  qrCodeUrl={qrCache[row.id]}
+                  voucherNumber={voucherCounter[row.id]}
+                />
+              }
                           fileName={`Payment_Voucher_${
                             row.vchType || "Voucher"
                           }_${
