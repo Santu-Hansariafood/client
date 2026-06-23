@@ -471,13 +471,13 @@ const ListPaymentReceived = () => {
       }
 
       const doc = new jsPDF({
-        orientation: "portrait",
+        orientation: "landscape",
         unit: "mm",
         format: "a4",
       });
 
       const pageWidth = doc.internal.pageSize.getWidth();
-      const margin = 15;
+      const margin = 10;
 
       doc.setFont("helvetica", "bold");
       doc.setFontSize(16);
@@ -538,8 +538,10 @@ const ListPaymentReceived = () => {
         currentY += 10;
       }
 
-      const tableData = reportRows.filter(r => !r.isOpening).map((row, idx) => {
-        return [
+      // Build table data with individual claims
+      const tableData = [];
+      reportRows.filter(r => !r.isOpening).forEach((row, idx) => {
+        tableData.push([
           idx + 1,
           row.date ? new Date(row.date).toLocaleDateString("en-GB") : "—",
           row.particulars.toUpperCase(),
@@ -549,7 +551,30 @@ const ListPaymentReceived = () => {
           row.debit > 0 ? `Rs. ${Number(row.debit).toLocaleString("en-IN", { minimumFractionDigits: 2 })}` : "",
           row.credit > 0 ? `Rs. ${Number(row.credit).toLocaleString("en-IN", { minimumFractionDigits: 2 })}` : "",
           `Rs. ${Number(row.balance).toLocaleString("en-IN", { minimumFractionDigits: 2 })}`,
-        ];
+          "",
+          "",
+        ]);
+
+        // Add individual claim rows if any
+        const hasClaims = row.raw?.qualityClaims && row.raw.qualityClaims.filter(c => Number(c.claimAmount) > 0).length > 0;
+        if (hasClaims) {
+          const validClaims = row.raw.qualityClaims.filter(c => Number(c.claimAmount) > 0);
+          validClaims.forEach((claim) => {
+            tableData.push([
+              "",
+              "",
+              `CLAIM: ${(claim.parameterName || "UNNAMED").toUpperCase()}`,
+              "",
+              "",
+              "",
+              "",
+              "",
+              "",
+              (claim.parameterName || "UNNAMED").toUpperCase(),
+              `Rs. ${Number(claim.claimAmount).toLocaleString("en-IN", { minimumFractionDigits: 2 })}`,
+            ]);
+          });
+        }
       });
 
       autoTable(doc, {
@@ -565,13 +590,15 @@ const ListPaymentReceived = () => {
             "DEBIT",
             "CREDIT",
             "BALANCE",
+            "CLAIM PARAMETER",
+            "CLAIM AMOUNT",
           ],
         ],
         body: tableData,
         theme: "grid",
         headStyles: {
-          fillColor: [255, 255, 255],
-          textColor: [0, 0, 0],
+          fillColor: [30, 58, 95],
+          textColor: [255, 255, 255],
           fontSize: 7,
           fontStyle: "bold",
           halign: "center",
@@ -587,14 +614,16 @@ const ListPaymentReceived = () => {
         },
         columnStyles: {
           0: { halign: "center", cellWidth: 8 },
-          1: { halign: "center", cellWidth: 15 },
-          2: { cellWidth: "auto" },
-          3: { cellWidth: 20 },
-          4: { cellWidth: 20 },
-          5: { halign: "center", cellWidth: 12 },
-          6: { halign: "right", cellWidth: 18 },
-          7: { halign: "right", cellWidth: 18 },
-          8: { halign: "right", fontStyle: "bold", cellWidth: 20 },
+          1: { halign: "center", cellWidth: 18 },
+          2: { cellWidth: 70 },
+          3: { cellWidth: 28 },
+          4: { cellWidth: 28 },
+          5: { halign: "center", cellWidth: 15 },
+          6: { halign: "right", cellWidth: 22 },
+          7: { halign: "right", cellWidth: 22 },
+          8: { halign: "right", fontStyle: "bold", cellWidth: 25 },
+          9: { cellWidth: 30 },
+          10: { halign: "right", cellWidth: 22, textColor: [185, 28, 28] },
         },
         margin: { left: margin, right: margin },
         didDrawPage: (data) => {
@@ -616,12 +645,6 @@ const ListPaymentReceived = () => {
       });
 
       const finalY = doc.lastAutoTable?.finalY || 70;
-
-      if (finalY + 30 > doc.internal.pageSize.height) {
-        doc.addPage();
-        doc.setLineWidth(0.5);
-        doc.line(margin, 10, pageWidth - margin, 10);
-      }
 
       const summaryY = doc.lastAutoTable?.finalY + 10 || 80;
 
@@ -716,13 +739,13 @@ const ListPaymentReceived = () => {
       }
 
       const doc = new jsPDF({
-        orientation: "portrait",
+        orientation: "landscape",
         unit: "mm",
         format: "a4",
       });
 
       const pageWidth = doc.internal.pageSize.getWidth();
-      const margin = 15;
+      const margin = 10;
 
       doc.setFont("helvetica", "bold");
       doc.setFontSize(16);
