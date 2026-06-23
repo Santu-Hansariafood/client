@@ -32,181 +32,126 @@ const TallyLedgerBook = ({
         c.companyName?.toLowerCase() === (row.supplierCompany || "").toLowerCase()
       );
 
-      // Header Company Info with Border
-      doc.setLineWidth(0.3);
-      doc.setDrawColor(200, 200, 200);
-      doc.roundedRect(margin, 10, pageWidth - 2*margin, 35, 2, 2);
-
+      // Header Company Info
       doc.setFont("helvetica", "bold");
-      doc.setFontSize(14);
+      doc.setFontSize(16);
       doc.setTextColor(30, 58, 95);
-      doc.text("HANSARIA FOOD PVT. LTD.", pageWidth / 2, 22, {
+      doc.text("HANSARIA FOOD PVT. LTD.", pageWidth / 2, 20, {
         align: "center",
       });
 
-      doc.setFontSize(8);
+      doc.setFontSize(9);
       doc.setFont("helvetica", "normal");
       doc.setTextColor(80, 80, 80);
-      doc.text(
-        "Primarc Square, Plot No.1, Salt Lake Bypass, LA Block, Sector: 3, Bidhannagar,",
-        pageWidth / 2,
-        28,
-        { align: "center" },
-      );
-      doc.text(
-        "Kolkata, West Bengal 700106, India",
-        pageWidth / 2,
-        33,
-        { align: "center" },
-      );
+      doc.text("Primarc Square, Plot No.1, Salt Lake Bypass, LA Block, Sector: 3, Bidhannagar", pageWidth / 2, 27, { align: "center" });
+      doc.text("Kolkata, West Bengal 700106", pageWidth / 2, 33, { align: "center" });
 
       // Title
-      doc.setFontSize(13);
+      doc.setFontSize(14);
       doc.setFont("helvetica", "bold");
-      doc.setTextColor(30, 58, 95);
-      doc.text("Payment Voucher", pageWidth / 2, 50, {
+      doc.setTextColor(0, 0, 0);
+      doc.text("Payment Voucher", pageWidth / 2, 45, {
         align: "center",
       });
-      doc.setLineWidth(0.3);
-      doc.line(margin, 53, pageWidth - margin, 53);
+      doc.setLineWidth(0.5);
+      doc.line(margin, 48, pageWidth - margin, 48);
 
-      let currentY = 58;
+      let currentY = 55;
 
-      // Buyer and Seller Details Side by Side
-      const colWidth = (pageWidth - 2*margin - 5)/2;
-      const leftCol = margin;
-      const rightCol = margin + colWidth + 5;
-
-      // Buyer Company Section
-      doc.setFillColor(240, 245, 250);
-      doc.roundedRect(leftCol, currentY - 3, colWidth, 35, 2, 2, 'F');
+      // Buyer Details
       doc.setFont("helvetica", "bold");
-      doc.setFontSize(9);
-      doc.setTextColor(30, 58, 95);
-      doc.text("Buyer Company Details", leftCol + 3, currentY + 3);
-
-      doc.setFontSize(8);
-      doc.setTextColor(40, 40, 40);
-      let buyerY = currentY + 10;
-      
-      if (row.buyerCompany) {
-        doc.setFont("helvetica", "bold");
-        doc.text("Name:", leftCol + 3, buyerY);
-        doc.setFont("helvetica", "normal");
-        doc.text(row.buyerCompany, leftCol + 25, buyerY);
-        buyerY += 5;
-      }
-
-      if (buyerCompany?.location) {
-        doc.setFont("helvetica", "bold");
-        doc.text("Location:", leftCol + 3, buyerY);
-        doc.setFont("helvetica", "normal");
-        doc.text(buyerCompany.location, leftCol + 25, buyerY);
-        buyerY += 5;
-      }
-
-      if (buyerCompany?.gstNumber) {
-        doc.setFont("helvetica", "bold");
-        doc.text("GSTIN:", leftCol + 3, buyerY);
-        doc.setFont("helvetica", "normal");
-        doc.text(buyerCompany.gstNumber, leftCol + 25, buyerY);
-        buyerY += 5;
-      }
-
-      // Seller Company Section
-      doc.setFillColor(245, 250, 245);
-      doc.roundedRect(rightCol, currentY - 3, colWidth, 48, 2, 2, 'F');
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(9);
-      doc.setTextColor(35, 100, 35);
-      doc.text("Seller Company Details", rightCol + 3, currentY + 3);
-
-      doc.setFontSize(8);
-      doc.setTextColor(40, 40, 40);
-      let sellerY = currentY + 10;
-      
-      if (row.supplierCompany) {
-        doc.setFont("helvetica", "bold");
-        doc.text("Name:", rightCol + 3, sellerY);
-        doc.setFont("helvetica", "normal");
-        doc.text(row.supplierCompany, rightCol + 25, sellerY);
-        sellerY += 5;
-      }
-
-      if (sellerCompany?.address) {
-        doc.setFont("helvetica", "bold");
-        doc.text("Address:", rightCol + 3, sellerY);
-        doc.setFont("helvetica", "normal");
-        const addrLines = doc.splitTextToSize(sellerCompany.address, colWidth - 30);
-        doc.text(addrLines, rightCol + 25, sellerY);
-        sellerY += addrLines.length * 5;
-      }
-
-      if (sellerCompany?.gstNo) {
-        doc.setFont("helvetica", "bold");
-        doc.text("GSTIN:", rightCol + 3, sellerY);
-        doc.setFont("helvetica", "normal");
-        doc.text(sellerCompany.gstNo, rightCol + 25, sellerY);
-        sellerY += 5;
-      }
-
-      currentY = Math.max(buyerY, sellerY) + 5;
-
-      // Voucher Details
-      doc.setFillColor(250, 250, 250);
-      doc.roundedRect(margin, currentY, pageWidth - 2*margin, 35, 2, 2, 'F');
-      doc.setDrawColor(200, 200, 200);
-      doc.roundedRect(margin, currentY, pageWidth - 2*margin, 35, 2, 2);
-
-      let vchY = currentY + 6;
-      const vchColWidth = (pageWidth - 2*margin)/3;
-
-      // Date
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(8);
+      doc.setFontSize(10);
       doc.setTextColor(0, 0, 0);
-      doc.text("Date:", margin + 5, vchY);
+      doc.text("Buyer:", margin, currentY);
       doc.setFont("helvetica", "normal");
-      if (row.date) {
-        doc.text(new Date(row.date).toLocaleDateString("en-GB"), margin + 25, vchY);
+      if (row.buyerCompany) {
+        doc.text(row.buyerCompany, margin + 20, currentY);
+      }
+      currentY += 6;
+
+      if (buyerCompany) {
+        const buyerLoc = `${buyerCompany.location || ""}${buyerCompany.pinCode ? ", " + buyerCompany.pinCode : ""}`;
+        const buyerLocLines = doc.splitTextToSize(buyerLoc, pageWidth - 2*margin - 20);
+        doc.setFontSize(9);
+        doc.text(buyerLocLines, margin + 20, currentY);
+        currentY += buyerLocLines.length * 5;
+        if (buyerCompany.gstNumber) {
+          doc.setFont("helvetica", "bold");
+          doc.text("GSTIN:", margin, currentY);
+          doc.setFont("helvetica", "normal");
+          doc.text(buyerCompany.gstNumber, margin + 20, currentY);
+          currentY += 6;
+        }
       }
 
-      // Voucher No
+      // Seller Details
       doc.setFont("helvetica", "bold");
-      doc.text("Voucher No:", margin + vchColWidth + 5, vchY);
+      doc.setFontSize(10);
+      doc.text("Seller:", margin, currentY);
       doc.setFont("helvetica", "normal");
-      doc.text(String(row.raw?.voucherNo || row.id || "-"), margin + vchColWidth + 35, vchY);
+      if (row.supplierCompany) {
+        doc.text(row.supplierCompany, margin + 20, currentY);
+      }
+      currentY += 6;
 
-      // Bill No
-      doc.setFont("helvetica", "bold");
-      doc.text("Bill No:", margin + 2*vchColWidth + 5, vchY);
-      doc.setFont("helvetica", "normal");
-      doc.text(String(row.raw?.billNo || row.raw?.billNumber || "-"), margin + 2*vchColWidth + 30, vchY);
+      if (sellerCompany) {
+        const sellerAddr = sellerCompany.address || "";
+        const sellerAddrLines = doc.splitTextToSize(sellerAddr, pageWidth - 2*margin - 20);
+        doc.setFontSize(9);
+        doc.text(sellerAddrLines, margin + 20, currentY);
+        currentY += sellerAddrLines.length * 5;
+        if (sellerCompany.pinNo) {
+          doc.text(`Pin: ${sellerCompany.pinNo}`, margin + 20, currentY);
+          currentY += 5;
+        }
+        if (sellerCompany.gstNo) {
+          doc.setFont("helvetica", "bold");
+          doc.text("GSTIN:", margin, currentY);
+          doc.setFont("helvetica", "normal");
+          doc.text(sellerCompany.gstNo, margin + 20, currentY);
+          currentY += 6;
+        }
+      }
 
-      vchY += 7;
+      // Voucher Details Table
+      const voucherDetails = [
+        { label: "Date", value: row.date ? new Date(row.date).toLocaleDateString("en-GB") : "-" },
+        { label: "Voucher No", value: String(row.raw?.voucherNo || row.id || "-") },
+        { label: "Bill No", value: String(row.raw?.billNo || row.raw?.billNumber || "-") },
+        { label: "Sauda No", value: String(row.raw?.saudaNo || "-") },
+        { label: "Lorry No", value: String(row.raw?.lorryNumber || "-") }
+      ];
 
-      // Sauda No
-      doc.setFont("helvetica", "bold");
-      doc.text("Sauda No:", margin + 5, vchY);
-      doc.setFont("helvetica", "normal");
-      doc.text(String(row.raw?.saudaNo || "-"), margin + 28, vchY);
+      const tableWidth = pageWidth - 2*margin;
+      const cellWidth = tableWidth / voucherDetails.length;
 
-      // Lorry No
-      doc.setFont("helvetica", "bold");
-      doc.text("Lorry No:", margin + vchColWidth + 5, vchY);
-      doc.setFont("helvetica", "normal");
-      doc.text(String(row.raw?.lorryNumber || "-"), margin + vchColWidth + 30, vchY);
+      doc.setLineWidth(0.2);
+      doc.setDrawColor(0, 0, 0);
+      doc.roundedRect(margin, currentY, tableWidth, 14, 1, 1);
 
-      currentY += 40;
+      for (let i = 0; i < voucherDetails.length; i++) {
+        const x = margin + i * cellWidth;
+        doc.line(x + cellWidth, currentY, x + cellWidth, currentY + 14);
+        
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(8);
+        doc.setTextColor(30, 58, 95);
+        doc.text(voucherDetails[i].label, x + cellWidth/2, currentY + 5, { align: "center" });
+        
+        doc.setFont("helvetica", "normal");
+        doc.setTextColor(0, 0, 0);
+        doc.text(voucherDetails[i].value, x + cellWidth/2, currentY + 11, { align: "center" });
+      }
 
-      // Claims / Deduction Summary
+      currentY += 20;
+
+      // Claims Table
       const hasClaims = row.raw?.qualityClaims && row.raw.qualityClaims.filter(c => Number(c.claimAmount) > 0).length > 0;
       if (hasClaims) {
         doc.setFont("helvetica", "bold");
         doc.setFontSize(10);
-        doc.setTextColor(30, 58, 95);
-        doc.text("Quality Claim Details", margin, currentY);
-        currentY += 5;
+        doc.text("Quality Claims:", margin, currentY);
+        currentY += 6;
 
         const claimTableData = row.raw.qualityClaims
           .filter(c => Number(c.claimAmount) > 0)
@@ -219,26 +164,26 @@ const TallyLedgerBook = ({
 
         autoTable(doc, {
           startY: currentY,
-          head: [["Parameter", "Standard %", "Actual %", "Claim Amount"]],
+          head: [["Parameter", "Standard", "Actual", "Amount"]],
           body: claimTableData,
           theme: "grid",
           headStyles: {
-            fillColor: [30, 58, 95],
-            textColor: [255, 255, 255],
-            fontSize: 8,
+            fillColor: [240, 240, 240],
+            textColor: [0, 0, 0],
+            fontSize: 9,
             fontStyle: "bold",
             halign: "center",
           },
           styles: {
-            fontSize: 8,
-            cellPadding: 2.5,
+            fontSize: 9,
+            cellPadding: 3,
             valign: "middle",
           },
           columnStyles: {
-            0: { cellWidth: 70 },
+            0: { cellWidth: 75 },
             1: { halign: "center", cellWidth: 30 },
             2: { halign: "center", cellWidth: 30 },
-            3: { halign: "right", cellWidth: 35 },
+            3: { halign: "right", cellWidth: 40 },
           },
           margin: { left: margin, right: margin },
         });
@@ -247,127 +192,86 @@ const TallyLedgerBook = ({
       }
 
       // Amount Summary
-      const summaryWidth = 90;
-      const summaryStartX = pageWidth - margin - summaryWidth;
-      doc.setFillColor(245, 250, 245);
-      doc.roundedRect(summaryStartX - 2, currentY - 3, summaryWidth + 4, hasClaims ? 30 : 18, 2, 2, 'F');
-      doc.roundedRect(summaryStartX - 2, currentY - 3, summaryWidth + 4, hasClaims ? 30 : 18, 2, 2);
-      
       const totalAmount = Math.max(Number(row.debit || 0), Number(row.credit || 0));
       let totalClaims = 0;
-      let summaryY = currentY;
       if (hasClaims) {
         totalClaims = row.raw.qualityClaims
           .filter(c => Number(c.claimAmount) > 0)
           .reduce((sum, c) => sum + Number(c.claimAmount), 0);
+      }
 
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(9);
-        doc.setTextColor(0, 0, 0);
-        doc.text("Total Deductions:", summaryStartX, summaryY + 5);
+      const summaryStartY = currentY;
+      const summaryCol1X = pageWidth - 80;
+
+      doc.setLineWidth(0.2);
+      doc.rect(summaryCol1X - 5, summaryStartY - 3, 85, hasClaims ? 22 : 10);
+
+      let summaryLine = 0;
+      if (hasClaims) {
         doc.setFont("helvetica", "normal");
-        doc.text(`₹ ${totalClaims.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`, pageWidth - margin - 3, summaryY + 5, { align: "right" });
-        summaryY += 7;
+        doc.setFontSize(10);
+        doc.text("Total Claims:", summaryCol1X, summaryStartY + 3 + summaryLine*5);
+        doc.text(`₹ ${totalClaims.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`, pageWidth - margin, summaryStartY + 3 + summaryLine*5, { align: "right" });
+        summaryLine++;
       }
 
       doc.setFont("helvetica", "bold");
-      doc.text("Total Amount:", summaryStartX, summaryY + 5);
-      doc.setFont("helvetica", "normal");
-      doc.text(`₹ ${totalAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`, pageWidth - margin - 3, summaryY + 5, { align: "right" });
-      summaryY += 8;
+      doc.text("Total Amount:", summaryCol1X, summaryStartY + 3 + summaryLine*5);
+      doc.text(`₹ ${totalAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`, pageWidth - margin, summaryStartY + 3 + summaryLine*5, { align: "right" });
+      summaryLine++;
 
       if (hasClaims && totalAmount > 0) {
         const netAmount = totalAmount - totalClaims;
         doc.setFont("helvetica", "bold");
         doc.setTextColor(185, 28, 28);
-        doc.text("Net Payable:", summaryStartX, summaryY + 5);
-        doc.text(`₹ ${netAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`, pageWidth - margin - 3, summaryY + 5, { align: "right" });
-        summaryY += 8;
+        doc.text("Net Payable:", summaryCol1X, summaryStartY + 3 + summaryLine*5);
+        doc.text(`₹ ${netAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`, pageWidth - margin, summaryStartY + 3 + summaryLine*5, { align: "right" });
+        doc.setTextColor(0, 0, 0);
       }
-      
-      currentY = summaryY + 3;
+
+      currentY = summaryStartY + (hasClaims ? 24 : 14);
 
       // Seller Bank Details
       if (sellerCompany?.bankDetails && sellerCompany.bankDetails.length > 0) {
         const bank = sellerCompany.bankDetails[0];
-        const bankWidth = (pageWidth - 2*margin - 5)/2;
         
-        doc.setFillColor(250, 245, 240);
-        doc.roundedRect(margin, currentY, bankWidth, 40, 2, 2, 'F');
-        doc.roundedRect(margin, currentY, bankWidth, 40, 2, 2);
-
         doc.setFont("helvetica", "bold");
+        doc.setFontSize(10);
+        doc.text("Bank Details:", margin, currentY);
+        currentY += 6;
+
+        doc.setFont("helvetica", "normal");
         doc.setFontSize(9);
-        doc.setTextColor(100, 50, 0);
-        doc.text("Seller Bank Details", margin + 5, currentY + 7);
-        let bankY = currentY + 14;
-        
-        doc.setFontSize(8);
-        doc.setTextColor(40, 40, 40);
-        
-        doc.setFont("helvetica", "bold");
-        doc.text("Bank:", margin + 5, bankY);
-        doc.setFont("helvetica", "normal");
-        doc.text(bank.bankName, margin + 28, bankY);
-        bankY += 5;
-        
-        doc.setFont("helvetica", "bold");
-        doc.text("Branch:", margin + 5, bankY);
-        doc.setFont("helvetica", "normal");
-        doc.text(bank.branchName, margin + 28, bankY);
-        bankY += 5;
-        
-        doc.setFont("helvetica", "bold");
-        doc.text("A/C No:", margin + 5, bankY);
-        doc.setFont("helvetica", "normal");
-        doc.text(bank.accountNumber, margin + 28, bankY);
-        bankY += 5;
-        
-        doc.setFont("helvetica", "bold");
-        doc.text("IFSC:", margin + 5, bankY);
-        doc.setFont("helvetica", "normal");
-        doc.text(bank.ifscCode, margin + 28, bankY);
-
-        // Add QR Code
-        const qrText = `Payment Voucher: ${row.raw?.voucherNo || row.id}\nAmount: ₹${totalAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}\nSeller: ${row.supplierCompany || "N/A"}\nDate: ${row.date ? new Date(row.date).toLocaleDateString("en-GB") : ""}`;
-        const qrDataUrl = await QRCode.toDataURL(qrText, {
-          margin: 1,
-          width: 120,
-          color: {
-            dark: "#1e3a5f",
-            light: "#ffffff"
-          }
-        });
-        
-        doc.addImage(qrDataUrl, 'PNG', margin + bankWidth + 10, currentY, 35, 35);
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(7);
-        doc.setTextColor(30, 58, 95);
-        doc.text("Scan to Verify", margin + bankWidth + 10, currentY + 40, { align: "center" });
+        doc.text(`Bank: ${bank.bankName}`, margin + 10, currentY);
+        currentY += 5;
+        doc.text(`Branch: ${bank.branchName}`, margin + 10, currentY);
+        currentY += 5;
+        doc.text(`A/C: ${bank.accountNumber}`, margin + 10, currentY);
+        currentY += 5;
+        doc.text(`IFSC: ${bank.ifscCode}`, margin + 10, currentY);
+        currentY += 8;
       }
 
       // Footer
-      const footerY = pageHeight - 35;
-      doc.setLineWidth(0.3);
-      doc.setDrawColor(200, 200, 200);
-      doc.line(margin, footerY, pageWidth - margin, footerY);
+      doc.setLineWidth(0.2);
+      doc.line(margin, pageHeight - 40, pageWidth - margin, pageHeight - 40);
 
-      doc.setFontSize(7);
+      doc.setFontSize(8);
       doc.setFont("helvetica", "normal");
       doc.setTextColor(100, 100, 100);
-      doc.text(`Generated: ${new Date().toLocaleString()}`, margin, footerY + 8);
+      doc.text(`Generated: ${new Date().toLocaleString()}`, margin, pageHeight - 30);
 
       doc.setFontSize(9);
       doc.setFont("helvetica", "bold");
-      doc.setTextColor(30, 58, 95);
-      doc.text("Authorised Signatory", pageWidth - margin - 3, pageHeight - 15, {
+      doc.setTextColor(0, 0, 0);
+      doc.text("Authorised Signatory", pageWidth - margin - 5, pageHeight - 30, {
         align: "right",
       });
       doc.line(
-        pageWidth - margin - 60,
-        pageHeight - 20,
-        pageWidth - margin - 3,
-        pageHeight - 20,
+        pageWidth - margin - 70,
+        pageHeight - 35,
+        pageWidth - margin - 5,
+        pageHeight - 35,
       );
 
       const fileName = `Payment_Voucher_${
@@ -380,6 +284,7 @@ const TallyLedgerBook = ({
       console.error("Download Single PDF Error:", error);
     }
   };
+
   if (loading) {
     return (
       <div className="py-24 flex flex-col items-center justify-center gap-3">
@@ -403,46 +308,46 @@ const TallyLedgerBook = ({
     <div className="overflow-x-auto border border-slate-300 bg-[#fffef8] shadow-inner">
       <table className="w-full min-w-[1100px] border-collapse text-left">
         <thead>
-        <tr className="bg-[#1e3a5f] text-white">
-          <th className="px-3 py-2.5 text-[10px] font-black uppercase tracking-wider border-r border-[#2d4a6f] w-[88px]">
-            Date
-          </th>
-          <th className="px-3 py-2.5 text-[10px] font-black uppercase tracking-wider border-r border-[#2d4a6f] min-w-[200px]">
-            Particulars
-          </th>
-          {showCompanyColumns && (
-            <>
-              <th className="px-3 py-2.5 text-[10px] font-black uppercase tracking-wider border-r border-[#2d4a6f] w-[120px]">
-                Buyer Co.
-              </th>
-              <th className="px-3 py-2.5 text-[10px] font-black uppercase tracking-wider border-r border-[#2d4a6f] w-[120px]">
-                Seller Co.
-              </th>
-            </>
-          )}
-          <th className="px-3 py-2.5 text-[10px] font-black uppercase tracking-wider border-r border-[#2d4a6f] w-[72px]">
-            Vch
-          </th>
-          <th className="px-3 py-2.5 text-[10px] font-black uppercase tracking-wider border-r border-[#2d4a6f] w-[100px] text-right">
-            Debit
-          </th>
-          <th className="px-3 py-2.5 text-[10px] font-black uppercase tracking-wider border-r border-[#2d4a6f] w-[100px] text-right">
-            Credit
-          </th>
-          <th className="px-3 py-2.5 text-[10px] font-black uppercase tracking-wider border-r border-[#2d4a6f] w-[110px] text-right">
-            Balance
-          </th>
-          <th className="px-3 py-2.5 text-[10px] font-black uppercase tracking-wider border-r border-[#2d4a6f] w-[150px]">
-            Claim Parameter
-          </th>
-          <th className="px-3 py-2.5 text-[10px] font-black uppercase tracking-wider border-r border-[#2d4a6f] w-[120px] text-right">
-            Claim Amount
-          </th>
-          <th className="px-3 py-2.5 text-[10px] font-black uppercase tracking-wider w-[80px] text-center">
-            Download
-          </th>
-        </tr>
-      </thead>
+          <tr className="bg-[#1e3a5f] text-white">
+            <th className="px-3 py-2.5 text-[10px] font-black uppercase tracking-wider border-r border-[#2d4a6f] w-[88px]">
+              Date
+            </th>
+            <th className="px-3 py-2.5 text-[10px] font-black uppercase tracking-wider border-r border-[#2d4a6f] min-w-[200px]">
+              Particulars
+            </th>
+            {showCompanyColumns && (
+              <>
+                <th className="px-3 py-2.5 text-[10px] font-black uppercase tracking-wider border-r border-[#2d4a6f] w-[120px]">
+                  Buyer Co.
+                </th>
+                <th className="px-3 py-2.5 text-[10px] font-black uppercase tracking-wider border-r border-[#2d4a6f] w-[120px]">
+                  Seller Co.
+                </th>
+              </>
+            )}
+            <th className="px-3 py-2.5 text-[10px] font-black uppercase tracking-wider border-r border-[#2d4a6f] w-[72px]">
+              Vch
+            </th>
+            <th className="px-3 py-2.5 text-[10px] font-black uppercase tracking-wider border-r border-[#2d4a6f] w-[100px] text-right">
+              Debit
+            </th>
+            <th className="px-3 py-2.5 text-[10px] font-black uppercase tracking-wider border-r border-[#2d4a6f] w-[100px] text-right">
+              Credit
+            </th>
+            <th className="px-3 py-2.5 text-[10px] font-black uppercase tracking-wider border-r border-[#2d4a6f] w-[110px] text-right">
+              Balance
+            </th>
+            <th className="px-3 py-2.5 text-[10px] font-black uppercase tracking-wider border-r border-[#2d4a6f] w-[150px]">
+              Claim Parameter
+            </th>
+            <th className="px-3 py-2.5 text-[10px] font-black uppercase tracking-wider border-r border-[#2d4a6f] w-[120px] text-right">
+              Claim Amount
+            </th>
+            <th className="px-3 py-2.5 text-[10px] font-black uppercase tracking-wider w-[80px] text-center">
+              Download
+            </th>
+          </tr>
+        </thead>
         <tbody>
           {rows.map((row, idx) => {
             const hasClaims = row.raw?.qualityClaims && row.raw.qualityClaims.filter(c => Number(c.claimAmount) > 0).length > 0;
