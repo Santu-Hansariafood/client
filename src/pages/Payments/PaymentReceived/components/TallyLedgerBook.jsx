@@ -268,7 +268,7 @@ const TallyLedgerBook = ({
           margin: { left: margin, right: margin },
         });
 
-        currentY = (doc as any).lastAutoTable?.finalY + 10;
+        currentY = doc.lastAutoTable?.finalY + 10;
         console.log("Claim table done, currentY:", currentY);
       }
 
