@@ -709,7 +709,7 @@ const PaymentVoucherPDF = ({ row, buyerCompany, sellerCompany, qrCodeUrl, vouche
         <View style={styles.footer} fixed>
           <View style={styles.footerLine} />
           <Text style={styles.footerText}>
-            this vouture is only for information purpose which is recived from the buyer / seller hansaria food is use for information purpose only
+            This voucher is only for Information Purpose which is Recived from the Buyer / Seller Hansaria Food Private Limited is use for information purpose only.
           </Text>
         </View>
       </Page>
