@@ -39,6 +39,8 @@ const paymentReceivedSchema = new mongoose.Schema(
         },
         allocatedAmount: { type: Number, required: true },
         remarks: { type: String, default: "" },
+        debitNote: { type: String, default: "" },
+        creditNote: { type: String, default: "" },
       },
     ],
     remarks: { type: String, default: "" },

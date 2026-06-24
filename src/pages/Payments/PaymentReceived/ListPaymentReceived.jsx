@@ -477,7 +477,7 @@ const ListPaymentReceived = () => {
 
       const reportRows = buildTallyVoucherRows(response.data.data || [], openingBalance, allEntries);
 
-      if (reportRows.length === 0) {
+      if (reportRows.length === 0 && allEntries.length === 0) {
         toast.warning("No records found");
         return;
       }
@@ -489,8 +489,10 @@ const ListPaymentReceived = () => {
       });
 
       const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
       const margin = 10;
 
+      // Header
       doc.setFont("helvetica", "bold");
       doc.setFontSize(16);
       doc.setTextColor(0, 0, 0);
@@ -508,12 +510,11 @@ const ListPaymentReceived = () => {
       );
 
       doc.setLineWidth(0.5);
-      doc.line(margin, 25, pageWidth - margin, 25); // Top Border
+      doc.line(margin, 25, pageWidth - margin, 25);
 
       doc.setFont("helvetica", "bold");
       doc.setFontSize(12);
-      const reportTitle = "PAYMENT RECEIVED MIS REPORT";
-      doc.text(reportTitle, margin, 32);
+      doc.text("PAYMENT RECEIVED MIS REPORT", margin, 32);
 
       if (selectedCompany) {
         doc.setFontSize(10);
@@ -533,7 +534,7 @@ const ListPaymentReceived = () => {
         selectedCompany ? 41 : 35,
         pageWidth - margin,
         selectedCompany ? 41 : 35,
-      ); // Bottom Header Border
+      );
 
       let currentY = selectedCompany ? 45 : 40;
 
@@ -550,40 +551,87 @@ const ListPaymentReceived = () => {
         currentY += 10;
       }
 
-      // Build table data with individual claims
+      // Process entries by lorry/bill number
+      const processedEntries = [];
+      const entryMap = new Map();
+
+      // Group entries by lorry and bill number
+      allEntries.forEach((entry) => {
+        const key = `${entry.lorryNumber || "unknown"}-${entry.billNumber || "unknown"}`;
+        if (!entryMap.has(key)) {
+          entryMap.set(key, []);
+        }
+        entryMap.get(key).push(entry);
+      });
+
+      // Helper to calculate tally details
+      const calculateTallyDetails = (e) => {
+        const weight = (e.unloadingWeight || 0) > 0 ? e.unloadingWeight : e.loadingWeight || 0;
+        const rate = e.actualRate || 0;
+        const cdPercent = e.cd || 0;
+        const gstPercent = e.gst || 0;
+        const grossAmount = weight * rate;
+        const cdAmount = grossAmount * (cdPercent / 100);
+        const taxableAmount = grossAmount - cdAmount;
+        const gstAmount = taxableAmount * (gstPercent / 100);
+        const netAmount = taxableAmount + gstAmount;
+        return { netAmount, dueAmount: Math.max(0, netAmount - (e.paidAmount || 0)) };
+      };
+
+      // Process each group
+      entryMap.forEach((entries, key) => {
+        entries.forEach((entry, idx) => {
+          const details = calculateTallyDetails(entry);
+          
+          processedEntries.push({
+            date: new Date(entry.loadingDate).toLocaleDateString("en-GB"),
+            saudaNo: entry.saudaNo || "-",
+            lorryNo: entry.lorryNumber || "-",
+            billNo: entry.billNumber || "-",
+            buyerCompany: entry.buyerCompany || "-",
+            supplierCompany: entry.supplierCompany || "-",
+            billAmount: details.netAmount,
+            paidAmount: entry.paidAmount || 0,
+            payableAmount: details.dueAmount,
+            remarks: entry.generalRemarks || "-",
+            qualityClaims: entry.qualityClaims || [],
+          });
+        });
+      });
+
+      // Build table data
       const tableData = [];
-      reportRows.filter(r => !r.isOpening).forEach((row, idx) => {
+      processedEntries.forEach((entry, idx) => {
         tableData.push([
           idx + 1,
-          row.date ? new Date(row.date).toLocaleDateString("en-GB") : "—",
-          row.particulars.toUpperCase(),
-          (row.buyerCompany || "-").toUpperCase(),
-          (row.supplierCompany || "-").toUpperCase(),
-          row.vchType.toUpperCase(),
-          row.debit > 0 ? `Rs. ${Number(row.debit).toLocaleString("en-IN", { minimumFractionDigits: 2 })}` : "",
-          row.credit > 0 ? `Rs. ${Number(row.credit).toLocaleString("en-IN", { minimumFractionDigits: 2 })}` : "",
-          `Rs. ${Number(row.balance).toLocaleString("en-IN", { minimumFractionDigits: 2 })}`,
-          "",
-          "",
+          entry.date,
+          entry.saudaNo,
+          entry.lorryNo,
+          entry.billNo,
+          entry.buyerCompany.toUpperCase(),
+          entry.supplierCompany.toUpperCase(),
+          `Rs. ${Number(entry.billAmount).toLocaleString("en-IN", { minimumFractionDigits: 2 })}`,
+          `Rs. ${Number(entry.paidAmount).toLocaleString("en-IN", { minimumFractionDigits: 2 })}`,
+          `Rs. ${Number(entry.payableAmount).toLocaleString("en-IN", { minimumFractionDigits: 2 })}`,
+          entry.remarks,
         ]);
 
-        // Add individual claim rows if any
-        const hasClaims = row.raw?.qualityClaims && row.raw.qualityClaims.filter(c => Number(c.claimAmount) > 0).length > 0;
-        if (hasClaims) {
-          const validClaims = row.raw.qualityClaims.filter(c => Number(c.claimAmount) > 0);
+        // Add claim rows if any
+        const validClaims = entry.qualityClaims.filter(c => Number(c.claimAmount) > 0);
+        if (validClaims.length > 0) {
           validClaims.forEach((claim) => {
             tableData.push([
+              "",
+              "",
+              "",
+              "",
               "",
               "",
               `CLAIM: ${(claim.parameterName || "UNNAMED").toUpperCase()}`,
               "",
               "",
-              "",
-              "",
-              "",
-              "",
-              (claim.parameterName || "UNNAMED").toUpperCase(),
               `Rs. ${Number(claim.claimAmount).toLocaleString("en-IN", { minimumFractionDigits: 2 })}`,
+              "",
             ]);
           });
         }
@@ -595,15 +643,15 @@ const ListPaymentReceived = () => {
           [
             "NO",
             "DATE",
-            "PARTICULARS",
+            "SAUDA NO",
+            "LORRY NO",
+            "BILL NO",
             "BUYER",
             "SELLER",
-            "VCH",
-            "DEBIT",
-            "CREDIT",
-            "BALANCE",
-            "CLAIM PARAMETER",
-            "CLAIM AMOUNT",
+            "BILL AMOUNT",
+            "PAID AMOUNT",
+            "PAYABLE AMOUNT",
+            "REMARKS",
           ],
         ],
         body: tableData,
@@ -627,15 +675,15 @@ const ListPaymentReceived = () => {
         columnStyles: {
           0: { halign: "center", cellWidth: 8 },
           1: { halign: "center", cellWidth: 18 },
-          2: { cellWidth: 70 },
-          3: { cellWidth: 28 },
-          4: { cellWidth: 28 },
-          5: { halign: "center", cellWidth: 15 },
-          6: { halign: "right", cellWidth: 22 },
+          2: { halign: "center", cellWidth: 18 },
+          3: { halign: "center", cellWidth: 18 },
+          4: { halign: "center", cellWidth: 18 },
+          5: { cellWidth: 28 },
+          6: { cellWidth: 28 },
           7: { halign: "right", cellWidth: 22 },
-          8: { halign: "right", fontStyle: "bold", cellWidth: 25 },
-          9: { cellWidth: 30 },
-          10: { halign: "right", cellWidth: 22, textColor: [185, 28, 28] },
+          8: { halign: "right", cellWidth: 22 },
+          9: { halign: "right", fontStyle: "bold", cellWidth: 25 },
+          10: { cellWidth: 40 },
         },
         margin: { left: margin, right: margin },
         didDrawPage: (data) => {
@@ -645,70 +693,59 @@ const ListPaymentReceived = () => {
           doc.text(
             `Page ${data.pageNumber} of ${pageCount}`,
             pageWidth - margin,
-            doc.internal.pageSize.height - 10,
+            pageHeight - 10,
             { align: "right" },
           );
           doc.text(
             `Printed on: ${new Date().toLocaleString()}`,
             margin,
-            doc.internal.pageSize.height - 10,
+            pageHeight - 10,
           );
         },
       });
 
       const finalY = doc.lastAutoTable?.finalY || 70;
+      const summaryY = finalY + 10;
 
-      const summaryY = doc.lastAutoTable?.finalY + 10 || 80;
+      // Calculate totals
+      const totalBillAmount = processedEntries.reduce((sum, e) => sum + Number(e.billAmount), 0);
+      const totalPaidAmount = processedEntries.reduce((sum, e) => sum + Number(e.paidAmount), 0);
+      const totalPayableAmount = processedEntries.reduce((sum, e) => sum + Number(e.payableAmount), 0);
 
+      // Print total bill value on left and payable value on right
       doc.setFontSize(10);
       doc.setFont("helvetica", "bold");
-
-      const periodDr = reportRows.reduce((s, r) => s + (r.debit || 0), 0);
-      const periodCr = reportRows.reduce((s, r) => s + (r.credit || 0), 0);
-      const closing = openingBalance + periodDr - periodCr;
-
       doc.text(
-        `Period Debit : Rs. ${periodDr.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`,
+        `Total Bill Amount: Rs. ${totalBillAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`,
+        margin,
+        summaryY,
+      );
+      doc.text(
+        `Total Payable Amount: Rs. ${totalPayableAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`,
         pageWidth - margin,
         summaryY,
         { align: "right" },
       );
 
-      doc.text(
-        `Period Credit : Rs. ${periodCr.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`,
-        pageWidth - margin,
-        summaryY + 7,
-        { align: "right" },
-      );
-
-      if (filters.ledgerId) {
-        doc.text(
-          `Closing Balance : Rs. ${closing.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`,
-          pageWidth - margin,
-          summaryY + 14,
-          { align: "right" },
-        );
-      }
-
+      // Signatory
       doc.setFontSize(9);
-      doc.text("Authorised Signatory", pageWidth - margin, summaryY + 20, {
+      doc.text("Authorised Signatory", pageWidth - margin, summaryY + 15, {
         align: "right",
       });
       doc.line(
         pageWidth - 60,
-        summaryY + 17,
+        summaryY + 12,
         pageWidth - margin,
-        summaryY + 17,
+        summaryY + 12,
       );
 
       doc.save(
-        `MIS_PaymentReceived_${filters.startDate}_to_${filters.endDate}.pdf`,
+        `MIS_PaymentReceived_${filters.startDate || "All"}_to_${filters.endDate || "All"}.pdf`,
       );
 
       toast.success("MIS Report generated successfully");
     } catch (error) {
       console.error("Print Error:", error);
-
       toast.error("Failed to generate MIS Report");
     } finally {
       setPrinting(false);

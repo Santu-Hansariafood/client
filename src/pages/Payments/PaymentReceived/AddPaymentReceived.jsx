@@ -949,6 +949,8 @@ const AddPaymentReceived = () => {
           loadingEntryId: e._id,
           allocatedAmount: parseFloat(e.allocatedAmount),
           remarks: e.rowRemarks,
+          debitNote: e.debitNote,
+          creditNote: e.creditNote,
         })),
         remarks:
           allocationSource === "fresh" && recordAmount > totalAllocated
@@ -1322,6 +1324,8 @@ const AddPaymentReceived = () => {
               loadingEntryId: entry._id,
               allocatedAmount: saveAllocated,
               remarks: lineRemark,
+              debitNote: entry.debitNote,
+              creditNote: entry.creditNote,
             },
           ],
           remarks:
