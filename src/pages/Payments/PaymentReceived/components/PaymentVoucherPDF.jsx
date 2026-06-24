@@ -7,7 +7,7 @@ import {
   Image,
 } from "@react-pdf/renderer";
 import QRCode from "qrcode";
-import logo from "../../../assets/Hans.jpg";
+import logo from "../../../../../src/assets/Hans.png";
 
 const styles = StyleSheet.create({
   page: {
