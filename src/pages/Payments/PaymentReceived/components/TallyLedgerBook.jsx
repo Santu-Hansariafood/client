@@ -18,8 +18,48 @@ const TallyLedgerBook = ({
   const [voucherCounter, setVoucherCounter] = useState({});
 
   const generateQRCode = async (row) => {
+    // Extract payment details for QR code
+    const getValue = (...candidates) => {
+      for (const value of candidates) {
+        if (value && String(value).trim() !== "" && String(value).trim() !== "N/A") {
+          return String(value).trim();
+        }
+      }
+      return "-";
+    };
+
+    const firstMapping = row.raw?.mappings?.[0];
+    const loadingEntry = firstMapping?.loadingEntryId;
+    const billNo = getValue(
+      loadingEntry?.billNumber,
+      row.raw?.billNo,
+      row.raw?.billNumber,
+      row.billNo
+    );
+    const saudaNo = getValue(
+      firstMapping?.saudaNo,
+      loadingEntry?.saudaNo,
+      row.raw?.saudaNo,
+      row.saudaNo
+    );
+    const lorryNo = getValue(
+      loadingEntry?.lorryNumber,
+      row.raw?.lorryNumber,
+      row.lorryNo
+    );
+
     const totalAmount = Math.max(Number(row.debit || 0), Number(row.credit || 0));
-    const qrText = `Payment Voucher: ${row.raw?.voucherNo || row.id}\nAmount: ₹${totalAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`;
+    const qrText = [
+      "HANSARIA FOOD PRIVATE LIMITED",
+      `Date: ${row.date ? new Date(row.date).toLocaleDateString("en-GB") : "-"}`,
+      `Voucher No: ${row.raw?.voucherNo || row.id || "-"}`,
+      `Buyer: ${row.buyerCompany || "-"}`,
+      `Seller: ${row.supplierCompany || "-"}`,
+      `Sauda No: ${saudaNo}`,
+      `Lorry No: ${lorryNo}`,
+      `Bill No: ${billNo}`,
+      `Amount: ₹${totalAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`
+    ].join("\n");
     
     const qrDataUrl = await QRCode.toDataURL(qrText, {
       margin: 1,

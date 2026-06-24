@@ -7,6 +7,7 @@ import {
   Image,
 } from "@react-pdf/renderer";
 import QRCode from "qrcode";
+import logo from "../../../assets/Hans.jpg";
 
 const styles = StyleSheet.create({
   page: {
@@ -36,6 +37,24 @@ const styles = StyleSheet.create({
     borderColor: "#1a1a1a",
     borderStyle: "solid",
   },
+  headerRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    marginBottom: 12,
+  },
+  companySection: {
+    flex: 1,
+  },
+  logoSection: {
+    width: 80,
+    alignItems: "flex-end",
+  },
+  logo: {
+    width: 70,
+    height: 50,
+    objectFit: "contain",
+  },
   titleContainer: {
     width: "100%",
     alignItems: "center",
@@ -43,10 +62,15 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
   },
   typeTitle: {
-    fontSize: 20,
-    fontWeight: "heavy",
+    fontSize: 18,
+    fontWeight: "bold",
     color: "#000000",
     textTransform: "uppercase",
+  },
+  introText: {
+    fontSize: 10,
+    marginBottom: 15,
+    textAlign: "left",
   },
   header: {
     flexDirection: "row",
@@ -58,16 +82,16 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   companyName: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: "bold",
     color: "#1a1a1a",
     textTransform: "uppercase",
     marginBottom: 4,
   },
   companyDetails: {
-    fontSize: 8,
+    fontSize: 8.5,
     color: "#333333",
-    lineHeight: 1.3,
+    lineHeight: 1.4,
   },
   partiesContainer: {
     flexDirection: "row",
@@ -429,18 +453,31 @@ const PaymentVoucherPDF = ({ row, buyerCompany, sellerCompany, qrCodeUrl, vouche
     row.lorryNo
   );
 
+  // Generate detailed QR code content
+  const generateQRContent = () => {
+    const details = [];
+    details.push("HANSARIA FOOD PRIVATE LIMITED");
+    details.push(`Date: ${formatDate(row.date)}`);
+    details.push(`Voucher No: ${voucherNumber || "-"}`);
+    details.push(`Buyer: ${row.buyerCompany || "-"}`);
+    details.push(`Seller: ${row.supplierCompany || "-"}`);
+    details.push(`Sauda No: ${saudaNo}`);
+    details.push(`Lorry No: ${lorryNo}`);
+    details.push(`Bill No: ${billNo}`);
+    details.push(`Total Amount: ${totalAmount}`);
+    details.push(`Net Payable: ${finalAmount}`);
+    return details.join("\n");
+  };
+
   return (
     <Document>
       <Page style={styles.page} size="A4">
         <View style={styles.pageBorder} fixed />
         <View style={styles.innerBorder} fixed />
 
-        <View style={styles.titleContainer}>
-          <Text style={styles.typeTitle}>PAYMENT VOUCHER</Text>
-        </View>
-
-        <View style={styles.header}>
-          <View style={styles.companyBrand}>
+        {/* Header with company info and logo */}
+        <View style={styles.headerRow}>
+          <View style={styles.companySection}>
             <Text style={styles.companyName}>
               HANSARIA FOOD PRIVATE LIMITED
             </Text>
@@ -451,6 +488,21 @@ const PaymentVoucherPDF = ({ row, buyerCompany, sellerCompany, qrCodeUrl, vouche
               Bidhannagar, Kolkata, West Bengal - 700106
             </Text>
           </View>
+          <View style={styles.logoSection}>
+            <Image src={logo} style={styles.logo} />
+          </View>
+        </View>
+
+        {/* Payment Voucher Title */}
+        <View style={styles.titleContainer}>
+          <Text style={styles.typeTitle}>PAYMENT VOUCHER</Text>
+        </View>
+
+        {/* Intro Text */}
+        <View>
+          <Text style={styles.introText}>
+            Please find the below payment details
+          </Text>
         </View>
 
         <View style={styles.partiesContainer}>
@@ -624,7 +676,7 @@ const PaymentVoucherPDF = ({ row, buyerCompany, sellerCompany, qrCodeUrl, vouche
         <View style={styles.signatorySection}>
           <View style={styles.signatoryBox}>
             <Text style={{ fontSize: 9, fontWeight: "bold", color: "#000" }}>
-              For HANSARIA FOOD PRIVATE LIMITED
+              For {row.buyerCompany || "HANSARIA FOOD PRIVATE LIMITED"}
             </Text>
             <View style={styles.signLine}>
               <Text

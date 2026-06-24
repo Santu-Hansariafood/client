@@ -496,29 +496,35 @@ const ListPaymentReceived = () => {
       doc.setFont("helvetica", "bold");
       doc.setFontSize(16);
       doc.setTextColor(0, 0, 0);
-      doc.text("HANSARIA FOOD PVT. LTD.", pageWidth / 2, 15, {
+      doc.text("HANSARIA FOOD PRIVATE LIMITED", pageWidth / 2, 15, {
         align: "center",
       });
 
-      doc.setFontSize(7);
+      doc.setFontSize(7.5);
       doc.setFont("helvetica", "normal");
       doc.text(
-        "Primarc Square, Plot No.1, Salt Lake Bypass, LA Block, Sector: 3, Bidhannagar, Kolkata, West Bengal 700106",
+        "Primarc Square, Plot No.1, Salt Lake Bypass, LA Block, Sector: 3",
         pageWidth / 2,
-        20,
+        21,
+        { align: "center" },
+      );
+      doc.text(
+        "Bidhannagar, Kolkata, West Bengal - 700106",
+        pageWidth / 2,
+        26,
         { align: "center" },
       );
 
       doc.setLineWidth(0.5);
-      doc.line(margin, 25, pageWidth - margin, 25);
+      doc.line(margin, 31, pageWidth - margin, 31);
 
       doc.setFont("helvetica", "bold");
       doc.setFontSize(12);
-      doc.text("PAYMENT RECEIVED MIS REPORT", margin, 32);
+      doc.text("PAYMENT RECEIVED MIS REPORT", margin, 38);
 
       if (selectedCompany) {
         doc.setFontSize(10);
-        doc.text(`COMPANY: ${selectedCompany.label.toUpperCase()}`, margin, 38);
+        doc.text(`COMPANY: ${selectedCompany.label.toUpperCase()}`, margin, 44);
       }
 
       doc.setFont("helvetica", "normal");
@@ -527,16 +533,22 @@ const ListPaymentReceived = () => {
         filters.startDate && filters.endDate
           ? `Period: ${new Date(filters.startDate).toLocaleDateString("en-GB")} to ${new Date(filters.endDate).toLocaleDateString("en-GB")}`
           : "Period: Consolidated (All Time)";
-      doc.text(dateRange, pageWidth - margin, 32, { align: "right" });
+      doc.text(dateRange, pageWidth - margin, 38, { align: "right" });
 
       doc.line(
         margin,
-        selectedCompany ? 41 : 35,
+        selectedCompany ? 47 : 41,
         pageWidth - margin,
-        selectedCompany ? 41 : 35,
+        selectedCompany ? 47 : 41,
       );
 
-      let currentY = selectedCompany ? 45 : 40;
+      let currentY = selectedCompany ? 51 : 45;
+
+      // Intro text
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(10);
+      doc.text("Please find the below payment details", margin, currentY + 5);
+      currentY += 10;
 
       if (filters.ledgerId) {
         doc.setFont("helvetica", "bold");
@@ -772,14 +784,22 @@ const ListPaymentReceived = () => {
 
       // Signatory
       doc.setFontSize(9);
-      doc.text("Authorised Signatory", pageWidth - margin, summaryY + 15, {
+      doc.setFont("helvetica", "bold");
+      doc.text(
+        `For ${filters.buyerCompany || "HANSARIA FOOD PRIVATE LIMITED"}`,
+        pageWidth - margin,
+        summaryY + 10,
+        { align: "right" },
+      );
+      doc.setFont("helvetica", "bold");
+      doc.text("Authorised Signatory", pageWidth - margin, summaryY + 20, {
         align: "right",
       });
       doc.line(
-        pageWidth - 60,
-        summaryY + 12,
+        pageWidth - 80,
+        summaryY + 17,
         pageWidth - margin,
-        summaryY + 12,
+        summaryY + 17,
       );
 
       doc.save(
