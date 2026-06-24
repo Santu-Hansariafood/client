@@ -477,7 +477,7 @@ const ListPaymentReceived = () => {
 
       const reportRows = buildTallyVoucherRows(response.data.data || [], openingBalance, allEntries);
 
-      if (reportRows.length === 0 && allEntries.length === 0) {
+      if (reportRows.length === 0) {
         toast.warning("No records found");
         return;
       }
@@ -551,21 +551,9 @@ const ListPaymentReceived = () => {
         currentY += 10;
       }
 
-      // Process entries by lorry/bill number
-      const processedEntries = [];
-      const entryMap = new Map();
-
-      // Group entries by lorry and bill number
-      allEntries.forEach((entry) => {
-        const key = `${entry.lorryNumber || "unknown"}-${entry.billNumber || "unknown"}`;
-        if (!entryMap.has(key)) {
-          entryMap.set(key, []);
-        }
-        entryMap.get(key).push(entry);
-      });
-
-      // Helper to calculate tally details
+      // Helper to calculate tally details for a loading entry
       const calculateTallyDetails = (e) => {
+        if (!e) return { netAmount: 0, dueAmount: 0 };
         const weight = (e.unloadingWeight || 0) > 0 ? e.unloadingWeight : e.loadingWeight || 0;
         const rate = e.actualRate || 0;
         const cdPercent = e.cd || 0;
@@ -578,46 +566,93 @@ const ListPaymentReceived = () => {
         return { netAmount, dueAmount: Math.max(0, netAmount - (e.paidAmount || 0)) };
       };
 
-      // Process each group
-      entryMap.forEach((entries, key) => {
-        entries.forEach((entry, idx) => {
-          const details = calculateTallyDetails(entry);
-          
-          processedEntries.push({
-            date: new Date(entry.loadingDate).toLocaleDateString("en-GB"),
-            saudaNo: entry.saudaNo || "-",
-            lorryNo: entry.lorryNumber || "-",
-            billNo: entry.billNumber || "-",
-            buyerCompany: entry.buyerCompany || "-",
-            supplierCompany: entry.supplierCompany || "-",
-            billAmount: details.netAmount,
-            paidAmount: entry.paidAmount || 0,
-            payableAmount: details.dueAmount,
-            remarks: entry.generalRemarks || "-",
-            qualityClaims: entry.qualityClaims || [],
-          });
-        });
-      });
+      // Helper to extract fields from a row
+      const extractRowData = (row) => {
+        let saudaNo = "-";
+        let lorryNo = "-";
+        let billNo = "-";
+        let billAmount = 0;
+        let paidAmount = 0;
+        let payableAmount = 0;
+        let remarks = "-";
+        let qualityClaims = [];
+
+        if (row.isOpening) {
+          return {
+            saudaNo,
+            lorryNo,
+            billNo,
+            billAmount,
+            paidAmount,
+            payableAmount,
+            remarks,
+            qualityClaims,
+          };
+        }
+
+        const raw = row.raw;
+        if (raw?.uiType === "entry") {
+          // It's a LoadingEntry
+          const details = calculateTallyDetails(raw);
+          saudaNo = raw.saudaNo || "-";
+          lorryNo = raw.lorryNumber || "-";
+          billNo = raw.billNumber || "-";
+          billAmount = details.netAmount;
+          paidAmount = raw.paidAmount || 0;
+          payableAmount = details.dueAmount;
+          remarks = raw.generalRemarks || "-";
+          qualityClaims = raw.qualityClaims || [];
+        } else if (raw?.mappings?.length > 0) {
+          // It's a PaymentReceived with mappings
+          const firstMapping = raw.mappings[0];
+          const loadingEntry = firstMapping?.loadingEntryId;
+          const details = calculateTallyDetails(loadingEntry);
+          saudaNo = firstMapping?.saudaNo || loadingEntry?.saudaNo || "-";
+          lorryNo = loadingEntry?.lorryNumber || "-";
+          billNo = loadingEntry?.billNumber || "-";
+          billAmount = details.netAmount;
+          paidAmount = Number(firstMapping?.allocatedAmount || 0);
+          payableAmount = details.dueAmount;
+          remarks = firstMapping?.remarks || raw.remarks || "-";
+          qualityClaims = loadingEntry?.qualityClaims || [];
+        } else {
+          // It's a PaymentReceived without mappings
+          remarks = row.particulars;
+        }
+
+        return {
+          saudaNo,
+          lorryNo,
+          billNo,
+          billAmount,
+          paidAmount,
+          payableAmount,
+          remarks,
+          qualityClaims,
+        };
+      };
 
       // Build table data
       const tableData = [];
-      processedEntries.forEach((entry, idx) => {
+      reportRows.forEach((row, idx) => {
+        const rowData = extractRowData(row);
+
         tableData.push([
           idx + 1,
-          entry.date,
-          entry.saudaNo,
-          entry.lorryNo,
-          entry.billNo,
-          entry.buyerCompany.toUpperCase(),
-          entry.supplierCompany.toUpperCase(),
-          `Rs. ${Number(entry.billAmount).toLocaleString("en-IN", { minimumFractionDigits: 2 })}`,
-          `Rs. ${Number(entry.paidAmount).toLocaleString("en-IN", { minimumFractionDigits: 2 })}`,
-          `Rs. ${Number(entry.payableAmount).toLocaleString("en-IN", { minimumFractionDigits: 2 })}`,
-          entry.remarks,
+          row.date ? new Date(row.date).toLocaleDateString("en-GB") : "-",
+          rowData.saudaNo,
+          rowData.lorryNo,
+          rowData.billNo,
+          (row.buyerCompany || "-").toUpperCase(),
+          (row.supplierCompany || "-").toUpperCase(),
+          rowData.billAmount > 0 ? `Rs. ${Number(rowData.billAmount).toLocaleString("en-IN", { minimumFractionDigits: 2 })}` : "",
+          rowData.paidAmount > 0 ? `Rs. ${Number(rowData.paidAmount).toLocaleString("en-IN", { minimumFractionDigits: 2 })}` : "",
+          rowData.payableAmount > 0 ? `Rs. ${Number(rowData.payableAmount).toLocaleString("en-IN", { minimumFractionDigits: 2 })}` : "",
+          rowData.remarks,
         ]);
 
         // Add claim rows if any
-        const validClaims = entry.qualityClaims.filter(c => Number(c.claimAmount) > 0);
+        const validClaims = rowData.qualityClaims.filter(c => Number(c.claimAmount) > 0);
         if (validClaims.length > 0) {
           validClaims.forEach((claim) => {
             tableData.push([
@@ -708,9 +743,17 @@ const ListPaymentReceived = () => {
       const summaryY = finalY + 10;
 
       // Calculate totals
-      const totalBillAmount = processedEntries.reduce((sum, e) => sum + Number(e.billAmount), 0);
-      const totalPaidAmount = processedEntries.reduce((sum, e) => sum + Number(e.paidAmount), 0);
-      const totalPayableAmount = processedEntries.reduce((sum, e) => sum + Number(e.payableAmount), 0);
+      let totalBillAmount = 0;
+      let totalPaidAmount = 0;
+      let totalPayableAmount = 0;
+      reportRows.forEach((row) => {
+        if (!row.isOpening) {
+          const rowData = extractRowData(row);
+          totalBillAmount += Number(rowData.billAmount);
+          totalPaidAmount += Number(rowData.paidAmount);
+          totalPayableAmount += Number(rowData.payableAmount);
+        }
+      });
 
       // Print total bill value on left and payable value on right
       doc.setFontSize(10);
@@ -1058,8 +1101,8 @@ const ListPaymentReceived = () => {
                 selectedCompany={selectedCompany}
                 selectedOpposingCompany={selectedOpposingCompany}
                 selectedSauda={selectedSauda}
-                onCompanyChange={handleCompanySelect}
-                onOpposingCompanyChange={handleOpposingSelect}
+                onCompanySelect={handleCompanySelect}
+                onOpposingCompanySelect={handleOpposingSelect}
                 onSaudaChange={setSelectedSauda}
                 onPrint={handlePrintReport}
                 onDownloadPaymentAdvice={handleDownloadPaymentAdvice}

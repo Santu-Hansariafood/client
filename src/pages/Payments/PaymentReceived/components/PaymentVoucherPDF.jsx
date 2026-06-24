@@ -407,9 +407,27 @@ const PaymentVoucherPDF = ({ row, buyerCompany, sellerCompany, qrCodeUrl, vouche
     return "-";
   };
 
-  const billNo = getValue(row.raw?.billNo, row.raw?.billNumber, row.billNo);
-  const saudaNo = getValue(row.raw?.saudaNo, row.saudaNo);
-  const lorryNo = getValue(row.raw?.lorryNumber, row.lorryNo);
+  // Try to extract from mappings first (for PaymentReceived)
+  const firstMapping = row.raw?.mappings?.[0];
+  const loadingEntry = firstMapping?.loadingEntryId;
+  
+  const billNo = getValue(
+    loadingEntry?.billNumber,
+    row.raw?.billNo,
+    row.raw?.billNumber,
+    row.billNo
+  );
+  const saudaNo = getValue(
+    firstMapping?.saudaNo,
+    loadingEntry?.saudaNo,
+    row.raw?.saudaNo,
+    row.saudaNo
+  );
+  const lorryNo = getValue(
+    loadingEntry?.lorryNumber,
+    row.raw?.lorryNumber,
+    row.lorryNo
+  );
 
   return (
     <Document>
