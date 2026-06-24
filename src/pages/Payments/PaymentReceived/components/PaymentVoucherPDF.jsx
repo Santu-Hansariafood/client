@@ -58,7 +58,7 @@ const styles = StyleSheet.create({
   titleContainer: {
     width: "100%",
     alignItems: "center",
-    marginBottom: 15,
+    marginBottom: 12,
     paddingVertical: 5,
   },
   typeTitle: {
@@ -66,6 +66,12 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#000000",
     textTransform: "uppercase",
+  },
+  titleDivider: {
+    width: "100%",
+    height: 1,
+    backgroundColor: "#000000",
+    marginTop: 10,
   },
   introText: {
     fontSize: 10,
@@ -418,6 +424,9 @@ const PaymentVoucherPDF = ({ row, buyerCompany, sellerCompany, qrCodeUrl, vouche
       .reduce((sum, c) => sum + Number(c.claimAmount), 0);
   }
   const finalAmount = hasClaims && totalAmount > 0 ? totalAmount - totalClaims : totalAmount;
+  
+  // Get payment mode from raw data
+  const paymentMode = row.raw?.paymentMode || "—";
 
   const bankDetails = sellerCompany?.bankDetails?.[0] || {};
 
@@ -496,6 +505,7 @@ const PaymentVoucherPDF = ({ row, buyerCompany, sellerCompany, qrCodeUrl, vouche
         {/* Payment Voucher Title */}
         <View style={styles.titleContainer}>
           <Text style={styles.typeTitle}>PAYMENT VOUCHER</Text>
+          <View style={styles.titleDivider} />
         </View>
 
         {/* Intro Text */}
@@ -507,12 +517,12 @@ const PaymentVoucherPDF = ({ row, buyerCompany, sellerCompany, qrCodeUrl, vouche
 
         <View style={styles.partiesContainer}>
           <View style={styles.partyBox}>
-            <Text style={styles.partyLabel}>TO (BUYER)</Text>
+            <Text style={styles.partyLabel}>FROM (BUYER)</Text>
             <Text style={styles.partyName}>{row.buyerCompany || "-"}</Text>
             {renderAddressDetails(buyerCompany, "buyer")}
           </View>
           <View style={styles.partyBox}>
-            <Text style={styles.partyLabel}>FROM (SELLER)</Text>
+            <Text style={styles.partyLabel}>TO (SELLER)</Text>
             <Text style={styles.partyName}>{row.supplierCompany || "-"}</Text>
             {renderAddressDetails(sellerCompany, "seller")}
           </View>
@@ -605,6 +615,10 @@ const PaymentVoucherPDF = ({ row, buyerCompany, sellerCompany, qrCodeUrl, vouche
               <Text style={styles.metaLabel}>Total Amount:</Text>
               <Text style={styles.metaValue}>{formatAmount(totalAmount)}</Text>
             </View>
+            <View style={styles.summaryRow}>
+              <Text style={styles.metaLabel}>Payment Mode:</Text>
+              <Text style={styles.metaValue}>{paymentMode}</Text>
+            </View>
             {hasClaims && totalAmount > 0 && (
               <>
                 <View style={styles.grandTotalRow}>
@@ -695,13 +709,7 @@ const PaymentVoucherPDF = ({ row, buyerCompany, sellerCompany, qrCodeUrl, vouche
         <View style={styles.footer} fixed>
           <View style={styles.footerLine} />
           <Text style={styles.footerText}>
-            * Certified that the particulars given above are true and correct.
-          </Text>
-          <Text style={styles.footerText}>
-            * This is a system-generated payment voucher.
-          </Text>
-          <Text style={styles.footerText}>
-            Generated on: {new Date().toLocaleString()}
+            this vouture is only for information purpose which is recived from the buyer / seller hansaria food is use for information purpose only
           </Text>
         </View>
       </Page>
