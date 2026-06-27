@@ -741,7 +741,7 @@ const MasterReceivingReportPDF = ({ entries = [], logoUrl }) => {
                   </Text>
                 </View>
 
-                {/* Next 2 items - 2 in a row */}
+                {/* Rate and Gross Amount in a row */}
                 <View style={styles.summaryItemHalf}>
                   <Text style={styles.summaryLabel}>Rate</Text>
                   <Text style={styles.summaryValue}>
@@ -753,19 +753,25 @@ const MasterReceivingReportPDF = ({ entries = [], logoUrl }) => {
                   <Text style={styles.summaryValue}>
                     Rs. {formatAmount(receivingBaseAmount)}
                   </Text>
-                  {cdPercent > 0 && (
-                    <>
+                </View>
+
+                {/* Less: CD and After CD in a row (if applicable) */}
+                {cdPercent > 0 && (
+                  <>
+                    <View style={styles.summaryItemHalf}>
                       <Text style={styles.summaryLabel}>Less: CD ({cdPercent.toFixed(1)}%)</Text>
                       <Text style={styles.summaryValue}>
                         - Rs. {formatAmount(cdAmount)}
                       </Text>
+                    </View>
+                    <View style={[styles.summaryItemHalf, { borderRightWidth: 0 }]}>
                       <Text style={styles.summaryLabel}>After CD</Text>
                       <Text style={styles.summaryValue}>
                         Rs. {formatAmount(subtotal)}
                       </Text>
-                    </>
-                  )}
-                </View>
+                    </View>
+                  </>
+                )}
 
                 {gstPercent > 0 && (
                   <View style={styles.summaryItemHalf}>
