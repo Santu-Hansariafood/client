@@ -904,22 +904,23 @@ const ListPaymentReceived = () => {
         currentWordsY += 10;
       }
 
-      // Find selected company's bank details
-      let selectedCompanyData = null;
+      // Find seller company's bank details
+      let sellerCompanyData = null;
       
-      if (selectedCompany) {
-        // Check all companies first
-        selectedCompanyData = allCompanies.find(c => c._id === selectedCompany.value || c.companyName === selectedCompany.label);
-        
-        // If not found, check seller companies
-        if (!selectedCompanyData) {
-          selectedCompanyData = sellerCompanies.find(c => c._id === selectedCompany.value || c.companyName === selectedCompany.label);
-        }
-        
-        // If still not found, check buyer companies
-        if (!selectedCompanyData) {
-          selectedCompanyData = buyerCompanies.find(c => c._id === selectedCompany.value || c.companyName === selectedCompany.label);
-        }
+      // Get the seller company name based on ledger type
+      const sellerCompanyName = filters.ledgerType === "Buyer" 
+        ? selectedOpposingCompany?.label 
+        : filters.ledgerType === "Seller" 
+          ? selectedCompany?.label 
+          : filters.supplierCompany;
+      
+      if (sellerCompanyName) {
+        // Find seller company in sellerCompanies list
+        sellerCompanyData = sellerCompanies.find(c => 
+          c.companyName === sellerCompanyName || 
+          (selectedOpposingCompany && c._id === selectedOpposingCompany.value) ||
+          (selectedCompany && c._id === selectedCompany.value)
+        );
       }
       
       // Bank Details Section
@@ -931,12 +932,12 @@ const ListPaymentReceived = () => {
       doc.setFont("helvetica", "normal");
       doc.setFontSize(9);
       
-      const bankDetails = selectedCompanyData?.bankDetails?.[0];
+      const bankDetails = sellerCompanyData?.bankDetails?.[0];
       
       if (bankDetails) {
         doc.text(`Bank Name: ${bankDetails.bankName || "-"}`, margin, currentWordsY);
         currentWordsY += 5;
-        doc.text(`Account Name: ${bankDetails.accountHolderName || selectedCompany?.label || "-"}`, margin, currentWordsY);
+        doc.text(`Account Name: ${bankDetails.accountHolderName || sellerCompanyName || "-"}`, margin, currentWordsY);
         currentWordsY += 5;
         doc.text(`Account Number: ${bankDetails.accountNumber || "-"}`, margin, currentWordsY);
         currentWordsY += 5;
