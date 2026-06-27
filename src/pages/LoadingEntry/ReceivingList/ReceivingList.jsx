@@ -331,6 +331,7 @@ _*Hansaria Food Private Limited*_`;
       } = await getMasterData();
 
       let cdValue = 0;
+      let gstValue = 0;
       try {
         const selfOrderRes = await api.get("/self-order", {
           params: {
@@ -354,13 +355,14 @@ _*Hansaria Food Private Limited*_`;
         );
         if (selfOrder) {
           cdValue = Number(selfOrder.cd || 0);
+          gstValue = Number(selfOrder.gst || 0);
         }
       } catch (e) {
         console.error("Error fetching self-order for CD:", e);
       }
 
       const pdfData = buildSaudaPdfData({
-        item: { ...selectedEntry, cd: cdValue },
+        item: { ...selectedEntry, cd: cdValue, gst: gstValue },
         consigneeData,
         supplierData,
         buyerData,
@@ -444,6 +446,7 @@ _*Hansaria Food Private Limited*_`;
       } = await getMasterData();
 
       let cdValue = 0;
+      let gstValue = 0;
       try {
         const selfOrderRes = await api.get("/self-order", {
           params: {
@@ -467,13 +470,14 @@ _*Hansaria Food Private Limited*_`;
         );
         if (selfOrder) {
           cdValue = Number(selfOrder.cd || 0);
+          let gstValue = Number(selfOrder.gst || 0);
         }
       } catch (e) {
         console.error("Error fetching self-order for CD:", e);
       }
 
       const pdfData = buildSaudaPdfData({
-        item: { ...selectedEntry, cd: cdValue },
+        item: { ...selectedEntry, cd: cdValue, gst: gstValue },
         consigneeData,
         supplierData,
         buyerData,
@@ -637,6 +641,7 @@ _*Hansaria Food Private Limited*_`;
       const preparedEntries = await Promise.all(
         loadingEntries.map(async (entry) => {
           let cdValue = 0;
+      let gstValue = 0;
           try {
             const selfOrderRes = await api.get("/self-order", {
               params: {
@@ -660,13 +665,14 @@ _*Hansaria Food Private Limited*_`;
             );
             if (selfOrder) {
               cdValue = Number(selfOrder.cd || 0);
+              gstValue = Number(selfOrder.gst || 0);
             }
           } catch (e) {
-            console.error("Error fetching self-order for CD:", e);
+            console.error("Error fetching self-order for CD/GST:", e);
           }
 
           const pdfData = buildSaudaPdfData({
-            item: { ...entry, cd: cdValue },
+            item: { ...entry, cd: cdValue, gst: gstValue },
             consigneeData,
             supplierData,
             buyerData,

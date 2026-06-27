@@ -647,7 +647,7 @@ const MasterReceivingReportPDF = ({ entries = [], logoUrl }) => {
 
         const receivingBaseAmount =
           (data.unloadingWeight || 0) * (data.actualRate || 0);
-        const totalAmount = receivingBaseAmount;
+        const totalAmount = cdPercent > 0 || gstPercent > 0 ? totalBillAmount : receivingBaseAmount;
         const amountInWords = numberToWords(totalAmount);
 
         const billNo = String(data.billNumber || "").trim();
@@ -739,6 +739,42 @@ const MasterReceivingReportPDF = ({ entries = [], logoUrl }) => {
                     Rs. {formatAmount(receivingBaseAmount)}
                   </Text>
                 </View>
+
+                {cdPercent > 0 && (
+                  <View style={styles.summaryItemHalf}>
+                    <Text style={styles.summaryLabel}>Less: CD ({cdPercent.toFixed(1)}%)</Text>
+                    <Text style={styles.summaryValue}>
+                      - Rs. {formatAmount(cdAmount)}
+                    </Text>
+                  </View>
+                )}
+
+                {cdPercent > 0 && (
+                  <View style={[styles.summaryItemHalf, { borderRightWidth: 0 }]}>
+                    <Text style={styles.summaryLabel}>After CD</Text>
+                    <Text style={styles.summaryValue}>
+                      Rs. {formatAmount(subtotal)}
+                    </Text>
+                  </View>
+                )}
+
+                {gstPercent > 0 && (
+                  <View style={styles.summaryItemHalf}>
+                    <Text style={styles.summaryLabel}>Add: GST ({gstPercent.toFixed(1)}%)</Text>
+                    <Text style={styles.summaryValue}>
+                      + Rs. {formatAmount(gstAmount)}
+                    </Text>
+                  </View>
+                )}
+
+                {gstPercent > 0 && (
+                  <View style={[styles.summaryItemHalf, { borderRightWidth: 0 }]}>
+                    <Text style={styles.summaryLabel}>Total Bill Amount</Text>
+                    <Text style={styles.summaryValue}>
+                      Rs. {formatAmount(totalBillAmount)}
+                    </Text>
+                  </View>
+                )}
 
                 <View style={styles.summaryItemHalf}>
                   <Text style={styles.summaryLabel}>Seller Company</Text>
