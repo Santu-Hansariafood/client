@@ -518,31 +518,45 @@ const ListPaymentReceived = () => {
       doc.setLineWidth(0.5);
       doc.line(margin, 31, pageWidth - margin, 31);
 
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(12);
-      doc.text("PAYMENT RECEIVED MIS REPORT", margin, 38);
-
-      if (selectedCompany) {
-        doc.setFontSize(10);
-        doc.text(`COMPANY: ${selectedCompany.label.toUpperCase()}`, margin, 44);
-      }
-
-      doc.setFont("helvetica", "normal");
+      // Company & Period Info Box
+      let infoY = 34;
+      const buyerName = filters.buyerCompany || "N/A";
+      const sellerName = filters.supplierCompany || "N/A";
+      const startDate = filters.startDate ? new Date(filters.startDate).toLocaleDateString("en-GB") : "All";
+      const endDate = filters.endDate ? new Date(filters.endDate).toLocaleDateString("en-GB") : "All";
+      
+      // Draw info box border
+      doc.rect(margin, infoY, pageWidth - margin * 2, 30);
+      
+      // Left side info
       doc.setFontSize(9);
-      const dateRange =
-        filters.startDate && filters.endDate
-          ? `Period: ${new Date(filters.startDate).toLocaleDateString("en-GB")} to ${new Date(filters.endDate).toLocaleDateString("en-GB")}`
-          : "Period: Consolidated (All Time)";
-      doc.text(dateRange, pageWidth - margin, 38, { align: "right" });
-
-      doc.line(
-        margin,
-        selectedCompany ? 47 : 41,
-        pageWidth - margin,
-        selectedCompany ? 47 : 41,
-      );
-
-      let currentY = selectedCompany ? 51 : 45;
+      doc.setFont("helvetica", "bold");
+      doc.text("Ledger", margin + 2, infoY + 8);
+      doc.setFont("helvetica", "normal");
+      doc.text(`: ${selectedCompany?.label || ""}`, margin + 20, infoY + 8);
+      
+      doc.setFont("helvetica", "bold");
+      doc.text("Date Between", margin + 2, infoY + 18);
+      doc.setFont("helvetica", "normal");
+      doc.text(`: ${startDate} To ${endDate}`, margin + 35, infoY + 18);
+      
+      // Right side info
+      doc.setFont("helvetica", "bold");
+      doc.text("Branch", pageWidth / 2, infoY + 8, { align: "center" });
+      doc.setFont("helvetica", "normal");
+      doc.text(": All", pageWidth / 2 + 18, infoY + 8);
+      
+      doc.setFont("helvetica", "bold");
+      doc.text("Buyer", pageWidth / 2, infoY + 18, { align: "center" });
+      doc.setFont("helvetica", "normal");
+      doc.text(`: ${buyerName}`, pageWidth / 2 + 18, infoY + 18);
+      
+      doc.setFont("helvetica", "bold");
+      doc.text("Seller", pageWidth - 70, infoY + 8);
+      doc.setFont("helvetica", "normal");
+      doc.text(`: ${sellerName}`, pageWidth - 40, infoY + 8);
+      
+      let currentY = infoY + 38;
 
       // Intro text
       doc.setFont("helvetica", "normal");
