@@ -520,6 +520,7 @@ const AddLoadingEntry = () => {
     advance: 0,
     balance: 0,
     billNumber: "",
+    sellerBillNo: "",
     dateOfIssue: new Date().toISOString().split("T")[0],
     buyerBrokerage: 0,
     sellerBrokerage: 0,
@@ -1110,6 +1111,20 @@ const AddLoadingEntry = () => {
                 </div>
                 <div className="space-y-2">
                   <label className="text-xs font-bold text-slate-500 uppercase">
+                    Seller Bill No
+                  </label>
+                  <DataInput
+                    value={editingEntry.sellerBillNo}
+                    onChange={(e) =>
+                      setEditingEntry({
+                        ...editingEntry,
+                        sellerBillNo: e.target.value,
+                      })
+                    }
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-slate-500 uppercase">
                     Driver Name
                   </label>
                   <DataInput
@@ -1261,6 +1276,14 @@ const AddLoadingEntry = () => {
                               </p>
                               <p className="text-sm font-bold text-slate-600">
                                 {entry.billNumber || "N/A"}
+                              </p>
+                            </div>
+                            <div>
+                              <p className="text-[10px] uppercase font-bold text-slate-400">
+                                Seller Bill No
+                              </p>
+                              <p className="text-sm font-bold text-slate-600">
+                                {entry.sellerBillNo || "N/A"}
                               </p>
                             </div>
                           </div>
@@ -1544,6 +1567,23 @@ const AddLoadingEntry = () => {
                                   )
                                 }
                                 placeholder="Invoice no."
+                                className="bg-white border-amber-100 focus:border-amber-400"
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                                Seller Bill No
+                              </label>
+                              <DataInput
+                                value={entry.sellerBillNo}
+                                onChange={(e) =>
+                                  handleEntryChange(
+                                    index,
+                                    "sellerBillNo",
+                                    e.target.value,
+                                  )
+                                }
+                                placeholder="Seller invoice no."
                                 className="bg-white border-amber-100 focus:border-amber-400"
                               />
                             </div>

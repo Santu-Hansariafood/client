@@ -96,6 +96,10 @@ const ViewLoadingEntryPopup = ({
             <span className="font-semibold text-slate-800">
               {selectedEntry.billNumber || "N/A"}
             </span>
+            <span className="text-slate-500">Seller Bill No:</span>
+            <span className="font-semibold text-slate-800">
+              {selectedEntry.sellerBillNo || "N/A"}
+            </span>
             <span className="text-slate-500">Bill Date:</span>
             <span className="font-semibold text-slate-800">
               {formatDate(selectedEntry.dateOfIssue)}

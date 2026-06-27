@@ -33,8 +33,12 @@ const EditLoadingEntryPopup = ({
     const rate = Number(currentSelfOrder?.rate || 0);
     const weight = Number(editEntry.unloadingWeight || 0);
     const totalBill = rate * weight;
-    // const cdAmount = totalBill * ((Number(currentSelfOrder?.cd) || 0) / 100);
-    // const gstAmount = totalBill * ((Number(currentSelfOrder?.gst) || 0) / 100);
+    const cdPercent = Number(currentSelfOrder?.cd) || 0;
+    const cdAmount = totalBill * (cdPercent / 100);
+    const gstPercent = Number(currentSelfOrder?.gst) || 0;
+    const gstAmount = (totalBill - cdAmount) * (gstPercent / 100);
+    const netAmount = totalBill - cdAmount + gstAmount;
+    
     const totalClaim = editEntry.manualClaim
       ? Number(editEntry.manualClaimAmount || 0)
       : editEntry.qualityClaims.reduce(
@@ -45,8 +49,9 @@ const EditLoadingEntryPopup = ({
     const otherCharges = Number(editEntry.otherCharges || 0);
     const bankCharges = Number(editEntry.bankCharges || 0);
     const tds = Number(editEntry.tds || 0);
+    
     return (
-      totalBill -
+      netAmount -
       totalClaim -
       secondClaim -
       otherCharges -
@@ -155,6 +160,19 @@ const EditLoadingEntryPopup = ({
             onChange={handleEditFieldChange}
             className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
             aria-label="Bill Number"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-semibold text-slate-700 mb-1">
+            Seller Bill No
+          </label>
+          <input
+            type="text"
+            name="sellerBillNo"
+            value={editEntry.sellerBillNo || ""}
+            onChange={handleEditFieldChange}
+            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            aria-label="Seller Bill Number"
           />
         </div>
         <div>
@@ -485,6 +503,62 @@ const EditLoadingEntryPopup = ({
                   {(
                     Number(editEntry.unloadingWeight || 0) *
                     Number(currentSelfOrder?.rate || 0)
+                  ).toFixed(2)}
+                </span>
+              </div>
+
+              {/* CD Percentage & Amount */}
+              <div className="flex justify-between items-center p-3 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl shadow-sm border border-blue-200">
+                <span className="font-bold text-slate-700 text-sm">
+                  Less CD ({Number(currentSelfOrder?.cd || 0).toFixed(1)}%):
+                </span>
+                <span className="text-lg font-black text-red-600">
+                  - ₹{" "}
+                  {(
+                    Number(editEntry.unloadingWeight || 0) *
+                    Number(currentSelfOrder?.rate || 0) *
+                    (Number(currentSelfOrder?.cd || 0) / 100)
+                  ).toFixed(2)}
+                </span>
+              </div>
+
+              {/* GST Percentage & Amount */}
+              <div className="flex justify-between items-center p-3 bg-gradient-to-r from-cyan-50 to-teal-50 rounded-xl shadow-sm border border-cyan-200">
+                <span className="font-bold text-slate-700 text-sm">
+                  Add GST ({Number(currentSelfOrder?.gst || 0).toFixed(1)}%):
+                </span>
+                <span className="text-lg font-black text-teal-700">
+                  + ₹{" "}
+                  {(
+                    (Number(editEntry.unloadingWeight || 0) *
+                      Number(currentSelfOrder?.rate || 0) -
+                      Number(editEntry.unloadingWeight || 0) *
+                        Number(currentSelfOrder?.rate || 0) *
+                        (Number(currentSelfOrder?.cd || 0) / 100)) *
+                    (Number(currentSelfOrder?.gst || 0) / 100)
+                  ).toFixed(2)}
+                </span>
+              </div>
+
+              {/* Net Amount */}
+              <div className="flex justify-between items-center p-3 bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl shadow-sm border border-purple-200">
+                <span className="font-bold text-slate-700 text-sm">
+                  Net Amount:
+                </span>
+                <span className="text-lg font-black text-purple-700">
+                  ₹{" "}
+                  {(
+                    Number(editEntry.unloadingWeight || 0) *
+                      Number(currentSelfOrder?.rate || 0) -
+                    Number(editEntry.unloadingWeight || 0) *
+                      Number(currentSelfOrder?.rate || 0) *
+                      (Number(currentSelfOrder?.cd || 0) / 100) +
+                    (Number(editEntry.unloadingWeight || 0) *
+                      Number(currentSelfOrder?.rate || 0) -
+                      Number(editEntry.unloadingWeight || 0) *
+                        Number(currentSelfOrder?.rate || 0) *
+                        (Number(currentSelfOrder?.cd || 0) / 100)) *
+                      (Number(currentSelfOrder?.gst || 0) / 100)
                   ).toFixed(2)}
                 </span>
               </div>

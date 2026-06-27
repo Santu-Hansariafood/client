@@ -1136,6 +1136,7 @@ const ListLoadingEntry = () => {
       "Unloading Weight",
       "Brokerage",
       "Bill No",
+      "Seller Bill No",
       "Entered By",
     ];
 
@@ -1159,6 +1160,7 @@ const ListLoadingEntry = () => {
         `${(entry.unloadingWeight || 0).toFixed(2)} T`,
         `₹ ${totalBrokerage}`,
         entry.billNumber || "N/A",
+        entry.sellerBillNo || "N/A",
         `${entry.creatorMobile || "N/A"} (${entry.entryByRole || "Admin"})`,
       ];
     });
@@ -1217,6 +1219,7 @@ const ListLoadingEntry = () => {
       "Advance",
       "Balance",
       "Bill No",
+      "Seller Bill No",
       "Date of Issue",
       "Entered By",
       "Actions",
@@ -1277,6 +1280,7 @@ const ListLoadingEntry = () => {
         entry.advance ? `₹ ${entry.advance}` : "N/A",
         entry.balance ? `₹ ${entry.balance}` : "N/A",
         entry.billNumber || "N/A",
+        entry.sellerBillNo || "N/A",
         formatDate(entry.dateOfIssue),
         <div key={`enteredBy-${entry._id}`} className="flex flex-col">
           <span className="font-semibold text-slate-700">
