@@ -100,109 +100,115 @@ const MisFilterPanel = ({
         </div>
       </div>
 
-      <div className="p-4 sm:p-6 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-4 sm:gap-5">
-        <div className="space-y-1.5">
-          <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-0.5">
-            Ledger type
-          </label>
-          <select
-            value={filters.ledgerType}
-            onChange={(e) => onFilterChange("ledgerType", e.target.value)}
-            className="w-full h-12 px-3 rounded-xl border border-slate-200 bg-white text-sm font-bold text-slate-800 focus:ring-2 focus:ring-[#1e3a5f]/15 focus:border-[#1e3a5f] outline-none"
-          >
-            <option value="">All (consolidated)</option>
-            <option value="Buyer">Buyer receipts</option>
-            <option value="Seller">Seller payments</option>
-          </select>
-        </div>
-
-        <div className="space-y-1.5">
-          <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-0.5">
-            {filters.ledgerType === "Buyer"
-              ? "Buyer company"
-              : filters.ledgerType === "Seller"
-                ? "Seller company"
-                : "Primary company"}
-            {filters.ledgerType && (
-              <span className="text-rose-500 ml-0.5">*</span>
-            )}
-          </label>
-          <div className="!mb-0">
-            <DataDropdown
-              options={primaryCompanyOptions}
-              selectedOptions={selectedCompany}
-              onChange={onCompanySelect}
-              placeholder={
-                ledgerTypeDisabled ? "Select ledger type first" : "Select company…"
-              }
-              isMulti={false}
-              isDisabled={ledgerTypeDisabled}
-              className="rounded-xl"
-            />
+      <div className="p-4 sm:p-6 space-y-4">
+        {/* First row: Ledger type, Primary company, Opposing company */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="space-y-1.5">
+            <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-0.5">
+              Ledger type
+            </label>
+            <select
+              value={filters.ledgerType}
+              onChange={(e) => onFilterChange("ledgerType", e.target.value)}
+              className="w-full h-12 px-3 rounded-xl border border-slate-200 bg-white text-sm font-bold text-slate-800 focus:ring-2 focus:ring-[#1e3a5f]/15 focus:border-[#1e3a5f] outline-none transition-all"
+            >
+              <option value="">All (consolidated)</option>
+              <option value="Buyer">Buyer receipts</option>
+              <option value="Seller">Seller payments</option>
+            </select>
           </div>
-        </div>
 
-        <div className="space-y-1.5">
-          <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-0.5">
-            {filters.ledgerType === "Buyer"
-              ? "Seller company"
-              : filters.ledgerType === "Seller"
+          <div className="space-y-1.5">
+            <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-0.5">
+              {filters.ledgerType === "Buyer"
                 ? "Buyer company"
-                : "Opposing company"}
-          </label>
-          <div className="!mb-0">
-            <DataDropdown
-              options={opposingCompanyOptions}
-              selectedOptions={selectedOpposingCompany}
-              onChange={onOpposingCompanySelect}
-              placeholder={
-                selectedCompany ? "Optional filter…" : "Select primary company first"
-              }
-              isMulti={false}
-              isDisabled={!selectedCompany && Boolean(filters.ledgerType)}
-              className="rounded-xl"
-            />
+                : filters.ledgerType === "Seller"
+                  ? "Seller company"
+                  : "Primary company"}
+              {filters.ledgerType && (
+                <span className="text-rose-500 ml-0.5">*</span>
+              )}
+            </label>
+            <div className="!mb-0">
+              <DataDropdown
+                options={primaryCompanyOptions}
+                selectedOptions={selectedCompany}
+                onChange={onCompanySelect}
+                placeholder={
+                  ledgerTypeDisabled ? "Select ledger type first" : "Select company…"
+                }
+                isMulti={false}
+                isDisabled={ledgerTypeDisabled}
+                className="rounded-xl"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-0.5">
+              {filters.ledgerType === "Buyer"
+                ? "Seller company"
+                : filters.ledgerType === "Seller"
+                  ? "Buyer company"
+                  : "Opposing company"}
+            </label>
+            <div className="!mb-0">
+              <DataDropdown
+                options={opposingCompanyOptions}
+                selectedOptions={selectedOpposingCompany}
+                onChange={onOpposingCompanySelect}
+                placeholder={
+                  selectedCompany ? "Optional filter…" : "Select primary company first"
+                }
+                isMulti={false}
+                isDisabled={!selectedCompany && Boolean(filters.ledgerType)}
+                className="rounded-xl"
+              />
+            </div>
           </div>
         </div>
 
-        <div className="space-y-1.5">
-          <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-0.5">
-            Sauda no.
-          </label>
-          <div className="!mb-0">
-            <DataDropdown
-              options={saudaOptions}
-              selectedOptions={selectedSauda}
-              onChange={onSaudaChange}
-              placeholder={
-                !selectedCompany
-                  ? "Select company"
-                  : saudaOptions.length === 0
-                    ? "No saudas"
-                    : "Drill-down…"
-              }
-              isMulti={false}
-              isDisabled={!selectedCompany || saudaOptions.length === 0}
-              className="rounded-xl"
+        {/* Second row: Sauda no, Period */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-1.5">
+            <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-0.5">
+              Sauda no.
+            </label>
+            <div className="!mb-0">
+              <DataDropdown
+                options={saudaOptions}
+                selectedOptions={selectedSauda}
+                onChange={onSaudaChange}
+                placeholder={
+                  !selectedCompany
+                    ? "Select company"
+                    : saudaOptions.length === 0
+                      ? "No saudas"
+                      : "Drill-down…"
+                }
+                isMulti={false}
+                isDisabled={!selectedCompany || saudaOptions.length === 0}
+                className="rounded-xl"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-0.5">
+              Period
+            </label>
+            <DateRangeSelector
+              startDate={filters.startDate}
+              endDate={filters.endDate}
+              onStartDateChange={(date) => onFilterChange("startDate", date)}
+              onEndDateChange={(date) => onFilterChange("endDate", date)}
+              onClear={() => {
+                onFilterChange("startDate", "");
+                onFilterChange("endDate", "");
+              }}
+              className="!h-12 !rounded-xl"
             />
           </div>
-        </div>
-
-        <div className="space-y-1.5 md:col-span-2 xl:col-span-1">
-          <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-0.5">
-            Period
-          </label>
-          <DateRangeSelector
-            startDate={filters.startDate}
-            endDate={filters.endDate}
-            onStartDateChange={(date) => onFilterChange("startDate", date)}
-            onEndDateChange={(date) => onFilterChange("endDate", date)}
-            onClear={() => {
-              onFilterChange("startDate", "");
-              onFilterChange("endDate", "");
-            }}
-            className="!h-12 !rounded-xl"
-          />
         </div>
       </div>
     </div>
