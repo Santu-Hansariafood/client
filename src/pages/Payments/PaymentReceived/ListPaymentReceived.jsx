@@ -904,6 +904,24 @@ const ListPaymentReceived = () => {
         currentWordsY += 10;
       }
 
+      // Find selected company's bank details
+      let selectedCompanyData = null;
+      
+      if (selectedCompany) {
+        // Check all companies first
+        selectedCompanyData = allCompanies.find(c => c._id === selectedCompany.value || c.companyName === selectedCompany.label);
+        
+        // If not found, check seller companies
+        if (!selectedCompanyData) {
+          selectedCompanyData = sellerCompanies.find(c => c._id === selectedCompany.value || c.companyName === selectedCompany.label);
+        }
+        
+        // If still not found, check buyer companies
+        if (!selectedCompanyData) {
+          selectedCompanyData = buyerCompanies.find(c => c._id === selectedCompany.value || c.companyName === selectedCompany.label);
+        }
+      }
+      
       // Bank Details Section
       doc.setFont("helvetica", "bold");
       doc.setFontSize(10);
@@ -912,16 +930,24 @@ const ListPaymentReceived = () => {
       
       doc.setFont("helvetica", "normal");
       doc.setFontSize(9);
-      doc.text("Bank Name: HDFC Bank", margin, currentWordsY);
-      currentWordsY += 5;
-      doc.text("Account Name: HANSARIA FOOD PRIVATE LIMITED", margin, currentWordsY);
-      currentWordsY += 5;
-      doc.text("Account Number: 0012345678901234", margin, currentWordsY);
-      currentWordsY += 5;
-      doc.text("IFSC Code: HDFC0000123", margin, currentWordsY);
-      currentWordsY += 5;
-      doc.text("Branch: Kolkata, West Bengal", margin, currentWordsY);
-      currentWordsY += 8;
+      
+      const bankDetails = selectedCompanyData?.bankDetails?.[0];
+      
+      if (bankDetails) {
+        doc.text(`Bank Name: ${bankDetails.bankName || "-"}`, margin, currentWordsY);
+        currentWordsY += 5;
+        doc.text(`Account Name: ${bankDetails.accountHolderName || selectedCompany?.label || "-"}`, margin, currentWordsY);
+        currentWordsY += 5;
+        doc.text(`Account Number: ${bankDetails.accountNumber || "-"}`, margin, currentWordsY);
+        currentWordsY += 5;
+        doc.text(`IFSC Code: ${bankDetails.ifscCode || "-"}`, margin, currentWordsY);
+        currentWordsY += 5;
+        doc.text(`Branch: ${bankDetails.branchName || "-"}`, margin, currentWordsY);
+        currentWordsY += 8;
+      } else {
+        doc.text("No bank details available", margin, currentWordsY);
+        currentWordsY += 8;
+      }
 
       // Disclaimer Note
       doc.setLineWidth(0.2);
