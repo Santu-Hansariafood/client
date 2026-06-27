@@ -264,7 +264,7 @@ const ReceivingList = () => {
 *Unloading Date:* _${formatDate(entry.unloadingDate)}_
 *Rate:* _Rs. ${entry.actualRate || 0}_
 *Gross Amount:* _Rs. ${grossAmount.toFixed(2)}_
-${cdValue > 0 ? `*CD (${cdValue}%):* _- Rs. ${cdDeduction.toFixed(2)}_` : ""}
+${cdValue > 0 ? `*CD (${cdValue}%):* _ Rs. - ${cdDeduction.toFixed(2)}_` : ""}
 ${cdValue > 0 ? `*Taxable Value:* _Rs. ${taxableValue.toFixed(2)}_` : ""}
 ${gstValue > 0 ? `*GST (${gstValue}%):* _+ Rs. ${gstAmount.toFixed(2)}_` : ""}
 *Final Amount:* _Rs. ${finalAmount.toFixed(2)}_
