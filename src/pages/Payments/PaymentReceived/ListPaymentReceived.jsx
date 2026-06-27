@@ -658,44 +658,108 @@ const ListPaymentReceived = () => {
         };
       };
 
-      // Build table data
-      const tableData = [];
-      reportRows.forEach((row, idx) => {
+      // Group rows by sauda number
+      const groupedBySauda = {};
+      reportRows.forEach((row) => {
         const rowData = extractRowData(row);
+        const saudaKey = rowData.saudaNo || "NO SAUDA";
+        if (!groupedBySauda[saudaKey]) {
+          groupedBySauda[saudaKey] = [];
+        }
+        groupedBySauda[saudaKey].push({ row, rowData });
+      });
 
+      // Process each sauda group
+      let rowIdx = 0;
+      const tableData = [];
+      const saudaTotals = {};
+
+      Object.keys(groupedBySauda).forEach((saudaKey) => {
+        const group = groupedBySauda[saudaKey];
+        let saudaDebitTotal = 0;
+        let saudaCreditTotal = 0;
+        let saudaPaidTotal = 0;
+
+        // Add sauda header row
         tableData.push([
-          idx + 1,
-          row.date ? new Date(row.date).toLocaleDateString("en-GB") : "-",
-          rowData.saudaNo,
-          rowData.lorryNo,
-          rowData.billNo,
-          (row.buyerCompany || "-").toUpperCase(),
-          (row.supplierCompany || "-").toUpperCase(),
-          rowData.billAmount > 0 ? `Rs. ${Number(rowData.billAmount).toLocaleString("en-IN", { minimumFractionDigits: 2 })}` : "",
-          rowData.paidAmount > 0 ? `Rs. ${Number(rowData.paidAmount).toLocaleString("en-IN", { minimumFractionDigits: 2 })}` : "",
-          rowData.payableAmount > 0 ? `Rs. ${Number(rowData.payableAmount).toLocaleString("en-IN", { minimumFractionDigits: 2 })}` : "",
-          rowData.remarks,
+          {
+            content: `SAUDA NO: ${saudaKey}`,
+            colSpan: 11,
+            styles: {
+              fillColor: [200, 200, 200],
+              fontStyle: "bold",
+              halign: "center",
+            },
+          },
         ]);
 
-        // Add claim rows if any
-        const validClaims = rowData.qualityClaims.filter(c => Number(c.claimAmount) > 0);
-        if (validClaims.length > 0) {
-          validClaims.forEach((claim) => {
-            tableData.push([
-              "",
-              "",
-              "",
-              "",
-              "",
-              "",
-              `CLAIM: ${(claim.parameterName || "UNNAMED").toUpperCase()}`,
-              "",
-              "",
-              `Rs. ${Number(claim.claimAmount).toLocaleString("en-IN", { minimumFractionDigits: 2 })}`,
-              "",
-            ]);
-          });
-        }
+        // Add each row in the sauda group
+        group.forEach(({ row, rowData }) => {
+          rowIdx++;
+          
+          // Calculate debit/credit for this row
+          const debit = row.debit || 0;
+          const credit = row.credit || 0;
+          saudaDebitTotal += debit;
+          saudaCreditTotal += credit;
+          saudaPaidTotal += rowData.paidAmount;
+
+          tableData.push([
+            rowIdx,
+            row.date ? new Date(row.date).toLocaleDateString("en-GB") : "-",
+            rowData.saudaNo,
+            rowData.lorryNo,
+            rowData.billNo,
+            (row.buyerCompany || "-").toUpperCase(),
+            (row.supplierCompany || "-").toUpperCase(),
+            debit > 0 ? `Rs. ${debit.toLocaleString("en-IN", { minimumFractionDigits: 2 })}` : "",
+            credit > 0 ? `Rs. ${credit.toLocaleString("en-IN", { minimumFractionDigits: 2 })}` : "",
+            (debit - credit) !== 0 ? `Rs. ${(debit - credit).toLocaleString("en-IN", { minimumFractionDigits: 2 })}` : "",
+            rowData.remarks,
+          ]);
+
+          // Add claim rows if any
+          const validClaims = rowData.qualityClaims.filter(c => Number(c.claimAmount) > 0);
+          if (validClaims.length > 0) {
+            validClaims.forEach((claim) => {
+              tableData.push([
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                `CLAIM: ${(claim.parameterName || "UNNAMED").toUpperCase()}`,
+                "",
+                "",
+                `Rs. ${Number(claim.claimAmount).toLocaleString("en-IN", { minimumFractionDigits: 2 })}`,
+                "",
+              ]);
+            });
+          }
+        });
+
+        // Add sauda total row
+        tableData.push([
+          {
+            content: `TOTAL FOR SAUDA ${saudaKey}`,
+            colSpan: 7,
+            styles: {
+              fontStyle: "bold",
+              halign: "right",
+            },
+          },
+          `Rs. ${saudaDebitTotal.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`,
+          `Rs. ${saudaCreditTotal.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`,
+          `Rs. ${(saudaDebitTotal - saudaCreditTotal).toLocaleString("en-IN", { minimumFractionDigits: 2 })}`,
+          "",
+        ]);
+
+        // Store sauda totals
+        saudaTotals[saudaKey] = {
+          debit: saudaDebitTotal,
+          credit: saudaCreditTotal,
+        };
       });
 
       autoTable(doc, {
@@ -709,9 +773,9 @@ const ListPaymentReceived = () => {
             "BILL NO",
             "BUYER",
             "SELLER",
-            "BILL AMOUNT",
-            "PAID AMOUNT",
-            "PAYABLE AMOUNT",
+            "DEBIT",
+            "CREDIT",
+            "BALANCE",
             "REMARKS",
           ],
         ],
@@ -769,28 +833,25 @@ const ListPaymentReceived = () => {
       const summaryY = finalY + 10;
 
       // Calculate totals
-      let totalBillAmount = 0;
-      let totalPaidAmount = 0;
-      let totalPayableAmount = 0;
+      let totalDebit = 0;
+      let totalCredit = 0;
       reportRows.forEach((row) => {
         if (!row.isOpening) {
-          const rowData = extractRowData(row);
-          totalBillAmount += Number(rowData.billAmount);
-          totalPaidAmount += Number(rowData.paidAmount);
-          totalPayableAmount += Number(rowData.payableAmount);
+          totalDebit += row.debit || 0;
+          totalCredit += row.credit || 0;
         }
       });
 
-      // Print total bill value on left and payable value on right
+      // Print total debit and credit
       doc.setFontSize(10);
       doc.setFont("helvetica", "bold");
       doc.text(
-        `Total Bill Amount: Rs. ${totalBillAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`,
+        `Total Debit: Rs. ${totalDebit.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`,
         margin,
         summaryY,
       );
       doc.text(
-        `Total Payable Amount: Rs. ${totalPayableAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`,
+        `Total Credit: Rs. ${totalCredit.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`,
         pageWidth - margin,
         summaryY,
         { align: "right" },
