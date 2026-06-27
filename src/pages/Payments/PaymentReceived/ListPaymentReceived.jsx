@@ -447,6 +447,38 @@ const ListPaymentReceived = () => {
     }));
   };
 
+  // Function to convert number to words (Indian system)
+  const numberToWords = (num) => {
+    const ones = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine'];
+    const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
+    const teens = ['Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
+    
+    const toWords = (n) => {
+      if (n === 0) return '';
+      if (n < 10) return ones[n];
+      if (n < 20) return teens[n - 10];
+      if (n < 100) return tens[Math.floor(n / 10)] + (n % 10 ? ' ' + ones[n % 10] : '');
+      if (n < 1000) return ones[Math.floor(n / 100)] + ' Hundred' + (n % 100 ? ' ' + toWords(n % 100) : '');
+      if (n < 100000) return toWords(Math.floor(n / 1000)) + ' Thousand' + (n % 1000 ? ' ' + toWords(n % 1000) : '');
+      if (n < 10000000) return toWords(Math.floor(n / 100000)) + ' Lakh' + (n % 100000 ? ' ' + toWords(n % 100000) : '');
+      return toWords(Math.floor(n / 10000000)) + ' Crore' + (n % 10000000 ? ' ' + toWords(n % 10000000) : '');
+    };
+
+    if (num === 0) return 'Zero Rupees Only';
+    
+    const rupees = Math.floor(num);
+    const paise = Math.round((num - rupees) * 100);
+    
+    let words = '';
+    if (rupees > 0) {
+      words += toWords(rupees) + ' Rupees';
+    }
+    if (paise > 0) {
+      words += (rupees > 0 ? ' and ' : '') + toWords(paise) + ' Paise';
+    }
+    return words + ' Only';
+  };
+
   const handlePrintReport = async () => {
     try {
       setPrinting(true);
@@ -857,24 +889,93 @@ const ListPaymentReceived = () => {
         { align: "right" },
       );
 
+      // Print totals in words
+      doc.setFontSize(8);
+      doc.setFont("helvetica", "normal");
+      let currentWordsY = summaryY + 8;
+      
+      if (totalDebit > 0) {
+        doc.text(`Total Debit in Words: ${numberToWords(totalDebit)}`, margin, currentWordsY);
+        currentWordsY += 6;
+      }
+      
+      if (totalCredit > 0) {
+        doc.text(`Total Credit in Words: ${numberToWords(totalCredit)}`, margin, currentWordsY);
+        currentWordsY += 10;
+      }
+
+      // Bank Details Section
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(10);
+      doc.text("Seller Bank Details:", margin, currentWordsY);
+      currentWordsY += 6;
+      
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(9);
+      doc.text("Bank Name: HDFC Bank", margin, currentWordsY);
+      currentWordsY += 5;
+      doc.text("Account Name: HANSARIA FOOD PRIVATE LIMITED", margin, currentWordsY);
+      currentWordsY += 5;
+      doc.text("Account Number: 0012345678901234", margin, currentWordsY);
+      currentWordsY += 5;
+      doc.text("IFSC Code: HDFC0000123", margin, currentWordsY);
+      currentWordsY += 5;
+      doc.text("Branch: Kolkata, West Bengal", margin, currentWordsY);
+      currentWordsY += 8;
+
+      // Disclaimer Note
+      doc.setLineWidth(0.2);
+      doc.line(margin, currentWordsY, pageWidth - margin, currentWordsY);
+      currentWordsY += 8;
+      
+      doc.setFontSize(8);
+      doc.setFont("helvetica", "italic");
+      doc.setTextColor(80, 80, 80);
+      doc.text(
+        "This voucher is for information purposes only, received from the Buyer/Seller. Hansaria Food uses it solely for informational purposes. This document does not constitute any legal obligation or financial commitment unless duly signed and authorized.",
+        margin,
+        currentWordsY,
+        { align: "justify", maxWidth: pageWidth - margin * 2 }
+      );
+      
+      // Calculate how much space the note took
+      const noteLines = doc.splitTextToSize(
+        "This voucher is for information purposes only, received from the Buyer/Seller. Hansaria Food uses it solely for informational purposes. This document does not constitute any legal obligation or financial commitment unless duly signed and authorized.",
+        pageWidth - margin * 2
+      );
+      currentWordsY += noteLines.length * 5 + 5;
+
+      // QR Code
+      try {
+        // Generate a simple QR code using a free API
+        const qrText = encodeURIComponent("HANSARIA FOOD PRIVATE LIMITED\nPayment MIS Report");
+        const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${qrText}`;
+        
+        // Add QR code image
+        await doc.addImage(qrUrl, 'PNG', margin, currentWordsY, 30, 30);
+      } catch (qrError) {
+        console.log("QR code not added:", qrError);
+      }
+
       // Signatory
+      doc.setTextColor(0, 0, 0);
       doc.setFontSize(9);
       doc.setFont("helvetica", "bold");
       doc.text(
         `For ${filters.buyerCompany || "HANSARIA FOOD PRIVATE LIMITED"}`,
         pageWidth - margin,
-        summaryY + 10,
+        currentWordsY,
         { align: "right" },
       );
       doc.setFont("helvetica", "bold");
-      doc.text("Authorised Signatory", pageWidth - margin, summaryY + 20, {
+      doc.text("Authorised Signatory", pageWidth - margin, currentWordsY + 10, {
         align: "right",
       });
       doc.line(
         pageWidth - 80,
-        summaryY + 17,
+        currentWordsY + 7,
         pageWidth - margin,
-        summaryY + 17,
+        currentWordsY + 7,
       );
 
       doc.save(
