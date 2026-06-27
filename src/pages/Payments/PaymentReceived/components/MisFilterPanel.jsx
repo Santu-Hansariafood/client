@@ -12,8 +12,8 @@ const MisFilterPanel = ({
   selectedCompany,
   selectedOpposingCompany,
   selectedSauda,
-  onCompanyChange,
-  onOpposingCompanyChange,
+  onCompanySelect,
+  onOpposingCompanySelect,
   onSaudaChange,
   onPrint,
   onDownloadPaymentAdvice,
@@ -82,7 +82,7 @@ const MisFilterPanel = ({
         </div>
       </div>
 
-      <div className="p-4 sm:p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-4 sm:gap-5">
+      <div className="p-4 sm:p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-4 sm:gap-5">
         <div className="space-y-1.5 lg:col-span-2">
           <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-0.5">
             Ledger type
@@ -109,17 +109,19 @@ const MisFilterPanel = ({
               <span className="text-rose-500 ml-0.5">*</span>
             )}
           </label>
-          <DataDropdown
-            options={primaryCompanyOptions}
-            selectedOptions={selectedCompany}
-            onChange={onCompanyChange}
-            placeholder={
-              ledgerTypeDisabled ? "Select ledger type first" : "Select company…"
-            }
-            isMulti={false}
-            isDisabled={ledgerTypeDisabled}
-            className="rounded-xl"
-          />
+          <div className="!mb-0">
+            <DataDropdown
+              options={primaryCompanyOptions}
+              selectedOptions={selectedCompany}
+              onChange={onCompanySelect}
+              placeholder={
+                ledgerTypeDisabled ? "Select ledger type first" : "Select company…"
+              }
+              isMulti={false}
+              isDisabled={ledgerTypeDisabled}
+              className="rounded-xl"
+            />
+          </div>
         </div>
 
         <div className="space-y-1.5 lg:col-span-3">
@@ -130,38 +132,42 @@ const MisFilterPanel = ({
                 ? "Buyer company"
                 : "Opposing company"}
           </label>
-          <DataDropdown
-            options={opposingCompanyOptions}
-            selectedOptions={selectedOpposingCompany}
-            onChange={onOpposingCompanyChange}
-            placeholder={
-              selectedCompany ? "Optional filter…" : "Select primary company first"
-            }
-            isMulti={false}
-            isDisabled={!selectedCompany && Boolean(filters.ledgerType)}
-            className="rounded-xl"
-          />
+          <div className="!mb-0">
+            <DataDropdown
+              options={opposingCompanyOptions}
+              selectedOptions={selectedOpposingCompany}
+              onChange={onOpposingCompanySelect}
+              placeholder={
+                selectedCompany ? "Optional filter…" : "Select primary company first"
+              }
+              isMulti={false}
+              isDisabled={!selectedCompany && Boolean(filters.ledgerType)}
+              className="rounded-xl"
+            />
+          </div>
         </div>
 
         <div className="space-y-1.5 lg:col-span-2">
           <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-0.5">
             Sauda no.
           </label>
-          <DataDropdown
-            options={saudaOptions}
-            selectedOptions={selectedSauda}
-            onChange={onSaudaChange}
-            placeholder={
-              !selectedCompany
-                ? "Select company"
-                : saudaOptions.length === 0
-                  ? "No saudas"
-                  : "Drill-down…"
-            }
-            isMulti={false}
-            isDisabled={!selectedCompany || saudaOptions.length === 0}
-            className="rounded-xl"
-          />
+          <div className="!mb-0">
+            <DataDropdown
+              options={saudaOptions}
+              selectedOptions={selectedSauda}
+              onChange={onSaudaChange}
+              placeholder={
+                !selectedCompany
+                  ? "Select company"
+                  : saudaOptions.length === 0
+                    ? "No saudas"
+                    : "Drill-down…"
+              }
+              isMulti={false}
+              isDisabled={!selectedCompany || saudaOptions.length === 0}
+              className="rounded-xl"
+            />
+          </div>
         </div>
 
         <div className="space-y-1.5 lg:col-span-2">
