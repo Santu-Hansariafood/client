@@ -680,6 +680,14 @@ const MasterReceivingReportPDF = ({ entries = [], logoUrl }) => {
                   </Text>
                 </View>
                 <View style={styles.summaryItemQuarter}>
+                  <Text style={styles.summaryLabel}>Seller Bill No.</Text>
+                  <Text style={styles.summaryValue}>
+                    {data.sellerBillNo || "N/A"}
+                  </Text>
+                </View>
+                <View
+                  style={[styles.summaryItemQuarter, { borderRightWidth: 0 }]}
+                >
                   <Text style={styles.summaryLabel}>Lorry Number</Text>
                   <Text
                     style={[
@@ -690,15 +698,13 @@ const MasterReceivingReportPDF = ({ entries = [], logoUrl }) => {
                     {data.lorryNumber || "N/A"}
                   </Text>
                 </View>
-                <View
-                  style={[styles.summaryItemQuarter, { borderRightWidth: 0 }]}
-                >
+
+                <View style={styles.summaryItemQuarter}>
                   <Text style={styles.summaryLabel}>Commodity</Text>
                   <Text style={styles.summaryValue}>
                     {data.commodity || "N/A"}
                   </Text>
                 </View>
-
                 <View style={styles.summaryItemQuarter}>
                   <Text style={styles.summaryLabel}>Loading Weight</Text>
                   <Text style={styles.summaryValue}>
@@ -711,6 +717,15 @@ const MasterReceivingReportPDF = ({ entries = [], logoUrl }) => {
                     {data.unloadingWeight || 0} Tons
                   </Text>
                 </View>
+                <View
+                  style={[styles.summaryItemQuarter, { borderRightWidth: 0 }]}
+                >
+                  <Text style={styles.summaryLabel}>Rejected Quantity</Text>
+                  <Text style={styles.summaryValue}>
+                    {(Number(data.loadingWeight || 0) - Number(data.unloadingWeight || 0)).toFixed(2)} Tons
+                  </Text>
+                </View>
+
                 <View style={styles.summaryItemQuarter}>
                   <Text style={styles.summaryLabel}>Loading Date</Text>
                   <Text style={styles.summaryValue}>
