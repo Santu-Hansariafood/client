@@ -82,15 +82,15 @@ const MisFilterPanel = ({
         </div>
       </div>
 
-      <div className="p-4 sm:p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-4 sm:gap-5">
-        <div className="space-y-1.5 lg:col-span-2">
+      <div className="p-4 sm:p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4 sm:gap-5">
+        <div className="space-y-1.5 lg:col-span-1">
           <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-0.5">
             Ledger type
           </label>
           <select
             value={filters.ledgerType}
             onChange={(e) => onFilterChange("ledgerType", e.target.value)}
-            className="w-full h-11 px-3 rounded-xl border border-slate-200 bg-white text-sm font-bold text-slate-800 focus:ring-2 focus:ring-[#1e3a5f]/15 focus:border-[#1e3a5f] outline-none"
+            className="w-full h-12 px-3 rounded-xl border border-slate-200 bg-white text-sm font-bold text-slate-800 focus:ring-2 focus:ring-[#1e3a5f]/15 focus:border-[#1e3a5f] outline-none"
           >
             <option value="">All (consolidated)</option>
             <option value="Buyer">Buyer receipts</option>
@@ -98,7 +98,7 @@ const MisFilterPanel = ({
           </select>
         </div>
 
-        <div className="space-y-1.5 lg:col-span-3">
+        <div className="space-y-1.5 lg:col-span-1">
           <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-0.5">
             {filters.ledgerType === "Buyer"
               ? "Buyer company"
@@ -124,7 +124,7 @@ const MisFilterPanel = ({
           </div>
         </div>
 
-        <div className="space-y-1.5 lg:col-span-3">
+        <div className="space-y-1.5 lg:col-span-1">
           <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-0.5">
             {filters.ledgerType === "Buyer"
               ? "Seller company"
@@ -147,7 +147,7 @@ const MisFilterPanel = ({
           </div>
         </div>
 
-        <div className="space-y-1.5 lg:col-span-2">
+        <div className="space-y-1.5 lg:col-span-1">
           <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-0.5">
             Sauda no.
           </label>
@@ -183,7 +183,7 @@ const MisFilterPanel = ({
               onFilterChange("startDate", "");
               onFilterChange("endDate", "");
             }}
-            className="!h-11 !rounded-xl"
+            className="!h-12 !rounded-xl"
           />
         </div>
       </div>

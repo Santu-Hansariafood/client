@@ -10,16 +10,16 @@ const DateRangeSelector = ({
     className = "" 
 }) => {
     return (
-        <div className={`flex items-center gap-3 bg-white px-4 py-2 rounded-xl border border-slate-200 shadow-sm transition-all group hover:border-slate-300 focus-within:ring-4 focus-within:ring-slate-900/5 focus-within:border-slate-900 ${className}`}>
+        <div className={`flex items-center gap-3 bg-white px-4 py-3 rounded-xl border border-slate-200 shadow-sm transition-all group hover:border-slate-300 focus-within:ring-4 focus-within:ring-slate-900/5 focus-within:border-slate-900 ${className}`}>
             <div className="flex items-center gap-2 flex-1">
-                <FaCalendarAlt className={`transition-colors ${startDate ? 'text-slate-900' : 'text-slate-300'}`} size={12} />
+                <FaCalendarAlt className={`transition-colors ${startDate ? 'text-slate-900' : 'text-slate-400'}`} size={14} />
                 <div className="flex flex-col">
                     <span className="text-[8px] font-black uppercase tracking-tighter text-slate-400 leading-none">From</span>
                     <input
                         type="date"
                         value={startDate || ''}
                         onChange={(e) => onStartDateChange(e.target.value)}
-                        className={`text-xs font-bold outline-none bg-transparent cursor-pointer h-5 ${!startDate ? 'text-slate-300' : 'text-slate-900'}`}
+                        className={`text-sm font-medium outline-none bg-transparent cursor-pointer h-6 ${!startDate ? 'text-slate-400' : 'text-slate-900'}`}
                         title="From Date"
                     />
                 </div>
@@ -38,11 +38,11 @@ const DateRangeSelector = ({
                         type="date"
                         value={endDate || ''}
                         onChange={(e) => onEndDateChange(e.target.value)}
-                        className={`text-xs font-bold outline-none bg-transparent cursor-pointer h-5 text-right ${!endDate ? 'text-slate-300' : 'text-slate-900'}`}
+                        className={`text-sm font-medium outline-none bg-transparent cursor-pointer h-6 text-right ${!endDate ? 'text-slate-400' : 'text-slate-900'}`}
                         title="To Date"
                     />
                 </div>
-                <FaCalendarAlt className={`transition-colors ${endDate ? 'text-slate-900' : 'text-slate-300'}`} size={12} />
+                <FaCalendarAlt className={`transition-colors ${endDate ? 'text-slate-900' : 'text-slate-400'}`} size={14} />
             </div>
 
             {onClear && (startDate || endDate) && (
