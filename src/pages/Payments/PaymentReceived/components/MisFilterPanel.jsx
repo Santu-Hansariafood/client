@@ -82,8 +82,8 @@ const MisFilterPanel = ({
         </div>
       </div>
 
-      <div className="p-4 sm:p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4 sm:gap-5">
-        <div className="space-y-1.5 lg:col-span-1">
+      <div className="p-4 sm:p-6 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-4 sm:gap-5">
+        <div className="space-y-1.5">
           <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-0.5">
             Ledger type
           </label>
@@ -98,7 +98,7 @@ const MisFilterPanel = ({
           </select>
         </div>
 
-        <div className="space-y-1.5 lg:col-span-1">
+        <div className="space-y-1.5">
           <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-0.5">
             {filters.ledgerType === "Buyer"
               ? "Buyer company"
@@ -124,7 +124,7 @@ const MisFilterPanel = ({
           </div>
         </div>
 
-        <div className="space-y-1.5 lg:col-span-1">
+        <div className="space-y-1.5">
           <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-0.5">
             {filters.ledgerType === "Buyer"
               ? "Seller company"
@@ -147,7 +147,7 @@ const MisFilterPanel = ({
           </div>
         </div>
 
-        <div className="space-y-1.5 lg:col-span-1">
+        <div className="space-y-1.5">
           <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-0.5">
             Sauda no.
           </label>
@@ -170,7 +170,7 @@ const MisFilterPanel = ({
           </div>
         </div>
 
-        <div className="space-y-1.5 lg:col-span-2">
+        <div className="space-y-1.5 md:col-span-2 xl:col-span-1">
           <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-0.5">
             Period
           </label>
