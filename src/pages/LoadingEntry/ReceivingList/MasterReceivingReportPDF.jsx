@@ -753,25 +753,19 @@ const MasterReceivingReportPDF = ({ entries = [], logoUrl }) => {
                   <Text style={styles.summaryValue}>
                     Rs. {formatAmount(receivingBaseAmount)}
                   </Text>
+                  {cdPercent > 0 && (
+                    <>
+                      <Text style={styles.summaryLabel}>Less: CD ({cdPercent.toFixed(1)}%)</Text>
+                      <Text style={styles.summaryValue}>
+                        - Rs. {formatAmount(cdAmount)}
+                      </Text>
+                      <Text style={styles.summaryLabel}>After CD</Text>
+                      <Text style={styles.summaryValue}>
+                        Rs. {formatAmount(subtotal)}
+                      </Text>
+                    </>
+                  )}
                 </View>
-
-                {cdPercent > 0 && (
-                  <View style={styles.summaryItemHalf}>
-                    <Text style={styles.summaryLabel}>Less: CD ({cdPercent.toFixed(1)}%)</Text>
-                    <Text style={styles.summaryValue}>
-                      - Rs. {formatAmount(cdAmount)}
-                    </Text>
-                  </View>
-                )}
-
-                {cdPercent > 0 && (
-                  <View style={[styles.summaryItemHalf, { borderRightWidth: 0 }]}>
-                    <Text style={styles.summaryLabel}>After CD</Text>
-                    <Text style={styles.summaryValue}>
-                      Rs. {formatAmount(subtotal)}
-                    </Text>
-                  </View>
-                )}
 
                 {gstPercent > 0 && (
                   <View style={styles.summaryItemHalf}>
