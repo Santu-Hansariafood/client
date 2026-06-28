@@ -77,6 +77,8 @@ const ReceivingList = () => {
   const [sellerCompanies, setSellerCompanies] = useState([]);
   const [selectedSellerEmail, setSelectedSellerEmail] = useState("");
   const [sendingEmail, setSendingEmail] = useState(false);
+  const [cdValue, setCdValue] = useState(0);
+  const [gstValue, setGstValue] = useState(0);
 
   const getMasterData = useCallback(async () => {
     if (masterDataCache) return masterDataCache;
@@ -164,7 +166,7 @@ const ReceivingList = () => {
     setCurrentPage(1);
   }, []);
 
-  const handleViewDocuments = useCallback((entry) => {
+  const handleViewDocuments = useCallback(async (entry) => {
     setSelectedEntry(entry);
     setShowPopup(true);
     // Auto-select first matching seller email if only one
@@ -177,6 +179,39 @@ const ReceivingList = () => {
       setSelectedSellerEmail(matchingSellers[0].email);
     } else {
       setSelectedSellerEmail("");
+    }
+    
+    // Fetch CD/GST values from self-order
+    try {
+      const selfOrderRes = await api.get("/self-order", {
+        params: {
+          search: entry.saudaNo,
+          limit: 1,
+        },
+      });
+      const selfOrders = Array.isArray(selfOrderRes?.data?.data)
+        ? selfOrderRes.data.data
+        : Array.isArray(selfOrderRes?.data)
+          ? selfOrderRes.data
+          : [];
+      const normalize = (v) =>
+        String(v || "")
+          .trim()
+          .toLowerCase();
+      const selfOrder = selfOrders.find(
+        (order) => normalize(order?.saudaNo) === normalize(entry?.saudaNo),
+      );
+      if (selfOrder) {
+        setCdValue(Number(selfOrder.cd || 0));
+        setGstValue(Number(selfOrder.gst || 0));
+      } else {
+        setCdValue(0);
+        setGstValue(0);
+      }
+    } catch (e) {
+      console.error("Error fetching self-order for CD/GST:", e);
+      setCdValue(0);
+      setGstValue(0);
     }
   }, [sellerCompanies]);
 
@@ -1153,6 +1188,32 @@ _*Hansaria Food Private Limited*_`;
                     </div>
                   )}
 
+                {/* Quick Details Section */}
+                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100 rounded-[2rem] p-6 shadow-sm">
+                  <h4 className="text-base font-black text-blue-900 mb-6 flex items-center gap-3">
+                    <span className="w-2 h-2 rounded-full bg-blue-500" />
+                    Quick Details
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="flex items-center justify-between p-3 bg-white rounded-xl border border-blue-100">
+                      <span className="font-semibold text-slate-700">
+                        Seller Bill No
+                      </span>
+                      <span className="text-lg font-black text-blue-700">
+                        {selectedEntry.sellerBillNo || "N/A"}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between p-3 bg-white rounded-xl border border-blue-100">
+                      <span className="font-semibold text-slate-700">
+                        Rejected Quantity
+                      </span>
+                      <span className="text-lg font-black text-red-600">
+                        {(Number(selectedEntry.loadingWeight || 0) - Number(selectedEntry.unloadingWeight || 0)).toFixed(2)} Tons
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
                 {/* Bill & Payable Calculation Section */}
                 <div className="bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-100 rounded-[2rem] p-6 shadow-sm">
                   <h4 className="text-base font-black text-emerald-900 mb-6 flex items-center gap-3">
@@ -1163,14 +1224,72 @@ _*Hansaria Food Private Limited*_`;
                     <div className="space-y-4">
                       <div className="flex items-center justify-between p-3 bg-white rounded-xl border border-emerald-100">
                         <span className="font-semibold text-slate-700">
-                          Total Bill Value
+                          Gross Amount
                         </span>
                         <span className="text-lg font-black text-emerald-700">
                           ₹{" "}
                           {(
-                            (selectedEntry.unloadingWeight || 0) *
+                            (selectedEntry.loadingWeight || 0) *
                             (selectedEntry.actualRate || 0)
                           ).toFixed(2)}
+                        </span>
+                      </div>
+                      {cdValue > 0 && (
+                        <div className="flex items-center justify-between p-3 bg-white rounded-xl border border-yellow-100">
+                          <span className="font-semibold text-slate-700">
+                            Less: CD ({cdValue.toFixed(1)}%)
+                          </span>
+                          <span className="text-lg font-bold text-yellow-600">
+                            - ₹{" "}
+                            {(
+                              ((selectedEntry.loadingWeight || 0) * (selectedEntry.actualRate || 0)) *
+                              (cdValue / 100)
+                            ).toFixed(2)}
+                          </span>
+                        </div>
+                      )}
+                      {cdValue > 0 && (
+                        <div className="flex items-center justify-between p-3 bg-white rounded-xl border border-cyan-100">
+                          <span className="font-semibold text-slate-700">
+                            After CD
+                          </span>
+                          <span className="text-lg font-bold text-cyan-700">
+                            ₹{" "}
+                            {(
+                              ((selectedEntry.loadingWeight || 0) * (selectedEntry.actualRate || 0)) -
+                              (((selectedEntry.loadingWeight || 0) * (selectedEntry.actualRate || 0)) * (cdValue / 100))
+                            ).toFixed(2)}
+                          </span>
+                        </div>
+                      )}
+                      {gstValue > 0 && (
+                        <div className="flex items-center justify-between p-3 bg-white rounded-xl border border-pink-100">
+                          <span className="font-semibold text-slate-700">
+                            Add: GST ({gstValue.toFixed(1)}%)
+                          </span>
+                          <span className="text-lg font-bold text-pink-600">
+                            + ₹{" "}
+                            {(() => {
+                              const afterCD = ((selectedEntry.loadingWeight || 0) * (selectedEntry.actualRate || 0)) -
+                                (((selectedEntry.loadingWeight || 0) * (selectedEntry.actualRate || 0)) * (cdValue / 100));
+                              return (afterCD * (gstValue / 100)).toFixed(2);
+                            })()}
+                          </span>
+                        </div>
+                      )}
+                      <div className="flex items-center justify-between p-3 bg-white rounded-xl border border-emerald-100">
+                        <span className="font-semibold text-slate-700">
+                          Total Bill Amount
+                        </span>
+                        <span className="text-lg font-black text-emerald-700">
+                          ₹{" "}
+                          {(() => {
+                            const grossAmount = (selectedEntry.loadingWeight || 0) * (selectedEntry.actualRate || 0);
+                            const cdAmount = grossAmount * (cdValue / 100);
+                            const afterCD = grossAmount - cdAmount;
+                            const gstAmount = afterCD * (gstValue / 100);
+                            return (afterCD + gstAmount).toFixed(2);
+                          })()}
                         </span>
                       </div>
                       {selectedEntry.qualityClaims &&
@@ -1232,9 +1351,11 @@ _*Hansaria Food Private Limited*_`;
                         <span className="text-3xl font-black text-white">
                           ₹{" "}
                           {(() => {
-                            const totalBill =
-                              (selectedEntry.unloadingWeight || 0) *
-                              (selectedEntry.actualRate || 0);
+                            const grossAmount = (selectedEntry.loadingWeight || 0) * (selectedEntry.actualRate || 0);
+                            const cdAmount = grossAmount * (cdValue / 100);
+                            const afterCD = grossAmount - cdAmount;
+                            const gstAmount = afterCD * (gstValue / 100);
+                            const totalBill = afterCD + gstAmount;
                             const qualityClaims =
                               selectedEntry.qualityClaims?.reduce(
                                 (sum, c) => sum + (Number(c.claimAmount) || 0),
