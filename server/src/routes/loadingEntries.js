@@ -484,8 +484,37 @@ const getBrokerageReportData = async (query, skip = null, limit = null) => {
     },
     {
       $addFields: {
+        // Use loading weight if unloading weight is 0 or not present
+        calculatedWeight: {
+          $cond: {
+            if: {
+              $or: [
+                { $eq: ["$unloadingWeight", null] },
+                { $eq: ["$unloadingWeight", 0] },
+                { $not: ["$unloadingWeight"] }
+              ]
+            },
+            then: { $ifNull: ["$loadingWeight", 0] },
+            else: { $ifNull: ["$unloadingWeight", 0] }
+          }
+        },
         totalBrokerage: {
-          $multiply: [{ $ifNull: ["$unloadingWeight", 0] }, "$brokerageRate"],
+          $multiply: [
+            {
+              $cond: {
+                if: {
+                  $or: [
+                    { $eq: ["$unloadingWeight", null] },
+                    { $eq: ["$unloadingWeight", 0] },
+                    { $not: ["$unloadingWeight"] }
+                  ]
+                },
+                then: { $ifNull: ["$loadingWeight", 0] },
+                else: { $ifNull: ["$unloadingWeight", 0] }
+              }
+            },
+            "$brokerageRate"
+          ],
         },
       },
     },
@@ -576,6 +605,9 @@ router.get("/brokerage-report/excel", async (req, res) => {
     worksheet.columns = [
       { header: "SL No", key: "slNo", width: 8 },
       { header: "Order Date", key: "orderDate", width: 12 },
+      { header: "Sauda No", key: "saudaNo", width: 15 },
+      { header: "Bill No", key: "billNo", width: 15 },
+      { header: "Lorry No", key: "lorryNo", width: 15 },
       {
         header: isBuyerReport ? "Seller Company" : "Buyer Company",
         key: "counterParty",
@@ -596,12 +628,15 @@ router.get("/brokerage-report/excel", async (req, res) => {
         orderDate: item.orderDate
           ? new Date(item.orderDate).toLocaleDateString("en-GB")
           : "N/A",
+        saudaNo: item.saudaNo || "N/A",
+        billNo: item.billNumber || "N/A",
+        lorryNo: item.lorryNumber || "N/A",
         counterParty: isBuyerReport
           ? item.supplierCompany || "N/A"
           : item.buyerCompany || "N/A",
         place: item.place || "N/A",
         item: item.commodity || "N/A",
-        weight: item.unloadingWeight || 0,
+        weight: item.calculatedWeight || item.unloadingWeight || item.loadingWeight || 0,
         rate: item.brokerageRate || 0,
         loading: item.loadingWeight || 0,
         unloading: item.unloadingWeight || 0,
@@ -743,6 +778,9 @@ router.get("/brokerage-report/pdf", async (req, res) => {
     const tableColumn = [
       "SL No",
       "Date",
+      "Sauda No",
+      "Bill No",
+      "Lorry No",
       isBuyerReport ? "Seller Company" : "Buyer Company",
       "PLACE",
       "Item",
@@ -756,12 +794,15 @@ router.get("/brokerage-report/pdf", async (req, res) => {
       item.orderDate
         ? new Date(item.orderDate).toLocaleDateString("en-GB")
         : "N/A",
+      item.saudaNo || "N/A",
+      item.billNumber || "N/A",
+      item.lorryNumber || "N/A",
       isBuyerReport
         ? item.supplierCompany || "N/A"
         : item.buyerCompany || "N/A",
       item.place || "N/A",
       item.commodity || "N/A",
-      Number(item.unloadingWeight || 0).toFixed(2),
+      Number(item.calculatedWeight || item.unloadingWeight || item.loadingWeight || 0).toFixed(2),
       Number(item.brokerageRate || 0).toFixed(2),
       Number(item.totalBrokerage || 0).toFixed(2),
     ]);
