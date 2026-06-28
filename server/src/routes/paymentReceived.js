@@ -1,6 +1,7 @@
 import express from "express";
 import mongoose from "mongoose";
 import PaymentReceived from "../models/PaymentReceived.js";
+import Counter from "../models/Counter.js";
 import LoadingEntry from "../models/LoadingEntry.js";
 import SelfOrder from "../models/SelfOrder.js";
 import Buyer from "../models/Buyer.js";
@@ -9,6 +10,40 @@ import Company from "../models/Company.js";
 import { adminOnly } from "../middleware/roleMiddleware.js";
 
 const router = express.Router();
+
+// Get next voucher number (just preview, don't increment yet - the pre-save hook does that)
+router.get("/next-voucher", async (req, res) => {
+  try {
+    let counter = await Counter.findOne({ id: "paymentVoucherNumber" });
+    let nextVoucher = 1;
+    if (counter) {
+      nextVoucher = counter.seq + 1;
+    }
+    res.json({ voucherNumber: nextVoucher });
+  } catch (error) {
+    console.error("Error fetching next voucher number:", error);
+    res.status(500).json({ message: "Failed to fetch next voucher number" });
+  }
+});
+
+// Get payment by voucher number
+router.get("/voucher/:voucherNumber", async (req, res) => {
+  try {
+    const { voucherNumber } = req.params;
+    const payment = await PaymentReceived.findOne({
+      voucherNumber: Number(voucherNumber),
+    });
+
+    if (!payment) {
+      return res.status(404).json({ message: "Payment not found" });
+    }
+
+    res.json(payment);
+  } catch (error) {
+    console.error("Error fetching payment by voucher:", error);
+    res.status(500).json({ message: "Failed to fetch payment" });
+  }
+});
 
 const escapeRegex = (value) =>
   String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -178,6 +213,8 @@ router.post("/", async (req, res) => {
       paymentMode,
       mappings,
       remarks,
+      sellerBillNo,
+      entries,
     } = req.body;
 
     const resolvedLedgerId = await resolveLedgerIdForPayment(
@@ -202,6 +239,11 @@ router.post("/", async (req, res) => {
       paymentType ||
       (totalMapped > 0 ? "Sauda-wise" : "Advance");
     let paymentAmount = Number(amount) || 0;
+    
+    // If entries are provided, calculate total from entries instead
+    if (entries && entries.length > 0) {
+      paymentAmount = entries.reduce((sum, entry) => sum + Number(entry.amount || 0), 0);
+    }
 
     if (resolvedType === "Adjustment" && totalMapped > 0) {
       if (!String(supplierCompany || "").trim()) {
@@ -250,6 +292,8 @@ router.post("/", async (req, res) => {
       paymentMode,
       mappings,
       remarks,
+      sellerBillNo: sellerBillNo || "",
+      entries: entries || [],
     });
 
     const savedPayment = await newPayment.save();
@@ -475,10 +519,19 @@ router.get("/", async (req, res) => {
       supplierCompany,
       startDate,
       endDate,
+      search,
       page = 1,
       limit = 10,
     } = req.query;
     const query = {};
+
+    if (search) {
+      const searchNum = Number(search);
+      query.$or = [
+        { sellerBillNo: { $regex: new RegExp(escapeRegex(search), "i") } },
+        ...(!isNaN(searchNum) ? [{ voucherNumber: searchNum }] : []),
+      ];
+    }
 
     if (ledgerType) query.ledgerType = ledgerType;
     if (ledgerId) {
@@ -717,6 +770,60 @@ router.get("/summary", async (req, res) => {
     res.json(result.sort((a, b) => b._id.year - a._id.year || b._id.period - a._id.period));
   } catch (error) {
     res.status(500).json({ message: error.message });
+  }
+});
+
+// Update payment by ID
+router.put("/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { sellerBillNo, date, entries, ...otherFields } = req.body;
+
+    const updateData = {
+      ...otherFields,
+    };
+
+    if (sellerBillNo !== undefined) updateData.sellerBillNo = sellerBillNo;
+    if (date !== undefined) updateData.date = date;
+    if (entries !== undefined) updateData.entries = entries;
+
+    // Calculate total amount from entries
+    if (entries) {
+      const total = entries.reduce((sum, entry) => sum + Number(entry.amount || 0), 0);
+      updateData.amount = total;
+    }
+
+    const updatedPayment = await PaymentReceived.findByIdAndUpdate(
+      id,
+      updateData,
+      { new: true }
+    );
+
+    if (!updatedPayment) {
+      return res.status(404).json({ message: "Payment not found" });
+    }
+
+    res.json(updatedPayment);
+  } catch (error) {
+    console.error("Error updating payment:", error);
+    res.status(500).json({ message: "Failed to update payment" });
+  }
+});
+
+// Delete payment by ID
+router.delete("/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const deletedPayment = await PaymentReceived.findByIdAndDelete(id);
+
+    if (!deletedPayment) {
+      return res.status(404).json({ message: "Payment not found" });
+    }
+
+    res.json({ message: "Payment deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting payment:", error);
+    res.status(500).json({ message: "Failed to delete payment" });
   }
 });
 

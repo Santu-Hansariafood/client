@@ -12,7 +12,7 @@ const PaymentForm = ({
     voucherNumber: nextVoucherNumber,
     sellerBillNo: "",
     date: new Date().toISOString().split("T")[0],
-    totalAmount: 0,
+    amount: 0,
     entries: [
       {
         id: Date.now(),
@@ -29,7 +29,7 @@ const PaymentForm = ({
         voucherNumber: payment.voucherNumber,
         sellerBillNo: payment.sellerBillNo || "",
         date: new Date(payment.date).toISOString().split("T")[0],
-        totalAmount: payment.totalAmount || 0,
+        amount: payment.amount || 0,
         entries: payment.entries?.map(entry => ({
           ...entry,
           id: entry.id || Date.now() + Math.random(),
@@ -40,7 +40,7 @@ const PaymentForm = ({
         voucherNumber: nextVoucherNumber,
         sellerBillNo: "",
         date: new Date().toISOString().split("T")[0],
-        totalAmount: 0,
+        amount: 0,
         entries: [
           {
             id: Date.now(),
@@ -59,7 +59,7 @@ const PaymentForm = ({
       (sum, entry) => sum + Number(entry.amount || 0),
       0
     );
-    setFormData(prev => ({ ...prev, totalAmount: total }));
+    setFormData(prev => ({ ...prev, amount: total }));
   }, [formData.entries]);
 
   const handleAddEntry = () => {
@@ -97,7 +97,7 @@ const PaymentForm = ({
     e.preventDefault();
     onSave({
       ...formData,
-      id: payment?.id,
+      id: payment?._id,
     });
   };
 
@@ -248,7 +248,7 @@ const PaymentForm = ({
                 Total Amount
               </label>
               <span className="text-3xl font-black text-emerald-800">
-                ₹ {formData.totalAmount.toFixed(2)}
+                ₹ {formData.amount.toFixed(2)}
               </span>
             </div>
           </div>

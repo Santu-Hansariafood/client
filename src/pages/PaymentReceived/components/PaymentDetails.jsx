@@ -98,7 +98,7 @@ const PaymentDetails = ({ payment, onClose, onEdit, onDelete }) => {
               Total Amount
             </label>
             <span className="text-3xl font-black text-emerald-800">
-              ₹ {Number(payment.totalAmount || 0).toFixed(2)}
+              ₹ {Number(payment.amount || 0).toFixed(2)}
             </span>
           </div>
         </div>

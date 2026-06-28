@@ -47,9 +47,9 @@ const PaymentList = ({
     payment.voucherNumber,
     payment.sellerBillNo || "N/A",
     new Date(payment.date).toLocaleDateString("en-GB"),
-    `₹ ${Number(payment.totalAmount || 0).toFixed(2)}`,
+    `₹ ${Number(payment.amount || 0).toFixed(2)}`,
     payment.entries?.length || 0,
-    <div key={payment.id} className="flex items-center gap-2">
+    <div key={payment._id} className="flex items-center gap-2">
       <button
         onClick={() => onViewDetails(payment)}
         className="p-2 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-600 hover:text-white transition-all shadow-sm border border-blue-100"
@@ -65,7 +65,7 @@ const PaymentList = ({
         <FaEdit size={14} />
       </button>
       <button
-        onClick={() => onDelete(payment.id)}
+        onClick={() => onDelete(payment._id)}
         className="p-2 bg-red-50 text-red-600 rounded-xl hover:bg-red-600 hover:text-white transition-all shadow-sm border border-red-100"
         title="Delete"
       >
