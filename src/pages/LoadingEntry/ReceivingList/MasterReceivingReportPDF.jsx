@@ -570,30 +570,45 @@ const renderAddressDetails = (details) => {
   if (!details) return null;
   const {
     address,
+    addressLine1,
+    addressLine2,
+    fullAddress,
     district,
+    city,
     state,
+    stateName,
     pinNo,
     pin,
+    pincode,
+    postalCode,
     panNo,
     pan,
+    panNumber,
     gstNo,
     gst,
+    gstin,
+    gstNumber,
     phone,
     mobile,
     phoneNumber,
+    contact,
+    contactNo,
   } = details;
   const parts = [];
-  const finalPin = pinNo || pin;
-  if (address || district || state || finalPin) {
+  const finalAddress = address || addressLine1 || fullAddress;
+  const finalPin = pinNo || pin || pincode || postalCode;
+  const finalDistrict = district || city;
+  const finalState = state || stateName;
+  if (finalAddress || finalDistrict || finalState || finalPin) {
     parts.push(
-      `${address || ""}${address && (district || state || finalPin) ? ", " : ""}${district || ""}${district && (state || finalPin) ? ", " : ""}${state || ""}${state && finalPin ? " - " : ""}${finalPin || ""}`,
+      `${finalAddress || ""}${finalAddress && (finalDistrict || finalState || finalPin) ? ", " : ""}${finalDistrict || ""}${finalDistrict && (finalState || finalPin) ? ", " : ""}${finalState || ""}${finalState && finalPin ? " - " : ""}${finalPin || ""}`,
     );
   }
-  const finalPan = panNo || pan;
+  const finalPan = panNo || pan || panNumber;
   if (finalPan) parts.push(`PAN No: ${finalPan}`);
-  const finalGst = gstNo || gst;
+  const finalGst = gstNo || gst || gstin || gstNumber;
   if (finalGst) parts.push(`GST: ${finalGst}`);
-  const contactNumber = phone || mobile || phoneNumber;
+  const contactNumber = phone || mobile || phoneNumber || contact || contactNo;
   if (contactNumber) parts.push(`Phone: ${contactNumber}`);
   if (parts.length === 0) return null;
   return <Text style={styles.addressDetails}>{parts.join("\n")}</Text>;
