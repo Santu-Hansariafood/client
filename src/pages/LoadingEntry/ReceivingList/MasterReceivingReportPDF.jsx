@@ -661,7 +661,7 @@ const MasterReceivingReportPDF = ({ entries = [], logoUrl }) => {
                   <Text style={styles.summaryTitle}>Unloading & Quality Claim</Text>
                 </View>
                 {logoUrl && (
-                  <Image src={logoUrl} style={{ width: 60, height: 60 }} />
+                  <Image src={logoUrl} style={{ width: 90, height: 90 }} />
                 )}
               </View>
 
@@ -748,21 +748,27 @@ const MasterReceivingReportPDF = ({ entries = [], logoUrl }) => {
                     Rs. {formatAmount(rate)}
                   </Text>
                 </View>
-                <View style={[styles.summaryItemHalf, { borderRightWidth: 0 }]}>
-                  <Text style={styles.summaryLabel}>Gross Amount</Text>
-                  <Text style={styles.summaryValue}>
-                    Rs. {formatAmount(receivingBaseAmount)}
-                  </Text>
+                <View style={[styles.summaryItemHalf, { borderRightWidth: 0, flexDirection: 'row' }]}>
+                  <View style={{ width: '33.33%', paddingRight: 5 }}>
+                    <Text style={styles.summaryLabel}>Gross Amount</Text>
+                    <Text style={styles.summaryValue}>
+                      Rs. {formatAmount(receivingBaseAmount)}
+                    </Text>
+                  </View>
                   {cdPercent > 0 && (
                     <>
-                      <Text style={styles.summaryLabel}>Less: CD ({cdPercent.toFixed(1)}%)</Text>
-                      <Text style={styles.summaryValue}>
-                        - Rs. {formatAmount(cdAmount)}
-                      </Text>
-                      <Text style={styles.summaryLabel}>After CD</Text>
-                      <Text style={styles.summaryValue}>
-                        Rs. {formatAmount(subtotal)}
-                      </Text>
+                      <View style={{ width: '33.33%', paddingHorizontal: 5 }}>
+                        <Text style={styles.summaryLabel}>Less: CD ({cdPercent.toFixed(1)}%)</Text>
+                        <Text style={styles.summaryValue}>
+                          - Rs. {formatAmount(cdAmount)}
+                        </Text>
+                      </View>
+                      <View style={{ width: '33.33%', paddingLeft: 5 }}>
+                        <Text style={styles.summaryLabel}>After CD</Text>
+                        <Text style={styles.summaryValue}>
+                          Rs. {formatAmount(subtotal)}
+                        </Text>
+                      </View>
                     </>
                   )}
                 </View>
