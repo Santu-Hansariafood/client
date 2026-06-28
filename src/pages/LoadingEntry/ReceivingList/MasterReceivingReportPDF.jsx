@@ -1376,7 +1376,7 @@ const MasterReceivingReportPDF = ({ entries = [], logoUrl }) => {
                     </Text>
                   </View>
                   {logoUrl && (
-                    <Image src={logoUrl} style={{ width: 60, height: 60 }} />
+                    <Image src={logoUrl} style={{ width: 90, height: 90 }} />
                   )}
                 </View>
 
@@ -1463,31 +1463,31 @@ const MasterReceivingReportPDF = ({ entries = [], logoUrl }) => {
                   </View>
                   <View style={styles.totalSection}>
                     <View style={styles.summaryRow}>
-                      <Text style={styles.label}>Gross Amount:</Text>
-                      <Text style={styles.value}>
+                      <Text style={styles.summaryLabel}>Gross Amount:</Text>
+                      <Text style={styles.summaryValue}>
                         {formatAmount(baseAmount)}
                       </Text>
                     </View>
                     {cdPercent > 0 && (
                       <View style={[styles.summaryRow]}>
-                        <Text style={styles.label}>
+                        <Text style={styles.summaryLabel}>
                           Less: Cash Discount ({cdPercent}%):
                         </Text>
-                        <Text style={styles.value}>
+                        <Text style={styles.summaryValue}>
                           - {formatAmount(cdAmount)}
                         </Text>
                       </View>
                     )}
                     <View style={styles.summaryRow}>
-                      <Text style={styles.label}>Taxable Value:</Text>
-                      <Text style={styles.value}>{formatAmount(subtotal)}</Text>
+                      <Text style={styles.summaryLabel}>Taxable Value:</Text>
+                      <Text style={styles.summaryValue}>{formatAmount(subtotal)}</Text>
                     </View>
                     {gstPercent > 0 && (
                       <View style={styles.summaryRow}>
-                        <Text style={styles.label}>
+                        <Text style={styles.summaryLabel}>
                           {isInterState ? "IGST" : "CGST/SGST"} ({gstPercent}%):
                         </Text>
-                        <Text style={styles.value}>
+                        <Text style={styles.summaryValue}>
                           {formatAmount(gstAmount)}
                         </Text>
                       </View>
