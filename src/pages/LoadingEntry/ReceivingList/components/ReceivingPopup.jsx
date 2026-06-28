@@ -50,6 +50,11 @@ const ReceivingPopup = ({
       } = await getMasterData();
 
       // Build pdf data using the same function as before
+      const matchedCommodity = commodityData.find(
+        (c) =>
+          c.name?.toLowerCase() === selectedEntry.commodity?.toLowerCase()
+      );
+      
       const pdfData = {
         ...selectedEntry,
         cd: cdValue,
@@ -75,10 +80,7 @@ const ReceivingPopup = ({
                 ? selectedEntry.consignee.label?.toLowerCase()
                 : selectedEntry.consignee?.toLowerCase()))
         ),
-        commodity: commodityData.find(
-          (c) =>
-            c.name?.toLowerCase() === selectedEntry.commodity?.toLowerCase()
-        ),
+        hsnCode: matchedCommodity?.hsnCode || matchedCommodity?.hsn || selectedEntry.hsnCode,
       };
 
       const qrData = JSON.stringify({
@@ -158,6 +160,11 @@ const ReceivingPopup = ({
         commodityData,
       } = await getMasterData();
 
+      const matchedCommodity = commodityData.find(
+        (c) =>
+          c.name?.toLowerCase() === selectedEntry.commodity?.toLowerCase()
+      );
+      
       const pdfData = {
         ...selectedEntry,
         cd: cdValue,
@@ -183,10 +190,7 @@ const ReceivingPopup = ({
                 ? selectedEntry.consignee.label?.toLowerCase()
                 : selectedEntry.consignee?.toLowerCase()))
         ),
-        commodity: commodityData.find(
-          (c) =>
-            c.name?.toLowerCase() === selectedEntry.commodity?.toLowerCase()
-        ),
+        hsnCode: matchedCommodity?.hsnCode || matchedCommodity?.hsn || selectedEntry.hsnCode,
       };
 
       const qrData = JSON.stringify({
