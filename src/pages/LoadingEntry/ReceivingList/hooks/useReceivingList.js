@@ -29,19 +29,29 @@ export const useReceivingList = (userRole) => {
     try {
       const [consigneeData, supplierData, buyerData, companyData, commodityData] =
         await Promise.all([
-          api.get("/consignees", { params: { limit: 200 } }).then(res => res.data),
-          api.get("/seller-company", { params: { limit: 200 } }).then(res => res.data),
-          api.get("/buyers", { params: { limit: 200 } }).then(res => res.data),
-          api.get("/companies", { params: { limit: 200 } }).then(res => res.data),
-          api.get("/commodities", { params: { limit: 200 } }).then(res => res.data),
+          api.get("/consignees").then(res => res.data),
+          api.get("/seller-company").then(res => res.data),
+          api.get("/buyers").then(res => res.data),
+          api.get("/companies").then(res => res.data),
+          api.get("/commodities").then(res => res.data),
         ]);
 
       const data = {
-        consigneeData: Array.isArray(consigneeData.data) ? consigneeData.data : [],
-        supplierData: Array.isArray(supplierData.data) ? supplierData.data : [],
-        buyerData: Array.isArray(buyerData.data) ? buyerData.data : [],
-        companyData: Array.isArray(companyData.data) ? companyData.data : [],
-        commodityData: Array.isArray(commodityData.data) ? commodityData.data : [],
+        consigneeData: Array.isArray(consigneeData) ? consigneeData : 
+                      (Array.isArray(consigneeData.data) ? consigneeData.data : 
+                      (Array.isArray(consigneeData.data?.data) ? consigneeData.data.data : [])),
+        supplierData: Array.isArray(supplierData) ? supplierData : 
+                      (Array.isArray(supplierData.data) ? supplierData.data : 
+                      (Array.isArray(supplierData.data?.data) ? supplierData.data.data : [])),
+        buyerData: Array.isArray(buyerData) ? buyerData : 
+                      (Array.isArray(buyerData.data) ? buyerData.data : 
+                      (Array.isArray(buyerData.data?.data) ? buyerData.data.data : [])),
+        companyData: Array.isArray(companyData) ? companyData : 
+                      (Array.isArray(companyData.data) ? companyData.data : 
+                      (Array.isArray(companyData.data?.data) ? companyData.data.data : [])),
+        commodityData: Array.isArray(commodityData) ? commodityData : 
+                      (Array.isArray(commodityData.data) ? commodityData.data : 
+                      (Array.isArray(commodityData.data?.data) ? commodityData.data.data : [])),
       };
       setMasterDataCache(data);
       return data;
