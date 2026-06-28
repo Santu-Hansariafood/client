@@ -567,6 +567,7 @@ const numberToWords = (num) => {
 };
 
 const renderAddressDetails = (details) => {
+  console.log("RENDER ADDRESS DETAILS CALLED WITH", details);
   if (!details) return null;
   const {
     address,
@@ -615,9 +616,14 @@ const renderAddressDetails = (details) => {
 };
 
 const MasterReceivingReportPDF = ({ entries = [], logoUrl }) => {
+  console.log("MASTER RECEIVING REPORT ENTRIES", entries);
   return (
     <Document title="Master Receiving Report">
       {entries.map((data, index) => {
+        console.log("ENTRY DATA INDEX", index, data);
+        console.log("SUPPLIER DETAILS", data.supplierDetails);
+        console.log("BUYER DETAILS", data.buyerDetails);
+        console.log("CONSIGNEE DETAILS", data.consigneeDetails);
         const rate = Number(data.actualRate || data.rate || 0);
         const weight = Number(data.loadingWeight || 0);
         const baseAmount = weight * rate;
