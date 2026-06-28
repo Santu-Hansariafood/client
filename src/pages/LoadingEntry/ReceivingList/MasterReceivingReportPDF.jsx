@@ -373,13 +373,40 @@ const styles = StyleSheet.create({
     backgroundColor: "#ffffff",
   },
   summaryHeader: {
-    borderBottomWidth: 1,
-    borderBottomColor: "#000000",
-    paddingBottom: 8,
-    marginBottom: 10,
+    borderBottomWidth: 2,
+    borderBottomColor: "#1e40af",
+    paddingBottom: 16,
+    marginBottom: 15,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+  },
+  premiumLogoContainer: {
+    width: 70,
+    height: 70,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  premiumSaudaBox: {
+    backgroundColor: "#eff6ff",
+    borderRadius: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderWidth: 1,
+    borderColor: "#3b82f6",
+    alignItems: "center",
+  },
+  premiumSaudaLabel: {
+    fontSize: 8,
+    color: "#1d4ed8",
+    fontWeight: "bold",
+    textTransform: "uppercase",
+    marginBottom: 3,
+  },
+  premiumSaudaValue: {
+    fontSize: 12,
+    color: "#1e40af",
+    fontWeight: "heavy",
   },
   summaryTitle: {
     fontSize: 16,
@@ -657,12 +684,18 @@ const MasterReceivingReportPDF = ({ entries = [], logoUrl }) => {
           <React.Fragment key={index}>
             <Page style={styles.summaryPage} size="A4">
               <View style={styles.summaryHeader}>
+                {logoUrl && (
+                  <View style={styles.premiumLogoContainer}>
+                    <Image src={logoUrl} style={{ width: 65, height: 65 }} />
+                  </View>
+                )}
+                <View style={styles.premiumSaudaBox}>
+                  <Text style={styles.premiumSaudaLabel}>Sauda No</Text>
+                  <Text style={styles.premiumSaudaValue}>{data.saudaNo || "N/A"}</Text>
+                </View>
                 <View>
                   <Text style={styles.summaryTitle}>Unloading & Quality Claim</Text>
                 </View>
-                {logoUrl && (
-                  <Image src={logoUrl} style={{ width: 60, height: 60 }} />
-                )}
               </View>
 
               <View style={styles.summaryGrid}>
@@ -1349,6 +1382,11 @@ const MasterReceivingReportPDF = ({ entries = [], logoUrl }) => {
                   <Text style={styles.billTypeTitle}>{billTitle}</Text>
                 </View>
                 <View style={styles.billHeader}>
+                  {logoUrl && (
+                    <View style={styles.premiumLogoContainer}>
+                      <Image src={logoUrl} style={{ width: 60, height: 60 }} />
+                    </View>
+                  )}
                   <View style={styles.companyBrand}>
                     <Text style={styles.companyName}>
                       {data.supplierCompany || ""}
@@ -1370,9 +1408,6 @@ const MasterReceivingReportPDF = ({ entries = [], logoUrl }) => {
                       {data.supplierDetails?.panNo || ""}
                     </Text>
                   </View>
-                  {logoUrl && (
-                    <Image src={logoUrl} style={{ width: 60, height: 60 }} />
-                  )}
                 </View>
 
                 <View style={styles.partiesContainer}>

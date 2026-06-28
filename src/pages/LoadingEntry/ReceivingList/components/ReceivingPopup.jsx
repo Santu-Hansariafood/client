@@ -6,6 +6,7 @@ import QRCode from "qrcode";
 import api from "../../../../utils/apiClient/apiClient";
 import MasterReceivingReportPDF from "../MasterReceivingReportPDF";
 import { downloadFile } from "../../../../utils/fileDownloader";
+import logoUrl from "../../../../assets/Hans.png";
 
 const PopupBox = lazy(() => import("../../../../common/PopupBox/PopupBox"));
 const Loading = lazy(() => import("../../../../common/Loading/Loading"));
@@ -81,11 +82,21 @@ const ReceivingPopup = ({
       };
 
       const qrData = JSON.stringify({
-        saudaNo: selectedEntry.saudaNo,
-        billNo: selectedEntry.billNumber,
-        lorry: selectedEntry.lorryNumber,
-        weight: selectedEntry.loadingWeight,
-      });
+          saudaNo: selectedEntry.saudaNo,
+          billNo: selectedEntry.billNumber,
+          sellerBillNo: selectedEntry.sellerBillNo,
+          lorryNo: selectedEntry.lorryNumber,
+          loadingWeight: selectedEntry.loadingWeight,
+          unloadingWeight: selectedEntry.unloadingWeight,
+          loadingDate: selectedEntry.loadingDate,
+          unloadingDate: selectedEntry.unloadingDate,
+          commodity: selectedEntry.commodity,
+          buyerCompany: selectedEntry.buyerCompany,
+          sellerCompany: selectedEntry.supplierCompany,
+          rate: selectedEntry.actualRate || selectedEntry.rate,
+          cd: cdValue,
+          gst: gstValue
+        });
       let qrCodeUrl = null;
       try {
         qrCodeUrl = await QRCode.toDataURL(qrData);
@@ -96,11 +107,11 @@ const ReceivingPopup = ({
       const preparedEntry = { ...pdfData, qrCodeUrl };
 
       const document = (
-        <MasterReceivingReportPDF
-          entries={[preparedEntry]}
-          logoUrl={null} // We can add logo later if needed
-        />
-      );
+          <MasterReceivingReportPDF
+            entries={[preparedEntry]}
+            logoUrl={logoUrl}
+          />
+        );
 
       const blob = await pdf(document).toBlob();
 
@@ -179,11 +190,21 @@ const ReceivingPopup = ({
       };
 
       const qrData = JSON.stringify({
-        saudaNo: selectedEntry.saudaNo,
-        billNo: selectedEntry.billNumber,
-        lorry: selectedEntry.lorryNumber,
-        weight: selectedEntry.loadingWeight,
-      });
+          saudaNo: selectedEntry.saudaNo,
+          billNo: selectedEntry.billNumber,
+          sellerBillNo: selectedEntry.sellerBillNo,
+          lorryNo: selectedEntry.lorryNumber,
+          loadingWeight: selectedEntry.loadingWeight,
+          unloadingWeight: selectedEntry.unloadingWeight,
+          loadingDate: selectedEntry.loadingDate,
+          unloadingDate: selectedEntry.unloadingDate,
+          commodity: selectedEntry.commodity,
+          buyerCompany: selectedEntry.buyerCompany,
+          sellerCompany: selectedEntry.supplierCompany,
+          rate: selectedEntry.actualRate || selectedEntry.rate,
+          cd: cdValue,
+          gst: gstValue
+        });
       let qrCodeUrl = null;
       try {
         qrCodeUrl = await QRCode.toDataURL(qrData);
@@ -194,11 +215,11 @@ const ReceivingPopup = ({
       const preparedEntry = { ...pdfData, qrCodeUrl };
 
       const document = (
-        <MasterReceivingReportPDF
-          entries={[preparedEntry]}
-          logoUrl={null}
-        />
-      );
+          <MasterReceivingReportPDF
+            entries={[preparedEntry]}
+            logoUrl={logoUrl}
+          />
+        );
 
       const blob = await pdf(document).toBlob();
       // Convert blob to base64
