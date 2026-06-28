@@ -684,15 +684,6 @@ const MasterReceivingReportPDF = ({ entries = [], logoUrl }) => {
           <React.Fragment key={index}>
             <Page style={styles.summaryPage} size="A4">
               <View style={styles.summaryHeader}>
-                {logoUrl && (
-                  <View style={styles.premiumLogoContainer}>
-                    <Image src={logoUrl} style={{ width: 65, height: 65 }} />
-                  </View>
-                )}
-                <View style={styles.premiumSaudaBox}>
-                  <Text style={styles.premiumSaudaLabel}>Sauda No</Text>
-                  <Text style={styles.premiumSaudaValue}>{data.saudaNo || "N/A"}</Text>
-                </View>
                 <View>
                   <Text style={styles.summaryTitle}>Unloading & Quality Claim</Text>
                 </View>
