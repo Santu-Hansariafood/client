@@ -56,30 +56,38 @@ const ReceivingPopup = ({
           c.label?.toLowerCase() === selectedEntry.commodity?.toLowerCase()
       );
       
-      // console.log("MATCHED COMMODITY", matchedCommodity);
-      // console.log("SELECTED ENTRY", selectedEntry);
-      // console.log("SUPPLIER DATA", supplierData);
-      // console.log("COMPANY DATA", companyData);
+      console.log("SELECTED ENTRY", selectedEntry);
+      console.log("CONSIGNEE DATA", consigneeData);
+      console.log("SUPPLIER DATA", supplierData);
+      console.log("BUYER DATA", buyerData);
+      console.log("COMPANY DATA", companyData);
+      console.log("COMMODITY DATA", commodityData);
+      console.log("MATCHED COMMODITY", matchedCommodity);
       
-      const pdfData = {
-        ...selectedEntry,
-        cd: cdValue,
-        gst: gstValue,
-        supplierDetails: supplierData.find(
-          (s) =>
-            s.companyName?.toLowerCase() ===
+      const foundSupplier = supplierData.find(
+        (s) =>
+          s.companyName?.toLowerCase() ===
             selectedEntry.supplierCompany?.toLowerCase() ||
-            s.name?.toLowerCase() ===
+          s.name?.toLowerCase() ===
             selectedEntry.supplierCompany?.toLowerCase()
-        ),
-        buyerDetails: companyData.find(
+      );
+      
+      const foundBuyer = 
+        buyerData.find(
+          (b) =>
+            b.companyName?.toLowerCase() ===
+              selectedEntry.buyerCompany?.toLowerCase() ||
+            b.name?.toLowerCase() ===
+              selectedEntry.buyerCompany?.toLowerCase()
+        ) || companyData.find(
           (c) =>
             c.companyName?.toLowerCase() ===
-            selectedEntry.buyerCompany?.toLowerCase() ||
+              selectedEntry.buyerCompany?.toLowerCase() ||
             c.name?.toLowerCase() ===
-            selectedEntry.buyerCompany?.toLowerCase()
-        ),
-        consigneeDetails: consigneeData.find(
+              selectedEntry.buyerCompany?.toLowerCase()
+        );
+      
+      const foundConsignee = consigneeData.find(
           (c) =>
             (c.name?.toLowerCase() ===
               (typeof selectedEntry.consignee === "object"
@@ -89,8 +97,20 @@ const ReceivingPopup = ({
               (typeof selectedEntry.consignee === "object"
                 ? selectedEntry.consignee.label?.toLowerCase()
                 : selectedEntry.consignee?.toLowerCase()))
-        ),
-        hsnCode: matchedCommodity?.hsnCode || matchedCommodity?.hsn || matchedCommodity?.hsnCode || matchedCommodity?.hsnNumber || matchedCommodity?.hsnCodeNumber || selectedEntry.hsnCode || selectedEntry.hsn,
+        );
+      
+      console.log("FOUND SUPPLIER", foundSupplier);
+      console.log("FOUND BUYER", foundBuyer);
+      console.log("FOUND CONSIGNEE", foundConsignee);
+      
+      const pdfData = {
+        ...selectedEntry,
+        cd: cdValue,
+        gst: gstValue,
+        supplierDetails: foundSupplier,
+        buyerDetails: foundBuyer,
+        consigneeDetails: foundConsignee,
+        hsnCode: matchedCommodity?.hsnCode || matchedCommodity?.hsn || matchedCommodity?.hsnNumber || matchedCommodity?.hsnCodeNumber || matchedCommodity?.hsn_code || selectedEntry.hsnCode || selectedEntry.hsn || selectedEntry.hsn_code,
       };
 
       const qrData = JSON.stringify({
@@ -176,30 +196,38 @@ const ReceivingPopup = ({
           c.label?.toLowerCase() === selectedEntry.commodity?.toLowerCase()
       );
       
-      // console.log("MATCHED COMMODITY", matchedCommodity);
-      // console.log("SELECTED ENTRY", selectedEntry);
-      // console.log("SUPPLIER DATA", supplierData);
-      // console.log("COMPANY DATA", companyData);
+      console.log("SELECTED ENTRY", selectedEntry);
+      console.log("CONSIGNEE DATA", consigneeData);
+      console.log("SUPPLIER DATA", supplierData);
+      console.log("BUYER DATA", buyerData);
+      console.log("COMPANY DATA", companyData);
+      console.log("COMMODITY DATA", commodityData);
+      console.log("MATCHED COMMODITY", matchedCommodity);
       
-      const pdfData = {
-        ...selectedEntry,
-        cd: cdValue,
-        gst: gstValue,
-        supplierDetails: supplierData.find(
-          (s) =>
-            s.companyName?.toLowerCase() ===
+      const foundSupplier = supplierData.find(
+        (s) =>
+          s.companyName?.toLowerCase() ===
             selectedEntry.supplierCompany?.toLowerCase() ||
-            s.name?.toLowerCase() ===
+          s.name?.toLowerCase() ===
             selectedEntry.supplierCompany?.toLowerCase()
-        ),
-        buyerDetails: companyData.find(
+      );
+      
+      const foundBuyer = 
+        buyerData.find(
+          (b) =>
+            b.companyName?.toLowerCase() ===
+              selectedEntry.buyerCompany?.toLowerCase() ||
+            b.name?.toLowerCase() ===
+              selectedEntry.buyerCompany?.toLowerCase()
+        ) || companyData.find(
           (c) =>
             c.companyName?.toLowerCase() ===
-            selectedEntry.buyerCompany?.toLowerCase() ||
+              selectedEntry.buyerCompany?.toLowerCase() ||
             c.name?.toLowerCase() ===
-            selectedEntry.buyerCompany?.toLowerCase()
-        ),
-        consigneeDetails: consigneeData.find(
+              selectedEntry.buyerCompany?.toLowerCase()
+        );
+      
+      const foundConsignee = consigneeData.find(
           (c) =>
             (c.name?.toLowerCase() ===
               (typeof selectedEntry.consignee === "object"
@@ -209,8 +237,20 @@ const ReceivingPopup = ({
               (typeof selectedEntry.consignee === "object"
                 ? selectedEntry.consignee.label?.toLowerCase()
                 : selectedEntry.consignee?.toLowerCase()))
-        ),
-        hsnCode: matchedCommodity?.hsnCode || matchedCommodity?.hsn || matchedCommodity?.hsnCode || matchedCommodity?.hsnNumber || matchedCommodity?.hsnCodeNumber || selectedEntry.hsnCode || selectedEntry.hsn,
+        );
+      
+      console.log("FOUND SUPPLIER", foundSupplier);
+      console.log("FOUND BUYER", foundBuyer);
+      console.log("FOUND CONSIGNEE", foundConsignee);
+      
+      const pdfData = {
+        ...selectedEntry,
+        cd: cdValue,
+        gst: gstValue,
+        supplierDetails: foundSupplier,
+        buyerDetails: foundBuyer,
+        consigneeDetails: foundConsignee,
+        hsnCode: matchedCommodity?.hsnCode || matchedCommodity?.hsn || matchedCommodity?.hsnNumber || matchedCommodity?.hsnCodeNumber || matchedCommodity?.hsn_code || selectedEntry.hsnCode || selectedEntry.hsn || selectedEntry.hsn_code,
       };
 
       const qrData = JSON.stringify({
