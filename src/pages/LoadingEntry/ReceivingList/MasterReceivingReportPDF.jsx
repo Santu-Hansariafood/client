@@ -373,40 +373,13 @@ const styles = StyleSheet.create({
     backgroundColor: "#ffffff",
   },
   summaryHeader: {
-    borderBottomWidth: 2,
-    borderBottomColor: "#1e40af",
-    paddingBottom: 16,
-    marginBottom: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: "#000000",
+    paddingBottom: 8,
+    marginBottom: 10,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-  },
-  premiumLogoContainer: {
-    width: 70,
-    height: 70,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  premiumSaudaBox: {
-    backgroundColor: "#eff6ff",
-    borderRadius: 8,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderWidth: 1,
-    borderColor: "#3b82f6",
-    alignItems: "center",
-  },
-  premiumSaudaLabel: {
-    fontSize: 8,
-    color: "#1d4ed8",
-    fontWeight: "bold",
-    textTransform: "uppercase",
-    marginBottom: 3,
-  },
-  premiumSaudaValue: {
-    fontSize: 12,
-    color: "#1e40af",
-    fontWeight: "heavy",
   },
   summaryTitle: {
     fontSize: 16,
@@ -687,6 +660,9 @@ const MasterReceivingReportPDF = ({ entries = [], logoUrl }) => {
                 <View>
                   <Text style={styles.summaryTitle}>Unloading & Quality Claim</Text>
                 </View>
+                {logoUrl && (
+                  <Image src={logoUrl} style={{ width: 60, height: 60 }} />
+                )}
               </View>
 
               <View style={styles.summaryGrid}>
@@ -765,7 +741,7 @@ const MasterReceivingReportPDF = ({ entries = [], logoUrl }) => {
                   </Text>
                 </View>
 
-                {/* Rate and Gross Amount in a row */}
+                {/* Next 2 items - 2 in a row */}
                 <View style={styles.summaryItemHalf}>
                   <Text style={styles.summaryLabel}>Rate</Text>
                   <Text style={styles.summaryValue}>
@@ -777,25 +753,19 @@ const MasterReceivingReportPDF = ({ entries = [], logoUrl }) => {
                   <Text style={styles.summaryValue}>
                     Rs. {formatAmount(receivingBaseAmount)}
                   </Text>
-                </View>
-
-                {/* Less: CD and After CD in a row (if applicable) */}
-                {cdPercent > 0 && (
-                  <>
-                    <View style={styles.summaryItemHalf}>
+                  {cdPercent > 0 && (
+                    <>
                       <Text style={styles.summaryLabel}>Less: CD ({cdPercent.toFixed(1)}%)</Text>
                       <Text style={styles.summaryValue}>
                         - Rs. {formatAmount(cdAmount)}
                       </Text>
-                    </View>
-                    <View style={[styles.summaryItemHalf, { borderRightWidth: 0 }]}>
                       <Text style={styles.summaryLabel}>After CD</Text>
                       <Text style={styles.summaryValue}>
                         Rs. {formatAmount(subtotal)}
                       </Text>
-                    </View>
-                  </>
-                )}
+                    </>
+                  )}
+                </View>
 
                 {gstPercent > 0 && (
                   <View style={styles.summaryItemHalf}>
@@ -1373,11 +1343,6 @@ const MasterReceivingReportPDF = ({ entries = [], logoUrl }) => {
                   <Text style={styles.billTypeTitle}>{billTitle}</Text>
                 </View>
                 <View style={styles.billHeader}>
-                  {logoUrl && (
-                    <View style={styles.premiumLogoContainer}>
-                      <Image src={logoUrl} style={{ width: 60, height: 60 }} />
-                    </View>
-                  )}
                   <View style={styles.companyBrand}>
                     <Text style={styles.companyName}>
                       {data.supplierCompany || ""}
@@ -1399,6 +1364,9 @@ const MasterReceivingReportPDF = ({ entries = [], logoUrl }) => {
                       {data.supplierDetails?.panNo || ""}
                     </Text>
                   </View>
+                  {logoUrl && (
+                    <Image src={logoUrl} style={{ width: 60, height: 60 }} />
+                  )}
                 </View>
 
                 <View style={styles.partiesContainer}>
