@@ -1367,20 +1367,26 @@ const MasterReceivingReportPDF = ({ entries = [], logoUrl }) => {
                       {data.supplierCompany || ""}
                     </Text>
                     <Text style={styles.companyDetails}>
-                      {data.supplierDetails?.address || ""}
-                      {data.supplierDetails?.district
-                        ? `, ${data.supplierDetails.district}`
-                        : ""}
-                      {data.supplierDetails?.state
-                        ? `, ${data.supplierDetails.state}`
-                        : ""}
-                      {data.supplierDetails?.pinNo
-                        ? ` - ${data.supplierDetails.pinNo}`
-                        : ""}
+                      {(() => {
+                        const details = data.supplierDetails;
+                        if (!details) return "";
+                        const address = details.address || details.addressLine1 || details.fullAddress || details.location || "";
+                        const district = details.district || details.city || "";
+                        const state = details.state || details.stateName || "";
+                        const pin = details.pinNo || details.pin || details.pinCode || details.pincode || details.postalCode || "";
+                        
+                        const parts = [];
+                        if (address) parts.push(address);
+                        if (district) parts.push(district);
+                        if (state) parts.push(state);
+                        if (pin) parts.push(`- ${pin}`);
+                        
+                        return parts.join(", ");
+                      })()}
                     </Text>
                     <Text style={styles.companyDetails}>
-                      GSTIN: {data.supplierDetails?.gstNo || ""} | PAN:{" "}
-                      {data.supplierDetails?.panNo || ""}
+                      GSTIN: {data.supplierDetails?.gstNo || data.supplierDetails?.gst || data.supplierDetails?.gstin || data.supplierDetails?.gstNumber || ""} | PAN:{" "}
+                      {data.supplierDetails?.panNo || data.supplierDetails?.pan || data.supplierDetails?.panNumber || ""}
                     </Text>
                   </View>
                   {logoUrl && (

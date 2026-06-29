@@ -38,7 +38,7 @@ const normalizeBankDetails = (entity) => {
 
 export const toUnifiedDetails = (entity) => {
   if (!entity) return null;
-  const gstNo = entity.gstNo || entity.gst || entity.gstNumber || "";
+  const gstNo = entity.gstNo || entity.gst || entity.gstNumber || entity.gstin || "";
   let panNo = entity.panNo || entity.pan || entity.panNumber || "";
 
   // Extract PAN from GST if missing
@@ -46,26 +46,42 @@ export const toUnifiedDetails = (entity) => {
     panNo = gstNo.substring(2, 12).toUpperCase();
   }
 
-  const pinValue = entity.pinNo || entity.pin || entity.pinCode || "";
+  const pinValue = entity.pinNo || entity.pin || entity.pinCode || entity.pincode || entity.postalCode || "";
+  const addressValue = entity.address || entity.addressLine1 || entity.fullAddress || entity.location || "";
+  const districtValue = entity.district || entity.city || "";
+  const stateValue = entity.state || entity.stateName || "";
 
   return {
     ...entity,
-    address: entity.address || entity.location || "",
+    address: addressValue,
+    addressLine1: addressValue,
+    fullAddress: addressValue,
+    location: addressValue,
     gstNo,
+    gst,
+    gstNumber: gstNo,
+    gstin: gstNo,
     panNo,
+    pan,
+    panNumber: panNo,
     bankDetails: normalizeBankDetails(entity),
     pinNo: pinValue,
     pin: pinValue,
+    pinCode: pinValue,
+    pincode: pinValue,
+    postalCode: pinValue,
     msmeNo: entity.msmeNo || entity.mandiLicense || "",
-    district: entity.district || "",
-    state: entity.state || "",
+    district: districtValue,
+    city: districtValue,
+    state: stateValue,
+    stateName: stateValue,
     phone: entity.phone || entity.mobile || entity.phoneNumber || "",
   };
 };
 
 export const toConsigneeDetails = (entity) => {
   if (!entity) return null;
-  const gstNo = entity.gstNo || entity.gst || entity.gstNumber || "";
+  const gstNo = entity.gstNo || entity.gst || entity.gstNumber || entity.gstin || "";
   let panNo = entity.panNo || entity.pan || entity.panNumber || "";
 
   // Extract PAN from GST if missing
@@ -73,18 +89,34 @@ export const toConsigneeDetails = (entity) => {
     panNo = gstNo.substring(2, 12).toUpperCase();
   }
 
-  const pinValue = entity.pin || entity.pinNo || entity.pinCode || "";
+  const pinValue = entity.pin || entity.pinNo || entity.pinCode || entity.pincode || entity.postalCode || "";
+  const addressValue = entity.address || entity.addressLine1 || entity.fullAddress || entity.location || "";
+  const districtValue = entity.district || entity.city || "";
+  const stateValue = entity.state || entity.stateName || "";
 
   return {
     ...entity,
-    address: entity.address || entity.location || "",
+    address: addressValue,
+    addressLine1: addressValue,
+    fullAddress: addressValue,
+    location: addressValue,
     gstNo,
+    gst,
+    gstNumber: gstNo,
+    gstin: gstNo,
     panNo,
+    pan,
+    panNumber: panNo,
     pin: pinValue,
     pinNo: pinValue,
+    pinCode: pinValue,
+    pincode: pinValue,
+    postalCode: pinValue,
     msmeNo: entity.msmeNo || entity.mandiLicense || "",
-    district: entity.district || "",
-    state: entity.state || "",
+    district: districtValue,
+    city: districtValue,
+    state: stateValue,
+    stateName: stateValue,
     phone: entity.phone || entity.mobile || entity.phoneNumber || "",
   };
 };
