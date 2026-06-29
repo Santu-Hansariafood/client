@@ -7,7 +7,7 @@ import api from "../../../../utils/apiClient/apiClient";
 import MasterReceivingReportPDF from "../MasterReceivingReportPDF";
 import { downloadFile } from "../../../../utils/fileDownloader";
 import { toUnifiedDetails, toConsigneeDetails } from "../../../../utils/saudaPdf/buildSaudaPdfData";
-import logoUrl from "../../../../assets/Hans.png";
+import logoUrl from "../../../../assets/Hans.jpg";
 
 const PopupBox = lazy(() => import("../../../../common/PopupBox/PopupBox"));
 const Loading = lazy(() => import("../../../../common/Loading/Loading"));
