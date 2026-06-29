@@ -107,9 +107,9 @@ const ReceivingPopup = ({
         ...selectedEntry,
         cd: cdValue,
         gst: gstValue,
-        supplierDetails: foundSupplier,
-        buyerDetails: foundBuyer,
-        consigneeDetails: foundConsignee,
+        supplierDetails: selectedEntry.supplierDetails || foundSupplier,
+        buyerDetails: selectedEntry.buyerDetails || foundBuyer,
+        consigneeDetails: selectedEntry.consigneeDetails || foundConsignee,
         hsnCode: matchedCommodity?.hsnCode || matchedCommodity?.hsn || matchedCommodity?.hsnNumber || matchedCommodity?.hsnCodeNumber || matchedCommodity?.hsn_code || selectedEntry.hsnCode || selectedEntry.hsn || selectedEntry.hsn_code,
       };
 
@@ -247,9 +247,9 @@ const ReceivingPopup = ({
         ...selectedEntry,
         cd: cdValue,
         gst: gstValue,
-        supplierDetails: foundSupplier,
-        buyerDetails: foundBuyer,
-        consigneeDetails: foundConsignee,
+        supplierDetails: selectedEntry.supplierDetails || foundSupplier,
+        buyerDetails: selectedEntry.buyerDetails || foundBuyer,
+        consigneeDetails: selectedEntry.consigneeDetails || foundConsignee,
         hsnCode: matchedCommodity?.hsnCode || matchedCommodity?.hsn || matchedCommodity?.hsnNumber || matchedCommodity?.hsnCodeNumber || matchedCommodity?.hsn_code || selectedEntry.hsnCode || selectedEntry.hsn || selectedEntry.hsn_code,
       };
 
