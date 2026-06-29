@@ -6,6 +6,7 @@ import QRCode from "qrcode";
 import api from "../../../../utils/apiClient/apiClient";
 import MasterReceivingReportPDF from "../MasterReceivingReportPDF";
 import { downloadFile } from "../../../../utils/fileDownloader";
+import { toUnifiedDetails, toConsigneeDetails } from "../../../../utils/saudaPdf/buildSaudaPdfData";
 import logoUrl from "../../../../assets/Hans.png";
 
 const PopupBox = lazy(() => import("../../../../common/PopupBox/PopupBox"));
@@ -107,11 +108,17 @@ const ReceivingPopup = ({
         ...selectedEntry,
         cd: cdValue,
         gst: gstValue,
-        supplierDetails: selectedEntry.supplierDetails || foundSupplier,
-        buyerDetails: selectedEntry.buyerDetails || foundBuyer,
-        consigneeDetails: selectedEntry.consigneeDetails || foundConsignee,
+        supplierDetails: toUnifiedDetails(selectedEntry.supplierDetails || foundSupplier),
+        buyerDetails: toUnifiedDetails(selectedEntry.buyerDetails || foundBuyer),
+        consigneeDetails: toConsigneeDetails(selectedEntry.consigneeDetails || foundConsignee),
         hsnCode: matchedCommodity?.hsnCode || matchedCommodity?.hsn || matchedCommodity?.hsnNumber || matchedCommodity?.hsnCodeNumber || matchedCommodity?.hsn_code || selectedEntry.hsnCode || selectedEntry.hsn || selectedEntry.hsn_code,
       };
+
+      // Handle billTo case
+      const isBillToConsignee = String(selectedEntry.billTo || "").toLowerCase() === "consignee";
+      if (isBillToConsignee) {
+        pdfData.buyerDetails = pdfData.consigneeDetails;
+      }
 
       const qrData = JSON.stringify({
           saudaNo: selectedEntry.saudaNo,
@@ -247,11 +254,17 @@ const ReceivingPopup = ({
         ...selectedEntry,
         cd: cdValue,
         gst: gstValue,
-        supplierDetails: selectedEntry.supplierDetails || foundSupplier,
-        buyerDetails: selectedEntry.buyerDetails || foundBuyer,
-        consigneeDetails: selectedEntry.consigneeDetails || foundConsignee,
+        supplierDetails: toUnifiedDetails(selectedEntry.supplierDetails || foundSupplier),
+        buyerDetails: toUnifiedDetails(selectedEntry.buyerDetails || foundBuyer),
+        consigneeDetails: toConsigneeDetails(selectedEntry.consigneeDetails || foundConsignee),
         hsnCode: matchedCommodity?.hsnCode || matchedCommodity?.hsn || matchedCommodity?.hsnNumber || matchedCommodity?.hsnCodeNumber || matchedCommodity?.hsn_code || selectedEntry.hsnCode || selectedEntry.hsn || selectedEntry.hsn_code,
       };
+
+      // Handle billTo case
+      const isBillToConsignee = String(selectedEntry.billTo || "").toLowerCase() === "consignee";
+      if (isBillToConsignee) {
+        pdfData.buyerDetails = pdfData.consigneeDetails;
+      }
 
       const qrData = JSON.stringify({
           saudaNo: selectedEntry.saudaNo,

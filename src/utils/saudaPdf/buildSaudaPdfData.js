@@ -46,13 +46,16 @@ const toUnifiedDetails = (entity) => {
     panNo = gstNo.substring(2, 12).toUpperCase();
   }
 
+  const pinValue = entity.pinNo || entity.pin || entity.pinCode || "";
+
   return {
     ...entity,
     address: entity.address || entity.location || "",
     gstNo,
     panNo,
     bankDetails: normalizeBankDetails(entity),
-    pinNo: entity.pinNo || entity.pin || entity.pinCode || "",
+    pinNo: pinValue,
+    pin: pinValue,
     msmeNo: entity.msmeNo || entity.mandiLicense || "",
     district: entity.district || "",
     state: entity.state || "",
@@ -70,12 +73,15 @@ const toConsigneeDetails = (entity) => {
     panNo = gstNo.substring(2, 12).toUpperCase();
   }
 
+  const pinValue = entity.pin || entity.pinNo || entity.pinCode || "";
+
   return {
     ...entity,
     address: entity.address || entity.location || "",
     gstNo,
     panNo,
-    pin: entity.pin || entity.pinNo || entity.pinCode || "",
+    pin: pinValue,
+    pinNo: pinValue,
     msmeNo: entity.msmeNo || entity.mandiLicense || "",
     district: entity.district || "",
     state: entity.state || "",

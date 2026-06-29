@@ -75,10 +75,15 @@ const SaudaDetails = ({ data }) => {
       pin,
       pinNo,
       pinCode,
+      pincode,
+      postalCode,
       panNo,
       pan,
+      panNumber,
       gstNo,
       gst,
+      gstin,
+      gstNumber,
       msmeNo,
       mandiLicense,
     } = details;
@@ -87,10 +92,10 @@ const SaudaDetails = ({ data }) => {
     const addr = address || location || "";
     const dist = district || "";
     const st = state || "";
-    const p = pinNo || pinCode || pin || "";
+    const p = pinNo || pinCode || pin || pincode || postalCode || "";
     const msme = msmeNo || mandiLicense || "";
-    const panVal = panNo || pan || "";
-    const gstVal = gstNo || gst || "";
+    const panVal = panNo || pan || panNumber || "";
+    const gstVal = gstNo || gst || gstin || gstNumber || "";
 
     if (addr || dist || st || p) {
       parts.push(

@@ -377,31 +377,38 @@ const renderAddressDetails = (details, type = "buyer") => {
     address,
     location,
     district,
+    city,
     state,
+    stateName,
     pinNo,
     pin,
     pinCode,
+    pincode,
+    postalCode,
     gstNo,
     gst,
+    gstin,
     gstNumber,
   } = details;
 
   const parts = [];
 
-  const finalPin = pinNo || pin || pinCode;
+  const finalPin = pinNo || pin || pinCode || pincode || postalCode;
   const finalAddress = address || location;
+  const finalDistrict = district || city;
+  const finalState = state || stateName;
 
-  if (finalAddress || district || state || finalPin) {
+  if (finalAddress || finalDistrict || finalState || finalPin) {
     parts.push(
       `${finalAddress || ""}${
-        finalAddress && (district || state || finalPin) ? ", " : ""
-      }${district || ""}${
-        district && (state || finalPin) ? ", " : ""
-      }${state || ""}${state && finalPin ? " - " : ""}${finalPin || ""}`,
+        finalAddress && (finalDistrict || finalState || finalPin) ? ", " : ""
+      }${finalDistrict || ""}${
+        finalDistrict && (finalState || finalPin) ? ", " : ""
+      }${finalState || ""}${finalState && finalPin ? " - " : ""}${finalPin || ""}`,
     );
   }
 
-  const finalGst = gstNo || gst || gstNumber;
+  const finalGst = gstNo || gst || gstin || gstNumber;
   if (finalGst) {
     parts.push(`GSTIN: ${finalGst}`);
   }

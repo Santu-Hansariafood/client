@@ -573,12 +573,14 @@ const renderAddressDetails = (details) => {
     addressLine1,
     addressLine2,
     fullAddress,
+    location,
     district,
     city,
     state,
     stateName,
     pinNo,
     pin,
+    pinCode,
     pincode,
     postalCode,
     panNo,
@@ -590,8 +592,8 @@ const renderAddressDetails = (details) => {
     gstNumber,
   } = details;
   const parts = [];
-  const finalAddress = address || addressLine1 || fullAddress;
-  const finalPin = pinNo || pin || pincode || postalCode;
+  const finalAddress = address || addressLine1 || fullAddress || location;
+  const finalPin = pinNo || pin || pinCode || pincode || postalCode;
   const finalDistrict = district || city;
   const finalState = state || stateName;
   if (finalAddress || finalDistrict || finalState || finalPin) {
@@ -748,8 +750,6 @@ const MasterReceivingReportPDF = ({ entries = [], logoUrl }) => {
                     {formatDate(data.unloadingDate)}
                   </Text>
                 </View>
-
-                {/* Next 2 items - 2 in a row */}
                 <View style={styles.summaryItemHalf}>
                   <Text style={styles.summaryLabel}>Rate</Text>
                   <Text style={styles.summaryValue}>

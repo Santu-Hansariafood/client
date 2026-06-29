@@ -629,14 +629,21 @@ const renderAddressDetails = (details) => {
 
   const {
     address,
+    location,
     district,
     state,
     pinNo,
     pin,
+    pinCode,
+    pincode,
+    postalCode,
     panNo,
     pan,
+    panNumber,
     gstNo,
     gst,
+    gstin,
+    gstNumber,
     phone,
     mobile,
     phoneNumber,
@@ -644,24 +651,25 @@ const renderAddressDetails = (details) => {
 
   const parts = [];
 
-  const finalPin = pinNo || pin;
+  const finalPin = pinNo || pin || pinCode || pincode || postalCode;
 
-  if (address || district || state || finalPin) {
+  if (address || location || district || state || finalPin) {
+    const finalAddress = address || location;
     parts.push(
-      `${address || ""}${
-        address && (district || state || finalPin) ? ", " : ""
+      `${finalAddress || ""}${
+        finalAddress && (district || state || finalPin) ? ", " : ""
       }${district || ""}${
         district && (state || finalPin) ? ", " : ""
       }${state || ""}${state && finalPin ? " - " : ""}${finalPin || ""}`,
     );
   }
 
-  const finalPan = panNo || pan;
+  const finalPan = panNo || pan || panNumber;
   if (finalPan) {
     parts.push(`PAN No: ${finalPan}`);
   }
 
-  const finalGst = gstNo || gst;
+  const finalGst = gstNo || gst || gstin || gstNumber;
   if (finalGst) {
     parts.push(`GST: ${finalGst}`);
   }
