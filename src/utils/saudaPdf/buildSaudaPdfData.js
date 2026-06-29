@@ -178,9 +178,12 @@ const findBestMatch = (dataList, key, nameField) => {
     return companyData.find((c) => c?._id && String(c._id) === resolved) || null;
   };
 
+  console.log("buildSaudaPdfData: item.consignee =", item?.consignee);
+  console.log("buildSaudaPdfData: consigneeData =", consigneeData);
   const matchingConsignee = 
     findBestMatch(consigneeData, item?.consignee, 'name') || 
     findBestMatch(consigneeData, item?.consignee, 'label');
+  console.log("buildSaudaPdfData: matchingConsignee =", matchingConsignee);
 
   const supplierId = item?.supplier?._id || item?.supplier;
   const matchingSellerProfile = sellerProfileData.find(
@@ -273,10 +276,12 @@ const findBestMatch = (dataList, key, nameField) => {
   );
   
   const itemConsigneeDetails = item?.consigneeDetails ? toConsigneeDetails(item.consigneeDetails) : null;
+  console.log("buildSaudaPdfData: itemConsigneeDetails =", itemConsigneeDetails);
   const finalConsigneeDetails = 
     toConsigneeDetails(matchingConsignee) || 
     (isSpecialConsignee ? toConsigneeDetails(matchingBuyer) : null) ||
     itemConsigneeDetails;
+  console.log("buildSaudaPdfData: finalConsigneeDetails =", finalConsigneeDetails);
 
   const billToConsignee = String(item?.billTo || "").toLowerCase() === "consignee";
 
