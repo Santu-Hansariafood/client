@@ -1,6 +1,7 @@
 import { formatLedgerAmount } from "../utils/paymentLedgerUtils";
 import { useState } from "react";
 import { PDFDownloadLink } from "@react-pdf/renderer";
+import { FaEnvelope, FaFilePdf } from "react-icons/fa";
 import QRCode from "qrcode";
 import PaymentVoucherPDF from "./PaymentVoucherPDF";
 
@@ -173,6 +174,9 @@ const TallyLedgerBook = ({
             <th className="px-3 py-2.5 text-[10px] font-black uppercase tracking-wider w-[100px] text-center">
               Download
             </th>
+            <th className="px-3 py-2.5 text-[10px] font-black uppercase tracking-wider w-[200px] text-center">
+              Recipient Email
+            </th>
             <th className="px-3 py-2.5 text-[10px] font-black uppercase tracking-wider w-[100px] text-center">
               Send
             </th>
@@ -245,7 +249,7 @@ const TallyLedgerBook = ({
                               onClick={() => handleDownloadClick(row)}
                               className="px-3 py-1.5 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded text-xs font-bold transition shadow"
                             >
-                              {qrLoading[row.id] ? "Preparing..." : "Download PDF"}
+                              {qrLoading[row.id] ? "Preparing..." : <FaFilePdf size={14} />}
                             </button>
                           )}
                           {qrCache[row.id] && !qrLoading[row.id] && (
@@ -268,13 +272,16 @@ const TallyLedgerBook = ({
                                 <button
                                   className="px-3 py-1.5 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded text-xs font-bold transition shadow"
                                 >
-                                  {loading ? "Loading..." : "Download PDF"}
+                                  {loading ? "Loading..." : <FaFilePdf size={14} />}
                                 </button>
                               )}
                             </PDFDownloadLink>
                           )}
                         </>
                       )}
+                    </td>
+                    <td className="px-3 py-2 text-center text-xs text-slate-600">
+                      {sellerCompany?.email || "-"}
                     </td>
                     <td className="px-3 py-2 text-center">
                       {!row.isOpening && sellerCompany?.email && (
@@ -283,7 +290,11 @@ const TallyLedgerBook = ({
                           disabled={sendingEmailIds.has(row.id)}
                           className="px-3 py-1.5 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white rounded text-xs font-bold transition shadow disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                          {sendingEmailIds.has(row.id) ? "Sending..." : "Send Email"}
+                          {sendingEmailIds.has(row.id) ? (
+                            <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin inline-block" />
+                          ) : (
+                            <FaEnvelope size={14} />
+                          )}
                         </button>
                       )}
                     </td>
@@ -318,6 +329,7 @@ const TallyLedgerBook = ({
                       <td className="px-3 py-1 text-right font-medium text-rose-700 tabular-nums">
                         {formatLedgerAmount(claim.claimAmount)}
                       </td>
+                      <td className="px-3 py-1"></td>
                       <td className="px-3 py-1"></td>
                       <td className="px-3 py-1"></td>
                     </tr>
@@ -378,7 +390,7 @@ const TallyLedgerBook = ({
                           onClick={() => handleDownloadClick(row)}
                           className="px-3 py-1.5 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded text-xs font-bold transition shadow"
                         >
-                          {qrLoading[row.id] ? "Preparing..." : "Download PDF"}
+                          {qrLoading[row.id] ? "Preparing..." : <FaFilePdf size={14} />}
                         </button>
                       )}
                       {qrCache[row.id] && !qrLoading[row.id] && (
@@ -402,13 +414,16 @@ const TallyLedgerBook = ({
                             <button
                               className="px-3 py-1.5 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded text-xs font-bold transition shadow"
                             >
-                              {loading ? "Loading..." : "Download PDF"}
+                              {loading ? "Loading..." : <FaFilePdf size={14} />}
                             </button>
                           )}
                         </PDFDownloadLink>
                       )}
                     </>
                   )}
+                </td>
+                <td className="px-3 py-2 text-center text-xs text-slate-600">
+                  {sellerCompany?.email || "-"}
                 </td>
                 <td className="px-3 py-2 text-center">
                   {!row.isOpening && sellerCompany?.email && (
@@ -417,7 +432,11 @@ const TallyLedgerBook = ({
                       disabled={sendingEmailIds.has(row.id)}
                       className="px-3 py-1.5 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white rounded text-xs font-bold transition shadow disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      {sendingEmailIds.has(row.id) ? "Sending..." : "Send Email"}
+                      {sendingEmailIds.has(row.id) ? (
+                        <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin inline-block" />
+                      ) : (
+                        <FaEnvelope size={14} />
+                      )}
                     </button>
                   )}
                 </td>
