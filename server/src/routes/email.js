@@ -1,5 +1,6 @@
 import express from "express";
 import nodemailer from "nodemailer";
+import PaymentReceived from "../models/PaymentReceived.js";
 
 const router = express.Router();
 
@@ -125,6 +126,82 @@ Contact: +91-8336924066 | +91-9330433535`,
     res.status(200).send("Email sent successfully");
   } catch (error) {
     console.error("Error sending email:", error);
+    res.status(500).send("Error sending email");
+  }
+});
+
+router.post("/send-payment-received", async (req, res) => {
+  const { pdf, recipientEmail, reportType, startDate, endDate, buyerCompany, supplierCompany } = req.body;
+
+  if (!pdf || !recipientEmail || !reportType) {
+    return res.status(400).send("Missing required fields: pdf, recipientEmail, reportType");
+  }
+
+  try {
+    const transporter = nodemailer.createTransport({
+      service: process.env.EMAIL_SERVICE,
+      auth: {
+        user: process.env.PAYMENTS_EMAIL,
+        pass: process.env.PAYMENTS_PASS,
+      },
+    });
+
+    const dateRangeText = startDate && endDate 
+      ? `${new Date(startDate).toLocaleDateString("en-GB")} to ${new Date(endDate).toLocaleDateString("en-GB")}`
+      : "All Time";
+
+    const subject = reportType === "MIS" 
+      ? `Payment MIS Report - ${dateRangeText}`
+      : `Payment Advice - ${dateRangeText}`;
+
+    const filename = reportType === "MIS" 
+      ? `MIS_Payment_Received_${startDate || "All"}_to_${endDate || "All"}.pdf`
+      : `Payment_Advice_${startDate || "All"}_to_${endDate || "All"}.pdf`;
+
+    const mailOptions = {
+      from: process.env.PAYMENTS_EMAIL,
+      to: recipientEmail,
+      subject: subject,
+      text: `Dear Sir/Madam,
+
+Please find attached the ${reportType === "MIS" ? "Payment MIS Report" : "Payment Advice"} for the period ${dateRangeText}.
+${buyerCompany ? `\nBuyer Company: ${buyerCompany}` : ""}
+${supplierCompany ? `\nSupplier Company: ${supplierCompany}` : ""}
+
+Thank you for your business.
+
+Best Regards,
+Hansaria Food Private Limited
+Contact: +91-8336924066 | +91-9330433535
+Email: payments@hansariafood.com`,
+      attachments: [
+        {
+          filename: filename,
+          content: pdf,
+          encoding: "base64",
+        },
+      ],
+    };
+
+    await transporter.sendMail(mailOptions);
+
+    // Update payment records to mark email as sent
+    const filter = {};
+    if (startDate) filter.date = { $gte: new Date(startDate) };
+    if (endDate) filter.date = { ...filter.date, $lte: new Date(endDate) };
+    if (buyerCompany) filter.buyerCompany = buyerCompany;
+    if (supplierCompany) filter.supplierCompany = supplierCompany;
+
+    await PaymentReceived.updateMany(filter, {
+      $set: {
+        emailSent: true,
+        emailSentAt: new Date(),
+      },
+    });
+
+    res.status(200).send("Email sent successfully");
+  } catch (error) {
+    console.error("Error sending payment received email:", error);
     res.status(500).send("Error sending email");
   }
 });

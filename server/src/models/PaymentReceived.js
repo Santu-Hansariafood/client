@@ -54,6 +54,8 @@ const paymentReceivedSchema = new mongoose.Schema(
       },
     ],
     remarks: { type: String, default: "" },
+    emailSent: { type: Boolean, default: false },
+    emailSentAt: { type: Date },
   },
   { timestamps: true },
 );
