@@ -6,7 +6,7 @@ import QRCode from "qrcode";
 import api from "../../../../utils/apiClient/apiClient";
 import MasterReceivingReportPDF from "../MasterReceivingReportPDF";
 import { downloadFile } from "../../../../utils/fileDownloader";
-import { toUnifiedDetails, toConsigneeDetails } from "../../../../utils/saudaPdf/buildSaudaPdfData";
+import { buildSaudaPdfData } from "../../../../utils/saudaPdf/buildSaudaPdfData";
 import logoUrl from "../../../../assets/Hans.jpg";
 
 const PopupBox = lazy(() => import("../../../../common/PopupBox/PopupBox"));
@@ -50,34 +50,6 @@ const ReceivingPopup = ({
         commodityData,
       } = await getMasterData();
 
-      // Helper functions for matching (copied from buildSaudaPdfData.js)
-      const normalizeText = (value) =>
-        String(value || "").trim().toLowerCase();
-      
-      const findBestMatch = (dataList, key, nameField) => {
-        if (!key) return null;
-        
-        // Handle if key is an object (like a populated Mongo ref)
-        const searchKey = (typeof key === 'object' && key?._id) ? String(key._id) : String(key);
-        const normalizedKey = normalizeText(searchKey);
-        
-        // 1. Match by ID
-        const byId = dataList.find(d => d._id && String(d._id) === searchKey);
-        if (byId) return byId;
-
-        // 2. Match by exact name
-        const exactName = dataList.find(d => normalizeText(d[nameField]) === normalizedKey);
-        if (exactName) return exactName;
-
-        // 3. Fuzzy match: starts with or is contained within
-        const fuzzyMatch = dataList.find(d => {
-          const dName = normalizeText(d[nameField]);
-          if (!dName) return false;
-          return normalizedKey.includes(dName) || dName.includes(normalizedKey);
-        });
-        return fuzzyMatch || null;
-      };
-
       const matchedCommodity = commodityData.find(
         (c) =>
           c.name?.toLowerCase() === selectedEntry.commodity?.toLowerCase() ||
@@ -86,42 +58,31 @@ const ReceivingPopup = ({
       
       console.log("SELECTED ENTRY", selectedEntry);
       console.log("CONSIGNEE DATA", consigneeData);
-      console.log("SUPPLIER DATA", supplierData);
-      console.log("BUYER DATA", buyerData);
-      console.log("COMPANY DATA", companyData);
-      console.log("COMMODITY DATA", commodityData);
-      console.log("MATCHED COMMODITY", matchedCommodity);
       
-      const foundSupplier = findBestMatch(supplierData, selectedEntry.supplierCompany, 'companyName') ||
-        findBestMatch(supplierData, selectedEntry.supplierCompany, 'name');
-      
-      const foundBuyer = findBestMatch(buyerData, selectedEntry.buyerCompany, 'companyName') ||
-        findBestMatch(buyerData, selectedEntry.buyerCompany, 'name') ||
-        findBestMatch(companyData, selectedEntry.buyerCompany, 'companyName') ||
-        findBestMatch(companyData, selectedEntry.buyerCompany, 'name');
-      
-      const foundConsignee = findBestMatch(consigneeData, selectedEntry.consignee, 'name') ||
-        findBestMatch(consigneeData, selectedEntry.consignee, 'label');
-      
-      console.log("FOUND SUPPLIER", foundSupplier);
-      console.log("FOUND BUYER", foundBuyer);
-      console.log("FOUND CONSIGNEE", foundConsignee);
-      
-      const pdfData = {
-        ...selectedEntry,
-        cd: cdValue,
-        gst: gstValue,
-        supplierDetails: toUnifiedDetails(selectedEntry.supplierDetails || foundSupplier),
-        buyerDetails: toUnifiedDetails(selectedEntry.buyerDetails || foundBuyer),
-        consigneeDetails: toConsigneeDetails(selectedEntry.consigneeDetails || foundConsignee),
-        hsnCode: matchedCommodity?.hsnCode || matchedCommodity?.hsn || matchedCommodity?.hsnNumber || matchedCommodity?.hsnCodeNumber || matchedCommodity?.hsn_code || selectedEntry.hsnCode || selectedEntry.hsn || selectedEntry.hsn_code,
-      };
+      const pdfData = buildSaudaPdfData({
+        item: {
+          ...selectedEntry,
+          cd: cdValue,
+          gst: gstValue,
+        },
+        consigneeData,
+        supplierData,
+        buyerData,
+        companyData,
+        commodityData,
+        qualityParameterData: [],
+        sellerProfileData: [],
+        getConsigneeDisplay: (item) => {
+          const c = item?.consignee;
+          if (typeof c === "object" && c?.name) return c.name;
+          if (typeof c === "object" && c?.label) return c.label;
+          return String(c || "N/A");
+        },
+      });
 
-      // Handle billTo case
-      const isBillToConsignee = String(selectedEntry.billTo || "").toLowerCase() === "consignee";
-      if (isBillToConsignee) {
-        pdfData.buyerDetails = pdfData.consigneeDetails;
-      }
+      pdfData.hsnCode = matchedCommodity?.hsnCode || matchedCommodity?.hsn || matchedCommodity?.hsnNumber || matchedCommodity?.hsnCodeNumber || matchedCommodity?.hsn_code || selectedEntry.hsnCode || selectedEntry.hsn || selectedEntry.hsn_code;
+      
+      console.log("FINAL PDF DATA", pdfData);
 
       const qrData = JSON.stringify({
           saudaNo: selectedEntry.saudaNo,
@@ -200,34 +161,6 @@ const ReceivingPopup = ({
         commodityData,
       } = await getMasterData();
 
-      // Helper functions for matching (copied from buildSaudaPdfData.js)
-      const normalizeText = (value) =>
-        String(value || "").trim().toLowerCase();
-      
-      const findBestMatch = (dataList, key, nameField) => {
-        if (!key) return null;
-        
-        // Handle if key is an object (like a populated Mongo ref)
-        const searchKey = (typeof key === 'object' && key?._id) ? String(key._id) : String(key);
-        const normalizedKey = normalizeText(searchKey);
-        
-        // 1. Match by ID
-        const byId = dataList.find(d => d._id && String(d._id) === searchKey);
-        if (byId) return byId;
-
-        // 2. Match by exact name
-        const exactName = dataList.find(d => normalizeText(d[nameField]) === normalizedKey);
-        if (exactName) return exactName;
-
-        // 3. Fuzzy match: starts with or is contained within
-        const fuzzyMatch = dataList.find(d => {
-          const dName = normalizeText(d[nameField]);
-          if (!dName) return false;
-          return normalizedKey.includes(dName) || dName.includes(normalizedKey);
-        });
-        return fuzzyMatch || null;
-      };
-
       const matchedCommodity = commodityData.find(
         (c) =>
           c.name?.toLowerCase() === selectedEntry.commodity?.toLowerCase() ||
@@ -236,42 +169,31 @@ const ReceivingPopup = ({
       
       console.log("SELECTED ENTRY", selectedEntry);
       console.log("CONSIGNEE DATA", consigneeData);
-      console.log("SUPPLIER DATA", supplierData);
-      console.log("BUYER DATA", buyerData);
-      console.log("COMPANY DATA", companyData);
-      console.log("COMMODITY DATA", commodityData);
-      console.log("MATCHED COMMODITY", matchedCommodity);
       
-      const foundSupplier = findBestMatch(supplierData, selectedEntry.supplierCompany, 'companyName') ||
-        findBestMatch(supplierData, selectedEntry.supplierCompany, 'name');
-      
-      const foundBuyer = findBestMatch(buyerData, selectedEntry.buyerCompany, 'companyName') ||
-        findBestMatch(buyerData, selectedEntry.buyerCompany, 'name') ||
-        findBestMatch(companyData, selectedEntry.buyerCompany, 'companyName') ||
-        findBestMatch(companyData, selectedEntry.buyerCompany, 'name');
-      
-      const foundConsignee = findBestMatch(consigneeData, selectedEntry.consignee, 'name') ||
-        findBestMatch(consigneeData, selectedEntry.consignee, 'label');
-      
-      console.log("FOUND SUPPLIER", foundSupplier);
-      console.log("FOUND BUYER", foundBuyer);
-      console.log("FOUND CONSIGNEE", foundConsignee);
-      
-      const pdfData = {
-        ...selectedEntry,
-        cd: cdValue,
-        gst: gstValue,
-        supplierDetails: toUnifiedDetails(selectedEntry.supplierDetails || foundSupplier),
-        buyerDetails: toUnifiedDetails(selectedEntry.buyerDetails || foundBuyer),
-        consigneeDetails: toConsigneeDetails(selectedEntry.consigneeDetails || foundConsignee),
-        hsnCode: matchedCommodity?.hsnCode || matchedCommodity?.hsn || matchedCommodity?.hsnNumber || matchedCommodity?.hsnCodeNumber || matchedCommodity?.hsn_code || selectedEntry.hsnCode || selectedEntry.hsn || selectedEntry.hsn_code,
-      };
+      const pdfData = buildSaudaPdfData({
+        item: {
+          ...selectedEntry,
+          cd: cdValue,
+          gst: gstValue,
+        },
+        consigneeData,
+        supplierData,
+        buyerData,
+        companyData,
+        commodityData,
+        qualityParameterData: [],
+        sellerProfileData: [],
+        getConsigneeDisplay: (item) => {
+          const c = item?.consignee;
+          if (typeof c === "object" && c?.name) return c.name;
+          if (typeof c === "object" && c?.label) return c.label;
+          return String(c || "N/A");
+        },
+      });
 
-      // Handle billTo case
-      const isBillToConsignee = String(selectedEntry.billTo || "").toLowerCase() === "consignee";
-      if (isBillToConsignee) {
-        pdfData.buyerDetails = pdfData.consigneeDetails;
-      }
+      pdfData.hsnCode = matchedCommodity?.hsnCode || matchedCommodity?.hsn || matchedCommodity?.hsnNumber || matchedCommodity?.hsnCodeNumber || matchedCommodity?.hsn_code || selectedEntry.hsnCode || selectedEntry.hsn || selectedEntry.hsn_code;
+      
+      console.log("FINAL PDF DATA", pdfData);
 
       const qrData = JSON.stringify({
           saudaNo: selectedEntry.saudaNo,

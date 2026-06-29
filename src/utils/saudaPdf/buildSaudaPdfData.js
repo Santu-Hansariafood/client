@@ -80,7 +80,6 @@ export const toUnifiedDetails = (entity) => {
 };
 
 export const toConsigneeDetails = (entity) => {
-  console.log("toConsigneeDetails called with entity:", entity);
   if (!entity) return null;
   const gstNo = entity.gstNo || entity.gst || entity.gstNumber || entity.gstin || "";
   let panNo = entity.panNo || entity.pan || entity.panNumber || "";
@@ -95,7 +94,7 @@ export const toConsigneeDetails = (entity) => {
   const districtValue = entity.district || entity.city || "";
   const stateValue = entity.state || entity.stateName || "";
 
-  const result = {
+  return {
     ...entity,
     address: addressValue,
     addressLine1: addressValue,
@@ -120,9 +119,6 @@ export const toConsigneeDetails = (entity) => {
     stateName: stateValue,
     phone: entity.phone || entity.mobile || entity.phoneNumber || "",
   };
-  
-  console.log("toConsigneeDetails returning:", result);
-  return result;
 };
 
 export const buildSaudaPdfData = ({

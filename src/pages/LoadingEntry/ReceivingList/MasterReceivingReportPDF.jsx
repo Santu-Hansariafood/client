@@ -567,7 +567,6 @@ const numberToWords = (num) => {
 };
 
 const renderAddressDetails = (details) => {
-  console.log("renderAddressDetails called with details:", details);
   if (!details) return null;
   const {
     address,
@@ -597,7 +596,6 @@ const renderAddressDetails = (details) => {
   const finalPin = pinNo || pin || pinCode || pincode || postalCode;
   const finalDistrict = district || city;
   const finalState = state || stateName;
-  console.log("finalAddress:", finalAddress, "finalPin:", finalPin, "finalDistrict:", finalDistrict, "finalState:", finalState);
   if (finalAddress || finalDistrict || finalState || finalPin) {
     parts.push(
       `${finalAddress || ""}${finalAddress && (finalDistrict || finalState || finalPin) ? ", " : ""}${finalDistrict || ""}${finalDistrict && (finalState || finalPin) ? ", " : ""}${finalState || ""}${finalState && finalPin ? " - " : ""}${finalPin || ""}`,
@@ -607,7 +605,6 @@ const renderAddressDetails = (details) => {
   if (finalPan) parts.push(`PAN No: ${finalPan}`);
   const finalGst = gstNo || gst || gstin || gstNumber;
   if (finalGst) parts.push(`GST: ${finalGst}`);
-  console.log("renderAddressDetails parts:", parts);
   if (parts.length === 0) return null;
   return <Text style={styles.addressDetails}>{parts.join("\n")}</Text>;
 };
