@@ -162,7 +162,7 @@ Thank you for your business.
 Best Regards,
 Hansaria Food Private Limited
 Contact: +91-8336924066 | +91-9330433535
-Email: payments@hansariafood.com`;
+Email: payment@hansariafood.com`;
     } else {
       const dateRangeText = startDate && endDate 
         ? `${new Date(startDate).toLocaleDateString("en-GB")} to ${new Date(endDate).toLocaleDateString("en-GB")}`
@@ -187,7 +187,7 @@ Thank you for your business.
 Best Regards,
 Hansaria Food Private Limited
 Contact: +91-8336924066 | +91-9330433535
-Email: payments@hansariafood.com`;
+Email: payment@hansariafood.com`;
     }
 
     const mailOptions = {
