@@ -50,7 +50,34 @@ const ReceivingPopup = ({
         commodityData,
       } = await getMasterData();
 
-      // Build pdf data using the same function as before
+      // Helper functions for matching (copied from buildSaudaPdfData.js)
+      const normalizeText = (value) =>
+        String(value || "").trim().toLowerCase();
+      
+      const findBestMatch = (dataList, key, nameField) => {
+        if (!key) return null;
+        
+        // Handle if key is an object (like a populated Mongo ref)
+        const searchKey = (typeof key === 'object' && key?._id) ? String(key._id) : String(key);
+        const normalizedKey = normalizeText(searchKey);
+        
+        // 1. Match by ID
+        const byId = dataList.find(d => d._id && String(d._id) === searchKey);
+        if (byId) return byId;
+
+        // 2. Match by exact name
+        const exactName = dataList.find(d => normalizeText(d[nameField]) === normalizedKey);
+        if (exactName) return exactName;
+
+        // 3. Fuzzy match: starts with or is contained within
+        const fuzzyMatch = dataList.find(d => {
+          const dName = normalizeText(d[nameField]);
+          if (!dName) return false;
+          return normalizedKey.includes(dName) || dName.includes(normalizedKey);
+        });
+        return fuzzyMatch || null;
+      };
+
       const matchedCommodity = commodityData.find(
         (c) =>
           c.name?.toLowerCase() === selectedEntry.commodity?.toLowerCase() ||
@@ -65,40 +92,16 @@ const ReceivingPopup = ({
       console.log("COMMODITY DATA", commodityData);
       console.log("MATCHED COMMODITY", matchedCommodity);
       
-      const foundSupplier = supplierData.find(
-        (s) =>
-          s.companyName?.toLowerCase() ===
-            selectedEntry.supplierCompany?.toLowerCase() ||
-          s.name?.toLowerCase() ===
-            selectedEntry.supplierCompany?.toLowerCase()
-      );
+      const foundSupplier = findBestMatch(supplierData, selectedEntry.supplierCompany, 'companyName') ||
+        findBestMatch(supplierData, selectedEntry.supplierCompany, 'name');
       
-      const foundBuyer = 
-        buyerData.find(
-          (b) =>
-            b.companyName?.toLowerCase() ===
-              selectedEntry.buyerCompany?.toLowerCase() ||
-            b.name?.toLowerCase() ===
-              selectedEntry.buyerCompany?.toLowerCase()
-        ) || companyData.find(
-          (c) =>
-            c.companyName?.toLowerCase() ===
-              selectedEntry.buyerCompany?.toLowerCase() ||
-            c.name?.toLowerCase() ===
-              selectedEntry.buyerCompany?.toLowerCase()
-        );
+      const foundBuyer = findBestMatch(buyerData, selectedEntry.buyerCompany, 'companyName') ||
+        findBestMatch(buyerData, selectedEntry.buyerCompany, 'name') ||
+        findBestMatch(companyData, selectedEntry.buyerCompany, 'companyName') ||
+        findBestMatch(companyData, selectedEntry.buyerCompany, 'name');
       
-      const foundConsignee = consigneeData.find(
-          (c) =>
-            (c.name?.toLowerCase() ===
-              (typeof selectedEntry.consignee === "object"
-                ? selectedEntry.consignee.name?.toLowerCase()
-                : selectedEntry.consignee?.toLowerCase())) ||
-            (c.label?.toLowerCase() ===
-              (typeof selectedEntry.consignee === "object"
-                ? selectedEntry.consignee.label?.toLowerCase()
-                : selectedEntry.consignee?.toLowerCase()))
-        );
+      const foundConsignee = findBestMatch(consigneeData, selectedEntry.consignee, 'name') ||
+        findBestMatch(consigneeData, selectedEntry.consignee, 'label');
       
       console.log("FOUND SUPPLIER", foundSupplier);
       console.log("FOUND BUYER", foundBuyer);
@@ -197,6 +200,34 @@ const ReceivingPopup = ({
         commodityData,
       } = await getMasterData();
 
+      // Helper functions for matching (copied from buildSaudaPdfData.js)
+      const normalizeText = (value) =>
+        String(value || "").trim().toLowerCase();
+      
+      const findBestMatch = (dataList, key, nameField) => {
+        if (!key) return null;
+        
+        // Handle if key is an object (like a populated Mongo ref)
+        const searchKey = (typeof key === 'object' && key?._id) ? String(key._id) : String(key);
+        const normalizedKey = normalizeText(searchKey);
+        
+        // 1. Match by ID
+        const byId = dataList.find(d => d._id && String(d._id) === searchKey);
+        if (byId) return byId;
+
+        // 2. Match by exact name
+        const exactName = dataList.find(d => normalizeText(d[nameField]) === normalizedKey);
+        if (exactName) return exactName;
+
+        // 3. Fuzzy match: starts with or is contained within
+        const fuzzyMatch = dataList.find(d => {
+          const dName = normalizeText(d[nameField]);
+          if (!dName) return false;
+          return normalizedKey.includes(dName) || dName.includes(normalizedKey);
+        });
+        return fuzzyMatch || null;
+      };
+
       const matchedCommodity = commodityData.find(
         (c) =>
           c.name?.toLowerCase() === selectedEntry.commodity?.toLowerCase() ||
@@ -211,40 +242,16 @@ const ReceivingPopup = ({
       console.log("COMMODITY DATA", commodityData);
       console.log("MATCHED COMMODITY", matchedCommodity);
       
-      const foundSupplier = supplierData.find(
-        (s) =>
-          s.companyName?.toLowerCase() ===
-            selectedEntry.supplierCompany?.toLowerCase() ||
-          s.name?.toLowerCase() ===
-            selectedEntry.supplierCompany?.toLowerCase()
-      );
+      const foundSupplier = findBestMatch(supplierData, selectedEntry.supplierCompany, 'companyName') ||
+        findBestMatch(supplierData, selectedEntry.supplierCompany, 'name');
       
-      const foundBuyer = 
-        buyerData.find(
-          (b) =>
-            b.companyName?.toLowerCase() ===
-              selectedEntry.buyerCompany?.toLowerCase() ||
-            b.name?.toLowerCase() ===
-              selectedEntry.buyerCompany?.toLowerCase()
-        ) || companyData.find(
-          (c) =>
-            c.companyName?.toLowerCase() ===
-              selectedEntry.buyerCompany?.toLowerCase() ||
-            c.name?.toLowerCase() ===
-              selectedEntry.buyerCompany?.toLowerCase()
-        );
+      const foundBuyer = findBestMatch(buyerData, selectedEntry.buyerCompany, 'companyName') ||
+        findBestMatch(buyerData, selectedEntry.buyerCompany, 'name') ||
+        findBestMatch(companyData, selectedEntry.buyerCompany, 'companyName') ||
+        findBestMatch(companyData, selectedEntry.buyerCompany, 'name');
       
-      const foundConsignee = consigneeData.find(
-          (c) =>
-            (c.name?.toLowerCase() ===
-              (typeof selectedEntry.consignee === "object"
-                ? selectedEntry.consignee.name?.toLowerCase()
-                : selectedEntry.consignee?.toLowerCase())) ||
-            (c.label?.toLowerCase() ===
-              (typeof selectedEntry.consignee === "object"
-                ? selectedEntry.consignee.label?.toLowerCase()
-                : selectedEntry.consignee?.toLowerCase()))
-        );
+      const foundConsignee = findBestMatch(consigneeData, selectedEntry.consignee, 'name') ||
+        findBestMatch(consigneeData, selectedEntry.consignee, 'label');
       
       console.log("FOUND SUPPLIER", foundSupplier);
       console.log("FOUND BUYER", foundBuyer);
