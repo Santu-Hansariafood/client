@@ -3,7 +3,7 @@ import Counter from "./Counter.js";
 
 const paymentReceivedSchema = new mongoose.Schema(
   {
-    voucherNumber: { type: Number, unique: true, required: true },
+    voucherNumber: { type: Number, unique: true },
     sellerBillNo: { type: String, default: "" },
     date: { type: Date, default: Date.now },
     ledgerType: {
@@ -64,8 +64,8 @@ paymentReceivedSchema.index({ ledgerType: 1 });
 paymentReceivedSchema.index({ createdAt: -1 });
 paymentReceivedSchema.index({ voucherNumber: 1 });
 
-// Auto-generate voucherNumber before saving
-paymentReceivedSchema.pre("save", async function (next) {
+// Auto-generate voucherNumber before validation
+paymentReceivedSchema.pre("validate", async function (next) {
   if (this.isNew && !this.voucherNumber) {
     let counter = await Counter.findOneAndUpdate(
       { id: "paymentVoucherNumber" },
