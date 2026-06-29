@@ -36,7 +36,7 @@ const normalizeBankDetails = (entity) => {
     );
 };
 
-const toUnifiedDetails = (entity) => {
+export const toUnifiedDetails = (entity) => {
   if (!entity) return null;
   const gstNo = entity.gstNo || entity.gst || entity.gstNumber || "";
   let panNo = entity.panNo || entity.pan || entity.panNumber || "";
@@ -63,7 +63,7 @@ const toUnifiedDetails = (entity) => {
   };
 };
 
-const toConsigneeDetails = (entity) => {
+export const toConsigneeDetails = (entity) => {
   if (!entity) return null;
   const gstNo = entity.gstNo || entity.gst || entity.gstNumber || "";
   let panNo = entity.panNo || entity.pan || entity.panNumber || "";
