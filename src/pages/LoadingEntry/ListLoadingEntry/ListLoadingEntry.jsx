@@ -472,27 +472,13 @@ const ListLoadingEntry = () => {
     async (entry) => {
       setSelectedEntry(entry);
       
-      // Fetch the latest entry data from API to ensure we have up-to-date info
       let latestEntry = entry;
       if (entry._id) {
         try {
           const entryRes = await api.get(`/loading-entries/${entry._id}`);
           latestEntry = entryRes.data?.data || entryRes.data || entry;
-          console.log("🔍 [DEBUG] Latest Entry from API:", latestEntry);
-          console.log("🔍 [DEBUG] Quality Claims from API:", latestEntry.qualityClaims);
-          console.log("🔍 [DEBUG] Bill & Payable Fields:", {
-            secondClaim: latestEntry.secondClaim,
-            secondClaimRemarks: latestEntry.secondClaimRemarks,
-            otherCharges: latestEntry.otherCharges,
-            otherChargesRemarks: latestEntry.otherChargesRemarks,
-            bankCharges: latestEntry.bankCharges,
-            bankChargesRemarks: latestEntry.bankChargesRemarks,
-            tds: latestEntry.tds,
-            tdsRemarks: latestEntry.tdsRemarks,
-            generalRemarks: latestEntry.generalRemarks,
-          });
         } catch (error) {
-          console.error("Error fetching latest entry data:", error);
+          toast.error("Error fetching latest entry data:", error);
         }
       }
 
@@ -557,7 +543,7 @@ const ListLoadingEntry = () => {
               fetchedCompany = companyRes.data?.data || companyRes.data;
               setCurrentCompany(fetchedCompany || null);
             } catch (err) {
-              console.error("Error fetching company by ID:", err);
+              toast.error("Error fetching company by ID:", err);
               if (selfOrder?.buyerCompany) {
                 try {
                   const companySearchRes = await api.get("/companies", {
@@ -573,7 +559,7 @@ const ListLoadingEntry = () => {
                   );
                   setCurrentCompany(fetchedCompany || null);
                 } catch (searchErr) {
-                  console.error("Error fetching company by name:", searchErr);
+                  toast.error("Error fetching company by name:", searchErr);
                   setCurrentCompany(null);
                 }
               } else {
@@ -595,7 +581,7 @@ const ListLoadingEntry = () => {
               );
               setCurrentCompany(fetchedCompany || null);
             } catch (err) {
-              console.error("Error fetching company by name:", err);
+              toast.error("Error fetching company by name:", err);
               setCurrentCompany(null);
             }
           } else {
@@ -822,19 +808,6 @@ const ListLoadingEntry = () => {
         setCurrentSelfOrder(null);
       }
 
-      console.log("🔍 [DEBUG] Final newEditEntry:", newEditEntry);
-      console.log("🔍 [DEBUG] Final newEditEntry qualityClaims:", newEditEntry.qualityClaims);
-      console.log("🔍 [DEBUG] Final newEditEntry Bill & Payable:", {
-        secondClaim: newEditEntry.secondClaim,
-        secondClaimRemarks: newEditEntry.secondClaimRemarks,
-        otherCharges: newEditEntry.otherCharges,
-        otherChargesRemarks: newEditEntry.otherChargesRemarks,
-        bankCharges: newEditEntry.bankCharges,
-        bankChargesRemarks: newEditEntry.bankChargesRemarks,
-        tds: newEditEntry.tds,
-        tdsRemarks: newEditEntry.tdsRemarks,
-        generalRemarks: newEditEntry.generalRemarks,
-      });
       setEditEntry(newEditEntry);
       setPopupType("edit");
     },
@@ -1029,7 +1002,6 @@ const ListLoadingEntry = () => {
     } catch (error) {
       const message = error.response?.data?.message || "Failed to update entry";
       toast.error(message);
-      console.error("Update error:", error);
     } finally {
       setIsSaving(false);
     }
@@ -1051,7 +1023,6 @@ const ListLoadingEntry = () => {
         await fetchData();
       } catch (error) {
         toast.error("Failed to delete entry");
-        console.error("Delete error:", error);
       }
     },
     [fetchData],
@@ -1077,7 +1048,6 @@ const ListLoadingEntry = () => {
       toast.success("Download started successfully!");
     } catch (error) {
       if (toastId) toast.dismiss(toastId);
-      console.error("PDF Download Error:", error);
       toast.error("Error generating download. Please try again.");
     }
   }, []);
@@ -1112,7 +1082,6 @@ const ListLoadingEntry = () => {
       toast.success("Excel file downloaded successfully");
     } catch (error) {
       if (toastId) toast.dismiss(toastId);
-      console.error("Excel Download Error:", error);
       toast.error("Failed to download Excel file. Please try again.");
     } finally {
       setExporting(false);

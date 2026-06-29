@@ -178,13 +178,10 @@ const findBestMatch = (dataList, key, nameField) => {
     return companyData.find((c) => c?._id && String(c._id) === resolved) || null;
   };
 
-  console.log("buildSaudaPdfData: item.consignee =", item?.consignee);
-  console.log("buildSaudaPdfData: consigneeData =", consigneeData);
   const matchingConsignee = 
     findBestMatch(consigneeData, item?.consignee, 'name') || 
     findBestMatch(consigneeData, item?.consignee, 'label');
-  console.log("buildSaudaPdfData: matchingConsignee =", matchingConsignee);
-
+  
   const supplierId = item?.supplier?._id || item?.supplier;
   const matchingSellerProfile = sellerProfileData.find(
     (seller) => String(seller._id) === String(supplierId),
@@ -276,20 +273,17 @@ const findBestMatch = (dataList, key, nameField) => {
   );
   
   const itemConsigneeDetails = item?.consigneeDetails ? toConsigneeDetails(item.consigneeDetails) : null;
-  console.log("buildSaudaPdfData: itemConsigneeDetails =", itemConsigneeDetails);
   const finalConsigneeDetails = 
     toConsigneeDetails(matchingConsignee) || 
     (isSpecialConsignee ? toConsigneeDetails(matchingBuyer) : null) ||
     itemConsigneeDetails;
-  console.log("buildSaudaPdfData: finalConsigneeDetails =", finalConsigneeDetails);
+
 
   const billToConsignee = String(item?.billTo || "").toLowerCase() === "consignee";
 
-  // Find matching commodity to get _id
   const commodityMatch = findBestMatch(commodityData, item?.commodity, 'name');
   const commodityId = commodityMatch?._id;
 
-  // Build parameters from company data if available
   let parameters = [];
   if (matchingBuyer && commodityId) {
     const companyCommodity = matchingBuyer.commodities?.find(cc => 
@@ -301,7 +295,6 @@ const findBestMatch = (dataList, key, nameField) => {
         const qualityParam = qualityParameterData.find(qp => 
           String(qp._id) === String(cp.parameterId)
         );
-        // Get first values entry (since values is array per companyCommodityParameter)
         const value = cp.values?.[0] || {};
         
         return {
@@ -309,14 +302,12 @@ const findBestMatch = (dataList, key, nameField) => {
           parameter: qualityParam?.name || 'Unknown Parameter',
           baseValue: value.baseValue,
           maxValue: value.maxValue,
-          // Keep original value for backwards compatibility
           value: value.baseValue
         };
       });
     }
   }
   
-  // If no company parameters found, use item parameters (for self order or existing data)
   if (parameters.length === 0 && item.parameters) {
     parameters = item.parameters.map(param => {
       const qualityParam = qualityParameterData.find(qp => 
@@ -346,7 +337,6 @@ const findBestMatch = (dataList, key, nameField) => {
     parameters: parameters.length > 0 ? parameters : item.parameters, // Fallback to item parameters if no company parameters
   };
 
-  // Ensure bank and GST details are present from profile if missing from company
   if (matchingSellerProfile) {
     if (!transformed.supplierDetails) {
       transformed.supplierDetails = {
@@ -355,13 +345,12 @@ const findBestMatch = (dataList, key, nameField) => {
           {
             bankName: matchingSellerProfile.bankName || "",
             ifscCode: matchingSellerProfile.ifscCode || "",
-            accountNumber: "", // Seller model is missing accountNumber
+            accountNumber: "",
             accountHolderName: matchingSellerProfile.sellerName || "",
           },
         ],
       };
     } else {
-      // Fallback for missing fields in existing supplierDetails
       if (!transformed.supplierDetails.gstNo) {
         transformed.supplierDetails.gstNo = matchingSellerProfile.gstNumber || "";
       }
@@ -379,7 +368,6 @@ const findBestMatch = (dataList, key, nameField) => {
     }
   }
 
-  // Ensure fields are not "N/A" if we have partial info
   if (transformed.supplierDetails?.bankDetails?.[0]) {
     const b = transformed.supplierDetails.bankDetails[0];
     if (b.accountNumber === "N/A") b.accountNumber = "";

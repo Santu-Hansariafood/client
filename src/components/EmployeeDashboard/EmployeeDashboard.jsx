@@ -90,7 +90,6 @@ const EmployeeDashboard = () => {
   }, []);
 
   const handlePrintIDCard = async () => {
-    console.log("Starting ID Card generation...", { user });
     if (!user) {
       toast.error("User data not found!");
       return;
@@ -99,8 +98,6 @@ const EmployeeDashboard = () => {
     setIsPrinting(true);
     const toastId = toast.loading("Generating ID Card...");
     try {
-      // Generate QR Code with all employee data
-      console.log("Generating QR Code...");
       const qrData = JSON.stringify({
         id: user.employeeId,
         name: user.name,
@@ -118,19 +115,13 @@ const EmployeeDashboard = () => {
           light: "#ffffff",
         },
       });
-      console.log("QR Code generated successfully");
 
-      // Generate PDF
-      console.log("Creating PDF document...");
       const doc = <EmployeeIDCardPDF user={user} qrCodeData={qrCodeUrl} logoUrl={logoBase64} />;
       
-      console.log("Converting PDF to blob...");
       const blob = await pdf(doc).toBlob();
-      console.log("Blob created successfully", { size: blob.size });
       
       const url = URL.createObjectURL(blob);
 
-      // Create a temporary link and trigger download/print
       const link = document.createElement("a");
       link.href = url;
       link.download = `ID_Card_${user.name.replace(/\s+/g, "_")}.pdf`;

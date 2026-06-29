@@ -358,7 +358,6 @@ const BuyerDashboard = () => {
   }, [fetchDashboardData]);
 
   const handlePrintIDCard = async () => {
-    console.log("Starting ID Card generation for Buyer...", { user });
     if (!user) {
       toast.error("User data not found!");
       return;
@@ -367,7 +366,6 @@ const BuyerDashboard = () => {
     setIsPrinting(true);
     const toastId = toast.loading("Generating ID Card...");
     try {
-      console.log("Generating QR Code...");
       const qrData = JSON.stringify({
         id: user._id,
         name: user.name,
@@ -382,9 +380,7 @@ const BuyerDashboard = () => {
         width: 200,
         color: { dark: "#000000", light: "#ffffff" },
       });
-      console.log("QR Code generated successfully");
 
-      console.log("Creating PDF document...");
       const doc = (
         <EmployeeIDCardPDF
           user={{
@@ -398,9 +394,7 @@ const BuyerDashboard = () => {
          />
        );
 
-      console.log("Converting PDF to blob...");
       const blob = await pdf(doc).toBlob();
-      console.log("Blob created successfully", { size: blob.size });
 
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
@@ -418,7 +412,6 @@ const BuyerDashboard = () => {
         autoClose: 3000,
       });
     } catch (error) {
-      console.error("Error generating ID Card:", error);
       toast.update(toastId, {
         render: `Failed to generate ID Card: ${error.message}`,
         type: "error",
@@ -471,7 +464,6 @@ const BuyerDashboard = () => {
           autoClose: 3000,
         });
       } catch (err) {
-        console.error("Report Generation Error:", err);
         toast.update(toastId, {
           render: "Failed to generate report. Please try again.",
           type: "error",

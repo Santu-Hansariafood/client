@@ -27,10 +27,8 @@ export const initiateSocket = (token) => {
     timeout: 20000,
   });
 
-  console.log("Connecting socket...");
 
   socket.on("connect", () => {
-    console.log("Socket connected:", socket.id);
   });
 
   socket.on("connect_error", (err) => {
@@ -45,7 +43,6 @@ export const initiateSocket = (token) => {
 };
 
 export const disconnectSocket = () => {
-  console.log("Disconnecting socket...");
   if (socket) socket.disconnect();
 };
 
@@ -55,7 +52,6 @@ export const subscribeToNotifications = (cb) => {
   socket.off("notification");
 
   socket.on("notification", (msg) => {
-    console.log("New notification received via socket");
     cb(null, msg);
   });
 };

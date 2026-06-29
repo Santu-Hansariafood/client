@@ -72,7 +72,6 @@ const ListQualityParameter = () => {
   };
 
   const handleView = (item) => {
-    console.log("Viewing:", item);
   };
 
   const handleEdit = (item) => {
@@ -91,14 +90,12 @@ const ListQualityParameter = () => {
       setIsEditPopupVisible(false);
       setEditItem(null);
     } catch (error) {
-      console.error("Error updating parameter:", error.response || error);
       toast.error("Failed to update quality parameter.");
     }
   };
 
   const handleDelete = async (item) => {
     try {
-      console.log("Deleting ID:", item._id);
       await api.delete(`/quality-parameters/${item._id}`);
       setQualityParameters((prev) =>
         prev.filter((param) => param._id !== item._id),
@@ -106,7 +103,6 @@ const ListQualityParameter = () => {
       setFilteredData((prev) => prev.filter((param) => param._id !== item._id));
       toast.success("Quality parameter deleted successfully!");
     } catch (error) {
-      console.error("Error deleting parameter:", error.response || error);
       toast.error("Failed to delete quality parameter.");
     }
   };

@@ -19,6 +19,7 @@ import MisVoucherLedger from "./components/MisVoucherLedger";
 import MisLorryLedger from "./components/MisLorryLedger";
 import MisPageHeader from "./components/MisPageHeader";
 import { buildTallyVoucherRows } from "./utils/paymentLedgerUtils";
+import Loading from "../../../common/Loading/Loading";
 
 const ListPaymentReceived = () => {
   const navigate = useNavigate();
@@ -65,16 +66,20 @@ const ListPaymentReceived = () => {
           params: { limit: 0 },
         });
         setAllCompanies(companiesRes.data.data || companiesRes.data || []);
-        
+
         const sellerCompaniesRes = await api.get("/seller-company", {
           params: { limit: 0 },
         });
-        setSellerCompanies(sellerCompaniesRes.data.data || sellerCompaniesRes.data || []);
-        
+        setSellerCompanies(
+          sellerCompaniesRes.data.data || sellerCompaniesRes.data || [],
+        );
+
         const buyerCompaniesRes = await api.get("/buyers", {
           params: { limit: 0 },
         });
-        setBuyerCompanies(buyerCompaniesRes.data.data || buyerCompaniesRes.data || []);
+        setBuyerCompanies(
+          buyerCompaniesRes.data.data || buyerCompaniesRes.data || [],
+        );
       } catch (error) {
         console.error("Error fetching initial data:", error);
       }
@@ -208,11 +213,7 @@ const ListPaymentReceived = () => {
       }
     };
     fetchSaudas();
-  }, [
-    filters.ledgerType,
-    selectedCompany,
-    selectedOpposingCompany,
-  ]);
+  }, [filters.ledgerType, selectedCompany, selectedOpposingCompany]);
 
   useEffect(() => {
     const fetchLorryWise = async () => {
@@ -302,8 +303,7 @@ const ListPaymentReceived = () => {
   const fetchPayments = async () => {
     try {
       setLoading(true);
-      
-      // 1. Fetch Payments
+
       const response = await api.get("/payment-received", {
         params: {
           ...filters,
@@ -316,17 +316,23 @@ const ListPaymentReceived = () => {
       setTotalAmount(response.data.totalAmount || 0);
       setOpeningBalance(response.data.openingBalance || 0);
 
-      // 2. Fetch Loading Entries (Bills) for the same period and company
-      if (filters.ledgerType && (filters.buyerCompany || filters.supplierCompany)) {
+      if (
+        filters.ledgerType &&
+        (filters.buyerCompany || filters.supplierCompany)
+      ) {
         const entryParams = {
           startDate: filters.startDate,
           endDate: filters.endDate,
           limit: 1000,
         };
-        if (filters.buyerCompany) entryParams.buyerCompany = filters.buyerCompany;
-        if (filters.supplierCompany) entryParams.supplierCompany = filters.supplierCompany;
+        if (filters.buyerCompany)
+          entryParams.buyerCompany = filters.buyerCompany;
+        if (filters.supplierCompany)
+          entryParams.supplierCompany = filters.supplierCompany;
 
-        const entriesRes = await api.get("/loading-entries", { params: entryParams });
+        const entriesRes = await api.get("/loading-entries", {
+          params: entryParams,
+        });
         setListEntries(entriesRes.data.data || []);
       } else {
         setListEntries([]);
@@ -441,42 +447,96 @@ const ListPaymentReceived = () => {
     setFilters((prev) => ({
       ...prev,
       supplierCompany:
-        filters.ledgerType === "Buyer" ? opt?.value || "" : prev.supplierCompany,
+        filters.ledgerType === "Buyer"
+          ? opt?.value || ""
+          : prev.supplierCompany,
       buyerCompany:
         filters.ledgerType === "Seller" ? opt?.label || "" : prev.buyerCompany,
     }));
   };
 
-  // Function to convert number to words (Indian system)
   const numberToWords = (num) => {
-    const ones = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine'];
-    const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
-    const teens = ['Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
-    
+    const ones = [
+      "",
+      "One",
+      "Two",
+      "Three",
+      "Four",
+      "Five",
+      "Six",
+      "Seven",
+      "Eight",
+      "Nine",
+    ];
+    const tens = [
+      "",
+      "",
+      "Twenty",
+      "Thirty",
+      "Forty",
+      "Fifty",
+      "Sixty",
+      "Seventy",
+      "Eighty",
+      "Ninety",
+    ];
+    const teens = [
+      "Ten",
+      "Eleven",
+      "Twelve",
+      "Thirteen",
+      "Fourteen",
+      "Fifteen",
+      "Sixteen",
+      "Seventeen",
+      "Eighteen",
+      "Nineteen",
+    ];
+
     const toWords = (n) => {
-      if (n === 0) return '';
+      if (n === 0) return "";
       if (n < 10) return ones[n];
       if (n < 20) return teens[n - 10];
-      if (n < 100) return tens[Math.floor(n / 10)] + (n % 10 ? ' ' + ones[n % 10] : '');
-      if (n < 1000) return ones[Math.floor(n / 100)] + ' Hundred' + (n % 100 ? ' ' + toWords(n % 100) : '');
-      if (n < 100000) return toWords(Math.floor(n / 1000)) + ' Thousand' + (n % 1000 ? ' ' + toWords(n % 1000) : '');
-      if (n < 10000000) return toWords(Math.floor(n / 100000)) + ' Lakh' + (n % 100000 ? ' ' + toWords(n % 100000) : '');
-      return toWords(Math.floor(n / 10000000)) + ' Crore' + (n % 10000000 ? ' ' + toWords(n % 10000000) : '');
+      if (n < 100)
+        return tens[Math.floor(n / 10)] + (n % 10 ? " " + ones[n % 10] : "");
+      if (n < 1000)
+        return (
+          ones[Math.floor(n / 100)] +
+          " Hundred" +
+          (n % 100 ? " " + toWords(n % 100) : "")
+        );
+      if (n < 100000)
+        return (
+          toWords(Math.floor(n / 1000)) +
+          " Thousand" +
+          (n % 1000 ? " " + toWords(n % 1000) : "")
+        );
+      if (n < 10000000)
+        return (
+          toWords(Math.floor(n / 100000)) +
+          " Lakh" +
+          (n % 100000 ? " " + toWords(n % 100000) : "")
+        );
+      return (
+        toWords(Math.floor(n / 10000000)) +
+        " Crore" +
+        (n % 10000000 ? " " + toWords(n % 10000000) : "")
+      );
     };
 
-    if (num === 0) return 'Zero Rupees Only';
-    
+    if (num === 0) return "Zero Rupees Only";
+
     const rupees = Math.floor(num);
     const paise = Math.round((num - rupees) * 100);
-    
-    let words = '';
+
+    let words = "";
     if (rupees > 0) {
-      words += toWords(rupees) + ' Rupees';
+      words += toWords(rupees) + " Rupees";
     }
     if (paise > 0) {
-      words += (rupees > 0 ? ' and ' : '') + toWords(paise) + ' Paise';
+      words += (rupees > 0 ? " and " : "") + toWords(paise) + " Paise";
     }
-    return words + ' Only';
+    return words + " Only";
   };
 
   const handlePrintReport = async () => {
@@ -492,22 +552,32 @@ const ListPaymentReceived = () => {
         params,
       });
 
-      // 2. Fetch Loading Entries (Bills) if needed for the report
       let allEntries = [];
-      if (filters.ledgerType && (filters.buyerCompany || filters.supplierCompany)) {
+      if (
+        filters.ledgerType &&
+        (filters.buyerCompany || filters.supplierCompany)
+      ) {
         const entryParams = {
           startDate: filters.startDate,
           endDate: filters.endDate,
           limit: 1000,
         };
-        if (filters.buyerCompany) entryParams.buyerCompany = filters.buyerCompany;
-        if (filters.supplierCompany) entryParams.supplierCompany = filters.supplierCompany;
+        if (filters.buyerCompany)
+          entryParams.buyerCompany = filters.buyerCompany;
+        if (filters.supplierCompany)
+          entryParams.supplierCompany = filters.supplierCompany;
 
-        const entriesRes = await api.get("/loading-entries", { params: entryParams });
+        const entriesRes = await api.get("/loading-entries", {
+          params: entryParams,
+        });
         allEntries = entriesRes.data.data || [];
       }
 
-      const reportRows = buildTallyVoucherRows(response.data.data || [], openingBalance, allEntries);
+      const reportRows = buildTallyVoucherRows(
+        response.data.data || [],
+        openingBalance,
+        allEntries,
+      );
 
       if (reportRows.length === 0) {
         toast.warning("No records found");
@@ -524,7 +594,6 @@ const ListPaymentReceived = () => {
       const pageHeight = doc.internal.pageSize.getHeight();
       const margin = 10;
 
-      // Header
       doc.setFont("helvetica", "bold");
       doc.setFontSize(16);
       doc.setTextColor(0, 0, 0);
@@ -550,47 +619,46 @@ const ListPaymentReceived = () => {
       doc.setLineWidth(0.5);
       doc.line(margin, 31, pageWidth - margin, 31);
 
-      // Company & Period Info Box
       let infoY = 34;
       const buyerName = filters.buyerCompany || "N/A";
       const sellerName = filters.supplierCompany || "N/A";
-      const startDate = filters.startDate ? new Date(filters.startDate).toLocaleDateString("en-GB") : "All";
-      const endDate = filters.endDate ? new Date(filters.endDate).toLocaleDateString("en-GB") : "All";
-      
-      // Draw info box border
+      const startDate = filters.startDate
+        ? new Date(filters.startDate).toLocaleDateString("en-GB")
+        : "All";
+      const endDate = filters.endDate
+        ? new Date(filters.endDate).toLocaleDateString("en-GB")
+        : "All";
+
       doc.rect(margin, infoY, pageWidth - margin * 2, 30);
-      
-      // Left side info
+
       doc.setFontSize(9);
       doc.setFont("helvetica", "bold");
       doc.text("Ledger", margin + 2, infoY + 8);
       doc.setFont("helvetica", "normal");
       doc.text(`: ${selectedCompany?.label || ""}`, margin + 20, infoY + 8);
-      
+
       doc.setFont("helvetica", "bold");
       doc.text("Date Between", margin + 2, infoY + 18);
       doc.setFont("helvetica", "normal");
       doc.text(`: ${startDate} To ${endDate}`, margin + 35, infoY + 18);
-      
-      // Right side info
+
       doc.setFont("helvetica", "bold");
       doc.text("Branch", pageWidth / 2, infoY + 8, { align: "center" });
       doc.setFont("helvetica", "normal");
       doc.text(": All", pageWidth / 2 + 18, infoY + 8);
-      
+
       doc.setFont("helvetica", "bold");
       doc.text("Buyer", pageWidth / 2, infoY + 18, { align: "center" });
       doc.setFont("helvetica", "normal");
       doc.text(`: ${buyerName}`, pageWidth / 2 + 18, infoY + 18);
-      
+
       doc.setFont("helvetica", "bold");
       doc.text("Seller", pageWidth - 70, infoY + 8);
       doc.setFont("helvetica", "normal");
       doc.text(`: ${sellerName}`, pageWidth - 40, infoY + 8);
-      
+
       let currentY = infoY + 38;
 
-      // Intro text
       doc.setFont("helvetica", "normal");
       doc.setFontSize(10);
       doc.text("Please find the below payment details", margin, currentY + 5);
@@ -609,10 +677,12 @@ const ListPaymentReceived = () => {
         currentY += 10;
       }
 
-      // Helper to calculate tally details for a loading entry
       const calculateTallyDetails = (e) => {
         if (!e) return { netAmount: 0, dueAmount: 0 };
-        const weight = (e.unloadingWeight || 0) > 0 ? e.unloadingWeight : e.loadingWeight || 0;
+        const weight =
+          (e.unloadingWeight || 0) > 0
+            ? e.unloadingWeight
+            : e.loadingWeight || 0;
         const rate = e.actualRate || 0;
         const cdPercent = e.cd || 0;
         const gstPercent = e.gst || 0;
@@ -621,10 +691,12 @@ const ListPaymentReceived = () => {
         const taxableAmount = grossAmount - cdAmount;
         const gstAmount = taxableAmount * (gstPercent / 100);
         const netAmount = taxableAmount + gstAmount;
-        return { netAmount, dueAmount: Math.max(0, netAmount - (e.paidAmount || 0)) };
+        return {
+          netAmount,
+          dueAmount: Math.max(0, netAmount - (e.paidAmount || 0)),
+        };
       };
 
-      // Helper to extract fields from a row
       const extractRowData = (row) => {
         let saudaNo = "-";
         let lorryNo = "-";
@@ -650,7 +722,6 @@ const ListPaymentReceived = () => {
 
         const raw = row.raw;
         if (raw?.uiType === "entry") {
-          // It's a LoadingEntry
           const details = calculateTallyDetails(raw);
           saudaNo = raw.saudaNo || "-";
           lorryNo = raw.lorryNumber || "-";
@@ -661,7 +732,6 @@ const ListPaymentReceived = () => {
           remarks = raw.generalRemarks || "-";
           qualityClaims = raw.qualityClaims || [];
         } else if (raw?.mappings?.length > 0) {
-          // It's a PaymentReceived with mappings
           const firstMapping = raw.mappings[0];
           const loadingEntry = firstMapping?.loadingEntryId;
           const details = calculateTallyDetails(loadingEntry);
@@ -674,7 +744,6 @@ const ListPaymentReceived = () => {
           remarks = firstMapping?.remarks || raw.remarks || "-";
           qualityClaims = loadingEntry?.qualityClaims || [];
         } else {
-          // It's a PaymentReceived without mappings
           remarks = row.particulars;
         }
 
@@ -701,7 +770,6 @@ const ListPaymentReceived = () => {
         groupedBySauda[saudaKey].push({ row, rowData });
       });
 
-      // Process each sauda group
       let rowIdx = 0;
       const tableData = [];
       const saudaTotals = {};
@@ -712,7 +780,6 @@ const ListPaymentReceived = () => {
         let saudaCreditTotal = 0;
         let saudaPaidTotal = 0;
 
-        // Add sauda header row
         tableData.push([
           {
             content: `SAUDA NO: ${saudaKey}`,
@@ -725,11 +792,9 @@ const ListPaymentReceived = () => {
           },
         ]);
 
-        // Add each row in the sauda group
         group.forEach(({ row, rowData }) => {
           rowIdx++;
-          
-          // Calculate debit/credit for this row
+
           const debit = row.debit || 0;
           const credit = row.credit || 0;
           saudaDebitTotal += debit;
@@ -744,14 +809,22 @@ const ListPaymentReceived = () => {
             rowData.billNo,
             (row.buyerCompany || "-").toUpperCase(),
             (row.supplierCompany || "-").toUpperCase(),
-            debit > 0 ? `Rs. ${debit.toLocaleString("en-IN", { minimumFractionDigits: 2 })}` : "",
-            credit > 0 ? `Rs. ${credit.toLocaleString("en-IN", { minimumFractionDigits: 2 })}` : "",
-            (debit - credit) !== 0 ? `Rs. ${(debit - credit).toLocaleString("en-IN", { minimumFractionDigits: 2 })}` : "",
+            debit > 0
+              ? `Rs. ${debit.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`
+              : "",
+            credit > 0
+              ? `Rs. ${credit.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`
+              : "",
+            debit - credit !== 0
+              ? `Rs. ${(debit - credit).toLocaleString("en-IN", { minimumFractionDigits: 2 })}`
+              : "",
             rowData.remarks,
           ]);
 
           // Add claim rows if any
-          const validClaims = rowData.qualityClaims.filter(c => Number(c.claimAmount) > 0);
+          const validClaims = rowData.qualityClaims.filter(
+            (c) => Number(c.claimAmount) > 0,
+          );
           if (validClaims.length > 0) {
             validClaims.forEach((claim) => {
               tableData.push([
@@ -771,7 +844,6 @@ const ListPaymentReceived = () => {
           }
         });
 
-        // Add sauda total row
         tableData.push([
           {
             content: `TOTAL FOR SAUDA ${saudaKey}`,
@@ -787,7 +859,6 @@ const ListPaymentReceived = () => {
           "",
         ]);
 
-        // Store sauda totals
         saudaTotals[saudaKey] = {
           debit: saudaDebitTotal,
           credit: saudaCreditTotal,
@@ -864,7 +935,6 @@ const ListPaymentReceived = () => {
       const finalY = doc.lastAutoTable?.finalY || 70;
       const summaryY = finalY + 10;
 
-      // Calculate totals
       let totalDebit = 0;
       let totalCredit = 0;
       reportRows.forEach((row) => {
@@ -874,7 +944,6 @@ const ListPaymentReceived = () => {
         }
       });
 
-      // Print total debit and credit
       doc.setFontSize(10);
       doc.setFont("helvetica", "bold");
       doc.text(
@@ -889,72 +958,97 @@ const ListPaymentReceived = () => {
         { align: "right" },
       );
 
-      // Print totals in words
       doc.setFontSize(8);
       doc.setFont("helvetica", "normal");
       let currentWordsY = summaryY + 8;
-      
+
       if (totalDebit > 0) {
-        doc.text(`Total Debit in Words: ${numberToWords(totalDebit)}`, margin, currentWordsY);
+        doc.text(
+          `Total Debit in Words: ${numberToWords(totalDebit)}`,
+          margin,
+          currentWordsY,
+        );
         currentWordsY += 6;
       }
-      
+
       if (totalCredit > 0) {
-        doc.text(`Total Credit in Words: ${numberToWords(totalCredit)}`, margin, currentWordsY);
+        doc.text(
+          `Total Credit in Words: ${numberToWords(totalCredit)}`,
+          margin,
+          currentWordsY,
+        );
         currentWordsY += 10;
       }
 
-      // Find seller company's bank details
       let sellerCompanyData = null;
-      
-      // Get the seller company name based on ledger type
-      const sellerCompanyName = filters.ledgerType === "Buyer" 
-        ? selectedOpposingCompany?.label 
-        : filters.ledgerType === "Seller" 
-          ? selectedCompany?.label 
-          : filters.supplierCompany;
-      
+
+      const sellerCompanyName =
+        filters.ledgerType === "Buyer"
+          ? selectedOpposingCompany?.label
+          : filters.ledgerType === "Seller"
+            ? selectedCompany?.label
+            : filters.supplierCompany;
+
       if (sellerCompanyName) {
-        // Find seller company in sellerCompanies list
-        sellerCompanyData = sellerCompanies.find(c => 
-          c.companyName === sellerCompanyName || 
-          (selectedOpposingCompany && c._id === selectedOpposingCompany.value) ||
-          (selectedCompany && c._id === selectedCompany.value)
+        sellerCompanyData = sellerCompanies.find(
+          (c) =>
+            c.companyName === sellerCompanyName ||
+            (selectedOpposingCompany &&
+              c._id === selectedOpposingCompany.value) ||
+            (selectedCompany && c._id === selectedCompany.value),
         );
       }
-      
-      // Bank Details Section
+
       doc.setFont("helvetica", "bold");
       doc.setFontSize(10);
       doc.text("Seller Bank Details:", margin, currentWordsY);
       currentWordsY += 6;
-      
+
       doc.setFont("helvetica", "normal");
       doc.setFontSize(9);
-      
+
       const bankDetails = sellerCompanyData?.bankDetails?.[0];
-      
+
       if (bankDetails) {
-        doc.text(`Bank Name: ${bankDetails.bankName || "-"}`, margin, currentWordsY);
+        doc.text(
+          `Bank Name: ${bankDetails.bankName || "-"}`,
+          margin,
+          currentWordsY,
+        );
         currentWordsY += 5;
-        doc.text(`Account Name: ${bankDetails.accountHolderName || sellerCompanyName || "-"}`, margin, currentWordsY);
+        doc.text(
+          `Account Name: ${bankDetails.accountHolderName || sellerCompanyName || "-"}`,
+          margin,
+          currentWordsY,
+        );
         currentWordsY += 5;
-        doc.text(`Account Number: ${bankDetails.accountNumber || "-"}`, margin, currentWordsY);
+        doc.text(
+          `Account Number: ${bankDetails.accountNumber || "-"}`,
+          margin,
+          currentWordsY,
+        );
         currentWordsY += 5;
-        doc.text(`IFSC Code: ${bankDetails.ifscCode || "-"}`, margin, currentWordsY);
+        doc.text(
+          `IFSC Code: ${bankDetails.ifscCode || "-"}`,
+          margin,
+          currentWordsY,
+        );
         currentWordsY += 5;
-        doc.text(`Branch: ${bankDetails.branchName || "-"}`, margin, currentWordsY);
+        doc.text(
+          `Branch: ${bankDetails.branchName || "-"}`,
+          margin,
+          currentWordsY,
+        );
         currentWordsY += 8;
       } else {
         doc.text("No bank details available", margin, currentWordsY);
         currentWordsY += 8;
       }
 
-      // Disclaimer Note
       doc.setLineWidth(0.2);
       doc.line(margin, currentWordsY, pageWidth - margin, currentWordsY);
       currentWordsY += 8;
-      
+
       doc.setFontSize(8);
       doc.setFont("helvetica", "italic");
       doc.setTextColor(80, 80, 80);
@@ -962,29 +1056,26 @@ const ListPaymentReceived = () => {
         "This voucher is for information purposes only, received from the Buyer/Seller. Hansaria Food uses it solely for informational purposes. This document does not constitute any legal obligation or financial commitment unless duly signed and authorized.",
         margin,
         currentWordsY,
-        { align: "justify", maxWidth: pageWidth - margin * 2 }
+        { align: "justify", maxWidth: pageWidth - margin * 2 },
       );
-      
-      // Calculate how much space the note took
+
       const noteLines = doc.splitTextToSize(
         "This voucher is for information purposes only, received from the Buyer/Seller. Hansaria Food uses it solely for informational purposes. This document does not constitute any legal obligation or financial commitment unless duly signed and authorized.",
-        pageWidth - margin * 2
+        pageWidth - margin * 2,
       );
       currentWordsY += noteLines.length * 5 + 5;
 
-      // QR Code
       try {
-        // Generate a simple QR code using a free API
-        const qrText = encodeURIComponent("HANSARIA FOOD PRIVATE LIMITED\nPayment MIS Report");
+        const qrText = encodeURIComponent(
+          "HANSARIA FOOD PRIVATE LIMITED\nPayment MIS Report",
+        );
         const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${qrText}`;
-        
-        // Add QR code image
-        await doc.addImage(qrUrl, 'PNG', margin, currentWordsY, 30, 30);
+
+        await doc.addImage(qrUrl, "PNG", margin, currentWordsY, 30, 30);
       } catch (qrError) {
         console.log("QR code not added:", qrError);
       }
 
-      // Signatory
       doc.setTextColor(0, 0, 0);
       doc.setFontSize(9);
       doc.setFont("helvetica", "bold");
@@ -1031,22 +1122,32 @@ const ListPaymentReceived = () => {
         params,
       });
 
-      // Fetch Loading Entries with quality claims
       let allEntries = [];
-      if (filters.ledgerType && (filters.buyerCompany || filters.supplierCompany)) {
+      if (
+        filters.ledgerType &&
+        (filters.buyerCompany || filters.supplierCompany)
+      ) {
         const entryParams = {
           startDate: filters.startDate,
           endDate: filters.endDate,
           limit: 1000,
         };
-        if (filters.buyerCompany) entryParams.buyerCompany = filters.buyerCompany;
-        if (filters.supplierCompany) entryParams.supplierCompany = filters.supplierCompany;
+        if (filters.buyerCompany)
+          entryParams.buyerCompany = filters.buyerCompany;
+        if (filters.supplierCompany)
+          entryParams.supplierCompany = filters.supplierCompany;
 
-        const entriesRes = await api.get("/loading-entries", { params: entryParams });
+        const entriesRes = await api.get("/loading-entries", {
+          params: entryParams,
+        });
         allEntries = entriesRes.data.data || [];
       }
 
-      const reportRows = buildTallyVoucherRows(response.data.data || [], openingBalance, allEntries);
+      const reportRows = buildTallyVoucherRows(
+        response.data.data || [],
+        openingBalance,
+        allEntries,
+      );
 
       if (reportRows.length === 0) {
         toast.warning("No records found");
@@ -1107,10 +1208,8 @@ const ListPaymentReceived = () => {
 
       let currentY = selectedCompany ? 45 : 40;
 
-      // First, process all payments and entries
       const payments = response.data.data || [];
 
-      // Payment Table
       const paymentTableData = payments.map((p, idx) => [
         idx + 1,
         p.date ? new Date(p.date).toLocaleDateString("en-GB") : "—",
@@ -1127,9 +1226,7 @@ const ListPaymentReceived = () => {
 
         autoTable(doc, {
           startY: currentY,
-          head: [
-            ["NO", "DATE", "VOUCHER NO", "MODE", "AMOUNT"],
-          ],
+          head: [["NO", "DATE", "VOUCHER NO", "MODE", "AMOUNT"]],
           body: paymentTableData,
           theme: "grid",
           headStyles: {
@@ -1154,18 +1251,21 @@ const ListPaymentReceived = () => {
         currentY = doc.lastAutoTable?.finalY + 10 || currentY + 20;
       }
 
-      // Quality Claims Table
-      const entriesWithClaims = allEntries.filter(e => 
-        e.qualityClaims && e.qualityClaims.length > 0 && 
-        e.qualityClaims.some(c => Number(c.claimAmount) > 0)
+      const entriesWithClaims = allEntries.filter(
+        (e) =>
+          e.qualityClaims &&
+          e.qualityClaims.length > 0 &&
+          e.qualityClaims.some((c) => Number(c.claimAmount) > 0),
       );
 
       if (entriesWithClaims.length > 0) {
         const claimTableData = [];
         let claimIdx = 1;
-        entriesWithClaims.forEach(entry => {
-          const validClaims = entry.qualityClaims.filter(c => Number(c.claimAmount) > 0);
-          validClaims.forEach(claim => {
+        entriesWithClaims.forEach((entry) => {
+          const validClaims = entry.qualityClaims.filter(
+            (c) => Number(c.claimAmount) > 0,
+          );
+          validClaims.forEach((claim) => {
             claimTableData.push([
               claimIdx++,
               entry.saudaNo || "N/A",
@@ -1186,7 +1286,14 @@ const ListPaymentReceived = () => {
           autoTable(doc, {
             startY: currentY,
             head: [
-              ["NO", "SAUDA NO", "LORRY NO", "BILL NO", "PARAMETER", "CLAIM AMOUNT"],
+              [
+                "NO",
+                "SAUDA NO",
+                "LORRY NO",
+                "BILL NO",
+                "PARAMETER",
+                "CLAIM AMOUNT",
+              ],
             ],
             body: claimTableData,
             theme: "grid",
@@ -1213,17 +1320,11 @@ const ListPaymentReceived = () => {
 
       const finalY = doc.lastAutoTable?.finalY || 70;
 
-      // Footer
       doc.setFontSize(9);
       doc.text("Authorised Signatory", pageWidth - margin, finalY + 20, {
         align: "right",
       });
-      doc.line(
-        pageWidth - 60,
-        finalY + 17,
-        pageWidth - margin,
-        finalY + 17,
-      );
+      doc.line(pageWidth - 60, finalY + 17, pageWidth - margin, finalY + 17);
 
       doc.save(
         `Payment_Advice_${filters.startDate || "All"}_to_${filters.endDate || "All"}.pdf`,
@@ -1266,10 +1367,7 @@ const ListPaymentReceived = () => {
         <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top_right,_#f0f9ff_0%,_#f8fafc_45%,_#f1f5f9_100%)]" />
 
         <div className="max-w-[1600px] mx-auto space-y-5 sm:space-y-6">
-          <MisPageHeader
-            activeTab={activeTab}
-            onTabChange={setActiveTab}
-          />
+          <MisPageHeader activeTab={activeTab} onTabChange={setActiveTab} />
 
           {activeTab === "vouchers" ? (
             <>
@@ -1336,12 +1434,7 @@ const ListPaymentReceived = () => {
               />
 
               {fetchingLorryWise ? (
-                <div className="rounded-3xl border border-slate-200 bg-white py-24 flex flex-col items-center gap-4 shadow-sm">
-                  <div className="w-12 h-12 border-4 border-[#1e3a5f]/20 border-t-[#1e3a5f] rounded-full animate-spin" />
-                  <p className="text-xs font-black text-slate-400 uppercase tracking-[0.2em]">
-                    Loading lorry ledger…
-                  </p>
-                </div>
+                <Loading />
               ) : selectedSauda ? (
                 lorryWiseData.length > 0 ? (
                   <MisLorryLedger
@@ -1353,9 +1446,12 @@ const ListPaymentReceived = () => {
                   />
                 ) : (
                   <div className="rounded-3xl border border-dashed border-slate-200 bg-white py-20 text-center px-6">
-                    <p className="font-bold text-slate-800">No lorries for this sauda</p>
+                    <p className="font-bold text-slate-800">
+                      No lorries for this sauda
+                    </p>
                     <p className="text-sm text-slate-500 mt-2">
-                      Sauda {selectedSauda.label} has no loading entries in the system.
+                      Sauda {selectedSauda.label} has no loading entries in the
+                      system.
                     </p>
                     <button
                       type="button"

@@ -344,7 +344,7 @@ const SellerDashboard = () => {
         reader.onloadend = () => setLogoBase64(reader.result);
         reader.readAsDataURL(blob);
       } catch (e) {
-        console.error("Logo conversion failed", e);
+        toast.error("Logo conversion failed");
       }
     };
     convertLogo();
@@ -447,7 +447,6 @@ const SellerDashboard = () => {
         setCompanyBreakdown(statsRes?.data?.companyBreakdown || []);
       } catch (err) {
         if (!isMounted) return;
-        console.error("Dashboard Sync Error:", err);
         setError(
           "Unable to sync dashboard data. Check your connection and try again.",
         );
@@ -469,7 +468,7 @@ const SellerDashboard = () => {
         try {
           await markAsRead(notif._id);
         } catch (err) {
-          console.error("Failed to mark notification as read:", err);
+          toast.error("Failed to mark notification as read.");
         }
       }
     },
@@ -514,7 +513,6 @@ const SellerDashboard = () => {
           autoClose: 3000,
         });
       } catch (err) {
-        console.error("Invoice Generation Error:", err);
         toast.update(toastId, {
           render: "Failed to generate invoice. Please try again.",
           type: "error",
@@ -527,7 +525,6 @@ const SellerDashboard = () => {
   );
 
   const handlePrintIDCard = async () => {
-    console.log("Starting ID Card generation for Seller...", { user });
     if (!user) {
       toast.error("User data not found!");
       return;
@@ -536,7 +533,6 @@ const SellerDashboard = () => {
     setIsPrinting(true);
     const toastId = toast.loading("Generating ID Card...");
     try {
-      console.log("Generating QR Code...");
       const qrData = JSON.stringify({
         id: user._id,
         name: user.name,
@@ -583,7 +579,6 @@ const SellerDashboard = () => {
         autoClose: 3000,
       });
     } catch (error) {
-      console.error("Error generating ID Card:", error);
       toast.update(toastId, {
         render: `Failed to generate ID Card: ${error.message}`,
         type: "error",

@@ -53,12 +53,9 @@ const ReceivingPopup = ({
       const matchedCommodity = commodityData.find(
         (c) =>
           c.name?.toLowerCase() === selectedEntry.commodity?.toLowerCase() ||
-          c.label?.toLowerCase() === selectedEntry.commodity?.toLowerCase()
+          c.label?.toLowerCase() === selectedEntry.commodity?.toLowerCase(),
       );
-      
-      console.log("SELECTED ENTRY", selectedEntry);
-      console.log("CONSIGNEE DATA", consigneeData);
-      
+
       const pdfData = buildSaudaPdfData({
         item: {
           ...selectedEntry,
@@ -80,41 +77,44 @@ const ReceivingPopup = ({
         },
       });
 
-      pdfData.hsnCode = matchedCommodity?.hsnCode || matchedCommodity?.hsn || matchedCommodity?.hsnNumber || matchedCommodity?.hsnCodeNumber || matchedCommodity?.hsn_code || selectedEntry.hsnCode || selectedEntry.hsn || selectedEntry.hsn_code;
-      
-      console.log("FINAL PDF DATA", pdfData);
+      pdfData.hsnCode =
+        matchedCommodity?.hsnCode ||
+        matchedCommodity?.hsn ||
+        matchedCommodity?.hsnNumber ||
+        matchedCommodity?.hsnCodeNumber ||
+        matchedCommodity?.hsn_code ||
+        selectedEntry.hsnCode ||
+        selectedEntry.hsn ||
+        selectedEntry.hsn_code;
 
       const qrData = JSON.stringify({
-          saudaNo: selectedEntry.saudaNo,
-          billNo: selectedEntry.billNumber,
-          sellerBillNo: selectedEntry.sellerBillNo,
-          lorryNo: selectedEntry.lorryNumber,
-          loadingWeight: selectedEntry.loadingWeight,
-          unloadingWeight: selectedEntry.unloadingWeight,
-          loadingDate: selectedEntry.loadingDate,
-          unloadingDate: selectedEntry.unloadingDate,
-          commodity: selectedEntry.commodity,
-          buyerCompany: selectedEntry.buyerCompany,
-          sellerCompany: selectedEntry.supplierCompany,
-          rate: selectedEntry.actualRate || selectedEntry.rate,
-          cd: cdValue,
-          gst: gstValue
-        });
+        saudaNo: selectedEntry.saudaNo,
+        billNo: selectedEntry.billNumber,
+        sellerBillNo: selectedEntry.sellerBillNo,
+        lorryNo: selectedEntry.lorryNumber,
+        loadingWeight: selectedEntry.loadingWeight,
+        unloadingWeight: selectedEntry.unloadingWeight,
+        loadingDate: selectedEntry.loadingDate,
+        unloadingDate: selectedEntry.unloadingDate,
+        commodity: selectedEntry.commodity,
+        buyerCompany: selectedEntry.buyerCompany,
+        sellerCompany: selectedEntry.supplierCompany,
+        rate: selectedEntry.actualRate || selectedEntry.rate,
+        cd: cdValue,
+        gst: gstValue,
+      });
       let qrCodeUrl = null;
       try {
         qrCodeUrl = await QRCode.toDataURL(qrData);
       } catch (e) {
-        console.error("QR Error", e);
+        toast.error("Failed to generate QR code");
       }
 
       const preparedEntry = { ...pdfData, qrCodeUrl };
 
       const document = (
-          <MasterReceivingReportPDF
-            entries={[preparedEntry]}
-            logoUrl={logoUrl}
-          />
-        );
+        <MasterReceivingReportPDF entries={[preparedEntry]} logoUrl={logoUrl} />
+      );
 
       const blob = await pdf(document).toBlob();
 
@@ -132,7 +132,7 @@ const ReceivingPopup = ({
         autoClose: 3000,
       });
     } catch (error) {
-      console.error("Error generating PDF:", error);
+      toast.error("Error generating PDF");
       toast.update(toastId, {
         render: "Failed to generate comprehensive report",
         type: "error",
@@ -164,12 +164,9 @@ const ReceivingPopup = ({
       const matchedCommodity = commodityData.find(
         (c) =>
           c.name?.toLowerCase() === selectedEntry.commodity?.toLowerCase() ||
-          c.label?.toLowerCase() === selectedEntry.commodity?.toLowerCase()
+          c.label?.toLowerCase() === selectedEntry.commodity?.toLowerCase(),
       );
-      
-      console.log("SELECTED ENTRY", selectedEntry);
-      console.log("CONSIGNEE DATA", consigneeData);
-      
+
       const pdfData = buildSaudaPdfData({
         item: {
           ...selectedEntry,
@@ -191,41 +188,44 @@ const ReceivingPopup = ({
         },
       });
 
-      pdfData.hsnCode = matchedCommodity?.hsnCode || matchedCommodity?.hsn || matchedCommodity?.hsnNumber || matchedCommodity?.hsnCodeNumber || matchedCommodity?.hsn_code || selectedEntry.hsnCode || selectedEntry.hsn || selectedEntry.hsn_code;
-      
-      console.log("FINAL PDF DATA", pdfData);
+      pdfData.hsnCode =
+        matchedCommodity?.hsnCode ||
+        matchedCommodity?.hsn ||
+        matchedCommodity?.hsnNumber ||
+        matchedCommodity?.hsnCodeNumber ||
+        matchedCommodity?.hsn_code ||
+        selectedEntry.hsnCode ||
+        selectedEntry.hsn ||
+        selectedEntry.hsn_code;
 
       const qrData = JSON.stringify({
-          saudaNo: selectedEntry.saudaNo,
-          billNo: selectedEntry.billNumber,
-          sellerBillNo: selectedEntry.sellerBillNo,
-          lorryNo: selectedEntry.lorryNumber,
-          loadingWeight: selectedEntry.loadingWeight,
-          unloadingWeight: selectedEntry.unloadingWeight,
-          loadingDate: selectedEntry.loadingDate,
-          unloadingDate: selectedEntry.unloadingDate,
-          commodity: selectedEntry.commodity,
-          buyerCompany: selectedEntry.buyerCompany,
-          sellerCompany: selectedEntry.supplierCompany,
-          rate: selectedEntry.actualRate || selectedEntry.rate,
-          cd: cdValue,
-          gst: gstValue
-        });
+        saudaNo: selectedEntry.saudaNo,
+        billNo: selectedEntry.billNumber,
+        sellerBillNo: selectedEntry.sellerBillNo,
+        lorryNo: selectedEntry.lorryNumber,
+        loadingWeight: selectedEntry.loadingWeight,
+        unloadingWeight: selectedEntry.unloadingWeight,
+        loadingDate: selectedEntry.loadingDate,
+        unloadingDate: selectedEntry.unloadingDate,
+        commodity: selectedEntry.commodity,
+        buyerCompany: selectedEntry.buyerCompany,
+        sellerCompany: selectedEntry.supplierCompany,
+        rate: selectedEntry.actualRate || selectedEntry.rate,
+        cd: cdValue,
+        gst: gstValue,
+      });
       let qrCodeUrl = null;
       try {
         qrCodeUrl = await QRCode.toDataURL(qrData);
       } catch (e) {
-        console.error("QR Error", e);
+        toast.error("Failed to generate QR code");
       }
 
       const preparedEntry = { ...pdfData, qrCodeUrl };
 
       const document = (
-          <MasterReceivingReportPDF
-            entries={[preparedEntry]}
-            logoUrl={logoUrl}
-          />
-        );
+        <MasterReceivingReportPDF entries={[preparedEntry]} logoUrl={logoUrl} />
+      );
 
       const blob = await pdf(document).toBlob();
       // Convert blob to base64
@@ -239,7 +239,6 @@ const ReceivingPopup = ({
         reader.onerror = reject;
       });
 
-      // Get sent by info from auth
       let sentByName = user?.name || "";
       let sentByMobile = mobile || "";
 
@@ -260,17 +259,16 @@ const ReceivingPopup = ({
         autoClose: 3000,
       });
 
-      // Update sent status
       try {
         await api.put(`/loading-entries/${selectedEntry._id}`, {
           sentStatus: "Sent",
         });
         fetchData();
       } catch (err) {
-        console.error("Error updating sent status:", err);
+        toast.error("Error updating sent status");
       }
     } catch (error) {
-      console.error("Error sending email:", error);
+      toast.error("Error sending email");
       toast.update(toastId, {
         render: "Failed to send report",
         type: "error",

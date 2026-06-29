@@ -20,7 +20,6 @@ const connect = async () => {
   const compressors = process.env.MONGODB_COMPRESSORS;
 
   try {
-    console.log("Connecting to MongoDB...");
     await mongoose.connect(uri, {
       serverSelectionTimeoutMS: 10000,
       maxPoolSize,
@@ -30,7 +29,6 @@ const connect = async () => {
       readPreference,
       compressors,
     });
-    console.log("MongoDB connected successfully.");
   } catch (err) {
     console.error("MongoDB connection error details:");
     console.error(err);

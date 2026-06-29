@@ -47,10 +47,6 @@ export const initSocket = (server) => {
   io.on("connection", (socket) => {
     const { mobile, role } = socket.user;
 
-    console.log(
-      `User connected: ${mobile} (${role}) - Socket ID: ${socket.id}`,
-    );
-
     if (role) {
       socket.join(role);
     }

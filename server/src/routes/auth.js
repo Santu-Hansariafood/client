@@ -73,15 +73,13 @@ router.post("/forgot-password", async (req, res) => {
         ? { "phoneNumbers.value": normalizedMobile }
         : { mobile: normalizedMobile };
 
-    console.log(`Searching for user: role=${role}, mobile=${normalizedMobile}`);
     const user = await Model.findOne(query);
     if (!user) {
-      console.log(`User not found for query: ${JSON.stringify(query)}`);
       return res.status(404).json({ message: "User not found" });
     }
 
     const email = getEmailByRole(user, role);
-    console.log(`Found user email: ${email}`);
+
     if (!email) {
       return res.status(400).json({
         message:
@@ -101,7 +99,6 @@ router.post("/forgot-password", async (req, res) => {
     try {
       emailTemplate = await fs.readFile(templatePath, "utf8");
     } catch (readError) {
-      console.error("Error reading email template:", readError);
       return res
         .status(500)
         .json({ message: "Failed to load email template." });
@@ -118,10 +115,8 @@ router.post("/forgot-password", async (req, res) => {
     };
 
     try {
-      console.log(`Sending OTP email to: ${email}`);
       await transporter.sendMail(mailOptions);
     } catch (mailError) {
-      console.error("Error sending OTP email:", mailError);
       return res.status(500).json({
         message: "Failed to send OTP email.",
         details: mailError.message,
@@ -129,7 +124,6 @@ router.post("/forgot-password", async (req, res) => {
     }
     res.json({ message: "OTP sent to your registered email address" });
   } catch (error) {
-    console.error("Forgot password error:", error);
     res
       .status(500)
       .json({ message: "Internal server error", details: error.message });
@@ -163,7 +157,6 @@ router.post("/verify-otp", async (req, res) => {
 
     res.json({ message: "OTP verified successfully" });
   } catch (error) {
-    console.error("Verify OTP error:", error);
     res.status(500).json({ message: "Internal server error" });
   }
 });
@@ -208,7 +201,6 @@ router.post("/change-password-otp", async (req, res) => {
     try {
       emailTemplate = await fs.readFile(templatePath, "utf8");
     } catch (readError) {
-      console.error("Error reading email template:", readError);
       return res
         .status(500)
         .json({ message: "Failed to load email template." });
@@ -227,7 +219,6 @@ router.post("/change-password-otp", async (req, res) => {
     await transporter.sendMail(mailOptions);
     res.json({ message: "OTP sent to your registered email address" });
   } catch (error) {
-    console.error("Change password OTP error:", error);
     res.status(500).json({ message: "Internal server error" });
   }
 });
@@ -264,7 +255,6 @@ router.post("/reset-password", async (req, res) => {
 
     res.json({ message: "Password reset successfully" });
   } catch (error) {
-    console.error("Reset password error:", error);
     res.status(500).json({ message: "Internal server error" });
   }
 });
@@ -279,10 +269,7 @@ router.post("/admin/login", async (req, res) => {
       normalizedMobile = phoneMatch[1];
     }
 
-    console.log(`Admin login attempt: mobile=${normalizedMobile}`);
-
     if (!process.env.JWT_SECRET) {
-      console.error("JWT_SECRET is not configured");
       return res.status(500).json({ message: "JWT_SECRET is not configured" });
     }
     const user = await User.findOne({
@@ -290,38 +277,35 @@ router.post("/admin/login", async (req, res) => {
       mobile: normalizedMobile,
     });
     if (!user) {
-      console.log(`Admin login failed: mobile=${normalizedMobile}`);
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
-    // Check if password is plain text and matches, then hash it for next time!
     let isPasswordValid = false;
-    // Check if password is bcrypt hash (starts with $2b$, $2a$, or $2y$)
-    if (user.password.startsWith('$2')) {
+    if (user.password.startsWith("$2")) {
       isPasswordValid = await user.comparePassword(password);
     } else {
-      // Check plain text match
       if (user.password === password) {
         isPasswordValid = true;
-        // Hash and save password
         user.password = password;
         await user.save();
-        console.log("Updated admin password to hashed version!");
       }
     }
-    
+
     if (!isPasswordValid) {
-      console.log(`Admin login failed: mobile=${normalizedMobile} - invalid password`);
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
     const token = jwt.sign(
-      { sub: user._id.toString(), role: "Admin", mobile: normalizedMobile, name: user.name },
+      {
+        sub: user._id.toString(),
+        role: "Admin",
+        mobile: normalizedMobile,
+        name: user.name,
+      },
       process.env.JWT_SECRET,
       { expiresIn: "7d" },
     );
 
-    console.log(`Admin login successful: ${user.name}`);
     res.json({
       role: "Admin",
       mobile: normalizedMobile,
@@ -335,7 +319,6 @@ router.post("/admin/login", async (req, res) => {
       token,
     });
   } catch (error) {
-    console.error(`Admin login error: ${error.message}`);
     res.status(500).json({ message: error.message });
   }
 });
@@ -350,38 +333,31 @@ router.post("/employees/login", async (req, res) => {
       normalizedMobile = phoneMatch[1];
     }
 
-    console.log(`Employee login attempt: mobile=${normalizedMobile}`);
-
     if (!process.env.JWT_SECRET) {
-      console.error("JWT_SECRET is not configured");
       return res.status(500).json({ message: "JWT_SECRET is not configured" });
     }
     const employee = await Employee.findOne({
       mobile: normalizedMobile,
     });
     if (!employee) {
-      console.log(`Employee login failed: mobile=${normalizedMobile}`);
       return res.status(401).json({ message: "Invalid credentials" });
     }
     if (employee.status === "Inactive") {
       return res.status(403).json({ message: "Your account is inactive." });
     }
 
-    // Check if password is plain text and matches, then hash it for next time!
     let isPasswordValid = false;
-    if (employee.password.startsWith('$2')) {
+    if (employee.password.startsWith("$2")) {
       isPasswordValid = await employee.comparePassword(password);
     } else {
       if (employee.password === password) {
         isPasswordValid = true;
         employee.password = password;
         await employee.save();
-        console.log("Updated employee password to hashed version!");
       }
     }
 
     if (!isPasswordValid) {
-      console.log(`Employee login failed: mobile=${normalizedMobile} - invalid password`);
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
@@ -396,7 +372,6 @@ router.post("/employees/login", async (req, res) => {
       { expiresIn: "7d" },
     );
 
-    console.log(`Employee login successful: ${employee.name}`);
     res.json({
       role: "Employee",
       mobile: normalizedMobile,
@@ -415,7 +390,6 @@ router.post("/employees/login", async (req, res) => {
       token,
     });
   } catch (error) {
-    console.error(`Employee login error: ${error.message}`);
     res.status(500).json({ message: error.message });
   }
 });
@@ -430,38 +404,31 @@ router.post("/transporters/login", async (req, res) => {
       normalizedMobile = phoneMatch[1];
     }
 
-    console.log(`Transporter login attempt: mobile=${normalizedMobile}`);
-
     if (!process.env.JWT_SECRET) {
-      console.error("JWT_SECRET is not configured");
       return res.status(500).json({ message: "JWT_SECRET is not configured" });
     }
     const transporter = await Transporter.findOne({
       mobile: normalizedMobile,
     });
     if (!transporter) {
-      console.log(`Transporter login failed: mobile=${normalizedMobile}`);
       return res.status(401).json({ message: "Invalid credentials" });
     }
     if (transporter.status === "Inactive") {
       return res.status(403).json({ message: "Your account is inactive." });
     }
 
-    // Check if password is plain text and matches, then hash it for next time!
     let isPasswordValid = false;
-    if (transporter.password.startsWith('$2')) {
+    if (transporter.password.startsWith("$2")) {
       isPasswordValid = await transporter.comparePassword(password);
     } else {
       if (transporter.password === password) {
         isPasswordValid = true;
         transporter.password = password;
         await transporter.save();
-        console.log("Updated transporter password to hashed version!");
       }
     }
 
     if (!isPasswordValid) {
-      console.log(`Transporter login failed: mobile=${normalizedMobile} - invalid password`);
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
@@ -476,7 +443,6 @@ router.post("/transporters/login", async (req, res) => {
       { expiresIn: "7d" },
     );
 
-    console.log(`Transporter login successful: ${transporter.name}`);
     res.json({
       role: "Transporter",
       mobile: normalizedMobile,
@@ -493,7 +459,6 @@ router.post("/transporters/login", async (req, res) => {
       token,
     });
   } catch (error) {
-    console.error(`Transporter login error: ${error.message}`);
     res.status(500).json({ message: error.message });
   }
 });
@@ -508,10 +473,7 @@ router.post("/buyers/login", async (req, res) => {
       normalizedMobile = phoneMatch[1];
     }
 
-    console.log(`Buyer login attempt: mobile=${normalizedMobile}`);
-
     if (!process.env.JWT_SECRET) {
-      console.error("JWT_SECRET is missing");
       return res.status(500).json({ message: "Server configuration error" });
     }
 
@@ -526,25 +488,21 @@ router.post("/buyers/login", async (req, res) => {
     }).populate("companyIds", "companyName");
 
     if (!buyer) {
-      console.warn(`Invalid buyer credentials for mobile: ${normalizedMobile}`);
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
-    // Check if password is plain text and matches, then hash it for next time!
     let isPasswordValid = false;
-    if (buyer.password.startsWith('$2')) {
+    if (buyer.password.startsWith("$2")) {
       isPasswordValid = await buyer.comparePassword(password);
     } else {
       if (buyer.password === password) {
         isPasswordValid = true;
         buyer.password = password;
         await buyer.save();
-        console.log("Updated buyer password to hashed version!");
       }
     }
 
     if (!isPasswordValid) {
-      console.warn(`Invalid buyer credentials for mobile: ${normalizedMobile} - invalid password`);
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
@@ -555,12 +513,16 @@ router.post("/buyers/login", async (req, res) => {
     }
 
     const token = jwt.sign(
-      { sub: buyer._id.toString(), role: "Buyer", mobile: normalizedMobile, name: buyer.name },
+      {
+        sub: buyer._id.toString(),
+        role: "Buyer",
+        mobile: normalizedMobile,
+        name: buyer.name,
+      },
       process.env.JWT_SECRET,
       { expiresIn: "7d" },
     );
 
-    console.log(`Buyer login successful: ${buyer.name}`);
     res.json({
       role: "Buyer",
       mobile: normalizedMobile,
@@ -578,7 +540,6 @@ router.post("/buyers/login", async (req, res) => {
       token,
     });
   } catch (error) {
-    console.error("Buyer login error:", error);
     res.status(500).json({ message: "Internal server error" });
   }
 });
@@ -593,10 +554,7 @@ router.post("/sellers/login", async (req, res) => {
       normalizedPhone = phoneMatch[1];
     }
 
-    console.log(`Seller login attempt: phone=${normalizedPhone}`);
-
     if (!process.env.JWT_SECRET) {
-      console.error("JWT_SECRET is missing");
       return res.status(500).json({ message: "Server configuration error" });
     }
 
@@ -611,25 +569,21 @@ router.post("/sellers/login", async (req, res) => {
     });
 
     if (!seller) {
-      console.warn(`Invalid seller credentials for phone: ${normalizedPhone}`);
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
-    // Check if password is plain text and matches, then hash it for next time!
     let isPasswordValid = false;
-    if (seller.password.startsWith('$2')) {
+    if (seller.password.startsWith("$2")) {
       isPasswordValid = await seller.comparePassword(password);
     } else {
       if (seller.password === password) {
         isPasswordValid = true;
         seller.password = password;
         await seller.save();
-        console.log("Updated seller password to hashed version!");
       }
     }
 
     if (!isPasswordValid) {
-      console.warn(`Invalid seller credentials for phone: ${normalizedPhone} - invalid password`);
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
@@ -638,12 +592,16 @@ router.post("/sellers/login", async (req, res) => {
     }
 
     const token = jwt.sign(
-      { sub: seller._id.toString(), role: "Seller", mobile: normalizedPhone, name: seller.sellerName },
+      {
+        sub: seller._id.toString(),
+        role: "Seller",
+        mobile: normalizedPhone,
+        name: seller.sellerName,
+      },
       process.env.JWT_SECRET,
       { expiresIn: "7d" },
     );
 
-    console.log(`Seller login successful: ${seller.sellerName}`);
     res.json({
       role: "Seller",
       mobile: normalizedPhone,
@@ -659,7 +617,6 @@ router.post("/sellers/login", async (req, res) => {
       token,
     });
   } catch (error) {
-    console.error("Seller login error:", error);
     res.status(500).json({ message: "Internal server error" });
   }
 });

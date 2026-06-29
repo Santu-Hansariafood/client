@@ -14,29 +14,23 @@ export const downloadFile = async (source, filename, mimeType = "application/pdf
     if (source && typeof source.output === 'function') {
       if (isMobile) {
         try {
-          console.log("Trying jsPDF native save()");
           source.save(filename);
           return;
         } catch (e1) {
-          console.warn("jsPDF native save() failed:", e1);
           
           try {
-            console.log("Trying blob + anchor download");
             const blob = source.output('blob');
             const url = URL.createObjectURL(blob);
             await triggerDownloadWithFallback(url, filename, isMobile, isAndroid);
             setTimeout(() => URL.revokeObjectURL(url), 10000);
             return;
           } catch (e2) {
-            console.warn("Blob + anchor failed:", e2);
             
             try {
-              console.log("Trying data URI navigation");
               const dataUri = source.output('datauristring');
               window.location.href = dataUri;
               return;
             } catch (e3) {
-              console.error("All download strategies failed for jsPDF:", e3);
               toast.error("Could not download PDF. Please try a different device/browser.");
             }
           }
@@ -82,7 +76,6 @@ export const downloadFile = async (source, filename, mimeType = "application/pdf
 };
 
 async function triggerDownloadWithFallback(url, filename, isMobile, isAndroid) {
-  console.log("Strategy 1: Anchor tag download");
   try {
     const link = document.createElement("a");
     link.href = url;
@@ -106,7 +99,6 @@ async function triggerDownloadWithFallback(url, filename, isMobile, isAndroid) {
   }
   
   if (isMobile) {
-    console.log("Strategy 2: Hidden iframe");
     try {
       const iframe = document.createElement("iframe");
       iframe.style.display = "none";
@@ -125,7 +117,6 @@ async function triggerDownloadWithFallback(url, filename, isMobile, isAndroid) {
   }
   
   if (isAndroid) {
-    console.log("Strategy 3: Android WebView direct navigation");
     try {
       window.location.href = url;
       return;
@@ -135,7 +126,6 @@ async function triggerDownloadWithFallback(url, filename, isMobile, isAndroid) {
   }
   
   if (isMobile) {
-    console.log("Strategy 4: Window open");
     try {
       window.open(url, "_blank");
       return;
