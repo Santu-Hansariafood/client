@@ -304,7 +304,7 @@ const styles = StyleSheet.create({
   },
   footer: {
     position: "absolute",
-    bottom: 20,
+    bottom: 10,
     left: 35,
     right: 35,
     textAlign: "center",
@@ -509,13 +509,11 @@ const PaymentVoucherPDF = ({ row, buyerCompany, sellerCompany, qrCodeUrl, vouche
           </View>
         </View>
 
-        {/* Payment Voucher Title */}
         <View style={styles.titleContainer}>
-          <Text style={styles.typeTitle}>PAYMENT VOUCHER</Text>
+          <Text style={styles.typeTitle}>PAYMENT DETAILS</Text>
           <View style={styles.titleDivider} />
         </View>
 
-        {/* Intro Text */}
         <View>
           <Text style={styles.introText}>
             Please find the below payment details
@@ -716,7 +714,9 @@ const PaymentVoucherPDF = ({ row, buyerCompany, sellerCompany, qrCodeUrl, vouche
         <View style={styles.footer} fixed>
           <View style={styles.footerLine} />
           <Text style={styles.footerText}>
-            This voucher is only for Information Purpose which is Recived from the Buyer / Seller Hansaria Food Private Limited is use for information purpose only.
+This document is generated automatically based on information provided by Either Buyer or Seller and is intended solely for informational and record-keeping purposes. {"\n"}
+Hansaria Food Private Limited does not verify or guarantee the accuracy, completeness, or authenticity of the information and shall not be liable for any errors, omissions, disputes, claims, losses, or legal consequences arising from the underlying transaction. {"\n"}
+This document does not constitute a legal contract, proof of payment, tax invoice, financial instrument, or acknowledgment of liability.
           </Text>
         </View>
       </Page>
