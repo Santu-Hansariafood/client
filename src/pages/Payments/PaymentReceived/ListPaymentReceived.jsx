@@ -3,6 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
+import { pdf } from "@react-pdf/renderer";
+import QRCode from "qrcode";
+import PaymentVoucherPDF from "./components/PaymentVoucherPDF";
 import AdminPageShell from "../../../common/AdminPageShell/AdminPageShell";
 import api from "../../../utils/apiClient/apiClient";
 import {
@@ -26,6 +29,7 @@ const ListPaymentReceived = () => {
   const [loading, setLoading] = useState(false);
   const [printing, setPrinting] = useState(false);
   const [sendingEmail, setSendingEmail] = useState(false);
+  const [sendingEmailIds, setSendingEmailIds] = useState(new Set());
   const [payments, setPayments] = useState([]);
   const [listEntries, setListEntries] = useState([]);
   const [total, setTotal] = useState(0);
@@ -1419,6 +1423,115 @@ const ListPaymentReceived = () => {
     }
   };
 
+  // Helper to generate QR code for individual voucher
+  const generateIndividualQRCode = async (row) => {
+    const getValue = (...candidates) => {
+      for (const value of candidates) {
+        if (value && String(value).trim() !== "" && String(value).trim() !== "N/A") {
+          return String(value).trim();
+        }
+      }
+      return "-";
+    };
+
+    const firstMapping = row.raw?.mappings?.[0];
+    const loadingEntry = firstMapping?.loadingEntryId;
+    const billNo = getValue(
+      loadingEntry?.billNumber,
+      row.raw?.billNo,
+      row.raw?.billNumber,
+      row.billNo
+    );
+    const saudaNo = getValue(
+      firstMapping?.saudaNo,
+      loadingEntry?.saudaNo,
+      row.raw?.saudaNo,
+      row.saudaNo
+    );
+    const lorryNo = getValue(
+      loadingEntry?.lorryNumber,
+      row.raw?.lorryNumber,
+      row.lorryNo
+    );
+
+    const totalAmount = Math.max(Number(row.debit || 0), Number(row.credit || 0));
+    const qrText = [
+      "HANSARIA FOOD PRIVATE LIMITED",
+      `Date: ${row.date ? new Date(row.date).toLocaleDateString("en-GB") : "-"}`,
+      `Voucher No: ${row.raw?.voucherNo || row.id || "-"}`,
+      `Buyer: ${row.buyerCompany || "-"}`,
+      `Seller: ${row.supplierCompany || "-"}`,
+      `Sauda No: ${saudaNo}`,
+      `Lorry No: ${lorryNo}`,
+      `Bill No: ${billNo}`,
+      `Amount: Rs. ${totalAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`
+    ].join("\n");
+    
+    return await QRCode.toDataURL(qrText, {
+      margin: 1,
+      width: 200,
+      color: {
+        dark: "#000000",
+        light: "#ffffff"
+      }
+    });
+  };
+
+  const handleSendIndividualEmail = async ({ row, buyerCompany, sellerCompany }) => {
+    try {
+      // Mark this row as sending
+      setSendingEmailIds((prev) => new Set([...prev, row.id]));
+
+      if (!sellerCompany?.email) {
+        toast.error("No email found for the seller company");
+        return;
+      }
+
+      // Generate QR code
+      const qrCodeUrl = await generateIndividualQRCode(row);
+
+      // Generate PDF using PaymentVoucherPDF component
+      const blob = await pdf(
+        <PaymentVoucherPDF
+          row={row}
+          buyerCompany={buyerCompany}
+          sellerCompany={sellerCompany}
+          qrCodeUrl={qrCodeUrl}
+          voucherNumber={1} // Simple voucher number for now
+        />
+      ).toBlob();
+
+      // Convert blob to base64
+      const reader = new FileReader();
+      reader.readAsDataURL(blob);
+      const pdfBase64 = await new Promise((resolve) => {
+        reader.onloadend = () => {
+          resolve(reader.result.split(",")[1]);
+        };
+      });
+
+      // Send email via API
+      await api.post("/email/send-payment-received", {
+        pdf: pdfBase64,
+        recipientEmail: sellerCompany.email,
+        reportType: "IndividualVoucher",
+        individualPaymentId: row.raw?._id || row.id,
+      });
+
+      toast.success("Email sent successfully!");
+    } catch (error) {
+      console.error("Send Individual Email Error:", error);
+      toast.error("Failed to send email");
+    } finally {
+      // Remove this row from sending state
+      setSendingEmailIds((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(row.id);
+        return newSet;
+      });
+    }
+  };
+
   const handleLedgerTypeChange = (value) => {
     setPage(1);
     setSelectedLedger(null);
@@ -1568,6 +1681,8 @@ const ListPaymentReceived = () => {
                   }
                   sellerCompanies={sellerCompanies}
                   buyerCompanies={buyerCompanies}
+                  onSendEmail={handleSendIndividualEmail}
+                  sendingEmailIds={sendingEmailIds}
                 />
               )}
             </>

@@ -12,6 +12,8 @@ const TallyLedgerBook = ({
   footer,
   sellerCompanies = [],
   buyerCompanies = [],
+  onSendEmail,
+  sendingEmailIds = new Set(),
 }) => {
   const [qrCache, setQrCache] = useState({});
   const [qrLoading, setQrLoading] = useState({});
@@ -171,6 +173,9 @@ const TallyLedgerBook = ({
             <th className="px-3 py-2.5 text-[10px] font-black uppercase tracking-wider w-[100px] text-center">
               Download
             </th>
+            <th className="px-3 py-2.5 text-[10px] font-black uppercase tracking-wider w-[100px] text-center">
+              Send
+            </th>
           </tr>
         </thead>
         <tbody>
@@ -271,6 +276,17 @@ const TallyLedgerBook = ({
                         </>
                       )}
                     </td>
+                    <td className="px-3 py-2 text-center">
+                      {!row.isOpening && sellerCompany?.email && (
+                        <button
+                          onClick={() => onSendEmail({ row, buyerCompany, sellerCompany })}
+                          disabled={sendingEmailIds.has(row.id)}
+                          className="px-3 py-1.5 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white rounded text-xs font-bold transition shadow disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {sendingEmailIds.has(row.id) ? "Sending..." : "Send Email"}
+                        </button>
+                      )}
+                    </td>
                   </tr>
                   {validClaims.map((claim, claimIdx) => (
                     <tr
@@ -302,6 +318,7 @@ const TallyLedgerBook = ({
                       <td className="px-3 py-1 text-right font-medium text-rose-700 tabular-nums">
                         {formatLedgerAmount(claim.claimAmount)}
                       </td>
+                      <td className="px-3 py-1"></td>
                       <td className="px-3 py-1"></td>
                     </tr>
                   ))}
@@ -391,6 +408,17 @@ const TallyLedgerBook = ({
                         </PDFDownloadLink>
                       )}
                     </>
+                  )}
+                </td>
+                <td className="px-3 py-2 text-center">
+                  {!row.isOpening && sellerCompany?.email && (
+                    <button
+                      onClick={() => onSendEmail({ row, buyerCompany, sellerCompany })}
+                      disabled={sendingEmailIds.has(row.id)}
+                      className="px-3 py-1.5 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white rounded text-xs font-bold transition shadow disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {sendingEmailIds.has(row.id) ? "Sending..." : "Send Email"}
+                    </button>
                   )}
                 </td>
               </tr>

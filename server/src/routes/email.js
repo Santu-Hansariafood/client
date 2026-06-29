@@ -131,7 +131,7 @@ Contact: +91-8336924066 | +91-9330433535`,
 });
 
 router.post("/send-payment-received", async (req, res) => {
-  const { pdf, recipientEmail, reportType, startDate, endDate, buyerCompany, supplierCompany } = req.body;
+  const { pdf, recipientEmail, reportType, startDate, endDate, buyerCompany, supplierCompany, individualPaymentId } = req.body;
 
   if (!pdf || !recipientEmail || !reportType) {
     return res.status(400).send("Missing required fields: pdf, recipientEmail, reportType");
@@ -146,23 +146,37 @@ router.post("/send-payment-received", async (req, res) => {
       },
     });
 
-    const dateRangeText = startDate && endDate 
-      ? `${new Date(startDate).toLocaleDateString("en-GB")} to ${new Date(endDate).toLocaleDateString("en-GB")}`
-      : "All Time";
+    let subject = "";
+    let filename = "";
+    let body = "";
 
-    const subject = reportType === "MIS" 
-      ? `Payment MIS Report - ${dateRangeText}`
-      : `Payment Advice - ${dateRangeText}`;
+    if (reportType === "IndividualVoucher") {
+      subject = `Payment Voucher`;
+      filename = `Payment_Voucher.pdf`;
+      body = `Dear Sir/Madam,
 
-    const filename = reportType === "MIS" 
-      ? `MIS_Payment_Received_${startDate || "All"}_to_${endDate || "All"}.pdf`
-      : `Payment_Advice_${startDate || "All"}_to_${endDate || "All"}.pdf`;
+Please find attached the payment voucher.
 
-    const mailOptions = {
-      from: process.env.PAYMENTS_EMAIL,
-      to: recipientEmail,
-      subject: subject,
-      text: `Dear Sir/Madam,
+Thank you for your business.
+
+Best Regards,
+Hansaria Food Private Limited
+Contact: +91-8336924066 | +91-9330433535
+Email: payments@hansariafood.com`;
+    } else {
+      const dateRangeText = startDate && endDate 
+        ? `${new Date(startDate).toLocaleDateString("en-GB")} to ${new Date(endDate).toLocaleDateString("en-GB")}`
+        : "All Time";
+
+      subject = reportType === "MIS" 
+        ? `Payment MIS Report - ${dateRangeText}`
+        : `Payment Advice - ${dateRangeText}`;
+
+      filename = reportType === "MIS" 
+        ? `MIS_Payment_Received_${startDate || "All"}_to_${endDate || "All"}.pdf`
+        : `Payment_Advice_${startDate || "All"}_to_${endDate || "All"}.pdf`;
+
+      body = `Dear Sir/Madam,
 
 Please find attached the ${reportType === "MIS" ? "Payment MIS Report" : "Payment Advice"} for the period ${dateRangeText}.
 ${buyerCompany ? `\nBuyer Company: ${buyerCompany}` : ""}
@@ -173,7 +187,14 @@ Thank you for your business.
 Best Regards,
 Hansaria Food Private Limited
 Contact: +91-8336924066 | +91-9330433535
-Email: payments@hansariafood.com`,
+Email: payments@hansariafood.com`;
+    }
+
+    const mailOptions = {
+      from: process.env.PAYMENTS_EMAIL,
+      to: recipientEmail,
+      subject: subject,
+      text: body,
       attachments: [
         {
           filename: filename,
@@ -186,18 +207,27 @@ Email: payments@hansariafood.com`,
     await transporter.sendMail(mailOptions);
 
     // Update payment records to mark email as sent
-    const filter = {};
-    if (startDate) filter.date = { $gte: new Date(startDate) };
-    if (endDate) filter.date = { ...filter.date, $lte: new Date(endDate) };
-    if (buyerCompany) filter.buyerCompany = buyerCompany;
-    if (supplierCompany) filter.supplierCompany = supplierCompany;
+    if (individualPaymentId) {
+      await PaymentReceived.findByIdAndUpdate(individualPaymentId, {
+        $set: {
+          emailSent: true,
+          emailSentAt: new Date(),
+        },
+      });
+    } else {
+      const filter = {};
+      if (startDate) filter.date = { $gte: new Date(startDate) };
+      if (endDate) filter.date = { ...filter.date, $lte: new Date(endDate) };
+      if (buyerCompany) filter.buyerCompany = buyerCompany;
+      if (supplierCompany) filter.supplierCompany = supplierCompany;
 
-    await PaymentReceived.updateMany(filter, {
-      $set: {
-        emailSent: true,
-        emailSentAt: new Date(),
-      },
-    });
+      await PaymentReceived.updateMany(filter, {
+        $set: {
+          emailSent: true,
+          emailSentAt: new Date(),
+        },
+      });
+    }
 
     res.status(200).send("Email sent successfully");
   } catch (error) {
