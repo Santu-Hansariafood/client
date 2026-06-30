@@ -22,7 +22,7 @@ const styles = StyleSheet.create({
     top: 10,
     left: 10,
     right: 10,
-    bottom: 10,
+    bottom: 20,
     borderWidth: 1.5,
     borderColor: "#1a1a1a",
     borderStyle: "solid",
@@ -32,7 +32,7 @@ const styles = StyleSheet.create({
     top: 14,
     left: 14,
     right: 14,
-    bottom: 14,
+    bottom: 24,
     borderWidth: 0.5,
     borderColor: "#1a1a1a",
     borderStyle: "solid",
@@ -304,7 +304,7 @@ const styles = StyleSheet.create({
   },
   footer: {
     position: "absolute",
-    bottom: 10,
+    bottom: 15,
     left: 35,
     right: 35,
     textAlign: "center",
@@ -312,12 +312,12 @@ const styles = StyleSheet.create({
   footerLine: {
     height: 0.5,
     backgroundColor: "#000000",
-    marginBottom: 4,
+    marginBottom: 3,
   },
   footerText: {
-    fontSize: 6,
+    fontSize: 5.5,
     color: "#000000",
-    lineHeight: 1.3,
+    lineHeight: 1.4,
   },
 });
 

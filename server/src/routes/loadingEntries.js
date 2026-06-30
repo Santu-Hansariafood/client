@@ -952,6 +952,30 @@ router.get("/brokerage-report/pdf", async (req, res) => {
       align: "right",
     });
 
+    // Add disclaimer text
+    doc.setFontSize(7);
+    doc.setFont("helvetica", "normal");
+    const disclaimerText = [
+      "This document is generated automatically based on information provided by Either Buyer or Seller and is intended solely for informational and record-keeping purposes.",
+      "Hansaria Food Private Limited does not verify or guarantee the accuracy, completeness, or authenticity of the information and shall not be liable for any errors, omissions, disputes, claims, losses, or legal consequences arising from the underlying transaction.",
+      "This document does not constitute a legal contract, proof of payment, tax invoice, financial instrument, or acknowledgment of liability."
+    ];
+    
+    let disclaimerY = finalY + 100;
+    disclaimerText.forEach((textLine) => {
+      const lines = doc.splitTextToSize(textLine, pageWidth - 2 * margin - 10);
+      lines.forEach((line) => {
+        if (disclaimerY > pageHeight - margin - 5) {
+          doc.addPage();
+          doc.setLineWidth(0.4);
+          doc.rect(margin, margin, pageWidth - 2 * margin, pageHeight - 2 * margin);
+          disclaimerY = margin + 20;
+        }
+        doc.text(line, margin + 5, disclaimerY, { maxWidth: pageWidth - 2 * margin - 10, align: "left" });
+        disclaimerY += 4;
+      });
+    });
+
     const pdfBuffer = doc.output("arraybuffer");
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader(
