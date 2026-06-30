@@ -685,7 +685,7 @@ router.get("/brokerage-report/pdf", async (req, res) => {
     }
 
     const doc = new jsPDF({
-      orientation: "portrait",
+      orientation: "landscape",
       unit: "mm",
       format: "a4",
     });
